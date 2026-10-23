@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS recoveries(version INTEGER PRIMARY KEY REFERENCES ver
 class AnalysisMixin:
     def _init_information(self, image, version=1):
         from .inspection import inspect_binary
-        document = inspect_binary(image.source_bytes)
+        document = inspect_binary(image.source_bytes,slice_arch=image.metadata.get('slice_arch'),image=image.metadata.get('selected_image'))
         if image.format == 'MZ':
             document=self._dos_document_for_image(image,document)
         if image.metadata.get('managed'):
@@ -52,14 +52,11 @@ class AnalysisMixin:
             self._dos_init(image,version)
 
     def _index_symbols(self, version, document):
-        for kind in ('imports','exports'):
-            for item in document.get(kind,[]):
-                address = item.get('address')
-                if address is None:
-                    continue
-                name = item.get('name') or (f"ordinal_{item['ordinal']}" if item.get('ordinal') is not None else 'unnamed')
-                self.db.execute('INSERT OR IGNORE INTO symbols VALUES (?,?,?,?,?,?)',
-                    (version,k(address),kind,name,item.get('module') or '',json.dumps(item)))
+        from .linkage import metadata_symbols
+        for address,kind,item in metadata_symbols(document):
+            name=item.get('name') or (f"ordinal_{item['ordinal']}" if item.get('ordinal') is not None else 'unnamed')
+            self.db.execute('INSERT OR IGNORE INTO symbols VALUES (?,?,?,?,?,?)',
+                (version,k(address),kind,name,item.get('module') or '',json.dumps(item)))
 
     def _document(self, version):
         row = self.db.execute('SELECT document FROM binary_info WHERE version=?',(version,)).fetchone()
@@ -97,10 +94,12 @@ class AnalysisMixin:
             v = self.version(version)['id']
             doc = self._document(v)
             if topic == 'summary':
-                return {'version':v,'header':doc['header'],'counts':{x:len(doc.get(x,[])) for x in ('sections','imports','exports','strings')},'warnings':doc.get('warnings',[])}
+                return {'version':v,'header':doc['header'],**{key:doc[key] for key in ('selected_image','image_views','container_header','selected_slice') if key in doc},'counts':{x:len(doc.get(x,[])) for x in ('sections','imports','exports','strings','libraries','relocations')},'warnings':doc.get('warnings',[])}
+            if topic == 'linkage':
+                return dict(version=v,linkage=doc.get('linkage',{}),metadata_revision=doc.get('metadata_revision',0),warnings=doc.get('warnings',[]))
             if topic == 'header':
-                return {'version':v,'header':doc['header'],'warnings':doc.get('warnings',[])}
-            if topic not in ('sections','imports','exports','strings'):
+                return {'version':v,'header':doc['header'],**{key:doc[key] for key in ('selected_image','image_views','container_header','selected_slice') if key in doc},'warnings':doc.get('warnings',[])}
+            if topic not in ('sections','imports','exports','strings','libraries','relocations'):
                 raise ValueError('unknown information topic')
             items=[]
             for original in doc.get(topic,[])[offset:offset+limit]:
@@ -121,6 +120,29 @@ class AnalysisMixin:
                 row=self.db.execute('SELECT document FROM recoveries WHERE version=?',(v,)).fetchone()
                 result['recovery']=json.loads(row[0]) if row else None
             return result
+
+    def refresh_metadata(self,version=None):
+        """Reinspect retained container bytes; preserve mappings and user names."""
+        from .inspection import inspect_binary
+        if self.meta['format'] not in ('ELF','Mach-O','PE'):
+            raise ValueError('metadata refresh supports ELF, Mach-O and PE containers')
+        with self.transaction(True):
+            v=self.version(version)['id']
+            row=self.db.execute('SELECT source_bytes FROM binary_info WHERE version=?',(v,)).fetchone()
+            if not row or row[0] is None:raise ValueError('original source bytes are unavailable; reimport the original file')
+            old=self._document(v)
+            document=inspect_binary(bytes(row[0]),slice_arch=self.meta['loader_metadata'].get('slice_arch'),image=self.meta['loader_metadata'].get('selected_image'))
+            document['file_mappings']=old.get('file_mappings',self.meta['loader_metadata'].get('file_mappings',[]))
+            if document.get('sections')!=old.get('sections'):
+                document['warnings'].append('Refreshed metadata; existing immutable memory mappings are retained.')
+            self.db.execute('UPDATE binary_info SET document=? WHERE version=?',(json.dumps(document),v))
+            self.db.execute("DELETE FROM symbols WHERE version=? AND kind IN ('imports','exports','import_stubs')",(v,))
+            self._index_symbols(v,document)
+            invalidated=self._invalidate_derived(v,reason='container metadata refreshed')
+            return dict(version=v,metadata_revision=document.get('metadata_revision',0),
+                        imports=len(document.get('imports',[])),exports=len(document.get('exports',[])),
+                        libraries=len(document.get('libraries',[])),relocations=len(document.get('relocations',[])),
+                        invalidated_tasks=invalidated,warnings=document['warnings'])
 
     def _queue_code(self, version, address, reason):
         return self.db.execute('INSERT OR IGNORE INTO work(version,context,address,reason) VALUES (?,?,?,?)',(version,self.context,k(address),reason)).rowcount
@@ -195,7 +217,8 @@ class AnalysisMixin:
                     self._queue_data(version,target,'pointer target')
                 # Promote only corroborated indirect control-flow, never an arbitrary pointer.
                 sources=self.db.execute("SELECT DISTINCT i.address,i.flow FROM xrefs x JOIN instructions i ON i.version=x.version AND i.context=x.context AND i.address=x.source JOIN operand_refs o ON o.version=x.version AND o.context=x.context AND o.source=x.source AND o.target=x.target WHERE x.version=? AND x.context=? AND x.target=? AND x.kind='data' AND i.flow IN ('indirect_call','indirect_jump') AND o.role='memory' AND o.width=?",(version,self.context,k(address),self.bits//8)).fetchall()
-                if sources and target_region.executable:
+                advanced=self.db.execute('SELECT 1 FROM metadata WHERE key=?',(f'advanced_enabled_{version}',)).fetchone()
+                if sources and target_region.executable and not advanced:
                     for ins in sources:
                         kind='resolved_call' if ins['flow']=='indirect_call' else 'resolved_branch'
                         self._add_xref(version,int(ins['address'],16),target,kind,'indirect operand + stored pointer value')
@@ -305,7 +328,7 @@ class AnalysisMixin:
                             self._queue_code(v,int(row[0],16),'deferred symbol or export seed')
                         for item in doc.get('exports',[]):
                             a=item.get('address')
-                            if a is not None and executable(a):
+                            if a is not None and item.get('code_seed_eligible',item.get('is_code',True)) and executable(a):
                                 self._queue_code(v,a,'deferred export seed')
                     self.db.execute('UPDATE analysis_state SET seeds_admitted=1 WHERE version=?',(v,))
                     passes+=1
@@ -321,6 +344,7 @@ class AnalysisMixin:
             return dict(version=v,decoded=decoded,attempted=attempted,data_processed=data_processed,new_facts=fact_count()-before,pending=pending,pending_code=pending_code,pending_data=pending_data,entry_complete=bool(state[0]),pending_seed_phase=not bool(state[1]),passes=passes,stable=stable,budget_exhausted=not stable and attempted>=budget)
 
     def _reset_analysis(self, version):
+        self._reset_derived(version)
         if self.meta["format"]=="MZ":
             return self._dos_reset(version)
         for table in ('instructions','xrefs','operand_refs','data_items','work','investigations','memory_refs','analysis_facts_revision'):
@@ -367,9 +391,12 @@ class AnalysisMixin:
             if any(a<int(row[0],16)+row[1] and a+size>int(row[0],16) for row in overlap):
                 raise ValueError('definition overlaps another explicit definition')
             self.db.execute('INSERT INTO definitions VALUES (?,?,?,?,?,?) ON CONFLICT(version,context,address) DO UPDATE SET representation=excluded.representation,size=excluded.size,author=excluded.author',(v,self.context,k(a),representation,size,author))
-            self._reset_analysis(v)
+            invalidation=self._incremental_representation(v,a,size)
+            if invalidation is None:
+                self._reset_analysis(v)
+                invalidation={'mode':'full_reset','reason':'complete dependency index not yet available'}
             analysis=None if defer else self.analyze(version=v,max_instructions=max_instructions)
-            return dict(version=v,address=h(a),representation=representation,size=size,analysis=analysis)
+            return dict(version=v,address=h(a),representation=representation,size=size,analysis=analysis,invalidation=invalidation)
 
     def items(self, version=None, limit=200, offset=0):
         from .project import integer

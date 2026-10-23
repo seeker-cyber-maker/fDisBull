@@ -240,11 +240,12 @@ class DOSViewsMixin:
                 if not has_label:
                     has_label = self.db.execute("SELECT 1 FROM functions WHERE version=? AND address=? LIMIT 1",
                                                 (v["id"], row["address"])).fetchone() is not None
+                display,file_refs,file_refs_summary=self._file_reference_display(v['id'],row['context'],linear,display)
                 instructions.append({"address": _hex(linear), "cs": row_cs, "ip": linear - row_cs * 16,
                                      "segmented_address": segmented_address, "context": row["context"],
                                      "alternative_contexts": alternatives, "size": row["size"], "bytes": row["bytes"],
                                      "mnemonic": row["mnemonic"], "operands": row["operands"], "raw_operands": row["operands"],
-                                     "display_operands": display, "flow": row["flow"],
+                                     "display_operands": display, "file_references":file_refs, "file_reference_summary":file_refs_summary, "flow": row["flow"],
                                      "target": _hex(int(row["target"], 16)) if row["target"] is not None else None,
                                      "name": self._dos_label(v["id"], linear, row["context"]), "show_label": has_label, "references": references,
                                      "comment": comment[0] if comment else None, "comment_author": comment[1] if comment else None,

@@ -186,10 +186,11 @@ class CFGMixin:
                                    width=ref['width'], **presentation(int(ref['target'], 16)))
                               for ref in self.db.execute('SELECT * FROM operand_refs WHERE version=? AND context=? AND source=? ORDER BY operand_index,role,target', (v, current_context, _key(a)))]
                 display = row['operands'] + (' ; ' + ', '.join(ref['name'] for ref in references) if references else '')
+                display,file_refs,file_refs_summary=self._file_reference_display(v,current_context,a,display)
                 shown = presentation(a, current_context)
                 node = dict(id=node_id, address=_hex(a), context=current_context, segmented_address=_segmented(a, current_context),
                             size=row['size'], bytes=row['bytes'], mnemonic=row['mnemonic'], operands=row['operands'],
-                            raw_operands=row['operands'], display_operands=display, flow=row['flow'], references=references,
+                            raw_operands=row['operands'], display_operands=display, flow=row['flow'], references=references, file_references=file_refs, file_reference_summary=file_refs_summary,
                             next_address=_following(row, a), name=shown['name'], representation=shown['representation'],
                             presentation=shown, highlights=[])
                 nodes.append(node)

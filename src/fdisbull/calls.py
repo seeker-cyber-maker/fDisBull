@@ -27,8 +27,10 @@ def _import_aliases(rows):
         for item in detail.get('alternatives', [detail]):
             alias = dict(module=item.get('module') or row['module'] or None,
                          name=item.get('name'), ordinal=item.get('ordinal'),
-                         forwarder=item.get('forwarder'))
-            identity = (alias['module'], alias['name'], alias['ordinal'], alias['forwarder'])
+                         forwarder=item.get('forwarder'),version=item.get('version'),
+                         binding_kind=item.get('kind'),addend=item.get('addend',0),stub_addresses=item.get('stub_addresses',[]),
+                         evidence=item.get('evidence'))
+            identity = (alias['module'], alias['name'], alias['ordinal'], alias['forwarder'],alias['addend'])
             aliases[identity] = alias
     return sorted(aliases.values(), key=lambda item: (item['module'] or '', item['name'] or '',
                                                      -1 if item['ordinal'] is None else item['ordinal']))
@@ -51,10 +53,10 @@ class CallViewsMixin:
 
             targets = {}
             if dos:
-                rows = self.db.execute("SELECT * FROM dos_edges WHERE version=? AND kind='call' ORDER BY source,source_context,target,target_context", (v,))
+                rows = self.db.execute("SELECT * FROM dos_edges WHERE version=? AND kind IN ('call','resolved_call') ORDER BY source,source_context,target,target_context", (v,))
                 for row in rows:
                     targets.setdefault((row['source_context'], row['source']), []).append(
-                        dict(target=row['target'], context=row['target_context'] or None, kind='call', evidence=row['evidence']))
+                        dict(target=row['target'], context=row['target_context'] or None, kind=row['kind'], evidence=row['evidence']))
             else:
                 rows = self.db.execute("SELECT * FROM xrefs WHERE version=? AND kind IN ('call','resolved_call') ORDER BY source,context,target,kind", (v,))
                 for row in rows:
@@ -62,13 +64,19 @@ class CallViewsMixin:
                         dict(target=row['target'], context=self.context, kind=row['kind'], evidence=row['evidence']))
             imports = {}
             for row in self.db.execute("SELECT * FROM symbols WHERE version=? AND kind IN ('imports','recovered_import') ORDER BY address,kind,module,name", (v,)):
-                imports.setdefault(row['address'], []).append(row)
+                if json.loads(row['detail']).get('callable') is not False:imports.setdefault(row['address'], []).append(row)
+            stubs={}
+            for row in self.db.execute("SELECT * FROM symbols WHERE version=? AND kind='import_stubs' ORDER BY address,module,name",(v,)):
+                stubs.setdefault(row['address'],[]).append(row)
+            metadata_calls={}
+            for row in self.db.execute("SELECT context,source,target,evidence FROM xrefs WHERE version=? AND kind='import_call'",(v,)):
+                metadata_calls.setdefault((row['context'],row['source']),[]).append(row)
             references = {}
             for row in self.db.execute("SELECT o.* FROM operand_refs o JOIN instructions i ON i.version=o.version AND i.context=o.context AND i.address=o.source WHERE o.version=? AND i.flow='indirect_call' AND o.role='memory' ORDER BY o.source,o.context,o.target", (v,)):
                 references.setdefault((row['context'], row['source']), []).append(row)
             groups, all_sites = {}, set()
 
-            def add(group_kind, target, context, row, evidence, slot_symbols=None):
+            def add(group_kind, target, context, row, evidence, slot_symbols=None, target_kind=None):
                 source = int(row['address'], 16)
                 source_id = (row['context'], row['address'])
                 identity = (group_kind, target, context, source_id if group_kind == 'unresolved' else None)
@@ -81,10 +89,13 @@ class CallViewsMixin:
                     name = label(target, context) if target is not None else 'unresolved_call_at_' + (_segmented(source, row['context']) or _hx(source))
                     groups[identity] = dict(kind=group_kind, target=_hx(target) if target is not None else None,
                         target_context=context, target_segmented_address=_segmented(target, context) if target is not None else None,
-                        target_kind='import_slot' if group_kind == 'library' else 'code_address' if target is not None else 'unknown',
+                        target_kind=target_kind or ('import_slot' if group_kind == 'library' else 'code_address' if target is not None else 'unknown'),
+                        stub_addresses=sorted({hex(a) for alias in aliases for a in alias.get('stub_addresses',[]) if type(a) is int}),
+                        runtime_provider_unresolved=group_kind=='library',
                         name=name, function=('|'.join(names) if names else None) if group_kind == 'library' else name if group_kind == 'function' else None,
                         library=module, module=module, modules=modules,
                         ordinal=next(iter(ordinals)) if len(ordinals) == 1 else None, aliases=aliases,
+                        binding_addends=sorted({a['addend'] for a in aliases if type(a.get('addend')) is int}),
                         status='static_evidence', runtime_observed=False, function_boundary_proven=False,
                         call_site_count=0, call_sites=[], call_sites_truncated=False,
                         _seen=set(), _stored={}, _sort=(0 if group_kind == 'function' else 1 if group_kind == 'library' else 2,
@@ -113,16 +124,29 @@ class CallViewsMixin:
 
             for row in self.db.execute("SELECT * FROM instructions WHERE version=? AND flow IN ('call','indirect_call') ORDER BY address,context", (v,)):
                 identity = (row['context'], row['address'])
-                library_slots = {ref['target'] for ref in references.get(identity, []) if ref['target'] in imports}
-                if library_slots:
-                    for slot in sorted(library_slots):
-                        add('library', int(slot, 16), None, row,
-                            'decoded indirect call through a slot identified by import metadata', imports[slot])
+                library_targets={}
+                for ref in references.get(identity,[]):
+                    if ref['target'] in imports:
+                        library_targets[(int(ref['target'],16),'import_slot')]=(imports[ref['target']],'decoded indirect call through a slot identified by import metadata')
+                for binding in metadata_calls.get(identity,[]):
+                    if binding['target'] in imports:
+                        library_targets[(int(binding['target'],16),'import_slot')]=(imports[binding['target']],binding['evidence'])
+                    elif binding['target'] in stubs:
+                        library_targets[(int(binding['target'],16),'code_stub')]=(stubs[binding['target']],binding['evidence'])
+                for target in targets.get(identity,[]):
+                    for stub in stubs.get(target['target'],[]):
+                        detail=json.loads(stub['detail']);slot=detail.get('slot_address')
+                        address=slot if slot is not None else int(target['target'],16)
+                        symbols=imports.get(f'{address:016x}',[stub])
+                        library_targets[(address,'import_slot' if slot is not None else 'code_stub')]=(symbols,'decoded call to a metadata-identified import stub; external target unresolved')
+                if library_targets:
+                    for (address,target_kind),(symbols,evidence) in sorted(library_targets.items()):
+                        add('library',address,None,row,evidence,symbols,target_kind)
                 elif targets.get(identity):
                     for target in targets[identity]:
-                        add('function', int(target['target'], 16), target['context'], row, target['evidence'])
+                        add('function',int(target['target'],16),target['context'],row,target['evidence'])
                 else:
-                    add('unresolved', None, None, row, 'decoded call instruction; no stored target or identified import slot')
+                    add('unresolved',None,None,row,'decoded call instruction; no stored target or identified import slot')
             selected = sorted((group for group in groups.values() if kind == 'all' or group['kind'] == kind), key=lambda group: group['_sort'])
             selected_sites = set().union(*(group['_seen'] for group in selected)) if selected else set()
             page = []
@@ -131,4 +155,4 @@ class CallViewsMixin:
             return dict(version=v, items=page, total=len(selected), offset=offset, has_more=offset + limit < len(selected),
                         total_call_sites=len(selected_sites), all_call_sites=len(all_sites), call_site_limit=_SITE_LIMIT,
                         analysis=self.analysis_status(v),
-                        note='Stored static calls only; no runtime completeness or caller-function ownership is claimed. Alternative targets may share a call site. Library identity requires import metadata; calls through unlinked stubs remain function targets.')
+                        note='Stored static calls only; no runtime completeness or caller-function ownership is claimed. Alternative targets may share a call site. Library identities come from declared bindings/stubs; their runtime providers and addresses remain unresolved. Unlinked stubs remain function targets.')

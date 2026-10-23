@@ -112,7 +112,9 @@ def test_actual_elf_exports_and_unresolved_imports_are_honest(tmp_path):
     assert any(s['name'] == '.text' and 'x' in s['permissions'] for s in metadata['sections'])
     assert any(s['name'] == 'helper' and s['address'] > 0 for s in metadata['exports'])
     puts = next(s for s in metadata['imports'] if s['name'] == 'puts')
-    assert puts['address'] is None and puts['module'] is None
+    assert puts['address'] is not None and puts['kind']=='got'
+    assert puts['module']=='libc.so.6' and puts['version_source']=='requirement'
+    assert puts['binding_state']=='runtime_unresolved'
     evidence = next(s for s in metadata['strings'] if s['text'] == 'EvidenceString')
     assert evidence['address'] is not None
     assert any('unresolved' in warning for warning in metadata['warnings'])

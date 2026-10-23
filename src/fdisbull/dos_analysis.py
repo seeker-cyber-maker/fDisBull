@@ -5,6 +5,9 @@ import struct
 
 from .dos_views import DOSViewsMixin
 
+# Revision 2 stops promoting mutable far-descriptor file bytes to known state.
+DOS_POINTER_REVISION = 2
+
 DOS_DDL = """
 CREATE TABLE IF NOT EXISTS dos_states(version INTEGER,context TEXT,address TEXT,registers TEXT NOT NULL,state TEXT NOT NULL,reason TEXT NOT NULL,PRIMARY KEY(version,context,address));
 CREATE TABLE IF NOT EXISTS dos_segments(version INTEGER,selector INTEGER,base TEXT,end TEXT,roles TEXT,sources TEXT,PRIMARY KEY(version,selector));
@@ -75,6 +78,7 @@ class DOSMixin(DOSViewsMixin):
         metadata=image.metadata['dos']
         self._dos_prepare(version)
         with self.transaction(True):
+            self.db.execute('INSERT OR REPLACE INTO metadata VALUES (?,?)',(f'dos_pointer_revision_{version}',json.dumps(DOS_POINTER_REVISION)))
             self.db.execute('DELETE FROM work WHERE version=?',(version,))
             self.db.execute('DELETE FROM functions WHERE version=?',(version,))
             candidates=metadata['segment_candidates']
@@ -234,12 +238,12 @@ class DOSMixin(DOSViewsMixin):
             after['_stack']=stack
         load=ins.get('load_far')
         if load and load.get('register'):
-            raw=self._dos_read(v,load['linear'],load['width'],file_backed=True)
-            if raw:
-                offset=int.from_bytes(raw[:load['offset_size']],'little')
-                if offset<=65535:
-                    after[load['register']]=offset
-                    after[load['segment_register']]=int.from_bytes(raw[load['offset_size']:],'little')
+            # The descriptor's initial file bytes can have been overwritten by
+            # an allocator return or file read before this routine is invoked.
+            # Native decoding already killed both destinations. Without a
+            # write-aware reaching definition, keep them unknown rather than
+            # resurrecting even a nonzero snapshot pointer as an exact address.
+            ins['unresolved'].append('far-pointer descriptor value is unknown; initial file bytes are not a proven reaching definition')
         return after
 
     def _dos_store_seed(self,v,cs,address,ins):
@@ -336,7 +340,9 @@ class DOSMixin(DOSViewsMixin):
                         messages.extend(ins['unresolved'])
                         target,target_cs=ins['target'],ins['target_cs']
                         indirect=ins.get('indirect')
-                        if target is None and indirect and indirect.get('pointer_address') is not None:
+                        normalized=self.db.execute('SELECT 1 FROM metadata WHERE key=?',(f'advanced_enabled_{v}',)).fetchone() is not None
+                        if normalized and ins['flow'] in ('indirect_call','indirect_jump'):target,target_cs=None,None
+                        if not normalized and target is None and indirect and indirect.get('pointer_address') is not None:
                             width=indirect['offset_size']+(2 if indirect['far'] else 0)
                             pointer=self._dos_read(v,indirect['pointer_address'],width,file_backed=True)
                             if pointer:
@@ -406,11 +412,14 @@ class DOSMixin(DOSViewsMixin):
                 if seeds:
                     data_segments=[r[0] for r in self.db.execute('SELECT selector,roles FROM dos_segments WHERE version=?',(v,)) if 'data' in json.loads(r[1])]
                     for seed in seeds:
-                        state={'ss':metadata['stack_ss']}
-                        if metadata.get('primary_data_segment') is not None:
-                            state['ds']=metadata['primary_data_segment']
-                        elif len(data_segments)==1:
-                            state['ds']=data_segments[0]
+                        # Explicit roots restored by a policy refresh keep
+                        # their identity, not stale inferred segment values.
+                        state={} if seed['reason']=='user seed' else {'ss':metadata['stack_ss']}
+                        if seed['reason']!='user seed':
+                            if metadata.get('primary_data_segment') is not None:
+                                state['ds']=metadata['primary_data_segment']
+                            elif len(data_segments)==1:
+                                state['ds']=data_segments[0]
                         a=int(seed['address'],16)
                         self._dos_enqueue(v,seed['cs'],a,state,'deferred '+seed['reason'])
                         self._dos_function(v,seed['cs'],a,f'sub_{seed["cs"]:04x}_{a-seed["cs"]*16:04x}',seed['reason'])
@@ -428,6 +437,7 @@ class DOSMixin(DOSViewsMixin):
             return dict(version=v,decoded=decoded,attempted=attempted,data_processed=data_processed,new_facts=after-before,pending=pending_code+pending_data+pending_seeds+pending_scans+(0 if state[1] else 1),pending_code=pending_code,pending_data=pending_data,pending_seeds=pending_seeds,pending_segment_scans=pending_scans,entry_complete=bool(state[0]),stable=stable,budget_exhausted=not stable and attempted>=budget,assumptions=['Static minimum allocation; no PSP memory fabricated.','Call fallthrough preserves DS/SS/BP/SP by conventional DOS C calling convention; general registers and ES are unknown.','Deferred relocation candidates may assume startup DS (or the unique observed DS); candidate provenance is retained.','Stability covers implemented static rules; unresolved indirect/dynamic code remains explicit.'])
 
     def _dos_reset(self,v):
+        self.db.execute('INSERT OR REPLACE INTO metadata VALUES (?,?)',(f'dos_pointer_revision_{v}',json.dumps(DOS_POINTER_REVISION)))
         for table in ('instructions','xrefs','operand_refs','data_items','work','investigations','dos_states','dos_edges','dos_constants','dos_seeds','dos_data_scans','functions','memory_refs','analysis_facts_revision'):
             self.db.execute(f'DELETE FROM {table} WHERE version=?',(v,))
         self._fresh_facts(v)
@@ -485,12 +495,12 @@ class DOSMixin(DOSViewsMixin):
             word=int.from_bytes(module[offset:offset+2],'little')
             module[offset:offset+2]=((word-metadata['load_segment'])&65535).to_bytes(2,'little')
         source=source_bytes[:metadata['header_size']]+bytes(module)+source_bytes[metadata['declared_file_size']:]
-        image=load_mz(source,load_segment=metadata['load_segment'],entry=self.meta['entry'])
+        image=load_mz(source,load_segment=metadata['load_segment'],entry=self.meta['entry'],allow_secondary=metadata.get('secondary_format') is not None)
         image.metadata['dos']['selected_entry_cs']=metadata.get('selected_entry_cs',metadata['entry_cs'])
         image.metadata['dos']['selected_entry_ip']=self.meta['entry']-16*image.metadata['dos']['selected_entry_cs']
         image.metadata['dos']['selected_entry_cs_source']='inherited selected entry context from parent version'
         image=replace(image,regions=patched)
-        document=self._dos_document_for_image(image,inspect_binary(source))
+        document=self._dos_document_for_image(image,inspect_binary(source,image='mz' if metadata.get('secondary_format') else None))
         if patched[0].data[metadata['module_size']:]!=bytes(metadata['allocation_size']-metadata['module_size']):
             document['warnings'].append('Allocation-only memory edits are retained in the project snapshot and have no disk file counterpart.')
         self.db.execute('INSERT INTO binary_info VALUES (?,?,?)',(version,json.dumps(document),source))

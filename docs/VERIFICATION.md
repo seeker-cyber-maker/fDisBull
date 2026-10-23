@@ -1,23 +1,110 @@
-# Verification receipt — fDisBull 0.5.0
+# Verification receipt — fDisBull 0.8.0
 
-Linux, CPython 3.12; iced-x86 1.21.0, Capstone distribution 5.0.9, LIEF 1.0.0, Pillow 12.3.0. Optional managed dependencies remain dnfile 0.18.0 and dncil 1.0.2. No guest code or macOS runtime was executed.
+Final integrated `python -m pytest -q`: **695 passed**, exit 0, **50.64 seconds**.
+`python -m compileall -q src/fdisbull` passed. Host: Linux x86-64, Python 3.12.14;
+iced-x86 1.21.0, Capstone distribution 5.0.9, LIEF 1.0.0, Pillow 12.3.0.
+No imported native/managed/game code was executed. Native macOS host execution
+remains unverified.
 
-Final integrated `python -m pytest -q`: **290 passed**, exit 0, **13.98 seconds**. Tests cover persisted straight-line/call-return continuations, schema-3 migration and explicit backfill, memory classification/width/overlap, DOS segment alternatives and unknown registers, implicit stack/string effects, REP bounds, native FS/GS, ARM64 access metadata corrections, read-only query/fallback parity, index reset/freshness, exact-entry CFGs, noncontiguous/loop/call/CS-wrap behavior, path evidence, immutable parent versions, shared names, SVG identity/escaping/bounds, and existing loaders/managed/import recovery/protocol/render features. Independent review added six regressions and found two index/implicit-access defects that were corrected before this final run.
+## External snapshots and structured file views
 
-## Original DinoPark snapshot
+New public workflows establish immutable file bytes, SHA-256/source metadata,
+bounded raw reads, EOF behavior, version isolation and survival after input
+changes/deletion/restart. Attachments never become native mappings or executable
+seeds. Each identity is a version, file name and offset. Per-file and aggregate
+attachment limits are checked atomically.
 
-The delivered database was migrated from the previous 46,294-instruction snapshot. `refresh-facts` added **40,658 missing fallthrough sources**, preserving the exact byte version. A forensic audit then supplied three explicit roots with DS=0x4020 assumptions: `38ff:2048` (save-load wrapper), `38ff:16fc` (save wrapper, calling serializer `38ff:0ffe`), and `38ff:3cc1` (corroborated switch block). They added 91, 769 and 23 instructions respectively. This is explicit candidate admission, not newly implemented general jump-table recovery.
+Nested structures, arrays, signed scalars and encoded pointers use the existing
+type registry. Redefinition checks native and file bindings together, including
+growth, overlap and file bounds. File views use compact layout descriptions and
+bounded traversal. An independent nested-layout fixture exposed excessive
+expanded output; the fixed one-item response is about 8.8 KB instead of 1.67 MB.
 
-Final database: **47,177 instructions**, **652 function candidates**, **57,285 xrefs**, **32,729 memory-access facts**. The implemented queues are stable with zero pending work; all 426 prior seeds remain admitted. SQLite integrity checks passed after closing and reopening the final portable snapshot. A repeated analysis attempted zero work. Source bytes and mapped byte-version identity remain unchanged; original executable SHA-256 is `2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c`.
+Authored source-to-file relationships retain exact instruction/CS identity,
+fingerprints, evidence, access width and bounded strided spans. Tests cover x86,
+ARM64 and DOS, separate same-offset files, exact interval overlap rather than
+stride gaps, shared field renames in data/xrefs/disassembly/CFG/SVG, and unchanged
+native facts/bytes. Inherited links become stale after source-byte changes and
+await decoding after unchanged-byte reanalysis. A 128-reference single-row
+fixture now renders with explicit preview/truncation instead of exceeding the
+renderer text limit. CLI and JSON workflows exercise every new operation.
 
-The reachable candidate slice from `38ff:2b66` contains **606 instructions, 91 basic blocks, 635 exact flow edges, 28 separate calls**, two RETF exits (`31c1`, `31cd`) and no missing stored successors under assumed call returns. All eight selected sites, including `3168` and `3170`, are reachable. Final graph edges are persisted, not reconstructed. `31ce` is not reached from this entry. This proves static topology under the stated assumptions, not branch feasibility, execution, semantic function ownership or a revenue formula.
+## Confirmed DOS pointer defect and repair
 
-`examples/dinopark-cfg.json` includes shortest instruction paths and exact edge evidence. `dinopark-cfg.svg` renders 606 instructions in 91 blocks, 120 interblock edges and eight highlighted sites. SVG XML and instruction counts passed; selected header, condition/loop and booking areas were rasterized and visually checked. Text is selectable and blocks do not overlap. Long outer-gutter edge segments can coincide; endpoint labels, tooltips and links retain exact identities. Rendering needs no Graphviz, Inkscape or browser at runtime.
+The prior LES/LDS transfer read immutable initial descriptor bytes as current
+memory. On DinoPark, runtime allocation writes DS:BFC7/BFC9, but its initial
+zeros had produced BX=0, ES=0 and false exact native references to 94h/98h.
+The fix applies to both zero and nonzero descriptors: without reaching-value
+proof the loaded offset and segment remain unknown. Raw instructions and the
+descriptor-cell reference remain intact. Ordinary explicit constants, segments
+and modeled stack propagation still work.
 
-The writer audit found two exact reads of DS:6F90 and six of DS:6FAC after the explicit roots. Zero fully resolved scalar writes in the stored state does **not** mean zero writers: indexed staff-array read/modify/write sites, initialization and save-load buffers need their recorded conditions. The save-file six-byte prefix supports offsets 3878→6FAC and 3888→6F90. See `DINOPARK_FIELD_AUDIT.md` for evidence, conditional writer sites and limits. Field meaning remains unresolved. The reported frozen-clock experiment was not run here; no Swift concession formula was introduced.
+DOS pointer revision 2 marks fresh/rebuilt analysis. Legacy projects expose
+stale status, hide obsolete native references/assumptions in raw disassembly and
+reject dependent fact/graph/effect queries until explicit `refresh-dos-state`.
+This bounded rebuild preserves bytes, versions, annotations, definitions, types,
+external snapshots and authored file links; registered explicit roots are
+re-admitted without their old register assumptions. Tests establish parent/child
+isolation, restart and atomic rollback/retry after an injected analysis failure.
+A plain `refresh-facts` cannot repair stale incoming register state and is
+therefore guarded too. Native and derived queue status remain separate.
 
-## Wheel and retained scope
+## Actual DinoPark qualification
 
-`dist/fdisbull-0.5.0-py3-none-any.whl` was imported directly as a ZIP; every packaged Python module exactly matched source. Its public analysis-status, six-read field query, exact CFG, highlighted SVG export and CLI parsing passed. SHA-256: `5558b98ba22ce717d82e191d3e69f915c8d5f62c0f8eb73ec81866540035507f`. `examples/wheel-v05-check.json` retains the check.
+An independent fresh copy of the retained original database was rebuilt in
+`/tmp` in 40.37 seconds, including 67,046 native attempts. It retains **47,177
+instructions and 652 candidate functions**, with **57,059 xrefs**, **12,232
+operand references** and **32,729 memory facts**. Native pending work is zero;
+all **652 derived jobs remain pending**. This is not whole-game semantic recovery.
+SQLite `quick_check` passed after commit and after closing/reopening.
 
-The 0.4 receipt is preserved as `VERIFICATION-0.4.md`; earlier corpus, managed, CHimpREC and research scope remain applicable. No new Wine/Apple-container runtime, decompiler, physical CPU probing, SNO x86 semantic verifier or ALD assembly qualification was added. Static stability continues to describe only the implemented rule set, not complete code coverage or observed gameplay behavior.
+At `38ff:22DB` and `22E9`, stored state now retains DS=4020/SS=4D04 but does not
+assert BX or ES. Their native operand-reference lists are empty; memory facts
+have no concrete target and report unknown BX/ES. The LES instructions still
+identify descriptor storage at physical 4C1C7. Native source/mapped fingerprints
+are unchanged.
+
+Actual `VARS.DAT` (364 bytes, SHA-256
+`5e4b32d6e4afd060d72da79bfcac27fdca493905a7e19e299729e31431a1d153`) and
+`DINOSG.000` (4,153 bytes) were attached to that copy, typed and queried. All
+91 parameter dwords are readable. Eight authored instruction/file relationships
+survive a separate-process reopen after the import paths are deleted.
+`examples/external-files-v08.json` records the values, native facts, fingerprints,
+queue state and integrity result. PNG/SVG exports were generated; SVG parses
+and the final PNG was visually inspected for correct labels and clipping.
+
+The field audit corrected a report interpretation: file offsets 94h/98h contain
+20/35, not the 1000 at 12Ch. The four additions at 10h/14h/18h/1Ch are
+250/500/750/1250; the loop independently tests four flags, without proving gift
+names or sequential tiers. The inspected use of 1250/1000/750/500 at 128h–134h
+is not sufficient to label them four concession prices. See
+`DINOPARK_RESOURCE_AUDIT.md` for exact sites, widths and qualified conclusions.
+
+One earlier workspace working copy developed SQLite integrity errors between
+qualification calls; the cause was not established. It is excluded from the
+package. The fresh independent `/tmp` rebuild did not reproduce the failure,
+passed integrity checks, and supplied the final receipts/exports. The canonical
+bundled database was never modified: SHA-256
+`2e8824f8d92df587f41104a63edf4992d656688119a39fa6816f00b2ef2358b9`.
+It remains a historical legacy-pointer snapshot and requires the explicit repair
+command before current DOS fact queries. No rebuilt duplicate large database is
+bundled; the included data/layouts and commands reproduce attachment on it.
+
+## Wheel and preserved platform behavior
+
+`dist/fdisbull-0.8.0-py3-none-any.whl` SHA-256:
+`e69969ebb68ccf4a3cbf0bad5bf91454b9fb8a0005706a411843be67f1778656`.
+All **42** wheel Python modules exactly match source. Imported from the wheel
+outside the source directory, new external snapshots, 91 typed VARS values,
+authored xrefs, immutable patches, source-deletion restart and legacy DOS guard/
+repair checks pass. The five ELF, Mach-O x86-64/ARM64 and PE/MZ selection workflows
+also pass from the wheel. Receipts: `wheel-v08-external-check.json` and
+`wheel-v08-platform-check.json`.
+
+Schema 1–5 projects migrate to schema 6 without losing native versions or user
+labels. Existing DOS computed facts need the separate pointer-policy repair.
+No Swift game port, daily-tick reconstruction, runtime allocator/file-loader
+model, debugger, decompiler or additional CPU mathematics is delivered. The
+external links are authored evidence, not automatic runtime heap resolution.
+Earlier platform/native evidence is retained in `VERIFICATION-0.7.md` and
+`VERIFICATION-0.6.md`, with its original scope.

@@ -50,7 +50,7 @@ def _is_executable(address: int, regions: list[Region]) -> bool:
 
 def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = None,
                base: int = 0, entry: int | None = None, load_segment: int = 0x1000,
-               module: bool = False) -> Image:
+               module: bool = False, slice_arch: str | None = None, image: str | None = None) -> Image:
     """Load classic MZ, ELF, PE, thin Mach-O or explicitly declared raw code.
 
     Native file mappings use their preferred image addresses (PIE load bias is
@@ -58,6 +58,8 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
     without an entry can be inspected and recursively seeded by exports.
     Module mode also permits an absent entry for other explicitly chosen libraries.
     """
+    if image=='auto':image=None
+    if image not in (None,'pe','mz'):raise ValueError('image must be auto, pe or mz')
     path = Path(path)
     if not isinstance(module,bool):
         raise ValueError('module must be a boolean')
@@ -74,6 +76,8 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
     if entry is not None:
         entry = _address(entry, "entry address")
     if arch is not None:
+        if image is not None:raise ValueError('image selects a container view; arch selects raw mode')
+        if slice_arch is not None:raise ValueError('slice_arch selects a Mach-O image; arch selects raw mode')
         if arch not in ("x86", "arm64"):
             raise ValueError("raw architecture must be x86 or arm64")
         bits = 64 if bits is None else bits
@@ -93,9 +97,20 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
             raise ValueError("arm64 entry point must be 4-byte aligned")
         return Image("raw", arch, bits, entry, regions, [Seed(entry, "entry", "entry")],
                      {"mapping": "flat", "filename": path.name, "source_sha256": hashlib.sha256(data).hexdigest(), "file_mappings":[dict(virtual_address=base,file_offset=0,file_size=len(data))]}, source_bytes=data)
+    if image=='mz':
+        if slice_arch is not None:raise ValueError('slice_arch selects Mach-O CPUs and cannot select an MZ view')
+        if bits is not None or base:raise ValueError('DOS MZ uses load_segment; bits/base require raw mode')
+        from .dos import load_mz
+        return load_mz(data,load_segment=load_segment,entry=entry,allow_secondary=True)
+    if image=='pe':
+        from .image_views import secondary_header
+        secondary=secondary_header(data)
+        if not secondary or secondary['format']!='PE':raise ValueError('requested PE image is not present')
     if data[:2]==b'MZ':
-        pe_offset=int.from_bytes(data[0x3c:0x40],'little') if len(data)>=0x40 else 0
-        if data[pe_offset:pe_offset+4]!=b'PE\0\0':
+        from .image_views import secondary_header
+        secondary=secondary_header(data)
+        if not secondary or secondary['format']!='PE':
+            if slice_arch is not None:raise ValueError('slice_arch applies only to Mach-O containers')
             if bits is not None or base:
                 raise ValueError('DOS MZ uses --load-segment; --bits/--base require raw mode')
             from .dos import load_mz
@@ -104,8 +119,13 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
         raise ValueError('load_segment applies only to classic DOS MZ')
     if bits is not None or base:
         raise ValueError("bits and base overrides require an explicit raw architecture")
-    if data[:4] in (b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca", b"\xca\xfe\xba\xbf", b"\xbf\xba\xfe\xca"):
-        raise ValueError("fat Mach-O requires selecting a thin architecture slice first")
+    original_data=data
+    selection=None
+    is_macho=data[:4] in (b"\xca\xfe\xba\xbe",b"\xbe\xba\xfe\xca",b"\xca\xfe\xba\xbf",b"\xbf\xba\xfe\xca",b"\xce\xfa\xed\xfe",b"\xcf\xfa\xed\xfe",b"\xfe\xed\xfa\xce",b"\xfe\xed\xfa\xcf")
+    if is_macho:
+        from .macho_slices import select_macho_slice
+        data,selection=select_macho_slice(data,slice_arch)
+    elif slice_arch is not None:raise ValueError('slice_arch applies only to Mach-O containers')
     if data[:2]!=b'MZ' and data[:4] != b"\x7fELF" and data[:4] not in (b"\xce\xfa\xed\xfe", b"\xcf\xfa\xed\xfe", b"\xfe\xed\xfa\xce", b"\xfe\xed\xfa\xcf"):
         raise ValueError("unsupported file format; declare --arch for raw code")
     try:
@@ -123,7 +143,10 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
         mapped_size += len(result)
         return result
 
-    metadata = {"filename": path.name, "mapping": "preferred static virtual addresses", "source_sha256": hashlib.sha256(data).hexdigest(), "file_mappings":[]}
+    metadata = {"filename": path.name, "mapping": "preferred static virtual addresses", "source_sha256": hashlib.sha256(original_data).hexdigest(), "file_mappings":[]}
+    if selection:
+        metadata['macho_slice']=selection
+        metadata['slice_arch']=selection['selector']
     is_dll=False
     if isinstance(binary, lief.ELF.Binary):
         if binary.header.file_type not in (lief.ELF.Header.FILE_TYPE.EXEC, lief.ELF.Header.FILE_TYPE.DYN):
@@ -150,6 +173,7 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
     elif isinstance(binary, lief.PE.Binary):
         is_dll=binary.header.has_characteristic(lief.PE.Header.CHARACTERISTICS.DLL)
         metadata['is_dll']=is_dll
+        metadata['selected_image']='pe'
         from .managed import managed_kind
         clr=managed_kind(data)
         if clr['recognized']:
@@ -215,15 +239,34 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
         raise ValueError("arm64 entry point must be 4-byte aligned")
     seeds = [Seed(entry, "entry", "entry")] if present else []
     seen = {entry} if present else set()
+    excluded_seeds=set()
+    if file_format=='ELF':
+        valid_functions=set()
+        for symbol in binary.symbols:
+            kind=str(symbol.type).rsplit('.',1)[-1];address=int(symbol.value);section=int(symbol.shndx)
+            if kind=='FUNC' and section not in (0,0xfff1,0xfff2):valid_functions.add(address)
+            elif kind in ('OBJECT','TLS','GNU_IFUNC','IFUNC') or section==0xfff1:excluded_seeds.add(address)
+        excluded_seeds-=valid_functions
+    elif file_format=='Mach-O':
+        from .macho_metadata import inspect_macho
+        exports=inspect_macho(binary,data)['exports']
+        # LIEF's abstract functions include every exported address, including
+        # constants in executable __TEXT segments. Preserve the section/trie
+        # classification rather than promoting segment permissions to code.
+        excluded_seeds={item['address'] for item in exports
+                        if item['address'] is not None and not item['is_code']}
+        excluded_seeds-={item['address'] for item in exports if item['is_code']}
     for function in binary.functions:
         address = int(function.address)
         if file_format == "PE":
             address += imagebase  # LIEF PE function entries are RVAs.
         if present and address == entry and function.name and seeds[0].name == "entry":
             seeds[0] = Seed(entry, function.name, "entry + symbol_or_unwind")
-        if address not in seen and _is_executable(address, regions):
+        if address not in seen and address not in excluded_seeds and _is_executable(address, regions):
             seen.add(address)
             seeds.append(Seed(address, function.name or f"sub_{address:x}", "symbol_or_unwind"))
     metadata["seed_count"] = len(seeds)
     metadata["relocations"] = "recorded mapping only; no runtime relocation applied"
-    return Image(file_format, arch, bits, entry, regions, seeds, metadata, source_bytes=data)
+    if selection and selection['offset']:
+        for mapping in metadata['file_mappings']:mapping['file_offset']+=selection['offset']
+    return Image(file_format, arch, bits, entry, regions, seeds, metadata, source_bytes=original_data)

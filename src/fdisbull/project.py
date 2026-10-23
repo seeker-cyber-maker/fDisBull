@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from .model import Region
 
 MAX_ADDRESS = (1 << 64) - 1
-SCHEMA = 4
+SCHEMA = 6
 
 def number(value):
     if isinstance(value, bool) or not isinstance(value, (int, str)):
@@ -66,9 +66,16 @@ from .calls import CallViewsMixin
 from .facts import FactsMixin, FACTS_DDL
 from .memory import MemoryMixin
 from .cfg import CFGMixin
+from .typesystem import TypeSystemMixin, TYPE_DDL
+from .external_files import ExternalFilesMixin, EXTERNAL_FILES_DDL
+from .file_references import FileReferencesMixin, FILE_REFERENCES_DDL
+from .dos_state_refresh import DOSStateRefreshMixin
+from .incremental import IncrementalMixin, ADVANCED_DDL
+from .advanced import AdvancedMixin
+from .membership_view import MembershipMixin
 
 
-class Project(FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
+class Project(DOSStateRefreshMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
     def __init__(self, path):
         self.path = Path(path).resolve()
         if not self.path.is_file():
@@ -77,7 +84,7 @@ class Project(FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, 
         self.db.row_factory = sqlite3.Row
         try:
             meta = dict(self.db.execute("SELECT key,value FROM metadata"))
-            if meta.get("application") != "fdisbull" or int(meta.get("schema", -1)) not in (1,2,3,SCHEMA):
+            if meta.get("application") != "fdisbull" or int(meta.get("schema", -1)) not in (1,2,3,4,5,SCHEMA):
                 raise ValueError("unsupported project schema")
             if int(meta["schema"]) == 1:
                 self.db.executescript("BEGIN IMMEDIATE;" + EXTENSION_DDL + "INSERT OR IGNORE INTO analysis_state SELECT id,0,0 FROM versions; UPDATE work SET state='pending',detail=NULL; UPDATE metadata SET value='2' WHERE key='schema'; COMMIT;")
@@ -86,9 +93,9 @@ class Project(FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, 
             else:
                 self.db.executescript(DOS_DDL)
             if int(meta["schema"]) != SCHEMA:
-                self.db.executescript("BEGIN IMMEDIATE;"+FACTS_DDL+"UPDATE metadata SET value='4' WHERE key='schema'; COMMIT;")
+                self.db.executescript("BEGIN IMMEDIATE;"+FACTS_DDL+TYPE_DDL+ADVANCED_DDL+EXTERNAL_FILES_DDL+FILE_REFERENCES_DDL+"UPDATE metadata SET value='6' WHERE key='schema'; COMMIT;")
             else:
-                self.db.executescript(FACTS_DDL)
+                self.db.executescript(FACTS_DDL+TYPE_DDL+ADVANCED_DDL+EXTERNAL_FILES_DDL+FILE_REFERENCES_DDL)
             self.meta = {k:json.loads(v) for k,v in meta.items() if k not in ("application","schema")}
             self.arch, self.bits = self.meta["arch"], self.meta["bits"]
             self.context = f"{self.arch}:{self.bits}:little"
@@ -146,7 +153,7 @@ class Project(FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, 
         try:
             db = sqlite3.connect(target)
             try:
-                db.executescript(DDL + EXTENSION_DDL + DOS_DDL + FACTS_DDL)
+                db.executescript(DDL + EXTENSION_DDL + DOS_DDL + FACTS_DDL + TYPE_DDL + ADVANCED_DDL + EXTERNAL_FILES_DDL + FILE_REFERENCES_DDL)
                 db.execute("PRAGMA journal_mode=WAL")
                 meta = {"arch":image.arch,"bits":image.bits,"format":image.format,"entry":image.entry,
                         "filename":filename,"source_sha256":image.metadata["source_sha256"],
@@ -231,7 +238,7 @@ class Project(FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, 
             return {"project":str(self.path),**metadata,"entry":hx(self.meta["entry"]),"context":self.context,
                     "version":v,"counts":counts,"work":work,"regions":regions,"analysis":self.analysis_status(v['id'])}
 
-    def analysis_status(self,version=None):
+    def _stored_analysis_status(self,version=None):
         """Current persisted queue state, independent of historical run receipts."""
         with self.transaction():
             v=self.version(version)['id']
@@ -255,7 +262,10 @@ class Project(FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, 
                 if source and source[0] is not None:
                     clr=managed_kind(bytes(source[0]))
             managed=clr.get('recognized') and (clr.get('il_only') or clr.get('status')=='invalid_managed')
-            return dict(version=v,stable=None if managed else not pending and bool(phase and phase[0]),
+            advanced=self.advanced_status(v)
+            enabled=self.db.execute('SELECT 1 FROM metadata WHERE key=?',(f'advanced_enabled_{v}',)).fetchone() is not None
+            base_stable=None if managed else not pending and bool(phase and phase[0])
+            return dict(version=v,stable=base_stable,scope='native code/data discovery queues',advanced=advanced,overall_stable=bool(base_stable and advanced['stable']) if enabled else None,
                         pending=pending,pending_code=pending_code,pending_data=pending_data,
                         pending_seeds=pending_seeds,pending_segment_scans=pending_scans,
                         pending_seed_phase=pending_phase,seed_states=seed_states,issues=issues,
@@ -305,7 +315,7 @@ class Project(FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, 
                 (v,self.context,key(a),kind,text,author,now()))
             return {"version":v,"address":hx(a),"kind":kind,"text":text,"author":author}
 
-    def xrefs(self, address, direction="to", version=None, limit=200,cs=None):
+    def _stored_xrefs(self, address, direction="to", version=None, limit=200,cs=None):
         if self.meta["format"]=="MZ":
             return self._dos_xrefs(address,direction,version,limit,cs)
         if direction not in ("to","from"):
@@ -316,7 +326,7 @@ class Project(FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, 
         rows = self.db.execute(f"SELECT * FROM xrefs WHERE version=? AND context=? AND {column}=? ORDER BY source,target,kind LIMIT ?",(v,self.context,key(address),limit))
         return [{"source":hx(int(r["source"],16)),"target":hx(int(r["target"],16)),"kind":r["kind"],"evidence":r["evidence"],"version":v,"source_name":self._label(v,int(r["source"],16)),"target_name":self._label(v,int(r["target"],16)),"target_representation":self._presentation(v,int(r["target"],16))["representation"]} for r in rows]
 
-    def disassembly(self, address=None, lines=50, version=None,cs=None):
+    def _stored_disassembly(self, address=None, lines=50, version=None,cs=None):
         if self.meta["format"]=="MZ":
             return self._dos_disassembly(address,lines,version,cs)
         count = integer(lines,"lines",1,500)
@@ -335,7 +345,8 @@ class Project(FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, 
                 display=r['operands']
                 if references:
                     display += ' ; ' + ', '.join(ref['name'] + (f" <{ref['representation']}>" if ref['representation'] else '') for ref in references)
-                result.append({"references":references,"display_operands":display,"address":address_hex,"size":r["size"],"bytes":r["bytes"],"mnemonic":r["mnemonic"],"operands":r["operands"],"flow":r["flow"],"target":hx(int(r["target"],16)) if r["target"] else None,"name":r["name"] or (fn[0] if fn else None),"comment":r["comment"],"comment_author":r["comment_author"],"comment_inherited_from":r["comment_inherited_from"],"xrefs":self.xrefs(address_hex,"to",v["id"]),"context":self.context})
+                display,file_refs,file_refs_summary=self._file_reference_display(v['id'],self.context,int(r['address'],16),display)
+                result.append({"references":references,"file_references":file_refs,"file_reference_summary":file_refs_summary,"display_operands":display,"address":address_hex,"size":r["size"],"bytes":r["bytes"],"mnemonic":r["mnemonic"],"operands":r["operands"],"flow":r["flow"],"target":hx(int(r["target"],16)) if r["target"] else None,"name":r["name"] or (fn[0] if fn else None),"comment":r["comment"],"comment_author":r["comment_author"],"comment_inherited_from":r["comment_inherited_from"],"xrefs":self.xrefs(address_hex,"to",v["id"]),"context":self.context})
             return {"title":self.meta["filename"],"arch":self.arch,"bits":self.bits,"context":self.context,"version":v["id"],"sha256":v["sha256"],"source_sha256":self.meta["source_sha256"],"address":hx(a),"instructions":result,"analysis":self.analysis_status(v['id']),"view":"stored instructions ordered by address; gaps are not decoded implicitly"}
 
     def patch(self, address, data, label="patch", origin="agent supplied bytes", version=None):
@@ -382,7 +393,7 @@ class Project(FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, 
                     if file_offset is not None:
                         source_bytes=source_bytes[:file_offset]+replacement+source_bytes[file_offset+len(replacement):]
                         from .inspection import inspect_binary
-                        refreshed=inspect_binary(source_bytes)
+                        refreshed=inspect_binary(source_bytes,slice_arch=self.meta['loader_metadata'].get('slice_arch'),image=self.meta['loader_metadata'].get('selected_image'))
                         refreshed['file_mappings']=document.get('file_mappings',[])
                         if refreshed.get('sections') != document.get('sections') or refreshed.get('header') != document.get('header'):
                             refreshed.setdefault('warnings',[]).append('Header/layout changed; stored memory mapping remains the parent mapping. Reimport patched file for a new layout.')
@@ -396,6 +407,7 @@ class Project(FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, 
                         document.setdefault('warnings',[]).append('Mapped-memory patch has no known disk counterpart; file metadata remains inherited from parent.')
                 self.db.execute('INSERT INTO binary_info VALUES (?,?,?)',(v,json.dumps(document),source_bytes))
                 self._index_symbols(v,document)
+            self._copy_interpretations(parent,v)
             self._reset_analysis(v)
             return {"version":v,"parent":parent,"address":hx(a),"bytes":replacement.hex(),"sha256":self.version(v)["sha256"],"annotations":"inherited; semantic validity requires review","analysis":"fresh work queue; previous analysis preserved in parent"}
 

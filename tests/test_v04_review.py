@@ -50,9 +50,9 @@ def test_export_selection_and_saved_project_share_one_source_snapshot(tmp_path, 
     inspect = inspection.inspect_binary
     changed = False
 
-    def change_source_after_selection_capture(data):
+    def change_source_after_selection_capture(data, **options):
         nonlocal changed
-        result = inspect(data)
+        result = inspect(data, **options)
         if not changed:
             changed = True
             newer = bytearray(original)

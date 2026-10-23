@@ -2,7 +2,7 @@
 
 `analysis-status` takes `project` and optional `version`. It returns current `stable`, pending code/data/seeds/segment scans, phase state, DOS seed-state counts and issue count without advancing analysis. `status` and disassembly snapshots embed the same summary; new image exports show it. A fixed point does not prove coverage. See [QUERYING.md](QUERYING.md).
 
-`calls` takes `project`, optional `version`, `limit`, `offset`, and `kind` (`all`, `function`, `library`, `unresolved`). It groups stored call targets with shared names, module/import aliases where known, exact incoming call sites, evidence and current analysis state. Target groups paginate; each includes total call-site count and at most 100 sites with an explicit truncation flag. Use `xrefs` on the target for further references. DOS target CS contexts remain distinct. Import/recovered-IAT metadata identifies library slots; compiled-in DOS helper names are not inferred. Unresolved indirect calls are kept separately. This is a static index, not a runtime call trace or a complete call graph.
+`calls` takes `project`, optional `version`, `limit`, `offset`, and `kind` (`all`, `function`, `library`, `unresolved`). It groups stored call targets with shared names, module/import aliases where known, exact incoming call sites, evidence and current analysis state. Target groups paginate; each includes total call-site count and at most 100 sites with an explicit truncation flag. Use `xrefs` on the target for further references. DOS target CS contexts remain distinct. Declared import slots and proven stub aliases identify library requests across PE, ELF and Mach-O; `import_call` xrefs do not resolve the external provider. Compiled-in DOS helper names are not inferred. Unresolved indirect calls are kept separately. This is a static index, not a runtime call trace or a complete call graph.
 
 `fdisbull serve --project FILE.fdb` reads UTF-8 JSON lines and writes one response per line. `fdisbull request '{...}'` performs one request. This is a local protocol, not MCP or JSON-RPC; there is no network server.
 
@@ -14,17 +14,20 @@ Include `project` in params when there is no session default, or to override it.
 | Method | Required params beyond project | Optional params |
 | --- | --- | --- |
 | identify | path; no project needed | |
-| inspect | path; no project needed | |
-| import | path | arch, bits, base, entry, module, load_segment (MZ; default `0x1000`) |
-| analyze-module | path, project (new target) | export (name, integer ordinal or `#ordinal`), entry, max_instructions |
+| inspect | path; no project needed | slice_arch (`x86`, `x86_64`, `arm64`), image (`auto`, `pe`, `mz`) |
+| import | path | arch, bits, base, entry, module, load_segment (MZ; default `0x1000`), slice_arch, image |
+| analyze-module | path, project (new target) | export (name, integer ordinal or `#ordinal`), entry, max_instructions, slice_arch, image |
 | managed | path **or** project | token (MethodDef), max_instructions (with token), version (project only) |
 | decoder-check | data (hex bytes), bits; no project needed | address, arch (`x86`), scan_offsets, max_candidates |
 | info | | version |
 | header | | version |
-| sections / imports / exports / strings | | version, limit (1–10,000), offset |
+| sections / imports / exports / strings / libraries / relocations | | version, limit (1–10,000), offset |
+| linkage | | version |
+| refresh-metadata | | version |
 | status | | version |
 | analyze | | version, start, max_instructions (1–1,000,000; default 10,000); MZ: cs, ds, es, ss |
 | refresh-facts | | version |
+| refresh-dos-state | MZ project | version, max_instructions (10,000) |
 | memory-accesses | address | size (1–1 MiB), access, include_unresolved, version, limit, offset |
 | cfg | address (exact instruction start) | version, cs, max_instructions, highlights |
 | render-cfg | address, output (`.svg`) | same as cfg |
@@ -48,9 +51,207 @@ Include `project` in params when there is no session default, or to override it.
 
 `limit` defaults to 200 for paginated lists. Information lists return `items`, `total`, `offset`, `has_more` and warnings. `items` and `queue` return arrays. `info` returns header/counts/warnings. `header.valid` means recognized header extents fit the file, not that the program can execute. A disk `file_offset` is never presented as a virtual address. Unknown import bindings and unmapped string addresses are null.
 
+## External files and authored file references (0.8)
+
+All methods here take `project` and optional `version` (default: latest).
+Attached identity is version + file name + byte offset, independent of native
+addresses and executable container offsets. File offsets in JSON are
+nonnegative integers. No attachment becomes an executable mapping or analysis
+seed.
+
+| CLI / JSON method | Python `Project` method | Required params beyond project | Optional params |
+| --- | --- | --- | --- |
+| `attach-file` | `attach_file` | `path` | `name` (source basename), `kind` (`data`), `author` (`agent`) |
+| `files` | `external_files` | — | `limit` (200; 1–10,000), `offset` (row pagination) |
+| `file-bytes` | `file_bytes` | `name` | `offset` (0), `size` (64; 0–65,536) |
+| `apply-file-type` | `apply_file_type` | `file`, `type_name` | `offset` (0), `name`, `author` |
+| `file-data` | `typed_file` | `file` | `offset` (exact binding start; 0), `max_items` (256; 1–4096) |
+| `file-reference` | `file_reference` | `address`, `file`, `evidence` | `offset` (0), `width` (1), `count` (1), `stride` (width), `access` (`unknown`), `cs`, `author` |
+| `file-xrefs` | `file_xrefs` | `file` | `offset` (0), `size` (1), `limit` (200), `page_offset` (0), `include_stale` (true) |
+
+CLI `file-reference PROJECT ADDRESS FILE OFFSET` and
+`file-xrefs PROJECT FILE OFFSET` require the file offset positionally. Their
+JSON/Python methods default it to zero. CLI `file-xrefs --page-offset N`
+paginates reference records; it does not move the queried file interval.
+`--active-only` sets `include_stale: false` and excludes both stale and
+awaiting-decode records.
+
+`attach-file` retains full bytes, SHA-256, basename, kind and author in SQLite.
+It accepts a regular file, up to 64 MiB per file and 64 MiB aggregate per
+version. Names are 1–256 characters without path separators or control
+characters; blank names, `.` and `..` are rejected. `kind` is an identifier
+used as descriptive metadata. The same name/hash is idempotent; a different
+hash under that name is rejected. The original path is not needed afterward.
+Child native byte versions inherit attachments, file bindings and authored
+references while retaining the parent's state.
+
+`files` returns metadata-only `items`, `total`, `total_bytes`, `limit`,
+`offset` and `truncated`; it does not return file blobs. `file-bytes` returns
+bounded `bytes` (hex), printable `ascii`, `file_size`, `requested_size`, actual
+`size`, `sha256`, `eof`, `complete` and `truncated`. A read may clip at EOF;
+an offset past EOF is rejected. `complete` means the response contains the
+entire file from offset zero, not merely the requested range.
+
+`apply-file-type` uses the shared explicit `define-type` registry. Its binding
+must fit the attachment and may not overlap another binding in that file.
+`typed_file` returns a compact layout, binding, scalar/pointer leaf `items`, SHA-256,
+`byte_order: "little"`, and truncation/budget status. Leaves carry `file`,
+`file_offset`, field `path`, type, original bytes and interpreted value.
+Pointers remain encoded values; no native or file target is inferred. Type
+revisions revalidate dependent file binding extents and overlaps atomically.
+`file-data` reports `layout_expanded: false`; struct layout fields identify
+their immediate type names and sizes, and array elements identify name/kind/size
+without recursively embedding definitions. `apply-file-type` also returns a
+compact layout. The shared `types` method remains the registry query.
+
+`file-reference` requires an exact stored source instruction, including DOS
+CS identity where applicable, and nonblank evidence of at most 4096
+characters. It describes `count` intervals
+`[offset + i*stride, offset + i*stride + width)`. Count is 1–4096; width and
+stride are 1–1 MiB; the whole set must fit the attachment. `access` is an
+authored classification (`read`, `write`, `read_write`, `address`, `unknown`),
+not a decoded operation or observed I/O result. Source bytes, file hash,
+context, author and evidence remain attached to the claim.
+
+`file-xrefs` requires the complete query interval to fit retained file bytes;
+it does not clip. It matches exact strided intervals, excluding gaps, and
+returns `total` reference records, `page_offset` and `has_more`. Each match
+has inclusive `matched_elements.first/last` indices. `locations` previews
+only the first 16 declared elements, which may differ from the query's
+matching elements. Current file-field names resolve in references,
+disassembly and CFG/render output without changing raw instruction operands.
+Disassembly/CFG instruction records preview at most eight `file_references`,
+each with at most four `locations`, and include `file_reference_summary`
+(`total`, `returned`, `truncated`). Display text uses at most three labels
+plus an additional-reference count. Use paginated `file-xrefs` for the full
+reference list and its 16-element previews.
+
+References report `active`, `stale` and `state`: `active` requires matching
+current source bytes and an exact stored instruction; `awaiting_decode`
+means matching bytes without that stored decode; `stale_bytes` means bytes
+changed. All report `runtime_observed: false`. These are authored file links,
+separate from native xrefs, recovered I/O, heap bindings or control-flow
+edges. A current annotation still needs independent evidence for its meaning.
+
+```json
+{"id":60,"method":"attach-file","params":{"project":"analysis.fdb","path":"resource.dat","name":"resource.dat","kind":"resource","author":"analyst"}}
+{"id":61,"method":"files","params":{"project":"analysis.fdb","limit":20,"offset":0}}
+{"id":62,"method":"file-bytes","params":{"project":"analysis.fdb","name":"resource.dat","offset":0,"size":8}}
+{"id":63,"method":"apply-file-type","params":{"project":"analysis.fdb","file":"resource.dat","type_name":"Record","offset":0,"name":"record"}}
+{"id":64,"method":"file-data","params":{"project":"analysis.fdb","file":"resource.dat","offset":0,"max_items":16}}
+{"id":65,"method":"file-reference","params":{"project":"analysis.fdb","address":"0x1000","file":"resource.dat","offset":0,"width":4,"access":"read","evidence":"Analyst hypothesis; loaded buffer identity still requires verification."}}
+{"id":66,"method":"file-xrefs","params":{"project":"analysis.fdb","file":"resource.dat","offset":0,"size":8,"limit":20,"page_offset":0,"include_stale":false}}
+```
+
+See [EXTERNAL_FILES.md](EXTERNAL_FILES.md) for a runnable typed-data example.
+
+## Refresh legacy DOS pointer state (0.8)
+
+`refresh-dos-state` maps to Python
+`Project.refresh_dos_state(version=None, max_instructions=10000)`. It is the
+explicit migration for MZ analyses created before DOS pointer revision 2.
+The earlier shallow `LES`/`LDS` rule could infer current pointers from immutable
+initial descriptor bytes despite possible writes. Both zero and nonzero
+snapshot pointer propagation are withdrawn; resource buffer/heap locations
+remain unresolved without independent evidence.
+
+An affected project with stored instructions reports `facts_stale: true`
+in `analysis-status` (also `status.analysis`) and `stable: false`. CFG,
+memory-access, call/call-effect, native-xref and function-analysis queries, ordinary `analyze`, and
+`refresh-facts` require this refresh instead of returning the old facts.
+Raw `disasm` keeps stored instruction bytes and authored file links available
+with `stored_facts_stale: true` while hiding obsolete native references. Opening a project or making a
+read-only query never silently rebuilds its analysis.
+
+The refresh resets native/derived facts and resumes native analysis under
+current rules within the instruction budget; derived jobs are requeued for
+`auto-analyze`. It preserves source/mapped bytes, version identities,
+authored names/comments/types, attachments and file-reference evidence.
+Explicit seed addresses are retained for revalidation, while inherited
+register assumptions are discarded. Continue with bounded `analyze` calls
+until native work stabilizes, then `auto-analyze` for derived work; a budget
+stop is not a fixed point. This DOS migration does not affect ELF, PE or
+Mach-O projects and is distinct from `refresh-metadata` or `refresh-facts`.
+
+The receipt includes `version`, `previous_dos_pointer_revision`,
+`dos_pointer_revision`, `restored_user_roots`, the native `analysis` receipt,
+live `status`/`advanced` queues and retained `sha256`/`source_sha256` values.
+Native stability in the nested receipt does not clear pending derived work.
+
+```json
+{"id":67,"method":"refresh-dos-state","params":{"project":"dinopark.fdb","max_instructions":10000}}
+```
+
+## Native image selection and linkage (0.7)
+
+`inspect` inventories an unselected universal Mach-O container. `import` and
+`analyze-module` require an explicit `slice_arch` for FAT input; `x86` selects
+32-bit x86, `x86_64` selects 64-bit x86 and `arm64` selects ARM64. A selector on
+a thin file must match. Missing or subtype-ambiguous matches are errors; the
+host architecture is never a selection rule. `arch` remains the separate raw
+mode override and cannot be combined with a container selector.
+
+`image: "auto"` is the default. A PE-bearing MZ file selects PE; `image: "pe"`
+requires that native view. `image: "mz"` explicitly selects its declared DOS
+load image, subject to the complete ordinary MZ extent, relocation and entry
+checks. Inspection includes `image_views` with availability and validation
+errors. PE and DOS views belong to separate projects/decode contexts. The
+loader does not guess a DOS stub length from `e_lfanew`.
+
+```json
+{"id":50,"method":"inspect","params":{"path":"UniversalBinary","slice_arch":"arm64"}}
+{"id":51,"method":"import","params":{"path":"UniversalBinary","project":"mac.fdb","slice_arch":"x86_64"}}
+{"id":52,"method":"analyze-module","params":{"path":"universal.dylib","project":"module.fdb","slice_arch":"arm64"}}
+{"id":53,"method":"import","params":{"path":"program.exe","project":"dos-view.fdb","image":"mz","load_segment":4096}}
+{"id":54,"method":"inspect","params":{"path":"program.exe","image":"pe"}}
+```
+
+Projects retain the complete original container, including unselected slices.
+Selected-slice metadata distinguishes container and slice hashes; public file
+offsets and patch translations refer to the original container. Virtual
+addresses remain the selected image's preferred static VAs. No ELF runtime
+relocation, Mach-O slide, dyld resolution or native execution occurs.
+
+`libraries` lists declared dependency names/ordinals; `relocations` retains
+format-specific symbol, type, slot, addend and source evidence. `linkage`
+returns format-specific records: an ELF object includes `needed`, interpreter,
+RPATH/RUNPATH and native-validated PLT stubs; Mach-O supplies dyld/indirect-symbol
+linkage records. Consumers should not assume identical `linkage` shapes.
+Python callers use `Project.information(topic="libraries", ...)`, with
+`"relocations"` or `"linkage"` for the other information operations.
+
+ELF imports distinguish relocation-backed GOT slots from unresolved symbols,
+COPY storage and TLS metadata. A slot's `address` is not the provider function
+address. `required_module`/`module` is assigned only with a consistent symbol
+version requirement; `module_candidates` remains non-binding otherwise.
+Versioned aliases retain their version/hidden flag. Dynamic export types keep
+functions, objects, IFUNC resolvers, TLS and absolute values distinct.
+
+Mach-O imports retain load-command ordinals/scopes, weak/lazy/chained binding
+provenance and exact indirect-symbol stub aliases. Unsupported or truncated
+binding cases remain warned/unresolved. Lazy and chained pointer bytes are not
+runtime code addresses; reexports and data/thread-local/absolute exports retain
+their distinct kinds. No dependency or resolver is loaded.
+
+`refresh-metadata` reparses retained ELF/Mach-O/PE file bytes, rebuilds the
+metadata symbol/stub index and invalidates dependent derived jobs. It returns
+counts, metadata revision, warnings and `invalidated_tasks`. Mappings, byte
+versions and authored names/comments remain intact; missing original bytes
+require a new import. Resume with `auto-analyze`. This operation differs from
+`refresh-facts`, which backfills facts for already stored instructions.
+
+```json
+{"id":55,"method":"libraries","params":{"project":"mac.fdb"}}
+{"id":56,"method":"relocations","params":{"project":"mac.fdb","limit":50}}
+{"id":57,"method":"linkage","params":{"project":"mac.fdb"}}
+{"id":58,"method":"refresh-metadata","params":{"project":"mac.fdb"}}
+```
+
+See [PLATFORMS.md](PLATFORMS.md) for practical commands and platform limits.
+
 ## Analysis and shared presentation
 
-One binary/architecture/bitness belongs to each project. Non-DOS projects use a flat little-endian decode context. MZ instruction facts add the actual CS (`x86:16:little:cs=38ff`); names/comments/representations remain shared by physical address within their byte version. `version` defaults to the newest ID.
+One selected image/architecture/bitness belongs to each project, even when the retained source container contains other images. Non-DOS projects use a flat little-endian decode context. MZ instruction facts add the actual CS (`x86:16:little:cs=38ff`); names/comments/representations remain shared by physical address within their byte version. `version` defaults to the newest ID.
 
 `analyze` prioritizes recursive entry traversal, mapped data investigations, then deferred symbol/export seeds. It reports `decoded`, `attempted`, `data_processed`, `new_facts`, `pending_code`, `pending_data`, `pending`, `entry_complete`, `passes`, `stable` and `budget_exhausted`. The budget counts work attempts across code and data. `pending` can include an unscheduled later seed phase. Resume while unstable; an empty implemented work queue does not establish complete disassembly.
 
@@ -58,7 +259,7 @@ One binary/architecture/bitness belongs to each project. Non-DOS projects use a 
 
 `disasm` returns stored rows, original numeric `operands`, structured `references` and address-resolved `display_operands`. Each reference carries operand index, role, target, width, shared name and representation. Changing a target name changes callers' subsequent query/render output. `render` uses that same stored snapshot, does not trigger analysis, and rejects overwriting an active database or its sidecars.
 
-`represent` defines one mapped range as `code`, `byte`, `word`, `dword`, `qword`, `pointer`, `ascii`, `utf-16le` or `unexplored`. `size` is bytes, 1–4096; strings require it explicitly, UTF-16 requires an even size, and numeric types require their natural width. `code` and `unexplored` default to one byte. Distinct explicit definitions may not overlap. The operation resets derived code/data facts and reanalyzes within `max_instructions`; `defer: true` instead returns `analysis: null` and leaves work queued. Names/comments and byte identity survive. Explicit unexplored ranges block automatic code/data work; change the same definition to `code` before analyzing them. Check the nested receipt when analysis runs.
+`represent` defines one mapped range as `code`, `byte`, `word`, `dword`, `qword`, `pointer`, `ascii`, `utf-16le` or `unexplored`. `size` is bytes, 1–4096; strings require it explicitly, UTF-16 requires an even size, and numeric types require their natural width. `code` and `unexplored` default to one byte. Distinct explicit definitions may not overlap. The operation retracts affected dependency-indexed routine slices, falling back to a full reset if instruction coverage is incomplete, and reanalyzes within `max_instructions`; `defer: true` instead returns `analysis: null` and leaves work queued. Names/comments and byte identity survive. Explicit unexplored ranges block automatic code/data work; change the same definition to `code` before analyzing them. Check the nested receipt when analysis runs.
 
 ## Byte spans and function evidence
 
@@ -134,7 +335,7 @@ Results include `source` with pinned CHimpREC provenance, `entries`, contiguous 
 
 ## Persistence and limits
 
-New projects retain source bytes and inspection metadata. Schema 1/2/3 databases migrate in place to schema 4 with original versions/annotations retained. Schema-1 work is reopened so reanalysis backfills reference facts. Missing original file metadata is reported explicitly and requires a new import; migration does not fabricate source bytes. Existing byte analysis remains available without that file.
+New projects retain source bytes and inspection metadata. Schema 1/2/3/4 databases migrate in place to schema 5 with original versions/annotations retained. Schema-1 work is reopened so reanalysis backfills reference facts. `refresh-metadata` can rebuild supported container metadata when original bytes are retained; projects lacking those bytes require a new import. Migration does not fabricate missing source bytes. Existing byte analysis remains available without the original path.
 
 Patches create child versions. Inherited annotations and definitions need semantic review. Source-file SHA-256 and mapped-snapshot SHA-256 identify different byte arrangements. File-backed metadata can refresh after a patch with a known disk counterpart; warnings disclose inherited metadata when no such mapping is known. MZ patches act on relocated memory bytes. Child file bytes undo every relocation in reverse loader order (including duplicate/overlapping records) before preserving the file-backed module. Allocation-only edits remain memory-only with an explicit warning; parent bytes/metadata remain intact.
 
@@ -154,3 +355,51 @@ Limits: 64 MiB input and mapped bytes; patch 1 byte–1 MiB within one region; a
 `refresh-facts` backfills missing fallthrough and access facts atomically from stored bytes and state. It changes derived indexes only. Fresh analysis keeps access facts current; older projects without a current index revision use read-only decode fallback until refreshed. Representation resets retract derived indexes. Patches keep the parent's facts isolated.
 
 `cfg` requires an exact stored entry and traverses independently of candidate function labels. Calls remain separate from intraprocedural edges and continuation assumes return. The output includes exact instruction nodes/edges, basic blocks, call sites, exits, gaps, unresolved transfers, budget frontier, current analysis and highlighted-site shortest paths with edge evidence. DOS physical entries with multiple CS interpretations require explicit CS. Up to 100 highlights accept addresses or `{address, cs?, label?}`. Reconstructed old continuations have separate provenance. `graph_closed` describes stored static topology under assumptions; it does not prove path feasibility, execution or function ownership. `render-cfg` exports this snapshot with selectable SVG text and protects database/sidecar paths.
+
+
+## Shared analysis and interpretation (0.6)
+
+All methods below take `project` and optional `version`. Hyphens name public CLI/JSON methods; Python method names use underscores. JSON bodies are structured objects; CLI definition/contract/signature files contain those objects, never arbitrary SQL or executable code.
+
+| Method | Required | Optional |
+| --- | --- | --- |
+| `auto-analyze` | — | `start`, `cs`, `ds`, `es`, `ss`, `abi`, `max_instructions` (10,000), `max_functions` (200), `max_steps` (100,000), `max_entries` (256), `max_rounds` (8) |
+| `advanced-status` | — | — |
+| `function-analysis` | `address` | `cs` |
+| `function-membership` | — | `max_instructions` (100,000), `max_work` (1,000,000) |
+| `define-type` | `name`, `definition` | `author` |
+| `apply-type` | `address`, `type_name` | `name`, `author` |
+| `types` | — | — |
+| `typed-data` | `address` | `max_items` (256) |
+| `set-summary` | `address`, `name` | `cs`, `prototype`, `summary`, `abi`, `author` |
+| `summaries` | — | — |
+| `add-signature` | `signature` | — |
+| `signatures` | — | — |
+| `call-effects` | — | `address`, `size` (1), `access` (`all`, `read`, `write`), `include_unresolved` (true), `limit` (200), `offset` (0) |
+
+`auto-analyze` runs bounded native discovery and persistent function jobs until both queues stabilize or limits stop work. `max_functions` limits job executions across rounds, not unique entries. Other budgets apply per job or native pass. Repeating resumes pending/partial work; increasing a per-job limit invalidates cached jobs for requalification. An entry with no stored instruction cannot produce a derived result. Enabling this pipeline retires shallow snapshot-pointer promotions and requires reaching-state and write-history evidence for new indirect transfers. Retained decoded code from earlier heuristic seeds remains evidence of that earlier discovery, not proven reachability.
+
+`function-analysis` reports `state`, `generation`, `reason`, `stale` and a nullable result. A result contains CFG coverage, dataflow diagnostics, frame slots/candidate arguments, indirect proposals/admissions, signature matches, qualified summary and call effects. Stale evidence is inspectable but `call-effects` excludes it. Basic `analysis-status.stable` still concerns native queues; `advanced` and `overall_stable` show the additional pipeline state.
+
+`function-membership` computes shared candidate membership over stored edges. It excludes callee edges, retains assumed call-return continuations and returns noncontiguous runs, shared blocks, alternate entries, tail-jump candidates, missing destinations and truncation. Candidate prologues and names do not override graph evidence.
+
+Types are explicit layouts: scalar (`size`, `signed`), pointer (`size`, `target`, `address_space`), array (`element`, `count`), struct (`size`, `fields` containing `name`, `offset`, `type`). Builtins are `u8/u16/u32/u64/i8/i16/i32/i64`. Pointer spaces are `flat`, `near` with optional `segment`, and four-byte `far16`. Structures reject overlapping fields and by-value cycles; pointer recursion is allowed. `typed-data` interprets immutable little-endian bytes and never dereferences a process. Field names resolve dynamically through shared physical identity.
+
+`set-summary` is an explicit user-confirmed assertion. Known identities include `memcpy`, `memmove`, `memset`, `read`, `write`, `fread`, `fwrite`; custom contracts require an explicit prototype/effects object. `add-signature` requires architecture, bitness, exact body bytes and provenance; byte wildcards require declared relocation ranges. The catalog matches a complete supplied contiguous body, not an arbitrary prefix. Matches and user assertions remain qualified static evidence. ABI profiles describe integer argument locations; floating/vector/variadic source signatures are not inferred.
+
+`call-effects` records call-site xrefs with width/range expressions, callee identity, argument values, ABI and provenance. Import-derived records include `summary_source`, `binding_evidence` and the condition that the declared binding still resolves to the named contract. `binding_unchanged_under_static_state` in that evidence is `true` when the modeled state permits reading the unchanged slot, `false` when a modeled may-write/taint prevents that proof, and `null` when proof is unavailable. It never identifies an observed runtime provider. A concrete buffer range can therefore remain a conditional contract effect even when binding proof is false or unknown; `resolved` describes its buffer address/size, not runtime callee identity. I/O lengths are upper bounds; unknown pointers remain possible effects. An unresolved record is not proof of overlap with the queried field. For instruction-level writers, combine with `memory-accesses`. DOS near offsets are not physical intervals without an established segment-aware contract.
+
+Mach-O ARM64 defaults to `aarch64_darwin` (alias `darwin_arm64`), which describes
+integer register arguments only. Darwin packed stack arguments and variadic
+placement need typed signatures and remain uninferred; floating/vector rules
+and authenticated-pointer behavior are not fully modeled. ELF ARM64 uses the
+separate `aarch64_aapcs64` profile. These defaults are analysis assumptions.
+Native macOS host execution has not been verified.
+
+```json
+{"id":40,"method":"define-type","params":{"project":"analysis.fdb","name":"Pair","definition":{"kind":"struct","size":4,"fields":[{"name":"count","offset":0,"type":"u16"},{"name":"flags","offset":2,"type":"u16"}]}}}
+{"id":41,"method":"apply-type","params":{"project":"analysis.fdb","address":"0x2000","type_name":"Pair","name":"record"}}
+{"id":42,"method":"auto-analyze","params":{"project":"analysis.fdb","abi":"x86_64_sysv","max_functions":50}}
+```
+
+See [ADVANCED_ANALYSIS.md](ADVANCED_ANALYSIS.md) for the decoder-neutral expressions, solver contracts and current CPU coverage.
