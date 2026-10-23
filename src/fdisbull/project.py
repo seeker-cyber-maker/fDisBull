@@ -1,0 +1,333 @@
+"""Versioned SQLite store and bounded recursive control-flow traversal."""
+from collections import deque
+from contextlib import contextmanager
+import hashlib
+import json
+from pathlib import Path
+import sqlite3
+from datetime import datetime, timezone
+
+from .model import Region
+
+MAX_ADDRESS = (1 << 64) - 1
+SCHEMA = 1
+
+def number(value):
+    if isinstance(value, bool) or not isinstance(value, (int, str)):
+        raise ValueError("address must be an integer or integer string")
+    result = int(value, 0) if isinstance(value, str) else int(value)
+    if not 0 <= result <= MAX_ADDRESS:
+        raise ValueError("address must be an unsigned 64-bit integer")
+    return result
+
+def integer(value, label, low, high):
+    if isinstance(value, bool) or not isinstance(value, int) or not low <= value <= high:
+        raise ValueError(f"{label} must be an integer in {low}..{high}")
+    return value
+
+def key(value):
+    return f"{number(value):016x}"
+
+def hx(value):
+    return f"0x{number(value):x}"
+
+def now():
+    return datetime.now(timezone.utc).isoformat()
+
+DDL = """
+CREATE TABLE metadata(key TEXT PRIMARY KEY, value TEXT NOT NULL);
+CREATE TABLE versions(id INTEGER PRIMARY KEY, parent INTEGER REFERENCES versions(id), label TEXT NOT NULL,
+    origin TEXT NOT NULL, sha256 TEXT NOT NULL, created TEXT NOT NULL);
+CREATE TABLE regions(version INTEGER REFERENCES versions(id), name TEXT NOT NULL, start TEXT NOT NULL,
+    data BLOB NOT NULL, executable INTEGER NOT NULL, writable INTEGER NOT NULL,
+    PRIMARY KEY(version,start));
+CREATE TABLE functions(version INTEGER REFERENCES versions(id), context TEXT NOT NULL, address TEXT NOT NULL,
+    name TEXT NOT NULL, source TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'candidate',
+    PRIMARY KEY(version,context,address));
+CREATE TABLE instructions(version INTEGER REFERENCES versions(id), context TEXT NOT NULL, address TEXT NOT NULL,
+    size INTEGER NOT NULL, bytes TEXT NOT NULL, mnemonic TEXT NOT NULL, operands TEXT NOT NULL,
+    flow TEXT NOT NULL, target TEXT, PRIMARY KEY(version,context,address));
+CREATE TABLE xrefs(version INTEGER REFERENCES versions(id), context TEXT NOT NULL, source TEXT NOT NULL,
+    target TEXT NOT NULL, kind TEXT NOT NULL, evidence TEXT NOT NULL,
+    PRIMARY KEY(version,context,source,target,kind));
+CREATE INDEX xrefs_target ON xrefs(version,context,target);
+CREATE TABLE annotations(version INTEGER REFERENCES versions(id), context TEXT NOT NULL, address TEXT NOT NULL,
+    kind TEXT NOT NULL, text TEXT NOT NULL, author TEXT NOT NULL, created TEXT NOT NULL, inherited_from INTEGER,
+    PRIMARY KEY(version,context,address,kind));
+CREATE TABLE work(version INTEGER REFERENCES versions(id), context TEXT NOT NULL, address TEXT NOT NULL,
+    reason TEXT NOT NULL, state TEXT NOT NULL DEFAULT 'pending', detail TEXT,
+    PRIMARY KEY(version,context,address));
+"""
+
+class Project:
+    def __init__(self, path):
+        self.path = Path(path).resolve()
+        if not self.path.is_file():
+            raise ValueError(f"project does not exist: {self.path}")
+        self.db = sqlite3.connect(self.path, timeout=30)
+        self.db.row_factory = sqlite3.Row
+        try:
+            meta = dict(self.db.execute("SELECT key,value FROM metadata"))
+            if meta.get("application") != "fdisbull" or int(meta.get("schema", -1)) != SCHEMA:
+                raise ValueError("unsupported project schema")
+            self.meta = {k:json.loads(v) for k,v in meta.items() if k not in ("application","schema")}
+            self.arch, self.bits = self.meta["arch"], self.meta["bits"]
+            self.context = f"{self.arch}:{self.bits}:little"
+            self.db.execute("PRAGMA foreign_keys=ON")
+            self.db.execute("PRAGMA busy_timeout=30000")
+        except Exception:
+            self.db.close()
+            raise
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.db.close()
+
+    @contextmanager
+    def transaction(self, write=False):
+        if self.db.in_transaction:
+            yield
+            return
+        self.db.execute("BEGIN IMMEDIATE" if write else "BEGIN")
+        try:
+            yield
+            self.db.commit()
+        except BaseException:
+            self.db.rollback()
+            raise
+
+    @classmethod
+    def create(cls, path, binary, **options):
+        from .loader import load_image
+        source = Path(binary)
+        image = load_image(source, **options)
+        # Validate our stable mapping independently of individual loader formats.
+        ordered = sorted(image.regions, key=lambda r:r.start)
+        end = 0
+        for r in ordered:
+            if not r.data:
+                continue
+            number(r.start)
+            if r.start < end or r.start + len(r.data) > MAX_ADDRESS + 1:
+                raise ValueError("overlapping or out-of-range image mappings")
+            end = r.start + len(r.data)
+        if not ordered or sum(len(r.data) for r in ordered) > 64 * 1024 * 1024:
+            raise ValueError("empty image or mapped bytes exceed 64 MiB")
+        target = Path(path).resolve()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with target.open("xb"):
+            pass
+        try:
+            db = sqlite3.connect(target)
+            try:
+                db.executescript(DDL)
+                db.execute("PRAGMA journal_mode=WAL")
+                meta = {"arch":image.arch,"bits":image.bits,"format":image.format,"entry":image.entry,
+                        "filename":source.name,"source_sha256":image.metadata["source_sha256"],
+                        "loader_metadata":image.metadata}
+                db.executemany("INSERT INTO metadata VALUES (?,?)",
+                    [("application","fdisbull"),("schema",str(SCHEMA))] + [(k,json.dumps(v)) for k,v in meta.items()])
+                db.execute("INSERT INTO versions VALUES (1,NULL,?,?,?,?)",
+                    ("original","file import",cls.digest(image.regions),now()))
+                context = f"{image.arch}:{image.bits}:little"
+                for r in image.regions:
+                    if r.data:
+                        db.execute("INSERT INTO regions VALUES (?,?,?,?,?,?)",(1,r.name,key(r.start),r.data,r.executable,r.writable))
+                for seed in image.seeds:
+                    address = key(seed.address)
+                    db.execute("INSERT OR IGNORE INTO functions(version,context,address,name,source) VALUES (1,?,?,?,?)",
+                        (context,address,seed.name,seed.source))
+                    db.execute("INSERT OR IGNORE INTO work(version,context,address,reason) VALUES (1,?,?,?)",
+                        (context,address,seed.source))
+                db.commit()
+                db.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            finally:
+                db.close()
+            return cls(target)
+        except BaseException:
+            target.unlink(missing_ok=True)
+            Path(str(target)+"-wal").unlink(missing_ok=True)
+            Path(str(target)+"-shm").unlink(missing_ok=True)
+            raise
+
+    @staticmethod
+    def digest(regions):
+        h = hashlib.sha256()
+        for r in sorted(regions, key=lambda r:r.start):
+            h.update(json.dumps([r.name,r.start,len(r.data),bool(r.executable),bool(r.writable)],separators=(",",":")).encode())
+            h.update(r.data)
+        return h.hexdigest()
+
+    def version(self, value=None):
+        result = self.db.execute("SELECT * FROM versions WHERE id=?",(integer(value,"version",1,(1<<63)-1),)).fetchone() if value is not None else self.db.execute("SELECT * FROM versions ORDER BY id DESC LIMIT 1").fetchone()
+        if result is None:
+            raise ValueError("unknown code version")
+        return dict(result)
+
+    def regions(self, version):
+        return [Region(r["name"],int(r["start"],16),bytes(r["data"]),bool(r["executable"]),bool(r["writable"]))
+                for r in self.db.execute("SELECT * FROM regions WHERE version=? ORDER BY start",(version,))]
+
+    def status(self, version=None):
+        with self.transaction():
+            v = self.version(version)
+            counts = {table:self.db.execute(f"SELECT count(*) FROM {table} WHERE version=?",(v["id"],)).fetchone()[0]
+                      for table in ("instructions","functions","xrefs","annotations")}
+            work = dict(self.db.execute("SELECT state,count(*) FROM work WHERE version=? GROUP BY state",(v["id"],)))
+            regions = [{"name":r.name,"start":hx(r.start),"size":len(r.data),"executable":r.executable,"writable":r.writable} for r in self.regions(v["id"])]
+            return {"project":str(self.path),**self.meta,"entry":hx(self.meta["entry"]),"context":self.context,
+                    "version":v,"counts":counts,"work":work,"regions":regions}
+
+    def versions(self):
+        return [dict(r) for r in self.db.execute("SELECT * FROM versions ORDER BY id")]
+
+    def analyze(self, version=None, start=None, max_instructions=10000):
+        from .decoder import decode
+        budget = integer(max_instructions,"max_instructions",1,1_000_000)
+        with self.transaction(True):
+            v = self.version(version)["id"]
+            regions = self.regions(v)
+            def mapped(a):
+                return next((r for r in regions if r.executable and r.start <= a < r.start+len(r.data)),None)
+            def enqueue(a, reason):
+                self.db.execute("INSERT OR IGNORE INTO work(version,context,address,reason) VALUES (?,?,?,?)",(v,self.context,key(a),reason))
+            if start is not None:
+                a = number(start)
+                if not mapped(a):
+                    raise ValueError("analysis start is not in executable mapped bytes")
+                enqueue(a,"user seed")
+                self.db.execute("INSERT OR IGNORE INTO functions(version,context,address,name,source) VALUES (?,?,?,?,?)",
+                    (v,self.context,key(a),f"sub_{a:x}","user seed"))
+            queue = deque(int(r[0],16) for r in self.db.execute("SELECT address FROM work WHERE version=? AND context=? AND state='pending' ORDER BY rowid",(v,self.context)))
+            queued = set(queue)
+            decoded = attempted = 0
+            while queue and attempted < budget:
+                a = queue.popleft()
+                attempted += 1
+                addr = key(a)
+                existing = self.db.execute("SELECT 1 FROM instructions WHERE version=? AND context=? AND address=?",(v,self.context,addr)).fetchone()
+                if existing:
+                    self.db.execute("UPDATE work SET state='decoded' WHERE version=? AND context=? AND address=?",(v,self.context,addr))
+                    continue
+                region = mapped(a)
+                if region is None:
+                    self.db.execute("UPDATE work SET state='outside',detail='outside executable mapping' WHERE version=? AND context=? AND address=?",(v,self.context,addr))
+                    continue
+                offset = a-region.start
+                ins = decode(region.data[offset:offset+16],a,self.arch,self.bits)
+                if ins is None:
+                    self.db.execute("UPDATE work SET state='invalid',detail='decoder rejected bytes' WHERE version=? AND context=? AND address=?",(v,self.context,addr))
+                    continue
+                flow, target = ins["flow"],ins["target"]
+                self.db.execute("INSERT INTO instructions VALUES (?,?,?,?,?,?,?,?,?)",
+                    (v,self.context,addr,ins["size"],ins["bytes"],ins["mnemonic"],ins["operands"],flow,key(target) if target is not None else None))
+                detail = "unresolved indirect control flow" if flow.startswith("indirect") else None
+                self.db.execute("UPDATE work SET state='decoded',detail=? WHERE version=? AND context=? AND address=?",(detail,v,self.context,addr))
+                decoded += 1
+                following = a+ins["size"]
+                successors = []
+                if target is not None:
+                    kind = "call" if flow == "call" else "branch"
+                    self.db.execute("INSERT OR IGNORE INTO xrefs VALUES (?,?,?,?,?,?)",(v,self.context,addr,key(target),kind,"decoded direct operand"))
+                    if mapped(target):
+                        successors.append((target,kind))
+                        if flow == "call":
+                            self.db.execute("INSERT OR IGNORE INTO functions(version,context,address,name,source) VALUES (?,?,?,?,?)",
+                                (v,self.context,key(target),f"sub_{target:x}","direct call"))
+                for ref in ins.get("data_refs",[]):
+                    self.db.execute("INSERT OR IGNORE INTO xrefs VALUES (?,?,?,?,?,?)",(v,self.context,addr,key(ref),"data","decoded static memory operand"))
+                if flow in ("next","call","conditional","indirect_call") and mapped(following):
+                    successors.append((following,"fallthrough"))
+                    if flow == "conditional":
+                        self.db.execute("INSERT OR IGNORE INTO xrefs VALUES (?,?,?,?,?,?)",(v,self.context,addr,key(following),"fallthrough","decoded conditional fallthrough"))
+                for successor,reason in successors:
+                    enqueue(successor,reason)
+                    if successor not in queued:
+                        queued.add(successor)
+                        queue.append(successor)
+            pending = self.db.execute("SELECT count(*) FROM work WHERE version=? AND state='pending'",(v,)).fetchone()[0]
+            return {"version":v,"decoded":decoded,"attempted":attempted,"pending":pending,"budget_exhausted":bool(pending and attempted >= budget)}
+
+    def functions(self, version=None, limit=200, offset=0):
+        v = self.version(version)["id"]
+        limit = integer(limit,"limit",1,10000)
+        offset = integer(offset,"offset",0,(1<<63)-1)
+        rows = self.db.execute("SELECT f.*,a.text AS rename FROM functions f LEFT JOIN annotations a ON a.version=f.version AND a.context=f.context AND a.address=f.address AND a.kind='name' WHERE f.version=? ORDER BY f.address LIMIT ? OFFSET ?",(v,limit,offset))
+        return [{"address":hx(int(r["address"],16)),"name":r["rename"] or r["name"],"source":r["source"],"status":r["status"],"version":v} for r in rows]
+
+    def annotate(self, address, text, kind="comment", author="agent", version=None):
+        if kind not in ("name","comment"):
+            raise ValueError("annotation kind must be name or comment")
+        if not isinstance(text,str) or not text.strip() or len(text)>4096:
+            raise ValueError("annotation text must contain 1..4096 characters")
+        if kind == "name" and (len(text)>256 or any(ord(c)<32 for c in text)):
+            raise ValueError("name must be at most 256 characters with no controls")
+        if not isinstance(author,str) or not author or len(author)>256:
+            raise ValueError("author must contain 1..256 characters")
+        a = number(address)
+        with self.transaction(True):
+            v = self.version(version)["id"]
+            if not any(r.start <= a < r.start+len(r.data) for r in self.regions(v)):
+                raise ValueError("annotation address is outside image")
+            self.db.execute("INSERT INTO annotations VALUES (?,?,?,?,?,?,?,NULL) ON CONFLICT(version,context,address,kind) DO UPDATE SET text=excluded.text,author=excluded.author,created=excluded.created,inherited_from=NULL",
+                (v,self.context,key(a),kind,text,author,now()))
+            return {"version":v,"address":hx(a),"kind":kind,"text":text,"author":author}
+
+    def xrefs(self, address, direction="to", version=None, limit=200):
+        if direction not in ("to","from"):
+            raise ValueError("direction must be to or from")
+        limit = integer(limit,"limit",1,10000)
+        v = self.version(version)["id"]
+        column = "target" if direction == "to" else "source"
+        rows = self.db.execute(f"SELECT * FROM xrefs WHERE version=? AND context=? AND {column}=? ORDER BY source,target,kind LIMIT ?",(v,self.context,key(address),limit))
+        return [{"source":hx(int(r["source"],16)),"target":hx(int(r["target"],16)),"kind":r["kind"],"evidence":r["evidence"],"version":v} for r in rows]
+
+    def disassembly(self, address=None, lines=50, version=None):
+        count = integer(lines,"lines",1,500)
+        with self.transaction():
+            v = self.version(version)
+            a = self.meta["entry"] if address is None else number(address)
+            rows = self.db.execute("SELECT i.*,n.text AS name,c.text AS comment,c.author AS comment_author,c.inherited_from AS comment_inherited_from FROM instructions i LEFT JOIN annotations n ON n.version=i.version AND n.context=i.context AND n.address=i.address AND n.kind='name' LEFT JOIN annotations c ON c.version=i.version AND c.context=i.context AND c.address=i.address AND c.kind='comment' WHERE i.version=? AND i.context=? AND i.address>=? ORDER BY i.address LIMIT ?",(v["id"],self.context,key(a),count)).fetchall()
+            result = []
+            for r in rows:
+                fn = self.db.execute("SELECT name FROM functions WHERE version=? AND context=? AND address=?",(v["id"],self.context,r["address"])).fetchone()
+                address_hex = hx(int(r["address"],16))
+                result.append({"address":address_hex,"size":r["size"],"bytes":r["bytes"],"mnemonic":r["mnemonic"],"operands":r["operands"],"flow":r["flow"],"target":hx(int(r["target"],16)) if r["target"] else None,"name":r["name"] or (fn[0] if fn else None),"comment":r["comment"],"comment_author":r["comment_author"],"comment_inherited_from":r["comment_inherited_from"],"xrefs":self.xrefs(address_hex,"to",v["id"]),"context":self.context})
+            return {"title":self.meta["filename"],"arch":self.arch,"bits":self.bits,"context":self.context,"version":v["id"],"sha256":v["sha256"],"source_sha256":self.meta["source_sha256"],"address":hx(a),"instructions":result,"view":"stored instructions ordered by address; gaps are not decoded implicitly"}
+
+    def patch(self, address, data, label="patch", origin="agent supplied bytes", version=None):
+        a = number(address)
+        if not isinstance(data,str):
+            raise ValueError("patch bytes must be a hexadecimal string")
+        try:
+            replacement = bytes.fromhex(data)
+        except ValueError as e:
+            raise ValueError("invalid patch hex") from e
+        if not 1 <= len(replacement) <= 1024*1024:
+            raise ValueError("patch must contain 1 byte..1 MiB")
+        if not isinstance(label,str) or not label.strip() or len(label)>256:
+            raise ValueError("label must contain 1..256 characters")
+        if not isinstance(origin,str) or not origin.strip() or len(origin)>1024:
+            raise ValueError("origin must contain 1..1024 characters")
+        with self.transaction(True):
+            parent = self.version(version)["id"]
+            regions = self.regions(parent)
+            match = next((r for r in regions if r.start <= a and a+len(replacement) <= r.start+len(r.data)),None)
+            if match is None:
+                raise ValueError("patch must fit entirely inside one mapped region")
+            patched = [Region(r.name,r.start,r.data[:a-r.start]+replacement+r.data[a-r.start+len(replacement):] if r is match else r.data,r.executable,r.writable) for r in regions]
+            cur = self.db.execute("INSERT INTO versions(parent,label,origin,sha256,created) VALUES (?,?,?,?,?)",(parent,label,origin,self.digest(patched),now()))
+            v = cur.lastrowid
+            for r in patched:
+                self.db.execute("INSERT INTO regions VALUES (?,?,?,?,?,?)",(v,r.name,key(r.start),r.data,r.executable,r.writable))
+            self.db.execute("INSERT INTO annotations SELECT ?,context,address,kind,text,author,created,? FROM annotations WHERE version=?",(v,parent,parent))
+            self.db.execute("INSERT INTO functions SELECT ?,context,address,name,source,status FROM functions WHERE version=? AND source!='direct call'",(v,parent))
+            self.db.execute("INSERT INTO work(version,context,address,reason) SELECT ?,context,address,source FROM functions WHERE version=?",(v,v))
+            return {"version":v,"parent":parent,"address":hx(a),"bytes":replacement.hex(),"sha256":self.version(v)["sha256"],"annotations":"inherited; semantic validity requires review","analysis":"fresh work queue; previous analysis preserved in parent"}
+
+    def issues(self, version=None, limit=200):
+        v = self.version(version)["id"]
+        limit = integer(limit,"limit",1,10000)
+        return [{"address":hx(int(r["address"],16)),"state":r["state"],"reason":r["reason"],"detail":r["detail"]} for r in self.db.execute("SELECT * FROM work WHERE version=? AND (detail IS NOT NULL OR state!='decoded') ORDER BY rowid LIMIT ?",(v,limit))]
