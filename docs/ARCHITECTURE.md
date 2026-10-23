@@ -1,4 +1,4 @@
-# fDisBull 0.8 architecture
+# fDisBull 0.8.1 architecture
 
 The local engine separates decoding, recoverable facts, shared address interpretations and presentation. Imported code is never executed. Python coordinates native iced-x86, Capstone and LIEF libraries with SQLite and Pillow.
 
@@ -16,6 +16,7 @@ The local engine separates decoding, recoverable facts, shared address interpret
 | `linkage.py` | Shared declared slot/stub call identities and static binding qualification over normalized flow. |
 | `external_files.py` | Versioned immutable save/resource snapshots and structural types in file-offset space. |
 | `file_references.py` | Authored instruction-to-file links with source fingerprints and dynamic field labels. |
+| `shared_labels.py` | Evidenced byte correspondences and bidirectional labels across native/file fields. |
 | `dos_state_refresh.py` | Legacy DOS fact guards and explicit bounded state rebuilding. |
 | `decoder.py` | Flat x86/ARM64 decode and structured operand references. |
 | `dos.py` | Classic MZ validation, relocated real-mode image and minimum allocation. |
@@ -42,7 +43,7 @@ A project has one selected image/architecture/bitness, while retaining the compl
 
 SQLite hexadecimal address keys preserve unsigned ordering; public physical addresses are hexadecimal strings. Each byte version retains mapped bytes/permissions, parent, label, origin, timestamp and mapped-image digest. A patch creates a child without overwriting its parent. Mapped hashes include region descriptions and differ from source-file hashes.
 
-New projects retain source bytes and parsed metadata. File offsets and virtual mappings stay distinct; strings map through actual file-backed ranges. Schema 1/2/3/4 databases migrate to schema 5 without deleting versions/annotations. Schema-1 work reopens for reference backfill. Missing original source metadata remains unavailable until a new import; migration never reconstructs missing source bytes.
+New projects retain source bytes and parsed metadata. File offsets and virtual mappings stay distinct; strings map through actual file-backed ranges. Schema 1–6 databases migrate to schema 7 without deleting versions/annotations. Schema-1 work reopens for reference backfill. Missing original source metadata remains unavailable until a new import; migration never reconstructs missing source bytes.
 
 ## Container selection and platform linkage
 
@@ -208,3 +209,38 @@ resets native/derived facts, preserves authored interpretations and bytes, and
 re-admits registered manual roots without their old register assumptions.
 Rebuilding runs within a native instruction budget; derived jobs remain a
 separate queue. Opening a project never silently discards its old analysis.
+
+
+## Bidirectional field identity
+
+Schema 7 adds `label_links` and `shared_label_names`. A link declares a pair of
+native/file intervals and a one-to-one relative-byte mapping, with evidence and
+author. File identity remains `(version, file name, offset)`; native data uses
+physical address identity. Range links compose through other files or memory
+buffers, so a block link also connects its interior fields. The mapping engine
+has no ISA/container branches beyond the existing native address parser.
+
+`link-labels` validates interval bounds, explicit-name conflicts and contradictory
+offset cycles atomically. Resolution traverses the correspondence component
+with explicit limits: 4096 links per version, 256 corresponding locations per
+field, 1 MiB per range, 100,000 validation location visits and 10,000 native name
+annotations. A budget failure rejects an operation instead of returning a
+partial shared identity. An explicit `name` can resolve the starting field's
+conflicting names; interior conflicts remain independent.
+
+`rename-file` and native `rename` write the shared explicit name for the selected
+corresponding field. Presentation resolves that name on demand; no instruction
+operands, bytes, semantic summaries or type definitions are rewritten. Without
+an explicit shared name, current structural names provide the fallback.
+Native/file typed leaves retain structural `path` and expose canonical `name`.
+File references, native operands/xrefs, disassembly and graph/image exports use
+the same resolution path. Instance-level renaming does not affect unlinked
+instances of a type. A patch clones label interpretations into an isolated
+child; parent names and mappings remain intact.
+
+Instruction-to-file references remain distinct from field correspondence: an
+instruction identity is not the field identity it accesses. Source fingerprints
+continue to govern whether its authored file reference is active. Shared label
+links are authored interpretations, not inferred byte equality, runtime I/O,
+register/pointer values or native xrefs. A shared name never qualifies a library
+contract or establishes a gameplay meaning.

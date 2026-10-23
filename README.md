@@ -1,4 +1,4 @@
-# fDisBull 0.8
+# fDisBull 0.8.1
 
 Attach save files, resource tables and other data to an existing analysis. Their bytes and SHA-256 are retained in the project, so byte queries and typed fields remain available after the source file is removed. Attached files have their own **file name + byte offset** identity; they do not become executable memory or code seeds.
 
@@ -14,6 +14,17 @@ fdisbull file-data analysis.fdb resource.dat --offset 0
 `record.json` uses the existing scalar/array/struct type definitions; for example, `{"kind":"struct","size":4,"fields":[{"name":"count","offset":0,"type":"u16"},{"name":"flags","offset":2,"type":"u16"}]}`. Values are interpreted from retained little-endian bytes. A field name records an interpretation, not a proven gameplay meaning.
 
 Use `file-reference` to record an explicit, evidenced relationship from a stored instruction to one file offset or a strided set of offsets. `file-xrefs` queries those annotations; subsequent disassembly and CFG exports resolve their current field names. These links do not recover runtime file I/O or establish where a loaded resource buffer lives in memory. Source-byte changes make the links stale.
+
+`link-labels` connects corresponding file and memory ranges, including chains through other saves or backup buffers. After an evidenced link, `rename-file` or the existing native `rename` changes the shared field label at every linked location. Interior offsets follow the range mapping; the instruction that accesses the field keeps its own name. Labels resolve in typed values, references, disassembly, xrefs and graph/image exports, while numeric operands and immutable bytes stay intact.
+
+```bash
+fdisbull link-labels analysis.fdb '{"file":"resource.dat","offset":0}' '{"address":"0xDATA"}' \
+  --size 4 --evidence 'Replace this with the evidence establishing the corresponding memory block.'
+fdisbull rename-file analysis.fdb resource.dat 0 record_count
+fdisbull label-info analysis.fdb '{"file":"resource.dat","offset":0}'
+```
+
+Replace `0xDATA` with an actual mapped data address. This declaration records a correspondence; it does not discover a loaded buffer, prove byte equality or establish a live pointer. Conflicting explicit labels require a chosen name instead of silently replacing either interpretation. See the complete [bidirectional-label example](docs/EXTERNAL_FILES.md#share-labels-between-files-and-native-fields).
 
 Attachments and their type bindings are inherited by child byte versions, with parent state preserved. Content is immutable under a given file name in a version: reattaching identical bytes is idempotent, while changed bytes require another name. Attachments share a 64 MiB per-version budget. See [EXTERNAL_FILES.md](docs/EXTERNAL_FILES.md) for a complete example, reference evidence and limits.
 
@@ -327,7 +338,7 @@ fdisbull disasm my-analysis.fdb --version 1 --address 0xADDRESS
 
 A patch preserves the parent snapshot and creates fresh child analysis. Operations default to the newest version; use `--version` to select another. Names, comments and explicit representations inherit and require semantic revalidation after changes. Source-file and mapped-snapshot digests are distinct: mapped hashes include region descriptions and bytes.
 
-Schema 1–4 databases migrate to schema 5 without discarding byte versions or annotations. A schema-1 project needs `analyze` to backfill structured references from retained bytes. Its original full-file metadata remains unavailable unless it was retained; reimport the original into a new project to obtain that information. Migration does not reconstruct missing source bytes. Existing byte analysis still works if the original is missing.
+Schema 1–6 databases migrate to schema 7 without discarding byte versions or annotations. Schema 7 adds evidenced file/memory label links and shared field names. A schema-1 project needs `analyze` to backfill structured references from retained bytes. Its original full-file metadata remains unavailable unless it was retained; reimport the original into a new project to obtain that information. Migration does not reconstruct missing source bytes. Existing byte analysis still works if the original is missing.
 
 DOS patches apply to relocated memory bytes. For a stored child file version, all relocation fixups are undone in reverse order before rebuilding the file-backed module; the parent remains unchanged. Allocation-only/BSS edits stay in the child memory snapshot and have no disk counterpart. Patching does not execute or save a runnable DOS process.
 

@@ -477,7 +477,12 @@ class MemoryMixin:
                     items += uncertain[:limit-len(items)]
             else:
                 items = uncertain[offset-exact_count:offset-exact_count+limit]
-            return dict(version=version_id, address=f'0x{queried:x}', size=size, selector=selector,
+            for item in items:
+                source=int(item['source'],16)
+                item['source_name']=self._dos_label(version_id,source,item['context']) if self.meta['format']=='MZ' else self._label(version_id,source)
+                target=item.get('concrete_target')
+                item['target_name']=self._label(version_id,target) if target is not None else None
+            return dict(version=version_id, address=f'0x{queried:x}', name=self._label(version_id,queried), size=size, selector=selector,
                         access=access, items=items, total=total, address_matches=exact_count,
                         unresolved_candidates=uncertain_count, offset=offset, has_more=offset+len(items)<total,
                         facts_source='persisted' if persisted else 'decoded_stored_instructions',

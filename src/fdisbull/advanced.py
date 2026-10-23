@@ -60,9 +60,14 @@ class AdvancedMixin:
             v,context,a=self._advanced_identity(address,cs,version)
             job=self.db.execute('SELECT * FROM advanced_jobs WHERE version=? AND context=? AND address=?',(v,context,_key(a))).fetchone()
             result=self.db.execute('SELECT document FROM advanced_results WHERE version=? AND context=? AND address=?',(v,context,_key(a))).fetchone()
-            return dict(version=v,context=context,address=hex(a),state=job['state'] if job else 'missing',
+            label=self._dos_label(v,a,context) if self.meta['format']=='MZ' else self._label(v,a)
+            document=json.loads(result[0]) if result else None
+            if document is not None and job is not None and job['state']=='done':
+                document['name']=label
+                document['call_effects']=[self._effect_labels(v,effect) for effect in document.get('call_effects',[])]
+            return dict(version=v,context=context,address=hex(a),name=label,state=job['state'] if job else 'missing',
                         generation=job['generation'] if job else 0,reason=job['reason'] if job else 'run auto-analyze',
-                        stale=job is None or job['state']!='done',result=json.loads(result[0]) if result else None)
+                        stale=job is None or job['state']!='done',result=document)
 
     def set_summary(self,address,name,version=None,cs=None,prototype=None,summary=None,abi=None,author='agent'):
         if not isinstance(author,str) or not 0<len(author)<=256:raise ValueError('author must contain 1..256 characters')
@@ -406,4 +411,5 @@ class AdvancedMixin:
                 identity=_dump(effect)
                 if identity in seen:continue
                 seen.add(identity);items.append(effect)
-        return dict(version=v,address=hex(a) if a is not None else None,size=size,items=items[offset:offset+limit],total=len(items),offset=offset,limit=limit,stale_jobs_excluded=stale,analysis=self.advanced_status(v),note='Qualified call-contract effects; combine with memory-accesses for instruction-level accesses. Unresolved effects remain possible candidates, not proven overlaps.')
+        page=[self._effect_labels(v,effect) for effect in items[offset:offset+limit]]
+        return dict(version=v,address=hex(a) if a is not None else None,name=self._label(v,a) if a is not None else None,size=size,items=page,total=len(items),offset=offset,limit=limit,stale_jobs_excluded=stale,analysis=self.advanced_status(v),note='Qualified call-contract effects; combine with memory-accesses for instruction-level accesses. Unresolved effects remain possible candidates, not proven overlaps.')

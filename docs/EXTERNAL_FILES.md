@@ -21,7 +21,7 @@ python - <<'PY'
 import json
 from pathlib import Path
 
-Path('program.bin').write_bytes(bytes.fromhex('8b00c3'))
+Path('program.bin').write_bytes(bytes.fromhex('8b00c3') + bytes(29) + bytes(8))
 Path('resource.dat').write_bytes(bytes.fromhex('0300020007000400'))
 Path('record.json').write_text(json.dumps({
     'kind': 'struct', 'size': 4, 'fields': [
@@ -112,6 +112,80 @@ It does not prove that a resource was loaded, recover a file-position cursor,
 associate a heap allocation with file bytes, or infer an economic/game rule
 from nearby numeric values.
 
+## Share labels between files and native fields
+
+Use `link-labels` when evidence connects an attached-file interval to native
+memory or to the same fields in another attached file. It records corresponding
+byte offsets rather than copying display text. Once linked, a field name set
+at either end resolves through the entire chain when queried.
+
+The following continues the small example above. Its correspondence is an
+explicit demonstration declaration: the example program does not establish
+that `resource.dat` was actually loaded into the retained data bytes at `0x1020`.
+
+```bash
+fdisbull link-labels analysis.fdb '{"file":"resource.dat","offset":0}' '{"address":"0x1020"}' \
+  --size 8 --evidence 'Demonstration correspondence only; no runtime loading is claimed.'
+fdisbull rename-file analysis.fdb resource.dat 0 record_count
+fdisbull label-info analysis.fdb '{"address":"0x1020"}'
+fdisbull rename analysis.fdb 0x1020 selected_count
+fdisbull label-info analysis.fdb '{"file":"resource.dat","offset":0}'
+```
+
+Both `label-info` queries return the name most recently set at either endpoint.
+For real analysis, link the field's data address, not the address of the
+instruction that accesses it. `file-reference` already attaches the current file
+field name to that instruction's operand display. Renaming the instruction
+itself must not rename the referenced field.
+
+For DinoPark, this example declares the user-reported eight-byte save-to-memory
+mapping. Run it on a working copy with `DINOSG.000` attached and, for native fact
+queries, the older DOS analysis refreshed. At the default load segment
+`0x1000`, `4020:6fa6` identifies physical address `0x471a6`.
+
+```bash
+fdisbull attach-file dinopark.fdb DINOSG.000 --kind save
+fdisbull link-labels dinopark.fdb '{"file":"DINOSG.000","offset":3872}' '{"address":"4020:6fa6"}' \
+  --size 8 --evidence 'User-reported save offset 3872 to DS:6FA6 mapping; retain the independent save-diff and loader/runtime evidence.'
+fdisbull rename-file dinopark.fdb DINOSG.000 3872 food_count
+fdisbull label-info dinopark.fdb '{"address":"4020:6fa6"}'
+fdisbull rename dinopark.fdb '4020:6fa8' restroom_count
+fdisbull label-info dinopark.fdb '{"file":"DINOSG.000","offset":3874}'
+```
+
+The eight-byte range maps interior fields one-to-one: save offset 3874 and
+`4020:6fa8` share a label independently of offset 3872 and `4020:6fa6`. Link a
+second save's corresponding block with another `link-labels` call to extend the
+same identity chain. A copied backup buffer can also be linked when its field
+correspondence is supported by evidence. Different values in different save
+snapshots remain different immutable bytes; the shared label states which
+field they represent.
+
+`label-info` shows the normalized endpoint, current name, explicit-name flag,
+label author, corresponding members and every traversed link with evidence.
+Endpoints are exactly `{"file":NAME,"offset":OFFSET}` or `{"address":ADDRESS}`.
+The methods support every existing native adapter and container; they do not
+route on PE or x86 instructions. DOS data aliases resolve physically, and
+source instruction CS identities stay separate.
+
+A shared instance name appears in typed leaf `name`, native/file references,
+xrefs, disassembly and CFG/image exports. Leaf `path` still describes the
+structural layout. Changing a type's field name updates the structural fallback
+when no explicit shared label has been set. Renaming one linked instance does
+not change the type definition or every unlinked instance using that type.
+
+Linking distinct explicit names raises an error instead of choosing silently.
+Use `--name LABEL` to choose the starting field's shared name; resolve any
+conflicting interior-field names separately before linking a whole block.
+Invalid extents, offset cycles and validation-budget failures roll back the
+operation. Repeating the same range link is idempotent.
+
+All links report `runtime_observed: false`. A label correspondence does not
+prove a pointer value, actual loader activity, execution, equal bytes or a
+native control/data xref. Names resolve at query time, with the original
+operands and evidence retained. An unchanged source fingerprint does not prove
+that a changed upstream loader still supports an authored correspondence.
+
 ## Versions and bounds
 
 Each attachment is immutable under its name in a byte version. Attaching the
@@ -121,8 +195,8 @@ Names are single identifiers rather than paths: empty names, separators,
 control characters, `.` and `..` are rejected.
 
 A native `patch` creates a child version that inherits attachments, file type
-bindings and authored references. Child annotation changes do not modify the
-parent. References are checked against the child's current source bytes and
+bindings, authored references, label links and shared names. Child annotation
+changes do not modify the parent. References are checked against the child's current source bytes and
 decode state; inherited data does not make a stale instruction relationship
 current. Select earlier state with the usual `--version` argument.
 
@@ -160,5 +234,10 @@ assumptions for revalidation. Raw disassembly remains available before refresh
 with old native references hidden. File links remain authored claims and do
 not become proven runtime mappings through migration. This repair is separate
 from `refresh-facts` and does not affect ELF, PE or Mach-O projects.
+
+Label links allow at most 4096 ranges per version, each 1 byte–1 MiB; resolving one
+field is bounded at 256 corresponding locations. Link validation is bounded at
+100,000 location visits and 10,000 native annotations. A limit failure is an
+error rather than a silently truncated identity chain.
 
 See [API.md](API.md) for Python/JSON methods and pagination parameters.

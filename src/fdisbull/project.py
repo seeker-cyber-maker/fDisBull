@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from .model import Region
 
 MAX_ADDRESS = (1 << 64) - 1
-SCHEMA = 6
+SCHEMA = 7
 
 def number(value):
     if isinstance(value, bool) or not isinstance(value, (int, str)):
@@ -69,13 +69,14 @@ from .cfg import CFGMixin
 from .typesystem import TypeSystemMixin, TYPE_DDL
 from .external_files import ExternalFilesMixin, EXTERNAL_FILES_DDL
 from .file_references import FileReferencesMixin, FILE_REFERENCES_DDL
+from .shared_labels import SharedLabelsMixin, SHARED_LABELS_DDL
 from .dos_state_refresh import DOSStateRefreshMixin
 from .incremental import IncrementalMixin, ADVANCED_DDL
 from .advanced import AdvancedMixin
 from .membership_view import MembershipMixin
 
 
-class Project(DOSStateRefreshMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
+class Project(DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
     def __init__(self, path):
         self.path = Path(path).resolve()
         if not self.path.is_file():
@@ -84,7 +85,7 @@ class Project(DOSStateRefreshMixin, AdvancedMixin, MembershipMixin, FileReferenc
         self.db.row_factory = sqlite3.Row
         try:
             meta = dict(self.db.execute("SELECT key,value FROM metadata"))
-            if meta.get("application") != "fdisbull" or int(meta.get("schema", -1)) not in (1,2,3,4,5,SCHEMA):
+            if meta.get("application") != "fdisbull" or int(meta.get("schema", -1)) not in (1,2,3,4,5,6,SCHEMA):
                 raise ValueError("unsupported project schema")
             if int(meta["schema"]) == 1:
                 self.db.executescript("BEGIN IMMEDIATE;" + EXTENSION_DDL + "INSERT OR IGNORE INTO analysis_state SELECT id,0,0 FROM versions; UPDATE work SET state='pending',detail=NULL; UPDATE metadata SET value='2' WHERE key='schema'; COMMIT;")
@@ -93,9 +94,9 @@ class Project(DOSStateRefreshMixin, AdvancedMixin, MembershipMixin, FileReferenc
             else:
                 self.db.executescript(DOS_DDL)
             if int(meta["schema"]) != SCHEMA:
-                self.db.executescript("BEGIN IMMEDIATE;"+FACTS_DDL+TYPE_DDL+ADVANCED_DDL+EXTERNAL_FILES_DDL+FILE_REFERENCES_DDL+"UPDATE metadata SET value='6' WHERE key='schema'; COMMIT;")
+                self.db.executescript("BEGIN IMMEDIATE;"+FACTS_DDL+TYPE_DDL+ADVANCED_DDL+EXTERNAL_FILES_DDL+FILE_REFERENCES_DDL+SHARED_LABELS_DDL+"UPDATE metadata SET value='7' WHERE key='schema'; COMMIT;")
             else:
-                self.db.executescript(FACTS_DDL+TYPE_DDL+ADVANCED_DDL+EXTERNAL_FILES_DDL+FILE_REFERENCES_DDL)
+                self.db.executescript(FACTS_DDL+TYPE_DDL+ADVANCED_DDL+EXTERNAL_FILES_DDL+FILE_REFERENCES_DDL+SHARED_LABELS_DDL)
             self.meta = {k:json.loads(v) for k,v in meta.items() if k not in ("application","schema")}
             self.arch, self.bits = self.meta["arch"], self.meta["bits"]
             self.context = f"{self.arch}:{self.bits}:little"
@@ -153,7 +154,7 @@ class Project(DOSStateRefreshMixin, AdvancedMixin, MembershipMixin, FileReferenc
         try:
             db = sqlite3.connect(target)
             try:
-                db.executescript(DDL + EXTENSION_DDL + DOS_DDL + FACTS_DDL + TYPE_DDL + ADVANCED_DDL + EXTERNAL_FILES_DDL + FILE_REFERENCES_DDL)
+                db.executescript(DDL + EXTENSION_DDL + DOS_DDL + FACTS_DDL + TYPE_DDL + ADVANCED_DDL + EXTERNAL_FILES_DDL + FILE_REFERENCES_DDL + SHARED_LABELS_DDL)
                 db.execute("PRAGMA journal_mode=WAL")
                 meta = {"arch":image.arch,"bits":image.bits,"format":image.format,"entry":image.entry,
                         "filename":filename,"source_sha256":image.metadata["source_sha256"],
@@ -295,7 +296,7 @@ class Project(DOSStateRefreshMixin, AdvancedMixin, MembershipMixin, FileReferenc
         limit = integer(limit,"limit",1,10000)
         offset = integer(offset,"offset",0,(1<<63)-1)
         rows = self.db.execute("SELECT f.*,a.text AS rename FROM functions f LEFT JOIN annotations a ON a.version=f.version AND a.context=f.context AND a.address=f.address AND a.kind='name' WHERE f.version=? ORDER BY f.address LIMIT ? OFFSET ?",(v,limit,offset))
-        return [{"address":hx(int(r["address"],16)),"name":r["rename"] or r["name"],"source":r["source"],"status":r["status"],"version":v} for r in rows]
+        return [{"address":hx(int(r["address"],16)),"name":self._label(v,int(r["address"],16)),"source":r["source"],"status":r["status"],"version":v} for r in rows]
 
     def annotate(self, address, text, kind="comment", author="agent", version=None):
         if kind not in ("name","comment"):
@@ -313,6 +314,8 @@ class Project(DOSStateRefreshMixin, AdvancedMixin, MembershipMixin, FileReferenc
                 raise ValueError("annotation address is outside image")
             self.db.execute("INSERT INTO annotations VALUES (?,?,?,?,?,?,?,NULL) ON CONFLICT(version,context,address,kind) DO UPDATE SET text=excluded.text,author=excluded.author,created=excluded.created,inherited_from=NULL",
                 (v,self.context,key(a),kind,text,author,now()))
+            if kind == "name":
+                self._rename_linked_native(v,a,text,author)
             return {"version":v,"address":hx(a),"kind":kind,"text":text,"author":author}
 
     def _stored_xrefs(self, address, direction="to", version=None, limit=200,cs=None):
@@ -346,7 +349,7 @@ class Project(DOSStateRefreshMixin, AdvancedMixin, MembershipMixin, FileReferenc
                 if references:
                     display += ' ; ' + ', '.join(ref['name'] + (f" <{ref['representation']}>" if ref['representation'] else '') for ref in references)
                 display,file_refs,file_refs_summary=self._file_reference_display(v['id'],self.context,int(r['address'],16),display)
-                result.append({"references":references,"file_references":file_refs,"file_reference_summary":file_refs_summary,"display_operands":display,"address":address_hex,"size":r["size"],"bytes":r["bytes"],"mnemonic":r["mnemonic"],"operands":r["operands"],"flow":r["flow"],"target":hx(int(r["target"],16)) if r["target"] else None,"name":r["name"] or (fn[0] if fn else None),"comment":r["comment"],"comment_author":r["comment_author"],"comment_inherited_from":r["comment_inherited_from"],"xrefs":self.xrefs(address_hex,"to",v["id"]),"context":self.context})
+                result.append({"references":references,"file_references":file_refs,"file_reference_summary":file_refs_summary,"display_operands":display,"address":address_hex,"size":r["size"],"bytes":r["bytes"],"mnemonic":r["mnemonic"],"operands":r["operands"],"flow":r["flow"],"target":hx(int(r["target"],16)) if r["target"] else None,"name":self._shared_name(v["id"],("memory","",int(r["address"],16))) or r["name"] or (fn[0] if fn else None),"comment":r["comment"],"comment_author":r["comment_author"],"comment_inherited_from":r["comment_inherited_from"],"xrefs":self.xrefs(address_hex,"to",v["id"]),"context":self.context})
             return {"title":self.meta["filename"],"arch":self.arch,"bits":self.bits,"context":self.context,"version":v["id"],"sha256":v["sha256"],"source_sha256":self.meta["source_sha256"],"address":hx(a),"instructions":result,"analysis":self.analysis_status(v['id']),"view":"stored instructions ordered by address; gaps are not decoded implicitly"}
 
     def patch(self, address, data, label="patch", origin="agent supplied bytes", version=None):

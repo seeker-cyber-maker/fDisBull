@@ -45,8 +45,7 @@ class MembershipMixin:
                 if dos:
                     name = self._dos_label(v, address, row['context'])
                 else:
-                    annotation = self.db.execute("SELECT text FROM annotations WHERE version=? AND context=? AND address=? AND kind='name'", (v, row['context'], row['address'])).fetchone()
-                    name = annotation[0] if annotation else row['name']
+                    name = self._label(v,address)
                 entries.append(dict(id=_id(row['context'], address), address=hex(address), context=row['context'],
                                     name=name, source=row['source']))
             table, source_context, target_context = ('dos_edges', 'source_context', 'target_context') if dos else ('xrefs', 'context', 'context')
