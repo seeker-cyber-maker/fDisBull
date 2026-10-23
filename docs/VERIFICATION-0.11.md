@@ -2,6 +2,12 @@
 
 Version 0.11.0 consolidates the layered-code and screenshot/click development snapshots without rewriting their receipts. Release promotion requires the committed source to pass both the [ordinary Linux tests and package checks](https://github.com/seeker-cyber-maker/fDisBull/actions/workflows/ci.yml) and the [native Linux acceptance matrix](https://github.com/seeker-cyber-maker/fDisBull/actions/workflows/native-debugger.yml). Inspect the run's commit identity and conclusion; a successful earlier version or a skipped native suite does not qualify the release.
 
+## Published release results
+
+[v0.11.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.11.0) targets `a2167479a6ee474e8a4e2a7965c8ef46c618df54`. The [ordinary tag run](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40014891689) passed with **759 passed and 28 skipped** and checked all three tool packages. The [native tag run](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40014891475) passed with **15 established-backend tests and 32 layers-backend tests**, with **no native skips**. The release assets were downloaded again after publication and matched the CI bytes and GitHub SHA-256 digests; all 49 Python modules in the wheel matched the tagged source.
+
+The exact published wheel passed the 32 focused native tests with the Mac layers executable identified below. The copied [DeepSeek delivery](DELIVERY-0.11.md) additionally passed the existing compatible-checkpoint/restart and marked-click integration tests using its own wheel and backend paths. Its package archives, payload manifest and ZIP were checked for excluded game/state/database files. These fresh delivery checks supplement the immutable development receipts below.
+
 ## Native source and acceptance profiles
 
 Both profiles start at DOSBox-X `029bd65c5dcc7cdc7f2e14e35278620d9707d969`. The established complete patch is SHA-256 `26ca8457aee6b2369a901c8fab59b89a3fe4bc2f40c72d4830571146eef535ce`; the layers complete patch is SHA-256 `fed837151e85fa1d59e1630fc75be92f7635c8572c5e7274dc1d5bac1407060f`. Independent replay matched all 27 declared changed source files in each profile. CI repeats that check before compiling the backend, records the new Linux executable identity and retains JUnit/log artifacts.

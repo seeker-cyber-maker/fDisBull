@@ -15,12 +15,14 @@ Requires Python **3.12 or later**.
 | Track | Source and availability | Verification |
 | --- | --- | --- |
 | **Current source: 0.11.0** | [Release notes](docs/RELEASE-0.11.0.md): code layers, execution-only overlays, breakpoint actions, and coordinate grids | [Verification and release gates](docs/VERIFICATION-0.11.md), including the real backend and actual DinoPark evidence |
-| **Latest published package release: 0.10.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.10.0), commit `6ba413e` | [Tag CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/39994442024) passed. Native Mac acceptance is separate. |
-| **Repository branches** | [main](https://github.com/seeker-cyber-maker/fDisBull/tree/main) is the default branch; [codex/takeover](https://github.com/seeker-cyber-maker/fDisBull/tree/codex/takeover) is the integration branch | Release promotion requires both ordinary and native Linux CI. Use version tags for fixed source snapshots. |
+| **Latest published package release: 0.11.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.11.0), commit `a216747` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40014891689): 759 passed. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40014891475): 15 established-backend and 32 layers-backend tests passed, no native skips. |
+| **Repository branch** | [main](https://github.com/seeker-cyber-maker/fDisBull/tree/main) is the only active branch | Release promotion requires both ordinary and native Linux CI. Use version tags for fixed source snapshots. The old experimental checkpoint is preserved under an archive tag. |
 
 The Python packages do **not** include an emulator. Stable debugging needs the [0.10 backend patch](experimental/dosbox-x/README.md); execution layers need the separate [layers backend patch](experimental/dosbox-x/layers/README.md). Both pin an upstream source commit and require an explicit executable path. Coordinate grids work with either backend.
 
 The [release-status record](docs/RELEASE_STATUS.md) distinguishes tagged source, published packages and historical candidate receipts. Ordinary Python CI may skip native tests; [required native acceptance](docs/DOSBOX_DEBUGGER.md#required-native-acceptance) builds or selects the real patched backend and runs the existing tests against it.
+
+The user-designated [DeepSeek delivery](docs/DELIVERY-0.11.md) contains the published packages and the tested Mac ARM64 layers backend, with checksums and usage instructions. Original game files, saved states and local project databases are excluded.
 
 ## Install and use
 
@@ -75,7 +77,7 @@ python scripts/build_release.py
 
 Eight saved releases were reconstructed as successive commits: **0.1.0, 0.2.0, 0.3.0, 0.4.0, 0.5.0, 0.8.0, 0.8.1, and 0.8.2**. These are imported release snapshots, not original development commits. Exact 0.6.0 and 0.7.0 source snapshots were unavailable; their later verification notes remain historical documentation. [Import provenance](history/README.md) records filtering and archive hashes.
 
-The original unfinished DOSBox checkpoint remains on `experimental/dosbox-headless`. The local continuation contains a complete backend patch and fixture/DinoPark runtime evidence under `experimental/dosbox-x`; the Python integration uses that separately built backend. Neither emulator nor original game assets are included in tool packages.
+The original unfinished DOSBox checkpoint is preserved at tag `archive/dosbox-headless-2026-10-23`; the former experimental and takeover branches have been removed. The continuation contains a complete backend patch and fixture/DinoPark runtime evidence under `experimental/dosbox-x`; the Python integration uses that separately built backend. Neither emulator nor original game assets are included in tool packages.
 
 ## Limits and licensing
 

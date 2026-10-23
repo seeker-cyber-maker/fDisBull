@@ -1,22 +1,26 @@
 # Release status checked on 2026-10-23
 
-The current source version is **0.11.0**, described in the [release notes](RELEASE-0.11.0.md). Integration runs on `codex/takeover`; promotion to the default branch `main` and tagging require successful ordinary and native Linux checks. A source tag and a GitHub package release are distinct publication steps. [Release verification](VERIFICATION-0.11.md) links the two workflows and preserved native evidence.
+The current source and latest published package version are **0.11.0**, described in the [release notes](RELEASE-0.11.0.md). [v0.11.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.11.0) is published, not draft and not prerelease, and targets commit `a2167479a6ee474e8a4e2a7965c8ef46c618df54`. Its wheel, source distribution and tool ZIP are the unmodified tag-CI outputs; `SHA256SUMS` and `VERIFICATION-0.11.0.json` are attached with their identities and provenance.
 
-The latest published package release is [v0.10.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.10.0), targeting commit `6ba413e2f535c6294b3ddb767a5bc12a6a388162`. GitHub reports it as published, not draft and not prerelease. Its three tool packages and `SHA256SUMS` are uploaded. Before the 0.11 integration, the default branch still described 0.8.2; this status record and the README now distinguish current source from the last published package release.
+The [tag-triggered ordinary Linux run](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40014891689) completed successfully with **759 passed and 28 skipped**, and checked all three tool packages. The [tag-triggered native Linux matrix](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40014891475) separately built and verified both pinned backend profiles: **15 passed** with the established backend and **32 passed** with the layers backend, with **no native skips**. Both workflows also passed on the same release commit before promotion and tagging. [Release verification](VERIFICATION-0.11.md) records the scope and preserved runtime evidence.
 
-The [tag-triggered test/package CI run](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/39994442024) completed successfully. Its Python suite reported **756 passed and 11 skipped**. Native tests require an explicitly configured patched backend, so this result must not be presented as Linux native-debugger acceptance. The earlier [branch CI run](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/39993411735) also completed successfully for the release commit.
+`main` is now the only GitHub and local branch. The fully merged `codex/takeover` branch was removed. The unfinished experimental checkpoint is preserved at tag `archive/dosbox-headless-2026-10-23`, targeting `7cc45b1cd0439ae0306d20a33f28f1619f13036a`, before removal of its branch. The release tag remains fixed; later README/publication documentation changes on `main` do not alter the published packages.
+
+The current [DeepSeek delivery](DELIVERY-0.11.md) is in `~/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.11.0-a216747/`, with a sibling published ZIP, checksums and a `LATEST.json` pointer. The exact published wheel passed all **32 focused native tests** against the tested Mac layers backend; the copied delivery pair additionally passed the **two checkpoint/marked-click tests**. Game inputs, saved states and project databases are excluded. Earlier deliveries are preserved.
 
 ## Historical candidate receipts
 
 [0.10 candidate verification](VERIFICATION-0.10.md), [candidate release notes](RELEASE-0.10.0.md), and [candidate delivery instructions](LOCAL_DELIVERY.md) describe the state at their creation. Statements there that the candidate was uncommitted or unpublished are historical, not current release status. They remain intact so their source identities and evidence are not rewritten after publication.
 
-The published local delivery is in:
+The earlier published 0.10.0 local delivery remains in:
 
 ```text
 ~/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.10.0-6ba413e/
 ```
 
 Its sibling bundle is `fdisbull-native-debugger-0.10.0-published-2026-10-23-6ba413e.zip`, SHA-256 `ffc5994091662bec26e7c577d1518098bee10429a3338392f7773b088cc37146`. This is the user-designated local delivery, not a portable emulator download for arbitrary hosts. Its tested native Mac backend remains SHA-256 `e749b6e50775de2807c2515f83e455dc705cdf6ddcdfb257e781f215d987865a`.
+
+[v0.10.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.10.0), commit `6ba413e2f535c6294b3ddb767a5bc12a6a388162`, remains published. Its [tag CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/39994442024) reported 756 passed and 11 skipped, without Linux native acceptance. These historical package and backend identities remain unchanged.
 
 ## 0.11 implementation and earlier local receipts
 
