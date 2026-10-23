@@ -450,7 +450,7 @@ class DOSMixin(DOSViewsMixin):
                 choices=[r[0] for r in self.db.execute('SELECT selector FROM dos_segments WHERE version=? AND base<=? AND end>? ORDER BY base DESC',(v,key(a),key(a)))]
                 if choices:
                     self._dos_enqueue(v,choices[0],a,{},'user code definition')
-            else:
+            elif row[1]!='unexplored':
                 self._queue_data(v,a,'user data definition')
 
     def _dos_document_for_image(self,image,document):

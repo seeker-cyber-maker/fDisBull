@@ -8,6 +8,13 @@ from .project import Project, number
 from . import __version__
 
 METHODS = {
+    "analyze-module": "Offline DLL/shared-library analysis; path,project,[export,entry,max_instructions]",
+    "analysis-status": "Current persisted queues, seed states and fixed-point status; [version]",
+    "calls": "Grouped native function/library calls with incoming xrefs; [version,limit,offset,kind]",
+    "locate": "Byte position in stored instructions/data and unexplored memory; address,[version,cs]",
+    "function-patterns": "Candidate prologue/epilogue evidence; [version,limit,offset,scan_unexplored]",
+    "managed": "Inspect .NET metadata or disassemble one CIL method; path or project,[token,max_instructions,version]",
+    "decoder-check": "Compare x86 iced/Capstone proposals without execution; data,[bits,address,scan_offsets,max_candidates]",
     "import": "Create a new project from binary; params: project, path, [arch,bits,base,entry,load_segment]",
     "segments": "DOS inferred segment inventory; [version]",
     "code-regions": "DOS decoded instruction runs by CS; [version]",
@@ -21,7 +28,7 @@ METHODS = {
     "strings": "File-backed ASCII/UTF16 strings; [version,limit,offset]",
     "items": "Investigated memory locations; [version,limit,offset]",
     "queue": "Code/data investigation work; [version,limit,offset]",
-    "represent": "Shared data/code definition; address,representation,[size,author,version,max_instructions]",
+    "represent": "Shared data/code/unexplored definition; address,representation,[size,author,version,max_instructions,defer]",
     "recover-imports": "Offline CHimpREC-derived recovery; module_exports or export_map,[candidate_slots,version,max_slots,gap_limit]",
     "status": "Image mappings, hashes, counts and remaining work; [version]",
     "analyze": "Recursive code/data analysis; [version,start,max_instructions,cs,ds,es,ss]",
@@ -48,6 +55,28 @@ def invoke(method, params):
             p[field] = number(p[field])
     if method == "help":
         return {"application":"fDisBull","version":__version__,"protocol":"JSON lines, one response per request; not MCP/JSON-RPC","methods":METHODS}
+    if method=='analyze-module':
+        from .modules import analyze_module
+        return analyze_module(**p)
+    if method=='decoder-check':
+        from .decoder_check import compare_decoders
+        data=p.pop('data')
+        if not isinstance(data,str):
+            raise ValueError('data must be hexadecimal bytes')
+        return compare_decoders(bytes.fromhex(data),**p)
+    if method=='managed' and 'path' in p:
+        from .managed import inspect_managed,disassemble_managed
+        path=Path(p.pop('path'))
+        if not path.is_file() or not 0<path.stat().st_size<=64*1024*1024:
+            raise ValueError('expected one nonempty input file at most 64 MiB')
+        with path.open('rb') as stream:
+            data=stream.read(64*1024*1024+1)
+        token=p.pop('token',None)
+        if token is not None:
+            return disassemble_managed(data,token,**p)
+        if p:
+            raise ValueError('unexpected managed inspection options')
+        return inspect_managed(data)
     if method in ('identify','inspect'):
         from .inspection import identify_header, inspect_binary
         path=Path(p.pop('path'))
@@ -68,6 +97,10 @@ def invoke(method, params):
     with Project(project) as db:
         if method=="code-regions":
             return db.code_regions(**p)
+        if method=="function-patterns":
+            return db.function_patterns(**p)
+        if method=='analysis-status':
+            return db.analysis_status(**p)
         if method in ('info','header','sections','imports','exports','strings'):
             return db.information(topic='summary' if method=='info' else method,**p)
         if method=='recover-imports':
@@ -112,7 +145,8 @@ def respond(request, default_project=None):
         if not isinstance(request,dict) or not isinstance(request.get("method"),str):
             raise ValueError("request must be an object with method and optional params/id")
         params = request.get("params",{})
-        if default_project is not None and isinstance(params,dict) and request["method"] not in ("identify","inspect","help"):
+        standalone=request['method'] in ('identify','inspect','help','decoder-check') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         return {"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params))}
     except (ValueError,TypeError,KeyError,OSError,sqlite3.Error,OverflowError,AttributeError,RecursionError) as e:
@@ -156,14 +190,26 @@ def parser():
     c.add_argument("--base",default=0,type=lambda s:int(s,0))
     c.add_argument("--entry",type=lambda s:int(s,0))
     c.add_argument("--load-segment",type=lambda s:int(s,0),default=0x1000)
-    for name in ["status","analyze","functions","disasm","xrefs","rename","comment","versions","patch","issues","render","info","header","sections","imports","exports","strings","items","queue","represent","recover-imports","segments","code-regions"]:
+    c.add_argument('--module',action='store_true',help='allow a library without an executable entry')
+    c=sub.add_parser('analyze-module',help=METHODS['analyze-module'])
+    c.add_argument('path');c.add_argument('project')
+    c.add_argument('--export');c.add_argument('--entry',type=lambda s:int(s,0))
+    c.add_argument('--max-instructions',type=int,default=10000)
+    c=sub.add_parser('managed',help=METHODS['managed'])
+    c.add_argument('path');c.add_argument('--token',type=lambda s:int(s,0))
+    c.add_argument('--max-instructions',type=int)
+    c=sub.add_parser('decoder-check',help=METHODS['decoder-check'])
+    c.add_argument('data');c.add_argument('--bits',type=int,choices=[16,32,64],default=64)
+    c.add_argument('--address',type=lambda s:int(s,0),default=0)
+    c.add_argument('--scan-offsets',action='store_true');c.add_argument('--max-candidates',type=int,default=16)
+    for name in ["status","analyze","functions","disasm","xrefs","rename","comment","versions","patch","issues","render","info","header","sections","imports","exports","strings","items","queue","represent","recover-imports","segments","code-regions","locate","function-patterns","analysis-status","calls"]:
         c = sub.add_parser(name,help=METHODS[name])
         c.add_argument("project")
         if name != "versions":
             c.add_argument("--version",type=int)
-        if name in ("xrefs","rename","comment","patch","represent"):
+        if name in ("xrefs","rename","comment","patch","represent","locate"):
             c.add_argument("address")
-        if name in ('analyze','disasm','xrefs','render'):
+        if name in ('analyze','disasm','xrefs','render','locate'):
             c.add_argument('--cs',type=lambda s:int(s,0))
         if name=='analyze':
             for register in ('ds','es','ss'):
@@ -172,9 +218,9 @@ def parser():
             if name=="analyze":
                 c.add_argument("--start")
             c.add_argument("--max-instructions",type=int,default=10000)
-        if name in ("functions","xrefs","issues","sections","imports","exports","strings","items","queue"):
+        if name in ("functions","xrefs","issues","sections","imports","exports","strings","items","queue","function-patterns","calls"):
             c.add_argument("--limit",type=int,default=200)
-        if name in ("functions","sections","imports","exports","strings","items","queue"):
+        if name in ("functions","sections","imports","exports","strings","items","queue","function-patterns","calls"):
             c.add_argument("--offset",type=int,default=0)
         if name in ("disasm","render"):
             c.add_argument("--address")
@@ -188,8 +234,13 @@ def parser():
         if name in ("rename","comment","represent"):
             c.add_argument("--author",default="agent")
         if name=='represent':
-            c.add_argument('representation',choices=['code','byte','word','dword','qword','pointer','ascii','utf-16le'])
+            c.add_argument('representation',choices=['code','byte','word','dword','qword','pointer','ascii','utf-16le','unexplored'])
             c.add_argument('--size',type=int)
+            c.add_argument('--defer',action='store_true',help='change representation and leave reanalysis queued')
+        if name=='function-patterns':
+            c.add_argument('--scan-unexplored',action='store_true')
+        if name=='calls':
+            c.add_argument('--kind',choices=['all','function','library','unresolved'],default='all')
         if name=='recover-imports':
             c.add_argument('export_map',help='JSON list of runtime module export addresses')
             c.add_argument('--max-slots',type=int,default=4096)

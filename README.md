@@ -1,4 +1,8 @@
-# fDisBull 0.3
+# fDisBull 0.4
+
+`analysis-status` reports the current persisted queue and seed states. New disassembly JSON and PNG/SVG exports include this state, so an earlier budget-limited receipt is distinguishable from a later fixed point. See [QUERYING.md](docs/QUERYING.md) for hexadecimal address queries and evidence limits.
+
+`calls` groups stored function and library call targets with incoming call-site xrefs. Try `fdisbull calls examples/dinopark.fdb --limit 50` or `fdisbull calls examples/windows.fdb --kind library`. Shared renames resolve when queried. Unresolved indirect calls remain visible; DOS compiled-in library helpers retain their current function labels until independently identified.
 
 A local, agent-first disassembler with a persistent SQLite database and GUI-free image export. iced-x86 decodes x86, Capstone decodes ARM64, and LIEF reads executable metadata. The project owns its analysis order, annotations and byte versions. Python coordinates the native libraries.
 
@@ -92,7 +96,64 @@ fdisbull render my-analysis.fdb function.png --address 0xADDRESS --lines 40
 
 Names and representations are shared by address and resolved when queried. Disassembly retains numeric `operands` and adds structured `references` and `display_operands`; image export uses the latter. Renaming a referenced address therefore updates its label in callers and exported views without editing every instruction.
 
-`represent` accepts `code`, `byte`, `word`, `dword`, `qword`, `pointer`, `ascii` and `utf-16le`. Strings require an explicit byte size, for example `represent my-analysis.fdb 0xADDRESS ascii --size 12`. Fixed-width numeric types require their matching width. Definitions must fit within one region and may not overlap another explicit definition. Changing a representation resets derived analysis and runs it again within the supplied budget; the response reports whether more work remains. This is a data/code interpretation, not a byte patch.
+`represent` accepts `code`, `byte`, `word`, `dword`, `qword`, `pointer`, `ascii`, `utf-16le` and `unexplored`. Strings require an explicit byte size, for example `represent my-analysis.fdb 0xADDRESS ascii --size 12`. Fixed-width numeric types require their matching width. Definitions must fit within one region and may not overlap another explicit definition. Changing a representation resets derived analysis and runs it again within the supplied budget; `--defer` leaves reanalysis queued instead. The byte version and its digest stay unchanged.
+
+## Locate instruction bytes and inspect function patterns
+
+```bash
+fdisbull locate examples/dinopark.fdb '38ff:53fd'
+fdisbull locate examples/dinopark.fdb '38ff:5401'
+fdisbull function-patterns examples/dinopark.fdb --limit 30
+fdisbull function-patterns examples/dinopark.fdb --scan-unexplored --limit 30
+```
+
+`locate` identifies every stored instruction/data span containing the byte, including CS aliases and overlaps. Each span reports `begin`, `part`, `end` or `single`, its byte offset, shared representation and exact bytes. Here `end` is the final included byte; `end_exclusive` is the following address. A one-byte instruction is `single`. The query does not decode new bytes.
+
+`function-patterns` reports native frame-setup/teardown evidence, returns and possible tail exits for supported x86/ARM64 code. A pattern remains a candidate: optimized functions may omit it, and the same sequence may appear inside a function or in data. The optional bounded unexplored-byte scan adds proposals with separate provenance; it neither queues analysis nor creates functions/instructions. Candidate DOS contexts remain explicit.
+
+Hold a range for later interpretation, then release the same range as code:
+
+```bash
+fdisbull represent my-analysis.fdb 0xADDRESS unexplored --size 32 --defer
+fdisbull locate my-analysis.fdb 0xADDRESS
+fdisbull represent my-analysis.fdb 0xADDRESS code --size 32 --defer
+fdisbull analyze my-analysis.fdb --start 0xADDRESS
+```
+
+An explicit `unexplored` range blocks automatic code/data investigation until its representation changes. A drained queue can therefore coexist with intentionally held bytes. Names and comments survive reanalysis; use `patch` only when changing the bytes themselves.
+
+## Analyze a DLL or shared library on demand
+
+```bash
+fdisbull analyze-module library.dll library.fdb
+fdisbull analyze-module library.dll selected-export.fdb --export ExportName
+fdisbull analyze-module library.dll ordinal-export.fdb --export '#7'
+fdisbull analyze-module library.dll selected-entry.fdb --entry 0x180001000
+fdisbull analyze selected-export.fdb --max-instructions 10000
+```
+
+Each first command creates a new project from a local module snapshot. Without an explicit root it uses available entry/export seeds; an export name, `#ordinal` or preferred virtual entry address selects a narrower root. Repeat ordinary `analyze` to resume its budget. Forwarded exports require selecting their destination module explicitly. The operation does not load the DLL into a process, run its initializer, download dependencies or recursively load imported DLLs. `import --module` can also retain a library that has no executable entry.
+
+## Inspect managed .NET assemblies and CIL
+
+```bash
+python -m pip install -e '.[managed]'
+fdisbull managed assembly.dll
+fdisbull managed assembly.dll --token 0x06000001 --max-instructions 1000
+```
+
+The optional extra pins **dnfile 0.18.0** and **dncil 1.0.2**. Start with the method list and select an actual MethodDef token from that assembly. The tool reports CLR metadata, names, signatures, RVAs/file offsets and method-body CIL, with token/call references and method-local branch targets. Tokens and `IL_` offsets have their own identity; they are not x86 addresses. Recognized CLR payloads are guarded from accidental native entry analysis, and invalid CLR metadata stays explicit.
+
+This is metadata/CIL analysis. It does not reconstruct C# source, verify the IL type/stack rules, interpret exception-handler sections or execute .NET. NativeAOT/native-only files need native analysis; absence of a CLR directory does not establish NativeAOT origin. Mixed native/managed payloads retain their limits. Actual Godot ALD assembly qualification remains pending the matching assembly; a Godot native executable alone is not its C# game assembly.
+
+## Compare alternative x86 decodings
+
+```bash
+fdisbull decoder-check 0f0dc0 --bits 64
+fdisbull decoder-check 554889e5c3 --bits 64 --scan-offsets
+```
+
+This read-only comparison records iced/Capstone validity, lengths, text and backend versions for bounded proposed starts. It never executes bytes or promotes a proposal to stored code. Text differences can be aliases or formatting; agreement does not prove hardware semantics. [DECODER_RESEARCH.md](docs/DECODER_RESEARCH.md) connects this surface to Sandsifter/Battelle and the proposed SNO x86 adapter. [WINE_DEBUGGER.md](docs/WINE_DEBUGGER.md) describes a future isolated Wine execution backend; it is not delivered or macOS-qualified here. [CORPUS.md](docs/CORPUS.md) records the difficult-binary collection search and current fixture coverage.
 
 Try the Windows example directly:
 
@@ -161,7 +222,7 @@ DOS patches apply to relocated memory bytes. For a stored child file version, al
 
 ## Supported scope
 
-Loaders support classic DOS MZ, little-endian x86/x86-64 and ARM64 ELF/PE, and thin little-endian x86/x86-64/ARM64 Mach-O. MZ applies its segment fixups at the chosen load segment. Other executable loaders use preferred static virtual addresses without applying runtime relocations. A shared library without an executable entry requires `--entry`.
+Loaders support classic DOS MZ, little-endian x86/x86-64 and ARM64 ELF/PE, and thin little-endian x86/x86-64/ARM64 Mach-O. MZ applies its segment fixups at the chosen load segment. Other executable loaders use preferred static virtual addresses without applying runtime relocations. Use `analyze-module`/`import --module` for a library without an executable entry, and `managed` for CLR metadata/CIL.
 
 ```bash
 fdisbull import segment.bin dos-segment.fdb --arch x86 --bits 16 --base 0x100

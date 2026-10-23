@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="1011" viewBox="0 0 1560 1011" role="img">
+<title>DINOPARK.EXE</title>
+<desc>Disassembly exported from a versioned fDisBull database snapshot.</desc>
+<rect width="100%" height="100%" fill="#101722"/>
+<g font-family="DejaVu Sans Mono, Menlo, Consolas, monospace">
+<line x1="36" y1="210" x2="1524" y2="210" stroke="#2d3d52"/>
+<line x1="36" y1="948" x2="1524" y2="948" stroke="#2d3d52"/>
+<text x="36" y="53" font-size="25" fill="#f1f5fb" font-weight="700" xml:space="preserve">fDisBull  /  DISASSEMBLY</text>
+<text x="36" y="88" font-size="18" fill="#f1f5fb" xml:space="preserve">DINOPARK.EXE</text>
+<text x="36" y="118" font-size="18" fill="#afbdd0" xml:space="preserve">x86 / 16-bit / little-endian     VERSION 1     18 instructions</text>
+<text x="36" y="145" font-size="15" fill="#afbdd0" xml:space="preserve">STATIC ANALYSIS  fixed point / pending 0 / issues 16671</text>
+<text x="36" y="170" font-size="15" fill="#afbdd0" xml:space="preserve">CONTEXT  x86:16:little:cs=38ff</text>
+<text x="36" y="195" font-size="15" fill="#afbdd0" xml:space="preserve">SNAPSHOT SHA-256  8006cbd191e3ff0a80f537f6d5163559542270f3bf706b7f86d8c4c54248c743</text>
+<text x="36" y="235" font-size="15" fill="#afbdd0" font-weight="700" xml:space="preserve">CS:IP</text>
+<text x="260" y="235" font-size="15" fill="#afbdd0" font-weight="700" xml:space="preserve">BYTES (HEX)</text>
+<text x="620" y="235" font-size="15" fill="#afbdd0" font-weight="700" xml:space="preserve">MNEMONIC</text>
+<text x="754" y="235" font-size="15" fill="#afbdd0" font-weight="700" xml:space="preserve">OPERANDS</text>
+<text x="36" y="271" font-size="18" fill="#95bdff" xml:space="preserve">38ff:2b94</text>
+<text x="260" y="271" font-size="18" fill="#acbbce" xml:space="preserve">c41ec7bf</text>
+<text x="620" y="271" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">les</text>
+<text x="754" y="271" font-size="18" fill="#f1f5fb" xml:space="preserve">bx,[0BFC7h] ; mem_4c1c7 &lt;scalar&gt;</text>
+<text x="36" y="306" font-size="18" fill="#95bdff" xml:space="preserve">38ff:2b98</text>
+<text x="260" y="306" font-size="18" fill="#acbbce" xml:space="preserve">26ffb7b200</text>
+<text x="620" y="306" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">push</text>
+<text x="754" y="306" font-size="18" fill="#f1f5fb" xml:space="preserve">word [es:bx+0B2h] ; mem_b2</text>
+<text x="36" y="341" font-size="18" fill="#95bdff" xml:space="preserve">38ff:2b9d</text>
+<text x="260" y="341" font-size="18" fill="#acbbce" xml:space="preserve">26ffb7b000</text>
+<text x="620" y="341" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">push</text>
+<text x="754" y="341" font-size="18" fill="#f1f5fb" xml:space="preserve">word [es:bx+0B0h] ; mem_b0</text>
+<text x="36" y="376" font-size="18" fill="#95bdff" xml:space="preserve">38ff:2ba2</text>
+<text x="260" y="376" font-size="18" fill="#acbbce" xml:space="preserve">9a2f170010</text>
+<text x="620" y="376" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">call</text>
+<text x="754" y="376" font-size="18" fill="#f1f5fb" xml:space="preserve">1000h:172Fh ; sub_1000_172f &lt;code&gt;</text>
+<text x="36" y="411" font-size="18" fill="#95bdff" xml:space="preserve">38ff:2ba7</text>
+<text x="260" y="411" font-size="18" fill="#acbbce" xml:space="preserve">8956ce</text>
+<text x="620" y="411" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">mov</text>
+<text x="754" y="411" font-size="18" fill="#f1f5fb" xml:space="preserve">[bp-32h],dx</text>
+<text x="36" y="446" font-size="18" fill="#95bdff" xml:space="preserve">38ff:2baa</text>
+<text x="260" y="446" font-size="18" fill="#acbbce" xml:space="preserve">8946cc</text>
+<text x="620" y="446" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">mov</text>
+<text x="754" y="446" font-size="18" fill="#f1f5fb" xml:space="preserve">[bp-34h],ax</text>
+<text x="36" y="481" font-size="18" fill="#95bdff" xml:space="preserve">38ff:2bad</text>
+<text x="260" y="481" font-size="18" fill="#acbbce" xml:space="preserve">0b46ce</text>
+<text x="620" y="481" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">or</text>
+<text x="754" y="481" font-size="18" fill="#f1f5fb" xml:space="preserve">ax,[bp-32h]</text>
+<text x="36" y="516" font-size="18" fill="#95bdff" xml:space="preserve">38ff:2bb0</text>
+<text x="260" y="516" font-size="18" fill="#acbbce" xml:space="preserve">750a</text>
+<text x="620" y="516" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">jne</text>
+<text x="754" y="516" font-size="18" fill="#f1f5fb" xml:space="preserve">short 2BBCh ; loc_38ff_2bbc &lt;code&gt;</text>
+<text x="36" y="551" font-size="18" fill="#95bdff" xml:space="preserve">38ff:2bb2</text>
+<text x="260" y="551" font-size="18" fill="#acbbce" xml:space="preserve">c746ce0000</text>
+<text x="620" y="551" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">mov</text>
+<text x="754" y="551" font-size="18" fill="#f1f5fb" xml:space="preserve">word [bp-32h],0</text>
+<text x="36" y="577" font-size="16" fill="#afbdd0" xml:space="preserve">XREF  fallthrough 38ff:2bb0 -&gt; 38ff:2bb2</text>
+<text x="36" y="611" font-size="18" fill="#95bdff" xml:space="preserve">38ff:2bb7</text>
+<text x="260" y="611" font-size="18" fill="#acbbce" xml:space="preserve">c746cc0100</text>
+<text x="620" y="611" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">mov</text>
+<text x="754" y="611" font-size="18" fill="#f1f5fb" xml:space="preserve">word [bp-34h],1</text>
+<text x="36" y="646" font-size="18" fill="#95bdff" xml:space="preserve">38ff:2bbc</text>
+<text x="260" y="646" font-size="18" fill="#acbbce" xml:space="preserve">33c0</text>
+<text x="620" y="646" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">xor</text>
+<text x="754" y="646" font-size="18" fill="#f1f5fb" xml:space="preserve">ax,ax</text>
+<text x="36" y="672" font-size="16" fill="#afbdd0" xml:space="preserve">XREF  branch 38ff:2bb0 -&gt; 38ff:2bbc</text>
+<text x="36" y="706" font-size="18" fill="#95bdff" xml:space="preserve">38ff:2bbe</text>
+<text x="260" y="706" font-size="18" fill="#acbbce" xml:space="preserve">ba0400</text>
+<text x="620" y="706" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">mov</text>
+<text x="754" y="706" font-size="18" fill="#f1f5fb" xml:space="preserve">dx,4</text>
+<text x="36" y="741" font-size="18" fill="#95bdff" xml:space="preserve">38ff:2bc1</text>
+<text x="260" y="741" font-size="18" fill="#acbbce" xml:space="preserve">50</text>
+<text x="620" y="741" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">push</text>
+<text x="754" y="741" font-size="18" fill="#f1f5fb" xml:space="preserve">ax</text>
+<text x="36" y="776" font-size="18" fill="#95bdff" xml:space="preserve">38ff:2bc2</text>
+<text x="260" y="776" font-size="18" fill="#acbbce" xml:space="preserve">52</text>
+<text x="620" y="776" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">push</text>
+<text x="754" y="776" font-size="18" fill="#f1f5fb" xml:space="preserve">dx</text>
+<text x="36" y="811" font-size="18" fill="#95bdff" xml:space="preserve">38ff:2bc3</text>
+<text x="260" y="811" font-size="18" fill="#acbbce" xml:space="preserve">c41ec7bf</text>
+<text x="620" y="811" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">les</text>
+<text x="754" y="811" font-size="18" fill="#f1f5fb" xml:space="preserve">bx,[0BFC7h] ; mem_4c1c7 &lt;scalar&gt;</text>
+<text x="36" y="846" font-size="18" fill="#95bdff" xml:space="preserve">38ff:2bc7</text>
+<text x="260" y="846" font-size="18" fill="#acbbce" xml:space="preserve">26ffb7ae00</text>
+<text x="620" y="846" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">push</text>
+<text x="754" y="846" font-size="18" fill="#f1f5fb" xml:space="preserve">word [es:bx+0AEh] ; mem_ae</text>
+<text x="36" y="881" font-size="18" fill="#95bdff" xml:space="preserve">38ff:2bcc</text>
+<text x="260" y="881" font-size="18" fill="#acbbce" xml:space="preserve">26ffb7ac00</text>
+<text x="620" y="881" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">push</text>
+<text x="754" y="881" font-size="18" fill="#f1f5fb" xml:space="preserve">word [es:bx+0ACh] ; mem_ac</text>
+<text x="36" y="916" font-size="18" fill="#95bdff" xml:space="preserve">38ff:2bd1</text>
+<text x="260" y="916" font-size="18" fill="#acbbce" xml:space="preserve">9a2f170010</text>
+<text x="620" y="916" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">call</text>
+<text x="754" y="916" font-size="18" fill="#f1f5fb" xml:space="preserve">1000h:172Fh ; sub_1000_172f &lt;code&gt;</text>
+<text x="36" y="981" font-size="15" fill="#afbdd0" xml:space="preserve">DATABASE SNAPSHOT  /  Static decode; analysis and annotations are interpretations.</text>
+</g></svg>

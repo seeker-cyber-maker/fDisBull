@@ -1,4 +1,4 @@
-# fDisBull 0.3 architecture
+# fDisBull 0.4 architecture
 
 The local engine separates decoding, recoverable facts, shared address interpretations and presentation. Imported code is never executed. Python coordinates native iced-x86, Capstone and LIEF libraries with SQLite and Pillow.
 
@@ -15,6 +15,10 @@ The local engine separates decoding, recoverable facts, shared address interpret
 | `dos_analysis.py` | CS-keyed DOS states/edges, segment evidence and recursive candidate discovery. |
 | `dos_views.py` | Physical aliases, segmented views, inferred segments and decoded runs. |
 | `analysis.py` | Non-DOS code/data queues, metadata indexing, shared representations and recovery. |
+| `boundaries.py` | Read-only byte-span ownership and candidate native prologue/epilogue evidence. |
+| `modules.py` | Explicit offline DLL/shared-library selection and bounded analysis roots. |
+| `managed.py` | Dependency-free CLR recognition; optional metadata and method-local CIL decoding. |
+| `decoder_check.py` | Non-executing iced/Capstone comparison at bounded proposed x86 starts. |
 | `project.py` | SQLite lifetime/migration, persistence, annotations and byte versions. |
 | `chimprec.py` | Offline candidate-slot/export matching and bounded IAT expansion. |
 | `cli.py` | CLI/JSON-lines dispatch and public response/address normalization. |
@@ -52,9 +56,29 @@ Persistent uniqueness keys deduplicate facts/work. Budgeted calls resume until i
 
 `segments` reports candidates with inferred bounds, roles, provenance and decoded counts. These are not section permissions recovered from MZ, which supplies none. `code-regions` independently reports only contiguous stored instruction runs per CS, with exclusive ends; gaps remain unclassified.
 
-Address labels resolve from user names and discovered/default identities. Structured operand references point to physical targets; queries resolve current names/representations into `display_operands` without rewriting numeric operands. A rename therefore updates all referring views. Explicit representations reset derived facts and trigger bounded reanalysis while retaining annotations. Inherited interpretations require revalidation after byte changes.
+Address labels resolve from user names and discovered/default identities. Structured operand references point to physical targets; queries resolve current names/representations into `display_operands` without rewriting numeric operands. A rename therefore updates all referring views. Explicit representations reset derived facts and trigger bounded reanalysis, or leave work queued with `defer`, while retaining annotations and the same byte version. An explicit `unexplored` definition holds a range out of automatic code/data work until it is reclassified; held ranges do not prevent stability of the remaining implemented queue. Inherited interpretations require revalidation after byte changes.
 
 Disassembly selects one stored CS interpretation, exposes alternatives and reports nearest-row fallback when applicable. Xrefs retain source/target CS. Rendering consumes the same stored snapshot; it does not decode bytes or elevate candidates. A future native UI should use these interfaces.
+
+## Byte ownership and candidate function boundaries
+
+`BoundaryMixin.locate` queries all stored instruction/data/definition spans containing a physical byte. Instruction contexts remain independent, including overlapping x86 streams and MZ aliases. Each owner reports byte offset and `begin`/`part`/`end`/`single`; its inclusive final-byte `end` and following-address `end_exclusive` make representation selection unambiguous. The query decodes no new instructions and can expose conflicting ownership instead of choosing silently.
+
+`function_patterns` examines native frame-setup/teardown patterns, returns and possible tail jumps. The default evidence comes from stored instructions and current snapshot bytes. An optional bounded raw scan proposes patterns only in unclassified executable mappings, excluding explicit definitions and known data/instruction spans. Raw DOS interpretations carry candidate CS windows. Neither path changes function facts or queues work. Function starts and ends remain hypotheses; frame omission, shared exits, internal jumps and matching data prevent universal signature-based boundaries.
+
+## On-demand modules and managed assemblies
+
+`modules.analyze_module` imports one requested local module into a new project, validates an optional export name/ordinal or preferred virtual entry, and runs one analysis budget. Selection happens before database creation. Forwarded exports are rejected and other modules are not loaded. A selected root set persists in metadata so later representation resets and deferred phases preserve the requested scope. Module mode permits files with no executable entry; an absent entry is not silently treated as executable code.
+
+CLR recognition is separate from native-machine decoding. `managed_kind` validates PE CLR/metadata structure without optional dependencies, distinguishes missing/invalid managed evidence, and protects recognized pure-IL/invalid payloads from accidental native entry analysis. Metadata/method decoding uses the optional pinned dnfile/dncil extra. `Project.managed` reads the selected version's retained source bytes, allowing method inspection after the original file disappears.
+
+Managed method identity is the assembly's MethodDef token plus local IL offset. Native VA, RVA and disk offset stay separate. A CIL query decodes a bounded method stream and resolves available token/call names and branch targets; it does not insert x86 instruction rows. It reports partial/invalid bodies and native/runtime/PInvoke methods explicitly. Linear CIL decoding is not IL type/stack verification, full EH recovery or C# reconstruction. Precompiled mixed-mode/NativeAOT payloads require their own native evidence. Actual Godot ALD assembly qualification remains open.
+
+## Decoder comparison and research seam
+
+`compare_decoders` supplies the first non-executing investigation surface: iced-x86 and Capstone receive the same bytes/mode/address at up to fifteen proposed starts. Results retain both predictions and distinguish validity, length and textual differences; no decoder becomes authoritative and no candidate enters stored analysis automatically. Formatting/alias differences are not semantic verdicts. Two-engine comparison currently supports x86 only.
+
+[DECODER_RESEARCH.md](DECODER_RESEARCH.md) relates this seam to Sandsifter/Battelle and the proposed SNO x86 candidate adapter. A physical CPU observation, translated execution and a software prediction have distinct provenance. Existing QP2A proposal/verifier machinery is useful design material; it does not establish an x86 semantic verifier. [WINE_DEBUGGER.md](WINE_DEBUGGER.md) specifies a future isolated execution backend, not an implemented/macOS-qualified debugger. [CORPUS.md](CORPUS.md) records collection discovery and fixture limitations.
 
 ## Agent and recovery seams
 
@@ -64,6 +88,6 @@ CLI and local stdin/stdout JSON-lines requests use shared project operations. Th
 
 ## Remaining boundaries
 
-Classic MZ segmented disassembly is supported, including the original DinoPark image and its known `38ff:*` routines at the selected load segment. This does not establish full-game execution or every-instruction coverage. NE/LE/LX loading, runtime overlays, general jump-table recovery, complete function/CFG recovery, decompilation, runtime SMC capture, an emulator/debugger connection and a native desktop UI remain outside this build.
+Classic MZ segmented disassembly is supported, including the original DinoPark image and its known `38ff:*` routines at the selected load segment. This does not establish full-game execution or every-instruction coverage. Native boundary evidence and managed CIL inspection do not establish complete function/CFG recovery or source decompilation. NE/LE/LX loading, runtime overlays, general jump-table recovery, runtime SMC capture, an emulator/debugger connection and a native desktop UI remain outside this build.
 
 Other loaders cover supported little-endian x86/ARM64 ELF/PE and thin Mach-O variants. ELF/Mach-O import binding and some metadata remain partial; PE delay imports are not parsed. String scanning is bounded printable ASCII/ASCII-range UTF-16LE recovery. Linux is exercised by the verification receipt; macOS runtime verification remains open.

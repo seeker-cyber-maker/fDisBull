@@ -61,9 +61,11 @@ CREATE TABLE work(version INTEGER REFERENCES versions(id), context TEXT NOT NULL
 
 from .analysis import AnalysisMixin, EXTENSION_DDL
 from .dos_analysis import DOSMixin, DOS_DDL
+from .boundaries import BoundaryMixin
+from .calls import CallViewsMixin
 
 
-class Project(DOSMixin, AnalysisMixin):
+class Project(CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
     def __init__(self, path):
         self.path = Path(path).resolve()
         if not self.path.is_file():
@@ -113,6 +115,11 @@ class Project(DOSMixin, AnalysisMixin):
         from .loader import load_image
         source = Path(binary)
         image = load_image(source, **options)
+        return cls._create_image(path,source.name,image)
+
+    @classmethod
+    def _create_image(cls,path,filename,image):
+        """Persist the exact validated immutable image without rereading its file."""
         # Validate our stable mapping independently of individual loader formats.
         ordered = sorted(image.regions, key=lambda r:r.start)
         end = 0
@@ -135,7 +142,7 @@ class Project(DOSMixin, AnalysisMixin):
                 db.executescript(DDL + EXTENSION_DDL + DOS_DDL)
                 db.execute("PRAGMA journal_mode=WAL")
                 meta = {"arch":image.arch,"bits":image.bits,"format":image.format,"entry":image.entry,
-                        "filename":source.name,"source_sha256":image.metadata["source_sha256"],
+                        "filename":filename,"source_sha256":image.metadata["source_sha256"],
                         "loader_metadata":image.metadata}
                 db.executemany("INSERT INTO metadata VALUES (?,?)",
                     [("application","fdisbull"),("schema",str(SCHEMA))] + [(k,json.dumps(v)) for k,v in meta.items()])
@@ -188,6 +195,17 @@ class Project(DOSMixin, AnalysisMixin):
         return [Region(r["name"],int(r["start"],16),bytes(r["data"]),bool(r["executable"]),bool(r["writable"]))
                 for r in self.db.execute("SELECT * FROM regions WHERE version=? ORDER BY start",(version,))]
 
+    def managed(self,token=None,version=None,max_instructions=10000):
+        from .managed import inspect_managed,disassemble_managed
+        with self.transaction():
+            v=self.version(version)['id']
+            row=self.db.execute('SELECT source_bytes FROM binary_info WHERE version=?',(v,)).fetchone()
+            if row is None or row[0] is None:
+                raise ValueError('original assembly bytes unavailable; use managed with the assembly path')
+            data=bytes(row[0])
+            result=inspect_managed(data) if token is None else disassemble_managed(data,token,max_instructions=max_instructions)
+            return {'version':v,**result}
+
     def status(self, version=None):
         with self.transaction():
             v = self.version(version)
@@ -204,7 +222,38 @@ class Project(DOSMixin, AnalysisMixin):
                 loader['dos']=dos
                 metadata['loader_metadata']=loader
             return {"project":str(self.path),**metadata,"entry":hx(self.meta["entry"]),"context":self.context,
-                    "version":v,"counts":counts,"work":work,"regions":regions}
+                    "version":v,"counts":counts,"work":work,"regions":regions,"analysis":self.analysis_status(v['id'])}
+
+    def analysis_status(self,version=None):
+        """Current persisted queue state, independent of historical run receipts."""
+        with self.transaction():
+            v=self.version(version)['id']
+            phase=self.db.execute('SELECT entry_complete,seeds_admitted FROM analysis_state WHERE version=?',(v,)).fetchone()
+            pending_code=self.db.execute("SELECT count(*) FROM work WHERE version=? AND state='pending'",(v,)).fetchone()[0]
+            pending_data=self.db.execute("SELECT count(*) FROM investigations WHERE version=? AND state='pending'",(v,)).fetchone()[0]
+            seed_states={}
+            pending_scans=0
+            if self.meta['format']=='MZ':
+                seed_states=dict(self.db.execute('SELECT state,count(*) FROM dos_seeds WHERE version=? GROUP BY state',(v,)))
+                scanned={r[0] for r in self.db.execute('SELECT selector FROM dos_data_scans WHERE version=?',(v,))}
+                pending_scans=sum('data' in json.loads(r[1]) and r[0] not in scanned for r in self.db.execute('SELECT selector,roles FROM dos_segments WHERE version=?',(v,)))
+            pending_seeds=seed_states.get('deferred',0)
+            pending_phase=not phase or not bool(phase[1])
+            pending=pending_code+pending_data+pending_seeds+pending_scans+int(pending_phase)
+            issues=self.db.execute("SELECT count(*) FROM work WHERE version=? AND (detail IS NOT NULL OR state!='decoded')",(v,)).fetchone()[0]
+            clr=self.meta['loader_metadata'].get('managed',{})
+            if self.meta['format']=='PE':
+                from .managed import managed_kind
+                source=self.db.execute('SELECT source_bytes FROM binary_info WHERE version=?',(v,)).fetchone()
+                if source and source[0] is not None:
+                    clr=managed_kind(bytes(source[0]))
+            managed=clr.get('recognized') and (clr.get('il_only') or clr.get('status')=='invalid_managed')
+            return dict(version=v,stable=None if managed else not pending and bool(phase and phase[0]),
+                        pending=pending,pending_code=pending_code,pending_data=pending_data,
+                        pending_seeds=pending_seeds,pending_segment_scans=pending_scans,
+                        pending_seed_phase=pending_phase,seed_states=seed_states,issues=issues,
+                        mode='managed-on-demand' if managed else 'static',
+                        note='Current stored state. A static fixed point does not establish complete code coverage or runtime behavior.')
 
     def _address(self,value):
         return self._dos_parse_address(value)[0] if self.meta['format']=='MZ' else number(value)
@@ -280,7 +329,7 @@ class Project(DOSMixin, AnalysisMixin):
                 if references:
                     display += ' ; ' + ', '.join(ref['name'] + (f" <{ref['representation']}>" if ref['representation'] else '') for ref in references)
                 result.append({"references":references,"display_operands":display,"address":address_hex,"size":r["size"],"bytes":r["bytes"],"mnemonic":r["mnemonic"],"operands":r["operands"],"flow":r["flow"],"target":hx(int(r["target"],16)) if r["target"] else None,"name":r["name"] or (fn[0] if fn else None),"comment":r["comment"],"comment_author":r["comment_author"],"comment_inherited_from":r["comment_inherited_from"],"xrefs":self.xrefs(address_hex,"to",v["id"]),"context":self.context})
-            return {"title":self.meta["filename"],"arch":self.arch,"bits":self.bits,"context":self.context,"version":v["id"],"sha256":v["sha256"],"source_sha256":self.meta["source_sha256"],"address":hx(a),"instructions":result,"view":"stored instructions ordered by address; gaps are not decoded implicitly"}
+            return {"title":self.meta["filename"],"arch":self.arch,"bits":self.bits,"context":self.context,"version":v["id"],"sha256":v["sha256"],"source_sha256":self.meta["source_sha256"],"address":hx(a),"instructions":result,"analysis":self.analysis_status(v['id']),"view":"stored instructions ordered by address; gaps are not decoded implicitly"}
 
     def patch(self, address, data, label="patch", origin="agent supplied bytes", version=None):
         a = self._address(address)
