@@ -4,7 +4,7 @@ Checked **2026-10-22** against the working source exposing the inspection, byte-
 
 Nine already downloaded PE samples were parsed as data. Every source SHA-256 was recomputed and matched the supplied manifest. Each received exactly one recursive analysis call with a **5,000-attempt maximum**. No sample ran, no DLL was loaded into an OS process, and this qualification did not unpack or automatically unpack anything. The original executables, DLL, archives and temporary `.fdb` databases remain outside the code archive.
 
-The machine-readable receipt is [corpus-analysis.json](../examples/corpus-analysis.json). It records source SHA-256, Drive URL, size, per-sample API results, entry bytes, metadata counts, analysis receipt, candidate evidence, truncation flags, native parser diagnostics and unresolved/pending work.
+The original machine-readable receipt and private sample-sharing URLs are omitted from this public source import. The tables below preserve the historical technical findings.
 
 ## Header and metadata results
 
@@ -60,7 +60,7 @@ These three requested fixtures remain blocked exactly as recorded by the origina
 | HyperUnpackMe1/Notepad.exe | `Google Drive 403 cannotDownloadAbusiveFile` |
 | IMA Files.zip | `Google Drive 403 cannotDownloadAbusiveFile` |
 
-The inventory is a bounded selection from the user-requested `VM/Dropbox/AMA/Files` and `VM/Dropbox/IMA/Updated/Files` hierarchy, not a complete recursive Drive inventory. Download links and provenance are preserved in the receipt; no claim is made that every exercise or blocker has been recovered.
+The inventory is a bounded selection from the user-requested private training-sample hierarchy, not a complete recursive Drive inventory. The original private receipt retained the download provenance; no claim is made that every exercise or blocker has been recovered.
 
 ## Reproduce without execution
 

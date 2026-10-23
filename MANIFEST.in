@@ -1,0 +1,12 @@
+include README.md AGENTS.md pyproject.toml MANIFEST.in
+recursive-include src/fdisbull *.py
+recursive-include tests *.py
+recursive-include docs *.md
+recursive-include scripts *.py
+prune examples
+prune history
+prune experimental
+prune build
+prune dist
+prune .github
+global-exclude __pycache__ *.py[cod] *.fdb *.fdb-* *.exe *.dll *.bin *.dat *.DAT

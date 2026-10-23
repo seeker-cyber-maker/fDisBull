@@ -1,0 +1,42 @@
+[
+  {
+    "version": "0.1.0",
+    "commit": "c940dbc45b45be84d85392fac60a281f6ac23138",
+    "archive_sha256": "753904a05085d25f9ad9f42cf1c56f05fd737be9970f78c1f3469a19affa0400"
+  },
+  {
+    "version": "0.2.0",
+    "commit": "e9074716f8bbfb0881c1c4b4b6bc727168e1cf32",
+    "archive_sha256": "12f4f550b75183b17a3d915f8f6b2c3c3bd927ac8025a444f63d8b2185e382b9"
+  },
+  {
+    "version": "0.3.0",
+    "commit": "3d9c06390b5965353aa3f3414b61f52e9754fbbf",
+    "archive_sha256": "ff0a6c433ac5222ac3577b3a3e6f9898fbc630c48c949c651f5c5602266cac94"
+  },
+  {
+    "version": "0.4.0",
+    "commit": "97ac7b05ad50e09f54512afd8b52c647c95e6ec2",
+    "archive_sha256": "623aa1a30204b856ee2e208bbf2ee5f81adfab6b20568dccafcf90e241cf6dd9"
+  },
+  {
+    "version": "0.5.0",
+    "commit": "44c4b289be9d9e5590fd5a54db929b787d51034a",
+    "archive_sha256": "f1c9fdd7e3e4f626f9552d9a4da01ed8d1329e5897e8a430a819a679ea40b126"
+  },
+  {
+    "version": "0.8.0",
+    "commit": "3980c2ce9f5c461b07c03a39e520b02dfb9b63c3",
+    "archive_sha256": "4b610dcd6e0368f9976386b97b3b22bc7aef1619ed8c3941c5135bcdc562958c"
+  },
+  {
+    "version": "0.8.1",
+    "commit": "c4fcee8289a2d621682effb900e232a50f7c2a57",
+    "archive_sha256": "3a1b4c31caf82fae3c6fbcc80375ffbb127f5d6200259f382f3887e38a26f54c"
+  },
+  {
+    "version": "0.8.2",
+    "commit": "f101d77077ee02ee19421a001451d442de2e2a00",
+    "archive_sha256": "2c78e88270e5eb6c084cf6e14ee79a84fac77001578964ff5e222ba726be675c"
+  }
+]

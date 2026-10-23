@@ -1,7 +1,10 @@
-.venv/
 __pycache__/
 .pytest_cache/
+.venv/
 *.egg-info/
 build/
+dist/
 *-wal
 *-shm
+*.fdb
+examples/**/local/

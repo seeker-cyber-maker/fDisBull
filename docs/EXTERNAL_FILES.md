@@ -269,13 +269,13 @@ time in `file-xrefs`; `matched_elements` still identifies the matching index ran
 
 ## Older DOS projects
 
-Before using the packaged historical DinoPark project or another older MZ
+Before using a separately supplied historical DinoPark project or another older MZ
 analysis for memory-access, CFG, native-xref, call or derived-function queries,
 run the explicit pointer-state migration:
 
 ```bash
-fdisbull refresh-dos-state examples/dinopark.fdb --max-instructions 10000
-fdisbull analyze examples/dinopark.fdb --max-instructions 100000
+fdisbull refresh-dos-state examples/dinopark/local/dinopark.fdb --max-instructions 10000
+fdisbull analyze examples/dinopark/local/dinopark.fdb --max-instructions 100000
 ```
 
 Repeat `analyze` until native work is stable, then use `auto-analyze` for

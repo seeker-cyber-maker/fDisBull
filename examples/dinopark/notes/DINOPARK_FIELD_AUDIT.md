@@ -2,7 +2,7 @@
 
 Audit date: 2026-10-22. This is static evidence for `DINOPARK.EXE`, SHA-256
 `2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c`.
-The [machine-readable evidence](../examples/dinopark-field-audit.json) records
+The [machine-readable evidence](../images/dinopark-field-audit.json) records
 instruction bytes, source addresses, original file offsets, stored register
 assumptions, memory widths/access classes, loader calls and archive checks.
 No game execution or day tick was observed.
