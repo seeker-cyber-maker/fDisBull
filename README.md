@@ -1,4 +1,17 @@
-# fDisBull 0.4
+# fDisBull 0.5
+
+
+`cfg` follows exact stored instruction identities and control-flow edges from a chosen entry. `render-cfg` exports its basic blocks as SVG with selected sites highlighted. Straight-line and assumed call-return fallthroughs now persist in SQLite. Existing projects can explicitly backfill these and memory-access facts with `refresh-facts`.
+
+```bash
+fdisbull refresh-facts examples/dinopark.fdb
+fdisbull memory-accesses examples/dinopark.fdb '4020:6f90' --size 2 --access write
+fdisbull cfg examples/dinopark.fdb '38ff:2b66' --highlight '38ff:3168'
+fdisbull render-cfg examples/dinopark.fdb '38ff:2b66' routine.svg \
+  --highlight '38ff:2be6' --highlight '38ff:2fd6' --highlight '38ff:3168'
+```
+
+Memory queries classify reads, writes, read/modify/write, conditional writes and address-only operands, including implicit stack/string accesses and interval overlaps. Unknown effective addresses remain separate unresolved candidates. A concrete overlap establishes an address under stored assumptions; it does not establish runtime execution. The [DinoPark field audit](docs/DINOPARK_FIELD_AUDIT.md) records indexed staff-array writers, initialization and save loading without assigning a settled gameplay meaning to either field.
 
 `analysis-status` reports the current persisted queue and seed states. New disassembly JSON and PNG/SVG exports include this state, so an earlier budget-limited receipt is distinguishable from a later fixed point. See [QUERYING.md](docs/QUERYING.md) for hexadecimal address queries and evidence limits.
 
@@ -22,7 +35,7 @@ fdisbull functions examples/demo.fdb
 
 Bundled examples include a compiled ELF with C source, a constructed Windows PE with imports/exports, and a synthetic captured-IAT snapshot with an export map. Saved projects and PNG/SVG exports are included. The tool can inspect an ELF file on another supported host without running that file.
 
-`examples/dinopark.fdb` contains the completed static analysis of your original DOS executable: 46,294 instructions across 31 CS contexts. Query it immediately with `fdisbull code-regions examples/dinopark.fdb` or `fdisbull disasm examples/dinopark.fdb --address '38ff:53fd'`. Its analysis receipt and PNG/SVG exports are included alongside it.
+`examples/dinopark.fdb` contains the completed static analysis of your original DOS executable: the original analysis plus an explicitly seeded save-loading wrapper across 31 CS contexts. Query it immediately with `fdisbull code-regions examples/dinopark.fdb` or `fdisbull disasm examples/dinopark.fdb --address '38ff:53fd'`. Its analysis receipt and PNG/SVG exports are included alongside it.
 
 ## Inspect a file, then build a project
 

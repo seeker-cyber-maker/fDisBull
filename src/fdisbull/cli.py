@@ -10,6 +10,10 @@ from . import __version__
 METHODS = {
     "analyze-module": "Offline DLL/shared-library analysis; path,project,[export,entry,max_instructions]",
     "analysis-status": "Current persisted queues, seed states and fixed-point status; [version]",
+    "cfg": "Reachable stored CFG from exact entry; address,[version,cs,max_instructions,highlights]",
+    "render-cfg": "Export reachable basic-block CFG as SVG; address,output,[version,cs,max_instructions,highlights]",
+    "memory-accesses": "Read/write/overlap and unresolved memory evidence; address,[size,version,access,limit,offset,include_unresolved]",
+    "refresh-facts": "Backfill persisted fallthrough and memory-access facts from stored instructions; [version]",
     "calls": "Grouped native function/library calls with incoming xrefs; [version,limit,offset,kind]",
     "locate": "Byte position in stored instructions/data and unexplored memory; address,[version,cs]",
     "function-patterns": "Candidate prologue/epilogue evidence; [version,limit,offset,scan_unexplored]",
@@ -95,6 +99,17 @@ def invoke(method, params):
         with Project.create(project,binary,**p) as db:
             return db.status()
     with Project(project) as db:
+        if method=="memory-accesses":
+            return db.memory_accesses(**p)
+        if method=="refresh-facts":
+            return db.refresh_facts(**p)
+        if method=="render-cfg":
+            from .cfg_render import render_cfg
+            destination=Path(p.pop("output")).expanduser().resolve()
+            protected=[db.path,Path(str(db.path)+"-wal"),Path(str(db.path)+"-shm")]
+            if any(destination==item or (destination.exists() and item.exists() and destination.samefile(item)) for item in protected):
+                raise ValueError("render output cannot overwrite a project database or SQLite sidecar")
+            return render_cfg(db.cfg(**p),destination)
         if method=="code-regions":
             return db.code_regions(**p)
         if method=="function-patterns":
@@ -129,7 +144,7 @@ def invoke(method, params):
         return getattr(db,method)(**p)
 
 def public_addresses(value, field=None):
-    address_fields={'address','virtual_address','entrypoint','imagebase','target','start','end'}
+    address_fields={'address','virtual_address','entrypoint','imagebase','target','start','end','source','concrete_target','interval_start','interval_end','possible_start','possible_end','source_address','target_address','next_address'}
     if isinstance(value,dict):
         return {key:public_addresses(item,key) for key,item in value.items()}
     if isinstance(value,list):
@@ -202,25 +217,25 @@ def parser():
     c.add_argument('data');c.add_argument('--bits',type=int,choices=[16,32,64],default=64)
     c.add_argument('--address',type=lambda s:int(s,0),default=0)
     c.add_argument('--scan-offsets',action='store_true');c.add_argument('--max-candidates',type=int,default=16)
-    for name in ["status","analyze","functions","disasm","xrefs","rename","comment","versions","patch","issues","render","info","header","sections","imports","exports","strings","items","queue","represent","recover-imports","segments","code-regions","locate","function-patterns","analysis-status","calls"]:
+    for name in ["status","analyze","functions","disasm","xrefs","rename","comment","versions","patch","issues","render","info","header","sections","imports","exports","strings","items","queue","represent","recover-imports","segments","code-regions","locate","function-patterns","analysis-status","calls","cfg","render-cfg","memory-accesses","refresh-facts"]:
         c = sub.add_parser(name,help=METHODS[name])
         c.add_argument("project")
         if name != "versions":
             c.add_argument("--version",type=int)
-        if name in ("xrefs","rename","comment","patch","represent","locate"):
+        if name in ("xrefs","rename","comment","patch","represent","locate","cfg","render-cfg","memory-accesses"):
             c.add_argument("address")
-        if name in ('analyze','disasm','xrefs','render','locate'):
+        if name in ('analyze','disasm','xrefs','render','locate','cfg','render-cfg'):
             c.add_argument('--cs',type=lambda s:int(s,0))
         if name=='analyze':
             for register in ('ds','es','ss'):
                 c.add_argument('--'+register,type=lambda s:int(s,0))
-        if name in ("analyze","represent"):
+        if name in ("analyze","represent","cfg","render-cfg"):
             if name=="analyze":
                 c.add_argument("--start")
             c.add_argument("--max-instructions",type=int,default=10000)
-        if name in ("functions","xrefs","issues","sections","imports","exports","strings","items","queue","function-patterns","calls"):
+        if name in ("functions","xrefs","issues","sections","imports","exports","strings","items","queue","function-patterns","calls","memory-accesses"):
             c.add_argument("--limit",type=int,default=200)
-        if name in ("functions","sections","imports","exports","strings","items","queue","function-patterns","calls"):
+        if name in ("functions","sections","imports","exports","strings","items","queue","function-patterns","calls","memory-accesses"):
             c.add_argument("--offset",type=int,default=0)
         if name in ("disasm","render"):
             c.add_argument("--address")
@@ -237,6 +252,14 @@ def parser():
             c.add_argument('representation',choices=['code','byte','word','dword','qword','pointer','ascii','utf-16le','unexplored'])
             c.add_argument('--size',type=int)
             c.add_argument('--defer',action='store_true',help='change representation and leave reanalysis queued')
+        if name in ('cfg','render-cfg'):
+            c.add_argument('--highlight',dest='highlights',action='append')
+        if name=='render-cfg':
+            c.add_argument('output')
+        if name=='memory-accesses':
+            c.add_argument('--size',type=int,default=1)
+            c.add_argument('--access',choices=['all','read','write'],default='all')
+            c.add_argument('--no-unresolved',dest='include_unresolved',action='store_false')
         if name=='function-patterns':
             c.add_argument('--scan-unexplored',action='store_true')
         if name=='calls':

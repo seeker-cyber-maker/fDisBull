@@ -1,48 +1,23 @@
-# Verification receipt — fDisBull 0.4.0
+# Verification receipt — fDisBull 0.5.0
 
-Final integrated source: Linux, CPython 3.12; iced-x86 1.21.0, Capstone distribution 5.0.9, LIEF 1.0.0, Pillow 12.3.0. Optional managed packages: dnfile 0.18.0 and dncil 1.0.2. No macOS runtime or guest-code execution is claimed.
+Linux, CPython 3.12; iced-x86 1.21.0, Capstone distribution 5.0.9, LIEF 1.0.0, Pillow 12.3.0. Optional managed dependencies remain dnfile 0.18.0 and dncil 1.0.2. No guest code or macOS runtime was executed.
 
-`python -m pytest -q --tb=short` completed with **231 passed**, exit 0, **14.00 seconds**.
+Final integrated `python -m pytest -q`: **290 passed**, exit 0, **13.98 seconds**. Tests cover persisted straight-line/call-return continuations, schema-3 migration and explicit backfill, memory classification/width/overlap, DOS segment alternatives and unknown registers, implicit stack/string effects, REP bounds, native FS/GS, ARM64 access metadata corrections, read-only query/fallback parity, index reset/freshness, exact-entry CFGs, noncontiguous/loop/call/CS-wrap behavior, path evidence, immutable parent versions, shared names, SVG identity/escaping/bounds, and existing loaders/managed/import recovery/protocol/render features. Independent review added six regressions and found two index/implicit-access defects that were corrected before this final run.
 
-| Capability | Fresh evidence |
-|---|---|
-| Exact instruction/data byte spans | Beginning, interior, final byte and one-byte instruction positions; overlapping interpretations, CS aliases, range-aware shared names, unsigned address limits |
-| Function boundary evidence | Native x86 16/32/64-bit and ARM64 frame patterns, returns, possible tail jumps; bounded read-only candidate scans; no automatic code promotion |
-| Representation-only changes | Deferred reanalysis; held unexplored spans suppress overlapping instructions/data and truncated-pointer promotion; byte digests and parent snapshots remain unchanged |
-| DLL/library analysis on demand | Selected exports/ordinals or explicit entries, persistent scoped roots, entryless DLLs and actual ELF shared objects; zero GOT pointers do not promote ELF headers into code |
-| Consistent module capture | Export selection and project bytes use the same immutable captured image, including a source-change regression |
-| Managed inspection and CIL | Real dnfile/dncil parsing of self-authored PE/CLI metadata, methods, tokens, strings, calls, branches, switches, tiny/fat headers, malformed and partial results |
-| Native/managed separation | Pure-IL and invalid recognized CLR payloads are blocked from native analysis; retained assembly bytes remain available after source deletion |
-| Decoder proposals | 15 focused cases, including actual iced/Capstone validity disagreement and formatting-only differences; alternatives are unconfirmed and never executed |
-| Grouped function/library call index | Nine focused tests cover incoming xrefs, import/recovered aliases, DOS CS identities, shared labels, unknown targets, pagination and version isolation; final-wheel public calls passed |
-| Current analysis state | Live budget status, admitted versus deferred seeds, unresolved issues with zero pending work, read-only status/disassembly consistency |
-| SQL address ordering | Fixed-width hexadecimal sorting/ranges tested at ordinary and unsigned high-half addresses; decimal casts are not used |
-| Existing functionality | Prior MZ, PE, ELF, Mach-O, CHimpREC, version/patch, protocol and render regressions passed |
+## Original DinoPark snapshot
 
-Independent review added ten regressions for module capture, entry/null-pointer handling, held ranges, current queue state and unsigned address queries. All passed. DOS pointer and current-state PNG/SVG exports were produced from the database; the new PNG was visually inspected with readable CS:IP, operands, context and analysis-state header.
+The delivered database was migrated from the previous 46,294-instruction snapshot. `refresh-facts` added **40,658 missing fallthrough sources**, preserving the exact byte version. A forensic audit then supplied three explicit roots with DS=0x4020 assumptions: `38ff:2048` (save-load wrapper), `38ff:16fc` (save wrapper, calling serializer `38ff:0ffe`), and `38ff:3cc1` (corroborated switch block). They added 91, 769 and 23 instructions respectively. This is explicit candidate admission, not newly implemented general jump-table recovery.
 
-## Original DinoPark
+Final database: **47,177 instructions**, **652 function candidates**, **57,285 xrefs**, **32,729 memory-access facts**. The implemented queues are stable with zero pending work; all 426 prior seeds remain admitted. SQLite integrity checks passed after closing and reopening the final portable snapshot. A repeated analysis attempted zero work. Source bytes and mapped byte-version identity remain unchanged; original executable SHA-256 is `2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c`.
 
-A fresh database built with final 0.4 rules again reached a fixed point: **46,294 instructions, 648 function candidates, 15,628 xrefs, 31 CS contexts with decoded code and 415 instruction runs**. All **426 seeds were admitted**, with zero pending code/data/seeds/segment scans. A subsequent call attempted zero work and added zero facts. This run took 18.067 seconds; every round is retained in `examples/dinopark-v04-check.json`.
+The reachable candidate slice from `38ff:2b66` contains **606 instructions, 91 basic blocks, 635 exact flow edges, 28 separate calls**, two RETF exits (`31c1`, `31cd`) and no missing stored successors under assumed call returns. All eight selected sites, including `3168` and `3170`, are reachable. Final graph edges are persisted, not reconstructed. `31ce` is not reached from this entry. This proves static topology under the stated assumptions, not branch feasibility, execution, semantic function ownership or a revenue formula.
 
-The delivered 0.3 ZIP was also opened independently and its stored database checked. It already contained the same admitted-seed/zero-pending fixed point. Earlier `stable: false` bounded receipts were historical rounds, not the final state. At `38ff:2b94`, stored bytes `c4 1e c7 bf` decode to raw operands `bx,[0BFC7h]`. The review check makes no runtime revenue or save/load claim. See `QUERYING.md` for pointer and writer-evidence limits.
+`examples/dinopark-cfg.json` includes shortest instruction paths and exact edge evidence. `dinopark-cfg.svg` renders 606 instructions in 91 blocks, 120 interblock edges and eight highlighted sites. SVG XML and instruction counts passed; selected header, condition/loop and booking areas were rasterized and visually checked. Text is selectable and blocks do not overlap. Long outer-gutter edge segments can coincide; endpoint labels, tooltips and links retain exact identities. Rendering needs no Graphviz, Inkscape or browser at runtime.
 
-The original 268,480-byte executable remains unchanged, SHA-256 `2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c`. `examples/dinopark.fdb` retains the previously delivered, self-contained snapshot; the fresh 0.4 qualification database is separate. The earlier receipt is preserved as `VERIFICATION-0.3.md`.
+The writer audit found two exact reads of DS:6F90 and six of DS:6FAC after the explicit roots. Zero fully resolved scalar writes in the stored state does **not** mean zero writers: indexed staff-array read/modify/write sites, initialization and save-load buffers need their recorded conditions. The save-file six-byte prefix supports offsets 3878→6FAC and 3888→6F90. See `DINOPARK_FIELD_AUDIT.md` for evidence, conditional writer sites and limits. Field meaning remains unresolved. The reported frozen-clock experiment was not run here; no Swift concession formula was introduced.
 
-## Drive corpus and managed scope
+## Wheel and retained scope
 
-Nine actual native PE samples from the user's VM/Dropbox course collection passed identification, inspection and import. Each received one bounded 5,000-work analysis call. The fresh integrated check stored **15,341 instruction interpretations**: seven implemented queues drained; HideDebugger.dll and deroko-64-_.exe remain explicitly partial. No sample or DLL was executed or OS-loaded. See `CORPUS.md`, `corpus-analysis.json` and `corpus-final-check.json` for exact provenance, results and parser diagnostics. Those receipts identify their point in development; they do not prove protected code was unpacked.
+`dist/fdisbull-0.5.0-py3-none-any.whl` was imported directly as a ZIP; every packaged Python module exactly matched source. Its public analysis-status, six-read field query, exact CFG, highlighted SVG export and CLI parsing passed. SHA-256: `5558b98ba22ce717d82e191d3e69f915c8d5f62c0f8eb73ec81866540035507f`. `examples/wheel-v05-check.json` retains the check.
 
-Google blocked IMA Files.zip, 10nop.exe and HyperUnpackMe1/Notepad.exe downloads with `403 cannotDownloadAbusiveFile`. They were not tested. The original course binaries and scratch analysis databases are outside this archive.
-
-The included managed sample and database are explicitly synthetic analysis fixtures, not the ALD game assembly. Actual ALD C# code was unavailable in the retrieved native corpus. CIL support does not reconstruct C# source, verify IL types, interpret exception clauses, debug the CLR or establish NativeAOT origin. Optional dependencies are required for metadata-table and method decoding.
-
-## Research versus implementation
-
-`WINE_DEBUGGER.md` is a sourced future implementation plan for an isolated Wine backend on Apple silicon, with Rosetta qualification and full-x86 QEMU fallback. No Wine debugger or Apple-container session was built or run. `DECODER_RESEARCH.md` correlates Battelle/Sandsifter, REcon's related work, STOKE and the current SNO design. The software decoder comparison is implemented; hardware probing and an x86 SNO semantic adapter are not.
-
-Static stability never proves complete code coverage, live memory values or correct behavioral interpretation. Runtime/JIT/overlay capture, general jump-table recovery, decompilation and native macOS validation remain outside this tested release. The external original-file recognition test skips when its fixture is absent; compiler-based ELF checks require a C compiler.
-
-The final installable `dist/fdisbull-0.4.0-py3-none-any.whl` matched every packaged Python source module. Imports ran directly from that wheel; current analysis status, grouped calls, byte location, retained managed CIL, decoder comparison and SVG rendering passed. The prior selected-export qualification also exercised the real HideDebugger.dll without loading it into an OS process. Wheel SHA-256: `9fe4ef13649e3f9f42f9185acdcc6f1823bcd8e3d96695d44bc30e1e8f1bdf85`.
-
-The included `dinopark-calls.json` indexes 2,983 stored call sites across 555 target groups (534 function targets, 21 unresolved indirect sites). The existing function label at `1000:172f` has 20 incoming call sites. `windows-calls.json` demonstrates import-metadata library identity. DOS static-runtime helpers are not assigned invented library names.
+The 0.4 receipt is preserved as `VERIFICATION-0.4.md`; earlier corpus, managed, CHimpREC and research scope remain applicable. No new Wine/Apple-container runtime, decompiler, physical CPU probing, SNO x86 semantic verifier or ALD assembly qualification was added. Static stability continues to describe only the implemented rule set, not complete code coverage or observed gameplay behavior.

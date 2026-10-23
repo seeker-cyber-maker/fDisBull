@@ -47,6 +47,7 @@ class AnalysisMixin:
         self.db.execute('INSERT INTO binary_info VALUES (?,?,?)',(version,json.dumps(document),image.source_bytes))
         self.db.execute('INSERT INTO analysis_state(version) VALUES (?)',(version,))
         self._index_symbols(version, document)
+        self._fresh_facts(version)
         if image.format=="MZ":
             self._dos_init(image,version)
 
@@ -258,6 +259,8 @@ class AnalysisMixin:
                     inserted=self.db.execute('INSERT OR IGNORE INTO instructions VALUES (?,?,?,?,?,?,?,?,?)',(v,self.context,k(a),ins['size'],ins['bytes'],ins['mnemonic'],ins['operands'],flow,k(target) if target is not None else None))
                     self.db.execute("UPDATE work SET state='decoded',detail=? WHERE version=? AND context=? AND address=?",('unresolved indirect control flow' if flow.startswith('indirect') else None,v,self.context,k(a)))
                     decoded+=inserted.rowcount
+                    self._clear_memory_facts(v,self.context,a)
+                    self._memory_facts(v,self.context,a,bytes.fromhex(ins['bytes']))
                     if target is not None:
                         kind='call' if flow=='call' else 'branch'
                         self._add_xref(v,a,target,kind,'decoded direct operand')
@@ -280,8 +283,8 @@ class AnalysisMixin:
                     following=a+ins['size']
                     if flow in ('next','call','conditional','indirect_call') and executable(following):
                         self._queue_code(v,following,'fallthrough')
-                        if flow=='conditional':
-                            self._add_xref(v,a,following,'fallthrough','decoded conditional fallthrough')
+                        evidence=('permitted call-return fallthrough; return is assumed' if flow in ('call','indirect_call') else 'decoded conditional fallthrough' if flow=='conditional' else 'decoded straight-line fallthrough')
+                        self._add_xref(v,a,following,'fallthrough',evidence)
                     continue
                 self.db.execute('UPDATE analysis_state SET entry_complete=1 WHERE version=?',(v,))
                 task=self.db.execute("SELECT address FROM investigations WHERE version=? AND context=? AND state='pending' ORDER BY rowid LIMIT 1",(v,self.context)).fetchone()
@@ -320,10 +323,11 @@ class AnalysisMixin:
     def _reset_analysis(self, version):
         if self.meta["format"]=="MZ":
             return self._dos_reset(version)
-        for table in ('instructions','xrefs','operand_refs','data_items','work','investigations'):
+        for table in ('instructions','xrefs','operand_refs','data_items','work','investigations','memory_refs','analysis_facts_revision'):
             self.db.execute(f'DELETE FROM {table} WHERE version=?',(version,))
         self.db.execute("DELETE FROM functions WHERE version=? AND source IN ('direct call','resolved indirect call')",(version,))
         self.db.execute('INSERT INTO analysis_state VALUES (?,0,0) ON CONFLICT(version) DO UPDATE SET entry_complete=0,seeds_admitted=0',(version,))
+        self._fresh_facts(version)
         roots=self.meta.get('analysis_roots')
         if roots is not None:
             for a in roots:

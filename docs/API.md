@@ -24,6 +24,10 @@ Include `project` in params when there is no session default, or to override it.
 | sections / imports / exports / strings | | version, limit (1–10,000), offset |
 | status | | version |
 | analyze | | version, start, max_instructions (1–1,000,000; default 10,000); MZ: cs, ds, es, ss |
+| refresh-facts | | version |
+| memory-accesses | address | size (1–1 MiB), access, include_unresolved, version, limit, offset |
+| cfg | address (exact instruction start) | version, cs, max_instructions, highlights |
+| render-cfg | address, output (`.svg`) | same as cfg |
 | functions | | version, limit, offset |
 | locate | address | version, cs (MZ) |
 | function-patterns | | version, limit, offset, scan_unexplored |
@@ -130,8 +134,23 @@ Results include `source` with pinned CHimpREC provenance, `entries`, contiguous 
 
 ## Persistence and limits
 
-New projects retain source bytes and inspection metadata. Schema 1/2 databases migrate in place to schema 3 with original versions/annotations retained. Schema-1 work is reopened so reanalysis backfills reference facts. Missing original file metadata is reported explicitly and requires a new import; migration does not fabricate source bytes. Existing byte analysis remains available without that file.
+New projects retain source bytes and inspection metadata. Schema 1/2/3 databases migrate in place to schema 4 with original versions/annotations retained. Schema-1 work is reopened so reanalysis backfills reference facts. Missing original file metadata is reported explicitly and requires a new import; migration does not fabricate source bytes. Existing byte analysis remains available without that file.
 
 Patches create child versions. Inherited annotations and definitions need semantic review. Source-file SHA-256 and mapped-snapshot SHA-256 identify different byte arrangements. File-backed metadata can refresh after a patch with a known disk counterpart; warnings disclose inherited metadata when no such mapping is known. MZ patches act on relocated memory bytes. Child file bytes undo every relocation in reverse loader order (including duplicate/overlapping records) before preserving the file-backed module. Allocation-only edits remain memory-only with an explicit warning; parent bytes/metadata remain intact.
 
 Limits: 64 MiB input and mapped bytes; patch 1 byte–1 MiB within one region; annotation 1–4096 characters; name at most 256 characters without controls; JSON line at most 1 MiB. Oversized requests close the stream; ordinary malformed requests return errors and the session continues. Inspection caps lists/text and marks truncated strings. SVG escapes text, and image bounds reject excessive views. Imported files are never executed.
+
+## Memory effects and selected CFGs
+
+```json
+{"id":40,"method":"refresh-facts","params":{"project":"dinopark.fdb"}}
+{"id":41,"method":"memory-accesses","params":{"project":"dinopark.fdb","address":"4020:6f90","size":2,"access":"write","limit":200}}
+{"id":42,"method":"cfg","params":{"project":"dinopark.fdb","address":"38ff:2b66","highlights":[{"address":"38ff:2be6","label":"staff-condition candidate"},{"address":"38ff:3168","label":"booking site"}]}}
+{"id":43,"method":"render-cfg","params":{"project":"dinopark.fdb","address":"38ff:2b66","output":"routine.svg","highlights":["38ff:2be6","38ff:2fd6","38ff:3168"]}}
+```
+
+`memory-accesses` considers all stored source contexts. Its data query selector is not a source-CS filter. Access filters are `all`, `read`, `write`, `read_write`, `conditional_write`, `address_only`; `write` includes read/modify/write and conditional writes. Byte intervals have exclusive ends and include writes beginning before the requested range. `items` separates `match: overlap` under known static state from `unresolved_candidate` with unknown registers/segments, repetition or width. Facts retain native decoder, expression, width, segment, assumptions and unresolved reasons. `address_matches`, `unresolved_candidates`, `total`, `has_more`, `analysis` and `budget_exhausted` qualify the result. Unknowns are never replaced with zero. Known flat native segmentation is an explicit assumption; FS/GS need a base. Conditional/repeated/vector effects may require runtime state. No query proves all writers or runtime execution.
+
+`refresh-facts` backfills missing fallthrough and access facts atomically from stored bytes and state. It changes derived indexes only. Fresh analysis keeps access facts current; older projects without a current index revision use read-only decode fallback until refreshed. Representation resets retract derived indexes. Patches keep the parent's facts isolated.
+
+`cfg` requires an exact stored entry and traverses independently of candidate function labels. Calls remain separate from intraprocedural edges and continuation assumes return. The output includes exact instruction nodes/edges, basic blocks, call sites, exits, gaps, unresolved transfers, budget frontier, current analysis and highlighted-site shortest paths with edge evidence. DOS physical entries with multiple CS interpretations require explicit CS. Up to 100 highlights accept addresses or `{address, cs?, label?}`. Reconstructed old continuations have separate provenance. `graph_closed` describes stored static topology under assumptions; it does not prove path feasibility, execution or function ownership. `render-cfg` exports this snapshot with selectable SVG text and protects database/sidecar paths.

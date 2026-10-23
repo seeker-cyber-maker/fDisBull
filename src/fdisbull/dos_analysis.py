@@ -309,6 +309,7 @@ class DOSMixin(DOSViewsMixin):
                     raw=self._dos_read(v,a,min(15,metadata['image_base']+metadata['allocation_size']-a))
                     messages=[]
                     variants=self._dos_variants(registers)
+                    self._clear_memory_facts(v,context,a)
                     self.db.execute("UPDATE work SET state='decoded',detail=NULL WHERE version=? AND context=? AND address=?",(v,context,key(a)))
                     for state in variants:
                         ins=decode_dos(raw,a,selector,state) if raw else None
@@ -318,6 +319,7 @@ class DOSMixin(DOSViewsMixin):
                             continue
                         inserted=self.db.execute('INSERT OR IGNORE INTO instructions VALUES (?,?,?,?,?,?,?,?,?)',(v,context,key(a),ins['size'],ins['bytes'],ins['mnemonic'],ins['operands'],ins['flow'],key(ins['target']) if ins['target'] is not None and ins['target']<0x100000 else None))
                         decoded+=inserted.rowcount
+                        self._memory_facts(v,context,a,bytes.fromhex(ins['bytes']),selector,state)
                         self._dos_note_segment(v,selector,'code',{'kind':'recursive instruction decode'})
                         after=self._dos_transfer_extras(v,ins,state)
                         segment=after.get('ds')
@@ -374,8 +376,11 @@ class DOSMixin(DOSViewsMixin):
                             caller=dict(after)
                             if ins['flow'] in ('call','indirect_call'):
                                 caller={name:value for name,value in caller.items() if name in ('ds','ss','sp','bp')}
-                            if ins['flow']=='conditional':
-                                self._dos_edge(v,context,a,ins['next_address'],selector,'fallthrough','16-bit CS/IP fallthrough')
+                            evidence=('permitted call-return fallthrough; return is assumed' if ins['flow'] in ('call','indirect_call') else '16-bit conditional CS/IP fallthrough' if ins['flow']=='conditional' else '16-bit straight-line CS/IP fallthrough')
+                            if 0<=ins['next_address']<0x100000:
+                                self._dos_edge(v,context,a,ins['next_address'],selector,'fallthrough',evidence)
+                            else:
+                                messages.append('fallthrough beyond supported unwrapped 1 MiB memory')
                             self._dos_enqueue(v,selector,ins['next_address'],caller,'fallthrough')
                     self.db.execute("UPDATE dos_states SET state='done' WHERE version=? AND context=? AND address=?",(v,context,key(a)))
                     if messages:
@@ -423,8 +428,9 @@ class DOSMixin(DOSViewsMixin):
             return dict(version=v,decoded=decoded,attempted=attempted,data_processed=data_processed,new_facts=after-before,pending=pending_code+pending_data+pending_seeds+pending_scans+(0 if state[1] else 1),pending_code=pending_code,pending_data=pending_data,pending_seeds=pending_seeds,pending_segment_scans=pending_scans,entry_complete=bool(state[0]),stable=stable,budget_exhausted=not stable and attempted>=budget,assumptions=['Static minimum allocation; no PSP memory fabricated.','Call fallthrough preserves DS/SS/BP/SP by conventional DOS C calling convention; general registers and ES are unknown.','Deferred relocation candidates may assume startup DS (or the unique observed DS); candidate provenance is retained.','Stability covers implemented static rules; unresolved indirect/dynamic code remains explicit.'])
 
     def _dos_reset(self,v):
-        for table in ('instructions','xrefs','operand_refs','data_items','work','investigations','dos_states','dos_edges','dos_constants','dos_seeds','dos_data_scans','functions'):
+        for table in ('instructions','xrefs','operand_refs','data_items','work','investigations','dos_states','dos_edges','dos_constants','dos_seeds','dos_data_scans','functions','memory_refs','analysis_facts_revision'):
             self.db.execute(f'DELETE FROM {table} WHERE version=?',(v,))
+        self._fresh_facts(v)
         self._dos_scanned_segments=set()
         self.db.execute('INSERT INTO analysis_state VALUES (?,0,0) ON CONFLICT(version) DO UPDATE SET entry_complete=0,seeds_admitted=0',(v,))
         metadata=self._dos_metadata(v)

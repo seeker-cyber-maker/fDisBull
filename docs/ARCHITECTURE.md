@@ -1,4 +1,4 @@
-# fDisBull 0.4 architecture
+# fDisBull 0.5 architecture
 
 The local engine separates decoding, recoverable facts, shared address interpretations and presentation. Imported code is never executed. Python coordinates native iced-x86, Capstone and LIEF libraries with SQLite and Pillow.
 
@@ -19,6 +19,10 @@ The local engine separates decoding, recoverable facts, shared address interpret
 | `modules.py` | Explicit offline DLL/shared-library selection and bounded analysis roots. |
 | `managed.py` | Dependency-free CLR recognition; optional metadata and method-local CIL decoding. |
 | `decoder_check.py` | Non-executing iced/Capstone comparison at bounded proposed x86 starts. |
+| `memory.py` | Native read/write effects, exact/possible intervals and read-only cross-context queries. |
+| `facts.py` | Persisted access facts and explicit backfill of stored control-flow continuations. |
+| `cfg.py` | Exact-entry, context-sensitive reachable slices and evidence paths; calls kept separate. |
+| `cfg_render.py` | Basic-block SVG export with highlighted instruction sites. |
 | `project.py` | SQLite lifetime/migration, persistence, annotations and byte versions. |
 | `chimprec.py` | Offline candidate-slot/export matching and bounded IAT expansion. |
 | `cli.py` | CLI/JSON-lines dispatch and public response/address normalization. |
@@ -30,7 +34,7 @@ A project has one binary/architecture/bitness. Versioned instruction facts add d
 
 SQLite hexadecimal address keys preserve unsigned ordering; public physical addresses are hexadecimal strings. Each byte version retains mapped bytes/permissions, parent, label, origin, timestamp and mapped-image digest. A patch creates a child without overwriting its parent. Mapped hashes include region descriptions and differ from source-file hashes.
 
-New projects retain source bytes and parsed metadata. File offsets and virtual mappings stay distinct; strings map through actual file-backed ranges. Schema 1/2 databases migrate to schema 3 without deleting versions/annotations. Schema-1 work reopens for reference backfill. Missing original source metadata remains unavailable until a new import; migration never reconstructs missing source bytes.
+New projects retain source bytes and parsed metadata. File offsets and virtual mappings stay distinct; strings map through actual file-backed ranges. Schema 1/2/3 databases migrate to schema 4 without deleting versions/annotations. Schema-1 work reopens for reference backfill. Missing original source metadata remains unavailable until a new import; migration never reconstructs missing source bytes.
 
 ## Classic DOS loading
 
@@ -91,3 +95,11 @@ CLI and local stdin/stdout JSON-lines requests use shared project operations. Th
 Classic MZ segmented disassembly is supported, including the original DinoPark image and its known `38ff:*` routines at the selected load segment. This does not establish full-game execution or every-instruction coverage. Native boundary evidence and managed CIL inspection do not establish complete function/CFG recovery or source decompilation. NE/LE/LX loading, runtime overlays, general jump-table recovery, runtime SMC capture, an emulator/debugger connection and a native desktop UI remain outside this build.
 
 Other loaders cover supported little-endian x86/ARM64 ELF/PE and thin Mach-O variants. ELF/Mach-O import binding and some metadata remain partial; PE delay imports are not parsed. String scanning is bounded printable ASCII/ASCII-range UTF-16LE recovery. Linux is exercised by the verification receipt; macOS runtime verification remains open.
+
+## Flow and access indexes
+
+Every permitted ordinary, conditional and call-return continuation now persists as a fallthrough edge. A call-return continuation explicitly assumes the callee returns. DOS next addresses wrap IP within the source CS; instruction identity remains `(version, context, address)`. `refresh-facts` atomically derives missing continuations and memory effects from stored instruction bytes, never extending discovery or using candidate function ranges as boundaries.
+
+Schema 4 adds `memory_refs(version, context, source, fact_key, detail)` and `analysis_facts_revision`. The JSON detail retains native access category, width, segment, address expression, exact/possible intervals, repetition, unknowns and assumptions. Per-source facts are replaced when state is reprocessed; representation resets clear them and patches leave the parent untouched. A current revision marks all stored instructions indexed. Migrated projects without that marker use read-only re-decoding until an explicit refresh. The original `operand_refs` table remains compatible; it is not a writer index.
+
+The CFG query follows exact stored edges independently of function labels, keeping call targets outside intraprocedural traversal and reporting missing destinations, unresolved transfers and budget frontiers. Older missing continuations can be reconstructed with separate provenance without writing. Highlighted sites carry exact shortest paths and edge evidence. A closed static graph is neither proven function ownership nor proof that a runtime path is feasible.
