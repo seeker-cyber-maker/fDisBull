@@ -113,11 +113,17 @@ def _layout(snapshot: dict) -> tuple[list[_Text], list[tuple[int, int, str]], in
         add(_PAD, y + 2, line, "muted")
         y += _LINE
     y += 4
+    context = _clean(snapshot.get("context", ""), limit=128)
+    if context:
+        for line in _wrap(f"CONTEXT  {context}", 145):
+            add(_PAD, y, line, "muted", 15)
+            y += 25
     sha = _clean(snapshot.get("sha256", "unavailable"), limit=128)
     add(_PAD, y, f"SNAPSHOT SHA-256  {sha}", "muted", 15)
     y += 40
     rules.append((y - 10, _WIDTH - _PAD, _COLORS["line"]))
-    for x, label in [(36, "ADDRESS"), (260, "BYTES (HEX)"), (620, "MNEMONIC"), (754, "OPERANDS")]:
+    segmented = any(isinstance(row, dict) and row.get("segmented_address") for row in rows)
+    for x, label in [(36, "CS:IP" if segmented else "ADDRESS"), (260, "BYTES (HEX)"), (620, "MNEMONIC"), (754, "OPERANDS")]:
         add(x, y, label, "muted", 15, True)
     y += 33
     if not rows:
@@ -127,12 +133,12 @@ def _layout(snapshot: dict) -> tuple[list[_Text], list[tuple[int, int, str]], in
         if not isinstance(row, dict):
             raise ValueError("every render instruction must be an object")
         name = _clean(row.get("name"))
-        if name:
+        if name and row.get("show_label", True):
             y += 9
             for line in _wrap(name + ":", 128):
                 add(_PAD, y, line, "name", bold=True)
                 y += _LINE
-        address = _clean(row.get("address", "?"), limit=18)
+        address = _clean(row.get("segmented_address") or row.get("address", "?"), limit=18)
         byte_text = _clean(row.get("bytes", ""), limit=64).replace(" ", "")
         if byte_text and (not re.fullmatch(r"[0-9a-fA-F]+", byte_text) or len(byte_text) % 2):
             raise ValueError("instruction bytes must be an even-length hexadecimal string")
@@ -164,8 +170,8 @@ def _layout(snapshot: dict) -> tuple[list[_Text], list[tuple[int, int, str]], in
             for ref in xrefs[:4]:
                 if not isinstance(ref, dict):
                     raise ValueError("every cross-reference must be an object")
-                source = ref.get("source", ref.get("from", "?"))
-                target = ref.get("target", ref.get("to", "?"))
+                source = ref.get("source_segmented_address") or ref.get("source", ref.get("from", "?"))
+                target = ref.get("target_segmented_address") or ref.get("target", ref.get("to", "?"))
                 kind = ref.get("kind", ref.get("type", "reference"))
                 refs.append(f"{_clean(kind)} {_clean(source)} -> {_clean(target)}")
             label = "XREF  " + "  |  ".join(refs)

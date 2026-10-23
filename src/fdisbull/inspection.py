@@ -40,34 +40,59 @@ def identify_header(data: bytes) -> dict:
         h.update(format="DOS MZ", family="DOS", bits=16, arch="x86", endian="little")
         if not need(28, "truncated DOS MZ header"):
             return h
-        header_size = int.from_bytes(data[8:10], "little") * 16
-        h["valid"] = header_size >= 28 and need(header_size, "DOS header paragraphs exceed file")
+        field_names = ("e_magic", "e_cblp", "e_cp", "e_crlc", "e_cparhdr", "e_minalloc", "e_maxalloc", "e_ss", "e_sp", "e_csum", "e_ip", "e_cs", "e_lfarlc", "e_ovno")
+        fields = dict(zip(field_names, struct.unpack_from("<14H", data)))
+        header_size = fields["e_cparhdr"] * 16
+        declared_size = (fields["e_cp"] * 512 - (512 - fields["e_cblp"] if fields["e_cblp"] else 0)
+                         if fields["e_cp"] and fields["e_cblp"] <= 511 else None)
+        h.update(dos_header=fields, header_size=header_size,
+                 declared_file_size=declared_size, relocation_count=fields["e_crlc"])
+        dos_issues = []
         if header_size < 28:
-            h["warnings"].append("invalid DOS header paragraph count")
-        # PE recognition does not depend on a DOS stub being executable: some
-        # valid minimal PE images leave DOS-only paragraph fields zero.
+            dos_issues.append("invalid DOS header paragraph count")
+        elif header_size > len(data):
+            dos_issues.append("DOS header paragraphs exceed file")
+        if fields["e_cp"] == 0:
+            dos_issues.append("DOS executable page count must be nonzero")
+        if fields["e_cblp"] > 511:
+            dos_issues.append("invalid DOS last-page byte count")
+        if declared_size is not None and declared_size > len(data):
+            dos_issues.append("DOS declared executable size exceeds file")
+        if declared_size is not None and declared_size <= header_size:
+            dos_issues.append("DOS declared executable size leaves no load module")
+        relocation_end = fields["e_lfarlc"] + fields["e_crlc"] * 4
+        if fields["e_crlc"] and (fields["e_lfarlc"] < 28 or relocation_end > header_size):
+            dos_issues.append("DOS relocation table exceeds its header bounds")
+
+        def classic_mz():
+            # Header validity covers structural extents, not relocation targets
+            # or whether a chosen real-mode allocation can execute the image.
+            h["valid"] = not dos_issues
+            h["warnings"].extend(dos_issues)
+            return h
+
+        # e_lfanew did not exist in the original MZ layout. Old relocation
+        # records can overlap that field; arbitrary nonzero bytes must not
+        # invalidate an otherwise sound DOS file. Recognize a secondary format
+        # only when its actual signature is present. PE DOS stubs need not
+        # satisfy classic-MZ page/header requirements.
         if len(data) < 64:
-            return h
+            return classic_mz()
+        field_overlap = fields["e_crlc"] and fields["e_lfarlc"] < 64 and relocation_end > 60
+        if field_overlap:
+            return classic_mz()
         offset = int.from_bytes(data[60:64], "little")
-        if not offset:
-            return h
-        h["header_offset"] = offset
-        if offset < 64:
-            h["valid"] = False
-            h["warnings"].append("secondary header offset overlaps DOS header")
-            return h
-        if not need(offset + 2, "truncated secondary executable header"):
-            h["valid"] = False
-            return h
+        if offset < 64 or offset + 2 > len(data):
+            return classic_mz()
         signature = data[offset:offset + 4]
         if signature[:2] in (b"NE", b"LE", b"LX"):
             kind = signature[:2].decode("ascii")
-            h.update(format=kind, family="DOS", bits=16 if kind == "NE" else 32)
+            h.update(format=kind, family="DOS", bits=16 if kind == "NE" else 32, header_offset=offset)
             h["valid"] = need(offset + (64 if kind == "NE" else 196), f"truncated {kind} header")
             return h
         if signature != b"PE\0\0":
-            h["warnings"].append("unrecognized secondary header; DOS MZ identification retained")
-            return h
+            return classic_mz()
+        h["header_offset"] = offset
         h.update(format="PE", family="PE", valid=False, bits=None)
         if not need(offset + 24, "truncated PE COFF header"):
             return h
@@ -206,7 +231,8 @@ def inspect_binary(data: bytes) -> dict:
     """Inspect metadata and ASCII/ASCII-range UTF-16LE strings from file bytes.
 
     Unresolved addresses are None. Returned addresses are preferred static VAs,
-    never file offsets mislabeled as VAs or guessed runtime bindings.
+    never file offsets mislabeled as VAs or guessed runtime bindings. Classic
+    DOS MZ addresses use an explicitly labelled static 0x1000 load-segment model.
     """
     data = _input(data)
     header = identify_header(data)
@@ -214,6 +240,40 @@ def inspect_binary(data: bytes) -> dict:
               "strings": [], "warnings": list(header["warnings"])}
     warnings = result["warnings"]
     mappings = []
+    if header["format"] == "DOS MZ":
+        if header["valid"]:
+            try:
+                from .dos import load_mz
+                image = load_mz(data)
+                metadata = image.metadata["dos"]
+                header.update(load_segment=metadata["load_segment"], entrypoint=image.entry,
+                              entry_cs=metadata["entry_cs"], entry_ip=metadata["entry_ip"],
+                              stack_ss=metadata["stack_ss"], stack_sp=metadata["sp"],
+                              load_model="static minimum-allocation model; not an observed runtime load")
+                summary = {name: value for name, value in metadata.items()
+                           if name not in ("relocations", "segment_candidates")}
+                summary["relocation_count"] = len(metadata["relocations"])
+                summary["segment_candidate_count"] = len(metadata["segment_candidates"])
+                summary["segment_candidates"] = [
+                    {"segment": item["segment"], "linear_base": item["linear_base"], "status": item["status"],
+                     "evidence_count": len(item["sources"]),
+                     "evidence_kinds": sorted({source["kind"] for source in item["sources"]})}
+                    for item in metadata["segment_candidates"]]
+                result["dos"] = summary
+                result["file_mappings"] = image.metadata["file_mappings"]
+                result["sections"] = [{"name": "DOS load module (unclassified)",
+                    "virtual_address": metadata["image_base"], "virtual_size": metadata["allocation_size"],
+                    "file_offset": metadata["header_size"], "file_size": metadata["module_size"],
+                    "permissions": "rwx; possible code/data, not classification"}]
+                mappings.append((metadata["header_size"], metadata["module_size"], metadata["image_base"]))
+                warnings.append("DOS addresses use the stated static load-segment model; no runtime execution or allocation was observed.")
+                warnings.append("MZ has no explicit code/data sections; segment candidates and executable permissions are not code classification.")
+            except ValueError as exc:
+                warnings.append(f"DOS memory mapping unavailable: {exc}")
+        else:
+            warnings.append("DOS memory mapping unavailable: structural header validation failed")
+        result["strings"] = _strings(data, mappings, warnings)
+        return result
     if not header["valid"] or header["format"] not in ("PE32", "PE32+", "ELF", "Mach-O"):
         warnings.append("structural metadata unavailable for this header; no address mapping inferred")
         result["strings"] = _strings(data, mappings, warnings)

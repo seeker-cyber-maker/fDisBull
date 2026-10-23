@@ -8,7 +8,9 @@ from .project import Project, number
 from . import __version__
 
 METHODS = {
-    "import": "Create a new project from binary; params: project, path, [arch,bits,base,entry]",
+    "import": "Create a new project from binary; params: project, path, [arch,bits,base,entry,load_segment]",
+    "segments": "DOS inferred segment inventory; [version]",
+    "code-regions": "DOS decoded instruction runs by CS; [version]",
     "identify": "Identify file header from bytes; path; no project required",
     "inspect": "Parse file metadata; path; no project required",
     "info": "Parsed container summary; [version]",
@@ -22,16 +24,16 @@ METHODS = {
     "represent": "Shared data/code definition; address,representation,[size,author,version,max_instructions]",
     "recover-imports": "Offline CHimpREC-derived recovery; module_exports or export_map,[candidate_slots,version,max_slots,gap_limit]",
     "status": "Image mappings, hashes, counts and remaining work; [version]",
-    "analyze": "Follow pending direct control flow; [version,start,max_instructions]",
+    "analyze": "Recursive code/data analysis; [version,start,max_instructions,cs,ds,es,ss]",
     "functions": "Candidate function entries; [version,limit,offset]",
-    "disasm": "Stored decoded rows; [version,address,lines]",
-    "xrefs": "Direct control/data references; address, [version,direction,limit]",
+    "disasm": "Stored decoded rows; [version,address,lines,cs]",
+    "xrefs": "Direct control/data references; address, [version,direction,limit,cs]",
     "rename": "Persistent address label; address,name,[version,author]",
     "comment": "Persistent evidence note; address,text,[version,author]",
     "versions": "Immutable mapped-byte snapshots and provenance",
     "patch": "Create a new snapshot, preserve parent; address,data,[version,label,origin]",
     "issues": "Pending/rejected/unresolved work; [version,limit]",
-    "render": "Export stored rows as SVG/PNG; output,[version,address,lines,format]",
+    "render": "Export stored rows as SVG/PNG; output,[version,address,lines,format,cs]",
     "help": "List methods; all project operations require project path",
 }
 
@@ -64,6 +66,8 @@ def invoke(method, params):
         with Project.create(project,binary,**p) as db:
             return db.status()
     with Project(project) as db:
+        if method=="code-regions":
+            return db.code_regions(**p)
         if method in ('info','header','sections','imports','exports','strings'):
             return db.information(topic='summary' if method=='info' else method,**p)
         if method=='recover-imports':
@@ -151,13 +155,19 @@ def parser():
     c.add_argument("--bits",type=int,choices=[16,32,64])
     c.add_argument("--base",default=0,type=lambda s:int(s,0))
     c.add_argument("--entry",type=lambda s:int(s,0))
-    for name in ["status","analyze","functions","disasm","xrefs","rename","comment","versions","patch","issues","render","info","header","sections","imports","exports","strings","items","queue","represent","recover-imports"]:
+    c.add_argument("--load-segment",type=lambda s:int(s,0),default=0x1000)
+    for name in ["status","analyze","functions","disasm","xrefs","rename","comment","versions","patch","issues","render","info","header","sections","imports","exports","strings","items","queue","represent","recover-imports","segments","code-regions"]:
         c = sub.add_parser(name,help=METHODS[name])
         c.add_argument("project")
         if name != "versions":
             c.add_argument("--version",type=int)
         if name in ("xrefs","rename","comment","patch","represent"):
             c.add_argument("address")
+        if name in ('analyze','disasm','xrefs','render'):
+            c.add_argument('--cs',type=lambda s:int(s,0))
+        if name=='analyze':
+            for register in ('ds','es','ss'):
+                c.add_argument('--'+register,type=lambda s:int(s,0))
         if name in ("analyze","represent"):
             if name=="analyze":
                 c.add_argument("--start")

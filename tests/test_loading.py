@@ -93,10 +93,10 @@ def test_invalid_and_truncated_instructions_do_not_become_code():
     assert decode(bytes.fromhex("c0035fd6"), 0x1001, "arm64", 64) is None
 
 
-def test_mz_and_unknown_formats_fail_explicitly(tmp_path):
+def test_malformed_mz_and_unknown_formats_fail_explicitly(tmp_path):
     source = tmp_path / "sample.exe"
     source.write_bytes(b"MZ" + bytes(62))
-    with pytest.raises(ValueError, match="segmented"):
+    with pytest.raises(ValueError, match="page count"):
         load_image(source)
     source.write_bytes(b"arbitrary text")
     with pytest.raises(ValueError, match="unsupported file format"):

@@ -33,6 +33,8 @@ class AnalysisMixin:
     def _init_information(self, image, version=1):
         from .inspection import inspect_binary
         document = inspect_binary(image.source_bytes)
+        if image.format == 'MZ':
+            document=self._dos_document_for_image(image,document)
         if image.format == 'raw':
             region = image.regions[0]
             document['sections'] = [dict(name='raw',virtual_address=region.start,virtual_size=len(region.data),file_offset=0,file_size=len(region.data),permissions='rx')]
@@ -43,6 +45,8 @@ class AnalysisMixin:
         self.db.execute('INSERT INTO binary_info VALUES (?,?,?)',(version,json.dumps(document),image.source_bytes))
         self.db.execute('INSERT INTO analysis_state(version) VALUES (?)',(version,))
         self._index_symbols(version, document)
+        if image.format=="MZ":
+            self._dos_init(image,version)
 
     def _index_symbols(self, version, document):
         for kind in ('imports','exports'):
@@ -194,7 +198,11 @@ class AnalysisMixin:
             (version,self.context,k(address),representation,size,json.dumps(value),source))
         self.db.execute("UPDATE investigations SET state='done',detail=NULL WHERE version=? AND context=? AND address=?",(version,self.context,k(address)))
 
-    def analyze(self, version=None, start=None, max_instructions=10000):
+    def analyze(self, version=None, start=None, max_instructions=10000,cs=None,ds=None,es=None,ss=None):
+        if self.meta["format"]=="MZ":
+            return self._dos_analyze(version,start,max_instructions,cs,ds,es,ss)
+        if any(x is not None for x in (cs,ds,es,ss)):
+            raise ValueError("segment registers apply only to DOS MZ")
         from .project import integer,number
         from .decoder import decode
         budget=integer(max_instructions,'max_instructions',1,1_000_000)
@@ -291,6 +299,8 @@ class AnalysisMixin:
             return dict(version=v,decoded=decoded,attempted=attempted,data_processed=data_processed,new_facts=fact_count()-before,pending=pending,pending_code=pending_code,pending_data=pending_data,entry_complete=bool(state[0]),pending_seed_phase=not bool(state[1]),passes=passes,stable=stable,budget_exhausted=not stable and attempted>=budget)
 
     def _reset_analysis(self, version):
+        if self.meta["format"]=="MZ":
+            return self._dos_reset(version)
         for table in ('instructions','xrefs','operand_refs','data_items','work','investigations'):
             self.db.execute(f'DELETE FROM {table} WHERE version=?',(version,))
         self.db.execute("DELETE FROM functions WHERE version=? AND source IN ('direct call','resolved indirect call')",(version,))
@@ -303,7 +313,7 @@ class AnalysisMixin:
 
     def represent(self, address, representation, size=None, author='agent', version=None, max_instructions=10000):
         from .project import number,integer
-        a=number(address)
+        a=self._address(address)
         allowed={'code':1,'byte':1,'word':2,'dword':4,'qword':8,'pointer':self.bits//8,'ascii':None,'utf-16le':None}
         if representation not in allowed:
             raise ValueError('representation must be code, byte, word, dword, qword, pointer, ascii or utf-16le')
