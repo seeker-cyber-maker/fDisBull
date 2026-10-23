@@ -35,6 +35,8 @@ class AnalysisMixin:
         document = inspect_binary(image.source_bytes)
         if image.format == 'MZ':
             document=self._dos_document_for_image(image,document)
+        if image.metadata.get('managed'):
+            document['header']['managed']=image.metadata['managed']
         if image.format == 'raw':
             region = image.regions[0]
             document['sections'] = [dict(name='raw',virtual_address=region.start,virtual_size=len(region.data),file_offset=0,file_size=len(region.data),permissions='rx')]
@@ -132,12 +134,17 @@ class AnalysisMixin:
         return self.db.execute('INSERT OR IGNORE INTO xrefs VALUES (?,?,?,?,?,?)',(version,self.context,k(source),k(target),kind,evidence)).rowcount
 
     def _data_one(self, version, address, regions, document):
+        held=self.db.execute("SELECT address,size FROM definitions WHERE version=? AND representation='unexplored'",(version,)).fetchall()
+        if any(int(row[0],16)<=address<int(row[0],16)+row[1] for row in held):
+            self.db.execute("UPDATE investigations SET state='deferred',detail='explicit unexplored representation' WHERE version=? AND context=? AND address=?",(version,self.context,k(address)))
+            return
         region=next((r for r in regions if r.start<=address<r.start+len(r.data)),None)
         if region is None:
             self.db.execute("UPDATE investigations SET state='outside',detail='outside mapped bytes' WHERE version=? AND context=? AND address=?",(version,self.context,k(address)))
             return
         offset=address-region.start
-        data=region.data[offset:offset+4096]
+        next_held=min((int(row[0],16) for row in held if int(row[0],16)>address),default=region.start+len(region.data))
+        data=region.data[offset:offset+min(4096,next_held-address)]
         defined=self.db.execute('SELECT representation,size FROM definitions WHERE version=? AND context=? AND address=?',(version,self.context,k(address))).fetchone()
         symbol=self.db.execute("SELECT kind FROM symbols WHERE version=? AND address=? AND kind IN ('imports','recovered_import') LIMIT 1",(version,k(address))).fetchone()
         string=next((s for s in document.get('strings',[]) if s.get('address')==address),None)
@@ -155,12 +162,12 @@ class AnalysisMixin:
             representation='import_slot'
         elif string:
             representation=string['encoding']
-            size=min(string['size'],len(region.data)-offset)
+            size=min(string['size'],len(data))
             try:
                 text=data[:size].decode(representation).split('\0',1)[0]
                 if len(text)<4 or any(not ch.isprintable() for ch in text):
                     raise ValueError('not a current string')
-                value={'text':text,'truncated':True} if size>len(data) else text
+                value={'text':text,'truncated':True} if size<string['size'] else text
                 source='snapshot bytes with file string hint'
             except (UnicodeError,ValueError):
                 representation,size,value='scalar',min(width,len(data)),None
@@ -177,10 +184,10 @@ class AnalysisMixin:
                 raise ValueError('bytes do not match requested string representation') from exc
         elif value is None:
             value=int.from_bytes(data[:size],'little')
-        if representation in ('scalar','pointer') and size in (4,8):
+        if representation in ('scalar','pointer') and size==width and width in (4,8):
             target=int.from_bytes(data[:size],'little')
             target_region=next((r for r in regions if r.start<=target<r.start+len(r.data)),None)
-            if target_region:
+            if target and target_region:
                 representation='pointer' if defined else 'pointer_candidate'
                 value={'target':h(target)}
                 if self._add_xref(version,address,target,'pointer','static pointer value; candidate unless corroborated'):
@@ -201,6 +208,13 @@ class AnalysisMixin:
     def analyze(self, version=None, start=None, max_instructions=10000,cs=None,ds=None,es=None,ss=None):
         if self.meta["format"]=="MZ":
             return self._dos_analyze(version,start,max_instructions,cs,ds,es,ss)
+        if self.meta['format']=='PE':
+            from .managed import managed_kind
+            v=self.version(version)['id']
+            row=self.db.execute('SELECT source_bytes FROM binary_info WHERE version=?',(v,)).fetchone()
+            clr=managed_kind(bytes(row[0])) if row and row[0] is not None else self.meta['loader_metadata'].get('managed',{})
+            if clr.get('recognized') and (clr.get('il_only') or clr.get('status')=='invalid_managed'):
+                raise ValueError('CLR/CIL assembly requires the managed command and a MethodDef token; native analysis is not applied to IL bytes')
         if any(x is not None for x in (cs,ds,es,ss)):
             raise ValueError("segment registers apply only to DOS MZ")
         from .project import integer,number
@@ -279,12 +293,17 @@ class AnalysisMixin:
                 state=self.db.execute('SELECT seeds_admitted FROM analysis_state WHERE version=?',(v,)).fetchone()[0]
                 if not state:
                     # Disconnected symbols/exports are a later recursive seed phase.
-                    for row in self.db.execute('SELECT address FROM functions WHERE version=? AND context=? ORDER BY address',(v,self.context)).fetchall():
-                        self._queue_code(v,int(row[0],16),'deferred symbol or export seed')
-                    for item in doc.get('exports',[]):
-                        a=item.get('address')
-                        if a is not None and executable(a):
-                            self._queue_code(v,a,'deferred export seed')
+                    roots=self.meta.get('analysis_roots')
+                    if roots is not None:
+                        for a in roots:
+                            self._queue_code(v,a,'requested module root')
+                    else:
+                        for row in self.db.execute('SELECT address FROM functions WHERE version=? AND context=? ORDER BY address',(v,self.context)).fetchall():
+                            self._queue_code(v,int(row[0],16),'deferred symbol or export seed')
+                        for item in doc.get('exports',[]):
+                            a=item.get('address')
+                            if a is not None and executable(a):
+                                self._queue_code(v,a,'deferred export seed')
                     self.db.execute('UPDATE analysis_state SET seeds_admitted=1 WHERE version=?',(v,))
                     passes+=1
                     continue
@@ -305,20 +324,27 @@ class AnalysisMixin:
             self.db.execute(f'DELETE FROM {table} WHERE version=?',(version,))
         self.db.execute("DELETE FROM functions WHERE version=? AND source IN ('direct call','resolved indirect call')",(version,))
         self.db.execute('INSERT INTO analysis_state VALUES (?,0,0) ON CONFLICT(version) DO UPDATE SET entry_complete=0,seeds_admitted=0',(version,))
-        self._queue_code(version,self.meta['entry'],'entry')
+        roots=self.meta.get('analysis_roots')
+        if roots is not None:
+            for a in roots:
+                self._queue_code(version,a,'requested module root')
+        elif self.meta['loader_metadata'].get('entrypoint_present',True):
+            self._queue_code(version,self.meta['entry'],'entry')
         for row in self.db.execute("SELECT address FROM definitions WHERE version=? AND representation='code'",(version,)).fetchall():
             self._queue_code(version,int(row[0],16),'user code definition')
-        for row in self.db.execute("SELECT address FROM definitions WHERE version=? AND representation!='code'",(version,)).fetchall():
+        for row in self.db.execute("SELECT address FROM definitions WHERE version=? AND representation NOT IN ('code','unexplored')",(version,)).fetchall():
             self._queue_data(version,int(row[0],16),'user data definition')
 
-    def represent(self, address, representation, size=None, author='agent', version=None, max_instructions=10000):
+    def represent(self, address, representation, size=None, author='agent', version=None, max_instructions=10000,defer=False):
         from .project import number,integer
         a=self._address(address)
-        allowed={'code':1,'byte':1,'word':2,'dword':4,'qword':8,'pointer':self.bits//8,'ascii':None,'utf-16le':None}
+        allowed={'code':1,'byte':1,'word':2,'dword':4,'qword':8,'pointer':self.bits//8,'ascii':None,'utf-16le':None,'unexplored':None}
         if representation not in allowed:
-            raise ValueError('representation must be code, byte, word, dword, qword, pointer, ascii or utf-16le')
+            raise ValueError('representation must be code, byte, word, dword, qword, pointer, ascii, utf-16le or unexplored')
+        if not isinstance(defer,bool):
+            raise ValueError('defer must be a boolean')
         if size is None:
-            size=allowed[representation]
+            size=1 if representation=='unexplored' else allowed[representation]
         size=integer(size,'size',1,4096)
         if allowed[representation] is not None and representation!='code' and size!=allowed[representation]:
             raise ValueError('numeric/pointer representation size must match its width')
@@ -338,7 +364,7 @@ class AnalysisMixin:
                 raise ValueError('definition overlaps another explicit definition')
             self.db.execute('INSERT INTO definitions VALUES (?,?,?,?,?,?) ON CONFLICT(version,context,address) DO UPDATE SET representation=excluded.representation,size=excluded.size,author=excluded.author',(v,self.context,k(a),representation,size,author))
             self._reset_analysis(v)
-            analysis=self.analyze(version=v,max_instructions=max_instructions)
+            analysis=None if defer else self.analyze(version=v,max_instructions=max_instructions)
             return dict(version=v,address=h(a),representation=representation,size=size,analysis=analysis)
 
     def items(self, version=None, limit=200, offset=0):

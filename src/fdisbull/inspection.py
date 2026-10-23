@@ -240,6 +240,11 @@ def inspect_binary(data: bytes) -> dict:
               "strings": [], "warnings": list(header["warnings"])}
     warnings = result["warnings"]
     mappings = []
+    if header['format'] in ('PE32','PE32+'):
+        from .managed import managed_kind
+        clr=managed_kind(data)
+        if clr['recognized']:
+            header['managed']=clr
     if header["format"] == "DOS MZ":
         if header["valid"]:
             try:

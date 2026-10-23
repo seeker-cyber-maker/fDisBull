@@ -255,6 +255,7 @@ class DOSViewsMixin:
                     "version": v["id"], "sha256": v["sha256"], "source_sha256": self.meta["source_sha256"],
                     "context": chosen_context, "address": _hex(a), "view_start": _hex(start),
                     "alternative_contexts": first_alternatives, "instructions": instructions, "warnings": warnings,
+                    "analysis": self.analysis_status(v['id']),
                     "view": "Stored static DOS instructions in one CS context; register assumptions and segment bounds are inferred, not runtime observations."}
 
     def _dos_segments(self, version=None):

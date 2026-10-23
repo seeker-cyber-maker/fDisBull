@@ -49,15 +49,18 @@ def _is_executable(address: int, regions: list[Region]) -> bool:
 
 
 def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = None,
-               base: int = 0, entry: int | None = None, load_segment: int = 0x1000) -> Image:
-    """Load ELF, PE, thin Mach-O, or explicitly declared flat raw code.
+               base: int = 0, entry: int | None = None, load_segment: int = 0x1000,
+               module: bool = False) -> Image:
+    """Load classic MZ, ELF, PE, thin Mach-O or explicitly declared raw code.
 
     Native file mappings use their preferred image addresses (PIE load bias is
-    not applied). Raw mode requires ``arch`` and defaults to 64 bits. DOS MZ,
-    fat Mach-O, relocatable objects and big-endian images are rejected because
-    their additional mapping context is not represented by this first release.
+    not applied). Raw mode requires ``arch`` and defaults to 64 bits. DLLs
+    without an entry can be inspected and recursively seeded by exports.
+    Module mode also permits an absent entry for other explicitly chosen libraries.
     """
     path = Path(path)
+    if not isinstance(module,bool):
+        raise ValueError('module must be a boolean')
     if not path.is_file():
         raise ValueError(f"not a regular input file: {path}")
     size = path.stat().st_size
@@ -121,6 +124,7 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
         return result
 
     metadata = {"filename": path.name, "mapping": "preferred static virtual addresses", "source_sha256": hashlib.sha256(data).hexdigest(), "file_mappings":[]}
+    is_dll=False
     if isinstance(binary, lief.ELF.Binary):
         if binary.header.file_type not in (lief.ELF.Header.FILE_TYPE.EXEC, lief.ELF.Header.FILE_TYPE.DYN):
             raise ValueError("only executable and shared/PIE ELF images are supported")
@@ -144,6 +148,12 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
                                       segment.has(lief.ELF.Segment.FLAGS.W)))
         file_format = "ELF"
     elif isinstance(binary, lief.PE.Binary):
+        is_dll=binary.header.has_characteristic(lief.PE.Header.CHARACTERISTICS.DLL)
+        metadata['is_dll']=is_dll
+        from .managed import managed_kind
+        clr=managed_kind(data)
+        if clr['recognized']:
+            metadata['managed']=clr
         machine = binary.header.machine
         if machine == lief.PE.Header.MACHINE_TYPES.AMD64:
             arch, bits = "x86", 64
@@ -189,19 +199,27 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
     else:
         raise ValueError("only ELF, PE, and thin Mach-O executables are supported")
     regions = _regions_check(regions)
+    explicit_entry=entry is not None
     if entry is None:
         entry = int(binary.entrypoint)
-    if not _is_executable(entry, regions):
+    declared_has_entry=bool(binary.optional_header.addressof_entrypoint) if file_format=='PE' else bool(binary.entrypoint)
+    metadata['declared_entrypoint']=int(binary.entrypoint)
+    present=_is_executable(entry,regions) and (explicit_entry or declared_has_entry)
+    if not present and (explicit_entry or not(module or is_dll or metadata.get('managed',{}).get('recognized'))):
         raise ValueError("entry point is not in an executable mapped region; supply an explicit entry")
-    if arch == "arm64" and entry % 4:
+    metadata['entrypoint_present']=present
+    if not present:
+        entry=regions[0].start
+        metadata['entrypoint_note']='No executable entry; this anchor is not a code seed. Analyze exports or an explicit address.'
+    if arch == "arm64" and present and entry % 4:
         raise ValueError("arm64 entry point must be 4-byte aligned")
-    seeds = [Seed(entry, "entry", "entry")]
-    seen = {entry}
+    seeds = [Seed(entry, "entry", "entry")] if present else []
+    seen = {entry} if present else set()
     for function in binary.functions:
         address = int(function.address)
         if file_format == "PE":
             address += imagebase  # LIEF PE function entries are RVAs.
-        if address == entry and function.name and seeds[0].name == "entry":
+        if present and address == entry and function.name and seeds[0].name == "entry":
             seeds[0] = Seed(entry, function.name, "entry + symbol_or_unwind")
         if address not in seen and _is_executable(address, regions):
             seen.add(address)
