@@ -137,7 +137,7 @@ def _layout(snapshot: dict) -> tuple[list[_Text], list[tuple[int, int, str]], in
         if byte_text and (not re.fullmatch(r"[0-9a-fA-F]+", byte_text) or len(byte_text) % 2):
             raise ValueError("instruction bytes must be an even-length hexadecimal string")
         mnemonic = _clean(row.get("mnemonic", "?"), limit=40)
-        operands = _clean(row.get("operands", ""))
+        operands = _clean(row.get("display_operands", row.get("operands", "")))
         byte_lines = _wrap(byte_text.lower(), 30)
         mnemonic_lines = _wrap(mnemonic, 10)
         operand_lines = _wrap(operands, 69)

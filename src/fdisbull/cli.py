@@ -9,6 +9,18 @@ from . import __version__
 
 METHODS = {
     "import": "Create a new project from binary; params: project, path, [arch,bits,base,entry]",
+    "identify": "Identify file header from bytes; path; no project required",
+    "inspect": "Parse file metadata; path; no project required",
+    "info": "Parsed container summary; [version]",
+    "header": "Parsed header fields; [version]",
+    "sections": "Disk and virtual section layout; [version,limit,offset]",
+    "imports": "Static imports and persisted IAT recovery; [version,limit,offset]",
+    "exports": "Export addresses, ordinals and forwarders; [version,limit,offset]",
+    "strings": "File-backed ASCII/UTF16 strings; [version,limit,offset]",
+    "items": "Investigated memory locations; [version,limit,offset]",
+    "queue": "Code/data investigation work; [version,limit,offset]",
+    "represent": "Shared data/code definition; address,representation,[size,author,version,max_instructions]",
+    "recover-imports": "Offline CHimpREC-derived recovery; module_exports or export_map,[candidate_slots,version,max_slots,gap_limit]",
     "status": "Image mappings, hashes, counts and remaining work; [version]",
     "analyze": "Follow pending direct control flow; [version,start,max_instructions]",
     "functions": "Candidate function entries; [version,limit,offset]",
@@ -34,6 +46,14 @@ def invoke(method, params):
             p[field] = number(p[field])
     if method == "help":
         return {"application":"fDisBull","version":__version__,"protocol":"JSON lines, one response per request; not MCP/JSON-RPC","methods":METHODS}
+    if method in ('identify','inspect'):
+        from .inspection import identify_header, inspect_binary
+        path=Path(p.pop('path'))
+        if p or not path.is_file() or path.stat().st_size>64*1024*1024:
+            raise ValueError('expected one regular input file at most 64 MiB')
+        with path.open('rb') as stream:
+            data=stream.read(64*1024*1024+1)
+        return identify_header(data) if method=='identify' else inspect_binary(data)
     project = p.pop("project",None)
     if not project:
         raise ValueError("project path is required")
@@ -44,6 +64,10 @@ def invoke(method, params):
         with Project.create(project,binary,**p) as db:
             return db.status()
     with Project(project) as db:
+        if method in ('info','header','sections','imports','exports','strings'):
+            return db.information(topic='summary' if method=='info' else method,**p)
+        if method=='recover-imports':
+            return db.recover_imports(**p)
         if method == "rename":
             p["text"] = p.pop("name")
             return db.annotate(kind="name",**p)
@@ -67,15 +91,26 @@ def invoke(method, params):
             return render_snapshot(snapshot,destination,fmt)
         return getattr(db,method)(**p)
 
+def public_addresses(value, field=None):
+    address_fields={'address','virtual_address','entrypoint','imagebase','target','start','end'}
+    if isinstance(value,dict):
+        return {key:public_addresses(item,key) for key,item in value.items()}
+    if isinstance(value,list):
+        return [public_addresses(item,'address' if field=='addresses' else None) for item in value]
+    if field in address_fields and isinstance(value,int) and not isinstance(value,bool):
+        return hex(value)
+    return value
+
+
 def respond(request, default_project=None):
     request_id = request.get("id") if isinstance(request,dict) else None
     try:
         if not isinstance(request,dict) or not isinstance(request.get("method"),str):
             raise ValueError("request must be an object with method and optional params/id")
         params = request.get("params",{})
-        if default_project is not None and isinstance(params,dict):
+        if default_project is not None and isinstance(params,dict) and request["method"] not in ("identify","inspect","help"):
             params = {"project":default_project,**params}
-        return {"id":request_id,"ok":True,"result":invoke(request["method"],params)}
+        return {"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params))}
     except (ValueError,TypeError,KeyError,OSError,sqlite3.Error,OverflowError,AttributeError,RecursionError) as e:
         return {"id":request_id,"ok":False,"error":{"type":type(e).__name__,"message":str(e)}}
 
@@ -106,6 +141,9 @@ def parser():
     root = argparse.ArgumentParser(prog="fdisbull",description="Agent-first disassembly with SQLite persistence and headless image export")
     root.add_argument("--version",action="version",version=__version__)
     sub = root.add_subparsers(dest="command",required=True)
+    for name in ('identify','inspect'):
+        c=sub.add_parser(name,help=METHODS[name])
+        c.add_argument('path')
     c = sub.add_parser("import",help="create project from executable or explicit raw code")
     c.add_argument("path")
     c.add_argument("project")
@@ -113,19 +151,20 @@ def parser():
     c.add_argument("--bits",type=int,choices=[16,32,64])
     c.add_argument("--base",default=0,type=lambda s:int(s,0))
     c.add_argument("--entry",type=lambda s:int(s,0))
-    for name in ["status","analyze","functions","disasm","xrefs","rename","comment","versions","patch","issues","render"]:
+    for name in ["status","analyze","functions","disasm","xrefs","rename","comment","versions","patch","issues","render","info","header","sections","imports","exports","strings","items","queue","represent","recover-imports"]:
         c = sub.add_parser(name,help=METHODS[name])
         c.add_argument("project")
         if name != "versions":
             c.add_argument("--version",type=int)
-        if name in ("xrefs","rename","comment","patch"):
+        if name in ("xrefs","rename","comment","patch","represent"):
             c.add_argument("address")
-        if name == "analyze":
-            c.add_argument("--start")
+        if name in ("analyze","represent"):
+            if name=="analyze":
+                c.add_argument("--start")
             c.add_argument("--max-instructions",type=int,default=10000)
-        if name in ("functions","xrefs","issues"):
+        if name in ("functions","xrefs","issues","sections","imports","exports","strings","items","queue"):
             c.add_argument("--limit",type=int,default=200)
-        if name == "functions":
+        if name in ("functions","sections","imports","exports","strings","items","queue"):
             c.add_argument("--offset",type=int,default=0)
         if name in ("disasm","render"):
             c.add_argument("--address")
@@ -136,8 +175,15 @@ def parser():
             c.add_argument("name")
         if name == "comment":
             c.add_argument("text")
-        if name in ("rename","comment"):
+        if name in ("rename","comment","represent"):
             c.add_argument("--author",default="agent")
+        if name=='represent':
+            c.add_argument('representation',choices=['code','byte','word','dword','qword','pointer','ascii','utf-16le'])
+            c.add_argument('--size',type=int)
+        if name=='recover-imports':
+            c.add_argument('export_map',help='JSON list of runtime module export addresses')
+            c.add_argument('--max-slots',type=int,default=4096)
+            c.add_argument('--gap-limit',type=int,default=10)
         if name == "patch":
             c.add_argument("data",help="replacement hex bytes; creates child version")
             c.add_argument("--label",default="patch")

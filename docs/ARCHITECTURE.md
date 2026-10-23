@@ -1,76 +1,55 @@
-# fDisBull 0.1 architecture
+# fDisBull 0.2 architecture
 
-fDisBull is a local disassembly project whose public interface is structured commands.
-Imported code is parsed and decoded; the tool never executes it. Python coordinates
-native iced-x86, Capstone and LIEF libraries with SQLite and Pillow.
+The local engine separates instruction decoding, recoverable facts, shared address interpretations and presentation. Imported code is never executed. Python coordinates native iced-x86, Capstone and LIEF libraries with SQLite and Pillow.
 
 ## Modules
 
 | Module | Responsibility |
 | --- | --- |
-| `model.py` | Immutable in-memory image, region and seed records. |
-| `loader.py` | Bounded raw/ELF/PE/thin Mach-O loading into static virtual-address mappings. |
-| `decoder.py` | One-instruction decode and directly recoverable control/data references. |
-| `project.py` | SQLite persistence, analysis queue, annotations, queries and version creation. |
-| `cli.py` | CLI argument handling, request dispatch and JSON response envelopes. |
-| `render.py` | Database-snapshot SVG/PNG export without a graphical desktop. |
+| `model.py` | Immutable image/region/seed records and retained source bytes. |
+| `loader.py` | Bounded raw/ELF/PE/thin Mach-O mapping at preferred static addresses. |
+| `inspection.py` | Byte-based header recognition, structural metadata and bounded file-backed strings. |
+| `decoder.py` | One-instruction decode, direct control/data targets and structured operand references. |
+| `analysis.py` | Metadata indexing, recursive code/data queues, shared representations and recovery integration. |
+| `project.py` | SQLite lifetime/migration, persistence, annotations, queries and child byte versions. |
+| `chimprec.py` | Offline candidate-slot/export matching and bounded IAT range expansion. |
+| `cli.py` | CLI and JSON-lines dispatch, public address normalization and response envelopes. |
+| `render.py` | Snapshot-backed SVG/PNG export without a graphical desktop. |
 
-## Address and byte identity
+## Identity and persistence
 
-A project currently has one architecture, bitness and flat address space. Instruction,
-function, cross-reference, annotation and work records carry both a version and a
-decode context such as `x86:64:little`. Addresses are zero-padded hexadecimal SQLite
-text, preserving unsigned 64-bit ordering without SQLite signed-integer overflow.
-Public responses use `0x`-prefixed hexadecimal strings.
+One project has one architecture, bitness and flat address space. Decoded facts and annotations carry byte version, decode context (for example `x86:64:little`) and address. Zero-padded hexadecimal SQLite address keys preserve unsigned 64-bit ordering. Public address fields use hexadecimal strings.
 
-Each version stores complete mapped regions as byte blobs, permissions, a parent,
-label, origin, timestamp and mapped-image digest. The application preserves existing
-byte versions: `patch` creates a child and leaves its parent available. A mapped-image
-digest includes region descriptions as well as bytes; it is distinct from the source
-file SHA-256. Patches change the project snapshot, not the original executable file.
+Each version retains mapped region bytes/permissions, parent, label, origin, timestamp and mapped-image digest. The application preserves existing byte snapshots: a patch creates a child instead of overwriting its parent. Mapped-image digests include region descriptions and bytes, so they differ from the original file digest.
 
-Imports use preferred static virtual addresses. Runtime relocations and process
-load biases are not applied. ELF load segments, PE headers/sections and Mach-O
-segments supply the mappings; overlapping or oversized mappings are rejected.
+New projects also retain original source bytes, inspection metadata and indexed static symbols. File offsets and virtual mappings remain distinct; runtime relocations/load bias are not applied. Strings map only through file-backed ranges. Unknown bindings are null rather than guessed.
 
-## Analysis and evidence
+Schema 1 projects migrate in place to schema 2 without deleting original versions or annotations. Prior work is reopened so analysis can backfill structured references. Those projects lack full original source bytes/metadata; information queries report this explicitly. Reimport into a new project to recover the new metadata. Retained mapped bytes remain usable if the source file is missing.
 
-Entry points and loader-provided function seeds start a persisted work queue. A user
-can add a seed with `analyze --start`. Analysis decodes bounded work, follows direct
-branches/calls and permitted fallthrough, and persists instructions and references.
-Direct call destinations become function candidates. Queue states and details retain
-pending work, invalid bytes, addresses outside executable mappings and unresolved
-indirect control flow. A budget-limited run can resume from the queue.
+## Analysis order and convergence
 
-Function entries are candidates, not established function boundaries. This release
-does not build a complete CFG, infer function ownership, recover jump tables, prove
-code/data classification, perform symbolic execution or provide decompilation.
-Static references are those the decoder can resolve directly; unresolved segment
-bases and indirect targets remain unresolved.
+The entry point begins the recursive code queue. Decoding follows direct branches/calls and permitted fallthrough, persists operand references/xrefs, and queues mapped memory targets for investigation. Once code work drains, data tasks classify strings, import slots, scalar values and pointer candidates. A pointer alone does not establish code. A corresponding indirect control-flow reference can corroborate a pointer target and queue it as code.
 
-Annotations are versioned names or comments with an author and timestamp. Child
-patches inherit them and mark their origin. **Inherited annotations require semantic
-revalidation after byte changes.** Child analysis starts with a fresh queue rather
-than copying the parent's decoded instructions and cross-references. Manually
-supplied byte versions support later SMC work; runtime SMC capture is not implemented.
+Disconnected symbol/function/export seeds enter a later recursive phase. New code/data evidence can reopen related work; persistent uniqueness keys deduplicate facts and tasks. A bounded call reports pending work and whether another call is required. `stable` means the implemented inference rules have no queued work; it does not certify exhaustive reverse engineering. Invalid bytes, blocked definitions and unresolved indirect flow remain inspectable.
 
-## Agent interface and views
+Functions are candidate entries, not proven boundaries or block ownership. There is no complete CFG, general jump-table recovery, symbolic execution or decompiler.
 
-`serve` reads one JSON object per stdin line and emits one stdout response per request.
-Requests carry `id`, `method` and `params`; responses carry `id`, `ok` and either
-`result` or `error`. This is a local JSON-lines protocol, not MCP or JSON-RPC, and it
-opens no listening socket. One-shot CLI commands use the same dispatcher.
+## Shared address interpretations
 
-Disassembly queries return stored instruction rows and annotations from one database
-snapshot. They do not silently decode gaps. Rendering consumes that snapshot and
-exports SVG/PNG with byte-version provenance. Long text wraps; excessive views fail
-explicitly. A future native UI should consume the same query/snapshot interfaces.
+Address labels resolve from user names, indexed/recovered symbols and function/default names. Explicit representations coexist with derived data items. Structured operand references point to target addresses, so callers resolve names/types when queried rather than copying annotations into instruction text. Disassembly retains numeric operands and adds `display_operands`; image rendering consumes the resolved field.
+
+`represent` records a bounded code/data range, clears derived analysis and automatically reanalyzes within budget while retaining annotations. Explicit data definitions block overlapping decoding; explicit code definitions can admit mapped ranges as code. Parent and child byte versions remain isolated. Patches inherit names/comments/definitions with provenance; **inherited interpretations need revalidation after changed bytes**.
+
+## Offline recovery
+
+`chimprec.py` adapts the pinned CHimpREC candidate-slot/export-resolution method. Supplied export addresses anchor candidate pointer cells; bounded expansion retains aliases, ordinal identities, padding and unresolved values. The project command selects candidates from recursively decoded memory references. The standalone helper additionally offers heuristic x86 pattern discovery. Recovery receipts and resolved shared slot labels persist per version. This is not live Windows attachment, runtime module discovery, forwarder traversal or executable rebuilding.
+
+## Agent and presentation seams
+
+The stdin/stdout JSON-lines protocol routes to the same project methods as one-shot CLI commands. It is not MCP/JSON-RPC and opens no network socket. Metadata inspection also works without a project. Database-backed views return one stored snapshot and do not silently decode gaps; exports include version/hash provenance. A future native UI should consume these query/snapshot interfaces.
 
 ## Current boundaries
 
-The decoders support flat raw x86 16/32/64-bit and little-endian ARM64 code. Native
-executable loading supports the selected x86/ARM64 variants in ELF, PE and thin
-Mach-O. DOS MZ segmented loading is missing: raw x86/16 accepts an already extracted
-flat code segment, not a complete DOS executable. Fat Mach-O, big-endian images and
-relocatable object files also require further loader work. There is no emulator,
-debugger connection, multi-address-space model, automatic LLM agent or native UI.
+Decoders support flat raw x86 16/32/64-bit and little-endian ARM64. Native loading supports selected x86/ARM64 ELF, PE and thin little-endian Mach-O. DOS MZ/NE/LE/LX headers can be recognized and inspected, but segmented DOS executable loading remains missing; raw x86/16 requires an extracted flat segment. Fat Mach-O, big-endian images and relocatable object loading need further work.
+
+ELF/Mach-O import binding and some metadata are partial; warnings identify unresolved information. PE delay imports are not parsed. String scanning covers printable ASCII and ASCII-range UTF-16LE heuristically. No runtime SMC capture, emulator/debugger connection, automatic LLM agent or native desktop UI is implemented. Linux is exercised by the verification receipt; macOS runtime verification remains open.

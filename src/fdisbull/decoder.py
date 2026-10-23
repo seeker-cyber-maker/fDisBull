@@ -24,6 +24,8 @@ def decode(data: bytes, address: int, arch: str, bits: int) -> dict | None:
         raise ValueError("instruction address must fit in an unsigned 64-bit integer")
     if not data:
         return None
+    references = []
+    immediates = []
     if arch == "x86":
         if bits not in (16, 32, 64):
             raise ValueError("x86 decoding requires 16, 32, or 64 bits")
@@ -64,6 +66,17 @@ def decode(data: bytes, address: int, arch: str, bits: int) -> dict | None:
             has_memory = any(instruction.op_kind(index) == ix.OpKind.MEMORY for index in range(instruction.op_count))
             if has_memory and instruction.memory_segment not in (ix.Register.FS, ix.Register.GS):
                 data_refs.append(instruction.memory_displacement)
+        if target is not None:
+            index=next(i for i in range(instruction.op_count) if instruction.op_kind(i) in (ix.OpKind.NEAR_BRANCH16,ix.OpKind.NEAR_BRANCH32,ix.OpKind.NEAR_BRANCH64))
+            references.append(dict(operand_index=index,role='code',target=target,width=bits//8))
+        for ref in data_refs:
+            index=next((i for i in range(instruction.op_count) if instruction.op_kind(i)==ix.OpKind.MEMORY),-1)
+            width=ix.MemorySizeExt.size(instruction.memory_size) or None
+            references.append(dict(operand_index=index,role='address' if instruction.mnemonic==ix.Mnemonic.LEA else 'memory',target=ref,width=width))
+        immediate_kinds={getattr(ix.OpKind,name) for name in dir(ix.OpKind) if name.startswith('IMMEDIATE')}
+        for index in range(instruction.op_count):
+            if instruction.op_kind(index) in immediate_kinds:
+                immediates.append(dict(operand_index=index,value=instruction.immediate(index) & ((1<<64)-1)))
         size = instruction.len
     elif arch == "arm64":
         if bits != 64:
@@ -76,7 +89,7 @@ def decode(data: bytes, address: int, arch: str, bits: int) -> dict | None:
         mnemonic, operands = instruction.mnemonic, instruction.op_str
         text = mnemonic + (" " + operands if operands else "")
         flow, target, data_refs = "next", None, []
-        immediate_operands = [operand.imm for operand in instruction.operands if operand.type == capstone.arm64.ARM64_OP_IMM]
+        immediate_operands = [operand.imm & ((1<<64)-1) for operand in instruction.operands if operand.type == capstone.arm64.ARM64_OP_IMM]
         if mnemonic in ("ret", "retaa", "retab", "eret", "eretaa", "eretab"):
             flow = "return"
         elif mnemonic in ("br", "braa", "brab", "braaz", "brabz"):
@@ -100,6 +113,10 @@ def decode(data: bytes, address: int, arch: str, bits: int) -> dict | None:
             # Literal addressing is PC relative; register-indexed loads have no
             # immediate operand in Capstone's top-level operand list.
             data_refs.append(immediate_operands[-1])
+        for ref in ([target] if target is not None else [])+data_refs:
+            index=next((i for i,op in enumerate(instruction.operands) if op.type==capstone.arm64.ARM64_OP_IMM and (op.imm & ((1<<64)-1))==ref),-1)
+            role='code' if ref==target else ('address' if mnemonic in ('adr','adrp') else 'memory')
+            references.append(dict(operand_index=index,role=role,target=ref,width=None))
         size = instruction.size
     else:
         raise ValueError(f"unsupported architecture: {arch!r}")
@@ -113,4 +130,6 @@ def decode(data: bytes, address: int, arch: str, bits: int) -> dict | None:
         "flow": flow,
         "target": target,
         "data_refs": data_refs,
+        "references": references,
+        "immediates": immediates,
     }

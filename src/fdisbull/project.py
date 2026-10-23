@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from .model import Region
 
 MAX_ADDRESS = (1 << 64) - 1
-SCHEMA = 1
+SCHEMA = 2
 
 def number(value):
     if isinstance(value, bool) or not isinstance(value, (int, str)):
@@ -59,7 +59,10 @@ CREATE TABLE work(version INTEGER REFERENCES versions(id), context TEXT NOT NULL
     PRIMARY KEY(version,context,address));
 """
 
-class Project:
+from .analysis import AnalysisMixin, EXTENSION_DDL
+
+
+class Project(AnalysisMixin):
     def __init__(self, path):
         self.path = Path(path).resolve()
         if not self.path.is_file():
@@ -68,8 +71,10 @@ class Project:
         self.db.row_factory = sqlite3.Row
         try:
             meta = dict(self.db.execute("SELECT key,value FROM metadata"))
-            if meta.get("application") != "fdisbull" or int(meta.get("schema", -1)) != SCHEMA:
+            if meta.get("application") != "fdisbull" or int(meta.get("schema", -1)) not in (1,SCHEMA):
                 raise ValueError("unsupported project schema")
+            if int(meta["schema"]) == 1:
+                self.db.executescript("BEGIN IMMEDIATE;" + EXTENSION_DDL + "INSERT OR IGNORE INTO analysis_state SELECT id,0,0 FROM versions; UPDATE work SET state='pending',detail=NULL; UPDATE metadata SET value='2' WHERE key='schema'; COMMIT;")
             self.meta = {k:json.loads(v) for k,v in meta.items() if k not in ("application","schema")}
             self.arch, self.bits = self.meta["arch"], self.meta["bits"]
             self.context = f"{self.arch}:{self.bits}:little"
@@ -122,7 +127,7 @@ class Project:
         try:
             db = sqlite3.connect(target)
             try:
-                db.executescript(DDL)
+                db.executescript(DDL + EXTENSION_DDL)
                 db.execute("PRAGMA journal_mode=WAL")
                 meta = {"arch":image.arch,"bits":image.bits,"format":image.format,"entry":image.entry,
                         "filename":source.name,"source_sha256":image.metadata["source_sha256"],
@@ -139,13 +144,21 @@ class Project:
                     address = key(seed.address)
                     db.execute("INSERT OR IGNORE INTO functions(version,context,address,name,source) VALUES (1,?,?,?,?)",
                         (context,address,seed.name,seed.source))
-                    db.execute("INSERT OR IGNORE INTO work(version,context,address,reason) VALUES (1,?,?,?)",
-                        (context,address,seed.source))
+                    if seed.address == image.entry:
+                        db.execute("INSERT OR IGNORE INTO work(version,context,address,reason) VALUES (1,?,?,?)",
+                            (context,address,seed.source))
                 db.commit()
                 db.execute("PRAGMA wal_checkpoint(TRUNCATE)")
             finally:
                 db.close()
-            return cls(target)
+            project = cls(target)
+            try:
+                with project.transaction(True):
+                    project._init_information(image)
+                return project
+            except BaseException:
+                project.db.close()
+                raise
         except BaseException:
             target.unlink(missing_ok=True)
             Path(str(target)+"-wal").unlink(missing_ok=True)
@@ -183,73 +196,6 @@ class Project:
     def versions(self):
         return [dict(r) for r in self.db.execute("SELECT * FROM versions ORDER BY id")]
 
-    def analyze(self, version=None, start=None, max_instructions=10000):
-        from .decoder import decode
-        budget = integer(max_instructions,"max_instructions",1,1_000_000)
-        with self.transaction(True):
-            v = self.version(version)["id"]
-            regions = self.regions(v)
-            def mapped(a):
-                return next((r for r in regions if r.executable and r.start <= a < r.start+len(r.data)),None)
-            def enqueue(a, reason):
-                self.db.execute("INSERT OR IGNORE INTO work(version,context,address,reason) VALUES (?,?,?,?)",(v,self.context,key(a),reason))
-            if start is not None:
-                a = number(start)
-                if not mapped(a):
-                    raise ValueError("analysis start is not in executable mapped bytes")
-                enqueue(a,"user seed")
-                self.db.execute("INSERT OR IGNORE INTO functions(version,context,address,name,source) VALUES (?,?,?,?,?)",
-                    (v,self.context,key(a),f"sub_{a:x}","user seed"))
-            queue = deque(int(r[0],16) for r in self.db.execute("SELECT address FROM work WHERE version=? AND context=? AND state='pending' ORDER BY rowid",(v,self.context)))
-            queued = set(queue)
-            decoded = attempted = 0
-            while queue and attempted < budget:
-                a = queue.popleft()
-                attempted += 1
-                addr = key(a)
-                existing = self.db.execute("SELECT 1 FROM instructions WHERE version=? AND context=? AND address=?",(v,self.context,addr)).fetchone()
-                if existing:
-                    self.db.execute("UPDATE work SET state='decoded' WHERE version=? AND context=? AND address=?",(v,self.context,addr))
-                    continue
-                region = mapped(a)
-                if region is None:
-                    self.db.execute("UPDATE work SET state='outside',detail='outside executable mapping' WHERE version=? AND context=? AND address=?",(v,self.context,addr))
-                    continue
-                offset = a-region.start
-                ins = decode(region.data[offset:offset+16],a,self.arch,self.bits)
-                if ins is None:
-                    self.db.execute("UPDATE work SET state='invalid',detail='decoder rejected bytes' WHERE version=? AND context=? AND address=?",(v,self.context,addr))
-                    continue
-                flow, target = ins["flow"],ins["target"]
-                self.db.execute("INSERT INTO instructions VALUES (?,?,?,?,?,?,?,?,?)",
-                    (v,self.context,addr,ins["size"],ins["bytes"],ins["mnemonic"],ins["operands"],flow,key(target) if target is not None else None))
-                detail = "unresolved indirect control flow" if flow.startswith("indirect") else None
-                self.db.execute("UPDATE work SET state='decoded',detail=? WHERE version=? AND context=? AND address=?",(detail,v,self.context,addr))
-                decoded += 1
-                following = a+ins["size"]
-                successors = []
-                if target is not None:
-                    kind = "call" if flow == "call" else "branch"
-                    self.db.execute("INSERT OR IGNORE INTO xrefs VALUES (?,?,?,?,?,?)",(v,self.context,addr,key(target),kind,"decoded direct operand"))
-                    if mapped(target):
-                        successors.append((target,kind))
-                        if flow == "call":
-                            self.db.execute("INSERT OR IGNORE INTO functions(version,context,address,name,source) VALUES (?,?,?,?,?)",
-                                (v,self.context,key(target),f"sub_{target:x}","direct call"))
-                for ref in ins.get("data_refs",[]):
-                    self.db.execute("INSERT OR IGNORE INTO xrefs VALUES (?,?,?,?,?,?)",(v,self.context,addr,key(ref),"data","decoded static memory operand"))
-                if flow in ("next","call","conditional","indirect_call") and mapped(following):
-                    successors.append((following,"fallthrough"))
-                    if flow == "conditional":
-                        self.db.execute("INSERT OR IGNORE INTO xrefs VALUES (?,?,?,?,?,?)",(v,self.context,addr,key(following),"fallthrough","decoded conditional fallthrough"))
-                for successor,reason in successors:
-                    enqueue(successor,reason)
-                    if successor not in queued:
-                        queued.add(successor)
-                        queue.append(successor)
-            pending = self.db.execute("SELECT count(*) FROM work WHERE version=? AND state='pending'",(v,)).fetchone()[0]
-            return {"version":v,"decoded":decoded,"attempted":attempted,"pending":pending,"budget_exhausted":bool(pending and attempted >= budget)}
-
     def functions(self, version=None, limit=200, offset=0):
         v = self.version(version)["id"]
         limit = integer(limit,"limit",1,10000)
@@ -282,7 +228,7 @@ class Project:
         v = self.version(version)["id"]
         column = "target" if direction == "to" else "source"
         rows = self.db.execute(f"SELECT * FROM xrefs WHERE version=? AND context=? AND {column}=? ORDER BY source,target,kind LIMIT ?",(v,self.context,key(address),limit))
-        return [{"source":hx(int(r["source"],16)),"target":hx(int(r["target"],16)),"kind":r["kind"],"evidence":r["evidence"],"version":v} for r in rows]
+        return [{"source":hx(int(r["source"],16)),"target":hx(int(r["target"],16)),"kind":r["kind"],"evidence":r["evidence"],"version":v,"source_name":self._label(v,int(r["source"],16)),"target_name":self._label(v,int(r["target"],16)),"target_representation":self._presentation(v,int(r["target"],16))["representation"]} for r in rows]
 
     def disassembly(self, address=None, lines=50, version=None):
         count = integer(lines,"lines",1,500)
@@ -294,7 +240,14 @@ class Project:
             for r in rows:
                 fn = self.db.execute("SELECT name FROM functions WHERE version=? AND context=? AND address=?",(v["id"],self.context,r["address"])).fetchone()
                 address_hex = hx(int(r["address"],16))
-                result.append({"address":address_hex,"size":r["size"],"bytes":r["bytes"],"mnemonic":r["mnemonic"],"operands":r["operands"],"flow":r["flow"],"target":hx(int(r["target"],16)) if r["target"] else None,"name":r["name"] or (fn[0] if fn else None),"comment":r["comment"],"comment_author":r["comment_author"],"comment_inherited_from":r["comment_inherited_from"],"xrefs":self.xrefs(address_hex,"to",v["id"]),"context":self.context})
+                references=[]
+                for ref in self.db.execute('SELECT * FROM operand_refs WHERE version=? AND context=? AND source=? ORDER BY operand_index,role',(v['id'],self.context,r['address'])):
+                    target=int(ref['target'],16)
+                    references.append(dict(operand_index=ref['operand_index'],role=ref['role'],target=hx(target),width=ref['width'],**self._presentation(v['id'],target)))
+                display=r['operands']
+                if references:
+                    display += ' ; ' + ', '.join(ref['name'] + (f" <{ref['representation']}>" if ref['representation'] else '') for ref in references)
+                result.append({"references":references,"display_operands":display,"address":address_hex,"size":r["size"],"bytes":r["bytes"],"mnemonic":r["mnemonic"],"operands":r["operands"],"flow":r["flow"],"target":hx(int(r["target"],16)) if r["target"] else None,"name":r["name"] or (fn[0] if fn else None),"comment":r["comment"],"comment_author":r["comment_author"],"comment_inherited_from":r["comment_inherited_from"],"xrefs":self.xrefs(address_hex,"to",v["id"]),"context":self.context})
             return {"title":self.meta["filename"],"arch":self.arch,"bits":self.bits,"context":self.context,"version":v["id"],"sha256":v["sha256"],"source_sha256":self.meta["source_sha256"],"address":hx(a),"instructions":result,"view":"stored instructions ordered by address; gaps are not decoded implicitly"}
 
     def patch(self, address, data, label="patch", origin="agent supplied bytes", version=None):
@@ -324,7 +277,36 @@ class Project:
                 self.db.execute("INSERT INTO regions VALUES (?,?,?,?,?,?)",(v,r.name,key(r.start),r.data,r.executable,r.writable))
             self.db.execute("INSERT INTO annotations SELECT ?,context,address,kind,text,author,created,? FROM annotations WHERE version=?",(v,parent,parent))
             self.db.execute("INSERT INTO functions SELECT ?,context,address,name,source,status FROM functions WHERE version=? AND source!='direct call'",(v,parent))
-            self.db.execute("INSERT INTO work(version,context,address,reason) SELECT ?,context,address,source FROM functions WHERE version=?",(v,v))
+            self.db.execute("INSERT INTO definitions SELECT ?,context,address,representation,size,author FROM definitions WHERE version=?",(v,parent))
+            info=self.db.execute('SELECT document,source_bytes FROM binary_info WHERE version=?',(parent,)).fetchone()
+            if info:
+                document=json.loads(info[0])
+                source_bytes=bytes(info[1]) if info[1] is not None else None
+                file_offset=None
+                if source_bytes is not None:
+                    for section in document.get('file_mappings',document.get('sections',[])):
+                        va,fs=section.get('virtual_address'),section.get('file_size',0)
+                        if va is not None and va <= a and a+len(replacement) <= va+fs:
+                            file_offset=section['file_offset']+a-va
+                            break
+                    if file_offset is not None:
+                        source_bytes=source_bytes[:file_offset]+replacement+source_bytes[file_offset+len(replacement):]
+                        from .inspection import inspect_binary
+                        refreshed=inspect_binary(source_bytes)
+                        refreshed['file_mappings']=document.get('file_mappings',[])
+                        if refreshed.get('sections') != document.get('sections') or refreshed.get('header') != document.get('header'):
+                            refreshed.setdefault('warnings',[]).append('Header/layout changed; stored memory mapping remains the parent mapping. Reimport patched file for a new layout.')
+                        if self.meta['format']=='raw':
+                            refreshed['sections']=document['sections']
+                            refreshed['imports'],refreshed['exports']=[],[]
+                            for string in refreshed['strings']:
+                                string['address']=regions[0].start+string['file_offset']
+                        document=refreshed
+                    else:
+                        document.setdefault('warnings',[]).append('Mapped-memory patch has no known disk counterpart; file metadata remains inherited from parent.')
+                self.db.execute('INSERT INTO binary_info VALUES (?,?,?)',(v,json.dumps(document),source_bytes))
+                self._index_symbols(v,document)
+            self._reset_analysis(v)
             return {"version":v,"parent":parent,"address":hx(a),"bytes":replacement.hex(),"sha256":self.version(v)["sha256"],"annotations":"inherited; semantic validity requires review","analysis":"fresh work queue; previous analysis preserved in parent"}
 
     def issues(self, version=None, limit=200):
