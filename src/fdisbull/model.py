@@ -23,3 +23,4 @@ class Image:
     regions: list[Region]
     seeds: list[Seed]
     metadata: dict = field(default_factory=dict)
+    source_bytes: bytes = b""

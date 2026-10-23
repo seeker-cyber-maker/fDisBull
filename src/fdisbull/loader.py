@@ -89,7 +89,7 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
         if arch == "arm64" and entry % 4:
             raise ValueError("arm64 entry point must be 4-byte aligned")
         return Image("raw", arch, bits, entry, regions, [Seed(entry, "entry", "entry")],
-                     {"mapping": "flat", "filename": path.name, "source_sha256": hashlib.sha256(data).hexdigest()})
+                     {"mapping": "flat", "filename": path.name, "source_sha256": hashlib.sha256(data).hexdigest(), "file_mappings":[dict(virtual_address=base,file_offset=0,file_size=len(data))]}, source_bytes=data)
     if bits is not None or base:
         raise ValueError("bits and base overrides require an explicit raw architecture")
     if data[:4] in (b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca", b"\xca\xfe\xba\xbf", b"\xbf\xba\xfe\xca"):
@@ -115,7 +115,7 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
         mapped_size += len(result)
         return result
 
-    metadata = {"filename": path.name, "mapping": "preferred static virtual addresses", "source_sha256": hashlib.sha256(data).hexdigest()}
+    metadata = {"filename": path.name, "mapping": "preferred static virtual addresses", "source_sha256": hashlib.sha256(data).hexdigest(), "file_mappings":[]}
     if isinstance(binary, lief.ELF.Binary):
         if binary.header.file_type not in (lief.ELF.Header.FILE_TYPE.EXEC, lief.ELF.Header.FILE_TYPE.DYN):
             raise ValueError("only executable and shared/PIE ELF images are supported")
@@ -132,6 +132,7 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
             raise ValueError(f"unsupported ELF architecture: {machine}")
         for index, segment in enumerate(binary.segments):
             if segment.type == lief.ELF.Segment.TYPE.LOAD:
+                metadata["file_mappings"].append(dict(virtual_address=int(segment.virtual_address),file_offset=int(segment.file_offset),file_size=int(segment.physical_size)))
                 regions.append(Region(f"LOAD{index}", segment.virtual_address,
                                       mapped_content(segment.content, segment.virtual_size),
                                       segment.has(lief.ELF.Segment.FLAGS.X),
@@ -151,8 +152,10 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
         metadata["imagebase"] = hex(imagebase)
         headers_size = min(int(binary.optional_header.sizeof_headers), len(data))
         if headers_size:
+            metadata["file_mappings"].append(dict(virtual_address=int(imagebase),file_offset=0,file_size=headers_size))
             regions.append(Region("headers", imagebase, mapped_content(data[:headers_size], headers_size), False))
         for section in binary.sections:
+            metadata["file_mappings"].append(dict(virtual_address=int(imagebase+section.virtual_address),file_offset=int(section.pointerto_raw_data),file_size=int(section.sizeof_raw_data)))
             regions.append(Region(section.name, imagebase + section.virtual_address,
                                   mapped_content(section.content, section.virtual_size),
                                   section.has_characteristic(lief.PE.Section.CHARACTERISTICS.MEM_EXECUTE),
@@ -173,6 +176,7 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
         for segment in binary.segments:
             if segment.name == "__PAGEZERO" or not segment.init_protection:
                 continue
+            metadata["file_mappings"].append(dict(virtual_address=int(segment.virtual_address),file_offset=int(segment.file_offset),file_size=int(segment.file_size)))
             regions.append(Region(segment.name, segment.virtual_address,
                                   mapped_content(segment.content, segment.virtual_size),
                                   bool(segment.init_protection & 4), bool(segment.init_protection & 2)))
@@ -199,4 +203,4 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
             seeds.append(Seed(address, function.name or f"sub_{address:x}", "symbol_or_unwind"))
     metadata["seed_count"] = len(seeds)
     metadata["relocations"] = "recorded mapping only; no runtime relocation applied"
-    return Image(file_format, arch, bits, entry, regions, seeds, metadata)
+    return Image(file_format, arch, bits, entry, regions, seeds, metadata, source_bytes=data)
