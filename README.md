@@ -1,4 +1,4 @@
-# fDisBull 0.2
+# fDisBull 0.3
 
 A local, agent-first disassembler with a persistent SQLite database and GUI-free image export. iced-x86 decodes x86, Capstone decodes ARM64, and LIEF reads executable metadata. The project owns its analysis order, annotations and byte versions. Python coordinates the native libraries.
 
@@ -17,6 +17,8 @@ fdisbull functions examples/demo.fdb
 ```
 
 Bundled examples include a compiled ELF with C source, a constructed Windows PE with imports/exports, and a synthetic captured-IAT snapshot with an export map. Saved projects and PNG/SVG exports are included. The tool can inspect an ELF file on another supported host without running that file.
+
+`examples/dinopark.fdb` contains the completed static analysis of your original DOS executable: 46,294 instructions across 31 CS contexts. Query it immediately with `fdisbull code-regions examples/dinopark.fdb` or `fdisbull disasm examples/dinopark.fdb --address '38ff:53fd'`. Its analysis receipt and PNG/SVG exports are included alongside it.
 
 ## Inspect a file, then build a project
 
@@ -38,6 +40,42 @@ fdisbull functions my-analysis.fdb
 Importing a new project stores the source bytes and parsed metadata automatically. Project information remains available after the original file disappears. `info` gives the summary; the individual information commands support version selection and list pagination.
 
 Analysis starts with recursive traversal from the entry point, then investigates mapped data references and admits disconnected symbol/export seeds. Pointer values become candidates; corroborated indirect control-flow references can supply further code work. Facts and tasks are deduplicated. Repeat `analyze` after a budget stop until it reports `stable: true`. Stability means the implemented rules have no remaining queued work, not that every function or indirect target has been recovered. `queue`, `items` and `issues` expose the remaining evidence and uncertainty.
+
+## Analyze the original DOS DinoPark executable
+
+Classic DOS MZ loading now applies the executable's relocation table and retains real CS:IP contexts. This is static disassembly of the original bytes; it does not run the game.
+
+The following uses the original file location in this workspace. After extracting the package elsewhere, replace `../dino-check/DINOPARK.EXE` with the path to your own original file:
+
+```bash
+fdisbull identify ../dino-check/DINOPARK.EXE
+fdisbull import ../dino-check/DINOPARK.EXE dinopark.fdb --load-segment 0x1000
+fdisbull header dinopark.fdb
+fdisbull analyze dinopark.fdb --max-instructions 100000
+fdisbull analyze dinopark.fdb --max-instructions 100000
+fdisbull segments dinopark.fdb
+fdisbull code-regions dinopark.fdb
+fdisbull disasm dinopark.fdb --address '38ff:53fd' --lines 35
+fdisbull xrefs dinopark.fdb '38ff:53fd'
+fdisbull render dinopark.fdb loan-function.png --address '38ff:53fd' --lines 35
+```
+
+Repeat the bounded `analyze` command until its receipt reports `stable: true`; two calls above are an example, not a guarantee of completion. `stable` concerns the implemented static rules. Unknown indirect targets, jump tables and external overlays can still remain.
+
+With the chosen load segment `0x1000`, the previously investigated `38ff:53fd` loan routine is addressable directly. Changing the load segment changes relocated selectors. To add a targeted seed and explicit register assumptions:
+
+```bash
+fdisbull analyze dinopark.fdb --start '38ff:53fd' --ds 0x4020 --max-instructions 10000
+fdisbull disasm dinopark.fdb --address 0x3e3ed --cs 0x38ff --lines 35
+```
+
+Here `0x4020` is DinoPark's statically established startup data segment at that load address, not a universal DOS default. `--cs`, `--ds`, `--es` and `--ss` let the caller provide analysis assumptions. Unknown segment/register values remain unresolved. The MZ project `header` includes fixed DOS header fields, relocation count, load segment and initial CS:IP; `segments` lists inferred segment roles/bounds. `code-regions` reports only contiguous stored instruction runs within a CS context and does not declare whole candidate segments to be code.
+
+DOS analysis follows the entry first, then admits relocation-backed far-call patterns, callback pointers in observed data segments and corroborated paired literal far-pointer stores as **candidates**. It does not treat every relocated word as code. Multiple CS:IP aliases may share a physical address; their instruction interpretations remain separate while a rename or explicit representation belongs to that shared physical location.
+
+The loader excludes the MZ header and trailing overlay bytes from executable memory. It zero-fills only paragraph padding and the declared minimum allocation, not a guessed DOS heap. Initial PSP segment values are recorded, but PSP bytes are not fabricated. A20 wrapping, DOS allocation, runtime overlays and device behavior are not emulated.
+
+Static propagation preserves DS/SS/BP/SP across call fallthrough by a conventional DOS C calling assumption, while general registers and ES become unknown. Deferred candidate seeds may inherit the startup DS or a unique observed data segment. Receipts and disassembly expose assumptions; these facts are not runtime execution observations. See [VERIFICATION.md](docs/VERIFICATION.md) for measured original-binary results.
 
 ## Name and interpret addresses once
 
@@ -117,20 +155,22 @@ fdisbull disasm my-analysis.fdb --version 1 --address 0xADDRESS
 
 A patch preserves the parent snapshot and creates fresh child analysis. Operations default to the newest version; use `--version` to select another. Names, comments and explicit representations inherit and require semantic revalidation after changes. Source-file and mapped-snapshot digests are distinct: mapped hashes include region descriptions and bytes.
 
-Opening a 0.1 database migrates its schema without discarding byte versions or annotations. Run `analyze` to backfill structured references from the retained bytes. Old projects did not retain full original file bytes, so newly added header/import/export/section metadata remains explicitly unavailable there; reimport the original into a new project to obtain it. Existing byte analysis still works if the original is missing.
+Schema 1 and 2 databases migrate to schema 3 without discarding byte versions or annotations. A schema-1 project needs `analyze` to backfill structured references from retained bytes. Its original full-file metadata remains unavailable unless it was retained; reimport the original into a new project to obtain that information. Migration does not reconstruct missing source bytes. Existing byte analysis still works if the original is missing.
+
+DOS patches apply to relocated memory bytes. For a stored child file version, all relocation fixups are undone in reverse order before rebuilding the file-backed module; the parent remains unchanged. Allocation-only/BSS edits stay in the child memory snapshot and have no disk counterpart. Patching does not execute or save a runnable DOS process.
 
 ## Supported scope
 
-Loaders support little-endian x86/x86-64 and ARM64 ELF/PE, plus thin little-endian x86/x86-64/ARM64 Mach-O. They use preferred static virtual addresses; they do not apply runtime relocations. A shared library without an executable entry requires `--entry`.
+Loaders support classic DOS MZ, little-endian x86/x86-64 and ARM64 ELF/PE, and thin little-endian x86/x86-64/ARM64 Mach-O. MZ applies its segment fixups at the chosen load segment. Other executable loaders use preferred static virtual addresses without applying runtime relocations. A shared library without an executable entry requires `--entry`.
 
 ```bash
 fdisbull import segment.bin dos-segment.fdb --arch x86 --bits 16 --base 0x100
 fdisbull import arm-code.bin arm.fdb --arch arm64 --base 0x1000
 ```
 
-`--arch` always selects explicit raw mode. Raw x86/16 is a flat extracted code segment. Header identification/inspection recognizes DOS MZ, NE, LE and LX, but **segmented DOS executable loading is still missing**. Recognizing DinoPark's DOS header does not mean its whole executable can yet be analyzed correctly. Fat Mach-O slices must also be selected before loading.
+`--arch` always selects explicit flat raw mode. Use automatic MZ import for DOS segmentation and relocation; raw x86/16 is only an extracted flat segment. NE/LE/LX secondary headers can be recognized but are not loaded as classic DOS MZ. Fat Mach-O slices must be selected before loading.
 
-ELF/Mach-O import bindings are partial and use null addresses where unresolved; PE delay-load imports are not enumerated. String extraction is a bounded heuristic for printable ASCII and ASCII-range UTF-16LE, not full Unicode recovery. Function entries are candidates. Complete function boundaries/CFGs, jump-table analysis, decompilation, runtime SMC capture and a native UI remain future work.
+ELF/Mach-O import bindings are partial and use null addresses where unresolved; PE delay-load imports are not enumerated. String extraction is a bounded heuristic for printable ASCII and ASCII-range UTF-16LE, not full Unicode recovery. Function entries and inferred segment bounds are candidates. Complete function boundaries/CFGs, general jump-table analysis, dynamic overlay recovery, decompilation, runtime SMC capture and a native UI remain future work. A decoded original-game function does not establish full-game execution or complete instruction coverage.
 
 ## Verify
 

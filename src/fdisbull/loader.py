@@ -49,7 +49,7 @@ def _is_executable(address: int, regions: list[Region]) -> bool:
 
 
 def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = None,
-               base: int = 0, entry: int | None = None) -> Image:
+               base: int = 0, entry: int | None = None, load_segment: int = 0x1000) -> Image:
     """Load ELF, PE, thin Mach-O, or explicitly declared flat raw code.
 
     Native file mappings use their preferred image addresses (PIE load bias is
@@ -90,15 +90,20 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
             raise ValueError("arm64 entry point must be 4-byte aligned")
         return Image("raw", arch, bits, entry, regions, [Seed(entry, "entry", "entry")],
                      {"mapping": "flat", "filename": path.name, "source_sha256": hashlib.sha256(data).hexdigest(), "file_mappings":[dict(virtual_address=base,file_offset=0,file_size=len(data))]}, source_bytes=data)
+    if data[:2]==b'MZ':
+        pe_offset=int.from_bytes(data[0x3c:0x40],'little') if len(data)>=0x40 else 0
+        if data[pe_offset:pe_offset+4]!=b'PE\0\0':
+            if bits is not None or base:
+                raise ValueError('DOS MZ uses --load-segment; --bits/--base require raw mode')
+            from .dos import load_mz
+            return load_mz(data,load_segment=load_segment,entry=entry)
+    if load_segment!=0x1000:
+        raise ValueError('load_segment applies only to classic DOS MZ')
     if bits is not None or base:
         raise ValueError("bits and base overrides require an explicit raw architecture")
     if data[:4] in (b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca", b"\xca\xfe\xba\xbf", b"\xbf\xba\xfe\xca"):
         raise ValueError("fat Mach-O requires selecting a thin architecture slice first")
-    if data[:2] == b"MZ":
-        pe_offset = int.from_bytes(data[0x3c:0x40], "little") if len(data) >= 0x40 else 0
-        if data[pe_offset:pe_offset + 4] != b"PE\0\0":
-            raise ValueError("DOS MZ segmented loading is not supported yet; use an extracted flat code segment in raw x86/16 mode")
-    elif data[:4] != b"\x7fELF" and data[:4] not in (b"\xce\xfa\xed\xfe", b"\xcf\xfa\xed\xfe", b"\xfe\xed\xfa\xce", b"\xfe\xed\xfa\xcf"):
+    if data[:2]!=b'MZ' and data[:4] != b"\x7fELF" and data[:4] not in (b"\xce\xfa\xed\xfe", b"\xcf\xfa\xed\xfe", b"\xfe\xed\xfa\xce", b"\xfe\xed\xfa\xcf"):
         raise ValueError("unsupported file format; declare --arch for raw code")
     try:
         binary = lief.parse(data)

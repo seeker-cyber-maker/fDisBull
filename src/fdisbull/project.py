@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from .model import Region
 
 MAX_ADDRESS = (1 << 64) - 1
-SCHEMA = 2
+SCHEMA = 3
 
 def number(value):
     if isinstance(value, bool) or not isinstance(value, (int, str)):
@@ -60,9 +60,10 @@ CREATE TABLE work(version INTEGER REFERENCES versions(id), context TEXT NOT NULL
 """
 
 from .analysis import AnalysisMixin, EXTENSION_DDL
+from .dos_analysis import DOSMixin, DOS_DDL
 
 
-class Project(AnalysisMixin):
+class Project(DOSMixin, AnalysisMixin):
     def __init__(self, path):
         self.path = Path(path).resolve()
         if not self.path.is_file():
@@ -71,10 +72,14 @@ class Project(AnalysisMixin):
         self.db.row_factory = sqlite3.Row
         try:
             meta = dict(self.db.execute("SELECT key,value FROM metadata"))
-            if meta.get("application") != "fdisbull" or int(meta.get("schema", -1)) not in (1,SCHEMA):
+            if meta.get("application") != "fdisbull" or int(meta.get("schema", -1)) not in (1,2,SCHEMA):
                 raise ValueError("unsupported project schema")
             if int(meta["schema"]) == 1:
                 self.db.executescript("BEGIN IMMEDIATE;" + EXTENSION_DDL + "INSERT OR IGNORE INTO analysis_state SELECT id,0,0 FROM versions; UPDATE work SET state='pending',detail=NULL; UPDATE metadata SET value='2' WHERE key='schema'; COMMIT;")
+            if int(meta["schema"]) in (1,2):
+                self.db.executescript("BEGIN IMMEDIATE;"+DOS_DDL+"UPDATE metadata SET value='3' WHERE key='schema'; COMMIT;")
+            else:
+                self.db.executescript(DOS_DDL)
             self.meta = {k:json.loads(v) for k,v in meta.items() if k not in ("application","schema")}
             self.arch, self.bits = self.meta["arch"], self.meta["bits"]
             self.context = f"{self.arch}:{self.bits}:little"
@@ -127,7 +132,7 @@ class Project(AnalysisMixin):
         try:
             db = sqlite3.connect(target)
             try:
-                db.executescript(DDL + EXTENSION_DDL)
+                db.executescript(DDL + EXTENSION_DDL + DOS_DDL)
                 db.execute("PRAGMA journal_mode=WAL")
                 meta = {"arch":image.arch,"bits":image.bits,"format":image.format,"entry":image.entry,
                         "filename":source.name,"source_sha256":image.metadata["source_sha256"],
@@ -190,13 +195,36 @@ class Project(AnalysisMixin):
                       for table in ("instructions","functions","xrefs","annotations")}
             work = dict(self.db.execute("SELECT state,count(*) FROM work WHERE version=? GROUP BY state",(v["id"],)))
             regions = [{"name":r.name,"start":hx(r.start),"size":len(r.data),"executable":r.executable,"writable":r.writable} for r in self.regions(v["id"])]
-            return {"project":str(self.path),**self.meta,"entry":hx(self.meta["entry"]),"context":self.context,
+            metadata=dict(self.meta)
+            if self.meta['format']=='MZ':
+                loader=dict(metadata['loader_metadata'])
+                dos=dict(loader['dos'])
+                dos['relocation_count']=len(dos.pop('relocations',[]))
+                dos['segment_candidate_count']=len(dos.pop('segment_candidates',[]))
+                loader['dos']=dos
+                metadata['loader_metadata']=loader
+            return {"project":str(self.path),**metadata,"entry":hx(self.meta["entry"]),"context":self.context,
                     "version":v,"counts":counts,"work":work,"regions":regions}
+
+    def _address(self,value):
+        return self._dos_parse_address(value)[0] if self.meta['format']=='MZ' else number(value)
+
+    def segments(self,version=None):
+        if self.meta['format']!='MZ':
+            raise ValueError('DOS segment inventory requires an MZ project; use sections for other formats')
+        return self._dos_segments(version)
+
+    def code_regions(self,version=None):
+        if self.meta['format']!='MZ':
+            raise ValueError('DOS code-region inventory requires an MZ project')
+        return self._dos_regions(version)
 
     def versions(self):
         return [dict(r) for r in self.db.execute("SELECT * FROM versions ORDER BY id")]
 
     def functions(self, version=None, limit=200, offset=0):
+        if self.meta["format"]=="MZ":
+            return self._dos_functions(version,limit,offset)
         v = self.version(version)["id"]
         limit = integer(limit,"limit",1,10000)
         offset = integer(offset,"offset",0,(1<<63)-1)
@@ -212,7 +240,7 @@ class Project(AnalysisMixin):
             raise ValueError("name must be at most 256 characters with no controls")
         if not isinstance(author,str) or not author or len(author)>256:
             raise ValueError("author must contain 1..256 characters")
-        a = number(address)
+        a = self._address(address)
         with self.transaction(True):
             v = self.version(version)["id"]
             if not any(r.start <= a < r.start+len(r.data) for r in self.regions(v)):
@@ -221,7 +249,9 @@ class Project(AnalysisMixin):
                 (v,self.context,key(a),kind,text,author,now()))
             return {"version":v,"address":hx(a),"kind":kind,"text":text,"author":author}
 
-    def xrefs(self, address, direction="to", version=None, limit=200):
+    def xrefs(self, address, direction="to", version=None, limit=200,cs=None):
+        if self.meta["format"]=="MZ":
+            return self._dos_xrefs(address,direction,version,limit,cs)
         if direction not in ("to","from"):
             raise ValueError("direction must be to or from")
         limit = integer(limit,"limit",1,10000)
@@ -230,7 +260,9 @@ class Project(AnalysisMixin):
         rows = self.db.execute(f"SELECT * FROM xrefs WHERE version=? AND context=? AND {column}=? ORDER BY source,target,kind LIMIT ?",(v,self.context,key(address),limit))
         return [{"source":hx(int(r["source"],16)),"target":hx(int(r["target"],16)),"kind":r["kind"],"evidence":r["evidence"],"version":v,"source_name":self._label(v,int(r["source"],16)),"target_name":self._label(v,int(r["target"],16)),"target_representation":self._presentation(v,int(r["target"],16))["representation"]} for r in rows]
 
-    def disassembly(self, address=None, lines=50, version=None):
+    def disassembly(self, address=None, lines=50, version=None,cs=None):
+        if self.meta["format"]=="MZ":
+            return self._dos_disassembly(address,lines,version,cs)
         count = integer(lines,"lines",1,500)
         with self.transaction():
             v = self.version(version)
@@ -251,7 +283,7 @@ class Project(AnalysisMixin):
             return {"title":self.meta["filename"],"arch":self.arch,"bits":self.bits,"context":self.context,"version":v["id"],"sha256":v["sha256"],"source_sha256":self.meta["source_sha256"],"address":hx(a),"instructions":result,"view":"stored instructions ordered by address; gaps are not decoded implicitly"}
 
     def patch(self, address, data, label="patch", origin="agent supplied bytes", version=None):
-        a = number(address)
+        a = self._address(address)
         if not isinstance(data,str):
             raise ValueError("patch bytes must be a hexadecimal string")
         try:
@@ -279,7 +311,9 @@ class Project(AnalysisMixin):
             self.db.execute("INSERT INTO functions SELECT ?,context,address,name,source,status FROM functions WHERE version=? AND source!='direct call'",(v,parent))
             self.db.execute("INSERT INTO definitions SELECT ?,context,address,representation,size,author FROM definitions WHERE version=?",(v,parent))
             info=self.db.execute('SELECT document,source_bytes FROM binary_info WHERE version=?',(parent,)).fetchone()
-            if info:
+            if info and self.meta["format"]=="MZ":
+                self._dos_patch_document(parent,v,bytes(info[1]),patched)
+            elif info:
                 document=json.loads(info[0])
                 source_bytes=bytes(info[1]) if info[1] is not None else None
                 file_offset=None
@@ -312,4 +346,4 @@ class Project(AnalysisMixin):
     def issues(self, version=None, limit=200):
         v = self.version(version)["id"]
         limit = integer(limit,"limit",1,10000)
-        return [{"address":hx(int(r["address"],16)),"state":r["state"],"reason":r["reason"],"detail":r["detail"]} for r in self.db.execute("SELECT * FROM work WHERE version=? AND (detail IS NOT NULL OR state!='decoded') ORDER BY rowid LIMIT ?",(v,limit))]
+        return [{"address":hx(int(r["address"],16)),"state":r["state"],"reason":r["reason"],"detail":r["detail"],"context":r["context"]} for r in self.db.execute("SELECT * FROM work WHERE version=? AND (detail IS NOT NULL OR state!='decoded') ORDER BY rowid LIMIT ?",(v,limit))]

@@ -72,3 +72,30 @@ def test_control_characters_cannot_corrupt_svg_or_reverse_its_text(tmp_path):
     text = " ".join(tree.getroot().itertext())
     assert "safeevil next" in text
     assert "\x00" not in text and "\x1b" not in text and "\u202e" not in text
+
+
+def test_dos_exports_show_segmented_addresses_and_context_without_label_noise(tmp_path):
+    view = snapshot()
+    view.update(title='DINOPARK.EXE', bits=16, context='x86:16:little:cs=38ff')
+    view['instructions'] = [
+        {'address': '0x3e3ed', 'segmented_address': '38ff:53fd', 'bytes': '55',
+         'mnemonic': 'push', 'operands': 'bp', 'name': 'loan_payment', 'show_label': True,
+         'xrefs': [{'kind': 'call', 'source': '0x20000', 'target': '0x3e3ed',
+                    'source_segmented_address': '2000:0000', 'target_segmented_address': '38ff:53fd'}]},
+        {'address': '0x3e3ee', 'segmented_address': '38ff:53fe', 'bytes': '89e5',
+         'mnemonic': 'mov', 'operands': 'bp,sp', 'name': 'loc_38ff_53fe', 'show_label': False},
+        {'address': '0x3e3f0', 'segmented_address': '38ff:5400', 'bytes': 'c3',
+         'mnemonic': 'ret', 'operands': '', 'name': 'loc_explicit_name', 'show_label': True},
+    ]
+    result = render_snapshot(view, tmp_path / 'dos.svg')
+    text = ' '.join(ET.parse(result['path']).getroot().itertext())
+    assert 'CS:IP' in text and '38ff:53fd' in text and '38ff:53fe' in text
+    assert 'CONTEXT  x86:16:little:cs=38ff' in text
+    assert 'loan_payment:' in text and 'loc_explicit_name:' in text
+    assert 'loc_38ff_53fe:' not in text
+    assert '2000:0000 -> 38ff:53fd' in text
+    assert '0x3e3ed' not in text
+    png = render_snapshot(view, tmp_path / 'dos.png')
+    with Image.open(png['path']) as image:
+        image.load()
+        assert image.size == (png['width'], png['height'])
