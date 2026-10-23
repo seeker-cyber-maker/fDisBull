@@ -19,6 +19,9 @@ CREATE TABLE IF NOT EXISTS shared_label_names(
  version INTEGER NOT NULL,space TEXT NOT NULL,file TEXT NOT NULL,offset TEXT NOT NULL,
  name TEXT NOT NULL,author TEXT NOT NULL,created TEXT NOT NULL,
  PRIMARY KEY(version,space,file,offset));
+CREATE TABLE IF NOT EXISTS label_link_removals(
+ version INTEGER NOT NULL,link_id INTEGER NOT NULL,reason TEXT NOT NULL,
+ author TEXT NOT NULL,created TEXT NOT NULL,PRIMARY KEY(version,link_id));
 """
 
 MAX_LABEL_MEMBERS = 256
@@ -78,7 +81,8 @@ class SharedLabelsMixin:
             space, file, offset = queue.popleft()
             location = key(offset)
             rows = self.db.execute(
-                'SELECT * FROM label_links WHERE version=? AND '
+                'SELECT l.* FROM label_links l WHERE l.version=? AND '
+                'NOT EXISTS (SELECT 1 FROM label_link_removals r WHERE r.version=l.version AND r.link_id=l.id) AND '
                 '((left_space=? AND left_file=? AND left_offset<=? AND left_last>=?) OR '
                 '(right_space=? AND right_file=? AND right_offset<=? AND right_last>=?))',
                 (v, space, file, location, location, space, file, location, location))
@@ -202,7 +206,8 @@ class SharedLabelsMixin:
             if a == b:
                 raise ValueError('label endpoints must be different locations')
             rows = self.db.execute('SELECT * FROM label_links WHERE version=? ORDER BY id', (v,)).fetchall()
-            duplicate = next((r for r in rows if r['size'] == size and
+            removed = {r[0] for r in self.db.execute('SELECT link_id FROM label_link_removals WHERE version=?', (v,))}
+            duplicate = next((r for r in rows if r['id'] not in removed and r['size'] == size and
                 ((a == (r['left_space'], r['left_file'], int(r['left_offset'], 16)) and
                   b == (r['right_space'], r['right_file'], int(r['right_offset'], 16))) or
                  (b == (r['left_space'], r['left_file'], int(r['left_offset'], 16)) and
@@ -212,7 +217,7 @@ class SharedLabelsMixin:
                     self._set_shared_name(v, a, name, author)
                 return self.label_info(left, version=v)
             if len(rows) >= MAX_LABEL_LINKS:
-                raise ValueError('version exceeds 4096 label links')
+                raise ValueError('version exceeds 4096 retained label links, including removed history')
             # Retain existing native labels as explicit choices before merging.
             # Earlier native annotations shadowed by a shared rename stay historical.
             annotations = self.db.execute(
@@ -234,7 +239,10 @@ class SharedLabelsMixin:
                  b[0], b[1], key(b[2]), key(b[2]+size-1), size, evidence, author))
             if name is not None:
                 self._set_shared_name(v, a, name, author)
-            rows = self.db.execute('SELECT * FROM label_links WHERE version=?', (v,)).fetchall()
+            rows = self.db.execute(
+                'SELECT l.* FROM label_links l WHERE l.version=? AND '
+                'NOT EXISTS (SELECT 1 FROM label_link_removals r WHERE r.version=l.version AND r.link_id=l.id)',
+                (v,)).fetchall()
             probes = set()
             for row in rows:
                 for side in ('left', 'right'):
@@ -256,6 +264,64 @@ class SharedLabelsMixin:
                     raise ValueError('conflicting explicit labels; resolve with name or rename the conflicting fields first')
             return self.label_info(left, version=v)
 
+    def _label_link_view(self, v, row):
+        removal = self.db.execute(
+            'SELECT reason,author,created FROM label_link_removals WHERE version=? AND link_id=?',
+            (v, row['id'])).fetchone()
+        return dict(id=row['id'],
+                    left=self._endpoint_view((row['left_space'],row['left_file'],int(row['left_offset'],16))),
+                    right=self._endpoint_view((row['right_space'],row['right_file'],int(row['right_offset'],16))),
+                    size=row['size'], evidence=row['evidence'], author=row['author'],
+                    active=removal is None, removal=dict(removal) if removal else None)
+
+    def label_links(self, version=None, include_removed=False, limit=200, offset=0):
+        from .project import integer
+        limit = integer(limit, 'limit', 1, 10000)
+        offset = integer(offset, 'offset', 0, (1 << 63)-1)
+        if not isinstance(include_removed, bool):
+            raise ValueError('include_removed must be boolean')
+        with self.transaction():
+            v = self.version(version)['id']
+            predicate = '' if include_removed else (
+                ' AND NOT EXISTS (SELECT 1 FROM label_link_removals r WHERE r.version=l.version AND r.link_id=l.id)')
+            total = self.db.execute('SELECT count(*) FROM label_links l WHERE l.version=?'+predicate, (v,)).fetchone()[0]
+            rows = self.db.execute('SELECT l.* FROM label_links l WHERE l.version=?'+predicate+' ORDER BY l.id LIMIT ? OFFSET ?',
+                                   (v, limit, offset)).fetchall()
+            return dict(version=v, items=[self._label_link_view(v,row) for row in rows],
+                        total=total, limit=limit, offset=offset, has_more=offset+len(rows)<total,
+                        include_removed=include_removed)
+
+    def unlink_labels(self, link_id, reason=None, version=None, author='agent'):
+        from .project import integer, now
+        from .external_files import _author
+        link_id = integer(link_id, 'link_id', 1, (1 << 63)-1)
+        author = _author(author)
+        if not isinstance(reason, str) or not reason.strip() or len(reason) > 4096:
+            raise ValueError('reason must contain 1..4096 characters explaining the removal')
+        with self._label_transaction():
+            v = self.version(version)['id']
+            row = self.db.execute('SELECT * FROM label_links WHERE version=? AND id=?', (v, link_id)).fetchone()
+            if row is None:
+                raise ValueError('unknown label link in this version')
+            link = self._label_link_view(v, row)
+            left, right = link['left'], link['right']
+            left_before = self.label_info(left, version=v)
+            right_before = self.label_info(right, version=v)
+            removed = link['active']
+            if removed:
+                self.db.execute('INSERT INTO label_link_removals VALUES (?,?,?,?,?)',
+                                (v, link_id, reason, author, now()))
+            left_after = self.label_info(left, version=v)
+            right_after = self.label_info(right, version=v)
+            return dict(version=v, removed=removed, link=self._label_link_view(v,row),
+                        left=dict(before=left_before, after=left_after),
+                        right=dict(before=right_before, after=right_after),
+                        still_connected=right in left_after['members'],
+                        connectivity_scope='starting_endpoints',
+                        note='Only this range link is removed. Shared names stay at their stored anchors; '
+                             'detached locations resolve remaining local labels/types. Independently authored '
+                             'native names and instruction file references are preserved.')
+
     def rename_file(self, file, offset, name, version=None, author='agent'):
         from .external_files import _author
         author = _author(author)
@@ -275,10 +341,9 @@ class SharedLabelsMixin:
             return dict(version=v, endpoint=self._endpoint_view(point),
                         name=names[0]['name'] if names else self._fallback_label(v, members),
                         explicit=bool(names), label_author=names[0]['author'] if names else None,
+                        label_anchor=self._endpoint_view((names[0]['space'],names[0]['file'],int(names[0]['offset'],16))) if names else None,
                         members=[self._endpoint_view(p) for p in members],
-                        links=[dict(id=r['id'], left=self._endpoint_view((r['left_space'],r['left_file'],int(r['left_offset'],16))),
-                                    right=self._endpoint_view((r['right_space'],r['right_file'],int(r['right_offset'],16))),
-                                    size=r['size'], evidence=r['evidence'], author=r['author']) for r in links],
+                        links=[self._label_link_view(v,r) for r in links],
                         runtime_observed=False,
                         scope='Authored field correspondence; values, pointer state, execution and native xrefs are not inferred.')
 

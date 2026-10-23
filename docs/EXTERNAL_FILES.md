@@ -162,7 +162,9 @@ snapshots remain different immutable bytes; the shared label states which
 field they represent.
 
 `label-info` shows the normalized endpoint, current name, explicit-name flag,
-label author, corresponding members and every traversed link with evidence.
+label author, `label_anchor`, corresponding members and every traversed link
+with evidence. The anchor identifies a stored shared-name marker, not the
+historical endpoint where the analyst chose the name.
 Endpoints are exactly `{"file":NAME,"offset":OFFSET}` or `{"address":ADDRESS}`.
 The methods support every existing native adapter and container; they do not
 route on PE or x86 instructions. DOS data aliases resolve physically, and
@@ -178,13 +180,70 @@ Linking distinct explicit names raises an error instead of choosing silently.
 Use `--name LABEL` to choose the starting field's shared name; resolve any
 conflicting interior-field names separately before linking a whole block.
 Invalid extents, offset cycles and validation-budget failures roll back the
-operation. Repeating the same range link is idempotent.
+operation. Repeating an active range link is idempotent; a new link after
+removal receives a new ID.
 
 All links report `runtime_observed: false`. A label correspondence does not
 prove a pointer value, actual loader activity, execution, equal bytes or a
 native control/data xref. Names resolve at query time, with the original
 operands and evidence retained. An unchanged source fingerprint does not prove
 that a changed upstream loader still supports an authored correspondence.
+
+## Correct a mistaken label link
+
+List the correspondence edges before removing one:
+
+```bash
+fdisbull label-links dinopark.fdb --include-removed --limit 200 --offset 0
+```
+
+Match the wrong edge by its file/native endpoints, range and original evidence,
+then use its actual numeric `id` with `unlink-labels`. Do not assume the wrong
+relationship has ID `1`. In this syntax example, replace `LINK_ID` with that
+reviewed ID:
+
+```bash
+fdisbull unlink-labels dinopark.fdb LINK_ID \
+  --reason 'Incorrect save-to-memory correspondence; retain this correction and its evidence.'
+fdisbull label-info dinopark.fdb '{"file":"DINOSG.000","offset":3872}'
+fdisbull label-info dinopark.fdb '{"address":"0x471a6"}'
+fdisbull label-links dinopark.fdb --include-removed
+```
+
+For the DinoPark mapping above, the verified native address is `0x471a6`
+(`4020:6fa6` at the stated load segment). The correct native address does not
+identify which inventory record was mistaken; inspect the actual edge before
+choosing an ID.
+
+The command removes that entire range edge from active label resolution while
+keeping the original edge and evidence. The receipt includes the inactive link,
+removal reason/author/time, `removed`, left/right `before` and `after`
+`label-info`, and `still_connected` with `connectivity_scope: "starting_endpoints"`.
+The latter is true if another path still connects the two starting endpoints;
+it makes no connectivity claim for every interior byte. Inspect any remaining mistaken paths and
+remove their specific IDs separately. For an interior field, use `label-info`
+on that field's own offset/address to inspect the resulting name.
+
+Unlinking is a graph correction, not a rename undo. A shared name written by
+0.8.1 has a storage anchor but no retained rename origin. Removal leaves that
+name at its existing anchor; each detached component resolves its own remaining
+names, native annotations and types. It does not copy the old shared name into
+every detached field. Check the before/after names and explicitly rename a
+remaining incorrect label if necessary.
+
+No attached snapshots, types, source `file-reference` annotations, native name
+annotations, bytes or analysis facts are deleted. Those instruction-to-file
+annotations remain separate claims; inspect them independently if their
+evidence also became invalid. Removed edges are excluded from graph traversal,
+validation and active duplicate matching. Repeating removal of the same ID is
+idempotent (`removed: false`) and retains the first removal metadata. Unknown
+IDs are errors. A later corrected link gets a new ID; removed IDs are never
+reused.
+
+Use `--version` to select the version being corrected. Child versions inherit
+removal history, and a correction in the child leaves the parent graph intact.
+`label-links` defaults to active records; `--include-removed` reveals the full
+retained history, with `--limit`/`--offset` for pagination.
 
 ## Versions and bounds
 
@@ -195,7 +254,7 @@ Names are single identifiers rather than paths: empty names, separators,
 control characters, `.` and `..` are rejected.
 
 A native `patch` creates a child version that inherits attachments, file type
-bindings, authored references, label links and shared names. Child annotation
+bindings, authored references, label links, removal history and shared names. Child annotation
 changes do not modify the parent. References are checked against the child's current source bytes and
 decode state; inherited data does not make a stale instruction relationship
 current. Select earlier state with the usual `--version` argument.
@@ -235,7 +294,8 @@ with old native references hidden. File links remain authored claims and do
 not become proven runtime mappings through migration. This repair is separate
 from `refresh-facts` and does not affect ELF, PE or Mach-O projects.
 
-Label links allow at most 4096 ranges per version, each 1 byte–1 MiB; resolving one
+Label links allow at most 4096 retained range records per version, including
+removed history, each 1 byte–1 MiB; resolving one
 field is bounded at 256 corresponding locations. Link validation is bounded at
 100,000 location visits and 10,000 native annotations. A limit failure is an
 error rather than a silently truncated identity chain.

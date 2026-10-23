@@ -314,7 +314,7 @@ def test_schema_six_migration_preserves_original_facts_files_and_types(tmp_path)
             UPDATE metadata SET value='6' WHERE key='schema';
         """)
     with Project(path) as migrated:
-        assert migrated.db.execute("SELECT value FROM metadata WHERE key='schema'").fetchone()[0] == '7'
+        assert migrated.db.execute("SELECT value FROM metadata WHERE key='schema'").fetchone()[0] == '8'
         assert migrated.disassembly(entry, lines=1) == before_native
         assert migrated.typed_file('save-a.dat', offset=8) == before_file
         assert migrated.typed_data(data) == before_type

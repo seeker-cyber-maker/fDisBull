@@ -1,4 +1,4 @@
-# fDisBull 0.8.1 architecture
+# fDisBull 0.8.2 architecture
 
 The local engine separates decoding, recoverable facts, shared address interpretations and presentation. Imported code is never executed. Python coordinates native iced-x86, Capstone and LIEF libraries with SQLite and Pillow.
 
@@ -43,7 +43,7 @@ A project has one selected image/architecture/bitness, while retaining the compl
 
 SQLite hexadecimal address keys preserve unsigned ordering; public physical addresses are hexadecimal strings. Each byte version retains mapped bytes/permissions, parent, label, origin, timestamp and mapped-image digest. A patch creates a child without overwriting its parent. Mapped hashes include region descriptions and differ from source-file hashes.
 
-New projects retain source bytes and parsed metadata. File offsets and virtual mappings stay distinct; strings map through actual file-backed ranges. Schema 1–6 databases migrate to schema 7 without deleting versions/annotations. Schema-1 work reopens for reference backfill. Missing original source metadata remains unavailable until a new import; migration never reconstructs missing source bytes.
+New projects retain source bytes and parsed metadata. File offsets and virtual mappings stay distinct; strings map through actual file-backed ranges. Schema 1–7 databases migrate to schema 8 without deleting versions/annotations. Schema-1 work reopens for reference backfill. Missing original source metadata remains unavailable until a new import; migration never reconstructs missing source bytes.
 
 ## Container selection and platform linkage
 
@@ -222,7 +222,8 @@ has no ISA/container branches beyond the existing native address parser.
 
 `link-labels` validates interval bounds, explicit-name conflicts and contradictory
 offset cycles atomically. Resolution traverses the correspondence component
-with explicit limits: 4096 links per version, 256 corresponding locations per
+with explicit limits: 4096 retained links per version (including removed history),
+256 corresponding locations per
 field, 1 MiB per range, 100,000 validation location visits and 10,000 native name
 annotations. A budget failure rejects an operation instead of returning a
 partial shared identity. An explicit `name` can resolve the starting field's
@@ -244,3 +245,34 @@ continue to govern whether its authored file reference is active. Shared label
 links are authored interpretations, not inferred byte equality, runtime I/O,
 register/pointer values or native xrefs. A shared name never qualifies a library
 contract or establishes a gameplay meaning.
+
+
+## Correcting correspondence edges
+
+Schema 8 adds `label_link_removals`, a per-version soft-removal record keyed by
+link ID. `label-links` inventories active edges by default and optionally
+includes removed history. Each edge keeps its original endpoints, size,
+evidence and author; removal adds a reason, author and timestamp. IDs are
+never reused, including when the same endpoints are linked again. All retained
+records count toward the per-version link quota.
+
+`unlink-labels` deactivates one complete range edge. Resolution, duplicate
+matching and validation ignore removed edges, while the original relationship
+remains auditable. The receipt captures starting-endpoint labels/members before
+and after removal and reports alternate connectivity with
+`connectivity_scope: "starting_endpoints"`; interior fields require their own
+queries. It does not remove other
+paths automatically. Repeating removal keeps the first removal metadata and
+returns `removed: false`. Unknown IDs are rejected. Byte-version inheritance
+copies removal state into the child; later corrections remain version-local.
+
+Removal does not reverse rename history. Existing schema-7 shared-name rows
+record a canonical storage anchor, not the original endpoint at which the
+analyst chose the name. Keep each name at its existing anchor when an edge is
+removed. Detached components resolve their local shared names, native
+annotations and type paths; copying a prior shared name into every split
+component would manufacture provenance. Before/after receipts expose the
+actual outcome for review. `label-info.label_anchor` exposes the stored marker
+location without pretending to recover its historical rename origin.
+Attachments, type bindings, source file-reference
+annotations, authored native annotations, bytes and analysis facts are retained.

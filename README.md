@@ -1,4 +1,4 @@
-# fDisBull 0.8.1
+# fDisBull 0.8.2
 
 Attach save files, resource tables and other data to an existing analysis. Their bytes and SHA-256 are retained in the project, so byte queries and typed fields remain available after the source file is removed. Attached files have their own **file name + byte offset** identity; they do not become executable memory or code seeds.
 
@@ -25,6 +25,10 @@ fdisbull label-info analysis.fdb '{"file":"resource.dat","offset":0}'
 ```
 
 Replace `0xDATA` with an actual mapped data address. This declaration records a correspondence; it does not discover a loaded buffer, prove byte equality or establish a live pointer. Conflicting explicit labels require a chosen name instead of silently replacing either interpretation. See the complete [bidirectional-label example](docs/EXTERNAL_FILES.md#share-labels-between-files-and-native-fields).
+
+Use `label-links` to inspect the correspondence inventory and its stable IDs. `unlink-labels PROJECT LINK_ID --reason TEXT` removes a mistaken range link from that version's active graph while preserving the original edge, evidence and removal record. Choose the actual wrong ID from the inventory; do not assume it is `1`. The receipt shows names and members before and after removal, and reports whether another path still connects the endpoints. See [correct a mistaken link](docs/EXTERNAL_FILES.md#correct-a-mistaken-label-link).
+
+Unlinking corrects the graph, not the rename history. Shared names created in 0.8.1 stay at their existing storage anchor; detached components resolve their own annotations/types, and the previous shared name is not copied into each one. Attachments, types, authored file-reference annotations and bytes remain intact. Use `label-links --include-removed` to review retained history. Child-version removals leave the parent unchanged.
 
 Attachments and their type bindings are inherited by child byte versions, with parent state preserved. Content is immutable under a given file name in a version: reattaching identical bytes is idempotent, while changed bytes require another name. Attachments share a 64 MiB per-version budget. See [EXTERNAL_FILES.md](docs/EXTERNAL_FILES.md) for a complete example, reference evidence and limits.
 
@@ -338,7 +342,7 @@ fdisbull disasm my-analysis.fdb --version 1 --address 0xADDRESS
 
 A patch preserves the parent snapshot and creates fresh child analysis. Operations default to the newest version; use `--version` to select another. Names, comments and explicit representations inherit and require semantic revalidation after changes. Source-file and mapped-snapshot digests are distinct: mapped hashes include region descriptions and bytes.
 
-Schema 1–6 databases migrate to schema 7 without discarding byte versions or annotations. Schema 7 adds evidenced file/memory label links and shared field names. A schema-1 project needs `analyze` to backfill structured references from retained bytes. Its original full-file metadata remains unavailable unless it was retained; reimport the original into a new project to obtain that information. Migration does not reconstruct missing source bytes. Existing byte analysis still works if the original is missing.
+Schema 1–7 databases migrate to schema 8 without discarding byte versions or annotations. Schema 7 added evidenced file/memory label links and shared field names; schema 8 retains per-version link-removal history. A schema-1 project needs `analyze` to backfill structured references from retained bytes. Its original full-file metadata remains unavailable unless it was retained; reimport the original into a new project to obtain that information. Migration does not reconstruct missing source bytes. Existing byte analysis still works if the original is missing.
 
 DOS patches apply to relocated memory bytes. For a stored child file version, all relocation fixups are undone in reverse order before rebuilding the file-backed module; the parent remains unchanged. Allocation-only/BSS edits stay in the child memory snapshot and have no disk counterpart. Patching does not execute or save a runnable DOS process.
 
