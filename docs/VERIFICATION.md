@@ -1,82 +1,77 @@
-# Verification receipt — fDisBull 0.8.1
+# Verification receipt — fDisBull 0.8.2
 
-Final integrated `python -m pytest -q -rs`: **716 passed**, exit 0, **51.67 seconds**.
-`python -m compileall -q src/fdisbull` passed. Linux x86-64, Python 3.12;
+Final integrated `python -m pytest -q -rs`: **744 passed**, exit 0, **65.87 seconds**.
+`python -m compileall -q src/fdisbull` passed. Linux x86-64, Python 3.12,
 iced-x86 1.21.0, Capstone 5.0.9, LIEF 1.0.0, Pillow 12.3.0.
-The original DinoPark executable fixture was restored from the existing corpus;
-there are no skipped tests in the final run. No imported program was executed.
-Native macOS host execution remains unverified.
+No imported program was executed. Native macOS host execution remains unverified.
 
-## Bidirectional labels
+## Correcting mistaken shared-label links
 
-The 21 new shared-label integration and transaction tests pass independently.
-They exercise explicit file→file→memory range correspondences on x86, ARM64
-and DOS; interior fields; file and native rename directions; untyped files;
-canonical names alongside structural paths; operand references, native xrefs,
-CFG, memory-access queries, SVG and PNG; source deletion and separate-process
-restart; schema 6→7 migration; DOS physical aliases; conflicting names and offset
-cycles; stale instruction relationships; and parent/child version isolation.
+The 0.8.1 API allowed creating a link but exposed no inventory or removal
+operation. The new `label-links` command lists stable IDs, endpoint ranges,
+original evidence/authorship and optional removal history. `unlink-labels`
+records a version-local removal containing reason, author and timestamp while
+preserving the original edge. Removed edges are excluded from name resolution,
+duplicate detection and prospective offset/conflict validation.
 
-Stored, current call-effect results resolve current target/call-site/callee
-labels without another derived-analysis pass or a generation change. Verified
-`memset` contracts retain their semantic summary identity while display names
-change. Stale cached function-analysis documents remain historical raw results,
-explicitly marked stale; the current envelope name remains query-time metadata.
+The 28 new public integration cases passed independently in 3.80 seconds.
+They cover x86, ARM64 and MZ views; typed/native references, xrefs, CFG,
+memory-access names, SVG and PNG; range/interior-field splitting; native
+annotations and independent instruction-to-file relationships; alternate
+paths; removal retries without rewriting the original audit; new IDs when
+relinking; paginated inventories; invalid requests; schema 7→8 migration;
+source deletion, separate-process restart and SQLite integrity; and isolated
+parent/child retractions inherited by later versions.
 
-A focused regression first demonstrated that a failed merge could survive when
-caught inside an enclosing caller transaction. Shared-label writes now use a
-savepoint; both ordinary and nested-transaction conflict/cycle failures roll
-back without partially merging identities. Whole-block links check conflicting
-names on interior fields as well as the starting field.
+Two failure injections establish atomic rollback inside a caller-owned outer
+transaction: a rejected insert and an exception after the removal was inserted.
+Both preserve the original graph and permit a subsequent successful retry.
+Native facts, bytes, versions, attachments and instruction file references
+remain unchanged by unlinking. The rendered regression shows a detached native
+reference reverting to its local structural name while the independently
+attached file-field annotation retains its own label.
 
-Existing unlinked native root renames retain their structural-root behavior.
-For a linked first field, native rename changes the shared field name without
-renaming the enclosing structure or neighboring fields. Decoded bytes, numeric
-operands, original evidence and native control/data edges remain intact.
+## Actual DinoPark qualification
 
-## Actual DinoPark example
+On a fresh copy of the previous label-qualified DinoPark database, a deliberate
+wrong mapping joined save offset 3872 to physical `0x390f6`, while the existing
+valid chain still reached `4020:6fa6` (`0x471a6`). Removing only the wrong edge
+made that endpoint lose the propagated name, kept both existing valid links
+unchanged, and retained food_stands/rest_rooms/gift_stands/parking_lots at all
+four save fields. Restart and SQLite `quick_check` passed.
+`examples/unlink-labels-v082.json` contains the before/after receipt, current
+inventory and retained removal history. This exercises authored label repair,
+not new runtime observations or loader inference. The original bundled corpus
+was not modified; its historical DOS native facts still require the documented
+state refresh before dependent analysis queries.
 
-`examples/shared-labels-v081.json` records a qualification on a fresh `/tmp`
-copy of the historical bundled database. The original database hash remained
-unchanged and SQLite `quick_check` passed. An explicitly authored eight-byte
-correspondence connects save offset 3872 in two independently named attachments
-to `4020:6fa6`. A file-side `food_count` rename and native-side
-`restroom_count` rename resolve across the chain, typed native/file fields,
-authored source relationships, and exported code images. Separate-process
-restart retained both labels. `examples/dinopark-shared-labels.svg/.png` show the
-real instruction supplying DS:6FA6 to the eight-byte reset call.
+## Wheel and documented workflow
 
-This qualification does not claim new loader recovery: the save/runtime
-correspondence is user-reported evidence and DS=4020 is an explicit condition.
-The historical corpus retains its obsolete native-facts warning; its raw code
-and authored annotations are usable, while dependent native facts still need
-`refresh-dos-state`. No gameplay meaning follows from sharing a label.
+The built 0.8.2 wheel contains all **43 Python source modules**, byte-for-byte
+identical to the final source. Outside the checkout, all **49 shared-label,
+transaction and unlink tests passed in 8.45 seconds** against extracted wheel
+modules. The separate-process restart tests also imported those wheel modules.
+The generic documented CLI setup, link inventory, reviewed-ID removal and
+active/historical inventory workflow completed successfully.
 
-## Wheel and package
+The release includes current source/tests/docs, the current wheel, prior
+examples and new correction receipts. Its manifest is regenerated; ZIP CRC and
+every packaged hash are verified. Earlier verification is retained in
+`VERIFICATION-0.8.1.md` and the preceding historical receipts.
 
-The built 0.8.1 wheel contains all **43 Python source modules**, byte-for-byte
-identical to the final source. It was extracted into a separate directory and
-imported there, outside the checkout. All **21 new tests passed in 4.04 seconds**
-against that wheel, including a separate-process restart with the wheel import
-path. The complete public generic CLI example in EXTERNAL_FILES.md produced
-18 successful responses and demonstrated reverse rename propagation.
+## Interpretation limits
 
-The package includes the current wheel, source, tests, docs, retained examples,
-and the new label receipts and images. Build caches, generated egg metadata,
-older wheels and earlier manifests are excluded; its manifest is regenerated
-and every packaged hash and ZIP CRC is verified. Historical 0.8.0 verification
-is preserved in `VERIFICATION-0.8.md`.
+Removal retracts one entire range edge. An alternate active path can still
+connect the starting endpoints; `still_connected` explicitly has
+`connectivity_scope: starting_endpoints`, not a whole-range reachability claim.
+Interior fields can be checked independently with `label-info`.
 
-## Limits
-
-Shared links are authored correspondences, not recovered I/O, pointer values,
-runtime observations, value equality or new native xrefs. Names are resolved
-from shared identity rather than replacing text in stored evidence. Explicit
-renames override structural fallbacks for that instance, without changing type
-definitions or unrelated instances. Child versions inherit these interpretations
-and require evidence review after behavioral changes.
-
-Links are bounded to 1 MiB each, 4096 per version and 256 corresponding byte
-locations per component. Validation rejects contradictory offset cycles and
-budget exhaustion rather than returning a partial name resolution. The existing
-little-endian type interpretations and decoder/semantic limitations remain.
+Removal is not a rename undo. Existing shared names have a stored canonical
+anchor, exposed by `label_info.label_anchor`, but their historical rename origin
+was not retained. That marker remains at its anchor; detached endpoints resolve
+remaining links, independently authored native annotations and structural
+fallbacks. Names are never copied into every detached component, and authored
+annotations are not silently deleted. Before/after receipts show the actual
+outcome. Removed IDs remain historical, are never reused, and count toward the
+existing 4096 retained-link limit. Links remain authored correspondences rather
+than runtime I/O, byte equality, pointer facts or new native xrefs.

@@ -51,7 +51,7 @@ Include `project` in params when there is no session default, or to override it.
 
 `limit` defaults to 200 for paginated lists. Information lists return `items`, `total`, `offset`, `has_more` and warnings. `items` and `queue` return arrays. `info` returns header/counts/warnings. `header.valid` means recognized header extents fit the file, not that the program can execute. A disk `file_offset` is never presented as a virtual address. Unknown import bindings and unmapped string addresses are null.
 
-## External files and authored file references (0.8.1)
+## External files and authored file references (0.8.2)
 
 All methods here take `project` and optional `version` (default: latest).
 Attached identity is version + file name + byte offset, independent of native
@@ -145,10 +145,10 @@ edges. A current annotation still needs independent evidence for its meaning.
 
 See [EXTERNAL_FILES.md](EXTERNAL_FILES.md) for a runnable typed-data example.
 
-## Bidirectional field labels (0.8.1)
+## Bidirectional field labels (0.8.2)
 
-These methods share labels across explicit file/memory correspondences. All
-accept `project` and optional `version` (latest by default). An endpoint is
+The three label-resolution methods share labels across explicit file/memory
+correspondences. All accept `project` and optional `version` (latest by default). An endpoint is
 exactly one of `{"file":"save.dat","offset":3872}` or
 `{"address":"0x471a6"}`. File offsets accept nonnegative integers or integer
 strings; native addresses also accept DOS `segment:offset` syntax for MZ.
@@ -180,14 +180,16 @@ Explicit names take precedence over structural names. If no explicit shared
 name exists, the current type path supplies the display name, so later type
 field revisions remain visible. A link between conflicting explicit names is
 rejected atomically. `name` selects a shared name for the linked starting field;
-conflicts at other interior fields must be resolved separately. Duplicate
+conflicts at other interior fields must be resolved separately. Duplicate active
 mappings in either direction are idempotent; supplying `name` can still rename
-the starting field. Contradictory shifted offset cycles are rejected.
+the starting field. Recreating a removed mapping makes a new link ID. Contradictory shifted offset cycles are rejected.
 
 All three methods return the queried `version`, normalized `endpoint`, current
-`name`, `explicit`, `label_author`, corresponding `members`, and `links` with
+`name`, `explicit`, `label_author`, `label_anchor`, corresponding `members`, and `links` with
 IDs, endpoint ranges, size, evidence and author. `runtime_observed` is always
-false. Typed file and native leaf values retain structural `path` and expose the
+false. `label_anchor` identifies the stored shared-name marker, or is null when
+there is none; it is not the historical endpoint at which the name was chosen.
+Typed file and native leaf values retain structural `path` and expose the
 current canonical `name`; the shared name also resolves in operand references,
 file references, native xrefs, disassembly and CFG/image output. Raw numeric
 operands and bytes are preserved. Queries resolve names dynamically rather than
@@ -202,7 +204,8 @@ A byte patch copies label interpretations into the child; child renames leave
 parent labels intact. Inherited interpretations still require evidence review
 after changes to relevant loader behavior.
 
-Limits are 1 byte–1 MiB per range, 4096 links per version, 256 corresponding locations
+Limits are 1 byte–1 MiB per range, 4096 retained link records per version
+(including removed history), 256 corresponding locations
 per resolved component, and 100,000 location visits per link-validation pass.
 Validation also bounds native annotation inspection at 10,000 rows. Endpoint,
 cycle, conflict or budget failures roll back the link operation. Labels contain
@@ -218,6 +221,76 @@ characters.
 
 The example uses the user-reported DinoPark mapping at load segment `0x1000`;
 recording it is not independent verification of that mapping or field meaning.
+
+## Inspect and remove label links (0.8.2)
+
+| CLI / JSON method | Python `Project` method | Required params beyond project | Optional params |
+| --- | --- | --- | --- |
+| `label-links` | `label_links` | — | `version`, `include_removed` (false), `limit` (200; 1–10,000), `offset` (0) |
+| `unlink-labels` | `unlink_labels` | `link_id`, `reason` | `version`, `author` (`agent`) |
+
+CLI syntax is `label-links PROJECT [--include-removed] [--limit N] [--offset N]`
+and `unlink-labels PROJECT LINK_ID --reason TEXT [--author NAME]`. Both accept
+`--version`. `LINK_ID` is the actual numeric inventory ID, not an endpoint or
+an index in the displayed page. Inspect the inventory before choosing a wrong
+link; IDs must not be guessed or assumed to start at `1` for the relationship
+being corrected.
+
+`label-links` returns `version`, `items`, `total`, `limit`, `offset`, `has_more`
+and `include_removed`. Each item retains `id`, `left`, `right`, `size`, original
+`evidence` and `author`, `active`, and `removal`. `removal` is null for an active
+link or an object containing the removal `reason`, `author` and `created`
+timestamp. Default inventory results contain active links; `include_removed`
+also exposes retained inactive records. Pagination applies to the selected
+inventory, not to file-byte intervals.
+
+`unlink-labels` deactivates the whole selected range edge in the chosen version.
+It retains that edge and its original evidence, and records the removal reason,
+author and timestamp. Removed edges no longer participate in label resolution,
+active duplicate detection or link validation. IDs are never reused: relinking
+the same endpoints creates a new ID, while all historical records still count
+toward the 4096-record per-version quota. An unknown link ID raises an error.
+Retrying an already removed ID returns `removed: false` and preserves the first
+removal record. The reason must be a nonblank string of 1–4096 characters;
+`link_id` must be a positive integer.
+
+The removal receipt contains:
+
+| Field | Meaning |
+| --- | --- |
+| `version` | Version whose active correspondence graph was changed. |
+| `removed` | True only when this call first removed the edge. |
+| `link` | The retained link, with `active: false` and removal metadata. |
+| `left.before` / `left.after` | `label-info` for the left starting endpoint before and after this call. |
+| `right.before` / `right.after` | Equivalent before/after information for the right starting endpoint. |
+| `still_connected` | An alternate active path still connects the two starting endpoints after removal. |
+| `connectivity_scope` | `"starting_endpoints"`; connectivity does not describe every interior byte of the range. |
+
+Removing one edge may leave an alternate path. Use its ID and evidence to
+identify any additional mistaken edges; removal does not automatically delete
+other paths. To inspect an interior field of a removed block, query that field
+with `label-info` separately. A child byte version inherits the current removal
+history; further child removals do not affect the parent.
+
+This is a graph correction, not a rename undo. Existing 0.8.1 shared-name records
+have a storage anchor without recorded rename origin. Removing a link leaves
+that name at its existing anchor; detached components recompute labels from
+their own remaining shared names, authored native annotations and structural
+types. The old shared name is not copied into every detached endpoint. Inspect
+the receipt's actual names and `label_anchor`, then explicitly rename a detached
+field if needed.
+Unlinking deletes no attachments, type definitions/bindings, source
+`file-reference` annotations, authored native annotations, bytes or analysis
+facts.
+
+```json
+{"id":74,"method":"label-links","params":{"project":"dinopark.fdb","include_removed":true,"limit":200,"offset":0}}
+```
+
+After choosing a specific wrong ID from that result, submit `unlink-labels`
+with `link_id`, a concrete `reason`, and the intended `version`. The verified
+native endpoint `4020:6fa6` is `0x471a6`; a mistaken correspondence must be
+removed before a corrected link can safely propagate names to that endpoint.
 
 ## Refresh legacy DOS pointer state (0.8)
 
@@ -409,7 +482,7 @@ Results include `source` with pinned CHimpREC provenance, `entries`, contiguous 
 
 ## Persistence and limits
 
-New projects retain source bytes and inspection metadata. Schema 1/2/3/4 databases migrate in place to schema 5 with original versions/annotations retained. Schema-1 work is reopened so reanalysis backfills reference facts. `refresh-metadata` can rebuild supported container metadata when original bytes are retained; projects lacking those bytes require a new import. Migration does not fabricate missing source bytes. Existing byte analysis remains available without the original path.
+New projects retain source bytes and inspection metadata. Schema 1–7 databases migrate in place to schema 8 with original versions/annotations retained. Schema 8 adds per-version label-link removal history. Schema-1 work is reopened so reanalysis backfills reference facts. `refresh-metadata` can rebuild supported container metadata when original bytes are retained; projects lacking those bytes require a new import. Migration does not fabricate missing source bytes. Existing byte analysis remains available without the original path.
 
 Patches create child versions. Inherited annotations and definitions need semantic review. Source-file SHA-256 and mapped-snapshot SHA-256 identify different byte arrangements. File-backed metadata can refresh after a patch with a known disk counterpart; warnings disclose inherited metadata when no such mapping is known. MZ patches act on relocated memory bytes. Child file bytes undo every relocation in reverse loader order (including duplicate/overlapping records) before preserving the file-backed module. Allocation-only edits remain memory-only with an explicit warning; parent bytes/metadata remain intact.
 

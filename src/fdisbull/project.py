@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from .model import Region
 
 MAX_ADDRESS = (1 << 64) - 1
-SCHEMA = 7
+SCHEMA = 8
 
 def number(value):
     if isinstance(value, bool) or not isinstance(value, (int, str)):
@@ -85,7 +85,7 @@ class Project(DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, Membership
         self.db.row_factory = sqlite3.Row
         try:
             meta = dict(self.db.execute("SELECT key,value FROM metadata"))
-            if meta.get("application") != "fdisbull" or int(meta.get("schema", -1)) not in (1,2,3,4,5,6,SCHEMA):
+            if meta.get("application") != "fdisbull" or int(meta.get("schema", -1)) not in (1,2,3,4,5,6,7,SCHEMA):
                 raise ValueError("unsupported project schema")
             if int(meta["schema"]) == 1:
                 self.db.executescript("BEGIN IMMEDIATE;" + EXTENSION_DDL + "INSERT OR IGNORE INTO analysis_state SELECT id,0,0 FROM versions; UPDATE work SET state='pending',detail=NULL; UPDATE metadata SET value='2' WHERE key='schema'; COMMIT;")
@@ -94,7 +94,7 @@ class Project(DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, Membership
             else:
                 self.db.executescript(DOS_DDL)
             if int(meta["schema"]) != SCHEMA:
-                self.db.executescript("BEGIN IMMEDIATE;"+FACTS_DDL+TYPE_DDL+ADVANCED_DDL+EXTERNAL_FILES_DDL+FILE_REFERENCES_DDL+SHARED_LABELS_DDL+"UPDATE metadata SET value='7' WHERE key='schema'; COMMIT;")
+                self.db.executescript("BEGIN IMMEDIATE;"+FACTS_DDL+TYPE_DDL+ADVANCED_DDL+EXTERNAL_FILES_DDL+FILE_REFERENCES_DDL+SHARED_LABELS_DDL+"UPDATE metadata SET value='8' WHERE key='schema'; COMMIT;")
             else:
                 self.db.executescript(FACTS_DDL+TYPE_DDL+ADVANCED_DDL+EXTERNAL_FILES_DDL+FILE_REFERENCES_DDL+SHARED_LABELS_DDL)
             self.meta = {k:json.loads(v) for k,v in meta.items() if k not in ("application","schema")}

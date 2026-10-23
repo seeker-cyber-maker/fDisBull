@@ -8,6 +8,8 @@ from .project import Project, number
 from . import __version__
 
 METHODS = {
+    'label-links': 'List shared label links and optional removal history; [version,include_removed,limit,offset]',
+    'unlink-labels': 'Retract a mistaken shared label link with provenance; link_id,reason,[version,author]',
     'link-labels': 'Link corresponding native/file byte ranges; left,right,evidence,[size,name,version,author]',
     'rename-file': 'Rename a file field and every linked identity; file,offset,name,[version,author]',
     'label-info': 'Resolve a shared field label and its evidence chain; endpoint,[version]',
@@ -129,7 +131,7 @@ def invoke(method, params):
         with Project.create(project,binary,**p) as db:
             return db.status()
     with Project(project) as db:
-        if method in ('link-labels','rename-file','label-info'):return getattr(db,method.replace('-','_'))(**p)
+        if method in ('link-labels','rename-file','label-info','label-links','unlink-labels'):return getattr(db,method.replace('-','_'))(**p)
         if method=='refresh-dos-state':return db.refresh_dos_state(**p)
         file_methods={'attach-file':'attach_file','files':'external_files','file-bytes':'file_bytes','apply-file-type':'apply_file_type','file-data':'typed_file','file-reference':'file_reference','file-xrefs':'file_xrefs'}
         if method in file_methods:return getattr(db,file_methods[method])(**p)
@@ -371,12 +373,16 @@ def parser():
                 c.add_argument('--size',type=lambda s:int(s,0),default=1);c.add_argument('--limit',type=int,default=200)
                 c.add_argument('--page-offset',type=int,default=0);c.add_argument('--active-only',dest='include_stale',action='store_false')
         if name in ('attach-file','apply-file-type','file-reference'):c.add_argument('--author',default='agent')
-    for name in ('link-labels','rename-file','label-info'):
+    for name in ('link-labels','rename-file','label-info','label-links','unlink-labels'):
         c=sub.add_parser(name,help=METHODS[name]);c.add_argument('project');c.add_argument('--version',type=int)
         if name=='link-labels':
             c.add_argument('left',type=json.loads);c.add_argument('right',type=json.loads)
             c.add_argument('--size',type=lambda s:int(s,0),default=1);c.add_argument('--evidence',required=True)
             c.add_argument('--name');c.add_argument('--author',default='agent')
+        elif name=='label-links':
+            c.add_argument('--include-removed',action='store_true');c.add_argument('--limit',type=int,default=200);c.add_argument('--offset',type=int,default=0)
+        elif name=='unlink-labels':
+            c.add_argument('link_id',type=int);c.add_argument('--reason',required=True);c.add_argument('--author',default='agent')
         elif name=='rename-file':
             c.add_argument('file');c.add_argument('offset',type=lambda s:int(s,0));c.add_argument('name');c.add_argument('--author',default='agent')
         else:c.add_argument('endpoint',type=json.loads)
