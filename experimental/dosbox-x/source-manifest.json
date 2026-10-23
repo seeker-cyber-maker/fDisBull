@@ -1,6 +1,6 @@
 {
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "664a8b6dc05bb720504489490819c8f7a886dce2ee7c7a6cba67bce2229573f2",
+  "patch_sha256": "26ca8457aee6b2369a901c8fab59b89a3fe4bc2f40c72d4830571146eef535ce",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -33,6 +33,11 @@
       "size": 2508
     },
     {
+      "path": "include/agent/debugger_adapter.h",
+      "sha256": "19c5a735cb3d77942d683b1c79ae1addf3bc5f2c0ff60414791aa40017268e8d",
+      "size": 3753
+    },
+    {
       "path": "include/agent/input_adapter.h",
       "sha256": "ecc9fc01f38ae69a14874e444f9aa3fea55329035fde251a6bbd7db9a017d212",
       "size": 2163
@@ -43,9 +48,24 @@
       "size": 960
     },
     {
+      "path": "include/debug.h",
+      "sha256": "07f5102d5af2b4fc4f5feb8c604267215a26ec7b0bc164a2a2a2342abc8fde39",
+      "size": 3004
+    },
+    {
+      "path": "include/paging.h",
+      "sha256": "f86c2aa924b79f577f07745644d40a83c14bdbd8da22335686618eb812ea6cfe",
+      "size": 21891
+    },
+    {
       "path": "src/agent/Makefile.am",
       "sha256": "a6939f562c8dc81870b136e8bba9fe7b805595ded08873bad9cd57b2b9b943e6",
       "size": 524
+    },
+    {
+      "path": "src/agent/debugger/debugger_adapter.cpp",
+      "sha256": "a8b779422567576ae80b23a62ac14dac6c3945578c088e023ca623dfb35193e1",
+      "size": 24339
     },
     {
       "path": "src/agent/protocol/agent_protocol.cpp",
@@ -54,8 +74,8 @@
     },
     {
       "path": "src/agent/server/agent_server.cpp",
-      "sha256": "5e39e44ff989c16b96581d85fc6cadc0eb80a653f05a34c0012e46d0168de86a",
-      "size": 177705
+      "sha256": "a39f7be856383e019f06f29d1d9187d858709b5f65d14299c5926555e0cf624b",
+      "size": 187654
     },
     {
       "path": "src/agent/transport/local_transport.cpp",
@@ -68,9 +88,14 @@
       "size": 906
     },
     {
+      "path": "src/cpu/core_normal.cpp",
+      "sha256": "f3174279d84096bb48a959f52206211f1a529d4ef25a418f16e3e0f5befe0d43",
+      "size": 7399
+    },
+    {
       "path": "src/debug/debug.cpp",
-      "sha256": "211ffbe1e0f4f58faeb1426e5e2aba00699be3815ec84524cd56e543e9e4ba54",
-      "size": 226616
+      "sha256": "7faa57204e701696c3591bf0a3c6cde9d6a9d47f02361845079830b4bc1896bd",
+      "size": 229553
     },
     {
       "path": "src/debug/debug_gui.cpp",
@@ -91,6 +116,11 @@
       "path": "src/ints/mouse.cpp",
       "sha256": "33c46156133237ff6fb687be786b4e1293afef42734039f954ff34682e533bf2",
       "size": 112554
+    },
+    {
+      "path": "src/misc/savestates.cpp",
+      "sha256": "29d7e0dde5dd603384ea1ae0ae845e56f039d6ba1ded2ddb8819e91e6aed5a91",
+      "size": 32101
     },
     {
       "path": "tests/agent_headless/MOUSEVID.asm",
@@ -156,9 +186,12 @@
     "Launcher selects native-resolution render doublescan=false",
     "Acceptance compares CPU values separately from input mutation revisions",
     "Refresh cached RGBA pixels on every completed frame to include palette-only changes",
-    "execution.timing: emulation-thread PIC clock and native DOSBox fast-forward getter/setter"
+    "execution.timing: emulation-thread PIC clock and native DOSBox fast-forward getter/setter",
+    "Native state save/load RPC with headless error handling and flagged-file restore disabled",
+    "Normal-core real-mode CPU data access watches, excluding instruction fetch and debugger/host reads",
+    "Structured bounded register edits for derived machine-state snapshots"
   ],
-  "emulator_sha256": "0f83e85df107ab4a502d3e973a53f8a15f1e9d3e36d08896cab92aefbe449902",
+  "emulator_sha256": "e749b6e50775de2807c2515f83e455dc705cdf6ddcdfb257e781f215d987865a",
   "nasm_version": "2.16.03",
   "nasm_source_sha256": "1412a1c760bbd05db026b6c0d1657affd6631cd0a63cddb6f73cc6d4aa616148",
   "verification": {
@@ -269,6 +302,88 @@
     {
       "path": "evidence/integration-2026-10-23/title.png",
       "sha256": "eaffa5b875bfdae263a63a3a717a13f053889223e29c9b83e8f54a2ebebccacc"
+    }
+  ],
+  "previous_integration": {
+    "commit": "a6cfea46fc255a347a397441137ae9e2d7116124",
+    "patch_sha256": "664a8b6dc05bb720504489490819c8f7a886dce2ee7c7a6cba67bce2229573f2",
+    "emulator_sha256": "0f83e85df107ab4a502d3e973a53f8a15f1e9d3e36d08896cab92aefbe449902"
+  },
+  "state_evidence": [
+    {
+      "path": "evidence/states-2026-10-23/backend-acceptance.log",
+      "sha256": "560234b21b883d3b203d1d4b9801abc578ac95c9163341d21bc4dcfb758bb198",
+      "size": 121
+    },
+    {
+      "path": "evidence/states-2026-10-23/client-tests.log",
+      "sha256": "337c1b1293d4ee8a1dd59ae579c055c6344880073559b460a4e98633320e363f",
+      "size": 5046
+    },
+    {
+      "path": "evidence/states-2026-10-23/commands.jsonl",
+      "sha256": "4262768fdac715a51a44352c09d653ab13615360196c8ecbf32861db411d25c2",
+      "size": 124047
+    },
+    {
+      "path": "evidence/states-2026-10-23/debugger-tests.log",
+      "sha256": "2d3933bdcb321551a0441ac727576ac3ff03bb76538e640c0c404873d4dde42c",
+      "size": 100
+    },
+    {
+      "path": "evidence/states-2026-10-23/first-save.png",
+      "sha256": "3e1717775391fad68bc81ec46d3074ea9a8ce3449d7d642c112fc0d817ea6e99",
+      "size": 21478
+    },
+    {
+      "path": "evidence/states-2026-10-23/full-tests.log",
+      "sha256": "4f4d80bc21475e85979255ece44e0159de96e52e188784b66893636d21f536fa",
+      "size": 25323
+    },
+    {
+      "path": "evidence/states-2026-10-23/game-state-acceptance.log",
+      "sha256": "ee85b0e709c2e7a2a3b270279fc33d5bae03cf3ebec8e44592feacf6fd313328",
+      "size": 125
+    },
+    {
+      "path": "evidence/states-2026-10-23/load-dialog.png",
+      "sha256": "9ddbe8c9bff1d163877162ad8789fd70d7cf7cab8c949fe0c648ccb6db2c22f7",
+      "size": 21171
+    },
+    {
+      "path": "evidence/states-2026-10-23/main-menu.png",
+      "sha256": "922b369e15efdde57e30032e40a95be2d1aa3263532c2160381c1d48a10bc9c8",
+      "size": 33016
+    },
+    {
+      "path": "evidence/states-2026-10-23/modified-state-resume.json",
+      "sha256": "a1fdd5c89dd37fc54080c2b56e25c1ad60dd400815448360987dc58fd1b5584a",
+      "size": 27200
+    },
+    {
+      "path": "evidence/states-2026-10-23/restored-dialog.png",
+      "sha256": "9ddbe8c9bff1d163877162ad8789fd70d7cf7cab8c949fe0c648ccb6db2c22f7",
+      "size": 21171
+    },
+    {
+      "path": "evidence/states-2026-10-23/state-package-check.log",
+      "sha256": "be9c08e0ecb018498a788466cd4710df1296822ce26728a4424844c9a5624bef",
+      "size": 155
+    },
+    {
+      "path": "evidence/states-2026-10-23/state-wheel-smoke.log",
+      "sha256": "ea420958e03e956df80bf2f721887b329096f324a64a9d2035528dab3a6d2002",
+      "size": 143
+    },
+    {
+      "path": "evidence/states-2026-10-23/summary.json",
+      "sha256": "2dba6c86ffe2c93516cac8e4b0775e559fde3314ac4e5f8ceb89d263891eacb4",
+      "size": 210179
+    },
+    {
+      "path": "evidence/states-2026-10-23/verification.json",
+      "sha256": "4b46d765b9c6802a5abdbac357e1c2994daa486328f7f9fad5e71ef081cca002",
+      "size": 5390
     }
   ]
 }

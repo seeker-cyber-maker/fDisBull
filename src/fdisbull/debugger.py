@@ -10,12 +10,17 @@ import re
 import struct
 import time
 import uuid
+import tempfile
 
 from .dosbox_rpc import DOSBoxRPC, DebuggerError
 from .external_files import _file_name
 
 
 DEBUG_DDL = '''
+CREATE TABLE IF NOT EXISTS debug_scripts(
+ id TEXT PRIMARY KEY, version INTEGER NOT NULL REFERENCES versions(id),
+ name TEXT NOT NULL, created TEXT NOT NULL, sha256 TEXT NOT NULL, script TEXT NOT NULL);
+
 CREATE TABLE IF NOT EXISTS debug_runs(
  id TEXT PRIMARY KEY, version INTEGER NOT NULL REFERENCES versions(id),
  created TEXT NOT NULL, ended TEXT, state TEXT NOT NULL, metadata TEXT NOT NULL);
@@ -54,6 +59,57 @@ class DebugProjectMixin:
             FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run
             WHERE r.version=? AND (? IS NULL OR r.id=?) ORDER BY a.rowid''',(v,run,run))
         return {'version':v,'artifacts':[{**dict(r),'metadata':json.loads(r['metadata'])} for r in rows]}
+
+    def debug_save_script(self, name, script, version=None):
+        from .debug_script import validate_script
+        validate_script(script)
+        name = _file_name(name)
+        text = json.dumps(script, sort_keys=True, separators=(',',':'), allow_nan=False)
+        identifier = uuid.uuid4().hex
+        v = self.version(version)['id']
+        digest = hashlib.sha256(text.encode()).hexdigest()
+        with self.transaction(True):
+            self.db.execute('INSERT INTO debug_scripts VALUES (?,?,?,?,?,?)',
+                            (identifier,v,name,stamp(),digest,text))
+        return dict(script_id=identifier,version=v,name=name,sha256=digest)
+
+    def debug_scripts(self, version=None):
+        v = self.version(version)['id']
+        return {'version':v,'scripts':[dict(r) for r in self.db.execute(
+            'SELECT id,version,name,created,sha256 FROM debug_scripts WHERE version=? ORDER BY rowid',(v,))]}
+
+    def debug_state_info(self, artifact):
+        import zipfile
+        row = self.db.execute('SELECT a.*,r.version FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run WHERE a.id=?',
+                              (artifact,)).fetchone()
+        if row is None or row['kind']!='state':
+            raise ValueError('Unknown native state artifact')
+        data = bytes(row['data'])
+        if hashlib.sha256(data).hexdigest()!=row['sha256']:
+            raise ValueError('Stored state hash mismatch')
+        with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            components = [{'name':i.filename,'size':i.file_size,'compressed_size':i.compress_size} for i in archive.infolist()]
+        return {'artifact':artifact,'version':row['version'],'sha256':row['sha256'],'size':len(data),
+                'metadata':json.loads(row['metadata']),'components':components}
+
+    def debug_fork_state(self, artifact, executable, game_dir, *, name='derived.sav', memory=None, registers=None):
+        info = self.debug_state_info(artifact)
+        memory = [] if memory is None else memory
+        registers = {} if registers is None else registers
+        if not isinstance(memory,list) or len(memory)>64 or not isinstance(registers,dict):
+            raise ValueError('State edits require at most 64 memory edits and a register mapping')
+        _file_name(name)
+        from .debug_state import validate_edits, apply_edits
+        validate_edits(memory,registers)
+        if not memory and not registers:
+            raise ValueError('A state fork requires at least one explicit edit')
+        with self.debugger(executable,game_dir,version=info['version']) as debug:
+            debug.load_state(artifact)
+            edits = apply_edits(debug,memory,registers)
+            debug._state_provenance = {'parent_artifact':artifact,'parent_sha256':info['sha256'],
+                                       'edits':edits,'guest_execution_during_edits':False}
+            result = debug.save_state(name)
+        return result
 
     def debug_export(self, artifact, output):
         row = self.db.execute('SELECT data,sha256 FROM debug_artifacts WHERE id=?',(artifact,)).fetchone()
@@ -96,7 +152,7 @@ class DebugSession:
         from . import __version__
         self.metadata = {'fdisbull_version':__version__,'source_sha256':project.meta['source_sha256'],'version_sha256':self.version['sha256'],
                          'executable':str(executable),'emulator_sha256':hashlib.sha256(executable.read_bytes()).hexdigest(),
-                         'game_dir':str(self.game_dir),'target':target,'static_load_segment':self.dos['load_segment']}
+                         'runtime_profile':'real-normal-v1','game_dir':str(self.game_dir),'target':target,'static_load_segment':self.dos['load_segment']}
         try:
             self.rpc = DOSBoxRPC(executable,self.game_dir)
             result = self.rpc.call('session.start',{'target':{'command':target,'arguments':[]},
@@ -212,22 +268,36 @@ class DebugSession:
                     'fast_forward':fast_forward,'timing_after':timing,'session':result}
         if result and result.get('stop_reason',{}).get('address'):
             result['stop_reason']['project_address'] = self.project_address(result['stop_reason']['address'])
+        if result and result.get('stop_reason',{}).get('data_access'):
+            access = result['stop_reason']['data_access']
+            access['project_instruction'] = self.project_address(access['instruction'])
         self._event('run',evidence)
         return evidence
 
     def project_address(self, address):
-        if address.get('space') != 'segmented':
+        if address.get('space') == 'linear':
+            runtime = int(address['offset'],16)
+        elif address.get('space') == 'segmented':
+            runtime = int(address['segment'],16)*16+int(address['offset'],16)
+        else:
             return None
-        runtime = int(address['segment'],16)*16+int(address['offset'],16)
         return hex(runtime-self.delta) if self.runtime_base <= runtime < self.runtime_base+self.module_size else None
 
     def registers(self):
         result = self.call('state.get_registers')
+        result.update(cs=result['segments']['cs'],ip=result['instruction_pointer'])
         result['project_address'] = self.project_address({'space':'segmented',
             'segment':result['segments']['cs'],'offset':result['instruction_pointer']})
         return result
 
-    def breakpoint(self, address, *, cs=None):
+    def breakpoint(self, address, *, cs=None, access='x', length=1):
+        if access not in ('x','r','w','rw'):
+            raise ValueError('access must be x, r, w, or rw')
+        bounded(length,'length',1,256)
+        if access != 'x':
+            return self._data_breakpoint(address,cs=cs,access=access,length=length)
+        if length != 1:
+            raise ValueError('Execution breakpoints use one instruction address')
         linear, selector = self.project._dos_parse_address(address,cs)
         offset = linear-self.static_base
         if not 0 <= offset < self.module_size:
@@ -254,6 +324,119 @@ class DebugSession:
         self._event('breakpoint',result)
         return result
 
+    def _data_breakpoint(self, address, *, cs, access, length):
+        if not self.rpc.capabilities.get('breakpoints',{}).get('data_access'):
+            raise DebuggerError('DOSBox build lacks data-access breakpoints; rebuild the backend')
+        linear, _ = self.project._dos_parse_address(address,cs)
+        offset = linear-self.static_base
+        if not 0 <= offset or offset+length > self.module_size:
+            raise ValueError('Data breakpoint range is outside the original mapped MZ module')
+        results = []
+        try:
+            for i in range(length):
+                runtime = self.runtime_base+offset+i
+                result = self.call('breakpoints.create',{'kind':access,'once':False,
+                    'address':{'space':'linear','offset':f'0x{runtime:08X}'}})
+                result.update(project_address=hex(linear+i),access=access,bytes_verified=False)
+                results.append(result)
+        except BaseException:
+            for result in results:
+                self.delete_breakpoint(result['breakpoint_id'])
+            raise
+        evidence = {'run':self.run_id,'access':access,'length':length,'breakpoints':results,
+                    'stop_semantics':'after_data_access_before_next_instruction'}
+        self._event('data-breakpoint',evidence)
+        return evidence
+
+    def memory(self, address, *, cs=None, length=16):
+        bounded(length,'length',1,65536)
+        linear, _ = self.project._dos_parse_address(address,cs)
+        offset = linear-self.static_base
+        if offset < 0 or offset+length > self.module_size:
+            raise ValueError('Memory range is outside the original mapped MZ module')
+        result = self.call('memory.read',{'address':{'space':'linear','offset':f'0x{linear+self.delta:08X}'},'length':length})
+        result.update(project_address=hex(linear),hex=base64.b64decode(result['data_base64'],validate=True).hex())
+        return result
+
+    def _disk_manifest(self):
+        entries = []; size = 0
+        protected = {self.project.path,Path(str(self.project.path)+'-wal'),Path(str(self.project.path)+'-shm'),Path(str(self.project.path)+'-journal')}
+        for path in sorted(self.game_dir.rglob('*')):
+            if path.is_symlink():
+                raise ValueError('Save states require a game directory without symbolic links')
+            if not path.is_file() or path.resolve() in protected:
+                continue
+            size += path.stat().st_size
+            if size > 256*1024*1024 or len(entries)>=4096:
+                raise ValueError('Game directory exceeds state manifest budget')
+            entries.append({'path':str(path.relative_to(self.game_dir)),'sha256':hashlib.sha256(path.read_bytes()).hexdigest()})
+        return entries
+
+    def save_state(self, name='checkpoint.sav'):
+        _file_name(name)
+        if not self.rpc.capabilities.get('save_states'):
+            raise DebuggerError('DOSBox build lacks native state operations')
+        if self.call('input.mouse.state').get('mouse',{}).get('release_pending'):
+            raise ValueError('Run until queued mouse releases complete before saving a state')
+        before = self._disk_manifest()
+        registers = self.registers()
+        if registers['cpu_mode']!='real':
+            raise ValueError('Native project checkpoints currently require real mode')
+        with tempfile.TemporaryDirectory(prefix='fdisbull-state-') as directory:
+            path = Path(directory)/'state.sav'
+            self.call('state.save',{'path':str(path)})
+            data = path.read_bytes()
+        if before != self._disk_manifest():
+            raise DebuggerError('Mounted game files changed while capturing state')
+        metadata = {**self.metadata,'registers':registers,'disk_manifest':before,
+                    'format':'dosbox-x-native','disk_restore':False}
+        if hasattr(self,'_state_provenance'):
+            metadata['derivation'] = self._state_provenance
+        return self._artifact(name,'state',data,metadata)
+
+    def load_state(self, artifact):
+        row = self.project.db.execute("""SELECT a.*,r.version FROM debug_artifacts a
+            JOIN debug_runs r ON r.id=a.run WHERE a.id=?""",(artifact,)).fetchone()
+        if row is None or row['kind'] != 'state' or row['version'] != self.version['id']:
+            raise ValueError('State must belong to the selected project version')
+        metadata = json.loads(row['metadata']); data = bytes(row['data'])
+        if hashlib.sha256(data).hexdigest()!=row['sha256']:
+            raise ValueError('Stored state hash mismatch')
+        for field in ('source_sha256','version_sha256','emulator_sha256','runtime_load_segment','runtime_profile','game_dir'):
+            if metadata.get(field) != self.metadata.get(field):
+                raise ValueError('State compatibility mismatch: '+field)
+        if metadata['disk_manifest'] != self._disk_manifest():
+            raise ValueError('Mounted game files differ from state; restore the matching files first')
+        with tempfile.TemporaryDirectory(prefix='fdisbull-state-') as directory:
+            path = Path(directory)/'state.sav'; path.write_bytes(data)
+            try:
+                result = self.call('state.load',{'path':str(path)})
+                registers = self.registers()
+                for field in ('general','segments','instruction_pointer','flags'):
+                    if registers.get(field) != metadata['registers'].get(field):
+                        raise DebuggerError('Restored CPU differs from saved state: '+field)
+            except BaseException:
+                self.close() # A partially failed native restore must never be resumed.
+                raise
+        result.update(artifact=artifact,sha256=row['sha256'],registers=registers,
+                      framebuffer='invalidated_until_next_completed_frame')
+        self._event('load-state',result)
+        return result
+
+    def script(self, script=None, *, script_id=None, timeout_ms=60000):
+        from .debug_script import execute_script
+        if (script is None)==(script_id is None):
+            raise ValueError('Supply exactly one of script or script_id')
+        if script_id is not None:
+            row = self.project.db.execute('SELECT * FROM debug_scripts WHERE id=? AND version=?',
+                (script_id,self.version['id'])).fetchone()
+            if row is None:
+                raise ValueError('Unknown script for selected project version')
+            if hashlib.sha256(row['script'].encode()).hexdigest()!=row['sha256']:
+                raise ValueError('Stored script hash mismatch')
+            script = json.loads(row['script'])
+        return execute_script(self,script,timeout_ms=timeout_ms)
+
     def delete_breakpoint(self, breakpoint_id):
         result = self.call('breakpoints.delete',{'breakpoint_id':breakpoint_id})
         self._event('delete_breakpoint',result)
@@ -272,8 +455,8 @@ class DebugSession:
 
     def _artifact(self, name, kind, data, metadata):
         name = _file_name(name)
-        if len(data) > 16*1024*1024:
-            raise ValueError('Runtime artifact exceeds 16 MiB')
+        if len(data) > (128 if kind=='state' else 16)*1024*1024:
+            raise ValueError('Runtime artifact exceeds per-kind size budget')
         identifier = uuid.uuid4().hex
         digest = hashlib.sha256(data).hexdigest()
         with self.project.transaction(True):
@@ -376,7 +559,8 @@ class DebugWorkspace:
         if session is None or session.project.path != Path(project).resolve():
             raise ValueError('Live run not owned by this server; use debug-runs for saved history')
         methods = {'debug-status':'status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
-                   'debug-run':'run','debug-click':'click','debug-screenshot':'screenshot','debug-trace':'trace'}
+                   'debug-run':'run','debug-click':'click','debug-screenshot':'screenshot','debug-trace':'trace',
+                   'debug-memory':'memory','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script'}
         if method=='debug-stop':
             if params:
                 raise ValueError('Unexpected stop options')

@@ -1,0 +1,173 @@
+{
+  "result": "pass for bounded native-state editing/reinjection and CPU data-watch acceptance",
+  "prior_integration_commit": "a6cfea46fc255a347a397441137ae9e2d7116124",
+  "backend_patch_sha256": "26ca8457aee6b2369a901c8fab59b89a3fe4bc2f40c72d4830571146eef535ce",
+  "emulator_sha256": "e749b6e50775de2807c2515f83e455dc705cdf6ddcdfb257e781f215d987865a",
+  "clean_replay_source_files": 27,
+  "focused_real_emulator_tests": 10,
+  "backend_client_transport_tests": 31,
+  "authored_headless_fixture": "pass",
+  "full_suite": {
+    "passed": 726,
+    "skipped": 3,
+    "failed": 2,
+    "errors": 23,
+    "limitation": "Established Apple compiler/linker versus Linux ELF fixtures; focused tests rerun after final aliases and script validation guard"
+  },
+  "actual_game": {
+    "result": "pass",
+    "native_components": 26,
+    "state_fork": {
+      "address": "0x471a6",
+      "before_hex": "0000",
+      "after_hex": "0100",
+      "parent_hash_unchanged": true,
+      "no_guest_execution_during_edit": true
+    },
+    "execution_breakpoint": "1000:75bc",
+    "trace_events": 64,
+    "data_modes_verified": [
+      "w",
+      "r",
+      "rw"
+    ],
+    "exact_proposed_counter_write_watch_placement_bytes": 8,
+    "counter_writer_and_revenue_semantics": "not established"
+  },
+  "source_files": [
+    {
+      "path": "src/fdisbull/debugger.py",
+      "sha256": "e575bb09297bd2f893736247f695355c70c6deb2a29bba31694983075be07b83",
+      "size": 31382
+    },
+    {
+      "path": "src/fdisbull/dosbox_rpc.py",
+      "sha256": "a21c08aa02f41c6ff34d7e6dc42d2b5023bce1f1992fdcc8f5bf6967e8a7c7d0",
+      "size": 6981
+    },
+    {
+      "path": "src/fdisbull/debug_script.py",
+      "sha256": "ccb9848c2c6b83882e8564d7868002df376040129e66bc5c1d9a18a8ba28df2c",
+      "size": 6293
+    },
+    {
+      "path": "src/fdisbull/debug_state.py",
+      "sha256": "e61fed80ee31abfe61dc1e00c6c3b16b80a33f757bf1d9b05b954c5366e26d61",
+      "size": 4680
+    },
+    {
+      "path": "src/fdisbull/cli.py",
+      "sha256": "e56c93fefdc8306e206c90f520e0fa4d3e4b5dfbaca13ff5e9cb491772e33077",
+      "size": 32399
+    },
+    {
+      "path": "tests/test_debugger.py",
+      "sha256": "c7ba93b234c5aa883cad3f0cfa790c68b523b49c718aab62f202ac6ba3f9e210",
+      "size": 14622
+    },
+    {
+      "path": "examples/dinopark/verify_states.py",
+      "sha256": "26a7972da1f3b4e348a900f0dae9e72c3c6d1c4440e003516c360318ea71ec08",
+      "size": 7082
+    },
+    {
+      "path": "examples/dinopark/routes/load-dialog.json",
+      "sha256": "502ce1480d24982244323188df9493ea4fa59e83550944ec87a51e85ae484920",
+      "size": 635
+    }
+  ],
+  "evidence": [
+    {
+      "path": "backend-acceptance.log",
+      "sha256": "560234b21b883d3b203d1d4b9801abc578ac95c9163341d21bc4dcfb758bb198",
+      "size": 121
+    },
+    {
+      "path": "client-tests.log",
+      "sha256": "337c1b1293d4ee8a1dd59ae579c055c6344880073559b460a4e98633320e363f",
+      "size": 5046
+    },
+    {
+      "path": "commands.jsonl",
+      "sha256": "4262768fdac715a51a44352c09d653ab13615360196c8ecbf32861db411d25c2",
+      "size": 124047
+    },
+    {
+      "path": "debugger-tests.log",
+      "sha256": "2d3933bdcb321551a0441ac727576ac3ff03bb76538e640c0c404873d4dde42c",
+      "size": 100
+    },
+    {
+      "path": "first-save.png",
+      "sha256": "3e1717775391fad68bc81ec46d3074ea9a8ce3449d7d642c112fc0d817ea6e99",
+      "size": 21478
+    },
+    {
+      "path": "full-tests.log",
+      "sha256": "4f4d80bc21475e85979255ece44e0159de96e52e188784b66893636d21f536fa",
+      "size": 25323
+    },
+    {
+      "path": "game-state-acceptance.log",
+      "sha256": "ee85b0e709c2e7a2a3b270279fc33d5bae03cf3ebec8e44592feacf6fd313328",
+      "size": 125
+    },
+    {
+      "path": "load-dialog.png",
+      "sha256": "9ddbe8c9bff1d163877162ad8789fd70d7cf7cab8c949fe0c648ccb6db2c22f7",
+      "size": 21171
+    },
+    {
+      "path": "main-menu.png",
+      "sha256": "922b369e15efdde57e30032e40a95be2d1aa3263532c2160381c1d48a10bc9c8",
+      "size": 33016
+    },
+    {
+      "path": "modified-state-resume.json",
+      "sha256": "a1fdd5c89dd37fc54080c2b56e25c1ad60dd400815448360987dc58fd1b5584a",
+      "size": 27200
+    },
+    {
+      "path": "restored-dialog.png",
+      "sha256": "9ddbe8c9bff1d163877162ad8789fd70d7cf7cab8c949fe0c648ccb6db2c22f7",
+      "size": 21171
+    },
+    {
+      "path": "state-package-check.log",
+      "sha256": "be9c08e0ecb018498a788466cd4710df1296822ce26728a4424844c9a5624bef",
+      "size": 155
+    },
+    {
+      "path": "state-wheel-smoke.log",
+      "sha256": "ea420958e03e956df80bf2f721887b329096f324a64a9d2035528dab3a6d2002",
+      "size": 143
+    },
+    {
+      "path": "summary.json",
+      "sha256": "2dba6c86ffe2c93516cac8e4b0775e559fde3314ac4e5f8ceb89d263891eacb4",
+      "size": 210179
+    }
+  ],
+  "packages": [
+    {
+      "path": ".gitignore",
+      "sha256": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1",
+      "size": 1
+    },
+    {
+      "path": "fdisbull-0.9.0-py3-none-any.whl",
+      "sha256": "b479b372e3575cb57044732a65b93fbc53324ee7da9c72b4d039b852a760d5c9",
+      "size": 221791
+    },
+    {
+      "path": "fdisbull-0.9.0-tool.zip",
+      "sha256": "9d1dbeff0165fbc09813170d0ce9ccf740e7ce9eec6d039eb65f60e62f693c7a",
+      "size": 498752
+    },
+    {
+      "path": "fdisbull-0.9.0.tar.gz",
+      "sha256": "4d03b001c7f1f40ab2a2c37d6ee7a9a535856341ed111913cb847e1b0d79ef17",
+      "size": 425634
+    }
+  ]
+}

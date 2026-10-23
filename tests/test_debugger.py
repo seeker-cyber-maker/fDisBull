@@ -60,7 +60,9 @@ def test_real_breakpoint_translation_trace_restart_and_patch_isolation(game,emul
             assert stopped['outcome']=='breakpoint' and not stopped['timed_out']
             assert stopped['session']['stop_reason']['project_address']=='0x10003'
             assert not stopped['timing_after']['fast_forward']
-            assert int(debug.registers()['general']['eax'],16)==0x1234
+            registers=debug.registers()
+            assert registers['cs']==registers['segments']['cs'] and registers['ip']==registers['instruction_pointer']
+            assert int(registers['general']['eax'],16)==0x1234
             debug.delete_breakpoint(breakpoint['breakpoint_id'])
             trace=debug.trace(count=4)
             assert trace['metadata']['complete'] and trace['metadata']['event_count']==4
@@ -139,3 +141,127 @@ def test_real_server_eof_reaps_session_and_offline_export_works(game,emulator):
             assert record['state']=='exited' and record['ended']
     finally:
         if process.poll() is None:process.kill();process.wait()
+
+
+@pytest.fixture
+def access_game(tmp_path):
+    # Set DS=CS; write 1234 to word [100], read it, write the same value, loop read/write.
+    binary = tmp_path/'ACCESS.EXE'
+    binary.write_bytes(mz_file(bytes.fromhex('0e1fb83412a30001a10001a30001ebf8')+bytes(497),ss=0,sp=0x200))
+    project=tmp_path/'access.fdb'
+    with Project.create(project,binary) as db:
+        db.analyze(start='1000:0000',max_instructions=10)
+    return project,binary
+
+
+def test_real_read_write_same_value_and_fetch_exclusion(access_game,emulator):
+    with Project(access_game[0]) as db, db.debugger(emulator,access_game[1].parent) as debug:
+        bp=debug.breakpoint('1000:0005')
+        assert debug.run(timeout_ms=2000)['outcome']=='breakpoint'
+        debug.delete_breakpoint(bp['breakpoint_id'])
+        for mode,expected_ip in [('w',8),('r',11),('rw',14)]:
+            bp=debug.breakpoint('1000:0101',access=mode) # High byte of a 16-bit access.
+            hit=debug.run(timeout_ms=2000)
+            assert hit['outcome']=='breakpoint',hit
+            assert hit['session']['stop_reason']['breakpoint_id']==bp['breakpoints'][0]['breakpoint_id']
+            assert int(debug.registers()['instruction_pointer'],16)==expected_ip
+            assert debug.memory('1000:0100',length=2)['hex']=='3412'
+            debug.delete_breakpoint(bp['breakpoints'][0]['breakpoint_id'])
+        # Fetching instructions and host debugger reads must not count as guest data reads.
+        bp=debug.breakpoint('1000:0008',access='r')
+        debug.memory('1000:0008',length=3)
+        assert debug.run(timeout_ms=30,fast_forward=True)['outcome']=='timeout'
+        debug.delete_breakpoint(bp['breakpoints'][0]['breakpoint_id'])
+
+
+def test_real_native_state_restores_memory_registers_and_new_session(access_game,emulator):
+    path,binary=access_game
+    with Project(path) as db:
+        with db.debugger(emulator,binary.parent) as debug:
+            bp=debug.breakpoint('1000:0005')
+            assert debug.run(timeout_ms=2000)['outcome']=='breakpoint'
+            debug.delete_breakpoint(bp['breakpoint_id'])
+            state=debug.save_state('before-write.sav')
+            assert state['kind']=='state'
+            assert debug.memory('1000:0100',length=2)['hex']=='0000'
+            bp=debug.breakpoint('1000:0100',access='w')
+            assert debug.run(timeout_ms=2000)['outcome']=='breakpoint'
+            assert debug.memory('1000:0100',length=2)['hex']=='3412'
+            debug.delete_breakpoint(bp['breakpoints'][0]['breakpoint_id'])
+            debug.load_state(state['artifact'])
+            assert debug.memory('1000:0100',length=2)['hex']=='0000'
+            assert int(debug.registers()['instruction_pointer'],16)==5
+    with Project(path) as db, db.debugger(emulator,binary.parent) as debug:
+        debug.load_state(state['artifact'])
+        assert debug.memory('1000:0100',length=2)['hex']=='0000'
+        assert int(debug.registers()['instruction_pointer'],16)==5
+        bp=debug.breakpoint('1000:0100',access='w')
+        assert debug.run(timeout_ms=2000)['outcome']=='breakpoint'
+        debug.delete_breakpoint(bp['breakpoints'][0]['breakpoint_id'])
+        extra=binary.parent/'NEW.DAT';extra.write_bytes(b'changed mount')
+        with pytest.raises(ValueError,match='Mounted game files differ'):
+            debug.load_state(state['artifact'])
+
+
+def test_script_validation_persistence_and_real_execution(access_game,emulator):
+    from fdisbull.debug_script import validate_script
+    script={'format':'fdisbull-script-1','steps':[
+        {'op':'breakpoint','address':'1000:0005','as':'bp'},
+        {'op':'run','timeout_ms':2000,'as':'hit'},
+        {'op':'assert','value':'$hit.outcome','equals':'breakpoint'},
+        {'op':'delete-breakpoint','breakpoint_id':'$bp.breakpoint_id'},
+        {'op':'save-state','as':'checkpoint'},
+        {'op':'repeat','count':2,'steps':[
+            {'op':'run','timeout_ms':1000,'guest_ms':10,'fast_forward':True},
+            {'op':'load-state','artifact':'$checkpoint.artifact'}]},
+        {'op':'memory','address':'1000:0100','length':2,'as':'word'},
+        {'op':'assert','value':'$word.hex','equals':'0000'}]}
+    with pytest.raises(ValueError):validate_script({'format':'fdisbull-script-1','steps':[{'op':'shell','command':'no'}]})
+    with pytest.raises((ValueError,TypeError)):validate_script({'format':'fdisbull-script-1','steps':[{'op':'click','xx':1,'y':2}]})
+    with Project(access_game[0]) as db:
+        stored=db.debug_save_script('route.json',script)
+    with Project(access_game[0]) as db, db.debugger(emulator,access_game[1].parent) as debug:
+        assert db.debug_scripts()['scripts'][0]['sha256']==stored['sha256']
+        result=debug.script(script_id=stored['script_id'])
+        assert result['ok'],result
+        assert result['completed_steps']==11
+        failed=debug.script({'format':'fdisbull-script-1','steps':[
+            {'op':'assert','value':1,'equals':2},{'op':'run','guest_ms':100}]})
+        assert not failed['ok'] and failed['completed_steps']==0 and len(failed['steps'])==1
+
+
+def test_native_state_fork_edits_and_reinjects_without_changing_parent(access_game,emulator):
+    path,binary=access_game
+    with Project(path) as db:
+        static_before=db.disassembly(address='1000:0005',lines=1)['instructions'][0]['bytes']
+        with db.debugger(emulator,binary.parent) as debug:
+            bp=debug.breakpoint('1000:0005')
+            assert debug.run(timeout_ms=2000)['outcome']=='breakpoint'
+            debug.delete_breakpoint(bp['breakpoint_id'])
+            parent=debug.save_state('parent.sav')
+        info=db.debug_state_info(parent['artifact'])
+        assert {'CPU','Memory','Vga','Pic'} <= {i['name'] for i in info['components']}
+        fork=db.debug_fork_state(parent['artifact'],emulator,binary.parent,
+            memory=[{'address':'1000:0100','expected_hex':'0000','data_hex':'9999'}],
+            registers={'eax':{'expected':'0x1234','value':'0xbeef'}})
+        assert fork['metadata']['derivation']['parent_sha256']==parent['sha256']
+        assert not fork['metadata']['derivation']['guest_execution_during_edits']
+        assert db.debug_state_info(parent['artifact'])['sha256']==parent['sha256']
+        with db.debugger(emulator,binary.parent) as debug:
+            debug.load_state(fork['artifact'])
+            assert debug.memory('1000:0100',length=2)['hex']=='9999'
+            assert int(debug.registers()['general']['eax'],16)==0xbeef
+            bp=debug.breakpoint('1000:0100',access='w')
+            hit=debug.run(timeout_ms=2000)
+            assert hit['outcome']=='breakpoint'
+            assert hit['session']['stop_reason']['data_access']['project_instruction']=='0x10005'
+            assert debug.memory('1000:0100',length=2)['hex']=='efbe'
+            debug.delete_breakpoint(bp['breakpoints'][0]['breakpoint_id'])
+            debug.load_state(parent['artifact'])
+            assert debug.memory('1000:0100',length=2)['hex']=='0000'
+            assert int(debug.registers()['general']['eax'],16)==0x1234
+        with pytest.raises(ValueError,match='expected bytes mismatch'):
+            db.debug_fork_state(parent['artifact'],emulator,binary.parent,
+                memory=[{'address':'1000:0100','expected_hex':'ffff','data_hex':'1111'}])
+        assert db.disassembly(address='1000:0005',lines=1)['instructions'][0]['bytes']==static_before
+        assert len(db.debug_artifacts()['artifacts'])==2 # Failed edit creates no derivative snapshot.

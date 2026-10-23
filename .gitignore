@@ -12,3 +12,7 @@ examples/**/local/
 # Recovered archives, local toolchains, and byte-retaining project sidecars
 /.recovery/
 *.fdb-*
+
+# Exported emulator checkpoints stay local
+*.sav
+*.state

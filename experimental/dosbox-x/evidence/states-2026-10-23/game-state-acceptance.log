@@ -1,0 +1,1 @@
+PASS: native state captured, forked with checked RAM edit, reinjected, breakpoint/trace and r/w/rw verified, parent restored

@@ -50,7 +50,7 @@ class DOSBoxRPC:
             with (directory / 'emulator.log').open('wb') as log:
                 self.process = subprocess.Popen(
                     [str(executable), '--defaultconf', '--noautoexec', '--noconfig',
-                     '-set', 'render doublescan=false', '--agent-config', str(config)],
+                     '-set', 'render doublescan=false', '-set', 'cpu core=normal', '--agent-config', str(config)],
                     cwd=directory, env=environment, stdin=subprocess.DEVNULL,
                     stdout=log, stderr=subprocess.STDOUT, pass_fds=(child_read,child_write))
             os.close(child_read); descriptors.remove(child_read)

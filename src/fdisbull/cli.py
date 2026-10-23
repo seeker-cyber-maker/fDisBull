@@ -11,12 +11,20 @@ METHODS = {
     'debug-launch': 'Launch a project-bound DOSBox session in serve; executable,game_dir,[version]',
     'debug-status': 'Live debugger status and address mapping; run',
     'debug-registers': 'Live CPU registers with project address mapping; run',
-    'debug-breakpoint': 'Verify and translate a stored disassembly address; run,address,[cs]',
+    'debug-breakpoint': 'Translate execution or data access breakpoint; run,address,[cs,access,length]',
     'debug-delete-breakpoint': 'Delete a live breakpoint; run,breakpoint_id',
     'debug-run': 'Run to a breakpoint or bounded guest time, pausing at host timeout; run,[timeout_ms,guest_ms,fast_forward]',
     'debug-click': 'Queue a screenshot-pixel mouse click; run,x,y,[button,hold_ms,mode_id]',
     'debug-screenshot': 'Store an actual guest PNG inside the project; run,[name]',
     'debug-trace': 'Store bounded CPU trace with project address mappings; run,[name,count,timeout_ms,fast_forward]',
+    'debug-memory': 'Read project-mapped runtime bytes; run,address,[cs,length]',
+    'debug-save-state': 'Store native emulator state in the project; run,[name]',
+    'debug-load-state': 'Restore a compatible project state during a run; run,artifact',
+    'debug-script': 'Execute bounded menu/debug script; run,[script,script_id,timeout_ms]',
+    'debug-save-script': 'Save an immutable version-bound script; name,script,[version]',
+    'debug-scripts': 'List saved scripts; [version]',
+    'debug-state-info': 'Inspect native checkpoint metadata and component sizes offline; artifact',
+    'debug-fork-state': 'Derive an edited native checkpoint without running guest instructions; artifact,executable,game_dir,[name,memory,registers]',
     'debug-stop': 'Stop and reap a live emulator; run',
     'debug-runs': 'Saved runtime history for a static version; [version]',
     'debug-artifacts': 'Saved screenshots and traces, available after restart; [version,run]',
@@ -137,7 +145,7 @@ def invoke(method, params, debugger=None):
     project = p.pop("project",None)
     if not project:
         raise ValueError("project path is required")
-    if method.startswith('debug-') and method not in ('debug-runs','debug-artifacts','debug-export'):
+    if method.startswith('debug-') and method not in ('debug-runs','debug-artifacts','debug-export','debug-save-script','debug-scripts','debug-state-info','debug-fork-state'):
         if debugger is None:
             raise ValueError('Live debugger commands require fdisbull serve or fdisbull debug; sessions close on server exit')
         return debugger.invoke(method,project,p)
@@ -148,7 +156,7 @@ def invoke(method, params, debugger=None):
         with Project.create(project,binary,**p) as db:
             return db.status()
     with Project(project) as db:
-        if method in ('debug-runs','debug-artifacts','debug-export'):
+        if method in ('debug-runs','debug-artifacts','debug-export','debug-save-script','debug-scripts','debug-state-info','debug-fork-state'):
             return getattr(db,method.replace('-','_'))(**p)
         if method in ('link-labels','rename-file','label-info','label-links','unlink-labels'):return getattr(db,method.replace('-','_'))(**p)
         if method=='refresh-dos-state':return db.refresh_dos_state(**p)
@@ -272,13 +280,21 @@ def parser():
     c = sub.add_parser('debug',help='Launch a DOS project and accept live debugger JSON commands on stdin')
     c.add_argument('project');c.add_argument('--executable',required=True);c.add_argument('--game-dir',required=True)
     c.add_argument('--version',type=int)
-    for name in ('debug-runs','debug-artifacts','debug-export'):
+    for name in ('debug-runs','debug-artifacts','debug-export','debug-save-script','debug-scripts','debug-state-info','debug-fork-state'):
         c = sub.add_parser(name,help=METHODS[name]);c.add_argument('project')
-        if name=='debug-export':
+        if name=='debug-state-info':
+            c.add_argument('artifact')
+        elif name=='debug-fork-state':
+            c.add_argument('artifact');c.add_argument('--executable',required=True);c.add_argument('--game-dir',required=True)
+            c.add_argument('--name',default='derived.sav');c.add_argument('--memory',type=json.loads,default=[])
+            c.add_argument('--registers',type=json.loads,default={})
+        elif name=='debug-export':
             c.add_argument('artifact');c.add_argument('output')
         else:
             c.add_argument('--version',type=int)
             if name=='debug-artifacts':c.add_argument('--run')
+            if name=='debug-save-script':
+                c.add_argument('name');c.add_argument('script',type=json.loads,help='JSON script object')
     for name in ('identify','inspect'):
         c=sub.add_parser(name,help=METHODS[name])
         c.add_argument('path')

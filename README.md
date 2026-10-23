@@ -64,3 +64,5 @@ The original unfinished DOSBox checkpoint remains on `experimental/dosbox-headle
 Static analysis does not establish runtime execution. A drained queue does not establish complete code coverage. Authored labels and links record interpretations, and unresolved segment/pointer state stays explicit. Native macOS debugger acceptance passes; the full suite still has Linux ELF fixture failures on Apple's compiler/linker. The integration currently launches original unpatched DOS MZ versions; it does not silently apply static child patches to the game.
 
 No first-party distribution license has been selected. Public visibility does not grant an open-source license. See [THIRD_PARTY.md](docs/THIRD_PARTY.md) for dependency provenance. The separate DOSBox-X checkpoint retains its upstream GPL notices.
+
+The debugger also supports [native checkpoints, editable state forks, bounded menu scripts, and CPU data-access breakpoints](docs/DEBUGGER_SCRIPTS.md). These extend the 0.9.0 integration; their verification is recorded separately from the original 0.9.0 receipt.

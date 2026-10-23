@@ -6,7 +6,7 @@ The backend must be built with the current `experimental/dosbox-x/headless-agent
 
 ## Launch
 
-Import the executable, then analyze an address you want to break on. CS:IP strings are hexadecimal disassembly addresses in the project's load context:
+Import the executable, then analyze code addresses where you want execution breakpoints. Data watches do not require disassembly. CS:IP strings are hexadecimal disassembly addresses in the project's load context:
 
 ```bash
 fdisbull import /path/to/dinopark/DINOPARK.EXE dinopark.fdb --load-segment 0x1000
@@ -61,7 +61,7 @@ The host budget covers the running interval. Pausing, restoring speed, and order
 
 Read `mode_id` from your actual screenshot; do not assume the example's value. Click coordinates are native screenshot pixels. Input queued while stopped is consumed on subsequent execution; the release timer uses guest milliseconds. Fast-forward accelerates that guest time too.
 
-Breakpoint placement pins the static version and instruction context, checks the on-disk executable against the project's source hash, derives the runtime MZ load segment from observed entry registers, relocates the expected instruction bytes, and compares those bytes with live memory before creating the native breakpoint. Addresses outside the mapped MZ image, missing stored instructions, byte mismatches, wrapping translations, and patched static versions are rejected explicitly.
+Execution breakpoint placement pins the static version and instruction context, checks the on-disk executable against the project's source hash, derives the runtime MZ load segment from observed entry registers, relocates the expected instruction bytes, and compares those bytes with live memory before creating the native breakpoint. Addresses outside the mapped MZ image, missing stored instructions, byte mismatches, wrapping translations, and patched static versions are rejected explicitly.
 
 The first implementation launches the **original unpatched MZ version** only. It does not silently apply a child project's patches to a game. Use `version:1` when a project's latest version is a child. Runtime evidence remains attached to its launch version and is not copied into patched children.
 
@@ -80,7 +80,7 @@ Remove a recurring breakpoint before tracing through its loop if you want a full
 
 Trace events retain native addresses, instructions, and register deltas. Events within the original loaded module additionally receive project linear and segmented addresses. Driver/BIOS/out-of-image events stay unmapped; a load-offset mapping does not establish that self-modified or overlaid code still matches static instructions. Register values in the backend trace are observations before the listed instruction.
 
-Each artifact has an ID, SHA-256, size, launch version, and runtime metadata. A trace can be partial after an early breakpoint or timeout; inspect `complete` and `event_count`. Limits are 10,000 trace instructions, 16 MiB per stored artifact, and 256 MiB of runtime artifacts per project.
+Each artifact has an ID, SHA-256, size, launch version, and runtime metadata. A trace can be partial after an early breakpoint or timeout; inspect `complete` and `event_count`. Limits are 10,000 trace instructions, 16 MiB per screenshot/trace artifact (128 MiB per native state), and 256 MiB of runtime artifacts per project.
 
 After closing and reopening the server or shell, list/export using artifact IDs:
 
@@ -115,6 +115,14 @@ Native CPU observations and guest screenshots are stored separately from static 
 
 `tests/test_debugger.py` tests source/version rejection and the live ownership contract. Set `FDISBULL_DOSBOX=/absolute/path/to/patched/dosbox-x` to additionally run real-MZ tests for relocation-aware breakpoints, observed trace addresses, timeout/pause/speed restoration, runtime-byte mismatch rejection, restart/export, patch isolation, and server EOF cleanup.
 
-`examples/dinopark/verify_debugger.py --executable PATH --game-dir DIR --output NEW_DIR` replays the actual-game path through fDisBull's public JSON interface. It creates a project and exports its evidence only after server/emulator exit. No game data is shipped with the script. The actual-game session reached Real Estate after title, bank, and city interactions; a full playthrough, sound, and save/load are not established.
+`examples/dinopark/verify_debugger.py --executable PATH --game-dir DIR --output NEW_DIR` replays the actual-game path through fDisBull's public JSON interface. It creates a project and exports its evidence only after server/emulator exit. No game data is shipped with the script. The actual-game session reached Real Estate after title, bank, and city interactions; a full playthrough and sound are not established. Native state editing/reinjection and the separate in-game load-menu route are covered by the later state verification below.
 
 The backend's absolute input remains scoped to built-in real/v8086 INT33. Headless operation is not security sandbox isolation. Native Windows integration, arbitrary guest drivers, complete memory-access tracing, and performance guarantees remain outside this verified scope.
+
+## Native states, editable dumps, scripts, and data breakpoints
+
+See [reusable debugger routes and native checkpoints](DEBUGGER_SCRIPTS.md) for native save/load states, isolated state forks with verified RAM/register edits, bounded JSON routes, and `x/r/w/rw` breakpoint modes.
+
+`debug.registers()` and `debug-registers` return hexadecimal runtime `cs` and `ip` aliases at the top level. The original `segments.cs` and `instruction_pointer` fields remain available. `project_address` is the separately mapped static address.
+
+For the supplied investigation, `debug.breakpoint("0x471a6", access="w", length=8)` arms byte watches across the proposed four-word block without requiring analysis at that data range. `run(timeout_ms=..., fast_forward=True)` waits for a write or pauses on timeout. Inspect `session.stop_reason.data_access` for the actual access and originating instruction; a timeout does not establish that a counter is never written. Execution breakpoints at routines such as `38ff:211f` still require analysis first.

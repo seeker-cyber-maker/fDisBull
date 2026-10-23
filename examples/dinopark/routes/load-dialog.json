@@ -1,0 +1,13 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {"op": "run", "guest_ms": 35000, "fast_forward": true, "timeout_ms": 10000},
+    {"op": "screenshot", "name": "main-menu.png", "as": "menu"},
+    {"op": "assert", "value": "$menu.metadata.width", "equals": 320},
+    {"op": "assert", "value": "$menu.metadata.height", "equals": 200},
+    {"op": "click", "x": 160, "y": 160, "hold_ms": 150, "mode_id": "$menu.metadata.mode_id"},
+    {"op": "run", "guest_ms": 1500, "fast_forward": true, "timeout_ms": 5000},
+    {"op": "screenshot", "name": "load-dialog.png"},
+    {"op": "save-state", "name": "load-dialog.sav", "as": "dialog"}
+  ]
+}

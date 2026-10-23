@@ -16,7 +16,7 @@ Baseline: `029bd65c5dcc7cdc7f2e14e35278620d9707d969`.
 
 - `recovered-work.patch`: original unfinished archive checkpoint, preserved unchanged.
 - `headless-agent.patch`: complete current patch against the baseline, including recovered cloud changes and local fixes. Apply this patch alone to the clean baseline.
-- `source-manifest.json`: hashes for all 21 resulting source files, complete patch, tested emulator, and evidence; also records cloud recovery provenance.
+- `source-manifest.json`: hashes for all 27 resulting source files, complete patch, tested emulator, and evidence; also records cloud recovery provenance.
 - `evidence/2026-10-23/`: real guest acceptance JSON and screenshots, client/transport test log, and a separate command-line launcher result.
 
 The later cloud files were recovered by replaying nine complete saved `fileChange` diffs from interrupted chat `01a168ae-ed38-7565-b9db-557772f800d6` and pipe-client task `01a16916-46ba-76ab-a177-a234771da0e0`. These restore the pipe client/tests, package exports, SDL header placement, launcher diagnostics, and guest acceptance runner. Old passing-test statements were independently rechecked locally.
@@ -71,7 +71,7 @@ Local NASM: `/Users/tiga/Documents/ChatGPT/fDisBull/.recovery/2026-10-23/toolcha
 | Validation | Stale mode and out-of-bounds coordinates rejected |
 | Palette/mode changes | Red changes to magenta; mode 12h and restoration to mode 13h succeed |
 | Lifecycle | Session reaches exited; launcher closes channels and reaps emulator |
-| Complete patch | Clean replay reproduces all 21 source hashes |
+| Complete patch | Clean replay reproduces all 27 source hashes |
 
 Failed runs and logs remain under `.recovery/2026-10-23/acceptance-01` through `acceptance-03`. They exposed default double-scan dimensions, register equality incorrectly including the mutation revision, and stale palette capture. `acceptance-04` passed with the diagnostic fix; `acceptance-verified` passed on final source with stronger trace/step assertions.
 
@@ -98,3 +98,9 @@ Acceptance covers authored DOS fixtures and the documented bounded DinoPark sess
 Headless emulation does not provide security sandbox isolation. Screenshot conversion refreshes a bounded RGBA buffer on every completed frame while capture is enabled; high-resolution throughput has not been benchmarked.
 
 This is modified DOSBox-X source, separate from fDisBull. Upstream headers identify GPL-2.0-or-later. Upstream GPL v2 text is retained verbatim in `COPYING`; source notices remain intact. Upstream adoption or verification is not claimed.
+
+## Editable native checkpoints and data watches
+
+The current patch additionally exposes stopped `state.save`/`state.load` operations using DOSBox-X native serialization, structured `state.set_register` edits, and normal-core real-mode `r/w/rw` data-access breakpoints. Headless state calls reject mismatches without GUI confirmation, disable native flagged-file restore, and invalidate the completed-frame cache on restore. fDisBull checks native checkpoint identity and captures edited state forks in an isolated paused emulator. See [state/script API](../../docs/DEBUGGER_SCRIPTS.md) and [state verification](../../docs/VERIFICATION-STATES.md).
+
+The original 0.9.0 patch and its 21-file replay are preserved in Git commit `a6cfea46fc255a347a397441137ae9e2d7116124`; earlier receipts refer to that exact patch/emulator. The current source manifest pins the expanded 27-file patch and new emulator.
