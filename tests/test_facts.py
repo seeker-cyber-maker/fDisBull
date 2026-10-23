@@ -26,7 +26,7 @@ def test_all_straight_lines_persist_and_old_projects_explicitly_backfill(tmp_pat
             p.db.execute("UPDATE metadata SET value='3' WHERE key='schema'")
         path=p.path
     with Project(path) as p:
-        assert p.db.execute("SELECT value FROM metadata WHERE key='schema'").fetchone()[0]=='6'
+        assert p.db.execute("SELECT value FROM metadata WHERE key='schema'").fetchone()[0]=='7'
         # Read-only CFG can expose old omissions before explicit refresh.
         before=p.db.total_changes
         assert len(p.cfg('0x1000')['nodes'])==3

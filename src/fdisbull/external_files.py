@@ -180,7 +180,7 @@ class ExternalFilesMixin:
                                 [(item['size'], v, item['file'], item['offset']) for item in sizes])
             return sizes
 
-    def _file_type_location(self, v, file, offset):
+    def _raw_file_type_location(self, v, file, offset):
         file, offset = _file_name(file), _offset(offset)
         metadata = self._external_file(v, file)
         if offset > metadata['size']:
@@ -194,6 +194,9 @@ class ExternalFilesMixin:
         field = _field_at(layout, offset - row['offset'])
         return dict(file=file, file_offset=offset, binding_offset=row['offset'], binding_name=row['name'],
                     binding_type=row['type_name'], name=row['name'] + field['path'], **field)
+
+    def _file_type_location(self, v, file, offset):
+        return self._raw_file_type_location(v, file, offset)
 
     def typed_file(self, file, offset=0, version=None, max_items=256):
         file, offset = _file_name(file), _offset(offset)
@@ -241,6 +244,7 @@ class ExternalFilesMixin:
                     if t['kind'] == 'pointer':
                         item.update(target_type=t['target'], address_space=t['address_space'],
                                     interpretation='encoded pointer value only; no native or file target inferred')
+                    item["name"] = self._file_label(v, file, offset + relative)
                     items.append(item)
 
             visit(layout, 0, row['name'])

@@ -1,7 +1,7 @@
 {
-  "version": "0.8.0",
-  "source_archive": "fDisBull-0.8.0.zip",
-  "source_archive_sha256": "4b610dcd6e0368f9976386b97b3b22bc7aef1619ed8c3941c5135bcdc562958c",
+  "version": "0.8.1",
+  "source_archive": "fDisBull-0.8.1.zip",
+  "source_archive_sha256": "3a1b4c31caf82fae3c6fbcc80375ffbb127f5d6200259f382f3887e38a26f54c",
   "import_kind": "reconstructed release snapshot, not original development commit",
   "normalization": [
     "tool source/tests preserved byte-for-byte",
@@ -25,8 +25,8 @@
     {
       "archive_path": "fdisbull/README.md",
       "repository_path": "README.md",
-      "archive_sha256": "47928370789253b00bcef4477e69a7031d716f1ce9dd6a17ea2fcadfc6e66dce",
-      "public_sha256": "47928370789253b00bcef4477e69a7031d716f1ce9dd6a17ea2fcadfc6e66dce"
+      "archive_sha256": "912deec7bcbdaa8fce4087a7bad6fa337e3653654447672b40ef4642f6b883cb",
+      "public_sha256": "912deec7bcbdaa8fce4087a7bad6fa337e3653654447672b40ef4642f6b883cb"
     },
     {
       "archive_path": "fdisbull/docs/ADVANCED_ANALYSIS.md",
@@ -37,14 +37,14 @@
     {
       "archive_path": "fdisbull/docs/API.md",
       "repository_path": "docs/API.md",
-      "archive_sha256": "ce7e6db8ac46fa96ecb00c20662dbcf7d7914455f219b34cf254700f594d5bd3",
-      "public_sha256": "ce7e6db8ac46fa96ecb00c20662dbcf7d7914455f219b34cf254700f594d5bd3"
+      "archive_sha256": "a43ba1e8f4e11ab74e13770edef877094b2de85f1d5fc58f0800c2f88e319f6b",
+      "public_sha256": "a43ba1e8f4e11ab74e13770edef877094b2de85f1d5fc58f0800c2f88e319f6b"
     },
     {
       "archive_path": "fdisbull/docs/ARCHITECTURE.md",
       "repository_path": "docs/ARCHITECTURE.md",
-      "archive_sha256": "ffbe0ee29779398b63c5ede0cf1bbb75315f272dc7656703a6fe576b9af54288",
-      "public_sha256": "ffbe0ee29779398b63c5ede0cf1bbb75315f272dc7656703a6fe576b9af54288"
+      "archive_sha256": "b8f77aec6f9077b137045c3e92afa9f1e33b739ca62d978d5662789c720a6b3b",
+      "public_sha256": "b8f77aec6f9077b137045c3e92afa9f1e33b739ca62d978d5662789c720a6b3b"
     },
     {
       "archive_path": "fdisbull/docs/CONTRACT.md",
@@ -79,8 +79,8 @@
     {
       "archive_path": "fdisbull/docs/EXTERNAL_FILES.md",
       "repository_path": "docs/EXTERNAL_FILES.md",
-      "archive_sha256": "64717f6261ac3301b92e9bb5ca9e74fe3b0833a3827751de6b819128ae70c274",
-      "public_sha256": "64717f6261ac3301b92e9bb5ca9e74fe3b0833a3827751de6b819128ae70c274"
+      "archive_sha256": "42273dfd91440a447c0f1f40aeeac07ee91d94792e36947835b2abc0a1ac7f34",
+      "public_sha256": "42273dfd91440a447c0f1f40aeeac07ee91d94792e36947835b2abc0a1ac7f34"
     },
     {
       "archive_path": "fdisbull/docs/PLATFORMS.md",
@@ -137,10 +137,16 @@
       "public_sha256": "ff3f495462e6a3beb032bc9b4f567488cfb37c2d13676f818578a0bae0fd2a50"
     },
     {
-      "archive_path": "fdisbull/docs/VERIFICATION.md",
-      "repository_path": "docs/VERIFICATION.md",
+      "archive_path": "fdisbull/docs/VERIFICATION-0.8.md",
+      "repository_path": "docs/VERIFICATION-0.8.md",
       "archive_sha256": "1a0e0e6e945ca7e5bba6e5cc5ddf1095fd31aca2f2742927d4de787671f0505d",
       "public_sha256": "1a0e0e6e945ca7e5bba6e5cc5ddf1095fd31aca2f2742927d4de787671f0505d"
+    },
+    {
+      "archive_path": "fdisbull/docs/VERIFICATION.md",
+      "repository_path": "docs/VERIFICATION.md",
+      "archive_sha256": "4d74d164a9ea1f4887f6516e430b7b70dd93240f847b59667f05be057798c0ef",
+      "public_sha256": "4d74d164a9ea1f4887f6516e430b7b70dd93240f847b59667f05be057798c0ef"
     },
     {
       "archive_path": "fdisbull/docs/WINE_DEBUGGER.md",
@@ -203,6 +209,18 @@
       "public_sha256": "eb6abbd0f2ce822df85236f686ebcccd3ae40dbba2da1f7bd56abd6cf6d3d0ed"
     },
     {
+      "archive_path": "fdisbull/examples/dinopark-shared-labels.png",
+      "repository_path": "examples/dinopark/images/dinopark-shared-labels.png",
+      "archive_sha256": "f7329be061ece66e047c5bb6e49229fc15b2b17603120cbfc2252c002849120e",
+      "public_sha256": "f7329be061ece66e047c5bb6e49229fc15b2b17603120cbfc2252c002849120e"
+    },
+    {
+      "archive_path": "fdisbull/examples/dinopark-shared-labels.svg",
+      "repository_path": "examples/dinopark/images/dinopark-shared-labels.svg",
+      "archive_sha256": "874af3cbfa0ce6b6f05412c8718a413a2f896d5f3b78e5bdecbaaf6759193ab7",
+      "public_sha256": "874af3cbfa0ce6b6f05412c8718a413a2f896d5f3b78e5bdecbaaf6759193ab7"
+    },
+    {
       "archive_path": "fdisbull/examples/platform-linux.c",
       "repository_path": "examples/synthetic/platform-linux.c",
       "archive_sha256": "bb2ff17801a003ea08fbcc5bc21902827c0f1b233d94f23fc7aea82cd1e14ccf",
@@ -223,14 +241,14 @@
     {
       "archive_path": "fdisbull/pyproject.toml",
       "repository_path": "pyproject.toml",
-      "archive_sha256": "76f2cb0843c33e3c639fe2c1b869f49d713a5fa28fa1fe837eba1d8f39b84f02",
-      "public_sha256": "76f2cb0843c33e3c639fe2c1b869f49d713a5fa28fa1fe837eba1d8f39b84f02"
+      "archive_sha256": "d390c5c1793b3a5849fc7a7ffb01e306973f2e5af45747871ef153a1fa9477bf",
+      "public_sha256": "d390c5c1793b3a5849fc7a7ffb01e306973f2e5af45747871ef153a1fa9477bf"
     },
     {
       "archive_path": "fdisbull/src/fdisbull/__init__.py",
       "repository_path": "src/fdisbull/__init__.py",
-      "archive_sha256": "112341bac76b0308469cf3c745b35ea78ea7d84fae6bbdf39b192e3dc32a2210",
-      "public_sha256": "112341bac76b0308469cf3c745b35ea78ea7d84fae6bbdf39b192e3dc32a2210"
+      "archive_sha256": "44e793b4f4a37d96df51859d0f36ca35fc799ed0adc9d4c50097080b931bf1a2",
+      "public_sha256": "44e793b4f4a37d96df51859d0f36ca35fc799ed0adc9d4c50097080b931bf1a2"
     },
     {
       "archive_path": "fdisbull/src/fdisbull/__main__.py",
@@ -241,8 +259,8 @@
     {
       "archive_path": "fdisbull/src/fdisbull/advanced.py",
       "repository_path": "src/fdisbull/advanced.py",
-      "archive_sha256": "46c8e0b90e8ad4c8ecfeadb241ca90548f2e4bf754a964032ecc75c39187b55d",
-      "public_sha256": "46c8e0b90e8ad4c8ecfeadb241ca90548f2e4bf754a964032ecc75c39187b55d"
+      "archive_sha256": "714c31098ef5a44523039d0bcb3198a83b5e431669a99aa9b934ac19a08779a7",
+      "public_sha256": "714c31098ef5a44523039d0bcb3198a83b5e431669a99aa9b934ac19a08779a7"
     },
     {
       "archive_path": "fdisbull/src/fdisbull/analysis.py",
@@ -283,8 +301,8 @@
     {
       "archive_path": "fdisbull/src/fdisbull/cli.py",
       "repository_path": "src/fdisbull/cli.py",
-      "archive_sha256": "8149f6ec807c972f859c9bdd6327240a583d71a106ad1f832d31f369378b33b0",
-      "public_sha256": "8149f6ec807c972f859c9bdd6327240a583d71a106ad1f832d31f369378b33b0"
+      "archive_sha256": "07283ef8b8adce7164e0f689999634238995317383999618ee39388b37fc6370",
+      "public_sha256": "07283ef8b8adce7164e0f689999634238995317383999618ee39388b37fc6370"
     },
     {
       "archive_path": "fdisbull/src/fdisbull/decoder.py",
@@ -337,8 +355,8 @@
     {
       "archive_path": "fdisbull/src/fdisbull/external_files.py",
       "repository_path": "src/fdisbull/external_files.py",
-      "archive_sha256": "81112f952a23a6caf2a05f8aec236f32da7da7c0f430661dbe5a27bf5b7f49cb",
-      "public_sha256": "81112f952a23a6caf2a05f8aec236f32da7da7c0f430661dbe5a27bf5b7f49cb"
+      "archive_sha256": "db8146edcc976bd43d88df36bff63d35716588264f0a51c5a2b3ad6e9134f810",
+      "public_sha256": "db8146edcc976bd43d88df36bff63d35716588264f0a51c5a2b3ad6e9134f810"
     },
     {
       "archive_path": "fdisbull/src/fdisbull/facts.py",
@@ -349,8 +367,8 @@
     {
       "archive_path": "fdisbull/src/fdisbull/file_references.py",
       "repository_path": "src/fdisbull/file_references.py",
-      "archive_sha256": "91e50565072ee10f543402ec164dab219d2a78e1551bd37087800e3320f5c1db",
-      "public_sha256": "91e50565072ee10f543402ec164dab219d2a78e1551bd37087800e3320f5c1db"
+      "archive_sha256": "7303d4ea4a8746fcfc32b3d9c1c96f04016331abd6082ef4309b3f5449d20772",
+      "public_sha256": "7303d4ea4a8746fcfc32b3d9c1c96f04016331abd6082ef4309b3f5449d20772"
     },
     {
       "archive_path": "fdisbull/src/fdisbull/flowdata.py",
@@ -379,8 +397,8 @@
     {
       "archive_path": "fdisbull/src/fdisbull/incremental.py",
       "repository_path": "src/fdisbull/incremental.py",
-      "archive_sha256": "6c2ac98cc2f0486cdc9447a5c1b5bc440233c15910dafa675c8b46991202303a",
-      "public_sha256": "6c2ac98cc2f0486cdc9447a5c1b5bc440233c15910dafa675c8b46991202303a"
+      "archive_sha256": "21ba6d675278bc44e3f9978c875328f0a8e4cb743d28f6db8610024647e782d0",
+      "public_sha256": "21ba6d675278bc44e3f9978c875328f0a8e4cb743d28f6db8610024647e782d0"
     },
     {
       "archive_path": "fdisbull/src/fdisbull/indirect.py",
@@ -427,14 +445,14 @@
     {
       "archive_path": "fdisbull/src/fdisbull/membership_view.py",
       "repository_path": "src/fdisbull/membership_view.py",
-      "archive_sha256": "930b5ae736ad4a8a0a8ccf9658d90d6c6692f5847dc3d15cafa4717cca2a2cc0",
-      "public_sha256": "930b5ae736ad4a8a0a8ccf9658d90d6c6692f5847dc3d15cafa4717cca2a2cc0"
+      "archive_sha256": "9b216b60032d7823a983f001ec11db472995bdc62aae7098fbd25ace1834c7a8",
+      "public_sha256": "9b216b60032d7823a983f001ec11db472995bdc62aae7098fbd25ace1834c7a8"
     },
     {
       "archive_path": "fdisbull/src/fdisbull/memory.py",
       "repository_path": "src/fdisbull/memory.py",
-      "archive_sha256": "4a4a107aaab49117c103645a6a3f5efb62fa0720973d69e01cb20fd35de1c9d2",
-      "public_sha256": "4a4a107aaab49117c103645a6a3f5efb62fa0720973d69e01cb20fd35de1c9d2"
+      "archive_sha256": "425a258bc73f0f3f294732878f06caa0ef901e5604d6060af1ee988218546dd8",
+      "public_sha256": "425a258bc73f0f3f294732878f06caa0ef901e5604d6060af1ee988218546dd8"
     },
     {
       "archive_path": "fdisbull/src/fdisbull/model.py",
@@ -451,8 +469,8 @@
     {
       "archive_path": "fdisbull/src/fdisbull/project.py",
       "repository_path": "src/fdisbull/project.py",
-      "archive_sha256": "2e5a40159bd107a1bc8947e11b1fff54ff9466a6620b773b6dca9d41a0259833",
-      "public_sha256": "2e5a40159bd107a1bc8947e11b1fff54ff9466a6620b773b6dca9d41a0259833"
+      "archive_sha256": "78448dc2fc56f2a89968ab3a4e9863d629032b9a86cb35c3d556359d19389c83",
+      "public_sha256": "78448dc2fc56f2a89968ab3a4e9863d629032b9a86cb35c3d556359d19389c83"
     },
     {
       "archive_path": "fdisbull/src/fdisbull/render.py",
@@ -467,6 +485,12 @@
       "public_sha256": "43017f5bc0dfbb70b0771d75c9cb03d1082593740e71f4cf404119e040e0ce48"
     },
     {
+      "archive_path": "fdisbull/src/fdisbull/shared_labels.py",
+      "repository_path": "src/fdisbull/shared_labels.py",
+      "archive_sha256": "26d060a4b9bacd97b6ec7bcca4c0344b80f53322d9ffe81f67d4b0c6afcc1c65",
+      "public_sha256": "26d060a4b9bacd97b6ec7bcca4c0344b80f53322d9ffe81f67d4b0c6afcc1c65"
+    },
+    {
       "archive_path": "fdisbull/src/fdisbull/summaries.py",
       "repository_path": "src/fdisbull/summaries.py",
       "archive_sha256": "8c7f08fdda12f98473f7c382a05fe9222bbbf04fe6b728fae1c402aafd255ced",
@@ -475,8 +499,8 @@
     {
       "archive_path": "fdisbull/src/fdisbull/typesystem.py",
       "repository_path": "src/fdisbull/typesystem.py",
-      "archive_sha256": "64022155327e22784824ce32d4ae6961b2081249a812ad042910ef6c96e71b0e",
-      "public_sha256": "64022155327e22784824ce32d4ae6961b2081249a812ad042910ef6c96e71b0e"
+      "archive_sha256": "55ffaae3bb64d6087fb569fe0e9ee9ef39d886141e9ae2a93026d86e161ee819",
+      "public_sha256": "55ffaae3bb64d6087fb569fe0e9ee9ef39d886141e9ae2a93026d86e161ee819"
     },
     {
       "archive_path": "fdisbull/tests/fixtures_formats.py",
@@ -613,8 +637,8 @@
     {
       "archive_path": "fdisbull/tests/test_facts.py",
       "repository_path": "tests/test_facts.py",
-      "archive_sha256": "60438a2b40f32013c007f5828744808a92b5810ee525975530b6c41d949ecd6d",
-      "public_sha256": "60438a2b40f32013c007f5828744808a92b5810ee525975530b6c41d949ecd6d"
+      "archive_sha256": "68619c23947ffd89cd293d3d74ea08dfb0c8f0e97d2accead2aecc0edbd00ec7",
+      "public_sha256": "68619c23947ffd89cd293d3d74ea08dfb0c8f0e97d2accead2aecc0edbd00ec7"
     },
     {
       "archive_path": "fdisbull/tests/test_facts_review.py",
@@ -625,8 +649,8 @@
     {
       "archive_path": "fdisbull/tests/test_file_references.py",
       "repository_path": "tests/test_file_references.py",
-      "archive_sha256": "3d3464580e0be036c67eb17048613703ec01c79fa61e3901ffeb1a54dae87d37",
-      "public_sha256": "3d3464580e0be036c67eb17048613703ec01c79fa61e3901ffeb1a54dae87d37"
+      "archive_sha256": "70556975cba51060c4717a7bfdcc7933ffdfa7070ec70b8a1fbfd684d3aa8d26",
+      "public_sha256": "70556975cba51060c4717a7bfdcc7933ffdfa7070ec70b8a1fbfd684d3aa8d26"
     },
     {
       "archive_path": "fdisbull/tests/test_flowdata.py",
@@ -767,6 +791,18 @@
       "public_sha256": "58139423d38a54a7aaceda263feffeff0d7a96d4236ad1f355708647f2a62db1"
     },
     {
+      "archive_path": "fdisbull/tests/test_shared_label_atomicity.py",
+      "repository_path": "tests/test_shared_label_atomicity.py",
+      "archive_sha256": "e5c3364fda01a5b22d26a4a05f026b7b076e650175ec1a14dffff68697f06c89",
+      "public_sha256": "e5c3364fda01a5b22d26a4a05f026b7b076e650175ec1a14dffff68697f06c89"
+    },
+    {
+      "archive_path": "fdisbull/tests/test_shared_labels.py",
+      "repository_path": "tests/test_shared_labels.py",
+      "archive_sha256": "d35bd8389062d4ea7f798ee8ef1d99735030897235be34d34a1bb48a73dca67e",
+      "public_sha256": "d35bd8389062d4ea7f798ee8ef1d99735030897235be34d34a1bb48a73dca67e"
+    },
+    {
       "archive_path": "fdisbull/tests/test_summaries.py",
       "repository_path": "tests/test_summaries.py",
       "archive_sha256": "0f61dfe3a487812f94acc1c4db5d2c8de7638815491dbd688e0c523e72075799",
@@ -798,7 +834,7 @@
     }
   ],
   "omitted_archive_members": [
-    "fdisbull/dist/fdisbull-0.8.0-py3-none-any.whl",
+    "fdisbull/dist/fdisbull-0.8.1-py3-none-any.whl",
     "fdisbull/examples/DINOSG.000",
     "fdisbull/examples/VARS.DAT",
     "fdisbull/examples/advanced-formats-v06.json",
@@ -857,6 +893,7 @@
     "fdisbull/examples/platform-pe.svg",
     "fdisbull/examples/platform-universal.dylib",
     "fdisbull/examples/platforms-v07.json",
+    "fdisbull/examples/shared-labels-v081.json",
     "fdisbull/examples/transform.elf",
     "fdisbull/examples/transform.png",
     "fdisbull/examples/transform.svg",
@@ -865,6 +902,7 @@
     "fdisbull/examples/wheel-v07-check.json",
     "fdisbull/examples/wheel-v08-external-check.json",
     "fdisbull/examples/wheel-v08-platform-check.json",
+    "fdisbull/examples/wheel-v081-shared-labels-check.json",
     "fdisbull/examples/windows-calls.json",
     "fdisbull/examples/windows-imports.png",
     "fdisbull/examples/windows-imports.svg",

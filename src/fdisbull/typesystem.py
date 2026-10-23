@@ -138,7 +138,7 @@ class TypeSystemMixin:
             invalidated=self._invalidate_derived(v,a,max(size,old[0] if old else 0),'type binding changed') if hasattr(self,'_invalidate_derived') else []
             return dict(version=v,address=hex(a),type=layout,name=name or f'data_{a:x}',invalidated_tasks=invalidated)
 
-    def _type_location(self,v,a):
+    def _raw_type_location(self,v,a):
         from .project import key
         row=self.db.execute('SELECT * FROM type_bindings WHERE version=? AND address<=? ORDER BY address DESC LIMIT 1',(v,key(a))).fetchone()
         if row is None:return None
@@ -146,8 +146,13 @@ class TypeSystemMixin:
         if a>=base+row['size']:return None
         layout=type_layout(row['type_name'],self._type_registry(v));field=_field_at(layout,a-base)
         annotation=self.db.execute("SELECT text FROM annotations WHERE version=? AND context=? AND address=? AND kind='name'",(v,self.context,row['address'])).fetchone()
-        root_name=annotation[0] if annotation else row['name']
+        # A linked first field is distinct from its enclosing structural root.
+        shared_root=hasattr(self,'_native_is_shared') and self._native_is_shared(v,base)
+        root_name=annotation[0] if annotation and not shared_root else row['name']
         return dict(binding_address=hex(base),binding_name=root_name,binding_type=row['type_name'],name=root_name+field['path'],**field)
+
+    def _type_location(self,v,a):
+        return self._raw_type_location(v,a)
 
     def _typed_label(self,v,a,original):
         from .project import key
@@ -197,7 +202,8 @@ class TypeSystemMixin:
                     value=int.from_bytes(raw,'little',signed=t.get('signed',False));item=dict(address=hex(a+offset),path=path,type=t['name'],size=t['size'],bytes=raw.hex(),value=value)
                     if t['kind']=='pointer':
                         target=(int.from_bytes(raw[2:],'little')*16+int.from_bytes(raw[:2],'little') if t['address_space']=='far16' else t['segment']*16+value if t['address_space']=='near' and t['segment'] is not None else value if t['address_space']=='flat' else None)
-                        item.update(target=hex(target) if target is not None else None,target_type=t['target'],target_mapped=bool(target is not None and self._mapping(v,target)),assumption='retained snapshot pointer value; not runtime memory')
+                        item.update(target=hex(target) if target is not None else None,target_type=t['target'],target_mapped=bool(target is not None and self._mapping(v,target)),target_name=self._label(v,target) if target is not None else None,assumption='retained snapshot pointer value; not runtime memory')
+                    item['name']=self._label(v,a+offset)
                     items.append(item)
             visit(layout,0,self._type_location(v,a)['binding_name'])
             return dict(version=v,address=hex(a),layout=layout,items=items,truncated=truncated,source='immutable mapped bytes; user-assigned structural interpretation')

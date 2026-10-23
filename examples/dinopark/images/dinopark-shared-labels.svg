@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="569" viewBox="0 0 1560 569" role="img">
+<title>DINOPARK.EXE</title>
+<desc>Disassembly exported from a versioned fDisBull database snapshot.</desc>
+<rect width="100%" height="100%" fill="#101722"/>
+<g font-family="DejaVu Sans Mono, Menlo, Consolas, monospace">
+<line x1="36" y1="210" x2="1524" y2="210" stroke="#2d3d52"/>
+<line x1="36" y1="506" x2="1524" y2="506" stroke="#2d3d52"/>
+<text x="36" y="53" font-size="25" fill="#f1f5fb" font-weight="700" xml:space="preserve">fDisBull  /  DISASSEMBLY</text>
+<text x="36" y="88" font-size="18" fill="#f1f5fb" xml:space="preserve">DINOPARK.EXE</text>
+<text x="36" y="118" font-size="18" fill="#afbdd0" xml:space="preserve">x86 / 16-bit / little-endian     VERSION 1     6 instructions</text>
+<text x="36" y="145" font-size="15" fill="#afbdd0" xml:space="preserve">STATIC ANALYSIS  partial / pending 1 / issues 17288</text>
+<text x="36" y="170" font-size="15" fill="#afbdd0" xml:space="preserve">CONTEXT  x86:16:little:cs=38ff</text>
+<text x="36" y="195" font-size="15" fill="#afbdd0" xml:space="preserve">SNAPSHOT SHA-256  8006cbd191e3ff0a80f537f6d5163559542270f3bf706b7f86d8c4c54248c743</text>
+<text x="36" y="235" font-size="15" fill="#afbdd0" font-weight="700" xml:space="preserve">CS:IP</text>
+<text x="260" y="235" font-size="15" fill="#afbdd0" font-weight="700" xml:space="preserve">BYTES (HEX)</text>
+<text x="620" y="235" font-size="15" fill="#afbdd0" font-weight="700" xml:space="preserve">MNEMONIC</text>
+<text x="754" y="235" font-size="15" fill="#afbdd0" font-weight="700" xml:space="preserve">OPERANDS</text>
+<text x="36" y="271" font-size="18" fill="#95bdff" xml:space="preserve">38ff:0137</text>
+<text x="260" y="271" font-size="18" fill="#acbbce" xml:space="preserve">b8a66f</text>
+<text x="620" y="271" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">mov</text>
+<text x="754" y="271" font-size="18" fill="#f1f5fb" xml:space="preserve">ax,6FA6h ; file DINOSG.000+0xf20: food_count (+2 stride, 4 elements)</text>
+<text x="754" y="299" font-size="18" fill="#f1f5fb" xml:space="preserve">[authored]</text>
+<text x="36" y="334" font-size="18" fill="#95bdff" xml:space="preserve">38ff:013a</text>
+<text x="260" y="334" font-size="18" fill="#acbbce" xml:space="preserve">50</text>
+<text x="620" y="334" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">push</text>
+<text x="754" y="334" font-size="18" fill="#f1f5fb" xml:space="preserve">ax</text>
+<text x="36" y="369" font-size="18" fill="#95bdff" xml:space="preserve">38ff:013b</text>
+<text x="260" y="369" font-size="18" fill="#acbbce" xml:space="preserve">9a00500010</text>
+<text x="620" y="369" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">call</text>
+<text x="754" y="369" font-size="18" fill="#f1f5fb" xml:space="preserve">1000h:5000h</text>
+<text x="36" y="404" font-size="18" fill="#95bdff" xml:space="preserve">38ff:0140</text>
+<text x="260" y="404" font-size="18" fill="#acbbce" xml:space="preserve">83c408</text>
+<text x="620" y="404" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">add</text>
+<text x="754" y="404" font-size="18" fill="#f1f5fb" xml:space="preserve">sp,8</text>
+<text x="36" y="439" font-size="18" fill="#95bdff" xml:space="preserve">38ff:0143</text>
+<text x="260" y="439" font-size="18" fill="#acbbce" xml:space="preserve">b80c00</text>
+<text x="620" y="439" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">mov</text>
+<text x="754" y="439" font-size="18" fill="#f1f5fb" xml:space="preserve">ax,0Ch</text>
+<text x="36" y="474" font-size="18" fill="#95bdff" xml:space="preserve">38ff:0146</text>
+<text x="260" y="474" font-size="18" fill="#acbbce" xml:space="preserve">50</text>
+<text x="620" y="474" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">push</text>
+<text x="754" y="474" font-size="18" fill="#f1f5fb" xml:space="preserve">ax</text>
+<text x="36" y="539" font-size="15" fill="#afbdd0" xml:space="preserve">DATABASE SNAPSHOT  /  Static decode; analysis and annotations are interpretations.</text>
+</g></svg>

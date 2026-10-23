@@ -191,7 +191,7 @@ def test_schema5_migration_adds_file_tables_without_changing_native_versions(tmp
             for table in ('file_references','file_type_bindings','external_files'):project.db.execute(f'DROP TABLE {table}')
             project.db.execute("UPDATE metadata SET value='5' WHERE key='schema'")
     with Project(path) as reopened:
-        assert reopened.db.execute("SELECT value FROM metadata WHERE key='schema'").fetchone()[0]=='6'
+        assert reopened.db.execute("SELECT value FROM metadata WHERE key='schema'").fetchone()[0]=='7'
         assert reopened.versions()==before and reopened.regions(1)[0].data==native
         assert reopened.disassembly(entry,lines=1)['instructions'][0]['name']=='entry_name'
         assert reopened.external_files()['total']==0

@@ -33,7 +33,7 @@ class FileReferencesMixin:
             offset = row['file_offset'] + index * row['stride']
             location = self._file_type_location(v, row['file'], offset)
             locations.append(dict(file_offset=offset, width=row['width'], type=location,
-                                  name=location['name'] if location else f"{row['file']}+0x{offset:x}"))
+                                  name=self._file_label(v, row['file'], offset)))
         metadata = self._external_file(v, row['file'])
         return dict(source=hex(source), context=row['context'],
                     segmented_address=_segmented(source, row['context']),

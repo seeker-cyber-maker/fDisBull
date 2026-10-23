@@ -51,7 +51,7 @@ Include `project` in params when there is no session default, or to override it.
 
 `limit` defaults to 200 for paginated lists. Information lists return `items`, `total`, `offset`, `has_more` and warnings. `items` and `queue` return arrays. `info` returns header/counts/warnings. `header.valid` means recognized header extents fit the file, not that the program can execute. A disk `file_offset` is never presented as a virtual address. Unknown import bindings and unmapped string addresses are null.
 
-## External files and authored file references (0.8)
+## External files and authored file references (0.8.1)
 
 All methods here take `project` and optional `version` (default: latest).
 Attached identity is version + file name + byte offset, independent of native
@@ -96,7 +96,7 @@ entire file from offset zero, not merely the requested range.
 must fit the attachment and may not overlap another binding in that file.
 `typed_file` returns a compact layout, binding, scalar/pointer leaf `items`, SHA-256,
 `byte_order: "little"`, and truncation/budget status. Leaves carry `file`,
-`file_offset`, field `path`, type, original bytes and interpreted value.
+`file_offset`, structural field `path`, current canonical `name`, type, original bytes and interpreted value.
 Pointers remain encoded values; no native or file target is inferred. Type
 revisions revalidate dependent file binding extents and overlaps atomically.
 `file-data` reports `layout_expanded: false`; struct layout fields identify
@@ -144,6 +144,80 @@ edges. A current annotation still needs independent evidence for its meaning.
 ```
 
 See [EXTERNAL_FILES.md](EXTERNAL_FILES.md) for a runnable typed-data example.
+
+## Bidirectional field labels (0.8.1)
+
+These methods share labels across explicit file/memory correspondences. All
+accept `project` and optional `version` (latest by default). An endpoint is
+exactly one of `{"file":"save.dat","offset":3872}` or
+`{"address":"0x471a6"}`. File offsets accept nonnegative integers or integer
+strings; native addresses also accept DOS `segment:offset` syntax for MZ.
+The entire linked interval must fit an attachment or one native mapped region.
+
+| CLI / JSON method | Python `Project` method | Required params beyond project | Optional params |
+| --- | --- | --- | --- |
+| `link-labels` | `link_labels` | `left`, `right`, `evidence` | `size` (1), `name`, `author` (`agent`) |
+| `rename-file` | `rename_file` | `file`, `offset`, `name` | `author` (`agent`) |
+| `label-info` | `label_info` | `endpoint` | — |
+
+CLI syntax is `link-labels PROJECT LEFT_JSON RIGHT_JSON --size N --evidence TEXT
+[--name LABEL]`, `rename-file PROJECT FILE OFFSET NAME`, and `label-info PROJECT
+ENDPOINT_JSON`. Pass each endpoint as one quoted JSON argument. The existing
+`rename PROJECT ADDRESS NAME` command renames a native endpoint and its linked
+file fields. To rename a field from a code view, select the reference's native
+target address or file offset; renaming the source instruction remains a
+separate operation.
+
+`link-labels` declares a one-to-one byte-offset mapping over `size` bytes. It
+supports file-to-file, file-to-memory and memory-to-memory links. Links compose
+transitively; a link over an eight-byte counter block also connects its interior
+fields at offsets `+2`, `+4` and `+6`. DOS native endpoints use physical address
+identity, while instruction-reference source CS contexts remain separate.
+Renaming an instance field does not rewrite its type definition or rename
+unlinked instances of that type.
+
+Explicit names take precedence over structural names. If no explicit shared
+name exists, the current type path supplies the display name, so later type
+field revisions remain visible. A link between conflicting explicit names is
+rejected atomically. `name` selects a shared name for the linked starting field;
+conflicts at other interior fields must be resolved separately. Duplicate
+mappings in either direction are idempotent; supplying `name` can still rename
+the starting field. Contradictory shifted offset cycles are rejected.
+
+All three methods return the queried `version`, normalized `endpoint`, current
+`name`, `explicit`, `label_author`, corresponding `members`, and `links` with
+IDs, endpoint ranges, size, evidence and author. `runtime_observed` is always
+false. Typed file and native leaf values retain structural `path` and expose the
+current canonical `name`; the shared name also resolves in operand references,
+file references, native xrefs, disassembly and CFG/image output. Raw numeric
+operands and bytes are preserved. Queries resolve names dynamically rather than
+rewriting decoded or cached semantic facts.
+
+These are authored field correspondences. They do not establish equal values,
+live pointer/register state, runtime file loading, native xrefs or execution.
+Existing `file-reference` remains an instruction-to-file relationship and never
+equates that instruction's identity with the field it accesses. A stale source
+instruction reference stays stale even when its field still has a shared label.
+A byte patch copies label interpretations into the child; child renames leave
+parent labels intact. Inherited interpretations still require evidence review
+after changes to relevant loader behavior.
+
+Limits are 1 byte–1 MiB per range, 4096 links per version, 256 corresponding locations
+per resolved component, and 100,000 location visits per link-validation pass.
+Validation also bounds native annotation inspection at 10,000 rows. Endpoint,
+cycle, conflict or budget failures roll back the link operation. Labels contain
+1–256 characters without control characters; evidence contains 1–4096 nonblank
+characters.
+
+```json
+{"id":70,"method":"link-labels","params":{"project":"dinopark.fdb","left":{"file":"DINOSG.000","offset":3872},"right":{"address":"4020:6fa6"},"size":8,"evidence":"Analyst-declared save-to-memory mapping; attach the independent loader/runtime evidence."}}
+{"id":71,"method":"rename-file","params":{"project":"dinopark.fdb","file":"DINOSG.000","offset":3872,"name":"food_count","author":"analyst"}}
+{"id":72,"method":"rename","params":{"project":"dinopark.fdb","address":"4020:6fa8","name":"restroom_count","author":"analyst"}}
+{"id":73,"method":"label-info","params":{"project":"dinopark.fdb","endpoint":{"file":"DINOSG.000","offset":3874}}}
+```
+
+The example uses the user-reported DinoPark mapping at load segment `0x1000`;
+recording it is not independent verification of that mapping or field meaning.
 
 ## Refresh legacy DOS pointer state (0.8)
 
