@@ -74,14 +74,16 @@ from .dos_state_refresh import DOSStateRefreshMixin
 from .incremental import IncrementalMixin, ADVANCED_DDL
 from .advanced import AdvancedMixin
 from .membership_view import MembershipMixin
+from .debugger import DebugProjectMixin, DEBUG_DDL
 
 
-class Project(DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
+class Project(DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
     def __init__(self, path):
         self.path = Path(path).resolve()
         if not self.path.is_file():
             raise ValueError(f"project does not exist: {self.path}")
         self.db = sqlite3.connect(self.path, timeout=30)
+        self._live_debuggers = []
         self.db.row_factory = sqlite3.Row
         try:
             meta = dict(self.db.execute("SELECT key,value FROM metadata"))
@@ -100,6 +102,7 @@ class Project(DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, Membership
             self.meta = {k:json.loads(v) for k,v in meta.items() if k not in ("application","schema")}
             self.arch, self.bits = self.meta["arch"], self.meta["bits"]
             self.context = f"{self.arch}:{self.bits}:little"
+            self.db.executescript(DEBUG_DDL)
             self.db.execute("PRAGMA foreign_keys=ON")
             self.db.execute("PRAGMA busy_timeout=30000")
         except Exception:
@@ -110,7 +113,11 @@ class Project(DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, Membership
         return self
 
     def __exit__(self, *args):
-        self.db.close()
+        try:
+            for session in tuple(self._live_debuggers):
+                session.close()
+        finally:
+            self.db.close()
 
     @contextmanager
     def transaction(self, write=False):

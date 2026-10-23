@@ -4,7 +4,7 @@ fDisBull 0.7 feeds Linux ELF, macOS Mach-O and Windows PE linkage metadata into
 the shared static call/flow/effect pipeline. Its current CPU adapters support
 x86 16/32/64 and ARM64; each native container still has its own supported machine
 and endian constraints. Importing a file never runs its code, loader, imported
-functions or initializers. Native macOS host execution has not been verified.
+functions or initializers. Native macOS Apple Silicon debugger and actual DinoPark acceptance now pass; see [DOSBOX_DEBUGGER.md](DOSBOX_DEBUGGER.md). Linux ELF fixture construction still requires a Linux compiler/linker, so the full suite is not green on Apple's toolchain.
 
 ## Start with the supplied projects
 

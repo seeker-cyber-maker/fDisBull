@@ -39,3 +39,16 @@ The reported concession block occupies save bytes 3872–3879 and four adjacent 
 After verifying that correspondence for your exact inputs, use `link-labels` and `rename-file` as shown in [EXTERNAL_FILES.md](../../docs/EXTERNAL_FILES.md). `file-reference` records an instruction-to-file relationship; `link-labels` records corresponding field identity. The accessing instruction keeps a separate identity.
 
 The notes and renders are historical evidence, not proof that every fact is current in a newly created project. No emulator, original game, or complete economic simulation is included.
+
+## Project debugger replay
+
+The 0.9.0 integration was verified through fDisBull's public JSON interface with the actual game. It skips guest time using native fast-forward, verifies a relocated disassembly breakpoint, records a 512-instruction input trace, saves PNGs inside the project, and checks bounded timeout/pause and export after restart. See [DOSBOX_DEBUGGER.md](../../docs/DOSBOX_DEBUGGER.md).
+
+```bash
+python examples/dinopark/verify_debugger.py \
+  --executable /path/to/patched/dosbox-x \
+  --game-dir /path/to/dinopark \
+  --output /path/to/new-evidence-directory
+```
+
+The output includes `dinopark.fdb`, which retains the original game bytes and is a local input/evidence file, excluded from public packages and Git history. The script itself includes no game assets.

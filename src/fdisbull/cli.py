@@ -8,6 +8,19 @@ from .project import Project, number
 from . import __version__
 
 METHODS = {
+    'debug-launch': 'Launch a project-bound DOSBox session in serve; executable,game_dir,[version]',
+    'debug-status': 'Live debugger status and address mapping; run',
+    'debug-registers': 'Live CPU registers with project address mapping; run',
+    'debug-breakpoint': 'Verify and translate a stored disassembly address; run,address,[cs]',
+    'debug-delete-breakpoint': 'Delete a live breakpoint; run,breakpoint_id',
+    'debug-run': 'Run to a breakpoint or bounded guest time, pausing at host timeout; run,[timeout_ms,guest_ms,fast_forward]',
+    'debug-click': 'Queue a screenshot-pixel mouse click; run,x,y,[button,hold_ms,mode_id]',
+    'debug-screenshot': 'Store an actual guest PNG inside the project; run,[name]',
+    'debug-trace': 'Store bounded CPU trace with project address mappings; run,[name,count,timeout_ms,fast_forward]',
+    'debug-stop': 'Stop and reap a live emulator; run',
+    'debug-runs': 'Saved runtime history for a static version; [version]',
+    'debug-artifacts': 'Saved screenshots and traces, available after restart; [version,run]',
+    'debug-export': 'Export a saved artifact without running an emulator; artifact,output',
     'label-links': 'List shared label links and optional removal history; [version,include_removed,limit,offset]',
     'unlink-labels': 'Retract a mistaken shared label link with provenance; link_id,reason,[version,author]',
     'link-labels': 'Link corresponding native/file byte ranges; left,right,evidence,[size,name,version,author]',
@@ -78,7 +91,7 @@ METHODS = {
     "help": "List methods; all project operations require project path",
 }
 
-def invoke(method, params):
+def invoke(method, params, debugger=None):
     if method not in METHODS:
         raise ValueError(f"unknown method: {method}")
     if not isinstance(params,dict):
@@ -124,6 +137,10 @@ def invoke(method, params):
     project = p.pop("project",None)
     if not project:
         raise ValueError("project path is required")
+    if method.startswith('debug-') and method not in ('debug-runs','debug-artifacts','debug-export'):
+        if debugger is None:
+            raise ValueError('Live debugger commands require fdisbull serve or fdisbull debug; sessions close on server exit')
+        return debugger.invoke(method,project,p)
     if method == "import":
         binary = p.pop("path",None)
         if binary is None:
@@ -131,6 +148,8 @@ def invoke(method, params):
         with Project.create(project,binary,**p) as db:
             return db.status()
     with Project(project) as db:
+        if method in ('debug-runs','debug-artifacts','debug-export'):
+            return getattr(db,method.replace('-','_'))(**p)
         if method in ('link-labels','rename-file','label-info','label-links','unlink-labels'):return getattr(db,method.replace('-','_'))(**p)
         if method=='refresh-dos-state':return db.refresh_dos_state(**p)
         file_methods={'attach-file':'attach_file','files':'external_files','file-bytes':'file_bytes','apply-file-type':'apply_file_type','file-data':'typed_file','file-reference':'file_reference','file-xrefs':'file_xrefs'}
@@ -200,7 +219,7 @@ def public_addresses(value, field=None):
     return value
 
 
-def respond(request, default_project=None):
+def respond(request, default_project=None, debugger=None):
     request_id = request.get("id") if isinstance(request,dict) else None
     try:
         if not isinstance(request,dict) or not isinstance(request.get("method"),str):
@@ -209,7 +228,7 @@ def respond(request, default_project=None):
         standalone=request['method'] in ('identify','inspect','help','decoder-check') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
-        return {"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params))}
+        return {"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
     except (ValueError,TypeError,KeyError,OSError,sqlite3.Error,OverflowError,AttributeError,RecursionError) as e:
         return {"id":request_id,"ok":False,"error":{"type":type(e).__name__,"message":str(e)}}
 
@@ -221,25 +240,45 @@ def load_request(value):
 def emit(value):
     print(json.dumps(value,ensure_ascii=True,separators=(",",":")),flush=True)
 
-def serve(default_project=None):
-    while True:
-        line = sys.stdin.buffer.readline(1024*1024+1)
-        if not line:
-            return 0
-        if len(line)>1024*1024:
-            emit({"id":None,"ok":False,"error":{"type":"ValueError","message":"request exceeds 1 MiB; stream closed"}})
-            return 1
-        try:
-            request = load_request(line)
-        except (ValueError,UnicodeDecodeError,RecursionError) as e:
-            emit({"id":None,"ok":False,"error":{"type":"InvalidJSON","message":str(e)}})
-            continue
-        emit(respond(request,default_project))
+def serve(default_project=None, debug_launch=None):
+    from .debugger import DebugWorkspace
+    debugger = DebugWorkspace()
+    try:
+        if debug_launch is not None:
+            result = respond({'id':'launch','method':'debug-launch','params':debug_launch},default_project,debugger)
+            emit(result)
+            if not result['ok']:
+                return 1
+        while True:
+            line = sys.stdin.buffer.readline(1024*1024+1)
+            if not line:
+                return 0
+            if len(line)>1024*1024:
+                emit({"id":None,"ok":False,"error":{"type":"ValueError","message":"request exceeds 1 MiB; stream closed"}})
+                return 1
+            try:
+                request = load_request(line)
+            except (ValueError,UnicodeDecodeError,RecursionError) as e:
+                emit({"id":None,"ok":False,"error":{"type":"InvalidJSON","message":str(e)}})
+                continue
+            emit(respond(request,default_project,debugger))
+    finally:
+        debugger.close()
 
 def parser():
     root = argparse.ArgumentParser(prog="fdisbull",description="Agent-first disassembly with SQLite persistence and headless image export")
     root.add_argument("--version",action="version",version=__version__)
     sub = root.add_subparsers(dest="command",required=True)
+    c = sub.add_parser('debug',help='Launch a DOS project and accept live debugger JSON commands on stdin')
+    c.add_argument('project');c.add_argument('--executable',required=True);c.add_argument('--game-dir',required=True)
+    c.add_argument('--version',type=int)
+    for name in ('debug-runs','debug-artifacts','debug-export'):
+        c = sub.add_parser(name,help=METHODS[name]);c.add_argument('project')
+        if name=='debug-export':
+            c.add_argument('artifact');c.add_argument('output')
+        else:
+            c.add_argument('--version',type=int)
+            if name=='debug-artifacts':c.add_argument('--run')
     for name in ('identify','inspect'):
         c=sub.add_parser(name,help=METHODS[name])
         c.add_argument('path')
@@ -398,6 +437,9 @@ def main(argv=None):
     command = args.pop("command")
     if command == "serve":
         return serve(args["project"])
+    if command == 'debug':
+        project = args.pop('project')
+        return serve(project,{k:v for k,v in args.items() if v is not None})
     if command == "request":
         try:
             request = load_request(args["json"])

@@ -1,5 +1,7 @@
 # Verification receipt — fDisBull 0.8.2
 
+This is the historical 0.8.2 receipt. Current local debugger integration and macOS/DinoPark results are recorded in [VERIFICATION-0.9.md](VERIFICATION-0.9.md).
+
 Final integrated `python -m pytest -q -rs`: **744 passed**, exit 0, **65.87 seconds**.
 `python -m compileall -q src/fdisbull` passed. Linux x86-64, Python 3.12,
 iced-x86 1.21.0, Capstone 5.0.9, LIEF 1.0.0, Pillow 12.3.0.

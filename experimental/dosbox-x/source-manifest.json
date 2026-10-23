@@ -1,0 +1,274 @@
+{
+  "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+  "patch_sha256": "664a8b6dc05bb720504489490819c8f7a886dce2ee7c7a6cba67bce2229573f2",
+  "source_files": [
+    {
+      "path": "client/python/dosbox_agent/__init__.py",
+      "sha256": "ced16106cbfad218488ce93bb131d08186118c18e038fe64e56ba955dd93e2b0",
+      "size": 1610
+    },
+    {
+      "path": "client/python/dosbox_agent/client.py",
+      "sha256": "500397af9e50180892ff5b7a62f1950104a81004861f51f10136088a4710297c",
+      "size": 37481
+    },
+    {
+      "path": "client/python/tests/test_client.py",
+      "sha256": "fde518416c39b61053ee43085d28706407fd0e5d078c3dc5e52f8e0e6fb1ba0d",
+      "size": 11827
+    },
+    {
+      "path": "client/python/tests/test_pipe_transport.py",
+      "sha256": "071711bf1c5db4fd034a96657d9ddace69ba341ac8edd916315a9f874205d490",
+      "size": 11116
+    },
+    {
+      "path": "client/python/tests/test_unix_transport.py",
+      "sha256": "032932b8471a76baf50ad146a138466ee1c0f15376625a6a04b889405c829349",
+      "size": 9847
+    },
+    {
+      "path": "include/agent/agent_protocol.h",
+      "sha256": "d9121fb309ff3ac3252325af65f0afef3a246c0f02706d6e2d5596e16f890008",
+      "size": 2508
+    },
+    {
+      "path": "include/agent/input_adapter.h",
+      "sha256": "ecc9fc01f38ae69a14874e444f9aa3fea55329035fde251a6bbd7db9a017d212",
+      "size": 2163
+    },
+    {
+      "path": "include/agent/video_adapter.h",
+      "sha256": "850d5ab351ec1b65ccf9541be5304351e18570bb35e5d588b1986be5daf68398",
+      "size": 960
+    },
+    {
+      "path": "src/agent/Makefile.am",
+      "sha256": "a6939f562c8dc81870b136e8bba9fe7b805595ded08873bad9cd57b2b9b943e6",
+      "size": 524
+    },
+    {
+      "path": "src/agent/protocol/agent_protocol.cpp",
+      "sha256": "7951de84c35c4b90e215cb0e7add79175a92bc04801fda618e7bb919c4f2b26f",
+      "size": 27474
+    },
+    {
+      "path": "src/agent/server/agent_server.cpp",
+      "sha256": "5e39e44ff989c16b96581d85fc6cadc0eb80a653f05a34c0012e46d0168de86a",
+      "size": 177705
+    },
+    {
+      "path": "src/agent/transport/local_transport.cpp",
+      "sha256": "5bae459c9f040cedc55a2f64fe8849c247173f846132a3f88f8a147c227df6e3",
+      "size": 29797
+    },
+    {
+      "path": "src/agent/transport/unix_transport_probe.cpp",
+      "sha256": "14d9d72b787d0c37167a11954f1ef311a2f33644e2760aaa77d9f403ac828f3b",
+      "size": 906
+    },
+    {
+      "path": "src/debug/debug.cpp",
+      "sha256": "211ffbe1e0f4f58faeb1426e5e2aba00699be3815ec84524cd56e543e9e4ba54",
+      "size": 226616
+    },
+    {
+      "path": "src/debug/debug_gui.cpp",
+      "sha256": "24a94105770a0b9f2a588325f64974a1205688b494387c677f5e45d4f67aa779",
+      "size": 30707
+    },
+    {
+      "path": "src/gui/render.cpp",
+      "sha256": "ebd35b92b3d30484605cd1cc954d8eab9413970dc07ba75df3b6bda628b50de6",
+      "size": 69117
+    },
+    {
+      "path": "src/gui/sdlmain.cpp",
+      "sha256": "46c16b0d2b886b3263d8f2b93feea4630b29d5e465b35ea39fe53964a3b797ef",
+      "size": 426398
+    },
+    {
+      "path": "src/ints/mouse.cpp",
+      "sha256": "33c46156133237ff6fb687be786b4e1293afef42734039f954ff34682e533bf2",
+      "size": 112554
+    },
+    {
+      "path": "tests/agent_headless/MOUSEVID.asm",
+      "sha256": "4b46ba4c63ecee0d10561fb3b688c0000f453df30e26d2e4db186f4dad1fa254",
+      "size": 4953
+    },
+    {
+      "path": "tests/agent_headless/verify_headless.py",
+      "sha256": "359a767b79343b7e3c8b75812446ac164d8ab74aa7e90eb066ec7f65b62dd20e",
+      "size": 12371
+    },
+    {
+      "path": "tools/headless_agent.py",
+      "sha256": "02a57b279af206d952e76ba23a204ffc986e9b52228f7bfe3dbe12211b6a45f7",
+      "size": 9883
+    }
+  ],
+  "cloud_recovery": {
+    "parent_chat": "01a168ae-ed38-7565-b9db-557772f800d6",
+    "pipe_client_chat": "01a16916-46ba-76ab-a177-a234771da0e0",
+    "method": "Replay nine complete fileChange diffs, in order within each chat, over the hash-verified archive checkpoint",
+    "patches": [
+      {
+        "path": "cloud-01.patch",
+        "sha256": "7313b2248b3f185d87ecc289c620a3310549ab83e45c79bfe79571e331a98ead"
+      },
+      {
+        "path": "cloud-02.patch",
+        "sha256": "0862891dd8d1716be49caf23b88483ab1fb0850a6bfa0a05f522a6b5d4be5868"
+      },
+      {
+        "path": "cloud-03.patch",
+        "sha256": "23cf09ec089b7667b976cc8ec33e53166d9b7964b732f773d1259d51a2666ff6"
+      },
+      {
+        "path": "cloud-04.patch",
+        "sha256": "7b57b069c9a424fb5a19bdc1ce8c3cef2d3e96043cc429d2cf3a0d9805fbabe1"
+      },
+      {
+        "path": "cloud-05.patch",
+        "sha256": "e78e2df09ae45e16cdc66ed2abae797d360ed894adf06dfdfd6930338dc51083"
+      },
+      {
+        "path": "cloud-06.patch",
+        "sha256": "77031d02eff5a6d593d25efabfadd49f7646aaf778b6f4356bc7775f48e7ddc6"
+      },
+      {
+        "path": "cloud-07.patch",
+        "sha256": "57efe5f2dacacd381494c80b58ce7c5746568f9ecf4484d4e87d5be96e133a18"
+      },
+      {
+        "path": "cloud-08.patch",
+        "sha256": "6b398dbf4ba5e7a78e8c1d590d4d4b07866e2c2d13a61863ae50a276424b83fb"
+      },
+      {
+        "path": "cloud-09.patch",
+        "sha256": "d70c951b18f1eff2666110452667913ec026f9c1e190e9066f4c6ae73c00afeb"
+      }
+    ]
+  },
+  "local_changes": [
+    "Portable same-FIFO validation fixture",
+    "Launcher selects native-resolution render doublescan=false",
+    "Acceptance compares CPU values separately from input mutation revisions",
+    "Refresh cached RGBA pixels on every completed frame to include palette-only changes",
+    "execution.timing: emulation-thread PIC clock and native DOSBox fast-forward getter/setter"
+  ],
+  "emulator_sha256": "0f83e85df107ab4a502d3e973a53f8a15f1e9d3e36d08896cab92aefbe449902",
+  "nasm_version": "2.16.03",
+  "nasm_source_sha256": "1412a1c760bbd05db026b6c0d1657affd6631cd0a63cddb6f73cc6d4aa616148",
+  "verification": {
+    "host": "macOS Apple Silicon",
+    "client_transport_tests": 31,
+    "guest_acceptance": "pass",
+    "guest_run": "acceptance-verified",
+    "cli_smoke": "pass",
+    "source_patch_replay": "21 file hashes match",
+    "project_integration": "DinoPark through fDisBull 0.9.0 serve: pass",
+    "backend_fixture_acceptance": "timing-backend-acceptance: pass"
+  },
+  "evidence": [
+    {
+      "path": "evidence/2026-10-23/acceptance-final.log",
+      "sha256": "560234b21b883d3b203d1d4b9801abc578ac95c9163341d21bc4dcfb758bb198"
+    },
+    {
+      "path": "evidence/2026-10-23/acceptance-verified.log",
+      "sha256": "560234b21b883d3b203d1d4b9801abc578ac95c9163341d21bc4dcfb758bb198"
+    },
+    {
+      "path": "evidence/2026-10-23/cli-screenshot.png",
+      "sha256": "381962f595c9d88fe4a106ae6a507cc068520418de961a7d2036c3e92f544326"
+    },
+    {
+      "path": "evidence/2026-10-23/cli-session.json",
+      "sha256": "a58a872e343438c2a1924eab3cb152d806929f4d4bdedfc59cca7f1e194ec9c0"
+    },
+    {
+      "path": "evidence/2026-10-23/click-queued.png",
+      "sha256": "381962f595c9d88fe4a106ae6a507cc068520418de961a7d2036c3e92f544326"
+    },
+    {
+      "path": "evidence/2026-10-23/dosbox-python-integrated.log",
+      "sha256": "dad17f49a953c8dbde565571c9c94fae3b67bf35c06610c9d20e98d238a7b3e2"
+    },
+    {
+      "path": "evidence/2026-10-23/mode12.png",
+      "sha256": "6f7271dc31301e2d3e89d69048b91c1154e4d6fadc29e4d5a338eaee89544e6e"
+    },
+    {
+      "path": "evidence/2026-10-23/mode13-repeat.png",
+      "sha256": "381962f595c9d88fe4a106ae6a507cc068520418de961a7d2036c3e92f544326"
+    },
+    {
+      "path": "evidence/2026-10-23/mode13-restored.png",
+      "sha256": "381962f595c9d88fe4a106ae6a507cc068520418de961a7d2036c3e92f544326"
+    },
+    {
+      "path": "evidence/2026-10-23/mode13.png",
+      "sha256": "381962f595c9d88fe4a106ae6a507cc068520418de961a7d2036c3e92f544326"
+    },
+    {
+      "path": "evidence/2026-10-23/palette-magenta.png",
+      "sha256": "c55777ee256f1988d767233c7ab239f753c7e426921dd28eb10f88277e58722e"
+    },
+    {
+      "path": "evidence/2026-10-23/verification.json",
+      "sha256": "0b1d0cc55bccb0d657d03dc79555991614515273583b3559032d2fc16f6770e8"
+    }
+  ],
+  "integration_evidence": [
+    {
+      "path": "evidence/integration-2026-10-23/bank-loan.png",
+      "sha256": "e0d15200c77d32d4eef92429e81555d3d0bf250af6596807b3bb6ed5334053be"
+    },
+    {
+      "path": "evidence/integration-2026-10-23/city.png",
+      "sha256": "ff8706952e08ea7d8451396860a8253e22fed8d3a3c91e32e12aadec66c30f71"
+    },
+    {
+      "path": "evidence/integration-2026-10-23/commands.jsonl",
+      "sha256": "457cf920d182157c0757e2ba066d47a1e52e307c41cb40f0ca0286cc776eb2f9"
+    },
+    {
+      "path": "evidence/integration-2026-10-23/integration-full-tests.log",
+      "sha256": "5638807bf1521eb582aaee089b34faa53a0e9ac8ea35bba04fc9e1300f07d454"
+    },
+    {
+      "path": "evidence/integration-2026-10-23/integration-release.log",
+      "sha256": "a6ae4f30f5ede4c472db39bd41405de38c9fb585d20284fd4794fad04133a487"
+    },
+    {
+      "path": "evidence/integration-2026-10-23/intro-skipped.png",
+      "sha256": "a3eb933dea773c62bbc1331fea099fa820a81e0931a6a116e7d5bca879fc4ddf"
+    },
+    {
+      "path": "evidence/integration-2026-10-23/new-game-input.json",
+      "sha256": "4d9334a69f3d5ca6471e1fccf90252a8829b7bc2695a415e11a051d76794f9d6"
+    },
+    {
+      "path": "evidence/integration-2026-10-23/project-debugger-final-tests.log",
+      "sha256": "9e469918c79527b0837786aea941fb87f2fd8e5ae308c58613befdb5d3e74e36"
+    },
+    {
+      "path": "evidence/integration-2026-10-23/real-estate.png",
+      "sha256": "4ab00022fa6fc8bc67d7dbc00ef80bc3dcb73f91355697a62d3a3b6a2182deac"
+    },
+    {
+      "path": "evidence/integration-2026-10-23/summary.json",
+      "sha256": "5b2dd162ea615d300c5b5153d4f7543266ec9763923ce615d9854181d466466b"
+    },
+    {
+      "path": "evidence/integration-2026-10-23/timing-backend-acceptance.log",
+      "sha256": "560234b21b883d3b203d1d4b9801abc578ac95c9163341d21bc4dcfb758bb198"
+    },
+    {
+      "path": "evidence/integration-2026-10-23/title.png",
+      "sha256": "eaffa5b875bfdae263a63a3a717a13f053889223e29c9b83e8f54a2ebebccacc"
+    }
+  ]
+}

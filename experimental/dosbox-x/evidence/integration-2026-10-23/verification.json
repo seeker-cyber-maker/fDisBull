@@ -1,0 +1,198 @@
+{
+  "result": "pass for project debugger acceptance",
+  "version": "0.9.0 development",
+  "backend_patch_sha256": "664a8b6dc05bb720504489490819c8f7a886dce2ee7c7a6cba67bce2229573f2",
+  "emulator_sha256": "0f83e85df107ab4a502d3e973a53f8a15f1e9d3e36d08896cab92aefbe449902",
+  "focused_real_emulator_tests": 6,
+  "full_suite": {
+    "passed": 722,
+    "skipped": 3,
+    "failed": 2,
+    "errors": 23,
+    "limitation": "Unchanged Linux ELF fixture failures on Apple toolchain; focused tests rerun after final small lifecycle/address metadata changes"
+  },
+  "guest_skip": {
+    "run": "65b2ae14207d404e8d1d55f19898ab58",
+    "outcome": "guest_time",
+    "timed_out": false,
+    "requested_guest_ms": 10000,
+    "guest_elapsed_ms": 10305,
+    "host_elapsed_ms": 447.717,
+    "fast_forward": true,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 10332,
+      "session_id": "ses-1",
+      "state_revision": 4
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 3,
+      "stop_reason": {
+        "kind": "pause"
+      }
+    }
+  },
+  "breakpoint": {
+    "run": "65b2ae14207d404e8d1d55f19898ab58",
+    "outcome": "breakpoint",
+    "timed_out": false,
+    "requested_guest_ms": null,
+    "guest_elapsed_ms": 25,
+    "host_elapsed_ms": 7.275,
+    "fast_forward": true,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 18452,
+      "session_id": "ses-1",
+      "state_revision": 12
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 11,
+      "stop_reason": {
+        "address": {
+          "offset": "0x000075BC",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "breakpoint_id": "bp-1",
+        "kind": "breakpoint",
+        "project_address": "0x175bc"
+      }
+    }
+  },
+  "timeout": {
+    "run": "65b2ae14207d404e8d1d55f19898ab58",
+    "outcome": "timeout",
+    "timed_out": true,
+    "requested_guest_ms": null,
+    "guest_elapsed_ms": 570,
+    "host_elapsed_ms": 32.591,
+    "fast_forward": true,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 32832,
+      "session_id": "ses-1",
+      "state_revision": 32
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 31,
+      "stop_reason": {
+        "kind": "pause"
+      }
+    }
+  },
+  "embedded_artifact_count": 6,
+  "prepared_project": "examples/dinopark/local/dinopark-debug.fdb",
+  "source_files": [
+    {
+      "path": "src/fdisbull/debugger.py",
+      "sha256": "c30e42dffba4731d8102f69af5fa87d4ec3dc72421a5793421bece2a44749ad2"
+    },
+    {
+      "path": "src/fdisbull/dosbox_rpc.py",
+      "sha256": "cef129212f27c16e78560ffd59362fbeffbe01f3d545377707d481d088f1aa16"
+    },
+    {
+      "path": "src/fdisbull/project.py",
+      "sha256": "8d10fda53d9d34ce4bee53a1ee09d5c2c78129e4afc4778d3fd50383452f4aa6"
+    },
+    {
+      "path": "src/fdisbull/cli.py",
+      "sha256": "151cd65fd054d1d6ce35d9e78c3282c2a750efd0d1f8d60596dda87b60d11425"
+    },
+    {
+      "path": "src/fdisbull/__init__.py",
+      "sha256": "b672ee2fd6fd2d76990efe306f0a98b208713de172c803146bb7b5c1f6e7ceda"
+    },
+    {
+      "path": "tests/test_debugger.py",
+      "sha256": "953fa79b349c73ad9db66ccfef958711c0f126917530cb33526e921dd898e314"
+    },
+    {
+      "path": "examples/dinopark/verify_debugger.py",
+      "sha256": "db3cb0b918d235b837337028f0e90e4948dbd275905d647bd3df61fb7b8536c0"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "60026077ce13df4dee31b962808f195bf1c1359b2ff3675ed302f7076aad0124"
+    }
+  ],
+  "packages": [
+    {
+      "name": "fdisbull-0.9.0-py3-none-any.whl",
+      "sha256": "02da96618c4a9a3756f64a69a448c26239c69a9ba9b3eab2d3b28ee138707b13"
+    },
+    {
+      "name": "fdisbull-0.9.0-tool.zip",
+      "sha256": "a10bd4309a4108c6a3258b01d7a73879a9dc1c7ba34b29bc28894dd0b60b01e7"
+    },
+    {
+      "name": "fdisbull-0.9.0.tar.gz",
+      "sha256": "e2ce3fc6b5217fdeaaa3fd13b9d809607f236973dea24d4ae3cc68e316ac5595"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "bank-loan.png",
+      "sha256": "e0d15200c77d32d4eef92429e81555d3d0bf250af6596807b3bb6ed5334053be"
+    },
+    {
+      "path": "city.png",
+      "sha256": "ff8706952e08ea7d8451396860a8253e22fed8d3a3c91e32e12aadec66c30f71"
+    },
+    {
+      "path": "commands.jsonl",
+      "sha256": "457cf920d182157c0757e2ba066d47a1e52e307c41cb40f0ca0286cc776eb2f9"
+    },
+    {
+      "path": "integration-full-tests.log",
+      "sha256": "5638807bf1521eb582aaee089b34faa53a0e9ac8ea35bba04fc9e1300f07d454"
+    },
+    {
+      "path": "integration-package-check.log",
+      "sha256": "37b0e00e8e4ff19047998c62ed6f3684d316553c635bf27064c598199ee89caf"
+    },
+    {
+      "path": "integration-release.log",
+      "sha256": "a6ae4f30f5ede4c472db39bd41405de38c9fb585d20284fd4794fad04133a487"
+    },
+    {
+      "path": "integration-wheel-smoke.log",
+      "sha256": "2d372b305122844b63a95068fea747a14d70df2ce0e365bd1b02369d2e83af90"
+    },
+    {
+      "path": "intro-skipped.png",
+      "sha256": "a3eb933dea773c62bbc1331fea099fa820a81e0931a6a116e7d5bca879fc4ddf"
+    },
+    {
+      "path": "new-game-input.json",
+      "sha256": "4d9334a69f3d5ca6471e1fccf90252a8829b7bc2695a415e11a051d76794f9d6"
+    },
+    {
+      "path": "project-debugger-final-tests.log",
+      "sha256": "9e469918c79527b0837786aea941fb87f2fd8e5ae308c58613befdb5d3e74e36"
+    },
+    {
+      "path": "real-estate.png",
+      "sha256": "4ab00022fa6fc8bc67d7dbc00ef80bc3dcb73f91355697a62d3a3b6a2182deac"
+    },
+    {
+      "path": "summary.json",
+      "sha256": "5b2dd162ea615d300c5b5153d4f7543266ec9763923ce615d9854181d466466b"
+    },
+    {
+      "path": "timing-backend-acceptance.log",
+      "sha256": "560234b21b883d3b203d1d4b9801abc578ac95c9163341d21bc4dcfb758bb198"
+    },
+    {
+      "path": "title.png",
+      "sha256": "eaffa5b875bfdae263a63a3a717a13f053889223e29c9b83e8f54a2ebebccacc"
+    }
+  ]
+}

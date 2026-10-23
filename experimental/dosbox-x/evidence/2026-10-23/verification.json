@@ -1,0 +1,353 @@
+{
+  "debugger": {
+    "capabilities": {
+      "address_spaces": [
+        "segmented",
+        "linear",
+        "physical"
+      ],
+      "breakpoints": {
+        "memory_change": true,
+        "memory_change_address_spaces": [
+          "segmented",
+          "linear"
+        ]
+      },
+      "debugger": true,
+      "input": {
+        "absolute_mouse": true,
+        "click_timing": "guest_emulated_milliseconds",
+        "coordinate_space": "guest_frame_pixels",
+        "driver": "builtin_dos_int33_only"
+      },
+      "limits": {
+        "max_memory_read_bytes": 65536,
+        "max_message_bytes": 8388608,
+        "max_trace_events": 10000
+      },
+      "protocol_version": "1.0",
+      "trace": {
+        "cpu": true
+      },
+      "video": {
+        "format": "png",
+        "headless": true,
+        "screenshot": true,
+        "source": "last_completed_guest_frame"
+      }
+    },
+    "trace": {
+      "active": false,
+      "events": [
+        {
+          "sequence": 1,
+          "address": {
+            "space": "segmented",
+            "offset": "0x00000100",
+            "segment": "0x0814"
+          },
+          "instruction": "mov  ax,1234",
+          "register_changes": {
+            "cs": "0x0814",
+            "ds": "0x0814",
+            "eax": "0x00000000",
+            "ebp": "0x0000091C",
+            "ebx": "0x00000000",
+            "ecx": "0x000000FF",
+            "edi": "0x0000FFFE",
+            "edx": "0x00000814",
+            "es": "0x0814",
+            "esi": "0x00000100",
+            "esp": "0x0000FFFE",
+            "flags": "0x00007202",
+            "fs": "0x0000",
+            "gs": "0x0000",
+            "instruction_pointer": "0x00000100",
+            "ss": "0x0814"
+          }
+        },
+        {
+          "sequence": 2,
+          "address": {
+            "space": "segmented",
+            "offset": "0x00000103",
+            "segment": "0x0814"
+          },
+          "instruction": "mov  bx,5678",
+          "register_changes": {
+            "eax": "0x00001234",
+            "instruction_pointer": "0x00000103"
+          }
+        }
+      ],
+      "next_cursor": null
+    },
+    "breakpoint_registers": {
+      "general": {
+        "eax": "0x00001234",
+        "ebp": "0x0000091C",
+        "ebx": "0x00005678",
+        "ecx": "0x000000FF",
+        "edi": "0x0000FFFE",
+        "edx": "0x00000814",
+        "esi": "0x00000100",
+        "esp": "0x0000FFFE"
+      },
+      "segments": {
+        "cs": "0x0814",
+        "ds": "0x0814",
+        "es": "0x0814",
+        "fs": "0x0000",
+        "gs": "0x0000",
+        "ss": "0x0814"
+      },
+      "instruction_pointer": "0x00000106",
+      "flags": "0x00007202",
+      "cpu_mode": "real",
+      "state_revision": 4
+    },
+    "step_registers": {
+      "general": {
+        "eax": "0x00001234",
+        "ebp": "0x0000091C",
+        "ebx": "0x00005678",
+        "ecx": "0x000000FF",
+        "edi": "0x0000FFFE",
+        "edx": "0x00000814",
+        "esi": "0x00000200",
+        "esp": "0x0000FFFE"
+      },
+      "segments": {
+        "cs": "0x0814",
+        "ds": "0x0814",
+        "es": "0x0814",
+        "fs": "0x0000",
+        "gs": "0x0000",
+        "ss": "0x0814"
+      },
+      "instruction_pointer": "0x00000109",
+      "flags": "0x00007202",
+      "cpu_mode": "real",
+      "state_revision": 6
+    },
+    "memory_patch": "deadbeef",
+    "wrong_memory_hash_rejected": true,
+    "stop": {
+      "session": {
+        "id": "ses-1",
+        "state": "exited",
+        "state_revision": 8,
+        "stop_reason": {
+          "kind": "program_exit",
+          "address": null,
+          "breakpoint_id": null
+        }
+      },
+      "running": false
+    }
+  },
+  "video_mouse": {
+    "initial_status": {
+      "version": 1,
+      "sample_count": 14319,
+      "mouse_x": 320,
+      "mouse_y": 100,
+      "mouse_buttons": 0,
+      "presses": 0,
+      "releases": 0,
+      "press_x": 0,
+      "press_y": 0,
+      "release_x": 0,
+      "release_y": 0,
+      "callback_count": 0,
+      "callback_mask": 0,
+      "callback_buttons": 0,
+      "callback_x": 0,
+      "callback_y": 0,
+      "down_samples": 0,
+      "command_ack": 0,
+      "video_mode": 19,
+      "frame_width": 320,
+      "frame_height": 200,
+      "palette_revision": 0,
+      "last_key": 0,
+      "ticks_low": 53533,
+      "ticks_high": 10,
+      "mouse_installed": 65535,
+      "button_count": 3,
+      "command_sequence": 0
+    },
+    "frame": {
+      "captured_ticks": 274,
+      "double_height": true,
+      "double_width": true,
+      "format": "png",
+      "frame_id": 14,
+      "height": 200,
+      "mode_id": 5,
+      "session_id": "ses-1",
+      "sha256": "381962f595c9d88fe4a106ae6a507cc068520418de961a7d2036c3e92f544326",
+      "source": "last_completed_guest_frame",
+      "source_bpp": 32,
+      "state_revision": 2,
+      "width": 320
+    },
+    "click_accepted": {
+      "accepted": true,
+      "coordinate_space": "guest_frame_pixels",
+      "delivery": "queued",
+      "mouse": {
+        "buttons": 1,
+        "max_x": 639,
+        "max_y": 199,
+        "min_x": 0,
+        "min_y": 0,
+        "owned_buttons": 1,
+        "pending_release_buttons": 1,
+        "release_pending": true,
+        "screen_max_x": 639,
+        "screen_max_y": 199,
+        "x": 320,
+        "y": 90
+      },
+      "session_id": "ses-1",
+      "state_revision": 4
+    },
+    "delivered_status": {
+      "version": 1,
+      "sample_count": 31086,
+      "mouse_x": 320,
+      "mouse_y": 90,
+      "mouse_buttons": 0,
+      "presses": 1,
+      "releases": 1,
+      "press_x": 320,
+      "press_y": 90,
+      "release_x": 320,
+      "release_y": 90,
+      "callback_count": 3,
+      "callback_mask": 4,
+      "callback_buttons": 0,
+      "callback_x": 320,
+      "callback_y": 90,
+      "down_samples": 3031,
+      "command_ack": 0,
+      "video_mode": 19,
+      "frame_width": 320,
+      "frame_height": 200,
+      "palette_revision": 0,
+      "last_key": 0,
+      "ticks_low": 53538,
+      "ticks_high": 10,
+      "mouse_installed": 65535,
+      "button_count": 3,
+      "command_sequence": 0
+    },
+    "clipped_status": {
+      "version": 1,
+      "sample_count": 50950,
+      "mouse_x": 200,
+      "mouse_y": 80,
+      "mouse_buttons": 0,
+      "presses": 1,
+      "releases": 1,
+      "press_x": 320,
+      "press_y": 90,
+      "release_x": 320,
+      "release_y": 90,
+      "callback_count": 3,
+      "callback_mask": 4,
+      "callback_buttons": 0,
+      "callback_x": 320,
+      "callback_y": 90,
+      "down_samples": 3031,
+      "command_ack": 1,
+      "video_mode": 19,
+      "frame_width": 320,
+      "frame_height": 200,
+      "palette_revision": 0,
+      "last_key": 0,
+      "ticks_low": 53544,
+      "ticks_high": 10,
+      "mouse_installed": 65535,
+      "button_count": 3,
+      "command_sequence": 1
+    },
+    "palette": {
+      "captured_ticks": 1030,
+      "double_height": true,
+      "double_width": true,
+      "format": "png",
+      "frame_id": 65,
+      "height": 200,
+      "mode_id": 5,
+      "session_id": "ses-1",
+      "sha256": "c55777ee256f1988d767233c7ab239f753c7e426921dd28eb10f88277e58722e",
+      "source": "last_completed_guest_frame",
+      "source_bpp": 32,
+      "state_revision": 11,
+      "width": 320
+    },
+    "mode12": {
+      "captured_ticks": 1190,
+      "double_height": false,
+      "double_width": false,
+      "format": "png",
+      "frame_id": 73,
+      "height": 480,
+      "mode_id": 6,
+      "session_id": "ses-1",
+      "sha256": "6f7271dc31301e2d3e89d69048b91c1154e4d6fadc29e4d5a338eaee89544e6e",
+      "source": "last_completed_guest_frame",
+      "source_bpp": 32,
+      "state_revision": 13,
+      "width": 640
+    },
+    "mode12_status": {
+      "version": 1,
+      "sample_count": 15592,
+      "mouse_x": 80,
+      "mouse_y": 60,
+      "mouse_buttons": 0,
+      "presses": 1,
+      "releases": 1,
+      "press_x": 320,
+      "press_y": 90,
+      "release_x": 320,
+      "release_y": 90,
+      "callback_count": 4,
+      "callback_mask": 1,
+      "callback_buttons": 0,
+      "callback_x": 80,
+      "callback_y": 60,
+      "down_samples": 3031,
+      "command_ack": 4,
+      "video_mode": 18,
+      "frame_width": 640,
+      "frame_height": 480,
+      "palette_revision": 1,
+      "last_key": 0,
+      "ticks_low": 53552,
+      "ticks_high": 10,
+      "mouse_installed": 65535,
+      "button_count": 3,
+      "command_sequence": 3
+    },
+    "restored": {
+      "captured_ticks": 1523,
+      "double_height": true,
+      "double_width": true,
+      "format": "png",
+      "frame_id": 90,
+      "height": 200,
+      "mode_id": 7,
+      "session_id": "ses-1",
+      "sha256": "381962f595c9d88fe4a106ae6a507cc068520418de961a7d2036c3e92f544326",
+      "source": "last_completed_guest_frame",
+      "source_bpp": 32,
+      "state_revision": 17,
+      "width": 320
+    },
+    "stopped_observations_do_not_execute": true
+  }
+}

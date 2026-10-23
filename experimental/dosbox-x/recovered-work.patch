@@ -1,0 +1,2517 @@
+diff --git a/client/python/dosbox_agent/client.py b/client/python/dosbox_agent/client.py
+index 552858c..f3ceef5 100644
+--- a/client/python/dosbox_agent/client.py
++++ b/client/python/dosbox_agent/client.py
+@@ -6,6 +6,9 @@ import ctypes
+ from ctypes import wintypes
+ import json
+ import os
++import socket
++import stat
++import threading
+ from pathlib import Path
+ import time
+ from collections.abc import Mapping
+@@ -170,12 +173,107 @@ class NamedPipeTransport:
+         self._handle = None
+ 
+ 
++class UnixSocketTransport:
++    """Bounded JSON-lines over a private, same-user filesystem Unix socket.
++
++    A timeout or malformed response closes the connection. No side-effecting
++    request is retried after a send: the caller must resolve request IDs.
++    """
++
++    def __init__(self, endpoint: str) -> None:
++        self._endpoint = endpoint
++        self._socket: socket.socket | None = None
++        self._lock = threading.Lock()
++
++    def _connect(self, deadline: float) -> None:
++        if os.name == "nt" or not hasattr(socket, "AF_UNIX"):
++            raise AgentConnectionError("unix_socket transport requires a POSIX host")
++        path = Path(self._endpoint)
++        if not path.is_absolute() or "\x00" in self._endpoint:
++            raise AgentConnectionError("Unix socket endpoint must be an absolute path without NUL bytes")
++        try:
++            parent = path.parent.lstat()
++            endpoint = path.lstat()
++        except OSError as error:
++            raise AgentConnectionError(f"unable to inspect Unix socket endpoint: {error}") from error
++        if (not stat.S_ISDIR(parent.st_mode) or parent.st_uid != os.geteuid()
++                or stat.S_IMODE(parent.st_mode) != 0o700):
++            raise AgentConnectionError("Unix socket parent must be an owner-owned mode-0700 directory")
++        if (not stat.S_ISSOCK(endpoint.st_mode) or endpoint.st_uid != os.geteuid()
++                or stat.S_IMODE(endpoint.st_mode) != 0o600):
++            raise AgentConnectionError("Unix socket endpoint must be an owner-owned mode-0600 socket")
++        connection = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
++        try:
++            connection.settimeout(max(0.001, deadline-time.monotonic()))
++            connection.connect(self._endpoint)
++            if hasattr(socket, "SO_PEERCRED"):
++                import struct
++                credentials = connection.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, struct.calcsize("3i"))
++                if struct.unpack("3i", credentials)[1] != os.geteuid():
++                    raise AgentConnectionError("Unix socket server has a different user identity")
++            elif hasattr(connection, "getpeereid"):
++                if connection.getpeereid()[0] != os.geteuid():
++                    raise AgentConnectionError("Unix socket server has a different user identity")
++            self._socket = connection
++        except (OSError, AgentConnectionError):
++            connection.close()
++            raise
++
++    def request(self, payload: str, timeout_ms: int, max_message_bytes: int) -> str:
++        encoded = payload.encode("utf-8")
++        if len(encoded) > max_message_bytes:
++            raise AgentProtocolError("request exceeds configured max_message_bytes")
++        deadline = time.monotonic() + timeout_ms/1000
++        with self._lock:
++            try:
++                if self._socket is None:
++                    self._connect(deadline)
++                connection = self._socket
++                assert connection is not None
++                connection.settimeout(max(0.001, deadline-time.monotonic()))
++                connection.sendall(encoded+b"\n")
++                response = bytearray()
++                while True:
++                    remaining = deadline-time.monotonic()
++                    if remaining <= 0:
++                        raise AgentConnectionError("timed out waiting for Unix-socket response")
++                    connection.settimeout(remaining)
++                    chunk = connection.recv(min(4096, max_message_bytes+1-len(response)))
++                    if not chunk:
++                        raise AgentConnectionError("Unix socket closed before a complete response")
++                    response.extend(chunk)
++                    newline = response.find(b"\n")
++                    if newline >= 0:
++                        if newline > max_message_bytes:
++                            raise AgentProtocolError("response exceeds configured max_message_bytes")
++                        if newline != len(response)-1:
++                            raise AgentProtocolError("unsolicited bytes after Unix-socket response")
++                        try:
++                            return bytes(response[:newline]).decode("utf-8")
++                        except UnicodeDecodeError as error:
++                            raise AgentProtocolError("server response is not UTF-8") from error
++                    if len(response) > max_message_bytes:
++                        raise AgentProtocolError("response exceeds configured max_message_bytes")
++            except OSError as error:
++                self.close()
++                raise AgentConnectionError(f"Unix socket I/O failed: {error}") from error
++            except (AgentConnectionError, AgentProtocolError):
++                self.close()
++                raise
++
++    def close(self) -> None:
++        if self._socket is not None:
++            self._socket.close()
++        self._socket = None
++
++
+ class AgentClient:
+     def __init__(self, config: AgentConfig, transport: RpcTransport | None = None) -> None:
+-        if config.transport != "named_pipe":
++        factories = {"named_pipe": NamedPipeTransport, "unix_socket": UnixSocketTransport}
++        if config.transport not in factories:
+             raise ValueError(f"unsupported configured transport: {config.transport}")
+         self.config = config
+-        self._transport: RpcTransport = transport or NamedPipeTransport(config.endpoint)
++        self._transport: RpcTransport = transport or factories[config.transport](config.endpoint)
+         self._next_request_id = 1
+ 
+     @classmethod
+@@ -203,9 +301,9 @@ class AgentClient:
+         # it writes the JSON-RPC response. Reserve local IPC time so a valid
+         # terminal response is not mistaken for a transport failure at that edge.
+         request_transport = self._transport
+-        transient_transport = isinstance(self._transport, NamedPipeTransport)
++        transient_transport = isinstance(self._transport, (NamedPipeTransport, UnixSocketTransport))
+         if transient_transport:
+-            request_transport = NamedPipeTransport(self.config.endpoint)
++            request_transport = type(self._transport)(self.config.endpoint)
+         try:
+             response_text = request_transport.request(
+                 payload,
+@@ -450,8 +548,10 @@ def load_config(path: str | Path) -> AgentConfig:
+             details.append("unexpected=" + ",".join(sorted(unexpected)))
+         raise ValueError("invalid agent config: " + " ".join(details))
+     transport = values["transport"]
+-    if transport != "named_pipe":
+-        raise ValueError("only transport=named_pipe is supported by the Python v1 client")
++    if transport not in {"named_pipe", "unix_socket"}:
++        raise ValueError("transport must be named_pipe or unix_socket")
++    if transport == "unix_socket" and (not Path(values["endpoint"]).is_absolute() or "\x00" in values["endpoint"]):
++        raise ValueError("Unix socket endpoint must be an absolute path without NUL bytes")
+     profile = values.get("profile", "production")
+     if profile not in {"production", "test"}:
+         raise ValueError("profile must be production or test")
+diff --git a/client/python/tests/test_client.py b/client/python/tests/test_client.py
+index 2cb854d..b9d075e 100644
+--- a/client/python/tests/test_client.py
++++ b/client/python/tests/test_client.py
+@@ -94,7 +94,7 @@ class AgentClientTests(unittest.TestCase):
+                 "\n".join((
+                     "transport=named_pipe",
+                     r"endpoint=\\.\pipe\client-test",
+-                    "dosbox_executable=runtime\\dosbox-x.exe",
++                    "dosbox_executable=runtime/dosbox-x.exe",
+                     "dosbox_workdir=runtime",
+                     "profile=test",
+                     "request_timeout_ms=50",
+@@ -117,7 +117,7 @@ class AgentClientTests(unittest.TestCase):
+                 "\n".join((
+                     "transport=named_pipe",
+                     r"endpoint=\\.\pipe\client-test",
+-                    "dosbox_executable=runtime\\dosbox-x.exe",
++                    "dosbox_executable=runtime/dosbox-x.exe",
+                     "dosbox_workdir=runtime",
+                     "request_timeout_ms=50",
+                     "max_message_bytes=64",
+diff --git a/include/agent/agent_protocol.h b/include/agent/agent_protocol.h
+index 3c4d612..7ee69b1 100644
+--- a/include/agent/agent_protocol.h
++++ b/include/agent/agent_protocol.h
+@@ -11,7 +11,8 @@ namespace dosbox_agent {
+ 
+ enum class AgentTransport {
+     NamedPipe,
+-    UnixSocket
++    UnixSocket,
++    Pipe
+ };
+ 
+ struct AgentConfig {
+diff --git a/src/agent/Makefile.am b/src/agent/Makefile.am
+index 437b7c3..fd601cd 100644
+--- a/src/agent/Makefile.am
++++ b/src/agent/Makefile.am
+@@ -1,4 +1,6 @@
+-AM_CPPFLAGS = -I$(top_srcdir)/include
++# Agent translation units gate their entire implementation on configure defines.
++# Include those defines before the first conditional, as the IDE builds do.
++AM_CPPFLAGS = -I$(top_srcdir)/include -include $(top_builddir)/config.h
+ 
+ noinst_LIBRARIES = libagent.a
+ 
+diff --git a/src/agent/protocol/agent_protocol.cpp b/src/agent/protocol/agent_protocol.cpp
+index a315ca1..4f17576 100644
+--- a/src/agent/protocol/agent_protocol.cpp
++++ b/src/agent/protocol/agent_protocol.cpp
+@@ -569,6 +569,8 @@ bool AGENT_LoadConfigFile(const std::string& path,
+         parsed.transport = AgentTransport::NamedPipe;
+     else if (values["transport"] == "unix_socket")
+         parsed.transport = AgentTransport::UnixSocket;
++    else if (values["transport"] == "pipe")
++        parsed.transport = AgentTransport::Pipe;
+     else {
+         *error = "Unsupported agent transport: " + values["transport"];
+         return false;
+@@ -636,6 +638,7 @@ const char* AGENT_TransportName(const AgentTransport transport)
+     switch (transport) {
+     case AgentTransport::NamedPipe: return "named_pipe";
+     case AgentTransport::UnixSocket: return "unix_socket";
++    case AgentTransport::Pipe: return "pipe";
+     }
+     return "unknown";
+ }
+diff --git a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cpp
+index 29363cf..23b4804 100644
+--- a/src/agent/server/agent_server.cpp
++++ b/src/agent/server/agent_server.cpp
+@@ -5,6 +5,9 @@
+ #include "agent/debugger_adapter.h"
+ #include "agent/debugger_output_parser.h"
+ #include "agent/trace_store.h"
++#include "agent/video_adapter.h"
++#include "agent/input_adapter.h"
++#include <zlib.h>
+ #include "../transport/rpc_transport.h"
+ 
+ #include <algorithm>
+@@ -448,6 +451,9 @@ static bool IsKnownMethod(const std::string& method)
+            method == "execution.step" ||
+            method == "execution.wait" ||
+            method == "state.get_registers" ||
++           method == "video.screenshot" ||
++           method == "input.mouse.move" || method == "input.mouse.click" ||
++           method == "input.mouse.button" || method == "input.mouse.state" ||
+            method == "memory.read" ||
+            method == "memory.write" ||
+            method == "breakpoints.create" ||
+@@ -518,6 +524,9 @@ public:
+         NativeBreakpoint breakpoint;
+         std::string raw_output;
+         std::vector<TraceSample> trace_samples;
++        FrameSnapshot frame;
++        AgentMouseState mouse;
++        bool stale_frame = false;
+         bool trace_active = false;
+         std::size_t trace_event_count = 0;
+     };
+@@ -1185,6 +1194,85 @@ static void CacheResponse(AgentServer::Impl::Session* session,
+     }
+ }
+ 
++static void PngU32(std::vector<std::uint8_t>* out, std::uint32_t value)
++{
++    for (int shift = 24; shift >= 0; shift -= 8) out->push_back((value >> shift) & 255);
++}
++
++static void PngChunk(std::vector<std::uint8_t>* out, const char* tag,
++                     const std::vector<std::uint8_t>& data)
++{
++    PngU32(out, static_cast<std::uint32_t>(data.size()));
++    const std::size_t start = out->size();
++    out->insert(out->end(), tag, tag + 4);
++    out->insert(out->end(), data.begin(), data.end());
++    PngU32(out, static_cast<std::uint32_t>(crc32(0, out->data() + start,
++                                              static_cast<uInt>(4 + data.size()))));
++}
++
++static bool EncodeFramePng(const FrameSnapshot& frame, std::vector<std::uint8_t>* png)
++{
++    const std::size_t stride = static_cast<std::size_t>(frame.width) * 4;
++    if (!frame.width || !frame.height || frame.rgba.size() > 16u * 1024u * 1024u ||
++        frame.rgba.size() != stride * frame.height) return false;
++    std::vector<std::uint8_t> scanlines;
++    scanlines.reserve(frame.rgba.size() + frame.height);
++    for (std::uint32_t y = 0; y < frame.height; ++y) {
++        scanlines.push_back(0); // PNG filter: none
++        scanlines.insert(scanlines.end(), frame.rgba.begin() + y * stride,
++                         frame.rgba.begin() + (y + 1) * stride);
++    }
++    uLongf size = compressBound(static_cast<uLong>(scanlines.size()));
++    std::vector<std::uint8_t> compressed(size);
++    if (compress2(compressed.data(), &size, scanlines.data(),
++                  static_cast<uLong>(scanlines.size()), Z_BEST_SPEED) != Z_OK) return false;
++    compressed.resize(size);
++    const std::uint8_t signature[] = {137,80,78,71,13,10,26,10};
++    png->assign(signature, signature + 8);
++    std::vector<std::uint8_t> header;
++    PngU32(&header, frame.width); PngU32(&header, frame.height);
++    const std::uint8_t attributes[] = {8,6,0,0,0};
++    header.insert(header.end(), attributes, attributes + 5);
++    PngChunk(png, "IHDR", header); PngChunk(png, "IDAT", compressed);
++    PngChunk(png, "IEND", std::vector<std::uint8_t>());
++    return true;
++}
++
++static JsonValue SignedNumber(const std::int32_t value)
++{
++    return JsonValue::Number(std::to_string(value));
++}
++
++static JsonValue MouseResult(const AgentMouseState& mouse)
++{
++    JsonValue result = Object();
++    Add(&result, "x", SignedNumber(mouse.x)); Add(&result, "y", SignedNumber(mouse.y));
++    Add(&result, "min_x", SignedNumber(mouse.min_x)); Add(&result, "max_x", SignedNumber(mouse.max_x));
++    Add(&result, "min_y", SignedNumber(mouse.min_y)); Add(&result, "max_y", SignedNumber(mouse.max_y));
++    Add(&result, "screen_max_x", SignedNumber(mouse.screen_max_x));
++    Add(&result, "screen_max_y", SignedNumber(mouse.screen_max_y));
++    Add(&result, "buttons", Number(mouse.buttons));
++    Add(&result, "owned_buttons", Number(mouse.owned_buttons));
++    Add(&result, "pending_release_buttons", Number(mouse.pending_release_buttons));
++    Add(&result, "release_pending", JsonValue::Bool(mouse.release_pending));
++    return result;
++}
++
++static bool OptionalFrameNumber(const JsonValue& params, const char* name,
++                                bool* present, std::uint64_t* result)
++{
++    const JsonValue* value = params.Find(name);
++    *present = value != NULL;
++    if (!value) return true;
++    if (value->type != JsonType::Number || value->text.empty()) return false;
++    *result = 0;
++    for (char c : value->text) {
++        if (c < '0' || c > '9' || *result > ((std::numeric_limits<std::uint64_t>::max)() - (c-'0')) / 10) return false;
++        *result = *result * 10 + (c-'0');
++    }
++    return true;
++}
++
+ static std::string Capabilities(const AgentConfig& config)
+ {
+     JsonValue result = Object();
+@@ -1194,6 +1282,18 @@ static std::string Capabilities(const AgentConfig& config)
+ #else
+     Add(&result, "debugger", JsonValue::Bool(false));
+ #endif
++    JsonValue video = Object();
++    Add(&video, "screenshot", JsonValue::Bool(true));
++    Add(&video, "format", String("png"));
++    Add(&video, "source", String("last_completed_guest_frame"));
++    Add(&video, "headless", JsonValue::Bool(AGENT_IsHeadless()));
++    Add(&result, "video", video);
++    JsonValue input = Object();
++    Add(&input, "absolute_mouse", JsonValue::Bool(true));
++    Add(&input, "driver", String("builtin_dos_int33_only"));
++    Add(&input, "coordinate_space", String("guest_frame_pixels"));
++    Add(&input, "click_timing", String("guest_emulated_milliseconds"));
++    Add(&result, "input", input);
+     JsonValue trace = Object();
+ #ifdef C_HEAVY_DEBUG
+     Add(&trace, "cpu", JsonValue::Bool(true));
+@@ -1754,6 +1854,130 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                 }
+             }
+         }
++    } else if (parsed.method == "video.screenshot" || parsed.method.compare(0, 12, "input.mouse.") == 0) {
++        const bool screenshot = parsed.method == "video.screenshot";
++        const bool move = parsed.method == "input.mouse.move";
++        const bool click = parsed.method == "input.mouse.click";
++        const bool button_op = parsed.method == "input.mouse.button";
++        const bool mutation = move || click || button_op;
++        std::uint32_t x = 0, y = 0, hold_ms = 50, button = 0;
++        std::uint64_t frame_id = 0, mode_id = 0;
++        bool pressed = false, has_frame = false, has_mode = false;
++        std::string button_name = "left";
++        bool valid = OptionalFrameNumber(parsed.params, "frame_id", &has_frame, &frame_id) &&
++                     OptionalFrameNumber(parsed.params, "mode_id", &has_mode, &mode_id);
++        if (move || click) {
++            const JsonValue* xv = parsed.params.Find("x");
++            const JsonValue* yv = parsed.params.Find("y");
++            valid = valid && xv && yv && GetUnsignedInteger(*xv, &x) && GetUnsignedInteger(*yv, &y);
++        }
++        if (click || button_op) {
++            if (parsed.params.Find("button")) valid = valid && GetString(parsed.params, "button", &button_name);
++            if (button_name == "left") button = 0;
++            else if (button_name == "right") button = 1;
++            else if (button_name == "middle") button = 2;
++            else valid = false;
++        }
++        if (button_op) valid = valid && GetBool(parsed.params, "pressed", &pressed);
++        if (click && parsed.params.Find("hold_ms"))
++            valid = valid && GetUnsignedInteger(*parsed.params.Find("hold_ms"), &hold_ms);
++        if (click && (hold_ms < 1 || hold_ms > 1000)) valid = false;
++        if (!valid) {
++            response = InvalidParams(parsed.id, "Invalid mouse coordinates, frame/mode id, button, pressed or hold_ms (1..1000)");
++        } else if (session->state != Impl::SessionState::Running && session->state != Impl::SessionState::Stopped) {
++            response = SessionError(parsed.id, kErrorCapabilityUnavailable, "Target is not active", "TARGET_EXITED", session);
++        } else {
++            const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
++            const std::string session_id = session->id;
++            if (SubmitEmulationCommandLocked(impl, [operation, screenshot, move, click, button_op,
++                    x, y, button, hold_ms, pressed, has_frame, frame_id, has_mode, mode_id](const std::uint64_t) {
++                    std::string error;
++                    FrameSnapshot frame;
++                    AgentMouseState mouse;
++                    std::vector<std::uint8_t> png;
++                    bool success = true, stale = false;
++                    if (screenshot || move || click) success = AGENT_GetFrameSnapshot(&frame, &error);
++                    if (success && (move || click) &&
++                        ((has_frame && frame_id != frame.frame_id) || (has_mode && mode_id != frame.mode_id))) {
++                        success = false; stale = true; error = "Screenshot frame or video mode has changed";
++                    }
++                    if (success && screenshot) {
++                        success = EncodeFramePng(frame, &png);
++                        if (!success) error = "Unable to encode guest framebuffer";
++                    } else if (success && move) {
++                        success = AGENT_MouseMoveAbsolute(x, y, frame.width, frame.height, &mouse, &error);
++                    } else if (success && click) {
++                        success = AGENT_MouseClickAbsolute(x, y, frame.width, frame.height, button, hold_ms, &mouse, &error);
++                    } else if (success && button_op) {
++                        success = AGENT_MouseButton(button, pressed, &mouse, &error);
++                    } else if (success) success = AGENT_MouseGetState(&mouse, &error);
++                    {
++                        std::lock_guard<std::mutex> operation_lock(operation->mutex);
++                        operation->success = success; operation->error = error;
++                        operation->stale_frame = stale; operation->frame = std::move(frame);
++                        operation->mouse = mouse; operation->data.swap(png); operation->done = true;
++                    }
++                    operation->completed.notify_all();
++                }) == 0) {
++                response = Error(parsed.id, kErrorCapabilityUnavailable, "Emulation-thread bridge is unavailable", "COMMAND_REJECTED");
++            } else {
++                const JsonValue response_id = parsed.id;
++                Impl::DeferredRequest pending;
++                pending.request = parsed; pending.fingerprint = parsed.fingerprint;
++                pending.wait = [operation](const std::uint32_t timeout_ms) {
++                    std::unique_lock<std::mutex> operation_lock(operation->mutex);
++                    return operation->completed.wait_for(operation_lock, std::chrono::milliseconds(timeout_ms),
++                                                          [operation]() { return operation->done; });
++                };
++                pending.finish = [impl, session_id, response_id, operation, screenshot, mutation]() {
++                    if (!operation->success)
++                        return Error(response_id, kErrorCapabilityUnavailable, operation->error,
++                                     operation->stale_frame ? "STALE_FRAME" : "COMMAND_REJECTED");
++                    if (!impl->session || impl->session->id != session_id)
++                        return Error(response_id, kErrorSessionNotFound, "Session was not found", "SESSION_NOT_FOUND");
++                    Impl::Session& active = *impl->session;
++                    if (mutation) ++active.state_revision;
++                    JsonValue result = SessionResult(active);
++                    if (screenshot) {
++                        const FrameSnapshot& frame = operation->frame;
++                        // Include JSON metadata and base64 expansion in the configured message budget.
++                        if ((operation->data.size() + 2) / 3 * 4 + 1024 > impl->config.max_message_bytes)
++                            return Error(response_id, kErrorRequestTooLarge,
++                                         "PNG exceeds max_message_bytes; raise the configured response budget", "RESPONSE_TOO_LARGE");
++                        Add(&result, "format", String("png"));
++                        Add(&result, "png_base64", String(EncodeBase64(operation->data)));
++                        Add(&result, "sha256", String(Sha256Hex(operation->data)));
++                        Add(&result, "width", Number(frame.width)); Add(&result, "height", Number(frame.height));
++                        Add(&result, "source_bpp", Number(frame.source_bpp));
++                        Add(&result, "frame_id", Number(frame.frame_id)); Add(&result, "mode_id", Number(frame.mode_id));
++                        Add(&result, "captured_ticks", Number(frame.captured_ticks));
++                        Add(&result, "double_width", JsonValue::Bool(frame.double_width));
++                        Add(&result, "double_height", JsonValue::Bool(frame.double_height));
++                        Add(&result, "source", String("last_completed_guest_frame"));
++                    } else {
++                        Add(&result, "mouse", MouseResult(operation->mouse));
++                        Add(&result, "coordinate_space", String("guest_frame_pixels"));
++                        if (mutation) {
++                            Add(&result, "accepted", JsonValue::Bool(true));
++                            Add(&result, "delivery", String("queued"));
++                        }
++                    }
++                    return AGENT_MakeJsonRpcResult(response_id, result);
++                };
++                if (parsed.has_id && parsed.id.type != JsonType::Null) session->deferred_requests[parsed.id_key] = pending;
++                lock.unlock();
++                const bool completed = pending.wait(impl->config.request_timeout_ms);
++                lock.lock();
++                if (!RebindSessionAfterWait(impl, session_id, &session, &response, parsed.id)) return response;
++                if (!completed) {
++                    cache_response = false;
++                    response = Error(parsed.id, kErrorOperationTimeout, "Timed out waiting for video/input on emulation thread", "OPERATION_TIMEOUT");
++                } else if (parsed.has_id && parsed.id.type != JsonType::Null) {
++                    auto deferred = session->deferred_requests.find(parsed.id_key);
++                    response = deferred->second.finish(); session->deferred_requests.erase(deferred);
++                } else response = pending.finish();
++            }
++        }
+     } else if (parsed.method == "state.get_registers") {
+         if (session->state == Impl::SessionState::Running) {
+             response = SessionError(parsed.id, kErrorTargetRunning,
+@@ -2856,6 +3080,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
+                                                const std::string& workdir)
+ {
+     AgentRuntime& adapter = *impl->runtime;
++    AGENT_MouseResetInput();
+     if (!adapter.IsReadyForTargetStart()) {
+         {
+             std::lock_guard<std::mutex> command_lock(impl->mutex);
+@@ -2930,6 +3155,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
+                                                              const std::string& operation_id)
+ {
+     AgentRuntime& adapter = *impl->runtime;
++    AGENT_MouseResetInput();
+     if (!adapter.IsReadyForTargetStart()) {
+         {
+             std::lock_guard<std::mutex> command_lock(impl->mutex);
+diff --git a/src/agent/transport/local_transport.cpp b/src/agent/transport/local_transport.cpp
+index 363f635..7da0d74 100644
+--- a/src/agent/transport/local_transport.cpp
++++ b/src/agent/transport/local_transport.cpp
+@@ -2,6 +2,12 @@
+ #include "rpc_transport.h"
+ 
+ #include <algorithm>
++#include <atomic>
++#include <chrono>
++#include <cerrno>
++#include <climits>
++#include <cstring>
++#include <cstdlib>
+ #include <condition_variable>
+ #include <mutex>
+ #include <thread>
+@@ -11,6 +17,15 @@
+ #include <windows.h>
+ #include <sddl.h>
+ #pragma comment(lib, "Advapi32.lib")
++#else
++#include <fcntl.h>
++#include <poll.h>
++#include <pthread.h>
++#include <signal.h>
++#include <sys/socket.h>
++#include <sys/stat.h>
++#include <sys/un.h>
++#include <unistd.h>
+ #endif
+ 
+ namespace dosbox_agent {
+@@ -291,29 +306,466 @@ private:
+ 
+ class UnixSocketTransport final : public IRpcTransport {
+ public:
++    UnixSocketTransport() {}
++    ~UnixSocketTransport() override { Stop(); }
+     const char* Name() const override { return "unix_socket"; }
+ 
+     bool ValidateConfiguration(const AgentConfig& config,
+                                std::string* error) const override
+     {
+-        if (config.endpoint.empty() || config.endpoint[0] != '/') {
+-            if (error != NULL)
+-                *error = "Unix socket endpoint must be an absolute path";
++        if (config.endpoint.empty() || config.endpoint[0] != '/' ||
++            config.endpoint.find('\0') != std::string::npos) {
++            if (error != NULL) *error = "Unix socket endpoint must be an absolute path without NUL bytes";
++            return false;
++        }
++#ifdef WIN32
++        if (error != NULL) *error = "Unix socket transport requires a POSIX host";
++        return false;
++#else
++        struct sockaddr_un address;
++        if (config.endpoint.size() >= sizeof(address.sun_path)) {
++            if (error != NULL) *error = "Unix socket endpoint is too long";
++            return false;
++        }
++        const std::string parent = config.endpoint.substr(0, config.endpoint.find_last_of('/'));
++        struct stat status;
++        if (parent.empty() || lstat(parent.c_str(), &status) != 0 ||
++            !S_ISDIR(status.st_mode) || status.st_uid != geteuid() ||
++            (status.st_mode & 0777) != 0700) {
++            if (error != NULL) *error = "Unix socket parent must be an existing owner-owned directory with mode 0700";
+             return false;
+         }
+         return true;
++#endif
+     }
+ 
+-    bool Start(const AgentConfig&,
+-               RequestHandler,
+-               std::string* error) override
++    bool Start(const AgentConfig& config, RequestHandler handler, std::string* error) override
+     {
+-        if (error != NULL)
+-            *error = "Unix socket transport is outside the Windows v1 scope";
++        if (!ValidateConfiguration(config, error) || !handler) return false;
++#ifdef WIN32
++        return false;
++#else
++        std::lock_guard<std::mutex> lock(mutex);
++        if (listener.joinable()) {
++            if (error != NULL) *error = "Unix socket transport is already running";
++            return false;
++        }
++        struct stat existing;
++        if (lstat(config.endpoint.c_str(), &existing) == 0 || errno != ENOENT) {
++            if (error != NULL) *error = "Unix socket endpoint already exists or cannot be checked; refusing to replace it";
++            return false;
++        }
++        endpoint = config.endpoint;
++        max_message_bytes = config.max_message_bytes;
++        timeout_ms = config.request_timeout_ms;
++        request_handler = handler;
++        stopping.store(false);
++        socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
++        if (socket_fd < 0) return FailStart("Unable to create Unix socket", error);
++        SetNonBlocking(socket_fd);
++        struct sockaddr_un address;
++        memset(&address, 0, sizeof(address));
++        address.sun_family = AF_UNIX;
++        memcpy(address.sun_path, endpoint.c_str(), endpoint.size() + 1);
++        if (bind(socket_fd, reinterpret_cast<struct sockaddr*>(&address), sizeof(address)) != 0)
++            return FailStart("Unable to bind Unix socket endpoint", error);
++        if (lstat(endpoint.c_str(), &created_socket) != 0) return FailStart("Unable to inspect bound Unix socket", error);
++        owns_endpoint = true;
++        if (chmod(endpoint.c_str(), 0600) != 0 || listen(socket_fd, 16) != 0)
++            return FailStart("Unable to secure/listen on Unix socket", error);
++        listener = std::thread(&UnixSocketTransport::Run, this);
++        return true;
++#endif
++    }
++
++    void Stop() override
++    {
++#ifndef WIN32
++        {
++            std::lock_guard<std::mutex> lock(mutex);
++            stopping.store(true);
++            if (socket_fd >= 0) shutdown(socket_fd, SHUT_RDWR);
++            for (std::vector<std::unique_ptr<Worker> >::iterator it = workers.begin(); it != workers.end(); ++it)
++                if ((*it)->fd >= 0) shutdown((*it)->fd, SHUT_RDWR);
++        }
++        if (listener.joinable()) listener.join();
++        for (std::vector<std::unique_ptr<Worker> >::iterator it = workers.begin(); it != workers.end(); ++it)
++            if ((*it)->thread.joinable()) (*it)->thread.join();
++        workers.clear();
++        if (socket_fd >= 0) close(socket_fd);
++        socket_fd = -1;
++        CleanupEndpoint();
++#endif
++    }
++
++private:
++#ifndef WIN32
++    struct Worker {
++        int fd = -1;
++        std::thread thread;
++        std::atomic<bool> finished{false};
++    };
++    std::mutex mutex;
++    std::atomic<bool> stopping{false};
++    std::thread listener;
++    std::vector<std::unique_ptr<Worker> > workers;
++    int socket_fd = -1;
++    std::string endpoint;
++    bool owns_endpoint = false;
++    struct stat created_socket;
++    std::size_t max_message_bytes = 0;
++    std::uint32_t timeout_ms = 0;
++    RequestHandler request_handler;
++
++    static void SetNonBlocking(const int fd)
++    {
++        const int status = fcntl(fd, F_GETFL, 0);
++        if (status >= 0) fcntl(fd, F_SETFL, status | O_NONBLOCK);
++        const int flags = fcntl(fd, F_GETFD, 0);
++        if (flags >= 0) fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
++#ifdef SO_NOSIGPIPE
++        int enabled = 1;
++        setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &enabled, sizeof(enabled));
++#endif
++    }
++
++    void CleanupEndpoint()
++    {
++        if (!owns_endpoint) return;
++        struct stat current;
++        if (lstat(endpoint.c_str(), &current) == 0 && S_ISSOCK(current.st_mode) &&
++            current.st_dev == created_socket.st_dev && current.st_ino == created_socket.st_ino)
++            unlink(endpoint.c_str());
++        owns_endpoint = false;
++    }
++
++    bool FailStart(const char* message, std::string* error)
++    {
++        if (error != NULL) *error = std::string(message) + ": " + strerror(errno);
++        if (socket_fd >= 0) close(socket_fd);
++        socket_fd = -1;
++        CleanupEndpoint();
++        return false;
++    }
++
++    static bool SameUser(const int fd)
++    {
++#if defined(__linux__) && defined(SO_PEERCRED)
++        struct ucred credentials;
++        socklen_t length = sizeof(credentials);
++        return getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &credentials, &length) == 0 &&
++               credentials.uid == geteuid();
++#elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)
++        uid_t uid;
++        gid_t gid;
++        return getpeereid(fd, &uid, &gid) == 0 && uid == geteuid();
++#else
++        // The owner-only parent directory and mode-0600 endpoint are still
++        // required on platforms without a peer-credential API.
++        return true;
++#endif
++    }
++
++    typedef std::chrono::steady_clock Clock;
++    bool Ready(const int fd, const short events, const Clock::time_point deadline)
++    {
++        while (!stopping.load()) {
++            const std::chrono::milliseconds remaining = std::chrono::duration_cast<std::chrono::milliseconds>(deadline - Clock::now());
++            if (remaining.count() <= 0) return false;
++            struct pollfd descriptor;
++            descriptor.fd = fd;
++            descriptor.events = events;
++            descriptor.revents = 0;
++            const int result = poll(&descriptor, 1, static_cast<int>((std::min<std::int64_t>)(remaining.count(), 100)));
++            if (result < 0 && errno == EINTR) continue;
++            if (result < 0) return false;
++            if (result > 0) return (descriptor.revents & events) != 0;
++        }
+         return false;
+     }
+ 
+-    void Stop() override {}
++    bool WriteAll(const int fd, const std::string& message)
++    {
++        if (message.size() > max_message_bytes + 1) return false;
++        const Clock::time_point deadline = Clock::now() + std::chrono::milliseconds(timeout_ms + 1000ULL);
++        std::size_t offset = 0;
++        while (offset < message.size()) {
++            if (!Ready(fd, POLLOUT, deadline)) return false;
++#ifdef MSG_NOSIGNAL
++            const ssize_t written = send(fd, message.data()+offset, message.size()-offset, MSG_NOSIGNAL);
++#else
++            const ssize_t written = send(fd, message.data()+offset, message.size()-offset, 0);
++#endif
++            if (written < 0 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) continue;
++            if (written <= 0) return false;
++            offset += static_cast<std::size_t>(written);
++        }
++        return true;
++    }
++
++    void Serve(Worker* worker)
++    {
++        std::string pending;
++        char buffer[4096];
++        Clock::time_point deadline = Clock::now() + std::chrono::milliseconds(timeout_ms + 1000ULL);
++        while (!stopping.load() && Ready(worker->fd, POLLIN, deadline)) {
++            const ssize_t count = recv(worker->fd, buffer, sizeof(buffer), 0);
++            if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) continue;
++            if (count <= 0) break;
++            pending.append(buffer, static_cast<std::size_t>(count));
++            bool failed = false;
++            for (;;) {
++                const std::size_t end = pending.find('\n');
++                if (end == std::string::npos) {
++                    if (pending.size() > max_message_bytes) failed = true;
++                    break;
++                }
++                std::string request = pending.substr(0, end);
++                pending.erase(0, end+1);
++                if (!request.empty() && request.back() == '\r') request.pop_back();
++                if (request.size() > max_message_bytes) { failed = true; break; }
++                if (!WriteAll(worker->fd, request_handler(request)+"\n")) { failed = true; break; }
++                deadline = Clock::now() + std::chrono::milliseconds(timeout_ms + 1000ULL);
++            }
++            if (failed) break;
++        }
++        {
++            std::lock_guard<std::mutex> lock(mutex);
++            close(worker->fd);
++            worker->fd = -1;
++            worker->finished.store(true);
++        }
++    }
++
++    void ReapWorkers()
++    {
++        for (std::vector<std::unique_ptr<Worker> >::iterator it = workers.begin(); it != workers.end();) {
++            if ((*it)->finished.load()) {
++                (*it)->thread.join();
++                it = workers.erase(it);
++            } else ++it;
++        }
++    }
++
++    void Run()
++    {
++        while (!stopping.load()) {
++            struct pollfd descriptor;
++            descriptor.fd = socket_fd;
++            descriptor.events = POLLIN;
++            descriptor.revents = 0;
++            const int ready = poll(&descriptor, 1, 100);
++            if (ready < 0 && errno == EINTR) continue;
++            if (ready <= 0) continue;
++            const int client = accept(socket_fd, NULL, NULL);
++            if (client < 0) continue;
++            SetNonBlocking(client);
++            if (!SameUser(client)) { close(client); continue; }
++            std::lock_guard<std::mutex> lock(mutex);
++            ReapWorkers();
++            if (stopping.load() || workers.size() >= 16) { close(client); continue; }
++            std::unique_ptr<Worker> worker(new Worker());
++            worker->fd = client;
++            Worker* raw = worker.get();
++            workers.push_back(std::move(worker));
++            raw->thread = std::thread(&UnixSocketTransport::Serve, this, raw);
++        }
++    }
++#endif
++};
++
++// Dedicated anonymous pipes supplied by a parent launcher. Standard streams are
++// deliberately excluded so emulator diagnostics cannot corrupt the RPC stream.
++// A pipe channel serializes requests; use bounded waits or Unix sockets for
++// concurrent execution.wait / execution.pause calls.
++class PipeTransport final : public IRpcTransport {
++public:
++    ~PipeTransport() override { Stop(); }
++    const char* Name() const override { return "pipe"; }
++
++    bool ValidateConfiguration(const AgentConfig& config, std::string* error) const override
++    {
++#ifdef WIN32
++        if (error != NULL) *error = "Inherited pipe transport requires a POSIX host";
++        return false;
++#else
++        int input, output;
++        if (!ParseEndpoint(config.endpoint, &input, &output)) {
++            if (error != NULL) *error = "Pipe endpoint must be fd:READ:WRITE with distinct dedicated descriptors >= 3";
++            return false;
++        }
++        struct stat in_status, out_status;
++        const int in_flags = fcntl(input, F_GETFL, 0);
++        const int out_flags = fcntl(output, F_GETFL, 0);
++        if (fstat(input, &in_status) != 0 || fstat(output, &out_status) != 0 ||
++            !S_ISFIFO(in_status.st_mode) || !S_ISFIFO(out_status.st_mode) ||
++            in_flags < 0 || out_flags < 0 ||
++            (in_flags & O_ACCMODE) != O_RDONLY ||
++            (out_flags & O_ACCMODE) != O_WRONLY ||
++            (in_status.st_dev == out_status.st_dev && in_status.st_ino == out_status.st_ino)) {
++            if (error != NULL) *error = "Pipe endpoint requires a readable FIFO and a separate writable FIFO";
++            return false;
++        }
++        return true;
++#endif
++    }
++
++    bool Start(const AgentConfig& config, RequestHandler handler, std::string* error) override
++    {
++        if (!ValidateConfiguration(config, error) || !handler) return false;
++#ifdef WIN32
++        return false;
++#else
++        if (worker.joinable()) {
++            if (error != NULL) *error = "Pipe transport is already running";
++            return false;
++        }
++        int original_read, original_write;
++        ParseEndpoint(config.endpoint, &original_read, &original_write);
++        read_fd = Duplicate(original_read);
++        write_fd = Duplicate(original_write);
++        if (read_fd < 0 || write_fd < 0) {
++            if (error != NULL) *error = "Unable to duplicate inherited pipe descriptors";
++            CloseDescriptors();
++            return false;
++        }
++        handler_ = handler;
++        max_message_bytes = config.max_message_bytes;
++        timeout_ms = config.request_timeout_ms;
++        stopping.store(false);
++        worker = std::thread(&PipeTransport::Run, this);
++        return true;
++#endif
++    }
++
++    void Stop() override
++    {
++#ifndef WIN32
++        stopping.store(true);
++        if (worker.joinable()) worker.join();
++        CloseDescriptors();
++#endif
++    }
++
++private:
++#ifndef WIN32
++    int read_fd = -1;
++    int write_fd = -1;
++    std::thread worker;
++    std::atomic<bool> stopping{false};
++    RequestHandler handler_;
++    std::size_t max_message_bytes = 0;
++    std::uint32_t timeout_ms = 0;
++    typedef std::chrono::steady_clock Clock;
++
++    static bool ParseEndpoint(const std::string& endpoint, int* input, int* output)
++    {
++        if (endpoint.compare(0, 3, "fd:") != 0) return false;
++        const std::size_t separator = endpoint.find(':', 3);
++        if (separator == std::string::npos || endpoint.find(':', separator+1) != std::string::npos) return false;
++        const std::string fields[] = {endpoint.substr(3, separator-3), endpoint.substr(separator+1)};
++        int values[2];
++        for (int index = 0; index != 2; ++index) {
++            if (fields[index].empty() || fields[index].find_first_not_of("0123456789") != std::string::npos) return false;
++            errno = 0;
++            char* end = NULL;
++            const unsigned long value = strtoul(fields[index].c_str(), &end, 10);
++            if (errno != 0 || *end != '\0' || value < 3 || value > INT_MAX) return false;
++            values[index] = static_cast<int>(value);
++        }
++        if (values[0] == values[1]) return false;
++        *input = values[0]; *output = values[1];
++        return true;
++    }
++
++    static int Duplicate(const int fd)
++    {
++        const int duplicate = dup(fd);
++        if (duplicate < 0) return -1;
++        const int flags = fcntl(duplicate, F_GETFL, 0);
++        if (flags < 0 || fcntl(duplicate, F_SETFL, flags | O_NONBLOCK) != 0 ||
++            fcntl(duplicate, F_SETFD, FD_CLOEXEC) != 0) {
++            close(duplicate);
++            return -1;
++        }
++        return duplicate;
++    }
++
++    void CloseDescriptors()
++    {
++        if (read_fd >= 0) close(read_fd);
++        if (write_fd >= 0) close(write_fd);
++        read_fd = write_fd = -1;
++    }
++
++    bool Ready(const int fd, const short events, const Clock::time_point deadline)
++    {
++        while (!stopping.load()) {
++            const std::int64_t remaining = std::chrono::duration_cast<std::chrono::milliseconds>(deadline - Clock::now()).count();
++            if (remaining <= 0) return false;
++            struct pollfd descriptor = {fd, events, 0};
++            const int result = poll(&descriptor, 1, static_cast<int>((std::min<std::int64_t>)(remaining, 100)));
++            if (result < 0 && errno == EINTR) continue;
++            if (result < 0) return false;
++            if (result > 0) return (descriptor.revents & events) != 0;
++        }
++        return false;
++    }
++
++    bool WriteAll(const std::string& message)
++    {
++        if (message.size() > max_message_bytes+1) return false;
++        const Clock::time_point deadline = Clock::now()+std::chrono::milliseconds(timeout_ms+1000ULL);
++        std::size_t offset = 0;
++        while (offset < message.size()) {
++            if (!Ready(write_fd, POLLOUT, deadline)) return false;
++            const ssize_t count = write(write_fd, message.data()+offset, message.size()-offset);
++            if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) continue;
++            if (count <= 0) return false;
++            offset += static_cast<std::size_t>(count);
++        }
++        return true;
++    }
++
++    void Run()
++    {
++        // Block SIGPIPE only in this worker. A disconnected launcher becomes an
++        // EPIPE result rather than terminating the emulator process.
++        sigset_t blocked;
++        sigemptyset(&blocked);
++        sigaddset(&blocked, SIGPIPE);
++        pthread_sigmask(SIG_BLOCK, &blocked, NULL);
++        std::string pending;
++        char buffer[4096];
++        Clock::time_point deadline = Clock::now()+std::chrono::milliseconds(timeout_ms+1000ULL);
++        while (!stopping.load()) {
++            // A parent-owned channel may remain idle for the whole session.
++            if (pending.empty()) deadline = Clock::now()+std::chrono::milliseconds(timeout_ms+1000ULL);
++            if (!Ready(read_fd, POLLIN, deadline)) {
++                if (stopping.load() || !pending.empty()) return;
++                struct pollfd descriptor = {read_fd, POLLIN, 0};
++                if (poll(&descriptor, 1, 0) > 0 && (descriptor.revents & (POLLERR|POLLHUP|POLLNVAL))) return;
++                continue;
++            }
++            const ssize_t count = read(read_fd, buffer, sizeof(buffer));
++            if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) continue;
++            if (count <= 0) return;
++            pending.append(buffer, static_cast<std::size_t>(count));
++            for (;;) {
++                const std::size_t end = pending.find('\n');
++                if (end == std::string::npos) {
++                    if (pending.size() > max_message_bytes) return;
++                    break;
++                }
++                std::string request = pending.substr(0, end);
++                pending.erase(0, end+1);
++                if (!request.empty() && request.back() == '\r') request.pop_back();
++                if (request.size() > max_message_bytes || !WriteAll(handler_(request)+"\n")) return;
++                deadline = Clock::now()+std::chrono::milliseconds(timeout_ms+1000ULL);
++            }
++        }
++    }
++#endif
+ };
+ 
+ } // namespace
+@@ -325,6 +777,8 @@ std::unique_ptr<IRpcTransport> AGENT_CreateLocalTransport(const AgentTransport t
+         return std::unique_ptr<IRpcTransport>(new NamedPipeTransport());
+     case AgentTransport::UnixSocket:
+         return std::unique_ptr<IRpcTransport>(new UnixSocketTransport());
++    case AgentTransport::Pipe:
++        return std::unique_ptr<IRpcTransport>(new PipeTransport());
+     }
+     return std::unique_ptr<IRpcTransport>();
+ }
+diff --git a/src/debug/debug.cpp b/src/debug/debug.cpp
+index 36c909c..51cf89d 100644
+--- a/src/debug/debug.cpp
++++ b/src/debug/debug.cpp
+@@ -45,6 +45,7 @@ using namespace std;
+ #include "debug.h"
+ #if defined(C_DOSBOX_AGENT)
+ #include "agent/agent_bridge.h"
++#include "agent/video_adapter.h"
+ #endif
+ #include "cross.h" //snprintf
+ #include "fpu_state.h"
+@@ -4814,6 +4815,9 @@ static int dbg_getch_vt(void) {
+ #endif
+ 
+ uint32_t DEBUG_CheckKeys(void) {
++#if defined(C_DOSBOX_AGENT)
++    if (dosbox_agent::AGENT_IsHeadless()) return 0;
++#endif
+ 	Bits ret=0;
+ 	bool numberrun = false;
+ 	bool skipDraw = false;
+@@ -5287,7 +5291,12 @@ Bitu DEBUG_Loop(void) {
+         // Interrupt started ? - then skip it
+         uint16_t oldCS	= SegValue(cs);
+         uint32_t oldEIP	= reg_eip;
+-        PIC_runIRQs();
++#if defined(C_DOSBOX_AGENT)
++        // RPC stop is a stable inspection point. Deliver pending interrupts only
++        // when execution resumes, not while polling screenshot/input requests.
++        if (!dosbox_agent::AGENT_IsHeadless())
++#endif
++            PIC_runIRQs();
+         SDL_Delay(1);
+ 
+ #if (C_DYNAMIC_X86)
+@@ -5359,6 +5368,9 @@ void DEBUG_Enable_Handler(bool pressed) {
+ 	if (!pressed || control->opt_display2)
+ 		return;
+ 
++#if defined(C_DOSBOX_AGENT)
++    if (!dosbox_agent::AGENT_IsHeadless()) {
++#endif
+     if (hidedebugger) {
+         hidedebugger=false;
+ #if defined(WIN32) && !defined(_WIN32_WINDOWS)
+@@ -5377,6 +5389,9 @@ void DEBUG_Enable_Handler(bool pressed) {
+         if (runnormal) return;
+     }
+ 
++#if defined(C_DOSBOX_AGENT)
++    }
++#endif
+     /* this command is now a toggle! */
+     /* However this should break back into the debugger if RUNWATCH is active */
+     if (debug_running) {
+@@ -5416,6 +5431,9 @@ void DEBUG_Enable_Handler(bool pressed) {
+     if (!isatty(0) || !isatty(1) || !isatty(2))
+ 	    allow = false;
+ 
++#if defined(C_DOSBOX_AGENT)
++    if (dosbox_agent::AGENT_IsHeadless()) allow = true;
++#endif
+     if (!allow) {
+ # if defined(MACOSX)
+ 	    LOG_MSG("Debugger in Mac OS X is not available unless you start DOSBox-X from a terminal or from the Terminal application");
+@@ -5464,6 +5482,9 @@ void DEBUG_Enable_Handler(bool pressed) {
+ }
+ 
+ void DEBUG_DrawScreen(void) {
++#if defined(C_DOSBOX_AGENT)
++    if (dosbox_agent::AGENT_IsHeadless()) return;
++#endif
+ 	DrawData();
+ 	DrawCode();
+     DrawInput();
+@@ -6185,6 +6206,9 @@ void DBGBlock::set_data_view(unsigned int view) {
+ }
+ 
+ void DEBUG_SetupConsole(void) {
++#if defined(C_DOSBOX_AGENT)
++    if (dosbox_agent::AGENT_IsHeadless()) return;
++#endif
+ 	if (dbg.win_main == NULL) {
+         LOG(LOG_MISC, LOG_DEBUG)("DEBUG_SetupConsole initializing GUI");
+ 
+diff --git a/src/debug/debug_gui.cpp b/src/debug/debug_gui.cpp
+index 6de6f1f..e451c77 100644
+--- a/src/debug/debug_gui.cpp
++++ b/src/debug/debug_gui.cpp
+@@ -36,6 +36,9 @@
+ #include "debug.h"
+ #include "debug_mcp.h"
+ #include "debug_inc.h"
++#if defined(C_DOSBOX_AGENT)
++#include "agent/video_adapter.h"
++#endif
+ #include "pic.h"
+ 
+ #include <stdexcept>
+@@ -589,6 +592,9 @@ void DEBUG_FlushInput(void) {
+ }
+ 
+ void DBGUI_StartUp(void) {
++#if defined(C_DOSBOX_AGENT)
++    if (dosbox_agent::AGENT_IsHeadless()) return;
++#endif
+ 	mainMenu.get_item("show_console").check(true).enable(false).refresh_item(mainMenu);
+ 	mainMenu.get_item("clear_console").check(false).enable(false).refresh_item(mainMenu);
+ 
+diff --git a/src/gui/render.cpp b/src/gui/render.cpp
+index 82e2ae2..af40975 100644
+--- a/src/gui/render.cpp
++++ b/src/gui/render.cpp
+@@ -41,6 +41,9 @@
+ #include "pc98_cg.h"
+ #include "pc98_gdc.h"
+ #include "pc98_gdc_const.h"
++#if defined(C_DOSBOX_AGENT)
++#include "agent/video_adapter.h"
++#endif
+ 
+ #include "render_scalers.h"
+ #include "render_glsl.h"
+@@ -100,6 +103,124 @@ ScalerLineHandler_t                     RENDER_DrawLine;
+ 
+ uint32_t                                GFX_palette32bpp[256] = {0};
+ 
++#if defined(C_DOSBOX_AGENT)
++namespace dosbox_agent {
++namespace {
++const std::size_t max_agent_frame_bytes = 16u * 1024u * 1024u;
++bool agent_frame_capture_enabled = false;
++bool agent_frame_valid = false;
++std::uint64_t agent_frame_sequence = 0;
++std::uint64_t agent_mode_sequence = 0;
++FrameSnapshot agent_frame;
++std::uint8_t agent_palette[256][3] = {};
++
++void InvalidateAgentFrame()
++{
++    agent_frame_valid = false;
++    agent_frame = FrameSnapshot();
++    ++agent_mode_sequence;
++}
++} // namespace
++
++void AGENT_EnableFrameCapture(bool enabled)
++{
++    agent_frame_capture_enabled = enabled;
++    InvalidateAgentFrame();
++}
++
++bool AGENT_GetFrameSnapshot(FrameSnapshot* frame, std::string* error)
++{
++    if (!frame) {
++        if (error) *error = "Frame output is required";
++        return false;
++    }
++    if (!agent_frame_capture_enabled || !agent_frame_valid) {
++        if (error) *error = "No complete framebuffer is available for the current video mode";
++        return false;
++    }
++    *frame = agent_frame;
++    return true;
++}
++
++static void CaptureCompletedAgentFrame()
++{
++    if (!agent_frame_capture_enabled || !scalerSourceCacheBuffer ||
++        render.scale.inLine < render.src.height || !render.src.width || !render.src.height)
++        return;
++    const std::size_t width = render.src.width;
++    const std::size_t height = render.src.height;
++    if (width > max_agent_frame_bytes / 4u ||
++        height > max_agent_frame_bytes / (width * 4u)) {
++        agent_frame_valid = false;
++        agent_frame = FrameSnapshot();
++        return;
++    }
++    const unsigned int bpp = static_cast<unsigned int>(render.src.bpp);
++    const std::size_t bytes_per_pixel = bpp == 8 ? 1u : bpp == 15 || bpp == 16 ? 2u : bpp == 32 ? 4u : 0u;
++    if (!bytes_per_pixel || render.scale.cachePitch < width * bytes_per_pixel ||
++        render.scale.cachePitch > scalerSourceCacheBufferSize / height) {
++        agent_frame_valid = false;
++        return;
++    }
++    // Reuse the RGBA allocation on unchanged frames. Palette-only changes also
++    // need conversion: the index bytes can stay identical while their colors do not.
++    bool palette_changed = false;
++    if (bpp == 8) {
++        for (std::size_t index = 0; index < 256; ++index) {
++            if (agent_palette[index][0] != render.pal.rgb[index].red ||
++                agent_palette[index][1] != render.pal.rgb[index].green ||
++                agent_palette[index][2] != render.pal.rgb[index].blue)
++                palette_changed = true;
++            agent_palette[index][0] = render.pal.rgb[index].red;
++            agent_palette[index][1] = render.pal.rgb[index].green;
++            agent_palette[index][2] = render.pal.rgb[index].blue;
++        }
++    }
++    const bool changed = !agent_frame_valid || Scaler_ChangedLineIndex != 0 ||
++                         render.fullFrame || render.pal.changed || palette_changed;
++    if (changed) {
++        agent_frame.rgba.resize(width * height * 4u);
++        for (std::size_t y = 0; y < height; ++y) {
++            const std::uint8_t* row = scalerSourceCacheBuffer + y * render.scale.cachePitch;
++            for (std::size_t x = 0; x < width; ++x) {
++                std::uint8_t* pixel = &agent_frame.rgba[(y * width + x) * 4u];
++                if (bpp == 8) {
++                    pixel[0] = render.pal.rgb[row[x]].red;
++                    pixel[1] = render.pal.rgb[row[x]].green;
++                    pixel[2] = render.pal.rgb[row[x]].blue;
++                } else if (bpp == 15 || bpp == 16) {
++                    std::uint16_t value;
++                    memcpy(&value, row + x * 2u, sizeof(value));
++                    const unsigned int r = bpp == 15 ? (value >> 10u) & 31u : (value >> 11u) & 31u;
++                    const unsigned int g = bpp == 15 ? (value >> 5u) & 31u : (value >> 5u) & 63u;
++                    const unsigned int b = value & 31u;
++                    pixel[0] = static_cast<std::uint8_t>((r << 3u) | (r >> 2u));
++                    pixel[1] = static_cast<std::uint8_t>(bpp == 15 ? (g << 3u) | (g >> 2u) : (g << 2u) | (g >> 4u));
++                    pixel[2] = static_cast<std::uint8_t>((b << 3u) | (b >> 2u));
++                } else {
++                    std::uint32_t value;
++                    memcpy(&value, row + x * 4u, sizeof(value));
++                    pixel[0] = static_cast<std::uint8_t>((value >> 16u) & 255u);
++                    pixel[1] = static_cast<std::uint8_t>((value >> 8u) & 255u);
++                    pixel[2] = static_cast<std::uint8_t>(value & 255u);
++                }
++                pixel[3] = 255;
++            }
++        }
++    }
++    agent_frame.width = static_cast<std::uint32_t>(width);
++    agent_frame.height = static_cast<std::uint32_t>(height);
++    agent_frame.source_bpp = bpp;
++    agent_frame.frame_id = ++agent_frame_sequence;
++    agent_frame.mode_id = agent_mode_sequence;
++    agent_frame.captured_ticks = PIC_Ticks;
++    agent_frame.double_width = render.src.dblw;
++    agent_frame.double_height = render.src.dblh;
++    agent_frame_valid = true;
++}
++} // namespace dosbox_agent
++#endif
++
+ unsigned int                            GFX_GetBShift();
+ void                                    aspect_ratio_menu();
+ void                                    RENDER_CallBack( GFX_CallBackFunctions_t function );
+@@ -480,6 +601,11 @@ void RENDER_EndUpdate( bool abort ) {
+     if (video_debug_overlay && !abort && render.active && render.scale.outLine != 0)
+         VGA_DebugOverlay();
+ 
++#if defined(C_DOSBOX_AGENT)
++    if (!abort && render.active && !render.disablerender)
++        dosbox_agent::CaptureCompletedAgentFrame();
++#endif
++
+     if (!abort && render.active && RENDER_DrawLine == RENDER_ClearCacheHandler)
+         render.scale.clearCache = false;
+ 
+@@ -562,6 +688,9 @@ std::string RENDER_GetScaler(void) {
+ static int aspect_x=0, aspect_y=0;
+ 
+ void RENDER_Shutdown() {
++#if defined(C_DOSBOX_AGENT)
++    dosbox_agent::InvalidateAgentFrame();
++#endif
+ 	Scaler_AspectChangedLinesFree();
+ 	scalerSourceCacheBufferFree();
+ 	scalerChangeCacheFree();
+@@ -571,6 +700,9 @@ void RENDER_Shutdown() {
+ }
+ 
+ void RENDER_Reset( void ) {
++#if defined(C_DOSBOX_AGENT)
++    dosbox_agent::InvalidateAgentFrame();
++#endif
+ 	Bitu width=render.src.width;
+ 	Bitu height=render.src.height;
+ 	bool dblw=render.src.dblw;
+@@ -1126,6 +1258,9 @@ void RENDER_CalcDoubleWidthHeight(Bitu width, Bitu height, double scrn_ratio, bo
+ void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double scrn_ratio) {
+     RENDER_Halt( );
+     if (!width || !height) {
++#if defined(C_DOSBOX_AGENT)
++        dosbox_agent::InvalidateAgentFrame();
++#endif
+         LOG(LOG_MISC,LOG_WARN)("RENDER_SetSize() rejected video mode %u x %u",(unsigned int)width,(unsigned int)height);
+         return; 
+     }
+diff --git a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
+index 79624b0..aa1c77f 100644
+--- a/src/gui/sdlmain.cpp
++++ b/src/gui/sdlmain.cpp
+@@ -35,6 +35,7 @@
+ #if defined(C_DOSBOX_AGENT)
+ #include "agent/agent_bridge.h"
+ #include "agent/agent_server.h"
++#include "agent/video_adapter.h"
+ #endif
+ 
+ #ifdef OS2
+@@ -148,6 +149,17 @@ char* revert_escape_newlines(const char* aMessage);
+ #include "ptrop.h"
+ #include "mapper.h"
+ #include "sdlmain.h"
++
++#if defined(C_DOSBOX_AGENT)
++namespace dosbox_agent {
++static bool agent_visible_window = false;
++
++bool AGENT_IsHeadless()
++{
++    return control && !control->opt_agent_config.empty() && !agent_visible_window;
++}
++} // namespace dosbox_agent
++#endif
+ #include "zipfile.h"
+ #include "glidedef.h"
+ #include "bios_disk.h"
+@@ -1873,7 +1885,12 @@ SDL_Window* GFX_SetSDLWindowMode(uint16_t width, uint16_t height, SCREEN_TYPES s
+                                       width, height,
+                                       (GFX_IsFullscreen() ? (sdl.desktop.full.display_res ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN) : 0)
+                                       | ((screenType == SCREEN_OPENGL) ? SDL_WINDOW_OPENGL : 0) | (maximize && !TTF_using()? SDL_WINDOW_MAXIMIZED : 0)
+-                                      | SDL_WINDOW_SHOWN | (SDL2_resize_enable ? SDL_WINDOW_RESIZABLE : 0)
++#if defined(C_DOSBOX_AGENT)
++                                      | (dosbox_agent::AGENT_IsHeadless() ? SDL_WINDOW_HIDDEN : SDL_WINDOW_SHOWN)
++#else
++                                      | SDL_WINDOW_SHOWN
++#endif
++                                      | (SDL2_resize_enable ? SDL_WINDOW_RESIZABLE : 0)
+                                       | (dpi_aware_enable ? SDL_WINDOW_ALLOW_HIGHDPI : 0));
+         if (sdl.window) {
+             GFX_SetTitle(-1, -1, -1, false); //refresh title.
+@@ -4158,9 +4175,17 @@ static void GUI_StartUp() {
+     if (output == "surface")
+     {
+ #if C_DIRECT3D
+-        if(!init_output) OUTPUT_DIRECT3D_Select();
++        if(!init_output
++#if defined(C_DOSBOX_AGENT)
++           && !dosbox_agent::AGENT_IsHeadless()
++#endif
++          ) OUTPUT_DIRECT3D_Select();
+ #elif C_OPENGL && defined(MACOSX) // JC: This is breaking SDL1 on Linux! Limit this to MAC OS! Windows users may use this if needed.
+-        if(!init_output) OUTPUT_OPENGL_Select(GLBilinear); // Initialize screen before switching to TTF (required for macOS builds)
++        if(!init_output
++#if defined(C_DOSBOX_AGENT)
++           && !dosbox_agent::AGENT_IsHeadless()
++#endif
++          ) OUTPUT_OPENGL_Select(GLBilinear); // Initialize screen before switching to TTF (required for macOS builds)
+ #endif
+         OUTPUT_SURFACE_Select();
+         init_output = true;
+@@ -7496,6 +7521,7 @@ bool DOSBOX_parse_argv() {
+             fprintf(stderr,"  -tests                                  Run unit tests to test the DOSBox-X code\n");
+ #if defined(C_DOSBOX_AGENT)
+             fprintf(stderr,"  -agent-config <path>                    Load agent configuration from an explicit file\n");
++            fprintf(stderr,"  -agent-window                           Show a window for an agent session (headless by default)\n");
+             fprintf(stderr,"  -agent-self-test                        Verify agent startup and emulation queue behavior\n");
+ #endif
+             fprintf(stderr,"  -print-ticks                            (Debug) Print emulator time and SDL_GetTicks()\n");
+@@ -7530,6 +7556,9 @@ bool DOSBOX_parse_argv() {
+         else if (optname == "agent-self-test") {
+             control->opt_agent_self_test = true;
+         }
++        else if (optname == "agent-window") {
++            dosbox_agent::agent_visible_window = true;
++        }
+ #endif
+         else if (optname == "nolog") {
+             control->opt_nolog = true;
+@@ -8468,6 +8497,29 @@ int main(int argc, char* argv[]) SDL_MAIN_NOEXCEPT {
+     /* -- parse command line arguments */
+     if (!DOSBOX_parse_argv()) return 1;
+ 
++#if defined(C_DOSBOX_AGENT)
++    dosbox_agent::AGENT_EnableFrameCapture(!control->opt_agent_config.empty());
++    if (dosbox_agent::AGENT_IsHeadless()) {
++#if !defined(C_SDL2)
++        fprintf(stderr, "Headless agent sessions require an SDL2 build; use --agent-window for an interactive session.\n");
++        return 1;
++#else
++        // Set these before any path chooser, console or SDL initialization.
++        // A hidden host window alone is not headless: the dummy drivers avoid
++        // connecting to X11, Wayland, Cocoa or the Windows desktop entirely.
++        SDL_setenv("SDL_VIDEODRIVER", "dummy", 1);
++        SDL_setenv("SDL_AUDIODRIVER", "dummy", 1);
++        control->opt_fullscreen = false;
++        control->opt_console = false;
++        control->opt_noconsole = true;
++        control->opt_nomenu = true;
++        control->opt_nogui = true;
++        control->opt_fastlaunch = true;
++        control->opt_promptfolder = 0;
++#endif
++    }
++#endif
++
+     if (control->opt_time_limit > 0)
+         time_limit_ms = (Bitu)(control->opt_time_limit * 1000);
+ 
+@@ -9414,6 +9466,21 @@ int main(int argc, char* argv[]) SDL_MAIN_NOEXCEPT {
+         control->ParseEnv(environ);
+ #endif
+ 
++#if defined(C_DOSBOX_AGENT)
++        if (dosbox_agent::AGENT_IsHeadless()) {
++            // User config and DOSBOX_* overrides must not accidentally select
++            // an OpenGL renderer or a desktop video driver for headless mode.
++            Section_prop* agent_sdl = static_cast<Section_prop*>(control->GetSection("sdl"));
++            agent_sdl->HandleInputline("videodriver=dummy");
++            agent_sdl->HandleInputline("output=surface");
++            agent_sdl->HandleInputline("fullscreen=false");
++            agent_sdl->HandleInputline("showmenu=false");
++            agent_sdl->HandleInputline("usesystemcursor=false");
++            static_cast<Section_prop*>(control->GetSection("dosbox"))->HandleInputline("video debug at startup=false");
++            video_debug_overlay = false;
++        }
++#endif
++
+         /* -- initialize logging first, so that higher level inits can report problems to the log file */
+         LOG::Init();
+ 
+diff --git a/src/ints/mouse.cpp b/src/ints/mouse.cpp
+index 84ada2d..0ae2528 100644
+--- a/src/ints/mouse.cpp
++++ b/src/ints/mouse.cpp
+@@ -43,6 +43,10 @@
+ #include "control.h"
+ #include "SDL.h"
+ 
++#if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
++#include "agent/input_adapter.h"
++#endif
++
+ #if defined(_MSC_VER)
+ # pragma warning(disable:4244) /* const fmath::local::uint64_t to double possible loss of data */
+ #endif
+@@ -110,8 +114,15 @@ static Bitu call_mouse_bd = 0;
+ static Bitu call_int33 = 0;
+ static Bitu call_int74 = 0;
+ static Bitu call_ps2, call_uir = 0;
++#if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
++static RealPt agent_builtin_int33_vector = 0;
++#endif
+ 
+ void MOUSE_Unsetup_DOS(void) {
++#if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
++    dosbox_agent::AGENT_MouseResetInput();
++    agent_builtin_int33_vector = 0;
++#endif
+     if (call_mouse_bd != 0) {
+         CALLBACK_DeAllocate(call_mouse_bd);
+         call_mouse_bd = 0;
+@@ -1341,6 +1352,179 @@ void Mouse_WheelMoved(int32_t scroll) {
+ 	mouse.last_scrolled_y=POS_Y;
+ }
+ 
++#if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
++namespace dosbox_agent {
++namespace {
++
++std::uint8_t agent_owned_buttons = 0;
++std::uint8_t agent_pending_release_buttons = 0;
++
++bool RequireAbsoluteMouse(std::string* error)
++{
++    if (!en_int33 || !AllowINT33RMAccess() || CurMode == NULL ||
++        IS_PC98_ARCH || useps2callback || KEYBOARD_AUX_Active() ||
++        agent_builtin_int33_vector == 0 ||
++        real_readd(0, 0x33u << 2) != agent_builtin_int33_vector) {
++        if (error) {
++            *error = "Absolute mouse input requires the built-in DOS INT33 driver "
++                     "in real/v8086 mode; PS/2/AUX, PC-98 and guest-OS mouse drivers are unsupported";
++        }
++        return false;
++    }
++    if (mouse.min_x > mouse.max_x || mouse.min_y > mouse.max_y ||
++        mouse.max_screen_x < 0 || mouse.max_screen_y < 0) {
++        if (error) *error = "DOS mouse coordinate ranges are not initialized";
++        return false;
++    }
++    return true;
++}
++
++void ReadMouseState(AgentMouseState* state)
++{
++    if (!state) return;
++    state->x = POS_X;
++    state->y = POS_Y;
++    state->min_x = mouse.min_x;
++    state->max_x = mouse.max_x;
++    state->min_y = mouse.min_y;
++    state->max_y = mouse.max_y;
++    state->screen_max_x = mouse.max_screen_x;
++    state->screen_max_y = mouse.max_screen_y;
++    state->buttons = mouse.buttons;
++    state->owned_buttons = agent_owned_buttons;
++    state->pending_release_buttons = agent_pending_release_buttons;
++    state->release_pending = agent_pending_release_buttons != 0;
++}
++
++// Follow the built-in driver's absolute full-screen integration coordinates,
++// then clip to its current virtual window. A clipped subwindow is not stretched
++// to cover the whole screenshot. INT33's POS_X/POS_Y enforce mode granularity.
++std::int32_t FrameToMouseAxis(std::uint32_t pixel, std::uint32_t extent,
++                              std::int32_t screen_max,
++                              std::int32_t minimum, std::int32_t maximum)
++{
++    const std::int64_t value = extent > 1
++        ? static_cast<std::int64_t>(pixel) * screen_max / (extent - 1)
++        : 0;
++    if (value < minimum) return minimum;
++    if (value > maximum) return maximum;
++    return static_cast<std::int32_t>(value);
++}
++
++void AgentMouseReleaseEvent(Bitu value)
++{
++    if (value >= MOUSE_BUTTONS) return;
++    const std::uint8_t mask = static_cast<std::uint8_t>(1u << value);
++    if (!(agent_pending_release_buttons & mask)) return;
++    agent_pending_release_buttons &= static_cast<std::uint8_t>(~mask);
++    if (agent_owned_buttons & mask) {
++        Mouse_ButtonReleased(static_cast<std::uint8_t>(value));
++        agent_owned_buttons &= static_cast<std::uint8_t>(~mask);
++    }
++}
++
++} // namespace
++
++bool AGENT_MouseGetState(AgentMouseState* state, std::string* error)
++{
++    if (!RequireAbsoluteMouse(error)) return false;
++    ReadMouseState(state);
++    return true;
++}
++
++bool AGENT_MouseMoveAbsolute(std::uint32_t x, std::uint32_t y,
++                             std::uint32_t frame_width,
++                             std::uint32_t frame_height,
++                             AgentMouseState* state, std::string* error)
++{
++    if (!RequireAbsoluteMouse(error)) return false;
++    if (frame_width == 0 || frame_height == 0 ||
++        frame_width > 4096 || frame_height > 4096 ||
++        x >= frame_width || y >= frame_height) {
++        if (error) *error = "Absolute mouse point must lie inside a 1..4096 pixel framebuffer";
++        return false;
++    }
++    const std::int32_t next_x = FrameToMouseAxis(x, frame_width,
++        mouse.max_screen_x, mouse.min_x, mouse.max_x);
++    const std::int32_t next_y = FrameToMouseAxis(y, frame_height,
++        mouse.max_screen_y, mouse.min_y, mouse.max_y);
++    const std::int32_t previous_x = POS_X;
++    const std::int32_t previous_y = POS_Y;
++    mouse.x = static_cast<float>(next_x);
++    mouse.y = static_cast<float>(next_y);
++    if (previous_x != POS_X || previous_y != POS_Y) {
++        Mouse_AddEvent(MOUSE_HAS_MOVED);
++    }
++    ReadMouseState(state);
++    return true;
++}
++
++bool AGENT_MouseButton(std::uint32_t button, bool pressed,
++                       AgentMouseState* state, std::string* error)
++{
++    if (!RequireAbsoluteMouse(error)) return false;
++    if (button >= MOUSE_BUTTONS) {
++        if (error) *error = "Mouse button must be 0 (left), 1 (right) or 2 (middle)";
++        return false;
++    }
++    const std::uint8_t mask = static_cast<std::uint8_t>(1u << button);
++    if ((mouse.buttons & mask) && !(agent_owned_buttons & mask)) {
++        if (error) *error = "Mouse button is held outside this agent; it will not be taken over";
++        return false;
++    }
++    if (pressed) {
++        Mouse_ButtonPressed(static_cast<std::uint8_t>(button));
++        agent_owned_buttons |= mask;
++    } else {
++        PIC_RemoveSpecificEvents(AgentMouseReleaseEvent, button);
++        agent_pending_release_buttons &= static_cast<std::uint8_t>(~mask);
++        Mouse_ButtonReleased(static_cast<std::uint8_t>(button));
++        agent_owned_buttons &= static_cast<std::uint8_t>(~mask);
++    }
++    ReadMouseState(state);
++    return true;
++}
++
++bool AGENT_MouseClickAbsolute(std::uint32_t x, std::uint32_t y,
++                              std::uint32_t frame_width,
++                              std::uint32_t frame_height,
++                              std::uint32_t button, std::uint32_t hold_ms,
++                              AgentMouseState* state, std::string* error)
++{
++    if (!RequireAbsoluteMouse(error)) return false;
++    if (button >= MOUSE_BUTTONS || hold_ms < 1 || hold_ms > 1000) {
++        if (error) *error = "Click requires button 0..2 and hold_ms 1..1000 of guest time";
++        return false;
++    }
++    const std::uint8_t mask = static_cast<std::uint8_t>(1u << button);
++    if ((mouse.buttons | agent_pending_release_buttons) & mask) {
++        if (error) *error = "Mouse button is already held or has a pending click release";
++        return false;
++    }
++    if (!AGENT_MouseMoveAbsolute(x, y, frame_width, frame_height, NULL, error)) return false;
++    if (!AGENT_MouseButton(button, true, NULL, error)) return false;
++    agent_pending_release_buttons |= mask;
++    PIC_AddEvent(AgentMouseReleaseEvent, static_cast<pic_tickindex_t>(hold_ms), button);
++    ReadMouseState(state);
++    return true;
++}
++
++void AGENT_MouseResetInput()
++{
++    PIC_RemoveEvents(AgentMouseReleaseEvent);
++    agent_pending_release_buttons = 0;
++    for (std::uint32_t button = 0; button < MOUSE_BUTTONS; ++button) {
++        const std::uint8_t mask = static_cast<std::uint8_t>(1u << button);
++        if (agent_owned_buttons & mask) {
++            Mouse_ButtonReleased(static_cast<std::uint8_t>(button));
++        }
++    }
++    agent_owned_buttons = 0;
++}
++
++} // namespace dosbox_agent
++#endif
++
+ static void Mouse_SetMickeyPixelRate(int16_t px, int16_t py){
+     if ((px!=0) && (py!=0)) {
+         mouse.mickeysPerPixel_x  = (float)px/X_MICKEY;
+@@ -1544,6 +1728,9 @@ void Mouse_AfterNewVideoMode(bool setmode) {
+ 
+ //Much too empty, Mouse_NewVideoMode contains stuff that should be in here
+ static void Mouse_Reset(void) {
++#if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
++    dosbox_agent::AGENT_MouseResetInput();
++#endif
+     Mouse_BeforeNewVideoMode(false);
+     Mouse_AfterNewVideoMode(false);
+     Mouse_SetMickeyPixelRate(8,16);
+@@ -2517,6 +2704,9 @@ void MOUSE_Startup(Section *sec) {
+ 
+     // Wasteland needs low(seg(int33))!=0 and low(ofs(int33))!=0
+     real_writed(0,0x33<<2,i33loc);
++#if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
++    agent_builtin_int33_vector = i33loc;
++#endif
+ 
+     call_mouse_bd=CALLBACK_Allocate();
+     CALLBACK_Setup(call_mouse_bd,&MOUSE_BD_Handler,CB_RETF8,
+diff --git a/client/python/tests/test_unix_transport.py b/client/python/tests/test_unix_transport.py
+new file mode 100644
+index 0000000..aed1ff4
+--- /dev/null
++++ b/client/python/tests/test_unix_transport.py
+@@ -0,0 +1,233 @@
++"""Real local IPC tests for the POSIX debugger transport and client."""
++from __future__ import annotations
++
++from dataclasses import replace
++import json
++import os
++from pathlib import Path
++import select
++import shutil
++import socket
++import stat
++import subprocess
++import sys
++import tempfile
++import threading
++import time
++import unittest
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++
++from dosbox_agent import AgentClient, AgentConfig, AgentConnectionError, AgentProtocolError
++from dosbox_agent.client import UnixSocketTransport, load_config
++
++
++ROOT = Path(__file__).resolve().parents[3]
++
++
++@unittest.skipUnless(os.name == 'posix', 'POSIX local socket transport')
++class UnixSocketClientTests(unittest.TestCase):
++    def setUp(self):
++        self.directory = tempfile.TemporaryDirectory()
++        self.addCleanup(self.directory.cleanup)
++        self.path = Path(self.directory.name)/'agent.sock'
++
++    def server(self, action):
++        listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
++        listener.bind(str(self.path))
++        os.chmod(self.path, 0o600)
++        listener.listen(1)
++        errors = []
++
++        def run():
++            try:
++                connection, _ = listener.accept()
++                with connection:
++                    action(connection)
++            except Exception as error:
++                errors.append(error)
++            finally:
++                listener.close()
++
++        thread = threading.Thread(target=run, daemon=True)
++        thread.start()
++        self.addCleanup(listener.close)
++        self.addCleanup(lambda: thread.join(2))
++        return thread, errors
++
++    def test_agent_client_uses_real_socket_and_matches_request_identity(self):
++        def reply(connection):
++            request = json.loads(connection.makefile('rb').readline())
++            payload = json.dumps(dict(jsonrpc='2.0', id=request['id'], result={'transport':'unix_socket'})).encode()+b'\n'
++            connection.sendall(payload[:9])
++            connection.sendall(payload[9:])
++
++        thread, errors = self.server(reply)
++        config = AgentConfig(Path(self.directory.name)/'agent.env','unix_socket',str(self.path),
++                             Path('/program'),Path('/work'),500,1024,256,100)
++        with AgentClient(config) as client:
++            self.assertEqual(client.capabilities(), {'transport':'unix_socket'})
++        thread.join(1)
++        self.assertEqual(errors, [])
++
++    def test_private_parent_and_socket_permissions_are_required(self):
++        self.server(lambda connection: connection.close())
++        os.chmod(self.path, 0o666)
++        transport = UnixSocketTransport(str(self.path))
++        with self.assertRaisesRegex(AgentConnectionError, 'mode-0600'):
++            transport.request('{}',100,128)
++        os.chmod(self.path, 0o600)
++        os.chmod(self.directory.name,0o755)
++        try:
++            with self.assertRaisesRegex(AgentConnectionError, 'mode-0700'):
++                transport.request('{}',100,128)
++        finally:
++            os.chmod(self.directory.name,0o700)
++
++    def test_oversized_response_is_rejected_without_truncating(self):
++        def reply(connection):
++            connection.recv(128)
++            connection.sendall(b'x'*129+b'\n')
++        self.server(reply)
++        with self.assertRaisesRegex(AgentProtocolError, 'exceeds'):
++            UnixSocketTransport(str(self.path)).request('{}',500,128)
++
++    def test_non_utf8_response_is_explicit_protocol_error(self):
++        def reply(connection):
++            connection.recv(128)
++            connection.sendall(b'\xff\n')
++        self.server(reply)
++        with self.assertRaisesRegex(AgentProtocolError, 'UTF-8'):
++            UnixSocketTransport(str(self.path)).request('{}',500,128)
++
++    def test_timeout_closes_connection_without_resending_request(self):
++        received = []
++        def reply(connection):
++            received.append(connection.recv(128))
++            time.sleep(0.15)
++        thread, errors = self.server(reply)
++        transport = UnixSocketTransport(str(self.path))
++        with self.assertRaises(AgentConnectionError):
++            transport.request('{"id":1}',30,128)
++        self.assertIsNone(transport._socket)
++        thread.join(1)
++        self.assertEqual(received,[b'{"id":1}\n'])
++
++    def test_unix_config_is_explicit_and_has_absolute_endpoint(self):
++        path = Path(self.directory.name)/'agent.env'
++        content = '\n'.join(('transport=unix_socket',f'endpoint={self.path}',
++                             'dosbox_executable=/program','dosbox_workdir=/work',
++                             'request_timeout_ms=100','max_message_bytes=128',
++                             'max_memory_read_bytes=64','max_trace_events=16'))
++        path.write_text(content)
++        self.assertEqual(load_config(path).transport,'unix_socket')
++        path.write_text(content.replace(str(self.path),'relative.sock'))
++        with self.assertRaisesRegex(ValueError, 'absolute'):
++            load_config(path)
++
++
++@unittest.skipUnless(os.name == 'posix' and shutil.which('g++'), 'POSIX C++ compiler')
++class UnixSocketServerTests(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.build = tempfile.TemporaryDirectory()
++        cls.executable = Path(cls.build.name)/'transport-probe'
++        subprocess.run(['g++','-std=c++11','-pthread','-DC_DEBUG=1','-DC_DOSBOX_AGENT=1',
++                        '-I'+str(ROOT/'include'),str(ROOT/'src/agent/transport/local_transport.cpp'),
++                        str(ROOT/'src/agent/transport/unix_transport_probe.cpp'),'-o',str(cls.executable)],
++                       check=True,capture_output=True,text=True)
++
++    @classmethod
++    def tearDownClass(cls):
++        cls.build.cleanup()
++
++    def setUp(self):
++        self.directory = tempfile.TemporaryDirectory()
++        self.addCleanup(self.directory.cleanup)
++        self.path = Path(self.directory.name)/'agent.sock'
++
++    def launch(self):
++        process = subprocess.Popen([str(self.executable),str(self.path)],stdin=subprocess.PIPE,
++                                   stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
++        self.addCleanup(lambda: self.cleanup_process(process))
++        self.assertTrue(select.select([process.stdout],[],[],3)[0], 'server startup timed out')
++        self.assertEqual(process.stdout.readline().strip(),'READY')
++        return process
++
++    @staticmethod
++    def cleanup_process(process):
++        if process.poll() is None:
++            try:
++                process.communicate('stop\n',timeout=2)
++            except subprocess.TimeoutExpired:
++                process.kill()
++                process.communicate(timeout=2)
++
++    def test_real_server_permissions_framing_and_concurrent_clients(self):
++        process = self.launch()
++        self.assertEqual(stat.S_IMODE(self.path.stat().st_mode),0o600)
++        first = socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
++        first.connect(str(self.path))
++        self.addCleanup(first.close)
++        second = UnixSocketTransport(str(self.path))
++        self.addCleanup(second.close)
++        # An idle connection must not prevent another debugger request.
++        self.assertEqual(second.request('{"id":2}',500,128),'{"id":2}')
++        first.sendall(b'{"id":')
++        first.sendall(b'1}\n')
++        self.assertEqual(first.recv(128),b'{"id":1}\n')
++        self.assertEqual(second.request('{"id":3}',500,128),'{"id":3}')
++        stdout,stderr = process.communicate('stop\n',timeout=2)
++        self.assertEqual(process.returncode,0,stderr)
++        self.assertIn('STOPPED',stdout)
++        self.assertFalse(self.path.exists())
++
++    def test_existing_file_or_socket_is_not_removed_or_replaced(self):
++        self.path.write_text('retain me')
++        result = subprocess.run([str(self.executable),str(self.path)],input='stop\n',
++                                capture_output=True,text=True,timeout=3)
++        self.assertEqual(result.returncode,1)
++        self.assertIn('refusing to replace',result.stderr)
++        self.assertEqual(self.path.read_text(),'retain me')
++        self.path.unlink()
++        listener = socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
++        self.addCleanup(listener.close)
++        listener.bind(str(self.path))
++        inode=self.path.stat().st_ino
++        result=subprocess.run([str(self.executable),str(self.path)],capture_output=True,text=True,timeout=3)
++        self.assertEqual(result.returncode,1)
++        self.assertEqual(self.path.stat().st_ino,inode)
++
++    def test_replaced_endpoint_is_not_unlinked_during_shutdown(self):
++        process=self.launch()
++        self.path.unlink()
++        self.path.write_text('replacement')
++        process.communicate('stop\n',timeout=2)
++        self.assertEqual(self.path.read_text(),'replacement')
++
++    def test_parent_permissions_and_overlong_path_reject_before_bind(self):
++        os.chmod(self.directory.name,0o755)
++        try:
++            result=subprocess.run([str(self.executable),str(self.path)],capture_output=True,text=True,timeout=3)
++            self.assertEqual(result.returncode,1)
++            self.assertIn('0700',result.stderr)
++            self.assertFalse(self.path.exists())
++        finally:
++            os.chmod(self.directory.name,0o700)
++        result=subprocess.run([str(self.executable),str(self.path.parent/('x'*120))],
++                              capture_output=True,text=True,timeout=3)
++        self.assertEqual(result.returncode,1)
++        self.assertIn('too long',result.stderr)
++
++    def test_oversized_request_disconnects_without_executing_truncated_request(self):
++        self.launch()
++        connection=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
++        self.addCleanup(connection.close)
++        connection.settimeout(1)
++        connection.connect(str(self.path))
++        connection.sendall(b'x'*129+b'\n')
++        self.assertEqual(connection.recv(128),b'')
++
++
++if __name__ == '__main__':
++    unittest.main()
+diff --git a/include/agent/input_adapter.h b/include/agent/input_adapter.h
+new file mode 100644
+index 0000000..3365b64
+--- /dev/null
++++ b/include/agent/input_adapter.h
+@@ -0,0 +1,51 @@
++#ifndef DOSBOX_AGENT_INPUT_ADAPTER_H
++#define DOSBOX_AGENT_INPUT_ADAPTER_H
++
++#include <cstdint>
++#include <string>
++
++namespace dosbox_agent {
++
++// Observed DOS INT 33h driver coordinates, after clipping and granularity.
++// These are not host pointer coordinates or accelerated relative mickeys.
++struct AgentMouseState {
++    std::int32_t x = 0;
++    std::int32_t y = 0;
++    std::int32_t min_x = 0;
++    std::int32_t max_x = 0;
++    std::int32_t min_y = 0;
++    std::int32_t max_y = 0;
++    std::int32_t screen_max_x = 0;
++    std::int32_t screen_max_y = 0;
++    std::uint32_t buttons = 0;
++    std::uint32_t owned_buttons = 0;
++    std::uint32_t pending_release_buttons = 0;
++    bool release_pending = false;
++};
++
++// All functions are called on the emulation thread. Absolute positions are
++// zero-based pixels in a supplied completed framebuffer's coordinate space.
++// Frame freshness/current mode must be checked by the caller before injection.
++// The supported target is the built-in DOS INT 33h driver, not guest PS/2,
++// serial-only, PC-98, protected-mode or externally installed mouse drivers.
++bool AGENT_MouseGetState(AgentMouseState* state, std::string* error);
++bool AGENT_MouseMoveAbsolute(std::uint32_t x, std::uint32_t y,
++                             std::uint32_t frame_width,
++                             std::uint32_t frame_height,
++                             AgentMouseState* state, std::string* error);
++bool AGENT_MouseButton(std::uint32_t button, bool pressed,
++                       AgentMouseState* state, std::string* error);
++bool AGENT_MouseClickAbsolute(std::uint32_t x, std::uint32_t y,
++                              std::uint32_t frame_width,
++                              std::uint32_t frame_height,
++                              std::uint32_t button, std::uint32_t hold_ms,
++                              AgentMouseState* state, std::string* error);
++
++// Cancel queued releases and release only buttons pressed by this adapter.
++// A queued click holds its button until hold_ms of guest emulated time passes;
++// an RPC response does not establish that the guest has processed that input.
++void AGENT_MouseResetInput();
++
++} // namespace dosbox_agent
++
++#endif
+diff --git a/include/agent/video_adapter.h b/include/agent/video_adapter.h
+new file mode 100644
+index 0000000..efc01ae
+--- /dev/null
++++ b/include/agent/video_adapter.h
+@@ -0,0 +1,32 @@
++#ifndef DOSBOX_AGENT_VIDEO_ADAPTER_H
++#define DOSBOX_AGENT_VIDEO_ADAPTER_H
++
++#include <cstdint>
++#include <string>
++#include <vector>
++
++namespace dosbox_agent {
++
++// Pixels use the completed guest renderer source, before host scaling, menu
++// bars and aspect correction. Mouse coordinates use this same upper-left grid.
++struct FrameSnapshot {
++    std::uint32_t width = 0;
++    std::uint32_t height = 0;
++    std::uint32_t source_bpp = 0;
++    std::uint64_t frame_id = 0;
++    std::uint64_t mode_id = 0;
++    std::uint64_t captured_ticks = 0;
++    bool double_width = false;
++    bool double_height = false;
++    std::vector<std::uint8_t> rgba;
++};
++
++// Invoke these on the emulation thread. A snapshot never advances execution;
++// it fails until a complete frame exists for the current video mode.
++void AGENT_EnableFrameCapture(bool enabled);
++bool AGENT_GetFrameSnapshot(FrameSnapshot* frame, std::string* error);
++bool AGENT_IsHeadless();
++
++} // namespace dosbox_agent
++
++#endif
+diff --git a/src/agent/transport/unix_transport_probe.cpp b/src/agent/transport/unix_transport_probe.cpp
+new file mode 100644
+index 0000000..0dedf94
+--- /dev/null
++++ b/src/agent/transport/unix_transport_probe.cpp
+@@ -0,0 +1,27 @@
++// Standalone transport acceptance fixture; not part of the DOSBox executable.
++#include "rpc_transport.h"
++#include <iostream>
++#include <string>
++
++int main(int argc, char** argv)
++{
++    if (argc != 2) return 2;
++    dosbox_agent::AgentConfig config;
++    config.transport = dosbox_agent::AgentTransport::UnixSocket;
++    config.endpoint = argv[1];
++    config.max_message_bytes = 128;
++    config.request_timeout_ms = 200;
++    std::unique_ptr<dosbox_agent::IRpcTransport> transport =
++        dosbox_agent::AGENT_CreateLocalTransport(config.transport);
++    std::string error;
++    if (!transport->Start(config, [](const std::string& input) { return input; }, &error)) {
++        std::cerr << error << std::endl;
++        return 1;
++    }
++    std::cout << "READY" << std::endl;
++    std::string command;
++    std::getline(std::cin, command);
++    transport->Stop();
++    std::cout << "STOPPED" << std::endl;
++    return 0;
++}
+diff --git a/tests/agent_headless/MOUSEVID.asm b/tests/agent_headless/MOUSEVID.asm
+new file mode 100644
+index 0000000..18a2649
+--- /dev/null
++++ b/tests/agent_headless/MOUSEVID.asm
+@@ -0,0 +1,257 @@
++; Real DOS/INT33 acceptance fixture. Build: nasm -f bin MOUSEVID.asm -o MOUSEVID.COM
++; All offsets below are runtime CS-relative offsets (COM origin = 0100h).
++;
++; 0600h: ready / repeated poll checkpoint, safe for an execution breakpoint.
++; 0800h: status block, see verify_headless.py STATUS_FIELDS.
++; 0840h: command word, consumed and cleared by the guest:
++;   1 clip X=100..200, Y=20..80; 2 restore mode13 full ranges;
++;   3 change palette index 1 from red to magenta;
++;   4 switch to mode12 (640x480); 5 switch to mode13 (320x200);
++;   6 hide cursor; 7 show cursor; 8 exit to DOS.
++; The callback records genuine mouse IRQ delivery as well as INT33 polling.
++bits 16
++org 100h
++
++    jmp start
++
++start:
++    push cs
++    pop ds
++    cld
++    call set_mode13
++    jmp poll_checkpoint
++
++set_mode13:
++    mov ax, 0013h
++    int 10h
++    mov word [video_mode], 13h
++    mov word [frame_width], 320
++    mov word [frame_height], 200
++    mov word [palette_revision], 0
++    mov ax, 0a000h
++    mov es, ax
++    xor di, di
++    mov al, 1
++    mov cx, 16000
++    rep stosb
++    mov al, 2
++    mov cx, 16000
++    rep stosb
++    mov al, 3
++    mov cx, 16000
++    rep stosb
++    mov al, 4
++    mov cx, 16000
++    rep stosb
++    mov dx, 03c8h
++    mov al, 1
++    out dx, al
++    inc dx
++    mov al, 63                  ; 1 red
++    out dx, al
++    xor al, al
++    out dx, al
++    out dx, al
++    out dx, al                  ; 2 green
++    mov al, 63
++    out dx, al
++    xor al, al
++    out dx, al
++    out dx, al                  ; 3 blue
++    out dx, al
++    mov al, 63
++    out dx, al
++    out dx, al                  ; 4 white
++    out dx, al
++    out dx, al
++    call reset_mouse
++    ret
++
++set_mode12:
++    mov ax, 0012h
++    int 10h
++    mov word [video_mode], 12h
++    mov word [frame_width], 640
++    mov word [frame_height], 480
++    call reset_mouse
++    ret
++
++reset_mouse:
++    xor ax, ax
++    int 33h
++    mov [mouse_installed], ax
++    mov [button_count], bx
++    push cs
++    pop es
++    mov dx, mouse_callback
++    mov cx, 007fh
++    mov ax, 000ch
++    int 33h
++    mov ax, 0001h
++    int 33h
++    ret
++
++apply_command:
++    mov ax, [command]
++    or ax, ax
++    jz .done
++    mov [command_ack], ax
++    inc word [command_sequence]
++    mov word [command], 0
++    cmp ax, 1
++    je .clip
++    cmp ax, 2
++    je .full
++    cmp ax, 3
++    je .palette
++    cmp ax, 4
++    je .mode12
++    cmp ax, 5
++    je .mode13
++    cmp ax, 6
++    je .hide
++    cmp ax, 7
++    je .show
++    cmp ax, 8
++    je .exit
++.done:
++    ret
++.clip:
++    mov ax, 7
++    mov cx, 100
++    mov dx, 200
++    int 33h
++    mov ax, 8
++    mov cx, 20
++    mov dx, 80
++    int 33h
++    ret
++.full:
++    mov ax, 7
++    xor cx, cx
++    mov dx, 639
++    int 33h
++    mov ax, 8
++    xor cx, cx
++    mov dx, 199
++    int 33h
++    ret
++.palette:
++    mov dx, 03c8h
++    mov al, 1
++    out dx, al
++    inc dx
++    mov al, 63
++    out dx, al
++    xor al, al
++    out dx, al
++    mov al, 63
++    out dx, al
++    inc word [palette_revision]
++    ret
++.mode12:
++    call set_mode12
++    ret
++.mode13:
++    call set_mode13
++    ret
++.hide:
++    mov ax, 2
++    int 33h
++    ret
++.show:
++    mov ax, 1
++    int 33h
++    ret
++.exit:
++    mov ax, 3
++    int 10h
++    mov ax, 4c00h
++    int 21h
++
++mouse_callback:
++    ; All writes use CS: so the interrupted program's DS is irrelevant.
++    inc word [cs:callback_count]
++    mov [cs:callback_mask], ax
++    mov [cs:callback_buttons], bx
++    mov [cs:callback_x], cx
++    mov [cs:callback_y], dx
++    retf
++
++times 0600h - ($ - $$ + 0100h) db 90h
++poll_checkpoint:
++    call apply_command
++    mov ax, 3
++    int 33h
++    mov [mouse_x], cx
++    mov [mouse_y], dx
++    mov [mouse_buttons], bx
++    test bx, 1
++    jz .not_down
++    inc word [down_samples]
++.not_down:
++    mov ax, 5
++    xor bx, bx
++    int 33h
++    add [presses], bx
++    or bx, bx
++    jz .no_press
++    mov [press_x], cx
++    mov [press_y], dx
++.no_press:
++    mov ax, 6
++    xor bx, bx
++    int 33h
++    add [releases], bx
++    or bx, bx
++    jz .no_release
++    mov [release_x], cx
++    mov [release_y], dx
++.no_release:
++    mov ah, 01h
++    int 16h
++    jz .no_key
++    xor ah, ah
++    int 16h
++    mov [last_key], ax
++.no_key:
++    xor ah, ah
++    int 1ah
++    mov [ticks_low], dx
++    mov [ticks_high], cx
++    inc word [sample_count]
++    jmp poll_checkpoint
++
++times 0800h - ($ - $$ + 0100h) db 0
++status:
++    db 'MVID'
++version:            dw 1
++sample_count:       dw 0
++mouse_x:            dw 0
++mouse_y:            dw 0
++mouse_buttons:      dw 0
++presses:            dw 0
++releases:           dw 0
++press_x:            dw 0
++press_y:            dw 0
++release_x:          dw 0
++release_y:          dw 0
++callback_count:     dw 0
++callback_mask:      dw 0
++callback_buttons:   dw 0
++callback_x:         dw 0
++callback_y:         dw 0
++down_samples:       dw 0
++command_ack:        dw 0
++video_mode:         dw 0
++frame_width:        dw 0
++frame_height:       dw 0
++palette_revision:   dw 0
++last_key:           dw 0
++ticks_low:          dw 0
++ticks_high:         dw 0
++mouse_installed:    dw 0
++button_count:       dw 0
++command_sequence:   dw 0
++    times 0840h - ($ - $$ + 0100h) db 0
++command:            dw 0
+diff --git a/tools/headless_agent.py b/tools/headless_agent.py
+new file mode 100644
+index 0000000..e90c447
+--- /dev/null
++++ b/tools/headless_agent.py
+@@ -0,0 +1,203 @@
++#!/usr/bin/env python3
++"""Launch a trusted DOS fixture using dedicated inherited POSIX RPC pipes.
++
++This controls an emulator process. It does not create a security sandbox.
++The reusable HeadlessAgent context exposes the repository's AgentClient.
++"""
++
++from __future__ import annotations
++
++import argparse
++import base64
++import hashlib
++import json
++import os
++from pathlib import Path
++import subprocess
++import sys
++import tempfile
++import time
++from typing import Any
++
++REPOSITORY = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(REPOSITORY / "client" / "python"))
++
++from dosbox_agent import AgentClient  # noqa: E402
++from dosbox_agent.client import PipeTransport, load_config  # noqa: E402
++
++
++class HeadlessAgent:
++    """Own one emulator process and its RPC pipes; always reap it on exit."""
++
++    def __init__(self, executable: str | Path, workdir: str | Path, *,
++                 window: bool = False, request_timeout_ms: int = 15000) -> None:
++        if os.name != "posix":
++            raise RuntimeError("This inherited-pipe launcher requires macOS or Linux")
++        self.executable = Path(executable).expanduser().resolve(strict=True)
++        self.workdir = Path(workdir).expanduser().resolve(strict=True)
++        if not self.executable.is_file() or not os.access(self.executable, os.X_OK):
++            raise ValueError("executable must be an executable file")
++        if not self.workdir.is_dir():
++            raise ValueError("workdir must be the explicit DOS fixture directory")
++        for path in (self.executable, self.workdir):
++            if any(character in str(path) for character in ("\n", "\r", "\x00")):
++                raise ValueError("configuration paths cannot contain line breaks or NUL")
++        if not 1 <= request_timeout_ms <= 60000:
++            raise ValueError("request_timeout_ms must be between 1 and 60000")
++        self.window = window
++        self.request_timeout_ms = request_timeout_ms
++        self.client: AgentClient | None = None
++        self.process: subprocess.Popen[bytes] | None = None
++        self._temporary: tempfile.TemporaryDirectory[str] | None = None
++
++    def __enter__(self) -> "HeadlessAgent":
++        if self.process is not None:
++            raise RuntimeError("HeadlessAgent is already started")
++        self._temporary = tempfile.TemporaryDirectory(prefix="dosbox-agent-")
++        directory = Path(self._temporary.name)
++        descriptors: list[int] = []
++        try:
++            child_read, parent_write = os.pipe()
++            descriptors.extend((child_read, parent_write))
++            parent_read, child_write = os.pipe()
++            descriptors.extend((parent_read, child_write))
++            configuration = directory / "agent.env"
++            configuration.write_text(
++                "transport=pipe\n"
++                f"endpoint=fd:{child_read}:{child_write}\n"
++                f"dosbox_executable={self.executable}\n"
++                f"dosbox_workdir={self.workdir}\n"
++                "profile=production\n"
++                f"request_timeout_ms={self.request_timeout_ms}\n"
++                "max_message_bytes=8388608\n"
++                "max_memory_read_bytes=65536\n"
++                "max_trace_events=10000\n",
++                encoding="utf-8",
++            )
++            configuration.chmod(0o600)
++            arguments = [str(self.executable), "--defaultconf", "--noautoexec", "--noconfig",
++                         "--agent-config", str(configuration)]
++            if self.window:
++                arguments.append("--agent-window")
++            environment = {key: value for key, value in os.environ.items()
++                           if not key.upper().startswith("DOSBOX_")}
++            environment["XDG_CONFIG_HOME"] = str(directory / "config")
++            self.process = subprocess.Popen(
++                arguments, cwd=directory, env=environment, stdin=subprocess.DEVNULL,
++                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
++                pass_fds=(child_read, child_write), close_fds=True,
++            )
++            # PipeTransport duplicates the parent ends and owns only its copies.
++            transport = PipeTransport(parent_read, parent_write)
++            try:
++                self.client = AgentClient(load_config(configuration), transport=transport)
++            except BaseException:
++                transport.close()
++                raise
++            for descriptor in descriptors:
++                os.close(descriptor)
++            descriptors.clear()
++            # This read-only request waits for actual RPC readiness; no startup
++            # sleep and no side-effecting request is automatically retried.
++            self.client.capabilities()
++            return self
++        except BaseException:
++            for descriptor in descriptors:
++                os.close(descriptor)
++            self.close()
++            raise
++
++    def close(self) -> None:
++        if self.client is not None:
++            self.client.close()
++            self.client = None
++        if self.process is not None:
++            if self.process.poll() is None:
++                self.process.terminate()
++                try:
++                    self.process.wait(timeout=2)
++                except subprocess.TimeoutExpired:
++                    self.process.kill()
++                    self.process.wait(timeout=2)
++            else:
++                self.process.wait()
++            self.process = None
++        if self._temporary is not None:
++            self._temporary.cleanup()
++            self._temporary = None
++
++    def __exit__(self, *_: object) -> None:
++        self.close()
++
++
++def save_screenshot(client: AgentClient, session_id: str, path: Path) -> dict[str, Any]:
++    """Save the completed frame already cached by DOSBox, without stepping."""
++    result = client.call("video.screenshot", {"session_id": session_id})
++    if result.get("format") != "png":
++        raise RuntimeError("video.screenshot did not return PNG")
++    data = base64.b64decode(result["png_base64"], validate=True)
++    if not data.startswith(b"\x89PNG\r\n\x1a\n"):
++        raise RuntimeError("video.screenshot returned an invalid PNG signature")
++    if hashlib.sha256(data).hexdigest() != result["sha256"]:
++        raise RuntimeError("video.screenshot PNG hash mismatch")
++    # Publish only a complete, validated artifact, including on interrupted writes.
++    with tempfile.NamedTemporaryFile(dir=path.parent, prefix=path.name + ".", delete=False) as stream:
++        temporary_path = Path(stream.name)
++        try:
++            stream.write(data)
++            stream.close()
++            temporary_path.replace(path)
++        finally:
++            temporary_path.unlink(missing_ok=True)
++    return {key: value for key, value in result.items() if key != "png_base64"}
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--executable", required=True, type=Path)
++    parser.add_argument("--workdir", required=True, type=Path,
++                        help="Directory containing a trusted DOS fixture and its data")
++    parser.add_argument("--target", required=True, help="DOS name, for example AGENTFIX.COM")
++    parser.add_argument("--run-ms", type=int, default=0,
++                        help="Explicitly execute for up to this many host milliseconds before pausing")
++    parser.add_argument("--screenshot", type=Path)
++    parser.add_argument("--window", action="store_true")
++    arguments = parser.parse_args()
++    if not 0 <= arguments.run_ms <= 60000:
++        parser.error("--run-ms must be between 0 and 60000")
++    report: dict[str, Any] = {}
++    with HeadlessAgent(arguments.executable, arguments.workdir, window=arguments.window) as launched:
++        client = launched.client
++        assert client is not None
++        session = client.start(arguments.target)
++        if arguments.run_ms:
++            operation = client.continue_(session.id)
++            deadline = time.monotonic() + arguments.run_ms / 1000
++            while time.monotonic() < deadline:
++                remaining_ms = max(1, min(100, int((deadline - time.monotonic()) * 1000)))
++                result = client.wait(session.id, operation.id, timeout_ms=remaining_ms)
++                session = result.session
++                if not result.running:
++                    break
++            if session.state == "running":
++                pause = client.pause(session.id)
++                result = client.wait(session.id, pause.id, timeout_ms=1000)
++                if result.running:
++                    raise RuntimeError("Target did not pause within the bounded wait")
++                session = result.session
++        report["session"] = {"id": session.id, "state": session.state}
++        if arguments.screenshot:
++            report["screenshot"] = save_screenshot(client, session.id, arguments.screenshot.resolve())
++        if session.state == "stopped":
++            registers = client.get_registers(session.id)
++            report["registers"] = {"cs": registers.segments["cs"], "ip": registers.instruction_pointer}
++    print(json.dumps(report, indent=2, sort_keys=True))
++    return 0
++
++
++if __name__ == "__main__":
++    try:
++        raise SystemExit(main())
++    except (OSError, ValueError, RuntimeError) as error:
++        print(f"headless-agent: {error}", file=sys.stderr)
++        raise SystemExit(1)

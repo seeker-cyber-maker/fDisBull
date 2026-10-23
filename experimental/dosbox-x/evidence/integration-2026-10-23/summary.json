@@ -1,0 +1,290 @@
+{
+  "result": "pass",
+  "run": "65b2ae14207d404e8d1d55f19898ab58",
+  "skip": {
+    "run": "65b2ae14207d404e8d1d55f19898ab58",
+    "outcome": "guest_time",
+    "timed_out": false,
+    "requested_guest_ms": 10000,
+    "guest_elapsed_ms": 10305,
+    "host_elapsed_ms": 447.717,
+    "fast_forward": true,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 10332,
+      "session_id": "ses-1",
+      "state_revision": 4
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 3,
+      "stop_reason": {
+        "kind": "pause"
+      }
+    }
+  },
+  "breakpoint": {
+    "address": {
+      "offset": "0x000075BC",
+      "segment": "0x0824",
+      "space": "segmented"
+    },
+    "breakpoint_id": "bp-1",
+    "kind": "execution",
+    "once": false,
+    "session_id": "ses-1",
+    "state_revision": 8,
+    "run": "65b2ae14207d404e8d1d55f19898ab58",
+    "version": 1,
+    "project_address": "0x175bc",
+    "project_cs": "0x1000",
+    "instruction_context": "x86:16:little:cs=1000",
+    "runtime_bytes": "b80300",
+    "bytes_verified": true
+  },
+  "hit": {
+    "run": "65b2ae14207d404e8d1d55f19898ab58",
+    "outcome": "breakpoint",
+    "timed_out": false,
+    "requested_guest_ms": null,
+    "guest_elapsed_ms": 25,
+    "host_elapsed_ms": 7.275,
+    "fast_forward": true,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 18452,
+      "session_id": "ses-1",
+      "state_revision": 12
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 11,
+      "stop_reason": {
+        "address": {
+          "offset": "0x000075BC",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "breakpoint_id": "bp-1",
+        "kind": "breakpoint",
+        "project_address": "0x175bc"
+      }
+    }
+  },
+  "trace": {
+    "artifact": "2612305226d14a2d9d4858423732f736",
+    "run": "65b2ae14207d404e8d1d55f19898ab58",
+    "version": 1,
+    "name": "new-game-input.json",
+    "kind": "trace",
+    "sha256": "4d9334a69f3d5ca6471e1fccf90252a8829b7bc2695a415e11a051d76794f9d6",
+    "size": 197282,
+    "metadata": {
+      "event_count": 512,
+      "complete": true,
+      "run": {
+        "run": "65b2ae14207d404e8d1d55f19898ab58",
+        "outcome": "pause",
+        "timed_out": false,
+        "requested_guest_ms": null,
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 4.853,
+        "fast_forward": false,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 18452,
+          "session_id": "ses-1",
+          "state_revision": 14
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 14,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        }
+      }
+    }
+  },
+  "timeout": {
+    "run": "65b2ae14207d404e8d1d55f19898ab58",
+    "outcome": "timeout",
+    "timed_out": true,
+    "requested_guest_ms": null,
+    "guest_elapsed_ms": 570,
+    "host_elapsed_ms": 32.591,
+    "fast_forward": true,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 32832,
+      "session_id": "ses-1",
+      "state_revision": 32
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 31,
+      "stop_reason": {
+        "kind": "pause"
+      }
+    }
+  },
+  "artifacts": {
+    "version": 1,
+    "artifacts": [
+      {
+        "id": "3a54fc902a6d4ec48f267ba8631c60cd",
+        "run": "65b2ae14207d404e8d1d55f19898ab58",
+        "name": "intro-skipped.png",
+        "kind": "screenshot",
+        "sha256": "a3eb933dea773c62bbc1331fea099fa820a81e0931a6a116e7d5bca879fc4ddf",
+        "size": 9219,
+        "metadata": {
+          "captured_ticks": 10319,
+          "double_height": true,
+          "double_width": true,
+          "format": "png",
+          "frame_id": 546,
+          "height": 200,
+          "mode_id": 5,
+          "session_id": "ses-1",
+          "sha256": "a3eb933dea773c62bbc1331fea099fa820a81e0931a6a116e7d5bca879fc4ddf",
+          "source": "last_completed_guest_frame",
+          "source_bpp": 32,
+          "state_revision": 4,
+          "width": 320
+        }
+      },
+      {
+        "id": "a3e6cd25028f4b078e9285cbf998c639",
+        "run": "65b2ae14207d404e8d1d55f19898ab58",
+        "name": "title.png",
+        "kind": "screenshot",
+        "sha256": "eaffa5b875bfdae263a63a3a717a13f053889223e29c9b83e8f54a2ebebccacc",
+        "size": 33321,
+        "metadata": {
+          "captured_ticks": 18409,
+          "double_height": true,
+          "double_width": true,
+          "format": "png",
+          "frame_id": 989,
+          "height": 200,
+          "mode_id": 5,
+          "session_id": "ses-1",
+          "sha256": "eaffa5b875bfdae263a63a3a717a13f053889223e29c9b83e8f54a2ebebccacc",
+          "source": "last_completed_guest_frame",
+          "source_bpp": 32,
+          "state_revision": 7,
+          "width": 320
+        }
+      },
+      {
+        "id": "2612305226d14a2d9d4858423732f736",
+        "run": "65b2ae14207d404e8d1d55f19898ab58",
+        "name": "new-game-input.json",
+        "kind": "trace",
+        "sha256": "4d9334a69f3d5ca6471e1fccf90252a8829b7bc2695a415e11a051d76794f9d6",
+        "size": 197282,
+        "metadata": {
+          "event_count": 512,
+          "complete": true,
+          "run": {
+            "run": "65b2ae14207d404e8d1d55f19898ab58",
+            "outcome": "pause",
+            "timed_out": false,
+            "requested_guest_ms": null,
+            "guest_elapsed_ms": 0,
+            "host_elapsed_ms": 4.853,
+            "fast_forward": false,
+            "timing_after": {
+              "fast_forward": false,
+              "guest_ticks": 18452,
+              "session_id": "ses-1",
+              "state_revision": 14
+            },
+            "session": {
+              "session_id": "ses-1",
+              "state": "stopped",
+              "state_revision": 14,
+              "stop_reason": {
+                "kind": "pause"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": "26c36630e061499687c1745e0b70e457",
+        "run": "65b2ae14207d404e8d1d55f19898ab58",
+        "name": "bank-loan.png",
+        "kind": "screenshot",
+        "sha256": "e0d15200c77d32d4eef92429e81555d3d0bf250af6596807b3bb6ed5334053be",
+        "size": 19530,
+        "metadata": {
+          "captured_ticks": 22746,
+          "double_height": true,
+          "double_width": true,
+          "format": "png",
+          "frame_id": 1250,
+          "height": 200,
+          "mode_id": 5,
+          "session_id": "ses-1",
+          "sha256": "e0d15200c77d32d4eef92429e81555d3d0bf250af6596807b3bb6ed5334053be",
+          "source": "last_completed_guest_frame",
+          "source_bpp": 32,
+          "state_revision": 17,
+          "width": 320
+        }
+      },
+      {
+        "id": "03e8b80204f641579640243df85055ce",
+        "run": "65b2ae14207d404e8d1d55f19898ab58",
+        "name": "city.png",
+        "kind": "screenshot",
+        "sha256": "ff8706952e08ea7d8451396860a8253e22fed8d3a3c91e32e12aadec66c30f71",
+        "size": 20173,
+        "metadata": {
+          "captured_ticks": 28197,
+          "double_height": true,
+          "double_width": true,
+          "format": "png",
+          "frame_id": 1551,
+          "height": 200,
+          "mode_id": 5,
+          "session_id": "ses-1",
+          "sha256": "ff8706952e08ea7d8451396860a8253e22fed8d3a3c91e32e12aadec66c30f71",
+          "source": "last_completed_guest_frame",
+          "source_bpp": 32,
+          "state_revision": 25,
+          "width": 320
+        }
+      },
+      {
+        "id": "c77651373ce549f7b1e9a6e7de5a9e35",
+        "run": "65b2ae14207d404e8d1d55f19898ab58",
+        "name": "real-estate.png",
+        "kind": "screenshot",
+        "sha256": "4ab00022fa6fc8bc67d7dbc00ef80bc3dcb73f91355697a62d3a3b6a2182deac",
+        "size": 39740,
+        "metadata": {
+          "captured_ticks": 32249,
+          "double_height": true,
+          "double_width": true,
+          "format": "png",
+          "frame_id": 1781,
+          "height": 200,
+          "mode_id": 5,
+          "session_id": "ses-1",
+          "sha256": "4ab00022fa6fc8bc67d7dbc00ef80bc3dcb73f91355697a62d3a3b6a2182deac",
+          "source": "last_completed_guest_frame",
+          "source_bpp": 32,
+          "state_revision": 29,
+          "width": 320
+        }
+      }
+    ]
+  }
+}

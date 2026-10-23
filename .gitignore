@@ -8,3 +8,7 @@ dist/
 *-shm
 *.fdb
 examples/**/local/
+
+# Recovered archives, local toolchains, and byte-retaining project sidecars
+/.recovery/
+*.fdb-*

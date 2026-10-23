@@ -1,0 +1,6630 @@
+{
+  "stop": {
+    "session": {
+      "id": "ses-1",
+      "state": "stopped",
+      "state_revision": 12,
+      "stop_reason": {
+        "kind": "pause",
+        "address": null,
+        "breakpoint_id": null
+      }
+    },
+    "running": false
+  },
+  "event_count": 512,
+  "events": [
+    {
+      "sequence": 1,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000C8C",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,0003",
+      "register_changes": {
+        "cs": "0x0EB7",
+        "ds": "0x3844",
+        "eax": "0x00000050",
+        "ebp": "0x00001F10",
+        "ebx": "0x00000001",
+        "ecx": "0x00000000",
+        "edi": "0x00000001",
+        "edx": "0x000093CF",
+        "es": "0x3844",
+        "esi": "0x00000012",
+        "esp": "0x00001F02",
+        "flags": "0x00007202",
+        "fs": "0x0000",
+        "gs": "0x0000",
+        "instruction_pointer": "0x00000C8C",
+        "ss": "0x4528"
+      }
+    },
+    {
+      "sequence": 2,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000C8F",
+        "segment": "0x0EB7"
+      },
+      "instruction": "int  33",
+      "register_changes": {
+        "eax": "0x00000003",
+        "instruction_pointer": "0x00000C8F"
+      }
+    },
+    {
+      "sequence": 3,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000010",
+        "segment": "0xC402"
+      },
+      "instruction": "jmp  short 00000019 ($+7)",
+      "register_changes": {
+        "cs": "0xC402",
+        "esp": "0x00001EFC",
+        "flags": "0x00007002",
+        "instruction_pointer": "0x00000010"
+      }
+    },
+    {
+      "sequence": 4,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000019",
+        "segment": "0xC402"
+      },
+      "instruction": "callback 004D  (Mouse)",
+      "register_changes": {
+        "instruction_pointer": "0x00000019"
+      }
+    },
+    {
+      "sequence": 5,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000001D",
+        "segment": "0xC402"
+      },
+      "instruction": "iret",
+      "register_changes": {
+        "ecx": "0x00000096",
+        "edx": "0x000000A0",
+        "instruction_pointer": "0x0000001D"
+      }
+    },
+    {
+      "sequence": 6,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000C91",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  [009A],bx",
+      "register_changes": {
+        "cs": "0x0EB7",
+        "esp": "0x00001F02",
+        "flags": "0x00007202",
+        "instruction_pointer": "0x00000C91"
+      }
+    },
+    {
+      "sequence": 7,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000C95",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  [7BB0],cx",
+      "register_changes": {
+        "instruction_pointer": "0x00000C95"
+      }
+    },
+    {
+      "sequence": 8,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000C99",
+        "segment": "0x0EB7"
+      },
+      "instruction": "sar  word [7BB0],1",
+      "register_changes": {
+        "instruction_pointer": "0x00000C99"
+      }
+    },
+    {
+      "sequence": 9,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000C9D",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  [7BAE],dx",
+      "register_changes": {
+        "instruction_pointer": "0x00000C9D"
+      }
+    },
+    {
+      "sequence": 10,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000CA1",
+        "segment": "0x0EB7"
+      },
+      "instruction": "retf",
+      "register_changes": {
+        "instruction_pointer": "0x00000CA1"
+      }
+    },
+    {
+      "sequence": 11,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000034E",
+        "segment": "0x0EB7"
+      },
+      "instruction": "and  word [009A],0001",
+      "register_changes": {
+        "esp": "0x00001F06",
+        "flags": "0x00007216",
+        "instruction_pointer": "0x0000034E"
+      }
+    },
+    {
+      "sequence": 12,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000353",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  word [0096],0000",
+      "register_changes": {
+        "instruction_pointer": "0x00000353"
+      }
+    },
+    {
+      "sequence": 13,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000358",
+        "segment": "0x0EB7"
+      },
+      "instruction": "je   0000035D ($+3)",
+      "register_changes": {
+        "instruction_pointer": "0x00000358"
+      }
+    },
+    {
+      "sequence": 14,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000035D",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[7BBA]",
+      "register_changes": {
+        "instruction_pointer": "0x0000035D"
+      }
+    },
+    {
+      "sequence": 15,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000360",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  ax,[7BB0]",
+      "register_changes": {
+        "eax": "0x000000A0",
+        "instruction_pointer": "0x00000360"
+      }
+    },
+    {
+      "sequence": 16,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000364",
+        "segment": "0x0EB7"
+      },
+      "instruction": "jne  0000036F ($+9)",
+      "register_changes": {
+        "instruction_pointer": "0x00000364"
+      }
+    },
+    {
+      "sequence": 17,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000036F",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[7BB0]",
+      "register_changes": {
+        "instruction_pointer": "0x0000036F"
+      }
+    },
+    {
+      "sequence": 18,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000372",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  [7BBA],ax",
+      "register_changes": {
+        "eax": "0x0000004B",
+        "instruction_pointer": "0x00000372"
+      }
+    },
+    {
+      "sequence": 19,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000375",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[7BAE]",
+      "register_changes": {
+        "instruction_pointer": "0x00000375"
+      }
+    },
+    {
+      "sequence": 20,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000378",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  [7BBC],ax",
+      "register_changes": {
+        "eax": "0x000000A0",
+        "instruction_pointer": "0x00000378"
+      }
+    },
+    {
+      "sequence": 21,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000037B",
+        "segment": "0x0EB7"
+      },
+      "instruction": "nop",
+      "register_changes": {
+        "instruction_pointer": "0x0000037B"
+      }
+    },
+    {
+      "sequence": 22,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000037C",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push cs",
+      "register_changes": {
+        "instruction_pointer": "0x0000037C"
+      }
+    },
+    {
+      "sequence": 23,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000037D",
+        "segment": "0x0EB7"
+      },
+      "instruction": "call 0000109B ($+d1b)",
+      "register_changes": {
+        "esp": "0x00001F04",
+        "instruction_pointer": "0x0000037D"
+      }
+    },
+    {
+      "sequence": 24,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000109B",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push si",
+      "register_changes": {
+        "esp": "0x00001F02",
+        "instruction_pointer": "0x0000109B"
+      }
+    },
+    {
+      "sequence": 25,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000109C",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push di",
+      "register_changes": {
+        "esp": "0x00001F00",
+        "instruction_pointer": "0x0000109C"
+      }
+    },
+    {
+      "sequence": 26,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000109D",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  [3DE4],sp",
+      "register_changes": {
+        "esp": "0x00001EFE",
+        "instruction_pointer": "0x0000109D"
+      }
+    },
+    {
+      "sequence": 27,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010A1",
+        "segment": "0x0EB7"
+      },
+      "instruction": "ja   000010A8 ($+5)",
+      "register_changes": {
+        "instruction_pointer": "0x000010A1"
+      }
+    },
+    {
+      "sequence": 28,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010A8",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[7BC6]",
+      "register_changes": {
+        "instruction_pointer": "0x000010A8"
+      }
+    },
+    {
+      "sequence": 29,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010AB",
+        "segment": "0x0EB7"
+      },
+      "instruction": "add  ax,[7BC0]",
+      "register_changes": {
+        "eax": "0x00000000",
+        "instruction_pointer": "0x000010AB"
+      }
+    },
+    {
+      "sequence": 30,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010AF",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  bx,ax",
+      "register_changes": {
+        "instruction_pointer": "0x000010AF"
+      }
+    },
+    {
+      "sequence": 31,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010B1",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[7BC8]",
+      "register_changes": {
+        "ebx": "0x00000000",
+        "instruction_pointer": "0x000010B1"
+      }
+    },
+    {
+      "sequence": 32,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010B4",
+        "segment": "0x0EB7"
+      },
+      "instruction": "add  ax,[7BBE]",
+      "register_changes": {
+        "instruction_pointer": "0x000010B4"
+      }
+    },
+    {
+      "sequence": 33,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010B8",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  cx,ax",
+      "register_changes": {
+        "instruction_pointer": "0x000010B8"
+      }
+    },
+    {
+      "sequence": 34,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010BA",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[7BCA]",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "instruction_pointer": "0x000010BA"
+      }
+    },
+    {
+      "sequence": 35,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010BD",
+        "segment": "0x0EB7"
+      },
+      "instruction": "add  ax,[7BC0]",
+      "register_changes": {
+        "eax": "0x000000C8",
+        "instruction_pointer": "0x000010BD"
+      }
+    },
+    {
+      "sequence": 36,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010C1",
+        "segment": "0x0EB7"
+      },
+      "instruction": "add  ax,FFFB",
+      "register_changes": {
+        "instruction_pointer": "0x000010C1"
+      }
+    },
+    {
+      "sequence": 37,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010C4",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  si,ax",
+      "register_changes": {
+        "eax": "0x000000C3",
+        "instruction_pointer": "0x000010C4"
+      }
+    },
+    {
+      "sequence": 38,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010C6",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  al,[7BC2]",
+      "register_changes": {
+        "esi": "0x000000C3",
+        "instruction_pointer": "0x000010C6"
+      }
+    },
+    {
+      "sequence": 39,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010C9",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ah,00",
+      "register_changes": {
+        "eax": "0x00000008",
+        "instruction_pointer": "0x000010C9"
+      }
+    },
+    {
+      "sequence": 40,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010CB",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  dx,[7BCC]",
+      "register_changes": {
+        "instruction_pointer": "0x000010CB"
+      }
+    },
+    {
+      "sequence": 41,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010CF",
+        "segment": "0x0EB7"
+      },
+      "instruction": "sub  dx,ax",
+      "register_changes": {
+        "edx": "0x00000140",
+        "instruction_pointer": "0x000010CF"
+      }
+    },
+    {
+      "sequence": 42,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010D1",
+        "segment": "0x0EB7"
+      },
+      "instruction": "add  dx,[7BBE]",
+      "register_changes": {
+        "edx": "0x00000138",
+        "instruction_pointer": "0x000010D1"
+      }
+    },
+    {
+      "sequence": 43,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010D5",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  di,dx",
+      "register_changes": {
+        "instruction_pointer": "0x000010D5"
+      }
+    },
+    {
+      "sequence": 44,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010D7",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  [7BBA],cx",
+      "register_changes": {
+        "edi": "0x00000138",
+        "instruction_pointer": "0x000010D7"
+      }
+    },
+    {
+      "sequence": 45,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010DB",
+        "segment": "0x0EB7"
+      },
+      "instruction": "jg   000010E9 ($+c)",
+      "register_changes": {
+        "instruction_pointer": "0x000010DB"
+      }
+    },
+    {
+      "sequence": 46,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010E9",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  [7BBA],di",
+      "register_changes": {
+        "instruction_pointer": "0x000010E9"
+      }
+    },
+    {
+      "sequence": 47,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010ED",
+        "segment": "0x0EB7"
+      },
+      "instruction": "jl   000010F9 ($+a)",
+      "register_changes": {
+        "instruction_pointer": "0x000010ED"
+      }
+    },
+    {
+      "sequence": 48,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010F9",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  [7BBC],bx",
+      "register_changes": {
+        "instruction_pointer": "0x000010F9"
+      }
+    },
+    {
+      "sequence": 49,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000010FD",
+        "segment": "0x0EB7"
+      },
+      "instruction": "jg   00001106 ($+7)",
+      "register_changes": {
+        "instruction_pointer": "0x000010FD"
+      }
+    },
+    {
+      "sequence": 50,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00001106",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  [7BBC],si",
+      "register_changes": {
+        "instruction_pointer": "0x00001106"
+      }
+    },
+    {
+      "sequence": 51,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000110A",
+        "segment": "0x0EB7"
+      },
+      "instruction": "jl   00001110 ($+4)",
+      "register_changes": {
+        "instruction_pointer": "0x0000110A"
+      }
+    },
+    {
+      "sequence": 52,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00001110",
+        "segment": "0x0EB7"
+      },
+      "instruction": "pop  di",
+      "register_changes": {
+        "instruction_pointer": "0x00001110"
+      }
+    },
+    {
+      "sequence": 53,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00001111",
+        "segment": "0x0EB7"
+      },
+      "instruction": "pop  si",
+      "register_changes": {
+        "edi": "0x00000001",
+        "esp": "0x00001F00",
+        "instruction_pointer": "0x00001111"
+      }
+    },
+    {
+      "sequence": 54,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00001112",
+        "segment": "0x0EB7"
+      },
+      "instruction": "retf",
+      "register_changes": {
+        "esi": "0x00000012",
+        "esp": "0x00001F02",
+        "instruction_pointer": "0x00001112"
+      }
+    },
+    {
+      "sequence": 55,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000380",
+        "segment": "0x0EB7"
+      },
+      "instruction": "jmp  short 0000038A ($+8)",
+      "register_changes": {
+        "esp": "0x00001F06",
+        "flags": "0x00007297",
+        "instruction_pointer": "0x00000380"
+      }
+    },
+    {
+      "sequence": 56,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000038A",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  word [0096],0000",
+      "register_changes": {
+        "instruction_pointer": "0x0000038A"
+      }
+    },
+    {
+      "sequence": 57,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000038F",
+        "segment": "0x0EB7"
+      },
+      "instruction": "je   00000394 ($+3)",
+      "register_changes": {
+        "instruction_pointer": "0x0000038F"
+      }
+    },
+    {
+      "sequence": 58,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000394",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push word [7BBC]",
+      "register_changes": {
+        "instruction_pointer": "0x00000394"
+      }
+    },
+    {
+      "sequence": 59,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000398",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[3DEE]",
+      "register_changes": {
+        "esp": "0x00001F04",
+        "instruction_pointer": "0x00000398"
+      }
+    },
+    {
+      "sequence": 60,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000039B",
+        "segment": "0x0EB7"
+      },
+      "instruction": "add  ax,[7BBA]",
+      "register_changes": {
+        "eax": "0x00000000",
+        "instruction_pointer": "0x0000039B"
+      }
+    },
+    {
+      "sequence": 61,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000039F",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push ax",
+      "register_changes": {
+        "eax": "0x0000004B",
+        "instruction_pointer": "0x0000039F"
+      }
+    },
+    {
+      "sequence": 62,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003A0",
+        "segment": "0x0EB7"
+      },
+      "instruction": "call 134D:0899",
+      "register_changes": {
+        "esp": "0x00001F02",
+        "instruction_pointer": "0x000003A0"
+      }
+    },
+    {
+      "sequence": 63,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000899",
+        "segment": "0x134D"
+      },
+      "instruction": "push bp",
+      "register_changes": {
+        "cs": "0x134D",
+        "esp": "0x00001EFE",
+        "flags": "0x00007206",
+        "instruction_pointer": "0x00000899"
+      }
+    },
+    {
+      "sequence": 64,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000089A",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  bp,sp",
+      "register_changes": {
+        "esp": "0x00001EFC",
+        "instruction_pointer": "0x0000089A"
+      }
+    },
+    {
+      "sequence": 65,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000089C",
+        "segment": "0x134D"
+      },
+      "instruction": "sub  sp,0004",
+      "register_changes": {
+        "ebp": "0x00001EFC",
+        "instruction_pointer": "0x0000089C"
+      }
+    },
+    {
+      "sequence": 66,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000089F",
+        "segment": "0x134D"
+      },
+      "instruction": "push si",
+      "register_changes": {
+        "esp": "0x00001EF8",
+        "instruction_pointer": "0x0000089F"
+      }
+    },
+    {
+      "sequence": 67,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008A0",
+        "segment": "0x134D"
+      },
+      "instruction": "push di",
+      "register_changes": {
+        "esp": "0x00001EF6",
+        "instruction_pointer": "0x000008A0"
+      }
+    },
+    {
+      "sequence": 68,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008A1",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  di,[bp+06]",
+      "register_changes": {
+        "esp": "0x00001EF4",
+        "instruction_pointer": "0x000008A1"
+      }
+    },
+    {
+      "sequence": 69,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008A4",
+        "segment": "0x134D"
+      },
+      "instruction": "cmp  [3DE4],sp",
+      "register_changes": {
+        "edi": "0x0000004B",
+        "instruction_pointer": "0x000008A4"
+      }
+    },
+    {
+      "sequence": 70,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008A8",
+        "segment": "0x134D"
+      },
+      "instruction": "ja   000008AF ($+5)",
+      "register_changes": {
+        "instruction_pointer": "0x000008A8"
+      }
+    },
+    {
+      "sequence": 71,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008AF",
+        "segment": "0x134D"
+      },
+      "instruction": "xor  si,si",
+      "register_changes": {
+        "instruction_pointer": "0x000008AF"
+      }
+    },
+    {
+      "sequence": 72,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008B1",
+        "segment": "0x134D"
+      },
+      "instruction": "jmp  short 00000905 ($+52)",
+      "register_changes": {
+        "esi": "0x00000000",
+        "instruction_pointer": "0x000008B1"
+      }
+    },
+    {
+      "sequence": 73,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000905",
+        "segment": "0x134D"
+      },
+      "instruction": "cmp  si,[3C54]",
+      "register_changes": {
+        "instruction_pointer": "0x00000905"
+      }
+    },
+    {
+      "sequence": 74,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000909",
+        "segment": "0x134D"
+      },
+      "instruction": "jl   000008B3 ($-58)",
+      "register_changes": {
+        "instruction_pointer": "0x00000909"
+      }
+    },
+    {
+      "sequence": 75,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008B3",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  ax,si",
+      "register_changes": {
+        "instruction_pointer": "0x000008B3"
+      }
+    },
+    {
+      "sequence": 76,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008B5",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  cl,04",
+      "register_changes": {
+        "eax": "0x00000000",
+        "instruction_pointer": "0x000008B5"
+      }
+    },
+    {
+      "sequence": 77,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008B7",
+        "segment": "0x134D"
+      },
+      "instruction": "shl  ax,cl",
+      "register_changes": {
+        "ecx": "0x00000004",
+        "instruction_pointer": "0x000008B7"
+      }
+    },
+    {
+      "sequence": 78,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008B9",
+        "segment": "0x134D"
+      },
+      "instruction": "add  ax,95FD",
+      "register_changes": {
+        "instruction_pointer": "0x000008B9"
+      }
+    },
+    {
+      "sequence": 79,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008BC",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  [bp-02],ds",
+      "register_changes": {
+        "eax": "0x000095FD",
+        "instruction_pointer": "0x000008BC"
+      }
+    },
+    {
+      "sequence": 80,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008BF",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  [bp-04],ax",
+      "register_changes": {
+        "instruction_pointer": "0x000008BF"
+      }
+    },
+    {
+      "sequence": 81,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008C2",
+        "segment": "0x134D"
+      },
+      "instruction": "les  bx,[bp-04]",
+      "register_changes": {
+        "instruction_pointer": "0x000008C2"
+      }
+    },
+    {
+      "sequence": 82,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008C5",
+        "segment": "0x134D"
+      },
+      "instruction": "cmp  es:[bx],di",
+      "register_changes": {
+        "ebx": "0x000095FD",
+        "instruction_pointer": "0x000008C5"
+      }
+    },
+    {
+      "sequence": 83,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008C8",
+        "segment": "0x134D"
+      },
+      "instruction": "jg   00000904 ($+3a)",
+      "register_changes": {
+        "instruction_pointer": "0x000008C8"
+      }
+    },
+    {
+      "sequence": 84,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008CA",
+        "segment": "0x134D"
+      },
+      "instruction": "cmp  es:[bx+04],di",
+      "register_changes": {
+        "instruction_pointer": "0x000008CA"
+      }
+    },
+    {
+      "sequence": 85,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008CE",
+        "segment": "0x134D"
+      },
+      "instruction": "jl   00000904 ($+34)",
+      "register_changes": {
+        "instruction_pointer": "0x000008CE"
+      }
+    },
+    {
+      "sequence": 86,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008D0",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  ax,es:[bx+02]",
+      "register_changes": {
+        "instruction_pointer": "0x000008D0"
+      }
+    },
+    {
+      "sequence": 87,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008D4",
+        "segment": "0x134D"
+      },
+      "instruction": "cmp  ax,[bp+08]",
+      "register_changes": {
+        "eax": "0x0000008E",
+        "instruction_pointer": "0x000008D4"
+      }
+    },
+    {
+      "sequence": 88,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008D7",
+        "segment": "0x134D"
+      },
+      "instruction": "jg   00000904 ($+2b)",
+      "register_changes": {
+        "instruction_pointer": "0x000008D7"
+      }
+    },
+    {
+      "sequence": 89,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008D9",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  ax,es:[bx+06]",
+      "register_changes": {
+        "instruction_pointer": "0x000008D9"
+      }
+    },
+    {
+      "sequence": 90,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008DD",
+        "segment": "0x134D"
+      },
+      "instruction": "cmp  ax,[bp+08]",
+      "register_changes": {
+        "eax": "0x000000B7",
+        "instruction_pointer": "0x000008DD"
+      }
+    },
+    {
+      "sequence": 91,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008E0",
+        "segment": "0x134D"
+      },
+      "instruction": "jl   00000904 ($+22)",
+      "register_changes": {
+        "instruction_pointer": "0x000008E0"
+      }
+    },
+    {
+      "sequence": 92,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008E2",
+        "segment": "0x134D"
+      },
+      "instruction": "cmp  word es:[bx+0E],0000",
+      "register_changes": {
+        "instruction_pointer": "0x000008E2"
+      }
+    },
+    {
+      "sequence": 93,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008E7",
+        "segment": "0x134D"
+      },
+      "instruction": "je   00000904 ($+1b)",
+      "register_changes": {
+        "instruction_pointer": "0x000008E7"
+      }
+    },
+    {
+      "sequence": 94,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008E9",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  bx,si",
+      "register_changes": {
+        "instruction_pointer": "0x000008E9"
+      }
+    },
+    {
+      "sequence": 95,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008EB",
+        "segment": "0x134D"
+      },
+      "instruction": "shl  bx,cl",
+      "register_changes": {
+        "ebx": "0x00000000",
+        "instruction_pointer": "0x000008EB"
+      }
+    },
+    {
+      "sequence": 96,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008ED",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  ax,[bx-69F7]",
+      "register_changes": {
+        "instruction_pointer": "0x000008ED"
+      }
+    },
+    {
+      "sequence": 97,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008F1",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  dx,[bx-69F9]",
+      "register_changes": {
+        "eax": "0x00003844",
+        "instruction_pointer": "0x000008F1"
+      }
+    },
+    {
+      "sequence": 98,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008F5",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  [91D7],ax",
+      "register_changes": {
+        "edx": "0x00005782",
+        "instruction_pointer": "0x000008F5"
+      }
+    },
+    {
+      "sequence": 99,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008F8",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  [91D5],dx",
+      "register_changes": {
+        "instruction_pointer": "0x000008F8"
+      }
+    },
+    {
+      "sequence": 100,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008FC",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  ax,si",
+      "register_changes": {
+        "instruction_pointer": "0x000008FC"
+      }
+    },
+    {
+      "sequence": 101,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008FE",
+        "segment": "0x134D"
+      },
+      "instruction": "pop  di",
+      "register_changes": {
+        "eax": "0x00000000",
+        "instruction_pointer": "0x000008FE"
+      }
+    },
+    {
+      "sequence": 102,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000008FF",
+        "segment": "0x134D"
+      },
+      "instruction": "pop  si",
+      "register_changes": {
+        "edi": "0x00000001",
+        "esp": "0x00001EF6",
+        "instruction_pointer": "0x000008FF"
+      }
+    },
+    {
+      "sequence": 103,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000900",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  sp,bp",
+      "register_changes": {
+        "esi": "0x00000012",
+        "esp": "0x00001EF8",
+        "instruction_pointer": "0x00000900"
+      }
+    },
+    {
+      "sequence": 104,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000902",
+        "segment": "0x134D"
+      },
+      "instruction": "pop  bp",
+      "register_changes": {
+        "esp": "0x00001EFC",
+        "instruction_pointer": "0x00000902"
+      }
+    },
+    {
+      "sequence": 105,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000903",
+        "segment": "0x134D"
+      },
+      "instruction": "retf",
+      "register_changes": {
+        "ebp": "0x00001F10",
+        "esp": "0x00001EFE",
+        "instruction_pointer": "0x00000903"
+      }
+    },
+    {
+      "sequence": 106,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003A5",
+        "segment": "0x0EB7"
+      },
+      "instruction": "add  sp,0004",
+      "register_changes": {
+        "cs": "0x0EB7",
+        "esp": "0x00001F02",
+        "flags": "0x00007256",
+        "instruction_pointer": "0x000003A5"
+      }
+    },
+    {
+      "sequence": 107,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003A8",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  si,ax",
+      "register_changes": {
+        "esp": "0x00001F06",
+        "instruction_pointer": "0x000003A8"
+      }
+    },
+    {
+      "sequence": 108,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003AA",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  word [009A],0000",
+      "register_changes": {
+        "esi": "0x00000000",
+        "instruction_pointer": "0x000003AA"
+      }
+    },
+    {
+      "sequence": 109,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003AF",
+        "segment": "0x0EB7"
+      },
+      "instruction": "je   000003B4 ($+3)",
+      "register_changes": {
+        "instruction_pointer": "0x000003AF"
+      }
+    },
+    {
+      "sequence": 110,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003B1",
+        "segment": "0x0EB7"
+      },
+      "instruction": "jmp  00000437 ($+83)",
+      "register_changes": {
+        "instruction_pointer": "0x000003B1"
+      }
+    },
+    {
+      "sequence": 111,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000437",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  word [009A],0000",
+      "register_changes": {
+        "instruction_pointer": "0x00000437"
+      }
+    },
+    {
+      "sequence": 112,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000043C",
+        "segment": "0x0EB7"
+      },
+      "instruction": "je   00000480 ($+42)",
+      "register_changes": {
+        "instruction_pointer": "0x0000043C"
+      }
+    },
+    {
+      "sequence": 113,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000043E",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  word [009E],0000",
+      "register_changes": {
+        "instruction_pointer": "0x0000043E"
+      }
+    },
+    {
+      "sequence": 114,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000443",
+        "segment": "0x0EB7"
+      },
+      "instruction": "jne  00000480 ($+3b)",
+      "register_changes": {
+        "instruction_pointer": "0x00000443"
+      }
+    },
+    {
+      "sequence": 115,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000445",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  si,FFFF",
+      "register_changes": {
+        "instruction_pointer": "0x00000445"
+      }
+    },
+    {
+      "sequence": 116,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000448",
+        "segment": "0x0EB7"
+      },
+      "instruction": "je   00000470 ($+26)",
+      "register_changes": {
+        "instruction_pointer": "0x00000448"
+      }
+    },
+    {
+      "sequence": 117,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000044A",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  bx,si",
+      "register_changes": {
+        "instruction_pointer": "0x0000044A"
+      }
+    },
+    {
+      "sequence": 118,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000044C",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  cl,04",
+      "register_changes": {
+        "instruction_pointer": "0x0000044C"
+      }
+    },
+    {
+      "sequence": 119,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000044E",
+        "segment": "0x0EB7"
+      },
+      "instruction": "shl  bx,cl",
+      "register_changes": {
+        "instruction_pointer": "0x0000044E"
+      }
+    },
+    {
+      "sequence": 120,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000450",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[bx-69FB]",
+      "register_changes": {
+        "instruction_pointer": "0x00000450"
+      }
+    },
+    {
+      "sequence": 121,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000454",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  [bp-06],ax",
+      "register_changes": {
+        "eax": "0x00000064",
+        "instruction_pointer": "0x00000454"
+      }
+    },
+    {
+      "sequence": 122,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000457",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push ax",
+      "register_changes": {
+        "instruction_pointer": "0x00000457"
+      }
+    },
+    {
+      "sequence": 123,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000458",
+        "segment": "0x0EB7"
+      },
+      "instruction": "call 134D:0920",
+      "register_changes": {
+        "esp": "0x00001F04",
+        "instruction_pointer": "0x00000458"
+      }
+    },
+    {
+      "sequence": 124,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000920",
+        "segment": "0x134D"
+      },
+      "instruction": "push bp",
+      "register_changes": {
+        "cs": "0x134D",
+        "esp": "0x00001F00",
+        "instruction_pointer": "0x00000920"
+      }
+    },
+    {
+      "sequence": 125,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000921",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  bp,sp",
+      "register_changes": {
+        "esp": "0x00001EFE",
+        "instruction_pointer": "0x00000921"
+      }
+    },
+    {
+      "sequence": 126,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000923",
+        "segment": "0x134D"
+      },
+      "instruction": "sub  sp,0004",
+      "register_changes": {
+        "ebp": "0x00001EFE",
+        "instruction_pointer": "0x00000923"
+      }
+    },
+    {
+      "sequence": 127,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000926",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  cx,[bp+06]",
+      "register_changes": {
+        "esp": "0x00001EFA",
+        "instruction_pointer": "0x00000926"
+      }
+    },
+    {
+      "sequence": 128,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000929",
+        "segment": "0x134D"
+      },
+      "instruction": "cmp  [3DE4],sp",
+      "register_changes": {
+        "ecx": "0x00000064",
+        "instruction_pointer": "0x00000929"
+      }
+    },
+    {
+      "sequence": 129,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000092D",
+        "segment": "0x134D"
+      },
+      "instruction": "ja   00000934 ($+5)",
+      "register_changes": {
+        "instruction_pointer": "0x0000092D"
+      }
+    },
+    {
+      "sequence": 130,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000934",
+        "segment": "0x134D"
+      },
+      "instruction": "xor  dx,dx",
+      "register_changes": {
+        "instruction_pointer": "0x00000934"
+      }
+    },
+    {
+      "sequence": 131,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000936",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  [bp-02],ds",
+      "register_changes": {
+        "edx": "0x00000000",
+        "instruction_pointer": "0x00000936"
+      }
+    },
+    {
+      "sequence": 132,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000939",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  word [bp-04],9139",
+      "register_changes": {
+        "instruction_pointer": "0x00000939"
+      }
+    },
+    {
+      "sequence": 133,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000093E",
+        "segment": "0x134D"
+      },
+      "instruction": "jmp  short 00000953 ($+13)",
+      "register_changes": {
+        "instruction_pointer": "0x0000093E"
+      }
+    },
+    {
+      "sequence": 134,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000953",
+        "segment": "0x134D"
+      },
+      "instruction": "cmp  dx,[3C56]",
+      "register_changes": {
+        "instruction_pointer": "0x00000953"
+      }
+    },
+    {
+      "sequence": 135,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000957",
+        "segment": "0x134D"
+      },
+      "instruction": "jl   00000940 ($-19)",
+      "register_changes": {
+        "instruction_pointer": "0x00000957"
+      }
+    },
+    {
+      "sequence": 136,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000959",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  ax,FFFF",
+      "register_changes": {
+        "instruction_pointer": "0x00000959"
+      }
+    },
+    {
+      "sequence": 137,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000095C",
+        "segment": "0x134D"
+      },
+      "instruction": "mov  sp,bp",
+      "register_changes": {
+        "eax": "0x0000FFFF",
+        "instruction_pointer": "0x0000095C"
+      }
+    },
+    {
+      "sequence": 138,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000095E",
+        "segment": "0x134D"
+      },
+      "instruction": "pop  bp",
+      "register_changes": {
+        "esp": "0x00001EFE",
+        "instruction_pointer": "0x0000095E"
+      }
+    },
+    {
+      "sequence": 139,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000095F",
+        "segment": "0x134D"
+      },
+      "instruction": "retf",
+      "register_changes": {
+        "ebp": "0x00001F10",
+        "esp": "0x00001F00",
+        "instruction_pointer": "0x0000095F"
+      }
+    },
+    {
+      "sequence": 140,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000045D",
+        "segment": "0x0EB7"
+      },
+      "instruction": "add  sp,0002",
+      "register_changes": {
+        "cs": "0x0EB7",
+        "esp": "0x00001F04",
+        "flags": "0x00007246",
+        "instruction_pointer": "0x0000045D"
+      }
+    },
+    {
+      "sequence": 141,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000460",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  ax,FFFF",
+      "register_changes": {
+        "esp": "0x00001F06",
+        "instruction_pointer": "0x00000460"
+      }
+    },
+    {
+      "sequence": 142,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000463",
+        "segment": "0x0EB7"
+      },
+      "instruction": "je   00000470 ($+b)",
+      "register_changes": {
+        "instruction_pointer": "0x00000463"
+      }
+    },
+    {
+      "sequence": 143,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000470",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  si,[9ABD]",
+      "register_changes": {
+        "instruction_pointer": "0x00000470"
+      }
+    },
+    {
+      "sequence": 144,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000474",
+        "segment": "0x0EB7"
+      },
+      "instruction": "je   00000480 ($+a)",
+      "register_changes": {
+        "instruction_pointer": "0x00000474"
+      }
+    },
+    {
+      "sequence": 145,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000476",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  word [9ABB],0000",
+      "register_changes": {
+        "instruction_pointer": "0x00000476"
+      }
+    },
+    {
+      "sequence": 146,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000047C",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  [9ABD],si",
+      "register_changes": {
+        "instruction_pointer": "0x0000047C"
+      }
+    },
+    {
+      "sequence": 147,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000480",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[009A]",
+      "register_changes": {
+        "instruction_pointer": "0x00000480"
+      }
+    },
+    {
+      "sequence": 148,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000483",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  [009E],ax",
+      "register_changes": {
+        "eax": "0x00000001",
+        "instruction_pointer": "0x00000483"
+      }
+    },
+    {
+      "sequence": 149,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000486",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  word [4295],0000",
+      "register_changes": {
+        "instruction_pointer": "0x00000486"
+      }
+    },
+    {
+      "sequence": 150,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000048B",
+        "segment": "0x0EB7"
+      },
+      "instruction": "je   00000490 ($+3)",
+      "register_changes": {
+        "instruction_pointer": "0x0000048B"
+      }
+    },
+    {
+      "sequence": 151,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000490",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[7BBA]",
+      "register_changes": {
+        "instruction_pointer": "0x00000490"
+      }
+    },
+    {
+      "sequence": 152,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000493",
+        "segment": "0x0EB7"
+      },
+      "instruction": "sub  ax,[7BBE]",
+      "register_changes": {
+        "eax": "0x0000004B",
+        "instruction_pointer": "0x00000493"
+      }
+    },
+    {
+      "sequence": 153,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000497",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  [00B1],ax",
+      "register_changes": {
+        "instruction_pointer": "0x00000497"
+      }
+    },
+    {
+      "sequence": 154,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000049A",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  word [00B1],0000",
+      "register_changes": {
+        "instruction_pointer": "0x0000049A"
+      }
+    },
+    {
+      "sequence": 155,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000049F",
+        "segment": "0x0EB7"
+      },
+      "instruction": "jge  000004A9 ($+8)",
+      "register_changes": {
+        "instruction_pointer": "0x0000049F"
+      }
+    },
+    {
+      "sequence": 156,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000004A9",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[7BCC]",
+      "register_changes": {
+        "instruction_pointer": "0x000004A9"
+      }
+    },
+    {
+      "sequence": 157,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000004AC",
+        "segment": "0x0EB7"
+      },
+      "instruction": "sub  ax,[7BBE]",
+      "register_changes": {
+        "eax": "0x00000140",
+        "instruction_pointer": "0x000004AC"
+      }
+    },
+    {
+      "sequence": 158,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000004B0",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  ax,[00B1]",
+      "register_changes": {
+        "instruction_pointer": "0x000004B0"
+      }
+    },
+    {
+      "sequence": 159,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000004B4",
+        "segment": "0x0EB7"
+      },
+      "instruction": "jge  000004C0 ($+a)",
+      "register_changes": {
+        "instruction_pointer": "0x000004B4"
+      }
+    },
+    {
+      "sequence": 160,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000004C0",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[7BBC]",
+      "register_changes": {
+        "instruction_pointer": "0x000004C0"
+      }
+    },
+    {
+      "sequence": 161,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000004C3",
+        "segment": "0x0EB7"
+      },
+      "instruction": "sub  ax,[7BC0]",
+      "register_changes": {
+        "eax": "0x000000A0",
+        "instruction_pointer": "0x000004C3"
+      }
+    },
+    {
+      "sequence": 162,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000004C7",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  [00B3],ax",
+      "register_changes": {
+        "instruction_pointer": "0x000004C7"
+      }
+    },
+    {
+      "sequence": 163,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000004CA",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[00B1]",
+      "register_changes": {
+        "instruction_pointer": "0x000004CA"
+      }
+    },
+    {
+      "sequence": 164,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000004CD",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  ax,[00A9]",
+      "register_changes": {
+        "eax": "0x0000004B",
+        "instruction_pointer": "0x000004CD"
+      }
+    },
+    {
+      "sequence": 165,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000004D1",
+        "segment": "0x0EB7"
+      },
+      "instruction": "jne  000004E6 ($+13)",
+      "register_changes": {
+        "instruction_pointer": "0x000004D1"
+      }
+    },
+    {
+      "sequence": 166,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000004E6",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  al,[7BC3]",
+      "register_changes": {
+        "instruction_pointer": "0x000004E6"
+      }
+    },
+    {
+      "sequence": 167,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000004E9",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ah,00",
+      "register_changes": {
+        "eax": "0x0000000A",
+        "instruction_pointer": "0x000004E9"
+      }
+    },
+    {
+      "sequence": 168,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000004EB",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  di,ax",
+      "register_changes": {
+        "instruction_pointer": "0x000004EB"
+      }
+    },
+    {
+      "sequence": 169,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000004ED",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  [bp-02],di",
+      "register_changes": {
+        "edi": "0x0000000A",
+        "instruction_pointer": "0x000004ED"
+      }
+    },
+    {
+      "sequence": 170,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000004F0",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[00AB]",
+      "register_changes": {
+        "instruction_pointer": "0x000004F0"
+      }
+    },
+    {
+      "sequence": 171,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000004F3",
+        "segment": "0x0EB7"
+      },
+      "instruction": "add  ax,[bp-02]",
+      "register_changes": {
+        "eax": "0x00000064",
+        "instruction_pointer": "0x000004F3"
+      }
+    },
+    {
+      "sequence": 172,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000004F6",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  ax,00C8",
+      "register_changes": {
+        "eax": "0x0000006E",
+        "instruction_pointer": "0x000004F6"
+      }
+    },
+    {
+      "sequence": 173,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000004F9",
+        "segment": "0x0EB7"
+      },
+      "instruction": "jle  00000505 ($+a)",
+      "register_changes": {
+        "instruction_pointer": "0x000004F9"
+      }
+    },
+    {
+      "sequence": 174,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000505",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[00B3]",
+      "register_changes": {
+        "instruction_pointer": "0x00000505"
+      }
+    },
+    {
+      "sequence": 175,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000508",
+        "segment": "0x0EB7"
+      },
+      "instruction": "add  ax,di",
+      "register_changes": {
+        "eax": "0x000000A0",
+        "instruction_pointer": "0x00000508"
+      }
+    },
+    {
+      "sequence": 176,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000050A",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  ax,00C8",
+      "register_changes": {
+        "eax": "0x000000AA",
+        "instruction_pointer": "0x0000050A"
+      }
+    },
+    {
+      "sequence": 177,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000050D",
+        "segment": "0x0EB7"
+      },
+      "instruction": "jle  00000518 ($+9)",
+      "register_changes": {
+        "instruction_pointer": "0x0000050D"
+      }
+    },
+    {
+      "sequence": 178,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000518",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  al,[7BC2]",
+      "register_changes": {
+        "instruction_pointer": "0x00000518"
+      }
+    },
+    {
+      "sequence": 179,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000051B",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ah,00",
+      "register_changes": {
+        "eax": "0x00000008",
+        "instruction_pointer": "0x0000051B"
+      }
+    },
+    {
+      "sequence": 180,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000051D",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  [00B5],ax",
+      "register_changes": {
+        "instruction_pointer": "0x0000051D"
+      }
+    },
+    {
+      "sequence": 181,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000520",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[00B1]",
+      "register_changes": {
+        "instruction_pointer": "0x00000520"
+      }
+    },
+    {
+      "sequence": 182,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000523",
+        "segment": "0x0EB7"
+      },
+      "instruction": "add  ax,[00B5]",
+      "register_changes": {
+        "eax": "0x0000004B",
+        "instruction_pointer": "0x00000523"
+      }
+    },
+    {
+      "sequence": 183,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000527",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  ax,[7BCC]",
+      "register_changes": {
+        "eax": "0x00000053",
+        "instruction_pointer": "0x00000527"
+      }
+    },
+    {
+      "sequence": 184,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000052B",
+        "segment": "0x0EB7"
+      },
+      "instruction": "jle  00000537 ($+a)",
+      "register_changes": {
+        "instruction_pointer": "0x0000052B"
+      }
+    },
+    {
+      "sequence": 185,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000537",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  word [A27E],0000",
+      "register_changes": {
+        "instruction_pointer": "0x00000537"
+      }
+    },
+    {
+      "sequence": 186,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000053C",
+        "segment": "0x0EB7"
+      },
+      "instruction": "je   00000563 ($+25)",
+      "register_changes": {
+        "instruction_pointer": "0x0000053C"
+      }
+    },
+    {
+      "sequence": 187,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000053E",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push word [7B88]",
+      "register_changes": {
+        "instruction_pointer": "0x0000053E"
+      }
+    },
+    {
+      "sequence": 188,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000542",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push word [bp-02]",
+      "register_changes": {
+        "esp": "0x00001F04",
+        "instruction_pointer": "0x00000542"
+      }
+    },
+    {
+      "sequence": 189,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000545",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[00AD]",
+      "register_changes": {
+        "esp": "0x00001F02",
+        "instruction_pointer": "0x00000545"
+      }
+    },
+    {
+      "sequence": 190,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000548",
+        "segment": "0x0EB7"
+      },
+      "instruction": "add  ax,0003",
+      "register_changes": {
+        "eax": "0x00000008",
+        "instruction_pointer": "0x00000548"
+      }
+    },
+    {
+      "sequence": 191,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000054B",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push ax",
+      "register_changes": {
+        "eax": "0x0000000B",
+        "instruction_pointer": "0x0000054B"
+      }
+    },
+    {
+      "sequence": 192,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000054C",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push word [00AB]",
+      "register_changes": {
+        "esp": "0x00001F00",
+        "instruction_pointer": "0x0000054C"
+      }
+    },
+    {
+      "sequence": 193,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000550",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push word [00A9]",
+      "register_changes": {
+        "esp": "0x00001EFE",
+        "instruction_pointer": "0x00000550"
+      }
+    },
+    {
+      "sequence": 194,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000554",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  al,[4292]",
+      "register_changes": {
+        "esp": "0x00001EFC",
+        "instruction_pointer": "0x00000554"
+      }
+    },
+    {
+      "sequence": 195,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000557",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ah,00",
+      "register_changes": {
+        "eax": "0x00000001",
+        "instruction_pointer": "0x00000557"
+      }
+    },
+    {
+      "sequence": 196,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000559",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push ax",
+      "register_changes": {
+        "instruction_pointer": "0x00000559"
+      }
+    },
+    {
+      "sequence": 197,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000055A",
+        "segment": "0x0EB7"
+      },
+      "instruction": "call far word [A2C2]",
+      "register_changes": {
+        "esp": "0x00001EFA",
+        "instruction_pointer": "0x0000055A"
+      }
+    },
+    {
+      "sequence": 198,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000B3",
+        "segment": "0x1141"
+      },
+      "instruction": "push bp",
+      "register_changes": {
+        "cs": "0x1141",
+        "esp": "0x00001EF6",
+        "flags": "0x00007202",
+        "instruction_pointer": "0x000000B3"
+      }
+    },
+    {
+      "sequence": 199,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000B4",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  bp,sp",
+      "register_changes": {
+        "esp": "0x00001EF4",
+        "instruction_pointer": "0x000000B4"
+      }
+    },
+    {
+      "sequence": 200,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000B6",
+        "segment": "0x1141"
+      },
+      "instruction": "push es",
+      "register_changes": {
+        "ebp": "0x00001EF4",
+        "instruction_pointer": "0x000000B6"
+      }
+    },
+    {
+      "sequence": 201,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000B7",
+        "segment": "0x1141"
+      },
+      "instruction": "push si",
+      "register_changes": {
+        "esp": "0x00001EF2",
+        "instruction_pointer": "0x000000B7"
+      }
+    },
+    {
+      "sequence": 202,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000B8",
+        "segment": "0x1141"
+      },
+      "instruction": "push di",
+      "register_changes": {
+        "esp": "0x00001EF0",
+        "instruction_pointer": "0x000000B8"
+      }
+    },
+    {
+      "sequence": 203,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000B9",
+        "segment": "0x1141"
+      },
+      "instruction": "push ds",
+      "register_changes": {
+        "esp": "0x00001EEE",
+        "instruction_pointer": "0x000000B9"
+      }
+    },
+    {
+      "sequence": 204,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000BA",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  ax,3844",
+      "register_changes": {
+        "esp": "0x00001EEC",
+        "instruction_pointer": "0x000000BA"
+      }
+    },
+    {
+      "sequence": 205,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000BD",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  ds,ax",
+      "register_changes": {
+        "eax": "0x00003844",
+        "instruction_pointer": "0x000000BD"
+      }
+    },
+    {
+      "sequence": 206,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000BF",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  es,ax",
+      "register_changes": {
+        "instruction_pointer": "0x000000BF"
+      }
+    },
+    {
+      "sequence": 207,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000C1",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,cs:[002C]",
+      "register_changes": {
+        "instruction_pointer": "0x000000C1"
+      }
+    },
+    {
+      "sequence": 208,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000C6",
+        "segment": "0x1141"
+      },
+      "instruction": "push cx",
+      "register_changes": {
+        "ecx": "0x00000050",
+        "instruction_pointer": "0x000000C6"
+      }
+    },
+    {
+      "sequence": 209,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000C7",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  bx,[bp+06]",
+      "register_changes": {
+        "esp": "0x00001EEA",
+        "instruction_pointer": "0x000000C7"
+      }
+    },
+    {
+      "sequence": 210,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000CA",
+        "segment": "0x1141"
+      },
+      "instruction": "shl  bx,1",
+      "register_changes": {
+        "ebx": "0x00000001",
+        "instruction_pointer": "0x000000CA"
+      }
+    },
+    {
+      "sequence": 211,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000CC",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  ax,cs:[bx+002E]",
+      "register_changes": {
+        "ebx": "0x00000002",
+        "instruction_pointer": "0x000000CC"
+      }
+    },
+    {
+      "sequence": 212,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000D1",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  es,ax",
+      "register_changes": {
+        "eax": "0x0000A3E8",
+        "instruction_pointer": "0x000000D1"
+      }
+    },
+    {
+      "sequence": 213,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000D3",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  ax,[bp+0A]",
+      "register_changes": {
+        "es": "0xA3E8",
+        "instruction_pointer": "0x000000D3"
+      }
+    },
+    {
+      "sequence": 214,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000D6",
+        "segment": "0x1141"
+      },
+      "instruction": "mul  cx",
+      "register_changes": {
+        "eax": "0x00000064",
+        "instruction_pointer": "0x000000D6"
+      }
+    },
+    {
+      "sequence": 215,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000D8",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  di,ax",
+      "register_changes": {
+        "eax": "0x00001F40",
+        "flags": "0x00007216",
+        "instruction_pointer": "0x000000D8"
+      }
+    },
+    {
+      "sequence": 216,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000DA",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  ax,[bp+08]",
+      "register_changes": {
+        "edi": "0x00001F40",
+        "instruction_pointer": "0x000000DA"
+      }
+    },
+    {
+      "sequence": 217,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000DD",
+        "segment": "0x1141"
+      },
+      "instruction": "shr  ax,1",
+      "register_changes": {
+        "eax": "0x000000A0",
+        "instruction_pointer": "0x000000DD"
+      }
+    },
+    {
+      "sequence": 218,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000DF",
+        "segment": "0x1141"
+      },
+      "instruction": "shr  ax,1",
+      "register_changes": {
+        "eax": "0x00000050",
+        "instruction_pointer": "0x000000DF"
+      }
+    },
+    {
+      "sequence": 219,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000E1",
+        "segment": "0x1141"
+      },
+      "instruction": "add  di,ax",
+      "register_changes": {
+        "eax": "0x00000028",
+        "instruction_pointer": "0x000000E1"
+      }
+    },
+    {
+      "sequence": 220,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000E3",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  ax,A000",
+      "register_changes": {
+        "edi": "0x00001F68",
+        "instruction_pointer": "0x000000E3"
+      }
+    },
+    {
+      "sequence": 221,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000E6",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  ds,ax",
+      "register_changes": {
+        "eax": "0x0000A000",
+        "flags": "0x00007202",
+        "instruction_pointer": "0x000000E6"
+      }
+    },
+    {
+      "sequence": 222,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000E8",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  si,[bp+10]",
+      "register_changes": {
+        "ds": "0xA000",
+        "instruction_pointer": "0x000000E8"
+      }
+    },
+    {
+      "sequence": 223,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000EB",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  dx,03C4",
+      "register_changes": {
+        "esi": "0x0000FDE8",
+        "instruction_pointer": "0x000000EB"
+      }
+    },
+    {
+      "sequence": 224,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000EE",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  al,02",
+      "register_changes": {
+        "edx": "0x000003C4",
+        "instruction_pointer": "0x000000EE"
+      }
+    },
+    {
+      "sequence": 225,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000F0",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  ah,0F",
+      "register_changes": {
+        "eax": "0x0000A002",
+        "instruction_pointer": "0x000000F0"
+      }
+    },
+    {
+      "sequence": 226,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000F2",
+        "segment": "0x1141"
+      },
+      "instruction": "out  dx,ax",
+      "register_changes": {
+        "eax": "0x00000F02",
+        "instruction_pointer": "0x000000F2"
+      }
+    },
+    {
+      "sequence": 227,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000F3",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  dx,03CE",
+      "register_changes": {
+        "instruction_pointer": "0x000000F3"
+      }
+    },
+    {
+      "sequence": 228,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000F6",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  al,05",
+      "register_changes": {
+        "edx": "0x000003CE",
+        "instruction_pointer": "0x000000F6"
+      }
+    },
+    {
+      "sequence": 229,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000F8",
+        "segment": "0x1141"
+      },
+      "instruction": "out  dx,al",
+      "register_changes": {
+        "eax": "0x00000F05",
+        "instruction_pointer": "0x000000F8"
+      }
+    },
+    {
+      "sequence": 230,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000F9",
+        "segment": "0x1141"
+      },
+      "instruction": "inc  dx",
+      "register_changes": {
+        "instruction_pointer": "0x000000F9"
+      }
+    },
+    {
+      "sequence": 231,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000FA",
+        "segment": "0x1141"
+      },
+      "instruction": "in   al,dx",
+      "register_changes": {
+        "edx": "0x000003CF",
+        "instruction_pointer": "0x000000FA"
+      }
+    },
+    {
+      "sequence": 232,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000FB",
+        "segment": "0x1141"
+      },
+      "instruction": "and  al,FC",
+      "register_changes": {
+        "eax": "0x00000F41",
+        "instruction_pointer": "0x000000FB"
+      }
+    },
+    {
+      "sequence": 233,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000FD",
+        "segment": "0x1141"
+      },
+      "instruction": "or   al,01",
+      "register_changes": {
+        "eax": "0x00000F40",
+        "instruction_pointer": "0x000000FD"
+      }
+    },
+    {
+      "sequence": 234,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000FF",
+        "segment": "0x1141"
+      },
+      "instruction": "out  dx,al",
+      "register_changes": {
+        "eax": "0x00000F41",
+        "instruction_pointer": "0x000000FF"
+      }
+    },
+    {
+      "sequence": 235,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000100",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  dx,di",
+      "register_changes": {
+        "instruction_pointer": "0x00000100"
+      }
+    },
+    {
+      "sequence": 236,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000102",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  bx,[bp+0E]",
+      "register_changes": {
+        "edx": "0x00001F68",
+        "instruction_pointer": "0x00000102"
+      }
+    },
+    {
+      "sequence": 237,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000105",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  ax,[bp+0C]",
+      "register_changes": {
+        "ebx": "0x0000000A",
+        "instruction_pointer": "0x00000105"
+      }
+    },
+    {
+      "sequence": 238,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000108",
+        "segment": "0x1141"
+      },
+      "instruction": "test ax,0003",
+      "register_changes": {
+        "eax": "0x0000000B",
+        "instruction_pointer": "0x00000108"
+      }
+    },
+    {
+      "sequence": 239,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000010B",
+        "segment": "0x1141"
+      },
+      "instruction": "je   00000110 ($+3)",
+      "register_changes": {
+        "instruction_pointer": "0x0000010B"
+      }
+    },
+    {
+      "sequence": 240,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000010D",
+        "segment": "0x1141"
+      },
+      "instruction": "add  ax,0004",
+      "register_changes": {
+        "instruction_pointer": "0x0000010D"
+      }
+    },
+    {
+      "sequence": 241,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000110",
+        "segment": "0x1141"
+      },
+      "instruction": "shr  ax,1",
+      "register_changes": {
+        "eax": "0x0000000F",
+        "instruction_pointer": "0x00000110"
+      }
+    },
+    {
+      "sequence": 242,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000112",
+        "segment": "0x1141"
+      },
+      "instruction": "shr  ax,1",
+      "register_changes": {
+        "eax": "0x00000007",
+        "instruction_pointer": "0x00000112"
+      }
+    },
+    {
+      "sequence": 243,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000114",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  bp,ax",
+      "register_changes": {
+        "eax": "0x00000003",
+        "instruction_pointer": "0x00000114"
+      }
+    },
+    {
+      "sequence": 244,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000116",
+        "segment": "0x1141"
+      },
+      "instruction": "pop  ax",
+      "register_changes": {
+        "ebp": "0x00000003",
+        "instruction_pointer": "0x00000116"
+      }
+    },
+    {
+      "sequence": 245,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000117",
+        "segment": "0x1141"
+      },
+      "instruction": "sub  ax,bp",
+      "register_changes": {
+        "eax": "0x00000050",
+        "esp": "0x00001EEC",
+        "instruction_pointer": "0x00000117"
+      }
+    },
+    {
+      "sequence": 246,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000119",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "eax": "0x0000004D",
+        "instruction_pointer": "0x00000119"
+      }
+    },
+    {
+      "sequence": 247,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011B",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x0000011B"
+      }
+    },
+    {
+      "sequence": 248,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011D",
+        "segment": "0x1141"
+      },
+      "instruction": "add  di,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x00001F6B",
+        "esi": "0x0000FDEB",
+        "instruction_pointer": "0x0000011D"
+      }
+    },
+    {
+      "sequence": 249,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011F",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "edi": "0x00001FB8",
+        "instruction_pointer": "0x0000011F"
+      }
+    },
+    {
+      "sequence": 250,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000120",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  00000119 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000009",
+        "instruction_pointer": "0x00000120"
+      }
+    },
+    {
+      "sequence": 251,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000119",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "instruction_pointer": "0x00000119"
+      }
+    },
+    {
+      "sequence": 252,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011B",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x0000011B"
+      }
+    },
+    {
+      "sequence": 253,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011D",
+        "segment": "0x1141"
+      },
+      "instruction": "add  di,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x00001FBB",
+        "esi": "0x0000FDEE",
+        "instruction_pointer": "0x0000011D"
+      }
+    },
+    {
+      "sequence": 254,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011F",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "edi": "0x00002008",
+        "instruction_pointer": "0x0000011F"
+      }
+    },
+    {
+      "sequence": 255,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000120",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  00000119 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000008",
+        "instruction_pointer": "0x00000120"
+      }
+    },
+    {
+      "sequence": 256,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000119",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "instruction_pointer": "0x00000119"
+      }
+    },
+    {
+      "sequence": 257,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011B",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x0000011B"
+      }
+    },
+    {
+      "sequence": 258,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011D",
+        "segment": "0x1141"
+      },
+      "instruction": "add  di,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x0000200B",
+        "esi": "0x0000FDF1",
+        "instruction_pointer": "0x0000011D"
+      }
+    },
+    {
+      "sequence": 259,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011F",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "edi": "0x00002058",
+        "instruction_pointer": "0x0000011F"
+      }
+    },
+    {
+      "sequence": 260,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000120",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  00000119 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000007",
+        "instruction_pointer": "0x00000120"
+      }
+    },
+    {
+      "sequence": 261,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000119",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "instruction_pointer": "0x00000119"
+      }
+    },
+    {
+      "sequence": 262,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011B",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x0000011B"
+      }
+    },
+    {
+      "sequence": 263,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011D",
+        "segment": "0x1141"
+      },
+      "instruction": "add  di,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x0000205B",
+        "esi": "0x0000FDF4",
+        "instruction_pointer": "0x0000011D"
+      }
+    },
+    {
+      "sequence": 264,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011F",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "edi": "0x000020A8",
+        "instruction_pointer": "0x0000011F"
+      }
+    },
+    {
+      "sequence": 265,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000120",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  00000119 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000006",
+        "instruction_pointer": "0x00000120"
+      }
+    },
+    {
+      "sequence": 266,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000119",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "instruction_pointer": "0x00000119"
+      }
+    },
+    {
+      "sequence": 267,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011B",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x0000011B"
+      }
+    },
+    {
+      "sequence": 268,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011D",
+        "segment": "0x1141"
+      },
+      "instruction": "add  di,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x000020AB",
+        "esi": "0x0000FDF7",
+        "instruction_pointer": "0x0000011D"
+      }
+    },
+    {
+      "sequence": 269,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011F",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "edi": "0x000020F8",
+        "instruction_pointer": "0x0000011F"
+      }
+    },
+    {
+      "sequence": 270,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000120",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  00000119 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000005",
+        "instruction_pointer": "0x00000120"
+      }
+    },
+    {
+      "sequence": 271,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000119",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "instruction_pointer": "0x00000119"
+      }
+    },
+    {
+      "sequence": 272,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011B",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x0000011B"
+      }
+    },
+    {
+      "sequence": 273,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011D",
+        "segment": "0x1141"
+      },
+      "instruction": "add  di,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x000020FB",
+        "esi": "0x0000FDFA",
+        "instruction_pointer": "0x0000011D"
+      }
+    },
+    {
+      "sequence": 274,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011F",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "edi": "0x00002148",
+        "instruction_pointer": "0x0000011F"
+      }
+    },
+    {
+      "sequence": 275,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000120",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  00000119 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000004",
+        "instruction_pointer": "0x00000120"
+      }
+    },
+    {
+      "sequence": 276,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000119",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "instruction_pointer": "0x00000119"
+      }
+    },
+    {
+      "sequence": 277,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011B",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x0000011B"
+      }
+    },
+    {
+      "sequence": 278,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011D",
+        "segment": "0x1141"
+      },
+      "instruction": "add  di,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x0000214B",
+        "esi": "0x0000FDFD",
+        "instruction_pointer": "0x0000011D"
+      }
+    },
+    {
+      "sequence": 279,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011F",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "edi": "0x00002198",
+        "instruction_pointer": "0x0000011F"
+      }
+    },
+    {
+      "sequence": 280,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000120",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  00000119 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000003",
+        "instruction_pointer": "0x00000120"
+      }
+    },
+    {
+      "sequence": 281,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000119",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "instruction_pointer": "0x00000119"
+      }
+    },
+    {
+      "sequence": 282,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011B",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x0000011B"
+      }
+    },
+    {
+      "sequence": 283,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011D",
+        "segment": "0x1141"
+      },
+      "instruction": "add  di,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x0000219B",
+        "esi": "0x0000FE00",
+        "flags": "0x00007206",
+        "instruction_pointer": "0x0000011D"
+      }
+    },
+    {
+      "sequence": 284,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011F",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "edi": "0x000021E8",
+        "instruction_pointer": "0x0000011F"
+      }
+    },
+    {
+      "sequence": 285,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000120",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  00000119 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000002",
+        "instruction_pointer": "0x00000120"
+      }
+    },
+    {
+      "sequence": 286,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000119",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "instruction_pointer": "0x00000119"
+      }
+    },
+    {
+      "sequence": 287,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011B",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x0000011B"
+      }
+    },
+    {
+      "sequence": 288,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011D",
+        "segment": "0x1141"
+      },
+      "instruction": "add  di,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x000021EB",
+        "esi": "0x0000FE03",
+        "instruction_pointer": "0x0000011D"
+      }
+    },
+    {
+      "sequence": 289,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011F",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "edi": "0x00002238",
+        "instruction_pointer": "0x0000011F"
+      }
+    },
+    {
+      "sequence": 290,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000120",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  00000119 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000001",
+        "instruction_pointer": "0x00000120"
+      }
+    },
+    {
+      "sequence": 291,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000119",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "instruction_pointer": "0x00000119"
+      }
+    },
+    {
+      "sequence": 292,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011B",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x0000011B"
+      }
+    },
+    {
+      "sequence": 293,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011D",
+        "segment": "0x1141"
+      },
+      "instruction": "add  di,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x0000223B",
+        "esi": "0x0000FE06",
+        "instruction_pointer": "0x0000011D"
+      }
+    },
+    {
+      "sequence": 294,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000011F",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "edi": "0x00002288",
+        "instruction_pointer": "0x0000011F"
+      }
+    },
+    {
+      "sequence": 295,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000120",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  00000119 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000000",
+        "instruction_pointer": "0x00000120"
+      }
+    },
+    {
+      "sequence": 296,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000122",
+        "segment": "0x1141"
+      },
+      "instruction": "pop  ds",
+      "register_changes": {
+        "instruction_pointer": "0x00000122"
+      }
+    },
+    {
+      "sequence": 297,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000123",
+        "segment": "0x1141"
+      },
+      "instruction": "pop  di",
+      "register_changes": {
+        "ds": "0x3844",
+        "esp": "0x00001EEE",
+        "instruction_pointer": "0x00000123"
+      }
+    },
+    {
+      "sequence": 298,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000124",
+        "segment": "0x1141"
+      },
+      "instruction": "pop  si",
+      "register_changes": {
+        "edi": "0x0000000A",
+        "esp": "0x00001EF0",
+        "instruction_pointer": "0x00000124"
+      }
+    },
+    {
+      "sequence": 299,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000125",
+        "segment": "0x1141"
+      },
+      "instruction": "pop  es",
+      "register_changes": {
+        "esi": "0x00000000",
+        "esp": "0x00001EF2",
+        "instruction_pointer": "0x00000125"
+      }
+    },
+    {
+      "sequence": 300,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000126",
+        "segment": "0x1141"
+      },
+      "instruction": "pop  bp",
+      "register_changes": {
+        "es": "0x3844",
+        "esp": "0x00001EF4",
+        "instruction_pointer": "0x00000126"
+      }
+    },
+    {
+      "sequence": 301,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000127",
+        "segment": "0x1141"
+      },
+      "instruction": "retf",
+      "register_changes": {
+        "ebp": "0x00001F10",
+        "esp": "0x00001EF6",
+        "instruction_pointer": "0x00000127"
+      }
+    },
+    {
+      "sequence": 302,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000055E",
+        "segment": "0x0EB7"
+      },
+      "instruction": "add  sp,000C",
+      "register_changes": {
+        "cs": "0x0EB7",
+        "esp": "0x00001EFA",
+        "flags": "0x00007246",
+        "instruction_pointer": "0x0000055E"
+      }
+    },
+    {
+      "sequence": 303,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000561",
+        "segment": "0x0EB7"
+      },
+      "instruction": "jmp  short 00000581 ($+1e)",
+      "register_changes": {
+        "esp": "0x00001F06",
+        "instruction_pointer": "0x00000561"
+      }
+    },
+    {
+      "sequence": 304,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000581",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  word [0098],0000",
+      "register_changes": {
+        "instruction_pointer": "0x00000581"
+      }
+    },
+    {
+      "sequence": 305,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000586",
+        "segment": "0x0EB7"
+      },
+      "instruction": "je   000005AF ($+27)",
+      "register_changes": {
+        "instruction_pointer": "0x00000586"
+      }
+    },
+    {
+      "sequence": 306,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005AF",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  word [A27E],0000",
+      "register_changes": {
+        "instruction_pointer": "0x000005AF"
+      }
+    },
+    {
+      "sequence": 307,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005B4",
+        "segment": "0x0EB7"
+      },
+      "instruction": "je   000005D9 ($+23)",
+      "register_changes": {
+        "instruction_pointer": "0x000005B4"
+      }
+    },
+    {
+      "sequence": 308,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005B6",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push word [7B88]",
+      "register_changes": {
+        "instruction_pointer": "0x000005B6"
+      }
+    },
+    {
+      "sequence": 309,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005BA",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push di",
+      "register_changes": {
+        "esp": "0x00001F04",
+        "instruction_pointer": "0x000005BA"
+      }
+    },
+    {
+      "sequence": 310,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005BB",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[00B5]",
+      "register_changes": {
+        "esp": "0x00001F02",
+        "instruction_pointer": "0x000005BB"
+      }
+    },
+    {
+      "sequence": 311,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005BE",
+        "segment": "0x0EB7"
+      },
+      "instruction": "add  ax,0003",
+      "register_changes": {
+        "eax": "0x00000008",
+        "instruction_pointer": "0x000005BE"
+      }
+    },
+    {
+      "sequence": 312,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005C1",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push ax",
+      "register_changes": {
+        "eax": "0x0000000B",
+        "instruction_pointer": "0x000005C1"
+      }
+    },
+    {
+      "sequence": 313,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005C2",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push word [00B3]",
+      "register_changes": {
+        "esp": "0x00001F00",
+        "instruction_pointer": "0x000005C2"
+      }
+    },
+    {
+      "sequence": 314,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005C6",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push word [00B1]",
+      "register_changes": {
+        "esp": "0x00001EFE",
+        "instruction_pointer": "0x000005C6"
+      }
+    },
+    {
+      "sequence": 315,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005CA",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  al,[4292]",
+      "register_changes": {
+        "esp": "0x00001EFC",
+        "instruction_pointer": "0x000005CA"
+      }
+    },
+    {
+      "sequence": 316,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005CD",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ah,00",
+      "register_changes": {
+        "eax": "0x00000001",
+        "instruction_pointer": "0x000005CD"
+      }
+    },
+    {
+      "sequence": 317,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005CF",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push ax",
+      "register_changes": {
+        "instruction_pointer": "0x000005CF"
+      }
+    },
+    {
+      "sequence": 318,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005D0",
+        "segment": "0x0EB7"
+      },
+      "instruction": "call far word [A2C6]",
+      "register_changes": {
+        "esp": "0x00001EFA",
+        "instruction_pointer": "0x000005D0"
+      }
+    },
+    {
+      "sequence": 319,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000003E",
+        "segment": "0x1141"
+      },
+      "instruction": "push bp",
+      "register_changes": {
+        "cs": "0x1141",
+        "esp": "0x00001EF6",
+        "flags": "0x00007202",
+        "instruction_pointer": "0x0000003E"
+      }
+    },
+    {
+      "sequence": 320,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000003F",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  bp,sp",
+      "register_changes": {
+        "esp": "0x00001EF4",
+        "instruction_pointer": "0x0000003F"
+      }
+    },
+    {
+      "sequence": 321,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000041",
+        "segment": "0x1141"
+      },
+      "instruction": "push es",
+      "register_changes": {
+        "ebp": "0x00001EF4",
+        "instruction_pointer": "0x00000041"
+      }
+    },
+    {
+      "sequence": 322,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000042",
+        "segment": "0x1141"
+      },
+      "instruction": "push si",
+      "register_changes": {
+        "esp": "0x00001EF2",
+        "instruction_pointer": "0x00000042"
+      }
+    },
+    {
+      "sequence": 323,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000043",
+        "segment": "0x1141"
+      },
+      "instruction": "push di",
+      "register_changes": {
+        "esp": "0x00001EF0",
+        "instruction_pointer": "0x00000043"
+      }
+    },
+    {
+      "sequence": 324,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000044",
+        "segment": "0x1141"
+      },
+      "instruction": "push ds",
+      "register_changes": {
+        "esp": "0x00001EEE",
+        "instruction_pointer": "0x00000044"
+      }
+    },
+    {
+      "sequence": 325,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000045",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  ax,3844",
+      "register_changes": {
+        "esp": "0x00001EEC",
+        "instruction_pointer": "0x00000045"
+      }
+    },
+    {
+      "sequence": 326,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000048",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  ds,ax",
+      "register_changes": {
+        "eax": "0x00003844",
+        "instruction_pointer": "0x00000048"
+      }
+    },
+    {
+      "sequence": 327,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000004A",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  es,ax",
+      "register_changes": {
+        "instruction_pointer": "0x0000004A"
+      }
+    },
+    {
+      "sequence": 328,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000004C",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,cs:[002C]",
+      "register_changes": {
+        "instruction_pointer": "0x0000004C"
+      }
+    },
+    {
+      "sequence": 329,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000051",
+        "segment": "0x1141"
+      },
+      "instruction": "push cx",
+      "register_changes": {
+        "ecx": "0x00000050",
+        "instruction_pointer": "0x00000051"
+      }
+    },
+    {
+      "sequence": 330,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000052",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  bx,[bp+06]",
+      "register_changes": {
+        "esp": "0x00001EEA",
+        "instruction_pointer": "0x00000052"
+      }
+    },
+    {
+      "sequence": 331,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000055",
+        "segment": "0x1141"
+      },
+      "instruction": "shl  bx,1",
+      "register_changes": {
+        "ebx": "0x00000001",
+        "instruction_pointer": "0x00000055"
+      }
+    },
+    {
+      "sequence": 332,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000057",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  ax,cs:[bx+002E]",
+      "register_changes": {
+        "ebx": "0x00000002",
+        "instruction_pointer": "0x00000057"
+      }
+    },
+    {
+      "sequence": 333,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000005C",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  ds,ax",
+      "register_changes": {
+        "eax": "0x0000A3E8",
+        "instruction_pointer": "0x0000005C"
+      }
+    },
+    {
+      "sequence": 334,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000005E",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  ax,[bp+0A]",
+      "register_changes": {
+        "ds": "0xA3E8",
+        "instruction_pointer": "0x0000005E"
+      }
+    },
+    {
+      "sequence": 335,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000061",
+        "segment": "0x1141"
+      },
+      "instruction": "mul  cx",
+      "register_changes": {
+        "eax": "0x000000A0",
+        "instruction_pointer": "0x00000061"
+      }
+    },
+    {
+      "sequence": 336,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000063",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  si,ax",
+      "register_changes": {
+        "eax": "0x00003200",
+        "edx": "0x00000000",
+        "flags": "0x00007212",
+        "instruction_pointer": "0x00000063"
+      }
+    },
+    {
+      "sequence": 337,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000065",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  ax,[bp+08]",
+      "register_changes": {
+        "esi": "0x00003200",
+        "instruction_pointer": "0x00000065"
+      }
+    },
+    {
+      "sequence": 338,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000068",
+        "segment": "0x1141"
+      },
+      "instruction": "shr  ax,1",
+      "register_changes": {
+        "eax": "0x0000004B",
+        "instruction_pointer": "0x00000068"
+      }
+    },
+    {
+      "sequence": 339,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000006A",
+        "segment": "0x1141"
+      },
+      "instruction": "shr  ax,1",
+      "register_changes": {
+        "eax": "0x00000025",
+        "instruction_pointer": "0x0000006A"
+      }
+    },
+    {
+      "sequence": 340,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000006C",
+        "segment": "0x1141"
+      },
+      "instruction": "add  si,ax",
+      "register_changes": {
+        "eax": "0x00000012",
+        "instruction_pointer": "0x0000006C"
+      }
+    },
+    {
+      "sequence": 341,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000006E",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  ax,A000",
+      "register_changes": {
+        "esi": "0x00003212",
+        "instruction_pointer": "0x0000006E"
+      }
+    },
+    {
+      "sequence": 342,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000071",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  es,ax",
+      "register_changes": {
+        "eax": "0x0000A000",
+        "instruction_pointer": "0x00000071"
+      }
+    },
+    {
+      "sequence": 343,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000073",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  di,[bp+10]",
+      "register_changes": {
+        "es": "0xA000",
+        "instruction_pointer": "0x00000073"
+      }
+    },
+    {
+      "sequence": 344,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000076",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  dx,03C4",
+      "register_changes": {
+        "edi": "0x0000FDE8",
+        "instruction_pointer": "0x00000076"
+      }
+    },
+    {
+      "sequence": 345,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000079",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  al,02",
+      "register_changes": {
+        "edx": "0x000003C4",
+        "instruction_pointer": "0x00000079"
+      }
+    },
+    {
+      "sequence": 346,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000007B",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  ah,0F",
+      "register_changes": {
+        "eax": "0x0000A002",
+        "instruction_pointer": "0x0000007B"
+      }
+    },
+    {
+      "sequence": 347,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000007D",
+        "segment": "0x1141"
+      },
+      "instruction": "out  dx,ax",
+      "register_changes": {
+        "eax": "0x00000F02",
+        "instruction_pointer": "0x0000007D"
+      }
+    },
+    {
+      "sequence": 348,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000007E",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  dx,03CE",
+      "register_changes": {
+        "instruction_pointer": "0x0000007E"
+      }
+    },
+    {
+      "sequence": 349,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000081",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  al,05",
+      "register_changes": {
+        "edx": "0x000003CE",
+        "instruction_pointer": "0x00000081"
+      }
+    },
+    {
+      "sequence": 350,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000083",
+        "segment": "0x1141"
+      },
+      "instruction": "out  dx,al",
+      "register_changes": {
+        "eax": "0x00000F05",
+        "instruction_pointer": "0x00000083"
+      }
+    },
+    {
+      "sequence": 351,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000084",
+        "segment": "0x1141"
+      },
+      "instruction": "inc  dx",
+      "register_changes": {
+        "instruction_pointer": "0x00000084"
+      }
+    },
+    {
+      "sequence": 352,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000085",
+        "segment": "0x1141"
+      },
+      "instruction": "in   al,dx",
+      "register_changes": {
+        "edx": "0x000003CF",
+        "instruction_pointer": "0x00000085"
+      }
+    },
+    {
+      "sequence": 353,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000086",
+        "segment": "0x1141"
+      },
+      "instruction": "and  al,FC",
+      "register_changes": {
+        "eax": "0x00000F41",
+        "instruction_pointer": "0x00000086"
+      }
+    },
+    {
+      "sequence": 354,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000088",
+        "segment": "0x1141"
+      },
+      "instruction": "or   al,01",
+      "register_changes": {
+        "eax": "0x00000F40",
+        "instruction_pointer": "0x00000088"
+      }
+    },
+    {
+      "sequence": 355,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000008A",
+        "segment": "0x1141"
+      },
+      "instruction": "out  dx,al",
+      "register_changes": {
+        "eax": "0x00000F41",
+        "instruction_pointer": "0x0000008A"
+      }
+    },
+    {
+      "sequence": 356,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000008B",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  dx,si",
+      "register_changes": {
+        "instruction_pointer": "0x0000008B"
+      }
+    },
+    {
+      "sequence": 357,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000008D",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  bx,[bp+0E]",
+      "register_changes": {
+        "edx": "0x00003212",
+        "instruction_pointer": "0x0000008D"
+      }
+    },
+    {
+      "sequence": 358,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000090",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  ax,[bp+0C]",
+      "register_changes": {
+        "ebx": "0x0000000A",
+        "instruction_pointer": "0x00000090"
+      }
+    },
+    {
+      "sequence": 359,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000093",
+        "segment": "0x1141"
+      },
+      "instruction": "test ax,0003",
+      "register_changes": {
+        "eax": "0x0000000B",
+        "instruction_pointer": "0x00000093"
+      }
+    },
+    {
+      "sequence": 360,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000096",
+        "segment": "0x1141"
+      },
+      "instruction": "je   0000009B ($+3)",
+      "register_changes": {
+        "instruction_pointer": "0x00000096"
+      }
+    },
+    {
+      "sequence": 361,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000098",
+        "segment": "0x1141"
+      },
+      "instruction": "add  ax,0004",
+      "register_changes": {
+        "instruction_pointer": "0x00000098"
+      }
+    },
+    {
+      "sequence": 362,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000009B",
+        "segment": "0x1141"
+      },
+      "instruction": "shr  ax,1",
+      "register_changes": {
+        "eax": "0x0000000F",
+        "instruction_pointer": "0x0000009B"
+      }
+    },
+    {
+      "sequence": 363,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000009D",
+        "segment": "0x1141"
+      },
+      "instruction": "shr  ax,1",
+      "register_changes": {
+        "eax": "0x00000007",
+        "flags": "0x00007213",
+        "instruction_pointer": "0x0000009D"
+      }
+    },
+    {
+      "sequence": 364,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000009F",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  bp,ax",
+      "register_changes": {
+        "eax": "0x00000003",
+        "instruction_pointer": "0x0000009F"
+      }
+    },
+    {
+      "sequence": 365,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A1",
+        "segment": "0x1141"
+      },
+      "instruction": "pop  ax",
+      "register_changes": {
+        "ebp": "0x00000003",
+        "instruction_pointer": "0x000000A1"
+      }
+    },
+    {
+      "sequence": 366,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A2",
+        "segment": "0x1141"
+      },
+      "instruction": "sub  ax,bp",
+      "register_changes": {
+        "eax": "0x00000050",
+        "esp": "0x00001EEC",
+        "instruction_pointer": "0x000000A2"
+      }
+    },
+    {
+      "sequence": 367,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A4",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "eax": "0x0000004D",
+        "instruction_pointer": "0x000000A4"
+      }
+    },
+    {
+      "sequence": 368,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A6",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x000000A6"
+      }
+    },
+    {
+      "sequence": 369,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A8",
+        "segment": "0x1141"
+      },
+      "instruction": "add  si,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x0000FDEB",
+        "esi": "0x00003215",
+        "instruction_pointer": "0x000000A8"
+      }
+    },
+    {
+      "sequence": 370,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AA",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "esi": "0x00003262",
+        "instruction_pointer": "0x000000AA"
+      }
+    },
+    {
+      "sequence": 371,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AB",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  000000A4 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000009",
+        "flags": "0x00007212",
+        "instruction_pointer": "0x000000AB"
+      }
+    },
+    {
+      "sequence": 372,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A4",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "instruction_pointer": "0x000000A4"
+      }
+    },
+    {
+      "sequence": 373,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A6",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x000000A6"
+      }
+    },
+    {
+      "sequence": 374,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A8",
+        "segment": "0x1141"
+      },
+      "instruction": "add  si,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x0000FDEE",
+        "esi": "0x00003265",
+        "instruction_pointer": "0x000000A8"
+      }
+    },
+    {
+      "sequence": 375,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AA",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "esi": "0x000032B2",
+        "instruction_pointer": "0x000000AA"
+      }
+    },
+    {
+      "sequence": 376,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AB",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  000000A4 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000008",
+        "instruction_pointer": "0x000000AB"
+      }
+    },
+    {
+      "sequence": 377,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A4",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "instruction_pointer": "0x000000A4"
+      }
+    },
+    {
+      "sequence": 378,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A6",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x000000A6"
+      }
+    },
+    {
+      "sequence": 379,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A8",
+        "segment": "0x1141"
+      },
+      "instruction": "add  si,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x0000FDF1",
+        "esi": "0x000032B5",
+        "instruction_pointer": "0x000000A8"
+      }
+    },
+    {
+      "sequence": 380,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AA",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "esi": "0x00003302",
+        "instruction_pointer": "0x000000AA"
+      }
+    },
+    {
+      "sequence": 381,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AB",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  000000A4 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000007",
+        "instruction_pointer": "0x000000AB"
+      }
+    },
+    {
+      "sequence": 382,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A4",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "instruction_pointer": "0x000000A4"
+      }
+    },
+    {
+      "sequence": 383,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A6",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x000000A6"
+      }
+    },
+    {
+      "sequence": 384,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A8",
+        "segment": "0x1141"
+      },
+      "instruction": "add  si,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x0000FDF4",
+        "esi": "0x00003305",
+        "instruction_pointer": "0x000000A8"
+      }
+    },
+    {
+      "sequence": 385,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AA",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "esi": "0x00003352",
+        "instruction_pointer": "0x000000AA"
+      }
+    },
+    {
+      "sequence": 386,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AB",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  000000A4 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000006",
+        "instruction_pointer": "0x000000AB"
+      }
+    },
+    {
+      "sequence": 387,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A4",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "instruction_pointer": "0x000000A4"
+      }
+    },
+    {
+      "sequence": 388,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A6",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x000000A6"
+      }
+    },
+    {
+      "sequence": 389,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A8",
+        "segment": "0x1141"
+      },
+      "instruction": "add  si,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x0000FDF7",
+        "esi": "0x00003355",
+        "instruction_pointer": "0x000000A8"
+      }
+    },
+    {
+      "sequence": 390,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AA",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "esi": "0x000033A2",
+        "instruction_pointer": "0x000000AA"
+      }
+    },
+    {
+      "sequence": 391,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AB",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  000000A4 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000005",
+        "instruction_pointer": "0x000000AB"
+      }
+    },
+    {
+      "sequence": 392,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A4",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "instruction_pointer": "0x000000A4"
+      }
+    },
+    {
+      "sequence": 393,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A6",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x000000A6"
+      }
+    },
+    {
+      "sequence": 394,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A8",
+        "segment": "0x1141"
+      },
+      "instruction": "add  si,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x0000FDFA",
+        "esi": "0x000033A5",
+        "instruction_pointer": "0x000000A8"
+      }
+    },
+    {
+      "sequence": 395,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AA",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "esi": "0x000033F2",
+        "instruction_pointer": "0x000000AA"
+      }
+    },
+    {
+      "sequence": 396,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AB",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  000000A4 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000004",
+        "instruction_pointer": "0x000000AB"
+      }
+    },
+    {
+      "sequence": 397,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A4",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "instruction_pointer": "0x000000A4"
+      }
+    },
+    {
+      "sequence": 398,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A6",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x000000A6"
+      }
+    },
+    {
+      "sequence": 399,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A8",
+        "segment": "0x1141"
+      },
+      "instruction": "add  si,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x0000FDFD",
+        "esi": "0x000033F5",
+        "instruction_pointer": "0x000000A8"
+      }
+    },
+    {
+      "sequence": 400,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AA",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "esi": "0x00003442",
+        "instruction_pointer": "0x000000AA"
+      }
+    },
+    {
+      "sequence": 401,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AB",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  000000A4 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000003",
+        "instruction_pointer": "0x000000AB"
+      }
+    },
+    {
+      "sequence": 402,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A4",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "instruction_pointer": "0x000000A4"
+      }
+    },
+    {
+      "sequence": 403,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A6",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x000000A6"
+      }
+    },
+    {
+      "sequence": 404,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A8",
+        "segment": "0x1141"
+      },
+      "instruction": "add  si,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x0000FE00",
+        "esi": "0x00003445",
+        "instruction_pointer": "0x000000A8"
+      }
+    },
+    {
+      "sequence": 405,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AA",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "esi": "0x00003492",
+        "instruction_pointer": "0x000000AA"
+      }
+    },
+    {
+      "sequence": 406,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AB",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  000000A4 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000002",
+        "instruction_pointer": "0x000000AB"
+      }
+    },
+    {
+      "sequence": 407,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A4",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "instruction_pointer": "0x000000A4"
+      }
+    },
+    {
+      "sequence": 408,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A6",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x000000A6"
+      }
+    },
+    {
+      "sequence": 409,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A8",
+        "segment": "0x1141"
+      },
+      "instruction": "add  si,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x0000FE03",
+        "esi": "0x00003495",
+        "instruction_pointer": "0x000000A8"
+      }
+    },
+    {
+      "sequence": 410,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AA",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "esi": "0x000034E2",
+        "instruction_pointer": "0x000000AA"
+      }
+    },
+    {
+      "sequence": 411,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AB",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  000000A4 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000001",
+        "instruction_pointer": "0x000000AB"
+      }
+    },
+    {
+      "sequence": 412,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A4",
+        "segment": "0x1141"
+      },
+      "instruction": "mov  cx,bp",
+      "register_changes": {
+        "instruction_pointer": "0x000000A4"
+      }
+    },
+    {
+      "sequence": 413,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A6",
+        "segment": "0x1141"
+      },
+      "instruction": "repe movsb",
+      "register_changes": {
+        "ecx": "0x00000003",
+        "instruction_pointer": "0x000000A6"
+      }
+    },
+    {
+      "sequence": 414,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000A8",
+        "segment": "0x1141"
+      },
+      "instruction": "add  si,ax",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x0000FE06",
+        "esi": "0x000034E5",
+        "instruction_pointer": "0x000000A8"
+      }
+    },
+    {
+      "sequence": 415,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AA",
+        "segment": "0x1141"
+      },
+      "instruction": "dec  bx",
+      "register_changes": {
+        "esi": "0x00003532",
+        "instruction_pointer": "0x000000AA"
+      }
+    },
+    {
+      "sequence": 416,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AB",
+        "segment": "0x1141"
+      },
+      "instruction": "jne  000000A4 ($-9)",
+      "register_changes": {
+        "ebx": "0x00000000",
+        "instruction_pointer": "0x000000AB"
+      }
+    },
+    {
+      "sequence": 417,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AD",
+        "segment": "0x1141"
+      },
+      "instruction": "pop  ds",
+      "register_changes": {
+        "instruction_pointer": "0x000000AD"
+      }
+    },
+    {
+      "sequence": 418,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AE",
+        "segment": "0x1141"
+      },
+      "instruction": "pop  di",
+      "register_changes": {
+        "ds": "0x3844",
+        "esp": "0x00001EEE",
+        "instruction_pointer": "0x000000AE"
+      }
+    },
+    {
+      "sequence": 419,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000AF",
+        "segment": "0x1141"
+      },
+      "instruction": "pop  si",
+      "register_changes": {
+        "edi": "0x0000000A",
+        "esp": "0x00001EF0",
+        "instruction_pointer": "0x000000AF"
+      }
+    },
+    {
+      "sequence": 420,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000B0",
+        "segment": "0x1141"
+      },
+      "instruction": "pop  es",
+      "register_changes": {
+        "esi": "0x00000000",
+        "esp": "0x00001EF2",
+        "instruction_pointer": "0x000000B0"
+      }
+    },
+    {
+      "sequence": 421,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000B1",
+        "segment": "0x1141"
+      },
+      "instruction": "pop  bp",
+      "register_changes": {
+        "es": "0x3844",
+        "esp": "0x00001EF4",
+        "instruction_pointer": "0x000000B1"
+      }
+    },
+    {
+      "sequence": 422,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000000B2",
+        "segment": "0x1141"
+      },
+      "instruction": "retf",
+      "register_changes": {
+        "ebp": "0x00001F10",
+        "esp": "0x00001EF6",
+        "instruction_pointer": "0x000000B2"
+      }
+    },
+    {
+      "sequence": 423,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005D4",
+        "segment": "0x0EB7"
+      },
+      "instruction": "add  sp,000C",
+      "register_changes": {
+        "cs": "0x0EB7",
+        "esp": "0x00001EFA",
+        "flags": "0x00007246",
+        "instruction_pointer": "0x000005D4"
+      }
+    },
+    {
+      "sequence": 424,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005D7",
+        "segment": "0x0EB7"
+      },
+      "instruction": "jmp  short 000005F5 ($+1c)",
+      "register_changes": {
+        "esp": "0x00001F06",
+        "instruction_pointer": "0x000005D7"
+      }
+    },
+    {
+      "sequence": 425,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005F5",
+        "segment": "0x0EB7"
+      },
+      "instruction": "xor  ax,ax",
+      "register_changes": {
+        "instruction_pointer": "0x000005F5"
+      }
+    },
+    {
+      "sequence": 426,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005F7",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push ax",
+      "register_changes": {
+        "eax": "0x00000000",
+        "instruction_pointer": "0x000005F7"
+      }
+    },
+    {
+      "sequence": 427,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005F8",
+        "segment": "0x0EB7"
+      },
+      "instruction": "nop",
+      "register_changes": {
+        "esp": "0x00001F04",
+        "instruction_pointer": "0x000005F8"
+      }
+    },
+    {
+      "sequence": 428,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005F9",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push cs",
+      "register_changes": {
+        "instruction_pointer": "0x000005F9"
+      }
+    },
+    {
+      "sequence": 429,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000005FA",
+        "segment": "0x0EB7"
+      },
+      "instruction": "call 00000980 ($+383)",
+      "register_changes": {
+        "esp": "0x00001F02",
+        "instruction_pointer": "0x000005FA"
+      }
+    },
+    {
+      "sequence": 430,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000980",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push bp",
+      "register_changes": {
+        "esp": "0x00001F00",
+        "instruction_pointer": "0x00000980"
+      }
+    },
+    {
+      "sequence": 431,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000981",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  bp,sp",
+      "register_changes": {
+        "esp": "0x00001EFE",
+        "instruction_pointer": "0x00000981"
+      }
+    },
+    {
+      "sequence": 432,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000983",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push si",
+      "register_changes": {
+        "ebp": "0x00001EFE",
+        "instruction_pointer": "0x00000983"
+      }
+    },
+    {
+      "sequence": 433,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000984",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  si,[bp+06]",
+      "register_changes": {
+        "esp": "0x00001EFC",
+        "instruction_pointer": "0x00000984"
+      }
+    },
+    {
+      "sequence": 434,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000987",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  [3DE4],sp",
+      "register_changes": {
+        "instruction_pointer": "0x00000987"
+      }
+    },
+    {
+      "sequence": 435,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000098B",
+        "segment": "0x0EB7"
+      },
+      "instruction": "ja   00000992 ($+5)",
+      "register_changes": {
+        "instruction_pointer": "0x0000098B"
+      }
+    },
+    {
+      "sequence": 436,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000992",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push word [9AAB]",
+      "register_changes": {
+        "instruction_pointer": "0x00000992"
+      }
+    },
+    {
+      "sequence": 437,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000996",
+        "segment": "0x0EB7"
+      },
+      "instruction": "call 15AC:03BF",
+      "register_changes": {
+        "esp": "0x00001EFA",
+        "instruction_pointer": "0x00000996"
+      }
+    },
+    {
+      "sequence": 438,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003BF",
+        "segment": "0x15AC"
+      },
+      "instruction": "push bp",
+      "register_changes": {
+        "cs": "0x15AC",
+        "esp": "0x00001EF6",
+        "flags": "0x00007216",
+        "instruction_pointer": "0x000003BF"
+      }
+    },
+    {
+      "sequence": 439,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003C0",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  bp,sp",
+      "register_changes": {
+        "esp": "0x00001EF4",
+        "instruction_pointer": "0x000003C0"
+      }
+    },
+    {
+      "sequence": 440,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003C2",
+        "segment": "0x15AC"
+      },
+      "instruction": "push si",
+      "register_changes": {
+        "ebp": "0x00001EF4",
+        "instruction_pointer": "0x000003C2"
+      }
+    },
+    {
+      "sequence": 441,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003C3",
+        "segment": "0x15AC"
+      },
+      "instruction": "cmp  [3DE4],sp",
+      "register_changes": {
+        "esp": "0x00001EF2",
+        "instruction_pointer": "0x000003C3"
+      }
+    },
+    {
+      "sequence": 442,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003C7",
+        "segment": "0x15AC"
+      },
+      "instruction": "ja   000003CE ($+5)",
+      "register_changes": {
+        "instruction_pointer": "0x000003C7"
+      }
+    },
+    {
+      "sequence": 443,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003CE",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  si,[3F62]",
+      "register_changes": {
+        "instruction_pointer": "0x000003CE"
+      }
+    },
+    {
+      "sequence": 444,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003D2",
+        "segment": "0x15AC"
+      },
+      "instruction": "cmp  word [3F68],000A",
+      "register_changes": {
+        "esi": "0x00000002",
+        "instruction_pointer": "0x000003D2"
+      }
+    },
+    {
+      "sequence": 445,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003D7",
+        "segment": "0x15AC"
+      },
+      "instruction": "jge  000003E7 ($+e)",
+      "register_changes": {
+        "instruction_pointer": "0x000003D7"
+      }
+    },
+    {
+      "sequence": 446,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003D9",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  bx,[3F68]",
+      "register_changes": {
+        "instruction_pointer": "0x000003D9"
+      }
+    },
+    {
+      "sequence": 447,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003DD",
+        "segment": "0x15AC"
+      },
+      "instruction": "shl  bx,1",
+      "register_changes": {
+        "instruction_pointer": "0x000003DD"
+      }
+    },
+    {
+      "sequence": 448,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003DF",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  [bx-5F34],si",
+      "register_changes": {
+        "instruction_pointer": "0x000003DF"
+      }
+    },
+    {
+      "sequence": 449,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003E3",
+        "segment": "0x15AC"
+      },
+      "instruction": "inc  word [3F68]",
+      "register_changes": {
+        "instruction_pointer": "0x000003E3"
+      }
+    },
+    {
+      "sequence": 450,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003E7",
+        "segment": "0x15AC"
+      },
+      "instruction": "push word [bp+06]",
+      "register_changes": {
+        "instruction_pointer": "0x000003E7"
+      }
+    },
+    {
+      "sequence": 451,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003EA",
+        "segment": "0x15AC"
+      },
+      "instruction": "push cs",
+      "register_changes": {
+        "esp": "0x00001EF0",
+        "instruction_pointer": "0x000003EA"
+      }
+    },
+    {
+      "sequence": 452,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003EB",
+        "segment": "0x15AC"
+      },
+      "instruction": "call 00000371 ($-7d)",
+      "register_changes": {
+        "esp": "0x00001EEE",
+        "instruction_pointer": "0x000003EB"
+      }
+    },
+    {
+      "sequence": 453,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000371",
+        "segment": "0x15AC"
+      },
+      "instruction": "push bp",
+      "register_changes": {
+        "esp": "0x00001EEC",
+        "instruction_pointer": "0x00000371"
+      }
+    },
+    {
+      "sequence": 454,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000372",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  bp,sp",
+      "register_changes": {
+        "esp": "0x00001EEA",
+        "instruction_pointer": "0x00000372"
+      }
+    },
+    {
+      "sequence": 455,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000374",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  cx,[bp+06]",
+      "register_changes": {
+        "ebp": "0x00001EEA",
+        "instruction_pointer": "0x00000374"
+      }
+    },
+    {
+      "sequence": 456,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000377",
+        "segment": "0x15AC"
+      },
+      "instruction": "cmp  [3DE4],sp",
+      "register_changes": {
+        "instruction_pointer": "0x00000377"
+      }
+    },
+    {
+      "sequence": 457,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000037B",
+        "segment": "0x15AC"
+      },
+      "instruction": "ja   00000382 ($+5)",
+      "register_changes": {
+        "instruction_pointer": "0x0000037B"
+      }
+    },
+    {
+      "sequence": 458,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000382",
+        "segment": "0x15AC"
+      },
+      "instruction": "cmp  cx,[3F62]",
+      "register_changes": {
+        "instruction_pointer": "0x00000382"
+      }
+    },
+    {
+      "sequence": 459,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000386",
+        "segment": "0x15AC"
+      },
+      "instruction": "je   000003BD ($+35)",
+      "register_changes": {
+        "instruction_pointer": "0x00000386"
+      }
+    },
+    {
+      "sequence": 460,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000388",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  ax,cx",
+      "register_changes": {
+        "instruction_pointer": "0x00000388"
+      }
+    },
+    {
+      "sequence": 461,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000038A",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  [3F62],ax",
+      "register_changes": {
+        "instruction_pointer": "0x0000038A"
+      }
+    },
+    {
+      "sequence": 462,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000038D",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  bx,ax",
+      "register_changes": {
+        "instruction_pointer": "0x0000038D"
+      }
+    },
+    {
+      "sequence": 463,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000038F",
+        "segment": "0x15AC"
+      },
+      "instruction": "shl  bx,1",
+      "register_changes": {
+        "instruction_pointer": "0x0000038F"
+      }
+    },
+    {
+      "sequence": 464,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000391",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  ax,[bx-5DFC]",
+      "register_changes": {
+        "instruction_pointer": "0x00000391"
+      }
+    },
+    {
+      "sequence": 465,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000395",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  dx,0019",
+      "register_changes": {
+        "instruction_pointer": "0x00000395"
+      }
+    },
+    {
+      "sequence": 466,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00000398",
+        "segment": "0x15AC"
+      },
+      "instruction": "imul dx",
+      "register_changes": {
+        "edx": "0x00000019",
+        "instruction_pointer": "0x00000398"
+      }
+    },
+    {
+      "sequence": 467,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000039A",
+        "segment": "0x15AC"
+      },
+      "instruction": "add  ax,057C",
+      "register_changes": {
+        "edx": "0x00000000",
+        "flags": "0x00007256",
+        "instruction_pointer": "0x0000039A"
+      }
+    },
+    {
+      "sequence": 468,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000039D",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  [97FB],ds",
+      "register_changes": {
+        "eax": "0x0000057C",
+        "instruction_pointer": "0x0000039D"
+      }
+    },
+    {
+      "sequence": 469,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003A1",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  [97F9],ax",
+      "register_changes": {
+        "instruction_pointer": "0x000003A1"
+      }
+    },
+    {
+      "sequence": 470,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003A4",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  bx,[3F62]",
+      "register_changes": {
+        "instruction_pointer": "0x000003A4"
+      }
+    },
+    {
+      "sequence": 471,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003A8",
+        "segment": "0x15AC"
+      },
+      "instruction": "shl  bx,1",
+      "register_changes": {
+        "instruction_pointer": "0x000003A8"
+      }
+    },
+    {
+      "sequence": 472,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003AA",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  ax,[bx-5E56]",
+      "register_changes": {
+        "instruction_pointer": "0x000003AA"
+      }
+    },
+    {
+      "sequence": 473,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003AE",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  dx,00EA",
+      "register_changes": {
+        "eax": "0x00000000",
+        "instruction_pointer": "0x000003AE"
+      }
+    },
+    {
+      "sequence": 474,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003B1",
+        "segment": "0x15AC"
+      },
+      "instruction": "imul dx",
+      "register_changes": {
+        "edx": "0x000000EA",
+        "instruction_pointer": "0x000003B1"
+      }
+    },
+    {
+      "sequence": 475,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003B3",
+        "segment": "0x15AC"
+      },
+      "instruction": "add  ax,A8F8",
+      "register_changes": {
+        "edx": "0x00000000",
+        "instruction_pointer": "0x000003B3"
+      }
+    },
+    {
+      "sequence": 476,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003B6",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  [91D3],ds",
+      "register_changes": {
+        "eax": "0x0000A8F8",
+        "instruction_pointer": "0x000003B6"
+      }
+    },
+    {
+      "sequence": 477,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003BA",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  [91D1],ax",
+      "register_changes": {
+        "instruction_pointer": "0x000003BA"
+      }
+    },
+    {
+      "sequence": 478,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003BD",
+        "segment": "0x15AC"
+      },
+      "instruction": "pop  bp",
+      "register_changes": {
+        "instruction_pointer": "0x000003BD"
+      }
+    },
+    {
+      "sequence": 479,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003BE",
+        "segment": "0x15AC"
+      },
+      "instruction": "retf",
+      "register_changes": {
+        "ebp": "0x00001EF4",
+        "esp": "0x00001EEC",
+        "instruction_pointer": "0x000003BE"
+      }
+    },
+    {
+      "sequence": 480,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003EE",
+        "segment": "0x15AC"
+      },
+      "instruction": "add  sp,0002",
+      "register_changes": {
+        "esp": "0x00001EF0",
+        "flags": "0x00007282",
+        "instruction_pointer": "0x000003EE"
+      }
+    },
+    {
+      "sequence": 481,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003F1",
+        "segment": "0x15AC"
+      },
+      "instruction": "mov  ax,si",
+      "register_changes": {
+        "esp": "0x00001EF2",
+        "instruction_pointer": "0x000003F1"
+      }
+    },
+    {
+      "sequence": 482,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003F3",
+        "segment": "0x15AC"
+      },
+      "instruction": "pop  si",
+      "register_changes": {
+        "eax": "0x00000002",
+        "instruction_pointer": "0x000003F3"
+      }
+    },
+    {
+      "sequence": 483,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003F4",
+        "segment": "0x15AC"
+      },
+      "instruction": "pop  bp",
+      "register_changes": {
+        "esi": "0x00000000",
+        "esp": "0x00001EF4",
+        "instruction_pointer": "0x000003F4"
+      }
+    },
+    {
+      "sequence": 484,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000003F5",
+        "segment": "0x15AC"
+      },
+      "instruction": "retf",
+      "register_changes": {
+        "ebp": "0x00001EFE",
+        "esp": "0x00001EF6",
+        "instruction_pointer": "0x000003F5"
+      }
+    },
+    {
+      "sequence": 485,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000099B",
+        "segment": "0x0EB7"
+      },
+      "instruction": "add  sp,0002",
+      "register_changes": {
+        "cs": "0x0EB7",
+        "esp": "0x00001EFA",
+        "flags": "0x00007202",
+        "instruction_pointer": "0x0000099B"
+      }
+    },
+    {
+      "sequence": 486,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000099E",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cmp  word [4295],0000",
+      "register_changes": {
+        "esp": "0x00001EFC",
+        "instruction_pointer": "0x0000099E"
+      }
+    },
+    {
+      "sequence": 487,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000009A3",
+        "segment": "0x0EB7"
+      },
+      "instruction": "je   000009B8 ($+13)",
+      "register_changes": {
+        "instruction_pointer": "0x000009A3"
+      }
+    },
+    {
+      "sequence": 488,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000009B8",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  al,[7BD0]",
+      "register_changes": {
+        "instruction_pointer": "0x000009B8"
+      }
+    },
+    {
+      "sequence": 489,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000009BB",
+        "segment": "0x0EB7"
+      },
+      "instruction": "cbw",
+      "register_changes": {
+        "eax": "0x00000000",
+        "instruction_pointer": "0x000009BB"
+      }
+    },
+    {
+      "sequence": 490,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000009BC",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push ax",
+      "register_changes": {
+        "instruction_pointer": "0x000009BC"
+      }
+    },
+    {
+      "sequence": 491,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000009BD",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[7BBC]",
+      "register_changes": {
+        "esp": "0x00001EFA",
+        "instruction_pointer": "0x000009BD"
+      }
+    },
+    {
+      "sequence": 492,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000009C0",
+        "segment": "0x0EB7"
+      },
+      "instruction": "sub  ax,[7BC0]",
+      "register_changes": {
+        "eax": "0x000000A0",
+        "instruction_pointer": "0x000009C0"
+      }
+    },
+    {
+      "sequence": 493,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000009C4",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push ax",
+      "register_changes": {
+        "instruction_pointer": "0x000009C4"
+      }
+    },
+    {
+      "sequence": 494,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000009C5",
+        "segment": "0x0EB7"
+      },
+      "instruction": "mov  ax,[7BBA]",
+      "register_changes": {
+        "esp": "0x00001EF8",
+        "instruction_pointer": "0x000009C5"
+      }
+    },
+    {
+      "sequence": 495,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000009C8",
+        "segment": "0x0EB7"
+      },
+      "instruction": "sub  ax,[7BBE]",
+      "register_changes": {
+        "eax": "0x0000004B",
+        "instruction_pointer": "0x000009C8"
+      }
+    },
+    {
+      "sequence": 496,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000009CC",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push ax",
+      "register_changes": {
+        "instruction_pointer": "0x000009CC"
+      }
+    },
+    {
+      "sequence": 497,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000009CD",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push si",
+      "register_changes": {
+        "esp": "0x00001EF6",
+        "instruction_pointer": "0x000009CD"
+      }
+    },
+    {
+      "sequence": 498,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000009CE",
+        "segment": "0x0EB7"
+      },
+      "instruction": "push word [7BCE]",
+      "register_changes": {
+        "esp": "0x00001EF4",
+        "instruction_pointer": "0x000009CE"
+      }
+    },
+    {
+      "sequence": 499,
+      "address": {
+        "space": "segmented",
+        "offset": "0x000009D2",
+        "segment": "0x0EB7"
+      },
+      "instruction": "call 172F:1174",
+      "register_changes": {
+        "esp": "0x00001EF2",
+        "instruction_pointer": "0x000009D2"
+      }
+    },
+    {
+      "sequence": 500,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00001174",
+        "segment": "0x172F"
+      },
+      "instruction": "push bp",
+      "register_changes": {
+        "cs": "0x172F",
+        "esp": "0x00001EEE",
+        "flags": "0x00007206",
+        "instruction_pointer": "0x00001174"
+      }
+    },
+    {
+      "sequence": 501,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00001175",
+        "segment": "0x172F"
+      },
+      "instruction": "mov  bp,sp",
+      "register_changes": {
+        "esp": "0x00001EEC",
+        "instruction_pointer": "0x00001175"
+      }
+    },
+    {
+      "sequence": 502,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00001177",
+        "segment": "0x172F"
+      },
+      "instruction": "sub  sp,0018",
+      "register_changes": {
+        "ebp": "0x00001EEC",
+        "instruction_pointer": "0x00001177"
+      }
+    },
+    {
+      "sequence": 503,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000117A",
+        "segment": "0x172F"
+      },
+      "instruction": "push si",
+      "register_changes": {
+        "esp": "0x00001ED4",
+        "instruction_pointer": "0x0000117A"
+      }
+    },
+    {
+      "sequence": 504,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000117B",
+        "segment": "0x172F"
+      },
+      "instruction": "push di",
+      "register_changes": {
+        "esp": "0x00001ED2",
+        "instruction_pointer": "0x0000117B"
+      }
+    },
+    {
+      "sequence": 505,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000117C",
+        "segment": "0x172F"
+      },
+      "instruction": "mov  si,[bp+06]",
+      "register_changes": {
+        "esp": "0x00001ED0",
+        "instruction_pointer": "0x0000117C"
+      }
+    },
+    {
+      "sequence": 506,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000117F",
+        "segment": "0x172F"
+      },
+      "instruction": "mov  di,[bp+0A]",
+      "register_changes": {
+        "esi": "0x00000001",
+        "instruction_pointer": "0x0000117F"
+      }
+    },
+    {
+      "sequence": 507,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00001182",
+        "segment": "0x172F"
+      },
+      "instruction": "cmp  [3DE4],sp",
+      "register_changes": {
+        "edi": "0x0000004B",
+        "instruction_pointer": "0x00001182"
+      }
+    },
+    {
+      "sequence": 508,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00001186",
+        "segment": "0x172F"
+      },
+      "instruction": "ja   0000118D ($+5)",
+      "register_changes": {
+        "instruction_pointer": "0x00001186"
+      }
+    },
+    {
+      "sequence": 509,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000118D",
+        "segment": "0x172F"
+      },
+      "instruction": "mov  ax,si",
+      "register_changes": {
+        "instruction_pointer": "0x0000118D"
+      }
+    },
+    {
+      "sequence": 510,
+      "address": {
+        "space": "segmented",
+        "offset": "0x0000118F",
+        "segment": "0x172F"
+      },
+      "instruction": "mov  dx,0019",
+      "register_changes": {
+        "eax": "0x00000001",
+        "instruction_pointer": "0x0000118F"
+      }
+    },
+    {
+      "sequence": 511,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00001192",
+        "segment": "0x172F"
+      },
+      "instruction": "imul dx",
+      "register_changes": {
+        "edx": "0x00000019",
+        "instruction_pointer": "0x00001192"
+      }
+    },
+    {
+      "sequence": 512,
+      "address": {
+        "space": "segmented",
+        "offset": "0x00001194",
+        "segment": "0x172F"
+      },
+      "instruction": "les  bx,[97F9]",
+      "register_changes": {
+        "eax": "0x00000019",
+        "edx": "0x00000000",
+        "flags": "0x00007202",
+        "instruction_pointer": "0x00001194"
+      }
+    }
+  ],
+  "registers": {
+    "general": {
+      "eax": "0x00000019",
+      "ebp": "0x00001EEC",
+      "ebx": "0x00000000",
+      "ecx": "0x00000000",
+      "edi": "0x0000004B",
+      "edx": "0x00000000",
+      "esi": "0x00000001",
+      "esp": "0x00001ED0"
+    },
+    "segments": {
+      "cs": "0x172F",
+      "ds": "0x3844",
+      "es": "0x3844",
+      "fs": "0x0000",
+      "gs": "0x0000",
+      "ss": "0x4528"
+    },
+    "instruction_pointer": "0x00001194",
+    "flags": "0x00007202",
+    "cpu_mode": "real",
+    "state_revision": 12
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "registers": {
+    "cs": "0xF000",
+    "ip": "0x0000CFC1"
+  },
+  "screenshot": {
+    "captured_ticks": 274,
+    "double_height": true,
+    "double_width": true,
+    "format": "png",
+    "frame_id": 14,
+    "height": 200,
+    "mode_id": 5,
+    "session_id": "ses-1",
+    "sha256": "381962f595c9d88fe4a106ae6a507cc068520418de961a7d2036c3e92f544326",
+    "source": "last_completed_guest_frame",
+    "source_bpp": 32,
+    "state_revision": 2,
+    "width": 320
+  },
+  "session": {
+    "id": "ses-1",
+    "state": "stopped"
+  }
+}

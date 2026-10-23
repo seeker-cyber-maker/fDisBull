@@ -1,4 +1,6 @@
-# fDisBull user guide (0.8.2)
+# fDisBull user guide (0.9.0 development)
+
+The project-backed [DOSBox debugger](DOSBOX_DEBUGGER.md) adds live DOS launch, disassembly-address breakpoints, native fast-forward, bounded runs, and screenshots/traces stored in the project. Static analysis remains available independently of an emulator.
 
 Attach save files, resource tables and other data to an existing analysis. Their bytes and SHA-256 are retained in the project, so byte queries and typed fields remain available after the source file is removed. Attached files have their own **file name + byte offset** identity; they do not become executable memory or code seeds.
 
@@ -129,7 +131,7 @@ A local, agent-first disassembler with a persistent SQLite database and GUI-free
 
 ## Start
 
-Requires **Python 3.12 or newer**. Python/CLI checks run on Linux; native macOS host execution has not been verified. Parsing Mach-O fixtures on Linux does not establish a macOS host run.
+Requires **Python 3.12 or newer**. Native macOS Apple Silicon debugger and actual DinoPark acceptance now pass. The full Mac suite still has Linux ELF fixture failures on Apple's compiler/linker; this is separate from parsing Mach-O files and from the earlier Linux checks.
 
 ```bash
 cd fdisbull

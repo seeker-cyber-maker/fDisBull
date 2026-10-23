@@ -1,5 +1,9 @@
 # Agent protocol
 
+## Project debugger (0.9.0 development)
+
+The same foreground `serve` process owns `debug-launch`, `debug-status`, `debug-registers`, `debug-breakpoint`, `debug-delete-breakpoint`, `debug-click`, `debug-run`, `debug-screenshot`, `debug-trace`, and `debug-stop`. Live requests carry the `run` ID returned by launch. `debug-run` accepts `guest_ms`, `fast_forward`, and an independent host `timeout_ms`; its `outcome` distinguishes a breakpoint, reached guest time, and timeout. Images/traces are retained in the `.fdb` and attached to the immutable launch version. `debug-runs`, `debug-artifacts`, and `debug-export` also work offline after restart. Full parameters, address verification rules, Python API, and examples are in [DOSBOX_DEBUGGER.md](DOSBOX_DEBUGGER.md).
+
 `analysis-status` takes `project` and optional `version`. It returns current `stable`, pending code/data/seeds/segment scans, phase state, DOS seed-state counts and issue count without advancing analysis. `status` and disassembly snapshots embed the same summary; new image exports show it. A fixed point does not prove coverage. See [QUERYING.md](QUERYING.md).
 
 `calls` takes `project`, optional `version`, `limit`, `offset`, and `kind` (`all`, `function`, `library`, `unresolved`). It groups stored call targets with shared names, module/import aliases where known, exact incoming call sites, evidence and current analysis state. Target groups paginate; each includes total call-site count and at most 100 sites with an explicit truncation flag. Use `xrefs` on the target for further references. DOS target CS contexts remain distinct. Declared import slots and proven stub aliases identify library requests across PE, ELF and Mach-O; `import_call` xrefs do not resolve the external provider. Compiled-in DOS helper names are not inferred. Unresolved indirect calls are kept separately. This is a static index, not a runtime call trace or a complete call graph.
@@ -541,7 +545,7 @@ integer register arguments only. Darwin packed stack arguments and variadic
 placement need typed signatures and remain uninferred; floating/vector rules
 and authenticated-pointer behavior are not fully modeled. ELF ARM64 uses the
 separate `aarch64_aapcs64` profile. These defaults are analysis assumptions.
-Native macOS host execution has not been verified.
+Native macOS Apple Silicon debugger acceptance is documented in [DOSBOX_DEBUGGER.md](DOSBOX_DEBUGGER.md); complete native-host coverage remains bounded by the documented Linux ELF fixture limitations.
 
 ```json
 {"id":40,"method":"define-type","params":{"project":"analysis.fdb","name":"Pair","definition":{"kind":"struct","size":4,"fields":[{"name":"count","offset":0,"type":"u16"},{"name":"flags","offset":2,"type":"u16"}]}}}

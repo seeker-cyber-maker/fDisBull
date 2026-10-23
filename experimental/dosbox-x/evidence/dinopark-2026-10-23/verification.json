@@ -1,0 +1,139 @@
+{
+  "result": "pass",
+  "scope": "Actual DinoPark game on native macOS Apple Silicon through headless inherited pipes",
+  "game_archive": "/Volumes/PATRIOT/Downloads/Dinopark_Tycoon_1993.zip",
+  "game_archive_sha256": "22e299e900af2c52c72d071a172326d7ba98b49c74d207af053574e133452944",
+  "game_executable_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+  "emulator_sha256": "9c1f4be93208798f2d7c27de2ca443646831336cb8aeeb691c0f286df439e0b3",
+  "breakpoint": {
+    "requested_segment": "0x0824",
+    "requested_offset": "0x000075BC",
+    "observed_cs": "0x0EB7",
+    "observed_ip": "0x00000C8C",
+    "linear_address": "0x0000F7FC",
+    "original_executable_file_offset": "0x0000BDBC",
+    "code_bytes_match_original": true,
+    "stop_action_sequence": 19
+  },
+  "trace": {
+    "events": 512,
+    "first_instruction": "mov ax,0003",
+    "next_instruction": "int 33h",
+    "return_registers": {
+      "bx": 1,
+      "cx": 150,
+      "dx": 160
+    },
+    "observed_game_memory": {
+      "3844:009A_button_word": 1,
+      "3844:7BB0_x_pixels": 75,
+      "3844:7BAE_y_pixels": 160
+    }
+  },
+  "visually_reviewed_states": [
+    "title menu",
+    "startup bank loan message",
+    "bank account screen",
+    "Dino City",
+    "Real Estate Desert/Plains/Marsh selection"
+  ],
+  "screen_size": [
+    320,
+    200
+  ],
+  "stopped_screenshot_unchanged": true,
+  "stopped_registers_unchanged": true,
+  "session_exit_confirmed": true,
+  "emulator_reaped": true,
+  "game_copy_modified_files": [],
+  "game_copy_added_files": [],
+  "backend_source_changed": false,
+  "probe_errors": [
+    {
+      "sequence": 10,
+      "reason": "Diagnostic offset string used four hex digits; API requires eight. Retried successfully as sequence 13."
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "01-startup.png",
+      "sha256": "87e1eef79ad841e70ea325b8f706255cbc54a0c932c42b8593d15f99376f60d3",
+      "size": 1960
+    },
+    {
+      "path": "02-intro.png",
+      "sha256": "1c12718a10d90d901a004896bd408ac89ac4f14cc5425281a5aadf83f950f578",
+      "size": 1778
+    },
+    {
+      "path": "03-title.png",
+      "sha256": "8d93ba74c61b961b5191782b88526a689567e64db0fdcbd94fc7232215035ba8",
+      "size": 9236
+    },
+    {
+      "path": "04-menu.png",
+      "sha256": "4d53f019367f69e425be11b5449ea175eea1f3f8f6e4f4ee27e5a326f4390ead",
+      "size": 33310
+    },
+    {
+      "path": "05-after-intro-click.png",
+      "sha256": "616e0fcb28ac51ed56d629cc9a26a3b2ee3597e68c101ca0319735ec0e0565a4",
+      "size": 33324
+    },
+    {
+      "path": "06-new-game.png",
+      "sha256": "1c12718a10d90d901a004896bd408ac89ac4f14cc5425281a5aadf83f950f578",
+      "size": 1778
+    },
+    {
+      "path": "07-new-game-ready.png",
+      "sha256": "9047359fe7e78474ce5a7ec8030c69d409f174a07d9f25e4aedaaf6e0be576a9",
+      "size": 19449
+    },
+    {
+      "path": "08-bank.png",
+      "sha256": "afaac8b0f64e1edc1db4cdb199934106a2a7bdd7c6fad1fd5e7b6a7bcdb7b7bb",
+      "size": 21376
+    },
+    {
+      "path": "09-bank-ready.png",
+      "sha256": "21dba1ebfb708cb1ce586eae67bc16073a941e07606ab2b428df57fe98f2f12f",
+      "size": 20586
+    },
+    {
+      "path": "10-after-bank.png",
+      "sha256": "f295ba68271ea3b7689afca6bbd90ca9425605b92e8cf306fedbdddf76ad7bc6",
+      "size": 20143
+    },
+    {
+      "path": "11-real-estate.png",
+      "sha256": "6b494268234f83ea8c8e0dfb53cad9539cab5c9943644cf7f4d43cb69a7153b0",
+      "size": 20884
+    },
+    {
+      "path": "12-real-estate-ready.png",
+      "sha256": "a52624303aeb5686f2e43570c249ab9ee6983c2b285354d212ce0c255a8e0cc1",
+      "size": 39738
+    },
+    {
+      "path": "13-repeat.png",
+      "sha256": "a52624303aeb5686f2e43570c249ab9ee6983c2b285354d212ce0c255a8e0cc1",
+      "size": 39738
+    },
+    {
+      "path": "actions.jsonl",
+      "sha256": "d7453a140c5da87261b041ae1a2b92becc2e5b46b9cfdb52b40f056e2a54db39",
+      "size": 19191
+    },
+    {
+      "path": "new-game-mouse-trace.json",
+      "sha256": "6e9887e51199660d253a26129757e27a4e7d7a1fdc99d3e44a82299c52b7b15b",
+      "size": 152517
+    },
+    {
+      "path": "new-game-mouse-trace.txt",
+      "sha256": "431212c2d77c276110196b33459207cbcf3918f8e478858e37efd944d9916720",
+      "size": 65102
+    }
+  ]
+}
