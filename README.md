@@ -2,7 +2,7 @@
 
 An agent-first disassembler with a persistent SQLite analysis database, explicit evidence, bounded analysis, and headless SVG/PNG exports.
 
-Current development version: **0.9.0**, including a project-backed DOSBox debugger. Published baseline: **0.8.2**. Requires Python **3.12 or later**.
+Current release candidate: **0.10.0**, including native debugger state editing, bounded scripts, and data watches. Published baseline: **0.8.2**. Requires Python **3.12 or later**.
 
 ## Install and use
 
@@ -57,7 +57,7 @@ python scripts/build_release.py
 
 Eight saved releases were reconstructed as successive commits: **0.1.0, 0.2.0, 0.3.0, 0.4.0, 0.5.0, 0.8.0, 0.8.1, and 0.8.2**. These are imported release snapshots, not original development commits. Exact 0.6.0 and 0.7.0 source snapshots were unavailable; their later verification notes remain historical documentation. [Import provenance](history/README.md) records filtering and archive hashes.
 
-The original unfinished DOSBox checkpoint remains on `experimental/dosbox-headless`. The local continuation contains a complete backend patch and fixture/DinoPark runtime evidence under `experimental/dosbox-x`; the 0.9.0 Python integration uses that separately built backend. Neither emulator nor original game assets are included in tool packages.
+The original unfinished DOSBox checkpoint remains on `experimental/dosbox-headless`. The local continuation contains a complete backend patch and fixture/DinoPark runtime evidence under `experimental/dosbox-x`; the Python integration uses that separately built backend. Neither emulator nor original game assets are included in tool packages.
 
 ## Limits and licensing
 
@@ -65,4 +65,4 @@ Static analysis does not establish runtime execution. A drained queue does not e
 
 No first-party distribution license has been selected. Public visibility does not grant an open-source license. See [THIRD_PARTY.md](docs/THIRD_PARTY.md) for dependency provenance. The separate DOSBox-X checkpoint retains its upstream GPL notices.
 
-The debugger also supports [native checkpoints, editable state forks, bounded menu scripts, and CPU data-access breakpoints](docs/DEBUGGER_SCRIPTS.md). These extend the 0.9.0 integration; their verification is recorded separately from the original 0.9.0 receipt.
+The debugger also supports [native checkpoints, editable state forks, bounded menu scripts, and CPU data-access breakpoints](docs/DEBUGGER_SCRIPTS.md). See the [0.10.0 release notes](docs/RELEASE-0.10.0.md) and [parking-counter experiment](docs/PARKING_COMMIT.md). Explicit DOS analysis seeds are decoded first within the requested budget, so preparing one execution-breakpoint address is no longer blocked by an older analysis queue.

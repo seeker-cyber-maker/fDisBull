@@ -1,0 +1,340 @@
+{
+  "run": {
+    "run": "96ac64c7adea448a98ba28e6345384ba",
+    "outcome": "breakpoint",
+    "timed_out": false,
+    "requested_guest_ms": null,
+    "guest_elapsed_ms": 0,
+    "host_elapsed_ms": 4.333,
+    "fast_forward": false,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 53805,
+      "session_id": "ses-1",
+      "state_revision": 79
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 79,
+      "stop_reason": {
+        "address": {
+          "offset": "0x0003F3E7",
+          "space": "linear"
+        },
+        "breakpoint_id": "bp-2",
+        "data_access": {
+          "access": "w",
+          "address": "0x0003F3E6",
+          "instruction": {
+            "offset": "0x00004FCB",
+            "segment": "0x0824",
+            "space": "segmented"
+          },
+          "length": 2,
+          "stop_timing": "after_access_before_next_instruction",
+          "project_instruction": "0x14fcb"
+        },
+        "kind": "breakpoint",
+        "project_address": "0x471a7"
+      }
+    }
+  },
+  "version": 1,
+  "mapping": {
+    "fdisbull_version": "0.9.0",
+    "source_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+    "version_sha256": "8006cbd191e3ff0a80f537f6d5163559542270f3bf706b7f86d8c4c54248c743",
+    "executable": "/Users/tiga/Conversions/DinoParkTycoon/debugger-runs/parking-commit-2026-10-23/delivery/fdisbull-native-debugger-cd13636/backend/native-macos-arm64/dosbox-x",
+    "emulator_sha256": "e749b6e50775de2807c2515f83e455dc705cdf6ddcdfb257e781f215d987865a",
+    "runtime_profile": "real-normal-v1",
+    "game_dir": "/Users/tiga/Conversions/DinoParkTycoon/debugger-runs/parking-commit-2026-10-23/game",
+    "target": "DINOPARK.EXE",
+    "static_load_segment": 4096,
+    "runtime_load_segment": 2084,
+    "entry_registers": {
+      "cpu_mode": "real",
+      "flags": "0x00007202",
+      "general": {
+        "eax": "0x00000000",
+        "ebp": "0x0000091C",
+        "ebx": "0x00000000",
+        "ecx": "0x000000FF",
+        "edi": "0x00000080",
+        "edx": "0x00000814",
+        "esi": "0x00000000",
+        "esp": "0x00000080"
+      },
+      "instruction_pointer": "0x00000000",
+      "segments": {
+        "cs": "0x0824",
+        "ds": "0x0814",
+        "es": "0x0814",
+        "fs": "0x0000",
+        "gs": "0x0000",
+        "ss": "0x4528"
+      },
+      "session_id": "ses-1",
+      "state_revision": 1
+    },
+    "capabilities": {
+      "address_spaces": [
+        "segmented",
+        "linear",
+        "physical"
+      ],
+      "breakpoints": {
+        "data_access": "normal_core_real_mode_byte_addresses",
+        "memory_change": true,
+        "memory_change_address_spaces": [
+          "segmented",
+          "linear"
+        ]
+      },
+      "debugger": true,
+      "input": {
+        "absolute_mouse": true,
+        "click_timing": "guest_emulated_milliseconds",
+        "coordinate_space": "guest_frame_pixels",
+        "driver": "builtin_dos_int33_only"
+      },
+      "limits": {
+        "max_memory_read_bytes": 65536,
+        "max_message_bytes": 8388608,
+        "max_trace_events": 10000
+      },
+      "protocol_version": "1.0",
+      "register_edit": true,
+      "save_states": true,
+      "timing": {
+        "fast_forward": true,
+        "guest_clock": "PIC_Ticks_milliseconds"
+      },
+      "trace": {
+        "cpu": true
+      },
+      "video": {
+        "format": "png",
+        "headless": true,
+        "screenshot": true,
+        "source": "last_completed_guest_frame"
+      }
+    },
+    "pid": 11905
+  },
+  "events": [
+    {
+      "address": {
+        "offset": "0x00000AEC",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "call 0824:4FB8",
+      "register_changes": {
+        "cs": "0x2B6F",
+        "ds": "0x3844",
+        "eax": "0x00006FA6",
+        "ebp": "0x00001EBC",
+        "ebx": "0x0000000C",
+        "ecx": "0x00000002",
+        "edi": "0x00000002",
+        "edx": "0x00002710",
+        "es": "0x3844",
+        "esi": "0x00000004",
+        "esp": "0x00001EA4",
+        "flags": "0x00007246",
+        "fs": "0x0000",
+        "gs": "0x0000",
+        "instruction_pointer": "0x00000AEC",
+        "ss": "0x4528"
+      },
+      "sequence": 1,
+      "project_address": "0x33f9c",
+      "project_segmented_address": "334b:0aec"
+    },
+    {
+      "address": {
+        "offset": "0x00004FB8",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "push bp",
+      "register_changes": {
+        "cs": "0x0824",
+        "esp": "0x00001EA0",
+        "instruction_pointer": "0x00004FB8"
+      },
+      "sequence": 2,
+      "project_address": "0x14fb8",
+      "project_segmented_address": "1000:4fb8"
+    },
+    {
+      "address": {
+        "offset": "0x00004FB9",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mov  bp,sp",
+      "register_changes": {
+        "esp": "0x00001E9E",
+        "instruction_pointer": "0x00004FB9"
+      },
+      "sequence": 3,
+      "project_address": "0x14fb9",
+      "project_segmented_address": "1000:4fb9"
+    },
+    {
+      "address": {
+        "offset": "0x00004FBB",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "push si",
+      "register_changes": {
+        "ebp": "0x00001E9E",
+        "instruction_pointer": "0x00004FBB"
+      },
+      "sequence": 4,
+      "project_address": "0x14fbb",
+      "project_segmented_address": "1000:4fbb"
+    },
+    {
+      "address": {
+        "offset": "0x00004FBC",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "push di",
+      "register_changes": {
+        "esp": "0x00001E9C",
+        "instruction_pointer": "0x00004FBC"
+      },
+      "sequence": 5,
+      "project_address": "0x14fbc",
+      "project_segmented_address": "1000:4fbc"
+    },
+    {
+      "address": {
+        "offset": "0x00004FBD",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mov  dx,ds",
+      "register_changes": {
+        "esp": "0x00001E9A",
+        "instruction_pointer": "0x00004FBD"
+      },
+      "sequence": 6,
+      "project_address": "0x14fbd",
+      "project_segmented_address": "1000:4fbd"
+    },
+    {
+      "address": {
+        "offset": "0x00004FBF",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "les  di,[bp+06]",
+      "register_changes": {
+        "edx": "0x00003844",
+        "instruction_pointer": "0x00004FBF"
+      },
+      "sequence": 7,
+      "project_address": "0x14fbf",
+      "project_segmented_address": "1000:4fbf"
+    },
+    {
+      "address": {
+        "offset": "0x00004FC2",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "lds  si,[bp+0A]",
+      "register_changes": {
+        "edi": "0x00006FA6",
+        "instruction_pointer": "0x00004FC2"
+      },
+      "sequence": 8,
+      "project_address": "0x14fc2",
+      "project_segmented_address": "1000:4fc2"
+    },
+    {
+      "address": {
+        "offset": "0x00004FC5",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mov  cx,[bp+0E]",
+      "register_changes": {
+        "esi": "0x0000B914",
+        "instruction_pointer": "0x00004FC5"
+      },
+      "sequence": 9,
+      "project_address": "0x14fc5",
+      "project_segmented_address": "1000:4fc5"
+    },
+    {
+      "address": {
+        "offset": "0x00004FC8",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "shr  cx,1",
+      "register_changes": {
+        "ecx": "0x00000008",
+        "instruction_pointer": "0x00004FC8"
+      },
+      "sequence": 10,
+      "project_address": "0x14fc8",
+      "project_segmented_address": "1000:4fc8"
+    },
+    {
+      "address": {
+        "offset": "0x00004FCA",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "cld",
+      "register_changes": {
+        "ecx": "0x00000004",
+        "instruction_pointer": "0x00004FCA"
+      },
+      "sequence": 11,
+      "project_address": "0x14fca",
+      "project_segmented_address": "1000:4fca"
+    },
+    {
+      "address": {
+        "offset": "0x00004FCB",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "repe movsw",
+      "register_changes": {
+        "instruction_pointer": "0x00004FCB"
+      },
+      "sequence": 12,
+      "project_address": "0x14fcb",
+      "project_segmented_address": "1000:4fcb"
+    },
+    {
+      "address": {
+        "offset": "0x00004FCD",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "jnc  00004FD0 ($+1)",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x00006FAE",
+        "esi": "0x0000B91C",
+        "instruction_pointer": "0x00004FCD"
+      },
+      "sequence": 13,
+      "project_address": "0x14fcd",
+      "project_segmented_address": "1000:4fcd"
+    }
+  ],
+  "requested_count": 64,
+  "complete": false
+}

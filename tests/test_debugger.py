@@ -265,3 +265,55 @@ def test_native_state_fork_edits_and_reinjects_without_changing_parent(access_ga
                 memory=[{'address':'1000:0100','expected_hex':'ffff','data_hex':'1111'}])
         assert db.disassembly(address='1000:0005',lines=1)['instructions'][0]['bytes']==static_before
         assert len(db.debug_artifacts()['artifacts'])==2 # Failed edit creates no derivative snapshot.
+
+
+def test_real_explicit_seed_places_breakpoint_despite_persistent_backlog(tmp_path,emulator):
+    module=bytearray(b'\x90'*512)
+    module[0x60:0x65]=bytes.fromhex('b87856ebfe')
+    binary=tmp_path/'SEED.EXE'
+    binary.write_bytes(mz_file(bytes(module),ss=0,sp=0x200))
+    path=tmp_path/'seed.fdb'
+    with Project.create(path,binary) as db:
+        db.analyze(max_instructions=1)
+    with Project(path) as db:
+        result=db.analyze(start='1000:0060',max_instructions=1)
+        assert not result['stable'] and result['pending']>0
+        with db.debugger(emulator,binary.parent) as debug:
+            bp=debug.breakpoint('1000:0060')
+            assert bp['bytes_verified'] and bp['runtime_bytes']=='b87856'
+            hit=debug.run(timeout_ms=2000,fast_forward=True)
+            assert hit['outcome']=='breakpoint'
+            assert hit['session']['stop_reason']['project_address']=='0x10060'
+        # Runtime observations and explicit seeding leave old recursive work intact.
+        db.analyze(max_instructions=1)
+        assert db.disassembly('1000:0001',lines=1)['instructions'][0]['bytes']=='90'
+
+
+def test_real_rep_word_watch_stops_after_copy_without_duplicate_byte_hit(tmp_path,emulator):
+    # DS=ES=CS; copy four distinct words from 100 to 110, then loop without writes.
+    module=bytearray(512)
+    module[:19]=bytes.fromhex('0e1f0e07be0001bf1001b90400fcf3a590ebfd')
+    module[0x100:0x108]=bytes.fromhex('1122334455667788')
+    binary=tmp_path/'REP.EXE'
+    binary.write_bytes(mz_file(bytes(module),ss=0,sp=0x200))
+    with Project.create(tmp_path/'rep.fdb',binary) as db:
+        db.analyze(max_instructions=20)
+        with db.debugger(emulator,binary.parent) as debug:
+            # Both byte watches overlap one word access at the end of the copy.
+            watch=debug.breakpoint('1000:0116',access='w',length=2)
+            assert debug.memory('1000:0110',length=8)['hex']=='0000000000000000'
+            hit=debug.run(timeout_ms=2000,fast_forward=True)
+            assert hit['outcome']=='breakpoint',hit
+            access=hit['session']['stop_reason']['data_access']
+            assert access['project_instruction']=='0x1000e' and access['length']==2
+            assert int(access['address'],16)==debug.runtime_load*16+0x116
+            assert hit['session']['stop_reason']['breakpoint_id'] in {b['breakpoint_id'] for b in watch['breakpoints']}
+            assert debug.memory('1000:0110',length=8)['hex']=='1122334455667788'
+            registers=debug.registers()
+            assert int(registers['ip'],16)==0x10
+            assert int(registers['general']['ecx'],16)==0
+            assert int(registers['general']['esi'],16)==0x108
+            assert int(registers['general']['edi'],16)==0x118
+            # Watches stay armed: no deferred second halfword stop on continuation.
+            trace=debug.trace(count=16)
+            assert trace['metadata']['complete'] and trace['metadata']['event_count']==16

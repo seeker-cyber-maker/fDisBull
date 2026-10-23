@@ -1,0 +1,32 @@
+Original MZ bytes; far segment operands below are unrelocated. Runtime addresses are in the JSON trace.
+
+334b:0ade  b80800       mov ax, 8
+334b:0ae1  50           push ax
+334b:0ae2  1e           push ds
+334b:0ae3  b814b9       mov ax, 0xb914
+334b:0ae6  50           push ax
+334b:0ae7  1e           push ds
+334b:0ae8  b8a66f       mov ax, 0x6fa6
+334b:0aeb  50           push ax
+334b:0aec  9ab84f0000   lcall 0, 0x4fb8
+334b:0af1  83c40a       add sp, 0xa
+1000:4fb8  55           push bp
+1000:4fb9  8bec         mov bp, sp
+1000:4fbb  56           push si
+1000:4fbc  57           push di
+1000:4fbd  8cda         mov dx, ds
+1000:4fbf  c47e06       les di, ptr [bp + 6]
+1000:4fc2  c5760a       lds si, ptr [bp + 0xa]
+1000:4fc5  8b4e0e       mov cx, word ptr [bp + 0xe]
+1000:4fc8  d1e9         shr cx, 1
+1000:4fca  fc           cld 
+1000:4fcb  f3a5         rep movsw word ptr es:[di], word ptr [si]
+1000:4fcd  7301         jae 0x4fd0
+1000:4fcf  a4           movsb byte ptr es:[di], byte ptr [si]
+1000:4fd0  8eda         mov ds, dx
+1000:4fd2  8b5608       mov dx, word ptr [bp + 8]
+1000:4fd5  8b4606       mov ax, word ptr [bp + 6]
+1000:4fd8  5f           pop di
+1000:4fd9  5e           pop si
+1000:4fda  5d           pop bp
+1000:4fdb  cb           retf 

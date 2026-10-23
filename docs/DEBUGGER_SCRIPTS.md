@@ -88,7 +88,7 @@ RAM edits change the machine snapshot, not static project bytes or code versions
 | `w` | A guest CPU data write overlaps a watched byte, including same-value writes |
 | `rw` | Either data access |
 
-Data watches currently require the normal CPU core in real mode; fDisBull selects that core explicitly. `length` is 1–256 bytes and creates one native breakpoint per byte; delete the returned IDs individually. Stops occur after the access and before the following instruction. The stop reason includes the access address, width, direction, and originating instruction address, plus its mapped project address. Current registers are the post-instruction registers. Instruction fetch, debugger inspection, and host-side reads are excluded. This is scoped CPU data-access instrumentation, not complete device/DMA or protected-mode memory tracing.
+Data watches currently require the normal CPU core in real mode; fDisBull selects that core explicitly. `length` is 1–256 bytes and creates one native breakpoint per byte; delete the returned IDs individually. Stops occur after the CPU instruction completes and before the following instruction. A repeated instruction such as `REP MOVSW` can finish its entire copy before stopping. Overlapping byte watches report one selected overlap; their IDs do not represent independent write operations or queued stops. The stop reason includes the access address, width, direction, and originating instruction address, plus its mapped project address. Current registers are the post-instruction registers. Instruction fetch, debugger inspection, and host-side reads are excluded. This is scoped CPU data-access instrumentation, not complete device/DMA or protected-mode memory tracing.
 
 ## Checkpoint boundaries
 
@@ -100,7 +100,7 @@ State artifacts can contain game code, data, and filenames. Keep the project dat
 
 ## DinoPark investigation supplied by the user
 
-The supplied report proposes loading STF7, watching the counters at project linear address `0x471a6`, and tracing the writer around `38ff:211f`; it separately proposes observing division and multiplication routines for revenue. Those are investigation hypotheses, not results established by this feature. The local game copy initially contains eight `DINOSG.000`–`.007` saves; the reported thirteenth STF7 entry is not present there.
+The supplied report proposes loading STF7, watching the counters at project linear address `0x471a6`, and tracing the writer around `38ff:211f`; it separately proposes observing division and multiplication routines for revenue. The revenue formula remains an investigation hypothesis. The [parking-purchase experiment](PARKING_COMMIT.md) now records the observed writer and OK-versus-tick timing for the available pmm save. The local game copy initially contains eight `DINOSG.000`–`.007` saves; the reported thirteenth STF7 entry is not present there.
 
 `examples/dinopark/routes/load-dialog.json` is a route from a fresh game entry to OLD GAME and a checkpoint of its dialog. Menu coordinates and save ordering are game-specific. Inspect a captured dialog before adding scroll/select clicks for another save collection. Use `debug-memory` and `r/w/rw` watches to observe the proposed counters; actual runtime observations should be saved separately from static annotations.
 

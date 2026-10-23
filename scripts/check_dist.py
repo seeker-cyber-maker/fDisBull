@@ -9,7 +9,7 @@ import tarfile
 import zipfile
 
 EXCLUDED_DIRECTORIES = {"examples", "history", "experimental", "build", "dist", ".git", "__pycache__"}
-EXCLUDED_SUFFIXES = {".fdb", ".exe", ".dll", ".bin", ".dat", ".so", ".dylib", ".o", ".pyc"}
+EXCLUDED_SUFFIXES = {".fdb", ".db", ".sqlite", ".sqlite3", ".sav", ".state", ".exe", ".com", ".dll", ".bin", ".dat", ".so", ".dylib", ".o", ".pyc"}
 REQUIRED_TEST_HELPERS = {"tests/fixtures_formats.py", "tests/fixtures_macho.py"}
 
 

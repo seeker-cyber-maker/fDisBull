@@ -1,4 +1,4 @@
-# fDisBull user guide (0.9.0 development)
+# fDisBull user guide (0.10.0)
 
 The project-backed [DOSBox debugger](DOSBOX_DEBUGGER.md) adds live DOS launch, disassembly-address breakpoints, native fast-forward, bounded runs, and screenshots/traces stored in the project. Static analysis remains available independently of an emulator.
 

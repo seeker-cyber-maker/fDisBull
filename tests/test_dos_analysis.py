@@ -110,3 +110,23 @@ def test_public_cli_load_segment_and_segment_inventory(tmp_path):
     output=tmp_path/'dos.svg'
     r=respond({'method':'render','params':{'project':str(project),'address':'2004:0000','output':str(output)}})
     assert r['ok'] and output.exists(),r
+
+
+def test_explicit_dos_seed_is_decoded_before_existing_queue_with_one_instruction_budget(tmp_path):
+    # An interactive debugger address must not sit behind older recursive work.
+    module=bytearray(b'\x90'*128)
+    module[0x60:0x64]=bytes.fromhex('b87856cb')
+    binary=tmp_path/'SEED.EXE';binary.write_bytes(mz_file(bytes(module),ss=0,sp=0x100))
+    path=tmp_path/'seed.fdb'
+    with Project.create(path,binary) as p:
+        p.analyze(max_instructions=1)
+    # The old entry traversal persists across restart.
+    with Project(path) as p:
+        result=p.analyze(start='1000:0060',max_instructions=1)
+        instruction=p.disassembly('1000:0060',lines=1)['instructions']
+        assert instruction and instruction[0]['bytes']=='b87856'
+        assert not result['stable'] and result['pending']>0
+        # Prioritizing the explicit address does not discard older work.
+        p.analyze(max_instructions=1)
+        prior=p.disassembly('1000:0001',lines=1)['instructions']
+        assert prior and prior[0]['bytes']=='90'

@@ -1,0 +1,2014 @@
+{
+  "run": {
+    "run": "429684a7a2cc4b10a745de6468e871a6",
+    "outcome": "pause",
+    "timed_out": false,
+    "requested_guest_ms": null,
+    "guest_elapsed_ms": 0,
+    "host_elapsed_ms": 3.966,
+    "fast_forward": false,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 53803,
+      "session_id": "ses-1",
+      "state_revision": 8
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 8,
+      "stop_reason": {
+        "kind": "pause"
+      }
+    }
+  },
+  "version": 1,
+  "mapping": {
+    "fdisbull_version": "0.9.0",
+    "source_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+    "version_sha256": "8006cbd191e3ff0a80f537f6d5163559542270f3bf706b7f86d8c4c54248c743",
+    "executable": "/Users/tiga/Conversions/DinoParkTycoon/debugger-runs/parking-commit-2026-10-23/delivery/fdisbull-native-debugger-cd13636/backend/native-macos-arm64/dosbox-x",
+    "emulator_sha256": "e749b6e50775de2807c2515f83e455dc705cdf6ddcdfb257e781f215d987865a",
+    "runtime_profile": "real-normal-v1",
+    "game_dir": "/Users/tiga/Conversions/DinoParkTycoon/debugger-runs/parking-commit-2026-10-23/game",
+    "target": "DINOPARK.EXE",
+    "static_load_segment": 4096,
+    "runtime_load_segment": 2084,
+    "entry_registers": {
+      "cpu_mode": "real",
+      "flags": "0x00007202",
+      "general": {
+        "eax": "0x00000000",
+        "ebp": "0x0000091C",
+        "ebx": "0x00000000",
+        "ecx": "0x000000FF",
+        "edi": "0x00000080",
+        "edx": "0x00000814",
+        "esi": "0x00000000",
+        "esp": "0x00000080"
+      },
+      "instruction_pointer": "0x00000000",
+      "segments": {
+        "cs": "0x0824",
+        "ds": "0x0814",
+        "es": "0x0814",
+        "fs": "0x0000",
+        "gs": "0x0000",
+        "ss": "0x4528"
+      },
+      "session_id": "ses-1",
+      "state_revision": 1
+    },
+    "capabilities": {
+      "address_spaces": [
+        "segmented",
+        "linear",
+        "physical"
+      ],
+      "breakpoints": {
+        "data_access": "normal_core_real_mode_byte_addresses",
+        "memory_change": true,
+        "memory_change_address_spaces": [
+          "segmented",
+          "linear"
+        ]
+      },
+      "debugger": true,
+      "input": {
+        "absolute_mouse": true,
+        "click_timing": "guest_emulated_milliseconds",
+        "coordinate_space": "guest_frame_pixels",
+        "driver": "builtin_dos_int33_only"
+      },
+      "limits": {
+        "max_memory_read_bytes": 65536,
+        "max_message_bytes": 8388608,
+        "max_trace_events": 10000
+      },
+      "protocol_version": "1.0",
+      "register_edit": true,
+      "save_states": true,
+      "timing": {
+        "fast_forward": true,
+        "guest_clock": "PIC_Ticks_milliseconds"
+      },
+      "trace": {
+        "cpu": true
+      },
+      "video": {
+        "format": "png",
+        "headless": true,
+        "screenshot": true,
+        "source": "last_completed_guest_frame"
+      }
+    },
+    "pid": 20211
+  },
+  "events": [
+    {
+      "address": {
+        "offset": "0x00004FCD",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "jnc  00004FD0 ($+1)",
+      "register_changes": {
+        "cs": "0x0824",
+        "ds": "0x3844",
+        "eax": "0x00006FA6",
+        "ebp": "0x00001E9E",
+        "ebx": "0x0000000C",
+        "ecx": "0x00000000",
+        "edi": "0x00006FAE",
+        "edx": "0x00003844",
+        "es": "0x3844",
+        "esi": "0x0000B91C",
+        "esp": "0x00001E9A",
+        "flags": "0x00007212",
+        "fs": "0x0000",
+        "gs": "0x0000",
+        "instruction_pointer": "0x00004FCD",
+        "ss": "0x4528"
+      },
+      "sequence": 1,
+      "project_address": "0x14fcd",
+      "project_segmented_address": "1000:4fcd"
+    },
+    {
+      "address": {
+        "offset": "0x00004FD0",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mov  ds,dx",
+      "register_changes": {
+        "instruction_pointer": "0x00004FD0"
+      },
+      "sequence": 2,
+      "project_address": "0x14fd0",
+      "project_segmented_address": "1000:4fd0"
+    },
+    {
+      "address": {
+        "offset": "0x00004FD2",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mov  dx,[bp+08]",
+      "register_changes": {
+        "instruction_pointer": "0x00004FD2"
+      },
+      "sequence": 3,
+      "project_address": "0x14fd2",
+      "project_segmented_address": "1000:4fd2"
+    },
+    {
+      "address": {
+        "offset": "0x00004FD5",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mov  ax,[bp+06]",
+      "register_changes": {
+        "instruction_pointer": "0x00004FD5"
+      },
+      "sequence": 4,
+      "project_address": "0x14fd5",
+      "project_segmented_address": "1000:4fd5"
+    },
+    {
+      "address": {
+        "offset": "0x00004FD8",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "pop  di",
+      "register_changes": {
+        "instruction_pointer": "0x00004FD8"
+      },
+      "sequence": 5,
+      "project_address": "0x14fd8",
+      "project_segmented_address": "1000:4fd8"
+    },
+    {
+      "address": {
+        "offset": "0x00004FD9",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "pop  si",
+      "register_changes": {
+        "edi": "0x00000002",
+        "esp": "0x00001E9C",
+        "instruction_pointer": "0x00004FD9"
+      },
+      "sequence": 6,
+      "project_address": "0x14fd9",
+      "project_segmented_address": "1000:4fd9"
+    },
+    {
+      "address": {
+        "offset": "0x00004FDA",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "pop  bp",
+      "register_changes": {
+        "esi": "0x00000004",
+        "esp": "0x00001E9E",
+        "instruction_pointer": "0x00004FDA"
+      },
+      "sequence": 7,
+      "project_address": "0x14fda",
+      "project_segmented_address": "1000:4fda"
+    },
+    {
+      "address": {
+        "offset": "0x00004FDB",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "retf",
+      "register_changes": {
+        "ebp": "0x00001EBC",
+        "esp": "0x00001EA0",
+        "instruction_pointer": "0x00004FDB"
+      },
+      "sequence": 8,
+      "project_address": "0x14fdb",
+      "project_segmented_address": "1000:4fdb"
+    },
+    {
+      "address": {
+        "offset": "0x00000AF1",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "add  sp,000A",
+      "register_changes": {
+        "cs": "0x2B6F",
+        "esp": "0x00001EA4",
+        "instruction_pointer": "0x00000AF1"
+      },
+      "sequence": 9,
+      "project_address": "0x33fa1",
+      "project_segmented_address": "334b:0af1"
+    },
+    {
+      "address": {
+        "offset": "0x00000AF4",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "xor  si,si",
+      "register_changes": {
+        "esp": "0x00001EAE",
+        "instruction_pointer": "0x00000AF4"
+      },
+      "sequence": 10,
+      "project_address": "0x33fa4",
+      "project_segmented_address": "334b:0af4"
+    },
+    {
+      "address": {
+        "offset": "0x00000AF6",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "jmp  short 00000B37 ($+3f)",
+      "register_changes": {
+        "esi": "0x00000000",
+        "instruction_pointer": "0x00000AF6"
+      },
+      "sequence": 11,
+      "project_address": "0x33fa6",
+      "project_segmented_address": "334b:0af6"
+    },
+    {
+      "address": {
+        "offset": "0x00000B37",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "cmp  si,0004",
+      "register_changes": {
+        "instruction_pointer": "0x00000B37"
+      },
+      "sequence": 12,
+      "project_address": "0x33fe7",
+      "project_segmented_address": "334b:0b37"
+    },
+    {
+      "address": {
+        "offset": "0x00000B3A",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "jl   00000AF8 ($-44)",
+      "register_changes": {
+        "instruction_pointer": "0x00000B3A"
+      },
+      "sequence": 13,
+      "project_address": "0x33fea",
+      "project_segmented_address": "334b:0b3a"
+    },
+    {
+      "address": {
+        "offset": "0x00000AF8",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "mov  bx,si",
+      "register_changes": {
+        "instruction_pointer": "0x00000AF8"
+      },
+      "sequence": 14,
+      "project_address": "0x33fa8",
+      "project_segmented_address": "334b:0af8"
+    },
+    {
+      "address": {
+        "offset": "0x00000AFA",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "shl  bx,1",
+      "register_changes": {
+        "ebx": "0x00000000",
+        "instruction_pointer": "0x00000AFA"
+      },
+      "sequence": 15,
+      "project_address": "0x33faa",
+      "project_segmented_address": "334b:0afa"
+    },
+    {
+      "address": {
+        "offset": "0x00000AFC",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "cmp  word [bx+689D],0000",
+      "register_changes": {
+        "instruction_pointer": "0x00000AFC"
+      },
+      "sequence": 16,
+      "project_address": "0x33fac",
+      "project_segmented_address": "334b:0afc"
+    },
+    {
+      "address": {
+        "offset": "0x00000B01",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "jne  00000B36 ($+33)",
+      "register_changes": {
+        "instruction_pointer": "0x00000B01"
+      },
+      "sequence": 17,
+      "project_address": "0x33fb1",
+      "project_segmented_address": "334b:0b01"
+    },
+    {
+      "address": {
+        "offset": "0x00000B03",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "mov  bx,si",
+      "register_changes": {
+        "instruction_pointer": "0x00000B03"
+      },
+      "sequence": 18,
+      "project_address": "0x33fb3",
+      "project_segmented_address": "334b:0b03"
+    },
+    {
+      "address": {
+        "offset": "0x00000B05",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "shl  bx,1",
+      "register_changes": {
+        "instruction_pointer": "0x00000B05"
+      },
+      "sequence": 19,
+      "project_address": "0x33fb5",
+      "project_segmented_address": "334b:0b05"
+    },
+    {
+      "address": {
+        "offset": "0x00000B07",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "cmp  word [bx+6895],0000",
+      "register_changes": {
+        "instruction_pointer": "0x00000B07"
+      },
+      "sequence": 20,
+      "project_address": "0x33fb7",
+      "project_segmented_address": "334b:0b07"
+    },
+    {
+      "address": {
+        "offset": "0x00000B0C",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "je   00000B36 ($+28)",
+      "register_changes": {
+        "instruction_pointer": "0x00000B0C"
+      },
+      "sequence": 21,
+      "project_address": "0x33fbc",
+      "project_segmented_address": "334b:0b0c"
+    },
+    {
+      "address": {
+        "offset": "0x00000B36",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "inc  si",
+      "register_changes": {
+        "instruction_pointer": "0x00000B36"
+      },
+      "sequence": 22,
+      "project_address": "0x33fe6",
+      "project_segmented_address": "334b:0b36"
+    },
+    {
+      "address": {
+        "offset": "0x00000B37",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "cmp  si,0004",
+      "register_changes": {
+        "esi": "0x00000001",
+        "instruction_pointer": "0x00000B37"
+      },
+      "sequence": 23,
+      "project_address": "0x33fe7",
+      "project_segmented_address": "334b:0b37"
+    },
+    {
+      "address": {
+        "offset": "0x00000B3A",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "jl   00000AF8 ($-44)",
+      "register_changes": {
+        "instruction_pointer": "0x00000B3A"
+      },
+      "sequence": 24,
+      "project_address": "0x33fea",
+      "project_segmented_address": "334b:0b3a"
+    },
+    {
+      "address": {
+        "offset": "0x00000AF8",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "mov  bx,si",
+      "register_changes": {
+        "instruction_pointer": "0x00000AF8"
+      },
+      "sequence": 25,
+      "project_address": "0x33fa8",
+      "project_segmented_address": "334b:0af8"
+    },
+    {
+      "address": {
+        "offset": "0x00000AFA",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "shl  bx,1",
+      "register_changes": {
+        "ebx": "0x00000001",
+        "instruction_pointer": "0x00000AFA"
+      },
+      "sequence": 26,
+      "project_address": "0x33faa",
+      "project_segmented_address": "334b:0afa"
+    },
+    {
+      "address": {
+        "offset": "0x00000AFC",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "cmp  word [bx+689D],0000",
+      "register_changes": {
+        "ebx": "0x00000002",
+        "instruction_pointer": "0x00000AFC"
+      },
+      "sequence": 27,
+      "project_address": "0x33fac",
+      "project_segmented_address": "334b:0afc"
+    },
+    {
+      "address": {
+        "offset": "0x00000B01",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "jne  00000B36 ($+33)",
+      "register_changes": {
+        "instruction_pointer": "0x00000B01"
+      },
+      "sequence": 28,
+      "project_address": "0x33fb1",
+      "project_segmented_address": "334b:0b01"
+    },
+    {
+      "address": {
+        "offset": "0x00000B03",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "mov  bx,si",
+      "register_changes": {
+        "instruction_pointer": "0x00000B03"
+      },
+      "sequence": 29,
+      "project_address": "0x33fb3",
+      "project_segmented_address": "334b:0b03"
+    },
+    {
+      "address": {
+        "offset": "0x00000B05",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "shl  bx,1",
+      "register_changes": {
+        "ebx": "0x00000001",
+        "instruction_pointer": "0x00000B05"
+      },
+      "sequence": 30,
+      "project_address": "0x33fb5",
+      "project_segmented_address": "334b:0b05"
+    },
+    {
+      "address": {
+        "offset": "0x00000B07",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "cmp  word [bx+6895],0000",
+      "register_changes": {
+        "ebx": "0x00000002",
+        "instruction_pointer": "0x00000B07"
+      },
+      "sequence": 31,
+      "project_address": "0x33fb7",
+      "project_segmented_address": "334b:0b07"
+    },
+    {
+      "address": {
+        "offset": "0x00000B0C",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "je   00000B36 ($+28)",
+      "register_changes": {
+        "instruction_pointer": "0x00000B0C"
+      },
+      "sequence": 32,
+      "project_address": "0x33fbc",
+      "project_segmented_address": "334b:0b0c"
+    },
+    {
+      "address": {
+        "offset": "0x00000B36",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "inc  si",
+      "register_changes": {
+        "instruction_pointer": "0x00000B36"
+      },
+      "sequence": 33,
+      "project_address": "0x33fe6",
+      "project_segmented_address": "334b:0b36"
+    },
+    {
+      "address": {
+        "offset": "0x00000B37",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "cmp  si,0004",
+      "register_changes": {
+        "esi": "0x00000002",
+        "instruction_pointer": "0x00000B37"
+      },
+      "sequence": 34,
+      "project_address": "0x33fe7",
+      "project_segmented_address": "334b:0b37"
+    },
+    {
+      "address": {
+        "offset": "0x00000B3A",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "jl   00000AF8 ($-44)",
+      "register_changes": {
+        "instruction_pointer": "0x00000B3A"
+      },
+      "sequence": 35,
+      "project_address": "0x33fea",
+      "project_segmented_address": "334b:0b3a"
+    },
+    {
+      "address": {
+        "offset": "0x00000AF8",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "mov  bx,si",
+      "register_changes": {
+        "instruction_pointer": "0x00000AF8"
+      },
+      "sequence": 36,
+      "project_address": "0x33fa8",
+      "project_segmented_address": "334b:0af8"
+    },
+    {
+      "address": {
+        "offset": "0x00000AFA",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "shl  bx,1",
+      "register_changes": {
+        "instruction_pointer": "0x00000AFA"
+      },
+      "sequence": 37,
+      "project_address": "0x33faa",
+      "project_segmented_address": "334b:0afa"
+    },
+    {
+      "address": {
+        "offset": "0x00000AFC",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "cmp  word [bx+689D],0000",
+      "register_changes": {
+        "ebx": "0x00000004",
+        "instruction_pointer": "0x00000AFC"
+      },
+      "sequence": 38,
+      "project_address": "0x33fac",
+      "project_segmented_address": "334b:0afc"
+    },
+    {
+      "address": {
+        "offset": "0x00000B01",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "jne  00000B36 ($+33)",
+      "register_changes": {
+        "instruction_pointer": "0x00000B01"
+      },
+      "sequence": 39,
+      "project_address": "0x33fb1",
+      "project_segmented_address": "334b:0b01"
+    },
+    {
+      "address": {
+        "offset": "0x00000B03",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "mov  bx,si",
+      "register_changes": {
+        "instruction_pointer": "0x00000B03"
+      },
+      "sequence": 40,
+      "project_address": "0x33fb3",
+      "project_segmented_address": "334b:0b03"
+    },
+    {
+      "address": {
+        "offset": "0x00000B05",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "shl  bx,1",
+      "register_changes": {
+        "ebx": "0x00000002",
+        "instruction_pointer": "0x00000B05"
+      },
+      "sequence": 41,
+      "project_address": "0x33fb5",
+      "project_segmented_address": "334b:0b05"
+    },
+    {
+      "address": {
+        "offset": "0x00000B07",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "cmp  word [bx+6895],0000",
+      "register_changes": {
+        "ebx": "0x00000004",
+        "instruction_pointer": "0x00000B07"
+      },
+      "sequence": 42,
+      "project_address": "0x33fb7",
+      "project_segmented_address": "334b:0b07"
+    },
+    {
+      "address": {
+        "offset": "0x00000B0C",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "je   00000B36 ($+28)",
+      "register_changes": {
+        "instruction_pointer": "0x00000B0C"
+      },
+      "sequence": 43,
+      "project_address": "0x33fbc",
+      "project_segmented_address": "334b:0b0c"
+    },
+    {
+      "address": {
+        "offset": "0x00000B36",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "inc  si",
+      "register_changes": {
+        "instruction_pointer": "0x00000B36"
+      },
+      "sequence": 44,
+      "project_address": "0x33fe6",
+      "project_segmented_address": "334b:0b36"
+    },
+    {
+      "address": {
+        "offset": "0x00000B37",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "cmp  si,0004",
+      "register_changes": {
+        "esi": "0x00000003",
+        "instruction_pointer": "0x00000B37"
+      },
+      "sequence": 45,
+      "project_address": "0x33fe7",
+      "project_segmented_address": "334b:0b37"
+    },
+    {
+      "address": {
+        "offset": "0x00000B3A",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "jl   00000AF8 ($-44)",
+      "register_changes": {
+        "instruction_pointer": "0x00000B3A"
+      },
+      "sequence": 46,
+      "project_address": "0x33fea",
+      "project_segmented_address": "334b:0b3a"
+    },
+    {
+      "address": {
+        "offset": "0x00000AF8",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "mov  bx,si",
+      "register_changes": {
+        "instruction_pointer": "0x00000AF8"
+      },
+      "sequence": 47,
+      "project_address": "0x33fa8",
+      "project_segmented_address": "334b:0af8"
+    },
+    {
+      "address": {
+        "offset": "0x00000AFA",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "shl  bx,1",
+      "register_changes": {
+        "ebx": "0x00000003",
+        "instruction_pointer": "0x00000AFA"
+      },
+      "sequence": 48,
+      "project_address": "0x33faa",
+      "project_segmented_address": "334b:0afa"
+    },
+    {
+      "address": {
+        "offset": "0x00000AFC",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "cmp  word [bx+689D],0000",
+      "register_changes": {
+        "ebx": "0x00000006",
+        "instruction_pointer": "0x00000AFC"
+      },
+      "sequence": 49,
+      "project_address": "0x33fac",
+      "project_segmented_address": "334b:0afc"
+    },
+    {
+      "address": {
+        "offset": "0x00000B01",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "jne  00000B36 ($+33)",
+      "register_changes": {
+        "flags": "0x00007246",
+        "instruction_pointer": "0x00000B01"
+      },
+      "sequence": 50,
+      "project_address": "0x33fb1",
+      "project_segmented_address": "334b:0b01"
+    },
+    {
+      "address": {
+        "offset": "0x00000B03",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "mov  bx,si",
+      "register_changes": {
+        "instruction_pointer": "0x00000B03"
+      },
+      "sequence": 51,
+      "project_address": "0x33fb3",
+      "project_segmented_address": "334b:0b03"
+    },
+    {
+      "address": {
+        "offset": "0x00000B05",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "shl  bx,1",
+      "register_changes": {
+        "ebx": "0x00000003",
+        "instruction_pointer": "0x00000B05"
+      },
+      "sequence": 52,
+      "project_address": "0x33fb5",
+      "project_segmented_address": "334b:0b05"
+    },
+    {
+      "address": {
+        "offset": "0x00000B07",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "cmp  word [bx+6895],0000",
+      "register_changes": {
+        "ebx": "0x00000006",
+        "instruction_pointer": "0x00000B07"
+      },
+      "sequence": 53,
+      "project_address": "0x33fb7",
+      "project_segmented_address": "334b:0b07"
+    },
+    {
+      "address": {
+        "offset": "0x00000B0C",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "je   00000B36 ($+28)",
+      "register_changes": {
+        "instruction_pointer": "0x00000B0C"
+      },
+      "sequence": 54,
+      "project_address": "0x33fbc",
+      "project_segmented_address": "334b:0b0c"
+    },
+    {
+      "address": {
+        "offset": "0x00000B36",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "inc  si",
+      "register_changes": {
+        "instruction_pointer": "0x00000B36"
+      },
+      "sequence": 55,
+      "project_address": "0x33fe6",
+      "project_segmented_address": "334b:0b36"
+    },
+    {
+      "address": {
+        "offset": "0x00000B37",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "cmp  si,0004",
+      "register_changes": {
+        "esi": "0x00000004",
+        "instruction_pointer": "0x00000B37"
+      },
+      "sequence": 56,
+      "project_address": "0x33fe7",
+      "project_segmented_address": "334b:0b37"
+    },
+    {
+      "address": {
+        "offset": "0x00000B3A",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "jl   00000AF8 ($-44)",
+      "register_changes": {
+        "instruction_pointer": "0x00000B3A"
+      },
+      "sequence": 57,
+      "project_address": "0x33fea",
+      "project_segmented_address": "334b:0b3a"
+    },
+    {
+      "address": {
+        "offset": "0x00000B3C",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "mov  ax,0008",
+      "register_changes": {
+        "instruction_pointer": "0x00000B3C"
+      },
+      "sequence": 58,
+      "project_address": "0x33fec",
+      "project_segmented_address": "334b:0b3c"
+    },
+    {
+      "address": {
+        "offset": "0x00000B3F",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "push ax",
+      "register_changes": {
+        "eax": "0x00000008",
+        "instruction_pointer": "0x00000B3F"
+      },
+      "sequence": 59,
+      "project_address": "0x33fef",
+      "project_segmented_address": "334b:0b3f"
+    },
+    {
+      "address": {
+        "offset": "0x00000B40",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "push ds",
+      "register_changes": {
+        "esp": "0x00001EAC",
+        "instruction_pointer": "0x00000B40"
+      },
+      "sequence": 60,
+      "project_address": "0x33ff0",
+      "project_segmented_address": "334b:0b40"
+    },
+    {
+      "address": {
+        "offset": "0x00000B41",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "mov  ax,6895",
+      "register_changes": {
+        "esp": "0x00001EAA",
+        "instruction_pointer": "0x00000B41"
+      },
+      "sequence": 61,
+      "project_address": "0x33ff1",
+      "project_segmented_address": "334b:0b41"
+    },
+    {
+      "address": {
+        "offset": "0x00000B44",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "push ax",
+      "register_changes": {
+        "eax": "0x00006895",
+        "instruction_pointer": "0x00000B44"
+      },
+      "sequence": 62,
+      "project_address": "0x33ff4",
+      "project_segmented_address": "334b:0b44"
+    },
+    {
+      "address": {
+        "offset": "0x00000B45",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "push ds",
+      "register_changes": {
+        "esp": "0x00001EA8",
+        "instruction_pointer": "0x00000B45"
+      },
+      "sequence": 63,
+      "project_address": "0x33ff5",
+      "project_segmented_address": "334b:0b45"
+    },
+    {
+      "address": {
+        "offset": "0x00000B46",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "mov  ax,689D",
+      "register_changes": {
+        "esp": "0x00001EA6",
+        "instruction_pointer": "0x00000B46"
+      },
+      "sequence": 64,
+      "project_address": "0x33ff6",
+      "project_segmented_address": "334b:0b46"
+    },
+    {
+      "address": {
+        "offset": "0x00000B49",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "push ax",
+      "register_changes": {
+        "eax": "0x0000689D",
+        "instruction_pointer": "0x00000B49"
+      },
+      "sequence": 65,
+      "project_address": "0x33ff9",
+      "project_segmented_address": "334b:0b49"
+    },
+    {
+      "address": {
+        "offset": "0x00000B4A",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "call 0824:4FB8",
+      "register_changes": {
+        "esp": "0x00001EA4",
+        "instruction_pointer": "0x00000B4A"
+      },
+      "sequence": 66,
+      "project_address": "0x33ffa",
+      "project_segmented_address": "334b:0b4a"
+    },
+    {
+      "address": {
+        "offset": "0x00004FB8",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "push bp",
+      "register_changes": {
+        "cs": "0x0824",
+        "esp": "0x00001EA0",
+        "instruction_pointer": "0x00004FB8"
+      },
+      "sequence": 67,
+      "project_address": "0x14fb8",
+      "project_segmented_address": "1000:4fb8"
+    },
+    {
+      "address": {
+        "offset": "0x00004FB9",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mov  bp,sp",
+      "register_changes": {
+        "esp": "0x00001E9E",
+        "instruction_pointer": "0x00004FB9"
+      },
+      "sequence": 68,
+      "project_address": "0x14fb9",
+      "project_segmented_address": "1000:4fb9"
+    },
+    {
+      "address": {
+        "offset": "0x00004FBB",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "push si",
+      "register_changes": {
+        "ebp": "0x00001E9E",
+        "instruction_pointer": "0x00004FBB"
+      },
+      "sequence": 69,
+      "project_address": "0x14fbb",
+      "project_segmented_address": "1000:4fbb"
+    },
+    {
+      "address": {
+        "offset": "0x00004FBC",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "push di",
+      "register_changes": {
+        "esp": "0x00001E9C",
+        "instruction_pointer": "0x00004FBC"
+      },
+      "sequence": 70,
+      "project_address": "0x14fbc",
+      "project_segmented_address": "1000:4fbc"
+    },
+    {
+      "address": {
+        "offset": "0x00004FBD",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mov  dx,ds",
+      "register_changes": {
+        "esp": "0x00001E9A",
+        "instruction_pointer": "0x00004FBD"
+      },
+      "sequence": 71,
+      "project_address": "0x14fbd",
+      "project_segmented_address": "1000:4fbd"
+    },
+    {
+      "address": {
+        "offset": "0x00004FBF",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "les  di,[bp+06]",
+      "register_changes": {
+        "instruction_pointer": "0x00004FBF"
+      },
+      "sequence": 72,
+      "project_address": "0x14fbf",
+      "project_segmented_address": "1000:4fbf"
+    },
+    {
+      "address": {
+        "offset": "0x00004FC2",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "lds  si,[bp+0A]",
+      "register_changes": {
+        "edi": "0x0000689D",
+        "instruction_pointer": "0x00004FC2"
+      },
+      "sequence": 73,
+      "project_address": "0x14fc2",
+      "project_segmented_address": "1000:4fc2"
+    },
+    {
+      "address": {
+        "offset": "0x00004FC5",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mov  cx,[bp+0E]",
+      "register_changes": {
+        "esi": "0x00006895",
+        "instruction_pointer": "0x00004FC5"
+      },
+      "sequence": 74,
+      "project_address": "0x14fc5",
+      "project_segmented_address": "1000:4fc5"
+    },
+    {
+      "address": {
+        "offset": "0x00004FC8",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "shr  cx,1",
+      "register_changes": {
+        "ecx": "0x00000008",
+        "instruction_pointer": "0x00004FC8"
+      },
+      "sequence": 75,
+      "project_address": "0x14fc8",
+      "project_segmented_address": "1000:4fc8"
+    },
+    {
+      "address": {
+        "offset": "0x00004FCA",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "cld",
+      "register_changes": {
+        "ecx": "0x00000004",
+        "instruction_pointer": "0x00004FCA"
+      },
+      "sequence": 76,
+      "project_address": "0x14fca",
+      "project_segmented_address": "1000:4fca"
+    },
+    {
+      "address": {
+        "offset": "0x00004FCB",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "repe movsw",
+      "register_changes": {
+        "instruction_pointer": "0x00004FCB"
+      },
+      "sequence": 77,
+      "project_address": "0x14fcb",
+      "project_segmented_address": "1000:4fcb"
+    },
+    {
+      "address": {
+        "offset": "0x00004FCD",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "jnc  00004FD0 ($+1)",
+      "register_changes": {
+        "ecx": "0x00000000",
+        "edi": "0x000068A5",
+        "esi": "0x0000689D",
+        "instruction_pointer": "0x00004FCD"
+      },
+      "sequence": 78,
+      "project_address": "0x14fcd",
+      "project_segmented_address": "1000:4fcd"
+    },
+    {
+      "address": {
+        "offset": "0x00004FD0",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mov  ds,dx",
+      "register_changes": {
+        "instruction_pointer": "0x00004FD0"
+      },
+      "sequence": 79,
+      "project_address": "0x14fd0",
+      "project_segmented_address": "1000:4fd0"
+    },
+    {
+      "address": {
+        "offset": "0x00004FD2",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mov  dx,[bp+08]",
+      "register_changes": {
+        "instruction_pointer": "0x00004FD2"
+      },
+      "sequence": 80,
+      "project_address": "0x14fd2",
+      "project_segmented_address": "1000:4fd2"
+    },
+    {
+      "address": {
+        "offset": "0x00004FD5",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mov  ax,[bp+06]",
+      "register_changes": {
+        "instruction_pointer": "0x00004FD5"
+      },
+      "sequence": 81,
+      "project_address": "0x14fd5",
+      "project_segmented_address": "1000:4fd5"
+    },
+    {
+      "address": {
+        "offset": "0x00004FD8",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "pop  di",
+      "register_changes": {
+        "instruction_pointer": "0x00004FD8"
+      },
+      "sequence": 82,
+      "project_address": "0x14fd8",
+      "project_segmented_address": "1000:4fd8"
+    },
+    {
+      "address": {
+        "offset": "0x00004FD9",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "pop  si",
+      "register_changes": {
+        "edi": "0x00000002",
+        "esp": "0x00001E9C",
+        "instruction_pointer": "0x00004FD9"
+      },
+      "sequence": 83,
+      "project_address": "0x14fd9",
+      "project_segmented_address": "1000:4fd9"
+    },
+    {
+      "address": {
+        "offset": "0x00004FDA",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "pop  bp",
+      "register_changes": {
+        "esi": "0x00000004",
+        "esp": "0x00001E9E",
+        "instruction_pointer": "0x00004FDA"
+      },
+      "sequence": 84,
+      "project_address": "0x14fda",
+      "project_segmented_address": "1000:4fda"
+    },
+    {
+      "address": {
+        "offset": "0x00004FDB",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "retf",
+      "register_changes": {
+        "ebp": "0x00001EBC",
+        "esp": "0x00001EA0",
+        "instruction_pointer": "0x00004FDB"
+      },
+      "sequence": 85,
+      "project_address": "0x14fdb",
+      "project_segmented_address": "1000:4fdb"
+    },
+    {
+      "address": {
+        "offset": "0x00000B4F",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "add  sp,000A",
+      "register_changes": {
+        "cs": "0x2B6F",
+        "esp": "0x00001EA4",
+        "flags": "0x00007212",
+        "instruction_pointer": "0x00000B4F"
+      },
+      "sequence": 86,
+      "project_address": "0x33fff",
+      "project_segmented_address": "334b:0b4f"
+    },
+    {
+      "address": {
+        "offset": "0x00000B52",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "cmp  word [686E],0000",
+      "register_changes": {
+        "esp": "0x00001EAE",
+        "instruction_pointer": "0x00000B52"
+      },
+      "sequence": 87,
+      "project_address": "0x34002",
+      "project_segmented_address": "334b:0b52"
+    },
+    {
+      "address": {
+        "offset": "0x00000B57",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "jl   00000B7A ($+21)",
+      "register_changes": {
+        "instruction_pointer": "0x00000B57"
+      },
+      "sequence": 88,
+      "project_address": "0x34007",
+      "project_segmented_address": "334b:0b57"
+    },
+    {
+      "address": {
+        "offset": "0x00000B59",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "jne  00000B63 ($+8)",
+      "register_changes": {
+        "instruction_pointer": "0x00000B59"
+      },
+      "sequence": 89,
+      "project_address": "0x34009",
+      "project_segmented_address": "334b:0b59"
+    },
+    {
+      "address": {
+        "offset": "0x00000B5B",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "cmp  word [686C],2710",
+      "register_changes": {
+        "instruction_pointer": "0x00000B5B"
+      },
+      "sequence": 90,
+      "project_address": "0x3400b",
+      "project_segmented_address": "334b:0b5b"
+    },
+    {
+      "address": {
+        "offset": "0x00000B61",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "jc   00000B7A ($+17)",
+      "register_changes": {
+        "instruction_pointer": "0x00000B61"
+      },
+      "sequence": 91,
+      "project_address": "0x34011",
+      "project_segmented_address": "334b:0b61"
+    },
+    {
+      "address": {
+        "offset": "0x00000B63",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "cmp  word [BFB7],0006",
+      "register_changes": {
+        "instruction_pointer": "0x00000B63"
+      },
+      "sequence": 92,
+      "project_address": "0x34013",
+      "project_segmented_address": "334b:0b63"
+    },
+    {
+      "address": {
+        "offset": "0x00000B68",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "jge  00000B7A ($+10)",
+      "register_changes": {
+        "instruction_pointer": "0x00000B68"
+      },
+      "sequence": 93,
+      "project_address": "0x34018",
+      "project_segmented_address": "334b:0b68"
+    },
+    {
+      "address": {
+        "offset": "0x00000B6A",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "inc  word [BFB7]",
+      "register_changes": {
+        "instruction_pointer": "0x00000B6A"
+      },
+      "sequence": 94,
+      "project_address": "0x3401a",
+      "project_segmented_address": "334b:0b6a"
+    },
+    {
+      "address": {
+        "offset": "0x00000B6E",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "cmp  word [BFB7],0001",
+      "register_changes": {
+        "flags": "0x00007213",
+        "instruction_pointer": "0x00000B6E"
+      },
+      "sequence": 95,
+      "project_address": "0x3401e",
+      "project_segmented_address": "334b:0b6e"
+    },
+    {
+      "address": {
+        "offset": "0x00000B73",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "jne  00000B7A ($+5)",
+      "register_changes": {
+        "instruction_pointer": "0x00000B73"
+      },
+      "sequence": 96,
+      "project_address": "0x34023",
+      "project_segmented_address": "334b:0b73"
+    },
+    {
+      "address": {
+        "offset": "0x00000B75",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "instruction": "call 1BE9:3517",
+      "register_changes": {
+        "instruction_pointer": "0x00000B75"
+      },
+      "sequence": 97,
+      "project_address": "0x34025",
+      "project_segmented_address": "334b:0b75"
+    },
+    {
+      "address": {
+        "offset": "0x00003517",
+        "segment": "0x1BE9",
+        "space": "segmented"
+      },
+      "instruction": "push si",
+      "register_changes": {
+        "cs": "0x1BE9",
+        "esp": "0x00001EAA",
+        "flags": "0x00007246",
+        "instruction_pointer": "0x00003517"
+      },
+      "sequence": 98,
+      "project_address": "0x27167",
+      "project_segmented_address": "23c5:3517"
+    },
+    {
+      "address": {
+        "offset": "0x00003518",
+        "segment": "0x1BE9",
+        "space": "segmented"
+      },
+      "instruction": "cmp  [3DE4],sp",
+      "register_changes": {
+        "esp": "0x00001EA8",
+        "instruction_pointer": "0x00003518"
+      },
+      "sequence": 99,
+      "project_address": "0x27168",
+      "project_segmented_address": "23c5:3518"
+    },
+    {
+      "address": {
+        "offset": "0x0000351C",
+        "segment": "0x1BE9",
+        "space": "segmented"
+      },
+      "instruction": "ja   00003523 ($+5)",
+      "register_changes": {
+        "instruction_pointer": "0x0000351C"
+      },
+      "sequence": 100,
+      "project_address": "0x2716c",
+      "project_segmented_address": "23c5:351c"
+    },
+    {
+      "address": {
+        "offset": "0x00003523",
+        "segment": "0x1BE9",
+        "space": "segmented"
+      },
+      "instruction": "xor  si,si",
+      "register_changes": {
+        "instruction_pointer": "0x00003523"
+      },
+      "sequence": 101,
+      "project_address": "0x27173",
+      "project_segmented_address": "23c5:3523"
+    },
+    {
+      "address": {
+        "offset": "0x00003525",
+        "segment": "0x1BE9",
+        "space": "segmented"
+      },
+      "instruction": "jmp  short 0000353B ($+14)",
+      "register_changes": {
+        "esi": "0x00000000",
+        "instruction_pointer": "0x00003525"
+      },
+      "sequence": 102,
+      "project_address": "0x27175",
+      "project_segmented_address": "23c5:3525"
+    },
+    {
+      "address": {
+        "offset": "0x0000353B",
+        "segment": "0x1BE9",
+        "space": "segmented"
+      },
+      "instruction": "cmp  si,000A",
+      "register_changes": {
+        "instruction_pointer": "0x0000353B"
+      },
+      "sequence": 103,
+      "project_address": "0x2718b",
+      "project_segmented_address": "23c5:353b"
+    },
+    {
+      "address": {
+        "offset": "0x0000353E",
+        "segment": "0x1BE9",
+        "space": "segmented"
+      },
+      "instruction": "jl   00003527 ($-19)",
+      "register_changes": {
+        "instruction_pointer": "0x0000353E"
+      },
+      "sequence": 104,
+      "project_address": "0x2718e",
+      "project_segmented_address": "23c5:353e"
+    },
+    {
+      "address": {
+        "offset": "0x00003527",
+        "segment": "0x1BE9",
+        "space": "segmented"
+      },
+      "instruction": "call 0824:1B4D",
+      "register_changes": {
+        "instruction_pointer": "0x00003527"
+      },
+      "sequence": 105,
+      "project_address": "0x27177",
+      "project_segmented_address": "23c5:3527"
+    },
+    {
+      "address": {
+        "offset": "0x00001B4D",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mov  cx,[7856]",
+      "register_changes": {
+        "cs": "0x0824",
+        "esp": "0x00001EA4",
+        "flags": "0x00007297",
+        "instruction_pointer": "0x00001B4D"
+      },
+      "sequence": 106,
+      "project_address": "0x11b4d",
+      "project_segmented_address": "1000:1b4d"
+    },
+    {
+      "address": {
+        "offset": "0x00001B51",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mov  bx,[7854]",
+      "register_changes": {
+        "ecx": "0x00007440",
+        "instruction_pointer": "0x00001B51"
+      },
+      "sequence": 107,
+      "project_address": "0x11b51",
+      "project_segmented_address": "1000:1b51"
+    },
+    {
+      "address": {
+        "offset": "0x00001B55",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mov  dx,015A",
+      "register_changes": {
+        "ebx": "0x00007D25",
+        "instruction_pointer": "0x00001B55"
+      },
+      "sequence": 108,
+      "project_address": "0x11b55",
+      "project_segmented_address": "1000:1b55"
+    },
+    {
+      "address": {
+        "offset": "0x00001B58",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mov  ax,4E35",
+      "register_changes": {
+        "edx": "0x0000015A",
+        "instruction_pointer": "0x00001B58"
+      },
+      "sequence": 109,
+      "project_address": "0x11b58",
+      "project_segmented_address": "1000:1b58"
+    },
+    {
+      "address": {
+        "offset": "0x00001B5B",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "call 00001AE8 ($-76)",
+      "register_changes": {
+        "eax": "0x00004E35",
+        "instruction_pointer": "0x00001B5B"
+      },
+      "sequence": 110,
+      "project_address": "0x11b5b",
+      "project_segmented_address": "1000:1b5b"
+    },
+    {
+      "address": {
+        "offset": "0x00001AE8",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "push si",
+      "register_changes": {
+        "esp": "0x00001EA2",
+        "instruction_pointer": "0x00001AE8"
+      },
+      "sequence": 111,
+      "project_address": "0x11ae8",
+      "project_segmented_address": "1000:1ae8"
+    },
+    {
+      "address": {
+        "offset": "0x00001AE9",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "xchg si,ax",
+      "register_changes": {
+        "esp": "0x00001EA0",
+        "instruction_pointer": "0x00001AE9"
+      },
+      "sequence": 112,
+      "project_address": "0x11ae9",
+      "project_segmented_address": "1000:1ae9"
+    },
+    {
+      "address": {
+        "offset": "0x00001AEA",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "xchg dx,ax",
+      "register_changes": {
+        "eax": "0x00000000",
+        "esi": "0x00004E35",
+        "instruction_pointer": "0x00001AEA"
+      },
+      "sequence": 113,
+      "project_address": "0x11aea",
+      "project_segmented_address": "1000:1aea"
+    },
+    {
+      "address": {
+        "offset": "0x00001AEB",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "test ax,ax",
+      "register_changes": {
+        "eax": "0x0000015A",
+        "edx": "0x00000000",
+        "instruction_pointer": "0x00001AEB"
+      },
+      "sequence": 114,
+      "project_address": "0x11aeb",
+      "project_segmented_address": "1000:1aeb"
+    },
+    {
+      "address": {
+        "offset": "0x00001AED",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "je   00001AF1 ($+2)",
+      "register_changes": {
+        "instruction_pointer": "0x00001AED"
+      },
+      "sequence": 115,
+      "project_address": "0x11aed",
+      "project_segmented_address": "1000:1aed"
+    },
+    {
+      "address": {
+        "offset": "0x00001AEF",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mul  bx",
+      "register_changes": {
+        "instruction_pointer": "0x00001AEF"
+      },
+      "sequence": 116,
+      "project_address": "0x11aef",
+      "project_segmented_address": "1000:1aef"
+    },
+    {
+      "address": {
+        "offset": "0x00001AF1",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "jcxz 00001AF8 ($+5)",
+      "register_changes": {
+        "eax": "0x00002402",
+        "edx": "0x000000A9",
+        "flags": "0x00007A03",
+        "instruction_pointer": "0x00001AF1"
+      },
+      "sequence": 117,
+      "project_address": "0x11af1",
+      "project_segmented_address": "1000:1af1"
+    },
+    {
+      "address": {
+        "offset": "0x00001AF3",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "xchg cx,ax",
+      "register_changes": {
+        "instruction_pointer": "0x00001AF3"
+      },
+      "sequence": 118,
+      "project_address": "0x11af3",
+      "project_segmented_address": "1000:1af3"
+    },
+    {
+      "address": {
+        "offset": "0x00001AF4",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mul  si",
+      "register_changes": {
+        "eax": "0x00007440",
+        "ecx": "0x00002402",
+        "instruction_pointer": "0x00001AF4"
+      },
+      "sequence": 119,
+      "project_address": "0x11af4",
+      "project_segmented_address": "1000:1af4"
+    },
+    {
+      "address": {
+        "offset": "0x00001AF6",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "add  ax,cx",
+      "register_changes": {
+        "eax": "0x00009140",
+        "edx": "0x00002383",
+        "flags": "0x00007A07",
+        "instruction_pointer": "0x00001AF6"
+      },
+      "sequence": 120,
+      "project_address": "0x11af6",
+      "project_segmented_address": "1000:1af6"
+    },
+    {
+      "address": {
+        "offset": "0x00001AF8",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "xchg si,ax",
+      "register_changes": {
+        "eax": "0x0000B542",
+        "instruction_pointer": "0x00001AF8"
+      },
+      "sequence": 121,
+      "project_address": "0x11af8",
+      "project_segmented_address": "1000:1af8"
+    },
+    {
+      "address": {
+        "offset": "0x00001AF9",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mul  bx",
+      "register_changes": {
+        "eax": "0x00004E35",
+        "esi": "0x0000B542",
+        "instruction_pointer": "0x00001AF9"
+      },
+      "sequence": 122,
+      "project_address": "0x11af9",
+      "project_segmented_address": "1000:1af9"
+    },
+    {
+      "address": {
+        "offset": "0x00001AFB",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "add  dx,si",
+      "register_changes": {
+        "eax": "0x00002EA9",
+        "edx": "0x0000263B",
+        "flags": "0x00007A87",
+        "instruction_pointer": "0x00001AFB"
+      },
+      "sequence": 123,
+      "project_address": "0x11afb",
+      "project_segmented_address": "1000:1afb"
+    },
+    {
+      "address": {
+        "offset": "0x00001AFD",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "pop  si",
+      "register_changes": {
+        "edx": "0x0000DB7D",
+        "instruction_pointer": "0x00001AFD"
+      },
+      "sequence": 124,
+      "project_address": "0x11afd",
+      "project_segmented_address": "1000:1afd"
+    },
+    {
+      "address": {
+        "offset": "0x00001AFE",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "ret",
+      "register_changes": {
+        "esi": "0x00000000",
+        "esp": "0x00001EA2",
+        "instruction_pointer": "0x00001AFE"
+      },
+      "sequence": 125,
+      "project_address": "0x11afe",
+      "project_segmented_address": "1000:1afe"
+    },
+    {
+      "address": {
+        "offset": "0x00001B5E",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "add  ax,0001",
+      "register_changes": {
+        "esp": "0x00001EA4",
+        "instruction_pointer": "0x00001B5E"
+      },
+      "sequence": 126,
+      "project_address": "0x11b5e",
+      "project_segmented_address": "1000:1b5e"
+    },
+    {
+      "address": {
+        "offset": "0x00001B61",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "adc  dx,0000",
+      "register_changes": {
+        "eax": "0x00002EAA",
+        "instruction_pointer": "0x00001B61"
+      },
+      "sequence": 127,
+      "project_address": "0x11b61",
+      "project_segmented_address": "1000:1b61"
+    },
+    {
+      "address": {
+        "offset": "0x00001B64",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "instruction": "mov  [7856],dx",
+      "register_changes": {
+        "instruction_pointer": "0x00001B64"
+      },
+      "sequence": 128,
+      "project_address": "0x11b64",
+      "project_segmented_address": "1000:1b64"
+    }
+  ],
+  "requested_count": 128,
+  "complete": true
+}

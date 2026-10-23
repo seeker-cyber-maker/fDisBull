@@ -1,6 +1,6 @@
 # Project DOSBox debugger
 
-The 0.9.0 development build integrates the separately built DOSBox-X agent with fDisBull projects. Live sessions run in the foreground `serve` process or a Python context. Screenshots, traces, run metadata, and operation receipts are stored inside the SQLite `.fdb`; exporting saved evidence never launches an emulator.
+The 0.10.0 build integrates the separately built DOSBox-X agent with fDisBull projects. Live sessions run in the foreground `serve` process or a Python context. Screenshots, traces, run metadata, and operation receipts are stored inside the SQLite `.fdb`; exporting saved evidence never launches an emulator.
 
 The backend must be built with the current `experimental/dosbox-x/headless-agent.patch`, including `execution.timing`. A stock DOSBox binary does not provide this protocol. The backend executable is supplied explicitly; no emulator, game, or native executable is bundled in the Python tool package. The current inherited-pipe integration supports macOS/Linux POSIX hosts; native runtime acceptance was performed on macOS Apple Silicon.
 
@@ -14,6 +14,8 @@ fdisbull analyze dinopark.fdb --start 1000:75bc --max-instructions 12
 fdisbull disasm dinopark.fdb --address 1000:75bc --lines 4
 fdisbull debug dinopark.fdb --executable /path/to/patched/dosbox-x --game-dir /path/to/dinopark
 ```
+
+In 0.10.0 an explicit DOS seed is attempted first within that call's instruction budget, even when an older recursive queue is pending. `analyze(start="334b:0aec", max_instructions=1)` can prepare that one valid instruction for breakpoint placement. Remaining recursive work is retained and the analysis still reports its pending status. This does not bypass explicit data definitions, address validation, or runtime byte verification.
 
 `debug` emits a launch result containing a `run` ID and then accepts the existing fDisBull JSON-lines request format on stdin. `serve --project dinopark.fdb` can also launch explicitly:
 

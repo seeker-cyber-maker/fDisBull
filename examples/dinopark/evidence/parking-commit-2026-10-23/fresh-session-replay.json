@@ -1,0 +1,193 @@
+{
+  "result": "pass",
+  "run": "429684a7a2cc4b10a745de6468e871a6",
+  "module": "/Users/tiga/Conversions/DinoParkTycoon/debugger-runs/parking-commit-2026-10-23/delivery/fdisbull-native-debugger-cd13636/packages/fdisbull-0.9.0-py3-none-any.whl/fdisbull/debugger.py",
+  "restored": {
+    "completed": true,
+    "session_id": "ses-1",
+    "state_revision": 2,
+    "artifact": "ce4393d16aff4b4fa81f7fad3c2afb5b",
+    "sha256": "9842ddcf2cb5e7715051b90d974d7f0c3848f230083ac52c26a75ba30eac6f72",
+    "registers": {
+      "cpu_mode": "real",
+      "flags": "0x00007283",
+      "general": {
+        "eax": "0x00000009",
+        "ebp": "0x00001EFC",
+        "ebx": "0x0000967D",
+        "ecx": "0x00000204",
+        "edi": "0x00000122",
+        "edx": "0x00000064",
+        "esi": "0x00000009",
+        "esp": "0x00001EF4"
+      },
+      "instruction_pointer": "0x000008B7",
+      "segments": {
+        "cs": "0x134D",
+        "ds": "0x3844",
+        "es": "0x3844",
+        "fs": "0x0000",
+        "gs": "0x0000",
+        "ss": "0x4528"
+      },
+      "session_id": "ses-1",
+      "state_revision": 2,
+      "cs": "0x134D",
+      "ip": "0x000008B7",
+      "project_address": "0x1bb47"
+    },
+    "framebuffer": "invalidated_until_next_completed_frame"
+  },
+  "before": {
+    "address": {
+      "offset": "0x0003F3E6",
+      "space": "linear"
+    },
+    "byte_count": 8,
+    "data_base64": "AAAAAAAAAAA=",
+    "session_id": "ses-1",
+    "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+    "state_revision": 3,
+    "project_address": "0x471a6",
+    "hex": "0000000000000000"
+  },
+  "pending_order": {
+    "address": {
+      "offset": "0x00043D54",
+      "space": "linear"
+    },
+    "byte_count": 8,
+    "data_base64": "AAAAAAAAAQA=",
+    "session_id": "ses-1",
+    "sha256": "30e06038fb18a7cfda688d7bfe8de1ca8fee6002c5b4a498e6993a3592e88893",
+    "state_revision": 3,
+    "project_address": "0x4bb14",
+    "hex": "0000000000000100"
+  },
+  "watch": {
+    "run": "429684a7a2cc4b10a745de6468e871a6",
+    "access": "w",
+    "length": 2,
+    "breakpoints": [
+      {
+        "address": {
+          "offset": "0x0003F3EC",
+          "space": "linear"
+        },
+        "breakpoint_id": "bp-1",
+        "kind": "w",
+        "once": false,
+        "session_id": "ses-1",
+        "state_revision": 4,
+        "project_address": "0x471ac",
+        "access": "w",
+        "bytes_verified": false
+      },
+      {
+        "address": {
+          "offset": "0x0003F3ED",
+          "space": "linear"
+        },
+        "breakpoint_id": "bp-2",
+        "kind": "w",
+        "once": false,
+        "session_id": "ses-1",
+        "state_revision": 5,
+        "project_address": "0x471ad",
+        "access": "w",
+        "bytes_verified": false
+      }
+    ],
+    "stop_semantics": "after_data_access_before_next_instruction"
+  },
+  "hit": {
+    "run": "429684a7a2cc4b10a745de6468e871a6",
+    "outcome": "breakpoint",
+    "timed_out": false,
+    "requested_guest_ms": null,
+    "guest_elapsed_ms": 141,
+    "host_elapsed_ms": 132.354,
+    "fast_forward": false,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 53803,
+      "session_id": "ses-1",
+      "state_revision": 7
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 7,
+      "stop_reason": {
+        "address": {
+          "offset": "0x0003F3ED",
+          "space": "linear"
+        },
+        "breakpoint_id": "bp-2",
+        "data_access": {
+          "access": "w",
+          "address": "0x0003F3EC",
+          "instruction": {
+            "offset": "0x00004FCB",
+            "segment": "0x0824",
+            "space": "segmented"
+          },
+          "length": 2,
+          "stop_timing": "after_access_before_next_instruction",
+          "project_instruction": "0x14fcb"
+        },
+        "kind": "breakpoint",
+        "project_address": "0x471ad"
+      }
+    }
+  },
+  "after": {
+    "address": {
+      "offset": "0x0003F3E6",
+      "space": "linear"
+    },
+    "byte_count": 8,
+    "data_base64": "AAAAAAAAAQA=",
+    "session_id": "ses-1",
+    "sha256": "30e06038fb18a7cfda688d7bfe8de1ca8fee6002c5b4a498e6993a3592e88893",
+    "state_revision": 7,
+    "project_address": "0x471a6",
+    "hex": "0000000000000100"
+  },
+  "continuation": {
+    "artifact": "4579befce8664a5282bf804a3344e7e8",
+    "run": "429684a7a2cc4b10a745de6468e871a6",
+    "version": 1,
+    "name": "22-fresh-session-return.json",
+    "kind": "trace",
+    "sha256": "3470080d1531b424948aeccab2a21a9be01239188c12098c880f775e71eed465",
+    "size": 51768,
+    "metadata": {
+      "event_count": 128,
+      "complete": true,
+      "run": {
+        "run": "429684a7a2cc4b10a745de6468e871a6",
+        "outcome": "pause",
+        "timed_out": false,
+        "requested_guest_ms": null,
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.966,
+        "fast_forward": false,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 53803,
+          "session_id": "ses-1",
+          "state_revision": 8
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 8,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "result": "pass",
+  "conclusion": "Parking count commits when the game processes shop OK, through an immediate staged-to-live block copy; not deferred to the later attendance update.",
+  "scope": "Original pmm save DINOSG.001, one parking-lot purchase, exact delivered DOS executable and backend; STF7 was not available.",
+  "delivery_zip_sha256": "25128411caeaad928056f8cd8e1011e1c48e70e0999be83b1a533e877be2b529",
+  "source_commit": "cd13636c5bba6755836cc5a72898661bae41755c",
+  "game_executable_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+  "game_save_sha256": "bf7af4fa7b57c96ff67dcd545d4b6873aee70681c0a197844fd73a84c40d32c5",
+  "emulator_sha256": "e749b6e50775de2807c2515f83e455dc705cdf6ddcdfb257e781f215d987865a",
+  "run_ids": [
+    "96ac64c7adea448a98ba28e6345384ba",
+    "429684a7a2cc4b10a745de6468e871a6"
+  ],
+  "watch_block": {
+    "project": "0x471a6..0x471ad",
+    "runtime": "0x3f3e6..0x3f3ed"
+  },
+  "parking_word": {
+    "project": "0x471ac",
+    "runtime": "0x3f3ec",
+    "runtime_segmented": "3844:6fac",
+    "static_segmented": "4020:6fac",
+    "before": 0,
+    "after": 1
+  },
+  "commit": {
+    "caller": "334b:0aec",
+    "runtime_caller": "2b6f:0aec",
+    "writer": "1000:4fcb",
+    "runtime_writer": "0824:4fcb",
+    "bytes": "f3a5",
+    "instruction": "REP MOVSW",
+    "source": "DS:b914",
+    "destination": "ES:6fa6",
+    "byte_count": 8,
+    "pre_rep_cx": 4,
+    "guest_ticks_before_and_after": 53805
+  },
+  "trace": {
+    "path": "17-ok-commit-call-to-write.json",
+    "events": 13,
+    "complete": false,
+    "reason": "Intentional early stop on data watch; final event is the next instruction snapshot, before execution"
+  },
+  "controls": {
+    "no_input_guest_ms": 2023,
+    "cancel_confirmation_guest_ms": 4102,
+    "attendance_entry_breakpoint": "38ff:211f",
+    "attendance_entry_hit_before_write": false
+  },
+  "raw_log_rows": {
+    "no_input_control": [
+      55,
+      56,
+      57
+    ],
+    "first_full_block_hit": [
+      59,
+      60,
+      61
+    ],
+    "before_copy_and_trace": [
+      91,
+      92,
+      93,
+      95,
+      96
+    ],
+    "attendance_ordering": [
+      100,
+      101,
+      102,
+      103
+    ],
+    "cancel_confirmed": [
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      116,
+      117
+    ],
+    "parking_word_only": [
+      125,
+      126,
+      127,
+      128,
+      129,
+      130,
+      131
+    ]
+  },
+  "watchpoint_caveat": "Overlapping byte watches do not imply separate successive stops. The word-only trial selected bp-8 for a 2-byte write; the 128-event continuation did not hit bp-7. REP MOVSW completed the full repeated copy before the stop.",
+  "checks": {
+    "idle_control_zero_before": true,
+    "idle_control_no_write_hit": true,
+    "idle_control_zero_after": true,
+    "before_copy_live_zero": true,
+    "before_copy_staging_one": true,
+    "after_copy_live_one": true,
+    "attendance_breakpoint_armed": true,
+    "writer_precedes_attendance": true,
+    "confirmed_cancel_no_write_hit": true,
+    "confirmed_cancel_still_zero": true,
+    "parking_specific_watch_hit": true,
+    "parking_specific_live_one": true,
+    "word_hit_does_not_queue_second_byte_hit": true,
+    "call_to_write_no_guest_millisecond_advance": true,
+    "trace_expected_path": true,
+    "fresh_emulator_replay": true,
+    "original_project_game_files_unchanged": true,
+    "all_sessions_exited": true
+  },
+  "original_game_files_hashed": 192
+}

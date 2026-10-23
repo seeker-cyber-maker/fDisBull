@@ -1,6 +1,6 @@
 # Agent protocol
 
-## Project debugger (0.9.0 development)
+## Project debugger (0.10.0)
 
 The same foreground `serve` process owns `debug-launch`, `debug-status`, `debug-registers`, `debug-breakpoint`, `debug-delete-breakpoint`, `debug-click`, `debug-run`, `debug-screenshot`, `debug-trace`, and `debug-stop`. Live requests carry the `run` ID returned by launch. `debug-run` accepts `guest_ms`, `fast_forward`, and an independent host `timeout_ms`; its `outcome` distinguishes a breakpoint, reached guest time, and timeout. Images/traces are retained in the `.fdb` and attached to the immutable launch version. `debug-runs`, `debug-artifacts`, and `debug-export` also work offline after restart. Full parameters, address verification rules, Python API, and examples are in [DOSBOX_DEBUGGER.md](DOSBOX_DEBUGGER.md).
 

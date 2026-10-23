@@ -56,3 +56,7 @@ The output includes `dinopark.fdb`, which retains the original game bytes and is
 ## Editable DOSBox machine states
 
 `verify_states.py --executable PATH --game-dir DIR --output NEW_LOCAL_DIR` captures a native DOSBox state, restores it after emulator restart, forks it with checked RAM edits, reinjects the derivative, hits an execution breakpoint, captures a trace, verifies CPU data watches, and restores the unchanged parent. Native state bytes stay embedded in the local `.fdb`. This is distinct from loading a DinoPark `DINOSG` file through the menu; that menu route is used only to prepare the test fixture. See [state editing and scripting](../../docs/DEBUGGER_SCRIPTS.md).
+
+## Parking purchase observation
+
+The [preserved parking experiment](evidence/parking-commit-2026-10-23/RESULT.md) establishes the staged-to-live counter copy during shop OK for the available pmm save. It includes bounded traces, controls, screenshots, and file hashes; game files, native state bytes, and the local database are excluded. [Replay instructions](../../docs/PARKING_COMMIT.md) explain how `replay_parking_commit.py` validates another wheel against the corresponding private checkpoint in a fresh emulator session.

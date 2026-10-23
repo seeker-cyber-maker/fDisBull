@@ -1,0 +1,77 @@
+1	run	guest_time	guest_delta=35065	guest_ticks=35092	
+2	click	{'x': 160, 'y': 160, 'hold_ms': 150}
+3	run	guest_time	guest_delta=1625	guest_ticks=36717	
+4	click	{'x': 90, 'y': 70, 'hold_ms': 150}
+5	run	guest_time	guest_delta=390	guest_ticks=37107	
+6	click	{'x': 250, 'y': 73, 'hold_ms': 150}
+7	run	guest_time	guest_delta=3050	guest_ticks=40157	
+9	peek	[0, 0, 0, 0]	guest_ticks=40157
+11	click	{'x': 260, 'y': 120, 'hold_ms': 100}
+12	run	guest_time	guest_delta=1235	guest_ticks=41392	
+14	click	{'x': 265, 'y': 145, 'hold_ms': 150}
+15	run	guest_time	guest_delta=1705	guest_ticks=43097	
+17	click	{'x': 205, 'y': 105, 'hold_ms': 150}
+18	run	guest_time	guest_delta=1040	guest_ticks=44137	
+20	peek	[0, 0, 0, 0]	guest_ticks=44137
+21	click	{'x': 263, 'y': 165, 'hold_ms': 100}
+22	run	guest_time	guest_delta=630	guest_ticks=44767	
+24	click	{'x': 195, 'y': 53, 'hold_ms': 100}
+25	run	guest_time	guest_delta=590	guest_ticks=45357	
+27	peek	[0, 0, 0, 0]	guest_ticks=45357
+28	click	{'x': 195, 'y': 54, 'hold_ms': 500}
+29	run	guest_time	guest_delta=1545	guest_ticks=46902	
+31	peek	[0, 0, 0, 0]	guest_ticks=46902
+34	click	{'x': 225, 'y': 140, 'hold_ms': 500}
+35	run	guest_time	guest_delta=1546	guest_ticks=48448	
+36	peek	[0, 0, 0, 0]	guest_ticks=48448
+38	click	{'x': 175, 'y': 140, 'hold_ms': 500}
+39	run	guest_time	guest_delta=1528	guest_ticks=49976	
+40	peek	[0, 0, 0, 0]	guest_ticks=49976
+42	click	{'x': 145, 'y': 187, 'hold_ms': 500}
+43	run	guest_time	guest_delta=1051	guest_ticks=51027	
+44	peek	[0, 0, 0, 0]	guest_ticks=51027
+46	click	{'x': 160, 'y': 188, 'hold_ms': 500}
+47	run	guest_time	guest_delta=1505	guest_ticks=52532	
+48	peek	[0, 0, 0, 0]	guest_ticks=52532
+50	click	{'x': 290, 'y': 100, 'button': 'right', 'hold_ms': 100}
+51	run	guest_time	guest_delta=1005	guest_ticks=53537	
+52	peek	[0, 0, 0, 0]	guest_ticks=53537
+55	peek	[0, 0, 0, 0]	guest_ticks=53537
+56	run	guest_time	guest_delta=2023	guest_ticks=55560	
+57	peek	[0, 0, 0, 0]	guest_ticks=55560
+59	click	{'x': 218, 'y': 188, 'hold_ms': 500}
+60	run	breakpoint	guest_delta=539	guest_ticks=56099	bp-2
+61	peek	[0, 0, 0, 1]	guest_ticks=56099
+69	peek	[0, 0, 0, 1]	guest_ticks=56099
+74	run	guest_time	guest_delta=142	guest_ticks=53679	
+75	click	{'x': 188, 'y': 188, 'hold_ms': 100}
+76	run	guest_time	guest_delta=1520	guest_ticks=55199	
+77	peek	[0, 0, 0, 0]	guest_ticks=55199
+80	run	guest_time	guest_delta=126	guest_ticks=53663	
+82	click	{'x': 218, 'y': 188, 'hold_ms': 100}
+83	run	breakpoint	guest_delta=140	guest_ticks=53803	bp-2
+84	peek	[0, 0, 0, 1]	guest_ticks=53803
+88	run	guest_time	guest_delta=130	guest_ticks=53667	
+90	click	{'x': 218, 'y': 188, 'hold_ms': 100}
+91	run	breakpoint	guest_delta=138	guest_ticks=53805	bp-9
+92	peek	[0, 0, 0, 0]	guest_ticks=53805
+96	peek	[0, 0, 0, 1]	guest_ticks=53805
+99	run	guest_time	guest_delta=137	guest_ticks=53674	
+101	click	{'x': 218, 'y': 188, 'hold_ms': 100}
+102	run	breakpoint	guest_delta=227	guest_ticks=53901	bp-2
+103	peek	[0, 0, 0, 1]	guest_ticks=53901
+104	run	guest_time	guest_delta=1112	guest_ticks=55013	
+105	peek	[0, 0, 0, 1]	guest_ticks=55013
+109	run	guest_time	guest_delta=131	guest_ticks=53668	
+110	click	{'x': 188, 'y': 188, 'hold_ms': 100}
+111	run	guest_time	guest_delta=510	guest_ticks=54178	
+112	click	{'x': 175, 'y': 111, 'hold_ms': 100}
+113	run	guest_time	guest_delta=1043	guest_ticks=55221	
+114	peek	[0, 0, 0, 0]	guest_ticks=55221
+116	run	guest_time	guest_delta=3059	guest_ticks=58280	
+117	peek	[0, 0, 0, 0]	guest_ticks=58280
+126	run	guest_time	guest_delta=133	guest_ticks=53670	
+127	click	{'x': 218, 'y': 188, 'hold_ms': 100}
+128	run	breakpoint	guest_delta=137	guest_ticks=53807	bp-8
+129	peek	[0, 0, 0, 1]	guest_ticks=53807
+131	peek	[0, 0, 0, 1]	guest_ticks=53807

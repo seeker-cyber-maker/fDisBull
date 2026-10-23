@@ -283,6 +283,7 @@ class DOSMixin(DOSViewsMixin):
             metadata=self._dos_metadata(v)
             if not self.db.execute('SELECT 1 FROM dos_states WHERE version=?',(v,)).fetchone():
                 self._dos_reset(v)
+            preferred_work=None
             if start is not None or any(x is not None for x in (cs,ds,es,ss)):
                 address,selector=self._dos_parse_address(start if start is not None else self.meta['entry'],cs)
                 if start is None and selector is None:
@@ -294,13 +295,21 @@ class DOSMixin(DOSViewsMixin):
                 for name,value in (('ds',ds),('es',es),('ss',ss)):
                     if value is not None:
                         state[name]=integer(value,name,0,65535)
-                self._dos_enqueue(v,selector,address,state,'user segmented seed',force=True)
+                if self._dos_enqueue(v,selector,address,state,'user segmented seed',force=True):
+                    preferred_work=(ctx(selector),key(address))
                 self._dos_function(v,selector,address,f'sub_{selector:04x}_{address-selector*16:04x}','user seed')
             fact_tables=('instructions','dos_edges','operand_refs','functions','data_items','dos_seeds','dos_constants')
             before=sum(self.db.execute(f'SELECT count(*) FROM {t} WHERE version=?',(v,)).fetchone()[0] for t in fact_tables)
             attempted=decoded=data_processed=0
             while attempted<budget:
-                work=self.db.execute("SELECT context,address FROM work WHERE version=? AND state='pending' ORDER BY rowid LIMIT 1",(v,)).fetchone()
+                # Decode the requested seed within this call's budget, then resume
+                # the persistent queue without discarding or starving older work.
+                work=None
+                if preferred_work is not None:
+                    work=self.db.execute("SELECT context,address FROM work WHERE version=? AND context=? AND address=? AND state='pending'",(v,*preferred_work)).fetchone()
+                    preferred_work=None
+                if work is None:
+                    work=self.db.execute("SELECT context,address FROM work WHERE version=? AND state='pending' ORDER BY rowid LIMIT 1",(v,)).fetchone()
                 if work:
                     context,a=work[0],int(work[1],16)
                     if ':cs=' not in context:
