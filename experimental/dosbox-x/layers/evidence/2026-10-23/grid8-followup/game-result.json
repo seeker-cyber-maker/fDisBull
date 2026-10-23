@@ -1,0 +1,1271 @@
+{
+  "result": "pass",
+  "script_client_requests": 1,
+  "standalone_compound_request_verified": true,
+  "total_client_requests": 3,
+  "route": {
+    "format": "fdisbull-script-result-1",
+    "script_artifact": "a2b388493923440c80163adb7afbf42d",
+    "script_sha256": "f1bc9d3ca561da1bfe520cb93fa39a439af0d32cf67719c4246cc5a2852cfef6",
+    "run": "2bbf29599ea84ed6b13a30e5e3b6dd46",
+    "ok": true,
+    "error": null,
+    "completed_steps": 6,
+    "requested_steps": 6,
+    "host_elapsed_ms": 3204.198,
+    "steps": [
+      {
+        "index": 0,
+        "op": "run",
+        "result": {
+          "run": "2bbf29599ea84ed6b13a30e5e3b6dd46",
+          "outcome": "guest_time",
+          "timed_out": false,
+          "requested_guest_ms": 35000,
+          "guest_elapsed_ms": 35065,
+          "host_elapsed_ms": 3008.251,
+          "fast_forward": true,
+          "timing_after": {
+            "fast_forward": false,
+            "guest_ticks": 35093,
+            "session_id": "ses-1",
+            "state_revision": 4
+          },
+          "session": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 3,
+            "stop_reason": {
+              "kind": "pause"
+            }
+          },
+          "hook_hits": []
+        },
+        "ok": true
+      },
+      {
+        "index": 1,
+        "op": "click-frame",
+        "result": {
+          "run": "2bbf29599ea84ed6b13a30e5e3b6dd46",
+          "x": 160,
+          "y": 160,
+          "mode_id": 5,
+          "frame": {
+            "artifact": "a0b7f81308c445b4a1299350b1e60009",
+            "run": "2bbf29599ea84ed6b13a30e5e3b6dd46",
+            "version": 1,
+            "name": "main-menu-click.png",
+            "kind": "screenshot-grid",
+            "sha256": "7b9e43934baa24ef9ca064d6c221c5030a4cea32a8e005404cc7252b255da3cc",
+            "size": 67777,
+            "metadata": {
+              "captured_ticks": 35088,
+              "double_height": true,
+              "double_width": true,
+              "format": "png",
+              "frame_id": 1858,
+              "height": 200,
+              "mode_id": 5,
+              "session_id": "ses-1",
+              "sha256": "7b9e43934baa24ef9ca064d6c221c5030a4cea32a8e005404cc7252b255da3cc",
+              "source": "last_completed_guest_frame",
+              "source_bpp": 32,
+              "state_revision": 4,
+              "width": 320,
+              "coordinate_grid": {
+                "coordinate_space": "screenshot_pixels",
+                "origin": [
+                  0,
+                  0
+                ],
+                "max_coordinate": [
+                  319,
+                  199
+                ],
+                "step": 8,
+                "x_lines": [
+                  0,
+                  8,
+                  16,
+                  24,
+                  32,
+                  40,
+                  48,
+                  56,
+                  64,
+                  72,
+                  80,
+                  88,
+                  96,
+                  104,
+                  112,
+                  120,
+                  128,
+                  136,
+                  144,
+                  152,
+                  160,
+                  168,
+                  176,
+                  184,
+                  192,
+                  200,
+                  208,
+                  216,
+                  224,
+                  232,
+                  240,
+                  248,
+                  256,
+                  264,
+                  272,
+                  280,
+                  288,
+                  296,
+                  304,
+                  312
+                ],
+                "y_lines": [
+                  0,
+                  8,
+                  16,
+                  24,
+                  32,
+                  40,
+                  48,
+                  56,
+                  64,
+                  72,
+                  80,
+                  88,
+                  96,
+                  104,
+                  112,
+                  120,
+                  128,
+                  136,
+                  144,
+                  152,
+                  160,
+                  168,
+                  176,
+                  184,
+                  192
+                ],
+                "label_step": 32,
+                "x_labels": [
+                  0,
+                  32,
+                  64,
+                  96,
+                  128,
+                  160,
+                  192,
+                  224,
+                  256,
+                  288
+                ],
+                "y_labels": [
+                  0,
+                  32,
+                  64,
+                  96,
+                  128,
+                  160,
+                  192
+                ],
+                "target": [
+                  160,
+                  160
+                ],
+                "x_direction": "right",
+                "y_direction": "down",
+                "resized": false,
+                "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+                "source_artifact": "95e0315831cc49778726d04557c14494",
+                "source_sha256": "fa534ef920db88d5e42cfa6558bb1308db3f1f2a1d168e98e7fbb663638da086"
+              }
+            }
+          },
+          "click": {
+            "accepted": true,
+            "coordinate_space": "guest_frame_pixels",
+            "delivery": "queued",
+            "mouse": {
+              "buttons": 1,
+              "max_x": 639,
+              "max_y": 199,
+              "min_x": 0,
+              "min_y": 0,
+              "owned_buttons": 1,
+              "pending_release_buttons": 1,
+              "release_pending": true,
+              "screen_max_x": 640,
+              "screen_max_y": 200,
+              "x": 320,
+              "y": 160
+            },
+            "session_id": "ses-1",
+            "state_revision": 5
+          },
+          "frame_phase": "before_queued_click"
+        },
+        "ok": true
+      },
+      {
+        "index": 2,
+        "op": "assert",
+        "result": {
+          "matched": true
+        },
+        "ok": true
+      },
+      {
+        "index": 3,
+        "op": "assert",
+        "result": {
+          "matched": true
+        },
+        "ok": true
+      },
+      {
+        "index": 4,
+        "op": "run",
+        "result": {
+          "run": "2bbf29599ea84ed6b13a30e5e3b6dd46",
+          "outcome": "guest_time",
+          "timed_out": false,
+          "requested_guest_ms": 1500,
+          "guest_elapsed_ms": 1605,
+          "host_elapsed_ms": 152.664,
+          "fast_forward": true,
+          "timing_after": {
+            "fast_forward": false,
+            "guest_ticks": 36698,
+            "session_id": "ses-1",
+            "state_revision": 8
+          },
+          "session": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 7,
+            "stop_reason": {
+              "kind": "pause"
+            }
+          },
+          "hook_hits": []
+        },
+        "ok": true
+      },
+      {
+        "index": 5,
+        "op": "screenshot",
+        "result": {
+          "artifact": "a19542c7c937424787b4db4888484d1a",
+          "run": "2bbf29599ea84ed6b13a30e5e3b6dd46",
+          "version": 1,
+          "name": "load-dialog-grid.png",
+          "kind": "screenshot-grid",
+          "sha256": "21106c352b6d1b47a52833d6ac3c0d1ac1f53e4a164c0e949a8b4d61114c5a86",
+          "size": 39443,
+          "metadata": {
+            "captured_ticks": 36686,
+            "double_height": true,
+            "double_width": true,
+            "format": "png",
+            "frame_id": 1955,
+            "height": 200,
+            "mode_id": 5,
+            "session_id": "ses-1",
+            "sha256": "21106c352b6d1b47a52833d6ac3c0d1ac1f53e4a164c0e949a8b4d61114c5a86",
+            "source": "last_completed_guest_frame",
+            "source_bpp": 32,
+            "state_revision": 8,
+            "width": 320,
+            "coordinate_grid": {
+              "coordinate_space": "screenshot_pixels",
+              "origin": [
+                0,
+                0
+              ],
+              "max_coordinate": [
+                319,
+                199
+              ],
+              "step": 8,
+              "x_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192,
+                200,
+                208,
+                216,
+                224,
+                232,
+                240,
+                248,
+                256,
+                264,
+                272,
+                280,
+                288,
+                296,
+                304,
+                312
+              ],
+              "y_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192
+              ],
+              "label_step": 32,
+              "x_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192,
+                224,
+                256,
+                288
+              ],
+              "y_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192
+              ],
+              "target": null,
+              "x_direction": "right",
+              "y_direction": "down",
+              "resized": false,
+              "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+              "source_artifact": "ef7b70353f7741d69d0f4ca35aaa0c3e",
+              "source_sha256": "264cb118213ce681ab8ee294dcc7011cba03713934d9a4c38fe5906ccc17c903"
+            }
+          }
+        },
+        "ok": true
+      }
+    ],
+    "artifact": "20d944a0648c42b4abe17309dcb8ed01"
+  },
+  "direct_action": {
+    "run": "2bbf29599ea84ed6b13a30e5e3b6dd46",
+    "x": 250,
+    "y": 130,
+    "mode_id": 5,
+    "frame": {
+      "artifact": "e4e4b54ccaf146c0aeef9c47a3694f18",
+      "run": "2bbf29599ea84ed6b13a30e5e3b6dd46",
+      "version": 1,
+      "name": "direct-click.png",
+      "kind": "screenshot-grid",
+      "sha256": "4d1f112b3f196cd404ef8b5a506ef13927e4d8205fef30f609eb372dab00d3de",
+      "size": 40418,
+      "metadata": {
+        "captured_ticks": 36686,
+        "double_height": true,
+        "double_width": true,
+        "format": "png",
+        "frame_id": 1955,
+        "height": 200,
+        "mode_id": 5,
+        "session_id": "ses-1",
+        "sha256": "4d1f112b3f196cd404ef8b5a506ef13927e4d8205fef30f609eb372dab00d3de",
+        "source": "last_completed_guest_frame",
+        "source_bpp": 32,
+        "state_revision": 8,
+        "width": 320,
+        "coordinate_grid": {
+          "coordinate_space": "screenshot_pixels",
+          "origin": [
+            0,
+            0
+          ],
+          "max_coordinate": [
+            319,
+            199
+          ],
+          "step": 8,
+          "x_lines": [
+            0,
+            8,
+            16,
+            24,
+            32,
+            40,
+            48,
+            56,
+            64,
+            72,
+            80,
+            88,
+            96,
+            104,
+            112,
+            120,
+            128,
+            136,
+            144,
+            152,
+            160,
+            168,
+            176,
+            184,
+            192,
+            200,
+            208,
+            216,
+            224,
+            232,
+            240,
+            248,
+            256,
+            264,
+            272,
+            280,
+            288,
+            296,
+            304,
+            312
+          ],
+          "y_lines": [
+            0,
+            8,
+            16,
+            24,
+            32,
+            40,
+            48,
+            56,
+            64,
+            72,
+            80,
+            88,
+            96,
+            104,
+            112,
+            120,
+            128,
+            136,
+            144,
+            152,
+            160,
+            168,
+            176,
+            184,
+            192
+          ],
+          "label_step": 32,
+          "x_labels": [
+            0,
+            32,
+            64,
+            96,
+            128,
+            160,
+            192,
+            224,
+            256,
+            288
+          ],
+          "y_labels": [
+            0,
+            32,
+            64,
+            96,
+            128,
+            160,
+            192
+          ],
+          "target": [
+            250,
+            130
+          ],
+          "x_direction": "right",
+          "y_direction": "down",
+          "resized": false,
+          "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+          "source_artifact": "424e8279fc9444ac8838edb1886566d8",
+          "source_sha256": "264cb118213ce681ab8ee294dcc7011cba03713934d9a4c38fe5906ccc17c903"
+        }
+      }
+    },
+    "click": {
+      "accepted": true,
+      "coordinate_space": "guest_frame_pixels",
+      "delivery": "queued",
+      "mouse": {
+        "buttons": 2,
+        "max_x": 639,
+        "max_y": 199,
+        "min_x": 0,
+        "min_y": 0,
+        "owned_buttons": 2,
+        "pending_release_buttons": 2,
+        "release_pending": true,
+        "screen_max_x": 640,
+        "screen_max_y": 200,
+        "x": 500,
+        "y": 130
+      },
+      "session_id": "ses-1",
+      "state_revision": 9
+    },
+    "frame_phase": "before_queued_click"
+  },
+  "process_reaped": true,
+  "foreground_owner_exit": 0,
+  "game_files_unchanged": 192,
+  "grid_helper_unchanged": "/Users/tiga/Conversions/DinoParkTycoon/TinyDinoPark/Scripts/original/grid.py",
+  "grid_helper_sha256": "d59eab3d74f362a7f4cc7baf2508df1eedc15944e97f31650eb1d952d286bc1b",
+  "backend_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+  "native_dimensions": [
+    320,
+    200
+  ],
+  "target": [
+    160,
+    160
+  ],
+  "grid_step": 8,
+  "label_step": 32,
+  "offline_grid_after_restart": true,
+  "responses": [
+    {
+      "id": "launch",
+      "ok": true,
+      "result": {
+        "run": "2bbf29599ea84ed6b13a30e5e3b6dd46",
+        "version": 1,
+        "live": true,
+        "last_stop": {
+          "address": {
+            "offset": "0x00000000",
+            "segment": "0x0824",
+            "space": "segmented"
+          },
+          "kind": "startup"
+        },
+        "session_id": "ses-1",
+        "state": "stopped",
+        "state_revision": 1,
+        "target": {
+          "command": "DINOPARK.EXE"
+        },
+        "mapping": {
+          "fdisbull_version": "0.11.0.dev0",
+          "source_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+          "version_sha256": "8006cbd191e3ff0a80f537f6d5163559542270f3bf706b7f86d8c4c54248c743",
+          "executable": "/Users/tiga/Documents/ChatGPT/fDisBull/.recovery/2026-10-23/dosbox-layers/src/dosbox-x",
+          "emulator_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+          "runtime_profile": "real-normal-v1",
+          "game_dir": "/Users/tiga/Conversions/DinoParkTycoon/debugger-runs/parking-commit-2026-10-23/game",
+          "target": "DINOPARK.EXE",
+          "static_load_segment": 4096,
+          "runtime_load_segment": 2084,
+          "entry_registers": {
+            "cpu_mode": "real",
+            "flags": "0x00007202",
+            "general": {
+              "eax": "0x00000000",
+              "ebp": "0x0000091C",
+              "ebx": "0x00000000",
+              "ecx": "0x000000FF",
+              "edi": "0x00000080",
+              "edx": "0x00000814",
+              "esi": "0x00000000",
+              "esp": "0x00000080"
+            },
+            "instruction_pointer": "0x00000000",
+            "segments": {
+              "cs": "0x0824",
+              "ds": "0x0814",
+              "es": "0x0814",
+              "fs": "0x0000",
+              "gs": "0x0000",
+              "ss": "0x4528"
+            },
+            "session_id": "ses-1",
+            "state_revision": 1
+          },
+          "capabilities": {
+            "address_spaces": [
+              "segmented",
+              "linear",
+              "physical"
+            ],
+            "breakpoints": {
+              "data_access": "normal_core_real_mode_byte_addresses",
+              "memory_change": true,
+              "memory_change_address_spaces": [
+                "segmented",
+                "linear"
+              ]
+            },
+            "code_layers": "normal_core_real_mode_guarded_fetch_v1",
+            "debugger": true,
+            "input": {
+              "absolute_mouse": true,
+              "click_timing": "guest_emulated_milliseconds",
+              "coordinate_space": "guest_frame_pixels",
+              "driver": "builtin_dos_int33_only"
+            },
+            "limits": {
+              "max_memory_read_bytes": 65536,
+              "max_message_bytes": 8388608,
+              "max_trace_events": 10000
+            },
+            "protocol_version": "1.0",
+            "register_edit": true,
+            "save_states": true,
+            "timing": {
+              "fast_forward": true,
+              "guest_clock": "PIC_Ticks_milliseconds"
+            },
+            "trace": {
+              "cpu": true
+            },
+            "video": {
+              "format": "png",
+              "headless": true,
+              "screenshot": true,
+              "source": "last_completed_guest_frame"
+            }
+          },
+          "pid": 14088
+        }
+      }
+    },
+    {
+      "id": null,
+      "ok": true,
+      "result": {
+        "format": "fdisbull-script-result-1",
+        "script_artifact": "a2b388493923440c80163adb7afbf42d",
+        "script_sha256": "f1bc9d3ca561da1bfe520cb93fa39a439af0d32cf67719c4246cc5a2852cfef6",
+        "run": "2bbf29599ea84ed6b13a30e5e3b6dd46",
+        "ok": true,
+        "error": null,
+        "completed_steps": 6,
+        "requested_steps": 6,
+        "host_elapsed_ms": 3204.198,
+        "steps": [
+          {
+            "index": 0,
+            "op": "run",
+            "result": {
+              "run": "2bbf29599ea84ed6b13a30e5e3b6dd46",
+              "outcome": "guest_time",
+              "timed_out": false,
+              "requested_guest_ms": 35000,
+              "guest_elapsed_ms": 35065,
+              "host_elapsed_ms": 3008.251,
+              "fast_forward": true,
+              "timing_after": {
+                "fast_forward": false,
+                "guest_ticks": 35093,
+                "session_id": "ses-1",
+                "state_revision": 4
+              },
+              "session": {
+                "session_id": "ses-1",
+                "state": "stopped",
+                "state_revision": 3,
+                "stop_reason": {
+                  "kind": "pause"
+                }
+              },
+              "hook_hits": []
+            },
+            "ok": true
+          },
+          {
+            "index": 1,
+            "op": "click-frame",
+            "result": {
+              "run": "2bbf29599ea84ed6b13a30e5e3b6dd46",
+              "x": 160,
+              "y": 160,
+              "mode_id": 5,
+              "frame": {
+                "artifact": "a0b7f81308c445b4a1299350b1e60009",
+                "run": "2bbf29599ea84ed6b13a30e5e3b6dd46",
+                "version": 1,
+                "name": "main-menu-click.png",
+                "kind": "screenshot-grid",
+                "sha256": "7b9e43934baa24ef9ca064d6c221c5030a4cea32a8e005404cc7252b255da3cc",
+                "size": 67777,
+                "metadata": {
+                  "captured_ticks": 35088,
+                  "double_height": true,
+                  "double_width": true,
+                  "format": "png",
+                  "frame_id": 1858,
+                  "height": 200,
+                  "mode_id": 5,
+                  "session_id": "ses-1",
+                  "sha256": "7b9e43934baa24ef9ca064d6c221c5030a4cea32a8e005404cc7252b255da3cc",
+                  "source": "last_completed_guest_frame",
+                  "source_bpp": 32,
+                  "state_revision": 4,
+                  "width": 320,
+                  "coordinate_grid": {
+                    "coordinate_space": "screenshot_pixels",
+                    "origin": [
+                      0,
+                      0
+                    ],
+                    "max_coordinate": [
+                      319,
+                      199
+                    ],
+                    "step": 8,
+                    "x_lines": [
+                      0,
+                      8,
+                      16,
+                      24,
+                      32,
+                      40,
+                      48,
+                      56,
+                      64,
+                      72,
+                      80,
+                      88,
+                      96,
+                      104,
+                      112,
+                      120,
+                      128,
+                      136,
+                      144,
+                      152,
+                      160,
+                      168,
+                      176,
+                      184,
+                      192,
+                      200,
+                      208,
+                      216,
+                      224,
+                      232,
+                      240,
+                      248,
+                      256,
+                      264,
+                      272,
+                      280,
+                      288,
+                      296,
+                      304,
+                      312
+                    ],
+                    "y_lines": [
+                      0,
+                      8,
+                      16,
+                      24,
+                      32,
+                      40,
+                      48,
+                      56,
+                      64,
+                      72,
+                      80,
+                      88,
+                      96,
+                      104,
+                      112,
+                      120,
+                      128,
+                      136,
+                      144,
+                      152,
+                      160,
+                      168,
+                      176,
+                      184,
+                      192
+                    ],
+                    "label_step": 32,
+                    "x_labels": [
+                      0,
+                      32,
+                      64,
+                      96,
+                      128,
+                      160,
+                      192,
+                      224,
+                      256,
+                      288
+                    ],
+                    "y_labels": [
+                      0,
+                      32,
+                      64,
+                      96,
+                      128,
+                      160,
+                      192
+                    ],
+                    "target": [
+                      160,
+                      160
+                    ],
+                    "x_direction": "right",
+                    "y_direction": "down",
+                    "resized": false,
+                    "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+                    "source_artifact": "95e0315831cc49778726d04557c14494",
+                    "source_sha256": "fa534ef920db88d5e42cfa6558bb1308db3f1f2a1d168e98e7fbb663638da086"
+                  }
+                }
+              },
+              "click": {
+                "accepted": true,
+                "coordinate_space": "guest_frame_pixels",
+                "delivery": "queued",
+                "mouse": {
+                  "buttons": 1,
+                  "max_x": 639,
+                  "max_y": 199,
+                  "min_x": 0,
+                  "min_y": 0,
+                  "owned_buttons": 1,
+                  "pending_release_buttons": 1,
+                  "release_pending": true,
+                  "screen_max_x": 640,
+                  "screen_max_y": 200,
+                  "x": 320,
+                  "y": 160
+                },
+                "session_id": "ses-1",
+                "state_revision": 5
+              },
+              "frame_phase": "before_queued_click"
+            },
+            "ok": true
+          },
+          {
+            "index": 2,
+            "op": "assert",
+            "result": {
+              "matched": true
+            },
+            "ok": true
+          },
+          {
+            "index": 3,
+            "op": "assert",
+            "result": {
+              "matched": true
+            },
+            "ok": true
+          },
+          {
+            "index": 4,
+            "op": "run",
+            "result": {
+              "run": "2bbf29599ea84ed6b13a30e5e3b6dd46",
+              "outcome": "guest_time",
+              "timed_out": false,
+              "requested_guest_ms": 1500,
+              "guest_elapsed_ms": 1605,
+              "host_elapsed_ms": 152.664,
+              "fast_forward": true,
+              "timing_after": {
+                "fast_forward": false,
+                "guest_ticks": 36698,
+                "session_id": "ses-1",
+                "state_revision": 8
+              },
+              "session": {
+                "session_id": "ses-1",
+                "state": "stopped",
+                "state_revision": 7,
+                "stop_reason": {
+                  "kind": "pause"
+                }
+              },
+              "hook_hits": []
+            },
+            "ok": true
+          },
+          {
+            "index": 5,
+            "op": "screenshot",
+            "result": {
+              "artifact": "a19542c7c937424787b4db4888484d1a",
+              "run": "2bbf29599ea84ed6b13a30e5e3b6dd46",
+              "version": 1,
+              "name": "load-dialog-grid.png",
+              "kind": "screenshot-grid",
+              "sha256": "21106c352b6d1b47a52833d6ac3c0d1ac1f53e4a164c0e949a8b4d61114c5a86",
+              "size": 39443,
+              "metadata": {
+                "captured_ticks": 36686,
+                "double_height": true,
+                "double_width": true,
+                "format": "png",
+                "frame_id": 1955,
+                "height": 200,
+                "mode_id": 5,
+                "session_id": "ses-1",
+                "sha256": "21106c352b6d1b47a52833d6ac3c0d1ac1f53e4a164c0e949a8b4d61114c5a86",
+                "source": "last_completed_guest_frame",
+                "source_bpp": 32,
+                "state_revision": 8,
+                "width": 320,
+                "coordinate_grid": {
+                  "coordinate_space": "screenshot_pixels",
+                  "origin": [
+                    0,
+                    0
+                  ],
+                  "max_coordinate": [
+                    319,
+                    199
+                  ],
+                  "step": 8,
+                  "x_lines": [
+                    0,
+                    8,
+                    16,
+                    24,
+                    32,
+                    40,
+                    48,
+                    56,
+                    64,
+                    72,
+                    80,
+                    88,
+                    96,
+                    104,
+                    112,
+                    120,
+                    128,
+                    136,
+                    144,
+                    152,
+                    160,
+                    168,
+                    176,
+                    184,
+                    192,
+                    200,
+                    208,
+                    216,
+                    224,
+                    232,
+                    240,
+                    248,
+                    256,
+                    264,
+                    272,
+                    280,
+                    288,
+                    296,
+                    304,
+                    312
+                  ],
+                  "y_lines": [
+                    0,
+                    8,
+                    16,
+                    24,
+                    32,
+                    40,
+                    48,
+                    56,
+                    64,
+                    72,
+                    80,
+                    88,
+                    96,
+                    104,
+                    112,
+                    120,
+                    128,
+                    136,
+                    144,
+                    152,
+                    160,
+                    168,
+                    176,
+                    184,
+                    192
+                  ],
+                  "label_step": 32,
+                  "x_labels": [
+                    0,
+                    32,
+                    64,
+                    96,
+                    128,
+                    160,
+                    192,
+                    224,
+                    256,
+                    288
+                  ],
+                  "y_labels": [
+                    0,
+                    32,
+                    64,
+                    96,
+                    128,
+                    160,
+                    192
+                  ],
+                  "target": null,
+                  "x_direction": "right",
+                  "y_direction": "down",
+                  "resized": false,
+                  "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+                  "source_artifact": "ef7b70353f7741d69d0f4ca35aaa0c3e",
+                  "source_sha256": "264cb118213ce681ab8ee294dcc7011cba03713934d9a4c38fe5906ccc17c903"
+                }
+              }
+            },
+            "ok": true
+          }
+        ],
+        "artifact": "20d944a0648c42b4abe17309dcb8ed01"
+      }
+    },
+    {
+      "id": null,
+      "ok": true,
+      "result": {
+        "run": "2bbf29599ea84ed6b13a30e5e3b6dd46",
+        "x": 250,
+        "y": 130,
+        "mode_id": 5,
+        "frame": {
+          "artifact": "e4e4b54ccaf146c0aeef9c47a3694f18",
+          "run": "2bbf29599ea84ed6b13a30e5e3b6dd46",
+          "version": 1,
+          "name": "direct-click.png",
+          "kind": "screenshot-grid",
+          "sha256": "4d1f112b3f196cd404ef8b5a506ef13927e4d8205fef30f609eb372dab00d3de",
+          "size": 40418,
+          "metadata": {
+            "captured_ticks": 36686,
+            "double_height": true,
+            "double_width": true,
+            "format": "png",
+            "frame_id": 1955,
+            "height": 200,
+            "mode_id": 5,
+            "session_id": "ses-1",
+            "sha256": "4d1f112b3f196cd404ef8b5a506ef13927e4d8205fef30f609eb372dab00d3de",
+            "source": "last_completed_guest_frame",
+            "source_bpp": 32,
+            "state_revision": 8,
+            "width": 320,
+            "coordinate_grid": {
+              "coordinate_space": "screenshot_pixels",
+              "origin": [
+                0,
+                0
+              ],
+              "max_coordinate": [
+                319,
+                199
+              ],
+              "step": 8,
+              "x_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192,
+                200,
+                208,
+                216,
+                224,
+                232,
+                240,
+                248,
+                256,
+                264,
+                272,
+                280,
+                288,
+                296,
+                304,
+                312
+              ],
+              "y_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192
+              ],
+              "label_step": 32,
+              "x_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192,
+                224,
+                256,
+                288
+              ],
+              "y_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192
+              ],
+              "target": [
+                250,
+                130
+              ],
+              "x_direction": "right",
+              "y_direction": "down",
+              "resized": false,
+              "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+              "source_artifact": "424e8279fc9444ac8838edb1886566d8",
+              "source_sha256": "264cb118213ce681ab8ee294dcc7011cba03713934d9a4c38fe5906ccc17c903"
+            }
+          }
+        },
+        "click": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 2,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 2,
+            "pending_release_buttons": 2,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 500,
+            "y": 130
+          },
+          "session_id": "ses-1",
+          "state_revision": 9
+        },
+        "frame_phase": "before_queued_click"
+      }
+    },
+    {
+      "id": null,
+      "ok": true,
+      "result": {
+        "run": "2bbf29599ea84ed6b13a30e5e3b6dd46",
+        "closed": true,
+        "process_reaped": true
+      }
+    }
+  ]
+}

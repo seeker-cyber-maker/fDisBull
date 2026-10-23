@@ -1,0 +1,32 @@
+[
+  {
+    "path": "full-mac-tests.log",
+    "size": 25035,
+    "sha256": "e12dffeac0795b6baee5e2deec2a14413fc91198b01ae39573d40708f92c825b"
+  },
+  {
+    "path": "local-verification.json",
+    "size": 1411,
+    "sha256": "708b4e485931b485a82fad0e1ff246dea45d92d8a53910fbfc5a36a98ad024ef"
+  },
+  {
+    "path": "native-tests.log",
+    "size": 100,
+    "sha256": "1d6b6fed4220231fc0e4ec015da80820100ceb263a493af661b7e5868a5ca4cf"
+  },
+  {
+    "path": "package-check.log",
+    "size": 158,
+    "sha256": "0f3f7dfd637da37ea4f5bdd22d7596d2a9bf9c151883931eda7e4907df2a5e73"
+  },
+  {
+    "path": "python-source-sha256.json",
+    "size": 6441,
+    "sha256": "2db8bac1d6070eff70dd44bf46fc62c8949c39166c9e57eb3d767e3c5f42648b"
+  },
+  {
+    "path": "wheel-proof.json",
+    "size": 7303,
+    "sha256": "c89bb2ebdd1f6e867e9b7509c8c90dae31e85bc2ff35e42b46e3868a528b4566"
+  }
+]

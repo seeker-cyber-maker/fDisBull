@@ -14,6 +14,7 @@ import tempfile
 
 from .dosbox_rpc import DOSBoxRPC, DebuggerError
 from .external_files import _file_name
+from .code_layers import LayerProjectMixin, LayerSessionMixin, LAYER_DDL
 
 
 DEBUG_DDL = '''
@@ -44,7 +45,10 @@ def stamp():
     return now()
 
 
-class DebugProjectMixin:
+DEBUG_DDL += LAYER_DDL
+
+
+class DebugProjectMixin(LayerProjectMixin):
     def debugger(self, executable, game_dir, *, version=None):
         return DebugSession(self, executable, game_dir, version=version)
 
@@ -127,8 +131,49 @@ class DebugProjectMixin:
             stream.write(data)
         return {'artifact':artifact,'output':str(destination),'sha256':row['sha256'],'size':len(data)}
 
+    def _debug_artifact(self, run, name, kind, data, metadata):
+        name = _file_name(name)
+        if len(data) > (128 if kind=='state' else 16)*1024*1024:
+            raise ValueError('Runtime artifact exceeds per-kind size budget')
+        row=self.db.execute('SELECT version FROM debug_runs WHERE id=?',(run,)).fetchone()
+        if row is None:
+            raise ValueError('Unknown debugger run')
+        identifier = uuid.uuid4().hex
+        digest = hashlib.sha256(data).hexdigest()
+        result = dict(artifact=identifier,run=run,version=row['version'],name=name,kind=kind,
+                      sha256=digest,size=len(data),metadata=metadata)
+        with self.transaction(True):
+            used = self.db.execute('SELECT coalesce(sum(length(data)),0) FROM debug_artifacts').fetchone()[0]
+            if used+len(data) > 256*1024*1024:
+                raise ValueError('Project runtime artifact budget exceeds 256 MiB')
+            self.db.execute('INSERT INTO debug_artifacts VALUES (?,?,?,?,?,?,?)',
+                (identifier,run,name,kind,digest,data,json.dumps(metadata)))
+            self.db.execute('INSERT INTO debug_events(run,created,operation,evidence) VALUES (?,?,?,?)',
+                            (run,stamp(),'artifact',json.dumps(result)))
+        return result
 
-class DebugSession:
+    def debug_grid(self, artifact, *, name='coordinate-grid.png', step=32, target=None):
+        """Derive a coordinate aid from an authentic saved frame, even after restart."""
+        from .screenshot_grid import coordinate_grid
+        from PIL import Image
+        _file_name(name)
+        row=self.db.execute('SELECT * FROM debug_artifacts WHERE id=?',(artifact,)).fetchone()
+        if row is None or row['kind']!='screenshot':
+            raise ValueError('Grid requires an original screenshot artifact')
+        data=bytes(row['data'])
+        if hashlib.sha256(data).hexdigest()!=row['sha256']:
+            raise ValueError('Stored screenshot hash mismatch')
+        rendered,grid=coordinate_grid(data,step=step,target=target)
+        metadata=json.loads(row['metadata'])
+        with Image.open(io.BytesIO(data)) as image:
+            if image.size!=(metadata['width'],metadata['height']):
+                raise ValueError('Stored screenshot dimensions differ from metadata')
+        grid.update(source_artifact=artifact,source_sha256=row['sha256'])
+        metadata.update(coordinate_grid=grid,sha256=hashlib.sha256(rendered).hexdigest())
+        return self._debug_artifact(row['run'],name,'screenshot-grid',rendered,metadata)
+
+
+class DebugSession(LayerSessionMixin):
     """One explicitly owned emulator; closing the project also closes sessions."""
     def __init__(self, project, executable, game_dir, *, version=None):
         self.project = project
@@ -230,6 +275,7 @@ class DebugSession:
         running = False
         result = None
         outcome = 'timeout'
+        hook_hits = []
         timing = before
         try:
             self._timing(fast_forward)
@@ -243,6 +289,14 @@ class DebugSession:
                     'timeout_ms':max(1,min(10 if fast_forward else 50,int(remaining*1000)))})
                 running = result.get('running',False)
                 if not running:
+                    hook_hit = self._dispatch_hook(result)
+                    if hook_hit is not None:
+                        hook_hits.append(hook_hit)
+                        if time.monotonic() >= deadline:
+                            break
+                        operation = self.call('execution.continue')
+                        running = True
+                        continue
                     kind = result.get('stop_reason',{}).get('kind','stopped')
                     outcome = 'breakpoint' if kind=='breakpoint' else kind
                     break
@@ -251,21 +305,23 @@ class DebugSession:
                     outcome = 'guest_time'
                     break
         finally:
-            try:
-                if running:
-                    pause = self.call('execution.pause')
-                    result = self.call('execution.wait',{'operation_id':pause['operation_id'],'timeout_ms':3000})
-                    if result.get('running'):
-                        raise DebuggerError('Target failed to pause after bounded run')
-                if result is None or result.get('state') != 'exited':
-                    timing = self._timing(before['fast_forward'])
-            except BaseException:
-                self.close()
-                raise
+            if not self.closed:
+                try:
+                    if running:
+                        pause = self.call('execution.pause')
+                        result = self.call('execution.wait',{'operation_id':pause['operation_id'],'timeout_ms':3000})
+                        if result.get('running'):
+                            raise DebuggerError('Target failed to pause after bounded run')
+                    if result is None or result.get('state') != 'exited':
+                        timing = self._timing(before['fast_forward'])
+                except BaseException:
+                    self.close()
+                    raise
         evidence = {'run':self.run_id,'outcome':outcome,'timed_out':outcome=='timeout',
                     'requested_guest_ms':guest_ms,'guest_elapsed_ms':timing['guest_ticks']-before['guest_ticks'],
                     'host_elapsed_ms':round((time.monotonic()-started)*1000,3),
                     'fast_forward':fast_forward,'timing_after':timing,'session':result}
+        evidence['hook_hits'] = hook_hits
         if result and result.get('stop_reason',{}).get('address'):
             result['stop_reason']['project_address'] = self.project_address(result['stop_reason']['address'])
         if result and result.get('stop_reason',{}).get('data_access'):
@@ -290,7 +346,9 @@ class DebugSession:
             'segment':result['segments']['cs'],'offset':result['instruction_pointer']})
         return result
 
-    def breakpoint(self, address, *, cs=None, access='x', length=1):
+    def breakpoint(self, address, *, cs=None, access='x', length=1, view='static'):
+        if view not in ('static','execute'):
+            raise ValueError('Breakpoint view must be static or execute')
         if access not in ('x','r','w','rw'):
             raise ValueError('access must be x, r, w, or rw')
         bounded(length,'length',1,256)
@@ -298,6 +356,19 @@ class DebugSession:
             return self._data_breakpoint(address,cs=cs,access=access,length=length)
         if length != 1:
             raise ValueError('Execution breakpoints use one instruction address')
+        if view == 'execute':
+            observed = self.code(address,cs=cs,length=15)
+            if not observed.get('overlay_valid',True) or not observed['instructions']:
+                raise ValueError('Execution view is stale or has no valid instruction')
+            instruction = observed['instructions'][0]
+            runtime_address = {'space':'segmented','segment':f"0x{int(instruction['cs'],16):04X}",
+                               'offset':f"0x{int(instruction['ip'],16):08X}"}
+            result = self.call('breakpoints.create',{'kind':'execution','address':runtime_address,'once':False})
+            result.update(run=self.run_id,version=self.version['id'],project_address=instruction['project_address'],
+                          runtime_bytes=instruction['bytes'],bytes_verified=True,static_bytes_verified=False,
+                          verification_view='execute',generation=observed['generation'])
+            self._event('breakpoint',result)
+            return result
         linear, selector = self.project._dos_parse_address(address,cs)
         offset = linear-self.static_base
         if not 0 <= offset < self.module_size:
@@ -379,6 +450,9 @@ class DebugSession:
         if self.call('input.mouse.state').get('mouse',{}).get('release_pending'):
             raise ValueError('Run until queued mouse releases complete before saving a state')
         before = self._disk_manifest()
+        layer_state = self._layer_state()
+        if layer_state['active']:
+            self.layers(layer_state['active'])
         registers = self.registers()
         if registers['cpu_mode']!='real':
             raise ValueError('Native project checkpoints currently require real mode')
@@ -389,7 +463,7 @@ class DebugSession:
         if before != self._disk_manifest():
             raise DebuggerError('Mounted game files changed while capturing state')
         metadata = {**self.metadata,'registers':registers,'disk_manifest':before,
-                    'format':'dosbox-x-native','disk_restore':False}
+                    'format':'dosbox-x-native','disk_restore':False,'code_layers':layer_state}
         if hasattr(self,'_state_provenance'):
             metadata['derivation'] = self._state_provenance
         return self._artifact(name,'state',data,metadata)
@@ -415,6 +489,7 @@ class DebugSession:
                 for field in ('general','segments','instruction_pointer','flags'):
                     if registers.get(field) != metadata['registers'].get(field):
                         raise DebuggerError('Restored CPU differs from saved state: '+field)
+                self._restore_layer_state(metadata.get('code_layers',{}))
             except BaseException:
                 self.close() # A partially failed native restore must never be resumed.
                 raise
@@ -438,7 +513,11 @@ class DebugSession:
         return execute_script(self,script,timeout_ms=timeout_ms)
 
     def delete_breakpoint(self, breakpoint_id):
+        self._layer_setup()
         result = self.call('breakpoints.delete',{'breakpoint_id':breakpoint_id})
+        control=self._hooks.pop(breakpoint_id,None)
+        if control is not None:
+            control['breakpoints']=[i for i in control['breakpoints'] if i!=breakpoint_id]
         self._event('delete_breakpoint',result)
         return result
 
@@ -453,24 +532,37 @@ class DebugSession:
         self._event('click',result)
         return result
 
-    def _artifact(self, name, kind, data, metadata):
-        name = _file_name(name)
-        if len(data) > (128 if kind=='state' else 16)*1024*1024:
-            raise ValueError('Runtime artifact exceeds per-kind size budget')
-        identifier = uuid.uuid4().hex
-        digest = hashlib.sha256(data).hexdigest()
-        with self.project.transaction(True):
-            used = self.project.db.execute('SELECT coalesce(sum(length(data)),0) FROM debug_artifacts').fetchone()[0]
-            if used+len(data) > 256*1024*1024:
-                raise ValueError('Project runtime artifact budget exceeds 256 MiB')
-            self.project.db.execute('INSERT INTO debug_artifacts VALUES (?,?,?,?,?,?,?)',
-                (identifier,self.run_id,name,kind,digest,data,json.dumps(metadata)))
-        result = dict(artifact=identifier,run=self.run_id,version=self.version['id'],name=name,kind=kind,
-                      sha256=digest,size=len(data),metadata=metadata)
-        self._event('artifact',result)
+    def click_frame(self, x, y, *, name='click-frame.png', grid_step=8,
+                    button='left', hold_ms=80, mode_id=None):
+        """Capture, label the exact target, and queue its mode-bound click in one call."""
+        from .screenshot_grid import validate_step
+        _file_name(name);validate_step(grid_step)
+        bounded(x,'x',0,4095);bounded(y,'y',0,4095);bounded(hold_ms,'hold_ms',1,1000)
+        if button not in ('left','right','middle'):
+            raise ValueError('button must be left, right or middle')
+        if mode_id is not None:bounded(mode_id,'mode_id',0,(1<<53)-1)
+        clean=self.screenshot(name[:248]+'.raw.png')
+        metadata=clean['metadata']
+        if x>=metadata['width'] or y>=metadata['height']:
+            raise ValueError('Click target is outside the captured native frame')
+        if mode_id is not None and mode_id!=metadata['mode_id']:
+            raise ValueError('Click mode differs from the newly captured frame mode')
+        frame=self.project.debug_grid(clean['artifact'],name=name,step=grid_step,target=[x,y])
+        click=self.click(x,y,button=button,hold_ms=hold_ms,mode_id=metadata['mode_id'])
+        result=dict(run=self.run_id,x=x,y=y,mode_id=metadata['mode_id'],frame=frame,click=click,
+                    frame_phase='before_queued_click')
+        self._event('click-frame',result)
         return result
 
-    def screenshot(self, name='screenshot.png'):
+    def _artifact(self, name, kind, data, metadata):
+        return self.project._debug_artifact(self.run_id,name,kind,data,metadata)
+
+    def screenshot(self, name='screenshot.png', *, grid=False, grid_step=32):
+        from .screenshot_grid import validate_step
+        _file_name(name)
+        if type(grid) is not bool:
+            raise ValueError('grid must be boolean')
+        validate_step(grid_step)
         result = self.call('video.screenshot')
         data = base64.b64decode(result.pop('png_base64'),validate=True)
         if not data.startswith(b'\x89PNG\r\n\x1a\n') or hashlib.sha256(data).hexdigest()!=result['sha256']:
@@ -480,7 +572,10 @@ class DebugSession:
             if image.size != (result['width'],result['height']):
                 raise DebuggerError('Screenshot dimensions differ from metadata')
             image.verify()
-        return self._artifact(name,'screenshot',data,result)
+        if not grid:
+            return self._artifact(name,'screenshot',data,result)
+        raw=self._artifact(name[:248]+'.raw.png','screenshot',data,result)
+        return self.project.debug_grid(raw['artifact'],name=name,step=grid_step)
 
     def trace(self, name='trace.json', *, count=512, timeout_ms=10000, fast_forward=False):
         _file_name(name)
@@ -509,6 +604,7 @@ class DebugSession:
                 segment = int(event['address']['segment'],16)-self.runtime_load+self.dos['load_segment']
                 event['project_segmented_address'] = (f"{segment:04x}:{int(event['address']['offset'],16):04x}"
                     if 0 <= segment <= 0xffff else None)
+        self._layer_trace(events)
         result = {'run':run,'version':self.version['id'],'mapping':self.metadata,'events':events,
                   'requested_count':count,'complete':len(events)==count}
         return self._artifact(name,'trace',json.dumps(result,indent=2).encode(),
@@ -559,8 +655,11 @@ class DebugWorkspace:
         if session is None or session.project.path != Path(project).resolve():
             raise ValueError('Live run not owned by this server; use debug-runs for saved history')
         methods = {'debug-status':'status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
-                   'debug-run':'run','debug-click':'click','debug-screenshot':'screenshot','debug-trace':'trace',
+                   'debug-run':'run','debug-click':'click','debug-click-frame':'click_frame','debug-screenshot':'screenshot','debug-trace':'trace',
                    'debug-memory':'memory','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script'}
+        methods.update({'debug-layer-stack':'layers','debug-layer-enable':'layer_enable','debug-layer-patch':'layer_patch',
+                        'debug-code':'code','debug-capture-code':'capture_code','debug-branch':'branch',
+                        'debug-cave':'cave','debug-hook':'hook','debug-hooks':'hooks','debug-delete-hook':'delete_hook'})
         if method=='debug-stop':
             if params:
                 raise ValueError('Unexpected stop options')

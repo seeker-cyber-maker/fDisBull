@@ -63,6 +63,46 @@ The host budget covers the running interval. Pausing, restoring speed, and order
 
 Read `mode_id` from your actual screenshot; do not assume the example's value. Click coordinates are native screenshot pixels. Input queued while stopped is consumed on subsequent execution; the release timer uses guest milliseconds. Fast-forward accelerates that guest time too.
 
+### Optional screenshot coordinate grid (0.11.0)
+
+`debug.screenshot("menu-grid.png", grid=True, grid_step=32)` saves a clean native frame and a separate annotated `screenshot-grid` artifact. The JSON equivalent is:
+
+```json
+{"method":"debug-screenshot","params":{"run":"RUN","name":"menu-grid.png","grid":true,"grid_step":32}}
+```
+
+Numbers across the top are **x**; numbers down the left are **y**. The origin is the top left, x increases rightward, and y increases downward. The grid never rescales or adds a border: a 320×200 frame still uses x=0..319 and y=0..199 for clicks. Do not multiply coordinates because `double_width` or `double_height` is true; those flags describe display presentation, not screenshot/input coordinates. The step defaults to 32 native pixels and accepts integers from **8 to 512**, including 8 for DOS art boundaries and 10 for a decimal grid. Clean screenshots remain the default.
+
+Fine lines and labels have separate spacing. With `grid_step=8`, lines appear every eight pixels and labels every 32; minor lines are faint so they do not obscure the art. Other steps use a label pitch that is a multiple of the line step and at least 32 pixels. `coordinate_grid.label_step`, `x_labels`, and `y_labels` record it. This changes annotation spacing only; click coordinates are never rounded to the grid.
+
+Use the returned `metadata.mode_id` with `debug.click`. A queued click requires subsequent execution to be consumed. A grid helps locate pixels; it does not identify controls or ensure the game has reached the expected menu. Changing video mode can invalidate a previously captured mode ID.
+
+Annotated metadata includes `coordinate_grid.source_artifact`, `source_sha256`, `step`, `origin`, `max_coordinate`, and the exact grid lines. The annotated artifact has its own SHA-256; the original PNG remains unchanged in the project. Grid rendering uses the stored pixels and operates after emulator/project restart too:
+
+```python
+with Project("dinopark.fdb") as project:
+    grid = project.debug_grid(CLEAN_SCREENSHOT_ID, step=20, name="menu-grid-20.png")
+    project.debug_export(grid["artifact"], "/new/path/menu-grid-20.png")
+```
+
+The offline JSON method is `debug-grid` with `artifact`, optional `name`, `step` and `target:[x,y]`; the CLI is `fdisbull debug-grid PROJECT ARTIFACT --step 8 --target '[160,160]'`. It accepts original `screenshot` artifacts, so repeated grids derive from the clean source instead of accumulating annotations. No GUI or emulator is used for this operation, and it works with screenshots from the published 0.10.0 backend. Both clean and annotated images count toward the existing project artifact budget. An offline target is a visual marker, not evidence that a click was queued or consumed.
+
+### Capture, mark and click in one action
+
+`debug.click_frame(x,y,grid_step=8)` captures a clean current frame, derives a gridded image marking and labelling that exact coordinate, and queues the click with the captured mode ID. JSON callers use **one** `debug-click-frame` request with `run`, `x`, `y`, and optional `name`, `grid_step`, `button`, `hold_ms`, `mode_id`. The result contains `frame`, `click`, `mode_id`, and `frame_phase:"before_queued_click"`. The frame is the actual pre-click view. If an expected `mode_id` is supplied and differs from the fresh frame, or the target is outside its dimensions, no click is queued.
+
+The `click-frame` script operation has the same fields. Capture/mark/click, bounded execution and an after-frame can all occur in one client `debug-script` request:
+
+```json
+{"format":"fdisbull-script-1","steps":[
+  {"op":"click-frame","x":160,"y":160,"grid_step":8,"hold_ms":150,"as":"action"},
+  {"op":"run","guest_ms":1500,"fast_forward":true,"timeout_ms":5000},
+  {"op":"screenshot","name":"after-click.png","grid":true,"grid_step":8}
+]}
+```
+
+The coordinate is an explicit input. When an agent must choose a new target from pixels, it still has to inspect a frame before sending that coordinate; scripts do not contain image recognition or invoke an agent inside the emulator. The compound action removes separate client calls for capturing/marking/queuing an already chosen point. Internal native RPCs still occur while the guest is paused, and a later run consumes the queued input. Clean source images, the target marker and the input receipt remain linked in project history.
+
 Execution breakpoint placement pins the static version and instruction context, checks the on-disk executable against the project's source hash, derives the runtime MZ load segment from observed entry registers, relocates the expected instruction bytes, and compares those bytes with live memory before creating the native breakpoint. Addresses outside the mapped MZ image, missing stored instructions, byte mismatches, wrapping translations, and patched static versions are rejected explicitly.
 
 The first implementation launches the **original unpatched MZ version** only. It does not silently apply a child project's patches to a game. Use `version:1` when a project's latest version is a child. Runtime evidence remains attached to its launch version and is not copied into patched children.
@@ -114,6 +154,24 @@ with Project("dinopark.fdb") as project:
 Native CPU observations and guest screenshots are stored separately from static facts. They do not mark an analysis queue stable, create inferred functions, or rewrite static instruction bytes.
 
 ## Verification and limits
+
+### Required native acceptance
+
+Ordinary `python -m pytest -q` is useful without an emulator and intentionally skips native tests when `FDISBULL_DOSBOX` is absent. For native acceptance, use the existing tests with `--require-native`. That option fails before collection if the environment variable is missing or does not name an executable file; a stock or incompatible executable then fails the actual integration tests rather than substituting a mock.
+
+From the repository root, select the separately built **layers backend** to test the current development source:
+
+```bash
+FDISBULL_DOSBOX=/absolute/path/to/layers/dosbox-x \
+  python -m pytest -q --require-native \
+  tests/test_debugger.py tests/test_code_layers.py tests/test_screenshot_grid.py
+```
+
+The current local Mac acceptance is **32 passed**, with native CPU, screenshots, checkpoint restart, static-patch isolation and process cleanup exercised. To check compatibility with the published 0.10 backend, run the same command without `tests/test_code_layers.py`: that backend supports the original debugger and optional screenshot grids but has no execution-layer capability, and the corresponding local check reports **15 passed**. Build each profile from its declared pristine DOSBox-X commit using either the [stable backend instructions](../experimental/dosbox-x/README.md) or the [layers instructions](../experimental/dosbox-x/layers/README.md); do not apply both complete patches to one checkout.
+
+The separate [native CI workflow](../.github/workflows/native-debugger.yml) checks out that pinned upstream commit, checks the complete patch and resulting source-file hashes, compiles the heavy-debug SDL2 backend, records its new Linux executable identity, and runs these same tests in both profiles. It retains logs and JUnit results without uploading games, machine states, databases or the emulator executable. Native acceptance is established by a successful run for the release commit, separately from the broad Python/package job where native skips are allowed. See the [release verification and CI links](VERIFICATION-0.11.md).
+
+The tests use authored MZ inputs. The source-only DinoPark replay requires the user's own game and remains a separate actual-game acceptance step. Native test success does not establish all-game compatibility, timing equivalence, or security isolation. Do not run less trustworthy targets on the assumption that headless emulation is a sandbox; checkpoint restore does not roll back mounted host files.
 
 `tests/test_debugger.py` tests source/version rejection and the live ownership contract. Set `FDISBULL_DOSBOX=/absolute/path/to/patched/dosbox-x` to additionally run real-MZ tests for relocation-aware breakpoints, observed trace addresses, timeout/pause/speed restoration, runtime-byte mismatch rejection, restart/export, patch isolation, and server EOF cleanup.
 

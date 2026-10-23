@@ -1,0 +1,22 @@
+{
+  "supplements": "verification-grid-final.json",
+  "note": "The earlier receipt inventories the build output directory. Its .gitignore entry is a build-control file, not a distribution package. These are the three archives checked by check_dist.py.",
+  "distribution_packages": [
+    {
+      "name": "fdisbull-0.11.0.dev0-py3-none-any.whl",
+      "size": 231203,
+      "sha256": "a554531687a3469c142ffc45d0b18081bd9e2a4f6365a88d7657a3a70ae6db3f"
+    },
+    {
+      "name": "fdisbull-0.11.0.dev0-tool.zip",
+      "size": 535937,
+      "sha256": "ceed3c452436ae726b885be53333d012c38659314fe115d43d74073f8c3702e3"
+    },
+    {
+      "name": "fdisbull-0.11.0.dev0.tar.gz",
+      "size": 455261,
+      "sha256": "659963ab94e920899a1b8f3afa7c1e65cab77301f37ef9874e02e447ba7f8721"
+    }
+  ],
+  "tool_only_archive_checks_passed": 3
+}

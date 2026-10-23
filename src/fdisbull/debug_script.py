@@ -10,9 +10,12 @@ import time
 from .debugger import bounded
 
 OPERATIONS = {
-    'run':'run', 'click':'click', 'screenshot':'screenshot', 'trace':'trace',
+    'run':'run', 'click':'click', 'click-frame':'click_frame', 'screenshot':'screenshot', 'trace':'trace',
     'breakpoint':'breakpoint', 'delete-breakpoint':'delete_breakpoint',
     'save-state':'save_state', 'load-state':'load_state',
+    'layer-stack':'layers', 'layer-enable':'layer_enable', 'layer-patch':'layer_patch',
+    'code':'code', 'capture-code':'capture_code', 'branch':'branch', 'cave':'cave', 'hook':'hook',
+    'hooks':'hooks', 'delete-hook':'delete_hook',
     'registers':'registers', 'memory':'memory', 'status':'status',
 }
 

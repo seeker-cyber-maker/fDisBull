@@ -1,0 +1,1078 @@
+{
+  "result": "pass",
+  "guest_self_check": true,
+  "original_crc": "0x650c",
+  "changed_crc": "0x33fa",
+  "detected_run": {
+    "run": "7695da153813402eb8c307bd854dcb0a",
+    "outcome": "breakpoint",
+    "timed_out": false,
+    "requested_guest_ms": null,
+    "guest_elapsed_ms": 0,
+    "host_elapsed_ms": 3.335,
+    "fast_forward": false,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 28,
+      "session_id": "ses-1",
+      "state_revision": 6
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 6,
+      "stop_reason": {
+        "address": {
+          "offset": "0x00000029",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "breakpoint_id": "bp-1",
+        "kind": "breakpoint",
+        "project_address": "0x10029"
+      }
+    },
+    "hook_hits": []
+  },
+  "detected_registers": {
+    "cpu_mode": "real",
+    "flags": "0x00007297",
+    "general": {
+      "eax": "0x0000DEAD",
+      "ebp": "0x0000091C",
+      "ebx": "0x00000000",
+      "ecx": "0x00000000",
+      "edi": "0x00000200",
+      "edx": "0x000033FA",
+      "esi": "0x00000053",
+      "esp": "0x00000200"
+    },
+    "instruction_pointer": "0x00000029",
+    "segments": {
+      "cs": "0x0824",
+      "ds": "0x0824",
+      "es": "0x0814",
+      "fs": "0x0000",
+      "gs": "0x0000",
+      "ss": "0x0824"
+    },
+    "session_id": "ses-1",
+    "state_revision": 6,
+    "cs": "0x0824",
+    "ip": "0x00000029",
+    "project_address": "0x10029"
+  },
+  "hooked_run": {
+    "run": "7695da153813402eb8c307bd854dcb0a",
+    "outcome": "breakpoint",
+    "timed_out": false,
+    "requested_guest_ms": null,
+    "guest_elapsed_ms": 0,
+    "host_elapsed_ms": 12.543,
+    "fast_forward": false,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 28,
+      "session_id": "ses-1",
+      "state_revision": 17
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 17,
+      "stop_reason": {
+        "address": {
+          "offset": "0x00000053",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "breakpoint_id": "bp-2",
+        "kind": "breakpoint",
+        "project_address": "0x10053"
+      }
+    },
+    "hook_hits": [
+      {
+        "hook": "15d903b00bec4636a704ba05b02dcce2",
+        "hit": 1,
+        "stop": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 11,
+          "stop_reason": {
+            "address": {
+              "offset": "0x0000000A",
+              "segment": "0x0824",
+              "space": "segmented"
+            },
+            "breakpoint_id": "bp-3",
+            "kind": "breakpoint"
+          }
+        },
+        "actions": [
+          {
+            "op": "layers",
+            "result": {
+              "run": "7695da153813402eb8c307bd854dcb0a",
+              "active_before": [
+                "95a74177a73a4cc2be2bcddf1a2f892f"
+              ],
+              "active": [],
+              "generation": 5,
+              "ram_bytes": 0,
+              "execution_bytes": 0,
+              "guest_instructions_during_transition": 0,
+              "preserved_changed_bytes": [],
+              "backend": {
+                "completed": true,
+                "generation": 5,
+                "session_id": "ses-1",
+                "state_revision": 13
+              }
+            }
+          }
+        ],
+        "dispatch": "paused_rpc",
+        "extra_guest_bytes": 0
+      },
+      {
+        "hook": "e6b0566d5ce541b89aca3b8a626f7eb2",
+        "hit": 1,
+        "stop": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 14,
+          "stop_reason": {
+            "address": {
+              "offset": "0x00000023",
+              "segment": "0x0824",
+              "space": "segmented"
+            },
+            "breakpoint_id": "bp-4",
+            "kind": "breakpoint"
+          }
+        },
+        "actions": [
+          {
+            "op": "layers",
+            "result": {
+              "run": "7695da153813402eb8c307bd854dcb0a",
+              "active_before": [],
+              "active": [
+                "95a74177a73a4cc2be2bcddf1a2f892f"
+              ],
+              "generation": 6,
+              "ram_bytes": 2,
+              "execution_bytes": 0,
+              "guest_instructions_during_transition": 0,
+              "preserved_changed_bytes": [],
+              "backend": {
+                "completed": true,
+                "generation": 6,
+                "session_id": "ses-1",
+                "state_revision": 16
+              }
+            }
+          }
+        ],
+        "dispatch": "paused_rpc",
+        "extra_guest_bytes": 0
+      }
+    ]
+  },
+  "hooked_registers": {
+    "cpu_mode": "real",
+    "flags": "0x00007246",
+    "general": {
+      "eax": "0x00002222",
+      "ebp": "0x0000091C",
+      "ebx": "0x00000000",
+      "ecx": "0x00000000",
+      "edi": "0x00000200",
+      "edx": "0x0000650C",
+      "esi": "0x00000053",
+      "esp": "0x00000200"
+    },
+    "instruction_pointer": "0x00000053",
+    "segments": {
+      "cs": "0x0824",
+      "ds": "0x0824",
+      "es": "0x0814",
+      "fs": "0x0000",
+      "gs": "0x0000",
+      "ss": "0x0824"
+    },
+    "session_id": "ses-1",
+    "state_revision": 17,
+    "cs": "0x0824",
+    "ip": "0x00000053",
+    "project_address": "0x10053"
+  },
+  "hooks": [
+    {
+      "hook": "15d903b00bec4636a704ba05b02dcce2",
+      "breakpoints": [
+        "bp-3"
+      ],
+      "actions": [
+        {
+          "op": "layers",
+          "layers": []
+        }
+      ],
+      "once": true,
+      "max_hits": 1,
+      "hits": 0,
+      "dispatch": "paused_rpc",
+      "extra_guest_bytes": 0,
+      "location": {
+        "address": {
+          "offset": "0x0000000A",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "breakpoint_id": "bp-3",
+        "kind": "execution",
+        "once": false,
+        "session_id": "ses-1",
+        "state_revision": 9,
+        "run": "7695da153813402eb8c307bd854dcb0a",
+        "version": 1,
+        "project_address": "0x1000a",
+        "runtime_bytes": "ac",
+        "bytes_verified": true,
+        "static_bytes_verified": false,
+        "verification_view": "execute",
+        "generation": 4
+      }
+    },
+    {
+      "hook": "e6b0566d5ce541b89aca3b8a626f7eb2",
+      "breakpoints": [
+        "bp-4"
+      ],
+      "actions": [
+        {
+          "op": "layers",
+          "layers": [
+            "95a74177a73a4cc2be2bcddf1a2f892f"
+          ]
+        }
+      ],
+      "once": true,
+      "max_hits": 1,
+      "hits": 0,
+      "dispatch": "paused_rpc",
+      "extra_guest_bytes": 0,
+      "location": {
+        "address": {
+          "offset": "0x00000023",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "breakpoint_id": "bp-4",
+        "kind": "execution",
+        "once": false,
+        "session_id": "ses-1",
+        "state_revision": 10,
+        "run": "7695da153813402eb8c307bd854dcb0a",
+        "version": 1,
+        "project_address": "0x10023",
+        "runtime_bytes": "e92a00",
+        "bytes_verified": true,
+        "static_bytes_verified": false,
+        "verification_view": "execute",
+        "generation": 4
+      }
+    }
+  ],
+  "layer_restored": {
+    "run": "7695da153813402eb8c307bd854dcb0a",
+    "active": [
+      "95a74177a73a4cc2be2bcddf1a2f892f"
+    ],
+    "generation": 6,
+    "layers": [
+      {
+        "id": "95a74177a73a4cc2be2bcddf1a2f892f",
+        "version": 1,
+        "name": "RAM experiment",
+        "kind": "ram",
+        "created": "2026-10-23T18:47:28.159762+00:00",
+        "sha256": "582ba0b3e7540cb2c3050416c2bd635cec0913a10731e15dd0c11d76b1c932ae",
+        "patches": [
+          {
+            "address": "0x10051",
+            "data_hex": "2222",
+            "expected_hex": "1111"
+          }
+        ]
+      }
+    ]
+  },
+  "runtime_patched_bytes": {
+    "address": {
+      "offset": "0x00008291",
+      "space": "linear"
+    },
+    "byte_count": 2,
+    "data_base64": "IiI=",
+    "layer_generation": 6,
+    "overlay_valid": true,
+    "session_id": "ses-1",
+    "sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+    "state_revision": 17,
+    "view": "ram",
+    "project_address": "0x10051",
+    "hex": "2222"
+  },
+  "backend_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+  "native_state_exported": false,
+  "process_reaped": true,
+  "timeline": {
+    "run": "7695da153813402eb8c307bd854dcb0a",
+    "events": [
+      {
+        "sequence": 1,
+        "created": "2026-10-23T18:47:27.965092+00:00",
+        "operation": "launch",
+        "evidence": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 1,
+          "stop_reason": {
+            "address": {
+              "offset": "0x00000000",
+              "segment": "0x0824",
+              "space": "segmented"
+            },
+            "kind": "startup"
+          }
+        }
+      },
+      {
+        "sequence": 2,
+        "created": "2026-10-23T18:47:28.158814+00:00",
+        "operation": "artifact",
+        "evidence": {
+          "artifact": "104738e5ef1d4828b7f984d69a6e9b80",
+          "run": "7695da153813402eb8c307bd854dcb0a",
+          "version": 1,
+          "name": "entry.sav",
+          "kind": "state",
+          "sha256": "1831252a4a0d97427b70a270bc758cd3f4de2771adabf3ad36cdf30c603551e2",
+          "size": 81246,
+          "metadata": {
+            "fdisbull_version": "0.11.0.dev0",
+            "source_sha256": "c0c030c3ede445852bebc849bb3ade2179920b42ddadb351cd30da794ec70960",
+            "version_sha256": "543386f4bfdffb3611c8a3e210424766f6e14d25152f854240206696df142920",
+            "executable": "/Users/tiga/Documents/ChatGPT/fDisBull/.recovery/2026-10-23/dosbox-layers/src/dosbox-x",
+            "emulator_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+            "runtime_profile": "real-normal-v1",
+            "game_dir": "/Users/tiga/Documents/ChatGPT/fDisBull/.recovery/2026-10-23/layers-grid-acceptance/fixture",
+            "target": "CHECK.EXE",
+            "static_load_segment": 4096,
+            "runtime_load_segment": 2084,
+            "entry_registers": {
+              "cpu_mode": "real",
+              "flags": "0x00007202",
+              "general": {
+                "eax": "0x00000000",
+                "ebp": "0x0000091C",
+                "ebx": "0x00000000",
+                "ecx": "0x000000FF",
+                "edi": "0x00000200",
+                "edx": "0x00000814",
+                "esi": "0x00000000",
+                "esp": "0x00000200"
+              },
+              "instruction_pointer": "0x00000000",
+              "segments": {
+                "cs": "0x0824",
+                "ds": "0x0814",
+                "es": "0x0814",
+                "fs": "0x0000",
+                "gs": "0x0000",
+                "ss": "0x0824"
+              },
+              "session_id": "ses-1",
+              "state_revision": 1
+            },
+            "capabilities": {
+              "address_spaces": [
+                "segmented",
+                "linear",
+                "physical"
+              ],
+              "breakpoints": {
+                "data_access": "normal_core_real_mode_byte_addresses",
+                "memory_change": true,
+                "memory_change_address_spaces": [
+                  "segmented",
+                  "linear"
+                ]
+              },
+              "code_layers": "normal_core_real_mode_guarded_fetch_v1",
+              "debugger": true,
+              "input": {
+                "absolute_mouse": true,
+                "click_timing": "guest_emulated_milliseconds",
+                "coordinate_space": "guest_frame_pixels",
+                "driver": "builtin_dos_int33_only"
+              },
+              "limits": {
+                "max_memory_read_bytes": 65536,
+                "max_message_bytes": 8388608,
+                "max_trace_events": 10000
+              },
+              "protocol_version": "1.0",
+              "register_edit": true,
+              "save_states": true,
+              "timing": {
+                "fast_forward": true,
+                "guest_clock": "PIC_Ticks_milliseconds"
+              },
+              "trace": {
+                "cpu": true
+              },
+              "video": {
+                "format": "png",
+                "headless": true,
+                "screenshot": true,
+                "source": "last_completed_guest_frame"
+              }
+            },
+            "pid": 98496,
+            "registers": {
+              "cpu_mode": "real",
+              "flags": "0x00007202",
+              "general": {
+                "eax": "0x00000000",
+                "ebp": "0x0000091C",
+                "ebx": "0x00000000",
+                "ecx": "0x000000FF",
+                "edi": "0x00000200",
+                "edx": "0x00000814",
+                "esi": "0x00000000",
+                "esp": "0x00000200"
+              },
+              "instruction_pointer": "0x00000000",
+              "segments": {
+                "cs": "0x0824",
+                "ds": "0x0814",
+                "es": "0x0814",
+                "fs": "0x0000",
+                "gs": "0x0000",
+                "ss": "0x0824"
+              },
+              "session_id": "ses-1",
+              "state_revision": 1,
+              "cs": "0x0824",
+              "ip": "0x00000000",
+              "project_address": "0x10000"
+            },
+            "disk_manifest": [
+              {
+                "path": "CHECK.EXE",
+                "sha256": "c0c030c3ede445852bebc849bb3ade2179920b42ddadb351cd30da794ec70960"
+              }
+            ],
+            "format": "dosbox-x-native",
+            "disk_restore": false,
+            "code_layers": {
+              "active": [],
+              "ram_base": {},
+              "ram_applied": {}
+            }
+          }
+        }
+      },
+      {
+        "sequence": 3,
+        "created": "2026-10-23T18:47:28.162417+00:00",
+        "operation": "layer-transition",
+        "evidence": {
+          "run": "7695da153813402eb8c307bd854dcb0a",
+          "active_before": [],
+          "active": [
+            "95a74177a73a4cc2be2bcddf1a2f892f"
+          ],
+          "generation": 2,
+          "ram_bytes": 2,
+          "execution_bytes": 0,
+          "guest_instructions_during_transition": 0,
+          "preserved_changed_bytes": [],
+          "backend": {
+            "completed": true,
+            "generation": 2,
+            "session_id": "ses-1",
+            "state_revision": 3
+          }
+        }
+      },
+      {
+        "sequence": 4,
+        "created": "2026-10-23T18:47:28.165758+00:00",
+        "operation": "breakpoint",
+        "evidence": {
+          "address": {
+            "offset": "0x00000029",
+            "segment": "0x0824",
+            "space": "segmented"
+          },
+          "breakpoint_id": "bp-1",
+          "kind": "execution",
+          "once": false,
+          "session_id": "ses-1",
+          "state_revision": 4,
+          "run": "7695da153813402eb8c307bd854dcb0a",
+          "version": 1,
+          "project_address": "0x10029",
+          "project_cs": "0x1000",
+          "instruction_context": "x86:16:little:cs=1000",
+          "runtime_bytes": "ebfe",
+          "bytes_verified": true
+        }
+      },
+      {
+        "sequence": 5,
+        "created": "2026-10-23T18:47:28.168075+00:00",
+        "operation": "breakpoint",
+        "evidence": {
+          "address": {
+            "offset": "0x00000053",
+            "segment": "0x0824",
+            "space": "segmented"
+          },
+          "breakpoint_id": "bp-2",
+          "kind": "execution",
+          "once": false,
+          "session_id": "ses-1",
+          "state_revision": 5,
+          "run": "7695da153813402eb8c307bd854dcb0a",
+          "version": 1,
+          "project_address": "0x10053",
+          "project_cs": "0x1000",
+          "instruction_context": "x86:16:little:cs=1000",
+          "runtime_bytes": "ebfe",
+          "bytes_verified": true
+        }
+      },
+      {
+        "sequence": 6,
+        "created": "2026-10-23T18:47:28.172734+00:00",
+        "operation": "run",
+        "evidence": {
+          "run": "7695da153813402eb8c307bd854dcb0a",
+          "outcome": "breakpoint",
+          "timed_out": false,
+          "requested_guest_ms": null,
+          "guest_elapsed_ms": 0,
+          "host_elapsed_ms": 3.335,
+          "fast_forward": false,
+          "timing_after": {
+            "fast_forward": false,
+            "guest_ticks": 28,
+            "session_id": "ses-1",
+            "state_revision": 6
+          },
+          "session": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 6,
+            "stop_reason": {
+              "address": {
+                "offset": "0x00000029",
+                "segment": "0x0824",
+                "space": "segmented"
+              },
+              "breakpoint_id": "bp-1",
+              "kind": "breakpoint",
+              "project_address": "0x10029"
+            }
+          },
+          "hook_hits": []
+        }
+      },
+      {
+        "sequence": 7,
+        "created": "2026-10-23T18:47:28.190030+00:00",
+        "operation": "load-state",
+        "evidence": {
+          "completed": true,
+          "session_id": "ses-1",
+          "state_revision": 7,
+          "artifact": "104738e5ef1d4828b7f984d69a6e9b80",
+          "sha256": "1831252a4a0d97427b70a270bc758cd3f4de2771adabf3ad36cdf30c603551e2",
+          "registers": {
+            "cpu_mode": "real",
+            "flags": "0x00007202",
+            "general": {
+              "eax": "0x00000000",
+              "ebp": "0x0000091C",
+              "ebx": "0x00000000",
+              "ecx": "0x000000FF",
+              "edi": "0x00000200",
+              "edx": "0x00000814",
+              "esi": "0x00000000",
+              "esp": "0x00000200"
+            },
+            "instruction_pointer": "0x00000000",
+            "segments": {
+              "cs": "0x0824",
+              "ds": "0x0814",
+              "es": "0x0814",
+              "fs": "0x0000",
+              "gs": "0x0000",
+              "ss": "0x0824"
+            },
+            "session_id": "ses-1",
+            "state_revision": 7,
+            "cs": "0x0824",
+            "ip": "0x00000000",
+            "project_address": "0x10000"
+          },
+          "framebuffer": "invalidated_until_next_completed_frame"
+        }
+      },
+      {
+        "sequence": 8,
+        "created": "2026-10-23T18:47:28.191955+00:00",
+        "operation": "layer-transition",
+        "evidence": {
+          "run": "7695da153813402eb8c307bd854dcb0a",
+          "active_before": [],
+          "active": [
+            "95a74177a73a4cc2be2bcddf1a2f892f"
+          ],
+          "generation": 4,
+          "ram_bytes": 2,
+          "execution_bytes": 0,
+          "guest_instructions_during_transition": 0,
+          "preserved_changed_bytes": [],
+          "backend": {
+            "completed": true,
+            "generation": 4,
+            "session_id": "ses-1",
+            "state_revision": 8
+          }
+        }
+      },
+      {
+        "sequence": 9,
+        "created": "2026-10-23T18:47:28.194347+00:00",
+        "operation": "breakpoint",
+        "evidence": {
+          "address": {
+            "offset": "0x0000000A",
+            "segment": "0x0824",
+            "space": "segmented"
+          },
+          "breakpoint_id": "bp-3",
+          "kind": "execution",
+          "once": false,
+          "session_id": "ses-1",
+          "state_revision": 9,
+          "run": "7695da153813402eb8c307bd854dcb0a",
+          "version": 1,
+          "project_address": "0x1000a",
+          "runtime_bytes": "ac",
+          "bytes_verified": true,
+          "static_bytes_verified": false,
+          "verification_view": "execute",
+          "generation": 4
+        }
+      },
+      {
+        "sequence": 10,
+        "created": "2026-10-23T18:47:28.194650+00:00",
+        "operation": "hook-create",
+        "evidence": {
+          "hook": "15d903b00bec4636a704ba05b02dcce2",
+          "breakpoints": [
+            "bp-3"
+          ],
+          "actions": [
+            {
+              "op": "layers",
+              "layers": []
+            }
+          ],
+          "once": true,
+          "max_hits": 1,
+          "hits": 0,
+          "dispatch": "paused_rpc",
+          "extra_guest_bytes": 0,
+          "location": {
+            "address": {
+              "offset": "0x0000000A",
+              "segment": "0x0824",
+              "space": "segmented"
+            },
+            "breakpoint_id": "bp-3",
+            "kind": "execution",
+            "once": false,
+            "session_id": "ses-1",
+            "state_revision": 9,
+            "run": "7695da153813402eb8c307bd854dcb0a",
+            "version": 1,
+            "project_address": "0x1000a",
+            "runtime_bytes": "ac",
+            "bytes_verified": true,
+            "static_bytes_verified": false,
+            "verification_view": "execute",
+            "generation": 4
+          }
+        }
+      },
+      {
+        "sequence": 11,
+        "created": "2026-10-23T18:47:28.196586+00:00",
+        "operation": "breakpoint",
+        "evidence": {
+          "address": {
+            "offset": "0x00000023",
+            "segment": "0x0824",
+            "space": "segmented"
+          },
+          "breakpoint_id": "bp-4",
+          "kind": "execution",
+          "once": false,
+          "session_id": "ses-1",
+          "state_revision": 10,
+          "run": "7695da153813402eb8c307bd854dcb0a",
+          "version": 1,
+          "project_address": "0x10023",
+          "runtime_bytes": "e92a00",
+          "bytes_verified": true,
+          "static_bytes_verified": false,
+          "verification_view": "execute",
+          "generation": 4
+        }
+      },
+      {
+        "sequence": 12,
+        "created": "2026-10-23T18:47:28.196830+00:00",
+        "operation": "hook-create",
+        "evidence": {
+          "hook": "e6b0566d5ce541b89aca3b8a626f7eb2",
+          "breakpoints": [
+            "bp-4"
+          ],
+          "actions": [
+            {
+              "op": "layers",
+              "layers": [
+                "95a74177a73a4cc2be2bcddf1a2f892f"
+              ]
+            }
+          ],
+          "once": true,
+          "max_hits": 1,
+          "hits": 0,
+          "dispatch": "paused_rpc",
+          "extra_guest_bytes": 0,
+          "location": {
+            "address": {
+              "offset": "0x00000023",
+              "segment": "0x0824",
+              "space": "segmented"
+            },
+            "breakpoint_id": "bp-4",
+            "kind": "execution",
+            "once": false,
+            "session_id": "ses-1",
+            "state_revision": 10,
+            "run": "7695da153813402eb8c307bd854dcb0a",
+            "version": 1,
+            "project_address": "0x10023",
+            "runtime_bytes": "e92a00",
+            "bytes_verified": true,
+            "static_bytes_verified": false,
+            "verification_view": "execute",
+            "generation": 4
+          }
+        }
+      },
+      {
+        "sequence": 13,
+        "created": "2026-10-23T18:47:28.203318+00:00",
+        "operation": "layer-transition",
+        "evidence": {
+          "run": "7695da153813402eb8c307bd854dcb0a",
+          "active_before": [
+            "95a74177a73a4cc2be2bcddf1a2f892f"
+          ],
+          "active": [],
+          "generation": 5,
+          "ram_bytes": 0,
+          "execution_bytes": 0,
+          "guest_instructions_during_transition": 0,
+          "preserved_changed_bytes": [],
+          "backend": {
+            "completed": true,
+            "generation": 5,
+            "session_id": "ses-1",
+            "state_revision": 13
+          }
+        }
+      },
+      {
+        "sequence": 14,
+        "created": "2026-10-23T18:47:28.203575+00:00",
+        "operation": "hook-hit",
+        "evidence": {
+          "hook": "15d903b00bec4636a704ba05b02dcce2",
+          "hit": 1,
+          "stop": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 11,
+            "stop_reason": {
+              "address": {
+                "offset": "0x0000000A",
+                "segment": "0x0824",
+                "space": "segmented"
+              },
+              "breakpoint_id": "bp-3",
+              "kind": "breakpoint"
+            }
+          },
+          "actions": [
+            {
+              "op": "layers",
+              "result": {
+                "run": "7695da153813402eb8c307bd854dcb0a",
+                "active_before": [
+                  "95a74177a73a4cc2be2bcddf1a2f892f"
+                ],
+                "active": [],
+                "generation": 5,
+                "ram_bytes": 0,
+                "execution_bytes": 0,
+                "guest_instructions_during_transition": 0,
+                "preserved_changed_bytes": [],
+                "backend": {
+                  "completed": true,
+                  "generation": 5,
+                  "session_id": "ses-1",
+                  "state_revision": 13
+                }
+              }
+            }
+          ],
+          "dispatch": "paused_rpc",
+          "extra_guest_bytes": 0
+        }
+      },
+      {
+        "sequence": 15,
+        "created": "2026-10-23T18:47:28.207973+00:00",
+        "operation": "layer-transition",
+        "evidence": {
+          "run": "7695da153813402eb8c307bd854dcb0a",
+          "active_before": [],
+          "active": [
+            "95a74177a73a4cc2be2bcddf1a2f892f"
+          ],
+          "generation": 6,
+          "ram_bytes": 2,
+          "execution_bytes": 0,
+          "guest_instructions_during_transition": 0,
+          "preserved_changed_bytes": [],
+          "backend": {
+            "completed": true,
+            "generation": 6,
+            "session_id": "ses-1",
+            "state_revision": 16
+          }
+        }
+      },
+      {
+        "sequence": 16,
+        "created": "2026-10-23T18:47:28.208222+00:00",
+        "operation": "hook-hit",
+        "evidence": {
+          "hook": "e6b0566d5ce541b89aca3b8a626f7eb2",
+          "hit": 1,
+          "stop": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 14,
+            "stop_reason": {
+              "address": {
+                "offset": "0x00000023",
+                "segment": "0x0824",
+                "space": "segmented"
+              },
+              "breakpoint_id": "bp-4",
+              "kind": "breakpoint"
+            }
+          },
+          "actions": [
+            {
+              "op": "layers",
+              "result": {
+                "run": "7695da153813402eb8c307bd854dcb0a",
+                "active_before": [],
+                "active": [
+                  "95a74177a73a4cc2be2bcddf1a2f892f"
+                ],
+                "generation": 6,
+                "ram_bytes": 2,
+                "execution_bytes": 0,
+                "guest_instructions_during_transition": 0,
+                "preserved_changed_bytes": [],
+                "backend": {
+                  "completed": true,
+                  "generation": 6,
+                  "session_id": "ses-1",
+                  "state_revision": 16
+                }
+              }
+            }
+          ],
+          "dispatch": "paused_rpc",
+          "extra_guest_bytes": 0
+        }
+      },
+      {
+        "sequence": 17,
+        "created": "2026-10-23T18:47:28.210279+00:00",
+        "operation": "run",
+        "evidence": {
+          "run": "7695da153813402eb8c307bd854dcb0a",
+          "outcome": "breakpoint",
+          "timed_out": false,
+          "requested_guest_ms": null,
+          "guest_elapsed_ms": 0,
+          "host_elapsed_ms": 12.543,
+          "fast_forward": false,
+          "timing_after": {
+            "fast_forward": false,
+            "guest_ticks": 28,
+            "session_id": "ses-1",
+            "state_revision": 17
+          },
+          "session": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 17,
+            "stop_reason": {
+              "address": {
+                "offset": "0x00000053",
+                "segment": "0x0824",
+                "space": "segmented"
+              },
+              "breakpoint_id": "bp-2",
+              "kind": "breakpoint",
+              "project_address": "0x10053"
+            }
+          },
+          "hook_hits": [
+            {
+              "hook": "15d903b00bec4636a704ba05b02dcce2",
+              "hit": 1,
+              "stop": {
+                "session_id": "ses-1",
+                "state": "stopped",
+                "state_revision": 11,
+                "stop_reason": {
+                  "address": {
+                    "offset": "0x0000000A",
+                    "segment": "0x0824",
+                    "space": "segmented"
+                  },
+                  "breakpoint_id": "bp-3",
+                  "kind": "breakpoint"
+                }
+              },
+              "actions": [
+                {
+                  "op": "layers",
+                  "result": {
+                    "run": "7695da153813402eb8c307bd854dcb0a",
+                    "active_before": [
+                      "95a74177a73a4cc2be2bcddf1a2f892f"
+                    ],
+                    "active": [],
+                    "generation": 5,
+                    "ram_bytes": 0,
+                    "execution_bytes": 0,
+                    "guest_instructions_during_transition": 0,
+                    "preserved_changed_bytes": [],
+                    "backend": {
+                      "completed": true,
+                      "generation": 5,
+                      "session_id": "ses-1",
+                      "state_revision": 13
+                    }
+                  }
+                }
+              ],
+              "dispatch": "paused_rpc",
+              "extra_guest_bytes": 0
+            },
+            {
+              "hook": "e6b0566d5ce541b89aca3b8a626f7eb2",
+              "hit": 1,
+              "stop": {
+                "session_id": "ses-1",
+                "state": "stopped",
+                "state_revision": 14,
+                "stop_reason": {
+                  "address": {
+                    "offset": "0x00000023",
+                    "segment": "0x0824",
+                    "space": "segmented"
+                  },
+                  "breakpoint_id": "bp-4",
+                  "kind": "breakpoint"
+                }
+              },
+              "actions": [
+                {
+                  "op": "layers",
+                  "result": {
+                    "run": "7695da153813402eb8c307bd854dcb0a",
+                    "active_before": [],
+                    "active": [
+                      "95a74177a73a4cc2be2bcddf1a2f892f"
+                    ],
+                    "generation": 6,
+                    "ram_bytes": 2,
+                    "execution_bytes": 0,
+                    "guest_instructions_during_transition": 0,
+                    "preserved_changed_bytes": [],
+                    "backend": {
+                      "completed": true,
+                      "generation": 6,
+                      "session_id": "ses-1",
+                      "state_revision": 16
+                    }
+                  }
+                }
+              ],
+              "dispatch": "paused_rpc",
+              "extra_guest_bytes": 0
+            }
+          ]
+        }
+      },
+      {
+        "sequence": 18,
+        "created": "2026-10-23T18:47:28.363298+00:00",
+        "operation": "close",
+        "evidence": {
+          "session_id": "ses-1",
+          "state": "exited",
+          "state_revision": 18,
+          "stop_reason": {
+            "kind": "program_exit"
+          },
+          "process_reaped": true
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,191 @@
+............................................s........................... [  9%]
+........................................................................ [ 18%]
+........................................................................ [ 27%]
+....................................................EEEEEEE...EEEEEEE... [ 36%]
+........................................................................ [ 45%]
+........................................................................ [ 54%]
+.....F.............F.................................................... [ 64%]
+........................................................................ [ 73%]
+................EEEEEEEEE............................................... [ 82%]
+........................................................................ [ 91%]
+................................ss.................................      [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_got_slots_come_from_actual_relocations_and_keep_module_proof _
+tests/test_elf_metadata.py:42: in elf_files
+    subprocess.run(command, check=True, capture_output=True)
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-Wl,--version-script=/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/versions.map', '-Wl,-soname,libmeta.so', '-Wl,-z,ibtplt', '-Wl,--enable-new-dtags,-rpath,$ORIGIN/meta', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/meta.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/libmeta.so']' returned non-zero exit status 1.
+_ ERROR at setup of test_plt_stubs_are_native_validated_not_fixed_stride_guesses _
+tests/test_elf_metadata.py:42: in elf_files
+    subprocess.run(command, check=True, capture_output=True)
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-Wl,--version-script=/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/versions.map', '-Wl,-soname,libmeta.so', '-Wl,-z,ibtplt', '-Wl,--enable-new-dtags,-rpath,$ORIGIN/meta', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/meta.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/libmeta.so']' returned non-zero exit status 1.
+_ ERROR at setup of test_function_data_ifunc_tls_and_absolute_exports_have_distinct_identity _
+tests/test_elf_metadata.py:42: in elf_files
+    subprocess.run(command, check=True, capture_output=True)
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-Wl,--version-script=/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/versions.map', '-Wl,-soname,libmeta.so', '-Wl,-z,ibtplt', '-Wl,--enable-new-dtags,-rpath,$ORIGIN/meta', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/meta.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/libmeta.so']' returned non-zero exit status 1.
+_ ERROR at setup of test_pie_copy_storage_tls_and_versioned_dependency_are_not_callable_slots _
+tests/test_elf_metadata.py:42: in elf_files
+    subprocess.run(command, check=True, capture_output=True)
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-Wl,--version-script=/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/versions.map', '-Wl,-soname,libmeta.so', '-Wl,-z,ibtplt', '-Wl,--enable-new-dtags,-rpath,$ORIGIN/meta', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/meta.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/libmeta.so']' returned non-zero exit status 1.
+___ ERROR at setup of test_fno_plt_uses_glob_dat_without_fabricating_a_stub ____
+tests/test_elf_metadata.py:42: in elf_files
+    subprocess.run(command, check=True, capture_output=True)
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-Wl,--version-script=/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/versions.map', '-Wl,-soname,libmeta.so', '-Wl,-z,ibtplt', '-Wl,--enable-new-dtags,-rpath,$ORIGIN/meta', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/meta.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/libmeta.so']' returned non-zero exit status 1.
+___ ERROR at setup of test_duplicate_versioned_export_names_remain_separate ____
+tests/test_elf_metadata.py:42: in elf_files
+    subprocess.run(command, check=True, capture_output=True)
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-Wl,--version-script=/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/versions.map', '-Wl,-soname,libmeta.so', '-Wl,-z,ibtplt', '-Wl,--enable-new-dtags,-rpath,$ORIGIN/meta', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/meta.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/libmeta.so']' returned non-zero exit status 1.
+_ ERROR at setup of test_conflicting_version_requirement_indices_do_not_prove_a_module _
+tests/test_elf_metadata.py:42: in elf_files
+    subprocess.run(command, check=True, capture_output=True)
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-Wl,--version-script=/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/versions.map', '-Wl,-soname,libmeta.so', '-Wl,-z,ibtplt', '-Wl,--enable-new-dtags,-rpath,$ORIGIN/meta', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/meta.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/libmeta.so']' returned non-zero exit status 1.
+___ ERROR at setup of test_limits_cap_metadata_and_path_lists_with_warnings ____
+tests/test_elf_metadata.py:42: in elf_files
+    subprocess.run(command, check=True, capture_output=True)
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-Wl,--version-script=/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/versions.map', '-Wl,-soname,libmeta.so', '-Wl,-z,ibtplt', '-Wl,--enable-new-dtags,-rpath,$ORIGIN/meta', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/meta.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/libmeta.so']' returned non-zero exit status 1.
+__ ERROR at setup of test_rel_encoding_does_not_claim_an_explicit_zero_addend __
+tests/test_elf_metadata.py:42: in elf_files
+    subprocess.run(command, check=True, capture_output=True)
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-Wl,--version-script=/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/versions.map', '-Wl,-soname,libmeta.so', '-Wl,-z,ibtplt', '-Wl,--enable-new-dtags,-rpath,$ORIGIN/meta', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/meta.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/libmeta.so']' returned non-zero exit status 1.
+_ ERROR at setup of test_unversioned_copy_storage_keeps_dependency_candidates_without_attribution _
+tests/test_elf_metadata.py:42: in elf_files
+    subprocess.run(command, check=True, capture_output=True)
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-Wl,--version-script=/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/versions.map', '-Wl,-soname,libmeta.so', '-Wl,-z,ibtplt', '-Wl,--enable-new-dtags,-rpath,$ORIGIN/meta', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/meta.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/libmeta.so']' returned non-zero exit status 1.
+______________ ERROR at setup of test_bad_limits_are_rejected[0] _______________
+tests/test_elf_metadata.py:42: in elf_files
+    subprocess.run(command, check=True, capture_output=True)
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-Wl,--version-script=/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/versions.map', '-Wl,-soname,libmeta.so', '-Wl,-z,ibtplt', '-Wl,--enable-new-dtags,-rpath,$ORIGIN/meta', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/meta.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/libmeta.so']' returned non-zero exit status 1.
+_____________ ERROR at setup of test_bad_limits_are_rejected[True] _____________
+tests/test_elf_metadata.py:42: in elf_files
+    subprocess.run(command, check=True, capture_output=True)
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-Wl,--version-script=/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/versions.map', '-Wl,-soname,libmeta.so', '-Wl,-z,ibtplt', '-Wl,--enable-new-dtags,-rpath,$ORIGIN/meta', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/meta.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/libmeta.so']' returned non-zero exit status 1.
+____________ ERROR at setup of test_bad_limits_are_rejected[100001] ____________
+tests/test_elf_metadata.py:42: in elf_files
+    subprocess.run(command, check=True, capture_output=True)
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-Wl,--version-script=/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/versions.map', '-Wl,-soname,libmeta.so', '-Wl,-z,ibtplt', '-Wl,--enable-new-dtags,-rpath,$ORIGIN/meta', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/meta.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/libmeta.so']' returned non-zero exit status 1.
+______________ ERROR at setup of test_bad_limits_are_rejected[2] _______________
+tests/test_elf_metadata.py:42: in elf_files
+    subprocess.run(command, check=True, capture_output=True)
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-Wl,--version-script=/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/versions.map', '-Wl,-soname,libmeta.so', '-Wl,-z,ibtplt', '-Wl,--enable-new-dtags,-rpath,$ORIGIN/meta', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/meta.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/elf-metadata0/libmeta.so']' returned non-zero exit status 1.
+____ ERROR at setup of test_linux_calls_xrefs_and_shared_bulk_effects[plt] _____
+tests/test_platform_calls.py:38: in linux_call_files
+    subprocess.run([gcc, '-shared', '-fPIC', '-nostartfiles', '-O1', '-fno-builtin',
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-nostartfiles', '-O1', '-fno-builtin', '-fno-optimize-sibling-calls', '-Wl,-e,platform_entry', '-Wl,-z,ibtplt', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/linux-calls0/calls.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/linux-calls0/plt.so']' returned non-zero exit status 1.
+____ ERROR at setup of test_linux_calls_xrefs_and_shared_bulk_effects[got] _____
+tests/test_platform_calls.py:38: in linux_call_files
+    subprocess.run([gcc, '-shared', '-fPIC', '-nostartfiles', '-O1', '-fno-builtin',
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-nostartfiles', '-O1', '-fno-builtin', '-fno-optimize-sibling-calls', '-Wl,-e,platform_entry', '-Wl,-z,ibtplt', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/linux-calls0/calls.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/linux-calls0/plt.so']' returned non-zero exit status 1.
+_ ERROR at setup of test_patched_got_disk_pointer_does_not_become_an_internal_call[plt] _
+tests/test_platform_calls.py:38: in linux_call_files
+    subprocess.run([gcc, '-shared', '-fPIC', '-nostartfiles', '-O1', '-fno-builtin',
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-nostartfiles', '-O1', '-fno-builtin', '-fno-optimize-sibling-calls', '-Wl,-e,platform_entry', '-Wl,-z,ibtplt', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/linux-calls0/calls.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/linux-calls0/plt.so']' returned non-zero exit status 1.
+_ ERROR at setup of test_patched_got_disk_pointer_does_not_become_an_internal_call[got] _
+tests/test_platform_calls.py:38: in linux_call_files
+    subprocess.run([gcc, '-shared', '-fPIC', '-nostartfiles', '-O1', '-fno-builtin',
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-nostartfiles', '-O1', '-fno-builtin', '-fno-optimize-sibling-calls', '-Wl,-e,platform_entry', '-Wl,-z,ibtplt', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/linux-calls0/calls.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/linux-calls0/plt.so']' returned non-zero exit status 1.
+_ ERROR at setup of test_refresh_upgrades_legacy_metadata_preserving_versions_annotations_and_bytes _
+tests/test_platform_calls.py:38: in linux_call_files
+    subprocess.run([gcc, '-shared', '-fPIC', '-nostartfiles', '-O1', '-fno-builtin',
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-nostartfiles', '-O1', '-fno-builtin', '-fno-optimize-sibling-calls', '-Wl,-e,platform_entry', '-Wl,-z,ibtplt', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/linux-calls0/calls.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/linux-calls0/plt.so']' returned non-zero exit status 1.
+_ ERROR at setup of test_stub_patch_retracts_library_identity_and_derived_call_xref_only_in_child _
+tests/test_platform_calls.py:38: in linux_call_files
+    subprocess.run([gcc, '-shared', '-fPIC', '-nostartfiles', '-O1', '-fno-builtin',
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-nostartfiles', '-O1', '-fno-builtin', '-fno-optimize-sibling-calls', '-Wl,-e,platform_entry', '-Wl,-z,ibtplt', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/linux-calls0/calls.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/linux-calls0/plt.so']' returned non-zero exit status 1.
+_ ERROR at setup of test_dependency_name_patch_rebuilds_versioned_modules_without_ghosts _
+tests/test_platform_calls.py:38: in linux_call_files
+    subprocess.run([gcc, '-shared', '-fPIC', '-nostartfiles', '-O1', '-fno-builtin',
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-nostartfiles', '-O1', '-fno-builtin', '-fno-optimize-sibling-calls', '-Wl,-e,platform_entry', '-Wl,-z,ibtplt', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/linux-calls0/calls.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/linux-calls0/plt.so']' returned non-zero exit status 1.
+_ ERROR at setup of test_import_name_patch_replaces_old_symbol_alias_and_contract _
+tests/test_platform_calls.py:38: in linux_call_files
+    subprocess.run([gcc, '-shared', '-fPIC', '-nostartfiles', '-O1', '-fno-builtin',
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-nostartfiles', '-O1', '-fno-builtin', '-fno-optimize-sibling-calls', '-Wl,-e,platform_entry', '-Wl,-z,ibtplt', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/linux-calls0/calls.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/linux-calls0/plt.so']' returned non-zero exit status 1.
+_ ERROR at setup of test_public_linkage_json_methods_and_refresh_return_structured_results _
+tests/test_platform_calls.py:38: in linux_call_files
+    subprocess.run([gcc, '-shared', '-fPIC', '-nostartfiles', '-O1', '-fno-builtin',
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-shared', '-fPIC', '-nostartfiles', '-O1', '-fno-builtin', '-fno-optimize-sibling-calls', '-Wl,-e,platform_entry', '-Wl,-z,ibtplt', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/linux-calls0/calls.c', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/linux-calls0/plt.so']' returned non-zero exit status 1.
+=================================== FAILURES ===================================
+__________ test_actual_elf_exports_and_unresolved_imports_are_honest ___________
+tests/test_inspection.py:111: in test_actual_elf_exports_and_unresolved_imports_are_honest
+    assert metadata['header']['format'] == 'ELF' and metadata['header']['valid']
+E   AssertionError: assert ('Mach-O' == 'ELF'
+E     
+E     - ELF
+E     + Mach-O)
+________________ test_real_elf_retains_entry_and_named_function ________________
+tests/test_loading.py:44: in test_real_elf_retains_entry_and_named_function
+    subprocess.run([compiler, "-nostdlib", "-no-pie", "-Wl,--build-id=none", str(assembly), "-o", str(executable)],
+../../../.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/subprocess.py:577: in run
+    raise CalledProcessError(retcode, process.args,
+E   subprocess.CalledProcessError: Command '['/usr/bin/gcc', '-nostdlib', '-no-pie', '-Wl,--build-id=none', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/test_real_elf_retains_entry_an0/sample.s', '-o', '/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-376/test_real_elf_retains_entry_an0/sample.elf']' returned non-zero exit status 1.
+=========================== short test summary info ============================
+FAILED tests/test_inspection.py::test_actual_elf_exports_and_unresolved_imports_are_honest
+FAILED tests/test_loading.py::test_real_elf_retains_entry_and_named_function
+ERROR tests/test_elf_metadata.py::test_got_slots_come_from_actual_relocations_and_keep_module_proof
+ERROR tests/test_elf_metadata.py::test_plt_stubs_are_native_validated_not_fixed_stride_guesses
+ERROR tests/test_elf_metadata.py::test_function_data_ifunc_tls_and_absolute_exports_have_distinct_identity
+ERROR tests/test_elf_metadata.py::test_pie_copy_storage_tls_and_versioned_dependency_are_not_callable_slots
+ERROR tests/test_elf_metadata.py::test_fno_plt_uses_glob_dat_without_fabricating_a_stub
+ERROR tests/test_elf_metadata.py::test_duplicate_versioned_export_names_remain_separate
+ERROR tests/test_elf_metadata.py::test_conflicting_version_requirement_indices_do_not_prove_a_module
+ERROR tests/test_elf_metadata.py::test_limits_cap_metadata_and_path_lists_with_warnings
+ERROR tests/test_elf_metadata.py::test_rel_encoding_does_not_claim_an_explicit_zero_addend
+ERROR tests/test_elf_metadata.py::test_unversioned_copy_storage_keeps_dependency_candidates_without_attribution
+ERROR tests/test_elf_metadata.py::test_bad_limits_are_rejected[0] - subproces...
+ERROR tests/test_elf_metadata.py::test_bad_limits_are_rejected[True] - subpro...
+ERROR tests/test_elf_metadata.py::test_bad_limits_are_rejected[100001] - subp...
+ERROR tests/test_elf_metadata.py::test_bad_limits_are_rejected[2] - subproces...
+ERROR tests/test_platform_calls.py::test_linux_calls_xrefs_and_shared_bulk_effects[plt]
+ERROR tests/test_platform_calls.py::test_linux_calls_xrefs_and_shared_bulk_effects[got]
+ERROR tests/test_platform_calls.py::test_patched_got_disk_pointer_does_not_become_an_internal_call[plt]
+ERROR tests/test_platform_calls.py::test_patched_got_disk_pointer_does_not_become_an_internal_call[got]
+ERROR tests/test_platform_calls.py::test_refresh_upgrades_legacy_metadata_preserving_versions_annotations_and_bytes
+ERROR tests/test_platform_calls.py::test_stub_patch_retracts_library_identity_and_derived_call_xref_only_in_child
+ERROR tests/test_platform_calls.py::test_dependency_name_patch_rebuilds_versioned_modules_without_ghosts
+ERROR tests/test_platform_calls.py::test_import_name_patch_replaces_old_symbol_alias_and_contract
+ERROR tests/test_platform_calls.py::test_public_linkage_json_methods_and_refresh_return_structured_results
+2 failed, 759 passed, 3 skipped, 23 errors in 47.27s

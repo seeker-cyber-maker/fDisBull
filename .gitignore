@@ -16,3 +16,7 @@ examples/**/local/
 # Exported emulator checkpoints stay local
 *.sav
 *.state
+
+# Native CI source checkout and transient reports
+/.native/
+/native-evidence/

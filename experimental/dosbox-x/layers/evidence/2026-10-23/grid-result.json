@@ -1,0 +1,246 @@
+{
+  "result": "pass",
+  "menu": {
+    "artifact": "8beb804d0e344384bd5455cc26076af8",
+    "run": "850cfb6cfb4c4cf0b20924c4d15dccf6",
+    "version": 1,
+    "name": "main-menu-grid.png",
+    "kind": "screenshot-grid",
+    "sha256": "3d82a9e1ba7f2dc5306760ee793e21a490814ce340f013265cebfee2e48e8c21",
+    "size": 53432,
+    "metadata": {
+      "captured_ticks": 35088,
+      "double_height": true,
+      "double_width": true,
+      "format": "png",
+      "frame_id": 1858,
+      "height": 200,
+      "mode_id": 5,
+      "session_id": "ses-1",
+      "sha256": "3d82a9e1ba7f2dc5306760ee793e21a490814ce340f013265cebfee2e48e8c21",
+      "source": "last_completed_guest_frame",
+      "source_bpp": 32,
+      "state_revision": 4,
+      "width": 320,
+      "coordinate_grid": {
+        "coordinate_space": "screenshot_pixels",
+        "origin": [
+          0,
+          0
+        ],
+        "max_coordinate": [
+          319,
+          199
+        ],
+        "step": 40,
+        "x_lines": [
+          0,
+          40,
+          80,
+          120,
+          160,
+          200,
+          240,
+          280
+        ],
+        "y_lines": [
+          0,
+          40,
+          80,
+          120,
+          160
+        ],
+        "x_direction": "right",
+        "y_direction": "down",
+        "resized": false,
+        "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+        "source_artifact": "fc79e0f72de942c582e9e7235b37825f",
+        "source_sha256": "fa534ef920db88d5e42cfa6558bb1308db3f1f2a1d168e98e7fbb663638da086"
+      }
+    }
+  },
+  "click": {
+    "accepted": true,
+    "coordinate_space": "guest_frame_pixels",
+    "delivery": "queued",
+    "mouse": {
+      "buttons": 1,
+      "max_x": 639,
+      "max_y": 199,
+      "min_x": 0,
+      "min_y": 0,
+      "owned_buttons": 1,
+      "pending_release_buttons": 1,
+      "release_pending": true,
+      "screen_max_x": 640,
+      "screen_max_y": 200,
+      "x": 320,
+      "y": 160
+    },
+    "session_id": "ses-1",
+    "state_revision": 5
+  },
+  "advance": {
+    "run": "850cfb6cfb4c4cf0b20924c4d15dccf6",
+    "outcome": "guest_time",
+    "timed_out": false,
+    "requested_guest_ms": 1500,
+    "guest_elapsed_ms": 1525,
+    "host_elapsed_ms": 144.306,
+    "fast_forward": true,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 36623,
+      "session_id": "ses-1",
+      "state_revision": 8
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 7,
+      "stop_reason": {
+        "kind": "pause"
+      }
+    },
+    "hook_hits": []
+  },
+  "dialog": {
+    "artifact": "68cdb19deef74fcaa2f9cdbbcf7d15ea",
+    "run": "850cfb6cfb4c4cf0b20924c4d15dccf6",
+    "version": 1,
+    "name": "load-dialog-grid.png",
+    "kind": "screenshot-grid",
+    "sha256": "8be323f069b35b411b16b9099214b532b83b2d42af4755ecabd5b1703be57c22",
+    "size": 35596,
+    "metadata": {
+      "captured_ticks": 36615,
+      "double_height": true,
+      "double_width": true,
+      "format": "png",
+      "frame_id": 1949,
+      "height": 200,
+      "mode_id": 5,
+      "session_id": "ses-1",
+      "sha256": "8be323f069b35b411b16b9099214b532b83b2d42af4755ecabd5b1703be57c22",
+      "source": "last_completed_guest_frame",
+      "source_bpp": 32,
+      "state_revision": 8,
+      "width": 320,
+      "coordinate_grid": {
+        "coordinate_space": "screenshot_pixels",
+        "origin": [
+          0,
+          0
+        ],
+        "max_coordinate": [
+          319,
+          199
+        ],
+        "step": 20,
+        "x_lines": [
+          0,
+          20,
+          40,
+          60,
+          80,
+          100,
+          120,
+          140,
+          160,
+          180,
+          200,
+          220,
+          240,
+          260,
+          280,
+          300
+        ],
+        "y_lines": [
+          0,
+          20,
+          40,
+          60,
+          80,
+          100,
+          120,
+          140,
+          160,
+          180
+        ],
+        "x_direction": "right",
+        "y_direction": "down",
+        "resized": false,
+        "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+        "source_artifact": "2f942765b1bf4b67a6772ba7e04bba63",
+        "source_sha256": "76203276eb14ad6ba6bd4748665e8875bc08a411246cbbad7339161289b0f7eb"
+      }
+    }
+  },
+  "backend_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+  "native_state_exported": false,
+  "process_reaped": true,
+  "offline_grid": {
+    "artifact": "46ad634009514678a88d9df350451818",
+    "run": "850cfb6cfb4c4cf0b20924c4d15dccf6",
+    "version": 1,
+    "name": "offline-grid.png",
+    "kind": "screenshot-grid",
+    "sha256": "646a55e51018a50945a7dfbddf54f5708435df80bc62c43ced95d1fca8189546",
+    "size": 56111,
+    "metadata": {
+      "captured_ticks": 35088,
+      "double_height": true,
+      "double_width": true,
+      "format": "png",
+      "frame_id": 1858,
+      "height": 200,
+      "mode_id": 5,
+      "session_id": "ses-1",
+      "sha256": "646a55e51018a50945a7dfbddf54f5708435df80bc62c43ced95d1fca8189546",
+      "source": "last_completed_guest_frame",
+      "source_bpp": 32,
+      "state_revision": 4,
+      "width": 320,
+      "coordinate_grid": {
+        "coordinate_space": "screenshot_pixels",
+        "origin": [
+          0,
+          0
+        ],
+        "max_coordinate": [
+          319,
+          199
+        ],
+        "step": 32,
+        "x_lines": [
+          0,
+          32,
+          64,
+          96,
+          128,
+          160,
+          192,
+          224,
+          256,
+          288
+        ],
+        "y_lines": [
+          0,
+          32,
+          64,
+          96,
+          128,
+          160,
+          192
+        ],
+        "x_direction": "right",
+        "y_direction": "down",
+        "resized": false,
+        "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+        "source_artifact": "fc79e0f72de942c582e9e7235b37825f",
+        "source_sha256": "fa534ef920db88d5e42cfa6558bb1308db3f1f2a1d168e98e7fbb663638da086"
+      }
+    }
+  },
+  "game_files_unchanged": 192
+}

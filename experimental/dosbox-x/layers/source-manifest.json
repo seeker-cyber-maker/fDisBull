@@ -1,0 +1,147 @@
+{
+  "feature": "temporal code layers; unreleased 0.11 development",
+  "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+  "patch_sha256": "fed837151e85fa1d59e1630fc75be92f7635c8572c5e7274dc1d5bac1407060f",
+  "source_files": [
+    {
+      "path": "client/python/dosbox_agent/__init__.py",
+      "sha256": "ced16106cbfad218488ce93bb131d08186118c18e038fe64e56ba955dd93e2b0",
+      "size": 1610
+    },
+    {
+      "path": "client/python/dosbox_agent/client.py",
+      "sha256": "500397af9e50180892ff5b7a62f1950104a81004861f51f10136088a4710297c",
+      "size": 37481
+    },
+    {
+      "path": "client/python/tests/test_client.py",
+      "sha256": "fde518416c39b61053ee43085d28706407fd0e5d078c3dc5e52f8e0e6fb1ba0d",
+      "size": 11827
+    },
+    {
+      "path": "client/python/tests/test_pipe_transport.py",
+      "sha256": "071711bf1c5db4fd034a96657d9ddace69ba341ac8edd916315a9f874205d490",
+      "size": 11116
+    },
+    {
+      "path": "client/python/tests/test_unix_transport.py",
+      "sha256": "032932b8471a76baf50ad146a138466ee1c0f15376625a6a04b889405c829349",
+      "size": 9847
+    },
+    {
+      "path": "include/agent/agent_protocol.h",
+      "sha256": "d9121fb309ff3ac3252325af65f0afef3a246c0f02706d6e2d5596e16f890008",
+      "size": 2508
+    },
+    {
+      "path": "include/agent/debugger_adapter.h",
+      "sha256": "595bd85cc9ea423c420bb5adaf89f05833780c61d8fc743df458150d5c6558b1",
+      "size": 3837
+    },
+    {
+      "path": "include/agent/input_adapter.h",
+      "sha256": "ecc9fc01f38ae69a14874e444f9aa3fea55329035fde251a6bbd7db9a017d212",
+      "size": 2163
+    },
+    {
+      "path": "include/agent/video_adapter.h",
+      "sha256": "850d5ab351ec1b65ccf9541be5304351e18570bb35e5d588b1986be5daf68398",
+      "size": 960
+    },
+    {
+      "path": "include/debug.h",
+      "sha256": "8cd3ef4d3c007b96a268a268e3fd895441bbf423bef1ac8ac854beb891f292b3",
+      "size": 3572
+    },
+    {
+      "path": "include/paging.h",
+      "sha256": "f86c2aa924b79f577f07745644d40a83c14bdbd8da22335686618eb812ea6cfe",
+      "size": 21891
+    },
+    {
+      "path": "src/agent/Makefile.am",
+      "sha256": "a6939f562c8dc81870b136e8bba9fe7b805595ded08873bad9cd57b2b9b943e6",
+      "size": 524
+    },
+    {
+      "path": "src/agent/debugger/debugger_adapter.cpp",
+      "sha256": "f18bace9e7ee669eedc313c1c62695d4cd2f3474a1beda45da98ea626299336a",
+      "size": 24513
+    },
+    {
+      "path": "src/agent/protocol/agent_protocol.cpp",
+      "sha256": "7951de84c35c4b90e215cb0e7add79175a92bc04801fda618e7bb919c4f2b26f",
+      "size": 27474
+    },
+    {
+      "path": "src/agent/server/agent_server.cpp",
+      "sha256": "110a04c787d01cd177bb4072850e665802a990d6d38ca765b2aaf0c2ef712cdd",
+      "size": 193937
+    },
+    {
+      "path": "src/agent/transport/local_transport.cpp",
+      "sha256": "5bae459c9f040cedc55a2f64fe8849c247173f846132a3f88f8a147c227df6e3",
+      "size": 29797
+    },
+    {
+      "path": "src/agent/transport/unix_transport_probe.cpp",
+      "sha256": "14d9d72b787d0c37167a11954f1ef311a2f33644e2760aaa77d9f403ac828f3b",
+      "size": 906
+    },
+    {
+      "path": "src/cpu/core_normal.cpp",
+      "sha256": "b1daad9654a5b8bbdd971dfa489c49a24535373fa06efae5dfcfcad00717e8cf",
+      "size": 8247
+    },
+    {
+      "path": "src/debug/debug.cpp",
+      "sha256": "658c8f0c42e2785d17d928f7c10928af3b749b745e266ccda28ef49503b8aaa4",
+      "size": 233946
+    },
+    {
+      "path": "src/debug/debug_gui.cpp",
+      "sha256": "24a94105770a0b9f2a588325f64974a1205688b494387c677f5e45d4f67aa779",
+      "size": 30707
+    },
+    {
+      "path": "src/gui/render.cpp",
+      "sha256": "ebd35b92b3d30484605cd1cc954d8eab9413970dc07ba75df3b6bda628b50de6",
+      "size": 69117
+    },
+    {
+      "path": "src/gui/sdlmain.cpp",
+      "sha256": "46c16b0d2b886b3263d8f2b93feea4630b29d5e465b35ea39fe53964a3b797ef",
+      "size": 426398
+    },
+    {
+      "path": "src/ints/mouse.cpp",
+      "sha256": "33c46156133237ff6fb687be786b4e1293afef42734039f954ff34682e533bf2",
+      "size": 112554
+    },
+    {
+      "path": "src/misc/savestates.cpp",
+      "sha256": "29d7e0dde5dd603384ea1ae0ae845e56f039d6ba1ded2ddb8819e91e6aed5a91",
+      "size": 32101
+    },
+    {
+      "path": "tests/agent_headless/MOUSEVID.asm",
+      "sha256": "4b46ba4c63ecee0d10561fb3b688c0000f453df30e26d2e4db186f4dad1fa254",
+      "size": 4953
+    },
+    {
+      "path": "tests/agent_headless/verify_headless.py",
+      "sha256": "359a767b79343b7e3c8b75812446ac164d8ab74aa7e90eb066ec7f65b62dd20e",
+      "size": 12371
+    },
+    {
+      "path": "tools/headless_agent.py",
+      "sha256": "02a57b279af206d952e76ba23a204ffc986e9b52228f7bfe3dbe12211b6a45f7",
+      "size": 9883
+    }
+  ],
+  "emulator_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+  "build_platform": "macOS ARM64; normal CPU core; heavy debugger",
+  "legacy_0_10_backend_sha256": "e749b6e50775de2807c2515f83e455dc705cdf6ddcdfb257e781f215d987865a",
+  "source_replay_files_verified": 27,
+  "source_patch_scope": "complete patch against declared upstream baseline; not incremental over 0.10"
+}

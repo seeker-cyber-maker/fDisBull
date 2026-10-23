@@ -1,0 +1,11 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {"op": "run", "guest_ms": 35000, "fast_forward": true, "timeout_ms": 10000},
+    {"op": "click-frame", "x": 160, "y": 160, "name": "main-menu-click.png", "grid_step": 8, "hold_ms": 150, "as": "menu"},
+    {"op": "assert", "value": "$menu.frame.metadata.width", "equals": 320},
+    {"op": "assert", "value": "$menu.frame.metadata.height", "equals": 200},
+    {"op": "run", "guest_ms": 1500, "fast_forward": true, "timeout_ms": 5000},
+    {"op": "screenshot", "name": "load-dialog-grid.png", "grid": true, "grid_step": 8}
+  ]
+}

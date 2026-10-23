@@ -1,0 +1,18 @@
+{
+  "result": "pass",
+  "profiles": [
+    {
+      "profile": "stable",
+      "baseline": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+      "patch_sha256": "26ca8457aee6b2369a901c8fab59b89a3fe4bc2f40c72d4830571146eef535ce",
+      "source_files_matched": 27
+    },
+    {
+      "profile": "layers",
+      "baseline": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+      "patch_sha256": "fed837151e85fa1d59e1630fc75be92f7635c8572c5e7274dc1d5bac1407060f",
+      "source_files_matched": 27
+    }
+  ],
+  "linux_build_performed": false
+}

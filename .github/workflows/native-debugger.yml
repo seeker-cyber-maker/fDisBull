@@ -1,0 +1,116 @@
+name: Native debugger acceptance
+
+on:
+  push:
+    paths:
+      - .github/workflows/native-debugger.yml
+      - experimental/dosbox-x/**
+      - src/fdisbull/**
+      - tests/**
+      - pyproject.toml
+  pull_request:
+    paths:
+      - .github/workflows/native-debugger.yml
+      - experimental/dosbox-x/**
+      - src/fdisbull/**
+      - tests/**
+      - pyproject.toml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-debugger:
+    name: Native debugger (${{ matrix.profile }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - profile: stable-backend
+            patch_directory: experimental/dosbox-x
+            tests: tests/test_debugger.py tests/test_screenshot_grid.py
+          - profile: layers-backend
+            patch_directory: experimental/dosbox-x/layers
+            tests: tests/test_debugger.py tests/test_code_layers.py tests/test_screenshot_grid.py
+    env:
+      FDISBULL_DOSBOX: ${{ github.workspace }}/.native/dosbox-x/src/dosbox-x
+      FDISBULL_PATCH_DIRECTORY: ${{ matrix.patch_directory }}
+      FDISBULL_NATIVE_TESTS: ${{ matrix.tests }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: joncampbell123/dosbox-x
+          ref: 029bd65c5dcc7cdc7f2e14e35278620d9707d969
+          path: .native/dosbox-x
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential autoconf automake pkg-config nasm \
+            libsdl2-dev libsdl2-net-dev libncurses-dev libpng-dev zlib1g-dev libfreetype6-dev
+          python -m pip install ".[test]"
+      - name: Verify pinned baseline and apply the complete patch
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, subprocess
+          from pathlib import Path
+          checkout=Path('.native/dosbox-x').resolve()
+          directory=Path(os.environ['FDISBULL_PATCH_DIRECTORY']).resolve()
+          manifest=json.loads((directory/'source-manifest.json').read_text())
+          head=subprocess.check_output(['git','-C',str(checkout),'rev-parse','HEAD'],text=True).strip()
+          assert head==manifest['baseline_commit'], 'Wrong upstream baseline'
+          patch=directory/'headless-agent.patch'
+          assert hashlib.sha256(patch.read_bytes()).hexdigest()==manifest['patch_sha256'], 'Patch hash mismatch'
+          subprocess.run(['git','-C',str(checkout),'apply','--check',str(patch)],check=True)
+          subprocess.run(['git','-C',str(checkout),'apply',str(patch)],check=True)
+          for item in manifest['source_files']:
+              path=checkout/item['path']
+              assert hashlib.sha256(path.read_bytes()).hexdigest()==item['sha256'], item['path']
+          print(f"Verified {len(manifest['source_files'])} patched source files against the declared manifest")
+          PY
+      - name: Build the native heavy-debug backend
+        working-directory: .native/dosbox-x
+        run: |
+          ./autogen.sh
+          ./configure --enable-sdl2 --enable-debug=heavy --enable-dosbox_agent \
+            --disable-avcodec --disable-libslirp --disable-libfluidsynth
+          make -j2
+      - name: Record the tested backend identity
+        run: |
+          mkdir -p native-evidence
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          executable=Path(os.environ['FDISBULL_DOSBOX'])
+          patch=Path(os.environ['FDISBULL_PATCH_DIRECTORY'])/'headless-agent.patch'
+          receipt={'source_commit':os.environ['GITHUB_SHA'],
+                   'upstream_commit':'029bd65c5dcc7cdc7f2e14e35278620d9707d969',
+                   'backend_sha256':hashlib.sha256(executable.read_bytes()).hexdigest(),
+                   'patch_sha256':hashlib.sha256(patch.read_bytes()).hexdigest(),
+                   'profile':os.environ['FDISBULL_PATCH_DIRECTORY'],
+                   'acceptance_tests':os.environ['FDISBULL_NATIVE_TESTS'].split()}
+          Path('native-evidence/backend-identity.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          PY
+      - name: Run existing tests with a required native backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pytest -q --require-native $FDISBULL_NATIVE_TESTS \
+            --junitxml=native-evidence/tests.xml 2>&1 | tee native-evidence/tests.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-debugger-${{ matrix.profile }}
+          path: native-evidence/*
+          if-no-files-found: warn

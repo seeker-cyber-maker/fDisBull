@@ -1,0 +1,53 @@
+{
+  "feature_version": "0.11.0.dev0",
+  "status": "uncommitted development; no release or push",
+  "source_base_commit": "6ba413e2f535c6294b3ddb767a5bc12a6a388162",
+  "full_suite": {
+    "exit_code": 1,
+    "passed": 755,
+    "skipped": 3,
+    "failed": 2,
+    "errors": 23,
+    "baseline_failure_identities_match": true
+  },
+  "layer_and_debugger_tests_passed": 28,
+  "legacy_backend_tests_passed": 12,
+  "backend_client_tests_passed": 31,
+  "backend_client_subtests_passed": 18,
+  "backend_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+  "backend_patch_sha256": "fed837151e85fa1d59e1630fc75be92f7635c8572c5e7274dc1d5bac1407060f",
+  "backend_source_replay_files": 27,
+  "linux_layer_runtime_verified": false,
+  "checks": {
+    "guest_crc_reads_original_code": true,
+    "execution_changes_guest_result": true,
+    "ram_and_fetch_layer_order": true,
+    "layered_checkpoint_fresh_session": true,
+    "stale_smc_overlay_stops": true,
+    "ram_changed_byte_preservation": true,
+    "native_stack_preflight_atomic": true,
+    "normalized_virtual_cave_return": true,
+    "public_json_and_routes": true,
+    "runtime_trace_both_views": true,
+    "dinopark_branch_successor_changed": true,
+    "dinopark_code_ram_unchanged": true,
+    "dinopark_state_restores_original_view": true,
+    "dinopark_game_files_unchanged": 192,
+    "all_test_and_game_emulators_reaped": true
+  },
+  "dinopark_branch": {
+    "project_segmented_address": "1693:0358",
+    "baseline": "je short 035Dh",
+    "alternate": "jne short 035Dh",
+    "baseline_successor": {
+      "offset": "0x0000035D",
+      "segment": "0x0EB7",
+      "space": "segmented"
+    },
+    "alternate_successor": {
+      "offset": "0x0000035A",
+      "segment": "0x0EB7",
+      "space": "segmented"
+    }
+  }
+}

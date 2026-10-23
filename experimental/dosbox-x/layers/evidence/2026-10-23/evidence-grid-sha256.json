@@ -1,0 +1,82 @@
+[
+  {
+    "path": "cli-grid.json",
+    "sha256": "618b3e78b45651d36367c9e78d86ea83645caecf73bfd99b27112501fbffb38c",
+    "size": 1566
+  },
+  {
+    "path": "dinopark-load-dialog-clean.png",
+    "sha256": "76203276eb14ad6ba6bd4748665e8875bc08a411246cbbad7339161289b0f7eb",
+    "size": 21148
+  },
+  {
+    "path": "dinopark-load-dialog-grid.png",
+    "sha256": "8be323f069b35b411b16b9099214b532b83b2d42af4755ecabd5b1703be57c22",
+    "size": 35596
+  },
+  {
+    "path": "dinopark-main-menu-clean.png",
+    "sha256": "fa534ef920db88d5e42cfa6558bb1308db3f1f2a1d168e98e7fbb663638da086",
+    "size": 32964
+  },
+  {
+    "path": "dinopark-main-menu-grid.png",
+    "sha256": "3d82a9e1ba7f2dc5306760ee793e21a490814ce340f013265cebfee2e48e8c21",
+    "size": 53432
+  },
+  {
+    "path": "dinopark-offline-grid.png",
+    "sha256": "646a55e51018a50945a7dfbddf54f5708435df80bc62c43ced95d1fca8189546",
+    "size": 56111
+  },
+  {
+    "path": "full-grid-tests.log",
+    "sha256": "01d70f73b0ace4a289329c857b129a54c8f95b7fda12485cfe36e6c16f245ef6",
+    "size": 25035
+  },
+  {
+    "path": "grid-result.json",
+    "sha256": "66c134f352e9699e91cf25ad6ef0cf06867d70fa03b237824cffc68f4c2e4268",
+    "size": 6099
+  },
+  {
+    "path": "json-protocol-grid.json",
+    "sha256": "b6c0add631aec2dafc880be9426e11ebd20c6bfc2c88dba25ad79d3c4dc03464",
+    "size": 25390
+  },
+  {
+    "path": "legacy-grid-tests.log",
+    "sha256": "b37240e6a99677bf0582a231c87647dec4396d4d995257cab15ef2b0d8593401",
+    "size": 100
+  },
+  {
+    "path": "native-grid-tests.log",
+    "sha256": "a0d10326a3933a04356f38ef32ff6dc7e3503003c8ceb6a3e148ea328d6c4a74",
+    "size": 100
+  },
+  {
+    "path": "package-grid-check.log",
+    "sha256": "255388ee80bf05951aab91c64850df7cef0d142ae41ae253ba3b6c8bc1537329",
+    "size": 173
+  },
+  {
+    "path": "python-source-sha256.json",
+    "sha256": "01cee45ffe6afea7f5168f3011eafecbfdb0462134af6fb8740b1b291daf9044",
+    "size": 6441
+  },
+  {
+    "path": "self-integrity.json",
+    "sha256": "3b9a8fb84e9afed082db702e596f8616cc5be139132366ffe920ec18823fc9a1",
+    "size": 31817
+  },
+  {
+    "path": "verification-grid-final.json",
+    "sha256": "7c09c4ef94ac770830f2b8aebc49741a75b1edc7a05eafed8a517981de3ab6c8",
+    "size": 2456
+  },
+  {
+    "path": "wheel-grid-proof.json",
+    "sha256": "43e5a9e6e63e38a01a4436d702494b2cc380d3fb93d77348b52aeb0ff77ca8e9",
+    "size": 5062
+  }
+]

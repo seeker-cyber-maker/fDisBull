@@ -1,8 +1,14 @@
 # Agent protocol
 
-## Project debugger (0.10.0)
+## Project debugger
 
 The same foreground `serve` process owns `debug-launch`, `debug-status`, `debug-registers`, `debug-breakpoint`, `debug-delete-breakpoint`, `debug-click`, `debug-run`, `debug-screenshot`, `debug-trace`, and `debug-stop`. Live requests carry the `run` ID returned by launch. `debug-run` accepts `guest_ms`, `fast_forward`, and an independent host `timeout_ms`; its `outcome` distinguishes a breakpoint, reached guest time, and timeout. Images/traces are retained in the `.fdb` and attached to the immutable launch version. `debug-runs`, `debug-artifacts`, and `debug-export` also work offline after restart. Full parameters, address verification rules, Python API, and examples are in [DOSBOX_DEBUGGER.md](DOSBOX_DEBUGGER.md).
+
+In 0.11.0 `debug-screenshot` accepts `grid` (boolean, default false) and `grid_step` (8..512, default 32). It retains a clean PNG and returns a separately annotated grid at identical native click coordinates. Fine grids retain wider label spacing. Offline `debug-grid` takes `artifact` (a clean screenshot), optional `name`, `step`, and `target:[x,y]`; it renders from stored bytes without launching an emulator. Both methods preserve the frame's mode ID and record the original image's identity/hash.
+
+`debug-click-frame` captures and marks a chosen target and queues its click in one client request. Parameters are `run`, `x`, `y`, optional `name`, `grid_step` (default 8), `button`, `hold_ms`, and expected `mode_id`. It returns `frame` (the marked pre-click screenshot), `click` (input receipt), and the captured mode ID. It rejects an out-of-frame point or a different expected video mode before queuing input. Bounded scripts expose the same operation as `click-frame`; subsequent `run` steps consume input. The coordinate remains explicit: no image recognition or agent callback executes inside a script.
+
+The 0.11.0 [temporal code-layer API](CODE_LAYERS.md) adds immutable definitions, ordered RAM and execution views, observed-code captures, branch/cave helpers, and bounded breakpoint actions. Offline methods include `debug-layer`, `debug-layer-info`, `debug-layers`, and `debug-events`; live methods and route operations are listed in that guide and by `methods`. Layer activation requires the separate layers backend. These runtime observations do not alter static instruction facts or original byte versions.
 
 `analysis-status` takes `project` and optional `version`. It returns current `stable`, pending code/data/seeds/segment scans, phase state, DOS seed-state counts and issue count without advancing analysis. `status` and disassembly snapshots embed the same summary; new image exports show it. A fixed point does not prove coverage. See [QUERYING.md](QUERYING.md).
 

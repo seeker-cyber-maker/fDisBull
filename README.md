@@ -2,7 +2,19 @@
 
 An agent-first disassembler with a persistent SQLite analysis database, explicit evidence, bounded analysis, and headless SVG/PNG exports.
 
-Current release candidate: **0.10.0**, including native debugger state editing, bounded scripts, and data watches. Published baseline: **0.8.2**. Requires Python **3.12 or later**.
+Requires Python **3.12 or later**.
+
+## Release, branches, and native backend status
+
+| Track | Source and availability | Verification |
+| --- | --- | --- |
+| **Current source: 0.11.0** | [Release notes](docs/RELEASE-0.11.0.md): code layers, execution-only overlays, breakpoint actions, and coordinate grids | [Verification and release gates](docs/VERIFICATION-0.11.md), including the real backend and actual DinoPark evidence |
+| **Latest published package release: 0.10.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.10.0), commit `6ba413e` | [Tag CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/39994442024) passed. Native Mac acceptance is separate. |
+| **Repository branches** | [main](https://github.com/seeker-cyber-maker/fDisBull/tree/main) is the default branch; [codex/takeover](https://github.com/seeker-cyber-maker/fDisBull/tree/codex/takeover) is the integration branch | Release promotion requires both ordinary and native Linux CI. Use version tags for fixed source snapshots. |
+
+The Python packages do **not** include an emulator. Stable debugging needs the [0.10 backend patch](experimental/dosbox-x/README.md); execution layers need the separate [layers backend patch](experimental/dosbox-x/layers/README.md). Both pin an upstream source commit and require an explicit executable path. Coordinate grids work with either backend.
+
+The [release-status record](docs/RELEASE_STATUS.md) distinguishes tagged source, published packages and historical candidate receipts. Ordinary Python CI may skip native tests; [required native acceptance](docs/DOSBOX_DEBUGGER.md#required-native-acceptance) builds or selects the real patched backend and runs the existing tests against it.
 
 ## Install and use
 
@@ -63,6 +75,12 @@ The original unfinished DOSBox checkpoint remains on `experimental/dosbox-headle
 
 Static analysis does not establish runtime execution. A drained queue does not establish complete code coverage. Authored labels and links record interpretations, and unresolved segment/pointer state stays explicit. Native macOS debugger acceptance passes; the full suite still has Linux ELF fixture failures on Apple's compiler/linker. The integration currently launches original unpatched DOS MZ versions; it does not silently apply static child patches to the game.
 
+Runtime code snapshots can preserve and decode observed self-modified or layered bytes alongside earlier views. They do not automatically create a new static code interpretation, traverse its targets, or rebuild its xrefs. A mapped runtime address alone does not verify equality with static instructions. Headless execution is not security isolation, and restoring a machine checkpoint does not roll back mounted host files.
+
 No first-party distribution license has been selected. Public visibility does not grant an open-source license. See [THIRD_PARTY.md](docs/THIRD_PARTY.md) for dependency provenance. The separate DOSBox-X checkpoint retains its upstream GPL notices.
 
 The debugger also supports [native checkpoints, editable state forks, bounded menu scripts, and CPU data-access breakpoints](docs/DEBUGGER_SCRIPTS.md). See the [0.10.0 release notes](docs/RELEASE-0.10.0.md) and [parking-counter experiment](docs/PARKING_COMMIT.md). Explicit DOS analysis seeds are decoded first within the requested budget, so preparing one execution-breakpoint address is no longer blocked by an older analysis queue.
+
+The 0.11.0 [code layers](docs/CODE_LAYERS.md) distinguish RAM-visible patches from instruction-fetch overlays, preserve observed self-modified code separately from static facts, and support guarded layer stacks, branch theories, and breakpoint-triggered virtual caves. They require the separate layers backend; the published 0.10.0 backend and packages remain unchanged. Zero additional guest RAM bytes does not imply zero host overhead or unchanged guest timing.
+
+Screenshots also support an [optional native-coordinate grid](docs/DOSBOX_DEBUGGER.md#optional-screenshot-coordinate-grid-0110) for writing click scripts. Clean frames remain stored unchanged; annotated images retain the same dimensions and video-mode ID and can be regenerated from the project after restart without operating a GUI. `click-frame` captures, labels and queues a chosen click in one client action.

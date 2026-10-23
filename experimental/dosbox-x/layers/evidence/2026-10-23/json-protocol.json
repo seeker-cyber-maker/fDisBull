@@ -1,0 +1,652 @@
+{
+  "result": "pass",
+  "json_requests": 8,
+  "server_exited": true,
+  "layer_transition": true,
+  "execution_view": true,
+  "hook_auto_resume": true,
+  "offline_event_read": true,
+  "native_process_reaped": true,
+  "responses": [
+    {
+      "id": "launch",
+      "ok": true,
+      "result": {
+        "run": "7d1a8108730545c89fa60ffaffe0afdc",
+        "version": 1,
+        "live": true,
+        "last_stop": {
+          "address": {
+            "offset": "0x00000000",
+            "segment": "0x0824",
+            "space": "segmented"
+          },
+          "kind": "startup"
+        },
+        "session_id": "ses-1",
+        "state": "stopped",
+        "state_revision": 1,
+        "target": {
+          "command": "LAYER.EXE"
+        },
+        "mapping": {
+          "fdisbull_version": "0.11.0.dev0",
+          "source_sha256": "ebf5fd296536b7ecce01cbcf395318b1015f0217641e4eee88aa2dc96351ed08",
+          "version_sha256": "9419db96c8a7911f2a528bc08052a94becfb6f0f00c6678cb06bb72a10d7847e",
+          "executable": "/Users/tiga/Documents/ChatGPT/fDisBull/.recovery/2026-10-23/dosbox-layers/src/dosbox-x",
+          "emulator_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+          "runtime_profile": "real-normal-v1",
+          "game_dir": "/Users/tiga/Documents/ChatGPT/fDisBull/.recovery/2026-10-23/layers-protocol/game",
+          "target": "LAYER.EXE",
+          "static_load_segment": 4096,
+          "runtime_load_segment": 2084,
+          "entry_registers": {
+            "cpu_mode": "real",
+            "flags": "0x00007202",
+            "general": {
+              "eax": "0x00000000",
+              "ebp": "0x0000091C",
+              "ebx": "0x00000000",
+              "ecx": "0x000000FF",
+              "edi": "0x00000200",
+              "edx": "0x00000814",
+              "esi": "0x00000000",
+              "esp": "0x00000200"
+            },
+            "instruction_pointer": "0x00000000",
+            "segments": {
+              "cs": "0x0824",
+              "ds": "0x0814",
+              "es": "0x0814",
+              "fs": "0x0000",
+              "gs": "0x0000",
+              "ss": "0x0824"
+            },
+            "session_id": "ses-1",
+            "state_revision": 1
+          },
+          "capabilities": {
+            "address_spaces": [
+              "segmented",
+              "linear",
+              "physical"
+            ],
+            "breakpoints": {
+              "data_access": "normal_core_real_mode_byte_addresses",
+              "memory_change": true,
+              "memory_change_address_spaces": [
+                "segmented",
+                "linear"
+              ]
+            },
+            "code_layers": "normal_core_real_mode_guarded_fetch_v1",
+            "debugger": true,
+            "input": {
+              "absolute_mouse": true,
+              "click_timing": "guest_emulated_milliseconds",
+              "coordinate_space": "guest_frame_pixels",
+              "driver": "builtin_dos_int33_only"
+            },
+            "limits": {
+              "max_memory_read_bytes": 65536,
+              "max_message_bytes": 8388608,
+              "max_trace_events": 10000
+            },
+            "protocol_version": "1.0",
+            "register_edit": true,
+            "save_states": true,
+            "timing": {
+              "fast_forward": true,
+              "guest_clock": "PIC_Ticks_milliseconds"
+            },
+            "trace": {
+              "cpu": true
+            },
+            "video": {
+              "format": "png",
+              "headless": true,
+              "screenshot": true,
+              "source": "last_completed_guest_frame"
+            }
+          },
+          "pid": 81993
+        }
+      }
+    },
+    {
+      "id": null,
+      "ok": true,
+      "result": {
+        "run": "7d1a8108730545c89fa60ffaffe0afdc",
+        "active_before": [],
+        "active": [
+          "088de5f1473e4a789d6d7eabcc3f0fed"
+        ],
+        "generation": 2,
+        "ram_bytes": 0,
+        "execution_bytes": 2,
+        "guest_instructions_during_transition": 0,
+        "preserved_changed_bytes": [],
+        "backend": {
+          "completed": true,
+          "generation": 2,
+          "session_id": "ses-1",
+          "state_revision": 2
+        }
+      }
+    },
+    {
+      "id": null,
+      "ok": true,
+      "result": {
+        "address": {
+          "offset": "0x00008242",
+          "space": "linear"
+        },
+        "byte_count": 3,
+        "data_base64": "uCIi",
+        "layer_generation": 2,
+        "overlay_valid": true,
+        "session_id": "ses-1",
+        "sha256": "fe407340b1193a09e994975d605b514124011214c13bce49785d362d34102b57",
+        "state_revision": 2,
+        "view": "execute",
+        "hex": "b82222",
+        "project_address": "0x10002",
+        "runtime_address": "0x8242",
+        "instructions": [
+          {
+            "runtime_address": "0x8242",
+            "project_address": "0x10002",
+            "cs": "0x824",
+            "ip": "0x2",
+            "size": 3,
+            "bytes": "b82222",
+            "instruction": "mov ax,2222h"
+          }
+        ],
+        "active_layers": [
+          "088de5f1473e4a789d6d7eabcc3f0fed"
+        ],
+        "generation": 2,
+        "evidence": "runtime observation; static analysis is unchanged"
+      }
+    },
+    {
+      "id": null,
+      "ok": true,
+      "result": {
+        "hook": "d559ab355b0d483eb883bbdbc4a34ade",
+        "breakpoints": [
+          "bp-1"
+        ],
+        "actions": [
+          {
+            "op": "layers",
+            "layers": []
+          }
+        ],
+        "once": true,
+        "max_hits": 1,
+        "hits": 0,
+        "dispatch": "paused_rpc",
+        "extra_guest_bytes": 0,
+        "location": {
+          "address": {
+            "offset": "0x00000002",
+            "segment": "0x0824",
+            "space": "segmented"
+          },
+          "breakpoint_id": "bp-1",
+          "kind": "execution",
+          "once": false,
+          "session_id": "ses-1",
+          "state_revision": 3,
+          "run": "7d1a8108730545c89fa60ffaffe0afdc",
+          "version": 1,
+          "project_address": "0x10002",
+          "runtime_bytes": "b82222",
+          "bytes_verified": true,
+          "static_bytes_verified": false,
+          "verification_view": "execute",
+          "generation": 2
+        }
+      }
+    },
+    {
+      "id": null,
+      "ok": true,
+      "result": {
+        "address": {
+          "offset": "0x00000009",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "breakpoint_id": "bp-2",
+        "kind": "execution",
+        "once": false,
+        "session_id": "ses-1",
+        "state_revision": 4,
+        "run": "7d1a8108730545c89fa60ffaffe0afdc",
+        "version": 1,
+        "project_address": "0x10009",
+        "project_cs": "0x1000",
+        "instruction_context": "x86:16:little:cs=1000",
+        "runtime_bytes": "ebfe",
+        "bytes_verified": true
+      }
+    },
+    {
+      "id": null,
+      "ok": true,
+      "result": {
+        "run": "7d1a8108730545c89fa60ffaffe0afdc",
+        "outcome": "breakpoint",
+        "timed_out": false,
+        "requested_guest_ms": null,
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 6.899,
+        "fast_forward": false,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 21,
+          "session_id": "ses-1",
+          "state_revision": 8
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 8,
+          "stop_reason": {
+            "address": {
+              "offset": "0x00000009",
+              "segment": "0x0824",
+              "space": "segmented"
+            },
+            "breakpoint_id": "bp-2",
+            "kind": "breakpoint",
+            "project_address": "0x10009"
+          }
+        },
+        "hook_hits": [
+          {
+            "hook": "d559ab355b0d483eb883bbdbc4a34ade",
+            "hit": 1,
+            "stop": {
+              "session_id": "ses-1",
+              "state": "stopped",
+              "state_revision": 5,
+              "stop_reason": {
+                "address": {
+                  "offset": "0x00000002",
+                  "segment": "0x0824",
+                  "space": "segmented"
+                },
+                "breakpoint_id": "bp-1",
+                "kind": "breakpoint"
+              }
+            },
+            "actions": [
+              {
+                "op": "layers",
+                "result": {
+                  "run": "7d1a8108730545c89fa60ffaffe0afdc",
+                  "active_before": [
+                    "088de5f1473e4a789d6d7eabcc3f0fed"
+                  ],
+                  "active": [],
+                  "generation": 3,
+                  "ram_bytes": 0,
+                  "execution_bytes": 0,
+                  "guest_instructions_during_transition": 0,
+                  "preserved_changed_bytes": [],
+                  "backend": {
+                    "completed": true,
+                    "generation": 3,
+                    "session_id": "ses-1",
+                    "state_revision": 7
+                  }
+                }
+              }
+            ],
+            "dispatch": "paused_rpc",
+            "extra_guest_bytes": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": null,
+      "ok": true,
+      "result": {
+        "cpu_mode": "real",
+        "flags": "0x00007202",
+        "general": {
+          "eax": "0x00001111",
+          "ebp": "0x0000091C",
+          "ebx": "0x00001111",
+          "ecx": "0x000000FF",
+          "edi": "0x00000200",
+          "edx": "0x00000814",
+          "esi": "0x00000000",
+          "esp": "0x00000200"
+        },
+        "instruction_pointer": "0x00000009",
+        "segments": {
+          "cs": "0x0824",
+          "ds": "0x0824",
+          "es": "0x0814",
+          "fs": "0x0000",
+          "gs": "0x0000",
+          "ss": "0x0824"
+        },
+        "session_id": "ses-1",
+        "state_revision": 8,
+        "cs": "0x0824",
+        "ip": "0x00000009",
+        "project_address": "0x10009"
+      }
+    },
+    {
+      "id": null,
+      "ok": true,
+      "result": {
+        "run": "7d1a8108730545c89fa60ffaffe0afdc",
+        "events": [
+          {
+            "sequence": 1,
+            "created": "2026-10-23T18:27:18.455247+00:00",
+            "operation": "launch",
+            "evidence": {
+              "session_id": "ses-1",
+              "state": "stopped",
+              "state_revision": 1,
+              "stop_reason": {
+                "address": {
+                  "offset": "0x00000000",
+                  "segment": "0x0824",
+                  "space": "segmented"
+                },
+                "kind": "startup"
+              }
+            }
+          },
+          {
+            "sequence": 2,
+            "created": "2026-10-23T18:27:18.458207+00:00",
+            "operation": "layer-transition",
+            "evidence": {
+              "run": "7d1a8108730545c89fa60ffaffe0afdc",
+              "active_before": [],
+              "active": [
+                "088de5f1473e4a789d6d7eabcc3f0fed"
+              ],
+              "generation": 2,
+              "ram_bytes": 0,
+              "execution_bytes": 2,
+              "guest_instructions_during_transition": 0,
+              "preserved_changed_bytes": [],
+              "backend": {
+                "completed": true,
+                "generation": 2,
+                "session_id": "ses-1",
+                "state_revision": 2
+              }
+            }
+          },
+          {
+            "sequence": 3,
+            "created": "2026-10-23T18:27:18.462835+00:00",
+            "operation": "breakpoint",
+            "evidence": {
+              "address": {
+                "offset": "0x00000002",
+                "segment": "0x0824",
+                "space": "segmented"
+              },
+              "breakpoint_id": "bp-1",
+              "kind": "execution",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 3,
+              "run": "7d1a8108730545c89fa60ffaffe0afdc",
+              "version": 1,
+              "project_address": "0x10002",
+              "runtime_bytes": "b82222",
+              "bytes_verified": true,
+              "static_bytes_verified": false,
+              "verification_view": "execute",
+              "generation": 2
+            }
+          },
+          {
+            "sequence": 4,
+            "created": "2026-10-23T18:27:18.463018+00:00",
+            "operation": "hook-create",
+            "evidence": {
+              "hook": "d559ab355b0d483eb883bbdbc4a34ade",
+              "breakpoints": [
+                "bp-1"
+              ],
+              "actions": [
+                {
+                  "op": "layers",
+                  "layers": []
+                }
+              ],
+              "once": true,
+              "max_hits": 1,
+              "hits": 0,
+              "dispatch": "paused_rpc",
+              "extra_guest_bytes": 0,
+              "location": {
+                "address": {
+                  "offset": "0x00000002",
+                  "segment": "0x0824",
+                  "space": "segmented"
+                },
+                "breakpoint_id": "bp-1",
+                "kind": "execution",
+                "once": false,
+                "session_id": "ses-1",
+                "state_revision": 3,
+                "run": "7d1a8108730545c89fa60ffaffe0afdc",
+                "version": 1,
+                "project_address": "0x10002",
+                "runtime_bytes": "b82222",
+                "bytes_verified": true,
+                "static_bytes_verified": false,
+                "verification_view": "execute",
+                "generation": 2
+              }
+            }
+          },
+          {
+            "sequence": 5,
+            "created": "2026-10-23T18:27:18.466268+00:00",
+            "operation": "breakpoint",
+            "evidence": {
+              "address": {
+                "offset": "0x00000009",
+                "segment": "0x0824",
+                "space": "segmented"
+              },
+              "breakpoint_id": "bp-2",
+              "kind": "execution",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 4,
+              "run": "7d1a8108730545c89fa60ffaffe0afdc",
+              "version": 1,
+              "project_address": "0x10009",
+              "project_cs": "0x1000",
+              "instruction_context": "x86:16:little:cs=1000",
+              "runtime_bytes": "ebfe",
+              "bytes_verified": true
+            }
+          },
+          {
+            "sequence": 6,
+            "created": "2026-10-23T18:27:18.472142+00:00",
+            "operation": "layer-transition",
+            "evidence": {
+              "run": "7d1a8108730545c89fa60ffaffe0afdc",
+              "active_before": [
+                "088de5f1473e4a789d6d7eabcc3f0fed"
+              ],
+              "active": [],
+              "generation": 3,
+              "ram_bytes": 0,
+              "execution_bytes": 0,
+              "guest_instructions_during_transition": 0,
+              "preserved_changed_bytes": [],
+              "backend": {
+                "completed": true,
+                "generation": 3,
+                "session_id": "ses-1",
+                "state_revision": 7
+              }
+            }
+          },
+          {
+            "sequence": 7,
+            "created": "2026-10-23T18:27:18.472368+00:00",
+            "operation": "hook-hit",
+            "evidence": {
+              "hook": "d559ab355b0d483eb883bbdbc4a34ade",
+              "hit": 1,
+              "stop": {
+                "session_id": "ses-1",
+                "state": "stopped",
+                "state_revision": 5,
+                "stop_reason": {
+                  "address": {
+                    "offset": "0x00000002",
+                    "segment": "0x0824",
+                    "space": "segmented"
+                  },
+                  "breakpoint_id": "bp-1",
+                  "kind": "breakpoint"
+                }
+              },
+              "actions": [
+                {
+                  "op": "layers",
+                  "result": {
+                    "run": "7d1a8108730545c89fa60ffaffe0afdc",
+                    "active_before": [
+                      "088de5f1473e4a789d6d7eabcc3f0fed"
+                    ],
+                    "active": [],
+                    "generation": 3,
+                    "ram_bytes": 0,
+                    "execution_bytes": 0,
+                    "guest_instructions_during_transition": 0,
+                    "preserved_changed_bytes": [],
+                    "backend": {
+                      "completed": true,
+                      "generation": 3,
+                      "session_id": "ses-1",
+                      "state_revision": 7
+                    }
+                  }
+                }
+              ],
+              "dispatch": "paused_rpc",
+              "extra_guest_bytes": 0
+            }
+          },
+          {
+            "sequence": 8,
+            "created": "2026-10-23T18:27:18.474310+00:00",
+            "operation": "run",
+            "evidence": {
+              "run": "7d1a8108730545c89fa60ffaffe0afdc",
+              "outcome": "breakpoint",
+              "timed_out": false,
+              "requested_guest_ms": null,
+              "guest_elapsed_ms": 0,
+              "host_elapsed_ms": 6.899,
+              "fast_forward": false,
+              "timing_after": {
+                "fast_forward": false,
+                "guest_ticks": 21,
+                "session_id": "ses-1",
+                "state_revision": 8
+              },
+              "session": {
+                "session_id": "ses-1",
+                "state": "stopped",
+                "state_revision": 8,
+                "stop_reason": {
+                  "address": {
+                    "offset": "0x00000009",
+                    "segment": "0x0824",
+                    "space": "segmented"
+                  },
+                  "breakpoint_id": "bp-2",
+                  "kind": "breakpoint",
+                  "project_address": "0x10009"
+                }
+              },
+              "hook_hits": [
+                {
+                  "hook": "d559ab355b0d483eb883bbdbc4a34ade",
+                  "hit": 1,
+                  "stop": {
+                    "session_id": "ses-1",
+                    "state": "stopped",
+                    "state_revision": 5,
+                    "stop_reason": {
+                      "address": {
+                        "offset": "0x00000002",
+                        "segment": "0x0824",
+                        "space": "segmented"
+                      },
+                      "breakpoint_id": "bp-1",
+                      "kind": "breakpoint"
+                    }
+                  },
+                  "actions": [
+                    {
+                      "op": "layers",
+                      "result": {
+                        "run": "7d1a8108730545c89fa60ffaffe0afdc",
+                        "active_before": [
+                          "088de5f1473e4a789d6d7eabcc3f0fed"
+                        ],
+                        "active": [],
+                        "generation": 3,
+                        "ram_bytes": 0,
+                        "execution_bytes": 0,
+                        "guest_instructions_during_transition": 0,
+                        "preserved_changed_bytes": [],
+                        "backend": {
+                          "completed": true,
+                          "generation": 3,
+                          "session_id": "ses-1",
+                          "state_revision": 7
+                        }
+                      }
+                    }
+                  ],
+                  "dispatch": "paused_rpc",
+                  "extra_guest_bytes": 0
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": null,
+      "ok": true,
+      "result": {
+        "run": "7d1a8108730545c89fa60ffaffe0afdc",
+        "closed": true,
+        "process_reaped": true
+      }
+    }
+  ]
+}

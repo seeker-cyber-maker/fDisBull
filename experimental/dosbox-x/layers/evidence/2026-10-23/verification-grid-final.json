@@ -1,0 +1,77 @@
+{
+  "feature_version": "0.11.0.dev0",
+  "status": "local uncommitted development; no release or push",
+  "source_base_commit": "6ba413e2f535c6294b3ddb767a5bc12a6a388162",
+  "supplements_receipt": {
+    "path": "verification.json",
+    "sha256": "7fbd35f18c9f8a5ec6218a77896cf01afdc2419f143e4a5f9999efc0f25739e4"
+  },
+  "full_suite": {
+    "exit_code": 1,
+    "passed": 758,
+    "skipped": 3,
+    "failed": 2,
+    "errors": 23,
+    "baseline_failure_identities_match": true
+  },
+  "focused_layer_debugger_grid_tests": 31,
+  "legacy_backend_debugger_grid_tests": 14,
+  "backend_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+  "stable_010_backend_unchanged": true,
+  "backend_source_files_verified": 27,
+  "checks": {
+    "guest_detects_active_ram_patch": "AX=DEAD; guest CRC mismatches",
+    "guest_self_check_entry_exit_hooks": "DX=650C; AX=2222; RAM patch re-enabled",
+    "grid_native_dimensions": [
+      320,
+      200
+    ],
+    "old_game_click": [
+      160,
+      160
+    ],
+    "observed_load_game_dialog": true,
+    "clean_frames_preserved": true,
+    "offline_grid_after_restart": true,
+    "public_foreground_json_grid": true,
+    "offline_cli_grid": true,
+    "game_files_unchanged": 192,
+    "emulators_reaped": true,
+    "isolated_wheel_modules_matched": 49,
+    "isolated_wheel_guest_crc_and_grid": true,
+    "tool_only_packages_checked": true
+  },
+  "packages": [
+    {
+      "name": ".gitignore",
+      "size": 1,
+      "sha256": "684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1"
+    },
+    {
+      "name": "fdisbull-0.11.0.dev0-py3-none-any.whl",
+      "size": 231203,
+      "sha256": "a554531687a3469c142ffc45d0b18081bd9e2a4f6365a88d7657a3a70ae6db3f"
+    },
+    {
+      "name": "fdisbull-0.11.0.dev0-tool.zip",
+      "size": 535937,
+      "sha256": "ceed3c452436ae726b885be53333d012c38659314fe115d43d74073f8c3702e3"
+    },
+    {
+      "name": "fdisbull-0.11.0.dev0.tar.gz",
+      "size": 455261,
+      "sha256": "659963ab94e920899a1b8f3afa7c1e65cab77301f37ef9874e02e447ba7f8721"
+    }
+  ],
+  "linux_runtime_verified": false,
+  "exclusions": [
+    "original game files",
+    "native saved states",
+    "local project databases"
+  ],
+  "boundaries": [
+    "authored self-integrity fixture; DinoPark own integrity routine not tested",
+    "zero extra guest installation bytes for execute layers; host overhead remains",
+    "Mac ELF toolchain baseline failures remain; Linux CI not run"
+  ]
+}

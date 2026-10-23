@@ -1,0 +1,47 @@
+[
+  {
+    "path": "client-tests.log",
+    "sha256": "cb5ff5cdf2a3cc39eac24e4f82c14b2c290d26cf34ff6e0301743347e66228e0",
+    "size": 101
+  },
+  {
+    "path": "dinopark-alternate.json",
+    "sha256": "cd5f4f9b42373c37c1a114122da799e61a8b350233e83e85e497b292eae80a01",
+    "size": 9192
+  },
+  {
+    "path": "dinopark-baseline.json",
+    "sha256": "4d513a3a7167a4490e81ab8a985b5d32f0ee0de113ed66f0e8755164083f9136",
+    "size": 8766
+  },
+  {
+    "path": "dinopark-main-menu.png",
+    "sha256": "fa534ef920db88d5e42cfa6558bb1308db3f1f2a1d168e98e7fbb663638da086",
+    "size": 32964
+  },
+  {
+    "path": "dinopark-result.json",
+    "sha256": "cf0767142af2456c55d850a18551b1b66b06996b94b5d4c8f0f4369b80bdde47",
+    "size": 10661
+  },
+  {
+    "path": "full-tests.log",
+    "sha256": "31ef30f337e139201ad123bdbf0a098826937651878e22038c71028caca63113",
+    "size": 25035
+  },
+  {
+    "path": "json-protocol.json",
+    "sha256": "ea97ee732ac19b83f602b7eeacb365d0587d2cf91e58e9c74818a5f64a093602",
+    "size": 20071
+  },
+  {
+    "path": "legacy-backend-tests.log",
+    "sha256": "e567efeed000057f6068d2aac7a919f39464cd534e6d0268cfbd1b7024cbbdeb",
+    "size": 100
+  },
+  {
+    "path": "verification.json",
+    "sha256": "7fbd35f18c9f8a5ec6218a77896cf01afdc2419f143e4a5f9999efc0f25739e4",
+    "size": 1784
+  }
+]

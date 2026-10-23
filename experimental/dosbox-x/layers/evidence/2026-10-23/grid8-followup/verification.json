@@ -1,0 +1,83 @@
+{
+  "result": "pass within stated scope",
+  "source_base_commit": "6ba413e2f535c6294b3ddb767a5bc12a6a388162",
+  "source_status": "local uncommitted 0.11.0.dev0; no push or release",
+  "focus_tests": 32,
+  "stable_backend_tests": 15,
+  "full_suite": {
+    "passed": 759,
+    "skipped": 3,
+    "failed": 2,
+    "errors": 23,
+    "exit_code": 1,
+    "baseline_failure_identities_match": true
+  },
+  "required_native_missing_backend_exit": 4,
+  "required_native_invalid_backend_exit": 4,
+  "ordinary_without_backend": {
+    "passed": 5,
+    "skipped": 26
+  },
+  "workflow_validation": {
+    "tool": "actionlint",
+    "version": "1.7.7",
+    "exit_code": 0,
+    "workflow_sha256": "1b3ff3c2bc305a002942ac84c3760e36321e1c24a35a1eda516a2d925ed10e40",
+    "linux_build_or_workflow_run": false,
+    "patch_profiles_replayed": 2,
+    "source_files_matched_per_profile": 27
+  },
+  "game": {
+    "script_client_requests": 1,
+    "standalone_compound_json_verified": true,
+    "native_dimensions": [
+      320,
+      200
+    ],
+    "grid_step": 8,
+    "label_step": 32,
+    "target": [
+      160,
+      160
+    ],
+    "observed_load_dialog": true,
+    "game_files_unchanged": 192,
+    "helper_sha256": "d59eab3d74f362a7f4cc7baf2508df1eedc15944e97f31650eb1d952d286bc1b",
+    "helper_unchanged": true,
+    "process_reaped": true
+  },
+  "packages": [
+    {
+      "name": "fdisbull-0.11.0.dev0-py3-none-any.whl",
+      "sha256": "ae549d1d79c192186251b6964b82bcdd768f3a9638040026c3f37fe28efd64b6",
+      "size": 231897
+    },
+    {
+      "name": "fdisbull-0.11.0.dev0-tool.zip",
+      "sha256": "81ce1483b8e29b0adccad2d438faf3c22cc97d03c6b6dcfb1ad06f8d6507f5ac",
+      "size": 543308
+    },
+    {
+      "name": "fdisbull-0.11.0.dev0.tar.gz",
+      "sha256": "e50286ee63d925e888b39cf63c1f686de9288c13d29910d78ae818df7aca0e93",
+      "size": 461800
+    }
+  ],
+  "wheel_source_modules_matched": 49,
+  "wheel_native_crc_grid_and_click_frame": true,
+  "historical_candidate_documents_unchanged": true,
+  "earlier_evidence_hashes_verified": true,
+  "public_main_unchanged": "c5fc870e444a5e120c2580ed94d0f8051387d598",
+  "published_release_unchanged": "v0.10.0",
+  "exclusions": [
+    "original game files",
+    "native states",
+    "local project databases"
+  ],
+  "claim_limits": [
+    "no automatic image recognition or agent callback inside scripts",
+    "frame shows chosen target before queued click; later execution consumes input",
+    "no automatic static interpretation/xref rebuilding from runtime snapshots",
+    "no Linux native acceptance from static workflow validation"
+  ]
+}

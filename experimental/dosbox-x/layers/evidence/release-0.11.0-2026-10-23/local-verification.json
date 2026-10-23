@@ -1,0 +1,43 @@
+{
+  "version": "0.11.0",
+  "phase": "pre-push local source snapshot; GitHub release gates are separate",
+  "source_base_commit": "6ba413e2f535c6294b3ddb767a5bc12a6a388162",
+  "native_tests_passed": 32,
+  "full_mac_suite": {
+    "passed": 759,
+    "skipped": 3,
+    "failed": 2,
+    "errors": 23,
+    "exit_code": 1,
+    "same_25_baseline_failure_identities": true
+  },
+  "isolated_wheel_modules_matched": 49,
+  "isolated_wheel_real_guest_crc_grid_click_frame": true,
+  "backend_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+  "stable_backend_sha256": "e749b6e50775de2807c2515f83e455dc705cdf6ddcdfb257e781f215d987865a",
+  "packages": [
+    {
+      "name": "fdisbull-0.11.0-py3-none-any.whl",
+      "size": 231832,
+      "sha256": "048ac641406aebf3c65c3e4c091dfd7f0a9a3b39dac3f99a76f3ad2314c78e78"
+    },
+    {
+      "name": "fdisbull-0.11.0-tool.zip",
+      "size": 546462,
+      "sha256": "6ba0b042e42996fa1539904ef2215353d7e9e34517f09e678312648e15b8de69"
+    },
+    {
+      "name": "fdisbull-0.11.0.tar.gz",
+      "size": 465368,
+      "sha256": "78907ac89ece8982f616e797a9a5d3fd63ad4337bbe87019ba6f723b89ff6ed0"
+    }
+  ],
+  "earlier_evidence_preserved": true,
+  "ordinary_linux_ci": "required on release commit",
+  "native_linux_ci": "both profiles required on release commit",
+  "excluded": [
+    "original game files",
+    "saved states",
+    "local project databases"
+  ]
+}

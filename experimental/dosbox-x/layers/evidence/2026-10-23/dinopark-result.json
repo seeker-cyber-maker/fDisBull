@@ -1,0 +1,387 @@
+{
+  "backend_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+  "run": "087e2553dc20447aa8e875cf86ae69cd",
+  "intro": {
+    "run": "087e2553dc20447aa8e875cf86ae69cd",
+    "outcome": "guest_time",
+    "timed_out": false,
+    "requested_guest_ms": 35000,
+    "guest_elapsed_ms": 35105,
+    "host_elapsed_ms": 3116.014,
+    "fast_forward": true,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 35132,
+      "session_id": "ses-1",
+      "state_revision": 4
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 3,
+      "stop_reason": {
+        "kind": "pause"
+      }
+    },
+    "hook_hits": []
+  },
+  "screenshot": {
+    "artifact": "5128c750d7d146b3b139a70c28393147",
+    "run": "087e2553dc20447aa8e875cf86ae69cd",
+    "version": 1,
+    "name": "main-menu.png",
+    "kind": "screenshot",
+    "sha256": "fa534ef920db88d5e42cfa6558bb1308db3f1f2a1d168e98e7fbb663638da086",
+    "size": 32964,
+    "metadata": {
+      "captured_ticks": 35117,
+      "double_height": true,
+      "double_width": true,
+      "format": "png",
+      "frame_id": 1860,
+      "height": 200,
+      "mode_id": 5,
+      "session_id": "ses-1",
+      "sha256": "fa534ef920db88d5e42cfa6558bb1308db3f1f2a1d168e98e7fbb663638da086",
+      "source": "last_completed_guest_frame",
+      "source_bpp": 32,
+      "state_revision": 4,
+      "width": 320
+    }
+  },
+  "branch_address": "1693:0358",
+  "layer": {
+    "layer": "facda28a813b4ab6a0b243e6683702ad",
+    "version": 1,
+    "name": "invert observed DinoPark branch",
+    "kind": "execute",
+    "sha256": "10ce4a17c0bdf3452be79fb51443e7132f4fa744d7e7dcca074259e5e1e6a034",
+    "patches": [
+      {
+        "address": "0x16c88",
+        "expected_hex": "7403",
+        "data_hex": "7503"
+      }
+    ],
+    "activation": {
+      "run": "087e2553dc20447aa8e875cf86ae69cd",
+      "active_before": [],
+      "active": [
+        "facda28a813b4ab6a0b243e6683702ad"
+      ],
+      "generation": 4,
+      "ram_bytes": 0,
+      "execution_bytes": 2,
+      "guest_instructions_during_transition": 0,
+      "preserved_changed_bytes": [],
+      "backend": {
+        "completed": true,
+        "generation": 4,
+        "session_id": "ses-1",
+        "state_revision": 21
+      }
+    }
+  },
+  "original_view": {
+    "address": {
+      "offset": "0x0000EEC8",
+      "space": "linear"
+    },
+    "byte_count": 8,
+    "data_base64": "dAPptQKhuns=",
+    "layer_generation": 2,
+    "overlay_valid": true,
+    "session_id": "ses-1",
+    "sha256": "12460099e653ed368504b206b2f15f3533bd21b97178145a743f80ebc6bd79e3",
+    "state_revision": 18,
+    "view": "ram",
+    "hex": "7403e9b502a1ba7b",
+    "project_address": "0x16c88",
+    "runtime_address": "0xeec8",
+    "instructions": [
+      {
+        "runtime_address": "0xeec8",
+        "project_address": "0x16c88",
+        "cs": "0xeb7",
+        "ip": "0x358",
+        "size": 2,
+        "bytes": "7403",
+        "instruction": "je short 035Dh"
+      },
+      {
+        "runtime_address": "0xeeca",
+        "project_address": "0x16c8a",
+        "cs": "0xeb7",
+        "ip": "0x35a",
+        "size": 3,
+        "bytes": "e9b502",
+        "instruction": "jmp 0612h"
+      },
+      {
+        "runtime_address": "0xeecd",
+        "project_address": "0x16c8d",
+        "cs": "0xeb7",
+        "ip": "0x35d",
+        "size": 3,
+        "bytes": "a1ba7b",
+        "instruction": "mov ax,[7BBAh]"
+      }
+    ],
+    "active_layers": [],
+    "generation": 2,
+    "evidence": "runtime observation; static analysis is unchanged"
+  },
+  "execution_view": {
+    "address": {
+      "offset": "0x0000EEC8",
+      "space": "linear"
+    },
+    "byte_count": 8,
+    "data_base64": "dQPptQKhuns=",
+    "layer_generation": 4,
+    "overlay_valid": true,
+    "session_id": "ses-1",
+    "sha256": "62248f568a4d4dc927abfd2b875f9004c2383b8fd129e507818a7ff3df7f2686",
+    "state_revision": 21,
+    "view": "execute",
+    "hex": "7503e9b502a1ba7b",
+    "project_address": "0x16c88",
+    "runtime_address": "0xeec8",
+    "instructions": [
+      {
+        "runtime_address": "0xeec8",
+        "project_address": "0x16c88",
+        "cs": "0xeb7",
+        "ip": "0x358",
+        "size": 2,
+        "bytes": "7503",
+        "instruction": "jne short 035Dh"
+      },
+      {
+        "runtime_address": "0xeeca",
+        "project_address": "0x16c8a",
+        "cs": "0xeb7",
+        "ip": "0x35a",
+        "size": 3,
+        "bytes": "e9b502",
+        "instruction": "jmp 0612h"
+      },
+      {
+        "runtime_address": "0xeecd",
+        "project_address": "0x16c8d",
+        "cs": "0xeb7",
+        "ip": "0x35d",
+        "size": 3,
+        "bytes": "a1ba7b",
+        "instruction": "mov ax,[7BBAh]"
+      }
+    ],
+    "active_layers": [
+      "facda28a813b4ab6a0b243e6683702ad"
+    ],
+    "generation": 4,
+    "evidence": "runtime observation; static analysis is unchanged"
+  },
+  "baseline_first": [
+    {
+      "address": {
+        "offset": "0x00000358",
+        "segment": "0x0EB7",
+        "space": "segmented"
+      },
+      "execution_bytes": "7403e9b502a1ba7b3b06b07b7509a1",
+      "instruction": "je short 035Dh",
+      "layer_generation": 2,
+      "native_instruction_view": "ram",
+      "ram_bytes": "7403e9b502a1ba7b3b06b07b7509a1",
+      "register_changes": {
+        "cs": "0x0EB7",
+        "ds": "0x3844",
+        "eax": "0x00000003",
+        "ebp": "0x00001F10",
+        "ebx": "0x00000000",
+        "ecx": "0x00000140",
+        "edi": "0x00000001",
+        "edx": "0x00000064",
+        "es": "0x3844",
+        "esi": "0x00000012",
+        "esp": "0x00001F06",
+        "flags": "0x00007246",
+        "fs": "0x0000",
+        "gs": "0x0000",
+        "instruction_pointer": "0x00000358",
+        "ss": "0x4528"
+      },
+      "sequence": 1,
+      "project_address": "0x16c88",
+      "project_segmented_address": "1693:0358",
+      "native_instruction": "je   0000035D ($+3)",
+      "instruction_view": "execute",
+      "active_layers": []
+    },
+    {
+      "address": {
+        "offset": "0x0000035D",
+        "segment": "0x0EB7",
+        "space": "segmented"
+      },
+      "execution_bytes": "a1ba7b3b06b07b7509a1bc7b3b06ae",
+      "instruction": "mov ax,[7BBAh]",
+      "layer_generation": 2,
+      "native_instruction_view": "ram",
+      "ram_bytes": "a1ba7b3b06b07b7509a1bc7b3b06ae",
+      "register_changes": {
+        "instruction_pointer": "0x0000035D"
+      },
+      "sequence": 2,
+      "project_address": "0x16c8d",
+      "project_segmented_address": "1693:035d",
+      "native_instruction": "mov  ax,[7BBA]",
+      "instruction_view": "execute",
+      "active_layers": []
+    }
+  ],
+  "alternate_first": [
+    {
+      "address": {
+        "offset": "0x00000358",
+        "segment": "0x0EB7",
+        "space": "segmented"
+      },
+      "execution_bytes": "7503e9b502a1ba7b3b06b07b7509a1",
+      "instruction": "jne short 035Dh",
+      "layer_generation": 4,
+      "native_instruction_view": "ram",
+      "ram_bytes": "7403e9b502a1ba7b3b06b07b7509a1",
+      "register_changes": {
+        "cs": "0x0EB7",
+        "ds": "0x3844",
+        "eax": "0x00000003",
+        "ebp": "0x00001F10",
+        "ebx": "0x00000000",
+        "ecx": "0x00000140",
+        "edi": "0x00000001",
+        "edx": "0x00000064",
+        "es": "0x3844",
+        "esi": "0x00000012",
+        "esp": "0x00001F06",
+        "flags": "0x00007246",
+        "fs": "0x0000",
+        "gs": "0x0000",
+        "instruction_pointer": "0x00000358",
+        "ss": "0x4528"
+      },
+      "sequence": 1,
+      "project_address": "0x16c88",
+      "project_segmented_address": "1693:0358",
+      "native_instruction": "je   0000035D ($+3)",
+      "instruction_view": "execute",
+      "active_layers": [
+        "facda28a813b4ab6a0b243e6683702ad"
+      ]
+    },
+    {
+      "address": {
+        "offset": "0x0000035A",
+        "segment": "0x0EB7",
+        "space": "segmented"
+      },
+      "execution_bytes": "e9b502a1ba7b3b06b07b7509a1bc7b",
+      "instruction": "jmp 0612h",
+      "layer_generation": 4,
+      "native_instruction_view": "ram",
+      "ram_bytes": "e9b502a1ba7b3b06b07b7509a1bc7b",
+      "register_changes": {
+        "instruction_pointer": "0x0000035A"
+      },
+      "sequence": 2,
+      "project_address": "0x16c8a",
+      "project_segmented_address": "1693:035a",
+      "native_instruction": "jmp  00000612 ($+2b5)",
+      "instruction_view": "execute",
+      "active_layers": [
+        "facda28a813b4ab6a0b243e6683702ad"
+      ]
+    }
+  ],
+  "baseline_trace": {
+    "artifact": "25bf8f63c218424d815b4d8fd4d6ffdd",
+    "run": "087e2553dc20447aa8e875cf86ae69cd",
+    "version": 1,
+    "name": "baseline.json",
+    "kind": "trace",
+    "sha256": "4d513a3a7167a4490e81ab8a985b5d32f0ee0de113ed66f0e8755164083f9136",
+    "size": 8766,
+    "metadata": {
+      "event_count": 8,
+      "complete": true,
+      "run": {
+        "run": "087e2553dc20447aa8e875cf86ae69cd",
+        "outcome": "pause",
+        "timed_out": false,
+        "requested_guest_ms": null,
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.493,
+        "fast_forward": false,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 35146,
+          "session_id": "ses-1",
+          "state_revision": 19
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 19,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": []
+      }
+    }
+  },
+  "alternate_trace": {
+    "artifact": "760fa5e73c01438d9e3fcad569e6f39e",
+    "run": "087e2553dc20447aa8e875cf86ae69cd",
+    "version": 1,
+    "name": "alternate.json",
+    "kind": "trace",
+    "sha256": "cd5f4f9b42373c37c1a114122da799e61a8b350233e83e85e497b292eae80a01",
+    "size": 9192,
+    "metadata": {
+      "event_count": 8,
+      "complete": true,
+      "run": {
+        "run": "087e2553dc20447aa8e875cf86ae69cd",
+        "outcome": "pause",
+        "timed_out": false,
+        "requested_guest_ms": null,
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.459,
+        "fast_forward": false,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 35146,
+          "session_id": "ses-1",
+          "state_revision": 22
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 22,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": []
+      }
+    }
+  },
+  "native_state_exported": false,
+  "guest_code_ram_unchanged": true,
+  "restore_original_view": true,
+  "result": "pass",
+  "process_reaped": true,
+  "game_files_unchanged": 192
+}

@@ -1,0 +1,63 @@
+{
+  "id": null,
+  "ok": true,
+  "result": {
+    "artifact": "eb5926679f5d4fde9a72f1ff35ec4b19",
+    "run": "850cfb6cfb4c4cf0b20924c4d15dccf6",
+    "version": 1,
+    "name": "cli-grid.png",
+    "kind": "screenshot-grid",
+    "sha256": "3d82a9e1ba7f2dc5306760ee793e21a490814ce340f013265cebfee2e48e8c21",
+    "size": 53432,
+    "metadata": {
+      "captured_ticks": 35088,
+      "double_height": true,
+      "double_width": true,
+      "format": "png",
+      "frame_id": 1858,
+      "height": 200,
+      "mode_id": 5,
+      "session_id": "ses-1",
+      "sha256": "3d82a9e1ba7f2dc5306760ee793e21a490814ce340f013265cebfee2e48e8c21",
+      "source": "last_completed_guest_frame",
+      "source_bpp": 32,
+      "state_revision": 4,
+      "width": 320,
+      "coordinate_grid": {
+        "coordinate_space": "screenshot_pixels",
+        "origin": [
+          0,
+          0
+        ],
+        "max_coordinate": [
+          319,
+          199
+        ],
+        "step": 40,
+        "x_lines": [
+          0,
+          40,
+          80,
+          120,
+          160,
+          200,
+          240,
+          280
+        ],
+        "y_lines": [
+          0,
+          40,
+          80,
+          120,
+          160
+        ],
+        "x_direction": "right",
+        "y_direction": "down",
+        "resized": false,
+        "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+        "source_artifact": "fc79e0f72de942c582e9e7235b37825f",
+        "source_sha256": "fa534ef920db88d5e42cfa6558bb1308db3f1f2a1d168e98e7fbb663638da086"
+      }
+    }
+  }
+}

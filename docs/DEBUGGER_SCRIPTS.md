@@ -1,5 +1,7 @@
 # Reusable debugger routes and native checkpoints
 
+The 0.11.0 [code-layer API](CODE_LAYERS.md) adds ordered RAM patches, execution-only overlays, temporal code captures, and bounded breakpoint actions. Those operations require the separate layers backend; the published 0.10.0 backend remains available for the original state/script/watchpoint API.
+
 A native checkpoint is an editable machine-state artifact, like a restorable crash dump. It can be inspected, forked with explicit RAM/register changes, and reinjected into a compatible debugger session.
 
 A route is a bounded JSON script executed by the foreground debugger owner. It can navigate menus, load an in-game save with mouse clicks, set breakpoints, run until a hit, capture evidence, and restore an emulator checkpoint within the same run. No Python, shell commands, expressions, or arbitrary RPC calls execute from a route.
@@ -46,6 +48,30 @@ A script uses `format: "fdisbull-script-1"` and a `steps` array. Supported `op` 
 ```
 
 `assert` compares `value` with `equals`. A `run` step expects `guest_time` when `guest_ms` is supplied, otherwise `breakpoint`; specify `expect` to require another outcome. An unexpected timeout or an incomplete trace stops the route and saves the failed step report. Each screenshot, trace, checkpoint, script source, and execution report is retained as a separate project artifact. The complete script is structurally validated before the first guest mutation. Execution stops at the first failure; prior actions remain recorded and are not rolled back automatically.
+
+In 0.11.0 a `screenshot` step accepts `grid:true` and `grid_step:32`. Its result retains the native dimensions and mode ID, so the next click can use it directly:
+
+```json
+{"format":"fdisbull-script-1","steps":[
+  {"op":"screenshot","name":"menu-grid.png","grid":true,"grid_step":32,"as":"menu"},
+  {"op":"click","x":160,"y":160,"mode_id":"$menu.metadata.mode_id","hold_ms":150},
+  {"op":"run","guest_ms":1500,"fast_forward":true,"timeout_ms":5000}
+]}
+```
+
+Coordinates above are illustrative; inspect the actual screen before choosing them. The [coordinate-grid documentation](DOSBOX_DEBUGGER.md#optional-screenshot-coordinate-grid-0110) explains original-frame retention, offline generation and display-doubling flags.
+
+For an eight-pixel art grid and a tighter loop, `click-frame` combines clean capture, target marker/label and mode-bound click queuing in one operation. It defaults to an eight-pixel grid with 32-pixel label spacing. Follow it with `run` and an after-frame in the same script request:
+
+```json
+{"format":"fdisbull-script-1","steps":[
+  {"op":"click-frame","x":160,"y":160,"grid_step":8,"as":"action"},
+  {"op":"run","guest_ms":1500,"fast_forward":true,"timeout_ms":5000},
+  {"op":"screenshot","name":"after.png","grid":true,"grid_step":8}
+]}
+```
+
+The action returns `frame` and `click`; the frame records `coordinate_grid.target` and is explicitly captured before the queued click. Coordinates stay exact and are not snapped or inferred. Choosing a new coordinate from an unknown image still requires agent inspection outside the script. The combined request avoids separate client calls for a point already chosen.
 
 Limits are 1 MiB of script JSON, eight nesting levels, 1,000 expanded steps, and a script dispatch budget of at most 600,000 host milliseconds. Bounded run/trace calls use the remaining budget. An already dispatched native serialization or RPC is governed by its own RPC deadline and is not preempted by the script dispatch budget.
 

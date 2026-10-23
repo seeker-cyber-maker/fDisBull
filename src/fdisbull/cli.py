@@ -11,11 +11,27 @@ METHODS = {
     'debug-launch': 'Launch a project-bound DOSBox session in serve; executable,game_dir,[version]',
     'debug-status': 'Live debugger status and address mapping; run',
     'debug-registers': 'Live CPU registers with project address mapping; run',
+    'debug-layer': 'Save an immutable guarded RAM or execution layer; name,kind,patches,[version]',
+    'debug-layer-info': 'Inspect an immutable layer definition; layer',
+    'debug-layers': 'List saved layers for a static version; [version]',
+    'debug-events': 'Read the persisted runtime event timeline; run,[after,limit]',
+    'debug-layer-stack': 'Inspect or replace the active ordered layer stack; run,[active]',
+    'debug-layer-enable': 'Enable or disable a saved layer; run,layer,[enabled]',
+    'debug-layer-patch': 'Create and optionally activate a guarded RAM/execute patch; run,name,address,expected_hex,data_hex,[kind,activate]',
+    'debug-code': 'Decode observed RAM or effective instruction-fetch bytes; run,address,[cs,length,view]',
+    'debug-capture-code': 'Save a temporal code view as an immutable project artifact; run,address,[cs,length,view,name]',
+    'debug-branch': 'Invert or force an observed 16-bit Jcc using an execution layer; run,name,address,[mode,activate]',
+    'debug-cave': 'Create an execution-only code cave with normalized far return; run,name,address,code_hex,return_to,[activate]',
+    'debug-hook': 'Attach bounded declarative actions to a breakpoint; run,address,actions,[once,max_hits,cs,access,length]',
+    'debug-hooks': 'Inspect active breakpoint actions and hit counts; run',
+    'debug-delete-hook': 'Remove an owned hook and its native breakpoints; run,hook',
     'debug-breakpoint': 'Translate execution or data access breakpoint; run,address,[cs,access,length]',
     'debug-delete-breakpoint': 'Delete a live breakpoint; run,breakpoint_id',
     'debug-run': 'Run to a breakpoint or bounded guest time, pausing at host timeout; run,[timeout_ms,guest_ms,fast_forward]',
     'debug-click': 'Queue a screenshot-pixel mouse click; run,x,y,[button,hold_ms,mode_id]',
-    'debug-screenshot': 'Store an actual guest PNG inside the project; run,[name]',
+    'debug-click-frame': 'Capture and label the chosen point, then queue its frame-mode-bound click; run,x,y,[name,grid_step,button,hold_ms,mode_id]',
+    'debug-screenshot': 'Store an actual guest PNG with optional native-pixel grid; run,[name,grid,grid_step]',
+    'debug-grid': 'Derive a coordinate grid from a stored clean screenshot offline; artifact,[name,step,target]',
     'debug-trace': 'Store bounded CPU trace with project address mappings; run,[name,count,timeout_ms,fast_forward]',
     'debug-memory': 'Read project-mapped runtime bytes; run,address,[cs,length]',
     'debug-save-state': 'Store native emulator state in the project; run,[name]',
@@ -145,7 +161,7 @@ def invoke(method, params, debugger=None):
     project = p.pop("project",None)
     if not project:
         raise ValueError("project path is required")
-    if method.startswith('debug-') and method not in ('debug-runs','debug-artifacts','debug-export','debug-save-script','debug-scripts','debug-state-info','debug-fork-state'):
+    if method.startswith('debug-') and method not in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-layer','debug-layer-info','debug-layers','debug-events'):
         if debugger is None:
             raise ValueError('Live debugger commands require fdisbull serve or fdisbull debug; sessions close on server exit')
         return debugger.invoke(method,project,p)
@@ -156,7 +172,7 @@ def invoke(method, params, debugger=None):
         with Project.create(project,binary,**p) as db:
             return db.status()
     with Project(project) as db:
-        if method in ('debug-runs','debug-artifacts','debug-export','debug-save-script','debug-scripts','debug-state-info','debug-fork-state'):
+        if method in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-layer','debug-layer-info','debug-layers','debug-events'):
             return getattr(db,method.replace('-','_'))(**p)
         if method in ('link-labels','rename-file','label-info','label-links','unlink-labels'):return getattr(db,method.replace('-','_'))(**p)
         if method=='refresh-dos-state':return db.refresh_dos_state(**p)
@@ -280,7 +296,7 @@ def parser():
     c = sub.add_parser('debug',help='Launch a DOS project and accept live debugger JSON commands on stdin')
     c.add_argument('project');c.add_argument('--executable',required=True);c.add_argument('--game-dir',required=True)
     c.add_argument('--version',type=int)
-    for name in ('debug-runs','debug-artifacts','debug-export','debug-save-script','debug-scripts','debug-state-info','debug-fork-state'):
+    for name in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state'):
         c = sub.add_parser(name,help=METHODS[name]);c.add_argument('project')
         if name=='debug-state-info':
             c.add_argument('artifact')
@@ -290,6 +306,9 @@ def parser():
             c.add_argument('--registers',type=json.loads,default={})
         elif name=='debug-export':
             c.add_argument('artifact');c.add_argument('output')
+        elif name=='debug-grid':
+            c.add_argument('artifact');c.add_argument('--name',default='coordinate-grid.png');c.add_argument('--step',type=int,default=32)
+            c.add_argument('--target',type=json.loads,help='Optional native [x,y] coordinate marker')
         else:
             c.add_argument('--version',type=int)
             if name=='debug-artifacts':c.add_argument('--run')

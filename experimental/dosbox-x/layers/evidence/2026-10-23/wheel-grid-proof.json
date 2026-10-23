@@ -1,0 +1,196 @@
+{
+  "grid_verified": true,
+  "grid": {
+    "artifact": "e2ce5c20d50f49628e762b1a9e8232ad",
+    "run": "4b39639006af4467a2c526df9ca8c162",
+    "version": 1,
+    "name": "wheel-grid.png",
+    "kind": "screenshot-grid",
+    "sha256": "c34abfce8b3d060bb6c10dfc4fa004d5930198d2d492aa8708591572c24e4eb5",
+    "size": 13362,
+    "metadata": {
+      "captured_ticks": 131,
+      "double_height": false,
+      "double_width": false,
+      "format": "png",
+      "frame_id": 6,
+      "height": 400,
+      "mode_id": 4,
+      "session_id": "ses-1",
+      "sha256": "c34abfce8b3d060bb6c10dfc4fa004d5930198d2d492aa8708591572c24e4eb5",
+      "source": "last_completed_guest_frame",
+      "source_bpp": 32,
+      "state_revision": 10,
+      "width": 720,
+      "coordinate_grid": {
+        "coordinate_space": "screenshot_pixels",
+        "origin": [
+          0,
+          0
+        ],
+        "max_coordinate": [
+          719,
+          399
+        ],
+        "step": 32,
+        "x_lines": [
+          0,
+          32,
+          64,
+          96,
+          128,
+          160,
+          192,
+          224,
+          256,
+          288,
+          320,
+          352,
+          384,
+          416,
+          448,
+          480,
+          512,
+          544,
+          576,
+          608,
+          640,
+          672,
+          704
+        ],
+        "y_lines": [
+          0,
+          32,
+          64,
+          96,
+          128,
+          160,
+          192,
+          224,
+          256,
+          288,
+          320,
+          352,
+          384
+        ],
+        "x_direction": "right",
+        "y_direction": "down",
+        "resized": false,
+        "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+        "source_artifact": "6a191c8d994543e69f2c1745081ca460",
+        "source_sha256": "ec482356fb14095d177ac40ec4e1e4fa8849d4051292082ad5abd5643a25376d"
+      }
+    }
+  },
+  "result": "pass",
+  "version": "0.11.0.dev0",
+  "module": "/Users/tiga/Documents/ChatGPT/fDisBull/.recovery/2026-10-23/layers-packages-final/fdisbull-0.11.0.dev0-py3-none-any.whl/fdisbull/code_layers.py",
+  "wheel_sha256": "a554531687a3469c142ffc45d0b18081bd9e2a4f6365a88d7657a3a70ae6db3f",
+  "backend_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+  "source_modules_matched": 49,
+  "guest_ax": "0x00002222",
+  "guest_crc": "0x0000650C",
+  "original_crc": "0x650c",
+  "alternate_crc": "0x33fa",
+  "ram_view": {
+    "address": {
+      "offset": "0x00008290",
+      "space": "linear"
+    },
+    "byte_count": 3,
+    "data_base64": "uBER",
+    "layer_generation": 2,
+    "overlay_valid": true,
+    "session_id": "ses-1",
+    "sha256": "4ed36144bb78e8b0396043cfe0dd706cb6ee4c74bdcba56bea2dab5d50b275af",
+    "state_revision": 6,
+    "view": "ram",
+    "hex": "b81111",
+    "project_address": "0x10050",
+    "runtime_address": "0x8290",
+    "instructions": [
+      {
+        "runtime_address": "0x8290",
+        "project_address": "0x10050",
+        "cs": "0x824",
+        "ip": "0x50",
+        "size": 3,
+        "bytes": "b81111",
+        "instruction": "mov ax,1111h"
+      }
+    ],
+    "active_layers": [
+      "122b26caa2fd494d9a00f7b9bb6b146a"
+    ],
+    "generation": 2,
+    "evidence": "runtime observation; static analysis is unchanged"
+  },
+  "execution_view": {
+    "address": {
+      "offset": "0x00008290",
+      "space": "linear"
+    },
+    "byte_count": 3,
+    "data_base64": "uCIi",
+    "layer_generation": 2,
+    "overlay_valid": true,
+    "session_id": "ses-1",
+    "sha256": "fe407340b1193a09e994975d605b514124011214c13bce49785d362d34102b57",
+    "state_revision": 6,
+    "view": "execute",
+    "hex": "b82222",
+    "project_address": "0x10050",
+    "runtime_address": "0x8290",
+    "instructions": [
+      {
+        "runtime_address": "0x8290",
+        "project_address": "0x10050",
+        "cs": "0x824",
+        "ip": "0x50",
+        "size": 3,
+        "bytes": "b82222",
+        "instruction": "mov ax,2222h"
+      }
+    ],
+    "active_layers": [
+      "122b26caa2fd494d9a00f7b9bb6b146a"
+    ],
+    "generation": 2,
+    "evidence": "runtime observation; static analysis is unchanged"
+  },
+  "layer": {
+    "layer": "122b26caa2fd494d9a00f7b9bb6b146a",
+    "version": 1,
+    "name": "wheel proof",
+    "kind": "execute",
+    "sha256": "fb79d543f62988f38e4fe22a7f2145045da339d037075ff7eeb4d0f52d57943d",
+    "patches": [
+      {
+        "address": "0x10051",
+        "expected_hex": "1111",
+        "data_hex": "2222"
+      }
+    ],
+    "activation": {
+      "run": "4b39639006af4467a2c526df9ca8c162",
+      "active_before": [],
+      "active": [
+        "122b26caa2fd494d9a00f7b9bb6b146a"
+      ],
+      "generation": 2,
+      "ram_bytes": 0,
+      "execution_bytes": 2,
+      "guest_instructions_during_transition": 0,
+      "preserved_changed_bytes": [],
+      "backend": {
+        "completed": true,
+        "generation": 2,
+        "session_id": "ses-1",
+        "state_revision": 2
+      }
+    }
+  },
+  "run": "4b39639006af4467a2c526df9ca8c162",
+  "offline_grid_verified": true,
+  "process_reaped": true
+}

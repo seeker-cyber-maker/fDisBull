@@ -1,0 +1,77 @@
+[
+  {
+    "path": "full-tests.log",
+    "size": 25035,
+    "sha256": "b1869149838ade9da81aadbbe977d00bd3dbd80825f8524fb7018b717dab4fa1"
+  },
+  {
+    "path": "game-result.json",
+    "size": 35013,
+    "sha256": "5d5390fef42cdd97832baafa524178ac25bc807fb398455edb2d054b31204cf1"
+  },
+  {
+    "path": "invalid-backend.log",
+    "size": 74,
+    "sha256": "9059641f7925b2a64db0f99801ca6a58a6bf32f25a40aa4f0912d0b61eb5a819"
+  },
+  {
+    "path": "legacy-tests.log",
+    "size": 100,
+    "sha256": "462a3c3ec20c1dd85268b3c7475340cd7281582caf3c1b1f461cf2c3c96651fa"
+  },
+  {
+    "path": "load-dialog-clean.png",
+    "size": 21187,
+    "sha256": "264cb118213ce681ab8ee294dcc7011cba03713934d9a4c38fe5906ccc17c903"
+  },
+  {
+    "path": "load-dialog-grid8.png",
+    "size": 39443,
+    "sha256": "21106c352b6d1b47a52833d6ac3c0d1ac1f53e4a164c0e949a8b4d61114c5a86"
+  },
+  {
+    "path": "main-menu-clean.png",
+    "size": 32964,
+    "sha256": "fa534ef920db88d5e42cfa6558bb1308db3f1f2a1d168e98e7fbb663638da086"
+  },
+  {
+    "path": "main-menu-click-grid8.png",
+    "size": 67777,
+    "sha256": "7b9e43934baa24ef9ca064d6c221c5030a4cea32a8e005404cc7252b255da3cc"
+  },
+  {
+    "path": "missing-backend.log",
+    "size": 87,
+    "sha256": "66d22ca449482de525402e8d3085018fa837c529d0ec5de4d3cab2e2aca189b3"
+  },
+  {
+    "path": "native-tests.log",
+    "size": 100,
+    "sha256": "4be82eae861084912883d410dc6add78ad0716f5cdbcb8f49602bd3ab5411b0e"
+  },
+  {
+    "path": "optional-without-backend.log",
+    "size": 110,
+    "sha256": "8df59b0e83223c5d8f6205ba2e31717b7803b33856d7a4b5bc28685142f52f12"
+  },
+  {
+    "path": "package-check.log",
+    "size": 173,
+    "sha256": "0dbb6c62d512b3fb3d18b9c48ea798aed29b5d26cb7702d5ef18f39e875f0136"
+  },
+  {
+    "path": "patch-replay.json",
+    "size": 527,
+    "sha256": "7c68fd73e679a59729f3994eb9a151b0e41950e812710adfe8aa2c431939351f"
+  },
+  {
+    "path": "verification.json",
+    "size": 2567,
+    "sha256": "9ddadb2b1d0958a0155faa1948f1d638d6dd33143f5e0468d370994af382dcd2"
+  },
+  {
+    "path": "wheel-proof.json",
+    "size": 7308,
+    "sha256": "eadf9ee1766f71f407577cab7b7d55817e8966723ba628cf8abf31e1e08b3616"
+  }
+]
