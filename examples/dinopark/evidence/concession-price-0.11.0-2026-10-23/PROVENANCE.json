@@ -1,0 +1,14 @@
+{
+  "script_sha256": "8b14099dd824d41fa85ebcc347f280854f50bcd4997f35a73d489f8929465093",
+  "successful_run_log_sha256": "882d853350561db332ca8e00b97788037c715a85689c62c614373a2fcefc8e00",
+  "wheel_sha256": "c8c877392e7f804cb9f14e344de2e55667cc928db5998f79c6b101f747a9e47b",
+  "backend_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+  "published_tool_commit": "a2167479a6ee474e8a4e2a7965c8ef46c618df54",
+  "source_helper_created_after_release": true,
+  "native_grid_artifacts_checked": 23,
+  "static_versions": 1,
+  "primary_run": "/Users/tiga/Conversions/DinoParkTycoon/debugger-runs/published-0.11.0-concession-replay-20261023-v5",
+  "supplemental_cash_reader_probe": "/Users/tiga/Conversions/DinoParkTycoon/debugger-runs/published-0.11.0-concession-replay-20261023-v4/evidence",
+  "all_public_trace_windows_bounded": true,
+  "no_native_state_bytes_exported": true
+}

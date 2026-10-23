@@ -1,0 +1,170 @@
+[
+  {
+    "point": [
+      195,
+      85
+    ],
+    "run": {
+      "run": "584a9ce8a01c4a23a5dbdaeff3348cf1",
+      "outcome": "guest_time",
+      "timed_out": false,
+      "requested_guest_ms": 1200,
+      "guest_elapsed_ms": 1246,
+      "host_elapsed_ms": 1240.776,
+      "fast_forward": false,
+      "timing_after": {
+        "fast_forward": false,
+        "guest_ticks": 47435,
+        "session_id": "ses-1",
+        "state_revision": 6
+      },
+      "session": {
+        "session_id": "ses-1",
+        "state": "stopped",
+        "state_revision": 6,
+        "stop_reason": {
+          "kind": "pause"
+        }
+      },
+      "hook_hits": []
+    }
+  },
+  {
+    "point": [
+      145,
+      187
+    ],
+    "run": {
+      "run": "584a9ce8a01c4a23a5dbdaeff3348cf1",
+      "outcome": "guest_time",
+      "timed_out": false,
+      "requested_guest_ms": 1000,
+      "guest_elapsed_ms": 1028,
+      "host_elapsed_ms": 1026.607,
+      "fast_forward": false,
+      "timing_after": {
+        "fast_forward": false,
+        "guest_ticks": 48463,
+        "session_id": "ses-1",
+        "state_revision": 8
+      },
+      "session": {
+        "session_id": "ses-1",
+        "state": "stopped",
+        "state_revision": 8,
+        "stop_reason": {
+          "kind": "pause"
+        }
+      },
+      "hook_hits": []
+    }
+  },
+  {
+    "point": [
+      160,
+      188
+    ],
+    "run": {
+      "run": "584a9ce8a01c4a23a5dbdaeff3348cf1",
+      "outcome": "breakpoint",
+      "timed_out": false,
+      "requested_guest_ms": 1500,
+      "guest_elapsed_ms": 549,
+      "host_elapsed_ms": 545.494,
+      "fast_forward": false,
+      "timing_after": {
+        "fast_forward": false,
+        "guest_ticks": 49012,
+        "session_id": "ses-1",
+        "state_revision": 10
+      },
+      "session": {
+        "session_id": "ses-1",
+        "state": "stopped",
+        "state_revision": 10,
+        "stop_reason": {
+          "address": {
+            "offset": "0x00000DCF",
+            "segment": "0x2B6F",
+            "space": "segmented"
+          },
+          "breakpoint_id": "bp-1",
+          "kind": "breakpoint",
+          "project_address": "0x3427f"
+        }
+      },
+      "hook_hits": []
+    }
+  },
+  {
+    "cash_before": {
+      "address": {
+        "offset": "0x00043F14",
+        "space": "linear"
+      },
+      "byte_count": 4,
+      "data_base64": "zYYBAA==",
+      "layer_generation": 2,
+      "overlay_valid": true,
+      "session_id": "ses-1",
+      "sha256": "d66431ac7e716c4ed7e732ebaf8df764ab3ef4732e02e8afacddc086516d6fff",
+      "state_revision": 11,
+      "view": "ram",
+      "project_address": "0x4bcd4",
+      "hex": "cd860100"
+    },
+    "cash_after": {
+      "address": {
+        "offset": "0x00043F14",
+        "space": "linear"
+      },
+      "byte_count": 4,
+      "data_base64": "gWkBAA==",
+      "layer_generation": 2,
+      "overlay_valid": true,
+      "session_id": "ses-1",
+      "sha256": "4014f8b0766e0fa1af79e8803e12d4580856f3c032782981beafc1997dfb84ba",
+      "state_revision": 12,
+      "view": "ram",
+      "project_address": "0x4bcd4",
+      "hex": "81690100"
+    },
+    "trace": {
+      "artifact": "1d3fc0f3464b484bbd3557395db970f8",
+      "run": "584a9ce8a01c4a23a5dbdaeff3348cf1",
+      "version": 1,
+      "name": "cash-staging-price-trace.json",
+      "kind": "trace",
+      "sha256": "decfdcfe00866567f124261b88b86fcf7d1157a2d50c73b60a3bffdc06479d28",
+      "size": 19400,
+      "metadata": {
+        "event_count": 24,
+        "complete": true,
+        "run": {
+          "run": "584a9ce8a01c4a23a5dbdaeff3348cf1",
+          "outcome": "pause",
+          "timed_out": false,
+          "requested_guest_ms": null,
+          "guest_elapsed_ms": 0,
+          "host_elapsed_ms": 3.548,
+          "fast_forward": false,
+          "timing_after": {
+            "fast_forward": false,
+            "guest_ticks": 49012,
+            "session_id": "ses-1",
+            "state_revision": 12
+          },
+          "session": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 12,
+            "stop_reason": {
+              "kind": "pause"
+            }
+          },
+          "hook_hits": []
+        }
+      }
+    }
+  }
+]

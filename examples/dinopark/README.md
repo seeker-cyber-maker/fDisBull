@@ -60,3 +60,7 @@ The output includes `dinopark.fdb`, which retains the original game bytes and is
 ## Parking purchase observation
 
 The [preserved parking experiment](evidence/parking-commit-2026-10-23/RESULT.md) establishes the staged-to-live counter copy during shop OK for the available pmm save. It includes bounded traces, controls, screenshots, and file hashes; game files, native state bytes, and the local database are excluded. [Replay instructions](../../docs/PARKING_COMMIT.md) explain how `replay_parking_commit.py` validates another wheel against the corresponding private checkpoint in a fresh emulator session.
+
+## Published 0.11.0: gift price and reversible code layers
+
+[The gift-price investigation](notes/CONCESSION_PRICE_0.11.md) traces 7,500 to the executable-initialized WORD at project `0x46a79` / static `4020:6879`, then follows selection, staged cash and shop-OK accounting. [The companion replay](verify_concession_price.py) uses the delivered wheel/backend, restores native checkpoints in fresh emulators, compares an execution layer on/off, and drives the catalogue with 8px `click-frame` grids. Original instructions charge 7,500; the three-site layer charges and accounts for 5,000 while code RAM and the price table remain unchanged. A declared native-state cash fork makes both trials affordable; original checkpoints and inputs are preserved. Private game/database/state output must remain outside Git.

@@ -1,0 +1,44 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 195,
+      "y": 85,
+      "name": "baseline-select-gift.png",
+      "grid_step": 8,
+      "hold_ms": 500
+    },
+    {
+      "op": "run",
+      "guest_ms": 1200,
+      "timeout_ms": 5000
+    },
+    {
+      "op": "click-frame",
+      "x": 145,
+      "y": 187,
+      "name": "baseline-show-buy-button.png",
+      "grid_step": 8,
+      "hold_ms": 500
+    },
+    {
+      "op": "run",
+      "guest_ms": 1000,
+      "timeout_ms": 5000
+    },
+    {
+      "op": "click-frame",
+      "x": 160,
+      "y": 188,
+      "name": "baseline-buy-one-gift.png",
+      "grid_step": 8,
+      "hold_ms": 500
+    },
+    {
+      "op": "run",
+      "guest_ms": 1500,
+      "timeout_ms": 5000
+    }
+  ]
+}

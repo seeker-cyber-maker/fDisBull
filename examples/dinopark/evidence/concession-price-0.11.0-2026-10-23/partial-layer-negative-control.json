@@ -1,0 +1,23 @@
+{
+  "result": "observed partial-layer inconsistency; corrected in final three-site layer",
+  "patched_sites": [
+    "334b:0c9e",
+    "334b:0a95"
+  ],
+  "omitted_site": "334b:0dcf",
+  "before": {
+    "cash": 100450,
+    "expenses": 0,
+    "available_cash": 92950,
+    "ticks": 50232
+  },
+  "after": {
+    "cash": 92950,
+    "expenses": 5000,
+    "transaction_total": 5000,
+    "ticks": 50232
+  },
+  "cash_debit": 7500,
+  "expense_increase": 5000,
+  "source_log_sha256": "3ec92ae0097caf7f4d66315f8a96625bb127332da456b53b551bc100973cf67e"
+}

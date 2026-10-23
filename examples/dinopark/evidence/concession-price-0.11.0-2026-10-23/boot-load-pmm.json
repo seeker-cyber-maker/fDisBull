@@ -1,0 +1,56 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "run",
+      "guest_ms": 35000,
+      "fast_forward": true,
+      "timeout_ms": 10000
+    },
+    {
+      "op": "click-frame",
+      "x": 160,
+      "y": 160,
+      "name": "01-old-game.png",
+      "grid_step": 8,
+      "hold_ms": 150
+    },
+    {
+      "op": "run",
+      "guest_ms": 1500,
+      "timeout_ms": 5000
+    },
+    {
+      "op": "click-frame",
+      "x": 90,
+      "y": 70,
+      "name": "02-select-pmm.png",
+      "grid_step": 8,
+      "hold_ms": 150
+    },
+    {
+      "op": "run",
+      "guest_ms": 300,
+      "timeout_ms": 5000
+    },
+    {
+      "op": "click-frame",
+      "x": 250,
+      "y": 73,
+      "name": "03-load-pmm.png",
+      "grid_step": 8,
+      "hold_ms": 150
+    },
+    {
+      "op": "run",
+      "guest_ms": 3000,
+      "timeout_ms": 5000
+    },
+    {
+      "op": "screenshot",
+      "name": "04-pmm-street.png",
+      "grid": true,
+      "grid_step": 8
+    }
+  ]
+}

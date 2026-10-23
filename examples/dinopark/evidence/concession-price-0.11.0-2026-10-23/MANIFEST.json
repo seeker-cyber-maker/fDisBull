@@ -1,0 +1,106 @@
+{
+  "excludes": [
+    "game files",
+    "in-game saves",
+    "native saved states",
+    "project databases"
+  ],
+  "manifest_excludes_itself": true,
+  "files": [
+    {
+      "path": "13-lookup-break-grid8.png",
+      "size": 57808,
+      "sha256": "c28083eae4dc2326d9ed810ca824116b46fc201e637f73536173fedbd8edb189"
+    },
+    {
+      "path": "14-baseline-lookup.json",
+      "size": 8857,
+      "sha256": "e8cc7ff03f3cd202a56ee3d8bdb83ee30ead151df9dabc4a1fe39375dd83d697"
+    },
+    {
+      "path": "15-layer-enabled-lookup.json",
+      "size": 9258,
+      "sha256": "70d45c237d7deb14cc3192fc8a25569edcdda227119802be6ce04e7c9fa7aa5a"
+    },
+    {
+      "path": "16-layer-disabled-lookup.json",
+      "size": 8858,
+      "sha256": "1f55c1e61a475aaa9dd3994b3ff6ffab53fc3887c0dc39da550369f3547c60f9"
+    },
+    {
+      "path": "17-restored-layer-lookup.json",
+      "size": 9256,
+      "sha256": "c960884c69577793eea60e14e0e5ac52427a66b4ad3f593ff063d0df6ead1527"
+    },
+    {
+      "path": "PROVENANCE.json",
+      "size": 898,
+      "sha256": "955ded8a64d02f92c688d683dae0c69d1453ebf56c8dc6c184d9030b6133242c"
+    },
+    {
+      "path": "RESULT.json",
+      "size": 3449,
+      "sha256": "c922787fe47d328f53e00dfd34e89202096eca966a38544a3cc916be8eab7db1"
+    },
+    {
+      "path": "baseline-after-purchase.png.raw.png",
+      "size": 30373,
+      "sha256": "e4464b243b3933a0ac260199a3fde05a2878eacdd502f1d2cbe1f2a977ae9fcc"
+    },
+    {
+      "path": "baseline-commit-trace.json",
+      "size": 131157,
+      "sha256": "2ed55814978b54100ff03a35f31d9660cd3a9de689460de68384d0fc329ab762"
+    },
+    {
+      "path": "baseline-order-gift.json",
+      "size": 771,
+      "sha256": "0a96b25484e3f1274296d1b939efcd11ac4c26f39a07ee500c4442ee31fb739a"
+    },
+    {
+      "path": "boot-load-pmm.json",
+      "size": 964,
+      "sha256": "c3e4db37c1b1b609cfd377c22a8498c021b2802c9e19beade5b5821e275450cb"
+    },
+    {
+      "path": "cash-staging-price-trace.json",
+      "size": 19400,
+      "sha256": "decfdcfe00866567f124261b88b86fcf7d1157a2d50c73b60a3bffdc06479d28"
+    },
+    {
+      "path": "cash-staging-price.json",
+      "size": 4199,
+      "sha256": "00c35be4fb54d49b70613e50d5dbbefe22b3a98d4f86e45d3ab1df74bdd5fe57"
+    },
+    {
+      "path": "layered-after-purchase.png.raw.png",
+      "size": 30366,
+      "sha256": "95df6b90e532b38e136bb3a5de21a1d05ac5723bdd0a3bcb5f73c839d1145e9c"
+    },
+    {
+      "path": "layered-commit-trace.json",
+      "size": 140726,
+      "sha256": "07b3d88ddf5200ad6b98120badb2a6d899a7a99a54ae66fbb8c42c6d1ea4a3d4"
+    },
+    {
+      "path": "layered-order-gift.json",
+      "size": 768,
+      "sha256": "6d6192922d833872568c26306f34b9dba8e40a86c9182858af76c9529f748038"
+    },
+    {
+      "path": "offline-concessions-grid8.png",
+      "size": 57808,
+      "sha256": "c28083eae4dc2326d9ed810ca824116b46fc201e637f73536173fedbd8edb189"
+    },
+    {
+      "path": "partial-layer-negative-control.json",
+      "size": 538,
+      "sha256": "15e74b2e43d22680302de1551d7879a6687bf458dad90217e497c897604f3c9f"
+    },
+    {
+      "path": "street-to-concessions.json",
+      "size": 1409,
+      "sha256": "5ffdbc35651aa4bde7ce04b2bb593af1661f8c6287caeb12f644b401cf6436dd"
+    }
+  ]
+}

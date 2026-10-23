@@ -1,0 +1,81 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "run",
+      "guest_ms": 120,
+      "timeout_ms": 3000
+    },
+    {
+      "op": "click-frame",
+      "x": 260,
+      "y": 120,
+      "name": "05-general-store.png",
+      "grid_step": 8,
+      "hold_ms": 500
+    },
+    {
+      "op": "run",
+      "guest_ms": 1200,
+      "timeout_ms": 5000
+    },
+    {
+      "op": "click-frame",
+      "x": 265,
+      "y": 145,
+      "name": "06-enter-store.png",
+      "grid_step": 8,
+      "hold_ms": 500
+    },
+    {
+      "op": "run",
+      "guest_ms": 1600,
+      "timeout_ms": 5000
+    },
+    {
+      "op": "click-frame",
+      "x": 205,
+      "y": 105,
+      "name": "07-catalog.png",
+      "grid_step": 8,
+      "hold_ms": 500
+    },
+    {
+      "op": "run",
+      "guest_ms": 1000,
+      "timeout_ms": 5000
+    },
+    {
+      "op": "click-frame",
+      "x": 263,
+      "y": 165,
+      "name": "08-cover.png",
+      "grid_step": 8,
+      "hold_ms": 500
+    },
+    {
+      "op": "run",
+      "guest_ms": 500,
+      "timeout_ms": 5000
+    },
+    {
+      "op": "click-frame",
+      "x": 195,
+      "y": 54,
+      "name": "09-concessions-tab.png",
+      "grid_step": 8,
+      "hold_ms": 500
+    },
+    {
+      "op": "run",
+      "guest_ms": 1500,
+      "timeout_ms": 5000
+    },
+    {
+      "op": "screenshot",
+      "name": "11-concessions-grid8.png",
+      "grid": true,
+      "grid_step": 8
+    }
+  ]
+}

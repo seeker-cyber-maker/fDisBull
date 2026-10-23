@@ -1,0 +1,124 @@
+{
+  "result": "pass",
+  "version": "0.11.0",
+  "module": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.11.0-a216747/packages/fdisbull-0.11.0-py3-none-any.whl/fdisbull/__init__.py",
+  "wheel_sha256": "c8c877392e7f804cb9f14e344de2e55667cc928db5998f79c6b101f747a9e47b",
+  "backend_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+  "executable_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+  "runs": [
+    "6596183ffa5f4555be6111ea8b19c8dc",
+    "d8c7ad9e82924d3f8729716e8056d132",
+    "dba9569e0ab44c26a51f02d1fea8ecbc"
+  ],
+  "price_table_no_cpu_writes_during_boot_and_navigation": true,
+  "purchase_fixture": {
+    "parent": "e104ca52736546c1ba55e307e1de1298",
+    "fork": "6d643c90ef944bc1858a9a86d60eba4a",
+    "edits": [
+      {
+        "address": "0x45e3a",
+        "expected_hex": "f0290000",
+        "data_hex": "a0860100"
+      },
+      {
+        "address": "0x4bcd4",
+        "expected_hex": "f0290000",
+        "data_hex": "a0860100"
+      }
+    ],
+    "cash": 100000,
+    "price_table_edited": false,
+    "purpose": "Keep both bounded purchase trials affordable despite live calendar costs"
+  },
+  "layer": {
+    "layer": "8f64001f886b4e46a6b91b7a25bb0ebe",
+    "version": 1,
+    "name": "Gift theory: food entry for selection, cash staging and commit",
+    "kind": "execute",
+    "sha256": "5044941cd9d7cce61f5aa76f383f9a1b9c6714f267245025f99eb59132dc696e",
+    "patches": [
+      {
+        "address": "0x3414e",
+        "expected_hex": "8b877568",
+        "data_hex": "8b877168"
+      },
+      {
+        "address": "0x3427f",
+        "expected_hex": "8b877568",
+        "data_hex": "8b877168"
+      },
+      {
+        "address": "0x33f45",
+        "expected_hex": "8b877568",
+        "data_hex": "8b877168"
+      }
+    ]
+  },
+  "trials": [
+    {
+      "name": "baseline",
+      "charged": 7500,
+      "before": {
+        "cash": 100450,
+        "expenses": 0,
+        "available_cash": 92950,
+        "ticks": 50122
+      },
+      "after": {
+        "cash": 92950,
+        "expenses": 7500,
+        "transaction_total": 7500,
+        "ticks": 50122
+      },
+      "gift_count": 1,
+      "trace_events": 192
+    },
+    {
+      "name": "layered",
+      "charged": 5000,
+      "before": {
+        "cash": 100450,
+        "expenses": 0,
+        "available_cash": 95450,
+        "ticks": 50122
+      },
+      "after": {
+        "cash": 95450,
+        "expenses": 5000,
+        "transaction_total": 5000,
+        "ticks": 50122
+      },
+      "gift_count": 1,
+      "trace_events": 192
+    }
+  ],
+  "layer_lookup_values": [
+    7500,
+    5000,
+    7500
+  ],
+  "restored_layer_lookup": 5000,
+  "code_ram_unchanged": true,
+  "price_table_unchanged": true,
+  "compatible_state_restore_in_fresh_emulators": true,
+  "offline_grid_after_restart": {
+    "width": 320,
+    "height": 200,
+    "step": 8,
+    "label_step": 32
+  },
+  "game_files_unchanged": 192,
+  "processes_reaped": 3,
+  "private_database": "/Users/tiga/Conversions/DinoParkTycoon/debugger-runs/published-0.11.0-concession-replay-20261023-v5/private/dinopark.fdb",
+  "private_checkpoints_exported": false,
+  "price_source": {
+    "file_offset": "0x3b279",
+    "project_address": "0x46a79",
+    "static_segmented": "4020:6879",
+    "word_hex": "4c1d",
+    "value": 7500,
+    "selection_instruction": "334b:0c9e",
+    "cash_staging_instruction": "334b:0dcf",
+    "commit_instruction": "334b:0a95"
+  }
+}
