@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from .model import Region
 
 MAX_ADDRESS = (1 << 64) - 1
-SCHEMA = 3
+SCHEMA = 4
 
 def number(value):
     if isinstance(value, bool) or not isinstance(value, (int, str)):
@@ -63,9 +63,12 @@ from .analysis import AnalysisMixin, EXTENSION_DDL
 from .dos_analysis import DOSMixin, DOS_DDL
 from .boundaries import BoundaryMixin
 from .calls import CallViewsMixin
+from .facts import FactsMixin, FACTS_DDL
+from .memory import MemoryMixin
+from .cfg import CFGMixin
 
 
-class Project(CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
+class Project(FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
     def __init__(self, path):
         self.path = Path(path).resolve()
         if not self.path.is_file():
@@ -74,7 +77,7 @@ class Project(CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
         self.db.row_factory = sqlite3.Row
         try:
             meta = dict(self.db.execute("SELECT key,value FROM metadata"))
-            if meta.get("application") != "fdisbull" or int(meta.get("schema", -1)) not in (1,2,SCHEMA):
+            if meta.get("application") != "fdisbull" or int(meta.get("schema", -1)) not in (1,2,3,SCHEMA):
                 raise ValueError("unsupported project schema")
             if int(meta["schema"]) == 1:
                 self.db.executescript("BEGIN IMMEDIATE;" + EXTENSION_DDL + "INSERT OR IGNORE INTO analysis_state SELECT id,0,0 FROM versions; UPDATE work SET state='pending',detail=NULL; UPDATE metadata SET value='2' WHERE key='schema'; COMMIT;")
@@ -82,6 +85,10 @@ class Project(CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
                 self.db.executescript("BEGIN IMMEDIATE;"+DOS_DDL+"UPDATE metadata SET value='3' WHERE key='schema'; COMMIT;")
             else:
                 self.db.executescript(DOS_DDL)
+            if int(meta["schema"]) != SCHEMA:
+                self.db.executescript("BEGIN IMMEDIATE;"+FACTS_DDL+"UPDATE metadata SET value='4' WHERE key='schema'; COMMIT;")
+            else:
+                self.db.executescript(FACTS_DDL)
             self.meta = {k:json.loads(v) for k,v in meta.items() if k not in ("application","schema")}
             self.arch, self.bits = self.meta["arch"], self.meta["bits"]
             self.context = f"{self.arch}:{self.bits}:little"
@@ -139,7 +146,7 @@ class Project(CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
         try:
             db = sqlite3.connect(target)
             try:
-                db.executescript(DDL + EXTENSION_DDL + DOS_DDL)
+                db.executescript(DDL + EXTENSION_DDL + DOS_DDL + FACTS_DDL)
                 db.execute("PRAGMA journal_mode=WAL")
                 meta = {"arch":image.arch,"bits":image.bits,"format":image.format,"entry":image.entry,
                         "filename":filename,"source_sha256":image.metadata["source_sha256"],
