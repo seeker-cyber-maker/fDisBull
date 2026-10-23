@@ -1,0 +1,16 @@
+{
+  "kind": "struct",
+  "size": 4153,
+  "fields": [
+    {
+      "name": "concession_words",
+      "offset": 3872,
+      "type": "ConcessionWords"
+    },
+    {
+      "name": "staff_words",
+      "offset": 3880,
+      "type": "StaffWords"
+    }
+  ]
+}

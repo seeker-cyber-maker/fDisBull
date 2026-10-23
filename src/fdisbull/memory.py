@@ -313,7 +313,7 @@ def _arm(raw, address, state):
             elif names:
                 # Exclusive stores begin with a status register, then data.
                 data_name = names[1] if mnemonic.startswith(('stxr', 'stlxr', 'stxp', 'stlxp')) and len(names) > 1 else names[0]
-                width = {'b': 1, 'h': 2, 's': 4, 'w': 4, 'd': 8, 'x': 8, 'q': 16}.get(data_name[:1])
+                width = 8 if data_name in ('fp', 'lr') else {'b': 1, 'h': 2, 's': 4, 'w': 4, 'd': 8, 'x': 8, 'q': 16}.get(data_name[:1])
             if mnemonic.startswith(('ldp', 'stp', 'ldnp', 'stnp', 'ldxp', 'ldaxp', 'stxp', 'stlxp', 'casp')) and width:
                 width *= 2
         fact = _base_fact(access, width, 64)

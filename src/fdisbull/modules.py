@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 
-def analyze_module(path,project,export=None,entry=None,max_instructions=10000):
+def analyze_module(path,project,export=None,entry=None,max_instructions=10000,slice_arch=None,image=None):
     from .inspection import inspect_binary
     from .loader import load_image
     from .project import Project,integer,number
@@ -16,8 +16,8 @@ def analyze_module(path,project,export=None,entry=None,max_instructions=10000):
         entry=number(entry)
     source=Path(path)
     # Validate the selection before creating a persistent database.
-    image=load_image(source,module=True,entry=entry)
-    document=inspect_binary(image.source_bytes)
+    image=load_image(source,module=True,entry=entry,slice_arch=slice_arch,image=image)
+    document=inspect_binary(image.source_bytes,slice_arch=image.metadata.get('slice_arch'),image=image.metadata.get('selected_image'))
     selected=entry
     selected_export=None
     if export is not None:
@@ -32,6 +32,7 @@ def analyze_module(path,project,export=None,entry=None,max_instructions=10000):
             raise ValueError('requested export has no unique mapped address')
         selected=addresses.pop()
         selected_export=matches[0]
+        if not selected_export.get('code_seed_eligible',selected_export.get('is_code',True)):raise ValueError('requested export is not a concrete native function')
         if not any(r.executable and r.start<=selected<r.start+len(r.data) for r in image.regions):
             raise ValueError('requested export is not in executable mapped bytes')
     with Project._create_image(project,source.name,image) as db:
@@ -44,4 +45,4 @@ def analyze_module(path,project,export=None,entry=None,max_instructions=10000):
         return {'project':str(db.path),'module':source.name,'selected_export':selected_export,
                 'analysis_roots':[hex(selected)] if selected is not None else None,
                 'analysis':analysis,'status':db.status(),
-                'scope':'Offline module snapshot; imports and forwarded exports do not load other DLLs.'}
+                'scope':'Offline module snapshot; imports and forwarded exports do not load dependencies.'}

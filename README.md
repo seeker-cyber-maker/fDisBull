@@ -1,5 +1,98 @@
-# fDisBull 0.5
+# fDisBull 0.8
 
+Attach save files, resource tables and other data to an existing analysis. Their bytes and SHA-256 are retained in the project, so byte queries and typed fields remain available after the source file is removed. Attached files have their own **file name + byte offset** identity; they do not become executable memory or code seeds.
+
+```bash
+fdisbull attach-file analysis.fdb ./resource.dat --name resource.dat --kind resource
+fdisbull files analysis.fdb
+fdisbull file-bytes analysis.fdb resource.dat --offset 0 --size 64
+fdisbull define-type analysis.fdb Record record.json
+fdisbull apply-file-type analysis.fdb resource.dat Record --offset 0 --name record
+fdisbull file-data analysis.fdb resource.dat --offset 0
+```
+
+`record.json` uses the existing scalar/array/struct type definitions; for example, `{"kind":"struct","size":4,"fields":[{"name":"count","offset":0,"type":"u16"},{"name":"flags","offset":2,"type":"u16"}]}`. Values are interpreted from retained little-endian bytes. A field name records an interpretation, not a proven gameplay meaning.
+
+Use `file-reference` to record an explicit, evidenced relationship from a stored instruction to one file offset or a strided set of offsets. `file-xrefs` queries those annotations; subsequent disassembly and CFG exports resolve their current field names. These links do not recover runtime file I/O or establish where a loaded resource buffer lives in memory. Source-byte changes make the links stale.
+
+Attachments and their type bindings are inherited by child byte versions, with parent state preserved. Content is immutable under a given file name in a version: reattaching identical bytes is idempotent, while changed bytes require another name. Attachments share a 64 MiB per-version budget. See [EXTERNAL_FILES.md](docs/EXTERNAL_FILES.md) for a complete example, reference evidence and limits.
+
+Older DOS projects, including the packaged historical DinoPark analysis, need an explicit state refresh before querying affected analysis. An earlier shallow `LES`/`LDS` rule treated initial descriptor bytes as current far pointers even after possible writes; that could produce false exact memory locations. `analysis-status` now marks those legacy facts `facts_stale: true` and cannot report stable. Rebuild them with:
+
+```bash
+fdisbull refresh-dos-state examples/dinopark.fdb --max-instructions 10000
+fdisbull analyze examples/dinopark.fdb --max-instructions 100000
+fdisbull auto-analyze examples/dinopark.fdb --max-functions 200 --max-rounds 8
+```
+
+Repeat bounded `analyze` until native work is stable; derived `auto-analyze` work has its own pending state. Refresh preserves bytes, versions, authored names/comments/types, attachments and file references. It retains explicit seed addresses but discards their inherited register assumptions for revalidation. Read-only queries do not silently rebuild old results: raw disassembly remains available with old native references hidden. `refresh-facts` is not this repair. ELF, PE and Mach-O projects are unaffected by the DOS state revision.
+
+Linux ELF and macOS Mach-O now feed declared library slots and code stubs into the same call, xref and conditional memory-effect passes used for Windows imports. ELF metadata includes GOT relocations, version requirements and validated PLT aliases; Mach-O includes dyld/chained bindings, indirect-symbol stubs, dependencies and export kinds. These are static file identities: runtime providers and relocated target addresses remain unknown.
+
+```bash
+fdisbull import ./program linux.fdb
+fdisbull auto-analyze linux.fdb
+fdisbull libraries linux.fdb
+fdisbull relocations linux.fdb --limit 50
+fdisbull linkage linux.fdb
+fdisbull calls linux.fdb --kind library
+fdisbull call-effects linux.fdb --access write
+fdisbull refresh-metadata existing.fdb
+```
+
+`refresh-metadata` upgrades retained ELF/Mach-O/PE metadata and rebuilds its symbol index without changing bytes, versions or user annotations. It makes dependent derived results stale; run `auto-analyze` again to refresh them. It requires retained original file bytes. `refresh-facts` remains the separate instruction-access/fallthrough backfill.
+
+Choose a universal Mach-O slice explicitly. `x86` means 32-bit, `x86_64` means 64-bit, and `arm64` means ARM64:
+
+```bash
+fdisbull inspect ./UniversalBinary
+fdisbull inspect ./UniversalBinary --slice-arch arm64
+fdisbull import ./UniversalBinary mac-arm.fdb --slice-arch arm64
+fdisbull auto-analyze mac-arm.fdb
+fdisbull analyze-module ./universal.dylib selected-library.fdb --slice-arch x86_64
+```
+
+Unselected inspection inventories FAT slices; import requires a unique explicit match. Projects retain the full original container, selected-slice metadata and global file offsets. A slice selector does not select the host CPU or execute that architecture.
+
+PE remains the default image for a file containing a PE header. A valid preceding DOS image can be selected into a separate project:
+
+```bash
+fdisbull inspect ./program.exe --image mz
+fdisbull import ./program.exe windows.fdb --image pe
+fdisbull import ./program.exe dos-stub.fdb --image mz --load-segment 0x1000
+fdisbull analyze dos-stub.fdb
+```
+
+The DOS view must pass normal MZ declared-size, relocation and entry validation; an `MZ` prefix alone is insufficient. It uses the declared DOS module, without guessing a stub boundary from the PE offset. Neither view executes. See [PLATFORMS.md](docs/PLATFORMS.md) for selection, linkage evidence and ABI limits.
+
+The `auto-analyze` pipeline adds bounded indirect-target recovery, shared function membership, frame/argument observations, qualified library effects, structural data types and dependency-driven reanalysis. Shared passes consume normalized instruction semantics rather than PE structures or CPU mnemonics. Current adapters cover x86 16/32/64 and ARM64; supported containers include DOS MZ, ELF, PE, thin/selected universal Mach-O and explicit raw images. This is an extensible analysis design, not a claim that every ISA is implemented.
+
+```bash
+fdisbull auto-analyze my-analysis.fdb --max-functions 200 --max-rounds 8
+fdisbull advanced-status my-analysis.fdb
+fdisbull function-analysis my-analysis.fdb 0xADDRESS
+fdisbull function-membership my-analysis.fdb
+fdisbull call-effects my-analysis.fdb --address 0xDATA --size 2 --access write
+```
+
+`auto-analyze` resumes persistent native and derived work. Its `stable` covers both queues; `analysis-status` retains the native queue's `stable` and separately exposes `advanced` and `overall_stable`. Each function result records generation, stale state, unknown transfers, assumptions and budgets. Re-run after a limit, or raise the relevant limit when a routine itself exceeds it. `function-analysis` is read-only and never presents a stale cache as current.
+
+Indirect transfers require finite state or a dominating index bound, exact readable table entries and valid native target decoding. Unknown indices remain proposals. Function membership is many-to-many over instruction identities: shared tails, alternate entries and noncontiguous blocks do not become exclusive address ranges. Frames retain symbolic entry-SP offsets, candidate arguments and ABI alternatives. Use `--abi x86_64_sysv`, `--abi x86_64_win64` or another documented profile when evidence supports it; file-based defaults are assumptions.
+
+Library memory effects require import/export identity, an exact full-body signature or an explicit `set-summary` contract. A rename is never sufficient. The small bundled signature catalog consists of authored test helpers, not a comprehensive compiler library database. `call-effects` reports bulk reads/writes and unresolved buffers; combine it with `memory-accesses` for instruction-level evidence. Import effects remain conditional on the declared binding being unchanged. Their `binding_evidence` distinguishes unchanged-under-static-state (`true`), a possible intervening write (`false`), and unavailable proof (`null`); even `true` is not runtime provider verification. DOS near-pointer effects retain unresolved segment identity instead of treating offsets as physical addresses. No imported function runs.
+
+Define a structure in a JSON file, for example `record.json` containing `{"kind":"struct","size":4,"fields":[{"name":"quantity","offset":0,"type":"u16"},{"name":"flags","offset":2,"type":"u16"}]}`, then:
+
+```bash
+fdisbull define-type my-analysis.fdb Record record.json
+fdisbull apply-type my-analysis.fdb 0xDATA Record --name record
+fdisbull typed-data my-analysis.fdb 0xDATA
+fdisbull set-summary my-analysis.fdb 0xCALLEE memcpy --abi x86_64_sysv
+```
+
+The last command explicitly asserts a contract; use it only when that function identity is supported by your evidence. Structure fields, arrays and pointers share physical address identity and labels. Type/summary changes queue dependent results and callers. Structural representation changes retract affected routine slices when the instruction dependency index is complete; older or incompletely indexed projects fall back to full analysis reset. Byte patches create isolated child versions, retaining user interpretations but revalidating byte-derived signature identities.
+
+See [ADVANCED_ANALYSIS.md](docs/ADVANCED_ANALYSIS.md) for the IR, algorithms, ABI profiles and limitations. There is no new emulator, runtime watchpoint engine, C# dataflow adapter or decompiler in this release.
 
 `cfg` follows exact stored instruction identities and control-flow edges from a chosen entry. `render-cfg` exports its basic blocks as SVG with selected sites highlighted. Straight-line and assumed call-return fallthroughs now persist in SQLite. Existing projects can explicitly backfill these and memory-access facts with `refresh-facts`.
 
@@ -21,7 +114,7 @@ A local, agent-first disassembler with a persistent SQLite database and GUI-free
 
 ## Start
 
-Requires **Python 3.12 or newer**. Linux execution is verified in the supplied receipt; macOS execution has not been independently run.
+Requires **Python 3.12 or newer**. Python/CLI checks run on Linux; native macOS host execution has not been verified. Parsing Mach-O fixtures on Linux does not establish a macOS host run.
 
 ```bash
 cd fdisbull
@@ -35,7 +128,9 @@ fdisbull functions examples/demo.fdb
 
 Bundled examples include a compiled ELF with C source, a constructed Windows PE with imports/exports, and a synthetic captured-IAT snapshot with an export map. Saved projects and PNG/SVG exports are included. The tool can inspect an ELF file on another supported host without running that file.
 
-`examples/dinopark.fdb` contains the completed static analysis of your original DOS executable: the original analysis plus an explicitly seeded save-loading wrapper across 31 CS contexts. Query it immediately with `fdisbull code-regions examples/dinopark.fdb` or `fdisbull disasm examples/dinopark.fdb --address '38ff:53fd'`. Its analysis receipt and PNG/SVG exports are included alongside it.
+`examples/dinopark.fdb` contains the prior native static fixed point for your original DOS executable: the original analysis plus an explicitly seeded save-loading wrapper across 31 CS contexts. Query it immediately with `fdisbull code-regions examples/dinopark.fdb` or `fdisbull disasm examples/dinopark.fdb --address '38ff:53fd'`. Its analysis receipt and PNG/SVG exports are included alongside it. The 0.6 package also retains two targeted derived function results; 650 other derived jobs remain pending. `function-analysis` and `advanced-status` expose that distinction.
+
+Those DinoPark 0.6 receipts remain historical evidence and are unchanged by the 0.7 platform metadata work.
 
 ## Inspect a file, then build a project
 
@@ -48,11 +143,14 @@ fdisbull sections my-analysis.fdb
 fdisbull imports my-analysis.fdb
 fdisbull exports my-analysis.fdb
 fdisbull strings my-analysis.fdb --limit 100
+fdisbull libraries my-analysis.fdb
+fdisbull relocations my-analysis.fdb --limit 50
+fdisbull linkage my-analysis.fdb
 fdisbull analyze my-analysis.fdb --max-instructions 10000
 fdisbull functions my-analysis.fdb
 ```
 
-`identify` and `inspect` need no database. Identification uses header bytes rather than the filename. `inspect` adds sections, imports, exports and strings, with warnings where recovery is partial. Section records distinguish **file offset/size** from **virtual address/size**. PE imports identify preferred-VA IAT slots; exports retain ordinals and forwarder information.
+`identify` and `inspect` need no database. Identification uses header bytes rather than the filename. `inspect` adds sections, imports, exports, strings and available platform linkage metadata, with warnings where recovery is partial. Section records distinguish **file offset/size** from **virtual address/size**. PE imports identify preferred-VA IAT slots; exports retain ordinals and forwarder information.
 
 Importing a new project stores the source bytes and parsed metadata automatically. Project information remains available after the original file disappears. `info` gives the summary; the individual information commands support version selection and list pagination.
 
@@ -109,7 +207,7 @@ fdisbull render my-analysis.fdb function.png --address 0xADDRESS --lines 40
 
 Names and representations are shared by address and resolved when queried. Disassembly retains numeric `operands` and adds structured `references` and `display_operands`; image export uses the latter. Renaming a referenced address therefore updates its label in callers and exported views without editing every instruction.
 
-`represent` accepts `code`, `byte`, `word`, `dword`, `qword`, `pointer`, `ascii`, `utf-16le` and `unexplored`. Strings require an explicit byte size, for example `represent my-analysis.fdb 0xADDRESS ascii --size 12`. Fixed-width numeric types require their matching width. Definitions must fit within one region and may not overlap another explicit definition. Changing a representation resets derived analysis and runs it again within the supplied budget; `--defer` leaves reanalysis queued instead. The byte version and its digest stay unchanged.
+`represent` accepts `code`, `byte`, `word`, `dword`, `qword`, `pointer`, `ascii`, `utf-16le` and `unexplored`. Strings require an explicit byte size, for example `represent my-analysis.fdb 0xADDRESS ascii --size 12`. Fixed-width numeric types require their matching width. Definitions must fit within one region and may not overlap another explicit definition. Changing a representation invalidates dependent analysis, using a full reset if the dependency index is incomplete, and runs native reanalysis within the supplied budget; `--defer` leaves reanalysis queued instead. The byte version and its digest stay unchanged.
 
 ## Locate instruction bytes and inspect function patterns
 
@@ -229,22 +327,22 @@ fdisbull disasm my-analysis.fdb --version 1 --address 0xADDRESS
 
 A patch preserves the parent snapshot and creates fresh child analysis. Operations default to the newest version; use `--version` to select another. Names, comments and explicit representations inherit and require semantic revalidation after changes. Source-file and mapped-snapshot digests are distinct: mapped hashes include region descriptions and bytes.
 
-Schema 1 and 2 databases migrate to schema 3 without discarding byte versions or annotations. A schema-1 project needs `analyze` to backfill structured references from retained bytes. Its original full-file metadata remains unavailable unless it was retained; reimport the original into a new project to obtain that information. Migration does not reconstruct missing source bytes. Existing byte analysis still works if the original is missing.
+Schema 1–4 databases migrate to schema 5 without discarding byte versions or annotations. A schema-1 project needs `analyze` to backfill structured references from retained bytes. Its original full-file metadata remains unavailable unless it was retained; reimport the original into a new project to obtain that information. Migration does not reconstruct missing source bytes. Existing byte analysis still works if the original is missing.
 
 DOS patches apply to relocated memory bytes. For a stored child file version, all relocation fixups are undone in reverse order before rebuilding the file-backed module; the parent remains unchanged. Allocation-only/BSS edits stay in the child memory snapshot and have no disk counterpart. Patching does not execute or save a runnable DOS process.
 
 ## Supported scope
 
-Loaders support classic DOS MZ, little-endian x86/x86-64 and ARM64 ELF/PE, and thin little-endian x86/x86-64/ARM64 Mach-O. MZ applies its segment fixups at the chosen load segment. Other executable loaders use preferred static virtual addresses without applying runtime relocations. Use `analyze-module`/`import --module` for a library without an executable entry, and `managed` for CLR metadata/CIL.
+Loaders support classic DOS MZ, little-endian x86/x86-64 and ARM64 ELF/PE, and thin or explicitly selected universal little-endian x86/x86-64/ARM64 Mach-O. MZ applies its segment fixups at the chosen load segment. Other executable loaders use preferred static virtual addresses without applying runtime relocations or dyld slides. Use `analyze-module`/`import --module` for a library without an executable entry, and `managed` for CLR metadata/CIL.
 
 ```bash
 fdisbull import segment.bin dos-segment.fdb --arch x86 --bits 16 --base 0x100
 fdisbull import arm-code.bin arm.fdb --arch arm64 --base 0x1000
 ```
 
-`--arch` always selects explicit flat raw mode. Use automatic MZ import for DOS segmentation and relocation; raw x86/16 is only an extracted flat segment. NE/LE/LX secondary headers can be recognized but are not loaded as classic DOS MZ. Fat Mach-O slices must be selected before loading.
+`--arch` always selects explicit flat raw mode. Use MZ image loading for DOS segmentation and relocation; raw x86/16 is only an extracted flat segment. NE/LE/LX native images remain unsupported; a valid preceding DOS image can be selected explicitly with `--image mz`. Universal Mach-O import uses `--slice-arch`; it never guesses from the host architecture.
 
-ELF/Mach-O import bindings are partial and use null addresses where unresolved; PE delay-load imports are not enumerated. String extraction is a bounded heuristic for printable ASCII and ASCII-range UTF-16LE, not full Unicode recovery. Function entries and inferred segment bounds are candidates. Complete function boundaries/CFGs, general jump-table analysis, dynamic overlay recovery, decompilation, runtime SMC capture and a native UI remain future work. A decoded original-game function does not establish full-game execution or complete instruction coverage.
+ELF GOT and Mach-O dyld addresses identify slots, not resolved external code. Unknown slots stay null; on-disk lazy/chained pointer values are not used as runtime targets. ELF version requirements can establish a requested library, while unversioned names retain candidates. Unsupported dyld/chained cases stay explicit. Darwin ARM64 describes integer register arguments only; packed stack, variadic and authenticated-pointer behavior is not fully modeled. PE delay-load imports are not enumerated. String extraction is a bounded heuristic for printable ASCII and ASCII-range UTF-16LE, not full Unicode recovery. Function entries and inferred segment bounds are candidates. Proven function ownership, arbitrary indirect-transfer recovery, dynamic overlay recovery, decompilation, runtime SMC capture and a native UI remain future work. A decoded original-game function does not establish full-game execution or complete instruction coverage.
 
 ## Verify
 

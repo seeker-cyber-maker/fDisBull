@@ -1,4 +1,4 @@
-# fDisBull 0.5 architecture
+# fDisBull 0.8 architecture
 
 The local engine separates decoding, recoverable facts, shared address interpretations and presentation. Imported code is never executed. Python coordinates native iced-x86, Capstone and LIEF libraries with SQLite and Pillow.
 
@@ -7,8 +7,16 @@ The local engine separates decoding, recoverable facts, shared address interpret
 | Module | Responsibility |
 | --- | --- |
 | `model.py` | Immutable image/region/seed records and retained source bytes. |
-| `loader.py` | File-format routing and raw/ELF/PE/thin Mach-O mappings. |
+| `loader.py` | File-format routing, explicit image/slice selection and raw/ELF/PE/Mach-O mappings. |
 | `inspection.py` | Header recognition, structural metadata and bounded file-backed strings. |
+| `elf_metadata.py` | ELF GOT/relocation/version evidence, typed dynamic exports and native slot-proven PLT aliases. |
+| `macho_metadata.py` | Mach-O dependencies, dyld/chained/indirect bindings, stub aliases and typed exports. |
+| `macho_slices.py` | Validated universal/thin Mach-O inventory and explicit architecture selection. |
+| `image_views.py` | Independent PE/DOS view inventory and validation boundaries. |
+| `linkage.py` | Shared declared slot/stub call identities and static binding qualification over normalized flow. |
+| `external_files.py` | Versioned immutable save/resource snapshots and structural types in file-offset space. |
+| `file_references.py` | Authored instruction-to-file links with source fingerprints and dynamic field labels. |
+| `dos_state_refresh.py` | Legacy DOS fact guards and explicit bounded state rebuilding. |
 | `decoder.py` | Flat x86/ARM64 decode and structured operand references. |
 | `dos.py` | Classic MZ validation, relocated real-mode image and minimum allocation. |
 | `dos_decoder.py` | CS-relative iced16 decoding and conservative register transfer. |
@@ -30,11 +38,64 @@ The local engine separates decoding, recoverable facts, shared address interpret
 
 ## Identity and persistence
 
-A project has one binary/architecture/bitness. Versioned instruction facts add decode context. Non-DOS contexts remain flat; MZ contexts include actual CS, such as `x86:16:little:cs=38ff`. Two CS:IP aliases may identify the same physical bytes while retaining different relative-control-flow interpretations. Names/comments/explicit representations identify the shared physical address within the byte version.
+A project has one selected image/architecture/bitness, while retaining the complete original file container. Versioned instruction facts add decode context. Non-DOS contexts remain flat; MZ contexts include actual CS, such as `x86:16:little:cs=38ff`. Two CS:IP aliases may identify the same physical bytes while retaining different relative-control-flow interpretations. Names/comments/explicit representations identify the shared physical address within the byte version.
 
 SQLite hexadecimal address keys preserve unsigned ordering; public physical addresses are hexadecimal strings. Each byte version retains mapped bytes/permissions, parent, label, origin, timestamp and mapped-image digest. A patch creates a child without overwriting its parent. Mapped hashes include region descriptions and differ from source-file hashes.
 
-New projects retain source bytes and parsed metadata. File offsets and virtual mappings stay distinct; strings map through actual file-backed ranges. Schema 1/2/3 databases migrate to schema 4 without deleting versions/annotations. Schema-1 work reopens for reference backfill. Missing original source metadata remains unavailable until a new import; migration never reconstructs missing source bytes.
+New projects retain source bytes and parsed metadata. File offsets and virtual mappings stay distinct; strings map through actual file-backed ranges. Schema 1/2/3/4 databases migrate to schema 5 without deleting versions/annotations. Schema-1 work reopens for reference backfill. Missing original source metadata remains unavailable until a new import; migration never reconstructs missing source bytes.
+
+## Container selection and platform linkage
+
+Universal Mach-O selection validates the entire slice table, extents, alignment,
+non-overlap and matching thin CPU/subtype headers before selecting a unique
+explicit `x86`, `x86_64` or `arm64` slice. The host CPU never chooses a slice.
+The loader maps only that image but retains full container bytes and separate
+container/slice hashes. Disk metadata and patch translations add the selected
+slice offset, so reported file offsets remain global to the original file.
+
+For PE-bearing MZ files, automatic selection remains PE. Explicit `image=mz`
+uses the ordinary DOS loader on its declared module with all extent/relocation
+checks intact. `image_views.py` reports a valid PE even if its preceding DOS
+view is unavailable. A magic prefix does not establish a runnable DOS image,
+and `e_lfanew` does not define a guessed stub boundary. Different native views
+are imported into separate projects; selection does not rewrite the container.
+
+Platform adapters produce slot, stub, symbol-kind and dependency evidence.
+ELF JUMP_SLOT/GLOB_DAT relocations identify GOT cells, while consistent verneed
+indices can identify a required library/version. DT_NEEDED alone supplies only
+candidates. COPY storage, TLS, object/absolute exports and IFUNC resolvers keep
+their distinct roles rather than becoming automatic function seeds. PLT aliases
+require decoded native slot proofs, without a universal entry stride.
+
+Mach-O records load-library ordinals/scopes, dyld/chained binding sources,
+exact indirect-symbol pointer/stub identities and export kinds/reexports.
+Unsupported chains, incomplete tables and special lookup scopes remain
+warned/unresolved. Neither adapter applies runtime relocations, executes a
+resolver, loads a dependency or establishes the actual external provider.
+
+`linkage.py` joins direct stub calls and normalized pointer-width loads from
+declared slots into `import_call` identities. This is the same graph/data-flow
+path across platforms. A declared runtime-unresolved slot is excluded from the
+immutable-memory oracle, so zero/lazy/chained/planted on-disk pointer bytes cannot
+become fabricated internal code targets. Captured-IAT recovery remains a
+separate explicitly supplied snapshot/export-map evidence source.
+
+Call effects retain the declared binding condition and `binding_evidence`.
+`binding_unchanged_under_static_state` is true when modeled writes permit the
+unchanged-slot assumption, false when a may-write/taint defeats it, and null
+when proof is unavailable. The reported buffer range may still instantiate a
+conditional contract; it does not prove the callee or effect ran. ELF and
+Darwin ABI defaults enter at the coordinator boundary. `aarch64_darwin` handles
+integer register arguments while leaving Darwin packed stack/variadic placement
+unknown; it is distinct from the ELF AAPCS64 profile.
+
+`refresh_metadata` reparses retained ELF/Mach-O/PE bytes, rebuilds metadata
+slot/stub/export indexes and invalidates dependent advanced jobs and owned
+edges. It preserves mappings, versions, original bytes and authored labels.
+Patches rebuild child metadata through known global file mappings; the parent
+index and results remain unchanged. This is separate from `refresh-facts` for
+stored instruction effects. See [PLATFORMS.md](PLATFORMS.md) for commands and
+the interpretation of these records.
 
 ## Classic DOS loading
 
@@ -92,9 +153,9 @@ CLI and local stdin/stdout JSON-lines requests use shared project operations. Th
 
 ## Remaining boundaries
 
-Classic MZ segmented disassembly is supported, including the original DinoPark image and its known `38ff:*` routines at the selected load segment. This does not establish full-game execution or every-instruction coverage. Native boundary evidence and managed CIL inspection do not establish complete function/CFG recovery or source decompilation. NE/LE/LX loading, runtime overlays, general jump-table recovery, runtime SMC capture, an emulator/debugger connection and a native desktop UI remain outside this build.
+Classic MZ segmented disassembly is supported, including the original DinoPark image and its known `38ff:*` routines at the selected load segment. This does not establish full-game execution or every-instruction coverage. Native boundary evidence and managed CIL inspection do not establish complete function/CFG recovery or source decompilation. NE/LE/LX native-image loading, runtime overlays, arbitrary indirect-transfer recovery, runtime SMC capture, an emulator/debugger connection and a native desktop UI remain outside this build.
 
-Other loaders cover supported little-endian x86/ARM64 ELF/PE and thin Mach-O variants. ELF/Mach-O import binding and some metadata remain partial; PE delay imports are not parsed. String scanning is bounded printable ASCII/ASCII-range UTF-16LE recovery. Linux is exercised by the verification receipt; macOS runtime verification remains open.
+Other loaders cover supported little-endian x86/ARM64 ELF/PE and thin or explicitly selected universal Mach-O images. Slot/stub metadata improves declared library identities; actual external providers, unsupported dyld chains and some metadata remain unresolved. PE delay imports are not parsed. String scanning is bounded printable ASCII/ASCII-range UTF-16LE recovery. Linux Python/CLI checks and cross-platform file fixtures are exercised; native macOS host execution remains unverified. Historical DinoPark 0.6 receipts are unchanged by this platform work.
 
 ## Flow and access indexes
 
@@ -103,3 +164,47 @@ Every permitted ordinary, conditional and call-return continuation now persists 
 Schema 4 adds `memory_refs(version, context, source, fact_key, detail)` and `analysis_facts_revision`. The JSON detail retains native access category, width, segment, address expression, exact/possible intervals, repetition, unknowns and assumptions. Per-source facts are replaced when state is reprocessed; representation resets clear them and patches leave the parent untouched. A current revision marks all stored instructions indexed. Migrated projects without that marker use read-only re-decoding until an explicit refresh. The original `operand_refs` table remains compatible; it is not a writer index.
 
 The CFG query follows exact stored edges independently of function labels, keeping call targets outside intraprocedural traversal and reporting missing destinations, unresolved transfers and budget frontiers. Older missing continuations can be reconstructed with separate provenance without writing. Highlighted sites carry exact shortest paths and edge evidence. A closed static graph is neither proven function ownership nor proof that a runtime path is feasible.
+
+
+## Shared derived-analysis pipeline
+
+Schema 5 adds versioned type definitions/bindings, qualified function summaries, signature catalogs, durable advanced jobs/results, byte/context dependencies and ownership of admitted derived edges. `advanced.py` coordinates native discovery with generic `semantics.py` → `flowdata.py` → `indirect.py`/`frames.py`/`summaries.py`. CPU-specific facts enter at the adapter; pure solvers never route on PE, ELF or instruction mnemonics. `function_analysis.py` computes many-to-many membership and `membership_view.py` supplies stored context-aware graphs.
+
+`incremental.py` follows byte-range dependencies and transitive callers. It retracts owned edges, makes cached results stale, removes orphan inferred call seeds and reopens the durable queue. Representation changes close over shared instruction owners before retracting affected slices. Incomplete dependency coverage uses the explicit full-reset fallback. `typesystem.py` resolves nested fields through shared physical addresses and applies versioned layouts without changing bytes. Byte-derived signatures are requalified after invalidation and are not inherited as established identities by patched child versions.
+
+`auto-analyze` is the end-to-end bounded fixed-point operation. Native `analyze` remains available; its basic pointer hints use snapshot evidence and its stable flag covers native queues only. Enabling advanced analysis replaces flat legacy pointer-target promotions with normalized flow proof. Read-only reports expose stale results, missing branches, budget frontiers and unknown arguments rather than silently manufacturing information. Full API/evidence contracts are in [ADVANCED_ANALYSIS.md](ADVANCED_ANALYSIS.md).
+
+## External files and corrected DOS pointer propagation
+
+Schema 6 adds `external_files`, `file_type_bindings` and `file_references`.
+An external address is `(version, file name, byte offset)`, independent of every
+CPU memory address. Attachments retain complete source bytes, SHA-256, kind and
+author. Snapshot content is immutable for a given name/version; structural
+interpretations can change. Native patches inherit attachments and authored
+links without mapping those bytes into the executable.
+
+The existing layout validator supplies scalar, array, pointer and nested
+structure views. File queries return bounded values and compact one-level
+layout descriptions. Type changes validate all native and file bindings before
+committing. Labels resolve when queried, so changing a field updates file data,
+cross-references, disassembly and graph exports without rewriting instructions.
+
+Instruction-to-file relationships are explicitly authored and retain evidence,
+CS context, widths and bounded strided spans. They never create native xrefs or
+runtime heap objects. Native instruction fingerprints distinguish active,
+awaiting-decode and stale links after patches. Previews have explicit counts
+and truncation; file-xrefs supplies the separate paged relationship index.
+
+DOS pointer revision 2 removes unsound LES/LDS promotion from immutable initial
+descriptor bytes. DOS memory is mutable: even a nonzero initialized descriptor
+can be overwritten before a load. Without reaching-value proof, the destination
+register/segment stays unknown. Byte queries and descriptor-cell references
+remain available. This does not add allocator, emulator or runtime file-I/O
+semantics.
+
+Legacy DOS projects expose `facts_stale` and hide obsolete native references in
+raw disassembly. Dependent queries require explicit `refresh-dos-state`, which
+resets native/derived facts, preserves authored interpretations and bytes, and
+re-admits registered manual roots without their old register assumptions.
+Rebuilding runs within a native instruction budget; derived jobs remain a
+separate queue. Opening a project never silently discards its old analysis.

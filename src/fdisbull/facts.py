@@ -21,6 +21,7 @@ class FactsMixin:
                             (version,context,source,fact_key,detail))
 
     def _clear_memory_facts(self, version, context, address):
+        self._invalidate_derived(version,address,reason='instruction or incoming state changed',context=context)
         self.db.execute('DELETE FROM memory_refs WHERE version=? AND context=? AND source=?',
                         (version,context,f'{address:016x}'))
 
@@ -40,6 +41,7 @@ class FactsMixin:
         dos = self.meta['format'] == 'MZ'
         with self.transaction(True):
             v = self.version(version)['id']
+            self._invalidate_derived(v,reason='derived facts refreshed')
             rows = self.db.execute('SELECT * FROM instructions WHERE version=? ORDER BY context,address',(v,)).fetchall()
             regions = self.regions(v)
             self.db.execute('DELETE FROM memory_refs WHERE version=?',(v,))

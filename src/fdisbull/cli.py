@@ -8,7 +8,32 @@ from .project import Project, number
 from . import __version__
 
 METHODS = {
-    "analyze-module": "Offline DLL/shared-library analysis; path,project,[export,entry,max_instructions]",
+    'attach-file': 'Snapshot an external data/save/resource file; path,[name,kind,version,author]',
+    'files': 'Attached file identities, hashes and type bindings; [version,limit,offset]',
+    'file-bytes': 'Read bounded attached-file hex and text; name,[offset,size,version]',
+    'apply-file-type': 'Bind a structural type in file-offset space; file,type_name,[offset,name,version,author]',
+    'file-data': 'Read an exact typed attached-file binding; file,[offset,version,max_items]',
+    'file-reference': 'Author an instruction-to-file relationship; address,file,evidence,[offset,width,count,stride,access,cs,version,author]',
+    'file-xrefs': 'Query authored references to attached-file bytes; file,[offset,size,version,limit,page_offset,include_stale]',
+    'refresh-dos-state': 'Rebuild legacy DOS states and dependent facts; [version,max_instructions]',
+    'auto-analyze': 'Run persistent native and derived analysis to a bounded fixed point; [version,start,cs,ds,es,ss,max_instructions,max_functions,max_steps,max_entries,max_rounds,abi]',
+    'advanced-status': 'Derived job states, pending entries and fixed point; [version]',
+    'function-analysis': 'Stored frame, indirect-target, signature and effect evidence; address,[version,cs]',
+    'function-membership': 'Shared instruction/block membership from candidate entries; [version,max_work,max_instructions]',
+    'define-type': 'Register or revise a scalar/pointer/array/struct; name,definition,[version,author]',
+    'apply-type': 'Bind a type to shared data identity; address,type_name,[name,version,author]',
+    'types': 'Registered layouts and data bindings; [version]',
+    'typed-data': 'Interpret a bound data object; address,[version,max_items]',
+    'set-summary': 'Register a qualified function contract; address,name,[prototype,summary,abi,version,cs,author]',
+    'summaries': 'Registered and signature-qualified function contracts; [version]',
+    'add-signature': 'Register an exact or relocation-masked full-body signature; signature,[version]',
+    'signatures': 'Builtin and registered function signatures; [version]',
+    'call-effects': 'Qualified memory effects at call sites; [address,size,access,version,include_unresolved,limit,offset]',
+    "libraries": "Declared dependency names and load ordinals; [version,limit,offset]",
+    "relocations": "Static relocation records with symbol/addend provenance; [version,limit,offset]",
+    "linkage": "GOT/PLT or dyld slot/stub metadata; [version]",
+    "refresh-metadata": "Reinspect retained ELF/Mach-O/PE bytes and invalidate consumers; [version]",
+    "analyze-module": "Offline DLL/shared-library analysis; path,project,[export,entry,max_instructions,slice_arch,image]",
     "analysis-status": "Current persisted queues, seed states and fixed-point status; [version]",
     "cfg": "Reachable stored CFG from exact entry; address,[version,cs,max_instructions,highlights]",
     "render-cfg": "Export reachable basic-block CFG as SVG; address,output,[version,cs,max_instructions,highlights]",
@@ -19,7 +44,7 @@ METHODS = {
     "function-patterns": "Candidate prologue/epilogue evidence; [version,limit,offset,scan_unexplored]",
     "managed": "Inspect .NET metadata or disassemble one CIL method; path or project,[token,max_instructions,version]",
     "decoder-check": "Compare x86 iced/Capstone proposals without execution; data,[bits,address,scan_offsets,max_candidates]",
-    "import": "Create a new project from binary; params: project, path, [arch,bits,base,entry,load_segment]",
+    "import": "Create a new project from binary; params: project, path, [arch,bits,base,entry,load_segment,slice_arch,image]",
     "segments": "DOS inferred segment inventory; [version]",
     "code-regions": "DOS decoded instruction runs by CS; [version]",
     "identify": "Identify file header from bytes; path; no project required",
@@ -84,11 +109,13 @@ def invoke(method, params):
     if method in ('identify','inspect'):
         from .inspection import identify_header, inspect_binary
         path=Path(p.pop('path'))
-        if p or not path.is_file() or path.stat().st_size>64*1024*1024:
+        slice_arch=p.pop('slice_arch',None)
+        image=p.pop('image',None)
+        if p or (method=='identify' and (slice_arch is not None or image is not None)) or not path.is_file() or path.stat().st_size>64*1024*1024:
             raise ValueError('expected one regular input file at most 64 MiB')
         with path.open('rb') as stream:
             data=stream.read(64*1024*1024+1)
-        return identify_header(data) if method=='identify' else inspect_binary(data)
+        return identify_header(data) if method=='identify' else inspect_binary(data,slice_arch=slice_arch,image=image)
     project = p.pop("project",None)
     if not project:
         raise ValueError("project path is required")
@@ -99,6 +126,18 @@ def invoke(method, params):
         with Project.create(project,binary,**p) as db:
             return db.status()
     with Project(project) as db:
+        if method=='refresh-dos-state':return db.refresh_dos_state(**p)
+        file_methods={'attach-file':'attach_file','files':'external_files','file-bytes':'file_bytes','apply-file-type':'apply_file_type','file-data':'typed_file','file-reference':'file_reference','file-xrefs':'file_xrefs'}
+        if method in file_methods:return getattr(db,file_methods[method])(**p)
+        if method in ('define-type','add-signature','set-summary'):
+            for field in ('definition','signature','prototype','summary'):
+                filename=p.pop(field+'_file',None)
+                if filename is not None:
+                    path=Path(filename)
+                    if not path.is_file() or path.stat().st_size>1024*1024:raise ValueError('expected a JSON file at most 1 MiB')
+                    p[field]=json.loads(path.read_text())
+        if method in ('auto-analyze', 'advanced-status', 'function-analysis', 'function-membership', 'define-type', 'apply-type', 'types', 'typed-data', 'set-summary', 'summaries', 'add-signature', 'signatures', 'call-effects'):
+            return getattr(db,method.replace('-','_'))(**p)
         if method=="memory-accesses":
             return db.memory_accesses(**p)
         if method=="refresh-facts":
@@ -116,7 +155,8 @@ def invoke(method, params):
             return db.function_patterns(**p)
         if method=='analysis-status':
             return db.analysis_status(**p)
-        if method in ('info','header','sections','imports','exports','strings'):
+        if method=='refresh-metadata':return db.refresh_metadata(**p)
+        if method in ('info','header','sections','imports','exports','strings','libraries','relocations','linkage'):
             return db.information(topic='summary' if method=='info' else method,**p)
         if method=='recover-imports':
             return db.recover_imports(**p)
@@ -144,11 +184,11 @@ def invoke(method, params):
         return getattr(db,method)(**p)
 
 def public_addresses(value, field=None):
-    address_fields={'address','virtual_address','entrypoint','imagebase','target','start','end','source','concrete_target','interval_start','interval_end','possible_start','possible_end','source_address','target_address','next_address'}
+    address_fields={'address','virtual_address','entrypoint','imagebase','target','start','end','source','concrete_target','interval_start','interval_end','possible_start','possible_end','slot','stub','slot_address','stub_address','storage_address','resolver_address','source_address','target_address','next_address'}
     if isinstance(value,dict):
         return {key:public_addresses(item,key) for key,item in value.items()}
     if isinstance(value,list):
-        return [public_addresses(item,'address' if field=='addresses' else None) for item in value]
+        return [public_addresses(item,'address' if field in ('addresses','stub_addresses') else None) for item in value]
     if field in address_fields and isinstance(value,int) and not isinstance(value,bool):
         return hex(value)
     return value
@@ -197,6 +237,9 @@ def parser():
     for name in ('identify','inspect'):
         c=sub.add_parser(name,help=METHODS[name])
         c.add_argument('path')
+        if name=='inspect':
+            c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'])
+            c.add_argument('--image',choices=['auto','pe','mz'])
     c = sub.add_parser("import",help="create project from executable or explicit raw code")
     c.add_argument("path")
     c.add_argument("project")
@@ -205,9 +248,13 @@ def parser():
     c.add_argument("--base",default=0,type=lambda s:int(s,0))
     c.add_argument("--entry",type=lambda s:int(s,0))
     c.add_argument("--load-segment",type=lambda s:int(s,0),default=0x1000)
+    c.add_argument('--image',choices=['auto','pe','mz'],help='select a PE native image or its DOS MZ image')
+    c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'],help='select a thin/universal Mach-O CPU slice')
     c.add_argument('--module',action='store_true',help='allow a library without an executable entry')
     c=sub.add_parser('analyze-module',help=METHODS['analyze-module'])
     c.add_argument('path');c.add_argument('project')
+    c.add_argument('--image',choices=['auto','pe','mz'])
+    c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'])
     c.add_argument('--export');c.add_argument('--entry',type=lambda s:int(s,0))
     c.add_argument('--max-instructions',type=int,default=10000)
     c=sub.add_parser('managed',help=METHODS['managed'])
@@ -217,7 +264,7 @@ def parser():
     c.add_argument('data');c.add_argument('--bits',type=int,choices=[16,32,64],default=64)
     c.add_argument('--address',type=lambda s:int(s,0),default=0)
     c.add_argument('--scan-offsets',action='store_true');c.add_argument('--max-candidates',type=int,default=16)
-    for name in ["status","analyze","functions","disasm","xrefs","rename","comment","versions","patch","issues","render","info","header","sections","imports","exports","strings","items","queue","represent","recover-imports","segments","code-regions","locate","function-patterns","analysis-status","calls","cfg","render-cfg","memory-accesses","refresh-facts"]:
+    for name in ["status","analyze","functions","disasm","xrefs","rename","comment","versions","patch","issues","render","info","header","sections","imports","exports","strings","items","queue","represent","recover-imports","segments","code-regions","locate","function-patterns","analysis-status","calls","cfg","render-cfg","memory-accesses","refresh-facts","libraries","relocations","linkage","refresh-metadata","refresh-dos-state"]:
         c = sub.add_parser(name,help=METHODS[name])
         c.add_argument("project")
         if name != "versions":
@@ -229,13 +276,13 @@ def parser():
         if name=='analyze':
             for register in ('ds','es','ss'):
                 c.add_argument('--'+register,type=lambda s:int(s,0))
-        if name in ("analyze","represent","cfg","render-cfg"):
+        if name in ("analyze","represent","cfg","render-cfg","refresh-dos-state"):
             if name=="analyze":
                 c.add_argument("--start")
             c.add_argument("--max-instructions",type=int,default=10000)
-        if name in ("functions","xrefs","issues","sections","imports","exports","strings","items","queue","function-patterns","calls","memory-accesses"):
+        if name in ("functions","xrefs","issues","sections","imports","exports","strings","items","queue","function-patterns","calls","memory-accesses","libraries","relocations"):
             c.add_argument("--limit",type=int,default=200)
-        if name in ("functions","sections","imports","exports","strings","items","queue","function-patterns","calls","memory-accesses"):
+        if name in ("functions","sections","imports","exports","strings","items","queue","function-patterns","calls","memory-accesses","libraries","relocations"):
             c.add_argument("--offset",type=int,default=0)
         if name in ("disasm","render"):
             c.add_argument("--address")
@@ -275,6 +322,51 @@ def parser():
         if name == "render":
             c.add_argument("output")
             c.add_argument("--format",choices=["svg","png"])
+    for name in ('auto-analyze', 'advanced-status', 'function-analysis', 'function-membership', 'define-type', 'apply-type', 'types', 'typed-data', 'set-summary', 'summaries', 'add-signature', 'signatures', 'call-effects'):
+        c=sub.add_parser(name,help=METHODS[name]);c.add_argument('project');c.add_argument('--version',type=int)
+        if name in ('function-analysis','apply-type','typed-data','set-summary'):c.add_argument('address')
+        if name in ('function-analysis','set-summary','auto-analyze'):c.add_argument('--cs',type=lambda s:int(s,0))
+        if name=='auto-analyze':
+            c.add_argument('--start');c.add_argument('--abi')
+            for field,default in [('max-instructions',10000),('max-functions',200),('max-steps',100000),('max-entries',256),('max-rounds',8)]:c.add_argument('--'+field,type=int,default=default)
+            for register in ('ds','es','ss'):c.add_argument('--'+register,type=lambda s:int(s,0))
+        if name=='function-membership':
+            c.add_argument('--max-work',type=int,default=1000000);c.add_argument('--max-instructions',type=int,default=100000)
+        if name=='define-type':c.add_argument('name');c.add_argument('definition_file')
+        if name=='apply-type':c.add_argument('type_name');c.add_argument('--name')
+        if name=='typed-data':c.add_argument('--max-items',type=int,default=256)
+        if name=='set-summary':
+            c.add_argument('name');c.add_argument('--abi');c.add_argument('--prototype-file');c.add_argument('--summary-file')
+        if name=='add-signature':c.add_argument('signature_file')
+        if name in ('define-type','apply-type','set-summary'):c.add_argument('--author',default='agent')
+        if name=='call-effects':
+            c.add_argument('--address');c.add_argument('--size',type=int,default=1)
+            c.add_argument('--access',choices=['all','read','write'],default='all')
+            c.add_argument('--no-unresolved',dest='include_unresolved',action='store_false')
+            c.add_argument('--limit',type=int,default=200);c.add_argument('--offset',type=int,default=0)
+    for name in ('attach-file','files','file-bytes','apply-file-type','file-data','file-reference','file-xrefs'):
+        c=sub.add_parser(name,help=METHODS[name]);c.add_argument('project');c.add_argument('--version',type=int)
+        if name=='attach-file':
+            c.add_argument('path');c.add_argument('--name');c.add_argument('--kind',default='data')
+        elif name=='files':
+            c.add_argument('--limit',type=int,default=200);c.add_argument('--offset',type=int,default=0)
+        elif name=='file-bytes':
+            c.add_argument('name');c.add_argument('--offset',type=lambda s:int(s,0),default=0);c.add_argument('--size',type=lambda s:int(s,0),default=64)
+        else:
+            if name=='file-reference':c.add_argument('address')
+            c.add_argument('file')
+            if name in ('file-reference','file-xrefs'):c.add_argument('offset',type=lambda s:int(s,0))
+            else:c.add_argument('--offset',type=lambda s:int(s,0),default=0)
+            if name=='apply-file-type':c.add_argument('type_name');c.add_argument('--name')
+            if name=='file-data':c.add_argument('--max-items',type=int,default=256)
+            if name=='file-reference':
+                c.add_argument('--width',type=lambda s:int(s,0),default=1);c.add_argument('--count',type=int,default=1)
+                c.add_argument('--stride',type=lambda s:int(s,0));c.add_argument('--access',choices=['read','write','read_write','address','unknown'],default='unknown')
+                c.add_argument('--evidence',required=True);c.add_argument('--cs',type=lambda s:int(s,0))
+            if name=='file-xrefs':
+                c.add_argument('--size',type=lambda s:int(s,0),default=1);c.add_argument('--limit',type=int,default=200)
+                c.add_argument('--page-offset',type=int,default=0);c.add_argument('--active-only',dest='include_stale',action='store_false')
+        if name in ('attach-file','apply-file-type','file-reference'):c.add_argument('--author',default='agent')
     c = sub.add_parser("serve",help="JSON-lines stdin/stdout protocol; no listening socket")
     c.add_argument("--project")
     c = sub.add_parser("request",help="one JSON request")

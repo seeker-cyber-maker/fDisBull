@@ -23,7 +23,8 @@ _HEADER_NAMES = (
 )
 
 
-def load_mz(data: bytes, *, load_segment: int = 0x1000, entry: int | None = None) -> Image:
+def load_mz(data: bytes, *, load_segment: int = 0x1000, entry: int | None = None,
+            allow_secondary: bool = False) -> Image:
     """Load a classic MZ module at a chosen DOS load segment.
 
     Canonical addresses are ``segment * 16 + offset``; addresses requiring A20
@@ -40,7 +41,12 @@ def load_mz(data: bytes, *, load_segment: int = 0x1000, entry: int | None = None
     ``entry`` is an optional canonical linear override. Header CS:IP remains in
     metadata. ``selected_entry`` and ``selected_entry_cs/ip`` record the actual
     analysis entry and its deterministic candidate-based context.
+    An explicit ``allow_secondary=True`` selects the declared DOS load image
+    even when the retained file also has a PE/NE/LE/LX secondary header. Default
+    loading still rejects that ambiguity; all MZ validation remains unchanged.
     """
+    if not isinstance(allow_secondary, bool):
+        raise ValueError("allow_secondary must be a boolean")
     if not isinstance(data, bytes):
         raise ValueError("MZ source must be immutable bytes")
     if len(data) < 28:
@@ -73,16 +79,10 @@ def load_mz(data: bytes, *, load_segment: int = 0x1000, entry: int | None = None
     # may overlap these bytes, and arbitrary nonzero values are not evidence
     # of a newer executable. Only an actual recognizable secondary signature,
     # referenced by an independent header field, causes explicit rejection.
-    if header_size >= 64 and len(data) >= 64:
-        field_overlaps_relocations = relocation_count and relocation_offset < 64 and relocation_end > 60
-        if not field_overlaps_relocations:
-            secondary_offset = struct.unpack_from("<I", data, 0x3C)[0]
-            if 64 <= secondary_offset <= len(data) - 2:
-                signature = data[secondary_offset:secondary_offset + 4]
-                secondary = next((name for marker, name in ((b"PE\0\0", "PE"), (b"NE", "NE"), (b"LE", "LE"), (b"LX", "LX"))
-                                  if signature.startswith(marker)), None)
-                if secondary is not None:
-                    raise ValueError(f"{secondary} secondary executable header is not a classic DOS MZ image")
+    from .image_views import secondary_header
+    secondary=secondary_header(data) if header_size>=64 else None
+    if secondary is not None and not allow_secondary:
+        raise ValueError(f"{secondary['format']} secondary executable header is not a classic DOS MZ image")
 
     module_size = declared_size - header_size
     paragraph_size = (module_size + 15) & ~15
@@ -142,6 +142,9 @@ def load_mz(data: bytes, *, load_segment: int = 0x1000, entry: int | None = None
         selected_entry_cs_source = "highest compatible existing segment candidate; static analysis assumption"
     candidate(selected_entry_cs, {"kind": "selected_entry_cs", "source": selected_entry_cs_source})
     dos = {
+        "selected_image": "mz",
+        "secondary_format": secondary['format'] if secondary else None,
+        "secondary_header_offset": secondary['header_offset'] if secondary else None,
         "load_segment": load_segment, "image_base": image_base,
         "module_size": module_size, "allocation_size": allocation_size,
         "entry_cs": entry_cs, "entry_ip": header["e_ip"], "header_entry": header_entry,
@@ -160,6 +163,9 @@ def load_mz(data: bytes, *, load_segment: int = 0x1000, entry: int | None = None
         "a20_wrap": False,
     }
     metadata = {
+        "selected_image": "mz",
+        "secondary_format": secondary['format'] if secondary else None,
+        "secondary_header_offset": secondary['header_offset'] if secondary else None,
         "source_sha256": hashlib.sha256(data).hexdigest(),
         "mapping": "DOS relocated real-mode linear addresses (segment*16+offset); no A20 wrap",
         "file_mappings": [{"virtual_address": image_base, "file_offset": header_size, "file_size": module_size}],

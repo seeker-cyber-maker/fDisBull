@@ -19,7 +19,7 @@ def _input(data: bytes) -> bytes:
     return data
 
 
-def identify_header(data: bytes) -> dict:
+def _identify_header(data: bytes) -> dict:
     """Identify headers by magic and validate the structural header extents.
 
     ``valid`` means the recognized header fits, not that the file can execute.
@@ -207,6 +207,19 @@ def identify_header(data: bytes) -> dict:
     return h
 
 
+def identify_header(data: bytes) -> dict:
+    """Identify the container and expose selectable embedded image views."""
+    header=_identify_header(data)
+    if data.startswith(b'MZ'):
+        from .image_views import image_views
+        header['image_views']=image_views(data)
+    if header['format']=='Mach-O fat' and header['valid']:
+        from .macho_slices import macho_slices
+        try:header['slices']=macho_slices(data)
+        except ValueError as exc:header['warnings'].append(str(exc))
+    return header
+
+
 def _strings(data: bytes, mappings: list[tuple[int, int, int]], warnings: list[str]) -> list[dict]:
     found = []
     text_budget = MAX_STRING_TEXT
@@ -227,7 +240,7 @@ def _strings(data: bytes, mappings: list[tuple[int, int, int]], warnings: list[s
     return sorted(found, key=lambda item: (item["file_offset"], item["encoding"]))
 
 
-def inspect_binary(data: bytes) -> dict:
+def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | None = None) -> dict:
     """Inspect metadata and ASCII/ASCII-range UTF-16LE strings from file bytes.
 
     Unresolved addresses are None. Returned addresses are preferred static VAs,
@@ -236,8 +249,53 @@ def inspect_binary(data: bytes) -> dict:
     """
     data = _input(data)
     header = identify_header(data)
+    if image=='auto':image=None
+    if image not in (None,'pe','mz'):raise ValueError('image must be auto, pe or mz')
+    container_header=None
+    if image=='mz':
+        if slice_arch is not None:raise ValueError('slice_arch cannot select an MZ image')
+        from .dos import load_mz
+        selected=load_mz(data,allow_secondary=True)
+        container_header=header
+        header=dict(format='DOS MZ',family='DOS',valid=True,bits=16,arch='x86',endian='little',
+                    header_offset=0,source='explicit MZ image selection',warnings=[],
+                    dos_header=selected.metadata['dos']['header_fields'],
+                    header_size=selected.metadata['dos']['header_size'],
+                    declared_file_size=selected.metadata['dos']['declared_file_size'])
+    elif image=='pe' and header['family']!='PE':raise ValueError('requested PE image is not present')
+
+    if header['format']=='Mach-O fat':
+        from .macho_slices import macho_slices,select_macho_slice
+        if slice_arch is not None:
+            selected,selection=select_macho_slice(data,slice_arch)
+            result=inspect_binary(selected)
+            delta=selection['offset']
+            def shift(value):
+                if isinstance(value,dict):
+                    for key,item in value.items():
+                        if key=='file_offset' and type(item) is int:value[key]=item+delta
+                        else:shift(item)
+                elif isinstance(value,list):
+                    for item in value:shift(item)
+            shift(result)
+            result['header']['header_offset']=delta
+            result['container_header']=header
+            result['selected_slice']=selection
+            return result
+        try:header['slices']=macho_slices(data)
+        except ValueError as exc:header['warnings'].append(str(exc))
+    elif slice_arch is not None:
+        if header['format']!='Mach-O':raise ValueError('slice_arch applies only to Mach-O containers')
+        from .macho_slices import select_macho_slice
+        select_macho_slice(data,slice_arch)
+
     result = {"header": header, "sections": [], "imports": [], "exports": [],
               "strings": [], "warnings": list(header["warnings"])}
+    if data.startswith(b'MZ'):
+        from .image_views import image_views
+        result['image_views']=image_views(data)
+    if container_header is not None:result['container_header']=container_header
+    result['selected_image']=image or ('pe' if header['family']=='PE' else 'mz' if header['format']=='DOS MZ' else None)
     warnings = result["warnings"]
     mappings = []
     if header['format'] in ('PE32','PE32+'):
@@ -249,7 +307,7 @@ def inspect_binary(data: bytes) -> dict:
         if header["valid"]:
             try:
                 from .dos import load_mz
-                image = load_mz(data)
+                image = load_mz(data,allow_secondary=result['selected_image']=='mz')
                 metadata = image.metadata["dos"]
                 header.update(load_segment=metadata["load_segment"], entrypoint=image.entry,
                               entry_cs=metadata["entry_cs"], entry_ip=metadata["entry_ip"],
@@ -318,6 +376,7 @@ def inspect_binary(data: bytes) -> dict:
                     if len(result["exports"]) >= MAX_ITEMS:
                         warnings.append("export list capped at 10000 entries")
                         break
+            result['libraries']=[dict(name=name,kind='import_descriptor') for name in sorted({item['module'] for item in result['imports']})]
             warnings.append("PE imports describe normal IAT entries; delay-load imports are not enumerated")
         elif isinstance(binary, lief.ELF.Binary):
             for section in binary.sections:
@@ -329,36 +388,22 @@ def inspect_binary(data: bytes) -> dict:
             for segment in binary.segments:
                 if segment.type == lief.ELF.Segment.TYPE.LOAD:
                     mappings.append((int(segment.file_offset), min(int(segment.physical_size), max(0, len(data) - int(segment.file_offset))), int(segment.virtual_address)))
-            for symbol in binary.dynamic_symbols:
-                if symbol.imported:
-                    result["imports"].append({"module": None, "name": symbol.name or None, "ordinal": None, "address": None, "kind": "dynamic_symbol"})
-                if symbol.exported:
-                    result["exports"].append({"name": symbol.name or None, "address": int(symbol.value), "ordinal": None, "forwarder": None})
-                if len(result["imports"]) + len(result["exports"]) >= MAX_ITEMS:
-                    warnings.append("dynamic symbol lists capped at 10000 entries")
-                    break
-            warnings.append("ELF import slots and symbol-to-library bindings are unresolved; imports have address null")
+            from .elf_metadata import inspect_elf
+            metadata=inspect_elf(binary,data,MAX_ITEMS)
+            for key in ('imports','exports','libraries','relocations','linkage'):result[key]=metadata.get(key,[] if key!='linkage' else {})
+            header.update(metadata.get('header',{}))
+            warnings.extend(metadata.get('warnings',[]))
+            result['metadata_revision']=1
         elif isinstance(binary, lief.MachO.Binary):
             for segment in binary.segments:
                 if int(segment.file_size):
                     mappings.append((int(segment.file_offset), min(int(segment.file_size), max(0, len(data) - int(segment.file_offset))), int(segment.virtual_address)))
-            for section in binary.sections:
-                result["sections"].append({"name": section.name, "virtual_address": int(section.virtual_address),
-                    "virtual_size": int(section.size), "file_offset": int(section.offset),
-                    "file_size": 0 if str(section.type).endswith("ZEROFILL") else int(section.size),
-                    "permissions": "unknown"})
-            for symbol in binary.imported_symbols:
-                result["imports"].append({"module": None, "name": symbol.name or None, "ordinal": None,
-                                          "address": None, "kind": "imported_symbol"})
-                if len(result["imports"]) >= MAX_ITEMS:
-                    warnings.append("import list capped at 10000 entries")
-                    break
-            for symbol in binary.exported_symbols:
-                result["exports"].append({"name": symbol.name or None, "address": int(symbol.value), "ordinal": None, "forwarder": None})
-                if len(result["exports"]) >= MAX_ITEMS:
-                    warnings.append("export list capped at 10000 entries")
-                    break
-            warnings.append("Mach-O import binding locations, library attribution and section permissions are unresolved")
+            from .macho_metadata import inspect_macho
+            metadata=inspect_macho(binary,data,MAX_ITEMS)
+            for key in ('sections','imports','exports','libraries','relocations','linkage'):result[key]=metadata.get(key,[] if key!='linkage' else {})
+            header.update(metadata.get('header',{}))
+            warnings.extend(metadata.get('warnings',[]))
+            result['metadata_revision']=1
         else:
             warnings.append("LIEF returned an unsupported metadata type")
     except Exception as exc:

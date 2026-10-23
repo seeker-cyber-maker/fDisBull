@@ -1,0 +1,461 @@
+{
+  "kind": "struct",
+  "size": 364,
+  "fields": [
+    {
+      "name": "param_0000",
+      "offset": 0,
+      "type": "u32"
+    },
+    {
+      "name": "param_0004",
+      "offset": 4,
+      "type": "u32"
+    },
+    {
+      "name": "param_0008",
+      "offset": 8,
+      "type": "u32"
+    },
+    {
+      "name": "param_000c",
+      "offset": 12,
+      "type": "u32"
+    },
+    {
+      "name": "param_0010",
+      "offset": 16,
+      "type": "u32"
+    },
+    {
+      "name": "param_0014",
+      "offset": 20,
+      "type": "u32"
+    },
+    {
+      "name": "param_0018",
+      "offset": 24,
+      "type": "u32"
+    },
+    {
+      "name": "param_001c",
+      "offset": 28,
+      "type": "u32"
+    },
+    {
+      "name": "param_0020",
+      "offset": 32,
+      "type": "u32"
+    },
+    {
+      "name": "param_0024",
+      "offset": 36,
+      "type": "u32"
+    },
+    {
+      "name": "param_0028",
+      "offset": 40,
+      "type": "u32"
+    },
+    {
+      "name": "param_002c",
+      "offset": 44,
+      "type": "u32"
+    },
+    {
+      "name": "param_0030",
+      "offset": 48,
+      "type": "u32"
+    },
+    {
+      "name": "param_0034",
+      "offset": 52,
+      "type": "u32"
+    },
+    {
+      "name": "param_0038",
+      "offset": 56,
+      "type": "u32"
+    },
+    {
+      "name": "param_003c",
+      "offset": 60,
+      "type": "u32"
+    },
+    {
+      "name": "param_0040",
+      "offset": 64,
+      "type": "u32"
+    },
+    {
+      "name": "param_0044",
+      "offset": 68,
+      "type": "u32"
+    },
+    {
+      "name": "param_0048",
+      "offset": 72,
+      "type": "u32"
+    },
+    {
+      "name": "param_004c",
+      "offset": 76,
+      "type": "u32"
+    },
+    {
+      "name": "param_0050",
+      "offset": 80,
+      "type": "u32"
+    },
+    {
+      "name": "param_0054",
+      "offset": 84,
+      "type": "u32"
+    },
+    {
+      "name": "param_0058",
+      "offset": 88,
+      "type": "u32"
+    },
+    {
+      "name": "param_005c",
+      "offset": 92,
+      "type": "u32"
+    },
+    {
+      "name": "param_0060",
+      "offset": 96,
+      "type": "u32"
+    },
+    {
+      "name": "param_0064",
+      "offset": 100,
+      "type": "u32"
+    },
+    {
+      "name": "param_0068",
+      "offset": 104,
+      "type": "u32"
+    },
+    {
+      "name": "param_006c",
+      "offset": 108,
+      "type": "u32"
+    },
+    {
+      "name": "param_0070",
+      "offset": 112,
+      "type": "u32"
+    },
+    {
+      "name": "param_0074",
+      "offset": 116,
+      "type": "u32"
+    },
+    {
+      "name": "param_0078",
+      "offset": 120,
+      "type": "u32"
+    },
+    {
+      "name": "param_007c",
+      "offset": 124,
+      "type": "u32"
+    },
+    {
+      "name": "param_0080",
+      "offset": 128,
+      "type": "u32"
+    },
+    {
+      "name": "param_0084",
+      "offset": 132,
+      "type": "u32"
+    },
+    {
+      "name": "param_0088",
+      "offset": 136,
+      "type": "u32"
+    },
+    {
+      "name": "param_008c",
+      "offset": 140,
+      "type": "u32"
+    },
+    {
+      "name": "param_0090",
+      "offset": 144,
+      "type": "u32"
+    },
+    {
+      "name": "param_0094",
+      "offset": 148,
+      "type": "u32"
+    },
+    {
+      "name": "param_0098",
+      "offset": 152,
+      "type": "u32"
+    },
+    {
+      "name": "param_009c",
+      "offset": 156,
+      "type": "u32"
+    },
+    {
+      "name": "param_00a0",
+      "offset": 160,
+      "type": "u32"
+    },
+    {
+      "name": "param_00a4",
+      "offset": 164,
+      "type": "u32"
+    },
+    {
+      "name": "param_00a8",
+      "offset": 168,
+      "type": "u32"
+    },
+    {
+      "name": "param_00ac",
+      "offset": 172,
+      "type": "u32"
+    },
+    {
+      "name": "param_00b0",
+      "offset": 176,
+      "type": "u32"
+    },
+    {
+      "name": "param_00b4",
+      "offset": 180,
+      "type": "u32"
+    },
+    {
+      "name": "param_00b8",
+      "offset": 184,
+      "type": "u32"
+    },
+    {
+      "name": "param_00bc",
+      "offset": 188,
+      "type": "u32"
+    },
+    {
+      "name": "param_00c0",
+      "offset": 192,
+      "type": "u32"
+    },
+    {
+      "name": "param_00c4",
+      "offset": 196,
+      "type": "u32"
+    },
+    {
+      "name": "param_00c8",
+      "offset": 200,
+      "type": "u32"
+    },
+    {
+      "name": "param_00cc",
+      "offset": 204,
+      "type": "u32"
+    },
+    {
+      "name": "param_00d0",
+      "offset": 208,
+      "type": "u32"
+    },
+    {
+      "name": "param_00d4",
+      "offset": 212,
+      "type": "u32"
+    },
+    {
+      "name": "param_00d8",
+      "offset": 216,
+      "type": "u32"
+    },
+    {
+      "name": "param_00dc",
+      "offset": 220,
+      "type": "u32"
+    },
+    {
+      "name": "param_00e0",
+      "offset": 224,
+      "type": "u32"
+    },
+    {
+      "name": "param_00e4",
+      "offset": 228,
+      "type": "u32"
+    },
+    {
+      "name": "param_00e8",
+      "offset": 232,
+      "type": "u32"
+    },
+    {
+      "name": "param_00ec",
+      "offset": 236,
+      "type": "u32"
+    },
+    {
+      "name": "param_00f0",
+      "offset": 240,
+      "type": "u32"
+    },
+    {
+      "name": "param_00f4",
+      "offset": 244,
+      "type": "u32"
+    },
+    {
+      "name": "param_00f8",
+      "offset": 248,
+      "type": "u32"
+    },
+    {
+      "name": "param_00fc",
+      "offset": 252,
+      "type": "u32"
+    },
+    {
+      "name": "param_0100",
+      "offset": 256,
+      "type": "u32"
+    },
+    {
+      "name": "param_0104",
+      "offset": 260,
+      "type": "u32"
+    },
+    {
+      "name": "param_0108",
+      "offset": 264,
+      "type": "u32"
+    },
+    {
+      "name": "param_010c",
+      "offset": 268,
+      "type": "u32"
+    },
+    {
+      "name": "param_0110",
+      "offset": 272,
+      "type": "u32"
+    },
+    {
+      "name": "param_0114",
+      "offset": 276,
+      "type": "u32"
+    },
+    {
+      "name": "param_0118",
+      "offset": 280,
+      "type": "u32"
+    },
+    {
+      "name": "param_011c",
+      "offset": 284,
+      "type": "u32"
+    },
+    {
+      "name": "param_0120",
+      "offset": 288,
+      "type": "u32"
+    },
+    {
+      "name": "param_0124",
+      "offset": 292,
+      "type": "u32"
+    },
+    {
+      "name": "param_0128",
+      "offset": 296,
+      "type": "u32"
+    },
+    {
+      "name": "param_012c",
+      "offset": 300,
+      "type": "u32"
+    },
+    {
+      "name": "param_0130",
+      "offset": 304,
+      "type": "u32"
+    },
+    {
+      "name": "param_0134",
+      "offset": 308,
+      "type": "u32"
+    },
+    {
+      "name": "param_0138",
+      "offset": 312,
+      "type": "u32"
+    },
+    {
+      "name": "param_013c",
+      "offset": 316,
+      "type": "u32"
+    },
+    {
+      "name": "param_0140",
+      "offset": 320,
+      "type": "u32"
+    },
+    {
+      "name": "param_0144",
+      "offset": 324,
+      "type": "u32"
+    },
+    {
+      "name": "param_0148",
+      "offset": 328,
+      "type": "u32"
+    },
+    {
+      "name": "param_014c",
+      "offset": 332,
+      "type": "u32"
+    },
+    {
+      "name": "param_0150",
+      "offset": 336,
+      "type": "u32"
+    },
+    {
+      "name": "param_0154",
+      "offset": 340,
+      "type": "u32"
+    },
+    {
+      "name": "param_0158",
+      "offset": 344,
+      "type": "u32"
+    },
+    {
+      "name": "param_015c",
+      "offset": 348,
+      "type": "u32"
+    },
+    {
+      "name": "param_0160",
+      "offset": 352,
+      "type": "u32"
+    },
+    {
+      "name": "param_0164",
+      "offset": 356,
+      "type": "u32"
+    },
+    {
+      "name": "param_0168",
+      "offset": 360,
+      "type": "u32"
+    }
+  ]
+}

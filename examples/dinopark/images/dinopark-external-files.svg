@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="1171" viewBox="0 0 1560 1171" role="img">
+<title>DINOPARK.EXE</title>
+<desc>Disassembly exported from a versioned fDisBull database snapshot.</desc>
+<rect width="100%" height="100%" fill="#101722"/>
+<g font-family="DejaVu Sans Mono, Menlo, Consolas, monospace">
+<line x1="36" y1="210" x2="1524" y2="210" stroke="#2d3d52"/>
+<line x1="36" y1="1108" x2="1524" y2="1108" stroke="#2d3d52"/>
+<text x="36" y="53" font-size="25" fill="#f1f5fb" font-weight="700" xml:space="preserve">fDisBull  /  DISASSEMBLY</text>
+<text x="36" y="88" font-size="18" fill="#f1f5fb" xml:space="preserve">DINOPARK.EXE</text>
+<text x="36" y="118" font-size="18" fill="#afbdd0" xml:space="preserve">x86 / 16-bit / little-endian     VERSION 1     14 instructions</text>
+<text x="36" y="145" font-size="15" fill="#afbdd0" xml:space="preserve">STATIC ANALYSIS  fixed point / pending 0 / issues 18316</text>
+<text x="36" y="170" font-size="15" fill="#afbdd0" xml:space="preserve">CONTEXT  x86:16:little:cs=38ff</text>
+<text x="36" y="195" font-size="15" fill="#afbdd0" xml:space="preserve">SNAPSHOT SHA-256  8006cbd191e3ff0a80f537f6d5163559542270f3bf706b7f86d8c4c54248c743</text>
+<text x="36" y="235" font-size="15" fill="#afbdd0" font-weight="700" xml:space="preserve">CS:IP</text>
+<text x="260" y="235" font-size="15" fill="#afbdd0" font-weight="700" xml:space="preserve">BYTES (HEX)</text>
+<text x="620" y="235" font-size="15" fill="#afbdd0" font-weight="700" xml:space="preserve">MNEMONIC</text>
+<text x="754" y="235" font-size="15" fill="#afbdd0" font-weight="700" xml:space="preserve">OPERANDS</text>
+<text x="36" y="271" font-size="18" fill="#95bdff" xml:space="preserve">38ff:22d0</text>
+<text x="260" y="271" font-size="18" fill="#acbbce" xml:space="preserve">833eac6f00</text>
+<text x="620" y="271" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">cmp</text>
+<text x="754" y="271" font-size="18" fill="#f1f5fb" xml:space="preserve">word [6FACh],0 ; mem_471ac &lt;scalar&gt;</text>
+<text x="36" y="297" font-size="16" fill="#afbdd0" xml:space="preserve">XREF  branch 38ff:22bb -&gt; 38ff:22d0  |  branch 38ff:22c2 -&gt; 38ff:22d0  |  fallthrough 38ff:22ca -&gt; 38ff:22d0</text>
+<text x="36" y="331" font-size="18" fill="#95bdff" xml:space="preserve">38ff:22d5</text>
+<text x="260" y="331" font-size="18" fill="#acbbce" xml:space="preserve">750e</text>
+<text x="620" y="331" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">jne</text>
+<text x="754" y="331" font-size="18" fill="#f1f5fb" xml:space="preserve">short 22E5h ; loc_38ff_22e5 &lt;code&gt;</text>
+<text x="36" y="357" font-size="16" fill="#afbdd0" xml:space="preserve">XREF  fallthrough 38ff:22d0 -&gt; 38ff:22d5</text>
+<text x="36" y="391" font-size="18" fill="#95bdff" xml:space="preserve">38ff:22d7</text>
+<text x="260" y="391" font-size="18" fill="#acbbce" xml:space="preserve">c41ec7bf</text>
+<text x="620" y="391" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">les</text>
+<text x="754" y="391" font-size="18" fill="#f1f5fb" xml:space="preserve">bx,[0BFC7h] ; mem_4c1c7 &lt;scalar&gt;</text>
+<text x="36" y="417" font-size="16" fill="#afbdd0" xml:space="preserve">XREF  fallthrough 38ff:22d5 -&gt; 38ff:22d7</text>
+<text x="36" y="451" font-size="18" fill="#95bdff" xml:space="preserve">38ff:22db</text>
+<text x="260" y="451" font-size="18" fill="#acbbce" xml:space="preserve">268b879400</text>
+<text x="620" y="451" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">mov</text>
+<text x="754" y="451" font-size="18" fill="#f1f5fb" xml:space="preserve">ax,[es:bx+94h] ; file VARS.DAT+0x94: vars.param_0094 [authored]</text>
+<text x="36" y="477" font-size="16" fill="#afbdd0" xml:space="preserve">XREF  fallthrough 38ff:22d7 -&gt; 38ff:22db</text>
+<text x="36" y="511" font-size="18" fill="#95bdff" xml:space="preserve">38ff:22e0</text>
+<text x="260" y="511" font-size="18" fill="#acbbce" xml:space="preserve">a3f8cc</text>
+<text x="620" y="511" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">mov</text>
+<text x="754" y="511" font-size="18" fill="#f1f5fb" xml:space="preserve">[0CCF8h],ax ; mem_4cef8 &lt;scalar&gt;</text>
+<text x="36" y="537" font-size="16" fill="#afbdd0" xml:space="preserve">XREF  fallthrough 38ff:22db -&gt; 38ff:22e0</text>
+<text x="36" y="571" font-size="18" fill="#95bdff" xml:space="preserve">38ff:22e3</text>
+<text x="260" y="571" font-size="18" fill="#acbbce" xml:space="preserve">eb10</text>
+<text x="620" y="571" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">jmp</text>
+<text x="754" y="571" font-size="18" fill="#f1f5fb" xml:space="preserve">short 22F5h ; loc_38ff_22f5 &lt;code&gt;</text>
+<text x="36" y="597" font-size="16" fill="#afbdd0" xml:space="preserve">XREF  fallthrough 38ff:22e0 -&gt; 38ff:22e3</text>
+<text x="36" y="631" font-size="18" fill="#95bdff" xml:space="preserve">38ff:22e5</text>
+<text x="260" y="631" font-size="18" fill="#acbbce" xml:space="preserve">c41ec7bf</text>
+<text x="620" y="631" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">les</text>
+<text x="754" y="631" font-size="18" fill="#f1f5fb" xml:space="preserve">bx,[0BFC7h] ; mem_4c1c7 &lt;scalar&gt;</text>
+<text x="36" y="657" font-size="16" fill="#afbdd0" xml:space="preserve">XREF  branch 38ff:22d5 -&gt; 38ff:22e5</text>
+<text x="36" y="691" font-size="18" fill="#95bdff" xml:space="preserve">38ff:22e9</text>
+<text x="260" y="691" font-size="18" fill="#acbbce" xml:space="preserve">268b879800</text>
+<text x="620" y="691" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">mov</text>
+<text x="754" y="691" font-size="18" fill="#f1f5fb" xml:space="preserve">ax,[es:bx+98h] ; file VARS.DAT+0x98: vars.param_0098 [authored]</text>
+<text x="36" y="717" font-size="16" fill="#afbdd0" xml:space="preserve">XREF  fallthrough 38ff:22e5 -&gt; 38ff:22e9</text>
+<text x="36" y="751" font-size="18" fill="#95bdff" xml:space="preserve">38ff:22ee</text>
+<text x="260" y="751" font-size="18" fill="#acbbce" xml:space="preserve">f72eac6f</text>
+<text x="620" y="751" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">imul</text>
+<text x="754" y="751" font-size="18" fill="#f1f5fb" xml:space="preserve">word [6FACh] ; mem_471ac &lt;scalar&gt;</text>
+<text x="36" y="777" font-size="16" fill="#afbdd0" xml:space="preserve">XREF  fallthrough 38ff:22e9 -&gt; 38ff:22ee</text>
+<text x="36" y="811" font-size="18" fill="#95bdff" xml:space="preserve">38ff:22f2</text>
+<text x="260" y="811" font-size="18" fill="#acbbce" xml:space="preserve">a3f8cc</text>
+<text x="620" y="811" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">mov</text>
+<text x="754" y="811" font-size="18" fill="#f1f5fb" xml:space="preserve">[0CCF8h],ax ; mem_4cef8 &lt;scalar&gt;</text>
+<text x="36" y="837" font-size="16" fill="#afbdd0" xml:space="preserve">XREF  fallthrough 38ff:22ee -&gt; 38ff:22f2</text>
+<text x="36" y="871" font-size="18" fill="#95bdff" xml:space="preserve">38ff:22f5</text>
+<text x="260" y="871" font-size="18" fill="#acbbce" xml:space="preserve">a1f8cc</text>
+<text x="620" y="871" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">mov</text>
+<text x="754" y="871" font-size="18" fill="#f1f5fb" xml:space="preserve">ax,[0CCF8h] ; mem_4cef8 &lt;scalar&gt;</text>
+<text x="36" y="897" font-size="16" fill="#afbdd0" xml:space="preserve">XREF  branch 38ff:22e3 -&gt; 38ff:22f5  |  fallthrough 38ff:22f2 -&gt; 38ff:22f5</text>
+<text x="36" y="931" font-size="18" fill="#95bdff" xml:space="preserve">38ff:22f8</text>
+<text x="260" y="931" font-size="18" fill="#acbbce" xml:space="preserve">f76eee</text>
+<text x="620" y="931" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">imul</text>
+<text x="754" y="931" font-size="18" fill="#f1f5fb" xml:space="preserve">word [bp-12h]</text>
+<text x="36" y="957" font-size="16" fill="#afbdd0" xml:space="preserve">XREF  fallthrough 38ff:22f5 -&gt; 38ff:22f8</text>
+<text x="36" y="991" font-size="18" fill="#95bdff" xml:space="preserve">38ff:22fb</text>
+<text x="260" y="991" font-size="18" fill="#acbbce" xml:space="preserve">99</text>
+<text x="620" y="991" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">cwd</text>
+<text x="754" y="991" font-size="18" fill="#f1f5fb" xml:space="preserve"></text>
+<text x="36" y="1017" font-size="16" fill="#afbdd0" xml:space="preserve">XREF  fallthrough 38ff:22f8 -&gt; 38ff:22fb</text>
+<text x="36" y="1051" font-size="18" fill="#95bdff" xml:space="preserve">38ff:22fc</text>
+<text x="260" y="1051" font-size="18" fill="#acbbce" xml:space="preserve">3b16e1bf</text>
+<text x="620" y="1051" font-size="18" fill="#8ce4d3" font-weight="700" xml:space="preserve">cmp</text>
+<text x="754" y="1051" font-size="18" fill="#f1f5fb" xml:space="preserve">dx,[0BFE1h] ; mem_4c1e1 &lt;scalar&gt;</text>
+<text x="36" y="1077" font-size="16" fill="#afbdd0" xml:space="preserve">XREF  fallthrough 38ff:22fb -&gt; 38ff:22fc</text>
+<text x="36" y="1141" font-size="15" fill="#afbdd0" xml:space="preserve">DATABASE SNAPSHOT  /  Static decode; analysis and annotations are interpretations.</text>
+</g></svg>
