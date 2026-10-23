@@ -218,4 +218,4 @@ unbounded whole-program analysis.
 Related evidence and boundaries are documented in
 [the architecture](ARCHITECTURE.md), [the API](API.md),
 [decoder research](DECODER_RESEARCH.md) and
-[the DinoPark field audit](DINOPARK_FIELD_AUDIT.md).
+[the DinoPark field audit](../examples/dinopark/notes/DINOPARK_FIELD_AUDIT.md).

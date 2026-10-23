@@ -50,6 +50,6 @@ WHERE m.version=1 AND json_extract(m.detail, '$.may_write')=1
 ORDER BY m.source, m.context;
 ```
 
-The JSON detail uses numeric physical targets and interval bounds internally; source keys use canonical hexadecimal text. Do not equate a null target with absence of a write. Indexed updates to DS:6F88 may hit DS:6F90 when BX=8 even though no exact target is stored. Bulk initialization and save-loading buffers require following pointer/length arguments across calls. The [field audit](DINOPARK_FIELD_AUDIT.md) distinguishes those candidates from resolved scalar accesses and traces the save-file prefix.
+The JSON detail uses numeric physical targets and interval bounds internally; source keys use canonical hexadecimal text. Do not equate a null target with absence of a write. Indexed updates to DS:6F88 may hit DS:6F90 when BX=8 even though no exact target is stored. Bulk initialization and save-loading buffers require following pointer/length arguments across calls. The [field audit](../examples/dinopark/notes/DINOPARK_FIELD_AUDIT.md) distinguishes those candidates from resolved scalar accesses and traces the save-file prefix.
 
 In 0.5, `dinopark-facts-receipt.json` records explicit forensic seeds that added previously missed load/save and switch-target blocks. They do not establish general jump-table recovery or complete coverage. Ordinary fallthroughs are persisted; `cfg` can independently reconstruct older omitted ones with explicit provenance.
