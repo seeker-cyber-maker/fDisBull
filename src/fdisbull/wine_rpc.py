@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import socket
 import subprocess
 import tempfile
@@ -25,6 +26,9 @@ class WineQemuRPC:
             paths=[Path(p).expanduser().resolve(strict=True) for p in (executable,kernel,initramfs)]
             if any(not p.is_file() for p in paths) or not os.access(paths[0],os.X_OK):
                 raise ValueError('Expected QEMU executable, Linux kernel and prepared Wine runtime files')
+            version=subprocess.check_output([str(paths[0]),'--version'],text=True,
+                                            stderr=subprocess.STDOUT,timeout=5).splitlines()[0]
+            self._check_version(version)
             sock=root/'rpc.sock'
             command=[str(paths[0]),'-accel','tcg,thread=multi','-machine','q35','-cpu','max',
                 '-smp','2','-m','4G','-nic','none','-display','none','-monitor','none','-no-reboot',
@@ -32,6 +36,7 @@ class WineQemuRPC:
                 '-kernel',str(paths[1]),'-initrd',str(paths[2]),'-append',
                 'console=ttyS0,115200 rdinit=/init rootfstype=ramfs loglevel=4 panic=1 random.trust_cpu=on']
             self.inputs={name:dict(path=str(p),sha256=self._hash(p)) for name,p in zip(('qemu','kernel','initramfs'),paths)}
+            self.inputs['qemu']['version']=version
             self.command=command
             with (root/'qemu.log').open('wb') as log:
                 self.process=subprocess.Popen(command,cwd=root,stdin=subprocess.DEVNULL,stdout=log,stderr=log)
@@ -64,6 +69,13 @@ class WineQemuRPC:
     @staticmethod
     def _hash(path):
         with path.open('rb') as stream:return hashlib.file_digest(stream,'sha256').hexdigest()
+
+    @staticmethod
+    def _check_version(version):
+        match=re.search(r'QEMU emulator version (\d+)\.(\d+)',version)
+        # Older TCG mishandles Wine's user-mode IRET when guest SMAP is enabled.
+        if not match or tuple(map(int,match.groups()))<(9,1):
+            raise DebuggerError('PE64 requires QEMU >= 9.1 for the TCG user-mode IRET/SMAP fix; found '+version)
 
     def _diagnostics(self):
         diagnostics=''

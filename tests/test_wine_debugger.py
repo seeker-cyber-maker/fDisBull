@@ -11,7 +11,16 @@ import pytest
 from fdisbull.project import Project
 from fdisbull.wine_debugger import PEDebugSession
 from fdisbull.wine_runtime import prepare
+from fdisbull.wine_rpc import WineQemuRPC
 from fixtures_formats import pe64
+
+
+def test_qemu_rejects_affected_iret_emulators_before_boot():
+    for version in ('QEMU emulator version 8.2.2 (Ubuntu)', 'QEMU emulator version 9.0.0', 'unknown'):
+        with pytest.raises(Exception,match='requires QEMU >= 9.1'):
+            WineQemuRPC._check_version(version)
+    WineQemuRPC._check_version('QEMU emulator version 9.1.0')
+    WineQemuRPC._check_version('QEMU emulator version 11.1.2')
 
 
 def test_pe_launch_rejects_invalid_inputs_before_starting_vm(tmp_path):

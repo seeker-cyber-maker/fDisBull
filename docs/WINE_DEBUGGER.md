@@ -6,7 +6,7 @@ The backend provides disassembly-address execution breakpoints, register observa
 
 ## Runtime preparation
 
-Supply QEMU, an x86-64 Linux kernel, and a trusted Linux initramfs containing Wine64, Python 3, Xvfb, `runuser`, and `x86_64-w64-mingw32-gcc`, with the `ubuntu` user and group (UID/GID 1000) used by the supplied guest launcher. The tested Ubuntu 24.04 runtime preparation and its provenance are described in [the platform experiment](../experimental/wine/README.md). That original image is a base: its old probe launcher is replaced in a **new** prepared image. No games, saved states or project databases enter the prepared runtime.
+Supply **QEMU 9.1 or later**, an x86-64 Linux kernel, and a trusted Linux initramfs containing Wine64, Python 3, Xvfb, `runuser`, and `x86_64-w64-mingw32-gcc`, with the `ubuntu` user and group (UID/GID 1000) used by the supplied guest launcher. Older QEMU TCG versions mishandle user-mode IRET with guest SMAP, which caused a real guest-kernel fault during Wine initialization in the first Linux PE CI run; the launcher rejects them before boot. See the [upstream fix](https://lists.gnu.org/archive/html/qemu-devel/2024-07/msg02430.html) and [CI recipe](../experimental/wine/ci/README.md). The tested Ubuntu 24.04 runtime preparation and its provenance are described in [the platform experiment](../experimental/wine/README.md). That original image is a base: its old probe launcher is replaced in a **new** prepared image. No games, saved states or project databases enter the prepared runtime.
 
 ```bash
 python -m fdisbull.wine_runtime \

@@ -120,9 +120,9 @@ jobs:
   pe64-debugger:
     name: PE64 Wine/QEMU (installed wheel)
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 45
     env:
-      FDISBULL_PE_QEMU: /usr/bin/qemu-system-x86_64
+      FDISBULL_PE_QEMU: ${{ github.workspace }}/.native/pe/qemu-9.2.4/build/qemu-system-x86_64
       FDISBULL_PE_KERNEL: ${{ github.workspace }}/.native/pe/linux-amd64
       FDISBULL_PE_INITRAMFS: ${{ github.workspace }}/.native/pe/runtime.cpio.gz
       FDISBULL_PE_FIXTURE: ${{ github.workspace }}/.native/pe/oracle.exe
@@ -143,11 +143,23 @@ jobs:
           python -m build --wheel --outdir .native/pe/packages
           python scripts/check_dist.py .native/pe/packages/*.whl
           python -m pip install --force-reinstall --no-deps .native/pe/packages/*.whl
-      - name: Install QEMU and build a trusted Wine root filesystem
+      - name: Build pinned QEMU with the upstream user-mode IRET fix
         run: |
           sudo apt-get update
-          sudo apt-get install -y qemu-system-x86
+          sudo apt-get install -y build-essential pkg-config libglib2.0-dev libpixman-1-dev ninja-build
           mkdir -p native-evidence/pe
+          curl --fail --location --retry 3 https://download.qemu.org/qemu-9.2.4.tar.xz \
+            --output .native/pe/qemu-9.2.4.tar.xz
+          echo 'f3cc1c4eabfdb288218ac3e33763dbe9e276d8bc890b867a2335d58de2ddd39a  .native/pe/qemu-9.2.4.tar.xz' | sha256sum --check
+          tar -xJf .native/pe/qemu-9.2.4.tar.xz -C .native/pe
+          mkdir .native/pe/qemu-9.2.4/build
+          cd .native/pe/qemu-9.2.4/build
+          ../configure --target-list=x86_64-softmmu --disable-docs --disable-user \
+            --disable-gtk --disable-sdl --disable-vnc --disable-curses --disable-werror
+          ninja -j2 qemu-system-x86_64
+          ./qemu-system-x86_64 --version
+      - name: Build a trusted Wine root filesystem
+        run: |
           docker build --platform linux/amd64 -f experimental/wine/ci/Containerfile -t fdisbull-pe-ci .
           docker create --name fdisbull-pe-export fdisbull-pe-ci /bin/true
           docker cp fdisbull-pe-export:/opt/ci/oracle.exe .native/pe/oracle.exe
