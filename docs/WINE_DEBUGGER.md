@@ -4,6 +4,8 @@ fDisBull 0.12.0 can launch an original x86-64 PE executable under Wine inside a 
 
 **Current source: 0.13.0.** The watches, layers, register editing and whole-VM state features below require the 0.13 package and a newly prepared matching guest runtime. Published 0.12.0 packages and their existing delivery remain unchanged. [Development acceptance and evidence](PE64_ADVANCED_VERIFICATION.md) is separate from [0.12.0 release verification](VERIFICATION-0.12.md).
 
+The [published 0.13.0 delivery](DELIVERY-0.13.md) supplies the exact packages and a separately tested Mac ARM64 backend/runtime, with integrity checks and agent launch helpers. Its compatibility and copied-pair evidence are distinct from Linux tag CI.
+
 The backend provides disassembly-address execution breakpoints, register observations, guarded memory edits, bounded instruction traces, actual client-window screenshots, coordinate grids and mouse clicks. Runs, edits, screenshots and traces use the same persistent project timeline and artifact/export commands as DOS. Closing a project or its foreground server terminates and reaps its QEMU process.
 
 ## Runtime preparation

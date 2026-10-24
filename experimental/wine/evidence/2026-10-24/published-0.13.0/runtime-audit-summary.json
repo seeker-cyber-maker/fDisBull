@@ -1,0 +1,28 @@
+{
+  "format": "gzip/newc boot filesystem, not QEMU migration or captured machine state",
+  "image_sha256": "3599b1b3c2e8c6e9d0eed88b58e091f7e36dc60e0cdfc4ed0435324a9d13bb49",
+  "size": 648696715,
+  "expanded_member_bytes": 1876771478,
+  "member_count": 21521,
+  "current_resources": {
+    "init": "062a3478f4657843a8128079d51e411de5987577dfd4d3e3fb4e5c6ad033fd92",
+    "opt/fdisbull/agent.c": "7f790582fc115fc3036f33c7a78bb11401619b4ce5adf0d624ca81d51c33d34a",
+    "opt/fdisbull/broker.py": "762d32e03e650a6b00fcfa2cc3e83fc0eccab3d1660523b5f6244772365d372b"
+  },
+  "game_state_project_paths_found": 0,
+  "os_package_configuration": [
+    {
+      "path": "var/lib/shells.state",
+      "size": 84,
+      "sha256": "76d76e1be9b95bf126b60928151bc4c9e11b8a4f66697be0e02aa03d076d348a",
+      "kind": "OS shells configuration or GCC plugin type descriptors; not an emulator/game state"
+    },
+    {
+      "path": "usr/lib/gcc/x86_64-w64-mingw32/13-win32/plugin/gtype.state",
+      "size": 1371523,
+      "sha256": "bf9f98cd7f8f5e78ade351c65b369850d860a5489235f1d21e1e5d0e39b8cb0d",
+      "kind": "OS shells configuration or GCC plugin type descriptors; not an emulator/game state"
+    }
+  ],
+  "full_member_audit_sha256": "5ea10d172301a2d0ca63f48cbefe9757b8cebd8f101f738d42b329bb51dc8e93"
+}

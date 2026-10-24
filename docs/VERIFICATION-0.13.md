@@ -6,6 +6,12 @@ The required workflows are [Tests and tool packages](https://github.com/seeker-c
 
 CI produces exact source/wheel/backend identities, test logs/JUnit and authored screenshots/traces. The ordinary job audits the wheel, sdist and tool ZIP. Before tagging, inspect each job's completed success, read its test counts and package/backend identities, audit downloaded package contents, and compare the PE-tested wheel's entry contents with the package-job wheel. An annotated tag records the exact accepted commit and CI run URLs. Publishing a GitHub release or replacing the DeepSeek delivery is a separate action.
 
+## Published tag verification
+
+[v0.13.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.13.0) is published at `eabfc2afb772d4cb78401893eebf15c8b0f6ad17`. [Tag Linux/package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40099730231) passed **769 tests, 31 skipped**. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40099730260) passed **15 stable DOS, 32 DOS layers and 13 PE64 installed-wheel tests**, with **no native skips**. All 65 wheel entry contents match between the package-job wheel and native-tested wheel.
+
+The five published assets were downloaded again and verified against GitHub SHA-256 digests. [Publication receipts](../experimental/wine/evidence/2026-10-24/published-0.13.0/) and the attached `VERIFICATION-0.13.0.json` retain identities and results. The [DeepSeek delivery](DELIVERY-0.13.md) additionally passed a fresh copied-Mac-backend smoke in 193.22 seconds, including a native state round trip. The fixed tag/packages remain unchanged; publication notes on main record the completed release and delivery after those files were built.
+
 ## Preserved local development evidence
 
 The [development record](PE64_ADVANCED_VERIFICATION.md) and its [hash-bound receipt](../experimental/wine/evidence/2026-10-24/pe-advanced/verification.json) preserve the earlier `0.13.0.dev0` builds without rewriting their identities or then-uncommitted status:

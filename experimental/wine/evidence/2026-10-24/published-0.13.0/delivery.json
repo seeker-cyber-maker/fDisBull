@@ -1,0 +1,37 @@
+{
+  "version": "0.13.0",
+  "source_commit": "eabfc2afb772d4cb78401893eebf15c8b0f6ad17",
+  "release_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.13.0",
+  "directory": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.13.0-eabfc2a",
+  "bundle": {
+    "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-wine-debugger-0.13.0-published-2026-10-24-eabfc2a.zip",
+    "sha256": "c2c84f2bce9ba44b730f32f69ffb91d59238afc25a7eb83ac2af7a7fee232e38",
+    "size": 662778358,
+    "entries": 173
+  },
+  "manifest": {
+    "sha256": "2a030cce7faf13a5695bda31bf6215ae07903415e89dd9a0a5492a27a5fe256f",
+    "size": 34188,
+    "executable": false
+  },
+  "payload_files": 172,
+  "copied_backend_acceptance": {
+    "result": "pass",
+    "seconds": 193.21828770893626,
+    "scope": "copied Mac package/backend smoke with one native checkpoint; full fork/export gate is tag CI",
+    "native_image_in_delivery": false
+  },
+  "tag_ci": {
+    "packages": 40099730231,
+    "native": 40099730260
+  },
+  "exclusions": [
+    "game files",
+    "in-game saves",
+    "emulator checkpoints",
+    "local project databases",
+    "compiled target fixtures"
+  ],
+  "boot_runtime_included": true,
+  "previous_deliveries_preserved": true
+}

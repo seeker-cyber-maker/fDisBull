@@ -14,15 +14,15 @@ Requires Python **3.12 or later**.
 
 | Track | Source and availability | Verification |
 | --- | --- | --- |
-| **Current source: 0.13.0** | [PE64 debugger](docs/WINE_DEBUGGER.md): read/write watches, toggleable RAM/execution layers and editable whole-VM native states | [Release notes](docs/RELEASE-0.13.0.md) and [verification gates](docs/VERIFICATION-0.13.md); separate from the fixed 0.12.0 release |
-| **Latest published package release: 0.12.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.12.0), commit `7f8c9d4` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40045173566): 764 passed. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40045173515): 15 established DOS, 32 DOS layers and 6 PE64 tests passed, no native skips. |
+| **Current source: 0.13.0** | [PE64 debugger](docs/WINE_DEBUGGER.md): read/write watches, toggleable RAM/execution layers and editable whole-VM native states | [Release notes](docs/RELEASE-0.13.0.md), [published verification](docs/VERIFICATION-0.13.md) and [tested delivery](docs/DELIVERY-0.13.md) |
+| **Latest published package release: 0.13.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.13.0), commit `eabfc2a` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40099730231): 769 passed, 31 skipped. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40099730260): 15 stable DOS, 32 DOS layers and 13 PE64 tests passed, no native skips. |
 | **Repository branch** | [main](https://github.com/seeker-cyber-maker/fDisBull/tree/main) is the only active branch | Release promotion requires both ordinary and native Linux CI. Use version tags for fixed source snapshots. The old experimental checkpoint is preserved under an archive tag. |
 
 The Python packages do **not** include an emulator. Stable debugging needs the [0.10 backend patch](experimental/dosbox-x/README.md); execution layers need the separate [layers backend patch](experimental/dosbox-x/layers/README.md). Both pin an upstream source commit and require an explicit executable path. Coordinate grids work with either backend.
 
 The [release-status record](docs/RELEASE_STATUS.md) distinguishes tagged source, published packages and historical candidate receipts. Ordinary Python CI may skip native tests; [required native acceptance](docs/DOSBOX_DEBUGGER.md#required-native-acceptance) builds or selects the real patched backend and runs the existing tests against it.
 
-The user-designated [0.12 DeepSeek delivery](docs/DELIVERY-0.12.md) contains the published packages and the tested Mac ARM64 Wine/QEMU backend, Linux kernel and pristine Wine runtime, with launch helpers, checksums and usage instructions. The earlier [DOS layers backend delivery](docs/DELIVERY-0.11.md) remains available for DinoPark. Original game files, saved states and local project databases are excluded.
+The user-designated [0.13 DeepSeek delivery](docs/DELIVERY-0.13.md) contains the exact published packages and the separately tested Mac ARM64 Wine/QEMU backend, Linux kernel and matching prepared Wine boot runtime, with launch helpers, checksums, native-state/layer/watch evidence and usage instructions. Earlier deliveries remain intact. The earlier [DOS layers backend delivery](docs/DELIVERY-0.11.md) remains available for DinoPark. Original game files, saved states and local project databases are excluded.
 
 ## Install and use
 

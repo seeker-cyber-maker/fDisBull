@@ -1,0 +1,36 @@
+{
+  "source_commit": "eabfc2afb772d4cb78401893eebf15c8b0f6ad17",
+  "result": "all published assets downloaded and identical",
+  "assets": [
+    {
+      "name": "fdisbull-0.13.0-py3-none-any.whl",
+      "sha256": "af760813d5d7a08dbada81474e683e13ad29bf822daa97f43ae250e680c39a9e",
+      "size": 268622,
+      "github_digest": "sha256:af760813d5d7a08dbada81474e683e13ad29bf822daa97f43ae250e680c39a9e"
+    },
+    {
+      "name": "fdisbull-0.13.0-tool.zip",
+      "sha256": "7468da685086fd80be80ed8aabad4953f2074721a44ac3c4a05b7ff085e476bf",
+      "size": 625255,
+      "github_digest": "sha256:7468da685086fd80be80ed8aabad4953f2074721a44ac3c4a05b7ff085e476bf"
+    },
+    {
+      "name": "fdisbull-0.13.0.tar.gz",
+      "sha256": "f25a497f7f42f5a1f2a4c413f85bcba22c21bff41ca2f0af60a968955637175c",
+      "size": 529208,
+      "github_digest": "sha256:f25a497f7f42f5a1f2a4c413f85bcba22c21bff41ca2f0af60a968955637175c"
+    },
+    {
+      "name": "SHA256SUMS",
+      "sha256": "9ee95f1fda668da7d67b657962ff5d68af896bf9f8d9f6fe40d6cd6aba7b9b8f",
+      "size": 370,
+      "github_digest": "sha256:9ee95f1fda668da7d67b657962ff5d68af896bf9f8d9f6fe40d6cd6aba7b9b8f"
+    },
+    {
+      "name": "VERIFICATION-0.13.0.json",
+      "sha256": "e9dafd3be63c801c3c16fe738e377c344f777e29094db470ba16815a2dcf00d9",
+      "size": 28718,
+      "github_digest": "sha256:e9dafd3be63c801c3c16fe738e377c344f777e29094db470ba16815a2dcf00d9"
+    }
+  ]
+}
