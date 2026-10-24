@@ -1,0 +1,39 @@
+{
+  "source_commit": "7f8c9d48e01c60a289834ad289282b572c0adad1",
+  "package_version": "0.12.0",
+  "platform": "macOS ARM64",
+  "result": {
+    "passed": 6,
+    "skipped": 0,
+    "elapsed_seconds": 265.09
+  },
+  "runtime_inputs": {
+    "qemu": {
+      "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.12.0-7f8c9d4/backend/native-macos-arm64/qemu-system-x86_64",
+      "sha256": "10bed8dc7571b0fc6c51ea484711b3802d2fb2dc00ba5d9af4d610cb2e2142cb",
+      "version": "QEMU emulator version 11.1.2"
+    },
+    "kernel": {
+      "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.12.0-7f8c9d4/backend/runtime/linux-amd64",
+      "sha256": "d8808aa4ca188560da1e6d749dcb930c87a5fd8b11ebff1f3fa6d728af35203d"
+    },
+    "initramfs": {
+      "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.12.0-7f8c9d4/backend/runtime/fdisbull-wine-runtime.cpio.gz",
+      "sha256": "4d9f342d84eea9b307f015901e614201a9b7f106f94177ec0fcc3f20ffc205ea"
+    }
+  },
+  "guest_runtime": {
+    "wine_version": "wine-9.0 (Ubuntu 9.0~repack-4build3)",
+    "guest_kernel": "6.1.0-50-amd64",
+    "agent_binary_sha256": "9a87f0efc3abd45d88949baff6b50091ae00ed4ae478c972a763fdaec9e2be88",
+    "resources": {
+      "init": "062a3478f4657843a8128079d51e411de5987577dfd4d3e3fb4e5c6ad033fd92",
+      "opt/fdisbull/agent.c": "370e0cf377e9ae385eba7a86abb8bf4a07bcba26129bf332ad29937a6987165b",
+      "opt/fdisbull/broker.py": "963c9203c20873851ec87a8b64988f4b6aa847cdae26d6ea30595414bd52628c"
+    }
+  },
+  "qemu_native_sha256": "a8ee5cdeaa1b04fa6fcfbaf210c03209ab7c91357ce2b6eb4dff10c2b7bc7816",
+  "evidence_scope": "Two fresh QEMU sessions using delivered tool files, copied native executable/wrapper/firmware, kernel and pristine Wine runtime. All assertions in tests/test_wine_debugger.py ran. Test EXE and projects stayed outside delivery.",
+  "game_files_states_and_databases_in_delivery": false,
+  "processes_reaped": true
+}

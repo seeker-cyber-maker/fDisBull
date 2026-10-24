@@ -1,0 +1,21 @@
+# 0.12.0 published release verification — 2026-10-24
+
+The fixed tag `v0.12.0` points to `7f8c9d48e01c60a289834ad289282b572c0adad1`. Both workflows passed on that commit before tagging and again on the tag. The [published release](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.12.0) includes unchanged tag-CI packages, checksums and a machine-readable verification receipt. Publication documentation on `main` does not replace those package bytes or move the tag.
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| Tag Linux/package CI | **764 passed, 29 skipped** | [Workflow](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40045173566) |
+| Established DOS native backend | **15 passed, no skips** | [Job](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40045173515/job/120725147374) |
+| DOS layers native backend | **32 passed, no skips** | [Job](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40045173515/job/120725147309) |
+| Installed-wheel PE64 native gate | **6 passed, no skips** | [Job](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40045173515/job/120725147270) |
+| Copied Mac package/backend delivery | **6 passed, no skips**, 265 seconds | [Delivery](DELIVERY-0.12.md), [selected receipt](../experimental/wine/evidence/2026-10-24/published-delivery/verification.json) |
+
+Ordinary Linux skips include unconfigured native backends. Native tests are separate required gates. Both DOS profiles build from pinned DOSBox-X `029bd65c5dcc7cdc7f2e14e35278620d9707d969` and hash-checked complete patches. PE CI builds pinned QEMU 9.2.4 and a separate Linux/Wine runtime, installs the wheel, and requires real acceptance with two fresh VMs. QEMU >=9.1 is required because earlier TCG mishandled Wine's user-mode IRET/SMAP path; the failing initial and diagnostic runs remain documented in the [CI runtime recipe](../experimental/wine/ci/README.md).
+
+All **60 wheel entry contents** match between the package-CI wheel and native-tested wheel. The ZIP archive timestamps can differ, so the two archive SHA-256 hashes are recorded separately. The three tool archives passed the exclusion audit, including checks for complete guest backend resources. All five GitHub release assets were downloaded after upload and matched against source files and GitHub's asset digests.
+
+The copied Mac delivery uses QEMU 11.1.2 and the previously qualified pristine Wine 9.0 runtime. The new published-wheel acceptance actually launched through the delivery's copied executable/firmware wrapper and kernel/runtime paths. The authored GDI fixture's counter changed **7 → 41** under a guarded memory edit, then **42 → 43** through real mouse clicks and rearmed disassembly breakpoints. The trace records completed `push rbp`, `mov rbp,rsp`, `nop`, `nop` instructions with observed bytes and pre-instruction registers. A bounded run returned a stopped timeout. The VM and project closed; images and traces exported after project restart. A second fresh VM exercised the foreground JSON API. Both owned processes were reaped, and original static disassembly stayed unchanged.
+
+Selected [screenshot](../experimental/wine/evidence/2026-10-24/published-delivery/after.png), [8px click-frame](../experimental/wine/evidence/2026-10-24/published-delivery/click.png), [trace](../experimental/wine/evidence/2026-10-24/published-delivery/checkpoint.json), [log](../experimental/wine/evidence/2026-10-24/published-delivery/tests.log) and [JUnit](../experimental/wine/evidence/2026-10-24/published-delivery/tests.xml) are preserved separately from the earlier [development receipts](PE64_VERIFICATION.md). The delivery contains the full returned evidence and payload manifest; game inputs, saved machine states, Wine prefixes, project databases and compiled fixtures remain outside it.
+
+The claim ceiling remains original native x86-64 PE EXEs and their main image with the authored GDI fixture, not arbitrary Windows game compatibility. PE32/WoW64, DLL/child-process launch, DirectX/fullscreen capture, PE watchpoints, code layers and resumable state editing are unqualified or unsupported. The complete macOS suite still has its documented pre-existing Linux ELF compiler/linker fixture failures. Neither this delivery nor headless execution is a security-isolation claim.

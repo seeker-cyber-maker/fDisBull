@@ -14,15 +14,15 @@ Requires Python **3.12 or later**.
 
 | Track | Source and availability | Verification |
 | --- | --- | --- |
-| **Current source: 0.12.0** | [Release notes](docs/RELEASE-0.12.0.md): PE64 Wine/QEMU debugging, guarded memory edits, traces, screenshots and clicks | [PE64 verification](docs/PE64_VERIFICATION.md) and required Linux package, DOS native and PE64 native CI gates |
-| **Latest published package release: 0.11.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.11.0), commit `a216747` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40014891689): 759 passed. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40014891475): 15 established-backend and 32 layers-backend tests passed, no native skips. |
+| **Current source: 0.12.0** | [Release notes](docs/RELEASE-0.12.0.md): PE64 Wine/QEMU debugging, guarded memory edits, traces, screenshots and clicks | [Published release verification](docs/VERIFICATION-0.12.md), including separate Linux package, DOS native and PE64 native gates |
+| **Latest published package release: 0.12.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.12.0), commit `7f8c9d4` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40045173566): 764 passed. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40045173515): 15 established DOS, 32 DOS layers and 6 PE64 tests passed, no native skips. |
 | **Repository branch** | [main](https://github.com/seeker-cyber-maker/fDisBull/tree/main) is the only active branch | Release promotion requires both ordinary and native Linux CI. Use version tags for fixed source snapshots. The old experimental checkpoint is preserved under an archive tag. |
 
 The Python packages do **not** include an emulator. Stable debugging needs the [0.10 backend patch](experimental/dosbox-x/README.md); execution layers need the separate [layers backend patch](experimental/dosbox-x/layers/README.md). Both pin an upstream source commit and require an explicit executable path. Coordinate grids work with either backend.
 
 The [release-status record](docs/RELEASE_STATUS.md) distinguishes tagged source, published packages and historical candidate receipts. Ordinary Python CI may skip native tests; [required native acceptance](docs/DOSBOX_DEBUGGER.md#required-native-acceptance) builds or selects the real patched backend and runs the existing tests against it.
 
-The user-designated [DeepSeek delivery](docs/DELIVERY-0.11.md) contains the published packages and the tested Mac ARM64 layers backend, with checksums and usage instructions. Original game files, saved states and local project databases are excluded.
+The user-designated [0.12 DeepSeek delivery](docs/DELIVERY-0.12.md) contains the published packages and the tested Mac ARM64 Wine/QEMU backend, Linux kernel and pristine Wine runtime, with launch helpers, checksums and usage instructions. The earlier [DOS layers backend delivery](docs/DELIVERY-0.11.md) remains available for DinoPark. Original game files, saved states and local project databases are excluded.
 
 ## Install and use
 
@@ -79,7 +79,7 @@ Eight saved releases were reconstructed as successive commits: **0.1.0, 0.2.0, 0
 
 The original unfinished DOSBox checkpoint is preserved at tag `archive/dosbox-headless-2026-10-23`; the former experimental and takeover branches have been removed. The continuation contains a complete backend patch and fixture/DinoPark runtime evidence under `experimental/dosbox-x`; the Python integration uses that separately built backend. Neither emulator nor original game assets are included in tool packages.
 
-Version 0.12.0 integrates a [PE64 Wine/QEMU debugger](docs/WINE_DEBUGGER.md): disassembly breakpoints, guarded memory edits, bounded instruction traces, client-window screenshots, 8px grids and mouse clicks, persisted with the project. It requires a separately prepared offline Linux/Wine runtime and QEMU. The [earlier Wine/Linux experiment](experimental/wine/README.md) records why full x86-64 CPU emulation is used on this Mac: Apple container/Rosetta failed the debugger gate. The [installed-wheel acceptance](docs/PE64_VERIFICATION.md) verifies real input, memory edits, rearmed breakpoints, traces and offline exports in two fresh sessions. The published 0.11.0 packages predate this PE integration.
+Version 0.12.0 integrates a [PE64 Wine/QEMU debugger](docs/WINE_DEBUGGER.md): disassembly breakpoints, guarded memory edits, bounded instruction traces, client-window screenshots, 8px grids and mouse clicks, persisted with the project. It requires a separately prepared offline Linux/Wine runtime and QEMU >=9.1. The [earlier Wine/Linux experiment](experimental/wine/README.md) records why full x86-64 CPU emulation is used on this Mac: Apple container/Rosetta failed the debugger gate. The [published-wheel verification](docs/VERIFICATION-0.12.md) covers real input, memory edits, rearmed breakpoints, traces and offline exports in fresh Linux CI and copied Mac delivery sessions. The runtime and emulator are supplied separately from the public Python packages.
 
 ## Limits and licensing
 
