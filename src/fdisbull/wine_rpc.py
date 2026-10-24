@@ -55,13 +55,7 @@ class WineQemuRPC:
                 'memory_read':True,'memory_write':True,'instruction_trace':True,'screenshots':True,'mouse':True,
                 'save_states':False,'code_layers':False,'data_watchpoints':False,'fast_forward':False}
         except BaseException as error:
-            diagnostics=''
-            for name in ('boot.log','qemu.log'):
-                path=root/name
-                if path.exists():
-                    with path.open('rb') as stream:
-                        stream.seek(max(0,path.stat().st_size-4096))
-                        diagnostics+='\n'+stream.read(4096).decode(errors='replace')
+            diagnostics=self._diagnostics()
             self.close()
             if isinstance(error,Exception):
                 raise DebuggerError(str(error)+diagnostics) from error
@@ -70,6 +64,15 @@ class WineQemuRPC:
     @staticmethod
     def _hash(path):
         with path.open('rb') as stream:return hashlib.file_digest(stream,'sha256').hexdigest()
+
+    def _diagnostics(self):
+        diagnostics=''
+        for path in (self.log_path,self.log_path.with_name('qemu.log')):
+            if path.exists():
+                with path.open('rb') as stream:
+                    stream.seek(max(0,path.stat().st_size-4096))
+                    diagnostics+='\n'+path.name+':\n'+stream.read(4096).decode(errors='replace')
+        return diagnostics
 
     def _read(self, deadline):
         data=bytearray()
@@ -101,8 +104,12 @@ class WineQemuRPC:
                 raise DebuggerError('Wine agent: '+reply['error']+'\n'+reply.get('wine_log_tail',''))
             if not isinstance(reply.get('result'),dict):raise DebuggerError('Invalid Wine result')
             return reply['result']
-        except BaseException:
-            self.close();raise
+        except BaseException as error:
+            diagnostics=self._diagnostics()
+            self.close()
+            if isinstance(error,Exception):
+                raise DebuggerError(str(error)+diagnostics) from error
+            raise
         finally:self.lock.release()
 
     def close(self):
