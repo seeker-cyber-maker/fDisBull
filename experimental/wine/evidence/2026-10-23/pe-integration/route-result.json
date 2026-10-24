@@ -1,0 +1,33 @@
+{
+  "format": "fdisbull-script-result-1",
+  "script_artifact": "d6c2884766cd485d97912be84e717d8d",
+  "script_sha256": "f3a41aedb10fd6332462bbec144373687f52949d4e590a4f10f8f6223a2418cb",
+  "run": "35338e7361e44840a1ad8b33e257a108",
+  "ok": true,
+  "error": null,
+  "completed_steps": 2,
+  "requested_steps": 2,
+  "host_elapsed_ms": 10.396,
+  "steps": [
+    {
+      "index": 0,
+      "op": "memory",
+      "result": {
+        "data_base64": "KQAAAA==",
+        "project_address": "0x140003000",
+        "runtime_address": "0x140003000",
+        "hex": "29000000",
+        "view": "logical-memory-with-owned-INT3-bytes-restored"
+      },
+      "ok": true
+    },
+    {
+      "index": 1,
+      "op": "assert",
+      "result": {
+        "matched": true
+      },
+      "ok": true
+    }
+  ]
+}

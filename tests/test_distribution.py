@@ -14,9 +14,11 @@ def test_distribution_check_rejects_game_state_and_database_files(tmp_path,unwan
     check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
     archive=tmp_path/'fdisbull-test-tool.zip'
     with zipfile.ZipFile(archive,'w') as output:
-        for required in ('src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py'):
+        for required in ('src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py',
+                         'tests/wine_gui_fixture.c','src/fdisbull/wine_guest/agent.c',
+                         'src/fdisbull/wine_guest/init.sh','src/fdisbull/wine_guest/broker.py'):
             output.writestr('fdisbull-test/'+required,'')
-    assert check(archive)==4
+    assert check(archive)==8
     with zipfile.ZipFile(archive,'a') as output:
         output.writestr('fdisbull-test/docs/'+unwanted,'local bytes')
     with pytest.raises(ValueError,match='Excluded binary/data file'):

@@ -1,153 +1,88 @@
-# Wine debugger feasibility on the M1 Max
+# PE64 Wine/QEMU debugger (0.12.0)
 
-Research checked **2026-10-22**. This is an implementation plan, not a delivered or macOS-tested debugger. No Wine installation, unknown executable, container or external infrastructure was started. A harmless inventory found this workspace is Linux/x86-64 and has no `container`, `wine`, `winedbg`, `gdb`, QEMU system emulator or MinGW compiler.
+fDisBull 0.12.0 can launch an original x86-64 PE executable under Wine inside a disposable x86-64 Linux QEMU guest. Static disassembly stays on the host. The published 0.11.0 packages predate this integration.
 
-## Feasibility decision
+The backend provides disassembly-address execution breakpoints, register observations, guarded memory edits, bounded instruction traces, actual client-window screenshots, coordinate grids and mouse clicks. Runs, edits, screenshots and traces use the same persistent project timeline and artifact/export commands as DOS. Closing a project or its foreground server terminates and reaps its QEMU process.
 
-A small Wine-backed debugger is feasible as a separate execution backend for fDisBull. Start by qualifying **one self-authored x86-64 Windows console executable** in an isolated Linux guest. Keep static analysis usable independently. Add native Windows debug events and byte snapshots to the existing database model only after execution controls work.
+## Runtime preparation
 
-Apple's current `container` documentation requires Apple silicon and documents macOS 26 support; Containerization's source build additionally requires Xcode 26. The M1 Max meets the CPU requirement, but its installed macOS version has not been checked. The tool runs Linux containers in separate lightweight VMs, and supports translated `linux/amd64` workloads. This supplies Linux isolation/translation, **not a Windows PE loader**: Wine remains necessary. [1–3]
-
-Rosetta running an amd64 Linux program does not establish that Wine exception delivery, software breakpoints, register access or single-step work correctly under that translation stack. These are explicit qualification gates. Do not describe that combination as verified from a successful `uname` or application launch. [3; inference]
-
-## Execution choices
-
-| Route | Use | Qualification limit |
-| --- | --- | --- |
-| Apple `container` + amd64 Wine via Linux binary translation | First M1 prototype if its actual macOS supports the installed container release | Guest debugger behavior under translation remains untested. |
-| Full x86-64 Linux guest under QEMU TCG on the Mac | Fallback when translation/debugger behavior fails | Slower software CPU emulation; no speed promise. |
-| Existing actual x86-64 Linux machine/VM | Establish backend correctness independently of Apple translation | Does not qualify the M1 path. |
-| ARM Windows VM with a Windows debug agent | Later option when real Windows behavior is required | Different backend, licensing and emulation behavior; not part of this MVP. |
-
-The M1 fallback must not depend on Apple's nested virtualization flag: the documented feature requires M3 or newer. A full x86 system emulated with QEMU TCG avoids that requirement; hardware virtualization of an ARM guest alone does not turn it into an x86 guest. [4,10]
-
-## Smallest architecture
-
-The Mac-side coordinator owns the fDisBull database, renders images and launches one disposable guest session. A trusted guest controller owns Wine and the debugged child. Commands/events travel through bounded stdin/stdout messages; the guest receives no host filesystem mount, SSH agent, shared desktop or published network port.
-
-Implement two bounded steps:
-
-1. **Capability probe using WineDbg.** Existing commands can launch/attach, break, step instructions, inspect registers/mappings/modules/memory and write a minidump. Batch options are `--command` and `--file`. Its GDB proxy is optional. [7]
-2. **Structured guest agent.** A small 64-bit Windows PE controller, built with MinGW or a suitable LLVM Windows cross-toolchain, uses Wine's implementation of Win32 debugging APIs and emits JSON directly. This avoids making a permanent database interface out of a human debugger's text. The same event adapter can later run on real Windows. [8; proposed design]
-
-No new disassembler, GUI automation, browser or machine simulator is required. Keep the existing native decoders for captured bytes.
-
-## Dependencies and example commands
-
-These commands are a **reviewable future recipe**. The image, `/opt/fdisbull/wine-agent` and its image build are proposed deliverables; they do not exist in this package. Pin the actual container release, Linux image digest, Wine build and debugger/compiler versions when implementing. Image acquisition/build may need network access before a session; sample execution remains offline.
-
-Read-only Mac capability inventory:
+Supply QEMU, an x86-64 Linux kernel, and a trusted Linux initramfs containing Wine64, Python 3, Xvfb, `runuser`, and `x86_64-w64-mingw32-gcc`, with the `ubuntu` user and group (UID/GID 1000) used by the supplied guest launcher. The tested Ubuntu 24.04 runtime preparation and its provenance are described in [the platform experiment](../experimental/wine/README.md). That original image is a base: its old probe launcher is replaced in a **new** prepared image. No games, saved states or project databases enter the prepared runtime.
 
 ```bash
-sw_vers
-uname -m
-container --version
-container run --help
+python -m fdisbull.wine_runtime \
+  --base-initramfs /path/to/trusted-linux-wine-base.cpio.gz \
+  --output /path/to/fdisbull-wine-runtime.cpio.gz
 ```
 
-The trusted image needs amd64 Linux userland, Wine with WineDbg, a prebuilt empty/default 64-bit Wine prefix template, a supervisor/controller and the self-authored probe. Add GDB only for the proxy experiment. Add Xvfb and guest-local X11 libraries only if Wine's initialization or the chosen probe requires them; do not connect the Mac's X server. Install runtimes in the trusted image, never interactively during an offline sample run.
+Preparation reads a gzip/newc archive with expanded hard links, preserves the base file, refuses to overwrite an existing output, adds packaged guest sources, and writes an input/output SHA-256 receipt. It streams a compact image, removing the old experiment’s Python environment, tests, probes, DOSBox build and package-manager documentation/cache. Those initramfs files consume guest RAM even when unused. The guest compiles the Windows debug agent and waits for its headless X server before accepting a target. The launcher uses `rootfstype=ramfs` for the runtime root, avoiding Linux’s default tmpfs root quota during unpacking; game writes remain in bounded tmpfs mounts. [Linux rootfs documentation](https://www.kernel.org/doc/Documentation/filesystems/ramfs-rootfs-initramfs.txt). The host checks the protocol and all three guest source hashes against its installed package, and records the compiled agent hash, Wine version and guest kernel. Rebuild the runtime when that source changes; a mismatch is rejected.
 
-Proposed isolated session invocation, using documented container options: [5,6]
+A session uses 2 virtual CPUs and 4 GiB of memory with QEMU TCG. Booting and initializing a new Wine prefix is substantially slower than DOSBox. Allow up to 240 seconds for boot and up to 300 seconds for the initial launch. Calls have finite deadlines; an uncertain transport or native operation closes the VM rather than replaying a mutation.
+
+The guest has no network device, host directory shares, clipboard, host display or published port. Target files are copied through the private serial channel into guest RAM. By default only the project executable is copied. For a program requiring assets, supply an explicit `files` list of relative paths including the EXE (maximum 1,024 files and 64 MiB total). Symbolic links, project databases and state extensions are rejected. Writes made by the target stay in the disposable guest and are lost on close.
+
+## Python and foreground JSON interface
+
+```python
+from fdisbull.project import Project
+
+with Project("sample.fdb") as project:
+    project.analyze(start="0x140001530", max_instructions=100)
+    with project.debugger(
+        "/opt/homebrew/bin/qemu-system-x86_64", "/path/to/program",
+        backend="wine-qemu", kernel="/path/to/linux-amd64",
+        initramfs="/path/to/fdisbull-wine-runtime.cpio.gz", version=1,
+    ) as debug:
+        bp = debug.breakpoint("0x140001530")
+        stopped = debug.run(timeout_ms=30000)
+        print(stopped, debug.registers())
+        before = debug.memory("0x140003010", length=4)
+        debug.write_memory("0x140003010", "29000000", expected_hex=before["hex"])
+        debug.trace("path.json", count=32, timeout_ms=20000)
+        debug.screenshot("window.png", grid=True, grid_step=8)
+        debug.click_frame(80, 80, name="click.png", grid_step=8)
+        debug.run(timeout_ms=30000)
+```
+
+The example addresses must be replaced with analyzed addresses from the selected project. The original EXE must match the imported source SHA-256. Select `version=1` explicitly if a static patch version is current: static child patches are never applied implicitly.
+
+For agents using JSON lines:
 
 ```bash
-container run --rm -i --name fdisbull-probe \
-  --arch amd64 --rosetta --network none \
-  --read-only --cap-drop ALL --user 1000:1000 \
-  --cpus 2 --memory 2G \
-  --mount type=tmpfs,target=/work,size=1G,mode=1777 \
-  --mount type=tmpfs,target=/tmp,size=128M,mode=1777 \
-  --env WINEPREFIX=/work/prefix \
-  --env HOME=/work/home \
-  fdisbull-wine-probe:qualified \
-  /opt/fdisbull/wine-agent --stdio
+fdisbull debug sample.fdb --backend wine-qemu \
+  --executable /path/to/qemu-system-x86_64 --game-dir /path/to/program \
+  --kernel /path/to/linux-amd64 --initramfs /path/to/fdisbull-wine-runtime.cpio.gz \
+  --version 1
 ```
 
-Inside the trusted image, the controller creates its private working directories and copies the prefix template. The deliberately set `HOME` is a guest application setting, not a repurposed shell variable. Transfer only an explicitly selected file as bounded bytes over the controller protocol. Return bounded result records/blobs before shutdown; tmpfs is ephemeral. Record resource limits and enforce a host wall-clock timeout. Do not add privileges until a specific failed capability test establishes what is needed; a same-user parent/child Win32 debug session is the intended starting point.
+Alternatively use `debug-launch` in `fdisbull serve` with `executable`, `game_dir`, `backend`, `kernel`, `initramfs`, and optional `version`, `files`, `boot_timeout_ms`. The returned `run` owns the live session. Use `debug-breakpoint`, `debug-run`, `debug-registers`, `debug-memory`, **`debug-write-memory`** (`address`, `data_hex`, `expected_hex`), `debug-trace`, `debug-screenshot`, `debug-click`, `debug-click-frame`, `debug-delete-breakpoint`, and `debug-stop`. Screenshots and traces remain available through `debug-artifacts`, `debug-grid` and `debug-export` after process and project restart. Declarative scripts support this same PE operation subset, including `write-memory`; unsupported DOS steps are rejected before script execution.
 
-A Wine prefix is configuration/runtime state, **not a security boundary**. Keeping a separate prefix or removing its `Z:` link does not replace the guest boundary. The architectural boundary is the isolated VM with no host shares and no external networking. An ordinary host-only/internal network is also not equivalent to no host connectivity; use `--network none`. [4–6,13]
+## Address and execution semantics
 
-WineDbg batch probe, *inside the isolated guest and only with our probe executable*:
+Project addresses are preferred-image virtual addresses. Runtime addresses are calculated as `observed main-module image base + RVA`. Breakpoints require a stored instruction boundary and compare the complete instruction against runtime logical bytes, applying PE DIR64 base relocations to the expected view when rebased. The original file bytes and static versions remain unchanged. External DLL and private/JIT addresses in traces have no project address rather than being guessed into the main module.
+
+Execution breakpoints use owned INT3 bytes. The agent restores the displaced byte and instruction pointer when hit, executes that instruction with peer threads held, flushes the instruction cache and rearms the breakpoint. Memory reads present the original bytes hidden beneath owned INT3s. Memory edits require explicit expected bytes, reject overlap with active breakpoints, restore page protection and verify readback. They are recorded as runtime events.
+
+`run(timeout_ms=...)` continues until a breakpoint, exception, process exit or host-duration timeout. A timeout requests a Windows debug break and returns a stopped session; it is not successful completion. Other exceptions retain their first-chance/code information and are passed to the program on continuation. `registers()` returns `rip`, `rflags`, `general`, `thread` and `project_address`.
+
+Traces single-step the selected stopped thread and record **completed instructions with pre-instruction registers and real observed bytes**. Peer threads are held during each step. A breakpoint, exception, exit or time limit can make a trace incomplete; inspect `metadata.complete`. If an individual step cannot complete before its deadline, the VM closes rather than claiming a resumable stop. This is instruction tracing, not a complete memory-access log or a scheduler-faithful recording.
+
+Screenshots capture the visible target window's client rectangle in the guest's headless Xvfb desktop using Win32 GDI. Coordinates are native client pixels with the origin at top left. Grids are derived from saved clean PNGs. `click-frame` stores and labels the frame before queuing Win32 `SendInput` mouse motion/down/up. The target consumes input when resumed. The PE click currently queues down and up together; DOS `hold_ms` timing is not applied. A frame-bound click checks window identity and dimensions. There is one selected visible client window (the largest); DirectX/fullscreen rendering, occluded windows and multi-window selection have not been qualified.
+
+## Verification and limits
+
+Run the real acceptance gate with an authored executable compiled from `tests/wine_gui_fixture.c` (MinGW `-O0 -g -mwindows`, linking user32 and gdi32):
 
 ```bash
-winedbg --file /opt/fdisbull/probe.winedbg /opt/fdisbull/probe64.exe
+FDISBULL_PE_QEMU=/path/to/qemu-system-x86_64 \
+FDISBULL_PE_KERNEL=/path/to/linux-amd64 \
+FDISBULL_PE_INITRAMFS=/path/to/fdisbull-wine-runtime.cpio.gz \
+FDISBULL_PE_FIXTURE=/path/to/oracle.exe \
+FDISBULL_REQUIRE_PE=1 \
+python -m pytest -q tests/test_wine_debugger.py
 ```
 
-The command file can inspect `info regs`, `info share`, `info map`, `x /16b $pc`, perform `stepi`, then terminate its child. Handle architecture-specific PC names in the probe. Validate each returned value against the known fixture. `--auto` is a crash receipt, not an interactive control API. [7]
+The explicit gate fails when inputs are missing. Ordinary tests skip the VM acceptance if no runtime is supplied. This fixture is authored source, not a shipped game. The native CI workflow builds a separate minimal Linux/Wine runtime from [the CI recipe](../experimental/wine/ci/README.md) and runs this gate against an installed wheel in two fresh QEMU sessions. See [PE64 verification and receipts](PE64_VERIFICATION.md) for the installed-wheel, restart, input, trace and offline-export results.
 
-Optional proxy experiment, with both frontend and proxy inside the same offline guest:
+The initial scope is native **PE64 x86-64 EXEs and the main image**. DLL launch, child-process following, PE32/WoW64, managed/.NET source debugging, heap/JIT imports, data watchpoints, DOS guest-time/fast-forward, code layers and resumable state editing are unsupported. Wine minidumps are not emulator checkpoints. Wine compatibility with an arbitrary game is not established by the authored GUI fixture.
 
-```bash
-winedbg --gdb --no-start --port 31337 /opt/fdisbull/probe64.exe
-```
-
-Connect an in-guest `gdb --interpreter=mi2` to its loopback endpoint. **`--no-start` means do not automatically launch GDB; it does not mean do not create the debuggee.** WineDbg's proxy forwards requests to Win32 APIs. Use GDB/MI for machine-oriented frontend records, not interactive text scraping. No port publishing is required. [7,9]
-
-## Structured capabilities and lifecycle
-
-The planned agent launches the child with `CreateProcessW` and `DEBUG_ONLY_THIS_PROCESS`, then owns a `WaitForDebugEvent`/`ContinueDebugEvent` loop. Track process/thread creation and exit, module load/unload, exception, breakpoint and single-step events. Preserve first-chance versus unhandled exception status; do not swallow every exception. Read/write thread context and memory through the appropriate Win32 APIs. [8]
-
-Enumerate maps with `VirtualQueryEx`, retaining base, size, committed state, type and protection; use `ReadProcessMemory` only on readable committed ranges and retain short-read/errors. Maps are observations from this stopped guest process, not static PE section permissions. [11]
-
-The proposed control surface is deliberately small:
-
-| Operation | Evidence returned |
-| --- | --- |
-| launch / stop / continue / terminate | Session/process identity and stop reason; bounded timeout status. |
-| break.add / break.remove | Address, original byte, breakpoint kind and success/error. |
-| step.instruction | Before/after PC, selected thread and actual stop event. |
-| registers | Architecture, thread ID, complete validity-tagged register set. |
-| maps / modules | Captured mappings; module base/path/hash when recoverable. |
-| memory.read | Requested/actual byte count, bytes or content hash, read errors. |
-| snapshot | Event sequence, maps/registers and selected byte blobs from one stop. |
-
-Software-breakpoint bookkeeping must restore original instructions, adjust PC as required, single-step correctly and clean up on termination. Keep an exact event sequence and raw backend transcript for debugging the adapter. Hardware watchpoints, child-process following and native Wine internals are later capabilities, never silently promised by the first implementation.
-
-## Feeding fDisBull
-
-Use a separate runtime session/process address space. Record source executable SHA-256, guest image/Wine/translation versions, module load base, event/thread IDs, architecture, timestamps and stop cause. Store immutable observed byte snapshots with provenance such as `wine-runtime-read`; compare changed pages without overwriting original file bytes or previous manual patches.
-
-A snapshot importer must distinguish image-backed bytes, relocated addresses, private/JIT allocations and unreadable gaps. New module mappings require an explicit importer/schema extension; today's byte `patch` command is not a general process-memory importer. Rebase references using the observed module mapping, then use existing decoding/annotation/render seams. A rendering should identify its runtime session and stopped snapshot, keeping runtime observation separate from static inference.
-
-The concrete first acceptance fixture should call one DLL function, hit one breakpoint, modify a small buffer, execute one step and exit. Acceptance requires exact register/memory values, observed module base, map protections, snapshot import, image export and a clean second run from a fresh prefix. Also verify isolation with harmless probes: no external route, no host files/mounts, no inherited credentials and no published listener. A reproducible failure under Rosetta triggers the fallback; it is not a reason to rebuild the whole debugger.
-
-## x86, .NET and LLVM limits
-
-Wine 11.0's release notes describe completed new WoW64 support and deprecate pure `WINEARCH=win32` prefixes in that mode. Start with the default 64-bit prefix. Test a native PE32 executable separately from PE32+; amd64 Linux translation does not alone prove 32-bit Windows debugging, WoW64 contexts or compatibility across every Wine build. [12]
-
-Wine Mono targets .NET Framework 4.8.1 and earlier under Wine; it is not a universal substitute for every Windows CLR/runtime. Managed source/IL breakpoints, object inspection and JIT-to-method mapping require a runtime-specific debugging adapter such as the applicable `ICorDebug`/managed callback interface, not merely native WineDbg support. Keep modern .NET, older Framework and mixed-mode cases as separate qualification tracks. [14,15]
-
-LLVM may supply a Windows-targeting compiler or a future remote frontend. It is not needed to implement the Win32 debug-event loop, and a Mac LLDB installation cannot automatically inspect a Linux guest's translated Wine process. Prefer the existing WineDbg/GDB remote seam or the structured guest agent before introducing another backend.
-
-## Full x86 Linux fallback
-
-Create a disposable qcow2 overlay from an already prepared, trusted x86-64 Linux guest containing Wine and the agent. An illustrative host-side launch is:
-
-```bash
-qemu-system-x86_64 \
-  -accel tcg -machine q35 -cpu max -smp 2 -m 4096 \
-  -drive file=wine-session.qcow2,format=qcow2,if=virtio \
-  -nic none -display none -serial stdio -monitor none
-```
-
-The guest image must already boot headlessly and start the session controller over its serial channel. Use no shared folders, clipboard, USB passthrough or host network. QEMU system emulation/TCG and its machine/serial options are documented, but this exact guest configuration has not been tested here. Deleting the disposable session disk after evidence extraction restores the prepared baseline. [10,16]
-
-## Sources
-
-All links below were consulted or retrieval attempted on **2026-10-22**. Apple `main` documentation is moving: use the tag matching the installed release when implementing, rather than assuming future `main` flags match it.
-
-1. [Apple container README](https://github.com/apple/container/blob/main/README.md) — Apple silicon/macOS 26 requirements, signed installer, Linux VM scope.
-2. [Apple Containerization README](https://github.com/apple/containerization/blob/main/README.md) — per-container VM design, process I/O over guest-agent transport, macOS/Xcode 26 build requirements.
-3. [Apple multiplatform images](https://github.com/apple/container/blob/main/docs/multiplatform-images.md) — amd64 Linux userland via Rosetta. [Apple Linux Intel binary translation API](https://developer.apple.com/documentation/virtualization/running-intel-binaries-in-linux-vms) was also checked; detailed body retrieval was unavailable, so no unsupported debugger promise is inferred.
-4. [Apple runtime configuration](https://github.com/apple/container/blob/main/docs/runtime-configuration.md) — capability controls and M3+ nested virtualization requirement.
-5. [Apple CLI command reference](https://github.com/apple/container/blob/main/docs/command-reference.md) and [0.6.0 release](https://github.com/apple/container/releases/tag/0.6.0) — process/resource/read-only/network flags; release notes explicitly introduce no-network mode.
-6. [Apple mounts/volumes](https://github.com/apple/container/blob/main/docs/volumes.md) — tmpfs size/mode syntax and ephemeral behavior. [Networking](https://github.com/apple/container/blob/main/docs/networking.md) distinguishes ordinary isolated networks from a no-network policy.
-7. [Wine Developers Manual: WineDbg, distributed by Debian](https://manpages.debian.org/trixie/wine/winedbg.1.en.html) — Wine 10.0 manual, source updated 2025-08-16; batch modes, GDB proxy, `--no-start` semantics and commands. WineHQ GitLab source retrieval was blocked by its anti-bot service; verify the installed Wine build's `winedbg --help` before automation.
-8. [Microsoft debugger main loop](https://learn.microsoft.com/en-us/windows/win32/debug/writing-the-debugger-s-main-loop) — updated 2025-07-14; debug events, continuation, contexts and process memory APIs. It specifies Windows behavior, not a guarantee of Wine/Rosetta compatibility.
-9. [GNU GDB/MI](https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB_002fMI.html) — machine-oriented frontend interface.
-10. [QEMU system introduction](https://www.qemu.org/docs/master/system/introduction.html) — full-system emulation, TCG, virtual devices and management interfaces.
-11. [Microsoft VirtualQueryEx](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualqueryex) — updated 2022-05-24; mapping states/types/protection and region extents.
-12. [Wine 11.0 upstream release announcement](https://list.winehq.org/hyperkitty/list/wine-releases@list.winehq.org/thread/UL6L2GJ55VYUJ5KUMBZ3TZSXRFJ52QG6/) — 2026-01-13; new WoW64 behavior, prefix restrictions and single loader.
-13. [WineHQ user-list security explanation](https://www.winehq.org/pipermail/wine-users/2012-January/101444.html) — 2012-01; indexed primary explanation that Wine is not an isolated VM/sandbox. Full page retrieval was unavailable; the no-prefix-boundary conclusion also follows from treating the guest's OS permissions as the boundary.
-14. [Wine Mono official repository](https://github.com/wine-mono/wine-mono) — supported Framework scope and relation to Wine's mscoree.
-15. [Microsoft ICorDebug](https://learn.microsoft.com/en-us/dotnet/core/unmanaged-api/debugging/icordebug/icordebug-interface) — updated 2025-08-30; CLR debugging/event interfaces. Validate the specific runtime/version rather than generalizing mixed-mode support.
-16. [QEMU invocation reference](https://www.qemu.org/docs/master/system/invocation.html) — accelerator, disk, serial, display and network options; current development documentation, pin the actual QEMU release for execution.
+[Historical planning and source research](WINE_DEBUGGER_RESEARCH.md) and [the Rosetta versus QEMU probe](../experimental/wine/README.md) preserve the earlier feasibility work. The Win32 implementation follows Microsoft's [debug event loop](https://learn.microsoft.com/en-us/windows/win32/debug/writing-the-debugger-s-main-loop), [memory-write API](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-writeprocessmemory), and [input API](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendinput); Wine support is established only by the recorded real runs.

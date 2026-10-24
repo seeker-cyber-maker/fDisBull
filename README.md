@@ -14,7 +14,7 @@ Requires Python **3.12 or later**.
 
 | Track | Source and availability | Verification |
 | --- | --- | --- |
-| **Current source: 0.11.0** | [Release notes](docs/RELEASE-0.11.0.md): code layers, execution-only overlays, breakpoint actions, and coordinate grids | [Verification and release gates](docs/VERIFICATION-0.11.md), including the real backend and actual DinoPark evidence |
+| **Current source: 0.12.0** | [Release notes](docs/RELEASE-0.12.0.md): PE64 Wine/QEMU debugging, guarded memory edits, traces, screenshots and clicks | [PE64 verification](docs/PE64_VERIFICATION.md) and required Linux package, DOS native and PE64 native CI gates |
 | **Latest published package release: 0.11.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.11.0), commit `a216747` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40014891689): 759 passed. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40014891475): 15 established-backend and 32 layers-backend tests passed, no native skips. |
 | **Repository branch** | [main](https://github.com/seeker-cyber-maker/fDisBull/tree/main) is the only active branch | Release promotion requires both ordinary and native Linux CI. Use version tags for fixed source snapshots. The old experimental checkpoint is preserved under an archive tag. |
 
@@ -79,9 +79,11 @@ Eight saved releases were reconstructed as successive commits: **0.1.0, 0.2.0, 0
 
 The original unfinished DOSBox checkpoint is preserved at tag `archive/dosbox-headless-2026-10-23`; the former experimental and takeover branches have been removed. The continuation contains a complete backend patch and fixture/DinoPark runtime evidence under `experimental/dosbox-x`; the Python integration uses that separately built backend. Neither emulator nor original game assets are included in tool packages.
 
+Version 0.12.0 integrates a [PE64 Wine/QEMU debugger](docs/WINE_DEBUGGER.md): disassembly breakpoints, guarded memory edits, bounded instruction traces, client-window screenshots, 8px grids and mouse clicks, persisted with the project. It requires a separately prepared offline Linux/Wine runtime and QEMU. The [earlier Wine/Linux experiment](experimental/wine/README.md) records why full x86-64 CPU emulation is used on this Mac: Apple container/Rosetta failed the debugger gate. The [installed-wheel acceptance](docs/PE64_VERIFICATION.md) verifies real input, memory edits, rearmed breakpoints, traces and offline exports in two fresh sessions. The published 0.11.0 packages predate this PE integration.
+
 ## Limits and licensing
 
-Static analysis does not establish runtime execution. A drained queue does not establish complete code coverage. Authored labels and links record interpretations, and unresolved segment/pointer state stays explicit. Native macOS debugger acceptance passes; the full suite still has Linux ELF fixture failures on Apple's compiler/linker. The integration currently launches original unpatched DOS MZ versions; it does not silently apply static child patches to the game.
+Static analysis does not establish runtime execution. A drained queue does not establish complete code coverage. Authored labels and links record interpretations, and unresolved segment/pointer state stays explicit. Native macOS debugger acceptance passes; the full suite still has Linux ELF fixture failures on Apple's compiler/linker. Runtime integration launches original unpatched DOS MZ or x86-64 PE EXE versions; static child patches are never applied silently. PE support has its own runtime and acceptance gate; DOS states, layers and data watchpoints do not transfer to PE.
 
 Runtime code snapshots can preserve and decode observed self-modified or layered bytes alongside earlier views. They do not automatically create a new static code interpretation, traverse its targets, or rebuild its xrefs. A mapped runtime address alone does not verify equality with static instructions. Headless execution is not security isolation, and restoring a machine checkpoint does not roll back mounted host files.
 

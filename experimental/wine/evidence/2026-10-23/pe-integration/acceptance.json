@@ -1,0 +1,40 @@
+{
+  "result": "pass",
+  "source_sha256": "0898cbe9b6d695f55bf75504d47d0d808e449d2d5a4047418aee6bc613e9d40f",
+  "checkpoint": "0x140001480",
+  "counter": "0x140003000",
+  "artifacts": [
+    {
+      "name": "before.png.raw.png",
+      "sha256": "c098e1a72396cece911ce01bfdf7ffbed81d1fdaf9ec796ab8211d827c3e8de0"
+    },
+    {
+      "name": "before.png",
+      "sha256": "98407f6e4f260134c5dd33f758a0e44e7e15445ed7df950f92e034f2160df86f"
+    },
+    {
+      "name": "route.fdisbull.json",
+      "sha256": "f3a41aedb10fd6332462bbec144373687f52949d4e590a4f10f8f6223a2418cb"
+    },
+    {
+      "name": "route-result.json",
+      "sha256": "261e6a83e3f78c7394d491c54eac6bc522f8ec57056a23527637316bea57095d"
+    },
+    {
+      "name": "checkpoint.json",
+      "sha256": "bea721608ed9e4f72a98fbc262bb58f4530f9212edca39fd2e24f26bf1d696bd"
+    },
+    {
+      "name": "click.png.raw.png",
+      "sha256": "c098e1a72396cece911ce01bfdf7ffbed81d1fdaf9ec796ab8211d827c3e8de0"
+    },
+    {
+      "name": "click.png",
+      "sha256": "938985ae758291fd3de27e26f6af1a9bb3b3e9ec2095a4a38bb38068e70ea01c"
+    },
+    {
+      "name": "after.png",
+      "sha256": "d7a22f4fda14e08fb0dc387535cbd3569668870b2b2ae23cf05fec44c369a059"
+    }
+  ]
+}

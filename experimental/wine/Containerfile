@@ -1,0 +1,32 @@
+FROM ubuntu@sha256:a2d43bffc46670d7108bb3c0468c67c5557c4c92e83e1e34cbff1322ad1b94dc
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential autoconf automake pkg-config nasm git ca-certificates \
+    libsdl2-dev libsdl2-net-dev libncurses-dev libpng-dev zlib1g-dev libfreetype6-dev \
+    python3 python3-venv wine wine64 xvfb xauth \
+    gcc-mingw-w64-x86-64-win32 binutils-mingw-w64-x86-64 \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /opt
+COPY dosbox-source.tar headless-agent.patch source-manifest.json /opt/
+RUN tar -xf dosbox-source.tar && cd dosbox-x && git apply ../headless-agent.patch \
+    && python3 -c 'import hashlib,json,pathlib; m=json.load(open("../source-manifest.json")); assert all(hashlib.sha256(pathlib.Path(x["path"]).read_bytes()).hexdigest()==x["sha256"] for x in m["source_files"]); print("27 patched source hashes matched")' \
+    && ./autogen.sh > /opt/dosbox-build.log 2>&1 \
+    && ./configure --enable-sdl2 --enable-debug=heavy --enable-dosbox_agent \
+       --disable-avcodec --disable-libslirp --disable-libfluidsynth >> /opt/dosbox-build.log 2>&1 \
+    && make -j4 >> /opt/dosbox-build.log 2>&1 \
+    && rm /opt/dosbox-source.tar
+COPY fdisbull-0.11.0-py3-none-any.whl /opt/packages/
+RUN python3 -m venv /opt/venv \
+    && /opt/venv/bin/pip install '/opt/packages/fdisbull-0.11.0-py3-none-any.whl[test]'
+COPY target64.c controller64.c /opt/probes/
+RUN x86_64-w64-mingw32-gcc -O0 -g -Wl,--dynamicbase,--nxcompat -o /opt/probes/target64.exe /opt/probes/target64.c \
+    && x86_64-w64-mingw32-gcc -O2 -Wall -o /opt/probes/controller64.exe /opt/probes/controller64.c \
+    && x86_64-w64-mingw32-nm /opt/probes/target64.exe > /opt/probes/target-symbols.txt \
+    && x86_64-w64-mingw32-objdump -p /opt/probes/target64.exe > /opt/probes/target-headers.txt \
+    && getent passwd 1000 > /opt/probes/runtime-user.txt
+COPY tests/ /opt/tests/
+COPY probe.sh /opt/probes/probe.sh
+RUN chmod 755 /opt/probes/probe.sh
+USER 1000:1000
+WORKDIR /work
+ENTRYPOINT ["/opt/probes/probe.sh"]

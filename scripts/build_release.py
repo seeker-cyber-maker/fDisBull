@@ -12,7 +12,10 @@ ROOT = Path(__file__).resolve().parents[1]
 ROOT_FILES = ("README.md", "AGENTS.md", "pyproject.toml", "MANIFEST.in")
 SOURCE_PATTERNS = (
     ("src/fdisbull", "*.py"),
+    ("src/fdisbull/wine_guest", "*.c"),
+    ("src/fdisbull/wine_guest", "*.sh"),
     ("tests", "*.py"),
+    ("tests", "wine_gui_fixture.c"),
     ("docs", "*.md"),
     ("scripts", "*.py"),
 )

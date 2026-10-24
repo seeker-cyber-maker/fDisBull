@@ -1,0 +1,609 @@
+..F....FFF...F.FF.......F.......                                         [100%]
+=================================== FAILURES ===================================
+______ test_real_breakpoint_translation_trace_restart_and_patch_isolation ______
+
+game = (PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_real_breakpoint_translati0/game.fdb'), PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_real_breakpoint_translati0/GAME.EXE'))
+emulator = '/opt/dosbox-x/src/dosbox-x'
+tmp_path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_real_breakpoint_translati0')
+
+    def test_real_breakpoint_translation_trace_restart_and_patch_isolation(game,emulator,tmp_path):
+        path,binary=game
+        with Project(path) as db:
+            with db.debugger(emulator,binary.parent) as debug:
+                breakpoint=debug.breakpoint('1000:0003')
+                assert breakpoint['bytes_verified'] and breakpoint['runtime_bytes']=='bb7856'
+                stopped=debug.run(timeout_ms=2000,fast_forward=True)
+                assert stopped['outcome']=='breakpoint' and not stopped['timed_out']
+                assert stopped['session']['stop_reason']['project_address']=='0x10003'
+                assert not stopped['timing_after']['fast_forward']
+                registers=debug.registers()
+                assert registers['cs']==registers['segments']['cs'] and registers['ip']==registers['instruction_pointer']
+                assert int(registers['general']['eax'],16)==0x1234
+                debug.delete_breakpoint(breakpoint['breakpoint_id'])
+                trace=debug.trace(count=4)
+                assert trace['metadata']['complete'] and trace['metadata']['event_count']==4
+                moved=debug.run(guest_ms=1000,timeout_ms=2000,fast_forward=True)
+>               assert moved['outcome']=='guest_time' and moved['guest_elapsed_ms']>=1000
+E               AssertionError: assert ('timeout' == 'guest_time'
+E                 
+E                 - guest_time
+E                 + timeout)
+
+opt/tests/test_debugger.py:70: AssertionError
+_______ test_real_native_state_restores_memory_registers_and_new_session _______
+
+access_game = (PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_real_native_state_restore0/access.fdb'), PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_real_native_state_restore0/ACCESS.EXE'))
+emulator = '/opt/dosbox-x/src/dosbox-x'
+
+    def test_real_native_state_restores_memory_registers_and_new_session(access_game,emulator):
+        path,binary=access_game
+        with Project(path) as db:
+            with db.debugger(emulator,binary.parent) as debug:
+                bp=debug.breakpoint('1000:0005')
+                assert debug.run(timeout_ms=2000)['outcome']=='breakpoint'
+                debug.delete_breakpoint(bp['breakpoint_id'])
+                state=debug.save_state('before-write.sav')
+                assert state['kind']=='state'
+                assert debug.memory('1000:0100',length=2)['hex']=='0000'
+                bp=debug.breakpoint('1000:0100',access='w')
+                assert debug.run(timeout_ms=2000)['outcome']=='breakpoint'
+                assert debug.memory('1000:0100',length=2)['hex']=='3412'
+                debug.delete_breakpoint(bp['breakpoints'][0]['breakpoint_id'])
+>               debug.load_state(state['artifact'])
+
+opt/tests/test_debugger.py:191: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opt/venv/lib/python3.12/site-packages/fdisbull/debugger.py:487: in load_state
+    result = self.call('state.load',{'path':str(path)})
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opt/venv/lib/python3.12/site-packages/fdisbull/debugger.py:247: in call
+    return self.rpc.call(method,{'session_id':self.session_id,**(params or {})})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <fdisbull.dosbox_rpc.DOSBoxRPC object at 0x7f10289ba5d0>
+method = 'state.load'
+params = {'session_id': 'ses-1', 'path': '/tmp/fdisbull-state-w7qw38cp/state.sav'}
+timeout_ms = 15000
+
+    def call(self, method, params=None, timeout_ms=15000):
+        deadline = time.monotonic() + timeout_ms / 1000
+        if not self.lock.acquire(timeout=max(0, deadline-time.monotonic())):
+            raise DebuggerError('Timed out waiting for RPC channel ownership')
+        try:
+            if self.reader is None or self.writer is None:
+                raise DebuggerError('Debugger channel is closed')
+            self.sequence += 1
+            request_id = f'fdisbull-{self.sequence}'
+            data = json.dumps({'jsonrpc':'2.0','id':request_id,'method':method,'params':params or {}},
+                              allow_nan=False,separators=(',',':')).encode() + b'\n'
+            if len(data) > self.limit:
+                raise DebuggerError('RPC request exceeds message budget')
+            sent = 0
+            while sent < len(data):
+                self._ready(self.writer, True, deadline)
+                try:
+                    written = os.write(self.writer, data[sent:sent+4096])
+                except (BlockingIOError,InterruptedError):
+                    continue
+                if not written:
+                    raise OSError('RPC write made no progress')
+                sent += written
+            response = bytearray()
+            while b'\n' not in response:
+                self._ready(self.reader, False, deadline)
+                try:
+                    chunk = os.read(self.reader, min(65536,self.limit+1-len(response)))
+                except (BlockingIOError,InterruptedError):
+                    continue
+                if not chunk:
+                    raise OSError('Emulator closed the RPC channel')
+                response.extend(chunk)
+                if len(response) > self.limit:
+                    raise OSError('RPC response exceeds message budget')
+            if response.find(b'\n') != len(response)-1:
+                raise OSError('Unsolicited data after RPC response')
+            result = json.loads(response)
+            if not isinstance(result,dict) or result.get('id') != request_id or result.get('jsonrpc') != '2.0':
+                raise OSError('Invalid RPC response identity')
+        except BaseException:
+            self._close_pipes()
+            raise
+        finally:
+            self.lock.release()
+        if 'error' in result:
+            error = result['error']
+>           raise DebuggerError(f"{error.get('message','DOSBox error')} ({error.get('data',{}).get('reason',error.get('code'))})")
+E           fdisbull.dosbox_rpc.DebuggerError: State load failed (STATE_FAILED)
+
+opt/venv/lib/python3.12/site-packages/fdisbull/dosbox_rpc.py:115: DebuggerError
+____________ test_script_validation_persistence_and_real_execution _____________
+
+access_game = (PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_script_validation_persist0/access.fdb'), PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_script_validation_persist0/ACCESS.EXE'))
+emulator = '/opt/dosbox-x/src/dosbox-x'
+
+    def test_script_validation_persistence_and_real_execution(access_game,emulator):
+        from fdisbull.debug_script import validate_script
+        script={'format':'fdisbull-script-1','steps':[
+            {'op':'breakpoint','address':'1000:0005','as':'bp'},
+            {'op':'run','timeout_ms':2000,'as':'hit'},
+            {'op':'assert','value':'$hit.outcome','equals':'breakpoint'},
+            {'op':'delete-breakpoint','breakpoint_id':'$bp.breakpoint_id'},
+            {'op':'save-state','as':'checkpoint'},
+            {'op':'repeat','count':2,'steps':[
+                {'op':'run','timeout_ms':1000,'guest_ms':10,'fast_forward':True},
+                {'op':'load-state','artifact':'$checkpoint.artifact'}]},
+            {'op':'memory','address':'1000:0100','length':2,'as':'word'},
+            {'op':'assert','value':'$word.hex','equals':'0000'}]}
+        with pytest.raises(ValueError):validate_script({'format':'fdisbull-script-1','steps':[{'op':'shell','command':'no'}]})
+        with pytest.raises((ValueError,TypeError)):validate_script({'format':'fdisbull-script-1','steps':[{'op':'click','xx':1,'y':2}]})
+        with Project(access_game[0]) as db:
+            stored=db.debug_save_script('route.json',script)
+        with Project(access_game[0]) as db, db.debugger(emulator,access_game[1].parent) as debug:
+            assert db.debug_scripts()['scripts'][0]['sha256']==stored['sha256']
+            result=debug.script(script_id=stored['script_id'])
+>           assert result['ok'],result
+E           AssertionError: {'format': 'fdisbull-script-result-1', 'script_artifact': '5196bd3ada6b44c0b90b536c8517a72d', 'script_sha256': '7d11214c47ea9ab304e9fa88bf6112f9e3cc518e02bb0b03d6fe2c398b3c7938', 'run': 'e13e010576f140a780a775f844f904ab', ...}
+E           assert False
+
+opt/tests/test_debugger.py:226: AssertionError
+______ test_native_state_fork_edits_and_reinjects_without_changing_parent ______
+
+access_game = (PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_native_state_fork_edits_a0/access.fdb'), PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_native_state_fork_edits_a0/ACCESS.EXE'))
+emulator = '/opt/dosbox-x/src/dosbox-x'
+
+    def test_native_state_fork_edits_and_reinjects_without_changing_parent(access_game,emulator):
+        path,binary=access_game
+        with Project(path) as db:
+            static_before=db.disassembly(address='1000:0005',lines=1)['instructions'][0]['bytes']
+            with db.debugger(emulator,binary.parent) as debug:
+                bp=debug.breakpoint('1000:0005')
+                assert debug.run(timeout_ms=2000)['outcome']=='breakpoint'
+                debug.delete_breakpoint(bp['breakpoint_id'])
+                parent=debug.save_state('parent.sav')
+            info=db.debug_state_info(parent['artifact'])
+            assert {'CPU','Memory','Vga','Pic'} <= {i['name'] for i in info['components']}
+>           fork=db.debug_fork_state(parent['artifact'],emulator,binary.parent,
+                memory=[{'address':'1000:0100','expected_hex':'0000','data_hex':'9999'}],
+                registers={'eax':{'expected':'0x1234','value':'0xbeef'}})
+
+opt/tests/test_debugger.py:244: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opt/venv/lib/python3.12/site-packages/fdisbull/debugger.py:111: in debug_fork_state
+    debug.load_state(artifact)
+opt/venv/lib/python3.12/site-packages/fdisbull/debugger.py:487: in load_state
+    result = self.call('state.load',{'path':str(path)})
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opt/venv/lib/python3.12/site-packages/fdisbull/debugger.py:247: in call
+    return self.rpc.call(method,{'session_id':self.session_id,**(params or {})})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <fdisbull.dosbox_rpc.DOSBoxRPC object at 0x7f10289bac60>
+method = 'state.load'
+params = {'session_id': 'ses-1', 'path': '/tmp/fdisbull-state-qqz7us72/state.sav'}
+timeout_ms = 15000
+
+    def call(self, method, params=None, timeout_ms=15000):
+        deadline = time.monotonic() + timeout_ms / 1000
+        if not self.lock.acquire(timeout=max(0, deadline-time.monotonic())):
+            raise DebuggerError('Timed out waiting for RPC channel ownership')
+        try:
+            if self.reader is None or self.writer is None:
+                raise DebuggerError('Debugger channel is closed')
+            self.sequence += 1
+            request_id = f'fdisbull-{self.sequence}'
+            data = json.dumps({'jsonrpc':'2.0','id':request_id,'method':method,'params':params or {}},
+                              allow_nan=False,separators=(',',':')).encode() + b'\n'
+            if len(data) > self.limit:
+                raise DebuggerError('RPC request exceeds message budget')
+            sent = 0
+            while sent < len(data):
+                self._ready(self.writer, True, deadline)
+                try:
+                    written = os.write(self.writer, data[sent:sent+4096])
+                except (BlockingIOError,InterruptedError):
+                    continue
+                if not written:
+                    raise OSError('RPC write made no progress')
+                sent += written
+            response = bytearray()
+            while b'\n' not in response:
+                self._ready(self.reader, False, deadline)
+                try:
+                    chunk = os.read(self.reader, min(65536,self.limit+1-len(response)))
+                except (BlockingIOError,InterruptedError):
+                    continue
+                if not chunk:
+                    raise OSError('Emulator closed the RPC channel')
+                response.extend(chunk)
+                if len(response) > self.limit:
+                    raise OSError('RPC response exceeds message budget')
+            if response.find(b'\n') != len(response)-1:
+                raise OSError('Unsolicited data after RPC response')
+            result = json.loads(response)
+            if not isinstance(result,dict) or result.get('id') != request_id or result.get('jsonrpc') != '2.0':
+                raise OSError('Invalid RPC response identity')
+        except BaseException:
+            self._close_pipes()
+            raise
+        finally:
+            self.lock.release()
+        if 'error' in result:
+            error = result['error']
+>           raise DebuggerError(f"{error.get('message','DOSBox error')} ({error.get('data',{}).get('reason',error.get('code'))})")
+E           fdisbull.dosbox_rpc.DebuggerError: State load failed (STATE_FAILED)
+
+opt/venv/lib/python3.12/site-packages/fdisbull/dosbox_rpc.py:115: DebuggerError
+_______ test_real_fetch_overlay_preserves_guest_data_and_stacks_over_ram _______
+
+layered_game = (PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_real_fetch_overlay_preser0/layer.fdb'), PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_real_fetch_overlay_preser0/LAYER.EXE'))
+layer_backend = '/opt/dosbox-x/src/dosbox-x'
+tmp_path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_real_fetch_overlay_preser0')
+
+    def test_real_fetch_overlay_preserves_guest_data_and_stacks_over_ram(layered_game,layer_backend,tmp_path):
+        path,binary=layered_game
+        with Project(path) as p, p.debugger(layer_backend,binary.parent) as d:
+            entry=d.save_state('entry.sav')
+            overlay=patch(p,'alternate immediate','execute','2222')
+            ram=patch(p,'visible immediate','ram','3333')
+            top=patch(p,'top immediate','execute','4444')
+            bp=d.breakpoint('1000:0009')
+            for layers,ax,bx in [([overlay],0x2222,0x1111),([ram],0x3333,0x3333),
+                                 ([ram,overlay],0x2222,0x3333),([overlay,top],0x4444,0x1111),
+                                 ([top,overlay],0x2222,0x1111),([],0x1111,0x1111)]:
+>               d.load_state(entry['artifact']);d.layers(layers)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opt/tests/test_code_layers.py:57: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opt/venv/lib/python3.12/site-packages/fdisbull/debugger.py:487: in load_state
+    result = self.call('state.load',{'path':str(path)})
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opt/venv/lib/python3.12/site-packages/fdisbull/debugger.py:247: in call
+    return self.rpc.call(method,{'session_id':self.session_id,**(params or {})})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <fdisbull.dosbox_rpc.DOSBoxRPC object at 0x7f10289d3410>
+method = 'state.load'
+params = {'session_id': 'ses-1', 'path': '/tmp/fdisbull-state-a1k6cbr7/state.sav'}
+timeout_ms = 15000
+
+    def call(self, method, params=None, timeout_ms=15000):
+        deadline = time.monotonic() + timeout_ms / 1000
+        if not self.lock.acquire(timeout=max(0, deadline-time.monotonic())):
+            raise DebuggerError('Timed out waiting for RPC channel ownership')
+        try:
+            if self.reader is None or self.writer is None:
+                raise DebuggerError('Debugger channel is closed')
+            self.sequence += 1
+            request_id = f'fdisbull-{self.sequence}'
+            data = json.dumps({'jsonrpc':'2.0','id':request_id,'method':method,'params':params or {}},
+                              allow_nan=False,separators=(',',':')).encode() + b'\n'
+            if len(data) > self.limit:
+                raise DebuggerError('RPC request exceeds message budget')
+            sent = 0
+            while sent < len(data):
+                self._ready(self.writer, True, deadline)
+                try:
+                    written = os.write(self.writer, data[sent:sent+4096])
+                except (BlockingIOError,InterruptedError):
+                    continue
+                if not written:
+                    raise OSError('RPC write made no progress')
+                sent += written
+            response = bytearray()
+            while b'\n' not in response:
+                self._ready(self.reader, False, deadline)
+                try:
+                    chunk = os.read(self.reader, min(65536,self.limit+1-len(response)))
+                except (BlockingIOError,InterruptedError):
+                    continue
+                if not chunk:
+                    raise OSError('Emulator closed the RPC channel')
+                response.extend(chunk)
+                if len(response) > self.limit:
+                    raise OSError('RPC response exceeds message budget')
+            if response.find(b'\n') != len(response)-1:
+                raise OSError('Unsolicited data after RPC response')
+            result = json.loads(response)
+            if not isinstance(result,dict) or result.get('id') != request_id or result.get('jsonrpc') != '2.0':
+                raise OSError('Invalid RPC response identity')
+        except BaseException:
+            self._close_pipes()
+            raise
+        finally:
+            self.lock.release()
+        if 'error' in result:
+            error = result['error']
+>           raise DebuggerError(f"{error.get('message','DOSBox error')} ({error.get('data',{}).get('reason',error.get('code'))})")
+E           fdisbull.dosbox_rpc.DebuggerError: State load failed (STATE_FAILED)
+
+opt/venv/lib/python3.12/site-packages/fdisbull/dosbox_rpc.py:115: DebuggerError
+____________ test_real_layered_checkpoint_restarts_with_both_views _____________
+
+layered_game = (PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_real_layered_checkpoint_r0/layer.fdb'), PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_real_layered_checkpoint_r0/LAYER.EXE'))
+layer_backend = '/opt/dosbox-x/src/dosbox-x'
+
+    def test_real_layered_checkpoint_restarts_with_both_views(layered_game,layer_backend):
+        path,binary=layered_game
+        with Project(path) as p:
+            with p.debugger(layer_backend,binary.parent) as d:
+                ram=patch(p,'RAM','ram','3333');overlay=patch(p,'fetch','execute','2222')
+                d.layers([ram,overlay]);state=d.save_state('layered.sav')
+            with p.debugger(layer_backend,binary.parent) as d:
+>               d.load_state(state['artifact'])
+
+opt/tests/test_code_layers.py:100: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opt/venv/lib/python3.12/site-packages/fdisbull/debugger.py:487: in load_state
+    result = self.call('state.load',{'path':str(path)})
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opt/venv/lib/python3.12/site-packages/fdisbull/debugger.py:247: in call
+    return self.rpc.call(method,{'session_id':self.session_id,**(params or {})})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <fdisbull.dosbox_rpc.DOSBoxRPC object at 0x7f1028a02a50>
+method = 'state.load'
+params = {'session_id': 'ses-1', 'path': '/tmp/fdisbull-state-xtwjq_yt/state.sav'}
+timeout_ms = 15000
+
+    def call(self, method, params=None, timeout_ms=15000):
+        deadline = time.monotonic() + timeout_ms / 1000
+        if not self.lock.acquire(timeout=max(0, deadline-time.monotonic())):
+            raise DebuggerError('Timed out waiting for RPC channel ownership')
+        try:
+            if self.reader is None or self.writer is None:
+                raise DebuggerError('Debugger channel is closed')
+            self.sequence += 1
+            request_id = f'fdisbull-{self.sequence}'
+            data = json.dumps({'jsonrpc':'2.0','id':request_id,'method':method,'params':params or {}},
+                              allow_nan=False,separators=(',',':')).encode() + b'\n'
+            if len(data) > self.limit:
+                raise DebuggerError('RPC request exceeds message budget')
+            sent = 0
+            while sent < len(data):
+                self._ready(self.writer, True, deadline)
+                try:
+                    written = os.write(self.writer, data[sent:sent+4096])
+                except (BlockingIOError,InterruptedError):
+                    continue
+                if not written:
+                    raise OSError('RPC write made no progress')
+                sent += written
+            response = bytearray()
+            while b'\n' not in response:
+                self._ready(self.reader, False, deadline)
+                try:
+                    chunk = os.read(self.reader, min(65536,self.limit+1-len(response)))
+                except (BlockingIOError,InterruptedError):
+                    continue
+                if not chunk:
+                    raise OSError('Emulator closed the RPC channel')
+                response.extend(chunk)
+                if len(response) > self.limit:
+                    raise OSError('RPC response exceeds message budget')
+            if response.find(b'\n') != len(response)-1:
+                raise OSError('Unsolicited data after RPC response')
+            result = json.loads(response)
+            if not isinstance(result,dict) or result.get('id') != request_id or result.get('jsonrpc') != '2.0':
+                raise OSError('Invalid RPC response identity')
+        except BaseException:
+            self._close_pipes()
+            raise
+        finally:
+            self.lock.release()
+        if 'error' in result:
+            error = result['error']
+>           raise DebuggerError(f"{error.get('message','DOSBox error')} ({error.get('data',{}).get('reason',error.get('code'))})")
+E           fdisbull.dosbox_rpc.DebuggerError: State load failed (STATE_FAILED)
+
+opt/venv/lib/python3.12/site-packages/fdisbull/dosbox_rpc.py:115: DebuggerError
+____ test_real_guest_self_modification_stops_stale_overlay_before_execution ____
+
+tmp_path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_real_guest_self_modificat0')
+layer_backend = '/opt/dosbox-x/src/dosbox-x'
+
+    def test_real_guest_self_modification_stops_stale_overlay_before_execution(tmp_path,layer_backend):
+        module=bytearray(512)
+        module[:9]=bytes.fromhex('0e1fc606210044eb17')
+        module[0x20:0x25]=bytes.fromhex('b81111ebfe')
+        binary=tmp_path/'SMC.EXE';binary.write_bytes(mz_file(bytes(module),ss=0,sp=0x200))
+        with Project.create(tmp_path/'smc.fdb',binary) as p:
+            p.analyze(max_instructions=20)
+            with p.debugger(layer_backend,binary.parent) as d:
+                entry=d.save_state('entry.sav')
+                layer=p.debug_layer('guard',kind='execute',patches=[{'address':'1000:0021',
+                    'expected_hex':'1111','data_hex':'2222'}])['layer']
+                d.layers([layer])
+                result=d.run(timeout_ms=2000)
+                assert result['outcome']=='layer_conflict',result
+                assert d.memory('1000:0021',length=2)['hex']=='4411'
+                d.layers([])
+                assert d.run(timeout_ms=20)['outcome']=='timeout'
+                assert int(d.registers()['general']['eax'],16)==0x1144
+>               d.load_state(entry['artifact'])
+
+opt/tests/test_code_layers.py:128: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opt/venv/lib/python3.12/site-packages/fdisbull/debugger.py:487: in load_state
+    result = self.call('state.load',{'path':str(path)})
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opt/venv/lib/python3.12/site-packages/fdisbull/debugger.py:247: in call
+    return self.rpc.call(method,{'session_id':self.session_id,**(params or {})})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <fdisbull.dosbox_rpc.DOSBoxRPC object at 0x7f1028999ac0>
+method = 'state.load'
+params = {'session_id': 'ses-1', 'path': '/tmp/fdisbull-state-icm0nmpv/state.sav'}
+timeout_ms = 15000
+
+    def call(self, method, params=None, timeout_ms=15000):
+        deadline = time.monotonic() + timeout_ms / 1000
+        if not self.lock.acquire(timeout=max(0, deadline-time.monotonic())):
+            raise DebuggerError('Timed out waiting for RPC channel ownership')
+        try:
+            if self.reader is None or self.writer is None:
+                raise DebuggerError('Debugger channel is closed')
+            self.sequence += 1
+            request_id = f'fdisbull-{self.sequence}'
+            data = json.dumps({'jsonrpc':'2.0','id':request_id,'method':method,'params':params or {}},
+                              allow_nan=False,separators=(',',':')).encode() + b'\n'
+            if len(data) > self.limit:
+                raise DebuggerError('RPC request exceeds message budget')
+            sent = 0
+            while sent < len(data):
+                self._ready(self.writer, True, deadline)
+                try:
+                    written = os.write(self.writer, data[sent:sent+4096])
+                except (BlockingIOError,InterruptedError):
+                    continue
+                if not written:
+                    raise OSError('RPC write made no progress')
+                sent += written
+            response = bytearray()
+            while b'\n' not in response:
+                self._ready(self.reader, False, deadline)
+                try:
+                    chunk = os.read(self.reader, min(65536,self.limit+1-len(response)))
+                except (BlockingIOError,InterruptedError):
+                    continue
+                if not chunk:
+                    raise OSError('Emulator closed the RPC channel')
+                response.extend(chunk)
+                if len(response) > self.limit:
+                    raise OSError('RPC response exceeds message budget')
+            if response.find(b'\n') != len(response)-1:
+                raise OSError('Unsolicited data after RPC response')
+            result = json.loads(response)
+            if not isinstance(result,dict) or result.get('id') != request_id or result.get('jsonrpc') != '2.0':
+                raise OSError('Invalid RPC response identity')
+        except BaseException:
+            self._close_pipes()
+            raise
+        finally:
+            self.lock.release()
+        if 'error' in result:
+            error = result['error']
+>           raise DebuggerError(f"{error.get('message','DOSBox error')} ({error.get('data',{}).get('reason',error.get('code'))})")
+E           fdisbull.dosbox_rpc.DebuggerError: State load failed (STATE_FAILED)
+
+opt/venv/lib/python3.12/site-packages/fdisbull/dosbox_rpc.py:115: DebuggerError
+_______ test_real_guest_self_integrity_can_disable_and_restore_ram_layer _______
+
+tmp_path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_real_guest_self_integrity0')
+layer_backend = '/opt/dosbox-x/src/dosbox-x'
+
+    def test_real_guest_self_integrity_can_disable_and_restore_ram_layer(tmp_path,layer_backend):
+        import binascii
+        expected=binascii.crc_hqx(bytes.fromhex('b81111'),0)
+        # Guest checks its own instruction bytes, branches to failure on mismatch,
+        # then executes those same instructions after the successful check.
+        code=bytes.fromhex('0e1fbe5000b9030031d2ac30c6b308d1e2730481f22110fecb75f4e2ed')
+        code+=bytes.fromhex('81fa')+expected.to_bytes(2,'little')
+        code+=bytes.fromhex('7503e92a00b8addeebfe')
+        module=bytearray(512);module[:len(code)]=code
+        module[0x50:0x55]=bytes.fromhex('b81111ebfe')
+        binary=tmp_path/'CHECK.EXE';binary.write_bytes(mz_file(bytes(module),ss=0,sp=0x200))
+        with Project.create(tmp_path/'check.fdb',binary) as p:
+            p.analyze(max_instructions=100)
+            with p.debugger(layer_backend,binary.parent) as d:
+                entry=d.save_state('entry.sav')
+                ram=d.layer_patch('visible experiment','1000:0051',expected_hex='1111',data_hex='2222')['layer']
+                d.breakpoint('1000:0029');d.breakpoint('1000:0053')
+                detected=d.run(timeout_ms=2000)
+                assert detected['outcome']=='breakpoint'
+                assert int(d.registers()['general']['eax'],16)==0xdead
+                assert int(d.registers()['general']['edx'],16)!=expected
+>               d.load_state(entry['artifact']);d.layers([ram])
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+opt/tests/test_code_layers.py:200: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+opt/venv/lib/python3.12/site-packages/fdisbull/debugger.py:487: in load_state
+    result = self.call('state.load',{'path':str(path)})
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+opt/venv/lib/python3.12/site-packages/fdisbull/debugger.py:247: in call
+    return self.rpc.call(method,{'session_id':self.session_id,**(params or {})})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <fdisbull.dosbox_rpc.DOSBoxRPC object at 0x7f10289d1ac0>
+method = 'state.load'
+params = {'session_id': 'ses-1', 'path': '/tmp/fdisbull-state-75oa7b0x/state.sav'}
+timeout_ms = 15000
+
+    def call(self, method, params=None, timeout_ms=15000):
+        deadline = time.monotonic() + timeout_ms / 1000
+        if not self.lock.acquire(timeout=max(0, deadline-time.monotonic())):
+            raise DebuggerError('Timed out waiting for RPC channel ownership')
+        try:
+            if self.reader is None or self.writer is None:
+                raise DebuggerError('Debugger channel is closed')
+            self.sequence += 1
+            request_id = f'fdisbull-{self.sequence}'
+            data = json.dumps({'jsonrpc':'2.0','id':request_id,'method':method,'params':params or {}},
+                              allow_nan=False,separators=(',',':')).encode() + b'\n'
+            if len(data) > self.limit:
+                raise DebuggerError('RPC request exceeds message budget')
+            sent = 0
+            while sent < len(data):
+                self._ready(self.writer, True, deadline)
+                try:
+                    written = os.write(self.writer, data[sent:sent+4096])
+                except (BlockingIOError,InterruptedError):
+                    continue
+                if not written:
+                    raise OSError('RPC write made no progress')
+                sent += written
+            response = bytearray()
+            while b'\n' not in response:
+                self._ready(self.reader, False, deadline)
+                try:
+                    chunk = os.read(self.reader, min(65536,self.limit+1-len(response)))
+                except (BlockingIOError,InterruptedError):
+                    continue
+                if not chunk:
+                    raise OSError('Emulator closed the RPC channel')
+                response.extend(chunk)
+                if len(response) > self.limit:
+                    raise OSError('RPC response exceeds message budget')
+            if response.find(b'\n') != len(response)-1:
+                raise OSError('Unsolicited data after RPC response')
+            result = json.loads(response)
+            if not isinstance(result,dict) or result.get('id') != request_id or result.get('jsonrpc') != '2.0':
+                raise OSError('Invalid RPC response identity')
+        except BaseException:
+            self._close_pipes()
+            raise
+        finally:
+            self.lock.release()
+        if 'error' in result:
+            error = result['error']
+>           raise DebuggerError(f"{error.get('message','DOSBox error')} ({error.get('data',{}).get('reason',error.get('code'))})")
+E           fdisbull.dosbox_rpc.DebuggerError: State load failed (STATE_FAILED)
+
+opt/venv/lib/python3.12/site-packages/fdisbull/dosbox_rpc.py:115: DebuggerError
+=============================== warnings summary ===============================
+opt/venv/lib/python3.12/site-packages/_pytest/cacheprovider.py:469
+  /opt/venv/lib/python3.12/site-packages/_pytest/cacheprovider.py:469: PytestCacheWarning: could not create cache path /opt/tests/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/opt/tests/pytest-cache-files-9vfuf46j'
+    config.cache.set("cache/nodeids", sorted(self.cached_nodeids))
+
+opt/venv/lib/python3.12/site-packages/_pytest/cacheprovider.py:423
+  /opt/venv/lib/python3.12/site-packages/_pytest/cacheprovider.py:423: PytestCacheWarning: could not create cache path /opt/tests/.pytest_cache/v/cache/lastfailed: [Errno 13] Permission denied: '/opt/tests/pytest-cache-files-vwhznu31'
+    config.cache.set("cache/lastfailed", self.lastfailed)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED opt/tests/test_debugger.py::test_real_breakpoint_translation_trace_restart_and_patch_isolation
+FAILED opt/tests/test_debugger.py::test_real_native_state_restores_memory_registers_and_new_session
+FAILED opt/tests/test_debugger.py::test_script_validation_persistence_and_real_execution
+FAILED opt/tests/test_debugger.py::test_native_state_fork_edits_and_reinjects_without_changing_parent
+FAILED opt/tests/test_code_layers.py::test_real_fetch_overlay_preserves_guest_data_and_stacks_over_ram
+FAILED opt/tests/test_code_layers.py::test_real_layered_checkpoint_restarts_with_both_views
+FAILED opt/tests/test_code_layers.py::test_real_guest_self_modification_stops_stale_overlay_before_execution
+FAILED opt/tests/test_code_layers.py::test_real_guest_self_integrity_can_disable_and_restore_ram_layer
+8 failed, 24 passed, 2 warnings in 177.18s (0:02:57)

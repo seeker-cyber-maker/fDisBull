@@ -1,0 +1,1 @@
+{"format":"fdisbull-script-1","steps":[{"address":"0x140003000","as":"value","length":4,"op":"memory"},{"equals":"29000000","op":"assert","value":"$value.hex"}]}

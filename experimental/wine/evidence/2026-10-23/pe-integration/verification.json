@@ -1,0 +1,127 @@
+{
+  "status": "passed",
+  "scope": "authored native x86-64 PE64 GDI fixture; original main image; macOS host -> offline QEMU TCG Linux -> Wine9",
+  "base_commit": "70631fa97bb7b9a043e7c54aadb89bccd61b3e5a",
+  "source_changes": "uncommitted development integration; no release/tag/push performed",
+  "source_sha256": {
+    "src/fdisbull/debugger.py": "662af2984f4a7720a2d110d3176054f48fc83727a2847032f2d5b328301c28bb",
+    "src/fdisbull/cli.py": "2be887918c5342b45bdaea9b1e8f0c29df61297335a7f09c18cc11a700d80b42",
+    "src/fdisbull/debug_script.py": "1db540c97ef82020c10d0cfb370f1455e75b303591b13c6cff99550d8060af79",
+    "src/fdisbull/wine_debugger.py": "559883e2b536542984c4d2a5281889eb2ea8231ca318687d0b6908a9fd64c61a",
+    "src/fdisbull/wine_rpc.py": "c518ac66c55b2d99241cce89835d98b0de4650b4b9ac04b4db4466401cfe5790",
+    "src/fdisbull/wine_runtime.py": "5417f78f6791693dd4e65b2a1814abba51b25ddd0e86b24c65817587f00e3f08",
+    "src/fdisbull/wine_guest/agent.c": "370e0cf377e9ae385eba7a86abb8bf4a07bcba26129bf332ad29937a6987165b",
+    "src/fdisbull/wine_guest/broker.py": "963c9203c20873851ec87a8b64988f4b6aa847cdae26d6ea30595414bd52628c",
+    "src/fdisbull/wine_guest/init.sh": "062a3478f4657843a8128079d51e411de5987577dfd4d3e3fb4e5c6ad033fd92"
+  },
+  "fixture_source_sha256": "e68e7c9a69f1b95adc7ea88e39b2983ce301ff45b4baa377938101891ec1f2d3",
+  "fixture_executable_sha256": "0898cbe9b6d695f55bf75504d47d0d808e449d2d5a4047418aee6bc613e9d40f",
+  "tested_wheel_sha256": "d7bece904672b828044c150eba3aadd074d3aa51d61a124a43f8fe2dad9fe87b",
+  "runtime": {
+    "qemu": {
+      "path": "/opt/homebrew/Cellar/qemu/11.1.2/bin/qemu-system-x86_64",
+      "sha256": "a8ee5cdeaa1b04fa6fcfbaf210c03209ab7c91357ce2b6eb4dff10c2b7bc7816"
+    },
+    "kernel": {
+      "path": "/Volumes/PATRIOT/fdisbull-wine-sandbox-20261023/qemu/linux-6.1.0-50-amd64",
+      "sha256": "d8808aa4ca188560da1e6d749dcb930c87a5fd8b11ebff1f3fa6d728af35203d"
+    },
+    "initramfs": {
+      "path": "/Volumes/PATRIOT/fdisbull-wine-sandbox-20261023/qemu/fdisbull-pe-runtime-final.cpio.gz",
+      "sha256": "4d9f342d84eea9b307f015901e614201a9b7f106f94177ec0fcc3f20ffc205ea"
+    }
+  },
+  "guest": {
+    "wine_version": "wine-9.0 (Ubuntu 9.0~repack-4build3)",
+    "guest_kernel": "6.1.0-50-amd64",
+    "agent_binary_sha256": "37fcd47d09c8a37b0c2ff8f5d4e704744d4ba85cdcb9a298921f474693874942",
+    "resources": {
+      "init": "062a3478f4657843a8128079d51e411de5987577dfd4d3e3fb4e5c6ad033fd92",
+      "opt/fdisbull/agent.c": "370e0cf377e9ae385eba7a86abb8bf4a07bcba26129bf332ad29937a6987165b",
+      "opt/fdisbull/broker.py": "963c9203c20873851ec87a8b64988f4b6aa847cdae26d6ea30595414bd52628c"
+    }
+  },
+  "results": {
+    "installed_wheel_pe64": {
+      "passed": 5,
+      "skipped": 0
+    },
+    "ordinary_linux": {
+      "passed": 763,
+      "skipped": 29,
+      "warnings": 1
+    },
+    "existing_macos_dos": {
+      "passed": 45,
+      "skipped": 0,
+      "backend_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced"
+    },
+    "macos_full": {
+      "passed": 736,
+      "skipped": 31,
+      "failed": 2,
+      "errors": 23,
+      "limit": "same baseline Linux ELF compiler/linker fixture failures"
+    }
+  },
+  "witness": {
+    "checkpoint": "0x140001480",
+    "counter": "0x140003000",
+    "counter_sequence": [
+      7,
+      41,
+      42,
+      43
+    ],
+    "fresh_json_session_counter": 7,
+    "completed_trace_instructions": 4,
+    "native_frame": [
+      320,
+      200
+    ],
+    "grid_step": 8,
+    "guest_ram_gib": 4,
+    "rootfs": "ramfs",
+    "all_owned_processes_reaped": true
+  },
+  "earlier_setup_failures": [
+    {
+      "stage": "Wine prefix initialization",
+      "configuration": "uncompacted 8GiB experimental runtime while competing VM ran",
+      "result": "180s initialization timeout before target launch; retained privately; no debugger success claimed"
+    },
+    {
+      "stage": "Linux initramfs unpack",
+      "configuration": "4GiB default tmpfs root, original and compact image",
+      "result": "write error then kernel panic; fixed by explicit rootfstype=ramfs; bounded diagnostics retained privately"
+    }
+  ],
+  "evidence_sha256": {
+    "native-acceptance.junit.xml": "5b55dbab5cff35c422fd1f3e778890178bc9a48e62f2c6f58a8ed84cc1c92b32",
+    "before.png": "98407f6e4f260134c5dd33f758a0e44e7e15445ed7df950f92e034f2160df86f",
+    "route-result.json": "261e6a83e3f78c7394d491c54eac6bc522f8ec57056a23527637316bea57095d",
+    "checkpoint.json": "bea721608ed9e4f72a98fbc262bb58f4530f9212edca39fd2e24f26bf1d696bd",
+    "click.png.raw.png": "c098e1a72396cece911ce01bfdf7ffbed81d1fdaf9ec796ab8211d827c3e8de0",
+    "ordinary-linux.junit.xml": "b9169b2aa59c263e01197f1a4b753aaf20b09a403c28119313290032da7ea823",
+    "after.png": "d7a22f4fda14e08fb0dc387535cbd3569668870b2b2ae23cf05fec44c369a059",
+    "acceptance.json": "a10d65970ae6021c823daf4e99033ac8fb8a3b4bb1b0f7c7288edf1c04bda6cc",
+    "ordinary-linux-vm.json": "7161072805eefe275ac2d11a85bdae6f321026bc31009838b96afb9f084b588c",
+    "dos-regression.junit.xml": "6af97f9ca1bb8039d77cb206a8f17d4eda4fde98e773d9577d6ec73a6bfdb07e",
+    "runtime-preparation.json": "c21a7c11a412408265484a108a94fffa6d56db78c3d8fb585fd907682acb398c",
+    "dos-regression.log": "d239504388bb1b1af13919522f8790aa48b84367a326171c598b9c48bc98f3da",
+    "click.png": "938985ae758291fd3de27e26f6af1a9bb3b3e9ec2095a4a38bb38068e70ea01c",
+    "ordinary-linux.log": "6b90694f94787e4cf0092bd777df8bcdfec83172ad77749c9b2f77abb1d09569",
+    "route.fdisbull.json": "f3a41aedb10fd6332462bbec144373687f52949d4e590a4f10f8f6223a2418cb",
+    "before.png.raw.png": "c098e1a72396cece911ce01bfdf7ffbed81d1fdaf9ec796ab8211d827c3e8de0",
+    "native-acceptance.log": "d3194aa768f3e8565ee65f945628f4fbef51635b68f8673c3c86e169566282c7"
+  },
+  "not_qualified": [
+    "arbitrary Windows games",
+    "PE32/WoW64",
+    "managed source debugging",
+    "DirectX/fullscreen/multiple-window capture",
+    "data watchpoints",
+    "code layers",
+    "resumable states"
+  ]
+}

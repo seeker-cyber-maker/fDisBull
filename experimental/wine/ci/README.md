@@ -1,0 +1,7 @@
+# PE64 native CI runtime
+
+The `PE64 Wine/QEMU (installed wheel)` job in `.github/workflows/native-debugger.yml` creates a new runtime from this recipe and requires the real PE acceptance test. It uses the same QEMU TCG transport and packaged guest sources as the public debugger, with two fresh offline VMs. It does not substitute a direct host-Wine probe for that integration.
+
+The Containerfile pins the Ubuntu 24.04 AMD64 base digest. Apt package versions are recorded per run. Docker is used only to construct/export the trusted root filesystem and compile our authored GUI fixture; target execution happens in QEMU with no network device or host mount. `build_runtime.py` streams the export to newc, expands tar hard links, omits the fixture and documentation/cache, then invokes the installed package's standard runtime preparer. The Linux kernel download is checked against SHA-256 `d8808aa4ca188560da1e6d749dcb930c87a5fd8b11ebff1f3fa6d728af35203d`, independently listed in Debian's [installer checksums](https://deb.debian.org/debian/dists/bookworm/main/installer-amd64/current/images/SHA256SUMS). An upstream replacement fails the gate instead of silently changing that input.
+
+The CI evidence includes the exact source commit, installed wheel identity, rootfs/kernel/runtime/fixture hashes, runtime package versions, JUnit/logs and authored screenshots/traces. The runtime images, compiled fixture, Wine prefix and test project database remain transient and are not uploaded. Sources and this recipe are retained in Git; no game files or saved states are needed.

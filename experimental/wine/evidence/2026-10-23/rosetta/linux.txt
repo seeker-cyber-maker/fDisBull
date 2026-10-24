@@ -1,0 +1,1 @@
+Linux fdisbull-pe-dos-qualification 6.18.35 #1 SMP Mon Jun 15 12:55:27 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux

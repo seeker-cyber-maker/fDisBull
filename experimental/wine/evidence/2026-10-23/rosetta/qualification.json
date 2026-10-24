@@ -1,0 +1,69 @@
+{
+  "scope": "Experimental runtime qualification; no packaged PE debugger",
+  "host": "macOS ARM64, Apple container 1.4.1, Linux amd64 userland via Rosetta",
+  "image": "sha256:935b6d6badbb7b0892bb5f0f9859bfcdc08e777278930978877c75bac9e80e83",
+  "wine": "9.0~repack-4build3",
+  "wine_basic_launch": true,
+  "wine_debug_qualified": false,
+  "debug_failure": "rosetta error: invalid gdt selector index 5",
+  "observed_debug_events": [
+    "process-create, image base 0x140000000",
+    "six loaded modules",
+    "Wine loader breakpoint 0x80000003"
+  ],
+  "not_reached": [
+    "fixture breakpoint",
+    "counter read/write oracle",
+    "single-step oracle"
+  ],
+  "ordinary_linux_tests": {
+    "passed": 759,
+    "skipped": 28
+  },
+  "required_native_tests": {
+    "passed": 25,
+    "failed": 7,
+    "skipped": 0,
+    "failed_tests": [
+      "test_real_native_state_restores_memory_registers_and_new_session",
+      "test_script_validation_persistence_and_real_execution",
+      "test_native_state_fork_edits_and_reinjects_without_changing_parent",
+      "test_real_fetch_overlay_preserves_guest_data_and_stacks_over_ram",
+      "test_real_layered_checkpoint_restarts_with_both_views",
+      "test_real_guest_self_modification_stops_stale_overlay_before_execution",
+      "test_real_guest_self_integrity_can_disable_and_restore_ram_layer"
+    ]
+  },
+  "limits": [
+    "Only PE32+ x86-64 native code probed",
+    "DOSBox state failures are not attributed to Wine",
+    "No game files, native states or project databases in these reports"
+  ],
+  "files": {
+    "SHA256SUMS": "d7d32505cbe32e95fe282d667404f80253031df50745bd944118f54ff4ae52d3",
+    "controller-variants.sha256": "47a7cb9f135e00134828d724b2d58896ee36c82f9e6e216b1c9ec7cfd08fcbd4",
+    "dosbox-tests.log": "c66ffaf2b58ce7d299954d60aa031feee5c5f18e2d7296f83bab5dc7d5ac744a",
+    "dosbox-tests.xml": "2feb0083bb72d10bea025a5a32a8cc5a27a376adcc95bcd1c5ad7fbc74aa33e7",
+    "exit-codes.json": "7579ef27bc2828c4f15c34f507f9259602cb13fdf6a601f1efc329f3deb01c03",
+    "linux.txt": "31955fab25fe0652f6c8f7ba266cfedee8bae45b92782963952d2df8c68eda88",
+    "ordinary-linux-tests.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "ordinary-linux-tests.log": "55b00cc5baa1857480c0692b50498ec869ea5a935bd7665e5ff85dfb9ba4e0f7",
+    "ordinary-linux-tests.xml": "efa4729a6e91e479bb09d71ddbb294f3d537eb3d1fc97758b878be0c964379de",
+    "package-versions.txt": "f06ccc2d8c22cf00448a2ed8b28018efa4a7fbb68caeff1aa451de0a10221a8f",
+    "wine-basic.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "wine-basic.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "wine-basic.stdout": "1186c8de2b3152d3535ea2b5b0f5d88ca1cd0caa325c153b1f1a8281099f847c",
+    "wine-fixture-context.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "wine-fixture-context.jsonl": "a6cc64833473726058827d56cb34991c108c1b3424871991d5fb8b6f809598de",
+    "wine-fixture-context.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "wine-full-context.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "wine-full-context.jsonl": "609364bf7597c15cc16578d6afc3a2cb5d47a41b468b1728af201ceeecfb5997",
+    "wine-full-context.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "wine-probe-2.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "wine-probe-2.jsonl": "6aab8d610a993d8a3424ac03afb1a21636aa8e8d57fe795340ac33cd309b5811",
+    "wine-probe-2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "wine-probe.jsonl": "de2a0f2134ec995a0bde7d529f35927e83b93b75432acf19f808a6c6c7a36f73",
+    "wine-probe.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "wine-version.txt": "88da7b55dc2f3922463047f6b92f0488c738c9306147cf47b949d1b284bae54a"
+  }
+}

@@ -49,7 +49,16 @@ DEBUG_DDL += LAYER_DDL
 
 
 class DebugProjectMixin(LayerProjectMixin):
-    def debugger(self, executable, game_dir, *, version=None):
+    def debugger(self, executable, game_dir, *, version=None, backend=None, kernel=None,
+                 initramfs=None, files=None, boot_timeout_ms=240000):
+        if backend == 'wine-qemu' or (backend is None and self.meta['format']=='PE'):
+            if kernel is None or initramfs is None:
+                raise ValueError('PE64 Wine/QEMU launch requires kernel and prepared initramfs')
+            from .wine_debugger import PEDebugSession
+            return PEDebugSession(self,executable,game_dir,kernel=kernel,initramfs=initramfs,
+                version=version,files=files,boot_timeout_ms=boot_timeout_ms)
+        if backend not in (None,'dosbox') or kernel is not None or initramfs is not None or files is not None:
+            raise ValueError('Unexpected DOS backend or Wine-only launch options')
         return DebugSession(self, executable, game_dir, version=version)
 
     def debug_runs(self, version=None):
@@ -240,6 +249,9 @@ class DebugSession(LayerSessionMixin):
 
     def __exit__(self, *args):
         self.close()
+
+    def write_memory(self, address, data_hex, *, expected_hex):
+        raise ValueError('Direct guarded memory editing is currently a PE64 operation; use a DOS RAM layer')
 
     def call(self, method, params=None):
         if self.closed:
@@ -656,7 +668,7 @@ class DebugWorkspace:
             raise ValueError('Live run not owned by this server; use debug-runs for saved history')
         methods = {'debug-status':'status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
                    'debug-run':'run','debug-click':'click','debug-click-frame':'click_frame','debug-screenshot':'screenshot','debug-trace':'trace',
-                   'debug-memory':'memory','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script'}
+                   'debug-memory':'memory','debug-write-memory':'write_memory','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script'}
         methods.update({'debug-layer-stack':'layers','debug-layer-enable':'layer_enable','debug-layer-patch':'layer_patch',
                         'debug-code':'code','debug-capture-code':'capture_code','debug-branch':'branch',
                         'debug-cave':'cave','debug-hook':'hook','debug-hooks':'hooks','debug-delete-hook':'delete_hook'})

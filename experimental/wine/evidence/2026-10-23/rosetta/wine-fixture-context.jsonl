@@ -1,0 +1,6 @@
+{"event":"process","image_base":"0x140000000","thread":252}
+{"event":"exception","code":"0x80000003","address":"0x6fffffca59c0","first_chance":1}
+rosetta error: invalid gdt selector index 5
+ {"result":"fail","breakpoint":false,"single_step":false,"modules":6,"exit_code":0}
+X connection to :99 broken (explicit kill or server shutdown).
+X connection to :99 broken (explicit kill or server shutdown).

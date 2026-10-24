@@ -1,6 +1,7 @@
 include README.md AGENTS.md pyproject.toml MANIFEST.in
-recursive-include src/fdisbull *.py
+recursive-include src/fdisbull *.py *.c *.sh
 recursive-include tests *.py
+include tests/wine_gui_fixture.c
 recursive-include docs *.md
 recursive-include scripts *.py
 prune examples

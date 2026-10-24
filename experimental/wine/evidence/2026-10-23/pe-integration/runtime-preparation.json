@@ -1,0 +1,21 @@
+{
+  "base_sha256": "6e1daa431dac3cf77462ef07a2b4fcee37ee10bd76bc9e8d1b44c77addc7badd",
+  "runtime_sha256": "4d9f342d84eea9b307f015901e614201a9b7f106f94177ec0fcc3f20ffc205ea",
+  "resources": {
+    "init": "062a3478f4657843a8128079d51e411de5987577dfd4d3e3fb4e5c6ad033fd92",
+    "opt/fdisbull/agent.c": "370e0cf377e9ae385eba7a86abb8bf4a07bcba26129bf332ad29937a6987165b",
+    "opt/fdisbull/broker.py": "963c9203c20873851ec87a8b64988f4b6aa847cdae26d6ea30595414bd52628c"
+  },
+  "retained_base_bytes": 1876709775,
+  "omitted_bytes": 224474199,
+  "omitted_prefixes": [
+    "opt/venv",
+    "opt/tests",
+    "opt/probes",
+    "opt/dosbox-x",
+    "usr/share/doc",
+    "usr/share/man",
+    "var/lib/apt/lists",
+    "var/cache/apt"
+  ]
+}

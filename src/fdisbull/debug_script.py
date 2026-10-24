@@ -16,7 +16,7 @@ OPERATIONS = {
     'layer-stack':'layers', 'layer-enable':'layer_enable', 'layer-patch':'layer_patch',
     'code':'code', 'capture-code':'capture_code', 'branch':'branch', 'cave':'cave', 'hook':'hook',
     'hooks':'hooks', 'delete-hook':'delete_hook',
-    'registers':'registers', 'memory':'memory', 'status':'status',
+    'registers':'registers', 'memory':'memory', 'write-memory':'write_memory', 'status':'status',
 }
 
 
@@ -68,6 +68,10 @@ def validate_script(script):
 def execute_script(session, script, *, timeout_ms=60000):
     bounded(timeout_ms,'timeout_ms',1,600000)
     steps = validate_script(script) # Reject malformed later steps before any guest mutation.
+    if getattr(session,'script_operations',None) is not None:
+        unsupported=[s['op'] for s in steps if s['op'] not in session.script_operations]
+        if unsupported:
+            raise ValueError('Unsupported operations for this backend: '+', '.join(sorted(set(unsupported))))
     encoded = json.dumps(script,sort_keys=True,separators=(',',':'),allow_nan=False).encode()
     source = session._artifact('route.fdisbull.json','script',encoded,{'format':script['format']})
     started = time.monotonic(); deadline = started+timeout_ms/1000

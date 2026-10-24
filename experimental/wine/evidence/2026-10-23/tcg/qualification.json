@@ -1,0 +1,88 @@
+{
+  "scope": "PE32+ x86-64 Win32 debug API qualification, not fDisBull PE integration",
+  "host": "macOS ARM64",
+  "guest": "Linux x86-64, QEMU 11.1.2 full CPU emulation (TCG)",
+  "wine_debug_qualified": true,
+  "exact_original_controller_also_passed": true,
+  "oracle_events": [
+    {
+      "event": "process",
+      "image_base": "0x140000000",
+      "thread": 392
+    },
+    {
+      "event": "exception",
+      "code": "0x80000003",
+      "address": "0x6fffffca59c0",
+      "first_chance": 1
+    },
+    {
+      "event": "exception",
+      "code": "0x80000003",
+      "address": "0x1400014dc",
+      "first_chance": 1
+    },
+    {
+      "event": "fixture-breakpoint",
+      "rip": "0x1400014dd",
+      "counter_before": 7,
+      "counter_after_edit": 41
+    },
+    {
+      "event": "exception",
+      "code": "0x80000004",
+      "address": "0x1400014e2",
+      "first_chance": 1
+    },
+    {
+      "event": "single-step",
+      "rip": "0x1400014e2",
+      "eax": "0x12345678"
+    },
+    {
+      "result": "pass",
+      "breakpoint": true,
+      "single_step": true,
+      "modules": 6,
+      "exit_code": 0
+    }
+  ],
+  "required_native_tests": {
+    "passed": 24,
+    "failed": 8,
+    "skipped": 0,
+    "failed_tests": [
+      "test_real_breakpoint_translation_trace_restart_and_patch_isolation",
+      "test_real_native_state_restores_memory_registers_and_new_session",
+      "test_script_validation_persistence_and_real_execution",
+      "test_native_state_fork_edits_and_reinjects_without_changing_parent",
+      "test_real_fetch_overlay_preserves_guest_data_and_stacks_over_ram",
+      "test_real_layered_checkpoint_restarts_with_both_views",
+      "test_real_guest_self_modification_stops_stale_overlay_before_execution",
+      "test_real_guest_self_integrity_can_disable_and_restore_ram_layer"
+    ]
+  },
+  "additional_native_failure": "1000 guest-ms did not complete within 2000 host-ms; test reports timeout",
+  "limits": [
+    "Only self-authored PE64 console target tested",
+    "No PE GUI screenshots/clicks, hardware watchpoints, code layers or resumable PE states qualified",
+    "Same seven DOSBox state.restore failures observed in both guest stacks; cause unresolved"
+  ],
+  "files": {
+    "SHA256SUMS": "a38717576cabf0cb1eefefc9e9c4b9a42e37c2aa5cb5f78860303eb1946a69c5",
+    "dosbox-tests.log": "2894e753c7356c5e2a751ebf53e0f9a115681fe92644237637b84dd6a8718497",
+    "dosbox-tests.xml": "2140b662d225d24f97db4f15f6ac6a94092a51920cf98447965b6bd7fbb2cc2d",
+    "exit-codes.json": "619b0d3d23186cf7691a5c47274920b21d5a5d6b13c4de8b9655f8f91267f615",
+    "linux.txt": "959087a4ed2da6541486712aefd917dab82ff8affe53d2271fc1ff4a58c582c3",
+    "package-versions.txt": "f06ccc2d8c22cf00448a2ed8b28018efa4a7fbb68caeff1aa451de0a10221a8f",
+    "tcg-init-result.json": "48076ff1501651d292b939d5fb5b309a36ca9abaa46a164a59621ef2b9e5da84",
+    "tcg-inputs.sha256": "1c77196a4a953e4fd0d00b8a54b49b5d612c12a90b5ff74639b3d0d2e28351f2",
+    "vm-result.json": "cd593691ff2fa126ea1075aefb2a8c58292ac3fbf789754b97b076d3143a7e99",
+    "wine-original-controller.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "wine-original-controller.jsonl": "4185500b4e1bd3cfd9f143529e63f1e0cf18e176881de382af2cdef57fd3aa14",
+    "wine-original-controller.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "wine-probe.jsonl": "3034079c247565ea473f170fae2e43fca4a9d03d489aeaf4cbe5f605ea7abb51",
+    "wine-probe.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "wine-version.txt": "88da7b55dc2f3922463047f6b92f0488c738c9306147cf47b949d1b284bae54a"
+  }
+}

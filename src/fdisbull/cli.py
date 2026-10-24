@@ -8,7 +8,7 @@ from .project import Project, number
 from . import __version__
 
 METHODS = {
-    'debug-launch': 'Launch a project-bound DOSBox session in serve; executable,game_dir,[version]',
+    'debug-launch': 'Launch project-bound DOSBox or PE64 Wine/QEMU; executable,game_dir,[version,backend,kernel,initramfs,files,boot_timeout_ms]',
     'debug-status': 'Live debugger status and address mapping; run',
     'debug-registers': 'Live CPU registers with project address mapping; run',
     'debug-layer': 'Save an immutable guarded RAM or execution layer; name,kind,patches,[version]',
@@ -34,6 +34,7 @@ METHODS = {
     'debug-grid': 'Derive a coordinate grid from a stored clean screenshot offline; artifact,[name,step,target]',
     'debug-trace': 'Store bounded CPU trace with project address mappings; run,[name,count,timeout_ms,fast_forward]',
     'debug-memory': 'Read project-mapped runtime bytes; run,address,[cs,length]',
+    'debug-write-memory': 'Guarded PE64 runtime edit with readback; run,address,data_hex,expected_hex',
     'debug-save-state': 'Store native emulator state in the project; run,[name]',
     'debug-load-state': 'Restore a compatible project state during a run; run,artifact',
     'debug-script': 'Execute bounded menu/debug script; run,[script,script_id,timeout_ms]',
@@ -293,9 +294,12 @@ def parser():
     root = argparse.ArgumentParser(prog="fdisbull",description="Agent-first disassembly with SQLite persistence and headless image export")
     root.add_argument("--version",action="version",version=__version__)
     sub = root.add_subparsers(dest="command",required=True)
-    c = sub.add_parser('debug',help='Launch a DOS project and accept live debugger JSON commands on stdin')
+    c = sub.add_parser('debug',help='Launch a DOS or PE64 project and accept live debugger JSON commands on stdin')
     c.add_argument('project');c.add_argument('--executable',required=True);c.add_argument('--game-dir',required=True)
     c.add_argument('--version',type=int)
+    c.add_argument('--backend',choices=['dosbox','wine-qemu'])
+    c.add_argument('--kernel');c.add_argument('--initramfs');c.add_argument('--files',type=json.loads)
+    c.add_argument('--boot-timeout-ms',type=int,default=240000)
     for name in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state'):
         c = sub.add_parser(name,help=METHODS[name]);c.add_argument('project')
         if name=='debug-state-info':

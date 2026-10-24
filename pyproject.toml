@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fdisbull"
-version = "0.11.0"
+version = "0.12.0"
 description = "Agent-first disassembly, persistent evidence and headless rendering"
 requires-python = ">=3.12"
 dependencies = ["iced-x86==1.21.0", "capstone==5.0.9", "lief==1.0.0", "Pillow>=10.4,<13"]
@@ -22,3 +22,6 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[tool.setuptools.package-data]
+fdisbull = ["wine_guest/*.c", "wine_guest/*.sh", "wine_guest/*.py"]

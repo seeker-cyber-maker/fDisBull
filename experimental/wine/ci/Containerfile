@@ -1,0 +1,11 @@
+FROM ubuntu@sha256:a2d43bffc46670d7108bb3c0468c67c5557c4c92e83e1e34cbff1322ad1b94dc
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 wine wine64 xvfb util-linux \
+    gcc-mingw-w64-x86-64-win32 binutils-mingw-w64-x86-64 \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/* \
+    && test "$(id -u ubuntu)" = 1000
+COPY tests/wine_gui_fixture.c /opt/ci/wine_gui_fixture.c
+RUN x86_64-w64-mingw32-gcc -O0 -g -mwindows \
+    -o /opt/ci/oracle.exe /opt/ci/wine_gui_fixture.c -luser32 -lgdi32 \
+    && dpkg-query -W > /opt/ci/runtime-packages.txt

@@ -1,0 +1,6 @@
+{"event":"process","image_base":"0x140000000","thread":276}
+{"event":"fixture-breakpoint","rip":"0x1400014dd","counter_before":7,"counter_after_edit":41}
+{"event":"single-step","rip":"0x1400014e2","eax":"0x12345678"}
+FDISBULL_PE_COUNTER=42
+{"result":"pass","breakpoint":true,"single_step":true,"modules":6,"exit_code":0}
+X connection to :99 broken (explicit kill or server shutdown).

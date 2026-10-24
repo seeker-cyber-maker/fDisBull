@@ -11,6 +11,7 @@ import zipfile
 EXCLUDED_DIRECTORIES = {"examples", "history", "experimental", "build", "dist", ".git", "__pycache__"}
 EXCLUDED_SUFFIXES = {".fdb", ".db", ".sqlite", ".sqlite3", ".sav", ".state", ".exe", ".com", ".dll", ".bin", ".dat", ".so", ".dylib", ".o", ".pyc"}
 REQUIRED_TEST_HELPERS = {"tests/fixtures_formats.py", "tests/fixtures_macho.py"}
+REQUIRED_PE_RESOURCES = {"wine_guest/agent.c", "wine_guest/init.sh", "wine_guest/broker.py"}
 
 
 def archive_names(path: Path) -> list[str]:
@@ -47,12 +48,17 @@ def check_archive(path: Path) -> int:
             raise ValueError(f"Wheel contains files outside fdisbull and its metadata: {sorted(roots)}")
         if "fdisbull/__init__.py" not in names:
             raise ValueError("Wheel is missing fdisbull/__init__.py")
+        missing = {"fdisbull/" + name for name in REQUIRED_PE_RESOURCES} - set(names)
+        if missing:
+            raise ValueError(f"Wheel is missing PE backend sources: {sorted(missing)}")
     else:
         roots = {entry.parts[0] for entry in entries}
         if len(roots) != 1 or not next(iter(roots)).startswith("fdisbull-"):
             raise ValueError(f"Unexpected source archive root: {sorted(roots)}")
         relative = {PurePosixPath(*entry.parts[1:]).as_posix() for entry in entries}
-        missing = (REQUIRED_TEST_HELPERS | {"src/fdisbull/__init__.py", "pyproject.toml"}) - relative
+        required = REQUIRED_TEST_HELPERS | {"src/fdisbull/__init__.py", "pyproject.toml", "tests/wine_gui_fixture.c"}
+        required |= {"src/fdisbull/" + name for name in REQUIRED_PE_RESOURCES}
+        missing = required - relative
         if missing:
             raise ValueError(f"Source archive is missing required files: {sorted(missing)}")
     return len(names)

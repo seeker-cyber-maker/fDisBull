@@ -1,0 +1,7 @@
+{
+  "timeout_seconds": 1,
+  "timed_out": true,
+  "qemu_exit": 0,
+  "driver_exit": 1,
+  "note": "QEMU handled termination with exit 0; the deadline flag and missing report correctly prevented acceptance. The launcher waited for its owned process."
+}
