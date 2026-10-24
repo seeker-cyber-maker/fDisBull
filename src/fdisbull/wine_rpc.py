@@ -17,8 +17,9 @@ from .dosbox_rpc import DebuggerError
 class WineQemuRPC:
     limit = 96*1024*1024
 
-    def __init__(self, executable, kernel, initramfs, *, boot_timeout_ms=240000):
+    def __init__(self, executable, kernel, initramfs, *, boot_timeout_ms=240000, restore=None):
         self.process = None;self.socket = None;self.sequence = 0
+        self.qmp=None
         self.lock = threading.Lock();self.temporary = tempfile.TemporaryDirectory(prefix='fdisbull-pe-',dir='/tmp')
         root=Path(self.temporary.name)
         self.log_path=root/'boot.log'
@@ -30,11 +31,14 @@ class WineQemuRPC:
                                             stderr=subprocess.STDOUT,timeout=5).splitlines()[0]
             self._check_version(version)
             sock=root/'rpc.sock'
+            qmp_path=root/'qmp.sock'
             command=[str(paths[0]),'-accel','tcg,thread=multi','-machine','q35','-cpu','max',
                 '-smp','2','-m','4G','-nic','none','-display','none','-monitor','none','-no-reboot',
                 '-serial',f'file:{self.log_path}','-serial',f'unix:{sock},server=on,wait=off',
+                '-qmp',f'unix:{qmp_path},server=on,wait=off',
                 '-kernel',str(paths[1]),'-initrd',str(paths[2]),'-append',
                 'console=ttyS0,115200 rdinit=/init rootfstype=ramfs loglevel=4 panic=1 random.trust_cpu=on']
+            if restore is not None:command+=['-incoming','defer']
             self.inputs={name:dict(path=str(p),sha256=self._hash(p)) for name,p in zip(('qemu','kernel','initramfs'),paths)}
             self.inputs['qemu']['version']=version
             self.command=command
@@ -48,7 +52,12 @@ class WineQemuRPC:
                     if self.process.poll() is not None or time.monotonic()>=deadline:
                         raise DebuggerError('QEMU failed before its serial channel opened')
                     time.sleep(.05)
-            hello=self._read(deadline)
+            from .qemu_control import QemuControl
+            self.qmp=QemuControl(qmp_path,self.process,deadline)
+            if restore is None:hello=self._read(deadline)
+            else:
+                self.qmp.restore(restore,timeout_ms=boot_timeout_ms)
+                hello=self.call('identity',timeout_ms=30000)
             self.hello=hello
             expected=self._hash(Path(__file__).with_name('wine_guest')/'agent.c')
             if hello.get('protocol')!='fdisbull-wine-qemu-1' or hello.get('agent_sha256')!=expected:
@@ -58,7 +67,10 @@ class WineQemuRPC:
                 raise DebuggerError('Wine runtime resource mismatch; rebuild with the installed package')
             self.capabilities={'backend':'wine-qemu','architecture':'x86-64','execution_breakpoints':True,
                 'memory_read':True,'memory_write':True,'instruction_trace':True,'screenshots':True,'mouse':True,
-                'save_states':False,'code_layers':False,'data_watchpoints':False,'fast_forward':False}
+                'save_states':True,'code_layers':True,'data_watchpoints':True,'register_edit':True,'fast_forward':False}
+            self.capabilities.update(watchpoint_access=['r','w','rw'],watchpoint_mechanism='Win32 guard pages with single-step rearming',
+                execution_layer_mechanism='guarded relocated instructions; 4 KiB target buffer; host overhead',
+                native_state_format='QEMU whole-VM migration; private project sidecar')
         except BaseException as error:
             diagnostics=self._diagnostics()
             self.close()
@@ -125,6 +137,7 @@ class WineQemuRPC:
         finally:self.lock.release()
 
     def close(self):
+        if self.qmp is not None:self.qmp.close();self.qmp=None
         if self.socket is not None:self.socket.close();self.socket=None
         if self.process is not None:
             if self.process.poll() is None:
@@ -132,3 +145,8 @@ class WineQemuRPC:
                 try:self.process.wait(timeout=3)
                 except subprocess.TimeoutExpired:self.process.kill();self.process.wait(timeout=3)
         if self.temporary is not None:self.temporary.cleanup();self.temporary=None
+
+    def capture(self,path):
+        with self.lock:
+            try:return self.qmp.save(path)
+            except BaseException:self.close();raise

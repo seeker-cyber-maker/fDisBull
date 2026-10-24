@@ -1,0 +1,30 @@
+{
+  "ram": {
+    "counter": 9,
+    "crc_matches": 0
+  },
+  "execute": {
+    "counter": 12,
+    "crc_matches": 1,
+    "crc32": "0x78568a01"
+  },
+  "branch": {
+    "inverted_increment": 2,
+    "restored_increment": 1
+  },
+  "alternate_reads_original": {
+    "counter": 17,
+    "source_byte": "01",
+    "data_watch_inside_layer": true
+  },
+  "parent_artifact": "fd8079db8ec2495f9248de330187904c",
+  "derived_artifact": "46c897875cff44a4a8236641295305ad",
+  "result": "pass",
+  "elapsed_seconds": 358.52385020884685,
+  "original_source_unchanged": true,
+  "parent_memory": 17,
+  "derived_memory": 51,
+  "derived_rax": "0x123456789abcdef0",
+  "resumed_with_layer": 54,
+  "resumed_without_layer": 55
+}

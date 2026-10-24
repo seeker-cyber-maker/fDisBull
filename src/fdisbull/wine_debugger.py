@@ -14,11 +14,15 @@ from .debugger import DebugSession, bounded, stamp
 from .dosbox_rpc import DebuggerError
 from .external_files import _file_name
 from .wine_rpc import WineQemuRPC
+from .wine_layers import PELayerSessionMixin
+from .wine_execution import PEExecutionMixin
+from .wine_state import PEStateSessionMixin,get_state,file_hash
 
 
-class PEDebugSession:
+class PEDebugSession(PELayerSessionMixin,PEExecutionMixin,PEStateSessionMixin):
     script_operations={'run','click','click-frame','screenshot','trace','breakpoint',
-        'delete-breakpoint','registers','memory','write-memory','status','assert'}
+        'delete-breakpoint','registers','memory','write-memory','status','assert',
+        'layer-stack','layer-enable','layer-patch','code','capture-code','branch','save-state','load-state','write-registers'}
     # Share artifact persistence, offline grids, and declarative script execution.
     _artifact=DebugSession._artifact
     _event=DebugSession._event
@@ -28,7 +32,7 @@ class PEDebugSession:
     click_frame=DebugSession.click_frame
 
     def __init__(self, project, executable, game_dir, *, kernel, initramfs,
-                 version=None, files=None, boot_timeout_ms=240000):
+                 version=None, files=None, boot_timeout_ms=240000,state=None):
         self.project=project;self.rpc=None;self.closed=False;self.run_id=uuid.uuid4().hex
         self.version=project.version(version)
         if project.meta['format']!='PE' or project.bits!=64 or project.meta['arch']!='x86' or self.version['parent'] is not None:
@@ -59,13 +63,25 @@ class PEDebugSession:
         self.regions=project.regions(self.version['id'])
         self.module_size=max((r.start+len(r.data)) for r in self.regions)-self.static_base
         self._expected={r.start:bytearray(r.data) for r in self.regions}
-        self.breakpoints={};self.mode_id=0;self._frame=None
+        self.breakpoints={};self.watchpoints={};self.mode_id=0;self._frame=None
         try:
-            self.rpc=WineQemuRPC(executable,kernel,initramfs,boot_timeout_ms=boot_timeout_ms)
-            launched=self.rpc.call('session.start',{'target':target,'entry_rva':project.meta['entry']-self.static_base,'files':uploads},timeout_ms=300000)
+            saved=None;native=None
+            if state is not None:
+                _,saved,native=get_state(project,state,self.version['id'])
+                for name,path in zip(('qemu','kernel','initramfs'),(executable,kernel,initramfs)):
+                    if file_hash(Path(path).expanduser().resolve(strict=True))!=saved['metadata']['runtime_inputs'][name]['sha256']:
+                        raise ValueError('Native state backend identity mismatch: '+name)
+                if [{'path':f['path'],'sha256':f['sha256']} for f in uploads]!=saved['metadata']['files']:
+                    raise ValueError('Native state program inputs mismatch')
+            self.rpc=WineQemuRPC(executable,kernel,initramfs,boot_timeout_ms=boot_timeout_ms,restore=native)
+            if saved is None:
+                launched=self.rpc.call('session.start',{'target':target,'entry_rva':project.meta['entry']-self.static_base,'files':uploads},timeout_ms=300000)
+            else:
+                launched={'image_base':saved['metadata']['runtime_image_base'],'pid':saved['metadata']['target_pid'],
+                          'session':self.rpc.call('status'),'restored_from':state}
             self.runtime_base=int(launched['image_base'],16);self.delta=self.runtime_base-self.static_base
             self._relocate_expected()
-            self.metadata={'backend':'wine-qemu','runtime_profile':'pe64-win32-debug-1',
+            self.metadata={'backend':'wine-qemu','runtime_profile':'pe64-win32-debug-2',
                 'source_sha256':project.meta['source_sha256'],'version_sha256':self.version['sha256'],
                 'static_image_base':hex(self.static_base),'runtime_image_base':hex(self.runtime_base),
                 'address_mapping':'observed main-module base + project RVA','capabilities':self.rpc.capabilities,
@@ -73,8 +89,12 @@ class PEDebugSession:
                 'target_pid':launched['pid'],'qemu_pid':self.rpc.process.pid}
             self.metadata['guest_runtime']={key:self.rpc.hello[key] for key in
                 ('wine_version','guest_kernel','agent_binary_sha256','resources')}
+            if saved is not None:self._load_state_host(saved['host'])
             regs=self.registers()
-            if regs['project_address']!=hex(project.meta['entry']):raise DebuggerError('Observed PE entry differs from project entry')
+            if saved is None and regs['project_address']!=hex(project.meta['entry']):raise DebuggerError('Observed PE entry differs from project entry')
+            if saved is not None:
+                for field in ('rip','rflags','general'):
+                    if regs[field]!=saved['metadata']['registers'][field]:raise DebuggerError('Native restored registers differ: '+field)
             with project.transaction(True):
                 project.db.execute('INSERT INTO debug_runs VALUES (?,?,?,?,?,?)',(self.run_id,self.version['id'],stamp(),None,'stopped',json.dumps(self.metadata)))
             self._event('launch',launched);project._live_debuggers.append(self)
@@ -101,6 +121,7 @@ class PEDebugSession:
 
     def call(self, method, params=None, *, timeout_ms=30000):
         if self.closed:raise DebuggerError('Debugger session is closed')
+        if method=='layers.configure':return self._configure_pe_layers(params)
         return self.rpc.call(method,params,timeout_ms=timeout_ms)
 
     def _address(self,address,length=1,executable=False):
@@ -120,6 +141,10 @@ class PEDebugSession:
 
     def registers(self):
         result=self.call('registers');result['project_address']=self.project_address(result['rip'])
+        self._layer_setup()
+        if self._pending_exec:
+            result['native_rip']=result['rip'];result['rip']=self._pending_exec['before']['rip']
+            result['project_address']=self.project_address(result['rip']);result['execution_location']='relocated-layer-instruction'
         result['cpu_mode']='long64';return result
 
     def memory(self,address,*,cs=None,length=16):
@@ -132,9 +157,12 @@ class PEDebugSession:
                 'view':'logical-memory-with-owned-INT3-bytes-restored'}
 
     def write_memory(self,address,data_hex,*,expected_hex):
+        self._layer_setup()
         data=bytes.fromhex(data_hex);expected=bytes.fromhex(expected_hex)
         if not 1<=len(data)<=65536 or len(data)!=len(expected):raise ValueError('Memory edit requires equally sized guarded bytes, at most 65536')
         value=self._address(address,len(data));before=self.memory(address,length=len(data))
+        if any(value<=a<value+len(data) for a in set(self._ram_applied)|set(self._execution)):
+            raise ValueError('Disable overlapping code layers before direct memory editing')
         if any(value<=bp<value+len(data) for bp in self.breakpoints.values()):
             raise ValueError('Delete overlapping execution breakpoints before editing memory')
         if before['hex']!=expected.hex():raise DebuggerError('Memory edit expected bytes differ; edit refused')
@@ -145,8 +173,16 @@ class PEDebugSession:
         self._event('write-memory',result);return result
 
     def breakpoint(self,address,*,cs=None,access='x',length=1,view='static'):
+        if access in ('r','w','rw'):
+            if cs is not None or view!='static':raise ValueError('PE64 watchpoints use flat project addresses')
+            bounded(length,'length',1,65536);value=self._address(address,length)
+            result=self.call('watch',dict(address=value+self.delta,length=length,access=access))
+            result.update(run=self.run_id,version=self.version['id'],project_address=hex(value),
+                          runtime_address=hex(value+self.delta),access=access,length=length,bytes_verified=False)
+            self.watchpoints[result['breakpoint_id']]=dict(address=value,length=length,access=access)
+            self._event('watchpoint',result);return result
         if cs is not None or access!='x' or length!=1 or view!='static':
-            raise ValueError('PE64 currently supports static disassembly execution breakpoints only')
+            raise ValueError('PE64 supports x, r, w and rw breakpoints at flat project addresses')
         value=self._address(address,executable=True)
         if value in self.breakpoints.values():raise ValueError('An owned breakpoint already exists at this address')
         snapshot=self.project.disassembly(address=value,version=self.version['id'],lines=1)['instructions']
@@ -160,6 +196,9 @@ class PEDebugSession:
         self.breakpoints[result['breakpoint_id']]=value;self._event('breakpoint',result);return result
 
     def delete_breakpoint(self,breakpoint_id):
+        if breakpoint_id in self.watchpoints:
+            result=self.call('unwatch',{'id':int(breakpoint_id[3:])})
+            del self.watchpoints[breakpoint_id];self._event('delete-watchpoint',result);return result
         if breakpoint_id not in self.breakpoints:raise ValueError('Unknown owned PE breakpoint')
         result=self.call('del',{'id':int(breakpoint_id[3:])});del self.breakpoints[breakpoint_id]
         self._event('delete-breakpoint',result);return result
@@ -167,7 +206,8 @@ class PEDebugSession:
     def run(self,*,timeout_ms=10000,guest_ms=None,fast_forward=False):
         bounded(timeout_ms,'timeout_ms',1,600000)
         if guest_ms is not None or fast_forward is not False:raise ValueError('PE uses host timeout_ms; DOS guest time and fast-forward are unsupported')
-        start=time.monotonic();result=self.call('run',{'timeout_ms':timeout_ms},timeout_ms=timeout_ms+15000)
+        start=time.monotonic();deadline=start+timeout_ms/1000
+        result=self._continue_native(deadline)
         stop=result['stop_reason'];stop['project_address']=self.project_address(stop['address'])
         evidence={'run':self.run_id,'outcome':stop['kind'],'timed_out':stop['kind']=='timeout','session':result,
                   'host_elapsed_ms':round((time.monotonic()-start)*1000,3)}
@@ -177,7 +217,7 @@ class PEDebugSession:
         from .decoder import decode
         _file_name(name);bounded(count,'count',1,10000);bounded(timeout_ms,'timeout_ms',1,600000)
         if fast_forward is not False:raise ValueError('DOS fast-forward is unsupported for PE')
-        result=self.call('trace',dict(count=count,timeout_ms=timeout_ms),timeout_ms=timeout_ms+15000)
+        result=self._trace_native(count,time.monotonic()+timeout_ms/1000)
         for event in result['events']:
             event['project_address']=self.project_address(event['address'])
             decoded=decode(bytes.fromhex(event['bytes']),int(event['address'],16),'x86',64)

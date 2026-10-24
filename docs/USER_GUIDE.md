@@ -2,6 +2,8 @@
 
 The project-backed [DOSBox debugger](DOSBOX_DEBUGGER.md) adds live DOS launch, disassembly-address breakpoints, native fast-forward, bounded runs, and screenshots/traces stored in the project. Static analysis remains available independently of an emulator.
 
+The [PE64 Wine/QEMU debugger](WINE_DEBUGGER.md) runs original x86-64 Windows EXEs in an offline Linux guest. Published 0.12.0 includes breakpoints, memory edits, traces, screenshots and clicks; 0.13.0 adds scalar read/write watches, toggleable code layers and editable whole-VM states. Those PE mechanisms and state formats differ from DOS and have their own [verification and limits](PE64_ADVANCED_VERIFICATION.md).
+
 Attach save files, resource tables and other data to an existing analysis. Their bytes and SHA-256 are retained in the project, so byte queries and typed fields remain available after the source file is removed. Attached files have their own **file name + byte offset** identity; they do not become executable memory or code seeds.
 
 ```bash
@@ -280,7 +282,7 @@ fdisbull decoder-check 0f0dc0 --bits 64
 fdisbull decoder-check 554889e5c3 --bits 64 --scan-offsets
 ```
 
-This read-only comparison records iced/Capstone validity, lengths, text and backend versions for bounded proposed starts. It never executes bytes or promotes a proposal to stored code. Text differences can be aliases or formatting; agreement does not prove hardware semantics. [DECODER_RESEARCH.md](DECODER_RESEARCH.md) connects this surface to Sandsifter/Battelle and the proposed SNO x86 adapter. [WINE_DEBUGGER.md](WINE_DEBUGGER.md) describes a future isolated Wine execution backend; it is not delivered or macOS-qualified here. [CORPUS.md](CORPUS.md) records the difficult-binary collection search and current fixture coverage.
+This read-only comparison records iced/Capstone validity, lengths, text and backend versions for bounded proposed starts. It never executes bytes or promotes a proposal to stored code. Text differences can be aliases or formatting; agreement does not prove hardware semantics. [DECODER_RESEARCH.md](DECODER_RESEARCH.md) connects this surface to Sandsifter/Battelle and the proposed SNO x86 adapter. [WINE_DEBUGGER.md](WINE_DEBUGGER.md) describes the separately qualified PE64 runtime backend; runtime evidence does not establish static decoder completeness. [CORPUS.md](CORPUS.md) records the difficult-binary collection search and current fixture coverage.
 
 Try the Windows example directly:
 

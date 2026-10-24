@@ -50,14 +50,14 @@ DEBUG_DDL += LAYER_DDL
 
 class DebugProjectMixin(LayerProjectMixin):
     def debugger(self, executable, game_dir, *, version=None, backend=None, kernel=None,
-                 initramfs=None, files=None, boot_timeout_ms=240000):
+                 initramfs=None, files=None, boot_timeout_ms=240000, state=None):
         if backend == 'wine-qemu' or (backend is None and self.meta['format']=='PE'):
             if kernel is None or initramfs is None:
                 raise ValueError('PE64 Wine/QEMU launch requires kernel and prepared initramfs')
             from .wine_debugger import PEDebugSession
             return PEDebugSession(self,executable,game_dir,kernel=kernel,initramfs=initramfs,
-                version=version,files=files,boot_timeout_ms=boot_timeout_ms)
-        if backend not in (None,'dosbox') or kernel is not None or initramfs is not None or files is not None:
+                version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state)
+        if backend not in (None,'dosbox') or kernel is not None or initramfs is not None or files is not None or state is not None:
             raise ValueError('Unexpected DOS backend or Wine-only launch options')
         return DebugSession(self, executable, game_dir, version=version)
 
@@ -100,27 +100,41 @@ class DebugProjectMixin(LayerProjectMixin):
         data = bytes(row['data'])
         if hashlib.sha256(data).hexdigest()!=row['sha256']:
             raise ValueError('Stored state hash mismatch')
+        if json.loads(row['metadata']).get('format')=='fdisbull-qemu-native-1':
+            from .wine_state import state_info
+            return state_info(self,artifact)
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
             components = [{'name':i.filename,'size':i.file_size,'compressed_size':i.compress_size} for i in archive.infolist()]
         return {'artifact':artifact,'version':row['version'],'sha256':row['sha256'],'size':len(data),
                 'metadata':json.loads(row['metadata']),'components':components}
 
-    def debug_fork_state(self, artifact, executable, game_dir, *, name='derived.sav', memory=None, registers=None):
+    def debug_fork_state(self, artifact, executable, game_dir, *, name='derived.sav', memory=None, registers=None,
+                         backend=None,kernel=None,initramfs=None,boot_timeout_ms=240000):
         info = self.debug_state_info(artifact)
         memory = [] if memory is None else memory
         registers = {} if registers is None else registers
         if not isinstance(memory,list) or len(memory)>64 or not isinstance(registers,dict):
             raise ValueError('State edits require at most 64 memory edits and a register mapping')
         _file_name(name)
-        from .debug_state import validate_edits, apply_edits
+        pe=info['metadata'].get('format')=='fdisbull-qemu-native-1'
+        if pe:
+            from .wine_state import validate_edits,apply_edits
+        else:
+            from .debug_state import validate_edits,apply_edits
         validate_edits(memory,registers)
         if not memory and not registers:
             raise ValueError('A state fork requires at least one explicit edit')
-        with self.debugger(executable,game_dir,version=info['version']) as debug:
-            debug.load_state(artifact)
+        options=dict(backend=backend,kernel=kernel,initramfs=initramfs,boot_timeout_ms=boot_timeout_ms)
+        if pe:
+            options['state']=artifact
+            # A state binds every explicitly uploaded asset, not only its EXE.
+            # Reuse that allowlist and let launch reverify each source hash.
+            options['files']=[item['path'] for item in info['metadata']['files']]
+        with self.debugger(executable,game_dir,version=info['version'],**options) as debug:
+            if not pe:debug.load_state(artifact)
             edits = apply_edits(debug,memory,registers)
-            debug._state_provenance = {'parent_artifact':artifact,'parent_sha256':info['sha256'],
-                                       'edits':edits,'guest_execution_during_edits':False}
+            debug._state_provenance = {'parent_artifact':artifact,'parent_sha256':info['sha256'],'edits':edits,
+                                      **({'target_execution_during_edits':False,'guest_services_running':True} if pe else {'guest_execution_during_edits':False})}
             result = debug.save_state(name)
         return result
 
@@ -136,6 +150,10 @@ class DebugProjectMixin(LayerProjectMixin):
         if any(destination==p or (destination.exists() and p.exists() and destination.samefile(p)) for p in protected):
             raise ValueError('Artifact export cannot overwrite the project or SQLite sidecars')
         destination.parent.mkdir(parents=True,exist_ok=True)
+        metadata_row=self.db.execute('SELECT kind,metadata FROM debug_artifacts WHERE id=?',(artifact,)).fetchone()
+        if metadata_row['kind']=='state' and json.loads(metadata_row['metadata']).get('format')=='fdisbull-qemu-native-1':
+            from .wine_state import export_state
+            return export_state(self,artifact,destination)
         with destination.open('xb') as stream:
             stream.write(data)
         return {'artifact':artifact,'output':str(destination),'sha256':row['sha256'],'size':len(data)}
@@ -183,6 +201,11 @@ class DebugProjectMixin(LayerProjectMixin):
 
 
 class DebugSession(LayerSessionMixin):
+    @property
+    def script_operations(self):
+        from .debug_script import OPERATIONS
+        return (set(OPERATIONS)|{'assert'})-{'write-memory','write-registers'}
+
     """One explicitly owned emulator; closing the project also closes sessions."""
     def __init__(self, project, executable, game_dir, *, version=None):
         self.project = project
@@ -252,6 +275,9 @@ class DebugSession(LayerSessionMixin):
 
     def write_memory(self, address, data_hex, *, expected_hex):
         raise ValueError('Direct guarded memory editing is currently a PE64 operation; use a DOS RAM layer')
+
+    def write_registers(self,registers):
+        raise ValueError('Direct guarded register editing is currently a PE64 operation; use a DOS state fork')
 
     def call(self, method, params=None):
         if self.closed:
@@ -668,7 +694,7 @@ class DebugWorkspace:
             raise ValueError('Live run not owned by this server; use debug-runs for saved history')
         methods = {'debug-status':'status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
                    'debug-run':'run','debug-click':'click','debug-click-frame':'click_frame','debug-screenshot':'screenshot','debug-trace':'trace',
-                   'debug-memory':'memory','debug-write-memory':'write_memory','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script'}
+                   'debug-memory':'memory','debug-write-memory':'write_memory','debug-write-registers':'write_registers','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script'}
         methods.update({'debug-layer-stack':'layers','debug-layer-enable':'layer_enable','debug-layer-patch':'layer_patch',
                         'debug-code':'code','debug-capture-code':'capture_code','debug-branch':'branch',
                         'debug-cave':'cave','debug-hook':'hook','debug-hooks':'hooks','debug-delete-hook':'delete_hook'})

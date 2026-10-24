@@ -89,7 +89,7 @@ def test_pe_script_rejects_dos_operations_before_any_guest_edit():
     session._artifact=unexpected
     script={'format':'fdisbull-script-1','steps':[
         {'op':'write-memory','address':'0x140003000','data_hex':'01','expected_hex':'00'},
-        {'op':'save-state','name':'unsupported.sav'}]}
+        {'op':'cave','name':'unsupported-cave','address':'0x140001000','code_hex':'90','return_to':'0x140001000'}]}
     with pytest.raises(ValueError,match='Unsupported operations'):
         session.script(script)
 

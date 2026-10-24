@@ -196,11 +196,11 @@ jobs:
                    'wheel':identity(next(Path('.native/pe/packages').glob('*.whl')))}
           Path('native-evidence/pe/backend-identity.json').write_text(json.dumps(receipt,indent=2)+'\n')
           PY
-      - name: Require real PE64 acceptance through two fresh QEMU sessions
+      - name: Require real PE64 watches, layers and native-state acceptance
         shell: bash
         run: |
           set -euo pipefail
-          python -m pytest -q -s tests/test_wine_debugger.py -o pythonpath= \
+          python -m pytest -q -s tests/test_wine_debugger.py tests/test_wine_advanced.py -o pythonpath= \
             --junitxml=native-evidence/pe/tests.xml 2>&1 | tee native-evidence/pe/tests.log
       - uses: actions/upload-artifact@v4
         if: always()

@@ -1,0 +1,363 @@
+[
+  {
+    "sequence": 3,
+    "operation": "run",
+    "evidence": {
+      "run": "7697f5895d504784bf6ae4f44d4754b3",
+      "outcome": "breakpoint",
+      "timed_out": false,
+      "session": {
+        "state": "stopped",
+        "stop_reason": {
+          "kind": "breakpoint",
+          "address": "0x140001518",
+          "thread": 376,
+          "exception_code": 2147483651,
+          "first_chance": 1,
+          "access_address": "0x0",
+          "access_code": 0,
+          "before_access": false,
+          "project_address": "0x140001518"
+        },
+        "exit_code": 0
+      },
+      "host_elapsed_ms": 611.795
+    }
+  },
+  {
+    "sequence": 4,
+    "operation": "watchpoint",
+    "evidence": {
+      "breakpoint_id": "wp-0",
+      "before_access": true,
+      "run": "7697f5895d504784bf6ae4f44d4754b3",
+      "version": 1,
+      "project_address": "0x140004001",
+      "runtime_address": "0x140004001",
+      "access": "w",
+      "length": 1,
+      "bytes_verified": false
+    }
+  },
+  {
+    "sequence": 7,
+    "operation": "run",
+    "evidence": {
+      "run": "7697f5895d504784bf6ae4f44d4754b3",
+      "outcome": "watchpoint",
+      "timed_out": false,
+      "session": {
+        "state": "stopped",
+        "stop_reason": {
+          "kind": "watchpoint",
+          "address": "0x140001658",
+          "thread": 376,
+          "exception_code": 2147483649,
+          "first_chance": 1,
+          "access_address": "0x140004000",
+          "access_code": 1,
+          "before_access": true,
+          "breakpoint_ids": [
+            "wp-0"
+          ],
+          "access_facts": {
+            "instruction": "lock xadd [rax],edx",
+            "fetch": false,
+            "ranges": [
+              {
+                "address": 5368725504,
+                "length": 4,
+                "read": true,
+                "write": true
+              }
+            ]
+          },
+          "registers": {
+            "rip": "0x140001658",
+            "rflags": "0x10246",
+            "thread": 376,
+            "general": {
+              "rax": "0x140004000",
+              "rbx": "0x40078",
+              "rcx": "0x40078",
+              "rdx": "0x1",
+              "rsi": "0x0",
+              "rdi": "0x500050",
+              "rbp": "0x7ffffe2ff9f0",
+              "rsp": "0x7ffffe2ff970",
+              "r8": "0x0",
+              "r9": "0x500050",
+              "r10": "0x1",
+              "r11": "0x202",
+              "r12": "0x202",
+              "r13": "0x140001523",
+              "r14": "0x0",
+              "r15": "0x6ffffe0146f0"
+            },
+            "project_address": "0x140001658",
+            "cpu_mode": "long64"
+          },
+          "project_address": "0x140001658"
+        },
+        "exit_code": 0
+      },
+      "host_elapsed_ms": 114.474
+    }
+  },
+  {
+    "sequence": 8,
+    "operation": "delete-watchpoint",
+    "evidence": {
+      "deleted": true
+    }
+  },
+  {
+    "sequence": 9,
+    "operation": "run",
+    "evidence": {
+      "run": "7697f5895d504784bf6ae4f44d4754b3",
+      "outcome": "breakpoint",
+      "timed_out": false,
+      "session": {
+        "state": "stopped",
+        "stop_reason": {
+          "kind": "breakpoint",
+          "address": "0x140001518",
+          "thread": 376,
+          "exception_code": 2147483651,
+          "first_chance": 1,
+          "access_address": "0x140004000",
+          "access_code": 1,
+          "before_access": false,
+          "project_address": "0x140001518"
+        },
+        "exit_code": 0
+      },
+      "host_elapsed_ms": 19.966
+    }
+  },
+  {
+    "sequence": 10,
+    "operation": "watchpoint",
+    "evidence": {
+      "breakpoint_id": "wp-0",
+      "before_access": true,
+      "run": "7697f5895d504784bf6ae4f44d4754b3",
+      "version": 1,
+      "project_address": "0x140004000",
+      "runtime_address": "0x140004000",
+      "access": "r",
+      "length": 4,
+      "bytes_verified": false
+    }
+  },
+  {
+    "sequence": 12,
+    "operation": "run",
+    "evidence": {
+      "run": "7697f5895d504784bf6ae4f44d4754b3",
+      "outcome": "watchpoint",
+      "timed_out": false,
+      "session": {
+        "state": "stopped",
+        "stop_reason": {
+          "kind": "watchpoint",
+          "address": "0x140001658",
+          "thread": 376,
+          "exception_code": 2147483649,
+          "first_chance": 1,
+          "access_address": "0x140004000",
+          "access_code": 1,
+          "before_access": true,
+          "breakpoint_ids": [
+            "wp-0"
+          ],
+          "access_facts": {
+            "instruction": "lock xadd [rax],edx",
+            "fetch": false,
+            "ranges": [
+              {
+                "address": 5368725504,
+                "length": 4,
+                "read": true,
+                "write": true
+              }
+            ]
+          },
+          "registers": {
+            "rip": "0x140001658",
+            "rflags": "0x10246",
+            "thread": 376,
+            "general": {
+              "rax": "0x140004000",
+              "rbx": "0x40078",
+              "rcx": "0x40078",
+              "rdx": "0x1",
+              "rsi": "0x0",
+              "rdi": "0x500050",
+              "rbp": "0x7ffffe2ff9f0",
+              "rsp": "0x7ffffe2ff970",
+              "r8": "0x0",
+              "r9": "0x500050",
+              "r10": "0x1",
+              "r11": "0x202",
+              "r12": "0x202",
+              "r13": "0x140001523",
+              "r14": "0x0",
+              "r15": "0x6ffffe0146f0"
+            },
+            "project_address": "0x140001658",
+            "cpu_mode": "long64"
+          },
+          "project_address": "0x140001658"
+        },
+        "exit_code": 0
+      },
+      "host_elapsed_ms": 165.095
+    }
+  },
+  {
+    "sequence": 13,
+    "operation": "delete-watchpoint",
+    "evidence": {
+      "deleted": true
+    }
+  },
+  {
+    "sequence": 14,
+    "operation": "run",
+    "evidence": {
+      "run": "7697f5895d504784bf6ae4f44d4754b3",
+      "outcome": "breakpoint",
+      "timed_out": false,
+      "session": {
+        "state": "stopped",
+        "stop_reason": {
+          "kind": "breakpoint",
+          "address": "0x140001518",
+          "thread": 376,
+          "exception_code": 2147483651,
+          "first_chance": 1,
+          "access_address": "0x140004000",
+          "access_code": 1,
+          "before_access": false,
+          "project_address": "0x140001518"
+        },
+        "exit_code": 0
+      },
+      "host_elapsed_ms": 31.856
+    }
+  },
+  {
+    "sequence": 15,
+    "operation": "watchpoint",
+    "evidence": {
+      "breakpoint_id": "wp-0",
+      "before_access": true,
+      "run": "7697f5895d504784bf6ae4f44d4754b3",
+      "version": 1,
+      "project_address": "0x140004000",
+      "runtime_address": "0x140004000",
+      "access": "r",
+      "length": 4,
+      "bytes_verified": false
+    }
+  },
+  {
+    "sequence": 17,
+    "operation": "run",
+    "evidence": {
+      "run": "7697f5895d504784bf6ae4f44d4754b3",
+      "outcome": "breakpoint",
+      "timed_out": false,
+      "session": {
+        "state": "stopped",
+        "stop_reason": {
+          "kind": "breakpoint",
+          "address": "0x140001518",
+          "thread": 376,
+          "exception_code": 2147483651,
+          "first_chance": 1,
+          "access_address": "0x140004000",
+          "access_code": 1,
+          "before_access": false,
+          "project_address": "0x140001518"
+        },
+        "exit_code": 0
+      },
+      "host_elapsed_ms": 110.59
+    }
+  },
+  {
+    "sequence": 19,
+    "operation": "run",
+    "evidence": {
+      "run": "7697f5895d504784bf6ae4f44d4754b3",
+      "outcome": "watchpoint",
+      "timed_out": false,
+      "session": {
+        "state": "stopped",
+        "stop_reason": {
+          "kind": "watchpoint",
+          "address": "0x140001658",
+          "thread": 376,
+          "exception_code": 2147483649,
+          "first_chance": 1,
+          "access_address": "0x140004000",
+          "access_code": 1,
+          "before_access": true,
+          "breakpoint_ids": [
+            "wp-0"
+          ],
+          "access_facts": {
+            "instruction": "lock xadd [rax],edx",
+            "fetch": false,
+            "ranges": [
+              {
+                "address": 5368725504,
+                "length": 4,
+                "read": true,
+                "write": true
+              }
+            ]
+          },
+          "registers": {
+            "rip": "0x140001658",
+            "rflags": "0x10246",
+            "thread": 376,
+            "general": {
+              "rax": "0x140004000",
+              "rbx": "0x40078",
+              "rcx": "0x40078",
+              "rdx": "0x1",
+              "rsi": "0x0",
+              "rdi": "0x500050",
+              "rbp": "0x7ffffe2ff9f0",
+              "rsp": "0x7ffffe2ff970",
+              "r8": "0x0",
+              "r9": "0x500050",
+              "r10": "0x1",
+              "r11": "0x202",
+              "r12": "0x202",
+              "r13": "0x140001523",
+              "r14": "0x0",
+              "r15": "0x6ffffe0146f0"
+            },
+            "project_address": "0x140001658",
+            "cpu_mode": "long64"
+          },
+          "project_address": "0x140001658"
+        },
+        "exit_code": 0
+      },
+      "host_elapsed_ms": 129.151
+    }
+  },
+  {
+    "sequence": 20,
+    "operation": "delete-watchpoint",
+    "evidence": {
+      "deleted": true
+    }
+  }
+]

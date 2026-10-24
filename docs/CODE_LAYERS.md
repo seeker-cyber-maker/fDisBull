@@ -1,5 +1,7 @@
 # Temporal code layers — 0.11.0
 
+This page describes the **DOSBox layers backend**. Version 0.13.0 also supports PE64 RAM/execution layers through Wine/QEMU; see [PE64 usage and limits](WINE_DEBUGGER.md#pe64-watches-layers-and-native-states-0130). PE execution layers relocate instructions into a private guest allocation and single-step them. The DOS zero-additional-guest-RAM guarantee, virtual caves, segmented addresses and breakpoint action hooks below do not apply to PE64.
+
 Code layers are immutable, version-bound experiment definitions with an ordered active stack in each live debugger session. They preserve original static bytes. Runtime captures and the event timeline record when a view changed, which definitions were active, and which bytes the CPU could fetch. This supports self-modifying code investigations and reversible theories without promoting runtime observations into static instruction facts.
 
 Two layer kinds have different visibility:

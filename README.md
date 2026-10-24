@@ -2,7 +2,7 @@
 
 An agent-first disassembler with a persistent SQLite analysis database, explicit evidence, bounded analysis, and headless SVG/PNG exports.
 
-> **This tool is not designed for malware analysis or security work.**
+> **This tool is not currently suitable for malware analysis or security work.**
 >
 > Must bring your own weapons. I have only done this once before. Safety not guaranteed.
 >
@@ -14,7 +14,7 @@ Requires Python **3.12 or later**.
 
 | Track | Source and availability | Verification |
 | --- | --- | --- |
-| **Current source: 0.12.0** | [Release notes](docs/RELEASE-0.12.0.md): PE64 Wine/QEMU debugging, guarded memory edits, traces, screenshots and clicks | [Published release verification](docs/VERIFICATION-0.12.md), including separate Linux package, DOS native and PE64 native gates |
+| **Current source: 0.13.0** | [PE64 debugger](docs/WINE_DEBUGGER.md): read/write watches, toggleable RAM/execution layers and editable whole-VM native states | [Release notes](docs/RELEASE-0.13.0.md) and [verification gates](docs/VERIFICATION-0.13.md); separate from the fixed 0.12.0 release |
 | **Latest published package release: 0.12.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.12.0), commit `7f8c9d4` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40045173566): 764 passed. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40045173515): 15 established DOS, 32 DOS layers and 6 PE64 tests passed, no native skips. |
 | **Repository branch** | [main](https://github.com/seeker-cyber-maker/fDisBull/tree/main) is the only active branch | Release promotion requires both ordinary and native Linux CI. Use version tags for fixed source snapshots. The old experimental checkpoint is preserved under an archive tag. |
 
@@ -81,9 +81,11 @@ The original unfinished DOSBox checkpoint is preserved at tag `archive/dosbox-he
 
 Version 0.12.0 integrates a [PE64 Wine/QEMU debugger](docs/WINE_DEBUGGER.md): disassembly breakpoints, guarded memory edits, bounded instruction traces, client-window screenshots, 8px grids and mouse clicks, persisted with the project. It requires a separately prepared offline Linux/Wine runtime and QEMU >=9.1. The [earlier Wine/Linux experiment](experimental/wine/README.md) records why full x86-64 CPU emulation is used on this Mac: Apple container/Rosetta failed the debugger gate. The [published-wheel verification](docs/VERIFICATION-0.12.md) covers real input, memory edits, rearmed breakpoints, traces and offline exports in fresh Linux CI and copied Mac delivery sessions. The runtime and emulator are supplied separately from the public Python packages.
 
+Version 0.13.0 adds PE64 `r`, `w` and `rw` watchpoints, reversible RAM layers, guarded relocated execution layers, and editable native QEMU states. PE execution layers use a private 4 KiB guest allocation and host stepping; the DOS backend's zero-additional-RAM fetch overlay does not apply to Wine. Native PE states capture the Linux/Wine machine and retain a hash-bound private sidecar beside the project. See [usage and exact limits](docs/WINE_DEBUGGER.md#pe64-watches-layers-and-native-states-0130).
+
 ## Limits and licensing
 
-Static analysis does not establish runtime execution. A drained queue does not establish complete code coverage. Authored labels and links record interpretations, and unresolved segment/pointer state stays explicit. Native macOS debugger acceptance passes; the full suite still has Linux ELF fixture failures on Apple's compiler/linker. Runtime integration launches original unpatched DOS MZ or x86-64 PE EXE versions; static child patches are never applied silently. PE support has its own runtime and acceptance gate; DOS states, layers and data watchpoints do not transfer to PE.
+Static analysis does not establish runtime execution. A drained queue does not establish complete code coverage. Authored labels and links record interpretations, and unresolved segment/pointer state stays explicit. Native macOS debugger acceptance passes; the full suite still has Linux ELF fixture failures on Apple's compiler/linker. Runtime integration launches original unpatched DOS MZ or x86-64 PE EXE versions; static child patches are never applied silently. PE support has its own runtime and acceptance gate. The PE watches, layers and states use different mechanisms and formats from DOS; published 0.12.0 packages do not contain those additions.
 
 Runtime code snapshots can preserve and decode observed self-modified or layered bytes alongside earlier views. They do not automatically create a new static code interpretation, traverse its targets, or rebuild its xrefs. A mapped runtime address alone does not verify equality with static instructions. Headless execution is not security isolation, and restoring a machine checkpoint does not roll back mounted host files.
 

@@ -74,6 +74,7 @@ def number(value, low, high):
 
 def invoke(method, params):
     global process
+    if method=='identity':return identity()
     if method == 'session.start':
         if process is not None:
             raise ValueError('This VM already owns a target')
@@ -107,14 +108,32 @@ def invoke(method, params):
         return response(90)
     if process is None:
         raise ValueError('No live target')
-    if method in ('status','registers','screenshot','close'):
+    if method in ('status','registers','screenshot','close','scratch','bp-check','guard-arm'):
         command = method
+    elif method=='setregs':
+        values=params['values']
+        names={'rax','rbx','rcx','rdx','rsi','rdi','rbp','rsp','r8','r9','r10','r11','r12','r13','r14','r15','rip','rflags'}
+        if not isinstance(values,dict) or not values or set(values)-names:raise ValueError('Invalid register map')
+        command='setregs '+' '.join(f'{name} {number(value,0,2**64-1):x}' for name,value in values.items())
+    elif method=='overlay':
+        ranges=params['ranges']
+        if not isinstance(ranges,list) or len(ranges)>64:raise ValueError('Invalid execution ranges')
+        command='overlay '+str(len(ranges))+' '+' '.join(f"{number(r['address'],0,2**64-1):x} {number(r['length'],1,65536)}" for r in ranges)
     elif method == 'run':
         command = f"run {number(params['timeout_ms'],1,600000)}"
+    elif method == 'step':
+        command = f"step {number(params['timeout_ms'],1,600000)}"
+    elif method == 'watch':
+        if params['access'] not in ('r','w','rw'):raise ValueError('Invalid watch access')
+        command = f"watch {number(params['address'],0,2**64-1):x} {number(params['length'],1,65536)} {params['access']}"
+    elif method == 'unwatch':
+        command = f"unwatch {number(params['id'],0,63)}"
     elif method == 'trace':
         command = f"trace {number(params['count'],1,10000)} {number(params['timeout_ms'],1,600000):x}"
     elif method == 'read':
         command = f"read {number(params['address'],0,2**64-1):x} {number(params['length'],1,65536)}"
+    elif method=='code':
+        command=f"code {number(params['address'],0,2**64-1):x}"
     elif method == 'write':
         data = bytes.fromhex(params['data_hex'])
         if not 1 <= len(data) <= 65536:raise ValueError('Invalid write size')
@@ -133,13 +152,16 @@ def invoke(method, params):
     return response(params.get('timeout_ms', 15000)/1000+10)
 
 
-send({'protocol':'fdisbull-wine-qemu-1','agent_sha256':AGENT_HASH,
+def identity():
+    return {'protocol':'fdisbull-wine-qemu-1','agent_sha256':AGENT_HASH,
       'resources':{name:hashlib.sha256(Path(path).read_bytes()).hexdigest()
                    for name,path in {'init':'/init','opt/fdisbull/agent.c':'/opt/fdisbull/agent.c',
                                      'opt/fdisbull/broker.py':__file__}.items()},
       'wine_version':subprocess.check_output(['wine','--version'],stderr=subprocess.DEVNULL,text=True,timeout=10).strip(),
       'guest_kernel':os.uname().release,
-      'agent_binary_sha256':hashlib.sha256(Path('/opt/fdisbull/agent.exe').read_bytes()).hexdigest()})
+      'agent_binary_sha256':hashlib.sha256(Path('/opt/fdisbull/agent.exe').read_bytes()).hexdigest()}
+
+send(identity())
 try:
     while True:
         line = channel.readline(LIMIT+1)

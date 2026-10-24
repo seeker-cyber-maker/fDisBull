@@ -46,8 +46,9 @@ class LayerProjectMixin:
     def debug_layer(self,name,*,kind,patches,version=None):
         from .project import now
         _file_name(name)
-        if self.meta['format']!='MZ' or kind not in ('ram','execute'):
-            raise ValueError('DOS layers require kind=ram or execute')
+        pe=self.meta['format']=='PE' and self.bits==64 and self.meta['arch']=='x86'
+        if self.meta['format']!='MZ' and not pe or kind not in ('ram','execute'):
+            raise ValueError('DOS/PE64 layers require kind=ram or execute')
         if not isinstance(patches,list) or not 1<=len(patches)<=64:
             raise ValueError('A layer requires 1..64 guarded patches')
         v=self.version(version)['id']; normalized=[]; touched=set()
@@ -55,11 +56,15 @@ class LayerProjectMixin:
             if not isinstance(patch,dict) or set(patch) not in (
                     {'address','expected_hex','data_hex'},{'address','cs','expected_hex','data_hex'}):
                 raise ValueError('Layer patch requires address, expected_hex, data_hex, and optional cs')
-            address,_=self._dos_parse_address(patch['address'],patch.get('cs'))
+            if pe:
+                if 'cs' in patch:raise ValueError('PE64 layer addresses are flat')
+                address=self._address(patch['address'])
+            else:address,_=self._dos_parse_address(patch['address'],patch.get('cs'))
             before=byte_string(patch['expected_hex']);after=byte_string(patch['data_hex'])
             if len(before)!=len(after):raise ValueError('A layer cannot resize memory')
-            if not any(r.start<=address and address+len(before)<=r.start+len(r.data) for r in self.regions(v)):
-                raise ValueError('Layer patch must fit one mapped DOS allocation region')
+            if not any(r.start<=address and address+len(before)<=r.start+len(r.data) and
+                       (not pe or kind!='execute' or r.executable) for r in self.regions(v)):
+                raise ValueError('Layer patch must fit a mapped region; PE execution layers require code')
             positions=set(range(address,address+len(before)))
             if touched&positions:raise ValueError('Patch ranges overlap inside one layer')
             touched.update(positions)

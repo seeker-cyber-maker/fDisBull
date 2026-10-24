@@ -16,7 +16,7 @@ OPERATIONS = {
     'layer-stack':'layers', 'layer-enable':'layer_enable', 'layer-patch':'layer_patch',
     'code':'code', 'capture-code':'capture_code', 'branch':'branch', 'cave':'cave', 'hook':'hook',
     'hooks':'hooks', 'delete-hook':'delete_hook',
-    'registers':'registers', 'memory':'memory', 'write-memory':'write_memory', 'status':'status',
+    'registers':'registers', 'memory':'memory', 'write-memory':'write_memory','write-registers':'write_registers', 'status':'status',
 }
 
 

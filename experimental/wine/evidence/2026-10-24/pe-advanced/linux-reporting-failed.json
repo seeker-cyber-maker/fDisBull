@@ -1,0 +1,11 @@
+{
+  "result": "failed",
+  "phase": "pytest session report writing",
+  "ordinary_linux_exit": 1,
+  "reason": "/work/evidence was owned by root; pytest runs as ubuntu and could not create dosbox-tests.xml",
+  "observed": "The progress reached100%; no green overall gate or assertion count is claimed because session finish failed",
+  "fix": "Harness chowns its report directory to ubuntu:ubuntu before running the unchanged final production/tests",
+  "log_sha256": "d3afdaeb87d0bcbd9a2b400f1958dadb580b9550f0ad2968ae58cda774175255",
+  "failed_input": "03433bf719a87c327a94e4601d14e33d9954735408271216b57cf1c30cd09a74",
+  "corrected_input": "f2bddbf8fa45a1b90311a92bc617577b7836b058304964786c2fc62990cbf589"
+}

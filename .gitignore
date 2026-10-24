@@ -16,6 +16,11 @@ examples/**/local/
 # Exported emulator checkpoints stay local
 *.sav
 *.state
+*.db
+*.sqlite
+*.sqlite3
+*.fdisbull-states/
+*.mig.gz
 
 # Native CI source checkout and transient reports
 /.native/

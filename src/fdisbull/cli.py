@@ -8,7 +8,7 @@ from .project import Project, number
 from . import __version__
 
 METHODS = {
-    'debug-launch': 'Launch project-bound DOSBox or PE64 Wine/QEMU; executable,game_dir,[version,backend,kernel,initramfs,files,boot_timeout_ms]',
+    'debug-launch': 'Launch project-bound DOSBox or PE64 Wine/QEMU; executable,game_dir,[version,backend,kernel,initramfs,files,boot_timeout_ms,state]',
     'debug-status': 'Live debugger status and address mapping; run',
     'debug-registers': 'Live CPU registers with project address mapping; run',
     'debug-layer': 'Save an immutable guarded RAM or execution layer; name,kind,patches,[version]',
@@ -35,13 +35,14 @@ METHODS = {
     'debug-trace': 'Store bounded CPU trace with project address mappings; run,[name,count,timeout_ms,fast_forward]',
     'debug-memory': 'Read project-mapped runtime bytes; run,address,[cs,length]',
     'debug-write-memory': 'Guarded PE64 runtime edit with readback; run,address,data_hex,expected_hex',
+    'debug-write-registers': 'Guarded PE64 general-register edits; run,registers',
     'debug-save-state': 'Store native emulator state in the project; run,[name]',
     'debug-load-state': 'Restore a compatible project state during a run; run,artifact',
     'debug-script': 'Execute bounded menu/debug script; run,[script,script_id,timeout_ms]',
     'debug-save-script': 'Save an immutable version-bound script; name,script,[version]',
     'debug-scripts': 'List saved scripts; [version]',
     'debug-state-info': 'Inspect native checkpoint metadata and component sizes offline; artifact',
-    'debug-fork-state': 'Derive an edited native checkpoint without running guest instructions; artifact,executable,game_dir,[name,memory,registers]',
+    'debug-fork-state': 'Restore, edit and recapture native state with target stopped; artifact,executable,game_dir,[name,memory,registers,backend,kernel,initramfs]',
     'debug-stop': 'Stop and reap a live emulator; run',
     'debug-runs': 'Saved runtime history for a static version; [version]',
     'debug-artifacts': 'Saved screenshots and traces, available after restart; [version,run]',
@@ -300,6 +301,7 @@ def parser():
     c.add_argument('--backend',choices=['dosbox','wine-qemu'])
     c.add_argument('--kernel');c.add_argument('--initramfs');c.add_argument('--files',type=json.loads)
     c.add_argument('--boot-timeout-ms',type=int,default=240000)
+    c.add_argument('--state',help='PE64 native checkpoint artifact to restore without cold launch')
     for name in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state'):
         c = sub.add_parser(name,help=METHODS[name]);c.add_argument('project')
         if name=='debug-state-info':
@@ -308,6 +310,7 @@ def parser():
             c.add_argument('artifact');c.add_argument('--executable',required=True);c.add_argument('--game-dir',required=True)
             c.add_argument('--name',default='derived.sav');c.add_argument('--memory',type=json.loads,default=[])
             c.add_argument('--registers',type=json.loads,default={})
+            c.add_argument('--backend',choices=['dosbox','wine-qemu']);c.add_argument('--kernel');c.add_argument('--initramfs')
         elif name=='debug-export':
             c.add_argument('artifact');c.add_argument('output')
         elif name=='debug-grid':

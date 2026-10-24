@@ -1,0 +1,17 @@
+{
+  "program_files": [
+    {
+      "path": "oracle.exe",
+      "sha256": "0d12fc90cc084848a287187a6cdc671f805e7cf38fdba1c794d6c22757b89d34"
+    },
+    {
+      "path": "fixture-asset.txt",
+      "sha256": "2ae319d03a6180b961afd8115eddf5314845b373e38471a5382f9369f9294d03"
+    }
+  ],
+  "native_state_sizes": [
+    952719697,
+    952925965
+  ],
+  "same_inputs_in_parent_and_child": true
+}

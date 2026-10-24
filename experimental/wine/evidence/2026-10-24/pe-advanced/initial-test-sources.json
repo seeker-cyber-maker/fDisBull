@@ -1,0 +1,10 @@
+{
+  "sdist": {
+    "name": "fdisbull-0.13.0.dev0.tar.gz",
+    "sha256": "2dadc1e83bb1901a102502a4673dd9eb8ba7ae0ba333513e0da25b2bcad33c3e"
+  },
+  "tests": {
+    "test_wine_advanced.py": "44e25802fab66bf8fb98ac334ea26cf6d119805e930901cf1529966b3b24432f",
+    "test_wine_debugger.py": "5634b9d9ecf9b558336a25967be845fef7bd0a5b05c36b5b0a60fb1101a838c6"
+  }
+}

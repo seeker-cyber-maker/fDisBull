@@ -1,0 +1,89 @@
+"""Bounded QMP control for one owned offline VM; snapshots use native migration."""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+import shlex
+import socket
+import threading
+import time
+
+from .dosbox_rpc import DebuggerError
+
+
+class QemuControl:
+    def __init__(self,path,process,deadline):
+        self.socket=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
+        self.buffer=bytearray();self.sequence=0;self.lock=threading.Lock()
+        try:
+            while True:
+                try:self.socket.connect(str(path));break
+                except (FileNotFoundError,ConnectionRefusedError):
+                    if process.poll() is not None or time.monotonic()>=deadline:raise DebuggerError('QMP socket did not open')
+                    time.sleep(.05)
+            self.greeting=self._read(deadline)
+            if 'QMP' not in self.greeting:raise DebuggerError('Invalid QMP greeting')
+            self.call('qmp_capabilities',timeout_ms=max(1,int((deadline-time.monotonic())*1000)))
+        except BaseException:
+            self.close();raise
+
+    def _read(self,deadline):
+        while b'\n' not in self.buffer:
+            remaining=deadline-time.monotonic()
+            if remaining<=0:raise TimeoutError('QMP deadline expired')
+            self.socket.settimeout(remaining)
+            chunk=self.socket.recv(65536)
+            if not chunk:raise DebuggerError('QMP channel closed')
+            self.buffer.extend(chunk)
+            if len(self.buffer)>8*1024*1024:raise DebuggerError('QMP reply exceeds budget')
+        line,_,rest=self.buffer.partition(b'\n');self.buffer=bytearray(rest)
+        value=json.loads(line)
+        if not isinstance(value,dict):raise DebuggerError('Invalid QMP reply')
+        return value
+
+    def call(self,method,arguments=None,timeout_ms=30000):
+        deadline=time.monotonic()+timeout_ms/1000
+        if not self.lock.acquire(timeout=timeout_ms/1000):raise TimeoutError('QMP is busy')
+        try:
+            self.sequence+=1;request={'execute':method,'id':self.sequence}
+            if arguments is not None:request['arguments']=arguments
+            self.socket.settimeout(max(.001,deadline-time.monotonic()))
+            self.socket.sendall(json.dumps(request,separators=(',',':')).encode()+b'\n')
+            while True:
+                reply=self._read(deadline)
+                if 'event' in reply:continue
+                if reply.get('id')!=self.sequence:raise DebuggerError('Wrong QMP reply identity')
+                if 'error' in reply:raise DebuggerError('QMP '+method+': '+json.dumps(reply['error']))
+                return reply['return']
+        finally:self.lock.release()
+
+    def save(self,path,timeout_ms=240000):
+        path=Path(path).resolve()
+        if path.exists():raise ValueError('Snapshot output already exists')
+        deadline=time.monotonic()+timeout_ms/1000
+        self.call('stop')
+        if self.call('query-status')['running']:raise DebuggerError('VM did not stop for checkpoint')
+        self.call('migrate',{'uri':'exec:/usr/bin/gzip -1 > '+shlex.quote(str(path))})
+        while True:
+            status=self.call('query-migrate')
+            if status.get('status')=='completed':break
+            if status.get('status') in ('failed','cancelled') or time.monotonic()>=deadline:
+                raise DebuggerError('Native VM checkpoint failed: '+json.dumps(status))
+            if path.exists() and path.stat().st_size>2*1024**3:raise DebuggerError('Native checkpoint exceeds 2 GiB')
+            time.sleep(.05)
+        self.call('cont')
+        return {'format':'qemu-native-migration-gzip-1','qmp_status':status}
+
+    def restore(self,path,timeout_ms=240000):
+        path=Path(path).resolve(strict=True);deadline=time.monotonic()+timeout_ms/1000
+        self.call('migrate-incoming',{'uri':'exec:/usr/bin/gzip -dc '+shlex.quote(str(path))})
+        while True:
+            status=self.call('query-status')
+            if status['status']!='inmigrate':break
+            if time.monotonic()>=deadline:raise TimeoutError('Native VM restore deadline expired')
+            time.sleep(.05)
+        if not status['running']:self.call('cont')
+        return status
+
+    def close(self):
+        if self.socket is not None:self.socket.close();self.socket=None

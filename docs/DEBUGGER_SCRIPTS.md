@@ -1,5 +1,7 @@
 # Reusable debugger routes and native checkpoints
 
+This page's segmented addresses, DOS register names and inline serializer describe DOSBox. Version 0.13.0 adds PE64 watches, layers, `write-memory`, `write-registers` and editable whole-QEMU states through the same foreground script interface. PE uses flat main-image addresses, 64-bit GPR/RIP/RFLAGS names, before-access watches and hash-bound native-state sidecars. See [PE64 usage and limits](WINE_DEBUGGER.md#pe64-watches-layers-and-native-states-0130). DOS guest-time/fast-forward and virtual caves/hooks do not carry over.
+
 The 0.11.0 [code-layer API](CODE_LAYERS.md) adds ordered RAM patches, execution-only overlays, temporal code captures, and bounded breakpoint actions. Those operations require the separate layers backend; the published 0.10.0 backend remains available for the original state/script/watchpoint API.
 
 A native checkpoint is an editable machine-state artifact, like a restorable crash dump. It can be inspected, forked with explicit RAM/register changes, and reinjected into a compatible debugger session.
