@@ -5,8 +5,6 @@ An agent-first disassembler with a persistent SQLite analysis database, explicit
 > **This tool is not currently suitable for malware analysis or security work.**
 >
 > Must bring your own weapons. I have only done this once before. Safety not guaranteed.
->
-> *With a nod to the “Safety Not Guaranteed” newspaper ad.*
 
 Requires Python **3.12 or later**.
 
