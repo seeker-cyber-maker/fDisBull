@@ -1,0 +1,23 @@
+[
+  {
+    "name": "fdisbull-0.13.0-py3-none-any.whl",
+    "sha256": "b4dc06152b1a3206d50ccfac122c359287c46f250a8f0a78c16351f9721d28a9",
+    "size": 310227,
+    "entries": 84,
+    "verified_source_payloads": 79
+  },
+  {
+    "name": "fdisbull-0.13.0-tool.zip",
+    "sha256": "5dfccdb625c42bd3b985f648ac4ba69d218d2c19c9ab9a3fc9c941234292251f",
+    "size": 704903,
+    "entries": 205,
+    "verified_source_payloads": 205
+  },
+  {
+    "name": "fdisbull-0.13.0.tar.gz",
+    "sha256": "9d5d44632fdd39e1181d3a9bbcbc28159fa6c9c3ef94372091e4850af8ff63ce",
+    "size": 597057,
+    "entries": 213,
+    "verified_source_payloads": 205
+  }
+]

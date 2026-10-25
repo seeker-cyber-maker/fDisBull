@@ -1,0 +1,18 @@
+READY
+{"mode": "host", "count": 24, "elapsed_ms": 1282.6055001933128, "requests": 97, "methods": {"status": {"count": 1, "median_ms": 1.6841250471770763}, "registers": {"count": 48, "median_ms": 11.937020462937653}, "code": {"count": 24, "median_ms": 11.37533294968307}, "step": {"count": 24, "median_ms": 21.521957940422}}, "completed": true, "same_gprs_and_pc": true, "arithmetic_and_direction_flags_unchanged": true, "artifact": "d87e0ecd40e146db8d1c4cd739c0cb3f"}
+{"mode": "linux", "count": 24, "elapsed_ms": 711.0324997920543, "requests": 1, "methods": {"trace-batch": {"count": 1, "median_ms": 709.6444577910006}}, "completed": true, "same_gprs_and_pc": true, "arithmetic_and_direction_flags_unchanged": true, "artifact": "87ae68e873994606a5c14933e10581ec"}
+{"mode": "linux", "count": 96, "elapsed_ms": 2605.8649581391364, "requests": 1, "methods": {"trace-batch": {"count": 1, "median_ms": 2603.2805829308927}}, "completed": true, "same_gprs_and_pc": true, "arithmetic_and_direction_flags_unchanged": true, "artifact": "8d78024bea644faf9f988efca97ff39a"}
+{"mode": "host", "count": 96, "elapsed_ms": 5555.160666117445, "requests": 385, "methods": {"status": {"count": 1, "median_ms": 1.859332900494337}, "registers": {"count": 192, "median_ms": 12.587187462486327}, "code": {"count": 96, "median_ms": 12.350874487310648}, "step": {"count": 96, "median_ms": 22.534500458277762}}, "completed": true, "same_gprs_and_pc": true, "arithmetic_and_direction_flags_unchanged": true, "artifact": "c19e1719a131487ea06116315a782e3f"}
+{"mode": "host", "count": 96, "elapsed_ms": 5360.198125010356, "requests": 385, "methods": {"status": {"count": 1, "median_ms": 1.2695409823209047}, "registers": {"count": 192, "median_ms": 12.224354431964457}, "code": {"count": 96, "median_ms": 12.0643749833107}, "step": {"count": 96, "median_ms": 22.08418701775372}}, "completed": true, "same_gprs_and_pc": true, "arithmetic_and_direction_flags_unchanged": true, "artifact": "17f901b680664ffe90f27476d7aaa17c"}
+{"mode": "linux", "count": 96, "elapsed_ms": 2447.8599168360233, "requests": 1, "methods": {"trace-batch": {"count": 1, "median_ms": 2445.52058307454}}, "completed": true, "same_gprs_and_pc": true, "arithmetic_and_direction_flags_unchanged": true, "artifact": "05a721171ef34072b2b7e1577f32015f"}
+Traceback (most recent call last):
+  File "/Users/tiga/Documents/ChatGPT/fDisBull/examples/synthetic/benchmark_ida_trace.py", line 122, in <module>
+    if __name__=='__main__':main()
+                            ~~~~^^
+  File "/Users/tiga/Documents/ChatGPT/fDisBull/examples/synthetic/benchmark_ida_trace.py", line 92, in main
+    verify_batch_stops(debug,checkpoint,report)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tiga/Documents/ChatGPT/fDisBull/examples/synthetic/benchmark_ida_trace.py", line 119, in verify_batch_stops
+    assert debug.status()['stop_reason']['kind']=='timeout' and debug.registers()['rip']==pc
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

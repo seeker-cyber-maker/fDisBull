@@ -1,0 +1,21 @@
+READY
+{"mode": "host", "count": 24, "elapsed_ms": 1380.5360831320286, "requests": 97, "methods": {"status": {"count": 1, "median_ms": 7.428167155012488}, "registers": {"count": 48, "median_ms": 12.630770914256573}, "code": {"count": 24, "median_ms": 12.855979497544467}, "step": {"count": 24, "median_ms": 23.381104692816734}}, "completed": true, "same_gprs_and_pc": true, "arithmetic_and_direction_flags_unchanged": true, "artifact": "ff8e82142eb14bf280c2e6907bc95060"}
+{"mode": "linux", "count": 24, "elapsed_ms": 798.980750143528, "requests": 1, "methods": {"trace-batch": {"count": 1, "median_ms": 797.5879160221666}}, "completed": true, "same_gprs_and_pc": true, "arithmetic_and_direction_flags_unchanged": true, "artifact": "d67c68b71d7a4bcfacba3e63c18a5dff"}
+{"mode": "linux", "count": 96, "elapsed_ms": 2907.43716689758, "requests": 1, "methods": {"trace-batch": {"count": 1, "median_ms": 2904.951874865219}}, "completed": true, "same_gprs_and_pc": true, "arithmetic_and_direction_flags_unchanged": true, "artifact": "ddb080704b6f4c24a9bc242cffbdbe77"}
+{"mode": "host", "count": 96, "elapsed_ms": 5829.273708164692, "requests": 385, "methods": {"status": {"count": 1, "median_ms": 7.280291989445686}, "registers": {"count": 192, "median_ms": 13.17456248216331}, "code": {"count": 96, "median_ms": 13.177396031096578}, "step": {"count": 96, "median_ms": 24.093791493214667}}, "completed": true, "same_gprs_and_pc": true, "arithmetic_and_direction_flags_unchanged": true, "artifact": "0589265f6114415ab50133c6cdd10621"}
+{"mode": "host", "count": 96, "elapsed_ms": 5900.104624917731, "requests": 385, "methods": {"status": {"count": 1, "median_ms": 6.620458094403148}, "registers": {"count": 192, "median_ms": 13.203354086726904}, "code": {"count": 96, "median_ms": 13.085125014185905}, "step": {"count": 96, "median_ms": 24.653520551510155}}, "completed": true, "same_gprs_and_pc": true, "arithmetic_and_direction_flags_unchanged": true, "artifact": "72a29d8a6ab74fefaca7d4985968bd11"}
+{"mode": "linux", "count": 96, "elapsed_ms": 3039.7933330386877, "requests": 1, "methods": {"trace-batch": {"count": 1, "median_ms": 3037.37875004299}}, "completed": true, "same_gprs_and_pc": true, "arithmetic_and_direction_flags_unchanged": true, "artifact": "409dd130a4c44afb87cae7677ba371ac"}
+Traceback (most recent call last):
+  File "/Users/tiga/Documents/ChatGPT/fDisBull/examples/synthetic/benchmark_ida_trace.py", line 111, in <module>
+    assert second['metadata']['event_count']==3 and not second['metadata']['complete']
+                        ^^^^^^
+  File "/Users/tiga/Documents/ChatGPT/fDisBull/examples/synthetic/benchmark_ida_trace.py", line 82, in main
+    completed=True,same_gprs_and_pc=True,arithmetic_and_direction_flags_unchanged=True,
+    ^^^^^^^
+  File "/Users/tiga/Documents/ChatGPT/fDisBull/src/fdisbull/ida_debugger.py", line 84, in breakpoint
+    return super().breakpoint(address,cs=cs,access=access,length=length,view=view)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tiga/Documents/ChatGPT/fDisBull/src/fdisbull/wine_debugger.py", line 193, in breakpoint
+    if not snapshot or int(snapshot[0]['address'],16)!=value:raise ValueError('Analyze this PE address before setting a disassembly breakpoint')
+                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: Analyze this PE address before setting a disassembly breakpoint

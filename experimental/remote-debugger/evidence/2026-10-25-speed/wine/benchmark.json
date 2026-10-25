@@ -1,0 +1,159 @@
+{
+  "backend": "wine-qemu",
+  "fixture_sha256": "0d12fc90cc084848a287187a6cdc671f805e7cf38fdba1c794d6c22757b89d34",
+  "server_sha256": null,
+  "runtime_sha256": "4bfe532e5e880ff0b0bdca077a9576077d3fbfe3986a5532858f2af2aaa27f39",
+  "scope": "same VM, same thread, same NOP/NOP/JMP loop; no static-analysis or cross-engine claim",
+  "samples": [
+    {
+      "mode": "host",
+      "count": 24,
+      "elapsed_ms": 907.9441661015153,
+      "requests": 97,
+      "methods": {
+        "status": {
+          "count": 1,
+          "median_ms": 8.322458015754819
+        },
+        "registers": {
+          "count": 48,
+          "median_ms": 9.16493742261082
+        },
+        "code": {
+          "count": 24,
+          "median_ms": 9.167020441964269
+        },
+        "step": {
+          "count": 24,
+          "median_ms": 12.639104039408267
+        }
+      },
+      "completed": true,
+      "same_gprs_and_pc": true,
+      "arithmetic_and_direction_flags_unchanged": true,
+      "artifact": "251fb950f1cc4e719e882c33a7768212"
+    },
+    {
+      "mode": "host",
+      "count": 96,
+      "elapsed_ms": 3543.759415857494,
+      "requests": 385,
+      "methods": {
+        "status": {
+          "count": 1,
+          "median_ms": 8.517042035236955
+        },
+        "registers": {
+          "count": 192,
+          "median_ms": 9.27677087020129
+        },
+        "code": {
+          "count": 96,
+          "median_ms": 9.060896001756191
+        },
+        "step": {
+          "count": 96,
+          "median_ms": 12.476708507165313
+        }
+      },
+      "completed": true,
+      "same_gprs_and_pc": true,
+      "arithmetic_and_direction_flags_unchanged": true,
+      "artifact": "0f923568ee0340a5b67f9f5205a2f936"
+    },
+    {
+      "mode": "host",
+      "count": 96,
+      "elapsed_ms": 3625.35999994725,
+      "requests": 385,
+      "methods": {
+        "status": {
+          "count": 1,
+          "median_ms": 8.688083151355386
+        },
+        "registers": {
+          "count": 192,
+          "median_ms": 9.342145407572389
+        },
+        "code": {
+          "count": 96,
+          "median_ms": 9.14093793835491
+        },
+        "step": {
+          "count": 96,
+          "median_ms": 12.466354528442025
+        }
+      },
+      "completed": true,
+      "same_gprs_and_pc": true,
+      "arithmetic_and_direction_flags_unchanged": true,
+      "artifact": "cc6e944802f54fb4afbce275480c21f7"
+    }
+  ],
+  "mapping": {
+    "backend": "wine-qemu",
+    "runtime_profile": "pe64-win32-debug-2",
+    "source_sha256": "0d12fc90cc084848a287187a6cdc671f805e7cf38fdba1c794d6c22757b89d34",
+    "version_sha256": "1da159e8e9bda03f8add72a6cfd7b38441e8399b50f9eb7c8dc1b786f79439b3",
+    "static_image_base": "0x140000000",
+    "runtime_image_base": "0x140000000",
+    "address_mapping": "observed main-module base + project RVA",
+    "capabilities": {
+      "backend": "wine-qemu",
+      "architecture": "x86-64",
+      "execution_breakpoints": true,
+      "memory_read": true,
+      "memory_write": true,
+      "instruction_trace": true,
+      "screenshots": true,
+      "mouse": true,
+      "save_states": true,
+      "code_layers": true,
+      "data_watchpoints": true,
+      "register_edit": true,
+      "fast_forward": false,
+      "watchpoint_access": [
+        "r",
+        "w",
+        "rw"
+      ],
+      "watchpoint_mechanism": "Win32 guard pages with single-step rearming",
+      "execution_layer_mechanism": "guarded relocated instructions; 4 KiB target buffer; host overhead",
+      "native_state_format": "QEMU whole-VM migration; private project sidecar"
+    },
+    "runtime_inputs": {
+      "qemu": {
+        "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.13.0-eabfc2a/backend/native-macos-arm64/qemu-system-x86_64",
+        "sha256": "10bed8dc7571b0fc6c51ea484711b3802d2fb2dc00ba5d9af4d610cb2e2142cb",
+        "version": "QEMU emulator version 11.1.2"
+      },
+      "kernel": {
+        "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.13.0-eabfc2a/backend/runtime/linux-amd64",
+        "sha256": "d8808aa4ca188560da1e6d749dcb930c87a5fd8b11ebff1f3fa6d728af35203d"
+      },
+      "initramfs": {
+        "path": "/Users/tiga/Documents/ChatGPT/fDisBull/.recovery/2026-10-25/ida-speed/wine-runtime.cpio.gz",
+        "sha256": "4bfe532e5e880ff0b0bdca077a9576077d3fbfe3986a5532858f2af2aaa27f39"
+      }
+    },
+    "files": [
+      {
+        "path": "oracle.exe",
+        "sha256": "0d12fc90cc084848a287187a6cdc671f805e7cf38fdba1c794d6c22757b89d34"
+      }
+    ],
+    "target_pid": 372,
+    "qemu_pid": 56638,
+    "guest_runtime": {
+      "wine_version": "wine-9.0 (Ubuntu 9.0~repack-4build3)",
+      "guest_kernel": "6.1.0-50-amd64",
+      "agent_binary_sha256": "77b727dac0b0b3a6c0ca42cd456a2ec3377ccf4dd6aa688ecec9bf2e579d596e",
+      "resources": {
+        "init": "062a3478f4657843a8128079d51e411de5987577dfd4d3e3fb4e5c6ad033fd92",
+        "opt/fdisbull/agent.c": "7f790582fc115fc3036f33c7a78bb11401619b4ce5adf0d624ca81d51c33d34a",
+        "opt/fdisbull/broker.py": "cf8e3c76e38716d66e269d768c404ecc7c68dc4868158f8b83acd76b4de2e151"
+      }
+    }
+  },
+  "offline_exports": true
+}

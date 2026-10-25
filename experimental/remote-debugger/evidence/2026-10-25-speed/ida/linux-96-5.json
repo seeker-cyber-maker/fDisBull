@@ -1,0 +1,4851 @@
+{
+  "events": [
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003000",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003000",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003000",
+      "instruction": {
+        "address": 5368721408,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003001",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x140003001",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003001",
+      "instruction": {
+        "address": 5368721409,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x140003002",
+      "bytes": "ebfc",
+      "registers": {
+        "rip": "0x140003002",
+        "rflags": "0x202",
+        "thread": 372,
+        "general": {
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x7ffffe892100",
+          "r13": "0x7ffffe324120",
+          "r14": "0x0",
+          "r15": "0x0",
+          "r8": "0x0",
+          "r9": "0x0",
+          "rax": "0x1",
+          "rbp": "0x7ffffe2ffee0",
+          "rbx": "0x8",
+          "rcx": "0x6ffffdc2ca44",
+          "rdi": "0x7ffffe892108",
+          "rdx": "0x0",
+          "rsi": "0x18",
+          "rsp": "0x7ffffe2ffde8"
+        }
+      },
+      "ram_bytes": "ebfc",
+      "execution_bytes": "ebfc",
+      "active_layers": [
+        "557e706f079442f48588d813c1d1332c"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140003002",
+      "instruction": {
+        "address": 5368721410,
+        "size": 2,
+        "bytes": "ebfc",
+        "mnemonic": "jmp",
+        "operands": "short 0000000140003000h",
+        "text": "jmp short 0000000140003000h",
+        "flow": "jump",
+        "target": 5368721408,
+        "data_refs": [],
+        "references": [
+          {
+            "operand_index": 0,
+            "role": "code",
+            "target": 5368721408,
+            "width": 8
+          }
+        ],
+        "immediates": []
+      }
+    }
+  ],
+  "complete": true,
+  "session": {
+    "state": "stopped",
+    "stop_reason": {
+      "kind": "step",
+      "address": "0x140003000",
+      "thread": 372,
+      "breakpoint_ids": [],
+      "native_event": {
+        "eid": 6,
+        "pid": 368,
+        "tid": 372,
+        "address": 5368721408,
+        "handled": true
+      },
+      "before_access": null
+    },
+    "exit_code": 0
+  },
+  "statistics": {
+    "collector": "linux-controller",
+    "completed_instructions": 96,
+    "elapsed_ms": 2498.199,
+    "peer_threads": "held across bounded batch; newly started peers held before continuation"
+  },
+  "run": "6a49a2153fbd481fb93bb91a800a4a45",
+  "version": 1,
+  "mapping": {
+    "backend": "ida-wine-qemu",
+    "runtime_profile": "pe64-win32-debug-2",
+    "source_sha256": "0d12fc90cc084848a287187a6cdc671f805e7cf38fdba1c794d6c22757b89d34",
+    "version_sha256": "1da159e8e9bda03f8add72a6cfd7b38441e8399b50f9eb7c8dc1b786f79439b3",
+    "static_image_base": "0x140000000",
+    "runtime_image_base": "0x140000000",
+    "address_mapping": "observed main-module base + project RVA",
+    "capabilities": {
+      "backend": "ida-wine-qemu",
+      "architecture": "x86-64",
+      "execution_breakpoints": true,
+      "memory_read": true,
+      "memory_write": true,
+      "instruction_trace": true,
+      "screenshots": true,
+      "mouse": true,
+      "save_states": false,
+      "code_layers": [
+        "ram"
+      ],
+      "data_watchpoints": false,
+      "register_edit": true,
+      "fast_forward": false,
+      "watchpoint_access": [
+        "r",
+        "w",
+        "rw"
+      ],
+      "watchpoint_mechanism": "IDA hardware/page breakpoints; stop semantics recorded per hit",
+      "remote_interface": 31,
+      "execution_layers": false,
+      "batch_trace": true,
+      "breakpoint_guest_code_writes": false,
+      "guest_register_filters": false,
+      "execution_breakpoint_mechanism": "IDA page protections; exact-PC filtering; guest instruction bytes unchanged"
+    },
+    "runtime_inputs": {
+      "qemu": {
+        "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.13.0-eabfc2a/backend/native-macos-arm64/qemu-system-x86_64",
+        "sha256": "10bed8dc7571b0fc6c51ea484711b3802d2fb2dc00ba5d9af4d610cb2e2142cb",
+        "version": "QEMU emulator version 11.1.2"
+      },
+      "kernel": {
+        "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.13.0-eabfc2a/backend/runtime/linux-amd64",
+        "sha256": "d8808aa4ca188560da1e6d749dcb930c87a5fd8b11ebff1f3fa6d728af35203d"
+      },
+      "initramfs": {
+        "path": "/Users/tiga/Documents/ChatGPT/fDisBull/.recovery/2026-10-25/ida-speed/runtime-2.cpio.gz",
+        "sha256": "6d1fa2794a663ad12cad58e73bd24fe47fbfffd9b3762b1a9c8d12112c5d7d31"
+      }
+    },
+    "files": [
+      {
+        "path": "oracle.exe",
+        "sha256": "0d12fc90cc084848a287187a6cdc671f805e7cf38fdba1c794d6c22757b89d34"
+      }
+    ],
+    "target_pid": 368,
+    "qemu_pid": 57906,
+    "remote_server": {
+      "sha256": "d11a634a17ab658cf4533396bd8a4bac5e594ab23d57464719d55eb63b06b0bf",
+      "interface": 31,
+      "flags": "0x500000000"
+    },
+    "guest_runtime": {
+      "wine_version": "wine-9.0 (Ubuntu 9.0~repack-4build3)",
+      "guest_kernel": "6.1.0-50-amd64",
+      "agent_binary_sha256": "01222531d89840b5a929631d36de70eca2d30a894f5bb742c5950c23c23f7e50",
+      "resources": {
+        "init": "45d223e9bc29af2ad00827c9deadc2b398fc47f6b17b5001a80637e9a8610905",
+        "opt/fdisbull/agent.c": "7f790582fc115fc3036f33c7a78bb11401619b4ce5adf0d624ca81d51c33d34a",
+        "opt/fdisbull/broker.py": "cf8e3c76e38716d66e269d768c404ecc7c68dc4868158f8b83acd76b4de2e151",
+        "opt/fdisbull/ida_broker.py": "948c9ca0593ed7a3e78d795738ddb3afe9b370401d32b822bc39bde351c4cd97",
+        "opt/fdisbull/ui.c": "cb2a1f857da9325a26ae704b6c5e05212f790be5e50f242959e872b427d43382",
+        "opt/fdisbull/remote/__init__.py": "4df28a19cb13efac25ce941d3aa40c2168114cc42407c61f57f75416dece5272",
+        "opt/fdisbull/remote/ida_wire.py": "97f42ef607fddf31a968b087e90a4395bf2b63b8a1629948eee2c26a0b6dd2a3",
+        "opt/fdisbull/remote/ida_remote.py": "545fa5325964af3619a1a5dde91fda6c818e330d8c5305e8808ef54f7e4bc1c3",
+        "opt/fdisbull/remote/ida_trace.py": "83bba70fc0accf56c565fd0bcaca956f1cbe3b5f7ed1862427510b79ad7e2c3e"
+      }
+    }
+  },
+  "requested_count": 96,
+  "semantics": "instructions completed by the selected stopped thread; pre-instruction registers; peer threads held per step"
+}

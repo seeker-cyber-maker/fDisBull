@@ -1,0 +1,17 @@
+{
+  "means_ms": {
+    "ida_host": 5799.993770895526,
+    "ida_linux": 2484.7970004193485,
+    "wine_host": 3584.559707902372
+  },
+  "ida_collector_speedup": 2.3341921975584667,
+  "against_existing_wine_speedup": 1.4425966013712272,
+  "against_existing_wine_time_reduction_percent": 30.680552064972776,
+  "host_requests_per_96_instructions": {
+    "ida_host": 385,
+    "ida_linux": 1,
+    "wine_host": 385
+  },
+  "samples_per_mean": 2,
+  "scope": "single authored fixture, 96-instruction NOP/NOP/JMP loop; excludes startup; no statistical or static-disassembly speed claim"
+}

@@ -1,0 +1,8 @@
+{
+  "source_archive": "/Volumes/PATRIOT/fdisbull-wine-sandbox-20261023/qemu/initramfs-v2.cpio.gz",
+  "member": "opt/dosbox-x/src/dosbox-x",
+  "sha256": "74f3b4dd5e3e93b23efdc5519ee60423e779140517745c6fb6ed882dcca14f88",
+  "size": 139064672,
+  "layers_marker": true,
+  "native_state_marker": true
+}
