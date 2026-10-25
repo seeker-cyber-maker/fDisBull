@@ -1,0 +1,34 @@
+{
+  "mac_copied_package_and_backends": {
+    "dos_boot_checks": 48,
+    "ida_checks": 4,
+    "wine_smoke": {
+      "result": "pass",
+      "seconds": 222.79120891704224,
+      "scope": "copied Mac package/backend smoke with one native checkpoint; full fork/export gate is tag CI"
+    }
+  },
+  "offline_mac": {
+    "result": "pass",
+    "passed": 51,
+    "skipped": 0,
+    "core_dependencies": "Genuine pinned wheels; iced-x86 Mac ARM64 wheel built from verified upstream source"
+  },
+  "offline_linux": {
+    "python": "3.13.5",
+    "architecture": "x86-64",
+    "installation": "pass, no network interface and pip --no-index --require-hashes",
+    "cli_and_engines": "pass: CLI help/inspect, actual ARM64 and DOS decoding, PE parse",
+    "library_resolution": "pass: all 63 needed libraries from private bundle, including SDL2_net",
+    "suite": {
+      "passed": 49,
+      "failed": 2,
+      "skipped": 0
+    },
+    "known_limit": "Native DOS state restore has Vga ZIP CRC failures in this Mac-hosted TCG probe; state restoration is not qualified for this probe",
+    "comparison": "Same failures reproduced with raw tag-CI ELF and system libraries; changing CPU profile or disabling compression did not resolve them",
+    "external_sandbox": "User-reported /opt/pyvenv/bin/python3 was not accessed or modified; actual installation there remains unverified"
+  },
+  "native_state_files_in_delivery": false,
+  "project_databases_in_delivery": false
+}

@@ -1,0 +1,130 @@
+[
+  {
+    "version": "0.14.0",
+    "source_commit": "6a0aeb3830eb544cd744d3410881c1c951a5ffb7",
+    "tag": "v0.14.0",
+    "release_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0",
+    "kind": "full Mac/QEMU delivery plus Linux offline DOS kit",
+    "directory": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.14.0-6a0aeb3",
+    "bundle": {
+      "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-unified-debugger-0.14.0-published-2026-10-25-6a0aeb3.zip",
+      "sha256": "b0f437162fcba22a23703a3a57b88ecd781c30507a24f0d87243b860a935a759",
+      "size": 2117467790,
+      "executable": false,
+      "entries": 438
+    },
+    "manifest": {
+      "sha256": "307b1868b9b433ab6ac54c577221b8be2eb8af298d8616a2eb4b63b13dbc8f4f",
+      "size": 85782,
+      "executable": false
+    },
+    "payload_files": 437,
+    "verification": "Directory manifest/hash/exclusions and ZIP CRC/per-entry SHA-256/executable modes passed",
+    "qualification": {
+      "mac_copied_package_and_backends": {
+        "dos_boot_checks": 48,
+        "ida_checks": 4,
+        "wine_smoke": {
+          "result": "pass",
+          "seconds": 222.79120891704224,
+          "scope": "copied Mac package/backend smoke with one native checkpoint; full fork/export gate is tag CI"
+        }
+      },
+      "offline_mac": {
+        "result": "pass",
+        "passed": 51,
+        "skipped": 0,
+        "core_dependencies": "Genuine pinned wheels; iced-x86 Mac ARM64 wheel built from verified upstream source"
+      },
+      "offline_linux": {
+        "python": "3.13.5",
+        "architecture": "x86-64",
+        "installation": "pass, no network interface and pip --no-index --require-hashes",
+        "cli_and_engines": "pass: CLI help/inspect, actual ARM64 and DOS decoding, PE parse",
+        "library_resolution": "pass: all 63 needed libraries from private bundle, including SDL2_net",
+        "suite": {
+          "passed": 49,
+          "failed": 2,
+          "skipped": 0
+        },
+        "known_limit": "Native DOS state restore has Vga ZIP CRC failures in this Mac-hosted TCG probe; state restoration is not qualified for this probe",
+        "comparison": "Same failures reproduced with raw tag-CI ELF and system libraries; changing CPU profile or disabling compression did not resolve them",
+        "external_sandbox": "User-reported /opt/pyvenv/bin/python3 was not accessed or modified; actual installation there remains unverified"
+      },
+      "native_state_files_in_delivery": false,
+      "project_databases_in_delivery": false
+    },
+    "tag_ci": {
+      "packages": 40222623197,
+      "native": 40222623209
+    },
+    "pristine_boot_runtimes_included": true,
+    "captured_states_included": false,
+    "project_databases_included": false,
+    "previous_deliveries_preserved": true
+  },
+  {
+    "version": "0.14.0",
+    "source_commit": "6a0aeb3830eb544cd744d3410881c1c951a5ffb7",
+    "tag": "v0.14.0",
+    "release_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0",
+    "kind": "compact offline Linux/DOS kit; partial native-state qualification",
+    "directory": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-linux-dos-offline-0.14.0-6a0aeb3",
+    "bundle": {
+      "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-linux-dos-offline-0.14.0-6a0aeb3.zip",
+      "sha256": "8adef6ec336a1a9efb43695479bbbc38bca63e8ccfc9b5e38b4f59a825bc1868",
+      "size": 98555019,
+      "executable": false,
+      "entries": 317
+    },
+    "manifest": {
+      "sha256": "04507ca7a4221a8043a14d0022e6de3337afae7e7869f93690c2c25d301315f9",
+      "size": 61300,
+      "executable": false
+    },
+    "payload_files": 316,
+    "verification": "Directory manifest/hash/exclusions and ZIP CRC/per-entry SHA-256/executable modes passed",
+    "qualification": {
+      "mac_copied_package_and_backends": {
+        "dos_boot_checks": 48,
+        "ida_checks": 4,
+        "wine_smoke": {
+          "result": "pass",
+          "seconds": 222.79120891704224,
+          "scope": "copied Mac package/backend smoke with one native checkpoint; full fork/export gate is tag CI"
+        }
+      },
+      "offline_mac": {
+        "result": "pass",
+        "passed": 51,
+        "skipped": 0,
+        "core_dependencies": "Genuine pinned wheels; iced-x86 Mac ARM64 wheel built from verified upstream source"
+      },
+      "offline_linux": {
+        "python": "3.13.5",
+        "architecture": "x86-64",
+        "installation": "pass, no network interface and pip --no-index --require-hashes",
+        "cli_and_engines": "pass: CLI help/inspect, actual ARM64 and DOS decoding, PE parse",
+        "library_resolution": "pass: all 63 needed libraries from private bundle, including SDL2_net",
+        "suite": {
+          "passed": 49,
+          "failed": 2,
+          "skipped": 0
+        },
+        "known_limit": "Native DOS state restore has Vga ZIP CRC failures in this Mac-hosted TCG probe; state restoration is not qualified for this probe",
+        "comparison": "Same failures reproduced with raw tag-CI ELF and system libraries; changing CPU profile or disabling compression did not resolve them",
+        "external_sandbox": "User-reported /opt/pyvenv/bin/python3 was not accessed or modified; actual installation there remains unverified"
+      },
+      "native_state_files_in_delivery": false,
+      "project_databases_in_delivery": false
+    },
+    "tag_ci": {
+      "packages": 40222623197,
+      "native": 40222623209
+    },
+    "pristine_boot_runtimes_included": false,
+    "captured_states_included": false,
+    "project_databases_included": false,
+    "previous_deliveries_preserved": true
+  }
+]

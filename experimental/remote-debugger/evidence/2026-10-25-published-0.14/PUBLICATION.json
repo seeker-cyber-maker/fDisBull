@@ -1,0 +1,77 @@
+{
+  "source_commit": "6a0aeb3830eb544cd744d3410881c1c951a5ffb7",
+  "release_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0",
+  "result": "published; exact assets and local delivery integrity verified",
+  "qualification": {
+    "mac_copied_package_and_backends": {
+      "dos_boot_checks": 48,
+      "ida_checks": 4,
+      "wine_smoke": {
+        "result": "pass",
+        "seconds": 222.79120891704224,
+        "scope": "copied Mac package/backend smoke with one native checkpoint; full fork/export gate is tag CI"
+      }
+    },
+    "offline_mac": {
+      "result": "pass",
+      "passed": 51,
+      "skipped": 0,
+      "core_dependencies": "Genuine pinned wheels; iced-x86 Mac ARM64 wheel built from verified upstream source"
+    },
+    "offline_linux": {
+      "python": "3.13.5",
+      "architecture": "x86-64",
+      "installation": "pass, no network interface and pip --no-index --require-hashes",
+      "cli_and_engines": "pass: CLI help/inspect, actual ARM64 and DOS decoding, PE parse",
+      "library_resolution": "pass: all 63 needed libraries from private bundle, including SDL2_net",
+      "suite": {
+        "passed": 49,
+        "failed": 2,
+        "skipped": 0
+      },
+      "known_limit": "Native DOS state restore has Vga ZIP CRC failures in this Mac-hosted TCG probe; state restoration is not qualified for this probe",
+      "comparison": "Same failures reproduced with raw tag-CI ELF and system libraries; changing CPU profile or disabling compression did not resolve them",
+      "external_sandbox": "User-reported /opt/pyvenv/bin/python3 was not accessed or modified; actual installation there remains unverified"
+    },
+    "native_state_files_in_delivery": false,
+    "project_databases_in_delivery": false
+  },
+  "evidence_files_sha256": {
+    "DELIVERY-0.14.0-linux-dos-offline-6a0aeb3.json": "16b680f26852d079679f02347b86598fae5702168cc0cabceade2efa828746e7",
+    "DELIVERY-0.14.0-published-6a0aeb3.json": "69f7f715d50537fccc74beabb4f5751d9935d02fff939a89bc2527efd90c2fa4",
+    "OFFLINE-LINUX-STATUS.md": "65f5375ba67e21cdc22754fe222eee005e0466fce3fe481850f5cbcaeefcf709",
+    "asset-readback.json": "8ec6461365f8a3d16db0b4b1d8ffdd12858648c2bcdfa9e40ba2eccd589b4f2f",
+    "backend/provenance/dosbox-linux-tag-ci.json": "6fe5e52483bbc7d68396a92060955f1be18e3ae0af18dade8cc4bf0a60bc69b3",
+    "compact-byte-identity.json": "dd69ce0827ec39854f34ab4b23a4a0fa06570d106e1857bfcdc50411d40a2c71",
+    "final-delivery-receipts.json": "a421de1abfe49802cf1072a545663f6a58a8eb9f8d92ecd8faf67d6dd7ae1b66",
+    "offline-dependencies.json": "49f3a2cfd571f69a8cbaf994f276400f1067d1c5a96aaabebb6bfd117428cd37",
+    "offline-linux-libraries.json": "406fb1cd11e3e35a0175bd545c6f43974c584350e5c3aea74a7eb2c8244a4f20",
+    "tag-native-ci.json": "03fdb5556f02ff156d7096924e2b2e3a20d9d34fd17b6682354948ed61d0d81e",
+    "tag-ordinary-ci.json": "167e2b2ced8a55595b6a4a24b38ddef7f580f8390ef7167cbafcc55134a65fd4",
+    "verification/COPIED-ACCEPTANCE.json": "f2744919fad625f072506434cbd57d92e6d5169e36b2bcba3bab2b05c472048b",
+    "verification/copied-boot/boot-grid8.png": "2924524bf02f8bdedfe29a6efe71a07a9bb7d46ae3e38b9a769cac89ed7f128b",
+    "verification/copied-boot/boot-trace.json": "c33fbc4679cc68f0be4ff4bed5fe183784010c2b653c73ac09db6d32e87a37a4",
+    "verification/copied-dos/dos-grid8.png": "235add48bc0ecb23d08eed87926af09b4ad8b52cc3be4e86b6614f62daae41f0",
+    "verification/copied-dos/dos-trace.json": "47479ec383d19f838e0b05bd7a78937d60ec30435cc1a4f8e75a9cedc184ed4e",
+    "verification/copied-dos-tests.xml": "0e6e32bfe1de4c4fd07a5d929e63714c059516212c818640f1215cc48976dbd3",
+    "verification/copied-ida/ida-click-grid8.png": "938985ae758291fd3de27e26f6af1a9bb3b3e9ec2095a4a38bb38068e70ea01c",
+    "verification/copied-ida/ida-trace.json": "a6fc326c8351de07b3fd296bab2f152f3368b69e7b20637c34da79ef3e05a5f9",
+    "verification/copied-ida-tests.xml": "35595725d83c5392d4433fab9665879e08e061ccda27ba9752b87d57df8c9960",
+    "verification/copied-wine/1cd8f4407060457f8327c6f2a04bc6f3-click-grid8.png": "be9e48d36dcd2a0b9d4a9a13c410b3c12c25bf02cc4888d27aeb570744b9aedc",
+    "verification/copied-wine/7d6885a5c1264b4fac72ac94ccfad073-copied-layer-trace.json": "d1a4643ec89092d2beff21d9e05dbbab55130df4e39425aa1a3bb0eb1a582761",
+    "verification/copied-wine/copied-wine.log": "17d85820803b50813a2b3e21d60691a277bd0e77a0f943b17091c1e1e0a5f2a3",
+    "verification/copied-wine/verification.json": "f296d9d7ba33ea7b078d634c1a11372bceaec40dbe26c323c902f51c30a8fb3e",
+    "verification/offline-linux313/baseline-cpu/tests.xml": "7fd1fa391c6d7fdd12d89fa0e589d0b3c5acf27954a20281a8b722316fa78269",
+    "verification/offline-linux313/initial/exit-codes.json": "7a117d590913cdaace41b52df8610231a6fb6fd3d588e0013882f4f03368a144",
+    "verification/offline-linux313/initial/probe.log": "4af9b482fbd3d21b166f49a5036355dca3bf96002fb3e57d3a8d8fb2cb8aabda",
+    "verification/offline-linux313/initial/tests.log": "b23aa74fba01957145c01af4690d6c2013fcb8d6426fddad741aca7cfb89e977",
+    "verification/offline-linux313/initial/tests.xml": "f5d2ef9e337a5c780f23823af775e7a3faa0d360e5743a3131077cf50ae36d32",
+    "verification/offline-linux313/loader-comparison/private-states.json": "166a7e5da4703165af4b78e96eb34bf4411b7375a960798e436b452f15be17f5",
+    "verification/offline-linux313/loader-comparison/raw-states.json": "4cc947c46491177be015127e63c6ff73a56d90f37e13ae51b7c800138284b162",
+    "verification/offline-linux313/loader-comparison/results.json": "d2a81cee227474c481cbea411c44f45aa1cba278bdddd117fda5c19ed7ac82fd",
+    "verification/offline-linux313/stored-zip/tests.xml": "80291045afa25abb21b6a46726db98148637e4f08600b12ec4b165c96f3fdd7f",
+    "verification/offline-mac/offline-mac-tests.xml": "013805dd9d270c45d0a124f64a3b3e585f42addd96213563c6da1a16770204ae",
+    "verification/runtime-audits/summary.json": "95c164d66904ee74de2c54326b0d3e70e17eafa8d1204ee8613a7a2db8f2582d"
+  },
+  "native_states_databases_games_in_evidence": false
+}

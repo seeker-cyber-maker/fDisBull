@@ -1,0 +1,971 @@
+{
+  "origin_runtime_sha256": "07aff6c7690c8abb06e3f32ef803581642e08ec5606d1769a3f0c2b6ff75c750",
+  "origin": "Shared-library closure extracted only from the audited pristine Ubuntu guest runtime",
+  "binary_sha256": "252ca805dd7bdb27ccc36ae74021b9809fcb8177d26c19ed970109dfd048247c",
+  "libraries": {
+    "libasound.so.2": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libasound.so.2.0.0",
+      "sha256": "ff4c69ef420f2d0ab92c813d2222d097c6a7eafe3b13952aed069e2bb0204f55",
+      "size": 1084144,
+      "needed": [
+        "libm.so.6",
+        "libc.so.6",
+        "ld-linux-x86-64.so.2"
+      ],
+      "package": "libasound2t64:amd64"
+    },
+    "libSDL2-2.0.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libSDL2-2.0.so.0.3000.0",
+      "sha256": "2507acbbe40afe7d3e2e775dd8af00a1dba93579b9e837563032f3d751a9a45b",
+      "size": 1926368,
+      "needed": [
+        "libasound.so.2",
+        "libm.so.6",
+        "libpulse.so.0",
+        "libsamplerate.so.0",
+        "libX11.so.6",
+        "libXext.so.6",
+        "libXcursor.so.1",
+        "libXi.so.6",
+        "libXfixes.so.3",
+        "libXrandr.so.2",
+        "libXss.so.1",
+        "libdrm.so.2",
+        "libgbm.so.1",
+        "libwayland-egl.so.1",
+        "libwayland-client.so.0",
+        "libwayland-cursor.so.0",
+        "libxkbcommon.so.0",
+        "libdecor-0.so.0",
+        "libc.so.6"
+      ],
+      "package": "libsdl2-2.0-0:amd64"
+    },
+    "libGL.so.1": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libGL.so.1.7.0",
+      "sha256": "67f471213576d225d38347a0b6d2a08a231980685301ff6461bd74d3994e5027",
+      "size": 547136,
+      "needed": [
+        "libGLdispatch.so.0",
+        "libGLX.so.0",
+        "libc.so.6"
+      ],
+      "package": "libgl1:amd64"
+    },
+    "libtinfo.so.6": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libtinfo.so.6.4",
+      "sha256": "e6089d7bb95eee5b545f3770dd69095b0bca47d26701cad145af429561d16306",
+      "size": 208328,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "libtinfo6:amd64"
+    },
+    "libfreetype.so.6": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libfreetype.so.6.20.1",
+      "sha256": "992dac80abe3a3854f3eb2668da4207c029664ceca5f122ddb46e2a8169e9499",
+      "size": 833608,
+      "needed": [
+        "libz.so.1",
+        "libbz2.so.1.0",
+        "libpng16.so.16",
+        "libbrotlidec.so.1",
+        "libc.so.6"
+      ],
+      "package": "libfreetype6:amd64"
+    },
+    "libncurses.so.6": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libncurses.so.6.4",
+      "sha256": "4f913f7e53348b701ea61fbf330f430967596570b1a3e16c70bab3d989d652c2",
+      "size": 165968,
+      "needed": [
+        "libtinfo.so.6",
+        "libc.so.6"
+      ],
+      "package": "libncurses6:amd64"
+    },
+    "libSDL2_net-2.0.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libSDL2_net-2.0.so.0.200.0",
+      "sha256": "4d1833dee6963d5f2b93fd1413178b58e82d7df0f713858217ea967bc28adf69",
+      "size": 22872,
+      "needed": [
+        "libSDL2-2.0.so.0",
+        "libc.so.6"
+      ],
+      "package": "libsdl2-net-2.0-0:amd64"
+    },
+    "libz.so.1": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libz.so.1.3",
+      "sha256": "f61677c7bdb7c2aa2a243ea781bfd16afcb361cede7b4ef76127a9d8eb9a5242",
+      "size": 113000,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "zlib1g:amd64"
+    },
+    "libpng16.so.16": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libpng16.so.16.43.0",
+      "sha256": "89c0c6569a8c00480d451401ad4c0a74942e62dc57f229a970592fdc5adb29e8",
+      "size": 223304,
+      "needed": [
+        "libz.so.1",
+        "libm.so.6",
+        "libc.so.6"
+      ],
+      "package": "libpng16-16t64:amd64"
+    },
+    "libX11.so.6": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libX11.so.6.4.0",
+      "sha256": "edd2ddf6e00a81c40b8645f7dbb6d6603c6a0a78d583bdbe7491d8a84de6e3b6",
+      "size": 1302184,
+      "needed": [
+        "libxcb.so.1",
+        "libc.so.6"
+      ],
+      "package": "libx11-6:amd64"
+    },
+    "libXrandr.so.2": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libXrandr.so.2.2.0",
+      "sha256": "bc6120a734d52e7f5e3611334e9f3cff0b3ce1b129bb20b6412ce8f0f62c049d",
+      "size": 47504,
+      "needed": [
+        "libXext.so.6",
+        "libXrender.so.1",
+        "libX11.so.6",
+        "libc.so.6"
+      ],
+      "package": "libxrandr2:amd64"
+    },
+    "libstdc++.so.6": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33",
+      "sha256": "1fd75fe70354a416d75aef22bcae68c47bd25d20e2d0568c30b1a9838cf62f11",
+      "size": 2592224,
+      "needed": [
+        "libm.so.6",
+        "libc.so.6",
+        "ld-linux-x86-64.so.2",
+        "libgcc_s.so.1"
+      ],
+      "package": "libstdc++6:amd64"
+    },
+    "libm.so.6": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libm.so.6",
+      "sha256": "fce00b6f25f459cf4ae0b7fae4257909a1a8a86f9149e7c029a5d617baf1ccd0",
+      "size": 952616,
+      "needed": [
+        "libc.so.6",
+        "ld-linux-x86-64.so.2"
+      ],
+      "package": "libc6:amd64"
+    },
+    "libgcc_s.so.1": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libgcc_s.so.1",
+      "sha256": "d93224d2b0dab4247598be683adca02f5cf00586f99c187579cd7e92058fb7cb",
+      "size": 183024,
+      "needed": [
+        "libc.so.6",
+        "ld-linux-x86-64.so.2"
+      ],
+      "package": "libgcc-s1:amd64"
+    },
+    "libc.so.6": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libc.so.6",
+      "sha256": "3a15d66867d83762c7f2f1e37359cb8f6c5743edb369c65285cb0b1c4f7498bf",
+      "size": 2129424,
+      "needed": [
+        "ld-linux-x86-64.so.2"
+      ],
+      "package": "libc6:amd64"
+    },
+    "ld-linux-x86-64.so.2": {
+      "source_member": "usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
+      "sha256": "c20a2dc8917c755f02b94049356320fe1f62ac7d9f8994731f807d9df39302da",
+      "size": 236616,
+      "needed": [],
+      "package": "libc6:amd64"
+    },
+    "libpulse.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libpulse.so.0.24.2",
+      "sha256": "3d78bd6bfcebccb7d4e65bac298c3aef5b0906fc4c6a4bebcd761c845f4c3c4a",
+      "size": 326856,
+      "needed": [
+        "libpulsecommon-16.1.so",
+        "libm.so.6",
+        "libdbus-1.so.3",
+        "libc.so.6"
+      ],
+      "package": "libpulse0:amd64"
+    },
+    "libsamplerate.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libsamplerate.so.0.2.2",
+      "sha256": "d18228ce734852b424a7baa27d0edf5bfb5aaff6de7a2b541a97c94985586bd3",
+      "size": 1497776,
+      "needed": [
+        "libm.so.6",
+        "libc.so.6"
+      ],
+      "package": "libsamplerate0:amd64"
+    },
+    "libXext.so.6": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libXext.so.6.4.0",
+      "sha256": "2907e6a996465de5b32a0dd10534d4416b87f1dee5670aaa7b19301a1fc93f44",
+      "size": 77512,
+      "needed": [
+        "libX11.so.6",
+        "libc.so.6"
+      ],
+      "package": "libxext6:amd64"
+    },
+    "libXcursor.so.1": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libXcursor.so.1.0.2",
+      "sha256": "09bd5941a53ee7fb06898fa066709cf098df8e33a45042e065d2f8461d92672c",
+      "size": 43464,
+      "needed": [
+        "libXrender.so.1",
+        "libXfixes.so.3",
+        "libX11.so.6",
+        "libc.so.6"
+      ],
+      "package": "libxcursor1:amd64"
+    },
+    "libXi.so.6": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libXi.so.6.1.0",
+      "sha256": "a51348c921ce1a35123fa7c99dc59bfd3e815be6829874fe15ae55172901d3e4",
+      "size": 76320,
+      "needed": [
+        "libX11.so.6",
+        "libXext.so.6",
+        "libc.so.6"
+      ],
+      "package": "libxi6:amd64"
+    },
+    "libXfixes.so.3": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libXfixes.so.3.1.0",
+      "sha256": "89e5897f438456013d2297850a7558cd28c9ad1f6978447197568949fb6a0fd9",
+      "size": 26800,
+      "needed": [
+        "libX11.so.6",
+        "libc.so.6"
+      ],
+      "package": "libxfixes3:amd64"
+    },
+    "libXss.so.1": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libXss.so.1.0.0",
+      "sha256": "1e165bf4777952eb9bb34c93f12e4fbd5de082a7f88a3c39fcd05e87dd8ddb07",
+      "size": 14648,
+      "needed": [
+        "libX11.so.6",
+        "libXext.so.6",
+        "libc.so.6"
+      ],
+      "package": "libxss1:amd64"
+    },
+    "libdrm.so.2": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libdrm.so.2.125.0",
+      "sha256": "ff39219aa058421e46afd36851342370cd1932d2557eb22f54e129755642bf67",
+      "size": 92760,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "libdrm2:amd64"
+    },
+    "libgbm.so.1": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libgbm.so.1.0.0",
+      "sha256": "3c781e20939adc578f1696980cb8a106cfc34da404e89d93faa887e995da2f14",
+      "size": 22976,
+      "needed": [
+        "libdrm.so.2",
+        "libexpat.so.1",
+        "libm.so.6",
+        "libc.so.6"
+      ],
+      "package": "libgbm1:amd64"
+    },
+    "libwayland-egl.so.1": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libwayland-egl.so.1.22.0",
+      "sha256": "f62e5dae4e63cb43e0210f08ef74dd379f0cd87eafbe569998fe6e1c4a820a10",
+      "size": 14344,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "libwayland-egl1:amd64"
+    },
+    "libwayland-client.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libwayland-client.so.0.22.0",
+      "sha256": "1c22abb422953442aa12822ea51ac76d1c8be92ed143e0159e0f830776cde2b2",
+      "size": 64776,
+      "needed": [
+        "libffi.so.8",
+        "libc.so.6"
+      ],
+      "package": "libwayland-client0:amd64"
+    },
+    "libwayland-cursor.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libwayland-cursor.so.0.22.0",
+      "sha256": "bcb52f21ed9a07af67795de01143fc5562939e584b5945ebbec60c054660e9f5",
+      "size": 35352,
+      "needed": [
+        "libwayland-client.so.0",
+        "libc.so.6"
+      ],
+      "package": "libwayland-cursor0:amd64"
+    },
+    "libxkbcommon.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libxkbcommon.so.0.0.0",
+      "sha256": "3eb6c7315985803a7c72cb81aa3293b763e6cfc907b70b7b2f641c2827cd90f9",
+      "size": 293432,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "libxkbcommon0:amd64"
+    },
+    "libdecor-0.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libdecor-0.so.0.200.2",
+      "sha256": "dba9cad366c76f275e9a0c0756c45fdb1962251bb9e034411ee96cd97e92ba7e",
+      "size": 39424,
+      "needed": [
+        "libwayland-client.so.0",
+        "libc.so.6"
+      ],
+      "package": "libdecor-0-0:amd64"
+    },
+    "libGLdispatch.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libGLdispatch.so.0.0.0",
+      "sha256": "ca01a91104c8887b3d8e59499b58cbb8f604cc285666b50d9ec888eb0c915182",
+      "size": 719304,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "libglvnd0:amd64"
+    },
+    "libGLX.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libGLX.so.0.0.0",
+      "sha256": "16fc8a37eea9210dc83c57eeff5aedc10ab4c6673f2f97e8bb6ee103df657b40",
+      "size": 137792,
+      "needed": [
+        "libGLdispatch.so.0",
+        "libX11.so.6",
+        "libc.so.6"
+      ],
+      "package": "libglx0:amd64"
+    },
+    "libbz2.so.1.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libbz2.so.1.0.4",
+      "sha256": "cc08c9f50a8009ffd6391e0116a100369b11ca9238fa52392c019e6645b122a1",
+      "size": 78944,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "libbz2-1.0:amd64"
+    },
+    "libbrotlidec.so.1": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libbrotlidec.so.1.1.0",
+      "sha256": "64d8a5019d4c294b89fde1193343ea324bbd8603652554e5545f0a01595fa2c5",
+      "size": 51512,
+      "needed": [
+        "libbrotlicommon.so.1",
+        "libc.so.6"
+      ],
+      "package": "libbrotli1:amd64"
+    },
+    "libxcb.so.1": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0",
+      "sha256": "7958a0136b121bdc4c708968569ad152a9ed208ab026e2537b1005dde64ca440",
+      "size": 162392,
+      "needed": [
+        "libXau.so.6",
+        "libXdmcp.so.6",
+        "libc.so.6"
+      ],
+      "package": "libxcb1:amd64"
+    },
+    "libXrender.so.1": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libXrender.so.1.3.0",
+      "sha256": "250977e0e004b6c0556144c3e683487063b4582dc83d205196ec3aa65d54e2c6",
+      "size": 43600,
+      "needed": [
+        "libX11.so.6",
+        "libc.so.6"
+      ],
+      "package": "libxrender1:amd64"
+    },
+    "libpulsecommon-16.1.so": {
+      "source_member": "usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-16.1.so",
+      "sha256": "00ab68a64ecbb5d6e0d4b5b35707a83a9040cdb373008e487176e49d184cf22f",
+      "size": 510288,
+      "needed": [
+        "libm.so.6",
+        "libsndfile.so.1",
+        "libdbus-1.so.3",
+        "libX11-xcb.so.1",
+        "libX11.so.6",
+        "libxcb.so.1",
+        "libsystemd.so.0",
+        "libasyncns.so.0",
+        "libapparmor.so.1",
+        "libc.so.6"
+      ],
+      "package": "libpulse0:amd64"
+    },
+    "libdbus-1.so.3": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libdbus-1.so.3.32.4",
+      "sha256": "a6ae7b4ef48562b40d7b9ba8efd2e49f6528b7cc6364bea382dcee4b473b5413",
+      "size": 317752,
+      "needed": [
+        "libsystemd.so.0",
+        "libc.so.6"
+      ],
+      "package": "libdbus-1-3:amd64"
+    },
+    "libexpat.so.1": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libexpat.so.1.9.1",
+      "sha256": "286682ecbc5e59a638963b1a4e6351e65eb32fcf4bdcb9cb7569b6a61fe06a8d",
+      "size": 186624,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "libexpat1:amd64"
+    },
+    "libffi.so.8": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libffi.so.8.1.4",
+      "sha256": "00f593fe192f2851b8ce23b25cec2488d769beb5a8f63e8c9e563071e1075153",
+      "size": 47672,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "libffi8:amd64"
+    },
+    "libbrotlicommon.so.1": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libbrotlicommon.so.1.1.0",
+      "sha256": "a91ead095d2c80520c55a89057bbe10b031a075340442e63f44b310f93883a1b",
+      "size": 141640,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "libbrotli1:amd64"
+    },
+    "libXau.so.6": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libXau.so.6.0.0",
+      "sha256": "8040da3f8516c1acfe39f04ff022480cdb273705ba5e7a4ca70bbdb1527cd67a",
+      "size": 18696,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "libxau6:amd64"
+    },
+    "libXdmcp.so.6": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libXdmcp.so.6.0.0",
+      "sha256": "667d97d6da16016400ab10de9f83ef4ab209ceb6adf68ff9650225ec13e723b0",
+      "size": 26776,
+      "needed": [
+        "libbsd.so.0",
+        "libc.so.6"
+      ],
+      "package": "libxdmcp6:amd64"
+    },
+    "libsndfile.so.1": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libsndfile.so.1.0.37",
+      "sha256": "3b9c4be9dab1c1fa6c0d9b9936946f07f02525f93b43fb1ee2112dd3fe70858d",
+      "size": 545896,
+      "needed": [
+        "libFLAC.so.12",
+        "libvorbis.so.0",
+        "libvorbisenc.so.2",
+        "libopus.so.0",
+        "libogg.so.0",
+        "libmpg123.so.0",
+        "libmp3lame.so.0",
+        "libm.so.6",
+        "libc.so.6"
+      ],
+      "package": "libsndfile1:amd64"
+    },
+    "libX11-xcb.so.1": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libX11-xcb.so.1.0.0",
+      "sha256": "941ab0ca78131e168817049d4c9935bb0e29b584cf05b58c47e3071f1fa81cf8",
+      "size": 14024,
+      "needed": [],
+      "package": "libx11-xcb1:amd64"
+    },
+    "libsystemd.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libsystemd.so.0.38.0",
+      "sha256": "b10be60fc80ea6910df1b253658e638bd29f3d1aeeb3798006fc66972366cb94",
+      "size": 910592,
+      "needed": [
+        "libcap.so.2",
+        "libgcrypt.so.20",
+        "liblz4.so.1",
+        "liblzma.so.5",
+        "libzstd.so.1",
+        "libc.so.6",
+        "ld-linux-x86-64.so.2"
+      ],
+      "package": "libsystemd0:amd64"
+    },
+    "libasyncns.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libasyncns.so.0.3.1",
+      "sha256": "47618619d79ea314f12905b3fff430916123df4a12602a5c40dd3679cf675521",
+      "size": 26616,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "libasyncns0:amd64"
+    },
+    "libapparmor.so.1": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libapparmor.so.1.17.2",
+      "sha256": "13b9bc655101674701a7c0b0b8a87f31d2f698c054ed34933d5141398c8b92ff",
+      "size": 84864,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "libapparmor1:amd64"
+    },
+    "libbsd.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libbsd.so.0.12.1",
+      "sha256": "e86cd4f0019f42c2ba5e60602e0edc8694d2948377d98c3654d0f6bddb5254bb",
+      "size": 80888,
+      "needed": [
+        "libmd.so.0",
+        "libc.so.6"
+      ],
+      "package": "libbsd0:amd64"
+    },
+    "libFLAC.so.12": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libFLAC.so.12.1.0",
+      "sha256": "03f99851a828586d74e06f62d098025271b19aeba9fe781a31b2d90dc57e723b",
+      "size": 407648,
+      "needed": [
+        "libogg.so.0",
+        "libm.so.6",
+        "libc.so.6"
+      ],
+      "package": "libflac12t64:amd64"
+    },
+    "libvorbis.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libvorbis.so.0.4.9",
+      "sha256": "ba08466742bf3f502d3a47699c321d99fdcb9628aaa8b4356cb6394cfe8a4113",
+      "size": 182344,
+      "needed": [
+        "libm.so.6",
+        "libogg.so.0",
+        "libc.so.6"
+      ],
+      "package": "libvorbis0a:amd64"
+    },
+    "libvorbisenc.so.2": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libvorbisenc.so.2.0.12",
+      "sha256": "f62e5237a789185d6a08c66745b585edd9e1c6956c16ee34d98ad6435efc7881",
+      "size": 694408,
+      "needed": [
+        "libvorbis.so.0",
+        "libc.so.6"
+      ],
+      "package": "libvorbisenc2:amd64"
+    },
+    "libopus.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libopus.so.0.9.0",
+      "sha256": "63ddaf057d71c53090607e0467eb308640c3b39b0f189e5b937e9c397be2f676",
+      "size": 387368,
+      "needed": [
+        "libm.so.6",
+        "libc.so.6"
+      ],
+      "package": "libopus0:amd64"
+    },
+    "libogg.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libogg.so.0.8.5",
+      "sha256": "1017f00b886f340acede53689da1267398e1297a20e8208db69ead7ab0fc3b6d",
+      "size": 34808,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "libogg0:amd64"
+    },
+    "libmpg123.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libmpg123.so.0.48.2",
+      "sha256": "af6e041af88719710b77d83b7deb8ecbe10bdf67a255fcadcfae7eec1d19eea6",
+      "size": 376344,
+      "needed": [
+        "libm.so.6",
+        "libc.so.6"
+      ],
+      "package": "libmpg123-0t64:amd64"
+    },
+    "libmp3lame.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libmp3lame.so.0.0.0",
+      "sha256": "14b664b4af2fe18975adb3c06c0369b436dd6504ce421736649c0415447c9d00",
+      "size": 297032,
+      "needed": [
+        "libm.so.6",
+        "libc.so.6"
+      ],
+      "package": "libmp3lame0:amd64"
+    },
+    "libcap.so.2": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libcap.so.2.66",
+      "sha256": "6ac6abc86ac891c6e13486470e26f1d939f47fda9e6b5d5508a7f5ec881adc84",
+      "size": 51536,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "libcap2:amd64"
+    },
+    "libgcrypt.so.20": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libgcrypt.so.20.4.3",
+      "sha256": "6ad6d7007ee1ad8319eb18ba9a512cf09dda49396a303774c68b47477020bad4",
+      "size": 1345072,
+      "needed": [
+        "libgpg-error.so.0",
+        "libc.so.6"
+      ],
+      "package": "libgcrypt20:amd64"
+    },
+    "liblz4.so.1": {
+      "source_member": "usr/lib/x86_64-linux-gnu/liblz4.so.1.9.4",
+      "sha256": "40bffd0a098387368b16b992abd5f7cf43c0fa2f05cabe5a6d483719554adfda",
+      "size": 137440,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "liblz4-1:amd64"
+    },
+    "liblzma.so.5": {
+      "source_member": "usr/lib/x86_64-linux-gnu/liblzma.so.5.4.5",
+      "sha256": "26b37d25f7ca2a2d348de8ecabacda12e921cd933b21fa069a179760db77219d",
+      "size": 202904,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "liblzma5:amd64"
+    },
+    "libzstd.so.1": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5",
+      "sha256": "0a2128bc10841fb29e76d08d945864dfb0b6a66da5df6df5d8299197439e54bb",
+      "size": 755864,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "libzstd1:amd64"
+    },
+    "libmd.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libmd.so.0.1.0",
+      "sha256": "423e18586b6ea740f4465afd64f7a9a4cb7264ed979c8e7256f9085af5345fef",
+      "size": 55536,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "libmd0:amd64"
+    },
+    "libgpg-error.so.0": {
+      "source_member": "usr/lib/x86_64-linux-gnu/libgpg-error.so.0.34.0",
+      "sha256": "6cb18a007bfcb623029f4528a36b46578fea7dc34c2b505b8e6e0d99e6348cd1",
+      "size": 149760,
+      "needed": [
+        "libc.so.6"
+      ],
+      "package": "libgpg-error0:amd64"
+    }
+  },
+  "packages": [
+    "libapparmor1:amd64",
+    "libasound2t64:amd64",
+    "libasyncns0:amd64",
+    "libbrotli1:amd64",
+    "libbsd0:amd64",
+    "libbz2-1.0:amd64",
+    "libc6:amd64",
+    "libcap2:amd64",
+    "libdbus-1-3:amd64",
+    "libdecor-0-0:amd64",
+    "libdrm2:amd64",
+    "libexpat1:amd64",
+    "libffi8:amd64",
+    "libflac12t64:amd64",
+    "libfreetype6:amd64",
+    "libgbm1:amd64",
+    "libgcc-s1:amd64",
+    "libgcrypt20:amd64",
+    "libgl1:amd64",
+    "libglvnd0:amd64",
+    "libglx0:amd64",
+    "libgpg-error0:amd64",
+    "liblz4-1:amd64",
+    "liblzma5:amd64",
+    "libmd0:amd64",
+    "libmp3lame0:amd64",
+    "libmpg123-0t64:amd64",
+    "libncurses6:amd64",
+    "libogg0:amd64",
+    "libopus0:amd64",
+    "libpng16-16t64:amd64",
+    "libpulse0:amd64",
+    "libsamplerate0:amd64",
+    "libsdl2-2.0-0:amd64",
+    "libsdl2-net-2.0-0:amd64",
+    "libsndfile1:amd64",
+    "libstdc++6:amd64",
+    "libsystemd0:amd64",
+    "libtinfo6:amd64",
+    "libvorbis0a:amd64",
+    "libvorbisenc2:amd64",
+    "libwayland-client0:amd64",
+    "libwayland-cursor0:amd64",
+    "libwayland-egl1:amd64",
+    "libx11-6:amd64",
+    "libx11-xcb1:amd64",
+    "libxau6:amd64",
+    "libxcb1:amd64",
+    "libxcursor1:amd64",
+    "libxdmcp6:amd64",
+    "libxext6:amd64",
+    "libxfixes3:amd64",
+    "libxi6:amd64",
+    "libxkbcommon0:amd64",
+    "libxrandr2:amd64",
+    "libxrender1:amd64",
+    "libxss1:amd64",
+    "libzstd1:amd64",
+    "zlib1g:amd64"
+  ],
+  "scope": "Private Linux x86-64 loader/library path; no system installation or global environment replacement",
+  "notices": {
+    "libapparmor1:amd64": {
+      "path": "backend/linux-amd64/licenses/libapparmor1-copyright.txt",
+      "sha256": "52b7cf37d674ca47296cf6270a95ecda0ecbef976cc090d702acbd741e36b3b4"
+    },
+    "libasound2t64:amd64": {
+      "path": "backend/linux-amd64/licenses/libasound2t64-copyright.txt",
+      "sha256": "9b356b4fae53b5d5e7668e048f085d68a5039de7b6afbf465f50e81513334062"
+    },
+    "libasyncns0:amd64": {
+      "path": "backend/linux-amd64/licenses/libasyncns0-copyright.txt",
+      "sha256": "26f98be71539b8f1038fbaf51551598d0e2eb16f98db9a62094fc85db5f1c25d"
+    },
+    "libbrotli1:amd64": {
+      "path": "backend/linux-amd64/licenses/libbrotli1-copyright.txt",
+      "sha256": "24a64e5bb83d0960d1835696a1e23c0896ad6055b0ca47c66ab0eb9a766324b1"
+    },
+    "libbsd0:amd64": {
+      "path": "backend/linux-amd64/licenses/libbsd0-copyright.txt",
+      "sha256": "978426553ab7b9cfb4503d98e578a77b8c3142c099100aa9791fd21be5a95f97"
+    },
+    "libbz2-1.0:amd64": {
+      "path": "backend/linux-amd64/licenses/libbz2-1.0-copyright.txt",
+      "sha256": "832ed535ff3c3d025a8d2348eb1b697b89addcf2eaadbc17650262040b9145e2"
+    },
+    "libc6:amd64": {
+      "path": "backend/linux-amd64/licenses/libc6-copyright.txt",
+      "sha256": "d3c95b56fa33e28b57860580f0baf4e4f4de2a268a2b80f1d031a5191bade265"
+    },
+    "libcap2:amd64": {
+      "path": "backend/linux-amd64/licenses/libcap2-copyright.txt",
+      "sha256": "e60a5642e12e340060e4e519a65b2eb0330be2917854841c644e36268f607d54"
+    },
+    "libdbus-1-3:amd64": {
+      "path": "backend/linux-amd64/licenses/libdbus-1-3-copyright.txt",
+      "sha256": "20d4fee565b0a0910670b8202c15f040ed5dd488a685a3008eb04b65d987f89c"
+    },
+    "libdecor-0-0:amd64": {
+      "path": "backend/linux-amd64/licenses/libdecor-0-0-copyright.txt",
+      "sha256": "598201e144e867fc6ea003d8418e730db56448825e3989a66f0ac3b79142b979"
+    },
+    "libdrm2:amd64": {
+      "path": "backend/linux-amd64/licenses/libdrm2-copyright.txt",
+      "sha256": "512c9a57fd8b449aa157351da9df07bf8e19f767e496a72205a4020268ddb2e0"
+    },
+    "libexpat1:amd64": {
+      "path": "backend/linux-amd64/licenses/libexpat1-copyright.txt",
+      "sha256": "60919fe1a156395ff14511bb6ff79756c50ade2fff59ac60c9bae1d8a7fe6292"
+    },
+    "libffi8:amd64": {
+      "path": "backend/linux-amd64/licenses/libffi8-copyright.txt",
+      "sha256": "737ff68f0eb104d3b0d96b291c3a8f40a775a3ec2b53f9b2e4bcfe3188bde118"
+    },
+    "libflac12t64:amd64": {
+      "path": "backend/linux-amd64/licenses/libflac12t64-copyright.txt",
+      "sha256": "b09e581d4a200e49d0c5e032777a3f9c5cfd164b3dfc90f5071f285df9543f18"
+    },
+    "libfreetype6:amd64": {
+      "path": "backend/linux-amd64/licenses/libfreetype6-copyright.txt",
+      "sha256": "ce6d766883ea111e7f47acc09e9d49be8827daa6a03f2c2707243a425d41f0e9"
+    },
+    "libgbm1:amd64": {
+      "path": "backend/linux-amd64/licenses/libgbm1-copyright.txt",
+      "sha256": "cbf3d2eb38998daf390f52d49969d1be5607a6aee138351e161c12a6976ba49e"
+    },
+    "libgcc-s1:amd64": {
+      "path": "backend/linux-amd64/licenses/libgcc-s1-copyright.txt",
+      "sha256": "20390f8a6f3b1e4d7cb45dd8652dabb259bbef688cbad839bcdb0b9ba7252f79"
+    },
+    "libgcrypt20:amd64": {
+      "path": "backend/linux-amd64/licenses/libgcrypt20-copyright.txt",
+      "sha256": "40162167dff80843a4b24aa8d0a4ffc50be5338d004ebe38f86ae3397ba9de3e"
+    },
+    "libgl1:amd64": {
+      "path": "backend/linux-amd64/licenses/libgl1-copyright.txt",
+      "sha256": "37920f219f60efa2fde5d003c51be0608b2159cc74c5eb6d70d630907db2d9a3"
+    },
+    "libglvnd0:amd64": {
+      "path": "backend/linux-amd64/licenses/libglvnd0-copyright.txt",
+      "sha256": "37920f219f60efa2fde5d003c51be0608b2159cc74c5eb6d70d630907db2d9a3"
+    },
+    "libglx0:amd64": {
+      "path": "backend/linux-amd64/licenses/libglx0-copyright.txt",
+      "sha256": "37920f219f60efa2fde5d003c51be0608b2159cc74c5eb6d70d630907db2d9a3"
+    },
+    "libgpg-error0:amd64": {
+      "path": "backend/linux-amd64/licenses/libgpg-error0-copyright.txt",
+      "sha256": "0250e9e7cbf6c68c2bd05b6db1ea684988f91cd95da69f2936064cf302729fe5"
+    },
+    "liblz4-1:amd64": {
+      "path": "backend/linux-amd64/licenses/liblz4-1-copyright.txt",
+      "sha256": "d3be0f43fe14da244f97c451bbae789c0acf868612598a69f5f22a289abeca40"
+    },
+    "liblzma5:amd64": {
+      "path": "backend/linux-amd64/licenses/liblzma5-copyright.txt",
+      "sha256": "a2dc8fac0f496e1c58aff67018cf0c6b88336316afa5642f9335b71642e28aa8"
+    },
+    "libmd0:amd64": {
+      "path": "backend/linux-amd64/licenses/libmd0-copyright.txt",
+      "sha256": "4365ef6255ad553fce69dd4bc0e093472c5d0e41b8ea493a545cc926ce171aa6"
+    },
+    "libmp3lame0:amd64": {
+      "path": "backend/linux-amd64/licenses/libmp3lame0-copyright.txt",
+      "sha256": "f0e4c5098ffedad31473eec38810c26409223858fb8d63dd7685bf225f96bc5d"
+    },
+    "libmpg123-0t64:amd64": {
+      "path": "backend/linux-amd64/licenses/libmpg123-0t64-copyright.txt",
+      "sha256": "ba3657ec83ab9af9070bacccc6c9735d1856c8a5adab275708ba3d4c9e41b5f8"
+    },
+    "libncurses6:amd64": {
+      "path": "backend/linux-amd64/licenses/libncurses6-copyright.txt",
+      "sha256": "7c9d2c8dbee48b6f4bbbffb1f370cc5858de11cc4f5a70c5c622c274917e1c65"
+    },
+    "libogg0:amd64": {
+      "path": "backend/linux-amd64/licenses/libogg0-copyright.txt",
+      "sha256": "36bb02bf6a764f4fac0ca9d38d2563932513df6015d98bd162624b18feaf096c"
+    },
+    "libopus0:amd64": {
+      "path": "backend/linux-amd64/licenses/libopus0-copyright.txt",
+      "sha256": "893be2dfc7b9d827675d69c43e1f172a89ef10d3745ffd15a48514c08470cace"
+    },
+    "libpng16-16t64:amd64": {
+      "path": "backend/linux-amd64/licenses/libpng16-16t64-copyright.txt",
+      "sha256": "4620d402b97601a910946acccbbe2e15bdffac11615bf9046520990d3b00f2b9"
+    },
+    "libpulse0:amd64": {
+      "path": "backend/linux-amd64/licenses/libpulse0-copyright.txt",
+      "sha256": "aff3f1d729168de06e34d940dc493cc305a6e4a6278f1ac38ee52ec0f69e342c"
+    },
+    "libsamplerate0:amd64": {
+      "path": "backend/linux-amd64/licenses/libsamplerate0-copyright.txt",
+      "sha256": "870b641e1bbc7459889f632a691d410e8be634cdd1d33e187b27bcbb2290ea73"
+    },
+    "libsdl2-2.0-0:amd64": {
+      "path": "backend/linux-amd64/licenses/libsdl2-2.0-0-copyright.txt",
+      "sha256": "33a0564f6eca16eb8234f17cb0ef51004dfa0755c55624a673cc5574a4e22cf4"
+    },
+    "libsdl2-net-2.0-0:amd64": {
+      "path": "backend/linux-amd64/licenses/libsdl2-net-2.0-0-copyright.txt",
+      "sha256": "50e8849ddcb560b3f2895dfed7fca60f427c4e5669feb6864c5766887a753e13"
+    },
+    "libsndfile1:amd64": {
+      "path": "backend/linux-amd64/licenses/libsndfile1-copyright.txt",
+      "sha256": "56bc3dae5803b8b2d59adf72fcd526eef2f4ac929d2442562d12248867222335"
+    },
+    "libstdc++6:amd64": {
+      "path": "backend/linux-amd64/licenses/libstdc++6-copyright.txt",
+      "sha256": "20390f8a6f3b1e4d7cb45dd8652dabb259bbef688cbad839bcdb0b9ba7252f79"
+    },
+    "libsystemd0:amd64": {
+      "path": "backend/linux-amd64/licenses/libsystemd0-copyright.txt",
+      "sha256": "a7d06854714a1ca99f6dbd1a1641dde5bcf28635be149f6554449618f8f427f3"
+    },
+    "libtinfo6:amd64": {
+      "path": "backend/linux-amd64/licenses/libtinfo6-copyright.txt",
+      "sha256": "7c9d2c8dbee48b6f4bbbffb1f370cc5858de11cc4f5a70c5c622c274917e1c65"
+    },
+    "libvorbis0a:amd64": {
+      "path": "backend/linux-amd64/licenses/libvorbis0a-copyright.txt",
+      "sha256": "47badad9f7f750f92cd12f44db08b6937e5b4d47935ba1cc60de0ea3a2adff9b"
+    },
+    "libvorbisenc2:amd64": {
+      "path": "backend/linux-amd64/licenses/libvorbisenc2-copyright.txt",
+      "sha256": "47badad9f7f750f92cd12f44db08b6937e5b4d47935ba1cc60de0ea3a2adff9b"
+    },
+    "libwayland-client0:amd64": {
+      "path": "backend/linux-amd64/licenses/libwayland-client0-copyright.txt",
+      "sha256": "736bf54141fa9808939ffff2691b817888ea53197484c2099e8d03b954b83e3b"
+    },
+    "libwayland-cursor0:amd64": {
+      "path": "backend/linux-amd64/licenses/libwayland-cursor0-copyright.txt",
+      "sha256": "736bf54141fa9808939ffff2691b817888ea53197484c2099e8d03b954b83e3b"
+    },
+    "libwayland-egl1:amd64": {
+      "path": "backend/linux-amd64/licenses/libwayland-egl1-copyright.txt",
+      "sha256": "736bf54141fa9808939ffff2691b817888ea53197484c2099e8d03b954b83e3b"
+    },
+    "libx11-6:amd64": {
+      "path": "backend/linux-amd64/licenses/libx11-6-copyright.txt",
+      "sha256": "0b380a7fd5b2228f26e9585e56f14812efd3350f3df307507d2bc055dfd8de3e"
+    },
+    "libx11-xcb1:amd64": {
+      "path": "backend/linux-amd64/licenses/libx11-xcb1-copyright.txt",
+      "sha256": "0b380a7fd5b2228f26e9585e56f14812efd3350f3df307507d2bc055dfd8de3e"
+    },
+    "libxau6:amd64": {
+      "path": "backend/linux-amd64/licenses/libxau6-copyright.txt",
+      "sha256": "118dd263a7b91c8f21c489f949bf13281dff9e766deea92b829dac4dce66601a"
+    },
+    "libxcb1:amd64": {
+      "path": "backend/linux-amd64/licenses/libxcb1-copyright.txt",
+      "sha256": "4f7cb9db6bf6542f5417e3d674c780d3a5fd12291a54d63054fb576ee0cfae80"
+    },
+    "libxcursor1:amd64": {
+      "path": "backend/linux-amd64/licenses/libxcursor1-copyright.txt",
+      "sha256": "817abc0ccc9e2591057be256b0f6d80edb134221ced29dd545a9eafaf40b423c"
+    },
+    "libxdmcp6:amd64": {
+      "path": "backend/linux-amd64/licenses/libxdmcp6-copyright.txt",
+      "sha256": "1bcbb50f8603fe8b86d330bfa460b772ea04fbd3c70e4499f0768b5340b9fd6e"
+    },
+    "libxext6:amd64": {
+      "path": "backend/linux-amd64/licenses/libxext6-copyright.txt",
+      "sha256": "bc57e445ca1d9fe082c8d54189dd411ff26caa8552c9c63d44ea06a982f32124"
+    },
+    "libxfixes3:amd64": {
+      "path": "backend/linux-amd64/licenses/libxfixes3-copyright.txt",
+      "sha256": "051ffe073ab38244c504bb379903b4ecda6081fb3d97d0d3dce44bc11712eef2"
+    },
+    "libxi6:amd64": {
+      "path": "backend/linux-amd64/licenses/libxi6-copyright.txt",
+      "sha256": "c812f9c54513ae593aab9580b54a4b18219648df7068d49ca1daa47f522ba3fa"
+    },
+    "libxkbcommon0:amd64": {
+      "path": "backend/linux-amd64/licenses/libxkbcommon0-copyright.txt",
+      "sha256": "5eeaeb1b6e029a0274e1573765bb0bae2926ef96a3679203faa4fd00fdaeaa88"
+    },
+    "libxrandr2:amd64": {
+      "path": "backend/linux-amd64/licenses/libxrandr2-copyright.txt",
+      "sha256": "6d8e6239cfe9dd25bbeef06dcf0610d802ebbdc8968db87cf5adf00ff98927d4"
+    },
+    "libxrender1:amd64": {
+      "path": "backend/linux-amd64/licenses/libxrender1-copyright.txt",
+      "sha256": "ed2a78123a5076b4f11da38cb1ffb85b5cb9fdc26b5746c517b1d7e7a9029704"
+    },
+    "libxss1:amd64": {
+      "path": "backend/linux-amd64/licenses/libxss1-copyright.txt",
+      "sha256": "3ebbe713ac6980aefc18dcf407c94f51bbf02852463294bbb6dc1ee1f9fad9c3"
+    },
+    "libzstd1:amd64": {
+      "path": "backend/linux-amd64/licenses/libzstd1-copyright.txt",
+      "sha256": "35e85e8e9bbb71492c5f5dddf39ed65b68775a02ad8d710c25d097b497f06c49"
+    },
+    "zlib1g:amd64": {
+      "path": "backend/linux-amd64/licenses/zlib1g-copyright.txt",
+      "sha256": "9e5b96d63773a5d177ba264254390f792be07e41748ebd94730981c6cac31cc6"
+    }
+  },
+  "notice_source": "/Volumes/PATRIOT/fdisbull-wine-sandbox-20261023/qemu/initramfs-v2.cpio.gz",
+  "notice_source_kind": "Trusted original Ubuntu package filesystem; notices copied verbatim"
+}

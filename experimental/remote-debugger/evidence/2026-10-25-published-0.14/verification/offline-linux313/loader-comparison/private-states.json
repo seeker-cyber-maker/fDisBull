@@ -1,0 +1,284 @@
+[
+  {
+    "method": "state.save"
+  },
+  {
+    "method": "state.load",
+    "zip_crc_failure": "Vga",
+    "entries": [
+      {
+        "name": "DOSBox-X_Version",
+        "size": 26,
+        "crc": 2932828184
+      },
+      {
+        "name": "Program_Name",
+        "size": 5,
+        "crc": 328197034
+      },
+      {
+        "name": "Memory_Size",
+        "size": 4,
+        "crc": 3143126361
+      },
+      {
+        "name": "Machine_Type",
+        "size": 7,
+        "crc": 474170815
+      },
+      {
+        "name": "Time_Stamp",
+        "size": 16,
+        "crc": 2533912270
+      },
+      {
+        "name": "Save_Remark",
+        "size": 0,
+        "crc": 0
+      },
+      {
+        "name": "CMOS",
+        "size": 80,
+        "crc": 2948148358
+      },
+      {
+        "name": "CPU",
+        "size": 21106744,
+        "crc": 3064983311
+      },
+      {
+        "name": "DMA",
+        "size": 1280,
+        "crc": 809556130
+      },
+      {
+        "name": "Dos",
+        "size": 68509,
+        "crc": 3284452876
+      },
+      {
+        "name": "Dosbox-x",
+        "size": 2,
+        "crc": 1104745215
+      },
+      {
+        "name": "EMS",
+        "size": 7491,
+        "crc": 208827662
+      },
+      {
+        "name": "FPU",
+        "size": 400,
+        "crc": 4063835686
+      },
+      {
+        "name": "IO handler",
+        "size": 0,
+        "crc": 0
+      },
+      {
+        "name": "Int10",
+        "size": 96,
+        "crc": 1750277657
+      },
+      {
+        "name": "IntTimer10",
+        "size": 336,
+        "crc": 1372076563
+      },
+      {
+        "name": "Joystick",
+        "size": 124,
+        "crc": 366415372
+      },
+      {
+        "name": "Keyboard",
+        "size": 246,
+        "crc": 3228941430
+      },
+      {
+        "name": "Memory",
+        "size": 17055880,
+        "crc": 2813198685
+      },
+      {
+        "name": "Midi",
+        "size": 25024,
+        "crc": 2174942011
+      },
+      {
+        "name": "Mixer",
+        "size": 288232,
+        "crc": 1062300254
+      },
+      {
+        "name": "Mouse",
+        "size": 711,
+        "crc": 3470924634
+      },
+      {
+        "name": "Pic",
+        "size": 163947,
+        "crc": 2832508021
+      },
+      {
+        "name": "Render",
+        "size": 2559,
+        "crc": 3830828494
+      },
+      {
+        "name": "Vga",
+        "size": 2640720,
+        "crc": 2456303114
+      },
+      {
+        "name": "XMS",
+        "size": 4096,
+        "crc": 3836325085
+      }
+    ],
+    "error": "State load failed (STATE_FAILED)",
+    "emulator_log": "LOG: Early LOG Init complete\nLOG: {\"component\":\"dosbox-agent\",\"event\":\"config_loaded\",\"transport\":\"pipe\",\"endpoint\":\"fd:9:12\",\"profile\":\"production\",\"dosbox_executable\":\"/opt/delivery/backend/linux-amd64/dosbox-x-offline\",\"dosbox_workdir\":\"/tmp/pytest-of-ubuntu/pytest-0/test_real_layered_checkpoint_r0\",\"request_timeout_ms\":15000,\"max_message_bytes\":8388608,\"max_memory_read_bytes\":65536,\"max_trace_events\":10000}\nLOG: DOSBox-X's working directory: /tmp/fdisbull-dosbox-bo9lgup7/\nLOG: Logging init: beginning logging proper. This is the end of the early init logging\nLOG: Logging: No logfile was given. All further logging will be discarded.\nLOG: DOSBox-X version 2026.10.01 Commit f1c4414 (Linux SDL2 64-bit)\nLOG: Prevent capture: 0\nLOG: SDL: version 2.30.0, Video dummy, Audio dummy\nLOG: Host keyboard layout is now  ()\nLOG: Mapper keyboard layout is now  ()\nLOG: SDL2 reports desktop display mode 1024 x 768\nLOG: Configured windowposition: -\nLOG: SDL: Current window pixel format: SDL_PIXELFORMAT_RGB888\nLOG: SDL: You are running in 24 bpp mode, this will slow down things!\nLOG: Releasing keyboard\nLOG: Screen report: Method 'None' (-1.000 x -1.000 pixels) at (0.000 x 0.000) (-1.000 x -1.000 mm) (-0.039 x -0.039 in) (-1.000 x -1.000 DPI)\nLOG: ISA BCLK: 8333333.333Hz (25000000/3)\nLOG: monopal: green, \nLOG: Active save slot: 1 [Empty]\nLOG: USING AVI+ZMBV\nLOG: Pentium CMPXCHG8B emulation is enabled\nLOG: Max 1073741824 sz 16384\nLOG: Final 16384\nLOG: Final arrangement: Below 4GB = 16384KB, Above 4GB = 0KB\nALSA lib seq_hw.c:528:(snd_seq_hw_open) open /dev/snd/seq failed: No such file or directory\nLOG: SDLNet_TCP_Open: Couldn't connect to remote host\nLOG: TiMidity: can't open control connection (host=127.0.0.1, port=7777)\nLOG: MT32: failed to locate ROMs.\nLOG: MT32 emulation requires the PCM and CONTROL ROM files.\nLOG: To eliminate this error message, check the DOSBox-X wiki.\nLOG: The ROM files are: CM32L_CONTROL.ROM and CM32L_PCM.ROM or MT32_CONTROL.ROM and MT32_PCM.ROM\nLOG: MIDI:Opened device:none\nLOG: VOODOO LFB now at d0000000\nLOG: Serial1: BASE 3f8h\nLOG: Serial2: BASE 2f8h\nLOG: Parallel1: BASE 378h\nLOG: MPU-401 Registering I/O ports as if IBM PC MPU-401 at base 330h\nLOG: Memory I/O complexity optimization enabled aka option 'memory io optimization 1'. If the game or demo is unable to draw to the screen properly, set the option to false.\nLOG: The 'scanline render on demand' option is available and may provide a modest boost in video render performance if set to true.\nLOG: Allocated APM BIOS pm entry point at f000:ce40\nLOG: Writing code to fce40\nLOG: Writing code to fce60\nLOG: ISA Plug & Play BIOS enabled\nLOG: VGA ROM BIOS init callback\nLOG: WARNING: No translation support (to host) for code page 0\nLOG: DOS keyboard layout loaded with main language code US for layout us\nLOG: XMS: 50 handles allocated for use by the DOS environment\nLOG: EMS page frame at 0xe000-0xefff\nLOG: COMMAND.COM env size:             720 bytes\nLOG: COMMAND.COM main body (PSP):      0x0701 sz=0x009a\nLOG: COMMAND.COM environment block:    0x079c sz=0x002d\nLOG: COMMAND.COM stack:                0x071b\nLOG: ***| TYPE HELP (+ENTER) TO GET AN OVERVIEW OF ALL COMMANDS |***\nLOG: Loading state from slot: 1 (/tmp/fdisbull-state-ozgngwzx/state.sav)\nLOG: pixratio 1.350, dw false, dh false\nLOG: Aspect ratio: 720 x 540  xToY=1.333 yToX=0.750\nLOG: menuScale=1\nLOG: surface consider=720x400 final=720x400\n"
+  },
+  {
+    "method": "state.save"
+  },
+  {
+    "method": "state.load",
+    "zip_crc_failure": "Vga",
+    "entries": [
+      {
+        "name": "DOSBox-X_Version",
+        "size": 26,
+        "crc": 2932828184
+      },
+      {
+        "name": "Program_Name",
+        "size": 3,
+        "crc": 1002006681
+      },
+      {
+        "name": "Memory_Size",
+        "size": 4,
+        "crc": 3143126361
+      },
+      {
+        "name": "Machine_Type",
+        "size": 7,
+        "crc": 474170815
+      },
+      {
+        "name": "Time_Stamp",
+        "size": 16,
+        "crc": 2533912270
+      },
+      {
+        "name": "Save_Remark",
+        "size": 0,
+        "crc": 0
+      },
+      {
+        "name": "CMOS",
+        "size": 80,
+        "crc": 2948148358
+      },
+      {
+        "name": "CPU",
+        "size": 21106744,
+        "crc": 2279493049
+      },
+      {
+        "name": "DMA",
+        "size": 1280,
+        "crc": 809556130
+      },
+      {
+        "name": "Dos",
+        "size": 68509,
+        "crc": 3234780366
+      },
+      {
+        "name": "Dosbox-x",
+        "size": 2,
+        "crc": 1104745215
+      },
+      {
+        "name": "EMS",
+        "size": 7491,
+        "crc": 208827662
+      },
+      {
+        "name": "FPU",
+        "size": 400,
+        "crc": 4063835686
+      },
+      {
+        "name": "IO handler",
+        "size": 0,
+        "crc": 0
+      },
+      {
+        "name": "Int10",
+        "size": 96,
+        "crc": 1750277657
+      },
+      {
+        "name": "IntTimer10",
+        "size": 336,
+        "crc": 1372076563
+      },
+      {
+        "name": "Joystick",
+        "size": 124,
+        "crc": 366415372
+      },
+      {
+        "name": "Keyboard",
+        "size": 246,
+        "crc": 3228941430
+      },
+      {
+        "name": "Memory",
+        "size": 17055880,
+        "crc": 3129031690
+      },
+      {
+        "name": "Midi",
+        "size": 25024,
+        "crc": 2174942011
+      },
+      {
+        "name": "Mixer",
+        "size": 288232,
+        "crc": 1931270208
+      },
+      {
+        "name": "Mouse",
+        "size": 711,
+        "crc": 2743419198
+      },
+      {
+        "name": "Pic",
+        "size": 163947,
+        "crc": 2832508021
+      },
+      {
+        "name": "Render",
+        "size": 2559,
+        "crc": 3830828494
+      },
+      {
+        "name": "Vga",
+        "size": 2640720,
+        "crc": 2345380160
+      },
+      {
+        "name": "XMS",
+        "size": 4096,
+        "crc": 3836325085
+      }
+    ],
+    "error": "State load failed (STATE_FAILED)",
+    "emulator_log": "LOG: Early LOG Init complete\nLOG: {\"component\":\"dosbox-agent\",\"event\":\"config_loaded\",\"transport\":\"pipe\",\"endpoint\":\"fd:9:12\",\"profile\":\"production\",\"dosbox_executable\":\"/opt/delivery/backend/linux-amd64/dosbox-x-offline\",\"dosbox_workdir\":\"/tmp/pytest-of-ubuntu/pytest-0/test_real_guest_self_modificat0\",\"request_timeout_ms\":15000,\"max_message_bytes\":8388608,\"max_memory_read_bytes\":65536,\"max_trace_events\":10000}\nLOG: DOSBox-X's working directory: /tmp/fdisbull-dosbox-q5_8_qts/\nLOG: Logging init: beginning logging proper. This is the end of the early init logging\nLOG: Logging: No logfile was given. All further logging will be discarded.\nLOG: DOSBox-X version 2026.10.01 Commit f1c4414 (Linux SDL2 64-bit)\nLOG: Prevent capture: 0\nLOG: SDL: version 2.30.0, Video dummy, Audio dummy\nLOG: Host keyboard layout is now  ()\nLOG: Mapper keyboard layout is now  ()\nLOG: SDL2 reports desktop display mode 1024 x 768\nLOG: Configured windowposition: -\nLOG: SDL: Current window pixel format: SDL_PIXELFORMAT_RGB888\nLOG: SDL: You are running in 24 bpp mode, this will slow down things!\nLOG: Releasing keyboard\nLOG: Screen report: Method 'None' (-1.000 x -1.000 pixels) at (0.000 x 0.000) (-1.000 x -1.000 mm) (-0.039 x -0.039 in) (-1.000 x -1.000 DPI)\nLOG: ISA BCLK: 8333333.333Hz (25000000/3)\nLOG: monopal: green, \nLOG: Active save slot: 1 [Empty]\nLOG: USING AVI+ZMBV\nLOG: Pentium CMPXCHG8B emulation is enabled\nLOG: Max 1073741824 sz 16384\nLOG: Final 16384\nLOG: Final arrangement: Below 4GB = 16384KB, Above 4GB = 0KB\nALSA lib seq_hw.c:528:(snd_seq_hw_open) open /dev/snd/seq failed: No such file or directory\nLOG: SDLNet_TCP_Open: Couldn't connect to remote host\nLOG: TiMidity: can't open control connection (host=127.0.0.1, port=7777)\nLOG: MT32: failed to locate ROMs.\nLOG: MT32 emulation requires the PCM and CONTROL ROM files.\nLOG: To eliminate this error message, check the DOSBox-X wiki.\nLOG: The ROM files are: CM32L_CONTROL.ROM and CM32L_PCM.ROM or MT32_CONTROL.ROM and MT32_PCM.ROM\nLOG: MIDI:Opened device:none\nLOG: VOODOO LFB now at d0000000\nLOG: Serial1: BASE 3f8h\nLOG: Serial2: BASE 2f8h\nLOG: Parallel1: BASE 378h\nLOG: MPU-401 Registering I/O ports as if IBM PC MPU-401 at base 330h\nLOG: Memory I/O complexity optimization enabled aka option 'memory io optimization 1'. If the game or demo is unable to draw to the screen properly, set the option to false.\nLOG: The 'scanline render on demand' option is available and may provide a modest boost in video render performance if set to true.\nLOG: Allocated APM BIOS pm entry point at f000:ce40\nLOG: Writing code to fce40\nLOG: Writing code to fce60\nLOG: ISA Plug & Play BIOS enabled\nLOG: VGA ROM BIOS init callback\nLOG: WARNING: No translation support (to host) for code page 0\nLOG: DOS keyboard layout loaded with main language code US for layout us\nLOG: XMS: 50 handles allocated for use by the DOS environment\nLOG: EMS page frame at 0xe000-0xefff\nLOG: COMMAND.COM env size:             720 bytes\nLOG: COMMAND.COM main body (PSP):      0x0701 sz=0x009a\nLOG: COMMAND.COM environment block:    0x079c sz=0x002d\nLOG: COMMAND.COM stack:                0x071b\nLOG: ***| TYPE HELP (+ENTER) TO GET AN OVERVIEW OF ALL COMMANDS |***\nLOG: Saving state to slot: 1 (/tmp/fdisbull-state-45ttteaw/state.sav)\nLOG: [20:03:28]: Saved. (Slot 1)\nLOG: pixratio 1.350, dw false, dh false\nLOG: Aspect ratio: 720 x 540  xToY=1.333 yToX=0.750\nLOG: menuScale=1\nLOG: surface consider=720x400 final=720x400\nLOG: Loading state from slot: 1 (/tmp/fdisbull-state-pa141o_6/state.sav)\nLOG: pixratio 1.350, dw false, dh false\nLOG: menuScale=1\nLOG: surface consider=720x400 final=720x400\n"
+  }
+]

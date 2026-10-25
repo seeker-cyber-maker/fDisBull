@@ -1,0 +1,42 @@
+{
+  "release_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0",
+  "source_commit": "6a0aeb3830eb544cd744d3410881c1c951a5ffb7",
+  "result": "pass",
+  "assets": [
+    {
+      "name": "fdisbull-0.14.0-py3-none-any.whl",
+      "size": 310227,
+      "sha256": "66e4e6ff9e2607e78a4a8cb110e78a25932d6d90c36af821c0177f4a3ab0b3f8",
+      "github_digest": "sha256:66e4e6ff9e2607e78a4a8cb110e78a25932d6d90c36af821c0177f4a3ab0b3f8",
+      "download_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.14.0/fdisbull-0.14.0-py3-none-any.whl"
+    },
+    {
+      "name": "fdisbull-0.14.0-tool.zip",
+      "size": 708130,
+      "sha256": "9f933a1ef1bdce5419ec4374cea92912bd76d8954342d5bbeb3de319e6a381f9",
+      "github_digest": "sha256:9f933a1ef1bdce5419ec4374cea92912bd76d8954342d5bbeb3de319e6a381f9",
+      "download_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.14.0/fdisbull-0.14.0-tool.zip"
+    },
+    {
+      "name": "fdisbull-0.14.0.tar.gz",
+      "size": 596404,
+      "sha256": "37e1f87f862e3fb7a1655d01c361509e92b6180823e262b3e0e1aade5f9bf7b3",
+      "github_digest": "sha256:37e1f87f862e3fb7a1655d01c361509e92b6180823e262b3e0e1aade5f9bf7b3",
+      "download_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.14.0/fdisbull-0.14.0.tar.gz"
+    },
+    {
+      "name": "SHA256SUMS",
+      "size": 370,
+      "sha256": "717100b037dfb9d12fd97f2e07eb67912640db287df13b8fd1fa362637baf6af",
+      "github_digest": "sha256:717100b037dfb9d12fd97f2e07eb67912640db287df13b8fd1fa362637baf6af",
+      "download_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.14.0/SHA256SUMS"
+    },
+    {
+      "name": "VERIFICATION-0.14.0.json",
+      "size": 2180,
+      "sha256": "13f85c97d5e3b86d3e80392799441c26269d8b722f0be0c284b56811e10b899e",
+      "github_digest": "sha256:13f85c97d5e3b86d3e80392799441c26269d8b722f0be0c284b56811e10b899e",
+      "download_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.14.0/VERIFICATION-0.14.0.json"
+    }
+  ]
+}

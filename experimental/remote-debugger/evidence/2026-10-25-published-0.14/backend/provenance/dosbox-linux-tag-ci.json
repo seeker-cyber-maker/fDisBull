@@ -1,0 +1,13 @@
+{
+  "source_commit": "6a0aeb3830eb544cd744d3410881c1c951a5ffb7",
+  "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+  "backend_sha256": "252ca805dd7bdb27ccc36ae74021b9809fcb8177d26c19ed970109dfd048247c",
+  "patch_sha256": "fed837151e85fa1d59e1630fc75be92f7635c8572c5e7274dc1d5bac1407060f",
+  "profile": "experimental/dosbox-x/layers",
+  "acceptance_tests": [
+    "tests/test_debugger.py",
+    "tests/test_code_layers.py",
+    "tests/test_screenshot_grid.py",
+    "tests/test_ida_dosbox.py"
+  ]
+}

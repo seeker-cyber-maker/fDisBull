@@ -11,8 +11,8 @@ Requires Python **3.12 or later**.
 Version 0.14.0 adds an optional [IDA 9.4 remote-server adapter and matching
 DOSBox endpoint](docs/IDA_REMOTE.md). These use a common binary debugger
 protocol and keep execution breakpoints out of instruction bytes. The new
-adapter's feature and verification limits are separate from the published
-0.13.0 backends; no vendor IDA executable is included. Bounded PE traces run
+adapter's feature and verification limits are separate from the custom Wine
+backend; no vendor IDA executable is included. Bounded PE traces run
 inside the Linux controller in one host request, preserving fresh code reads,
 integer-register snapshots and breakpoint boundaries. See the
 [measured trace comparison](docs/IDA_TRACE_PERFORMANCE.md).
@@ -21,10 +21,9 @@ The [shared machine controller](docs/UNIFIED_DEBUGGER.md) also runs
 DOSBox inside Linux/QEMU using the existing DOS project API. DOS and Windows
 sessions expose an explicit outer-machine context, while a raw-image profile
 can stop before boot and capture registers, memory, breakpoints, traces and
-display artifacts. Real DinoPark, DOS state/layer/input checks and an authored
-boot-sector session have been verified locally. This is separate from the
-published 0.13.0 packages and does not yet provide typed kernel objects or a
-DTrace provider.
+display artifacts. Real DinoPark has been verified locally. DOS state/layer/input
+checks and an authored boot-sector session also passed Linux CI. Typed kernel
+objects and a DTrace provider remain future work.
 
 See the [0.14.0 release notes](docs/RELEASE-0.14.0.md) for runtime compatibility,
 feature limits and the ordinary/native Linux checks required before tagging.
@@ -33,15 +32,15 @@ feature limits and the ordinary/native Linux checks required before tagging.
 
 | Track | Source and availability | Verification |
 | --- | --- | --- |
-| **Current source: 0.14.0** | [Unified DOS, Windows and machine debugging](docs/UNIFIED_DEBUGGER.md), plus the optional [IDA remote adapter](docs/IDA_REMOTE.md) | [Release notes and required CI gates](docs/RELEASE-0.14.0.md). Existing 0.13.0 publication and deliveries remain unchanged. |
-| **Latest published package release: 0.13.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.13.0), commit `eabfc2a` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40099730231): 769 passed, 31 skipped. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40099730260): 15 stable DOS, 32 DOS layers and 13 PE64 tests passed, no native skips. |
+| **Current source: 0.14.0** | [Unified DOS, Windows and machine debugging](docs/UNIFIED_DEBUGGER.md), plus the optional [IDA remote adapter](docs/IDA_REMOTE.md) | [Release notes](docs/RELEASE-0.14.0.md) and [publication/delivery evidence](docs/DELIVERY-0.14.md). Earlier deliveries remain unchanged. |
+| **Latest published package release: 0.14.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0), commit `6a0aeb3` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623197): 817 passed, 45 skipped. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623209): 15 stable DOS, 38 layers/endpoint, 14 PE64 and 10 DOS/QEMU/boot checks passed, no native skips. |
 | **Repository branch** | [main](https://github.com/seeker-cyber-maker/fDisBull/tree/main) is the only active branch | Release promotion requires both ordinary and native Linux CI. Use version tags for fixed source snapshots. The old experimental checkpoint is preserved under an archive tag. |
 
 The Python packages do **not** include an emulator. Stable debugging needs the [0.10 backend patch](experimental/dosbox-x/README.md); execution layers need the separate [layers backend patch](experimental/dosbox-x/layers/README.md). Both pin an upstream source commit and require an explicit executable path. Coordinate grids work with either backend.
 
 The [release-status record](docs/RELEASE_STATUS.md) distinguishes tagged source, published packages and historical candidate receipts. Ordinary Python CI may skip native tests; [required native acceptance](docs/DOSBOX_DEBUGGER.md#required-native-acceptance) builds or selects the real patched backend and runs the existing tests against it.
 
-The user-designated [0.13 DeepSeek delivery](docs/DELIVERY-0.13.md) contains the exact published packages and the separately tested Mac ARM64 Wine/QEMU backend, Linux kernel and matching prepared Wine boot runtime, with launch helpers, checksums, native-state/layer/watch evidence and usage instructions. Earlier deliveries remain intact. The earlier [DOS layers backend delivery](docs/DELIVERY-0.11.md) remains available for DinoPark. Original game files, saved states and local project databases are excluded.
+The user-designated [0.14 DeepSeek delivery](docs/DELIVERY-0.14.md) contains the exact published packages, tested Mac ARM64 DOSBox/QEMU backends, Linux DOSBox and matching pristine DOS/Wine/optional-IDA boot runtimes. A smaller Linux/DOS offline kit supplies genuine hash-locked Python wheels and private libraries including SDL2_net. Copied Mac gates and 51 clean-offline checks passed. The additional Linux Python 3.13.5 probe passed installation and 49 native checks, with **2 native-state restore CRC failures**; the external DeepSeek environment remains unverified. See the delivery record for the separate scopes and failed receipts. Earlier deliveries are preserved. Game files, saved states and project databases are excluded.
 
 ## Install and use
 

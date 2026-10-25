@@ -1,15 +1,34 @@
 # Release status checked on 2026-10-25
 
-The current source is **0.14.0**, described in the [release notes](RELEASE-0.14.0.md).
-It adds shared DOS/Windows QEMU ownership, explicit target/machine contexts,
-DOSBox inside Linux/QEMU, raw boot debugging and optional IDA remote endpoints.
-Tag promotion requires successful ordinary and native Linux CI on the exact
-source commit. Native CI also requires the source-built DOS backend inside
-QEMU and real boot-context tests against the installed wheel. Local development
-receipts remain historical. Preparing or tagging this source does not publish
-a GitHub release or replace existing deliveries.
+The current source and latest published package release are **0.14.0**.
+[v0.14.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0)
+is published, not draft or prerelease, and targets
+`6a0aeb3830eb544cd744d3410881c1c951a5ffb7`. Five unchanged tag-CI assets were
+downloaded again and matched against GitHub digests and local CI files.
+The tag remains fixed; later publication documentation on `main` does not
+change the package bytes. See the [release notes](RELEASE-0.14.0.md) and
+[publication/delivery record](DELIVERY-0.14.md).
 
-The latest published package release remains **0.13.0**. [v0.13.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.13.0) is published, not draft and not prerelease, and targets `eabfc2afb772d4cb78401893eebf15c8b0f6ad17`. Its five assets are the unchanged tag-CI wheel/sdist/tool ZIP plus `SHA256SUMS` and `VERIFICATION-0.13.0.json`. Uploaded assets were downloaded again and checked against GitHub SHA-256 digests. See [release notes](RELEASE-0.13.0.md), [verification gates](VERIFICATION-0.13.md) and [publication evidence](../experimental/wine/evidence/2026-10-24/published-0.13.0/asset-readback.json).
+Ordinary and native Linux CI passed before tagging and on the tag.
+[Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623197)
+passed **817 tests, 45 skipped**. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623209)
+passed **15 stable DOS, 38 layers/endpoint, 14 PE64 and 10 DOS/QEMU/boot checks**,
+without native skips. All 84 wheel entry contents match.
+
+The versioned full Mac/QEMU delivery and compact offline Linux/DOS kit passed
+directory and ZIP integrity/exclusion checks before the latest pointers were
+updated. Copied Mac gates passed 48 DOS/boot, 4 optional IDA checks and a real
+Wine smoke; the clean Mac offline suite passed 51 checks. The separate Linux
+x86-64 Python 3.13.5 offline installation/CLI probe passed, but native tests
+reported **49 passed, 2 native-state restore CRC failures**. Failed receipts
+are retained and this probe's state restoration remains unqualified. The
+reported external DeepSeek environment has not been accessed or changed.
+Games, saved states, project databases and vendor IDA server/keys are excluded.
+Earlier deliveries and evidence remain unchanged.
+
+## Earlier published 0.13.0 release
+
+The earlier **0.13.0** package release remains available. [v0.13.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.13.0) is published, not draft and not prerelease, and targets `eabfc2afb772d4cb78401893eebf15c8b0f6ad17`. Its five assets are the unchanged tag-CI wheel/sdist/tool ZIP plus `SHA256SUMS` and `VERIFICATION-0.13.0.json`. Uploaded assets were downloaded again and checked against GitHub SHA-256 digests. See [release notes](RELEASE-0.13.0.md), [verification gates](VERIFICATION-0.13.md) and [publication evidence](../experimental/wine/evidence/2026-10-24/published-0.13.0/asset-readback.json).
 
 Both workflows passed before tagging and again on the tag. [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40099730231) passed **769 tests, 31 skipped**. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40099730260) passed **15 stable DOS, 32 DOS layers and 13 PE64 tests**, with **no native skips**. All 65 wheel entry contents match between package CI and installed-wheel PE acceptance.
 

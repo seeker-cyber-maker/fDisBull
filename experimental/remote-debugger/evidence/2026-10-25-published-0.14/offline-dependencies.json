@@ -1,0 +1,192 @@
+{
+  "target": "Linux x86-64 CPython 3.13.5 (/opt/pyvenv reported externally)",
+  "additional_profiles": [
+    "Linux x86-64 CPython 3.12",
+    "macOS ARM64 CPython 3.13"
+  ],
+  "distribution": "Real wheel binaries and original notices retained; no substitute/stub dependencies",
+  "wheels": [
+    {
+      "file": "wheels/capstone-5.0.9-py3-none-macosx_11_0_arm64.whl",
+      "name": "capstone",
+      "version": "5.0.9",
+      "size": 1202361,
+      "sha256": "fc269c5082e17d7f9f265cd6980e2fdc6ab572df913951d76db0357e06b8001d",
+      "origin": {
+        "kind": "unchanged PyPI wheel",
+        "url": "https://files.pythonhosted.org/packages/42/9a/4eecfbc94961cda70301fd13de69042be1943bee456e37bc1369840601b1/capstone-5.0.9-py3-none-macosx_11_0_arm64.whl",
+        "upstream_sha256": "fc269c5082e17d7f9f265cd6980e2fdc6ab572df913951d76db0357e06b8001d"
+      }
+    },
+    {
+      "file": "wheels/capstone-5.0.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "name": "capstone",
+      "version": "5.0.9",
+      "size": 1485316,
+      "sha256": "273fd8d747d2e35c88f91450be51a603ecfaafb00d96d9f315dcb8689c86193e",
+      "origin": {
+        "kind": "unchanged PyPI wheel",
+        "url": "https://files.pythonhosted.org/packages/d1/39/17747862222bb062e86b501f1f148d5ff589b77908b080d30f7f085cbfb7/capstone-5.0.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        "upstream_sha256": "273fd8d747d2e35c88f91450be51a603ecfaafb00d96d9f315dcb8689c86193e"
+      }
+    },
+    {
+      "file": "wheels/iced_x86-1.21.0-cp313-cp313-macosx_12_0_arm64.whl",
+      "name": "iced-x86",
+      "version": "1.21.0",
+      "size": 848716,
+      "sha256": "4fa935654332dc8c212d330a9443d9aa655e842e357c26b122038e0a392146b1",
+      "origin": {
+        "kind": "locally built genuine Mac ARM64 wheel, not an upstream binary",
+        "source_url": "https://files.pythonhosted.org/packages/53/7a/0838fc746873d8b46da350fd3d6caf07f16a1c049712c72838d2c26de681/iced-x86-1.21.0.tar.gz",
+        "source_sha256": "1248b00647dd83b911214895eafbeb2642caa3007de2796ffad1c69aa6d8cd87",
+        "source_archive": "source/iced-x86-1.21.0.tar.gz",
+        "build": "pip wheel iced-x86==1.21.0; Rust 1.99.1; CPython 3.13; fresh offline Mac acceptance required"
+      }
+    },
+    {
+      "file": "wheels/iced_x86-1.21.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "name": "iced-x86",
+      "version": "1.21.0",
+      "size": 949386,
+      "sha256": "489789377bfc1fe432bd2a8a5780c9f3e7c35be2e6133b0de5432cd901cad32c",
+      "origin": {
+        "kind": "unchanged PyPI wheel",
+        "url": "https://files.pythonhosted.org/packages/5d/08/054cac5c4f435a243e423323783992c78c7c2f22cf2269fcca145b8423af/iced_x86-1.21.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        "upstream_sha256": "489789377bfc1fe432bd2a8a5780c9f3e7c35be2e6133b0de5432cd901cad32c"
+      }
+    },
+    {
+      "file": "wheels/iniconfig-2.3.1-py3-none-any.whl",
+      "name": "iniconfig",
+      "version": "2.3.1",
+      "size": 7552,
+      "sha256": "9121e2c1fdb355232495be3194c8dfe87ccc2d5dee45947b78e68f499790d7a7",
+      "origin": {
+        "kind": "unchanged PyPI wheel",
+        "url": "https://files.pythonhosted.org/packages/56/43/4ca9e49d27a1fcf6bece6f6aec0ea46bb9112489b93d4b688fb415457bdb/iniconfig-2.3.1-py3-none-any.whl",
+        "upstream_sha256": "9121e2c1fdb355232495be3194c8dfe87ccc2d5dee45947b78e68f499790d7a7"
+      }
+    },
+    {
+      "file": "wheels/lief-1.0.0-cp312-abi3-macosx_11_0_arm64.whl",
+      "name": "lief",
+      "version": "1.0.0",
+      "size": 3285262,
+      "sha256": "92bf3b06c19a1ebd9e7978de47cc61040752ec452f7906bc3aac8d57abb23a8b",
+      "origin": {
+        "kind": "unchanged PyPI wheel",
+        "url": "https://files.pythonhosted.org/packages/da/b0/9f231000f0b1d0d227fa4b3a6a66aff4d5168dcc642c697605e0df739b4f/lief-1.0.0-cp312-abi3-macosx_11_0_arm64.whl",
+        "upstream_sha256": "92bf3b06c19a1ebd9e7978de47cc61040752ec452f7906bc3aac8d57abb23a8b"
+      }
+    },
+    {
+      "file": "wheels/lief-1.0.0-cp312-abi3-manylinux_2_28_x86_64.whl",
+      "name": "lief",
+      "version": "1.0.0",
+      "size": 3674893,
+      "sha256": "41ff868f5328fc8e5237a9e1f4718590e0ee9180c1422b3e4948b7116ba4517c",
+      "origin": {
+        "kind": "unchanged PyPI wheel",
+        "url": "https://files.pythonhosted.org/packages/cd/d7/6e8135da80a63d8ee413f169eda8c331817bf6f1496fc5647722b105aa19/lief-1.0.0-cp312-abi3-manylinux_2_28_x86_64.whl",
+        "upstream_sha256": "41ff868f5328fc8e5237a9e1f4718590e0ee9180c1422b3e4948b7116ba4517c"
+      }
+    },
+    {
+      "file": "wheels/packaging-26.3-py3-none-any.whl",
+      "name": "packaging",
+      "version": "26.3",
+      "size": 129956,
+      "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c",
+      "origin": {
+        "kind": "unchanged PyPI wheel",
+        "url": "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl",
+        "upstream_sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c"
+      }
+    },
+    {
+      "file": "wheels/pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "name": "pillow",
+      "version": "12.3.0",
+      "size": 6940830,
+      "sha256": "78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91",
+      "origin": {
+        "kind": "unchanged PyPI wheel",
+        "url": "https://files.pythonhosted.org/packages/84/21/a35af28dcc61f37ed850a2d64c65c701321dfbf25085e469d5559360cbbf/pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+        "upstream_sha256": "78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91"
+      }
+    },
+    {
+      "file": "wheels/pillow-12.3.0-cp313-cp313-macosx_11_0_arm64.whl",
+      "name": "pillow",
+      "version": "12.3.0",
+      "size": 4780109,
+      "sha256": "d69141514cc30b774ceea5e3ed3a6635c8d8a96edf664689b890f4089111fb35",
+      "origin": {
+        "kind": "unchanged PyPI wheel",
+        "url": "https://files.pythonhosted.org/packages/10/76/8803c13605b763d33d156c4678fc77f8443389c0c51c8aef707bb02015f4/pillow-12.3.0-cp313-cp313-macosx_11_0_arm64.whl",
+        "upstream_sha256": "d69141514cc30b774ceea5e3ed3a6635c8d8a96edf664689b890f4089111fb35"
+      }
+    },
+    {
+      "file": "wheels/pillow-12.3.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "name": "pillow",
+      "version": "12.3.0",
+      "size": 6937129,
+      "sha256": "0847a763afefb695bc912d7c131e7e0632d4edc1d8698f58ddabec8e46b8b6d3",
+      "origin": {
+        "kind": "unchanged PyPI wheel",
+        "url": "https://files.pythonhosted.org/packages/f7/62/de5bdd77d935331f4f802edc11e4d82950f642caad6cb2f949837b8560e2/pillow-12.3.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+        "upstream_sha256": "0847a763afefb695bc912d7c131e7e0632d4edc1d8698f58ddabec8e46b8b6d3"
+      }
+    },
+    {
+      "file": "wheels/pip-25.2-py3-none-any.whl",
+      "name": "pip",
+      "version": "25.2",
+      "size": 1752557,
+      "sha256": "6d67a2b4e7f14d8b31b8b52648866fa717f45a1eb70e83002f4331d07e953717",
+      "origin": {
+        "kind": "unchanged PyPI wheel",
+        "url": "https://files.pythonhosted.org/packages/b7/3f/945ef7ab14dc4f9d7f40288d2df998d1837ee0888ec3659c813487572faa/pip-25.2-py3-none-any.whl",
+        "upstream_sha256": "6d67a2b4e7f14d8b31b8b52648866fa717f45a1eb70e83002f4331d07e953717"
+      }
+    },
+    {
+      "file": "wheels/pluggy-1.7.0-py3-none-any.whl",
+      "name": "pluggy",
+      "version": "1.7.0",
+      "size": 27082,
+      "sha256": "7dd7b0d8832ba3cb632c306926ded123429211b83641b35dc5c41ad2d34f9bec",
+      "origin": {
+        "kind": "unchanged PyPI wheel",
+        "url": "https://files.pythonhosted.org/packages/40/9e/2b38731e0fc536806f16490e1a12d7f0dc2a1235aa8cc07bcc75416a7daa/pluggy-1.7.0-py3-none-any.whl",
+        "upstream_sha256": "7dd7b0d8832ba3cb632c306926ded123429211b83641b35dc5c41ad2d34f9bec"
+      }
+    },
+    {
+      "file": "wheels/pygments-2.21.0-py3-none-any.whl",
+      "name": "pygments",
+      "version": "2.21.0",
+      "size": 1250147,
+      "sha256": "2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9",
+      "origin": {
+        "kind": "unchanged PyPI wheel",
+        "url": "https://files.pythonhosted.org/packages/71/46/17f022dd3e953bf20a04a028a21ec746d942f8d2af30fa0f124fa0e6a684/pygments-2.21.0-py3-none-any.whl",
+        "upstream_sha256": "2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9"
+      }
+    },
+    {
+      "file": "wheels/pytest-9.1.1-py3-none-any.whl",
+      "name": "pytest",
+      "version": "9.1.1",
+      "size": 386536,
+      "sha256": "37a86b45efb9a47a61a36449063e8e18d0cab3161329fc099eb21783169c4f0c",
+      "origin": {
+        "kind": "unchanged PyPI wheel",
+        "url": "https://files.pythonhosted.org/packages/24/25/1de2678b631f5a49215c6c96fff41ba892b0a34df68d6d80292b1b48aa7f/pytest-9.1.1-py3-none-any.whl",
+        "upstream_sha256": "37a86b45efb9a47a61a36449063e8e18d0cab3161329fc099eb21783169c4f0c"
+      }
+    }
+  ]
+}
