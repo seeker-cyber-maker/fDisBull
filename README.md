@@ -10,6 +10,24 @@ An agent-first disassembler with a persistent SQLite analysis database, explicit
 
 Requires Python **3.12 or later**.
 
+Unreleased development: an optional [IDA 9.4 remote-server adapter and matching
+DOSBox endpoint](docs/IDA_REMOTE.md). These use a common binary debugger
+protocol and keep execution breakpoints out of instruction bytes. The new
+adapter's feature and verification limits are separate from the published
+0.13.0 backends; no vendor IDA executable is included. Bounded PE traces run
+inside the Linux controller in one host request, preserving fresh code reads,
+integer-register snapshots and breakpoint boundaries. See the
+[measured trace comparison](docs/IDA_TRACE_PERFORMANCE.md).
+
+The unreleased [shared machine controller](docs/UNIFIED_DEBUGGER.md) also runs
+DOSBox inside Linux/QEMU using the existing DOS project API. DOS and Windows
+sessions expose an explicit outer-machine context, while a raw-image profile
+can stop before boot and capture registers, memory, breakpoints, traces and
+display artifacts. Real DinoPark, DOS state/layer/input checks and an authored
+boot-sector session have been verified locally. This is separate from the
+published 0.13.0 packages and does not yet provide typed kernel objects or a
+DTrace provider.
+
 ## Release, branches, and native backend status
 
 | Track | Source and availability | Verification |

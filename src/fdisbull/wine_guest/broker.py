@@ -72,32 +72,38 @@ def number(value, low, high):
     return value
 
 
+def stage_files(params):
+    """Stage the explicit target allowlist, shared by the debugger engines."""
+    files = params['files']
+    if not isinstance(files, list) or not 1 <= len(files) <= 1024:
+        raise ValueError('Invalid file list')
+    directory = Path('/work/game');directory.mkdir(mode=0o700)
+    total = 0;seen = set()
+    for item in files:
+        name = item['path']
+        path = directory / name
+        if not isinstance(name, str) or not name or '\\' in name or ':' in name or '\x00' in name or Path(name).is_absolute() or '..' in Path(name).parts or name in seen:
+            raise ValueError('Non-local or duplicate guest filename')
+        seen.add(name)
+        data = base64.b64decode(item['data_base64'], validate=True)
+        total += len(data)
+        if total > 64*1024*1024 or hashlib.sha256(data).hexdigest() != item['sha256']:
+            raise ValueError('Upload budget or hash mismatch')
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open('xb') as out:out.write(data)
+    target = params['target']
+    if target not in seen or '/' in target:
+        raise ValueError('Target must be a supplied top-level file')
+    return directory, target
+
+
 def invoke(method, params):
     global process
     if method=='identity':return identity()
     if method == 'session.start':
         if process is not None:
             raise ValueError('This VM already owns a target')
-        files = params['files']
-        if not isinstance(files, list) or not 1 <= len(files) <= 1024:
-            raise ValueError('Invalid file list')
-        directory = Path('/work/game');directory.mkdir(mode=0o700)
-        total = 0;seen = set()
-        for item in files:
-            name = item['path']
-            path = directory / name
-            if not isinstance(name, str) or not name or '\\' in name or ':' in name or '\x00' in name or Path(name).is_absolute() or '..' in Path(name).parts or name in seen:
-                raise ValueError('Non-local or duplicate guest filename')
-            seen.add(name)
-            data = base64.b64decode(item['data_base64'], validate=True)
-            total += len(data)
-            if total > 64*1024*1024 or hashlib.sha256(data).hexdigest() != item['sha256']:
-                raise ValueError('Upload budget or hash mismatch')
-            path.parent.mkdir(parents=True, exist_ok=True)
-            with path.open('xb') as out:out.write(data)
-        target = params['target']
-        if target not in seen or '/' in target:
-            raise ValueError('Target must be a supplied top-level file')
+        directory, target = stage_files(params)
         entry = number(params['entry_rva'], 1, 0xffffffff)
         for name in ('prefix', 'runtime', 'cache'):
             Path('/work', name).mkdir(mode=0o700, exist_ok=True)
@@ -161,30 +167,35 @@ def identity():
       'guest_kernel':os.uname().release,
       'agent_binary_sha256':hashlib.sha256(Path('/opt/fdisbull/agent.exe').read_bytes()).hexdigest()}
 
-send(identity())
-try:
-    while True:
-        line = channel.readline(LIMIT+1)
-        if not line:break
-        if len(line)>LIMIT or not line.endswith(b'\n'):raise ValueError('Request budget exceeded')
-        request = json.loads(line)
-        try:
-            result = invoke(request['method'], request.get('params', {}))
-            send({'id':request['id'], 'result':result})
-        except Exception as error:
-            log=Path('/work/wine.log')
-            diagnostics=''
-            if log.exists():
-                with log.open('rb') as stream:
-                    stream.seek(max(0,log.stat().st_size-4096))
-                    diagnostics=stream.read(4096).decode(errors='replace')
-            send({'id':request.get('id'), 'error':str(error), 'wine_log_tail':diagnostics})
-            # Failed native operations may leave uncertain process state. Never resume.
-            break
-        if request['method']=='close':break
-finally:
-    if process is not None:
-        process.terminate()
-        try:process.wait(timeout=3)
-        except subprocess.TimeoutExpired:process.kill();process.wait()
-    channel.close()
+def main():
+    send(identity())
+    try:
+        while True:
+            line = channel.readline(LIMIT+1)
+            if not line:break
+            if len(line)>LIMIT or not line.endswith(b'\n'):raise ValueError('Request budget exceeded')
+            request = json.loads(line)
+            try:
+                result = invoke(request['method'], request.get('params', {}))
+                send({'id':request['id'], 'result':result})
+            except Exception as error:
+                log=Path('/work/wine.log')
+                diagnostics=''
+                if log.exists():
+                    with log.open('rb') as stream:
+                        stream.seek(max(0,log.stat().st_size-4096))
+                        diagnostics=stream.read(4096).decode(errors='replace')
+                send({'id':request.get('id'), 'error':str(error), 'wine_log_tail':diagnostics})
+                # Failed native operations may leave uncertain process state. Never resume.
+                break
+            if request['method']=='close':break
+    finally:
+        if process is not None:
+            process.terminate()
+            try:process.wait(timeout=3)
+            except subprocess.TimeoutExpired:process.kill();process.wait()
+        channel.close()
+
+
+if __name__ == '__main__':
+    main()

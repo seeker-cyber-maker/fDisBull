@@ -61,7 +61,7 @@ def resources():
             'opt/fdisbull/broker.py':root/'broker.py'}
 
 
-def prepare(base, output):
+def prepare(base, output, *, resource_files=None):
     base = Path(base).expanduser().resolve(strict=True)
     output = Path(output).expanduser().resolve()
     records = {}
@@ -79,10 +79,19 @@ def prepare(base, output):
                     stream.write(b'\0'*(-(110+len(encoded))%4));stream.write(data)
                     stream.write(b'\0'*(-len(data)%4))
                 emit('opt/fdisbull',b'',stat.S_IFDIR|0o755,1)
-                for i,(name,path) in enumerate(resources().items(),2):
+                directories={'opt','opt/fdisbull'}
+                inode=2
+                for name,path in (resources() if resource_files is None else resource_files).items():
+                    relative=PurePosixPath(name)
+                    if relative.is_absolute() or '..' in relative.parts:
+                        raise ValueError('Runtime resources require local relative paths')
+                    for parent in reversed(relative.parents):
+                        directory=str(parent)
+                        if directory!='.' and directory not in directories:
+                            emit(directory,b'',stat.S_IFDIR|0o755,inode);inode+=1;directories.add(directory)
                     data=path.read_bytes();records[name]=hashlib.sha256(data).hexdigest()
-                    emit(name,data,stat.S_IFREG|0o755,i)
-                emit('TRAILER!!!',b'',0,10)
+                    emit(name,data,stat.S_IFREG|0o755,inode);inode+=1
+                emit('TRAILER!!!',b'',0,inode)
     except FileExistsError:
         raise
     except BaseException:

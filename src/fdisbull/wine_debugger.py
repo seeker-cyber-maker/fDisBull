@@ -20,6 +20,8 @@ from .wine_state import PEStateSessionMixin,get_state,file_hash
 
 
 class PEDebugSession(PELayerSessionMixin,PEExecutionMixin,PEStateSessionMixin):
+    rpc_type=WineQemuRPC
+    backend_name='wine-qemu'
     script_operations={'run','click','click-frame','screenshot','trace','breakpoint',
         'delete-breakpoint','registers','memory','write-memory','status','assert',
         'layer-stack','layer-enable','layer-patch','code','capture-code','branch','save-state','load-state','write-registers'}
@@ -30,6 +32,9 @@ class PEDebugSession(PELayerSessionMixin,PEExecutionMixin,PEStateSessionMixin):
     __enter__=DebugSession.__enter__
     __exit__=DebugSession.__exit__
     click_frame=DebugSession.click_frame
+    contexts=DebugSession.contexts
+    context=DebugSession.context
+    machine=DebugSession.machine
 
     def __init__(self, project, executable, game_dir, *, kernel, initramfs,
                  version=None, files=None, boot_timeout_ms=240000,state=None):
@@ -42,23 +47,8 @@ class PEDebugSession(PELayerSessionMixin,PEExecutionMixin,PEStateSessionMixin):
         target=project.meta['filename']
         if not directory.is_dir() or not re.fullmatch(r'[A-Za-z0-9_. -]{1,128}\.exe',target,re.I):
             raise ValueError('PE target must be an ordinary EXE filename inside game_dir')
-        names=[target] if files is None else files
-        if not isinstance(names,list) or not 1<=len(names)<=1024 or target not in names or len(set(names))!=len(names):
-            raise ValueError('files must explicitly include the target and at most 1024 unique relative assets')
-        uploads=[];total=0
-        for name in names:
-            if not isinstance(name,str) or not name or '\\' in name or ':' in name or '\x00' in name or Path(name).is_absolute() or '..' in Path(name).parts:
-                raise ValueError('Asset paths must be local relative paths')
-            path=directory/name
-            if any(p.is_symlink() for p in [path,*path.parents] if p!=directory.parent) or not path.is_file() or not path.resolve().is_relative_to(directory):
-                raise ValueError('Assets must be regular files without symbolic links')
-            if path.resolve() in (project.path,Path(str(project.path)+'-wal'),Path(str(project.path)+'-shm')) or path.suffix.lower() in ('.fdb','.db','.sqlite','.sqlite3','.sav','.state'):
-                raise ValueError('Do not upload project databases or saved states as game assets')
-            total+=path.stat().st_size
-            if total>64*1024*1024:raise ValueError('Explicit PE upload exceeds 64 MiB')
-            data=path.read_bytes();digest=hashlib.sha256(data).hexdigest()
-            if name==target and digest!=project.meta['source_sha256']:raise ValueError('Executable differs from the project source hash')
-            uploads.append(dict(path=name,sha256=digest,data_base64=base64.b64encode(data).decode()))
+        from .guest_assets import uploads as prepare_uploads
+        uploads=prepare_uploads(project,directory,target,files)
         self.static_base=int(project.meta['loader_metadata']['imagebase'],16)
         self.regions=project.regions(self.version['id'])
         self.module_size=max((r.start+len(r.data)) for r in self.regions)-self.static_base
@@ -73,20 +63,22 @@ class PEDebugSession(PELayerSessionMixin,PEExecutionMixin,PEStateSessionMixin):
                         raise ValueError('Native state backend identity mismatch: '+name)
                 if [{'path':f['path'],'sha256':f['sha256']} for f in uploads]!=saved['metadata']['files']:
                     raise ValueError('Native state program inputs mismatch')
-            self.rpc=WineQemuRPC(executable,kernel,initramfs,boot_timeout_ms=boot_timeout_ms,restore=native)
+            self.rpc=self.rpc_type(executable,kernel,initramfs,boot_timeout_ms=boot_timeout_ms,restore=native)
             if saved is None:
-                launched=self.rpc.call('session.start',{'target':target,'entry_rva':project.meta['entry']-self.static_base,'files':uploads},timeout_ms=300000)
+                launched=self.rpc.call('session.start',{'target':target,'entry_rva':project.meta['entry']-self.static_base,
+                    'files':uploads,**getattr(self,'engine_start',{})},timeout_ms=300000)
             else:
                 launched={'image_base':saved['metadata']['runtime_image_base'],'pid':saved['metadata']['target_pid'],
                           'session':self.rpc.call('status'),'restored_from':state}
             self.runtime_base=int(launched['image_base'],16);self.delta=self.runtime_base-self.static_base
             self._relocate_expected()
-            self.metadata={'backend':'wine-qemu','runtime_profile':'pe64-win32-debug-2',
+            self.metadata={'backend':self.backend_name,'runtime_profile':'pe64-win32-debug-2',
                 'source_sha256':project.meta['source_sha256'],'version_sha256':self.version['sha256'],
                 'static_image_base':hex(self.static_base),'runtime_image_base':hex(self.runtime_base),
                 'address_mapping':'observed main-module base + project RVA','capabilities':self.rpc.capabilities,
                 'runtime_inputs':self.rpc.inputs,'files':[{'path':f['path'],'sha256':f['sha256']} for f in uploads],
                 'target_pid':launched['pid'],'qemu_pid':self.rpc.process.pid}
+            if 'remote_server' in launched:self.metadata['remote_server']=launched['remote_server']
             self.metadata['guest_runtime']={key:self.rpc.hello[key] for key in
                 ('wine_version','guest_kernel','agent_binary_sha256','resources')}
             if saved is not None:self._load_state_host(saved['host'])
@@ -241,7 +233,7 @@ class PEDebugSession(PELayerSessionMixin,PEExecutionMixin,PEStateSessionMixin):
         identity=(result['window'],width,height)
         if identity!=self._frame:self.mode_id+=1;self._frame=identity
         result.update(mode_id=self.mode_id,coordinate_space='client-native-pixels',capture='Win32 desktop BitBlt of visible target client rectangle',
-                      sha256=hashlib.sha256(data).hexdigest(),backend='wine-qemu')
+                      sha256=hashlib.sha256(data).hexdigest(),backend=self.backend_name)
         raw=self._artifact(name if not grid else name[:248]+'.raw.png','screenshot',data,result)
         return self.project.debug_grid(raw['artifact'],name=name,step=grid_step) if grid else raw
 

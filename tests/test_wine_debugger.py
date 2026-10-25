@@ -15,6 +15,37 @@ from fdisbull.wine_rpc import WineQemuRPC
 from fixtures_formats import pe64
 
 
+def test_guest_call_waiting_for_machine_lock_rejects_a_concurrent_pause_without_closing():
+    import threading
+    from types import SimpleNamespace
+    lock=threading.RLock();waiting=threading.Event();closed=[];errors=[];sent=[]
+    class SignaledLock:
+        def acquire(self,**kwargs):
+            waiting.set()
+            return lock.acquire(**kwargs)
+        def release(self):lock.release()
+    rpc=WineQemuRPC.__new__(WineQemuRPC)
+    rpc.vm=SimpleNamespace(machine_stopped=False)
+    rpc.lock=SignaledLock()
+    class Channel:
+        def settimeout(self,value):pass
+        def sendall(self,data):sent.append(data)
+    rpc.socket=Channel();rpc.sequence=0
+    rpc._read=lambda deadline:dict(id=rpc.sequence,result={})
+    rpc.close=lambda:closed.append(True)
+    def call():
+        try:rpc.call('registers',timeout_ms=2000)
+        except Exception as error:errors.append(error)
+    with lock:
+        worker=threading.Thread(target=call);worker.start()
+        assert waiting.wait(1)
+        rpc.vm.machine_stopped=True
+    worker.join(2)
+    assert not worker.is_alive() and not closed and not sent
+    assert len(errors)==1 and isinstance(errors[0],ValueError)
+    assert 'Resume the machine' in str(errors[0])
+
+
 def test_qemu_rejects_affected_iret_emulators_before_boot():
     for version in ('QEMU emulator version 8.2.2 (Ubuntu)', 'QEMU emulator version 9.0.0', 'unknown'):
         with pytest.raises(Exception,match='requires QEMU >= 9.1'):

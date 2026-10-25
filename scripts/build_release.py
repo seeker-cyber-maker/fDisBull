@@ -14,8 +14,13 @@ SOURCE_PATTERNS = (
     ("src/fdisbull", "*.py"),
     ("src/fdisbull/wine_guest", "*.c"),
     ("src/fdisbull/wine_guest", "*.sh"),
+    ("src/fdisbull/ida_guest", "*.c"),
+    ("src/fdisbull/ida_guest", "*.sh"),
+    ("src/fdisbull/ida_guest", "SDK-LICENSE.txt"),
+    ("src/fdisbull/dos_guest", "*.sh"),
     ("tests", "*.py"),
     ("tests", "wine_gui_fixture.c"),
+    ("tests", "ida_rpc_vectors.json"),
     ("docs", "*.md"),
     ("scripts", "*.py"),
 )
