@@ -1,0 +1,2 @@
+PASS negative control: pre-lock check permits a queued request after pause; regression detects it
+PASS current implementation: queued guest request rejected, no bytes sent, VM preserved

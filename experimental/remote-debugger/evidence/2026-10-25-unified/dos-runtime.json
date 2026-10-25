@@ -1,0 +1,23 @@
+{
+  "base_sha256": "3599b1b3c2e8c6e9d0eed88b58e091f7e36dc60e0cdfc4ed0435324a9d13bb49",
+  "runtime_sha256": "c6fdb21db3f3002e4e174eca6a489996bcef82fec1f958f73c45dd029de7442d",
+  "resources": {
+    "init": "a46aeacc5b34ed94a33d8b7d44eac2a20e8724088655aef046c9621bf3dd0383",
+    "opt/fdisbull/dos_broker.py": "8054f409edcf75b78c3218ced24a839162ea1ef874fec9715db906d62826c93c",
+    "opt/fdisbull/remote/__init__.py": "037ab42b952c74c8964c3e13f336081398f6a3753688a25dded72a8a03af2c35",
+    "opt/fdisbull/remote/dosbox_rpc.py": "b2561ae261609ef9a84f556a390120a02e9c3862b67e0a2ae24337cec37dddf1",
+    "opt/fdisbull/dosbox-x": "74f3b4dd5e3e93b23efdc5519ee60423e779140517745c6fb6ed882dcca14f88"
+  },
+  "retained_base_bytes": 1876771478,
+  "omitted_bytes": 0,
+  "omitted_prefixes": [
+    "opt/venv",
+    "opt/tests",
+    "opt/probes",
+    "opt/dosbox-x",
+    "usr/share/doc",
+    "usr/share/man",
+    "var/lib/apt/lists",
+    "var/cache/apt"
+  ]
+}

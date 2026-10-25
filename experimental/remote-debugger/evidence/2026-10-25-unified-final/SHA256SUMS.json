@@ -1,0 +1,16 @@
+{
+  "README.md": "c23b40845a2bd6cf1a7332a8803c101610f08f90f21e4050a71a1dd7e69b942b",
+  "linux-focused/exit-codes.json": "94f28e84ba9c9888d5fcd725bd0af7b14364120e5ff6be0635690d7712370cd3",
+  "linux-focused/inputs.json": "96e0ead61905467f5c5616269be23d62792a138b8a4c0362bb8d5db165768739",
+  "linux-focused/linux.txt": "959087a4ed2da6541486712aefd917dab82ff8affe53d2271fc1ff4a58c582c3",
+  "linux-focused/tests.log": "691ef912155c44b05df3940bcb55bd65e26745aa98226be9a54def2eb3bd8bef",
+  "linux-focused/tests.xml": "47b6672ec0658f2c1d9247017c13967e02ba429220e942468f10f1683958ad8b",
+  "lock-native-final.log": "10a9a02270fb120d92d21d0d99bfa4ceafbbdf793b8b3595615652c16cd14c9d",
+  "lock-native-final.xml": "988147885d4135ef9d7ffece351a3a63ff10f3bae87196466fca8a97ffc7321f",
+  "lock-regression-proof.log": "55500c3218ef625e19e4d5db7cb964ef69e4a4942dcc2fc74c0acb7941cfa85a",
+  "package-lock-final-audit.txt": "7b0255c3b5863ba568644e24ef8b8d40fb766df8ec5976518a61ca06369950af",
+  "package-lock-final-readback.json": "3d88bb84407f62cd5e3da02aea2ed08cde4910b1237b7cf7475fd6c4ede6e158",
+  "verification.json": "ea46d3b497554d8472284d22ebfc6edc918bb40245deade026ae69a759fe271f",
+  "wheel-lock-final.log": "308ff9bdb167af2cd4ea8fb11c00c4ffa36a5fd47e6204ec362b632acc74c147",
+  "wheel-lock-final.xml": "2e397b7adc678acf6808549a6f8a859e4759b65cb976008dc06f71d04f4077ef"
+}

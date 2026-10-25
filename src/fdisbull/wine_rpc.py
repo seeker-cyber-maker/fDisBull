@@ -16,54 +16,39 @@ from .dosbox_rpc import DebuggerError
 
 class WineQemuRPC:
     limit = 96*1024*1024
+    protocol = 'fdisbull-wine-qemu-1'
+    agent_resource = 'opt/fdisbull/agent.c'
 
-    def __init__(self, executable, kernel, initramfs, *, boot_timeout_ms=240000, restore=None):
+    @staticmethod
+    def runtime_resources():
+        from .wine_runtime import resources
+        return resources()
+
+    def __init__(self, executable, kernel, initramfs, *, boot_timeout_ms=240000, restore=None,on_spawn=None):
         self.process = None;self.socket = None;self.sequence = 0
-        self.qmp=None
+        self.qmp=None;self.vm=None
         self.lock = threading.Lock();self.temporary = tempfile.TemporaryDirectory(prefix='fdisbull-pe-',dir='/tmp')
         root=Path(self.temporary.name)
         self.log_path=root/'boot.log'
         try:
-            paths=[Path(p).expanduser().resolve(strict=True) for p in (executable,kernel,initramfs)]
-            if any(not p.is_file() for p in paths) or not os.access(paths[0],os.X_OK):
-                raise ValueError('Expected QEMU executable, Linux kernel and prepared Wine runtime files')
-            version=subprocess.check_output([str(paths[0]),'--version'],text=True,
-                                            stderr=subprocess.STDOUT,timeout=5).splitlines()[0]
-            self._check_version(version)
-            sock=root/'rpc.sock'
-            qmp_path=root/'qmp.sock'
-            command=[str(paths[0]),'-accel','tcg,thread=multi','-machine','q35','-cpu','max',
-                '-smp','2','-m','4G','-nic','none','-display','none','-monitor','none','-no-reboot',
-                '-serial',f'file:{self.log_path}','-serial',f'unix:{sock},server=on,wait=off',
-                '-qmp',f'unix:{qmp_path},server=on,wait=off',
-                '-kernel',str(paths[1]),'-initrd',str(paths[2]),'-append',
-                'console=ttyS0,115200 rdinit=/init rootfstype=ramfs loglevel=4 panic=1 random.trust_cpu=on']
-            if restore is not None:command+=['-incoming','defer']
-            self.inputs={name:dict(path=str(p),sha256=self._hash(p)) for name,p in zip(('qemu','kernel','initramfs'),paths)}
-            self.inputs['qemu']['version']=version
-            self.command=command
-            with (root/'qemu.log').open('wb') as log:
-                self.process=subprocess.Popen(command,cwd=root,stdin=subprocess.DEVNULL,stdout=log,stderr=log)
+            from .qemu_machine import QemuMachine
+            self.temporary.cleanup()
+            self.vm=QemuMachine(executable,kernel=kernel,initramfs=initramfs,
+                                restore=restore is not None,timeout_ms=boot_timeout_ms,on_spawn=on_spawn)
+            self.process=self.vm.process;self.qmp=self.vm.qmp;self.temporary=self.vm.temporary
+            self.inputs=self.vm.inputs;self.command=self.vm.command;self.log_path=self.vm.log_path
+            self.lock=self.vm.lock
             deadline=time.monotonic()+boot_timeout_ms/1000
-            self.socket=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
-            while True:
-                try:self.socket.connect(str(sock));break
-                except (FileNotFoundError,ConnectionRefusedError):
-                    if self.process.poll() is not None or time.monotonic()>=deadline:
-                        raise DebuggerError('QEMU failed before its serial channel opened')
-                    time.sleep(.05)
-            from .qemu_control import QemuControl
-            self.qmp=QemuControl(qmp_path,self.process,deadline)
+            self.socket=self.vm.serial(deadline)
             if restore is None:hello=self._read(deadline)
             else:
                 self.qmp.restore(restore,timeout_ms=boot_timeout_ms)
                 hello=self.call('identity',timeout_ms=30000)
             self.hello=hello
-            expected=self._hash(Path(__file__).with_name('wine_guest')/'agent.c')
-            if hello.get('protocol')!='fdisbull-wine-qemu-1' or hello.get('agent_sha256')!=expected:
+            expected=self._hash(self.runtime_resources()[self.agent_resource]) if self.agent_resource else None
+            if hello.get('protocol')!=self.protocol or self.agent_resource and hello.get('agent_sha256')!=expected:
                 raise DebuggerError('Wine runtime protocol/source mismatch; rebuild the runtime with this package')
-            from .wine_runtime import resources
-            if hello.get('resources')!={name:self._hash(path) for name,path in resources().items()}:
+            if hello.get('resources')!={name:self._hash(path) for name,path in self.runtime_resources().items()}:
                 raise DebuggerError('Wine runtime resource mismatch; rebuild with the installed package')
             self.capabilities={'backend':'wine-qemu','architecture':'x86-64','execution_breakpoints':True,
                 'memory_read':True,'memory_write':True,'instruction_trace':True,'screenshots':True,'mouse':True,
@@ -112,9 +97,18 @@ class WineQemuRPC:
         if not isinstance(result,dict):raise DebuggerError('Invalid Wine RPC object')
         return result
 
+    @property
+    def machine(self):
+        return self.vm.context
+
     def call(self, method, params=None, timeout_ms=30000):
         deadline=time.monotonic()+timeout_ms/1000
         if not self.lock.acquire(timeout=timeout_ms/1000):raise TimeoutError('Wine channel is busy')
+        # A concurrent pause can win the lock after this call starts. Check
+        # under the shared machine lock, outside transport failure cleanup.
+        if self.vm is not None and self.vm.machine_stopped:
+            self.lock.release()
+            raise ValueError('Resume the machine context before calling the guest debugger')
         try:
             if self.socket is None:raise DebuggerError('Wine channel is closed')
             self.sequence+=1
@@ -132,19 +126,17 @@ class WineQemuRPC:
             diagnostics=self._diagnostics()
             self.close()
             if isinstance(error,Exception):
-                raise DebuggerError(str(error)+diagnostics) from error
+                raise DebuggerError(self.protocol+' '+method+': '+str(error)+diagnostics) from error
             raise
         finally:self.lock.release()
 
     def close(self):
-        if self.qmp is not None:self.qmp.close();self.qmp=None
         if self.socket is not None:self.socket.close();self.socket=None
-        if self.process is not None:
-            if self.process.poll() is None:
-                self.process.terminate()
-                try:self.process.wait(timeout=3)
-                except subprocess.TimeoutExpired:self.process.kill();self.process.wait(timeout=3)
-        if self.temporary is not None:self.temporary.cleanup();self.temporary=None
+        if self.vm is not None:
+            self.vm.close();self.qmp=None;self.temporary=None
+        else:
+            if self.qmp is not None:self.qmp.close();self.qmp=None
+            if self.temporary is not None:self.temporary.cleanup();self.temporary=None
 
     def capture(self,path):
         with self.lock:

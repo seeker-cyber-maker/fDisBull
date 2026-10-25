@@ -36,7 +36,7 @@ jobs:
             tests: tests/test_debugger.py tests/test_screenshot_grid.py
           - profile: layers-backend
             patch_directory: experimental/dosbox-x/layers
-            tests: tests/test_debugger.py tests/test_code_layers.py tests/test_screenshot_grid.py
+            tests: tests/test_debugger.py tests/test_code_layers.py tests/test_screenshot_grid.py tests/test_ida_dosbox.py
     env:
       FDISBULL_DOSBOX: ${{ github.workspace }}/.native/dosbox-x/src/dosbox-x
       FDISBULL_PATCH_DIRECTORY: ${{ matrix.patch_directory }}
@@ -116,9 +116,16 @@ jobs:
           name: native-debugger-${{ matrix.profile }}
           path: native-evidence/*
           if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        if: success() && matrix.profile == 'layers-backend'
+        with:
+          name: linux-dosbox-layers
+          path: .native/dosbox-x/src/dosbox-x
+          if-no-files-found: error
 
   pe64-debugger:
-    name: PE64 Wine/QEMU (installed wheel)
+    name: Unified DOS, boot and PE64 (installed wheel)
+    needs: native-debugger
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
@@ -128,6 +135,14 @@ jobs:
       FDISBULL_PE_FIXTURE: ${{ github.workspace }}/.native/pe/oracle.exe
       FDISBULL_PE_EVIDENCE: ${{ github.workspace }}/native-evidence/pe/artifacts
       FDISBULL_REQUIRE_PE: "1"
+      FDISBULL_DOSBOX: ${{ github.workspace }}/.native/linux-dosbox/dosbox-x
+      FDISBULL_MACHINE_QEMU: ${{ github.workspace }}/.native/pe/qemu-9.2.4/build/qemu-system-x86_64
+      FDISBULL_DOS_KERNEL: ${{ github.workspace }}/.native/pe/linux-amd64
+      FDISBULL_DOS_INITRAMFS: ${{ github.workspace }}/.native/pe/dos-runtime.cpio.gz
+      FDISBULL_MACHINE_EVIDENCE: ${{ github.workspace }}/native-evidence/unified/boot
+      FDISBULL_DOS_QEMU_EVIDENCE: ${{ github.workspace }}/native-evidence/unified/dos
+      FDISBULL_REQUIRE_MACHINE: "1"
+      FDISBULL_REQUIRE_DOS_QEMU: "1"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -137,6 +152,26 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: pyproject.toml
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-dosbox-layers
+          path: .native/linux-dosbox
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-debugger-layers-backend
+          path: .native/linux-dosbox/evidence
+      - name: Check the source-built Linux DOSBox
+        run: |
+          chmod +x "$FDISBULL_DOSBOX"
+          sha256sum "$FDISBULL_DOSBOX"
+          ldd "$FDISBULL_DOSBOX"
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          receipt=json.loads(Path('.native/linux-dosbox/evidence/backend-identity.json').read_text())
+          assert receipt['source_commit']==os.environ['GITHUB_SHA']
+          assert receipt['backend_sha256']==hashlib.sha256(Path(os.environ['FDISBULL_DOSBOX']).read_bytes()).hexdigest()
+          PY
       - name: Build and install the release wheel
         run: |
           python -m pip install ".[test]" build
@@ -161,6 +196,9 @@ jobs:
       - name: Build a trusted Wine root filesystem
         run: |
           docker build --platform linux/amd64 -f experimental/wine/ci/Containerfile -t fdisbull-pe-ci .
+          docker run --rm --network none \
+            --mount "type=bind,source=$FDISBULL_DOSBOX,target=/opt/dosbox-x,readonly" \
+            fdisbull-pe-ci sh -ec 'ldd /opt/dosbox-x > /tmp/dos-libraries; cat /tmp/dos-libraries; ! grep -q "not found" /tmp/dos-libraries'
           docker create --name fdisbull-pe-export fdisbull-pe-ci /bin/true
           docker cp fdisbull-pe-export:/opt/ci/oracle.exe .native/pe/oracle.exe
           docker cp fdisbull-pe-export:/opt/ci/runtime-packages.txt native-evidence/pe/runtime-packages.txt
@@ -176,6 +214,10 @@ jobs:
           python experimental/wine/ci/build_runtime.py \
             --rootfs-tar .native/pe/rootfs.tar --base .native/pe/base.cpio.gz \
             --output "$FDISBULL_PE_INITRAMFS" > native-evidence/pe/runtime-preparation.json
+          python -m fdisbull.dos_runtime \
+            --base-initramfs .native/pe/base.cpio.gz \
+            --dosbox "$FDISBULL_DOSBOX" --output "$FDISBULL_DOS_INITRAMFS" \
+            > native-evidence/pe/dos-runtime-preparation.json
           rm .native/pe/rootfs.tar .native/pe/base.cpio.gz
       - name: Record exact inputs and installed package identity
         run: |
@@ -192,7 +234,8 @@ jobs:
           receipt={'source_commit':os.environ['GITHUB_SHA'],
                    'version':fdisbull.__version__,'installed_module':fdisbull.__file__,
                    'inputs':{key:identity(os.environ[key]) for key in (
-                       'FDISBULL_PE_QEMU','FDISBULL_PE_KERNEL','FDISBULL_PE_INITRAMFS','FDISBULL_PE_FIXTURE')},
+                       'FDISBULL_PE_QEMU','FDISBULL_PE_KERNEL','FDISBULL_PE_INITRAMFS','FDISBULL_PE_FIXTURE',
+                       'FDISBULL_DOSBOX','FDISBULL_DOS_INITRAMFS')},
                    'wheel':identity(next(Path('.native/pe/packages').glob('*.whl')))}
           Path('native-evidence/pe/backend-identity.json').write_text(json.dumps(receipt,indent=2)+'\n')
           PY
@@ -202,11 +245,24 @@ jobs:
           set -euo pipefail
           python -m pytest -q -s tests/test_wine_debugger.py tests/test_wine_advanced.py -o pythonpath= \
             --junitxml=native-evidence/pe/tests.xml 2>&1 | tee native-evidence/pe/tests.log
+      - name: Require real DOS-in-QEMU and boot-context acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p native-evidence/unified
+          python -m pytest -q -s tests/test_dos_qemu.py tests/test_qemu_machine.py -o pythonpath= \
+            --junitxml=native-evidence/unified/tests.xml 2>&1 | tee native-evidence/unified/tests.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: native-debugger-pe64
           path: native-evidence/pe/
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-debugger-unified
+          path: native-evidence/unified/
           if-no-files-found: warn
       - uses: actions/upload-artifact@v4
         if: success()

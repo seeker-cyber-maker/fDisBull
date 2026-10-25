@@ -1,0 +1,635 @@
+............................................s........................... [  8%]
+.......................................ssssssssssssss.s..ssssssssss..... [ 17%]
+..........FFFFFFFFFF.................................................... [ 26%]
+........................................................................ [ 34%]
+........................................................................ [ 43%]
+.........sssss.......................................................... [ 52%]
+........................................................................ [ 61%]
+........................................................................ [ 69%]
+........................................................................ [ 78%]
+s.s..................................................................... [ 87%]
+.....................................................................s.. [ 96%]
+.s.....s.........................                                        [100%]
+=================================== FAILURES ===================================
+___ test_distribution_check_rejects_game_state_and_database_files[local.fdb] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject0')
+unwanted = 'local.fdb'
+
+    @pytest.mark.parametrize('unwanted',[
+        'local.fdb','local.fdb-wal','local.db','local.sqlite','local.sqlite3',
+        'checkpoint.sav','checkpoint.STATE','GAME.EXE','GAME.COM','VARS.DAT',
+    ])
+    def test_distribution_check_rejects_game_state_and_database_files(tmp_path,unwanted):
+        check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+        archive=tmp_path/'fdisbull-test-tool.zip'
+        with zipfile.ZipFile(archive,'w') as output:
+            for required in ('src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py',
+                             'tests/wine_gui_fixture.c','src/fdisbull/wine_guest/agent.c',
+                             'src/fdisbull/wine_guest/init.sh','src/fdisbull/wine_guest/broker.py'):
+                output.writestr('fdisbull-test/'+required,'')
+>       assert check(archive)==8
+               ^^^^^^^^^^^^^^
+
+tests/test_distribution.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject0/fdisbull-test-tool.zip')
+
+    def check_archive(path: Path) -> int:
+        names = archive_names(path)
+        if not names:
+            raise ValueError(f"Empty archive: {path}")
+        entries = [PurePosixPath(name) for name in names]
+        for entry in entries:
+            if entry.is_absolute() or ".." in entry.parts:
+                raise ValueError(f"Invalid archive path: {entry}")
+            if EXCLUDED_DIRECTORIES.intersection(entry.parts):
+                raise ValueError(f"Excluded directory in {path.name}: {entry}")
+            if entry.suffix.lower() in EXCLUDED_SUFFIXES or ".fdb-" in entry.name.lower():
+                raise ValueError(f"Excluded binary/data file in {path.name}: {entry}")
+        if path.suffix == ".whl":
+            roots = {entry.parts[0] for entry in entries}
+            metadata = {name for name in roots if name.startswith("fdisbull-") and name.endswith(".dist-info")}
+            if len(metadata) != 1 or roots != {"fdisbull", *metadata}:
+                raise ValueError(f"Wheel contains files outside fdisbull and its metadata: {sorted(roots)}")
+            if "fdisbull/__init__.py" not in names:
+                raise ValueError("Wheel is missing fdisbull/__init__.py")
+            missing = {"fdisbull/" + name for name in REQUIRED_PE_RESOURCES} - set(names)
+            if missing:
+                raise ValueError(f"Wheel is missing PE backend sources: {sorted(missing)}")
+        else:
+            roots = {entry.parts[0] for entry in entries}
+            if len(roots) != 1 or not next(iter(roots)).startswith("fdisbull-"):
+                raise ValueError(f"Unexpected source archive root: {sorted(roots)}")
+            relative = {PurePosixPath(*entry.parts[1:]).as_posix() for entry in entries}
+            required = REQUIRED_TEST_HELPERS | {"src/fdisbull/__init__.py", "pyproject.toml", "tests/wine_gui_fixture.c"}
+            required |= {"src/fdisbull/" + name for name in REQUIRED_PE_RESOURCES}
+            missing = required - relative
+            if missing:
+>               raise ValueError(f"Source archive is missing required files: {sorted(missing)}")
+E               ValueError: Source archive is missing required files: ['src/fdisbull/ida_guest/broker.py', 'src/fdisbull/ida_guest/init.sh', 'src/fdisbull/ida_guest/ui.c', 'src/fdisbull/ida_remote.py', 'src/fdisbull/ida_wire.py']
+
+scripts/check_dist.py:64: ValueError
+_ test_distribution_check_rejects_game_state_and_database_files[local.fdb-wal] _
+
+tmp_path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject1')
+unwanted = 'local.fdb-wal'
+
+    @pytest.mark.parametrize('unwanted',[
+        'local.fdb','local.fdb-wal','local.db','local.sqlite','local.sqlite3',
+        'checkpoint.sav','checkpoint.STATE','GAME.EXE','GAME.COM','VARS.DAT',
+    ])
+    def test_distribution_check_rejects_game_state_and_database_files(tmp_path,unwanted):
+        check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+        archive=tmp_path/'fdisbull-test-tool.zip'
+        with zipfile.ZipFile(archive,'w') as output:
+            for required in ('src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py',
+                             'tests/wine_gui_fixture.c','src/fdisbull/wine_guest/agent.c',
+                             'src/fdisbull/wine_guest/init.sh','src/fdisbull/wine_guest/broker.py'):
+                output.writestr('fdisbull-test/'+required,'')
+>       assert check(archive)==8
+               ^^^^^^^^^^^^^^
+
+tests/test_distribution.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject1/fdisbull-test-tool.zip')
+
+    def check_archive(path: Path) -> int:
+        names = archive_names(path)
+        if not names:
+            raise ValueError(f"Empty archive: {path}")
+        entries = [PurePosixPath(name) for name in names]
+        for entry in entries:
+            if entry.is_absolute() or ".." in entry.parts:
+                raise ValueError(f"Invalid archive path: {entry}")
+            if EXCLUDED_DIRECTORIES.intersection(entry.parts):
+                raise ValueError(f"Excluded directory in {path.name}: {entry}")
+            if entry.suffix.lower() in EXCLUDED_SUFFIXES or ".fdb-" in entry.name.lower():
+                raise ValueError(f"Excluded binary/data file in {path.name}: {entry}")
+        if path.suffix == ".whl":
+            roots = {entry.parts[0] for entry in entries}
+            metadata = {name for name in roots if name.startswith("fdisbull-") and name.endswith(".dist-info")}
+            if len(metadata) != 1 or roots != {"fdisbull", *metadata}:
+                raise ValueError(f"Wheel contains files outside fdisbull and its metadata: {sorted(roots)}")
+            if "fdisbull/__init__.py" not in names:
+                raise ValueError("Wheel is missing fdisbull/__init__.py")
+            missing = {"fdisbull/" + name for name in REQUIRED_PE_RESOURCES} - set(names)
+            if missing:
+                raise ValueError(f"Wheel is missing PE backend sources: {sorted(missing)}")
+        else:
+            roots = {entry.parts[0] for entry in entries}
+            if len(roots) != 1 or not next(iter(roots)).startswith("fdisbull-"):
+                raise ValueError(f"Unexpected source archive root: {sorted(roots)}")
+            relative = {PurePosixPath(*entry.parts[1:]).as_posix() for entry in entries}
+            required = REQUIRED_TEST_HELPERS | {"src/fdisbull/__init__.py", "pyproject.toml", "tests/wine_gui_fixture.c"}
+            required |= {"src/fdisbull/" + name for name in REQUIRED_PE_RESOURCES}
+            missing = required - relative
+            if missing:
+>               raise ValueError(f"Source archive is missing required files: {sorted(missing)}")
+E               ValueError: Source archive is missing required files: ['src/fdisbull/ida_guest/broker.py', 'src/fdisbull/ida_guest/init.sh', 'src/fdisbull/ida_guest/ui.c', 'src/fdisbull/ida_remote.py', 'src/fdisbull/ida_wire.py']
+
+scripts/check_dist.py:64: ValueError
+___ test_distribution_check_rejects_game_state_and_database_files[local.db] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject2')
+unwanted = 'local.db'
+
+    @pytest.mark.parametrize('unwanted',[
+        'local.fdb','local.fdb-wal','local.db','local.sqlite','local.sqlite3',
+        'checkpoint.sav','checkpoint.STATE','GAME.EXE','GAME.COM','VARS.DAT',
+    ])
+    def test_distribution_check_rejects_game_state_and_database_files(tmp_path,unwanted):
+        check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+        archive=tmp_path/'fdisbull-test-tool.zip'
+        with zipfile.ZipFile(archive,'w') as output:
+            for required in ('src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py',
+                             'tests/wine_gui_fixture.c','src/fdisbull/wine_guest/agent.c',
+                             'src/fdisbull/wine_guest/init.sh','src/fdisbull/wine_guest/broker.py'):
+                output.writestr('fdisbull-test/'+required,'')
+>       assert check(archive)==8
+               ^^^^^^^^^^^^^^
+
+tests/test_distribution.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject2/fdisbull-test-tool.zip')
+
+    def check_archive(path: Path) -> int:
+        names = archive_names(path)
+        if not names:
+            raise ValueError(f"Empty archive: {path}")
+        entries = [PurePosixPath(name) for name in names]
+        for entry in entries:
+            if entry.is_absolute() or ".." in entry.parts:
+                raise ValueError(f"Invalid archive path: {entry}")
+            if EXCLUDED_DIRECTORIES.intersection(entry.parts):
+                raise ValueError(f"Excluded directory in {path.name}: {entry}")
+            if entry.suffix.lower() in EXCLUDED_SUFFIXES or ".fdb-" in entry.name.lower():
+                raise ValueError(f"Excluded binary/data file in {path.name}: {entry}")
+        if path.suffix == ".whl":
+            roots = {entry.parts[0] for entry in entries}
+            metadata = {name for name in roots if name.startswith("fdisbull-") and name.endswith(".dist-info")}
+            if len(metadata) != 1 or roots != {"fdisbull", *metadata}:
+                raise ValueError(f"Wheel contains files outside fdisbull and its metadata: {sorted(roots)}")
+            if "fdisbull/__init__.py" not in names:
+                raise ValueError("Wheel is missing fdisbull/__init__.py")
+            missing = {"fdisbull/" + name for name in REQUIRED_PE_RESOURCES} - set(names)
+            if missing:
+                raise ValueError(f"Wheel is missing PE backend sources: {sorted(missing)}")
+        else:
+            roots = {entry.parts[0] for entry in entries}
+            if len(roots) != 1 or not next(iter(roots)).startswith("fdisbull-"):
+                raise ValueError(f"Unexpected source archive root: {sorted(roots)}")
+            relative = {PurePosixPath(*entry.parts[1:]).as_posix() for entry in entries}
+            required = REQUIRED_TEST_HELPERS | {"src/fdisbull/__init__.py", "pyproject.toml", "tests/wine_gui_fixture.c"}
+            required |= {"src/fdisbull/" + name for name in REQUIRED_PE_RESOURCES}
+            missing = required - relative
+            if missing:
+>               raise ValueError(f"Source archive is missing required files: {sorted(missing)}")
+E               ValueError: Source archive is missing required files: ['src/fdisbull/ida_guest/broker.py', 'src/fdisbull/ida_guest/init.sh', 'src/fdisbull/ida_guest/ui.c', 'src/fdisbull/ida_remote.py', 'src/fdisbull/ida_wire.py']
+
+scripts/check_dist.py:64: ValueError
+_ test_distribution_check_rejects_game_state_and_database_files[local.sqlite] __
+
+tmp_path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject3')
+unwanted = 'local.sqlite'
+
+    @pytest.mark.parametrize('unwanted',[
+        'local.fdb','local.fdb-wal','local.db','local.sqlite','local.sqlite3',
+        'checkpoint.sav','checkpoint.STATE','GAME.EXE','GAME.COM','VARS.DAT',
+    ])
+    def test_distribution_check_rejects_game_state_and_database_files(tmp_path,unwanted):
+        check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+        archive=tmp_path/'fdisbull-test-tool.zip'
+        with zipfile.ZipFile(archive,'w') as output:
+            for required in ('src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py',
+                             'tests/wine_gui_fixture.c','src/fdisbull/wine_guest/agent.c',
+                             'src/fdisbull/wine_guest/init.sh','src/fdisbull/wine_guest/broker.py'):
+                output.writestr('fdisbull-test/'+required,'')
+>       assert check(archive)==8
+               ^^^^^^^^^^^^^^
+
+tests/test_distribution.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject3/fdisbull-test-tool.zip')
+
+    def check_archive(path: Path) -> int:
+        names = archive_names(path)
+        if not names:
+            raise ValueError(f"Empty archive: {path}")
+        entries = [PurePosixPath(name) for name in names]
+        for entry in entries:
+            if entry.is_absolute() or ".." in entry.parts:
+                raise ValueError(f"Invalid archive path: {entry}")
+            if EXCLUDED_DIRECTORIES.intersection(entry.parts):
+                raise ValueError(f"Excluded directory in {path.name}: {entry}")
+            if entry.suffix.lower() in EXCLUDED_SUFFIXES or ".fdb-" in entry.name.lower():
+                raise ValueError(f"Excluded binary/data file in {path.name}: {entry}")
+        if path.suffix == ".whl":
+            roots = {entry.parts[0] for entry in entries}
+            metadata = {name for name in roots if name.startswith("fdisbull-") and name.endswith(".dist-info")}
+            if len(metadata) != 1 or roots != {"fdisbull", *metadata}:
+                raise ValueError(f"Wheel contains files outside fdisbull and its metadata: {sorted(roots)}")
+            if "fdisbull/__init__.py" not in names:
+                raise ValueError("Wheel is missing fdisbull/__init__.py")
+            missing = {"fdisbull/" + name for name in REQUIRED_PE_RESOURCES} - set(names)
+            if missing:
+                raise ValueError(f"Wheel is missing PE backend sources: {sorted(missing)}")
+        else:
+            roots = {entry.parts[0] for entry in entries}
+            if len(roots) != 1 or not next(iter(roots)).startswith("fdisbull-"):
+                raise ValueError(f"Unexpected source archive root: {sorted(roots)}")
+            relative = {PurePosixPath(*entry.parts[1:]).as_posix() for entry in entries}
+            required = REQUIRED_TEST_HELPERS | {"src/fdisbull/__init__.py", "pyproject.toml", "tests/wine_gui_fixture.c"}
+            required |= {"src/fdisbull/" + name for name in REQUIRED_PE_RESOURCES}
+            missing = required - relative
+            if missing:
+>               raise ValueError(f"Source archive is missing required files: {sorted(missing)}")
+E               ValueError: Source archive is missing required files: ['src/fdisbull/ida_guest/broker.py', 'src/fdisbull/ida_guest/init.sh', 'src/fdisbull/ida_guest/ui.c', 'src/fdisbull/ida_remote.py', 'src/fdisbull/ida_wire.py']
+
+scripts/check_dist.py:64: ValueError
+_ test_distribution_check_rejects_game_state_and_database_files[local.sqlite3] _
+
+tmp_path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject4')
+unwanted = 'local.sqlite3'
+
+    @pytest.mark.parametrize('unwanted',[
+        'local.fdb','local.fdb-wal','local.db','local.sqlite','local.sqlite3',
+        'checkpoint.sav','checkpoint.STATE','GAME.EXE','GAME.COM','VARS.DAT',
+    ])
+    def test_distribution_check_rejects_game_state_and_database_files(tmp_path,unwanted):
+        check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+        archive=tmp_path/'fdisbull-test-tool.zip'
+        with zipfile.ZipFile(archive,'w') as output:
+            for required in ('src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py',
+                             'tests/wine_gui_fixture.c','src/fdisbull/wine_guest/agent.c',
+                             'src/fdisbull/wine_guest/init.sh','src/fdisbull/wine_guest/broker.py'):
+                output.writestr('fdisbull-test/'+required,'')
+>       assert check(archive)==8
+               ^^^^^^^^^^^^^^
+
+tests/test_distribution.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject4/fdisbull-test-tool.zip')
+
+    def check_archive(path: Path) -> int:
+        names = archive_names(path)
+        if not names:
+            raise ValueError(f"Empty archive: {path}")
+        entries = [PurePosixPath(name) for name in names]
+        for entry in entries:
+            if entry.is_absolute() or ".." in entry.parts:
+                raise ValueError(f"Invalid archive path: {entry}")
+            if EXCLUDED_DIRECTORIES.intersection(entry.parts):
+                raise ValueError(f"Excluded directory in {path.name}: {entry}")
+            if entry.suffix.lower() in EXCLUDED_SUFFIXES or ".fdb-" in entry.name.lower():
+                raise ValueError(f"Excluded binary/data file in {path.name}: {entry}")
+        if path.suffix == ".whl":
+            roots = {entry.parts[0] for entry in entries}
+            metadata = {name for name in roots if name.startswith("fdisbull-") and name.endswith(".dist-info")}
+            if len(metadata) != 1 or roots != {"fdisbull", *metadata}:
+                raise ValueError(f"Wheel contains files outside fdisbull and its metadata: {sorted(roots)}")
+            if "fdisbull/__init__.py" not in names:
+                raise ValueError("Wheel is missing fdisbull/__init__.py")
+            missing = {"fdisbull/" + name for name in REQUIRED_PE_RESOURCES} - set(names)
+            if missing:
+                raise ValueError(f"Wheel is missing PE backend sources: {sorted(missing)}")
+        else:
+            roots = {entry.parts[0] for entry in entries}
+            if len(roots) != 1 or not next(iter(roots)).startswith("fdisbull-"):
+                raise ValueError(f"Unexpected source archive root: {sorted(roots)}")
+            relative = {PurePosixPath(*entry.parts[1:]).as_posix() for entry in entries}
+            required = REQUIRED_TEST_HELPERS | {"src/fdisbull/__init__.py", "pyproject.toml", "tests/wine_gui_fixture.c"}
+            required |= {"src/fdisbull/" + name for name in REQUIRED_PE_RESOURCES}
+            missing = required - relative
+            if missing:
+>               raise ValueError(f"Source archive is missing required files: {sorted(missing)}")
+E               ValueError: Source archive is missing required files: ['src/fdisbull/ida_guest/broker.py', 'src/fdisbull/ida_guest/init.sh', 'src/fdisbull/ida_guest/ui.c', 'src/fdisbull/ida_remote.py', 'src/fdisbull/ida_wire.py']
+
+scripts/check_dist.py:64: ValueError
+_ test_distribution_check_rejects_game_state_and_database_files[checkpoint.sav] _
+
+tmp_path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject5')
+unwanted = 'checkpoint.sav'
+
+    @pytest.mark.parametrize('unwanted',[
+        'local.fdb','local.fdb-wal','local.db','local.sqlite','local.sqlite3',
+        'checkpoint.sav','checkpoint.STATE','GAME.EXE','GAME.COM','VARS.DAT',
+    ])
+    def test_distribution_check_rejects_game_state_and_database_files(tmp_path,unwanted):
+        check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+        archive=tmp_path/'fdisbull-test-tool.zip'
+        with zipfile.ZipFile(archive,'w') as output:
+            for required in ('src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py',
+                             'tests/wine_gui_fixture.c','src/fdisbull/wine_guest/agent.c',
+                             'src/fdisbull/wine_guest/init.sh','src/fdisbull/wine_guest/broker.py'):
+                output.writestr('fdisbull-test/'+required,'')
+>       assert check(archive)==8
+               ^^^^^^^^^^^^^^
+
+tests/test_distribution.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject5/fdisbull-test-tool.zip')
+
+    def check_archive(path: Path) -> int:
+        names = archive_names(path)
+        if not names:
+            raise ValueError(f"Empty archive: {path}")
+        entries = [PurePosixPath(name) for name in names]
+        for entry in entries:
+            if entry.is_absolute() or ".." in entry.parts:
+                raise ValueError(f"Invalid archive path: {entry}")
+            if EXCLUDED_DIRECTORIES.intersection(entry.parts):
+                raise ValueError(f"Excluded directory in {path.name}: {entry}")
+            if entry.suffix.lower() in EXCLUDED_SUFFIXES or ".fdb-" in entry.name.lower():
+                raise ValueError(f"Excluded binary/data file in {path.name}: {entry}")
+        if path.suffix == ".whl":
+            roots = {entry.parts[0] for entry in entries}
+            metadata = {name for name in roots if name.startswith("fdisbull-") and name.endswith(".dist-info")}
+            if len(metadata) != 1 or roots != {"fdisbull", *metadata}:
+                raise ValueError(f"Wheel contains files outside fdisbull and its metadata: {sorted(roots)}")
+            if "fdisbull/__init__.py" not in names:
+                raise ValueError("Wheel is missing fdisbull/__init__.py")
+            missing = {"fdisbull/" + name for name in REQUIRED_PE_RESOURCES} - set(names)
+            if missing:
+                raise ValueError(f"Wheel is missing PE backend sources: {sorted(missing)}")
+        else:
+            roots = {entry.parts[0] for entry in entries}
+            if len(roots) != 1 or not next(iter(roots)).startswith("fdisbull-"):
+                raise ValueError(f"Unexpected source archive root: {sorted(roots)}")
+            relative = {PurePosixPath(*entry.parts[1:]).as_posix() for entry in entries}
+            required = REQUIRED_TEST_HELPERS | {"src/fdisbull/__init__.py", "pyproject.toml", "tests/wine_gui_fixture.c"}
+            required |= {"src/fdisbull/" + name for name in REQUIRED_PE_RESOURCES}
+            missing = required - relative
+            if missing:
+>               raise ValueError(f"Source archive is missing required files: {sorted(missing)}")
+E               ValueError: Source archive is missing required files: ['src/fdisbull/ida_guest/broker.py', 'src/fdisbull/ida_guest/init.sh', 'src/fdisbull/ida_guest/ui.c', 'src/fdisbull/ida_remote.py', 'src/fdisbull/ida_wire.py']
+
+scripts/check_dist.py:64: ValueError
+_ test_distribution_check_rejects_game_state_and_database_files[checkpoint.STATE] _
+
+tmp_path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject6')
+unwanted = 'checkpoint.STATE'
+
+    @pytest.mark.parametrize('unwanted',[
+        'local.fdb','local.fdb-wal','local.db','local.sqlite','local.sqlite3',
+        'checkpoint.sav','checkpoint.STATE','GAME.EXE','GAME.COM','VARS.DAT',
+    ])
+    def test_distribution_check_rejects_game_state_and_database_files(tmp_path,unwanted):
+        check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+        archive=tmp_path/'fdisbull-test-tool.zip'
+        with zipfile.ZipFile(archive,'w') as output:
+            for required in ('src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py',
+                             'tests/wine_gui_fixture.c','src/fdisbull/wine_guest/agent.c',
+                             'src/fdisbull/wine_guest/init.sh','src/fdisbull/wine_guest/broker.py'):
+                output.writestr('fdisbull-test/'+required,'')
+>       assert check(archive)==8
+               ^^^^^^^^^^^^^^
+
+tests/test_distribution.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject6/fdisbull-test-tool.zip')
+
+    def check_archive(path: Path) -> int:
+        names = archive_names(path)
+        if not names:
+            raise ValueError(f"Empty archive: {path}")
+        entries = [PurePosixPath(name) for name in names]
+        for entry in entries:
+            if entry.is_absolute() or ".." in entry.parts:
+                raise ValueError(f"Invalid archive path: {entry}")
+            if EXCLUDED_DIRECTORIES.intersection(entry.parts):
+                raise ValueError(f"Excluded directory in {path.name}: {entry}")
+            if entry.suffix.lower() in EXCLUDED_SUFFIXES or ".fdb-" in entry.name.lower():
+                raise ValueError(f"Excluded binary/data file in {path.name}: {entry}")
+        if path.suffix == ".whl":
+            roots = {entry.parts[0] for entry in entries}
+            metadata = {name for name in roots if name.startswith("fdisbull-") and name.endswith(".dist-info")}
+            if len(metadata) != 1 or roots != {"fdisbull", *metadata}:
+                raise ValueError(f"Wheel contains files outside fdisbull and its metadata: {sorted(roots)}")
+            if "fdisbull/__init__.py" not in names:
+                raise ValueError("Wheel is missing fdisbull/__init__.py")
+            missing = {"fdisbull/" + name for name in REQUIRED_PE_RESOURCES} - set(names)
+            if missing:
+                raise ValueError(f"Wheel is missing PE backend sources: {sorted(missing)}")
+        else:
+            roots = {entry.parts[0] for entry in entries}
+            if len(roots) != 1 or not next(iter(roots)).startswith("fdisbull-"):
+                raise ValueError(f"Unexpected source archive root: {sorted(roots)}")
+            relative = {PurePosixPath(*entry.parts[1:]).as_posix() for entry in entries}
+            required = REQUIRED_TEST_HELPERS | {"src/fdisbull/__init__.py", "pyproject.toml", "tests/wine_gui_fixture.c"}
+            required |= {"src/fdisbull/" + name for name in REQUIRED_PE_RESOURCES}
+            missing = required - relative
+            if missing:
+>               raise ValueError(f"Source archive is missing required files: {sorted(missing)}")
+E               ValueError: Source archive is missing required files: ['src/fdisbull/ida_guest/broker.py', 'src/fdisbull/ida_guest/init.sh', 'src/fdisbull/ida_guest/ui.c', 'src/fdisbull/ida_remote.py', 'src/fdisbull/ida_wire.py']
+
+scripts/check_dist.py:64: ValueError
+___ test_distribution_check_rejects_game_state_and_database_files[GAME.EXE] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject7')
+unwanted = 'GAME.EXE'
+
+    @pytest.mark.parametrize('unwanted',[
+        'local.fdb','local.fdb-wal','local.db','local.sqlite','local.sqlite3',
+        'checkpoint.sav','checkpoint.STATE','GAME.EXE','GAME.COM','VARS.DAT',
+    ])
+    def test_distribution_check_rejects_game_state_and_database_files(tmp_path,unwanted):
+        check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+        archive=tmp_path/'fdisbull-test-tool.zip'
+        with zipfile.ZipFile(archive,'w') as output:
+            for required in ('src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py',
+                             'tests/wine_gui_fixture.c','src/fdisbull/wine_guest/agent.c',
+                             'src/fdisbull/wine_guest/init.sh','src/fdisbull/wine_guest/broker.py'):
+                output.writestr('fdisbull-test/'+required,'')
+>       assert check(archive)==8
+               ^^^^^^^^^^^^^^
+
+tests/test_distribution.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject7/fdisbull-test-tool.zip')
+
+    def check_archive(path: Path) -> int:
+        names = archive_names(path)
+        if not names:
+            raise ValueError(f"Empty archive: {path}")
+        entries = [PurePosixPath(name) for name in names]
+        for entry in entries:
+            if entry.is_absolute() or ".." in entry.parts:
+                raise ValueError(f"Invalid archive path: {entry}")
+            if EXCLUDED_DIRECTORIES.intersection(entry.parts):
+                raise ValueError(f"Excluded directory in {path.name}: {entry}")
+            if entry.suffix.lower() in EXCLUDED_SUFFIXES or ".fdb-" in entry.name.lower():
+                raise ValueError(f"Excluded binary/data file in {path.name}: {entry}")
+        if path.suffix == ".whl":
+            roots = {entry.parts[0] for entry in entries}
+            metadata = {name for name in roots if name.startswith("fdisbull-") and name.endswith(".dist-info")}
+            if len(metadata) != 1 or roots != {"fdisbull", *metadata}:
+                raise ValueError(f"Wheel contains files outside fdisbull and its metadata: {sorted(roots)}")
+            if "fdisbull/__init__.py" not in names:
+                raise ValueError("Wheel is missing fdisbull/__init__.py")
+            missing = {"fdisbull/" + name for name in REQUIRED_PE_RESOURCES} - set(names)
+            if missing:
+                raise ValueError(f"Wheel is missing PE backend sources: {sorted(missing)}")
+        else:
+            roots = {entry.parts[0] for entry in entries}
+            if len(roots) != 1 or not next(iter(roots)).startswith("fdisbull-"):
+                raise ValueError(f"Unexpected source archive root: {sorted(roots)}")
+            relative = {PurePosixPath(*entry.parts[1:]).as_posix() for entry in entries}
+            required = REQUIRED_TEST_HELPERS | {"src/fdisbull/__init__.py", "pyproject.toml", "tests/wine_gui_fixture.c"}
+            required |= {"src/fdisbull/" + name for name in REQUIRED_PE_RESOURCES}
+            missing = required - relative
+            if missing:
+>               raise ValueError(f"Source archive is missing required files: {sorted(missing)}")
+E               ValueError: Source archive is missing required files: ['src/fdisbull/ida_guest/broker.py', 'src/fdisbull/ida_guest/init.sh', 'src/fdisbull/ida_guest/ui.c', 'src/fdisbull/ida_remote.py', 'src/fdisbull/ida_wire.py']
+
+scripts/check_dist.py:64: ValueError
+___ test_distribution_check_rejects_game_state_and_database_files[GAME.COM] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject8')
+unwanted = 'GAME.COM'
+
+    @pytest.mark.parametrize('unwanted',[
+        'local.fdb','local.fdb-wal','local.db','local.sqlite','local.sqlite3',
+        'checkpoint.sav','checkpoint.STATE','GAME.EXE','GAME.COM','VARS.DAT',
+    ])
+    def test_distribution_check_rejects_game_state_and_database_files(tmp_path,unwanted):
+        check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+        archive=tmp_path/'fdisbull-test-tool.zip'
+        with zipfile.ZipFile(archive,'w') as output:
+            for required in ('src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py',
+                             'tests/wine_gui_fixture.c','src/fdisbull/wine_guest/agent.c',
+                             'src/fdisbull/wine_guest/init.sh','src/fdisbull/wine_guest/broker.py'):
+                output.writestr('fdisbull-test/'+required,'')
+>       assert check(archive)==8
+               ^^^^^^^^^^^^^^
+
+tests/test_distribution.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject8/fdisbull-test-tool.zip')
+
+    def check_archive(path: Path) -> int:
+        names = archive_names(path)
+        if not names:
+            raise ValueError(f"Empty archive: {path}")
+        entries = [PurePosixPath(name) for name in names]
+        for entry in entries:
+            if entry.is_absolute() or ".." in entry.parts:
+                raise ValueError(f"Invalid archive path: {entry}")
+            if EXCLUDED_DIRECTORIES.intersection(entry.parts):
+                raise ValueError(f"Excluded directory in {path.name}: {entry}")
+            if entry.suffix.lower() in EXCLUDED_SUFFIXES or ".fdb-" in entry.name.lower():
+                raise ValueError(f"Excluded binary/data file in {path.name}: {entry}")
+        if path.suffix == ".whl":
+            roots = {entry.parts[0] for entry in entries}
+            metadata = {name for name in roots if name.startswith("fdisbull-") and name.endswith(".dist-info")}
+            if len(metadata) != 1 or roots != {"fdisbull", *metadata}:
+                raise ValueError(f"Wheel contains files outside fdisbull and its metadata: {sorted(roots)}")
+            if "fdisbull/__init__.py" not in names:
+                raise ValueError("Wheel is missing fdisbull/__init__.py")
+            missing = {"fdisbull/" + name for name in REQUIRED_PE_RESOURCES} - set(names)
+            if missing:
+                raise ValueError(f"Wheel is missing PE backend sources: {sorted(missing)}")
+        else:
+            roots = {entry.parts[0] for entry in entries}
+            if len(roots) != 1 or not next(iter(roots)).startswith("fdisbull-"):
+                raise ValueError(f"Unexpected source archive root: {sorted(roots)}")
+            relative = {PurePosixPath(*entry.parts[1:]).as_posix() for entry in entries}
+            required = REQUIRED_TEST_HELPERS | {"src/fdisbull/__init__.py", "pyproject.toml", "tests/wine_gui_fixture.c"}
+            required |= {"src/fdisbull/" + name for name in REQUIRED_PE_RESOURCES}
+            missing = required - relative
+            if missing:
+>               raise ValueError(f"Source archive is missing required files: {sorted(missing)}")
+E               ValueError: Source archive is missing required files: ['src/fdisbull/ida_guest/broker.py', 'src/fdisbull/ida_guest/init.sh', 'src/fdisbull/ida_guest/ui.c', 'src/fdisbull/ida_remote.py', 'src/fdisbull/ida_wire.py']
+
+scripts/check_dist.py:64: ValueError
+___ test_distribution_check_rejects_game_state_and_database_files[VARS.DAT] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject9')
+unwanted = 'VARS.DAT'
+
+    @pytest.mark.parametrize('unwanted',[
+        'local.fdb','local.fdb-wal','local.db','local.sqlite','local.sqlite3',
+        'checkpoint.sav','checkpoint.STATE','GAME.EXE','GAME.COM','VARS.DAT',
+    ])
+    def test_distribution_check_rejects_game_state_and_database_files(tmp_path,unwanted):
+        check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+        archive=tmp_path/'fdisbull-test-tool.zip'
+        with zipfile.ZipFile(archive,'w') as output:
+            for required in ('src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py',
+                             'tests/wine_gui_fixture.c','src/fdisbull/wine_guest/agent.c',
+                             'src/fdisbull/wine_guest/init.sh','src/fdisbull/wine_guest/broker.py'):
+                output.writestr('fdisbull-test/'+required,'')
+>       assert check(archive)==8
+               ^^^^^^^^^^^^^^
+
+tests/test_distribution.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_distribution_check_reject9/fdisbull-test-tool.zip')
+
+    def check_archive(path: Path) -> int:
+        names = archive_names(path)
+        if not names:
+            raise ValueError(f"Empty archive: {path}")
+        entries = [PurePosixPath(name) for name in names]
+        for entry in entries:
+            if entry.is_absolute() or ".." in entry.parts:
+                raise ValueError(f"Invalid archive path: {entry}")
+            if EXCLUDED_DIRECTORIES.intersection(entry.parts):
+                raise ValueError(f"Excluded directory in {path.name}: {entry}")
+            if entry.suffix.lower() in EXCLUDED_SUFFIXES or ".fdb-" in entry.name.lower():
+                raise ValueError(f"Excluded binary/data file in {path.name}: {entry}")
+        if path.suffix == ".whl":
+            roots = {entry.parts[0] for entry in entries}
+            metadata = {name for name in roots if name.startswith("fdisbull-") and name.endswith(".dist-info")}
+            if len(metadata) != 1 or roots != {"fdisbull", *metadata}:
+                raise ValueError(f"Wheel contains files outside fdisbull and its metadata: {sorted(roots)}")
+            if "fdisbull/__init__.py" not in names:
+                raise ValueError("Wheel is missing fdisbull/__init__.py")
+            missing = {"fdisbull/" + name for name in REQUIRED_PE_RESOURCES} - set(names)
+            if missing:
+                raise ValueError(f"Wheel is missing PE backend sources: {sorted(missing)}")
+        else:
+            roots = {entry.parts[0] for entry in entries}
+            if len(roots) != 1 or not next(iter(roots)).startswith("fdisbull-"):
+                raise ValueError(f"Unexpected source archive root: {sorted(roots)}")
+            relative = {PurePosixPath(*entry.parts[1:]).as_posix() for entry in entries}
+            required = REQUIRED_TEST_HELPERS | {"src/fdisbull/__init__.py", "pyproject.toml", "tests/wine_gui_fixture.c"}
+            required |= {"src/fdisbull/" + name for name in REQUIRED_PE_RESOURCES}
+            missing = required - relative
+            if missing:
+>               raise ValueError(f"Source archive is missing required files: {sorted(missing)}")
+E               ValueError: Source archive is missing required files: ['src/fdisbull/ida_guest/broker.py', 'src/fdisbull/ida_guest/init.sh', 'src/fdisbull/ida_guest/ui.c', 'src/fdisbull/ida_remote.py', 'src/fdisbull/ida_wire.py']
+
+scripts/check_dist.py:64: ValueError
+=============================== warnings summary ===============================
+../venv/lib/python3.12/site-packages/_pytest/cacheprovider.py:469
+  /opt/venv/lib/python3.12/site-packages/_pytest/cacheprovider.py:469: PytestCacheWarning: could not create cache path /opt/current/.pytest_cache/v/cache/nodeids: [Errno 13] Permission denied: '/opt/current/pytest-cache-files-h8wag_0k'
+    config.cache.set("cache/nodeids", sorted(self.cached_nodeids))
+
+../venv/lib/python3.12/site-packages/_pytest/cacheprovider.py:423
+  /opt/venv/lib/python3.12/site-packages/_pytest/cacheprovider.py:423: PytestCacheWarning: could not create cache path /opt/current/.pytest_cache/v/cache/lastfailed: [Errno 13] Permission denied: '/opt/current/pytest-cache-files-mv0i1_p7'
+    config.cache.set("cache/lastfailed", self.lastfailed)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_distribution.py::test_distribution_check_rejects_game_state_and_database_files[local.fdb]
+FAILED tests/test_distribution.py::test_distribution_check_rejects_game_state_and_database_files[local.fdb-wal]
+FAILED tests/test_distribution.py::test_distribution_check_rejects_game_state_and_database_files[local.db]
+FAILED tests/test_distribution.py::test_distribution_check_rejects_game_state_and_database_files[local.sqlite]
+FAILED tests/test_distribution.py::test_distribution_check_rejects_game_state_and_database_files[local.sqlite3]
+FAILED tests/test_distribution.py::test_distribution_check_rejects_game_state_and_database_files[checkpoint.sav]
+FAILED tests/test_distribution.py::test_distribution_check_rejects_game_state_and_database_files[checkpoint.STATE]
+FAILED tests/test_distribution.py::test_distribution_check_rejects_game_state_and_database_files[GAME.EXE]
+FAILED tests/test_distribution.py::test_distribution_check_rejects_game_state_and_database_files[GAME.COM]
+FAILED tests/test_distribution.py::test_distribution_check_rejects_game_state_and_database_files[VARS.DAT]
+10 failed, 779 passed, 36 skipped, 2 warnings in 530.47s (0:08:50)

@@ -1,0 +1,600 @@
+[
+  {
+    "label": "launch",
+    "result": {
+      "eid": 1,
+      "pid": 41957,
+      "tid": 1,
+      "address": 33344,
+      "handled": true,
+      "module": {
+        "name": "DINOPARK.EXE",
+        "base": 33344,
+        "size": 250048,
+        "rebase_to": 33344
+      }
+    }
+  },
+  {
+    "label": "intro",
+    "result": {
+      "run": "b05475c7d13840eda1f02729f0cd0d4f",
+      "outcome": "guest_time",
+      "timed_out": false,
+      "requested_guest_ms": 35000,
+      "guest_elapsed_ms": 35015,
+      "host_elapsed_ms": 44836.619,
+      "fast_forward": true,
+      "timing_after": {
+        "fast_forward": false,
+        "guest_ticks": 36001,
+        "session_id": "ses-1",
+        "state_revision": 4
+      },
+      "session": {
+        "session_id": "ses-1",
+        "state": "stopped",
+        "state_revision": 3,
+        "stop_reason": {
+          "kind": "pause"
+        }
+      },
+      "hook_hits": []
+    }
+  },
+  {
+    "label": "menu",
+    "result": {
+      "artifact": "fdee2a42d80541efb7130db059107b37",
+      "run": "b05475c7d13840eda1f02729f0cd0d4f",
+      "version": 1,
+      "name": "remote-menu-grid8.png",
+      "kind": "screenshot-grid",
+      "sha256": "3d7bfa951044466aec2c24d1664c08f81988188ca203d0c89f540c7485f5079e",
+      "size": 67115,
+      "metadata": {
+        "captured_ticks": 35973,
+        "double_height": true,
+        "double_width": true,
+        "format": "png",
+        "frame_id": 1914,
+        "height": 200,
+        "mode_id": 5,
+        "session_id": "ses-1",
+        "sha256": "3d7bfa951044466aec2c24d1664c08f81988188ca203d0c89f540c7485f5079e",
+        "source": "last_completed_guest_frame",
+        "source_bpp": 32,
+        "state_revision": 4,
+        "width": 320,
+        "coordinate_grid": {
+          "coordinate_space": "screenshot_pixels",
+          "origin": [
+            0,
+            0
+          ],
+          "max_coordinate": [
+            319,
+            199
+          ],
+          "step": 8,
+          "x_lines": [
+            0,
+            8,
+            16,
+            24,
+            32,
+            40,
+            48,
+            56,
+            64,
+            72,
+            80,
+            88,
+            96,
+            104,
+            112,
+            120,
+            128,
+            136,
+            144,
+            152,
+            160,
+            168,
+            176,
+            184,
+            192,
+            200,
+            208,
+            216,
+            224,
+            232,
+            240,
+            248,
+            256,
+            264,
+            272,
+            280,
+            288,
+            296,
+            304,
+            312
+          ],
+          "y_lines": [
+            0,
+            8,
+            16,
+            24,
+            32,
+            40,
+            48,
+            56,
+            64,
+            72,
+            80,
+            88,
+            96,
+            104,
+            112,
+            120,
+            128,
+            136,
+            144,
+            152,
+            160,
+            168,
+            176,
+            184,
+            192
+          ],
+          "label_step": 32,
+          "x_labels": [
+            0,
+            32,
+            64,
+            96,
+            128,
+            160,
+            192,
+            224,
+            256,
+            288
+          ],
+          "y_labels": [
+            0,
+            32,
+            64,
+            96,
+            128,
+            160,
+            192
+          ],
+          "target": null,
+          "x_direction": "right",
+          "y_direction": "down",
+          "resized": false,
+          "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+          "source_artifact": "0d54a4a51982421b83a14744e16acd2d",
+          "source_sha256": "433fefd01943236f56921132dd2623b07630bd1f94e0b5719b9a026f231a4c36"
+        }
+      }
+    }
+  },
+  {
+    "label": "new-game-click",
+    "result": {
+      "run": "b05475c7d13840eda1f02729f0cd0d4f",
+      "x": 75,
+      "y": 160,
+      "mode_id": 5,
+      "frame": {
+        "artifact": "daaebb1238854649ae508644a422944d",
+        "run": "b05475c7d13840eda1f02729f0cd0d4f",
+        "version": 1,
+        "name": "new-game-click.png",
+        "kind": "screenshot-grid",
+        "sha256": "91e36249475ea5ee23c6bd5588a76db079da00b269b7dd2ca9a32c197a0a371f",
+        "size": 67820,
+        "metadata": {
+          "captured_ticks": 35973,
+          "double_height": true,
+          "double_width": true,
+          "format": "png",
+          "frame_id": 1914,
+          "height": 200,
+          "mode_id": 5,
+          "session_id": "ses-1",
+          "sha256": "91e36249475ea5ee23c6bd5588a76db079da00b269b7dd2ca9a32c197a0a371f",
+          "source": "last_completed_guest_frame",
+          "source_bpp": 32,
+          "state_revision": 5,
+          "width": 320,
+          "coordinate_grid": {
+            "coordinate_space": "screenshot_pixels",
+            "origin": [
+              0,
+              0
+            ],
+            "max_coordinate": [
+              319,
+              199
+            ],
+            "step": 8,
+            "x_lines": [
+              0,
+              8,
+              16,
+              24,
+              32,
+              40,
+              48,
+              56,
+              64,
+              72,
+              80,
+              88,
+              96,
+              104,
+              112,
+              120,
+              128,
+              136,
+              144,
+              152,
+              160,
+              168,
+              176,
+              184,
+              192,
+              200,
+              208,
+              216,
+              224,
+              232,
+              240,
+              248,
+              256,
+              264,
+              272,
+              280,
+              288,
+              296,
+              304,
+              312
+            ],
+            "y_lines": [
+              0,
+              8,
+              16,
+              24,
+              32,
+              40,
+              48,
+              56,
+              64,
+              72,
+              80,
+              88,
+              96,
+              104,
+              112,
+              120,
+              128,
+              136,
+              144,
+              152,
+              160,
+              168,
+              176,
+              184,
+              192
+            ],
+            "label_step": 32,
+            "x_labels": [
+              0,
+              32,
+              64,
+              96,
+              128,
+              160,
+              192,
+              224,
+              256,
+              288
+            ],
+            "y_labels": [
+              0,
+              32,
+              64,
+              96,
+              128,
+              160,
+              192
+            ],
+            "target": [
+              75,
+              160
+            ],
+            "x_direction": "right",
+            "y_direction": "down",
+            "resized": false,
+            "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+            "source_artifact": "1b5af166d01f44309f3488fbea2aca49",
+            "source_sha256": "433fefd01943236f56921132dd2623b07630bd1f94e0b5719b9a026f231a4c36"
+          }
+        }
+      },
+      "click": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 150,
+          "y": 160
+        },
+        "session_id": "ses-1",
+        "state_revision": 6
+      },
+      "frame_phase": "before_queued_click"
+    }
+  },
+  {
+    "label": "game-code-breakpoint",
+    "result": {
+      "state": "stopped",
+      "stop_reason": {
+        "kind": "breakpoint",
+        "address": "0xf7fc",
+        "thread": 1,
+        "breakpoint_ids": [
+          "bp-1"
+        ],
+        "native_event": {
+          "eid": 5,
+          "pid": 41957,
+          "tid": 1,
+          "address": 63484,
+          "handled": true,
+          "hardware_address": 18446744073709551615,
+          "kernel_address": 18446744073709551615
+        },
+        "before_access": null
+      },
+      "exit_code": 0
+    }
+  },
+  {
+    "label": "input-trace",
+    "result": {
+      "artifact": "026367fe404e4c258c6144066825391b",
+      "run": "b05475c7d13840eda1f02729f0cd0d4f",
+      "version": 1,
+      "name": "remote-new-game-input.json",
+      "kind": "trace",
+      "sha256": "92e0a5c4c7355125dff02aa055d29d1a035dd6bd3a9200d1ac588b07b3b284d9",
+      "size": 371461,
+      "metadata": {
+        "event_count": 512,
+        "complete": true,
+        "run": {
+          "run": "b05475c7d13840eda1f02729f0cd0d4f",
+          "outcome": "pause",
+          "timed_out": false,
+          "requested_guest_ms": null,
+          "guest_elapsed_ms": 0,
+          "host_elapsed_ms": 81.156,
+          "fast_forward": false,
+          "timing_after": {
+            "fast_forward": false,
+            "guest_ticks": 36003,
+            "session_id": "ses-1",
+            "state_revision": 9
+          },
+          "session": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 9,
+            "stop_reason": {
+              "kind": "pause"
+            }
+          },
+          "hook_hits": []
+        }
+      }
+    }
+  },
+  {
+    "label": "bank-run",
+    "result": {
+      "run": "b05475c7d13840eda1f02729f0cd0d4f",
+      "outcome": "guest_time",
+      "timed_out": false,
+      "requested_guest_ms": 4000,
+      "guest_elapsed_ms": 4023,
+      "host_elapsed_ms": 5380.089,
+      "fast_forward": true,
+      "timing_after": {
+        "fast_forward": false,
+        "guest_ticks": 40026,
+        "session_id": "ses-1",
+        "state_revision": 12
+      },
+      "session": {
+        "session_id": "ses-1",
+        "state": "stopped",
+        "state_revision": 11,
+        "stop_reason": {
+          "kind": "pause"
+        }
+      },
+      "hook_hits": []
+    }
+  },
+  {
+    "label": "bank",
+    "result": {
+      "artifact": "75eef0b2a7c346538fea59c3cda99941",
+      "run": "b05475c7d13840eda1f02729f0cd0d4f",
+      "version": 1,
+      "name": "remote-bank-grid8.png",
+      "kind": "screenshot-grid",
+      "sha256": "2ef27186796485eb9dcfa36d3d7cb75bd3e62c6317d87af9124f6c38a65c2503",
+      "size": 33799,
+      "metadata": {
+        "captured_ticks": 40011,
+        "double_height": true,
+        "double_width": true,
+        "format": "png",
+        "frame_id": 2153,
+        "height": 200,
+        "mode_id": 5,
+        "session_id": "ses-1",
+        "sha256": "2ef27186796485eb9dcfa36d3d7cb75bd3e62c6317d87af9124f6c38a65c2503",
+        "source": "last_completed_guest_frame",
+        "source_bpp": 32,
+        "state_revision": 12,
+        "width": 320,
+        "coordinate_grid": {
+          "coordinate_space": "screenshot_pixels",
+          "origin": [
+            0,
+            0
+          ],
+          "max_coordinate": [
+            319,
+            199
+          ],
+          "step": 8,
+          "x_lines": [
+            0,
+            8,
+            16,
+            24,
+            32,
+            40,
+            48,
+            56,
+            64,
+            72,
+            80,
+            88,
+            96,
+            104,
+            112,
+            120,
+            128,
+            136,
+            144,
+            152,
+            160,
+            168,
+            176,
+            184,
+            192,
+            200,
+            208,
+            216,
+            224,
+            232,
+            240,
+            248,
+            256,
+            264,
+            272,
+            280,
+            288,
+            296,
+            304,
+            312
+          ],
+          "y_lines": [
+            0,
+            8,
+            16,
+            24,
+            32,
+            40,
+            48,
+            56,
+            64,
+            72,
+            80,
+            88,
+            96,
+            104,
+            112,
+            120,
+            128,
+            136,
+            144,
+            152,
+            160,
+            168,
+            176,
+            184,
+            192
+          ],
+          "label_step": 32,
+          "x_labels": [
+            0,
+            32,
+            64,
+            96,
+            128,
+            160,
+            192,
+            224,
+            256,
+            288
+          ],
+          "y_labels": [
+            0,
+            32,
+            64,
+            96,
+            128,
+            160,
+            192
+          ],
+          "target": null,
+          "x_direction": "right",
+          "y_direction": "down",
+          "resized": false,
+          "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+          "source_artifact": "75e90ecd6e354ff8878c5a5113db8156",
+          "source_sha256": "f0937e608fd8fe63412af9cad4cd19c059ec106f10c742e2748a45546a687db8"
+        }
+      }
+    }
+  },
+  {
+    "label": "registers",
+    "result": {
+      "eax": 2056,
+      "ebx": 131,
+      "ecx": 131,
+      "edx": 965,
+      "esi": 15,
+      "edi": 12818,
+      "ebp": 0,
+      "esp": 6504,
+      "eip": 3132,
+      "efl": 29254,
+      "cs": 4417,
+      "ds": 31086,
+      "es": 40960,
+      "fs": 0,
+      "gs": 0,
+      "ss": 17704
+    }
+  }
+]

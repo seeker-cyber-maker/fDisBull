@@ -8,11 +8,32 @@ An agent-first disassembler with a persistent SQLite analysis database, explicit
 
 Requires Python **3.12 or later**.
 
+Version 0.14.0 adds an optional [IDA 9.4 remote-server adapter and matching
+DOSBox endpoint](docs/IDA_REMOTE.md). These use a common binary debugger
+protocol and keep execution breakpoints out of instruction bytes. The new
+adapter's feature and verification limits are separate from the published
+0.13.0 backends; no vendor IDA executable is included. Bounded PE traces run
+inside the Linux controller in one host request, preserving fresh code reads,
+integer-register snapshots and breakpoint boundaries. See the
+[measured trace comparison](docs/IDA_TRACE_PERFORMANCE.md).
+
+The [shared machine controller](docs/UNIFIED_DEBUGGER.md) also runs
+DOSBox inside Linux/QEMU using the existing DOS project API. DOS and Windows
+sessions expose an explicit outer-machine context, while a raw-image profile
+can stop before boot and capture registers, memory, breakpoints, traces and
+display artifacts. Real DinoPark, DOS state/layer/input checks and an authored
+boot-sector session have been verified locally. This is separate from the
+published 0.13.0 packages and does not yet provide typed kernel objects or a
+DTrace provider.
+
+See the [0.14.0 release notes](docs/RELEASE-0.14.0.md) for runtime compatibility,
+feature limits and the ordinary/native Linux checks required before tagging.
+
 ## Release, branches, and native backend status
 
 | Track | Source and availability | Verification |
 | --- | --- | --- |
-| **Current source: 0.13.0** | [PE64 debugger](docs/WINE_DEBUGGER.md): read/write watches, toggleable RAM/execution layers and editable whole-VM native states | [Release notes](docs/RELEASE-0.13.0.md), [published verification](docs/VERIFICATION-0.13.md) and [tested delivery](docs/DELIVERY-0.13.md) |
+| **Current source: 0.14.0** | [Unified DOS, Windows and machine debugging](docs/UNIFIED_DEBUGGER.md), plus the optional [IDA remote adapter](docs/IDA_REMOTE.md) | [Release notes and required CI gates](docs/RELEASE-0.14.0.md). Existing 0.13.0 publication and deliveries remain unchanged. |
 | **Latest published package release: 0.13.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.13.0), commit `eabfc2a` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40099730231): 769 passed, 31 skipped. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40099730260): 15 stable DOS, 32 DOS layers and 13 PE64 tests passed, no native skips. |
 | **Repository branch** | [main](https://github.com/seeker-cyber-maker/fDisBull/tree/main) is the only active branch | Release promotion requires both ordinary and native Linux CI. Use version tags for fixed source snapshots. The old experimental checkpoint is preserved under an archive tag. |
 

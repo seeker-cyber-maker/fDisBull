@@ -49,8 +49,30 @@ DEBUG_DDL += LAYER_DDL
 
 
 class DebugProjectMixin(LayerProjectMixin):
+    def machine(self, executable, *, boot_image, version=None, boot_timeout_ms=30000):
+        from .qemu_machine import MachineDebugSession
+        return MachineDebugSession(self,executable,boot_image=boot_image,version=version,boot_timeout_ms=boot_timeout_ms)
+
     def debugger(self, executable, game_dir, *, version=None, backend=None, kernel=None,
-                 initramfs=None, files=None, boot_timeout_ms=240000, state=None):
+                 initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None,_on_spawn=None):
+        if backend=='qemu-machine':
+            if any(x is not None for x in (kernel,initramfs,files,state,remote_server)):
+                raise ValueError('Raw boot launch uses its project image without guest-controller options')
+            return self.machine(executable,boot_image=Path(game_dir)/self.meta['filename'],version=version,boot_timeout_ms=boot_timeout_ms)
+        if backend=='dosbox-qemu':
+            if kernel is None or initramfs is None or state is not None or remote_server is not None:
+                raise ValueError('DOSBox/QEMU launch requires kernel and prepared initramfs; load native states after launch')
+            from .dos_qemu import DOSQemuSession
+            return DOSQemuSession(self,executable,game_dir,kernel=kernel,initramfs=initramfs,version=version,
+                                  files=files,boot_timeout_ms=boot_timeout_ms,_on_spawn=_on_spawn)
+        if backend == 'ida-wine-qemu':
+            if kernel is None or initramfs is None or remote_server is None:
+                raise ValueError('IDA launch requires kernel, prepared IDA initramfs and remote_server')
+            from .ida_debugger import IDAPEDebugSession
+            return IDAPEDebugSession(self,executable,game_dir,kernel=kernel,initramfs=initramfs,
+                version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state,remote_server=remote_server)
+        if remote_server is not None:
+            raise ValueError('remote_server requires backend=ida-wine-qemu')
         if backend == 'wine-qemu' or (backend is None and self.meta['format']=='PE'):
             if kernel is None or initramfs is None:
                 raise ValueError('PE64 Wine/QEMU launch requires kernel and prepared initramfs')
@@ -59,7 +81,7 @@ class DebugProjectMixin(LayerProjectMixin):
                 version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state)
         if backend not in (None,'dosbox') or kernel is not None or initramfs is not None or files is not None or state is not None:
             raise ValueError('Unexpected DOS backend or Wine-only launch options')
-        return DebugSession(self, executable, game_dir, version=version)
+        return DebugSession(self, executable, game_dir, version=version,_on_spawn=_on_spawn)
 
     def debug_runs(self, version=None):
         v = self.version(version)['id']
@@ -129,6 +151,8 @@ class DebugProjectMixin(LayerProjectMixin):
             options['state']=artifact
             # A state binds every explicitly uploaded asset, not only its EXE.
             # Reuse that allowlist and let launch reverify each source hash.
+            options['files']=[item['path'] for item in info['metadata']['files']]
+        elif backend=='dosbox-qemu':
             options['files']=[item['path'] for item in info['metadata']['files']]
         with self.debugger(executable,game_dir,version=info['version'],**options) as debug:
             if not pe:debug.load_state(artifact)
@@ -207,8 +231,9 @@ class DebugSession(LayerSessionMixin):
         return (set(OPERATIONS)|{'assert'})-{'write-memory','write-registers'}
 
     """One explicitly owned emulator; closing the project also closes sessions."""
-    def __init__(self, project, executable, game_dir, *, version=None):
+    def __init__(self, project, executable, game_dir, *, version=None,_on_spawn=None):
         self.project = project
+        self._spawn_callback=_on_spawn
         self.rpc = None
         self.closed = False
         self.run_id = uuid.uuid4().hex
@@ -231,7 +256,8 @@ class DebugSession(LayerSessionMixin):
                          'executable':str(executable),'emulator_sha256':hashlib.sha256(executable.read_bytes()).hexdigest(),
                          'runtime_profile':'real-normal-v1','game_dir':str(self.game_dir),'target':target,'static_load_segment':self.dos['load_segment']}
         try:
-            self.rpc = DOSBoxRPC(executable,self.game_dir)
+            self.rpc = self._open_rpc(executable,self.game_dir)
+            self.metadata.update(self._transport_metadata())
             result = self.rpc.call('session.start',{'target':{'command':target,'arguments':[]},
                 'mounts':[{'drive':'C','host_path':str(self.game_dir)}],'break_at':'entry'})
             self.session_id = result['session_id']
@@ -272,6 +298,25 @@ class DebugSession(LayerSessionMixin):
 
     def __exit__(self, *args):
         self.close()
+
+    def _open_rpc(self,executable,game_dir):return DOSBoxRPC(executable,game_dir,on_spawn=self._spawn_callback)
+    def _transport_metadata(self):return {}
+
+    @property
+    def machine(self):
+        if not hasattr(self.rpc,'machine'):raise ValueError('This session has no outer machine context')
+        return self.rpc.machine.bind(self.project,self.run_id)
+
+    def contexts(self):
+        primary='dos-cpu' if self.project.meta['format']=='MZ' else 'process'
+        contexts=[dict(id=primary,kind=primary,trace_phase='before-fetch; last record pending' if primary=='dos-cpu' else 'completed-step')]
+        if hasattr(self.rpc,'machine'):contexts.append(dict(id='machine',kind='machine',parent_of=primary,capabilities=self.rpc.machine.capabilities))
+        return dict(run=self.run_id,selected=primary,contexts=contexts)
+
+    def context(self,name):
+        if name==self.contexts()['selected']:return self
+        if name=='machine':return self.machine
+        raise ValueError('Unknown execution context')
 
     def write_memory(self, address, data_hex, *, expected_hex):
         raise ValueError('Direct guarded memory editing is currently a PE64 operation; use a DOS RAM layer')
@@ -694,10 +739,12 @@ class DebugWorkspace:
             raise ValueError('Live run not owned by this server; use debug-runs for saved history')
         methods = {'debug-status':'status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
                    'debug-run':'run','debug-click':'click','debug-click-frame':'click_frame','debug-screenshot':'screenshot','debug-trace':'trace',
-                   'debug-memory':'memory','debug-write-memory':'write_memory','debug-write-registers':'write_registers','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script'}
+                   'debug-memory':'memory','debug-write-memory':'write_memory','debug-write-registers':'write_registers','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script',
+                   'debug-contexts':'contexts','debug-pause':'pause','debug-resume':'resume'}
         methods.update({'debug-layer-stack':'layers','debug-layer-enable':'layer_enable','debug-layer-patch':'layer_patch',
                         'debug-code':'code','debug-capture-code':'capture_code','debug-branch':'branch',
                         'debug-cave':'cave','debug-hook':'hook','debug-hooks':'hooks','debug-delete-hook':'delete_hook'})
+        context=params.pop('context',None)
         if method=='debug-stop':
             if params:
                 raise ValueError('Unexpected stop options')
@@ -705,7 +752,10 @@ class DebugWorkspace:
             session.project.__exit__()
             del self.sessions[run]
             return {'run':run,'closed':True,'process_reaped':session.rpc.process.poll() is not None}
-        return getattr(session,methods[method])(**params)
+        selected=session.context(context) if context is not None else session
+        operation=getattr(selected,methods[method],None)
+        if operation is None:raise ValueError('Operation is unavailable in the selected execution context')
+        return operation(**params)
 
     def close(self):
         for session in self.sessions.values():

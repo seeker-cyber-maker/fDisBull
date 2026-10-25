@@ -2,6 +2,9 @@ FROM ubuntu@sha256:a2d43bffc46670d7108bb3c0468c67c5557c4c92e83e1e34cbff1322ad1b9
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 wine wine64 xvfb util-linux \
+    libsdl2-2.0-0 libsdl2-net-2.0-0 libncurses6 libncursesw6 libpng16-16t64 zlib1g libfreetype6 \
+    libflac12t64 libogg0 libvorbis0a libvorbisfile3 libopus0 libsndfile1 libasound2t64 \
+    libpcap0.8t64 libxkbfile1 \
     gcc-mingw-w64-x86-64-win32 binutils-mingw-w64-x86-64 \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/* \
     && test "$(id -u ubuntu)" = 1000
