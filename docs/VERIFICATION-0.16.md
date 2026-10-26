@@ -1,5 +1,9 @@
 # 0.16.0 candidate verification
 
+For the completed tag CI, publication, updated offline kit and copied backend
+qualification, see the [0.16 publication/delivery record](DELIVERY-0.16.md). The
+receipts below remain historical candidate evidence.
+
 This page preserves the initial candidate evidence. Later acceptance for
 [standalone DOS/waits](VERIFICATION-DOS-KNOWLEDGE.md) and
 [guest keyboard input](VERIFICATION-GUEST-KEYBOARD.md) is recorded separately;

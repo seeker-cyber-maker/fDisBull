@@ -1,0 +1,55 @@
+{
+  "result": "pass",
+  "release_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.16.0",
+  "assets": [
+    {
+      "name": "fdisbull-0.16.0-py3-none-any.whl",
+      "id": 679625410,
+      "size": 356220,
+      "sha256": "65737048eec0747ad7879232ec64194a12c426f00f77fc0bdc82c17a3f422a32",
+      "browser_download_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.16.0/fdisbull-0.16.0-py3-none-any.whl"
+    },
+    {
+      "name": "fdisbull-0.16.0-tool.zip",
+      "id": 679625406,
+      "size": 814637,
+      "sha256": "a844db6ca8e9e9afb5631244d92c9d17f838986b382d6b8b018ba45307e90543",
+      "browser_download_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.16.0/fdisbull-0.16.0-tool.zip"
+    },
+    {
+      "name": "fdisbull-0.16.0.tar.gz",
+      "id": 679625407,
+      "size": 685195,
+      "sha256": "5455a1cb4e78480f3ee23468f75f7b23b5e7d0ce9658f2e1ac81ef9ff2a99b32",
+      "browser_download_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.16.0/fdisbull-0.16.0.tar.gz"
+    },
+    {
+      "name": "fdisbull-linux-dos-offline-0.16.0-e1e3fb4-2026-10-26.zip",
+      "id": 679625426,
+      "size": 99042209,
+      "sha256": "41044d06aa641ccac28b355961edf343af8da6a999b715d9a2477182f4eea6be",
+      "browser_download_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.16.0/fdisbull-linux-dos-offline-0.16.0-e1e3fb4-2026-10-26.zip"
+    },
+    {
+      "name": "fdisbull-linux-dos-offline-0.16.0-e1e3fb4-2026-10-26.zip.sha256",
+      "id": 679625442,
+      "size": 123,
+      "sha256": "340da0937280e404ff24a249ccd468eb9ee4d4b86aef9749fe1a943d4f7fdc1a",
+      "browser_download_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.16.0/fdisbull-linux-dos-offline-0.16.0-e1e3fb4-2026-10-26.zip.sha256"
+    },
+    {
+      "name": "SHA256SUMS",
+      "id": 679625409,
+      "size": 623,
+      "sha256": "ac005651db3912c825fe3f6a3ff29f47a14fc3041863f115bfbde5db97b47ce6",
+      "browser_download_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.16.0/SHA256SUMS"
+    },
+    {
+      "name": "VERIFICATION-0.16.0.json",
+      "id": 679625408,
+      "size": 3602,
+      "sha256": "2b2201b9a165363adbe76dd4a6473593bf11574d4da71ebdc78acee369fba498",
+      "browser_download_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.16.0/VERIFICATION-0.16.0.json"
+    }
+  ]
+}

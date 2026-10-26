@@ -1,0 +1,55 @@
+{
+  "format": "fdisbull-doctor-1",
+  "version": "0.16.0",
+  "backend": "wine-qemu",
+  "status": "failed",
+  "python": "3.13.14",
+  "platform": "darwin",
+  "architecture": "arm64",
+  "checks": [
+    {
+      "name": "genuine dependencies and native decoding",
+      "status": "passed"
+    },
+    {
+      "name": "backend inputs",
+      "status": "passed"
+    },
+    {
+      "name": "compile and retrieve fixed authored source",
+      "status": "passed"
+    },
+    {
+      "name": "launch authored target",
+      "status": "failed",
+      "error": "DebuggerError: fdisbull-wine-qemu-1 session.start: Wine agent: Command '['wineboot', '-u']' timed out after 179.98890200000002 seconds\nwine: failed to open L\"C:\\\\windows\\\\syswow64\\\\rundll32.exe\": c0000135\nwine: configuration in L\"/work/prefix\" has been updated.\n\nboot.log:\n\nqemu.log:\n"
+    }
+  ],
+  "native_state_restored": false,
+  "artifacts": {},
+  "scope": "Authored disposable target; finite debugger acceptance; no game compatibility or timing parity claim",
+  "dependencies": {
+    "capstone": {
+      "status": "available",
+      "version": "5.0.7"
+    },
+    "iced_x86": {
+      "status": "available",
+      "version": null
+    },
+    "lief": {
+      "status": "available",
+      "version": "1.0.0-d05b3499b"
+    },
+    "PIL": {
+      "status": "available",
+      "version": "12.3.0"
+    }
+  },
+  "input_sha256": {
+    "executable": "10bed8dc7571b0fc6c51ea484711b3802d2fb2dc00ba5d9af4d610cb2e2142cb",
+    "kernel": "d8808aa4ca188560da1e6d749dcb930c87a5fd8b11ebff1f3fa6d728af35203d",
+    "initramfs": "d784d94a0fbf81896e693cde6daa850cf81c1f2c6f391811913d234009fe7676"
+  },
+  "authored_target_sha256": "fde0e03692b9b6f37a7d3f003a289bbce723a71bb205ee1ebfff2ab39f194c38"
+}

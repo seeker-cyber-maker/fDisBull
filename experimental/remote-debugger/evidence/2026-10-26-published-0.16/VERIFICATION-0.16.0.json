@@ -1,0 +1,101 @@
+{
+  "version": "0.16.0",
+  "tag": "v0.16.0",
+  "source_commit": "e1e3fb4913d6d8fae7893c2c9b8edf364d144953",
+  "release_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.16.0",
+  "tag_ci": {
+    "ordinary": {
+      "run": 40384806706,
+      "passed": 1077,
+      "skipped": 61
+    },
+    "native": {
+      "run": 40384806769,
+      "stable": 32,
+      "layers": 312,
+      "layers_python": "3.13.5",
+      "pe64": 16,
+      "unified_dos_boot": 10,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "packages": {
+    "fdisbull-0.16.0-py3-none-any.whl": {
+      "size": 356220,
+      "sha256": "65737048eec0747ad7879232ec64194a12c426f00f77fc0bdc82c17a3f422a32"
+    },
+    "fdisbull-0.16.0-tool.zip": {
+      "size": 814637,
+      "sha256": "a844db6ca8e9e9afb5631244d92c9d17f838986b382d6b8b018ba45307e90543"
+    },
+    "fdisbull-0.16.0.tar.gz": {
+      "size": 685195,
+      "sha256": "5455a1cb4e78480f3ee23468f75f7b23b5e7d0ce9658f2e1ac81ef9ff2a99b32"
+    }
+  },
+  "wheel_entry_contents_matching_native_tested_wheel": 95,
+  "tool_entries_matching_source": 90,
+  "backend": {
+    "source_commit": "e1e3fb4913d6d8fae7893c2c9b8edf364d144953",
+    "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+    "backend_sha256": "0adff006f3ada67ead18922bf1c57013a72c78e0e6e4e11b29eb7109d4bc41a3",
+    "patch_sha256": "5e70ab0f840e2f7a9d9d4ee3b3445000d5910f74770d65f3baa17a1865d28f31",
+    "profile": "experimental/dosbox-x/layers",
+    "acceptance_tests": [
+      "tests/test_debugger.py",
+      "tests/test_keyboard.py",
+      "tests/test_debug_wait.py",
+      "tests/test_code_layers.py",
+      "tests/test_debug_experiments.py",
+      "tests/test_runtime_code.py",
+      "tests/test_debug_semantics.py",
+      "tests/test_doctor.py",
+      "tests/test_screenshot_grid.py",
+      "tests/test_ida_dosbox.py",
+      "tests/test_dosbox_zip_stream.py",
+      "tests/test_library_catalog.py",
+      "tests/test_rich_types.py",
+      "tests/test_dos_services.py"
+    ],
+    "tag": "v0.16.0",
+    "tag_ci_run": 40384806769,
+    "launcher_sha256": "a4100faade186cd37ae35e84621e55af40b0eb88a7f106c4b33e2f0e0093bad2",
+    "binary_transformations": "none; exact tag-CI ELF",
+    "keyboard_capability": "ibm_pc_controller_us_ascii_v1"
+  },
+  "offline_kit": {
+    "sha256": "41044d06aa641ccac28b355961edf343af8da6a999b715d9a2477182f4eea6be",
+    "size": 99042209,
+    "payload_files": 332,
+    "manifest_sha256": "6ee493f2ca52e9bff02e9278302619b8b6fd74702bc11eee1f76d233d3b7e707",
+    "filename": "fdisbull-linux-dos-offline-0.16.0-e1e3fb4-2026-10-26.zip"
+  },
+  "local_copied_qualification": {
+    "mac_native_checks": 312,
+    "mac_wine": "isolated runtime doctor passed; initial overlapping cold start hit wineboot 180-second timeout",
+    "mac_dos_qemu": "runtime doctor passed",
+    "linux_offline_native_checks": 312,
+    "linux_offline_clean_checks": 14,
+    "linux_native_archive_checks": 46,
+    "linux_native_invalid_archives": 0,
+    "tag_ci": {
+      "ordinary": 40384806706,
+      "native": 40384806769
+    },
+    "external_deepseek_environment_accessed": false
+  },
+  "exclusions": [
+    "game files",
+    "in-game saves",
+    "captured native/emulator states",
+    "project databases",
+    "vendor IDA server and keys"
+  ],
+  "caveats": [
+    "DinoPark verification covers save-name input and native restoration, not a durable leaderboard entry",
+    "New backend identity requires fresh compatible native checkpoints",
+    "Mac QEMU uses this Mac's existing Homebrew libraries",
+    "Linux QEMU is a separately provided host dependency; the compact kit is direct Linux DOS"
+  ]
+}

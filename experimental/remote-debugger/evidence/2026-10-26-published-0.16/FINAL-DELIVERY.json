@@ -1,0 +1,51 @@
+{
+  "version": "0.16.0",
+  "tag": "v0.16.0",
+  "source_commit": "e1e3fb4913d6d8fae7893c2c9b8edf364d144953",
+  "release_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.16.0",
+  "published_assets_verified": 7,
+  "qualification": {
+    "mac_native_checks": 312,
+    "mac_wine": "isolated runtime doctor passed; initial overlapping cold start hit wineboot 180-second timeout",
+    "mac_dos_qemu": "runtime doctor passed",
+    "linux_offline_native_checks": 312,
+    "linux_offline_clean_checks": 14,
+    "linux_native_archive_checks": 46,
+    "linux_native_invalid_archives": 0,
+    "tag_ci": {
+      "ordinary": 40384806706,
+      "native": 40384806769
+    },
+    "external_deepseek_environment_accessed": false
+  },
+  "deliveries": {
+    "full": {
+      "directory": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.16.0-e1e3fb4",
+      "bundle": {
+        "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-unified-debugger-0.16.0-published-2026-10-26-e1e3fb4.zip",
+        "sha256": "7f564208670b477c8dbda7ae98a6a599acf325717aca37caae605f0f113f5ac7",
+        "size": 1568262961
+      },
+      "payload_files": 453,
+      "manifest_sha256": "18087f1ae72270700e0d7eae5c6d6cf13d3b61fe9fc0d2fe9bf6b0ef4fa20688",
+      "verifier": "VERIFIED: 0.16.0 453 payload files; 63 private libraries; 2 audited pristine runtimes",
+      "zip_readback": "CRC, every member hash and executable mode passed"
+    },
+    "compact": {
+      "directory": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-linux-dos-offline-0.16.0-e1e3fb4",
+      "bundle": {
+        "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-linux-dos-offline-0.16.0-e1e3fb4-2026-10-26.zip",
+        "sha256": "41044d06aa641ccac28b355961edf343af8da6a999b715d9a2477182f4eea6be",
+        "size": 99042209
+      },
+      "payload_files": 332,
+      "manifest_sha256": "6ee493f2ca52e9bff02e9278302619b8b6fd74702bc11eee1f76d233d3b7e707",
+      "verifier": "VERIFIED: 0.16.0 332 payload files; 63 private libraries; 0 audited pristine runtimes",
+      "zip_readback": "CRC, every member hash and executable mode passed"
+    }
+  },
+  "captured_states_included": false,
+  "project_databases_included": false,
+  "game_files_included": false,
+  "previous_deliveries_preserved": true
+}

@@ -1,0 +1,42 @@
+{
+  "result": "pass",
+  "python": "3.13.5",
+  "native_suite": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "312",
+    "time": "509.432",
+    "timestamp": "2026-10-26T21:39:59.480457+00:00",
+    "hostname": "(none)"
+  },
+  "clean_directory_suite": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "14",
+    "time": "29.172",
+    "timestamp": "2026-10-26T22:03:46.896684+00:00",
+    "hostname": "(none)"
+  },
+  "identity": {
+    "python": "3.13.5 (main, Jul 23 2025, 00:37:22) [Clang 20.1.4 ]",
+    "module": "/work/venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+    "version": "0.16.0",
+    "wheel_sha256": "65737048eec0747ad7879232ec64194a12c426f00f77fc0bdc82c17a3f422a32",
+    "matching_installed_tool_entries": 90,
+    "backend_sha256": "0adff006f3ada67ead18922bf1c57013a72c78e0e6e4e11b29eb7109d4bc41a3",
+    "state_archive_checks": 46,
+    "save_checks": 16,
+    "load_checks": 30,
+    "invalid_archives": 0,
+    "network": "QEMU -nic none; pip --no-index --require-hashes",
+    "external_deepseek_environment_accessed": false,
+    "test_exit_code": 0
+  },
+  "initial_manifest_check": "Failed because the qualification image inherited an older /opt/delivery tree; retained unchanged",
+  "final_manifest_check": "Passed at a new unique guest path, using the same native ELF/package/library bytes",
+  "external_environment_accessed": false
+}

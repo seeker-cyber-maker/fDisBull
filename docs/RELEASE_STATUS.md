@@ -1,17 +1,24 @@
 # Release status checked on 2026-10-26
 
-The source is **0.16.0**, adding [guest keyboard input](GUEST_KEYBOARD.md),
-[standalone DOS knowledge](DOS_KNOWLEDGE.md),
-[bounded saved-script waits](OBSERVATION_WAIT.md), temporal code interpretations,
-explicit observation semantics and the runtime doctor. Local offline Linux
-Python 3.13.5 acceptance passed **1,065 ordinary checks (59 skipped)** and
-**311 installed-wheel/native-gate checks with no skips**. See the
-[acceptance record](VERIFICATION-DOS-KNOWLEDGE.md). The earlier failure receipts
-remain historical evidence. Exact-commit ordinary and native GitHub Linux CI
-must pass before tagging. Tag CI and GitHub publication are separate gates.
-The keyboard follow-up passed [312 selected native Mac checks](VERIFICATION-GUEST-KEYBOARD.md)
-and an actual DinoPark name-entry/state-restore replay. Its final Linux CI remains
-a separate gate. The latest published package release is **0.14.0**.
+[**0.16.0 is published**](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.16.0),
+not draft or prerelease, at `e1e3fb4913d6d8fae7893c2c9b8edf364d144953`.
+Both pre-tag workflows and tag workflows passed. Tag CI reported **1,077 ordinary
+tests passed, 61 skipped**, plus **32 stable DOS, 312 layers (Python 3.13.5),
+16 PE64 and 10 DOS/QEMU/boot checks**, without native skips. All 95 wheel entry
+contents match the native-tested wheel. All seven published assets were
+downloaded and matched against GitHub digests and the audited original files.
+
+The [0.16 publication/delivery record](DELIVERY-0.16.md) documents the updated
+Linux/DOS offline kit and full copied Mac delivery. Fresh no-network Linux
+3.13.5 acceptance passed 312 native checks, 46 save/load archive CRC checks and
+a separate clean-path verifier/install/14-check run. Copied Mac DOS passed 312
+checks; DOS/QEMU and isolated Wine doctors passed. Earlier failed probes remain
+explicitly preserved. Source-tag/package bytes stay fixed; these publication
+notes are later records on main. Game files, captured states and databases are
+excluded from Git and delivery.
+
+## Earlier 0.14.0 publication
+
 [v0.14.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0)
 is published, not draft or prerelease, and targets
 `6a0aeb3830eb544cd744d3410881c1c951a5ffb7`. Five unchanged tag-CI assets were

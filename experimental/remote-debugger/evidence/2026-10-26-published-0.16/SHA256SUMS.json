@@ -1,0 +1,12 @@
+{
+  "mac-dos-qemu.json": "0de3acefef1afb0ebc12f9be06127dd114d66bae251edcf7c8752357a24c704b",
+  "ASSET-READBACK.json": "a8cedd4c8f7b206e5b6a7db43d47309dc9095182f27a0e832b2917a58c093adc",
+  "mac-native.xml": "4149e9599802920a210beceadc694aebdbf61dff92903963ada87e06add0ce72",
+  "mac-wine-isolated.xml": "abe0c5a9407ceaf6fa73c4a88d3d8d490539cc1f2b286a8455bbbda3cd08f545",
+  "TAG-ARTIFACT-AUDIT.json": "7f41dd979b7cfbca5257094df0e1308a35841d03f1b70492df18f77ad7af0849",
+  "OFFLINE-ACCEPTANCE.json": "75be7ea50fc3ba0704699e9673eda9f419757c003a11926aab0a5f318dfd52ee",
+  "VERIFICATION-0.16.0.json": "2b2201b9a165363adbe76dd4a6473593bf11574d4da71ebdc78acee369fba498",
+  "mac-wine-isolated.json": "2942987522b7cd1c83342ec2cc4ec1303232abef6ed97770cc0415fd5b3dc4a9",
+  "mac-wine-initial.json": "2bc6b155ece4d938636a7855fd08635c9c50dab2bfa77143ab07253e790869f6",
+  "FINAL-DELIVERY.json": "323597d90235e7d578b5198f786a846a20f98dccbd99300d80a1bf89af031602"
+}

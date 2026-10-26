@@ -8,23 +8,21 @@ An agent-first disassembler with a persistent SQLite analysis database, explicit
 
 Requires Python **3.12 or later**.
 
-The **0.16.0 source** adds [temporal code interpretations](docs/RUNTIME_CODE.md), [explicit debugger observation semantics](docs/DEBUGGER_SEMANTICS.md) and a [real runtime doctor](docs/RUNTIME_DOCTOR.md). It also rejects misaligned experiment captures before comparison. See the [release notes](docs/RELEASE-0.16.0.md) and [local acceptance record](docs/VERIFICATION-DOS-KNOWLEDGE.md). Exact-commit ordinary and native Linux CI gate tagging; GitHub release publication is recorded separately.
+[**fDisBull 0.16.0 is published**](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.16.0),
+with CI-verified packages and an updated
+[Linux/DOS offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.16.0/fdisbull-linux-dos-offline-0.16.0-e1e3fb4-2026-10-26.zip).
+See the [release notes](docs/RELEASE-0.16.0.md) and
+[publication/delivery verification](docs/DELIVERY-0.16.md).
 
-The candidate also adds [bounded observation waits](docs/OBSERVATION_WAIT.md) to
-saved DOS scripts and [standalone DOS analysis knowledge](docs/DOS_KNOWLEDGE.md):
-182 provenance-bound runtime signatures, 37 DOS/BIOS service descriptions,
-reusable signature catalogs, enums/flags, unions, bitfields, aliases and declared
-function types with near/far Pascal profiles. These remain bounded interpretations;
-compiler overlay loading and dedicated COM/SYS loaders are not implemented.
-
-The **0.15.0 CI-verified source candidate** adds [saved experiments and baseline-versus-layer
-comparisons](docs/DEBUGGER_EXPERIMENTS.md): capture a checkpoint, its breakpoints,
-watches and hooks, then restore that setup for both trials and compare stored
-registers, memory, screenshots and traces. Native control IDs are rebound for
-the saved script, and consumed hooks/hit counts are restored. See the
-[candidate release notes](docs/RELEASE-0.15.0.md) and
-[verification record](docs/VERIFICATION-0.15.md). The latest published release
-remains 0.14.0.
+This release consolidates [saved experiments and baseline/layer comparisons](docs/DEBUGGER_EXPERIMENTS.md),
+[guest keyboard input](docs/GUEST_KEYBOARD.md), [bounded observation waits](docs/OBSERVATION_WAIT.md),
+[temporal code interpretations](docs/RUNTIME_CODE.md), [observation semantics](docs/DEBUGGER_SEMANTICS.md)
+and the [runtime doctor](docs/RUNTIME_DOCTOR.md). Its
+[standalone DOS knowledge](docs/DOS_KNOWLEDGE.md) supplies 182 provenance-bound
+runtime signatures, 37 DOS/BIOS service descriptions, reusable catalogs and
+richer declared types with near/far Pascal profiles. Comparison captures are
+validated before pairing. Compiler overlay loading and dedicated COM/SYS
+loaders remain outside this implementation.
 
 Version 0.14.0 adds an optional [IDA 9.4 remote-server adapter and matching
 DOSBox endpoint](docs/IDA_REMOTE.md). These use a common binary debugger
@@ -50,18 +48,20 @@ feature limits and the ordinary/native Linux checks required before tagging.
 
 | Track | Source and availability | Verification |
 | --- | --- | --- |
-| **Working candidate: 0.16.0** | Temporal interpretations, standalone DOS knowledge, bounded waits and guest keyboard input | [Candidate notes](docs/RELEASE-0.16.0.md) and [verification](docs/VERIFICATION-0.16.md). Final-commit ordinary and native CI gate tagging. |
-| **CI-verified main candidate: 0.15.0** | [Saved debugger experiments](docs/DEBUGGER_EXPERIMENTS.md) on the existing unified debugger | [Candidate notes](docs/RELEASE-0.15.0.md) and [local verification](docs/VERIFICATION-0.15.md). No 0.15.0 tag/release; exact CI packages are additionally available in the GitHub offline asset. |
-| **Latest published package release: 0.14.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0), commit `6a0aeb3` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623197): 817 passed, 45 skipped. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623209): 15 stable DOS, 38 layers/endpoint, 14 PE64 and 10 DOS/QEMU/boot checks passed, no native skips. |
+| **Latest published release: 0.16.0** | [Packages and updated offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.16.0), source `e1e3fb4` | [Tag CI and copied-pair verification](docs/DELIVERY-0.16.md): 1,077 ordinary, 32 stable DOS, 312 layers, 16 PE64 and 10 DOS/QEMU/boot checks passed; no native skips. |
+| **Historical source candidate: 0.15.0** | [Saved debugger experiments](docs/DEBUGGER_EXPERIMENTS.md) on the existing unified debugger | [Candidate notes](docs/RELEASE-0.15.0.md) and [local verification](docs/VERIFICATION-0.15.md). No 0.15.0 tag/release; exact CI packages are additionally available in the GitHub offline asset. |
+| **Earlier published release: 0.14.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0), commit `6a0aeb3` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623197): 817 passed, 45 skipped. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623209): 15 stable DOS, 38 layers/endpoint, 14 PE64 and 10 DOS/QEMU/boot checks passed, no native skips. |
 | **Repository branch** | [main](https://github.com/seeker-cyber-maker/fDisBull/tree/main) is the only active branch | Release promotion requires both ordinary and native Linux CI. Use version tags for fixed source snapshots. The old experimental checkpoint is preserved under an archive tag. |
 
-The [0.15.0 Linux/DOS offline candidate kit](https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.14.0/fdisbull-linux-dos-offline-0.15.0-e91879c-2026-10-26.zip) is now hosted on GitHub, with a [checksum](https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.14.0/fdisbull-linux-dos-offline-0.15.0-e91879c-2026-10-26.zip.sha256). It supplies the exact `e91879c` CI packages, genuine Python dependencies, and the corrected Linux backend with private SDL2_net libraries. Its 0.15.0 contents predate the current 0.16.0 work; its URL uses the existing 0.14.0 release as an asset host.
+The historical [0.15.0 Linux/DOS offline candidate kit](https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.14.0/fdisbull-linux-dos-offline-0.15.0-e91879c-2026-10-26.zip) is now hosted on GitHub, with a [checksum](https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.14.0/fdisbull-linux-dos-offline-0.15.0-e91879c-2026-10-26.zip.sha256). It supplies the exact `e91879c` CI packages, genuine Python dependencies, and the corrected Linux backend with private SDL2_net libraries. Its 0.15.0 contents predate the current 0.16.0 work; its URL uses the existing 0.14.0 release as an asset host.
 
-The Python packages do **not** include an emulator. Stable debugging needs the [0.10 backend patch](experimental/dosbox-x/README.md); execution layers need the separate [layers backend patch](experimental/dosbox-x/layers/README.md). Both pin an upstream source commit and require an explicit executable path. Coordinate grids work with either backend.
+The Python packages do **not** include an emulator. Source builds use the [stable backend patch](experimental/dosbox-x/README.md); execution layers need the separate [layers backend patch](experimental/dosbox-x/layers/README.md). Both pin an upstream source commit and require an explicit executable path. Coordinate grids work with either backend.
 
 The [release-status record](docs/RELEASE_STATUS.md) distinguishes tagged source, published packages and historical candidate receipts. Ordinary Python CI may skip native tests; [required native acceptance](docs/DOSBOX_DEBUGGER.md#required-native-acceptance) builds or selects the real patched backend and runs the existing tests against it.
 
-The user-designated [0.14 DeepSeek delivery](docs/DELIVERY-0.14.md) contains the exact published packages, tested Mac ARM64 DOSBox/QEMU backends, Linux DOSBox and matching pristine DOS/Wine/optional-IDA boot runtimes. A smaller Linux/DOS offline kit supplies genuine hash-locked Python wheels and private libraries including SDL2_net. Copied Mac gates and 51 clean-offline checks passed. The additional Linux Python 3.13.5 probe passed installation and 49 native checks, with **2 native-state restore CRC failures**; the external DeepSeek environment remains unverified. See the delivery record for the separate scopes and failed receipts. Earlier deliveries are preserved. Game files, saved states and project databases are excluded.
+The current [0.16 DeepSeek delivery](docs/DELIVERY-0.16.md) contains the published packages, keyboard-capable DOSBox, tested Mac QEMU/Wine profiles and audited pristine boot filesystems. Its Linux 3.13.5 offline kit passed 312 native checks and 46 save/load CRC checks; both copied bundles passed complete manifest and ZIP readback.
+
+The earlier user-designated [0.14 DeepSeek delivery](docs/DELIVERY-0.14.md) contains the exact published packages, tested Mac ARM64 DOSBox/QEMU backends, Linux DOSBox and matching pristine DOS/Wine/optional-IDA boot runtimes. A smaller Linux/DOS offline kit supplies genuine hash-locked Python wheels and private libraries including SDL2_net. Copied Mac gates and 51 clean-offline checks passed. The additional Linux Python 3.13.5 probe passed installation and 49 native checks, with **2 native-state restore CRC failures**; the external DeepSeek environment remains unverified. See the delivery record for the separate scopes and failed receipts. Earlier deliveries are preserved. Game files, saved states and project databases are excluded.
 
 The direct Linux backend now has a separate [native-state CRC correction and
 offline statefix1 kit](docs/LINUX_STATE_CRC_FIX.md). It fixes the empty VGA buffer
