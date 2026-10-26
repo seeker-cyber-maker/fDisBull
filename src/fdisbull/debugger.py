@@ -553,6 +553,10 @@ class DebugSession(ExperimentSessionMixin, LayerSessionMixin):
             raise DebuggerError('DOSBox build lacks native state operations')
         if self.call('input.mouse.state').get('mouse',{}).get('release_pending'):
             raise ValueError('Run until queued mouse releases complete before saving a state')
+        if self.rpc.capabilities.get('input',{}).get('keyboard'):
+            keyboard=self.keyboard_state()['keyboard']
+            if keyboard['pending_events'] or keyboard['owned_keys']:
+                raise ValueError('Run until queued keyboard input completes before saving a state')
         before = self._disk_manifest()
         layer_state = self._layer_state()
         if layer_state['active']:
@@ -625,6 +629,31 @@ class DebugSession(ExperimentSessionMixin, LayerSessionMixin):
             control['breakpoints']=[i for i in control['breakpoints'] if i!=breakpoint_id]
         self._event('delete_breakpoint',result)
         return result
+
+    @property
+    def keyboard(self):
+        from .keyboard_input import GuestKeyboard
+        return GuestKeyboard(self)
+
+    def _keyboard_call(self, operation, params=None):
+        if self.rpc.capabilities.get('input',{}).get('keyboard')!='ibm_pc_controller_us_ascii_v1':
+            raise DebuggerError('DOSBox build lacks guest keyboard input; rebuild the 0.16.0 backend')
+        result=self.call('input.keyboard.'+operation,params or {})
+        self._event('keyboard.'+operation,result)
+        return result
+
+    def keyboard_press(self, key, *, modifiers=(), hold_ms=40, gap_ms=40):
+        from .keyboard_input import validate_keyboard
+        validate_keyboard(key=key,modifiers=modifiers,hold_ms=hold_ms,gap_ms=gap_ms)
+        return self._keyboard_call('press',dict(key=key,modifiers=','.join(modifiers),hold_ms=hold_ms,gap_ms=gap_ms))
+
+    def keyboard_type(self, text, *, hold_ms=40, gap_ms=40):
+        from .keyboard_input import validate_keyboard
+        validate_keyboard(text=text,hold_ms=hold_ms,gap_ms=gap_ms)
+        return self._keyboard_call('type',dict(text=text,hold_ms=hold_ms,gap_ms=gap_ms))
+
+    def keyboard_state(self):
+        return self._keyboard_call('state')
 
     def click(self, x, y, *, button='left', hold_ms=80, mode_id=None):
         bounded(x,'x',0,4095); bounded(y,'y',0,4095); bounded(hold_ms,'hold_ms',1,1000)
@@ -763,6 +792,7 @@ class DebugWorkspace:
         if session is None or session.project.path != Path(project).resolve():
             raise ValueError('Live run not owned by this server; use debug-runs for saved history')
         methods = {'debug-status':'status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
+                   'debug-keyboard-press':'keyboard_press','debug-keyboard-type':'keyboard_type','debug-keyboard-state':'keyboard_state',
                    'debug-run':'run','debug-wait':'wait','debug-click':'click','debug-click-frame':'click_frame','debug-screenshot':'screenshot','debug-trace':'trace',
                    'debug-memory':'memory','debug-write-memory':'write_memory','debug-write-registers':'write_registers','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script',
                    'debug-contexts':'contexts','debug-pause':'pause','debug-resume':'resume'}

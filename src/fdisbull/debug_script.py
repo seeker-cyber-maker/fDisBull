@@ -10,6 +10,7 @@ import time
 from .debugger import bounded
 
 OPERATIONS = {
+    'keyboard.press':'keyboard_press','keyboard.type':'keyboard_type','keyboard.state':'keyboard_state',
     'wait':'wait',
     'run':'run', 'click':'click', 'click-frame':'click_frame', 'screenshot':'screenshot', 'trace':'trace',
     'breakpoint':'breakpoint', 'delete-breakpoint':'delete_breakpoint',
@@ -55,6 +56,10 @@ def validate_script(script):
                 elif op in OPERATIONS:
                     signature = inspect.signature(getattr(DebugSession,OPERATIONS[op]))
                     signature.bind(None,**params)
+                    if op in ('keyboard.press','keyboard.type') and not any(
+                            isinstance(v,str) and v.startswith('$') for v in params.values()):
+                        from .keyboard_input import validate_keyboard
+                        validate_keyboard(**params)
                     if op=='wait':
                         from .debug_wait import validate_wait
                         validate_wait(**params)

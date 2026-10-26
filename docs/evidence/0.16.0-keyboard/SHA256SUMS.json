@@ -1,0 +1,14 @@
+{
+  "acceptance.json": "4556b3659eb6376d8be25d7f854255b7b05874e3ffac18b271c29935edcb661c",
+  "native-full.xml": "70fb7fc1135a25bcf26d6c228ad80ef3ac091c731efbdaed1e0deacc8604d700",
+  "native-focused.log": "e6c171d5ac2509150499d6070af052042d7f95624df9ed96deff26033639e3ac",
+  "native-full.log": "2319d9bac58769de3dceb1a9ac70e596330a08d919087677be89ebe1ff2fa61e",
+  "native-focused.xml": "84653ede068ae76f5df90c6185210cec7bd41c00bd684268a951cc0b06c89ee2",
+  "dinopark/keyboard-route-result.json": "99e68af47c8890d02dc1c088b07745bcb02b6ff85a7410206bf88ca558d3d44e",
+  "dinopark/name-dialog-trace.json": "b5ce8f45e06338f638d9d3afde2e2c91630c572a9d9c2a06086e6c4d5c5704ff",
+  "dinopark/typed-name.png": "e3ba6196d003c3d97f49d35d6e5e53e10b81bc6b69ecae2a0b2f8e629ede13bc",
+  "dinopark/keyboard-route.json": "70fc49aeeb6fba44b92be10420a1ce37c3980fb01149bfc15f97b1770dcabd8b",
+  "dinopark/SHA256SUMS.json": "d883c2ee4b411acfce5e14e7e94ab5d841d44e94aba45315d829e14bb3de39f7",
+  "dinopark/restored-typed-name.png": "e3ba6196d003c3d97f49d35d6e5e53e10b81bc6b69ecae2a0b2f8e629ede13bc",
+  "dinopark/receipt.json": "256777c374b2ffa9bee0a04412be30fcee6646bd6fbd038b3b91a5f8be37372d"
+}

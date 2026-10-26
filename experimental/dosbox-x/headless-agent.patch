@@ -327,6 +327,506 @@ index 2cb854d..b9d075e 100644
                      "dosbox_workdir=runtime",
                      "request_timeout_ms=50",
                      "max_message_bytes=64",
+diff --git a/client/python/tests/test_pipe_transport.py b/client/python/tests/test_pipe_transport.py
+new file mode 100644
+index 0000000..5160e08
+--- /dev/null
++++ b/client/python/tests/test_pipe_transport.py
+@@ -0,0 +1,255 @@
++"""Real inherited-pipe RPC tests; no local socket service is required."""
++from __future__ import annotations
++
++import json
++import os
++from pathlib import Path
++import select
++import sys
++import tempfile
++import threading
++import time
++import unittest
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++
++from dosbox_agent import AgentClient, AgentConfig, AgentConnectionError, AgentProtocolError
++from dosbox_agent.client import PipeTransport, load_config
++
++
++@unittest.skipUnless(os.name == "posix", "POSIX inherited-pipe transport")
++class PipeTransportTests(unittest.TestCase):
++    def setUp(self):
++        self.server_read, self.client_write = os.pipe()
++        self.client_read, self.server_write = os.pipe()
++        for fd in (self.server_read, self.client_write, self.client_read, self.server_write):
++            self.addCleanup(self.close_fd, fd)
++
++    @staticmethod
++    def close_fd(fd):
++        try:
++            os.close(fd)
++        except OSError:
++            pass
++
++    def transport(self):
++        transport = PipeTransport(self.client_read, self.client_write)
++        self.addCleanup(transport.close)
++        return transport
++
++    @staticmethod
++    def read_line(fd):
++        data = bytearray()
++        while not data.endswith(b"\n"):
++            if not select.select([fd], [], [], 2)[0]:
++                raise TimeoutError("test server received no complete request")
++            chunk = os.read(fd, 4096)
++            if not chunk:
++                raise EOFError("test client closed before a complete request")
++            data.extend(chunk)
++        return bytes(data[:-1])
++
++    def server(self, action):
++        errors = []
++
++        def run():
++            try:
++                action(self.server_read, self.server_write)
++            except BaseException as error:
++                errors.append(error)
++
++        thread = threading.Thread(target=run, daemon=True)
++        thread.start()
++        self.addCleanup(thread.join, 3)
++        return thread, errors
++
++    def test_launcher_import_and_config_accept_dedicated_pipe_endpoint(self):
++        with tempfile.TemporaryDirectory() as directory:
++            path = Path(directory) / "agent.env"
++            content = "\n".join(("transport=pipe", "endpoint=fd:3:4",
++                "dosbox_executable=/program", "dosbox_workdir=/work",
++                "request_timeout_ms=100", "max_message_bytes=128",
++                "max_memory_read_bytes=64", "max_trace_events=16"))
++            path.write_text(content)
++            self.assertEqual(load_config(path).transport, "pipe")
++            for endpoint in ("fd:0:4", "fd:3:3", "fd:3:-4", "fd:3:4:5", "fd:3:999999999999999", "pipe:3:4"):
++                path.write_text(content.replace("fd:3:4", endpoint))
++                with self.subTest(endpoint=endpoint), self.assertRaisesRegex(ValueError, "fd:READ:WRITE"):
++                    load_config(path)
++
++    def test_sequential_agent_client_calls_use_same_inherited_channels(self):
++        received = []
++        def reply(read_fd, write_fd):
++            for _ in range(2):
++                request = json.loads(self.read_line(read_fd))
++                received.append(request)
++                data = json.dumps({"jsonrpc":"2.0", "id":request["id"], "result":{"transport":"pipe"}}).encode()+b"\n"
++                os.write(write_fd, data[:7])
++                os.write(write_fd, data[7:])
++        thread, errors = self.server(reply)
++        config = AgentConfig(Path("/config"), "pipe", f"fd:{self.client_read}:{self.client_write}",
++                             Path("/program"), Path("/work"), 500, 1024, 256, 100)
++        with AgentClient(config) as client:
++            self.assertEqual(client.capabilities(), {"transport":"pipe"})
++            self.assertEqual(client.capabilities(), {"transport":"pipe"})
++        thread.join(1)
++        self.assertEqual(errors, [])
++        self.assertEqual(len({request["id"] for request in received}), 2)
++
++    def test_transport_duplicates_descriptors_and_close_preserves_caller_ownership(self):
++        transport = self.transport()
++        transport.close()
++        transport.close()
++        os.fstat(self.client_read)
++        os.fstat(self.client_write)
++        with self.assertRaisesRegex(AgentConnectionError, "closed"):
++            transport.request("{}", 100, 128)
++
++    def test_large_request_and_response_are_framed_without_truncation(self):
++        payload = json.dumps({"data":"x"*200000})
++        response = json.dumps({"data":"é"*70000}, ensure_ascii=False)
++        received = []
++        def reply(read_fd, write_fd):
++            received.append(self.read_line(read_fd).decode())
++            encoded = response.encode()+b"\n"
++            for index in range(0, len(encoded), 317):
++                os.write(write_fd, encoded[index:index+317])
++        thread, errors = self.server(reply)
++        self.assertEqual(self.transport().request(payload, 2000, 300000), response)
++        thread.join(1)
++        self.assertEqual(errors, [])
++        self.assertEqual(received, [payload])
++
++    def test_request_size_limit_rejects_before_writing_and_keeps_channel_usable(self):
++        transport = self.transport()
++        with self.assertRaisesRegex(AgentProtocolError, "request exceeds"):
++            transport.request("é"*65, 100, 128)
++        self.assertEqual(select.select([self.server_read], [], [], 0)[0], [])
++        thread, errors = self.server(lambda r,w: (self.read_line(r), os.write(w,b"ok\n")))
++        self.assertEqual(transport.request("{}", 500, 128), "ok")
++        thread.join(1)
++        self.assertEqual(errors, [])
++
++    def test_exact_response_byte_limit_is_accepted(self):
++        thread, errors = self.server(lambda r,w: (self.read_line(r), os.write(w,b"x"*128+b"\n")))
++        self.assertEqual(self.transport().request("{}", 500, 128), "x"*128)
++        thread.join(1)
++        self.assertEqual(errors, [])
++
++    def assert_bad_response_closes_channel(self, response, message):
++        transport = self.transport()
++        thread, errors = self.server(lambda r,w: (self.read_line(r), os.write(w,response)))
++        with self.assertRaisesRegex(AgentProtocolError, message):
++            transport.request("{}", 500, 128)
++        thread.join(1)
++        self.assertEqual(errors, [])
++        with self.assertRaisesRegex(AgentConnectionError, "closed"):
++            transport.request("{}", 100, 128)
++
++    def test_oversized_response_closes_channel(self):
++        self.assert_bad_response_closes_channel(b"x"*129+b"\n", "response exceeds")
++
++    def test_invalid_utf8_response_closes_channel(self):
++        self.assert_bad_response_closes_channel(b"\xff\n", "UTF-8")
++
++    def test_unsolicited_bytes_after_response_close_channel(self):
++        self.assert_bad_response_closes_channel(b"ok\nextra", "unsolicited")
++
++    def test_partial_response_eof_is_an_error(self):
++        def reply(read_fd, write_fd):
++            self.read_line(read_fd)
++            os.write(write_fd, b"partial")
++            os.close(write_fd)
++        thread, errors = self.server(reply)
++        with self.assertRaisesRegex(AgentConnectionError, "complete response"):
++            self.transport().request("{}", 500, 128)
++        thread.join(1)
++        self.assertEqual(errors, [])
++
++    def test_response_timeout_closes_channel_without_replaying_request(self):
++        received = []
++        def reply(read_fd, write_fd):
++            received.append(self.read_line(read_fd))
++            time.sleep(0.15)
++        thread, errors = self.server(reply)
++        transport = self.transport()
++        with self.assertRaisesRegex(AgentConnectionError, "timed out"):
++            transport.request('{"id":1}', 30, 128)
++        with self.assertRaisesRegex(AgentConnectionError, "closed"):
++            transport.request('{"id":1}', 30, 128)
++        thread.join(1)
++        self.assertEqual(errors, [])
++        self.assertEqual(received, [b'{"id":1}'])
++        self.assertEqual(select.select([self.server_read], [], [], 0)[0], [])
++
++    def test_write_timeout_is_bounded_when_server_does_not_read(self):
++        transport = self.transport()
++        started = time.monotonic()
++        with self.assertRaisesRegex(AgentConnectionError, "timed out"):
++            transport.request("x"*2000000, 30, 2000001)
++        self.assertLess(time.monotonic()-started, 0.5)
++        with self.assertRaisesRegex(AgentConnectionError, "closed"):
++            transport.request("{}", 100, 128)
++
++    def test_waiting_request_deadline_does_not_interrupt_active_exchange(self):
++        transport = self.transport()
++        received, results, failures = [], [], []
++        first_received, release_reply = threading.Event(), threading.Event()
++
++        def reply(read_fd, write_fd):
++            received.append(self.read_line(read_fd))
++            first_received.set()
++            if not release_reply.wait(1):
++                raise TimeoutError("test did not release first response")
++            os.write(write_fd, b"first-response\n")
++
++        def first_request():
++            try:
++                results.append(transport.request("first", 1000, 128))
++            except BaseException as error:
++                failures.append(error)
++
++        server_thread, errors = self.server(reply)
++        requester = threading.Thread(target=first_request, daemon=True)
++        requester.start()
++        self.assertTrue(first_received.wait(1))
++        try:
++            with self.assertRaisesRegex(AgentConnectionError, "request lock"):
++                transport.request("second", 30, 128)
++        finally:
++            release_reply.set()
++            requester.join(1)
++            server_thread.join(1)
++        self.assertEqual(failures, [])
++        self.assertEqual(errors, [])
++        self.assertEqual(results, ["first-response"])
++        self.assertEqual(received, [b"first"])
++        self.assertEqual(select.select([self.server_read], [], [], 0)[0], [])
++
++    def test_only_distinct_readable_and_writable_fifo_descriptors_are_accepted(self):
++        with tempfile.TemporaryFile() as file:
++            for read_fd, write_fd in ((0,self.client_write), (self.client_read,self.client_read),
++                                     (self.client_write,self.client_read), (file.fileno(),self.client_write)):
++                with self.subTest(read_fd=read_fd,write_fd=write_fd), self.assertRaises((ValueError, AgentConnectionError)):
++                    PipeTransport(read_fd, write_fd)
++
++    def test_same_backing_fifo_is_rejected(self):
++        # Darwin assigns different inode identities to an anonymous pipe's
++        # two ends. A named FIFO gives both hosts the same observable identity.
++        with tempfile.TemporaryDirectory() as directory:
++            path = Path(directory) / 'same-fifo'
++            os.mkfifo(path, 0o600)
++            read_fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
++            try:
++                write_fd = os.open(path, os.O_WRONLY | os.O_NONBLOCK)
++                try:
++                    with self.assertRaisesRegex(ValueError, 'separate writable FIFO'):
++                        PipeTransport(read_fd, write_fd)
++                finally:
++                    os.close(write_fd)
++            finally:
++                os.close(read_fd)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/client/python/tests/test_unix_transport.py b/client/python/tests/test_unix_transport.py
+new file mode 100644
+index 0000000..aed1ff4
+--- /dev/null
++++ b/client/python/tests/test_unix_transport.py
+@@ -0,0 +1,233 @@
++"""Real local IPC tests for the POSIX debugger transport and client."""
++from __future__ import annotations
++
++from dataclasses import replace
++import json
++import os
++from pathlib import Path
++import select
++import shutil
++import socket
++import stat
++import subprocess
++import sys
++import tempfile
++import threading
++import time
++import unittest
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++
++from dosbox_agent import AgentClient, AgentConfig, AgentConnectionError, AgentProtocolError
++from dosbox_agent.client import UnixSocketTransport, load_config
++
++
++ROOT = Path(__file__).resolve().parents[3]
++
++
++@unittest.skipUnless(os.name == 'posix', 'POSIX local socket transport')
++class UnixSocketClientTests(unittest.TestCase):
++    def setUp(self):
++        self.directory = tempfile.TemporaryDirectory()
++        self.addCleanup(self.directory.cleanup)
++        self.path = Path(self.directory.name)/'agent.sock'
++
++    def server(self, action):
++        listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
++        listener.bind(str(self.path))
++        os.chmod(self.path, 0o600)
++        listener.listen(1)
++        errors = []
++
++        def run():
++            try:
++                connection, _ = listener.accept()
++                with connection:
++                    action(connection)
++            except Exception as error:
++                errors.append(error)
++            finally:
++                listener.close()
++
++        thread = threading.Thread(target=run, daemon=True)
++        thread.start()
++        self.addCleanup(listener.close)
++        self.addCleanup(lambda: thread.join(2))
++        return thread, errors
++
++    def test_agent_client_uses_real_socket_and_matches_request_identity(self):
++        def reply(connection):
++            request = json.loads(connection.makefile('rb').readline())
++            payload = json.dumps(dict(jsonrpc='2.0', id=request['id'], result={'transport':'unix_socket'})).encode()+b'\n'
++            connection.sendall(payload[:9])
++            connection.sendall(payload[9:])
++
++        thread, errors = self.server(reply)
++        config = AgentConfig(Path(self.directory.name)/'agent.env','unix_socket',str(self.path),
++                             Path('/program'),Path('/work'),500,1024,256,100)
++        with AgentClient(config) as client:
++            self.assertEqual(client.capabilities(), {'transport':'unix_socket'})
++        thread.join(1)
++        self.assertEqual(errors, [])
++
++    def test_private_parent_and_socket_permissions_are_required(self):
++        self.server(lambda connection: connection.close())
++        os.chmod(self.path, 0o666)
++        transport = UnixSocketTransport(str(self.path))
++        with self.assertRaisesRegex(AgentConnectionError, 'mode-0600'):
++            transport.request('{}',100,128)
++        os.chmod(self.path, 0o600)
++        os.chmod(self.directory.name,0o755)
++        try:
++            with self.assertRaisesRegex(AgentConnectionError, 'mode-0700'):
++                transport.request('{}',100,128)
++        finally:
++            os.chmod(self.directory.name,0o700)
++
++    def test_oversized_response_is_rejected_without_truncating(self):
++        def reply(connection):
++            connection.recv(128)
++            connection.sendall(b'x'*129+b'\n')
++        self.server(reply)
++        with self.assertRaisesRegex(AgentProtocolError, 'exceeds'):
++            UnixSocketTransport(str(self.path)).request('{}',500,128)
++
++    def test_non_utf8_response_is_explicit_protocol_error(self):
++        def reply(connection):
++            connection.recv(128)
++            connection.sendall(b'\xff\n')
++        self.server(reply)
++        with self.assertRaisesRegex(AgentProtocolError, 'UTF-8'):
++            UnixSocketTransport(str(self.path)).request('{}',500,128)
++
++    def test_timeout_closes_connection_without_resending_request(self):
++        received = []
++        def reply(connection):
++            received.append(connection.recv(128))
++            time.sleep(0.15)
++        thread, errors = self.server(reply)
++        transport = UnixSocketTransport(str(self.path))
++        with self.assertRaises(AgentConnectionError):
++            transport.request('{"id":1}',30,128)
++        self.assertIsNone(transport._socket)
++        thread.join(1)
++        self.assertEqual(received,[b'{"id":1}\n'])
++
++    def test_unix_config_is_explicit_and_has_absolute_endpoint(self):
++        path = Path(self.directory.name)/'agent.env'
++        content = '\n'.join(('transport=unix_socket',f'endpoint={self.path}',
++                             'dosbox_executable=/program','dosbox_workdir=/work',
++                             'request_timeout_ms=100','max_message_bytes=128',
++                             'max_memory_read_bytes=64','max_trace_events=16'))
++        path.write_text(content)
++        self.assertEqual(load_config(path).transport,'unix_socket')
++        path.write_text(content.replace(str(self.path),'relative.sock'))
++        with self.assertRaisesRegex(ValueError, 'absolute'):
++            load_config(path)
++
++
++@unittest.skipUnless(os.name == 'posix' and shutil.which('g++'), 'POSIX C++ compiler')
++class UnixSocketServerTests(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.build = tempfile.TemporaryDirectory()
++        cls.executable = Path(cls.build.name)/'transport-probe'
++        subprocess.run(['g++','-std=c++11','-pthread','-DC_DEBUG=1','-DC_DOSBOX_AGENT=1',
++                        '-I'+str(ROOT/'include'),str(ROOT/'src/agent/transport/local_transport.cpp'),
++                        str(ROOT/'src/agent/transport/unix_transport_probe.cpp'),'-o',str(cls.executable)],
++                       check=True,capture_output=True,text=True)
++
++    @classmethod
++    def tearDownClass(cls):
++        cls.build.cleanup()
++
++    def setUp(self):
++        self.directory = tempfile.TemporaryDirectory()
++        self.addCleanup(self.directory.cleanup)
++        self.path = Path(self.directory.name)/'agent.sock'
++
++    def launch(self):
++        process = subprocess.Popen([str(self.executable),str(self.path)],stdin=subprocess.PIPE,
++                                   stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
++        self.addCleanup(lambda: self.cleanup_process(process))
++        self.assertTrue(select.select([process.stdout],[],[],3)[0], 'server startup timed out')
++        self.assertEqual(process.stdout.readline().strip(),'READY')
++        return process
++
++    @staticmethod
++    def cleanup_process(process):
++        if process.poll() is None:
++            try:
++                process.communicate('stop\n',timeout=2)
++            except subprocess.TimeoutExpired:
++                process.kill()
++                process.communicate(timeout=2)
++
++    def test_real_server_permissions_framing_and_concurrent_clients(self):
++        process = self.launch()
++        self.assertEqual(stat.S_IMODE(self.path.stat().st_mode),0o600)
++        first = socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
++        first.connect(str(self.path))
++        self.addCleanup(first.close)
++        second = UnixSocketTransport(str(self.path))
++        self.addCleanup(second.close)
++        # An idle connection must not prevent another debugger request.
++        self.assertEqual(second.request('{"id":2}',500,128),'{"id":2}')
++        first.sendall(b'{"id":')
++        first.sendall(b'1}\n')
++        self.assertEqual(first.recv(128),b'{"id":1}\n')
++        self.assertEqual(second.request('{"id":3}',500,128),'{"id":3}')
++        stdout,stderr = process.communicate('stop\n',timeout=2)
++        self.assertEqual(process.returncode,0,stderr)
++        self.assertIn('STOPPED',stdout)
++        self.assertFalse(self.path.exists())
++
++    def test_existing_file_or_socket_is_not_removed_or_replaced(self):
++        self.path.write_text('retain me')
++        result = subprocess.run([str(self.executable),str(self.path)],input='stop\n',
++                                capture_output=True,text=True,timeout=3)
++        self.assertEqual(result.returncode,1)
++        self.assertIn('refusing to replace',result.stderr)
++        self.assertEqual(self.path.read_text(),'retain me')
++        self.path.unlink()
++        listener = socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
++        self.addCleanup(listener.close)
++        listener.bind(str(self.path))
++        inode=self.path.stat().st_ino
++        result=subprocess.run([str(self.executable),str(self.path)],capture_output=True,text=True,timeout=3)
++        self.assertEqual(result.returncode,1)
++        self.assertEqual(self.path.stat().st_ino,inode)
++
++    def test_replaced_endpoint_is_not_unlinked_during_shutdown(self):
++        process=self.launch()
++        self.path.unlink()
++        self.path.write_text('replacement')
++        process.communicate('stop\n',timeout=2)
++        self.assertEqual(self.path.read_text(),'replacement')
++
++    def test_parent_permissions_and_overlong_path_reject_before_bind(self):
++        os.chmod(self.directory.name,0o755)
++        try:
++            result=subprocess.run([str(self.executable),str(self.path)],capture_output=True,text=True,timeout=3)
++            self.assertEqual(result.returncode,1)
++            self.assertIn('0700',result.stderr)
++            self.assertFalse(self.path.exists())
++        finally:
++            os.chmod(self.directory.name,0o700)
++        result=subprocess.run([str(self.executable),str(self.path.parent/('x'*120))],
++                              capture_output=True,text=True,timeout=3)
++        self.assertEqual(result.returncode,1)
++        self.assertIn('too long',result.stderr)
++
++    def test_oversized_request_disconnects_without_executing_truncated_request(self):
++        self.launch()
++        connection=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
++        self.addCleanup(connection.close)
++        connection.settimeout(1)
++        connection.connect(str(self.path))
++        connection.sendall(b'x'*129+b'\n')
++        self.assertEqual(connection.recv(128),b'')
++
++
++if __name__ == '__main__':
++    unittest.main()
 diff --git a/include/agent/agent_protocol.h b/include/agent/agent_protocol.h
 index 3c4d612..7ee69b1 100644
 --- a/include/agent/agent_protocol.h
@@ -354,6 +854,116 @@ index d1abe84..6a63d0b 100644
  };
  
  struct NativeBreakpoint {
+diff --git a/include/agent/input_adapter.h b/include/agent/input_adapter.h
+new file mode 100644
+index 0000000..9f214a1
+--- /dev/null
++++ b/include/agent/input_adapter.h
+@@ -0,0 +1,66 @@
++#ifndef DOSBOX_AGENT_INPUT_ADAPTER_H
++#define DOSBOX_AGENT_INPUT_ADAPTER_H
++
++#include <cstdint>
++#include <string>
++
++namespace dosbox_agent {
++
++// Observed DOS INT 33h driver coordinates, after clipping and granularity.
++// These are not host pointer coordinates or accelerated relative mickeys.
++struct AgentMouseState {
++    std::int32_t x = 0;
++    std::int32_t y = 0;
++    std::int32_t min_x = 0;
++    std::int32_t max_x = 0;
++    std::int32_t min_y = 0;
++    std::int32_t max_y = 0;
++    std::int32_t screen_max_x = 0;
++    std::int32_t screen_max_y = 0;
++    std::uint32_t buttons = 0;
++    std::uint32_t owned_buttons = 0;
++    std::uint32_t pending_release_buttons = 0;
++    bool release_pending = false;
++};
++
++// All functions are called on the emulation thread. Absolute positions are
++// zero-based pixels in a supplied completed framebuffer's coordinate space.
++// Frame freshness/current mode must be checked by the caller before injection.
++// The supported target is the built-in DOS INT 33h driver, not guest PS/2,
++// serial-only, PC-98, protected-mode or externally installed mouse drivers.
++bool AGENT_MouseGetState(AgentMouseState* state, std::string* error);
++bool AGENT_MouseMoveAbsolute(std::uint32_t x, std::uint32_t y,
++                             std::uint32_t frame_width,
++                             std::uint32_t frame_height,
++                             AgentMouseState* state, std::string* error);
++bool AGENT_MouseButton(std::uint32_t button, bool pressed,
++                       AgentMouseState* state, std::string* error);
++bool AGENT_MouseClickAbsolute(std::uint32_t x, std::uint32_t y,
++                              std::uint32_t frame_width,
++                              std::uint32_t frame_height,
++                              std::uint32_t button, std::uint32_t hold_ms,
++                              AgentMouseState* state, std::string* error);
++
++// Cancel queued releases and release only buttons pressed by this adapter.
++// A queued click holds its button until hold_ms of guest emulated time passes;
++// an RPC response does not establish that the guest has processed that input.
++void AGENT_MouseResetInput();
++
++
++struct AgentKeyboardState {
++    std::uint32_t pending_events = 0;
++    std::uint32_t owned_keys = 0;
++    std::uint32_t duration_ms = 0;
++};
++// Emulation thread only. Named physical keys and US-layout ASCII typing use
++// the emulated keyboard controller, never BIOS-buffer or guest-memory writes.
++bool AGENT_KeyboardQueue(const std::string& key, const std::string& text,
++                         const std::string& modifiers, bool typing,
++                         std::uint32_t hold_ms, std::uint32_t gap_ms,
++                         AgentKeyboardState* state, std::string* error);
++void AGENT_KeyboardGetState(AgentKeyboardState* state);
++void AGENT_KeyboardResetInput();
++
++} // namespace dosbox_agent
++
++#endif
+diff --git a/include/agent/video_adapter.h b/include/agent/video_adapter.h
+new file mode 100644
+index 0000000..efc01ae
+--- /dev/null
++++ b/include/agent/video_adapter.h
+@@ -0,0 +1,32 @@
++#ifndef DOSBOX_AGENT_VIDEO_ADAPTER_H
++#define DOSBOX_AGENT_VIDEO_ADAPTER_H
++
++#include <cstdint>
++#include <string>
++#include <vector>
++
++namespace dosbox_agent {
++
++// Pixels use the completed guest renderer source, before host scaling, menu
++// bars and aspect correction. Mouse coordinates use this same upper-left grid.
++struct FrameSnapshot {
++    std::uint32_t width = 0;
++    std::uint32_t height = 0;
++    std::uint32_t source_bpp = 0;
++    std::uint64_t frame_id = 0;
++    std::uint64_t mode_id = 0;
++    std::uint64_t captured_ticks = 0;
++    bool double_width = false;
++    bool double_height = false;
++    std::vector<std::uint8_t> rgba;
++};
++
++// Invoke these on the emulation thread. A snapshot never advances execution;
++// it fails until a complete frame exists for the current video mode.
++void AGENT_EnableFrameCapture(bool enabled);
++bool AGENT_GetFrameSnapshot(FrameSnapshot* frame, std::string* error);
++bool AGENT_IsHeadless();
++
++} // namespace dosbox_agent
++
++#endif
 diff --git a/include/debug.h b/include/debug.h
 index f4ee552..601afc4 100644
 --- a/include/debug.h
@@ -500,7 +1110,7 @@ index a315ca1..4f17576 100644
      return "unknown";
  }
 diff --git a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cpp
-index 29363cf..8b1f41b 100644
+index 29363cf..c84e4c6 100644
 --- a/src/agent/server/agent_server.cpp
 +++ b/src/agent/server/agent_server.cpp
 @@ -5,6 +5,12 @@
@@ -528,24 +1138,26 @@ index 29363cf..8b1f41b 100644
  namespace dosbox_agent {
  namespace {
  
-@@ -447,7 +458,11 @@ static bool IsKnownMethod(const std::string& method)
+@@ -447,7 +458,12 @@ static bool IsKnownMethod(const std::string& method)
             method == "execution.pause" ||
             method == "execution.step" ||
             method == "execution.wait" ||
 +           method == "execution.timing" || method == "state.save" || method == "state.load" || method == "state.set_register" ||
             method == "state.get_registers" ||
 +           method == "video.screenshot" ||
++           method == "input.keyboard.press" || method == "input.keyboard.type" || method == "input.keyboard.state" ||
 +           method == "input.mouse.move" || method == "input.mouse.click" ||
 +           method == "input.mouse.button" || method == "input.mouse.state" ||
             method == "memory.read" ||
             method == "memory.write" ||
             method == "breakpoints.create" ||
-@@ -518,6 +533,12 @@ public:
+@@ -518,6 +534,13 @@ public:
          NativeBreakpoint breakpoint;
          std::string raw_output;
          std::vector<TraceSample> trace_samples;
 +        FrameSnapshot frame;
 +        AgentMouseState mouse;
++        AgentKeyboardState keyboard;
 +        bool stale_frame = false;
 +        std::uint64_t guest_ticks = 0;
 +        bool fast_forward = false;
@@ -553,7 +1165,7 @@ index 29363cf..8b1f41b 100644
          bool trace_active = false;
          std::size_t trace_event_count = 0;
      };
-@@ -553,6 +574,7 @@ public:
+@@ -553,6 +576,7 @@ public:
          std::string last_stop_breakpoint_id;
          MemoryAddress last_stop_breakpoint_address;
          bool has_last_stop_breakpoint_address = false;
@@ -561,7 +1173,7 @@ index 29363cf..8b1f41b 100644
          std::string failure_message;
          std::uint64_t state_revision = 0;
          std::uint64_t next_operation = 1;
-@@ -941,6 +963,8 @@ static JsonValue StopReason(const AgentServer::Impl::Session& session)
+@@ -941,6 +965,8 @@ static JsonValue StopReason(const AgentServer::Impl::Session& session)
  {
      JsonValue stop = Object();
      Add(&stop, "kind", String(session.last_stop_kind));
@@ -570,7 +1182,7 @@ index 29363cf..8b1f41b 100644
      if (!session.last_stop_breakpoint_id.empty())
          Add(&stop, "breakpoint_id", String(session.last_stop_breakpoint_id));
      if (session.has_last_stop_breakpoint_address) {
-@@ -1185,6 +1209,85 @@ static void CacheResponse(AgentServer::Impl::Session* session,
+@@ -1185,6 +1211,85 @@ static void CacheResponse(AgentServer::Impl::Session* session,
      }
  }
  
@@ -656,7 +1268,7 @@ index 29363cf..8b1f41b 100644
  static std::string Capabilities(const AgentConfig& config)
  {
      JsonValue result = Object();
-@@ -1194,6 +1297,24 @@ static std::string Capabilities(const AgentConfig& config)
+@@ -1194,6 +1299,25 @@ static std::string Capabilities(const AgentConfig& config)
  #else
      Add(&result, "debugger", JsonValue::Bool(false));
  #endif
@@ -673,6 +1285,7 @@ index 29363cf..8b1f41b 100644
 +    Add(&timing, "guest_clock", String("PIC_Ticks_milliseconds"));
 +    Add(&result, "timing", timing);
 +    JsonValue input = Object();
++    Add(&input, "keyboard", String("ibm_pc_controller_us_ascii_v1"));
 +    Add(&input, "absolute_mouse", JsonValue::Bool(true));
 +    Add(&input, "driver", String("builtin_dos_int33_only"));
 +    Add(&input, "coordinate_space", String("guest_frame_pixels"));
@@ -681,7 +1294,7 @@ index 29363cf..8b1f41b 100644
      JsonValue trace = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&trace, "cpu", JsonValue::Bool(true));
-@@ -1204,6 +1325,7 @@ static std::string Capabilities(const AgentConfig& config)
+@@ -1204,6 +1328,7 @@ static std::string Capabilities(const AgentConfig& config)
      JsonValue breakpoints = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&breakpoints, "memory_change", JsonValue::Bool(true));
@@ -689,10 +1302,64 @@ index 29363cf..8b1f41b 100644
  #else
      Add(&breakpoints, "memory_change", JsonValue::Bool(false));
  #endif
-@@ -1754,6 +1876,297 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1754,6 +1879,354 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  }
              }
          }
++    } else if (parsed.method.compare(0,15,"input.keyboard.")==0) {
++        const bool typing=parsed.method=="input.keyboard.type";
++        const bool query=parsed.method=="input.keyboard.state";
++        std::string key,text,modifiers;
++        std::uint32_t hold_ms=40,gap_ms=40;
++        bool valid=query || GetString(parsed.params,typing?"text":"key",typing?&text:&key);
++        if(parsed.params.Find("modifiers")) valid=valid && GetString(parsed.params,"modifiers",&modifiers);
++        if(parsed.params.Find("hold_ms")) valid=valid && GetUnsignedInteger(*parsed.params.Find("hold_ms"),&hold_ms);
++        if(parsed.params.Find("gap_ms")) valid=valid && GetUnsignedInteger(*parsed.params.Find("gap_ms"),&gap_ms);
++        if(!valid || hold_ms<1 || hold_ms>1000 || gap_ms<1 || gap_ms>1000 || (typing && !modifiers.empty())) {
++            response=InvalidParams(parsed.id,"Invalid keyboard parameters");
++        } else if(session->state!=Impl::SessionState::Running && session->state!=Impl::SessionState::Stopped) {
++            response=SessionError(parsed.id,kErrorCapabilityUnavailable,"Target is not active","TARGET_EXITED",session);
++        } else {
++            const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
++            const std::string session_id=session->id;
++            if(SubmitEmulationCommandLocked(impl,[operation,typing,query,key,text,modifiers,hold_ms,gap_ms](const std::uint64_t) {
++                std::string error; AgentKeyboardState keyboard;
++                bool ok=true;
++                if(query) AGENT_KeyboardGetState(&keyboard);
++                else ok=AGENT_KeyboardQueue(key,text,modifiers,typing,hold_ms,gap_ms,&keyboard,&error);
++                std::lock_guard<std::mutex> guard(operation->mutex);
++                operation->success=ok;operation->error=error;operation->keyboard=keyboard;operation->done=true;
++                operation->completed.notify_all();
++            })==0) response=Error(parsed.id,kErrorCapabilityUnavailable,"Keyboard bridge unavailable","COMMAND_REJECTED");
++            else {
++                const JsonValue response_id=parsed.id;
++                Impl::DeferredRequest pending;pending.request=parsed;pending.fingerprint=parsed.fingerprint;
++                pending.wait=[operation](const std::uint32_t timeout_ms) {
++                    std::unique_lock<std::mutex> guard(operation->mutex);
++                    return operation->completed.wait_for(guard,std::chrono::milliseconds(timeout_ms),[operation](){return operation->done;});
++                };
++                pending.finish=[impl,session_id,response_id,operation,query]() {
++                    if(!operation->success) return Error(response_id,kErrorCapabilityUnavailable,operation->error,"COMMAND_REJECTED");
++                    if(!impl->session || impl->session->id!=session_id) return Error(response_id,kErrorSessionNotFound,"Session was not found","SESSION_NOT_FOUND");
++                    if(!query) ++impl->session->state_revision;
++                    JsonValue result=SessionResult(*impl->session),keyboard=Object();
++                    Add(&keyboard,"pending_events",Number(operation->keyboard.pending_events));
++                    Add(&keyboard,"owned_keys",Number(operation->keyboard.owned_keys));
++                    Add(&keyboard,"queued_guest_ms",Number(operation->keyboard.duration_ms));
++                    Add(&result,"keyboard",keyboard);
++                    if(!query) {Add(&result,"accepted",JsonValue::Bool(true));Add(&result,"delivery",String("queued"));}
++                    return AGENT_MakeJsonRpcResult(response_id,result);
++                };
++                if(parsed.has_id && parsed.id.type!=JsonType::Null) session->deferred_requests[parsed.id_key]=pending;
++                lock.unlock();const bool completed=pending.wait(impl->config.request_timeout_ms);lock.lock();
++                if(!RebindSessionAfterWait(impl,session_id,&session,&response,parsed.id)) return response;
++                if(!completed) {cache_response=false;response=Error(parsed.id,kErrorOperationTimeout,"Timed out queuing guest keyboard input","OPERATION_TIMEOUT");}
++                else if(parsed.has_id && parsed.id.type!=JsonType::Null) {
++                    auto deferred=session->deferred_requests.find(parsed.id_key);
++                    response=deferred->second.finish();session->deferred_requests.erase(deferred);
++                } else response=pending.finish();
++            }
++        }
 +    } else if (parsed.method == "video.screenshot" || parsed.method.compare(0, 12, "input.mouse.") == 0) {
 +        const bool screenshot = parsed.method == "video.screenshot";
 +        const bool move = parsed.method == "input.mouse.move";
@@ -829,8 +1496,11 @@ index 29363cf..8b1f41b 100644
 +            const std::string session_id = session->id;
 +            if (SubmitEmulationCommandLocked(impl, [operation, load, path](const std::uint64_t) {
 +                    std::string error;
-+                    if (load) { dosbox_agent::AGENT_MouseResetInput(); dosbox_agent::AGENT_EnableFrameCapture(false); }
-+                    const bool ok = AGENT_StateFile(path, load, &error);
++                    if (load) { dosbox_agent::AGENT_MouseResetInput(); dosbox_agent::AGENT_KeyboardResetInput(); dosbox_agent::AGENT_EnableFrameCapture(false); }
++                    AgentKeyboardState keyboard; AGENT_KeyboardGetState(&keyboard);
++                    const bool ok = (!load && (keyboard.pending_events || keyboard.owned_keys))
++                        ? (error="Run until pending keyboard input completes before saving",false)
++                        : AGENT_StateFile(path, load, &error);
 +                    if (load) { DEBUG_AgentClearLastBreakpoint(); dosbox_agent::AGENT_EnableFrameCapture(true); }
 +                    std::lock_guard<std::mutex> guard(operation->mutex);
 +                    operation->success = ok; operation->error = error; operation->done = true;
@@ -987,7 +1657,7 @@ index 29363cf..8b1f41b 100644
      } else if (parsed.method == "state.get_registers") {
          if (session->state == Impl::SessionState::Running) {
              response = SessionError(parsed.id, kErrorTargetRunning,
-@@ -1955,7 +2368,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1955,7 +2428,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                   item != session->breakpoints.end(); ++item) {
                  JsonValue entry = Object();
                  Add(&entry, "breakpoint_id", String(item->second.id));
@@ -996,7 +1666,7 @@ index 29363cf..8b1f41b 100644
                  Add(&entry, "enabled", JsonValue::Bool(item->second.enabled));
                  Add(&entry, "once", JsonValue::Bool(item->second.native.once));
                  Add(&entry, "address", EncodeMemoryAddress(item->second.native.address));
-@@ -1970,7 +2383,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1970,7 +2443,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
          MemoryAddress address;
          bool once = false;
          const JsonValue* once_value = parsed.params.Find("once");
@@ -1005,7 +1675,7 @@ index 29363cf..8b1f41b 100644
              !ParseMemoryAddress(parsed.params, "breakpoints.create", &address, &validation_error) ||
              (once_value != NULL && !GetBool(parsed.params, "once", &once))) {
              response = InvalidParams(parsed.id, validation_error.empty() ?
-@@ -1982,7 +2395,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1982,7 +2455,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              response = SessionError(parsed.id, kErrorCapabilityUnavailable,
                                      "Target must be stopped before creating breakpoints", "TARGET_NOT_STOPPED", session);
          } else {
@@ -1014,23 +1684,23 @@ index 29363cf..8b1f41b 100644
  #ifndef C_HEAVY_DEBUG
              if (kind == BreakpointKind::MemoryChange) {
                  response = Error(parsed.id, kErrorCapabilityUnavailable,
-@@ -2856,6 +3269,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
+@@ -2856,6 +3329,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
                                                 const std::string& workdir)
  {
      AgentRuntime& adapter = *impl->runtime;
-+    AGENT_MouseResetInput();
++    AGENT_MouseResetInput(); dosbox_agent::AGENT_KeyboardResetInput();
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -2930,6 +3344,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
+@@ -2930,6 +3404,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
                                                               const std::string& operation_id)
  {
      AgentRuntime& adapter = *impl->runtime;
-+    AGENT_MouseResetInput();
++    AGENT_MouseResetInput(); dosbox_agent::AGENT_KeyboardResetInput();
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -3008,6 +3423,8 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3008,6 +3483,8 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
          return;
      AgentRuntime& adapter = *impl->runtime;
      const std::uintptr_t native_breakpoint = adapter.ConsumeLastBreakpointHandle();
@@ -1039,7 +1709,7 @@ index 29363cf..8b1f41b 100644
      std::vector<TraceSample> trace_samples;
      bool native_trace_active = false;
      std::string trace_error;
-@@ -3037,6 +3454,18 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3037,6 +3514,18 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
              impl->session->trace.Stop();
      }
      impl->session->state = Impl::SessionState::Stopped;
@@ -1576,6 +2246,39 @@ index 363f635..7da0d74 100644
      }
      return std::unique_ptr<IRpcTransport>();
  }
+diff --git a/src/agent/transport/unix_transport_probe.cpp b/src/agent/transport/unix_transport_probe.cpp
+new file mode 100644
+index 0000000..0dedf94
+--- /dev/null
++++ b/src/agent/transport/unix_transport_probe.cpp
+@@ -0,0 +1,27 @@
++// Standalone transport acceptance fixture; not part of the DOSBox executable.
++#include "rpc_transport.h"
++#include <iostream>
++#include <string>
++
++int main(int argc, char** argv)
++{
++    if (argc != 2) return 2;
++    dosbox_agent::AgentConfig config;
++    config.transport = dosbox_agent::AgentTransport::UnixSocket;
++    config.endpoint = argv[1];
++    config.max_message_bytes = 128;
++    config.request_timeout_ms = 200;
++    std::unique_ptr<dosbox_agent::IRpcTransport> transport =
++        dosbox_agent::AGENT_CreateLocalTransport(config.transport);
++    std::string error;
++    if (!transport->Start(config, [](const std::string& input) { return input; }, &error)) {
++        std::cerr << error << std::endl;
++        return 1;
++    }
++    std::cout << "READY" << std::endl;
++    std::string command;
++    std::getline(std::cin, command);
++    transport->Stop();
++    std::cout << "STOPPED" << std::endl;
++    return 0;
++}
 diff --git a/src/cpu/core_normal.cpp b/src/cpu/core_normal.cpp
 index e582cc0..1cd5cac 100644
 --- a/src/cpu/core_normal.cpp
@@ -2193,6 +2896,150 @@ index 79624b0..8aea08e 100644
          /* -- initialize logging first, so that higher level inits can report problems to the log file */
          LOG::Init();
  
+diff --git a/src/hardware/keyboard.cpp b/src/hardware/keyboard.cpp
+index 423e8d2..529c36a 100644
+--- a/src/hardware/keyboard.cpp
++++ b/src/hardware/keyboard.cpp
+@@ -3043,3 +3043,139 @@ public:
+     }
+ } dummy;
+ }
++
++
++#if C_DOSBOX_AGENT
++#include "agent/input_adapter.h"
++#include <deque>
++#include <set>
++#include <vector>
++namespace dosbox_agent {
++namespace {
++struct AgentKeyEvent { KBD_KEYS key; bool pressed; std::uint32_t delay; };
++std::deque<AgentKeyEvent> agent_key_events;
++std::set<KBD_KEYS> agent_owned_keys;
++
++KBD_KEYS AgentNamedKey(const std::string& name)
++{
++    static const struct { const char* name; KBD_KEYS key; } names[] = {
++        {"enter",KBD_enter},{"escape",KBD_esc},{"esc",KBD_esc},
++        {"tab",KBD_tab},{"backspace",KBD_backspace},{"space",KBD_space},
++        {"left",KBD_left},{"right",KBD_right},{"up",KBD_up},{"down",KBD_down},
++        {"home",KBD_home},{"end",KBD_end},{"insert",KBD_insert},{"delete",KBD_delete},
++        {"pageup",KBD_pageup},{"pagedown",KBD_pagedown},
++        {"shift",KBD_leftshift},{"ctrl",KBD_leftctrl},{"alt",KBD_leftalt},
++        {"f1",KBD_f1},{"f2",KBD_f2},{"f3",KBD_f3},{"f4",KBD_f4},
++        {"f5",KBD_f5},{"f6",KBD_f6},{"f7",KBD_f7},{"f8",KBD_f8},
++        {"f9",KBD_f9},{"f10",KBD_f10},{"f11",KBD_f11},{"f12",KBD_f12},
++        {"-",KBD_minus},{"=",KBD_equals},{"[",KBD_leftbracket},{"]",KBD_rightbracket},
++        {";",KBD_semicolon},{"'",KBD_quote},{",",KBD_comma},{".",KBD_period},
++        {"/",KBD_slash},{"\\",KBD_backslash},{"`",KBD_grave}
++    };
++    static const char letters[]="abcdefghijklmnopqrstuvwxyz0123456789";
++    static const KBD_KEYS keys[]={KBD_a,KBD_b,KBD_c,KBD_d,KBD_e,KBD_f,KBD_g,
++        KBD_h,KBD_i,KBD_j,KBD_k,KBD_l,KBD_m,KBD_n,KBD_o,KBD_p,KBD_q,KBD_r,
++        KBD_s,KBD_t,KBD_u,KBD_v,KBD_w,KBD_x,KBD_y,KBD_z,KBD_0,KBD_1,KBD_2,
++        KBD_3,KBD_4,KBD_5,KBD_6,KBD_7,KBD_8,KBD_9};
++    if (name.size()==1) for (std::size_t i=0;i<sizeof(keys)/sizeof(keys[0]);++i)
++        if (name[0]==letters[i]) return keys[i];
++    for (const auto& item:names) if(name==item.name) return item.key;
++    return KBD_NONE;
++}
++
++void AgentKeyDispatch(Bitu)
++{
++    if (agent_key_events.empty()) return;
++    const auto event=agent_key_events.front(); agent_key_events.pop_front();
++    KEYBOARD_AddKey(event.key,event.pressed);
++    if (event.pressed) agent_owned_keys.insert(event.key);
++    else agent_owned_keys.erase(event.key);
++    if (!agent_key_events.empty())
++        PIC_AddEvent(AgentKeyDispatch,static_cast<pic_tickindex_t>(agent_key_events.front().delay));
++}
++} // namespace
++
++void AGENT_KeyboardGetState(AgentKeyboardState* state)
++{
++    if (!state) return;
++    state->pending_events=static_cast<std::uint32_t>(agent_key_events.size());
++    state->owned_keys=static_cast<std::uint32_t>(agent_owned_keys.size());
++    state->duration_ms=0;
++    for (const auto& event:agent_key_events) state->duration_ms+=event.delay;
++}
++
++void AGENT_KeyboardResetInput()
++{
++    PIC_RemoveEvents(AgentKeyDispatch);
++    agent_key_events.clear();
++    for (const auto key:agent_owned_keys) KEYBOARD_AddKey(key,false);
++    agent_owned_keys.clear();
++}
++
++bool AGENT_KeyboardQueue(const std::string& key, const std::string& text,
++                         const std::string& modifiers, bool typing,
++                         std::uint32_t hold_ms, std::uint32_t gap_ms,
++                         AgentKeyboardState* state, std::string* error)
++{
++    const auto fail=[error](const char* why) { if(error)*error=why; return false; };
++    if (IS_PC98_ARCH) return fail("Keyboard adapter supports IBM PC targets only");
++    if (!agent_key_events.empty() || !agent_owned_keys.empty())
++        return fail("Keyboard input is pending; run guest time before queuing another operation");
++    if (hold_ms<1 || hold_ms>1000 || gap_ms<1 || gap_ms>1000)
++        return fail("Keyboard hold_ms and gap_ms must be 1..1000 guest milliseconds");
++    std::deque<AgentKeyEvent> events;
++    std::vector<KBD_KEYS> mods;
++    if (!typing) {
++        std::size_t start=0;
++        while(start<modifiers.size()) {
++            const auto end=modifiers.find(',',start);
++            const auto token=modifiers.substr(start,end==std::string::npos?end:end-start);
++            const auto mod=AgentNamedKey(token);
++            if (mod!=KBD_leftshift && mod!=KBD_leftctrl && mod!=KBD_leftalt)
++                return fail("Modifiers must be unique shift, ctrl or alt");
++            for(const auto old:mods) if(old==mod) return fail("Duplicate keyboard modifier");
++            mods.push_back(mod);
++            if(end==std::string::npos) break;
++            start=end+1;
++        }
++    }
++    const auto append=[&events,hold_ms,gap_ms](KBD_KEYS code,const std::vector<KBD_KEYS>& prefix) {
++        const bool after_previous=!events.empty();
++        bool first=true;
++        for(const auto mod:prefix) {events.push_back({mod,true,static_cast<std::uint32_t>(2+(first && after_previous?gap_ms:0))});first=false;}
++        events.push_back({code,true,static_cast<std::uint32_t>(2+(first && after_previous?gap_ms:0))});
++        events.push_back({code,false,hold_ms});
++        for(auto it=prefix.rbegin();it!=prefix.rend();++it) events.push_back({*it,false,2});
++        // Only the next event is registered with PIC; guest execution drains the queue.
++    };
++    if (typing) {
++        if(text.empty() || text.size()>64) return fail("Text requires 1..64 ASCII characters");
++        const std::string shifted="!@#$%^&*()_+{}|:\"<>?~";
++        const std::string unshifted="1234567890-=[]\\;',./`";
++        for (const unsigned char ch:text) {
++            KBD_KEYS code=KBD_NONE; bool shift=false;
++            if(ch>='A' && ch<='Z') {code=AgentNamedKey(std::string(1,ch-'A'+'a'));shift=true;}
++            else if(ch==' ') code=KBD_space;
++            else if(ch=='\n' || ch=='\r') code=KBD_enter;
++            else if(ch=='\t') code=KBD_tab;
++            else {
++                const auto pos=shifted.find(static_cast<char>(ch));
++                if(pos!=std::string::npos) {code=AgentNamedKey(unshifted.substr(pos,1));shift=true;}
++                else code=AgentNamedKey(std::string(1,ch));
++            }
++            if(code==KBD_NONE || ch>=128 || ch==0) return fail("Text supports US-layout ASCII only");
++            append(code,shift?std::vector<KBD_KEYS>{KBD_leftshift}:std::vector<KBD_KEYS>{});
++        }
++    } else {
++        const auto code=AgentNamedKey(key);
++        if(code==KBD_NONE) return fail("Unknown keyboard key");
++        for(const auto mod:mods) if(code==mod) return fail("Key cannot duplicate its modifier");
++        append(code,mods);
++    }
++    agent_key_events.swap(events);
++    AGENT_KeyboardGetState(state);
++    PIC_AddEvent(AgentKeyDispatch,static_cast<pic_tickindex_t>(agent_key_events.front().delay));
++    return true;
++}
++} // namespace dosbox_agent
++#endif
 diff --git a/src/ints/mouse.cpp b/src/ints/mouse.cpp
 index 84ada2d..0ae2528 100644
 --- a/src/ints/mouse.cpp
@@ -4334,634 +5181,6 @@ index 27545af..d0daf4c 100644
 +    return agent_state_error.empty();
 +}
 +#endif
-diff --git a/client/python/tests/test_pipe_transport.py b/client/python/tests/test_pipe_transport.py
-new file mode 100644
-index 0000000..5160e08
---- /dev/null
-+++ b/client/python/tests/test_pipe_transport.py
-@@ -0,0 +1,255 @@
-+"""Real inherited-pipe RPC tests; no local socket service is required."""
-+from __future__ import annotations
-+
-+import json
-+import os
-+from pathlib import Path
-+import select
-+import sys
-+import tempfile
-+import threading
-+import time
-+import unittest
-+
-+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-+
-+from dosbox_agent import AgentClient, AgentConfig, AgentConnectionError, AgentProtocolError
-+from dosbox_agent.client import PipeTransport, load_config
-+
-+
-+@unittest.skipUnless(os.name == "posix", "POSIX inherited-pipe transport")
-+class PipeTransportTests(unittest.TestCase):
-+    def setUp(self):
-+        self.server_read, self.client_write = os.pipe()
-+        self.client_read, self.server_write = os.pipe()
-+        for fd in (self.server_read, self.client_write, self.client_read, self.server_write):
-+            self.addCleanup(self.close_fd, fd)
-+
-+    @staticmethod
-+    def close_fd(fd):
-+        try:
-+            os.close(fd)
-+        except OSError:
-+            pass
-+
-+    def transport(self):
-+        transport = PipeTransport(self.client_read, self.client_write)
-+        self.addCleanup(transport.close)
-+        return transport
-+
-+    @staticmethod
-+    def read_line(fd):
-+        data = bytearray()
-+        while not data.endswith(b"\n"):
-+            if not select.select([fd], [], [], 2)[0]:
-+                raise TimeoutError("test server received no complete request")
-+            chunk = os.read(fd, 4096)
-+            if not chunk:
-+                raise EOFError("test client closed before a complete request")
-+            data.extend(chunk)
-+        return bytes(data[:-1])
-+
-+    def server(self, action):
-+        errors = []
-+
-+        def run():
-+            try:
-+                action(self.server_read, self.server_write)
-+            except BaseException as error:
-+                errors.append(error)
-+
-+        thread = threading.Thread(target=run, daemon=True)
-+        thread.start()
-+        self.addCleanup(thread.join, 3)
-+        return thread, errors
-+
-+    def test_launcher_import_and_config_accept_dedicated_pipe_endpoint(self):
-+        with tempfile.TemporaryDirectory() as directory:
-+            path = Path(directory) / "agent.env"
-+            content = "\n".join(("transport=pipe", "endpoint=fd:3:4",
-+                "dosbox_executable=/program", "dosbox_workdir=/work",
-+                "request_timeout_ms=100", "max_message_bytes=128",
-+                "max_memory_read_bytes=64", "max_trace_events=16"))
-+            path.write_text(content)
-+            self.assertEqual(load_config(path).transport, "pipe")
-+            for endpoint in ("fd:0:4", "fd:3:3", "fd:3:-4", "fd:3:4:5", "fd:3:999999999999999", "pipe:3:4"):
-+                path.write_text(content.replace("fd:3:4", endpoint))
-+                with self.subTest(endpoint=endpoint), self.assertRaisesRegex(ValueError, "fd:READ:WRITE"):
-+                    load_config(path)
-+
-+    def test_sequential_agent_client_calls_use_same_inherited_channels(self):
-+        received = []
-+        def reply(read_fd, write_fd):
-+            for _ in range(2):
-+                request = json.loads(self.read_line(read_fd))
-+                received.append(request)
-+                data = json.dumps({"jsonrpc":"2.0", "id":request["id"], "result":{"transport":"pipe"}}).encode()+b"\n"
-+                os.write(write_fd, data[:7])
-+                os.write(write_fd, data[7:])
-+        thread, errors = self.server(reply)
-+        config = AgentConfig(Path("/config"), "pipe", f"fd:{self.client_read}:{self.client_write}",
-+                             Path("/program"), Path("/work"), 500, 1024, 256, 100)
-+        with AgentClient(config) as client:
-+            self.assertEqual(client.capabilities(), {"transport":"pipe"})
-+            self.assertEqual(client.capabilities(), {"transport":"pipe"})
-+        thread.join(1)
-+        self.assertEqual(errors, [])
-+        self.assertEqual(len({request["id"] for request in received}), 2)
-+
-+    def test_transport_duplicates_descriptors_and_close_preserves_caller_ownership(self):
-+        transport = self.transport()
-+        transport.close()
-+        transport.close()
-+        os.fstat(self.client_read)
-+        os.fstat(self.client_write)
-+        with self.assertRaisesRegex(AgentConnectionError, "closed"):
-+            transport.request("{}", 100, 128)
-+
-+    def test_large_request_and_response_are_framed_without_truncation(self):
-+        payload = json.dumps({"data":"x"*200000})
-+        response = json.dumps({"data":"é"*70000}, ensure_ascii=False)
-+        received = []
-+        def reply(read_fd, write_fd):
-+            received.append(self.read_line(read_fd).decode())
-+            encoded = response.encode()+b"\n"
-+            for index in range(0, len(encoded), 317):
-+                os.write(write_fd, encoded[index:index+317])
-+        thread, errors = self.server(reply)
-+        self.assertEqual(self.transport().request(payload, 2000, 300000), response)
-+        thread.join(1)
-+        self.assertEqual(errors, [])
-+        self.assertEqual(received, [payload])
-+
-+    def test_request_size_limit_rejects_before_writing_and_keeps_channel_usable(self):
-+        transport = self.transport()
-+        with self.assertRaisesRegex(AgentProtocolError, "request exceeds"):
-+            transport.request("é"*65, 100, 128)
-+        self.assertEqual(select.select([self.server_read], [], [], 0)[0], [])
-+        thread, errors = self.server(lambda r,w: (self.read_line(r), os.write(w,b"ok\n")))
-+        self.assertEqual(transport.request("{}", 500, 128), "ok")
-+        thread.join(1)
-+        self.assertEqual(errors, [])
-+
-+    def test_exact_response_byte_limit_is_accepted(self):
-+        thread, errors = self.server(lambda r,w: (self.read_line(r), os.write(w,b"x"*128+b"\n")))
-+        self.assertEqual(self.transport().request("{}", 500, 128), "x"*128)
-+        thread.join(1)
-+        self.assertEqual(errors, [])
-+
-+    def assert_bad_response_closes_channel(self, response, message):
-+        transport = self.transport()
-+        thread, errors = self.server(lambda r,w: (self.read_line(r), os.write(w,response)))
-+        with self.assertRaisesRegex(AgentProtocolError, message):
-+            transport.request("{}", 500, 128)
-+        thread.join(1)
-+        self.assertEqual(errors, [])
-+        with self.assertRaisesRegex(AgentConnectionError, "closed"):
-+            transport.request("{}", 100, 128)
-+
-+    def test_oversized_response_closes_channel(self):
-+        self.assert_bad_response_closes_channel(b"x"*129+b"\n", "response exceeds")
-+
-+    def test_invalid_utf8_response_closes_channel(self):
-+        self.assert_bad_response_closes_channel(b"\xff\n", "UTF-8")
-+
-+    def test_unsolicited_bytes_after_response_close_channel(self):
-+        self.assert_bad_response_closes_channel(b"ok\nextra", "unsolicited")
-+
-+    def test_partial_response_eof_is_an_error(self):
-+        def reply(read_fd, write_fd):
-+            self.read_line(read_fd)
-+            os.write(write_fd, b"partial")
-+            os.close(write_fd)
-+        thread, errors = self.server(reply)
-+        with self.assertRaisesRegex(AgentConnectionError, "complete response"):
-+            self.transport().request("{}", 500, 128)
-+        thread.join(1)
-+        self.assertEqual(errors, [])
-+
-+    def test_response_timeout_closes_channel_without_replaying_request(self):
-+        received = []
-+        def reply(read_fd, write_fd):
-+            received.append(self.read_line(read_fd))
-+            time.sleep(0.15)
-+        thread, errors = self.server(reply)
-+        transport = self.transport()
-+        with self.assertRaisesRegex(AgentConnectionError, "timed out"):
-+            transport.request('{"id":1}', 30, 128)
-+        with self.assertRaisesRegex(AgentConnectionError, "closed"):
-+            transport.request('{"id":1}', 30, 128)
-+        thread.join(1)
-+        self.assertEqual(errors, [])
-+        self.assertEqual(received, [b'{"id":1}'])
-+        self.assertEqual(select.select([self.server_read], [], [], 0)[0], [])
-+
-+    def test_write_timeout_is_bounded_when_server_does_not_read(self):
-+        transport = self.transport()
-+        started = time.monotonic()
-+        with self.assertRaisesRegex(AgentConnectionError, "timed out"):
-+            transport.request("x"*2000000, 30, 2000001)
-+        self.assertLess(time.monotonic()-started, 0.5)
-+        with self.assertRaisesRegex(AgentConnectionError, "closed"):
-+            transport.request("{}", 100, 128)
-+
-+    def test_waiting_request_deadline_does_not_interrupt_active_exchange(self):
-+        transport = self.transport()
-+        received, results, failures = [], [], []
-+        first_received, release_reply = threading.Event(), threading.Event()
-+
-+        def reply(read_fd, write_fd):
-+            received.append(self.read_line(read_fd))
-+            first_received.set()
-+            if not release_reply.wait(1):
-+                raise TimeoutError("test did not release first response")
-+            os.write(write_fd, b"first-response\n")
-+
-+        def first_request():
-+            try:
-+                results.append(transport.request("first", 1000, 128))
-+            except BaseException as error:
-+                failures.append(error)
-+
-+        server_thread, errors = self.server(reply)
-+        requester = threading.Thread(target=first_request, daemon=True)
-+        requester.start()
-+        self.assertTrue(first_received.wait(1))
-+        try:
-+            with self.assertRaisesRegex(AgentConnectionError, "request lock"):
-+                transport.request("second", 30, 128)
-+        finally:
-+            release_reply.set()
-+            requester.join(1)
-+            server_thread.join(1)
-+        self.assertEqual(failures, [])
-+        self.assertEqual(errors, [])
-+        self.assertEqual(results, ["first-response"])
-+        self.assertEqual(received, [b"first"])
-+        self.assertEqual(select.select([self.server_read], [], [], 0)[0], [])
-+
-+    def test_only_distinct_readable_and_writable_fifo_descriptors_are_accepted(self):
-+        with tempfile.TemporaryFile() as file:
-+            for read_fd, write_fd in ((0,self.client_write), (self.client_read,self.client_read),
-+                                     (self.client_write,self.client_read), (file.fileno(),self.client_write)):
-+                with self.subTest(read_fd=read_fd,write_fd=write_fd), self.assertRaises((ValueError, AgentConnectionError)):
-+                    PipeTransport(read_fd, write_fd)
-+
-+    def test_same_backing_fifo_is_rejected(self):
-+        # Darwin assigns different inode identities to an anonymous pipe's
-+        # two ends. A named FIFO gives both hosts the same observable identity.
-+        with tempfile.TemporaryDirectory() as directory:
-+            path = Path(directory) / 'same-fifo'
-+            os.mkfifo(path, 0o600)
-+            read_fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
-+            try:
-+                write_fd = os.open(path, os.O_WRONLY | os.O_NONBLOCK)
-+                try:
-+                    with self.assertRaisesRegex(ValueError, 'separate writable FIFO'):
-+                        PipeTransport(read_fd, write_fd)
-+                finally:
-+                    os.close(write_fd)
-+            finally:
-+                os.close(read_fd)
-+
-+
-+if __name__ == "__main__":
-+    unittest.main()
-diff --git a/client/python/tests/test_unix_transport.py b/client/python/tests/test_unix_transport.py
-new file mode 100644
-index 0000000..aed1ff4
---- /dev/null
-+++ b/client/python/tests/test_unix_transport.py
-@@ -0,0 +1,233 @@
-+"""Real local IPC tests for the POSIX debugger transport and client."""
-+from __future__ import annotations
-+
-+from dataclasses import replace
-+import json
-+import os
-+from pathlib import Path
-+import select
-+import shutil
-+import socket
-+import stat
-+import subprocess
-+import sys
-+import tempfile
-+import threading
-+import time
-+import unittest
-+
-+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-+
-+from dosbox_agent import AgentClient, AgentConfig, AgentConnectionError, AgentProtocolError
-+from dosbox_agent.client import UnixSocketTransport, load_config
-+
-+
-+ROOT = Path(__file__).resolve().parents[3]
-+
-+
-+@unittest.skipUnless(os.name == 'posix', 'POSIX local socket transport')
-+class UnixSocketClientTests(unittest.TestCase):
-+    def setUp(self):
-+        self.directory = tempfile.TemporaryDirectory()
-+        self.addCleanup(self.directory.cleanup)
-+        self.path = Path(self.directory.name)/'agent.sock'
-+
-+    def server(self, action):
-+        listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-+        listener.bind(str(self.path))
-+        os.chmod(self.path, 0o600)
-+        listener.listen(1)
-+        errors = []
-+
-+        def run():
-+            try:
-+                connection, _ = listener.accept()
-+                with connection:
-+                    action(connection)
-+            except Exception as error:
-+                errors.append(error)
-+            finally:
-+                listener.close()
-+
-+        thread = threading.Thread(target=run, daemon=True)
-+        thread.start()
-+        self.addCleanup(listener.close)
-+        self.addCleanup(lambda: thread.join(2))
-+        return thread, errors
-+
-+    def test_agent_client_uses_real_socket_and_matches_request_identity(self):
-+        def reply(connection):
-+            request = json.loads(connection.makefile('rb').readline())
-+            payload = json.dumps(dict(jsonrpc='2.0', id=request['id'], result={'transport':'unix_socket'})).encode()+b'\n'
-+            connection.sendall(payload[:9])
-+            connection.sendall(payload[9:])
-+
-+        thread, errors = self.server(reply)
-+        config = AgentConfig(Path(self.directory.name)/'agent.env','unix_socket',str(self.path),
-+                             Path('/program'),Path('/work'),500,1024,256,100)
-+        with AgentClient(config) as client:
-+            self.assertEqual(client.capabilities(), {'transport':'unix_socket'})
-+        thread.join(1)
-+        self.assertEqual(errors, [])
-+
-+    def test_private_parent_and_socket_permissions_are_required(self):
-+        self.server(lambda connection: connection.close())
-+        os.chmod(self.path, 0o666)
-+        transport = UnixSocketTransport(str(self.path))
-+        with self.assertRaisesRegex(AgentConnectionError, 'mode-0600'):
-+            transport.request('{}',100,128)
-+        os.chmod(self.path, 0o600)
-+        os.chmod(self.directory.name,0o755)
-+        try:
-+            with self.assertRaisesRegex(AgentConnectionError, 'mode-0700'):
-+                transport.request('{}',100,128)
-+        finally:
-+            os.chmod(self.directory.name,0o700)
-+
-+    def test_oversized_response_is_rejected_without_truncating(self):
-+        def reply(connection):
-+            connection.recv(128)
-+            connection.sendall(b'x'*129+b'\n')
-+        self.server(reply)
-+        with self.assertRaisesRegex(AgentProtocolError, 'exceeds'):
-+            UnixSocketTransport(str(self.path)).request('{}',500,128)
-+
-+    def test_non_utf8_response_is_explicit_protocol_error(self):
-+        def reply(connection):
-+            connection.recv(128)
-+            connection.sendall(b'\xff\n')
-+        self.server(reply)
-+        with self.assertRaisesRegex(AgentProtocolError, 'UTF-8'):
-+            UnixSocketTransport(str(self.path)).request('{}',500,128)
-+
-+    def test_timeout_closes_connection_without_resending_request(self):
-+        received = []
-+        def reply(connection):
-+            received.append(connection.recv(128))
-+            time.sleep(0.15)
-+        thread, errors = self.server(reply)
-+        transport = UnixSocketTransport(str(self.path))
-+        with self.assertRaises(AgentConnectionError):
-+            transport.request('{"id":1}',30,128)
-+        self.assertIsNone(transport._socket)
-+        thread.join(1)
-+        self.assertEqual(received,[b'{"id":1}\n'])
-+
-+    def test_unix_config_is_explicit_and_has_absolute_endpoint(self):
-+        path = Path(self.directory.name)/'agent.env'
-+        content = '\n'.join(('transport=unix_socket',f'endpoint={self.path}',
-+                             'dosbox_executable=/program','dosbox_workdir=/work',
-+                             'request_timeout_ms=100','max_message_bytes=128',
-+                             'max_memory_read_bytes=64','max_trace_events=16'))
-+        path.write_text(content)
-+        self.assertEqual(load_config(path).transport,'unix_socket')
-+        path.write_text(content.replace(str(self.path),'relative.sock'))
-+        with self.assertRaisesRegex(ValueError, 'absolute'):
-+            load_config(path)
-+
-+
-+@unittest.skipUnless(os.name == 'posix' and shutil.which('g++'), 'POSIX C++ compiler')
-+class UnixSocketServerTests(unittest.TestCase):
-+    @classmethod
-+    def setUpClass(cls):
-+        cls.build = tempfile.TemporaryDirectory()
-+        cls.executable = Path(cls.build.name)/'transport-probe'
-+        subprocess.run(['g++','-std=c++11','-pthread','-DC_DEBUG=1','-DC_DOSBOX_AGENT=1',
-+                        '-I'+str(ROOT/'include'),str(ROOT/'src/agent/transport/local_transport.cpp'),
-+                        str(ROOT/'src/agent/transport/unix_transport_probe.cpp'),'-o',str(cls.executable)],
-+                       check=True,capture_output=True,text=True)
-+
-+    @classmethod
-+    def tearDownClass(cls):
-+        cls.build.cleanup()
-+
-+    def setUp(self):
-+        self.directory = tempfile.TemporaryDirectory()
-+        self.addCleanup(self.directory.cleanup)
-+        self.path = Path(self.directory.name)/'agent.sock'
-+
-+    def launch(self):
-+        process = subprocess.Popen([str(self.executable),str(self.path)],stdin=subprocess.PIPE,
-+                                   stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
-+        self.addCleanup(lambda: self.cleanup_process(process))
-+        self.assertTrue(select.select([process.stdout],[],[],3)[0], 'server startup timed out')
-+        self.assertEqual(process.stdout.readline().strip(),'READY')
-+        return process
-+
-+    @staticmethod
-+    def cleanup_process(process):
-+        if process.poll() is None:
-+            try:
-+                process.communicate('stop\n',timeout=2)
-+            except subprocess.TimeoutExpired:
-+                process.kill()
-+                process.communicate(timeout=2)
-+
-+    def test_real_server_permissions_framing_and_concurrent_clients(self):
-+        process = self.launch()
-+        self.assertEqual(stat.S_IMODE(self.path.stat().st_mode),0o600)
-+        first = socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
-+        first.connect(str(self.path))
-+        self.addCleanup(first.close)
-+        second = UnixSocketTransport(str(self.path))
-+        self.addCleanup(second.close)
-+        # An idle connection must not prevent another debugger request.
-+        self.assertEqual(second.request('{"id":2}',500,128),'{"id":2}')
-+        first.sendall(b'{"id":')
-+        first.sendall(b'1}\n')
-+        self.assertEqual(first.recv(128),b'{"id":1}\n')
-+        self.assertEqual(second.request('{"id":3}',500,128),'{"id":3}')
-+        stdout,stderr = process.communicate('stop\n',timeout=2)
-+        self.assertEqual(process.returncode,0,stderr)
-+        self.assertIn('STOPPED',stdout)
-+        self.assertFalse(self.path.exists())
-+
-+    def test_existing_file_or_socket_is_not_removed_or_replaced(self):
-+        self.path.write_text('retain me')
-+        result = subprocess.run([str(self.executable),str(self.path)],input='stop\n',
-+                                capture_output=True,text=True,timeout=3)
-+        self.assertEqual(result.returncode,1)
-+        self.assertIn('refusing to replace',result.stderr)
-+        self.assertEqual(self.path.read_text(),'retain me')
-+        self.path.unlink()
-+        listener = socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
-+        self.addCleanup(listener.close)
-+        listener.bind(str(self.path))
-+        inode=self.path.stat().st_ino
-+        result=subprocess.run([str(self.executable),str(self.path)],capture_output=True,text=True,timeout=3)
-+        self.assertEqual(result.returncode,1)
-+        self.assertEqual(self.path.stat().st_ino,inode)
-+
-+    def test_replaced_endpoint_is_not_unlinked_during_shutdown(self):
-+        process=self.launch()
-+        self.path.unlink()
-+        self.path.write_text('replacement')
-+        process.communicate('stop\n',timeout=2)
-+        self.assertEqual(self.path.read_text(),'replacement')
-+
-+    def test_parent_permissions_and_overlong_path_reject_before_bind(self):
-+        os.chmod(self.directory.name,0o755)
-+        try:
-+            result=subprocess.run([str(self.executable),str(self.path)],capture_output=True,text=True,timeout=3)
-+            self.assertEqual(result.returncode,1)
-+            self.assertIn('0700',result.stderr)
-+            self.assertFalse(self.path.exists())
-+        finally:
-+            os.chmod(self.directory.name,0o700)
-+        result=subprocess.run([str(self.executable),str(self.path.parent/('x'*120))],
-+                              capture_output=True,text=True,timeout=3)
-+        self.assertEqual(result.returncode,1)
-+        self.assertIn('too long',result.stderr)
-+
-+    def test_oversized_request_disconnects_without_executing_truncated_request(self):
-+        self.launch()
-+        connection=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
-+        self.addCleanup(connection.close)
-+        connection.settimeout(1)
-+        connection.connect(str(self.path))
-+        connection.sendall(b'x'*129+b'\n')
-+        self.assertEqual(connection.recv(128),b'')
-+
-+
-+if __name__ == '__main__':
-+    unittest.main()
-diff --git a/include/agent/input_adapter.h b/include/agent/input_adapter.h
-new file mode 100644
-index 0000000..3365b64
---- /dev/null
-+++ b/include/agent/input_adapter.h
-@@ -0,0 +1,51 @@
-+#ifndef DOSBOX_AGENT_INPUT_ADAPTER_H
-+#define DOSBOX_AGENT_INPUT_ADAPTER_H
-+
-+#include <cstdint>
-+#include <string>
-+
-+namespace dosbox_agent {
-+
-+// Observed DOS INT 33h driver coordinates, after clipping and granularity.
-+// These are not host pointer coordinates or accelerated relative mickeys.
-+struct AgentMouseState {
-+    std::int32_t x = 0;
-+    std::int32_t y = 0;
-+    std::int32_t min_x = 0;
-+    std::int32_t max_x = 0;
-+    std::int32_t min_y = 0;
-+    std::int32_t max_y = 0;
-+    std::int32_t screen_max_x = 0;
-+    std::int32_t screen_max_y = 0;
-+    std::uint32_t buttons = 0;
-+    std::uint32_t owned_buttons = 0;
-+    std::uint32_t pending_release_buttons = 0;
-+    bool release_pending = false;
-+};
-+
-+// All functions are called on the emulation thread. Absolute positions are
-+// zero-based pixels in a supplied completed framebuffer's coordinate space.
-+// Frame freshness/current mode must be checked by the caller before injection.
-+// The supported target is the built-in DOS INT 33h driver, not guest PS/2,
-+// serial-only, PC-98, protected-mode or externally installed mouse drivers.
-+bool AGENT_MouseGetState(AgentMouseState* state, std::string* error);
-+bool AGENT_MouseMoveAbsolute(std::uint32_t x, std::uint32_t y,
-+                             std::uint32_t frame_width,
-+                             std::uint32_t frame_height,
-+                             AgentMouseState* state, std::string* error);
-+bool AGENT_MouseButton(std::uint32_t button, bool pressed,
-+                       AgentMouseState* state, std::string* error);
-+bool AGENT_MouseClickAbsolute(std::uint32_t x, std::uint32_t y,
-+                              std::uint32_t frame_width,
-+                              std::uint32_t frame_height,
-+                              std::uint32_t button, std::uint32_t hold_ms,
-+                              AgentMouseState* state, std::string* error);
-+
-+// Cancel queued releases and release only buttons pressed by this adapter.
-+// A queued click holds its button until hold_ms of guest emulated time passes;
-+// an RPC response does not establish that the guest has processed that input.
-+void AGENT_MouseResetInput();
-+
-+} // namespace dosbox_agent
-+
-+#endif
-diff --git a/include/agent/video_adapter.h b/include/agent/video_adapter.h
-new file mode 100644
-index 0000000..efc01ae
---- /dev/null
-+++ b/include/agent/video_adapter.h
-@@ -0,0 +1,32 @@
-+#ifndef DOSBOX_AGENT_VIDEO_ADAPTER_H
-+#define DOSBOX_AGENT_VIDEO_ADAPTER_H
-+
-+#include <cstdint>
-+#include <string>
-+#include <vector>
-+
-+namespace dosbox_agent {
-+
-+// Pixels use the completed guest renderer source, before host scaling, menu
-+// bars and aspect correction. Mouse coordinates use this same upper-left grid.
-+struct FrameSnapshot {
-+    std::uint32_t width = 0;
-+    std::uint32_t height = 0;
-+    std::uint32_t source_bpp = 0;
-+    std::uint64_t frame_id = 0;
-+    std::uint64_t mode_id = 0;
-+    std::uint64_t captured_ticks = 0;
-+    bool double_width = false;
-+    bool double_height = false;
-+    std::vector<std::uint8_t> rgba;
-+};
-+
-+// Invoke these on the emulation thread. A snapshot never advances execution;
-+// it fails until a complete frame exists for the current video mode.
-+void AGENT_EnableFrameCapture(bool enabled);
-+bool AGENT_GetFrameSnapshot(FrameSnapshot* frame, std::string* error);
-+bool AGENT_IsHeadless();
-+
-+} // namespace dosbox_agent
-+
-+#endif
-diff --git a/src/agent/transport/unix_transport_probe.cpp b/src/agent/transport/unix_transport_probe.cpp
-new file mode 100644
-index 0000000..0dedf94
---- /dev/null
-+++ b/src/agent/transport/unix_transport_probe.cpp
-@@ -0,0 +1,27 @@
-+// Standalone transport acceptance fixture; not part of the DOSBox executable.
-+#include "rpc_transport.h"
-+#include <iostream>
-+#include <string>
-+
-+int main(int argc, char** argv)
-+{
-+    if (argc != 2) return 2;
-+    dosbox_agent::AgentConfig config;
-+    config.transport = dosbox_agent::AgentTransport::UnixSocket;
-+    config.endpoint = argv[1];
-+    config.max_message_bytes = 128;
-+    config.request_timeout_ms = 200;
-+    std::unique_ptr<dosbox_agent::IRpcTransport> transport =
-+        dosbox_agent::AGENT_CreateLocalTransport(config.transport);
-+    std::string error;
-+    if (!transport->Start(config, [](const std::string& input) { return input; }, &error)) {
-+        std::cerr << error << std::endl;
-+        return 1;
-+    }
-+    std::cout << "READY" << std::endl;
-+    std::string command;
-+    std::getline(std::cin, command);
-+    transport->Stop();
-+    std::cout << "STOPPED" << std::endl;
-+    return 0;
-+}
 diff --git a/tests/agent_headless/MOUSEVID.asm b/tests/agent_headless/MOUSEVID.asm
 new file mode 100644
 index 0000000..18a2649

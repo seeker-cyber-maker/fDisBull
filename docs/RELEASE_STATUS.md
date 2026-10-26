@@ -1,6 +1,7 @@
 # Release status checked on 2026-10-26
 
-The source is **0.16.0**, adding [standalone DOS knowledge](DOS_KNOWLEDGE.md),
+The source is **0.16.0**, adding [guest keyboard input](GUEST_KEYBOARD.md),
+[standalone DOS knowledge](DOS_KNOWLEDGE.md),
 [bounded saved-script waits](OBSERVATION_WAIT.md), temporal code interpretations,
 explicit observation semantics and the runtime doctor. Local offline Linux
 Python 3.13.5 acceptance passed **1,065 ordinary checks (59 skipped)** and
@@ -8,7 +9,9 @@ Python 3.13.5 acceptance passed **1,065 ordinary checks (59 skipped)** and
 [acceptance record](VERIFICATION-DOS-KNOWLEDGE.md). The earlier failure receipts
 remain historical evidence. Exact-commit ordinary and native GitHub Linux CI
 must pass before tagging. Tag CI and GitHub publication are separate gates.
-The latest published package release is **0.14.0**.
+The keyboard follow-up passed [312 selected native Mac checks](VERIFICATION-GUEST-KEYBOARD.md)
+and an actual DinoPark name-entry/state-restore replay. Its final Linux CI remains
+a separate gate. The latest published package release is **0.14.0**.
 [v0.14.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0)
 is published, not draft or prerelease, and targets
 `6a0aeb3830eb544cd744d3410881c1c951a5ffb7`. Five unchanged tag-CI assets were

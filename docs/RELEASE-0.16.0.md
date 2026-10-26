@@ -1,5 +1,11 @@
 # fDisBull 0.16.0
 
+[Guest keyboard input](GUEST_KEYBOARD.md) adds Python `keyboard.press` and
+`keyboard.type`, matching saved-script operations, timed releases, bounded
+US-layout ASCII typing and inspectable queue state to both DOS backend patches.
+Keys enter through the emulated controller. Pending input prevents state saving;
+state loading and target termination cancel this adapter's input.
+
 The standalone DOS follow-up adds [bounded saved-script observation waits](OBSERVATION_WAIT.md)
 and [DOS analysis knowledge](DOS_KNOWLEDGE.md): 182 licensed, provenance-bound
 runtime signatures; OMF extraction and reusable project signature catalogs;

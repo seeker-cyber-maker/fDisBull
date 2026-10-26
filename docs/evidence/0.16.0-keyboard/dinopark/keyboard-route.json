@@ -1,0 +1,173 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "run",
+      "guest_ms": 35000,
+      "timeout_ms": 15000,
+      "fast_forward": true
+    },
+    {
+      "op": "click-frame",
+      "x": 80,
+      "y": 160,
+      "name": "new-game.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 1800,
+      "timeout_ms": 15000,
+      "fast_forward": false
+    },
+    {
+      "op": "keyboard.press",
+      "key": "escape"
+    },
+    {
+      "op": "run",
+      "guest_ms": 180,
+      "timeout_ms": 15000,
+      "fast_forward": false
+    },
+    {
+      "op": "run",
+      "guest_ms": 500,
+      "timeout_ms": 15000,
+      "fast_forward": false
+    },
+    {
+      "op": "keyboard.press",
+      "key": "escape"
+    },
+    {
+      "op": "run",
+      "guest_ms": 180,
+      "timeout_ms": 15000,
+      "fast_forward": false
+    },
+    {
+      "op": "run",
+      "guest_ms": 500,
+      "timeout_ms": 15000,
+      "fast_forward": false
+    },
+    {
+      "op": "click-frame",
+      "x": 175,
+      "y": 187,
+      "name": "leave-bank.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 600,
+      "timeout_ms": 15000,
+      "fast_forward": false
+    },
+    {
+      "op": "click-frame",
+      "x": 145,
+      "y": 187,
+      "name": "main-menu.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 600,
+      "timeout_ms": 15000,
+      "fast_forward": false
+    },
+    {
+      "op": "click-frame",
+      "x": 216,
+      "y": 122,
+      "name": "save-game.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 600,
+      "timeout_ms": 15000,
+      "fast_forward": false
+    },
+    {
+      "op": "click-frame",
+      "x": 96,
+      "y": 57,
+      "name": "name-field.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 200,
+      "timeout_ms": 15000,
+      "fast_forward": false
+    },
+    {
+      "op": "keyboard.press",
+      "key": "home"
+    },
+    {
+      "op": "run",
+      "guest_ms": 180,
+      "timeout_ms": 15000,
+      "fast_forward": false
+    },
+    {
+      "op": "repeat",
+      "count": 8,
+      "steps": [
+        {
+          "op": "keyboard.press",
+          "key": "delete"
+        },
+        {
+          "op": "run",
+          "guest_ms": 180,
+          "timeout_ms": 5000,
+          "fast_forward": true
+        }
+      ]
+    },
+    {
+      "op": "keyboard.type",
+      "text": "FD16TEST"
+    },
+    {
+      "op": "run",
+      "guest_ms": 1300,
+      "timeout_ms": 15000,
+      "fast_forward": false
+    },
+    {
+      "op": "keyboard.press",
+      "key": "backspace"
+    },
+    {
+      "op": "run",
+      "guest_ms": 180,
+      "timeout_ms": 15000,
+      "fast_forward": false
+    },
+    {
+      "op": "keyboard.type",
+      "text": "1"
+    },
+    {
+      "op": "run",
+      "guest_ms": 180,
+      "timeout_ms": 15000,
+      "fast_forward": false
+    },
+    {
+      "op": "keyboard.state",
+      "as": "keyboard"
+    }
+  ]
+}

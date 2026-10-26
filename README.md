@@ -50,7 +50,7 @@ feature limits and the ordinary/native Linux checks required before tagging.
 
 | Track | Source and availability | Verification |
 | --- | --- | --- |
-| **Working candidate: 0.16.0** | Temporal interpretations, observation contracts and runtime doctor; uncommitted | [Candidate notes](docs/RELEASE-0.16.0.md) and [verification](docs/VERIFICATION-0.16.md). No tag or release CI yet. |
+| **Working candidate: 0.16.0** | Temporal interpretations, standalone DOS knowledge, bounded waits and guest keyboard input | [Candidate notes](docs/RELEASE-0.16.0.md) and [verification](docs/VERIFICATION-0.16.md). Final-commit ordinary and native CI gate tagging. |
 | **CI-verified main candidate: 0.15.0** | [Saved debugger experiments](docs/DEBUGGER_EXPERIMENTS.md) on the existing unified debugger | [Candidate notes](docs/RELEASE-0.15.0.md) and [local verification](docs/VERIFICATION-0.15.md). No 0.15.0 tag/release; exact CI packages are additionally available in the GitHub offline asset. |
 | **Latest published package release: 0.14.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0), commit `6a0aeb3` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623197): 817 passed, 45 skipped. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623209): 15 stable DOS, 38 layers/endpoint, 14 PE64 and 10 DOS/QEMU/boot checks passed, no native skips. |
 | **Repository branch** | [main](https://github.com/seeker-cyber-maker/fDisBull/tree/main) is the only active branch | Release promotion requires both ordinary and native Linux CI. Use version tags for fixed source snapshots. The old experimental checkpoint is preserved under an archive tag. |

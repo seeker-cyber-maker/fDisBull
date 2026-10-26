@@ -1,5 +1,9 @@
 # Reusable debugger routes and native checkpoints
 
+Version 0.16.0 adds [guest keyboard input](GUEST_KEYBOARD.md) through
+`keyboard.press`, `keyboard.type` and `keyboard.state`, plus explicit bounded
+`run`/`wait` operations to let the guest consume queued key events.
+
 Version 0.15.0 adds [saved experiments](DEBUGGER_EXPERIMENTS.md), which capture
 the route and restore its native checkpoint, layer stack, breakpoints, watches
 and hook hit counts before each baseline/layer trial. Ordinary `load-state`

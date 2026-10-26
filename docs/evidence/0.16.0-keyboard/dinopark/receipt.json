@@ -1,0 +1,21 @@
+{
+  "version": "0.16.0",
+  "backend_sha256": "315beb4e01c7d81a96209dd949c239675517af53102dd97bd0eb30bde7a0fdbb",
+  "script_sha256": "b3292c9b976a8d8cbd2f2e9b9052236dd5d1ec4d7a4f8f8ec4e1ce5c93d57f59",
+  "source_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+  "input": "FD16TEST then Backspace then 1",
+  "observed_ascii": "FD16TES1",
+  "runtime_linear_addresses": [
+    "0x00046CDC"
+  ],
+  "native_state_restored_in_fresh_session": true,
+  "keyboard_after_restore": {
+    "owned_keys": 0,
+    "pending_events": 0,
+    "queued_guest_ms": 0
+  },
+  "original_files_unchanged": 192,
+  "copied_files_unchanged": 192,
+  "processes_reaped": true,
+  "scope": "Save-name dialog typing and native restoration; no save confirmation or durable leaderboard claim"
+}

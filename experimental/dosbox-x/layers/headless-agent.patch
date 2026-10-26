@@ -865,10 +865,10 @@ index d1abe84..17aa909 100644
  struct NativeBreakpoint {
 diff --git a/include/agent/input_adapter.h b/include/agent/input_adapter.h
 new file mode 100644
-index 0000000..3365b64
+index 0000000..9f214a1
 --- /dev/null
 +++ b/include/agent/input_adapter.h
-@@ -0,0 +1,51 @@
+@@ -0,0 +1,66 @@
 +#ifndef DOSBOX_AGENT_INPUT_ADAPTER_H
 +#define DOSBOX_AGENT_INPUT_ADAPTER_H
 +
@@ -916,6 +916,21 @@ index 0000000..3365b64
 +// A queued click holds its button until hold_ms of guest emulated time passes;
 +// an RPC response does not establish that the guest has processed that input.
 +void AGENT_MouseResetInput();
++
++
++struct AgentKeyboardState {
++    std::uint32_t pending_events = 0;
++    std::uint32_t owned_keys = 0;
++    std::uint32_t duration_ms = 0;
++};
++// Emulation thread only. Named physical keys and US-layout ASCII typing use
++// the emulated keyboard controller, never BIOS-buffer or guest-memory writes.
++bool AGENT_KeyboardQueue(const std::string& key, const std::string& text,
++                         const std::string& modifiers, bool typing,
++                         std::uint32_t hold_ms, std::uint32_t gap_ms,
++                         AgentKeyboardState* state, std::string* error);
++void AGENT_KeyboardGetState(AgentKeyboardState* state);
++void AGENT_KeyboardResetInput();
 +
 +} // namespace dosbox_agent
 +
@@ -1072,6 +1087,19 @@ index e7e6974..990eccb 100644
  	if ((address & 0xfffu)<0xffdu) {
  		const HostPt tlb_addr=get_tlb_write(address);
  		if (tlb_addr) host_writed(tlb_addr+address,val);
+diff --git a/include/zipcppstdbuf.h b/include/zipcppstdbuf.h
+index aff85f2..eda9c7d 100644
+--- a/include/zipcppstdbuf.h
++++ b/include/zipcppstdbuf.h
+@@ -20,6 +20,8 @@ public:
+ 	virtual ~zip_ostreambuf() { close(); }
+ public:
+ 	virtual std::streamsize xsputn(const Base::char_type *s, std::streamsize count) override {
++		// crc32(seed, NULL, 0) resets the CRC; an empty write must preserve it.
++		if (count == 0) return 0;
+ 		assert(zf != NULL);
+ 
+ 		const int err = zipWriteInFileInZip(zf, (void*)s, count);
 diff --git a/src/agent/Makefile.am b/src/agent/Makefile.am
 index 437b7c3..fd601cd 100644
 --- a/src/agent/Makefile.am
@@ -1145,7 +1173,7 @@ index a315ca1..4f17576 100644
      return "unknown";
  }
 diff --git a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cpp
-index 29363cf..373bec3 100644
+index 29363cf..dc80132 100644
 --- a/src/agent/server/agent_server.cpp
 +++ b/src/agent/server/agent_server.cpp
 @@ -5,6 +5,12 @@
@@ -1173,24 +1201,26 @@ index 29363cf..373bec3 100644
  namespace dosbox_agent {
  namespace {
  
-@@ -447,7 +458,11 @@ static bool IsKnownMethod(const std::string& method)
+@@ -447,7 +458,12 @@ static bool IsKnownMethod(const std::string& method)
             method == "execution.pause" ||
             method == "execution.step" ||
             method == "execution.wait" ||
 +           method == "layers.configure" || method == "execution.timing" || method == "state.save" || method == "state.load" || method == "state.set_register" ||
             method == "state.get_registers" ||
 +           method == "video.screenshot" ||
++           method == "input.keyboard.press" || method == "input.keyboard.type" || method == "input.keyboard.state" ||
 +           method == "input.mouse.move" || method == "input.mouse.click" ||
 +           method == "input.mouse.button" || method == "input.mouse.state" ||
             method == "memory.read" ||
             method == "memory.write" ||
             method == "breakpoints.create" ||
-@@ -518,6 +533,14 @@ public:
+@@ -518,6 +534,15 @@ public:
          NativeBreakpoint breakpoint;
          std::string raw_output;
          std::vector<TraceSample> trace_samples;
 +        FrameSnapshot frame;
 +        AgentMouseState mouse;
++        AgentKeyboardState keyboard;
 +        std::uint64_t layer_generation = 0;
 +        bool overlay_valid = true;
 +        bool stale_frame = false;
@@ -1200,7 +1230,7 @@ index 29363cf..373bec3 100644
          bool trace_active = false;
          std::size_t trace_event_count = 0;
      };
-@@ -553,6 +576,7 @@ public:
+@@ -553,6 +578,7 @@ public:
          std::string last_stop_breakpoint_id;
          MemoryAddress last_stop_breakpoint_address;
          bool has_last_stop_breakpoint_address = false;
@@ -1208,7 +1238,7 @@ index 29363cf..373bec3 100644
          std::string failure_message;
          std::uint64_t state_revision = 0;
          std::uint64_t next_operation = 1;
-@@ -941,12 +965,14 @@ static JsonValue StopReason(const AgentServer::Impl::Session& session)
+@@ -941,12 +967,14 @@ static JsonValue StopReason(const AgentServer::Impl::Session& session)
  {
      JsonValue stop = Object();
      Add(&stop, "kind", String(session.last_stop_kind));
@@ -1224,7 +1254,7 @@ index 29363cf..373bec3 100644
          JsonValue address = Object();
          Add(&address, "space", String("segmented"));
          std::ostringstream segment;
-@@ -987,6 +1013,10 @@ static JsonValue TraceEventResult(const TraceEvent& event, const std::string& de
+@@ -987,6 +1015,10 @@ static JsonValue TraceEventResult(const TraceEvent& event, const std::string& de
      else if (detail == "long" && !event.sample.analysis.empty())
          instruction += " ; " + event.sample.analysis;
      Add(&result, "instruction", String(instruction));
@@ -1235,7 +1265,7 @@ index 29363cf..373bec3 100644
      JsonValue changes = Object();
      for (std::vector<TraceRegisterChange>::const_iterator change = event.register_changes.begin();
           change != event.register_changes.end(); ++change) {
-@@ -1185,6 +1215,85 @@ static void CacheResponse(AgentServer::Impl::Session* session,
+@@ -1185,6 +1217,85 @@ static void CacheResponse(AgentServer::Impl::Session* session,
      }
  }
  
@@ -1321,7 +1351,7 @@ index 29363cf..373bec3 100644
  static std::string Capabilities(const AgentConfig& config)
  {
      JsonValue result = Object();
-@@ -1194,6 +1303,29 @@ static std::string Capabilities(const AgentConfig& config)
+@@ -1194,6 +1305,30 @@ static std::string Capabilities(const AgentConfig& config)
  #else
      Add(&result, "debugger", JsonValue::Bool(false));
  #endif
@@ -1343,6 +1373,7 @@ index 29363cf..373bec3 100644
 +    Add(&timing, "guest_clock", String("PIC_Ticks_milliseconds"));
 +    Add(&result, "timing", timing);
 +    JsonValue input = Object();
++    Add(&input, "keyboard", String("ibm_pc_controller_us_ascii_v1"));
 +    Add(&input, "absolute_mouse", JsonValue::Bool(true));
 +    Add(&input, "driver", String("builtin_dos_int33_only"));
 +    Add(&input, "coordinate_space", String("guest_frame_pixels"));
@@ -1351,7 +1382,7 @@ index 29363cf..373bec3 100644
      JsonValue trace = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&trace, "cpu", JsonValue::Bool(true));
-@@ -1204,6 +1336,7 @@ static std::string Capabilities(const AgentConfig& config)
+@@ -1204,6 +1339,7 @@ static std::string Capabilities(const AgentConfig& config)
      JsonValue breakpoints = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&breakpoints, "memory_change", JsonValue::Bool(true));
@@ -1359,10 +1390,64 @@ index 29363cf..373bec3 100644
  #else
      Add(&breakpoints, "memory_change", JsonValue::Bool(false));
  #endif
-@@ -1754,6 +1887,360 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1754,6 +1890,417 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  }
              }
          }
++    } else if (parsed.method.compare(0,15,"input.keyboard.")==0) {
++        const bool typing=parsed.method=="input.keyboard.type";
++        const bool query=parsed.method=="input.keyboard.state";
++        std::string key,text,modifiers;
++        std::uint32_t hold_ms=40,gap_ms=40;
++        bool valid=query || GetString(parsed.params,typing?"text":"key",typing?&text:&key);
++        if(parsed.params.Find("modifiers")) valid=valid && GetString(parsed.params,"modifiers",&modifiers);
++        if(parsed.params.Find("hold_ms")) valid=valid && GetUnsignedInteger(*parsed.params.Find("hold_ms"),&hold_ms);
++        if(parsed.params.Find("gap_ms")) valid=valid && GetUnsignedInteger(*parsed.params.Find("gap_ms"),&gap_ms);
++        if(!valid || hold_ms<1 || hold_ms>1000 || gap_ms<1 || gap_ms>1000 || (typing && !modifiers.empty())) {
++            response=InvalidParams(parsed.id,"Invalid keyboard parameters");
++        } else if(session->state!=Impl::SessionState::Running && session->state!=Impl::SessionState::Stopped) {
++            response=SessionError(parsed.id,kErrorCapabilityUnavailable,"Target is not active","TARGET_EXITED",session);
++        } else {
++            const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
++            const std::string session_id=session->id;
++            if(SubmitEmulationCommandLocked(impl,[operation,typing,query,key,text,modifiers,hold_ms,gap_ms](const std::uint64_t) {
++                std::string error; AgentKeyboardState keyboard;
++                bool ok=true;
++                if(query) AGENT_KeyboardGetState(&keyboard);
++                else ok=AGENT_KeyboardQueue(key,text,modifiers,typing,hold_ms,gap_ms,&keyboard,&error);
++                std::lock_guard<std::mutex> guard(operation->mutex);
++                operation->success=ok;operation->error=error;operation->keyboard=keyboard;operation->done=true;
++                operation->completed.notify_all();
++            })==0) response=Error(parsed.id,kErrorCapabilityUnavailable,"Keyboard bridge unavailable","COMMAND_REJECTED");
++            else {
++                const JsonValue response_id=parsed.id;
++                Impl::DeferredRequest pending;pending.request=parsed;pending.fingerprint=parsed.fingerprint;
++                pending.wait=[operation](const std::uint32_t timeout_ms) {
++                    std::unique_lock<std::mutex> guard(operation->mutex);
++                    return operation->completed.wait_for(guard,std::chrono::milliseconds(timeout_ms),[operation](){return operation->done;});
++                };
++                pending.finish=[impl,session_id,response_id,operation,query]() {
++                    if(!operation->success) return Error(response_id,kErrorCapabilityUnavailable,operation->error,"COMMAND_REJECTED");
++                    if(!impl->session || impl->session->id!=session_id) return Error(response_id,kErrorSessionNotFound,"Session was not found","SESSION_NOT_FOUND");
++                    if(!query) ++impl->session->state_revision;
++                    JsonValue result=SessionResult(*impl->session),keyboard=Object();
++                    Add(&keyboard,"pending_events",Number(operation->keyboard.pending_events));
++                    Add(&keyboard,"owned_keys",Number(operation->keyboard.owned_keys));
++                    Add(&keyboard,"queued_guest_ms",Number(operation->keyboard.duration_ms));
++                    Add(&result,"keyboard",keyboard);
++                    if(!query) {Add(&result,"accepted",JsonValue::Bool(true));Add(&result,"delivery",String("queued"));}
++                    return AGENT_MakeJsonRpcResult(response_id,result);
++                };
++                if(parsed.has_id && parsed.id.type!=JsonType::Null) session->deferred_requests[parsed.id_key]=pending;
++                lock.unlock();const bool completed=pending.wait(impl->config.request_timeout_ms);lock.lock();
++                if(!RebindSessionAfterWait(impl,session_id,&session,&response,parsed.id)) return response;
++                if(!completed) {cache_response=false;response=Error(parsed.id,kErrorOperationTimeout,"Timed out queuing guest keyboard input","OPERATION_TIMEOUT");}
++                else if(parsed.has_id && parsed.id.type!=JsonType::Null) {
++                    auto deferred=session->deferred_requests.find(parsed.id_key);
++                    response=deferred->second.finish();session->deferred_requests.erase(deferred);
++                } else response=pending.finish();
++            }
++        }
 +    } else if (parsed.method == "video.screenshot" || parsed.method.compare(0, 12, "input.mouse.") == 0) {
 +        const bool screenshot = parsed.method == "video.screenshot";
 +        const bool move = parsed.method == "input.mouse.move";
@@ -1499,9 +1584,12 @@ index 29363cf..373bec3 100644
 +            const std::string session_id = session->id;
 +            if (SubmitEmulationCommandLocked(impl, [operation, load, path](const std::uint64_t) {
 +                    std::string error;
-+                    if (load) { dosbox_agent::AGENT_MouseResetInput(); dosbox_agent::AGENT_EnableFrameCapture(false); }
++                    if (load) { dosbox_agent::AGENT_MouseResetInput(); dosbox_agent::AGENT_KeyboardResetInput(); dosbox_agent::AGENT_EnableFrameCapture(false); }
 +                    if (load) DEBUG_AgentClearLayers();
-+                    const bool ok = AGENT_StateFile(path, load, &error);
++                    AgentKeyboardState keyboard; AGENT_KeyboardGetState(&keyboard);
++                    const bool ok = (!load && (keyboard.pending_events || keyboard.owned_keys))
++                        ? (error="Run until pending keyboard input completes before saving",false)
++                        : AGENT_StateFile(path, load, &error);
 +                    if (load) { DEBUG_AgentClearLastBreakpoint(); dosbox_agent::AGENT_EnableFrameCapture(true); }
 +                    std::lock_guard<std::mutex> guard(operation->mutex);
 +                    operation->success = ok; operation->error = error; operation->done = true;
@@ -1720,7 +1808,7 @@ index 29363cf..373bec3 100644
      } else if (parsed.method == "state.get_registers") {
          if (session->state == Impl::SessionState::Running) {
              response = SessionError(parsed.id, kErrorTargetRunning,
-@@ -1801,6 +2288,10 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1801,6 +2348,10 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              }
          }
      } else if (parsed.method == "memory.read") {
@@ -1731,7 +1819,7 @@ index 29363cf..373bec3 100644
          const JsonValue* length_value = parsed.params.Find("length");
          std::uint32_t length = 0;
          MemoryAddress address;
-@@ -1820,12 +2311,18 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1820,12 +2371,18 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
          } else {
              const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
              const std::string session_id = session->id;
@@ -1751,7 +1839,7 @@ index 29363cf..373bec3 100644
                      {
                          std::lock_guard<std::mutex> operation_lock(operation->mutex);
                          operation->success = success;
-@@ -1857,6 +2354,9 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1857,6 +2414,9 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  } else {
                      JsonValue result = SessionResult(*session);
                      Add(&result, "address", EncodeMemoryAddress(address));
@@ -1761,7 +1849,7 @@ index 29363cf..373bec3 100644
                      Add(&result, "byte_count", Number(operation->data.size()));
                      Add(&result, "data_base64", String(EncodeBase64(operation->data)));
                      Add(&result, "sha256", String(Sha256Hex(operation->data)));
-@@ -1955,7 +2455,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1955,7 +2515,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                   item != session->breakpoints.end(); ++item) {
                  JsonValue entry = Object();
                  Add(&entry, "breakpoint_id", String(item->second.id));
@@ -1770,7 +1858,7 @@ index 29363cf..373bec3 100644
                  Add(&entry, "enabled", JsonValue::Bool(item->second.enabled));
                  Add(&entry, "once", JsonValue::Bool(item->second.native.once));
                  Add(&entry, "address", EncodeMemoryAddress(item->second.native.address));
-@@ -1970,7 +2470,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1970,7 +2530,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
          MemoryAddress address;
          bool once = false;
          const JsonValue* once_value = parsed.params.Find("once");
@@ -1779,7 +1867,7 @@ index 29363cf..373bec3 100644
              !ParseMemoryAddress(parsed.params, "breakpoints.create", &address, &validation_error) ||
              (once_value != NULL && !GetBool(parsed.params, "once", &once))) {
              response = InvalidParams(parsed.id, validation_error.empty() ?
-@@ -1982,7 +2482,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1982,7 +2542,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              response = SessionError(parsed.id, kErrorCapabilityUnavailable,
                                      "Target must be stopped before creating breakpoints", "TARGET_NOT_STOPPED", session);
          } else {
@@ -1788,23 +1876,23 @@ index 29363cf..373bec3 100644
  #ifndef C_HEAVY_DEBUG
              if (kind == BreakpointKind::MemoryChange) {
                  response = Error(parsed.id, kErrorCapabilityUnavailable,
-@@ -2856,6 +3356,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
+@@ -2856,6 +3416,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
                                                 const std::string& workdir)
  {
      AgentRuntime& adapter = *impl->runtime;
-+    AGENT_MouseResetInput();
++    AGENT_MouseResetInput(); dosbox_agent::AGENT_KeyboardResetInput();
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -2930,6 +3431,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
+@@ -2930,6 +3491,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
                                                               const std::string& operation_id)
  {
      AgentRuntime& adapter = *impl->runtime;
-+    AGENT_MouseResetInput();
++    AGENT_MouseResetInput(); dosbox_agent::AGENT_KeyboardResetInput();
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -3008,6 +3510,8 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3008,6 +3570,8 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
          return;
      AgentRuntime& adapter = *impl->runtime;
      const std::uintptr_t native_breakpoint = adapter.ConsumeLastBreakpointHandle();
@@ -1813,7 +1901,7 @@ index 29363cf..373bec3 100644
      std::vector<TraceSample> trace_samples;
      bool native_trace_active = false;
      std::string trace_error;
-@@ -3037,7 +3541,19 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3037,7 +3601,19 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
              impl->session->trace.Stop();
      }
      impl->session->state = Impl::SessionState::Stopped;
@@ -3144,6 +3232,150 @@ index 79624b0..8aea08e 100644
          /* -- initialize logging first, so that higher level inits can report problems to the log file */
          LOG::Init();
  
+diff --git a/src/hardware/keyboard.cpp b/src/hardware/keyboard.cpp
+index 423e8d2..529c36a 100644
+--- a/src/hardware/keyboard.cpp
++++ b/src/hardware/keyboard.cpp
+@@ -3043,3 +3043,139 @@ public:
+     }
+ } dummy;
+ }
++
++
++#if C_DOSBOX_AGENT
++#include "agent/input_adapter.h"
++#include <deque>
++#include <set>
++#include <vector>
++namespace dosbox_agent {
++namespace {
++struct AgentKeyEvent { KBD_KEYS key; bool pressed; std::uint32_t delay; };
++std::deque<AgentKeyEvent> agent_key_events;
++std::set<KBD_KEYS> agent_owned_keys;
++
++KBD_KEYS AgentNamedKey(const std::string& name)
++{
++    static const struct { const char* name; KBD_KEYS key; } names[] = {
++        {"enter",KBD_enter},{"escape",KBD_esc},{"esc",KBD_esc},
++        {"tab",KBD_tab},{"backspace",KBD_backspace},{"space",KBD_space},
++        {"left",KBD_left},{"right",KBD_right},{"up",KBD_up},{"down",KBD_down},
++        {"home",KBD_home},{"end",KBD_end},{"insert",KBD_insert},{"delete",KBD_delete},
++        {"pageup",KBD_pageup},{"pagedown",KBD_pagedown},
++        {"shift",KBD_leftshift},{"ctrl",KBD_leftctrl},{"alt",KBD_leftalt},
++        {"f1",KBD_f1},{"f2",KBD_f2},{"f3",KBD_f3},{"f4",KBD_f4},
++        {"f5",KBD_f5},{"f6",KBD_f6},{"f7",KBD_f7},{"f8",KBD_f8},
++        {"f9",KBD_f9},{"f10",KBD_f10},{"f11",KBD_f11},{"f12",KBD_f12},
++        {"-",KBD_minus},{"=",KBD_equals},{"[",KBD_leftbracket},{"]",KBD_rightbracket},
++        {";",KBD_semicolon},{"'",KBD_quote},{",",KBD_comma},{".",KBD_period},
++        {"/",KBD_slash},{"\\",KBD_backslash},{"`",KBD_grave}
++    };
++    static const char letters[]="abcdefghijklmnopqrstuvwxyz0123456789";
++    static const KBD_KEYS keys[]={KBD_a,KBD_b,KBD_c,KBD_d,KBD_e,KBD_f,KBD_g,
++        KBD_h,KBD_i,KBD_j,KBD_k,KBD_l,KBD_m,KBD_n,KBD_o,KBD_p,KBD_q,KBD_r,
++        KBD_s,KBD_t,KBD_u,KBD_v,KBD_w,KBD_x,KBD_y,KBD_z,KBD_0,KBD_1,KBD_2,
++        KBD_3,KBD_4,KBD_5,KBD_6,KBD_7,KBD_8,KBD_9};
++    if (name.size()==1) for (std::size_t i=0;i<sizeof(keys)/sizeof(keys[0]);++i)
++        if (name[0]==letters[i]) return keys[i];
++    for (const auto& item:names) if(name==item.name) return item.key;
++    return KBD_NONE;
++}
++
++void AgentKeyDispatch(Bitu)
++{
++    if (agent_key_events.empty()) return;
++    const auto event=agent_key_events.front(); agent_key_events.pop_front();
++    KEYBOARD_AddKey(event.key,event.pressed);
++    if (event.pressed) agent_owned_keys.insert(event.key);
++    else agent_owned_keys.erase(event.key);
++    if (!agent_key_events.empty())
++        PIC_AddEvent(AgentKeyDispatch,static_cast<pic_tickindex_t>(agent_key_events.front().delay));
++}
++} // namespace
++
++void AGENT_KeyboardGetState(AgentKeyboardState* state)
++{
++    if (!state) return;
++    state->pending_events=static_cast<std::uint32_t>(agent_key_events.size());
++    state->owned_keys=static_cast<std::uint32_t>(agent_owned_keys.size());
++    state->duration_ms=0;
++    for (const auto& event:agent_key_events) state->duration_ms+=event.delay;
++}
++
++void AGENT_KeyboardResetInput()
++{
++    PIC_RemoveEvents(AgentKeyDispatch);
++    agent_key_events.clear();
++    for (const auto key:agent_owned_keys) KEYBOARD_AddKey(key,false);
++    agent_owned_keys.clear();
++}
++
++bool AGENT_KeyboardQueue(const std::string& key, const std::string& text,
++                         const std::string& modifiers, bool typing,
++                         std::uint32_t hold_ms, std::uint32_t gap_ms,
++                         AgentKeyboardState* state, std::string* error)
++{
++    const auto fail=[error](const char* why) { if(error)*error=why; return false; };
++    if (IS_PC98_ARCH) return fail("Keyboard adapter supports IBM PC targets only");
++    if (!agent_key_events.empty() || !agent_owned_keys.empty())
++        return fail("Keyboard input is pending; run guest time before queuing another operation");
++    if (hold_ms<1 || hold_ms>1000 || gap_ms<1 || gap_ms>1000)
++        return fail("Keyboard hold_ms and gap_ms must be 1..1000 guest milliseconds");
++    std::deque<AgentKeyEvent> events;
++    std::vector<KBD_KEYS> mods;
++    if (!typing) {
++        std::size_t start=0;
++        while(start<modifiers.size()) {
++            const auto end=modifiers.find(',',start);
++            const auto token=modifiers.substr(start,end==std::string::npos?end:end-start);
++            const auto mod=AgentNamedKey(token);
++            if (mod!=KBD_leftshift && mod!=KBD_leftctrl && mod!=KBD_leftalt)
++                return fail("Modifiers must be unique shift, ctrl or alt");
++            for(const auto old:mods) if(old==mod) return fail("Duplicate keyboard modifier");
++            mods.push_back(mod);
++            if(end==std::string::npos) break;
++            start=end+1;
++        }
++    }
++    const auto append=[&events,hold_ms,gap_ms](KBD_KEYS code,const std::vector<KBD_KEYS>& prefix) {
++        const bool after_previous=!events.empty();
++        bool first=true;
++        for(const auto mod:prefix) {events.push_back({mod,true,static_cast<std::uint32_t>(2+(first && after_previous?gap_ms:0))});first=false;}
++        events.push_back({code,true,static_cast<std::uint32_t>(2+(first && after_previous?gap_ms:0))});
++        events.push_back({code,false,hold_ms});
++        for(auto it=prefix.rbegin();it!=prefix.rend();++it) events.push_back({*it,false,2});
++        // Only the next event is registered with PIC; guest execution drains the queue.
++    };
++    if (typing) {
++        if(text.empty() || text.size()>64) return fail("Text requires 1..64 ASCII characters");
++        const std::string shifted="!@#$%^&*()_+{}|:\"<>?~";
++        const std::string unshifted="1234567890-=[]\\;',./`";
++        for (const unsigned char ch:text) {
++            KBD_KEYS code=KBD_NONE; bool shift=false;
++            if(ch>='A' && ch<='Z') {code=AgentNamedKey(std::string(1,ch-'A'+'a'));shift=true;}
++            else if(ch==' ') code=KBD_space;
++            else if(ch=='\n' || ch=='\r') code=KBD_enter;
++            else if(ch=='\t') code=KBD_tab;
++            else {
++                const auto pos=shifted.find(static_cast<char>(ch));
++                if(pos!=std::string::npos) {code=AgentNamedKey(unshifted.substr(pos,1));shift=true;}
++                else code=AgentNamedKey(std::string(1,ch));
++            }
++            if(code==KBD_NONE || ch>=128 || ch==0) return fail("Text supports US-layout ASCII only");
++            append(code,shift?std::vector<KBD_KEYS>{KBD_leftshift}:std::vector<KBD_KEYS>{});
++        }
++    } else {
++        const auto code=AgentNamedKey(key);
++        if(code==KBD_NONE) return fail("Unknown keyboard key");
++        for(const auto mod:mods) if(code==mod) return fail("Key cannot duplicate its modifier");
++        append(code,mods);
++    }
++    agent_key_events.swap(events);
++    AGENT_KeyboardGetState(state);
++    PIC_AddEvent(AgentKeyDispatch,static_cast<pic_tickindex_t>(agent_key_events.front().delay));
++    return true;
++}
++} // namespace dosbox_agent
++#endif
 diff --git a/src/ints/mouse.cpp b/src/ints/mouse.cpp
 index 84ada2d..0ae2528 100644
 --- a/src/ints/mouse.cpp
@@ -5994,15 +6226,3 @@ index 0000000..31561fd
 +    except (OSError, ValueError, RuntimeError) as error:
 +        print(f"headless-agent: {error}", file=sys.stderr)
 +        raise SystemExit(1)
-diff --git a/include/zipcppstdbuf.h b/include/zipcppstdbuf.h
---- a/include/zipcppstdbuf.h
-+++ b/include/zipcppstdbuf.h
-@@ -20,6 +20,8 @@
- 	virtual ~zip_ostreambuf() { close(); }
- public:
- 	virtual std::streamsize xsputn(const Base::char_type *s, std::streamsize count) override {
-+		// crc32(seed, NULL, 0) resets the CRC; an empty write must preserve it.
-+		if (count == 0) return 0;
- 		assert(zf != NULL);
- 
- 		const int err = zipWriteInFileInZip(zf, (void*)s, count);

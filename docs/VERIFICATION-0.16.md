@@ -1,5 +1,10 @@
 # 0.16.0 candidate verification
 
+This page preserves the initial candidate evidence. Later acceptance for
+[standalone DOS/waits](VERIFICATION-DOS-KNOWLEDGE.md) and
+[guest keyboard input](VERIFICATION-GUEST-KEYBOARD.md) is recorded separately;
+current promotion status is in [release status](RELEASE_STATUS.md).
+
 This is local source-candidate verification based on main `e91879c`, not a
 0.16.0 commit/tag or GitHub CI result. Runtime source files match the tested
 89-entry wheel. The source distribution and tool ZIP are checked independently

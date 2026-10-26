@@ -1,4 +1,6 @@
 # Preserve verifier receipts and upstream notices byte for byte.
 docs/evidence/** -whitespace
+experimental/dosbox-x/**/headless-agent.patch -whitespace
+experimental/dosbox-x/headless-agent.patch -whitespace
 examples/dinopark/evidence/** -whitespace
 src/fdisbull/data/MICROSOFT-DOS-LICENSE.txt -whitespace

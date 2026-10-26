@@ -1,0 +1,26 @@
+{
+  "python": "3.13.14",
+  "platform": "macOS ARM64",
+  "native_checks": 312,
+  "failed": 0,
+  "skipped": 0,
+  "backend_sha256": "315beb4e01c7d81a96209dd949c239675517af53102dd97bd0eb30bde7a0fdbb",
+  "patches": {
+    "experimental/dosbox-x": "052ca436868af16c477620730353180b419fc6658d8288501d66ff87b7aa01c0",
+    "experimental/dosbox-x/layers": "5e70ab0f840e2f7a9d9d4ee3b3445000d5910f74770d65f3baa17a1865d28f31"
+  },
+  "clean_patch_replay": {
+    "stable_source_files": 28,
+    "layers_source_files": 29
+  },
+  "initial_gap": "keyboard.press/type were unknown script operations; before.log retained privately",
+  "host_full_suite": {
+    "passed": 1050,
+    "skipped": 62,
+    "failed": 2,
+    "setup_errors": 23,
+    "cause": "Apple compiler/linker does not build GNU/Linux ELF fixtures; not a green full Mac suite"
+  },
+  "scope": "Fresh local native checks and actual-game input; final Linux CI and tag gates remain separate",
+  "game_inputs_states_databases_in_evidence": false
+}
