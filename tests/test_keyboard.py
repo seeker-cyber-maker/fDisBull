@@ -132,3 +132,45 @@ def test_real_keyboard_mid_dialog_checkpoint_restore(keyboard_game,emulator):
         debug.keyboard.type('TIGA16\n')
         assert debug.run(timeout_ms=5000,fast_forward=True)['outcome']=='breakpoint'
         assert bytes.fromhex(debug.memory('1000:0100',length=14)['hex'])[::2]==b'TIGA16\r'
+
+
+@pytest.mark.parametrize('prefix',['','TI'])
+def test_real_keyboard_mid_dialog_checkpoint_fresh_session(keyboard_game,emulator,prefix):
+    path,binary=keyboard_game
+    expected=b'TIGA16\r'
+    suffix='TIGA16'[len(prefix):]+'\n'
+    with Project(path) as db:
+        with db.debugger(emulator,binary.parent) as debug:
+            wait=debug.breakpoint('1000:0009')
+            assert debug.run(timeout_ms=5000,fast_forward=True)['outcome']=='breakpoint'
+            debug.delete_breakpoint(wait['breakpoint_id'])
+            debug.run(guest_ms=20,timeout_ms=3000,fast_forward=True)
+            if prefix:
+                debug.keyboard.type(prefix)
+                debug.run(guest_ms=300,timeout_ms=3000,fast_forward=True)
+                assert bytes.fromhex(debug.memory('1000:0100',length=2*len(prefix))['hex'])[::2]==prefix.encode('ascii')
+            assert debug.keyboard.state()['keyboard']==dict(
+                pending_events=0,owned_keys=0,queued_guest_ms=0)
+            checkpoint=debug.save_state('waiting-for-name-fresh.sav')
+            first_process=debug.rpc.process
+            debug.breakpoint('1000:0010')
+            debug.keyboard.type(suffix)
+            assert debug.run(timeout_ms=5000,fast_forward=True)['outcome']=='breakpoint'
+            assert bytes.fromhex(debug.memory('1000:0100',length=14)['hex'])[::2]==expected
+        assert first_process.poll() is not None
+
+    # Reopen both project and emulator, not just the native state in one session.
+    with Project(path) as db, db.debugger(emulator,binary.parent) as debug:
+        assert debug.rpc.process.pid!=first_process.pid
+        restored=debug.load_state(checkpoint['artifact'])
+        assert restored['framebuffer']=='invalidated_until_next_completed_frame'
+        assert debug.keyboard.state()['keyboard']==dict(
+            pending_events=0,owned_keys=0,queued_guest_ms=0)
+        debug.run(guest_ms=50,timeout_ms=3000,fast_forward=True)
+        assert debug.screenshot('fresh-restored-dialog.png')['artifact']
+        if prefix:
+            assert bytes.fromhex(debug.memory('1000:0100',length=2*len(prefix))['hex'])[::2]==prefix.encode('ascii')
+        debug.breakpoint('1000:0010')
+        debug.keyboard.type(suffix)
+        assert debug.run(timeout_ms=5000,fast_forward=True)['outcome']=='breakpoint'
+        assert bytes.fromhex(debug.memory('1000:0100',length=14)['hex'])[::2]==expected
