@@ -104,3 +104,31 @@ def test_real_keyboard_chords_atomic_rejection_and_pending_restore(keyboard_game
         debug.run(guest_ms=200,timeout_ms=3000,fast_forward=True)
         assert debug.memory('1000:0100',length=6)['hex']=='411e004b003b'
         assert debug.keyboard.state()['keyboard']['owned_keys']==0
+
+
+def test_real_keyboard_mid_dialog_checkpoint_restore(keyboard_game,emulator):
+    path,binary=keyboard_game
+    with Project(path) as db, db.debugger(emulator,binary.parent) as debug:
+        wait=debug.breakpoint('1000:0009')
+        assert debug.run(timeout_ms=5000,fast_forward=True)['outcome']=='breakpoint'
+        debug.delete_breakpoint(wait['breakpoint_id'])
+        debug.run(guest_ms=20,timeout_ms=3000,fast_forward=True)
+        checkpoint=debug.save_state('waiting-for-name.sav')
+
+        end=debug.breakpoint('1000:0010')
+        debug.keyboard.type('TIGA16\n')
+        assert debug.run(timeout_ms=5000,fast_forward=True)['outcome']=='breakpoint'
+        assert bytes.fromhex(debug.memory('1000:0100',length=14)['hex'])[::2]==b'TIGA16\r'
+        debug.delete_breakpoint(end['breakpoint_id'])
+
+        restored=debug.load_state(checkpoint['artifact'])
+        assert restored['framebuffer']=='invalidated_until_next_completed_frame'
+        assert debug.keyboard.state()['keyboard']==dict(
+            pending_events=0,owned_keys=0,queued_guest_ms=0)
+        debug.run(guest_ms=50,timeout_ms=3000,fast_forward=True)
+        assert debug.screenshot('restored-dialog.png')['artifact']
+
+        end=debug.breakpoint('1000:0010')
+        debug.keyboard.type('TIGA16\n')
+        assert debug.run(timeout_ms=5000,fast_forward=True)['outcome']=='breakpoint'
+        assert bytes.fromhex(debug.memory('1000:0100',length=14)['hex'])[::2]==b'TIGA16\r'
