@@ -1,6 +1,9 @@
-# Release status checked on 2026-10-25
+# Release status checked on 2026-10-26
 
-The current source and latest published package release are **0.14.0**.
+The working source is a **0.15.0 candidate** with
+[saved experiments and layer comparisons](DEBUGGER_EXPERIMENTS.md).
+It has not been tagged or published. The latest published package release is
+**0.14.0**.
 [v0.14.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0)
 is published, not draft or prerelease, and targets
 `6a0aeb3830eb544cd744d3410881c1c951a5ffb7`. Five unchanged tag-CI assets were

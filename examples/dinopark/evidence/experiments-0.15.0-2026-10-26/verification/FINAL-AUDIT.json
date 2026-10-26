@@ -1,0 +1,71 @@
+{
+  "format": "fdisbull-0.15-candidate-audit-1",
+  "version": "0.15.0",
+  "base_commit": "c5ed42e41cfdedba6908be66dbca89efcf88dff6",
+  "git_visible_files_audited": 803,
+  "forbidden_payloads": [],
+  "game_states_databases_in_git_or_packages": false,
+  "native_tested_wheel_entry_contents_match_final_wheel": 85,
+  "packages": {
+    "fdisbull-0.15.0-py3-none-any.whl": {
+      "sha256": "d25e7ca359722c27570626e83a0700373f32f92cbaf9ef032d316c6008807a68",
+      "size": 316924
+    },
+    "fdisbull-0.15.0-tool.zip": {
+      "sha256": "6c13afc99c0c44290527e8fe2f7c3a4889df2027e3a98d0243de67c5d617635e",
+      "size": 736276
+    },
+    "fdisbull-0.15.0.tar.gz": {
+      "sha256": "85b96a68778867a828b8633b59f2a2f450594ca5f591a87655e342418e2123c5",
+      "size": 620938
+    }
+  },
+  "test_suites": {
+    "linux_ordinary": {
+      "tests": 873,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 51
+    },
+    "linux_native": {
+      "tests": 60,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "mac_native": {
+      "tests": 60,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "pe_experiment": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "mac_full_suite": {
+    "passed": 795,
+    "skipped": 53,
+    "failed": 2,
+    "fixture_setup_errors": 23,
+    "reason": "Existing Linux ELF compiler/linker fixtures on Apple compiler"
+  },
+  "dinopark": {
+    "prices": [
+      7500,
+      5000
+    ],
+    "breakpoints": 1,
+    "read_watch_bytes": 8,
+    "once_hook_hits_per_trial": 1,
+    "restored_hook_hit_count": 0,
+    "input_files_unchanged": 192
+  },
+  "source_changes_committed": false,
+  "github_ci_run_for_candidate": false,
+  "tagged_or_published": false,
+  "previous_deliveries_modified": false
+}

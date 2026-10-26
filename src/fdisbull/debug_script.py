@@ -35,8 +35,8 @@ def validate_script(script):
             if not isinstance(step,dict) or not isinstance(step.get('op'),str):
                 raise ValueError('Every step requires an op')
             op = step['op']
-            if 'expect' in step and (op!='run' or step['expect'] not in ('breakpoint','guest_time','timeout','exited','pause')):
-                raise ValueError('expect is a run outcome: breakpoint, guest_time, timeout, exited, or pause')
+            if 'expect' in step and (op!='run' or step['expect'] not in ('breakpoint','watchpoint','guest_time','timeout','exited','pause')):
+                raise ValueError('expect is a run outcome: breakpoint, watchpoint, guest_time, timeout, exited, or pause')
             if op=='repeat':
                 if set(step) != {'op','count','steps'}:
                     raise ValueError('repeat requires count and steps')
@@ -65,7 +65,7 @@ def validate_script(script):
     return expanded
 
 
-def execute_script(session, script, *, timeout_ms=60000):
+def execute_script(session, script, *, timeout_ms=60000, bindings=None):
     bounded(timeout_ms,'timeout_ms',1,600000)
     steps = validate_script(script) # Reject malformed later steps before any guest mutation.
     if getattr(session,'script_operations',None) is not None:
@@ -75,7 +75,7 @@ def execute_script(session, script, *, timeout_ms=60000):
     encoded = json.dumps(script,sort_keys=True,separators=(',',':'),allow_nan=False).encode()
     source = session._artifact('route.fdisbull.json','script',encoded,{'format':script['format']})
     started = time.monotonic(); deadline = started+timeout_ms/1000
-    results = {}; records = []; failure = None
+    results = dict(bindings or {}); records = []; failure = None
 
     def resolve(value):
         if isinstance(value,str) and value.startswith('$'):

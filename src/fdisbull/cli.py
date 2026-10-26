@@ -8,6 +8,12 @@ from .project import Project, number
 from . import __version__
 
 METHODS = {
+    'debug-controls': 'Inspect owned breakpoint/watch/hook definitions for experiment capture; run',
+    'debug-save-experiment': 'Capture a native checkpoint, controls, script and observations; run,name,[script,script_id,observations]',
+    'debug-experiments': 'List immutable saved experiments; [version]',
+    'debug-experiment-info': 'Inspect a saved experiment and verify its identities offline; artifact',
+    'debug-restore-experiment': 'Restore native state, layers, breakpoints, watches and hook hit counts; run,experiment',
+    'debug-compare-experiment': 'Run baseline and an explicit layer stack, save differences and restore baseline; run,experiment,layers,[timeout_ms]',
     'debug-contexts': 'List explicit DOS/process and outer-machine execution contexts; run',
     'debug-pause': 'Pause all vCPUs in the selected machine context; run,context=machine',
     'debug-resume': 'Resume the selected machine so guest services can run; run,context=machine',
@@ -166,7 +172,7 @@ def invoke(method, params, debugger=None):
     project = p.pop("project",None)
     if not project:
         raise ValueError("project path is required")
-    if method.startswith('debug-') and method not in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-layer','debug-layer-info','debug-layers','debug-events'):
+    if method.startswith('debug-') and method not in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-layer','debug-layer-info','debug-layers','debug-events','debug-experiments','debug-experiment-info'):
         if debugger is None:
             raise ValueError('Live debugger commands require fdisbull serve or fdisbull debug; sessions close on server exit')
         return debugger.invoke(method,project,p)
@@ -177,7 +183,7 @@ def invoke(method, params, debugger=None):
         with Project.create(project,binary,**p) as db:
             return db.status()
     with Project(project) as db:
-        if method in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-layer','debug-layer-info','debug-layers','debug-events'):
+        if method in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-layer','debug-layer-info','debug-layers','debug-events','debug-experiments','debug-experiment-info'):
             return getattr(db,method.replace('-','_'))(**p)
         if method in ('link-labels','rename-file','label-info','label-links','unlink-labels'):return getattr(db,method.replace('-','_'))(**p)
         if method=='refresh-dos-state':return db.refresh_dos_state(**p)
@@ -306,9 +312,9 @@ def parser():
     c.add_argument('--kernel');c.add_argument('--initramfs');c.add_argument('--files',type=json.loads)
     c.add_argument('--boot-timeout-ms',type=int,default=240000)
     c.add_argument('--state',help='PE64 native checkpoint artifact to restore without cold launch')
-    for name in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state'):
+    for name in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-experiments','debug-experiment-info'):
         c = sub.add_parser(name,help=METHODS[name]);c.add_argument('project')
-        if name=='debug-state-info':
+        if name in ('debug-state-info','debug-experiment-info'):
             c.add_argument('artifact')
         elif name=='debug-fork-state':
             c.add_argument('artifact');c.add_argument('--executable',required=True);c.add_argument('--game-dir',required=True)

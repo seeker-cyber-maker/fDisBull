@@ -296,7 +296,11 @@ class LayerSessionMixin:
         ids=[bp['breakpoint_id']] if access=='x' else [b['breakpoint_id'] for b in bp['breakpoints']]
         token=uuid.uuid4().hex
         control={'hook':token,'breakpoints':ids,'actions':json.loads(json.dumps(actions)),
-                 'once':once,'max_hits':max_hits,'hits':0,'dispatch':'paused_rpc','extra_guest_bytes':0,'location':bp}
+                 'once':once,'max_hits':max_hits,'hits':0,'dispatch':'paused_rpc','extra_guest_bytes':0,'location':bp,
+                 'native_count':len(ids),'definition':{'address':address,'cs':cs,'access':access,'length':length,
+                    'actions':json.loads(json.dumps(actions)),'once':once,'max_hits':max_hits}}
+        if access=='x' and bp.get('project_cs') is not None:
+            control['definition'].update(address=bp['project_address'],cs=bp['project_cs'])
         for identifier in ids:self._hooks[identifier]=control
         self._event('hook-create',control)
         return control.copy()
@@ -312,6 +316,7 @@ class LayerSessionMixin:
         for bp in control['breakpoints']:
             if bp in self._hooks:
                 self.call('breakpoints.delete',{'breakpoint_id':bp});self._hooks.pop(bp,None)
+                self._forget_breakpoint(bp)
         self._event('hook-delete',{'hook':hook})
         return {'hook':hook,'deleted':True}
 
@@ -329,6 +334,7 @@ class LayerSessionMixin:
                 for bp in control['breakpoints']:
                     if bp in self._hooks:
                         self.call('breakpoints.delete',{'breakpoint_id':bp});self._hooks.pop(bp,None)
+                        self._forget_breakpoint(bp)
             for action in control['actions']:
                 if action['op']=='layers':change=self.layers(action['layers'])
                 elif action['op']=='registers':change=apply_edits(self,[],action['registers'])

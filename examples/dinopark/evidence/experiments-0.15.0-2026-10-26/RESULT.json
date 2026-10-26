@@ -1,0 +1,45 @@
+{
+  "version": "0.15.0",
+  "module": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-26/experiments/mac-installed-fixed/fdisbull/__init__.py",
+  "driver_sha256": "7a23e37f8829674297c2f0aab4a48b0fcea6aef3a68593450cf71bcb3976ae5d",
+  "backend_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+  "source_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+  "experiment": "8b9d14c9f8244a6f89c1f91f2e2e1a90",
+  "layer": "e7cad335cac94f3a9683d9f0da6f3d69",
+  "layer_definition": {
+    "id": "e7cad335cac94f3a9683d9f0da6f3d69",
+    "version": 1,
+    "name": "Gift lookup selects the 5000 entry",
+    "kind": "execute",
+    "created": "2026-10-26T11:22:43.977707+00:00",
+    "sha256": "049cff7458aa2ca80543e2c2ff8e6354a667d618b80c5c6d48208f192ab09e43",
+    "patches": [
+      {
+        "address": "0x3414e",
+        "data_hex": "8b877168",
+        "expected_hex": "8b877568"
+      }
+    ]
+  },
+  "original_controls_removed": true,
+  "result": "pass",
+  "prices": [
+    7500,
+    5000
+  ],
+  "comparison": "ea9cdd9b99c04c22bde4364f5d7bd156",
+  "breakpoint_restored": true,
+  "read_watch_bytes_restored": 8,
+  "once_hook_restored": true,
+  "once_hook_fired_once_per_trial": true,
+  "hook_hit_count_restored": 0,
+  "baseline_layers_restored": true,
+  "code_ram_unchanged": true,
+  "price_table_unchanged": true,
+  "fresh_session_restore": true,
+  "processes_reaped": true,
+  "game_files_unchanged": 192,
+  "native_states_exported": false,
+  "database_exported": false,
+  "evidence_exported_after_restart": true
+}

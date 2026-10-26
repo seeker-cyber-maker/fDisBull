@@ -1,0 +1,269 @@
+{
+  "events": [
+    {
+      "address": "0x1400014d0",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x1400014d0",
+        "rflags": "0x202",
+        "thread": 380,
+        "general": {
+          "rax": "0x1",
+          "rbx": "0x40078",
+          "rcx": "0x6ffffdc2ca44",
+          "rdx": "0x0",
+          "rsi": "0x1",
+          "rdi": "0x500050",
+          "rbp": "0x7ffffe2ffa50",
+          "rsp": "0x7ffffe2ff978",
+          "r8": "0x0",
+          "r9": "0x0",
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x202",
+          "r13": "0x1400014d5",
+          "r14": "0x0",
+          "r15": "0x6ffffe0146f0"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [],
+      "layer_generation": 1,
+      "project_address": "0x1400014d0",
+      "instruction": {
+        "address": 5368714448,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x1400014d1",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x1400014d1",
+        "rflags": "0x202",
+        "thread": 380,
+        "general": {
+          "rax": "0x1",
+          "rbx": "0x40078",
+          "rcx": "0x6ffffdc2ca44",
+          "rdx": "0x0",
+          "rsi": "0x1",
+          "rdi": "0x500050",
+          "rbp": "0x7ffffe2ffa50",
+          "rsp": "0x7ffffe2ff978",
+          "r8": "0x0",
+          "r9": "0x0",
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x202",
+          "r13": "0x1400014d5",
+          "r14": "0x0",
+          "r15": "0x6ffffe0146f0"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [],
+      "layer_generation": 1,
+      "project_address": "0x1400014d1",
+      "instruction": {
+        "address": 5368714449,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x1400014d2",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x1400014d2",
+        "rflags": "0x202",
+        "thread": 380,
+        "general": {
+          "rax": "0x1",
+          "rbx": "0x40078",
+          "rcx": "0x6ffffdc2ca44",
+          "rdx": "0x0",
+          "rsi": "0x1",
+          "rdi": "0x500050",
+          "rbp": "0x7ffffe2ffa50",
+          "rsp": "0x7ffffe2ff978",
+          "r8": "0x0",
+          "r9": "0x0",
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x202",
+          "r13": "0x1400014d5",
+          "r14": "0x0",
+          "r15": "0x6ffffe0146f0"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [],
+      "layer_generation": 1,
+      "project_address": "0x1400014d2",
+      "instruction": {
+        "address": 5368714450,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    },
+    {
+      "address": "0x1400014d3",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x1400014d3",
+        "rflags": "0x202",
+        "thread": 380,
+        "general": {
+          "rax": "0x1",
+          "rbx": "0x40078",
+          "rcx": "0x6ffffdc2ca44",
+          "rdx": "0x0",
+          "rsi": "0x1",
+          "rdi": "0x500050",
+          "rbp": "0x7ffffe2ffa50",
+          "rsp": "0x7ffffe2ff978",
+          "r8": "0x0",
+          "r9": "0x0",
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x202",
+          "r13": "0x1400014d5",
+          "r14": "0x0",
+          "r15": "0x6ffffe0146f0"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [],
+      "layer_generation": 1,
+      "project_address": "0x1400014d3",
+      "instruction": {
+        "address": 5368714451,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      }
+    }
+  ],
+  "complete": true,
+  "session": {
+    "state": "stopped",
+    "stop_reason": {
+      "kind": "step",
+      "address": "0x1400014d4",
+      "thread": 380,
+      "exception_code": 2147483652,
+      "first_chance": 1,
+      "access_address": "0x140004004",
+      "access_code": 1,
+      "before_access": false
+    },
+    "exit_code": 0
+  },
+  "run": "0214c291892c4d92a1beeb177dc7d8c4",
+  "version": 1,
+  "mapping": {
+    "address_mapping": "observed main-module base + project RVA",
+    "backend": "wine-qemu",
+    "capabilities": {
+      "architecture": "x86-64",
+      "backend": "wine-qemu",
+      "code_layers": true,
+      "data_watchpoints": true,
+      "execution_breakpoints": true,
+      "execution_layer_mechanism": "guarded relocated instructions; 4 KiB target buffer; host overhead",
+      "fast_forward": false,
+      "instruction_trace": true,
+      "memory_read": true,
+      "memory_write": true,
+      "mouse": true,
+      "native_state_format": "QEMU whole-VM migration; private project sidecar",
+      "register_edit": true,
+      "save_states": true,
+      "screenshots": true,
+      "watchpoint_access": [
+        "r",
+        "w",
+        "rw"
+      ],
+      "watchpoint_mechanism": "Win32 guard pages with single-step rearming"
+    },
+    "files": [
+      {
+        "path": "oracle.exe",
+        "sha256": "bd4fa6cf3a664a35587ff97ae99aa5410b1c666accb6006ed85351cb68ad2806"
+      }
+    ],
+    "guest_runtime": {
+      "agent_binary_sha256": "9594aaa4d1c58237ddcbd95d25aeda854bfad7d7c1068e4037e489af4eade251",
+      "guest_kernel": "6.1.0-50-amd64",
+      "resources": {
+        "init": "062a3478f4657843a8128079d51e411de5987577dfd4d3e3fb4e5c6ad033fd92",
+        "opt/fdisbull/agent.c": "7f790582fc115fc3036f33c7a78bb11401619b4ce5adf0d624ca81d51c33d34a",
+        "opt/fdisbull/broker.py": "cf8e3c76e38716d66e269d768c404ecc7c68dc4868158f8b83acd76b4de2e151"
+      },
+      "wine_version": "wine-9.0 (Ubuntu 9.0~repack-4build3)"
+    },
+    "qemu_pid": 31675,
+    "runtime_image_base": "0x140000000",
+    "runtime_inputs": {
+      "qemu": {
+        "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.14.0-6a0aeb3/backend/native-macos-arm64/qemu-system-x86_64",
+        "sha256": "10bed8dc7571b0fc6c51ea484711b3802d2fb2dc00ba5d9af4d610cb2e2142cb",
+        "version": "QEMU emulator version 11.1.2"
+      },
+      "kernel": {
+        "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.14.0-6a0aeb3/backend/runtime/linux-amd64",
+        "sha256": "d8808aa4ca188560da1e6d749dcb930c87a5fd8b11ebff1f3fa6d728af35203d"
+      },
+      "initramfs": {
+        "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.14.0-6a0aeb3/backend/runtime/fdisbull-wine-runtime.cpio.gz",
+        "sha256": "4bfe532e5e880ff0b0bdca077a9576077d3fbfe3986a5532858f2af2aaa27f39"
+      }
+    },
+    "runtime_profile": "pe64-win32-debug-2",
+    "source_sha256": "bd4fa6cf3a664a35587ff97ae99aa5410b1c666accb6006ed85351cb68ad2806",
+    "static_image_base": "0x140000000",
+    "target_pid": 376,
+    "version_sha256": "4d730d5995861e5dfae81b98e0947f22f380e5981b6524e2e40dfb4782e086fb",
+    "restored_from": "7562df44fc9546edbc7a8485ff336449"
+  },
+  "requested_count": 4,
+  "semantics": "instructions completed by the selected stopped thread; pre-instruction registers; peer threads held per step"
+}

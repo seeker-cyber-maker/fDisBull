@@ -41,6 +41,37 @@ def native_inputs():
     return [os.environ[n] for n in names]
 
 
+def test_real_pe_saved_experiment_restores_watches_and_compares_layers(tmp_path):
+    import lief
+    qemu,kernel,runtime,fixture=native_inputs()
+    source=Path(fixture);binary=lief.PE.parse(str(source));base=binary.optional_header.imagebase
+    exports={e.name:base+e.address for e in binary.get_export().entries}
+    with Project.create(tmp_path/'experiment.fdb',source) as project:
+        project.analyze(start=exports['checkpoint'],max_instructions=16)
+        layer=project.debug_layer('increment three',kind='execute',patches=[{
+            'address':exports['experiment_value']+1,'expected_hex':'01000000','data_hex':'03000000'}])['layer']
+        with project.debugger(qemu,source.parent,kernel=kernel,initramfs=runtime) as debug:
+            debug.breakpoint(exports['checkpoint'])
+            assert debug.run(timeout_ms=60000)['outcome']=='breakpoint'
+            watch=debug.breakpoint(exports['counter'],access='rw',length=4)
+            script={'format':'fdisbull-script-1','steps':[
+                {'op':'click-frame','x':80,'y':80},
+                {'op':'run','timeout_ms':60000,'expect':'watchpoint'},
+                {'op':'delete-breakpoint','breakpoint_id':f"$controls.breakpoints.{watch['breakpoint_id']}.breakpoint_id"},
+                {'op':'run','timeout_ms':60000},
+                {'op':'trace','count':4,'timeout_ms':20000},
+                {'op':'screenshot','grid':True,'grid_step':8}]}
+            saved=debug.save_experiment('PE counter',script=script,observations=[{'address':exports['counter'],'length':4}])
+            result=debug.compare_experiment(saved['artifact'],layers=[layer],timeout_ms=600000)
+            assert result['ok'],result
+            assert result['baseline']['memory'][0]['hex']=='08000000'
+            assert result['layer']['memory'][0]['hex']=='0a000000'
+            assert result['comparison']['observed_difference'] is True
+            assert debug.memory(exports['counter'],length=4)['hex']=='07000000'
+            assert len(debug.controls()['breakpoints'])==2 and debug.controls()['hooks']==[]
+            assert debug.layers()['active']==[]
+
+
 def test_real_pe_guard_write_and_read_watches(tmp_path):
     import lief
     qemu,kernel,runtime,fixture=native_inputs()

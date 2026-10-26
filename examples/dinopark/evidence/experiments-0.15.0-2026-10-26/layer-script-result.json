@@ -1,0 +1,723 @@
+{
+  "format": "fdisbull-script-result-1",
+  "script_artifact": "aa0e22e03f4649419f58b1ad2fd0279d",
+  "script_sha256": "8352806a5e4a4b3a21113f76391048cffa171ebbcbc5e2a8ac9ef40c3b3f4169",
+  "run": "ee6c44be5ff74ad29e642f01d040e57a",
+  "ok": true,
+  "error": null,
+  "completed_steps": 20,
+  "requested_steps": 20,
+  "host_elapsed_ms": 1435.353,
+  "steps": [
+    {
+      "index": 0,
+      "op": "run",
+      "result": {
+        "run": "ee6c44be5ff74ad29e642f01d040e57a",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 120,
+        "guest_elapsed_ms": 124,
+        "host_elapsed_ms": 109.631,
+        "fast_forward": false,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 46733,
+          "session_id": "ses-1",
+          "state_revision": 47
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 47,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [
+          {
+            "hook": "4739874895124139b10233e2ba57967c",
+            "hit": 1,
+            "stop": {
+              "session_id": "ses-1",
+              "state": "stopped",
+              "state_revision": 44,
+              "stop_reason": {
+                "address": {
+                  "offset": "0x000075BC",
+                  "segment": "0x0824",
+                  "space": "segmented"
+                },
+                "breakpoint_id": "bp-20",
+                "kind": "breakpoint"
+              }
+            },
+            "actions": [
+              {
+                "op": "registers",
+                "result": {
+                  "memory": [],
+                  "registers": [
+                    {
+                      "register": "fs",
+                      "before": "0x0",
+                      "after": "0x0",
+                      "verified": true
+                    }
+                  ]
+                }
+              }
+            ],
+            "dispatch": "paused_rpc",
+            "extra_guest_bytes": 0
+          }
+        ]
+      },
+      "ok": true
+    },
+    {
+      "index": 1,
+      "op": "click-frame",
+      "result": {
+        "run": "ee6c44be5ff74ad29e642f01d040e57a",
+        "x": 195,
+        "y": 85,
+        "mode_id": 10,
+        "frame": {
+          "artifact": "dbb9d62642c44767a21166bd132fa98b",
+          "run": "ee6c44be5ff74ad29e642f01d040e57a",
+          "version": 1,
+          "name": "gift-selection-grid8.png",
+          "kind": "screenshot-grid",
+          "sha256": "c28083eae4dc2326d9ed810ca824116b46fc201e637f73536173fedbd8edb189",
+          "size": 57808,
+          "metadata": {
+            "captured_ticks": 46726,
+            "double_height": true,
+            "double_width": true,
+            "format": "png",
+            "frame_id": 100,
+            "height": 200,
+            "mode_id": 10,
+            "session_id": "ses-1",
+            "sha256": "c28083eae4dc2326d9ed810ca824116b46fc201e637f73536173fedbd8edb189",
+            "source": "last_completed_guest_frame",
+            "source_bpp": 32,
+            "state_revision": 47,
+            "width": 320,
+            "coordinate_grid": {
+              "coordinate_space": "screenshot_pixels",
+              "origin": [
+                0,
+                0
+              ],
+              "max_coordinate": [
+                319,
+                199
+              ],
+              "step": 8,
+              "x_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192,
+                200,
+                208,
+                216,
+                224,
+                232,
+                240,
+                248,
+                256,
+                264,
+                272,
+                280,
+                288,
+                296,
+                304,
+                312
+              ],
+              "y_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192
+              ],
+              "label_step": 32,
+              "x_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192,
+                224,
+                256,
+                288
+              ],
+              "y_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192
+              ],
+              "target": [
+                195,
+                85
+              ],
+              "x_direction": "right",
+              "y_direction": "down",
+              "resized": false,
+              "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+              "source_artifact": "dd75ef57c4c149dabb3f0eb7847dfcdb",
+              "source_sha256": "558d06867cb9cb1779b8a9fd5fdbfa03d5bdab883ab323d69ea5144f33ee6a2b"
+            }
+          }
+        },
+        "click": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 390,
+            "y": 85
+          },
+          "session_id": "ses-1",
+          "state_revision": 48
+        },
+        "frame_phase": "before_queued_click"
+      },
+      "ok": true
+    },
+    {
+      "index": 2,
+      "op": "run",
+      "result": {
+        "run": "ee6c44be5ff74ad29e642f01d040e57a",
+        "outcome": "breakpoint",
+        "timed_out": false,
+        "requested_guest_ms": null,
+        "guest_elapsed_ms": 255,
+        "host_elapsed_ms": 243.344,
+        "fast_forward": false,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 46988,
+          "session_id": "ses-1",
+          "state_revision": 49
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 49,
+          "stop_reason": {
+            "address": {
+              "offset": "0x0003ECB6",
+              "space": "linear"
+            },
+            "breakpoint_id": "bp-13",
+            "data_access": {
+              "access": "r",
+              "address": "0x0003ECB5",
+              "instruction": {
+                "offset": "0x00000C9E",
+                "segment": "0x2B6F",
+                "space": "segmented"
+              },
+              "length": 2,
+              "stop_timing": "after_access_before_next_instruction",
+              "project_instruction": "0x3414e"
+            },
+            "kind": "breakpoint",
+            "project_address": "0x46a76"
+          }
+        },
+        "hook_hits": []
+      },
+      "ok": true
+    },
+    {
+      "index": 3,
+      "op": "assert",
+      "result": {
+        "matched": true
+      },
+      "ok": true
+    },
+    {
+      "index": 4,
+      "op": "registers",
+      "result": {
+        "cpu_mode": "real",
+        "flags": "0x00007212",
+        "general": {
+          "eax": "0x00001388",
+          "ebp": "0x00001EBC",
+          "ebx": "0x00000004",
+          "ecx": "0x000000CF",
+          "edi": "0x000000CF",
+          "edx": "0x00000004",
+          "esi": "0x00000007",
+          "esp": "0x00001EAE"
+        },
+        "instruction_pointer": "0x00000CA2",
+        "segments": {
+          "cs": "0x2B6F",
+          "ds": "0x3844",
+          "es": "0x3844",
+          "fs": "0x0000",
+          "gs": "0x0000",
+          "ss": "0x4528"
+        },
+        "session_id": "ses-1",
+        "state_revision": 49,
+        "cs": "0x2B6F",
+        "ip": "0x00000CA2",
+        "project_address": "0x34152"
+      },
+      "ok": true
+    },
+    {
+      "index": 5,
+      "op": "delete-breakpoint",
+      "result": {
+        "breakpoint_id": "bp-12",
+        "deleted": true,
+        "session_id": "ses-1",
+        "state_revision": 50
+      },
+      "ok": true
+    },
+    {
+      "index": 6,
+      "op": "delete-breakpoint",
+      "result": {
+        "breakpoint_id": "bp-13",
+        "deleted": true,
+        "session_id": "ses-1",
+        "state_revision": 51
+      },
+      "ok": true
+    },
+    {
+      "index": 7,
+      "op": "delete-breakpoint",
+      "result": {
+        "breakpoint_id": "bp-14",
+        "deleted": true,
+        "session_id": "ses-1",
+        "state_revision": 52
+      },
+      "ok": true
+    },
+    {
+      "index": 8,
+      "op": "delete-breakpoint",
+      "result": {
+        "breakpoint_id": "bp-15",
+        "deleted": true,
+        "session_id": "ses-1",
+        "state_revision": 53
+      },
+      "ok": true
+    },
+    {
+      "index": 9,
+      "op": "delete-breakpoint",
+      "result": {
+        "breakpoint_id": "bp-16",
+        "deleted": true,
+        "session_id": "ses-1",
+        "state_revision": 54
+      },
+      "ok": true
+    },
+    {
+      "index": 10,
+      "op": "delete-breakpoint",
+      "result": {
+        "breakpoint_id": "bp-17",
+        "deleted": true,
+        "session_id": "ses-1",
+        "state_revision": 55
+      },
+      "ok": true
+    },
+    {
+      "index": 11,
+      "op": "delete-breakpoint",
+      "result": {
+        "breakpoint_id": "bp-18",
+        "deleted": true,
+        "session_id": "ses-1",
+        "state_revision": 56
+      },
+      "ok": true
+    },
+    {
+      "index": 12,
+      "op": "delete-breakpoint",
+      "result": {
+        "breakpoint_id": "bp-19",
+        "deleted": true,
+        "session_id": "ses-1",
+        "state_revision": 57
+      },
+      "ok": true
+    },
+    {
+      "index": 13,
+      "op": "run",
+      "result": {
+        "run": "ee6c44be5ff74ad29e642f01d040e57a",
+        "outcome": "breakpoint",
+        "timed_out": false,
+        "requested_guest_ms": null,
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 3.49,
+        "fast_forward": false,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 46988,
+          "session_id": "ses-1",
+          "state_revision": 58
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 58,
+          "stop_reason": {
+            "address": {
+              "offset": "0x00000CA3",
+              "segment": "0x2B6F",
+              "space": "segmented"
+            },
+            "breakpoint_id": "bp-11",
+            "kind": "breakpoint",
+            "project_address": "0x34153"
+          }
+        },
+        "hook_hits": []
+      },
+      "ok": true
+    },
+    {
+      "index": 14,
+      "op": "assert",
+      "result": {
+        "matched": true
+      },
+      "ok": true
+    },
+    {
+      "index": 15,
+      "op": "registers",
+      "result": {
+        "cpu_mode": "real",
+        "flags": "0x00007212",
+        "general": {
+          "eax": "0x00001388",
+          "ebp": "0x00001EBC",
+          "ebx": "0x00000004",
+          "ecx": "0x000000CF",
+          "edi": "0x000000CF",
+          "edx": "0x00000000",
+          "esi": "0x00000007",
+          "esp": "0x00001EAE"
+        },
+        "instruction_pointer": "0x00000CA3",
+        "segments": {
+          "cs": "0x2B6F",
+          "ds": "0x3844",
+          "es": "0x3844",
+          "fs": "0x0000",
+          "gs": "0x0000",
+          "ss": "0x4528"
+        },
+        "session_id": "ses-1",
+        "state_revision": 58,
+        "cs": "0x2B6F",
+        "ip": "0x00000CA3",
+        "project_address": "0x34153"
+      },
+      "ok": true
+    },
+    {
+      "index": 16,
+      "op": "delete-breakpoint",
+      "result": {
+        "breakpoint_id": "bp-11",
+        "deleted": true,
+        "session_id": "ses-1",
+        "state_revision": 59
+      },
+      "ok": true
+    },
+    {
+      "index": 17,
+      "op": "trace",
+      "result": {
+        "artifact": "7eae21924bf74b338b66d37221f1d206",
+        "run": "ee6c44be5ff74ad29e642f01d040e57a",
+        "version": 1,
+        "name": "selected-price.json",
+        "kind": "trace",
+        "sha256": "e2e7ca187b7f6394c574965c92a37bba81f02ad9fb2740af6331cc19eb2c1d3c",
+        "size": 14926,
+        "metadata": {
+          "event_count": 16,
+          "complete": true,
+          "run": {
+            "run": "ee6c44be5ff74ad29e642f01d040e57a",
+            "outcome": "pause",
+            "timed_out": false,
+            "requested_guest_ms": null,
+            "guest_elapsed_ms": 0,
+            "host_elapsed_ms": 3.613,
+            "fast_forward": false,
+            "timing_after": {
+              "fast_forward": false,
+              "guest_ticks": 46988,
+              "session_id": "ses-1",
+              "state_revision": 60
+            },
+            "session": {
+              "session_id": "ses-1",
+              "state": "stopped",
+              "state_revision": 60,
+              "stop_reason": {
+                "kind": "pause"
+              }
+            },
+            "hook_hits": []
+          }
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 18,
+      "op": "run",
+      "result": {
+        "run": "ee6c44be5ff74ad29e642f01d040e57a",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 1000,
+        "guest_elapsed_ms": 1050,
+        "host_elapsed_ms": 1034.983,
+        "fast_forward": false,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 48038,
+          "session_id": "ses-1",
+          "state_revision": 61
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 61,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": []
+      },
+      "ok": true
+    },
+    {
+      "index": 19,
+      "op": "screenshot",
+      "result": {
+        "artifact": "4ce0c74e53d043a2ac4ac4f26238c514",
+        "run": "ee6c44be5ff74ad29e642f01d040e57a",
+        "version": 1,
+        "name": "after-selection-grid8.png",
+        "kind": "screenshot-grid",
+        "sha256": "f3e9167e297ebb8f20ba7bb409b620c40a2b6020a5de132567d1e4bd24b45ddf",
+        "size": 56784,
+        "metadata": {
+          "captured_ticks": 48030,
+          "double_height": true,
+          "double_width": true,
+          "format": "png",
+          "frame_id": 187,
+          "height": 200,
+          "mode_id": 10,
+          "session_id": "ses-1",
+          "sha256": "f3e9167e297ebb8f20ba7bb409b620c40a2b6020a5de132567d1e4bd24b45ddf",
+          "source": "last_completed_guest_frame",
+          "source_bpp": 32,
+          "state_revision": 61,
+          "width": 320,
+          "coordinate_grid": {
+            "coordinate_space": "screenshot_pixels",
+            "origin": [
+              0,
+              0
+            ],
+            "max_coordinate": [
+              319,
+              199
+            ],
+            "step": 8,
+            "x_lines": [
+              0,
+              8,
+              16,
+              24,
+              32,
+              40,
+              48,
+              56,
+              64,
+              72,
+              80,
+              88,
+              96,
+              104,
+              112,
+              120,
+              128,
+              136,
+              144,
+              152,
+              160,
+              168,
+              176,
+              184,
+              192,
+              200,
+              208,
+              216,
+              224,
+              232,
+              240,
+              248,
+              256,
+              264,
+              272,
+              280,
+              288,
+              296,
+              304,
+              312
+            ],
+            "y_lines": [
+              0,
+              8,
+              16,
+              24,
+              32,
+              40,
+              48,
+              56,
+              64,
+              72,
+              80,
+              88,
+              96,
+              104,
+              112,
+              120,
+              128,
+              136,
+              144,
+              152,
+              160,
+              168,
+              176,
+              184,
+              192
+            ],
+            "label_step": 32,
+            "x_labels": [
+              0,
+              32,
+              64,
+              96,
+              128,
+              160,
+              192,
+              224,
+              256,
+              288
+            ],
+            "y_labels": [
+              0,
+              32,
+              64,
+              96,
+              128,
+              160,
+              192
+            ],
+            "target": null,
+            "x_direction": "right",
+            "y_direction": "down",
+            "resized": false,
+            "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+            "source_artifact": "8f13cb5e81ea4812ab0e104f68753f6c",
+            "source_sha256": "013f8b7244969fe349b6584b58625fe1912f0546a29579dff1b0eec6a0658b40"
+          }
+        }
+      },
+      "ok": true
+    }
+  ]
+}

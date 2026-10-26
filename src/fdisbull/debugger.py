@@ -15,6 +15,7 @@ import tempfile
 from .dosbox_rpc import DOSBoxRPC, DebuggerError
 from .external_files import _file_name
 from .code_layers import LayerProjectMixin, LayerSessionMixin, LAYER_DDL
+from .debug_experiments import ExperimentProjectMixin, ExperimentSessionMixin
 
 
 DEBUG_DDL = '''
@@ -48,7 +49,7 @@ def stamp():
 DEBUG_DDL += LAYER_DDL
 
 
-class DebugProjectMixin(LayerProjectMixin):
+class DebugProjectMixin(ExperimentProjectMixin, LayerProjectMixin):
     def machine(self, executable, *, boot_image, version=None, boot_timeout_ms=30000):
         from .qemu_machine import MachineDebugSession
         return MachineDebugSession(self,executable,boot_image=boot_image,version=version,boot_timeout_ms=boot_timeout_ms)
@@ -224,7 +225,7 @@ class DebugProjectMixin(LayerProjectMixin):
         return self._debug_artifact(row['run'],name,'screenshot-grid',rendered,metadata)
 
 
-class DebugSession(LayerSessionMixin):
+class DebugSession(ExperimentSessionMixin, LayerSessionMixin):
     @property
     def script_operations(self):
         from .debug_script import OPERATIONS
@@ -436,7 +437,8 @@ class DebugSession(LayerSessionMixin):
             raise ValueError('access must be x, r, w, or rw')
         bounded(length,'length',1,256)
         if access != 'x':
-            return self._data_breakpoint(address,cs=cs,access=access,length=length)
+            result = self._data_breakpoint(address,cs=cs,access=access,length=length)
+            return self._remember_breakpoints(dict(address=address,cs=cs,access=access,length=length,view=view),result)
         if length != 1:
             raise ValueError('Execution breakpoints use one instruction address')
         if view == 'execute':
@@ -448,10 +450,11 @@ class DebugSession(LayerSessionMixin):
                                'offset':f"0x{int(instruction['ip'],16):08X}"}
             result = self.call('breakpoints.create',{'kind':'execution','address':runtime_address,'once':False})
             result.update(run=self.run_id,version=self.version['id'],project_address=instruction['project_address'],
+                          project_cs=hex(int(instruction['cs'],16)-self.runtime_load+self.dos['load_segment']),
                           runtime_bytes=instruction['bytes'],bytes_verified=True,static_bytes_verified=False,
                           verification_view='execute',generation=observed['generation'])
             self._event('breakpoint',result)
-            return result
+            return self._remember_breakpoints(dict(address=address,cs=cs,access=access,length=length,view=view),result)
         linear, selector = self.project._dos_parse_address(address,cs)
         offset = linear-self.static_base
         if not 0 <= offset < self.module_size:
@@ -476,7 +479,7 @@ class DebugSession(LayerSessionMixin):
         result.update(run=self.run_id,version=self.version['id'],project_address=hex(linear),
                       project_cs=f'0x{selector:04X}',instruction_context=rows[0]['context'],runtime_bytes=data.hex(),bytes_verified=True)
         self._event('breakpoint',result)
-        return result
+        return self._remember_breakpoints(dict(address=address,cs=cs,access=access,length=length,view=view),result)
 
     def _data_breakpoint(self, address, *, cs, access, length):
         if not self.rpc.capabilities.get('breakpoints',{}).get('data_access'):
@@ -598,6 +601,7 @@ class DebugSession(LayerSessionMixin):
     def delete_breakpoint(self, breakpoint_id):
         self._layer_setup()
         result = self.call('breakpoints.delete',{'breakpoint_id':breakpoint_id})
+        self._forget_breakpoint(breakpoint_id)
         control=self._hooks.pop(breakpoint_id,None)
         if control is not None:
             control['breakpoints']=[i for i in control['breakpoints'] if i!=breakpoint_id]
@@ -744,6 +748,8 @@ class DebugWorkspace:
         methods.update({'debug-layer-stack':'layers','debug-layer-enable':'layer_enable','debug-layer-patch':'layer_patch',
                         'debug-code':'code','debug-capture-code':'capture_code','debug-branch':'branch',
                         'debug-cave':'cave','debug-hook':'hook','debug-hooks':'hooks','debug-delete-hook':'delete_hook'})
+        methods.update({'debug-controls':'controls','debug-save-experiment':'save_experiment',
+                        'debug-restore-experiment':'restore_experiment','debug-compare-experiment':'compare_experiment'})
         context=params.pop('context',None)
         if method=='debug-stop':
             if params:

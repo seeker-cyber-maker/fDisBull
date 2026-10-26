@@ -8,6 +8,15 @@ An agent-first disassembler with a persistent SQLite analysis database, explicit
 
 Requires Python **3.12 or later**.
 
+The **0.15.0 source candidate** adds [saved experiments and baseline-versus-layer
+comparisons](docs/DEBUGGER_EXPERIMENTS.md): capture a checkpoint, its breakpoints,
+watches and hooks, then restore that setup for both trials and compare stored
+registers, memory, screenshots and traces. Native control IDs are rebound for
+the saved script, and consumed hooks/hit counts are restored. See the
+[candidate release notes](docs/RELEASE-0.15.0.md) and
+[verification record](docs/VERIFICATION-0.15.md). The latest published release
+remains 0.14.0.
+
 Version 0.14.0 adds an optional [IDA 9.4 remote-server adapter and matching
 DOSBox endpoint](docs/IDA_REMOTE.md). These use a common binary debugger
 protocol and keep execution breakpoints out of instruction bytes. The new
@@ -32,7 +41,7 @@ feature limits and the ordinary/native Linux checks required before tagging.
 
 | Track | Source and availability | Verification |
 | --- | --- | --- |
-| **Current source: 0.14.0** | [Unified DOS, Windows and machine debugging](docs/UNIFIED_DEBUGGER.md), plus the optional [IDA remote adapter](docs/IDA_REMOTE.md) | [Release notes](docs/RELEASE-0.14.0.md) and [publication/delivery evidence](docs/DELIVERY-0.14.md). Earlier deliveries remain unchanged. |
+| **Working source candidate: 0.15.0** | [Saved debugger experiments](docs/DEBUGGER_EXPERIMENTS.md) on the existing unified debugger | [Candidate notes](docs/RELEASE-0.15.0.md) and [local verification](docs/VERIFICATION-0.15.md). This candidate has not been published. |
 | **Latest published package release: 0.14.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0), commit `6a0aeb3` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623197): 817 passed, 45 skipped. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623209): 15 stable DOS, 38 layers/endpoint, 14 PE64 and 10 DOS/QEMU/boot checks passed, no native skips. |
 | **Repository branch** | [main](https://github.com/seeker-cyber-maker/fDisBull/tree/main) is the only active branch | Release promotion requires both ordinary and native Linux CI. Use version tags for fixed source snapshots. The old experimental checkpoint is preserved under an archive tag. |
 

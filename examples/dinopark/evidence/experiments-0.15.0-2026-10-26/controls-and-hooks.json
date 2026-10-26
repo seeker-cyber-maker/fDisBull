@@ -1,0 +1,826 @@
+{
+  "run": "ee6c44be5ff74ad29e642f01d040e57a",
+  "events": [
+    {
+      "sequence": 84,
+      "created": "2026-10-26T11:22:44.988657+00:00",
+      "operation": "restore-experiment",
+      "evidence": {
+        "experiment": "8b9d14c9f8244a6f89c1f91f2e2e1a90",
+        "checkpoint": {
+          "completed": true,
+          "session_id": "ses-1",
+          "state_revision": 2,
+          "artifact": "7a563f6d4bad4852b4aedf5db845393a",
+          "sha256": "77c99b24ac76d571dcfa98cef91881b00323431ad1f8d5382613db628c22393f",
+          "registers": {
+            "cpu_mode": "real",
+            "flags": "0x00007202",
+            "general": {
+              "eax": "0x00000050",
+              "ebp": "0x00001F10",
+              "ebx": "0x00000001",
+              "ecx": "0x00000001",
+              "edi": "0x00000001",
+              "edx": "0x00000000",
+              "esi": "0x00000007",
+              "esp": "0x00001F06"
+            },
+            "instruction_pointer": "0x00000349",
+            "segments": {
+              "cs": "0x0EB7",
+              "ds": "0x3844",
+              "es": "0x3844",
+              "fs": "0x0000",
+              "gs": "0x0000",
+              "ss": "0x4528"
+            },
+            "session_id": "ses-1",
+            "state_revision": 2,
+            "cs": "0x0EB7",
+            "ip": "0x00000349",
+            "project_address": "0x16c79"
+          },
+          "framebuffer": "invalidated_until_next_completed_frame"
+        },
+        "controls": {
+          "breakpoints": {
+            "bp-1": {
+              "address": {
+                "offset": "0x00000CA3",
+                "segment": "0x2B6F",
+                "space": "segmented"
+              },
+              "breakpoint_id": "bp-1",
+              "kind": "execution",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 3,
+              "run": "ee6c44be5ff74ad29e642f01d040e57a",
+              "version": 1,
+              "project_address": "0x34153",
+              "project_cs": "0x334B",
+              "instruction_context": "x86:16:little:cs=334b",
+              "runtime_bytes": "52",
+              "bytes_verified": true
+            },
+            "bp-2": {
+              "address": {
+                "offset": "0x0003ECB5",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-2",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 4,
+              "project_address": "0x46a75",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-3": {
+              "address": {
+                "offset": "0x0003ECB6",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-3",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 5,
+              "project_address": "0x46a76",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-4": {
+              "address": {
+                "offset": "0x0003ECB7",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-4",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 6,
+              "project_address": "0x46a77",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-5": {
+              "address": {
+                "offset": "0x0003ECB8",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-5",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 7,
+              "project_address": "0x46a78",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-6": {
+              "address": {
+                "offset": "0x0003ECB9",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-6",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 8,
+              "project_address": "0x46a79",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-7": {
+              "address": {
+                "offset": "0x0003ECBA",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-7",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 9,
+              "project_address": "0x46a7a",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-8": {
+              "address": {
+                "offset": "0x0003ECBB",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-8",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 10,
+              "project_address": "0x46a7b",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-9": {
+              "address": {
+                "offset": "0x0003ECBC",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-9",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 11,
+              "project_address": "0x46a7c",
+              "access": "r",
+              "bytes_verified": false
+            }
+          },
+          "hooks": {
+            "8ed4afbe59e34a889b5f6734a9815b92": {
+              "hook": "20e32d0c81c04adab20560312811f95e",
+              "breakpoints": [
+                "bp-10"
+              ],
+              "actions": [
+                {
+                  "op": "registers",
+                  "registers": {
+                    "fs": {
+                      "expected": "0x0000",
+                      "value": "0x0000"
+                    }
+                  }
+                }
+              ],
+              "once": true,
+              "max_hits": 1,
+              "hits": 0,
+              "dispatch": "paused_rpc",
+              "extra_guest_bytes": 0,
+              "location": {
+                "address": {
+                  "offset": "0x000075BC",
+                  "segment": "0x0824",
+                  "space": "segmented"
+                },
+                "breakpoint_id": "bp-10",
+                "kind": "execution",
+                "once": false,
+                "session_id": "ses-1",
+                "state_revision": 12,
+                "run": "ee6c44be5ff74ad29e642f01d040e57a",
+                "version": 1,
+                "project_address": "0x175bc",
+                "project_cs": "0x1000",
+                "runtime_bytes": "b80300",
+                "bytes_verified": true,
+                "static_bytes_verified": false,
+                "verification_view": "execute",
+                "generation": 2
+              },
+              "native_count": 1,
+              "definition": {
+                "address": "0x175bc",
+                "cs": "0x1000",
+                "access": "x",
+                "length": 1,
+                "actions": [
+                  {
+                    "op": "registers",
+                    "registers": {
+                      "fs": {
+                        "expected": "0x0000",
+                        "value": "0x0000"
+                      }
+                    }
+                  }
+                ],
+                "once": true,
+                "max_hits": 1
+              }
+            }
+          }
+        },
+        "active_layers": [],
+        "hit_counts_restored": true
+      }
+    },
+    {
+      "sequence": 88,
+      "created": "2026-10-26T11:22:44.997587+00:00",
+      "operation": "hook-hit",
+      "evidence": {
+        "hook": "20e32d0c81c04adab20560312811f95e",
+        "hit": 1,
+        "stop": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 14,
+          "stop_reason": {
+            "address": {
+              "offset": "0x000075BC",
+              "segment": "0x0824",
+              "space": "segmented"
+            },
+            "breakpoint_id": "bp-10",
+            "kind": "breakpoint"
+          }
+        },
+        "actions": [
+          {
+            "op": "registers",
+            "result": {
+              "memory": [],
+              "registers": [
+                {
+                  "register": "fs",
+                  "before": "0x0",
+                  "after": "0x0",
+                  "verified": true
+                }
+              ]
+            }
+          }
+        ],
+        "dispatch": "paused_rpc",
+        "extra_guest_bytes": 0
+      }
+    },
+    {
+      "sequence": 123,
+      "created": "2026-10-26T11:22:46.450590+00:00",
+      "operation": "restore-experiment",
+      "evidence": {
+        "experiment": "8b9d14c9f8244a6f89c1f91f2e2e1a90",
+        "checkpoint": {
+          "completed": true,
+          "session_id": "ses-1",
+          "state_revision": 32,
+          "artifact": "7a563f6d4bad4852b4aedf5db845393a",
+          "sha256": "77c99b24ac76d571dcfa98cef91881b00323431ad1f8d5382613db628c22393f",
+          "registers": {
+            "cpu_mode": "real",
+            "flags": "0x00007202",
+            "general": {
+              "eax": "0x00000050",
+              "ebp": "0x00001F10",
+              "ebx": "0x00000001",
+              "ecx": "0x00000001",
+              "edi": "0x00000001",
+              "edx": "0x00000000",
+              "esi": "0x00000007",
+              "esp": "0x00001F06"
+            },
+            "instruction_pointer": "0x00000349",
+            "segments": {
+              "cs": "0x0EB7",
+              "ds": "0x3844",
+              "es": "0x3844",
+              "fs": "0x0000",
+              "gs": "0x0000",
+              "ss": "0x4528"
+            },
+            "session_id": "ses-1",
+            "state_revision": 32,
+            "cs": "0x0EB7",
+            "ip": "0x00000349",
+            "project_address": "0x16c79"
+          },
+          "framebuffer": "invalidated_until_next_completed_frame"
+        },
+        "controls": {
+          "breakpoints": {
+            "bp-1": {
+              "address": {
+                "offset": "0x00000CA3",
+                "segment": "0x2B6F",
+                "space": "segmented"
+              },
+              "breakpoint_id": "bp-11",
+              "kind": "execution",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 33,
+              "run": "ee6c44be5ff74ad29e642f01d040e57a",
+              "version": 1,
+              "project_address": "0x34153",
+              "project_cs": "0x334B",
+              "instruction_context": "x86:16:little:cs=334b",
+              "runtime_bytes": "52",
+              "bytes_verified": true
+            },
+            "bp-2": {
+              "address": {
+                "offset": "0x0003ECB5",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-12",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 34,
+              "project_address": "0x46a75",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-3": {
+              "address": {
+                "offset": "0x0003ECB6",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-13",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 35,
+              "project_address": "0x46a76",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-4": {
+              "address": {
+                "offset": "0x0003ECB7",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-14",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 36,
+              "project_address": "0x46a77",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-5": {
+              "address": {
+                "offset": "0x0003ECB8",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-15",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 37,
+              "project_address": "0x46a78",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-6": {
+              "address": {
+                "offset": "0x0003ECB9",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-16",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 38,
+              "project_address": "0x46a79",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-7": {
+              "address": {
+                "offset": "0x0003ECBA",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-17",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 39,
+              "project_address": "0x46a7a",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-8": {
+              "address": {
+                "offset": "0x0003ECBB",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-18",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 40,
+              "project_address": "0x46a7b",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-9": {
+              "address": {
+                "offset": "0x0003ECBC",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-19",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 41,
+              "project_address": "0x46a7c",
+              "access": "r",
+              "bytes_verified": false
+            }
+          },
+          "hooks": {
+            "8ed4afbe59e34a889b5f6734a9815b92": {
+              "hook": "4739874895124139b10233e2ba57967c",
+              "breakpoints": [
+                "bp-20"
+              ],
+              "actions": [
+                {
+                  "op": "registers",
+                  "registers": {
+                    "fs": {
+                      "expected": "0x0000",
+                      "value": "0x0000"
+                    }
+                  }
+                }
+              ],
+              "once": true,
+              "max_hits": 1,
+              "hits": 0,
+              "dispatch": "paused_rpc",
+              "extra_guest_bytes": 0,
+              "location": {
+                "address": {
+                  "offset": "0x000075BC",
+                  "segment": "0x0824",
+                  "space": "segmented"
+                },
+                "breakpoint_id": "bp-20",
+                "kind": "execution",
+                "once": false,
+                "session_id": "ses-1",
+                "state_revision": 42,
+                "run": "ee6c44be5ff74ad29e642f01d040e57a",
+                "version": 1,
+                "project_address": "0x175bc",
+                "project_cs": "0x1000",
+                "runtime_bytes": "b80300",
+                "bytes_verified": true,
+                "static_bytes_verified": false,
+                "verification_view": "execute",
+                "generation": 4
+              },
+              "native_count": 1,
+              "definition": {
+                "address": "0x175bc",
+                "cs": "0x1000",
+                "access": "x",
+                "length": 1,
+                "actions": [
+                  {
+                    "op": "registers",
+                    "registers": {
+                      "fs": {
+                        "expected": "0x0000",
+                        "value": "0x0000"
+                      }
+                    }
+                  }
+                ],
+                "once": true,
+                "max_hits": 1
+              }
+            }
+          }
+        },
+        "active_layers": [],
+        "hit_counts_restored": true
+      }
+    },
+    {
+      "sequence": 127,
+      "created": "2026-10-26T11:22:46.460818+00:00",
+      "operation": "hook-hit",
+      "evidence": {
+        "hook": "4739874895124139b10233e2ba57967c",
+        "hit": 1,
+        "stop": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 44,
+          "stop_reason": {
+            "address": {
+              "offset": "0x000075BC",
+              "segment": "0x0824",
+              "space": "segmented"
+            },
+            "breakpoint_id": "bp-20",
+            "kind": "breakpoint"
+          }
+        },
+        "actions": [
+          {
+            "op": "registers",
+            "result": {
+              "memory": [],
+              "registers": [
+                {
+                  "register": "fs",
+                  "before": "0x0",
+                  "after": "0x0",
+                  "verified": true
+                }
+              ]
+            }
+          }
+        ],
+        "dispatch": "paused_rpc",
+        "extra_guest_bytes": 0
+      }
+    },
+    {
+      "sequence": 162,
+      "created": "2026-10-26T11:22:47.942687+00:00",
+      "operation": "restore-experiment",
+      "evidence": {
+        "experiment": "8b9d14c9f8244a6f89c1f91f2e2e1a90",
+        "checkpoint": {
+          "completed": true,
+          "session_id": "ses-1",
+          "state_revision": 62,
+          "artifact": "7a563f6d4bad4852b4aedf5db845393a",
+          "sha256": "77c99b24ac76d571dcfa98cef91881b00323431ad1f8d5382613db628c22393f",
+          "registers": {
+            "cpu_mode": "real",
+            "flags": "0x00007202",
+            "general": {
+              "eax": "0x00000050",
+              "ebp": "0x00001F10",
+              "ebx": "0x00000001",
+              "ecx": "0x00000001",
+              "edi": "0x00000001",
+              "edx": "0x00000000",
+              "esi": "0x00000007",
+              "esp": "0x00001F06"
+            },
+            "instruction_pointer": "0x00000349",
+            "segments": {
+              "cs": "0x0EB7",
+              "ds": "0x3844",
+              "es": "0x3844",
+              "fs": "0x0000",
+              "gs": "0x0000",
+              "ss": "0x4528"
+            },
+            "session_id": "ses-1",
+            "state_revision": 62,
+            "cs": "0x0EB7",
+            "ip": "0x00000349",
+            "project_address": "0x16c79"
+          },
+          "framebuffer": "invalidated_until_next_completed_frame"
+        },
+        "controls": {
+          "breakpoints": {
+            "bp-1": {
+              "address": {
+                "offset": "0x00000CA3",
+                "segment": "0x2B6F",
+                "space": "segmented"
+              },
+              "breakpoint_id": "bp-21",
+              "kind": "execution",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 63,
+              "run": "ee6c44be5ff74ad29e642f01d040e57a",
+              "version": 1,
+              "project_address": "0x34153",
+              "project_cs": "0x334B",
+              "instruction_context": "x86:16:little:cs=334b",
+              "runtime_bytes": "52",
+              "bytes_verified": true
+            },
+            "bp-2": {
+              "address": {
+                "offset": "0x0003ECB5",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-22",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 64,
+              "project_address": "0x46a75",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-3": {
+              "address": {
+                "offset": "0x0003ECB6",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-23",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 65,
+              "project_address": "0x46a76",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-4": {
+              "address": {
+                "offset": "0x0003ECB7",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-24",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 66,
+              "project_address": "0x46a77",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-5": {
+              "address": {
+                "offset": "0x0003ECB8",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-25",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 67,
+              "project_address": "0x46a78",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-6": {
+              "address": {
+                "offset": "0x0003ECB9",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-26",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 68,
+              "project_address": "0x46a79",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-7": {
+              "address": {
+                "offset": "0x0003ECBA",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-27",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 69,
+              "project_address": "0x46a7a",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-8": {
+              "address": {
+                "offset": "0x0003ECBB",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-28",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 70,
+              "project_address": "0x46a7b",
+              "access": "r",
+              "bytes_verified": false
+            },
+            "bp-9": {
+              "address": {
+                "offset": "0x0003ECBC",
+                "space": "linear"
+              },
+              "breakpoint_id": "bp-29",
+              "kind": "r",
+              "once": false,
+              "session_id": "ses-1",
+              "state_revision": 71,
+              "project_address": "0x46a7c",
+              "access": "r",
+              "bytes_verified": false
+            }
+          },
+          "hooks": {
+            "8ed4afbe59e34a889b5f6734a9815b92": {
+              "hook": "e9aa52f8e6c5477bb2d8e5bbf4b76084",
+              "breakpoints": [
+                "bp-30"
+              ],
+              "actions": [
+                {
+                  "op": "registers",
+                  "registers": {
+                    "fs": {
+                      "expected": "0x0000",
+                      "value": "0x0000"
+                    }
+                  }
+                }
+              ],
+              "once": true,
+              "max_hits": 1,
+              "hits": 0,
+              "dispatch": "paused_rpc",
+              "extra_guest_bytes": 0,
+              "location": {
+                "address": {
+                  "offset": "0x000075BC",
+                  "segment": "0x0824",
+                  "space": "segmented"
+                },
+                "breakpoint_id": "bp-30",
+                "kind": "execution",
+                "once": false,
+                "session_id": "ses-1",
+                "state_revision": 72,
+                "run": "ee6c44be5ff74ad29e642f01d040e57a",
+                "version": 1,
+                "project_address": "0x175bc",
+                "project_cs": "0x1000",
+                "runtime_bytes": "b80300",
+                "bytes_verified": true,
+                "static_bytes_verified": false,
+                "verification_view": "execute",
+                "generation": 6
+              },
+              "native_count": 1,
+              "definition": {
+                "address": "0x175bc",
+                "cs": "0x1000",
+                "access": "x",
+                "length": 1,
+                "actions": [
+                  {
+                    "op": "registers",
+                    "registers": {
+                      "fs": {
+                        "expected": "0x0000",
+                        "value": "0x0000"
+                      }
+                    }
+                  }
+                ],
+                "once": true,
+                "max_hits": 1
+              }
+            }
+          }
+        },
+        "active_layers": [],
+        "hit_counts_restored": true
+      }
+    }
+  ],
+  "source": "Stored project debug_events; private database not exported"
+}

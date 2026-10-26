@@ -1,0 +1,97 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "run",
+      "guest_ms": 120,
+      "timeout_ms": 3000
+    },
+    {
+      "op": "click-frame",
+      "x": 195,
+      "y": 85,
+      "name": "gift-selection-grid8.png",
+      "hold_ms": 150
+    },
+    {
+      "op": "run",
+      "timeout_ms": 5000,
+      "as": "price_watch"
+    },
+    {
+      "op": "assert",
+      "value": "$price_watch.session.stop_reason.data_access.project_instruction",
+      "equals": "0x3414e"
+    },
+    {
+      "op": "registers",
+      "as": "selected_price"
+    },
+    {
+      "op": "delete-breakpoint",
+      "breakpoint_id": "$controls.breakpoints.bp-2.breakpoint_id"
+    },
+    {
+      "op": "delete-breakpoint",
+      "breakpoint_id": "$controls.breakpoints.bp-3.breakpoint_id"
+    },
+    {
+      "op": "delete-breakpoint",
+      "breakpoint_id": "$controls.breakpoints.bp-4.breakpoint_id"
+    },
+    {
+      "op": "delete-breakpoint",
+      "breakpoint_id": "$controls.breakpoints.bp-5.breakpoint_id"
+    },
+    {
+      "op": "delete-breakpoint",
+      "breakpoint_id": "$controls.breakpoints.bp-6.breakpoint_id"
+    },
+    {
+      "op": "delete-breakpoint",
+      "breakpoint_id": "$controls.breakpoints.bp-7.breakpoint_id"
+    },
+    {
+      "op": "delete-breakpoint",
+      "breakpoint_id": "$controls.breakpoints.bp-8.breakpoint_id"
+    },
+    {
+      "op": "delete-breakpoint",
+      "breakpoint_id": "$controls.breakpoints.bp-9.breakpoint_id"
+    },
+    {
+      "op": "run",
+      "timeout_ms": 5000,
+      "as": "execution_stop"
+    },
+    {
+      "op": "assert",
+      "value": "$execution_stop.session.stop_reason.project_address",
+      "equals": "0x34153"
+    },
+    {
+      "op": "registers"
+    },
+    {
+      "op": "delete-breakpoint",
+      "breakpoint_id": "$controls.breakpoints.bp-1.breakpoint_id"
+    },
+    {
+      "op": "trace",
+      "name": "selected-price.json",
+      "count": 16,
+      "timeout_ms": 5000
+    },
+    {
+      "op": "run",
+      "guest_ms": 1000,
+      "timeout_ms": 5000
+    },
+    {
+      "op": "screenshot",
+      "name": "after-selection-grid8.png",
+      "grid": true,
+      "grid_step": 8
+    }
+  ]
+}

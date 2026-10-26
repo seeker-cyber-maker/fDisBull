@@ -1,0 +1,6 @@
+Processing /opt/managed/dncil-1.0.2-py3-none-any.whl
+Processing /opt/managed/dnfile-0.18.0-py3-none-any.whl
+Processing /opt/managed/pefile-2024.8.26-py3-none-any.whl
+Installing collected packages: pefile, dncil, dnfile
+
+Successfully installed dncil-1.0.2 dnfile-0.18.0 pefile-2024.8.26

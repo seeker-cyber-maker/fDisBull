@@ -17,9 +17,10 @@ from .wine_rpc import WineQemuRPC
 from .wine_layers import PELayerSessionMixin
 from .wine_execution import PEExecutionMixin
 from .wine_state import PEStateSessionMixin,get_state,file_hash
+from .debug_experiments import ExperimentSessionMixin
 
 
-class PEDebugSession(PELayerSessionMixin,PEExecutionMixin,PEStateSessionMixin):
+class PEDebugSession(ExperimentSessionMixin,PELayerSessionMixin,PEExecutionMixin,PEStateSessionMixin):
     rpc_type=WineQemuRPC
     backend_name='wine-qemu'
     script_operations={'run','click','click-frame','screenshot','trace','breakpoint',
@@ -172,7 +173,8 @@ class PEDebugSession(PELayerSessionMixin,PEExecutionMixin,PEStateSessionMixin):
             result.update(run=self.run_id,version=self.version['id'],project_address=hex(value),
                           runtime_address=hex(value+self.delta),access=access,length=length,bytes_verified=False)
             self.watchpoints[result['breakpoint_id']]=dict(address=value,length=length,access=access)
-            self._event('watchpoint',result);return result
+            self._event('watchpoint',result)
+            return self._remember_breakpoints(dict(address=address,cs=cs,access=access,length=length,view=view),result)
         if cs is not None or access!='x' or length!=1 or view!='static':
             raise ValueError('PE64 supports x, r, w and rw breakpoints at flat project addresses')
         value=self._address(address,executable=True)
@@ -185,14 +187,17 @@ class PEDebugSession(PELayerSessionMixin,PEExecutionMixin,PEStateSessionMixin):
         if observed!=expected.hex():raise DebuggerError('Runtime code differs from the selected static instruction; breakpoint refused')
         result=self.call('bp',{'address':value+self.delta})
         result.update(run=self.run_id,version=self.version['id'],project_address=hex(value),runtime_bytes=observed,bytes_verified=True)
-        self.breakpoints[result['breakpoint_id']]=value;self._event('breakpoint',result);return result
+        self.breakpoints[result['breakpoint_id']]=value;self._event('breakpoint',result)
+        return self._remember_breakpoints(dict(address=address,cs=cs,access=access,length=length,view=view),result)
 
     def delete_breakpoint(self,breakpoint_id):
         if breakpoint_id in self.watchpoints:
             result=self.call('unwatch',{'id':int(breakpoint_id[3:])})
-            del self.watchpoints[breakpoint_id];self._event('delete-watchpoint',result);return result
+            del self.watchpoints[breakpoint_id];self._forget_breakpoint(breakpoint_id)
+            self._event('delete-watchpoint',result);return result
         if breakpoint_id not in self.breakpoints:raise ValueError('Unknown owned PE breakpoint')
         result=self.call('del',{'id':int(breakpoint_id[3:])});del self.breakpoints[breakpoint_id]
+        self._forget_breakpoint(breakpoint_id)
         self._event('delete-breakpoint',result);return result
 
     def run(self,*,timeout_ms=10000,guest_ms=None,fast_forward=False):

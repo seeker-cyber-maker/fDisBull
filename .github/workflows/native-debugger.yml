@@ -38,7 +38,7 @@ jobs:
           - profile: layers-backend
             patch_directory: experimental/dosbox-x/layers
             python_version: "3.13.5"
-            tests: tests/test_debugger.py tests/test_code_layers.py tests/test_screenshot_grid.py tests/test_ida_dosbox.py tests/test_dosbox_zip_stream.py
+            tests: tests/test_debugger.py tests/test_code_layers.py tests/test_debug_experiments.py tests/test_screenshot_grid.py tests/test_ida_dosbox.py tests/test_dosbox_zip_stream.py
     env:
       FDISBULL_DOSBOX: ${{ github.workspace }}/.native/dosbox-x/src/dosbox-x
       FDISBULL_DOSBOX_SOURCE: ${{ github.workspace }}/.native/dosbox-x
