@@ -1,0 +1,254 @@
+{
+  "run": {
+    "run": "de7541648a3449beba70cc3469519002",
+    "outcome": "pause",
+    "timed_out": false,
+    "requested_guest_ms": null,
+    "guest_elapsed_ms": 0,
+    "host_elapsed_ms": 8.236,
+    "fast_forward": false,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 5,
+      "session_id": "ses-1",
+      "state_revision": 12
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 12,
+      "stop_reason": {
+        "kind": "pause"
+      }
+    },
+    "hook_hits": []
+  },
+  "version": 1,
+  "mapping": {
+    "fdisbull_version": "0.14.0",
+    "source_sha256": "57fc058697aff73bb5b42187edd78169e9b73ee851afe8b1b5b2f188f83b40f0",
+    "version_sha256": "b1171165b8f37df5797c8c81c0fc42fcd9faf93606d4e0e24b3d63df125e48a7",
+    "executable": "/opt/delivery/backend/linux-amd64/dosbox-x-offline",
+    "emulator_sha256": "6aad8c616460fef7ee2a9df24a52f611d4a7b47a2f987d2b496c7985da02ca33",
+    "runtime_profile": "real-normal-v1",
+    "game_dir": "/tmp/pytest-of-ubuntu/pytest-0/test_real_dos_endpoint_breakpo0",
+    "target": "GAME.EXE",
+    "static_load_segment": 4096,
+    "runtime_load_segment": 2084,
+    "entry_registers": {
+      "cpu_mode": "real",
+      "flags": "0x00007202",
+      "general": {
+        "eax": "0x00000000",
+        "ebp": "0x0000091C",
+        "ebx": "0x00000000",
+        "ecx": "0x000000FF",
+        "edi": "0x00000200",
+        "edx": "0x00000814",
+        "esi": "0x00000000",
+        "esp": "0x00000200"
+      },
+      "instruction_pointer": "0x00000000",
+      "segments": {
+        "cs": "0x0824",
+        "ds": "0x0814",
+        "es": "0x0814",
+        "fs": "0x0000",
+        "gs": "0x0000",
+        "ss": "0x0824"
+      },
+      "session_id": "ses-1",
+      "state_revision": 1
+    },
+    "capabilities": {
+      "address_spaces": [
+        "segmented",
+        "linear",
+        "physical"
+      ],
+      "breakpoints": {
+        "data_access": "normal_core_real_mode_byte_addresses",
+        "memory_change": true,
+        "memory_change_address_spaces": [
+          "segmented",
+          "linear"
+        ]
+      },
+      "code_layers": "normal_core_real_mode_guarded_fetch_v1",
+      "debugger": true,
+      "input": {
+        "absolute_mouse": true,
+        "click_timing": "guest_emulated_milliseconds",
+        "coordinate_space": "guest_frame_pixels",
+        "driver": "builtin_dos_int33_only"
+      },
+      "limits": {
+        "max_memory_read_bytes": 65536,
+        "max_message_bytes": 8388608,
+        "max_trace_events": 10000
+      },
+      "protocol_version": "1.0",
+      "register_edit": true,
+      "save_states": true,
+      "timing": {
+        "fast_forward": true,
+        "guest_clock": "PIC_Ticks_milliseconds"
+      },
+      "trace": {
+        "cpu": true
+      },
+      "video": {
+        "format": "png",
+        "headless": true,
+        "screenshot": true,
+        "source": "last_completed_guest_frame"
+      }
+    },
+    "pid": 408
+  },
+  "events": [
+    {
+      "address": {
+        "offset": "0x0000000A",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "ebfa00000000000000000000000000",
+      "instruction": "jmp short 6",
+      "layer_generation": 1,
+      "native_instruction_view": "ram",
+      "ram_bytes": "ebfa00000000000000000000000000",
+      "register_changes": {
+        "cs": "0x0824",
+        "ds": "0x0824",
+        "eax": "0xABCDEF01",
+        "ebp": "0x0000091C",
+        "ebx": "0x00005678",
+        "ecx": "0x000000FF",
+        "edi": "0x00000200",
+        "edx": "0x00000814",
+        "es": "0x0814",
+        "esi": "0x00000000",
+        "esp": "0x00000200",
+        "flags": "0x00007202",
+        "fs": "0x0000",
+        "gs": "0x0000",
+        "instruction_pointer": "0x0000000A",
+        "ss": "0x0824"
+      },
+      "sequence": 1,
+      "project_address": "0x1000a",
+      "project_segmented_address": "1000:000a",
+      "native_instruction": "jmp  short 00000006 ($-6)",
+      "instruction_view": "execute",
+      "active_layers": []
+    },
+    {
+      "address": {
+        "offset": "0x00000006",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "ff060001ebfa000000000000000000",
+      "instruction": "inc word [100h]",
+      "layer_generation": 1,
+      "native_instruction_view": "ram",
+      "ram_bytes": "ff060001ebfa000000000000000000",
+      "register_changes": {
+        "instruction_pointer": "0x00000006"
+      },
+      "sequence": 2,
+      "project_address": "0x10006",
+      "project_segmented_address": "1000:0006",
+      "native_instruction": "inc  word [0100]",
+      "instruction_view": "execute",
+      "active_layers": []
+    },
+    {
+      "address": {
+        "offset": "0x0000000A",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "ebfa00000000000000000000000000",
+      "instruction": "jmp short 6",
+      "layer_generation": 1,
+      "native_instruction_view": "ram",
+      "ram_bytes": "ebfa00000000000000000000000000",
+      "register_changes": {
+        "instruction_pointer": "0x0000000A"
+      },
+      "sequence": 3,
+      "project_address": "0x1000a",
+      "project_segmented_address": "1000:000a",
+      "native_instruction": "jmp  short 00000006 ($-6)",
+      "instruction_view": "execute",
+      "active_layers": []
+    },
+    {
+      "address": {
+        "offset": "0x00000006",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "ff060001ebfa000000000000000000",
+      "instruction": "inc word [100h]",
+      "layer_generation": 1,
+      "native_instruction_view": "ram",
+      "ram_bytes": "ff060001ebfa000000000000000000",
+      "register_changes": {
+        "instruction_pointer": "0x00000006"
+      },
+      "sequence": 4,
+      "project_address": "0x10006",
+      "project_segmented_address": "1000:0006",
+      "native_instruction": "inc  word [0100]",
+      "instruction_view": "execute",
+      "active_layers": []
+    },
+    {
+      "address": {
+        "offset": "0x0000000A",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "ebfa00000000000000000000000000",
+      "instruction": "jmp short 6",
+      "layer_generation": 1,
+      "native_instruction_view": "ram",
+      "ram_bytes": "ebfa00000000000000000000000000",
+      "register_changes": {
+        "instruction_pointer": "0x0000000A"
+      },
+      "sequence": 5,
+      "project_address": "0x1000a",
+      "project_segmented_address": "1000:000a",
+      "native_instruction": "jmp  short 00000006 ($-6)",
+      "instruction_view": "execute",
+      "active_layers": []
+    },
+    {
+      "address": {
+        "offset": "0x00000006",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "ff060001ebfa000000000000000000",
+      "instruction": "inc word [100h]",
+      "layer_generation": 1,
+      "native_instruction_view": "ram",
+      "ram_bytes": "ff060001ebfa000000000000000000",
+      "register_changes": {
+        "instruction_pointer": "0x00000006"
+      },
+      "sequence": 6,
+      "project_address": "0x10006",
+      "project_segmented_address": "1000:0006",
+      "native_instruction": "inc  word [0100]",
+      "instruction_view": "execute",
+      "active_layers": []
+    }
+  ],
+  "requested_count": 6,
+  "complete": true
+}

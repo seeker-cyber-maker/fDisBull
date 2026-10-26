@@ -1,0 +1,13 @@
+{
+  "result": "pass",
+  "python": "3.13.5 (main, Jul 23 2025, 00:37:22) [Clang 20.1.4 ]",
+  "version": "0.14.0",
+  "module": "/work/clean-venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+  "capstone_actual_arm64_decode": "pass",
+  "iced_actual_dos_decode": "pass",
+  "lief_actual_pe_parse": "pass",
+  "loader_paths": "all resolved libraries from private bundle",
+  "SDL2_net": "bundled genuine runtime library",
+  "cli_help_and_inspect": "pass",
+  "network": "VM has no network interface; pip --no-index and hash-locked wheels only"
+}

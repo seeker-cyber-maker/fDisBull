@@ -1,0 +1,54 @@
+{
+  "kind": "locally built Linux backend hotfix; original public 0.14.0 packages unchanged",
+  "host_tool_version": "0.14.0",
+  "host_tool_release_commit": "6a0aeb3830eb544cd744d3410881c1c951a5ffb7",
+  "source_base_repo_commit": "10807dd935916528c55ccd6784596b6e4b0b382b",
+  "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+  "patch_sha256": "042ee5b9f091debb4109864cc0c5ceee3b7987c1a596ab2acd6e44f3cf6ccbda",
+  "backend_sha256": "2aeb537ee7bbde674a72c759076bb26c3ba30fcc70ac5baa420bff0b07dc1e16",
+  "backend_size": 21723400,
+  "launcher_sha256": "6aad8c616460fef7ee2a9df24a52f611d4a7b47a2f987d2b496c7985da02ca33",
+  "launcher_identity": "Launcher pins and verifies the ELF hash; its changed hash also distinguishes old checkpoint compatibility",
+  "build": "Linux x86-64; GCC13; O2 g0; heavy debug, SDL2, native agent; strip --strip-debug after build and before acceptance",
+  "accepted_native_suite": {
+    "python": "3.13.5",
+    "passed": 52,
+    "failed": 0,
+    "skipped": 0
+  },
+  "fresh_copied_kit_qualification": {
+    "result": "pass",
+    "python": "3.13.5",
+    "suite": {
+      "tests": 51,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "repeated_original_cases": [
+      {
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "archive_checks": 40,
+    "invalid_archives": 0,
+    "cpu_profile": "qemu64"
+  },
+  "native_states_in_delivery": false,
+  "project_databases_in_delivery": false
+}

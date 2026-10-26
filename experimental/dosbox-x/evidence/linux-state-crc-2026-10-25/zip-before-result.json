@@ -1,0 +1,6 @@
+{
+  "exit_code": 1,
+  "stdout": "",
+  "stderr": "archive CRC changed after empty write\n",
+  "scope": "unmodified upstream ZIP adapter with real minizip, before fix"
+}

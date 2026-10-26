@@ -1,0 +1,21 @@
+{
+  "python": "3.13.5 (main, Jul 23 2025, 00:37:22) [Clang 20.1.4 ]",
+  "backend_sha256": "2aeb537ee7bbde674a72c759076bb26c3ba30fcc70ac5baa420bff0b07dc1e16",
+  "phase_exit_codes": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "archive_checks": 40,
+  "save_checks": 15,
+  "load_checks": 25,
+  "invalid_archives": 0,
+  "offline_exports": {
+    "native-offline-frame.png": "727ed2455749920f58c5a46e1777502cc60edfb6d75707305f0430306e35671d",
+    "native-offline-grid.png": "926a28bb4ec15575b5112286082c72279da4773b182533e23dbbd6b16348cd63",
+    "native-offline-trace.json": "87f327b3f5131d3a5db9fabb84a504437d86e8b40c9d52f960a9cd65a21f4f8f"
+  },
+  "cpu_profile": "qemu64",
+  "external_environment_accessed": false
+}

@@ -1,0 +1,26 @@
+{
+  "root_cause": "zip_ostreambuf forwards a null zero-length write to minizip; zlib crc32(nonzero_seed, NULL, 0) returns 0 and resets the archive running CRC",
+  "native_diagnostic_null_empty_writes": [
+    "pid=115 len=0 seed=7ad40ac4 real=0 ref=0 equal=1"
+  ],
+  "other_zlib_crc_algorithm_mismatches": 0,
+  "archive_before_database_equals_archive_before_load": "6ded29b3e6eddeff564fcd2fb691095160ea6d278c8513d8bd697680316bd05a",
+  "invalid_records_immediately_after_save": [
+    {
+      "name": "Vga",
+      "size": 2640720,
+      "header_crc": 2808284434,
+      "actual_crc": 1339871027,
+      "valid": false
+    }
+  ],
+  "source_fix": "Return 0 before calling zipWriteInFileInZip when stream count is zero",
+  "native_standalone_old_result": {
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "archive CRC changed after empty write\n",
+    "scope": "unmodified upstream ZIP adapter with real minizip, before fix"
+  },
+  "native_standalone_fixed_result": ".                                                                        [100%]\n1 passed in 0.92s",
+  "published_host_wheel_entry_identity": "all 84 entries unchanged; ship original published wheel"
+}

@@ -1,7 +1,7 @@
 {
-  "feature": "temporal code layers; unreleased 0.11 development",
+  "feature": "Temporal code layers and zero-byte native ZIP write CRC fix",
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "fed837151e85fa1d59e1630fc75be92f7635c8572c5e7274dc1d5bac1407060f",
+  "patch_sha256": "042ee5b9f091debb4109864cc0c5ceee3b7987c1a596ab2acd6e44f3cf6ccbda",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -137,11 +137,25 @@
       "path": "tools/headless_agent.py",
       "sha256": "02a57b279af206d952e76ba23a204ffc986e9b52228f7bfe3dbe12211b6a45f7",
       "size": 9883
+    },
+    {
+      "path": "include/zipcppstdbuf.h",
+      "sha256": "7810704bdc1c7f2baddb1f25f19fc562d5e47f9dd1e8ea7da8db15b669d587d3",
+      "size": 1789
     }
   ],
-  "emulator_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
-  "build_platform": "macOS ARM64; normal CPU core; heavy debugger",
   "legacy_0_10_backend_sha256": "e749b6e50775de2807c2515f83e455dc705cdf6ddcdfb257e781f215d987865a",
-  "source_replay_files_verified": 27,
-  "source_patch_scope": "complete patch against declared upstream baseline; not incremental over 0.10"
+  "source_replay_files_verified": 28,
+  "source_patch_scope": "complete patch against declared upstream baseline; not incremental over 0.10",
+  "initial_macos_emulator_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+  "initial_build_platform": "macOS ARM64; normal CPU core; heavy debugger",
+  "emulator_sha256": "2aeb537ee7bbde674a72c759076bb26c3ba30fcc70ac5baa420bff0b07dc1e16",
+  "build_platform": "Linux x86-64; GCC13 O2 g0; normal CPU core; heavy debugger; strip-debug before Python3.13.5 native acceptance",
+  "linux_native_acceptance": {
+    "passed": 52,
+    "failed": 0,
+    "skipped": 0,
+    "python": "3.13.5",
+    "scope": "clean source build in network-disabled QEMU Linux; complete source replay checked separately"
+  }
 }

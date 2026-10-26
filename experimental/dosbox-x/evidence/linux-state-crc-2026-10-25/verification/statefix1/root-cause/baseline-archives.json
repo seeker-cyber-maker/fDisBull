@@ -1,0 +1,754 @@
+[
+  {
+    "method": "state.save",
+    "sha256": "6ded29b3e6eddeff564fcd2fb691095160ea6d278c8513d8bd697680316bd05a",
+    "entries": [
+      {
+        "name": "DOSBox-X_Version",
+        "size": 26,
+        "header_crc": 2932828184,
+        "actual_crc": 2932828184,
+        "valid": true
+      },
+      {
+        "name": "Program_Name",
+        "size": 5,
+        "header_crc": 328197034,
+        "actual_crc": 328197034,
+        "valid": true
+      },
+      {
+        "name": "Memory_Size",
+        "size": 4,
+        "header_crc": 3143126361,
+        "actual_crc": 3143126361,
+        "valid": true
+      },
+      {
+        "name": "Machine_Type",
+        "size": 7,
+        "header_crc": 474170815,
+        "actual_crc": 474170815,
+        "valid": true
+      },
+      {
+        "name": "Time_Stamp",
+        "size": 16,
+        "header_crc": 2108506883,
+        "actual_crc": 2108506883,
+        "valid": true
+      },
+      {
+        "name": "Save_Remark",
+        "size": 0,
+        "header_crc": 0,
+        "actual_crc": 0,
+        "valid": true
+      },
+      {
+        "name": "CMOS",
+        "size": 80,
+        "header_crc": 2948148358,
+        "actual_crc": 2948148358,
+        "valid": true
+      },
+      {
+        "name": "CPU",
+        "size": 21106744,
+        "header_crc": 3033753394,
+        "actual_crc": 3033753394,
+        "valid": true
+      },
+      {
+        "name": "DMA",
+        "size": 1280,
+        "header_crc": 809556130,
+        "actual_crc": 809556130,
+        "valid": true
+      },
+      {
+        "name": "Dos",
+        "size": 68509,
+        "header_crc": 3284452876,
+        "actual_crc": 3284452876,
+        "valid": true
+      },
+      {
+        "name": "Dosbox-x",
+        "size": 2,
+        "header_crc": 1104745215,
+        "actual_crc": 1104745215,
+        "valid": true
+      },
+      {
+        "name": "EMS",
+        "size": 7491,
+        "header_crc": 208827662,
+        "actual_crc": 208827662,
+        "valid": true
+      },
+      {
+        "name": "FPU",
+        "size": 400,
+        "header_crc": 4063835686,
+        "actual_crc": 4063835686,
+        "valid": true
+      },
+      {
+        "name": "IO handler",
+        "size": 0,
+        "header_crc": 0,
+        "actual_crc": 0,
+        "valid": true
+      },
+      {
+        "name": "Int10",
+        "size": 96,
+        "header_crc": 1750277657,
+        "actual_crc": 1750277657,
+        "valid": true
+      },
+      {
+        "name": "IntTimer10",
+        "size": 336,
+        "header_crc": 1372076563,
+        "actual_crc": 1372076563,
+        "valid": true
+      },
+      {
+        "name": "Joystick",
+        "size": 124,
+        "header_crc": 366415372,
+        "actual_crc": 366415372,
+        "valid": true
+      },
+      {
+        "name": "Keyboard",
+        "size": 246,
+        "header_crc": 3228941430,
+        "actual_crc": 3228941430,
+        "valid": true
+      },
+      {
+        "name": "Memory",
+        "size": 17055880,
+        "header_crc": 532441441,
+        "actual_crc": 532441441,
+        "valid": true
+      },
+      {
+        "name": "Midi",
+        "size": 25024,
+        "header_crc": 2174942011,
+        "actual_crc": 2174942011,
+        "valid": true
+      },
+      {
+        "name": "Mixer",
+        "size": 288232,
+        "header_crc": 289698131,
+        "actual_crc": 289698131,
+        "valid": true
+      },
+      {
+        "name": "Mouse",
+        "size": 711,
+        "header_crc": 720555245,
+        "actual_crc": 720555245,
+        "valid": true
+      },
+      {
+        "name": "Pic",
+        "size": 163947,
+        "header_crc": 2832508021,
+        "actual_crc": 2832508021,
+        "valid": true
+      },
+      {
+        "name": "Render",
+        "size": 2559,
+        "header_crc": 3830828494,
+        "actual_crc": 3830828494,
+        "valid": true
+      },
+      {
+        "name": "Vga",
+        "size": 2640720,
+        "header_crc": 2808284434,
+        "actual_crc": 1339871027,
+        "valid": false
+      },
+      {
+        "name": "XMS",
+        "size": 4096,
+        "header_crc": 3836325085,
+        "actual_crc": 3836325085,
+        "valid": true
+      }
+    ]
+  },
+  {
+    "method": "state.load",
+    "sha256": "6ded29b3e6eddeff564fcd2fb691095160ea6d278c8513d8bd697680316bd05a",
+    "entries": [
+      {
+        "name": "DOSBox-X_Version",
+        "size": 26,
+        "header_crc": 2932828184,
+        "actual_crc": 2932828184,
+        "valid": true
+      },
+      {
+        "name": "Program_Name",
+        "size": 5,
+        "header_crc": 328197034,
+        "actual_crc": 328197034,
+        "valid": true
+      },
+      {
+        "name": "Memory_Size",
+        "size": 4,
+        "header_crc": 3143126361,
+        "actual_crc": 3143126361,
+        "valid": true
+      },
+      {
+        "name": "Machine_Type",
+        "size": 7,
+        "header_crc": 474170815,
+        "actual_crc": 474170815,
+        "valid": true
+      },
+      {
+        "name": "Time_Stamp",
+        "size": 16,
+        "header_crc": 2108506883,
+        "actual_crc": 2108506883,
+        "valid": true
+      },
+      {
+        "name": "Save_Remark",
+        "size": 0,
+        "header_crc": 0,
+        "actual_crc": 0,
+        "valid": true
+      },
+      {
+        "name": "CMOS",
+        "size": 80,
+        "header_crc": 2948148358,
+        "actual_crc": 2948148358,
+        "valid": true
+      },
+      {
+        "name": "CPU",
+        "size": 21106744,
+        "header_crc": 3033753394,
+        "actual_crc": 3033753394,
+        "valid": true
+      },
+      {
+        "name": "DMA",
+        "size": 1280,
+        "header_crc": 809556130,
+        "actual_crc": 809556130,
+        "valid": true
+      },
+      {
+        "name": "Dos",
+        "size": 68509,
+        "header_crc": 3284452876,
+        "actual_crc": 3284452876,
+        "valid": true
+      },
+      {
+        "name": "Dosbox-x",
+        "size": 2,
+        "header_crc": 1104745215,
+        "actual_crc": 1104745215,
+        "valid": true
+      },
+      {
+        "name": "EMS",
+        "size": 7491,
+        "header_crc": 208827662,
+        "actual_crc": 208827662,
+        "valid": true
+      },
+      {
+        "name": "FPU",
+        "size": 400,
+        "header_crc": 4063835686,
+        "actual_crc": 4063835686,
+        "valid": true
+      },
+      {
+        "name": "IO handler",
+        "size": 0,
+        "header_crc": 0,
+        "actual_crc": 0,
+        "valid": true
+      },
+      {
+        "name": "Int10",
+        "size": 96,
+        "header_crc": 1750277657,
+        "actual_crc": 1750277657,
+        "valid": true
+      },
+      {
+        "name": "IntTimer10",
+        "size": 336,
+        "header_crc": 1372076563,
+        "actual_crc": 1372076563,
+        "valid": true
+      },
+      {
+        "name": "Joystick",
+        "size": 124,
+        "header_crc": 366415372,
+        "actual_crc": 366415372,
+        "valid": true
+      },
+      {
+        "name": "Keyboard",
+        "size": 246,
+        "header_crc": 3228941430,
+        "actual_crc": 3228941430,
+        "valid": true
+      },
+      {
+        "name": "Memory",
+        "size": 17055880,
+        "header_crc": 532441441,
+        "actual_crc": 532441441,
+        "valid": true
+      },
+      {
+        "name": "Midi",
+        "size": 25024,
+        "header_crc": 2174942011,
+        "actual_crc": 2174942011,
+        "valid": true
+      },
+      {
+        "name": "Mixer",
+        "size": 288232,
+        "header_crc": 289698131,
+        "actual_crc": 289698131,
+        "valid": true
+      },
+      {
+        "name": "Mouse",
+        "size": 711,
+        "header_crc": 720555245,
+        "actual_crc": 720555245,
+        "valid": true
+      },
+      {
+        "name": "Pic",
+        "size": 163947,
+        "header_crc": 2832508021,
+        "actual_crc": 2832508021,
+        "valid": true
+      },
+      {
+        "name": "Render",
+        "size": 2559,
+        "header_crc": 3830828494,
+        "actual_crc": 3830828494,
+        "valid": true
+      },
+      {
+        "name": "Vga",
+        "size": 2640720,
+        "header_crc": 2808284434,
+        "actual_crc": 1339871027,
+        "valid": false
+      },
+      {
+        "name": "XMS",
+        "size": 4096,
+        "header_crc": 3836325085,
+        "actual_crc": 3836325085,
+        "valid": true
+      }
+    ]
+  },
+  {
+    "method": "state.save",
+    "sha256": "779937645734e48a0de6e7ec5046d68eab3c9cbeca4815db6d91f8b2ba649beb",
+    "entries": [
+      {
+        "name": "DOSBox-X_Version",
+        "size": 26,
+        "header_crc": 2932828184,
+        "actual_crc": 2932828184,
+        "valid": true
+      },
+      {
+        "name": "Program_Name",
+        "size": 3,
+        "header_crc": 1002006681,
+        "actual_crc": 1002006681,
+        "valid": true
+      },
+      {
+        "name": "Memory_Size",
+        "size": 4,
+        "header_crc": 3143126361,
+        "actual_crc": 3143126361,
+        "valid": true
+      },
+      {
+        "name": "Machine_Type",
+        "size": 7,
+        "header_crc": 474170815,
+        "actual_crc": 474170815,
+        "valid": true
+      },
+      {
+        "name": "Time_Stamp",
+        "size": 16,
+        "header_crc": 178942869,
+        "actual_crc": 178942869,
+        "valid": true
+      },
+      {
+        "name": "Save_Remark",
+        "size": 0,
+        "header_crc": 0,
+        "actual_crc": 0,
+        "valid": true
+      },
+      {
+        "name": "CMOS",
+        "size": 80,
+        "header_crc": 1107406758,
+        "actual_crc": 1107406758,
+        "valid": true
+      },
+      {
+        "name": "CPU",
+        "size": 21106744,
+        "header_crc": 3911412260,
+        "actual_crc": 3911412260,
+        "valid": true
+      },
+      {
+        "name": "DMA",
+        "size": 1280,
+        "header_crc": 809556130,
+        "actual_crc": 809556130,
+        "valid": true
+      },
+      {
+        "name": "Dos",
+        "size": 68509,
+        "header_crc": 3234780366,
+        "actual_crc": 3234780366,
+        "valid": true
+      },
+      {
+        "name": "Dosbox-x",
+        "size": 2,
+        "header_crc": 1104745215,
+        "actual_crc": 1104745215,
+        "valid": true
+      },
+      {
+        "name": "EMS",
+        "size": 7491,
+        "header_crc": 208827662,
+        "actual_crc": 208827662,
+        "valid": true
+      },
+      {
+        "name": "FPU",
+        "size": 400,
+        "header_crc": 4063835686,
+        "actual_crc": 4063835686,
+        "valid": true
+      },
+      {
+        "name": "IO handler",
+        "size": 0,
+        "header_crc": 0,
+        "actual_crc": 0,
+        "valid": true
+      },
+      {
+        "name": "Int10",
+        "size": 96,
+        "header_crc": 1750277657,
+        "actual_crc": 1750277657,
+        "valid": true
+      },
+      {
+        "name": "IntTimer10",
+        "size": 336,
+        "header_crc": 1372076563,
+        "actual_crc": 1372076563,
+        "valid": true
+      },
+      {
+        "name": "Joystick",
+        "size": 124,
+        "header_crc": 366415372,
+        "actual_crc": 366415372,
+        "valid": true
+      },
+      {
+        "name": "Keyboard",
+        "size": 246,
+        "header_crc": 3228941430,
+        "actual_crc": 3228941430,
+        "valid": true
+      },
+      {
+        "name": "Memory",
+        "size": 17055880,
+        "header_crc": 3160092854,
+        "actual_crc": 3160092854,
+        "valid": true
+      },
+      {
+        "name": "Midi",
+        "size": 25024,
+        "header_crc": 2174942011,
+        "actual_crc": 2174942011,
+        "valid": true
+      },
+      {
+        "name": "Mixer",
+        "size": 288232,
+        "header_crc": 2463095021,
+        "actual_crc": 2463095021,
+        "valid": true
+      },
+      {
+        "name": "Mouse",
+        "size": 711,
+        "header_crc": 490031351,
+        "actual_crc": 490031351,
+        "valid": true
+      },
+      {
+        "name": "Pic",
+        "size": 163947,
+        "header_crc": 3153973032,
+        "actual_crc": 3153973032,
+        "valid": true
+      },
+      {
+        "name": "Render",
+        "size": 2559,
+        "header_crc": 2131828311,
+        "actual_crc": 2131828311,
+        "valid": true
+      },
+      {
+        "name": "Vga",
+        "size": 2644624,
+        "header_crc": 3860070111,
+        "actual_crc": 3860070111,
+        "valid": true
+      },
+      {
+        "name": "XMS",
+        "size": 4096,
+        "header_crc": 3836325085,
+        "actual_crc": 3836325085,
+        "valid": true
+      }
+    ]
+  },
+  {
+    "method": "state.load",
+    "sha256": "779937645734e48a0de6e7ec5046d68eab3c9cbeca4815db6d91f8b2ba649beb",
+    "entries": [
+      {
+        "name": "DOSBox-X_Version",
+        "size": 26,
+        "header_crc": 2932828184,
+        "actual_crc": 2932828184,
+        "valid": true
+      },
+      {
+        "name": "Program_Name",
+        "size": 3,
+        "header_crc": 1002006681,
+        "actual_crc": 1002006681,
+        "valid": true
+      },
+      {
+        "name": "Memory_Size",
+        "size": 4,
+        "header_crc": 3143126361,
+        "actual_crc": 3143126361,
+        "valid": true
+      },
+      {
+        "name": "Machine_Type",
+        "size": 7,
+        "header_crc": 474170815,
+        "actual_crc": 474170815,
+        "valid": true
+      },
+      {
+        "name": "Time_Stamp",
+        "size": 16,
+        "header_crc": 178942869,
+        "actual_crc": 178942869,
+        "valid": true
+      },
+      {
+        "name": "Save_Remark",
+        "size": 0,
+        "header_crc": 0,
+        "actual_crc": 0,
+        "valid": true
+      },
+      {
+        "name": "CMOS",
+        "size": 80,
+        "header_crc": 1107406758,
+        "actual_crc": 1107406758,
+        "valid": true
+      },
+      {
+        "name": "CPU",
+        "size": 21106744,
+        "header_crc": 3911412260,
+        "actual_crc": 3911412260,
+        "valid": true
+      },
+      {
+        "name": "DMA",
+        "size": 1280,
+        "header_crc": 809556130,
+        "actual_crc": 809556130,
+        "valid": true
+      },
+      {
+        "name": "Dos",
+        "size": 68509,
+        "header_crc": 3234780366,
+        "actual_crc": 3234780366,
+        "valid": true
+      },
+      {
+        "name": "Dosbox-x",
+        "size": 2,
+        "header_crc": 1104745215,
+        "actual_crc": 1104745215,
+        "valid": true
+      },
+      {
+        "name": "EMS",
+        "size": 7491,
+        "header_crc": 208827662,
+        "actual_crc": 208827662,
+        "valid": true
+      },
+      {
+        "name": "FPU",
+        "size": 400,
+        "header_crc": 4063835686,
+        "actual_crc": 4063835686,
+        "valid": true
+      },
+      {
+        "name": "IO handler",
+        "size": 0,
+        "header_crc": 0,
+        "actual_crc": 0,
+        "valid": true
+      },
+      {
+        "name": "Int10",
+        "size": 96,
+        "header_crc": 1750277657,
+        "actual_crc": 1750277657,
+        "valid": true
+      },
+      {
+        "name": "IntTimer10",
+        "size": 336,
+        "header_crc": 1372076563,
+        "actual_crc": 1372076563,
+        "valid": true
+      },
+      {
+        "name": "Joystick",
+        "size": 124,
+        "header_crc": 366415372,
+        "actual_crc": 366415372,
+        "valid": true
+      },
+      {
+        "name": "Keyboard",
+        "size": 246,
+        "header_crc": 3228941430,
+        "actual_crc": 3228941430,
+        "valid": true
+      },
+      {
+        "name": "Memory",
+        "size": 17055880,
+        "header_crc": 3160092854,
+        "actual_crc": 3160092854,
+        "valid": true
+      },
+      {
+        "name": "Midi",
+        "size": 25024,
+        "header_crc": 2174942011,
+        "actual_crc": 2174942011,
+        "valid": true
+      },
+      {
+        "name": "Mixer",
+        "size": 288232,
+        "header_crc": 2463095021,
+        "actual_crc": 2463095021,
+        "valid": true
+      },
+      {
+        "name": "Mouse",
+        "size": 711,
+        "header_crc": 490031351,
+        "actual_crc": 490031351,
+        "valid": true
+      },
+      {
+        "name": "Pic",
+        "size": 163947,
+        "header_crc": 3153973032,
+        "actual_crc": 3153973032,
+        "valid": true
+      },
+      {
+        "name": "Render",
+        "size": 2559,
+        "header_crc": 2131828311,
+        "actual_crc": 2131828311,
+        "valid": true
+      },
+      {
+        "name": "Vga",
+        "size": 2644624,
+        "header_crc": 3860070111,
+        "actual_crc": 3860070111,
+        "valid": true
+      },
+      {
+        "name": "XMS",
+        "size": 4096,
+        "header_crc": 3836325085,
+        "actual_crc": 3836325085,
+        "valid": true
+      }
+    ]
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "build_rootfs": {
+    "path": "/Volumes/PATRIOT/fdisbull-wine-sandbox-20261023/qemu/fdisbull-linux-source-tests-2.cpio.gz",
+    "sha256": "c60cddc433f3830fff26660659a4c6c15acf16d9634ab7066d9fcdadede8e5eb",
+    "private_build_input_only": true
+  },
+  "upstream_source_archive": {
+    "sha256": "2606c7a239f3d1ee55c98ccead99bba49c83b96b99982d3ab173b755b974f7bd",
+    "git_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969"
+  },
+  "patch_sha256": "042ee5b9f091debb4109864cc0c5ceee3b7987c1a596ab2acd6e44f3cf6ccbda",
+  "network": "QEMU -nic none; no network build/install downloads",
+  "python": "CPython3.13.5 genuine pinned python-build-standalone input; delivered dependency wheels unchanged"
+}

@@ -1,0 +1,116 @@
+{
+  "result": "pass",
+  "kind": "Local backend correction and verified offline delivery; no new public release",
+  "patch_sha256": "042ee5b9f091debb4109864cc0c5ceee3b7987c1a596ab2acd6e44f3cf6ccbda",
+  "backend_sha256": "2aeb537ee7bbde674a72c759076bb26c3ba30fcc70ac5baa420bff0b07dc1e16",
+  "qualification": {
+    "result": "pass",
+    "host_tool_version": "0.14.0",
+    "backend_revision": "statefix1",
+    "backend_sha256": "2aeb537ee7bbde674a72c759076bb26c3ba30fcc70ac5baa420bff0b07dc1e16",
+    "build_and_native": {
+      "python": "3.13.5",
+      "cpu_profile": "max",
+      "suite": {
+        "tests": 52,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    "fresh_copied_kit": {
+      "python": "3.13.5 (main, Jul 23 2025, 00:37:22) [Clang 20.1.4 ]",
+      "cpu_profile": "qemu64",
+      "suite": {
+        "tests": 51,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "repeat_suites": [
+        {
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "tests": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "backend_sha256": "2aeb537ee7bbde674a72c759076bb26c3ba30fcc70ac5baa420bff0b07dc1e16",
+      "phase_exit_codes": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "archive_checks": 40,
+      "save_checks": 15,
+      "load_checks": 25,
+      "invalid_archives": 0,
+      "offline_exports": {
+        "native-offline-frame.png": "727ed2455749920f58c5a46e1777502cc60edfb6d75707305f0430306e35671d",
+        "native-offline-grid.png": "926a28bb4ec15575b5112286082c72279da4773b182533e23dbbd6b16348cd63",
+        "native-offline-trace.json": "87f327b3f5131d3a5db9fabb84a504437d86e8b40c9d52f960a9cd65a21f4f8f"
+      },
+      "external_environment_accessed": false
+    },
+    "crc_validation": "All saved/load-input ZIP members checked; real minizip regression preserves CRC for empty writes and rejects altered data",
+    "coverage": "native save/load, fresh-session restore, editable state fork, RAM/fetch layers, watchpoints, breakpoint rearming, screenshot/click/grid, trace, project restart, static patch isolation and offline image/trace exports",
+    "external_deepseek_environment": "Not accessed or modified; user-reported /opt/pyvenv must install/run this kit locally",
+    "game_state_database_payloads_in_delivery": false,
+    "original_release_assets": "Unchanged; use the exact published 0.14.0 wheel"
+  },
+  "bundle": {
+    "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-linux-dos-offline-0.14.0-statefix1-2026-10-25.zip",
+    "sha256": "e709ddecc12ed0c9a294fd3cb9e2e280a18c8846a888f0cb60d4e56fcad1f558",
+    "size": 56926586,
+    "executable": false,
+    "entries": 327
+  },
+  "manifest": {
+    "sha256": "d9ac9f0e92887b9d06eb65c021567666cffcb55ad6492dbf644bd68b1ba485e4",
+    "size": 66017,
+    "executable": false
+  },
+  "payload_files": 326,
+  "excluded_payloads_found": 0,
+  "source_record": "Current working tree patch and tests; v0.14.0 tag/assets remain unchanged",
+  "evidence_sha256": {
+    "DELIVERY.json": "bdcb04bf6d8a2e8717c865314dc2bc046962c47048c7c03446108cf0ef061be6",
+    "backend/provenance/dosbox-linux-statefix1.json": "db8d9728a2c3289055f1b4171700166bc4e5b5019066dccad3f48f175fc6d599",
+    "build-provenance.json": "d6ef196753c1fdc46c8e8d9f503590902055cd4fe8f4d125681befa54dd83cf5",
+    "complete-patch-replay.json": "a744c575aba63e752fedd6ade387d88a05c371e34a7fa287d9c1114f6888f140",
+    "required-source-negative.log": "4e0a27b7792c96180c56fb83184e6df446bd1dd851aab0f5880a54a7672d872d",
+    "verification/ACCEPTANCE.json": "ea923b54c6cfb92616ffb0d559b4fd10a47949c0f7a9ba2f31a0c8af9f321e78",
+    "verification/statefix1/build-and-native/archive-integrity.json": "23bead941bf619b9fbad89d3141d079d7c9af4b1298430b9264d830313d8de63",
+    "verification/statefix1/build-and-native/source-identity.json": "80f611d87b78127fef4077f6d8c0f2a626d01e0834d77b0f7cce7c6599186590",
+    "verification/statefix1/build-and-native/tests.xml": "3c9ae5ab3cb67512cb65ef811ad34b0a794f66ddd214f78f6d95c5ddfad0a86b",
+    "verification/statefix1/copied-kit-python3135/acceptance.json": "1beb52e809911159ea41acca32d7dcd0e508f3f11c6ebca788d89b538db1955c",
+    "verification/statefix1/copied-kit-python3135/archive-integrity.json": "bcea705eebee7d0e64051afc71e49e9017962d6a6695173801b489501ce5e170",
+    "verification/statefix1/copied-kit-python3135/helper.json": "4832705ce46b6e349f023cc8642f1cb87338445e10d86f149485670f2d7fcfe5",
+    "verification/statefix1/copied-kit-python3135/native-offline-frame.png": "727ed2455749920f58c5a46e1777502cc60edfb6d75707305f0430306e35671d",
+    "verification/statefix1/copied-kit-python3135/native-offline-grid.png": "926a28bb4ec15575b5112286082c72279da4773b182533e23dbbd6b16348cd63",
+    "verification/statefix1/copied-kit-python3135/native-offline-trace.json": "87f327b3f5131d3a5db9fabb84a504437d86e8b40c9d52f960a9cd65a21f4f8f",
+    "verification/statefix1/copied-kit-python3135/probe.log": "4af9b482fbd3d21b166f49a5036355dca3bf96002fb3e57d3a8d8fb2cb8aabda",
+    "verification/statefix1/copied-kit-python3135/repeat-1.xml": "b9e078fe449d060320166e4d2d5a045798c18444a3cb58fbc7f0cfccbdfdefd0",
+    "verification/statefix1/copied-kit-python3135/repeat-2.xml": "f0516276fa9cd2b7fbc2c2acb9dbcceec747e1712ddd98aa395133e996f61ba4",
+    "verification/statefix1/copied-kit-python3135/repeat-3.xml": "2e7830431b09e004daee5d357272b6c6a4bd7e9cda80c1d808bff2467493a221",
+    "verification/statefix1/copied-kit-python3135/tests.log": "20778a389caa29392dfe865992e790d382708952298f093d37f37b8f237e016d",
+    "verification/statefix1/copied-kit-python3135/tests.xml": "18b2ba156b394a10db2edf0342afefb8226be2198a4012ebefa754650924830e",
+    "verification/statefix1/root-cause/ROOT-CAUSE.json": "2de94efa9b23f6f1f0f16ae28d119d5d6084f6197fd5b3fac61c152a4c9658f7",
+    "verification/statefix1/root-cause/baseline-archives.json": "8c34d3331beb6e85657ed168f0aa861a3e31bb82e1e45a8c46c5ebb964c25ee5",
+    "zip-before-result.json": "baa3e18f5cb9ffb3ad7d01d7f9946d2933656666b6ea9ccb97263fc38381a51b",
+    "zip-regression-final.log": "1a66abe03b6728e6f464afeaafc29f0b4ee7a563d2b6a2dc77c82c9c357a9fe3"
+  }
+}

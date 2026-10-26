@@ -1,0 +1,18 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_native_zip_empty_writes_preserve_crc_and_corruption_is_rejected _____
+
+tmp_path = PosixPath('/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-513/test_native_zip_empty_writes_p0')
+request = <FixtureRequest for <Function test_native_zip_empty_writes_preserve_crc_and_corruption_is_rejected>>
+
+    def test_native_zip_empty_writes_preserve_crc_and_corruption_is_rejected(tmp_path, request):
+        location = os.environ.get('FDISBULL_DOSBOX_SOURCE')
+        if not location:
+            if request.config.getoption('--require-native'):
+>               pytest.fail('Native ZIP acceptance requires FDISBULL_DOSBOX_SOURCE')
+E               Failed: Native ZIP acceptance requires FDISBULL_DOSBOX_SOURCE
+
+tests/test_dosbox_zip_stream.py:14: Failed
+=========================== short test summary info ============================
+FAILED tests/test_dosbox_zip_stream.py::test_native_zip_empty_writes_preserve_crc_and_corruption_is_rejected
+1 failed in 0.02s

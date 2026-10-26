@@ -20,6 +20,7 @@ SOURCE_PATTERNS = (
     ("src/fdisbull/dos_guest", "*.sh"),
     ("tests", "*.py"),
     ("tests", "wine_gui_fixture.c"),
+    ("tests", "dosbox_zip_empty_write.cpp"),
     ("tests", "ida_rpc_vectors.json"),
     ("docs", "*.md"),
     ("scripts", "*.py"),

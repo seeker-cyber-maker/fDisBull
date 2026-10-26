@@ -42,6 +42,14 @@ The [release-status record](docs/RELEASE_STATUS.md) distinguishes tagged source,
 
 The user-designated [0.14 DeepSeek delivery](docs/DELIVERY-0.14.md) contains the exact published packages, tested Mac ARM64 DOSBox/QEMU backends, Linux DOSBox and matching pristine DOS/Wine/optional-IDA boot runtimes. A smaller Linux/DOS offline kit supplies genuine hash-locked Python wheels and private libraries including SDL2_net. Copied Mac gates and 51 clean-offline checks passed. The additional Linux Python 3.13.5 probe passed installation and 49 native checks, with **2 native-state restore CRC failures**; the external DeepSeek environment remains unverified. See the delivery record for the separate scopes and failed receipts. Earlier deliveries are preserved. Game files, saved states and project databases are excluded.
 
+The direct Linux backend now has a separate [native-state CRC correction and
+offline statefix1 kit](docs/LINUX_STATE_CRC_FIX.md). It fixes the empty VGA buffer
+write that caused the original probe's two restore failures. Python 3.13.5
+acceptance passed 52 clean-build checks, 51 fresh copied-kit checks and 6 repeated
+original-case checks, with no failures/skips. The published 0.14.0 package bytes
+and original full delivery remain unchanged; the original failed results above
+describe that earlier delivery.
+
 ## Install and use
 
 ```bash

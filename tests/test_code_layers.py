@@ -1,7 +1,9 @@
 """Temporal byte views must be proved by actual guest execution, not host readback."""
 import json
+import io
 import os
 from pathlib import Path
+import zipfile
 
 import pytest
 
@@ -29,6 +31,12 @@ def layer_backend():
 def patch(p,name,kind,value):
     return p.debug_layer(name,kind=kind,patches=[{
         'address':'1000:0003','expected_hex':'1111','data_hex':value}])['layer']
+
+
+def assert_checkpoint_crc(project, artifact):
+    data = project.db.execute('SELECT data FROM debug_artifacts WHERE id=?', (artifact,)).fetchone()[0]
+    with zipfile.ZipFile(io.BytesIO(bytes(data))) as archive:
+        assert archive.testzip() is None, 'Native checkpoint contains a corrupt ZIP member'
 
 
 def test_layer_definitions_survive_restart_without_changing_static_bytes(layered_game):
@@ -96,6 +104,7 @@ def test_real_layered_checkpoint_restarts_with_both_views(layered_game,layer_bac
         with p.debugger(layer_backend,binary.parent) as d:
             ram=patch(p,'RAM','ram','3333');overlay=patch(p,'fetch','execute','2222')
             d.layers([ram,overlay]);state=d.save_state('layered.sav')
+            assert_checkpoint_crc(p, state['artifact'])
         with p.debugger(layer_backend,binary.parent) as d:
             d.load_state(state['artifact'])
             assert d.layers()['active']==[ram,overlay]
@@ -116,6 +125,7 @@ def test_real_guest_self_modification_stops_stale_overlay_before_execution(tmp_p
         p.analyze(max_instructions=20)
         with p.debugger(layer_backend,binary.parent) as d:
             entry=d.save_state('entry.sav')
+            assert_checkpoint_crc(p, entry['artifact'])
             layer=p.debug_layer('guard',kind='execute',patches=[{'address':'1000:0021',
                 'expected_hex':'1111','data_hex':'2222'}])['layer']
             d.layers([layer])

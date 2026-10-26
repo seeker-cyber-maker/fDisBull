@@ -26,6 +26,15 @@ reported external DeepSeek environment has not been accessed or changed.
 Games, saved states, project databases and vendor IDA server/keys are excluded.
 Earlier deliveries and evidence remain unchanged.
 
+## Linux native-state correction
+
+The separate [statefix1 offline kit](LINUX_STATE_CRC_FIX.md) corrects the original
+Linux probe's native ZIP CRC failures. Its clean Python 3.13.5 build passed 52
+checks; the copied kit passed 51 checks plus 6 repeated original cases, with no
+failures or skips. This is a separate backend correction. The published v0.14.0 tag,
+package assets and original full Mac/QEMU delivery remain unchanged. Earlier
+failed receipts retain their original scope and bytes.
+
 ## Earlier published 0.13.0 release
 
 The earlier **0.13.0** package release remains available. [v0.13.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.13.0) is published, not draft and not prerelease, and targets `eabfc2afb772d4cb78401893eebf15c8b0f6ad17`. Its five assets are the unchanged tag-CI wheel/sdist/tool ZIP plus `SHA256SUMS` and `VERIFICATION-0.13.0.json`. Uploaded assets were downloaded again and checked against GitHub SHA-256 digests. See [release notes](RELEASE-0.13.0.md), [verification gates](VERIFICATION-0.13.md) and [publication evidence](../experimental/wine/evidence/2026-10-24/published-0.13.0/asset-readback.json).

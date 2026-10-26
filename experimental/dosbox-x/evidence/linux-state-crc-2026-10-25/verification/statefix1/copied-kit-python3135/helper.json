@@ -1,0 +1,16 @@
+{
+  "version": "0.14.0",
+  "module": "/opt/delivery/tool/fdisbull/__init__.py",
+  "python": "/work/clean-venv/bin/python",
+  "platform": "linux",
+  "architecture": "x86_64",
+  "dos": {
+    "executable": "/opt/delivery/backend/linux-amd64/dosbox-x-offline",
+    "backend": "dosbox"
+  },
+  "ida": "Use ida_options(path_to_your_IDA_9_4_win64_remote_exe); server and keys are not included",
+  "qemu_profiles": {
+    "available": false,
+    "reason": "Linux QEMU profiles need a separately available QEMU >=9.1; direct DOS works offline with dos_options()"
+  }
+}

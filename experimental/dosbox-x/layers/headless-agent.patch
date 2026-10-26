@@ -5994,3 +5994,15 @@ index 0000000..31561fd
 +    except (OSError, ValueError, RuntimeError) as error:
 +        print(f"headless-agent: {error}", file=sys.stderr)
 +        raise SystemExit(1)
+diff --git a/include/zipcppstdbuf.h b/include/zipcppstdbuf.h
+--- a/include/zipcppstdbuf.h
++++ b/include/zipcppstdbuf.h
+@@ -20,6 +20,8 @@
+ 	virtual ~zip_ostreambuf() { close(); }
+ public:
+ 	virtual std::streamsize xsputn(const Base::char_type *s, std::streamsize count) override {
++		// crc32(seed, NULL, 0) resets the CRC; an empty write must preserve it.
++		if (count == 0) return 0;
+ 		assert(zf != NULL);
+ 
+ 		const int err = zipWriteInFileInZip(zf, (void*)s, count);
