@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="294.347" timestamp="2026-10-26T09:54:12.682436-04:00" hostname="Studio.local"><testcase classname="tests.test_wine_doctor" name="test_real_wine_runtime_doctor" time="294.331" /></testsuite></testsuites>

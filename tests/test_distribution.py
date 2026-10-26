@@ -15,17 +15,18 @@ def test_distribution_check_rejects_game_state_and_database_files(tmp_path,unwan
     archive=tmp_path/'fdisbull-test-tool.zip'
     required_files=('src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py',
                          'tests/wine_gui_fixture.c','tests/dosbox_zip_empty_write.cpp','src/fdisbull/wine_guest/agent.c',
-                         'src/fdisbull/wine_guest/init.sh','src/fdisbull/wine_guest/broker.py',
+                         'src/fdisbull/wine_guest/init.sh','src/fdisbull/wine_guest/broker.py','src/fdisbull/wine_guest/selftest.c',
                          'tests/ida_rpc_vectors.json','src/fdisbull/ida_wire.py','src/fdisbull/ida_remote.py',
                          'src/fdisbull/ida_guest/broker.py','src/fdisbull/ida_guest/init.sh',
                          'src/fdisbull/ida_guest/ui.c','src/fdisbull/ida_guest/SDK-LICENSE.txt','src/fdisbull/ida_trace.py',
                          'src/fdisbull/dos_guest/__init__.py','src/fdisbull/dos_guest/init.sh','src/fdisbull/dos_guest/broker.py',
                          'src/fdisbull/dos_qemu.py','src/fdisbull/dos_runtime.py','src/fdisbull/qemu_machine.py',
-                         'src/fdisbull/gdb_rpc.py','src/fdisbull/guest_assets.py')
+                         'src/fdisbull/gdb_rpc.py','src/fdisbull/guest_assets.py',
+                         'src/fdisbull/data/dos-runtime-signatures.json','src/fdisbull/data/MICROSOFT-DOS-LICENSE.txt')
     with zipfile.ZipFile(archive,'w') as output:
         for required in required_files:
             output.writestr('fdisbull-test/'+required,'')
-    assert check(archive)==25
+    assert check(archive)==len(required_files)
     with zipfile.ZipFile(archive,'a') as output:
         output.writestr('fdisbull-test/docs/'+unwanted,'local bytes')
     with pytest.raises(ValueError,match='Excluded binary/data file'):

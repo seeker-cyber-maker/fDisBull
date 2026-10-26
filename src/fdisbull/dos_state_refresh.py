@@ -68,7 +68,7 @@ class DOSStateRefreshMixin:
 
     def cfg(self, address, version=None, cs=None, max_instructions=10000, highlights=None):
         v = self._require_dos_pointer_facts_current(version)
-        return super().cfg(address, v, cs, max_instructions, highlights)
+        return self._runtime_snapshot(super().cfg(address, v, cs, max_instructions, highlights),nodes='nodes')
 
     def memory_accesses(self, address, size=1, version=None, access='all', limit=200,
                         offset=0, include_unresolved=True):
@@ -89,7 +89,14 @@ class DOSStateRefreshMixin:
 
     def xrefs(self, address, direction='to', version=None, limit=200, cs=None):
         v = self._require_dos_pointer_facts_current(version)
-        return self._stored_xrefs(address, direction, v, limit, cs)
+        rows=self._stored_xrefs(address, direction, v, limit, cs)
+        record=self._runtime_record(v)
+        if record is not None:
+            for row in rows:
+                context=row.get('source_context') or row.get('context') or self.context
+                sizes=self.db.execute('SELECT size FROM instructions WHERE version=? AND context=? AND address=?',(v,context,f"{int(row['source'],16):016x}")).fetchall()
+                row['byte_provenance']=self._runtime_byte_provenance(record,int(row['source'],16),max((r[0] for r in sizes),default=1))
+        return rows
 
     def call_effects(self, address=None, size=1, access='all', version=None,
                      include_unresolved=True, limit=200, offset=0):
@@ -106,7 +113,7 @@ class DOSStateRefreshMixin:
         return super().represent(address, representation, size, author, v, max_instructions, defer)
 
     def disassembly(self, address=None, lines=50, version=None, cs=None):
-        result = self._stored_disassembly(address, lines, version, cs)
+        result = self._runtime_snapshot(self._stored_disassembly(address, lines, version, cs))
         if self.meta['format'] != 'MZ':
             return result
         stale = self._dos_pointer_facts_stale(result['version'])
@@ -118,6 +125,7 @@ class DOSStateRefreshMixin:
             display, references, summary = self._file_reference_display(
                 result['version'], row['context'], int(row['address'], 16), raw)
             row.update(references=[], xrefs=[], assumptions=None, stored_facts_stale=True,
+                       interrupt_service=None,
                        display_operands=display, file_references=references,
                        file_reference_summary=summary)
             if row['flow'] in ('indirect_call', 'indirect_jump', 'indirect_branch'):

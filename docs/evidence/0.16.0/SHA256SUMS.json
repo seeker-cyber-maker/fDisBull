@@ -1,0 +1,14 @@
+{
+  "PUBLISHED-OFFLINE-015.json": "a2e6034dad0addba44be442f8b40b026c8d52843c87e4553620f42686a58db1a",
+  "dos-doctor/click.png": "a48d1e72c477828382d7b771f2ef9ed9ec55cb454a5edad070812fd3bbe3edb3",
+  "dos-doctor/frame.png": "235add48bc0ecb23d08eed87926af09b4ad8b52cc3be4e86b6614f62daae41f0",
+  "dos-doctor/receipt.json": "7a1dd413a3cf92473fb9ad2da94e02e6b3a70f42d769b55c7c769449cb690ae4",
+  "dos-doctor/trace.json": "999539f33ac1d7040833501df4b90bf1c56b6a8a89cbe8c1ec436faa5d178855",
+  "mac-full.xml": "f7665e460d0036629f681511d88a18c89ca43cbb36a0a9de3a95dfe1bb2a839c",
+  "machine.xml": "0e713b126507e05f653bb6548b2dada33ae305f07177de99b58703fbc8f265d1",
+  "wine-doctor/click.png": "938985ae758291fd3de27e26f6af1a9bb3b3e9ec2095a4a38bb38068e70ea01c",
+  "wine-doctor/frame.png": "98407f6e4f260134c5dd33f758a0e44e7e15445ed7df950f92e034f2160df86f",
+  "wine-doctor/receipt.json": "d9f823d7fadc08c5d04a29c4322a52cb1cbe7ffaf0ef46f0359e72bfcc51a1e2",
+  "wine-doctor/trace.json": "c1e5316efb0674ebd42c4cdf707c99491efc4dda011d8d5e3a6361d4e4455984",
+  "zip-regression.log": "69ecfaf567d422eefd466e0fe6d916331525411012bbb3614286aa68e60a291c"
+}

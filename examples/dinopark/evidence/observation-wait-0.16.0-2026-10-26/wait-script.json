@@ -1,0 +1,20 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "wait",
+      "observations": {
+        "prices": {
+          "kind": "memory",
+          "address": "0x46a75",
+          "length": 8
+        }
+      },
+      "until": {
+        "observation": "prices",
+        "equals": "8813e8034c1d1027"
+      },
+      "guest_ms": 100
+    }
+  ]
+}

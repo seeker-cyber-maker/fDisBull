@@ -1,0 +1,16 @@
+{
+  "source_manifest_sha256": "1399ae85490ce9da00e60c3be0bdff650704a1927aa6d640993beeca2ff47fe8",
+  "files": {
+    "RESULT.json": "0e396664262afbb526ab3f09350c29e4193907fd420ce95e50a23268826cc0da",
+    "static-knowledge.json": "f00119f4b3b3198cfb2658d96e296ec447f35550c02b707045204498d50cb90f",
+    "wait-script.json": "69678750f36f2a01a241354d1971bd39df5135ca17f775ef425b04d45dca0e18",
+    "comparison.json": "d2cf2fcd5ecedf1bc1aef0eb3a2f25f1d1f26d6a61c1b8eb5eefca612952fa03",
+    "dos-service-disassembly.png": "72a24d8a796b2bfb84b12a4fc6abc5c5ff5bff5ccd97a45a9652449b38a1dcee",
+    "wait-diagnostic-grid8.png": "76259c5231a780da54b25a182e608a14613a976decbd7836dba459e0529f2f83",
+    "baseline-trace.json": "a446996004787ca65667a7c64163e96a2e4065ad9558aa745b2c46f14f55c550",
+    "layer-trace.json": "4eb23e02d1675b52c23440152a8a04ee72e49b55eddf5dbb22a6c3a2836deffd"
+  },
+  "grid_parent_artifact": "dc4fc4ac539d472dbd7c22cd4e2cf67a",
+  "grid_parent_sha256": "3e5eaeb63ee83c47aae54267714b5f38c12414e647bfa8e5ee2c535b3c0edc77",
+  "private_inputs_included": false
+}

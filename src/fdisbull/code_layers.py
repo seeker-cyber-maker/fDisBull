@@ -237,12 +237,14 @@ class LayerSessionMixin:
                 'cs':hex(segment),'ip':hex(instruction.ip),'size':instruction.len,
                 'bytes':bytes.fromhex(result['hex'])[offset:offset+instruction.len].hex(),
                 'instruction':formatter.format(instruction)})
-        result.update(instructions=instructions,active_layers=list(self._layers),generation=self._layer_generation,
+        result.update(instructions=instructions,runtime_cs=hex(segment),project_cs=hex(segment-self.runtime_load+self.dos['load_segment']),
+                      instruction_pointer=hex(ip),active_layers=list(self._layers),generation=self._layer_generation,
                       evidence='runtime observation; static analysis is unchanged')
         return result
 
     def capture_code(self,address,*,cs=None,length=64,view='execute',name='code-view.json'):
-        result=self.code(address,cs=cs,length=length,view=view)
+        from .runtime_code import qualify_capture
+        result=qualify_capture(self,self.code(address,cs=cs,length=length,view=view))
         return self._artifact(name,'code-snapshot',json.dumps(result,indent=2).encode(),
                               {'view':view,'project_address':result['project_address'],
                                'generation':result['generation'],'active_layers':result['active_layers']})

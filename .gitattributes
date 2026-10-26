@@ -1,4 +1,4 @@
-/examples export-ignore
-/history export-ignore
-/experimental export-ignore
-/.github export-ignore
+# Preserve verifier receipts and upstream notices byte for byte.
+docs/evidence/** -whitespace
+examples/dinopark/evidence/** -whitespace
+src/fdisbull/data/MICROSOFT-DOS-LICENSE.txt -whitespace

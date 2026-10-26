@@ -1,0 +1,254 @@
+{
+  "format": "fdisbull-dos-knowledge-acceptance-1",
+  "status": "passed",
+  "version": "0.16.0",
+  "source_base_commit": "e91879c03d7072dc214ea81900f7f70ec5304c46",
+  "source_status": "Uncommitted source candidate; no GitHub CI/tag/release claimed",
+  "wheel_sha256": "7fcc827a8a4fb89057db416a703c763f02c5c59cfc6f79178c0699816129b065",
+  "source_hashes": {
+    "fdisbull/__init__.py": "ec7f1d7749cafac5156d65e2b31228ad160d7bba2c9fc0779da79343e3f33599",
+    "fdisbull/__main__.py": "79ee6f134c5c5193377cf9b189cbdcc3e2095e49ba9cec310114441c15a917c4",
+    "fdisbull/advanced.py": "9d1764b9e5daae1df9861d98d864427f276ce8f846825b768c5ee6ee1a8f0ec2",
+    "fdisbull/analysis.py": "78e81e3e48088c39bda74483cec226d872cdf754e81b6583a1d068bb116f85e2",
+    "fdisbull/boundaries.py": "39ee0ca08840faced458517f88ddab93e68293d31a61a3f47c1ee11da8fe12f2",
+    "fdisbull/calls.py": "74b68bf5487f24cfea76a40926ea173a6b460dd19396fea2dfd833cfbed40d51",
+    "fdisbull/cfg.py": "259f6d9c6a0412f3e5e430854c109efe157efa0fd1826788cf2f24563913eda0",
+    "fdisbull/cfg_render.py": "85f7f59a5cc4277275688b05ad994f5ebf553aa2430decbbcbe1f46161cc4955",
+    "fdisbull/chimprec.py": "a33cf1cbfe042dcda10997af06e64b5dc6a57b49efa21fa41ea2d065b074ac14",
+    "fdisbull/cli.py": "a1f098247048439f33d31ba674354b6fb786df9e4ded571725129374ab9b138e",
+    "fdisbull/code_layers.py": "6d0f72640d768652020cec4e59d87bb1cb01814b521f2d035a2409371294bf50",
+    "fdisbull/debug_experiments.py": "4569a4fbd8a817f8a6bda06b1ebd380ef3ef556d50111f7d5ea5804352b3b541",
+    "fdisbull/debug_script.py": "98ecc64764fd7613643a5a3a78bbe48e1446386d6e1cc0a01ea679853c3295f6",
+    "fdisbull/debug_semantics.py": "401ed55207988fe0b3048e07e323d24219655af3ed034228905a09fcfba9b150",
+    "fdisbull/debug_state.py": "e61fed80ee31abfe61dc1e00c6c3b16b80a33f757bf1d9b05b954c5366e26d61",
+    "fdisbull/debug_wait.py": "d32d84f1db21d7ef6129afcb56fb8552e75b1dea92f53a634ba6e818cf6e4ab0",
+    "fdisbull/debugger.py": "25a425b762bdabb2fc53428373d9d14d5ef77ef2ab8e507be594d7d42c2cfda1",
+    "fdisbull/decoder.py": "d6611cdae47c73b710205e77a0c38de3f7e9c0ef488a7092ffd9cc4fc20a1bf9",
+    "fdisbull/decoder_check.py": "03cbbe01e475f24226e2005b8b1423818e9a086104b90f6fce487d1c3ea86e2c",
+    "fdisbull/doctor.py": "bd480bb91682f9ccca0297b4f53931afbc38f3d9e11c9df948ed0cac778207ed",
+    "fdisbull/dos.py": "479e7444539ca15ac3d60ce0cbf02a3da642811f90d28d8ce909218571c7b16e",
+    "fdisbull/dos_analysis.py": "6493c9dc84d4b4463ce9a0fb5e8751cdaed6f41ead7d160c72a9bb555bcce0d9",
+    "fdisbull/dos_decoder.py": "62de193ad1c3d2a9c1a9addd713e67a48f937a9a90fc379c9587f528a5a353b5",
+    "fdisbull/dos_qemu.py": "edbde8d2b6a6096abe56c6aa2e3abc4a4103fc0daa052431fce840725b99fac0",
+    "fdisbull/dos_runtime.py": "49a1f342243274946d05d015932cb55ca20b4e707a7f97c63f722f5df43991fd",
+    "fdisbull/dos_services.py": "c6b1af28da238f1454ffdba0e43c0f00fcc1fcba7a9c6c3db60d5c3f359a3fd9",
+    "fdisbull/dos_state_refresh.py": "ad7a7c8a39331154f4523e2011bff493623a05d7d0ade230897f63113f3d7888",
+    "fdisbull/dos_views.py": "cf78c47a6989e6155ee5c490d1b6432a95fff2c04aaace1159cd1fb6ba5a550a",
+    "fdisbull/dosbox_rpc.py": "b2561ae261609ef9a84f556a390120a02e9c3862b67e0a2ae24337cec37dddf1",
+    "fdisbull/elf_metadata.py": "2fd5e317eb9fab7d25057d58a3a19b65613ddbe1d51dd7d6b1b1936f6630b7a1",
+    "fdisbull/external_files.py": "92b952d2d015cb0d32802b35c542b0bd89fd90dc8bdf8a8092a85f2c98cf4fc2",
+    "fdisbull/facts.py": "5308113ae711cc85c41ce44cfbe2044414914287dd77816f279f7ec64e140036",
+    "fdisbull/file_references.py": "7303d4ea4a8746fcfc32b3d9c1c96f04016331abd6082ef4309b3f5449d20772",
+    "fdisbull/flowdata.py": "1551327207ab700f8f76c3e18b9155bbd15a05cd7097c288c2fd4de3ee818b4b",
+    "fdisbull/frames.py": "b502bfce6af31577e7158f555177677bd93c0981124d5d177a0d755829d60e97",
+    "fdisbull/function_analysis.py": "da61e91a801a661c1e85c42173bb520b7f7f2be77b636d67771398fea83af26e",
+    "fdisbull/gdb_rpc.py": "bc479a110262b3c0a07484983732b00562e20df4389a3e258ef8ad47e549f81d",
+    "fdisbull/guest_assets.py": "a91f95b337c00777534c2e2bc2220dd99e51a849c09cc033524344607dd44ea2",
+    "fdisbull/ida_debugger.py": "552bc5ca3d41dea6b6d6bf86654a83d36e23b0e0f6b90764d1bffa188045a5e9",
+    "fdisbull/ida_dosbox.py": "27671b2da9be1bdc39e4cd1c7f90e0b67e6eb29613c3a68ffd75842ff6636b15",
+    "fdisbull/ida_remote.py": "b073880b6284acc84924ddad535cc65d2a65939dc480c4213c1adc2c5164e159",
+    "fdisbull/ida_runtime.py": "fd21e0191bd6078319d331f7fcdad8c00544a49e1dc9ab55a26a8effde2ed8e6",
+    "fdisbull/ida_trace.py": "83bba70fc0accf56c565fd0bcaca956f1cbe3b5f7ed1862427510b79ad7e2c3e",
+    "fdisbull/ida_wire.py": "97f42ef607fddf31a968b087e90a4395bf2b63b8a1629948eee2c26a0b6dd2a3",
+    "fdisbull/image_views.py": "53736930b318cf1176653335844b170ef5a47b302eb1f90020adff37977e4b22",
+    "fdisbull/incremental.py": "e461d6c9cf53a37e55f6dfc8d399df495390c3d2eb5400edd435593053162cee",
+    "fdisbull/indirect.py": "96fb59d032d4cbe17745a2d5fa00b2d2f67f5382faa36a538f89bfe31c049f2a",
+    "fdisbull/inspection.py": "cb370ab35a8bb9541c5d132ecbf93b1188b4fceab7bf84df0747310ad014e2fd",
+    "fdisbull/linkage.py": "42964a25c4dc2f01ab6b6c6901a25616459861d4d4925c4eaf55c12eaf1352be",
+    "fdisbull/loader.py": "8f358438fa0ba09dbf161fc718edb047aafbc13dc500bbeac6b403ee28358f9b",
+    "fdisbull/macho_metadata.py": "78169450ee7cc40bbe2f5ce7ac771eef8b250c27fe1efabb38f56d05a72f0ff0",
+    "fdisbull/macho_slices.py": "f7df331017a9e5fdb64a6697d4d3a8d828ebffbee4c3a927fb010c6290811de0",
+    "fdisbull/managed.py": "b1457ce14aba3dbdb4635032e4044a8927bfcb397dc2a330f4973ddb133b2614",
+    "fdisbull/membership_view.py": "9b216b60032d7823a983f001ec11db472995bdc62aae7098fbd25ace1834c7a8",
+    "fdisbull/memory.py": "425a258bc73f0f3f294732878f06caa0ef901e5604d6060af1ee988218546dd8",
+    "fdisbull/model.py": "d3efec6eb49fe5fc2641ea09c2c6fcdbc6b48935c7d11222b71e8bda13829273",
+    "fdisbull/modules.py": "8b6f4a8408dd064bf3cf5fb7c959ef89807043db76a55a2a44e5a796cec42b40",
+    "fdisbull/omf_catalog.py": "aae593db27fe5759799d4480ec357bbd2496fb532a00a37f12a2af9709ba7845",
+    "fdisbull/project.py": "fc75c9eb5ff6a404f08a9207391efe7d2f5b6022dc21d99802d11f99ccb3dc45",
+    "fdisbull/qemu_control.py": "5981c1a235bb9e53d694f25d36c42a3b717aecf017f8095247b74c3757505a2a",
+    "fdisbull/qemu_machine.py": "4e4c2f8139568ea710280631040a83b2d9b27765452d6e7a96fdb3ac6cb30b49",
+    "fdisbull/render.py": "c3aceac452307f0228ddd99e85a5c55aa11bb0fcfa7ba3e475541cbd00641d58",
+    "fdisbull/runtime_code.py": "d54a021d086f955df1da893d0fa567fbb87bcc262656dc1b811fd93bf3c56d62",
+    "fdisbull/screenshot_grid.py": "79799cc0149ad9640bcbe6db8dafc5ad868e463b89b3583921bcd505ae5f3e03",
+    "fdisbull/semantics.py": "43017f5bc0dfbb70b0771d75c9cb03d1082593740e71f4cf404119e040e0ce48",
+    "fdisbull/shared_labels.py": "ca7ae7780ea19a074d22cf0a85042a062fca115dc4dc90b0305ba112ac137029",
+    "fdisbull/summaries.py": "902264fba8c4602581111eadeefa88de77fd0582ef5788c26610b0c6d9f3780a",
+    "fdisbull/typesystem.py": "b8385d14152efbaaed71b85989846a2c86058726eb75dd468c2011d00e8f8d0f",
+    "fdisbull/wine_debugger.py": "1121914e7016922a4606e1fd07ffa7d11c4f76cfa2aa0aeded01c85efc61a034",
+    "fdisbull/wine_execution.py": "6b85c7915871f20eb42c02823fa66b4e17eeb7fe8ed2307cf46c791e3bc6a126",
+    "fdisbull/wine_layers.py": "960b95686f26d66d8c290212e7e795006156bc7ff8d3e11744aae7efd1709517",
+    "fdisbull/wine_rpc.py": "2aab95f43c3a5355a69dfaa601455f518706df395c542b23a0f58623e8001f9e",
+    "fdisbull/wine_runtime.py": "934e2bb9dd171e946891085ff7bfef7f33346a0b66786cca9457849dcb953d14",
+    "fdisbull/wine_state.py": "4bf0c41a59fc46dbcd15864fd5945f0b375b35c593db78dd9a475b77ba9e72a3",
+    "fdisbull/wine_watch.py": "47280622631a01458751ccc7bdc0d8a8b24724d330d0482dfa7ea27f4e2adc75",
+    "fdisbull/data/MICROSOFT-DOS-LICENSE.txt": "b5179f780ec212a434efcc989a2295a140deb0bdb17182d2bf9c5f6f1f1a01c4",
+    "fdisbull/data/dos-runtime-signatures.json": "0c7ec56a167040d00d9fa5c96dd87131466ffac3d661ebffbbc2ff006c90aa55",
+    "fdisbull/dos_guest/__init__.py": "037ab42b952c74c8964c3e13f336081398f6a3753688a25dded72a8a03af2c35",
+    "fdisbull/dos_guest/broker.py": "8054f409edcf75b78c3218ced24a839162ea1ef874fec9715db906d62826c93c",
+    "fdisbull/dos_guest/init.sh": "a46aeacc5b34ed94a33d8b7d44eac2a20e8724088655aef046c9621bf3dd0383",
+    "fdisbull/ida_guest/SDK-LICENSE.txt": "209c7463ca3927fa6ac029e7e7121f665db20a47d4a269c9bf21fa1825afa2e0",
+    "fdisbull/ida_guest/__init__.py": "4df28a19cb13efac25ce941d3aa40c2168114cc42407c61f57f75416dece5272",
+    "fdisbull/ida_guest/broker.py": "948c9ca0593ed7a3e78d795738ddb3afe9b370401d32b822bc39bde351c4cd97",
+    "fdisbull/ida_guest/init.sh": "45d223e9bc29af2ad00827c9deadc2b398fc47f6b17b5001a80637e9a8610905",
+    "fdisbull/ida_guest/ui.c": "cb2a1f857da9325a26ae704b6c5e05212f790be5e50f242959e872b427d43382",
+    "fdisbull/wine_guest/agent.c": "7f790582fc115fc3036f33c7a78bb11401619b4ce5adf0d624ca81d51c33d34a",
+    "fdisbull/wine_guest/broker.py": "7e6263017345bd1b6c8132f39aaab3c7181516c4210ca8aef8cf6e70ef2eae21",
+    "fdisbull/wine_guest/init.sh": "1d88753c741ff775444e95b3469a77aaeccaba5c5889d53ed2b63e9ae0d5ad43",
+    "fdisbull/wine_guest/selftest.c": "70b5e3f4b443154f8346ba45103324fd95cc27ac24c508fc1f59c2542b6fa104"
+  },
+  "linux": {
+    "ordinary": {
+      "tests": 1124,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 59,
+      "passed": 1065,
+      "identity": {
+        "python": "3.13.5 (main, Jul 23 2025, 00:37:22) [Clang 20.1.4 ]",
+        "module": "/work/venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+        "version": "0.16.0",
+        "wheel_sha256": "7fcc827a8a4fb89057db416a703c763f02c5c59cfc6f79178c0699816129b065",
+        "matching_installed_entries": 89
+      },
+      "exit_codes": {
+        "install": 0,
+        "wheel": 0,
+        "managed": 0,
+        "ordinary": 0,
+        "identity": 0
+      },
+      "files": {
+        "exit-codes.json": "3bc83d113308220bbaf6ff7de2bfc341a49a87dac46989de64a9e90360fc92ac",
+        "identity.json": "e6968f8b596f7d06b068f85fc54cbab118c215b9c2507f7391d159bbca09596c",
+        "install.log": "c6bf39b184fccd88130eb10dbb232be8388317863421b3bfd664f440fba111dd",
+        "managed.log": "8d834c029ac85bcf0f89eafbfd27f5187293c7442f7446f49b49a9523e7121f3",
+        "ordinary.log": "9c911d50793148f02ad96826beda86ee3ae86028b8a19fe3c25408e7c94c767a",
+        "ordinary.xml": "8d6aa006525f7d686d6731e434b86fbd9504c821b42deb953aca09765e6cf82b",
+        "wheel.log": "cd47e7c33744db0353405c7fb866026d20670229e8b9d75608f6452850eae5f4"
+      }
+    },
+    "native": {
+      "tests": 311,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 311,
+      "identity": {
+        "python": "3.13.5 (main, Jul 23 2025, 00:37:22) [Clang 20.1.4 ]",
+        "module": "/work/venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+        "version": "0.16.0",
+        "wheel_sha256": "7fcc827a8a4fb89057db416a703c763f02c5c59cfc6f79178c0699816129b065",
+        "matching_installed_entries": 89
+      },
+      "exit_codes": {
+        "install": 0,
+        "wheel": 0,
+        "managed": 0,
+        "native": 0,
+        "identity": 0
+      },
+      "files": {
+        "exit-codes.json": "62a3ebc450c0447d52ab1442f73002efe59ec861a1b194414adf7e114a13e631",
+        "identity.json": "e6968f8b596f7d06b068f85fc54cbab118c215b9c2507f7391d159bbca09596c",
+        "install.log": "c6bf39b184fccd88130eb10dbb232be8388317863421b3bfd664f440fba111dd",
+        "managed.log": "8d834c029ac85bcf0f89eafbfd27f5187293c7442f7446f49b49a9523e7121f3",
+        "native.log": "0a90dad79d7aad154841ac4da235adaeedc6576567df9404610e9da179a94613",
+        "native.xml": "9b80ffd2bfb1811c0ad581c05b936eb4bd76a66a878c46ff19e0f0dea7d308d0",
+        "wheel.log": "cd47e7c33744db0353405c7fb866026d20670229e8b9d75608f6452850eae5f4"
+      }
+    }
+  },
+  "mac": {
+    "focused": {
+      "tests": 315,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 315
+    },
+    "native_wait": {
+      "tests": 37,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 37
+    },
+    "full_suite": "Not rerun here; README retains Linux-ELF fixture limitations"
+  },
+  "comparison_hardening": {
+    "result": {
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 14
+    },
+    "scope": "Separate malformed-helper capture-count/identity regressions, not an E32 gameplay inference"
+  },
+  "dos_catalog": {
+    "signatures": 182,
+    "distinct_names": 63,
+    "source_commit": "2d04cacc5322951f187bb17e017c12920ac8ebe2",
+    "reproducible": true
+  },
+  "dinopark": {
+    "game_files_unchanged": 192,
+    "processes_reaped": true,
+    "initial_wait_guest_runs": 0,
+    "failed_wait": {
+      "outcome": "guest_budget",
+      "guest_elapsed_ms": 130,
+      "guest_budget_overshoot_ms": 90
+    },
+    "controls_restored": {
+      "breakpoint_restored": true,
+      "read_watch_bytes_restored": 8,
+      "once_hook_restored": true,
+      "hook_hit_count_restored": 0,
+      "baseline_layers_restored": true
+    },
+    "static_pass": {
+      "stable": false,
+      "budget_exhausted": true,
+      "described_sites": 29,
+      "qualified_runtime_matches": 0
+    },
+    "scope": "Actual DinoPark waits and existing matched price experiment; not E32 cancellation replay",
+    "original_evidence_manifest_sha256": "1399ae85490ce9da00e60c3be0bdff650704a1927aa6d640993beeca2ff47fe8"
+  },
+  "validation_history": [
+    "Initial Mac hook-test failures were misplaced original assertions; restored to their original test, earlier logs retained.",
+    "Pre-final Linux: 1064 ordinary passed/59 skipped; 308 native passed/2 failed. The old 1000-guest-ms/2000-host-ms throughput assumption and a short startup diagnostic-frame precondition were corrected. Strict timeout/missing-capture checks remain.",
+    "The next combined VM reached its 1200-second outer timeout after ordinary failed, before log export. Exact pre-fix wheel independently reproduces the 8192-node rejection of an existing valid 16KB layout. Corrected to 65536 nodes/members plus 4096 union instances. Native/ordinary receipts are now exported independently.",
+    "Final Linux gate results above are fresh and use the exact wheel/source hashes, not rerun claims inferred from earlier receipts."
+  ],
+  "exclusions": [
+    "game executables/resources",
+    "game saves",
+    "native saved states",
+    "project databases",
+    "VM images",
+    "compiled target fixtures"
+  ],
+  "remaining": [
+    "Borland/Pascal runtime catalogs",
+    "COM/SYS dedicated loaders",
+    "compiler-managed overlays",
+    "full DOS/BIOS coverage",
+    "external Pro environment acceptance"
+  ],
+  "packages": {
+    "fdisbull-0.16.0-py3-none-any.whl": {
+      "sha256": "7fcc827a8a4fb89057db416a703c763f02c5c59cfc6f79178c0699816129b065",
+      "bytes": 354658
+    },
+    "fdisbull-0.16.0-tool.zip": {
+      "sha256": "acd2a9876963869069f148b2b96ce552e8fe773319a3333bf5f59b6a3fe3f8d1",
+      "bytes": 803755
+    },
+    "fdisbull-0.16.0.tar.gz": {
+      "sha256": "f625a87660c23caba34fa1f597734a635544429bfbd1bde3b93694311d921d49",
+      "bytes": 679857
+    }
+  }
+}

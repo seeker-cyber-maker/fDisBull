@@ -1,0 +1,3520 @@
+{
+  "format": "fdisbull-signatures-1",
+  "inputs": [
+    {
+      "extraction": {
+        "accepted_signatures": 63,
+        "excluded": {
+          "absolute public symbol": 6,
+          "module checksum mismatch": 1,
+          "module requires linker fixups": 293,
+          "no eligible closed code body": 26,
+          "overlapping LEDATA": 12,
+          "unsupported record 0xa2": 8
+        },
+        "modules": 402,
+        "scope": "Fixup-free contiguous returning routines; no external calls, indirect transfers or compiler attribution inference"
+      },
+      "sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "extraction": {
+        "accepted_signatures": 63,
+        "excluded": {
+          "absolute public symbol": 6,
+          "module checksum mismatch": 1,
+          "module requires linker fixups": 293,
+          "no eligible closed code body": 26,
+          "overlapping LEDATA": 12,
+          "unsupported record 0xa2": 8
+        },
+        "modules": 402,
+        "scope": "Fixup-free contiguous returning routines; no external calls, indirect transfers or compiler attribution inference"
+      },
+      "sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "extraction": {
+        "accepted_signatures": 56,
+        "excluded": {
+          "absolute public symbol": 6,
+          "module checksum mismatch": 1,
+          "module requires linker fixups": 300,
+          "no eligible closed code body": 26,
+          "overlapping LEDATA": 12,
+          "unsupported record 0xa2": 8
+        },
+        "modules": 402,
+        "scope": "Fixup-free contiguous returning routines; no external calls, indirect transfers or compiler attribution inference"
+      },
+      "sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    }
+  ],
+  "license": "MIT; Copyright (c) Microsoft Corporation. See MICROSOFT-DOS-LICENSE.txt",
+  "limitations": "Byte identities only; not compiler identification or memory-effect contracts. Unresolved fixups and non-contiguous/incomplete routines are excluded.",
+  "name": "Microsoft DOS C runtime subset",
+  "signatures": [
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78bde8cd88ec08b7e0433c0b9fffff2ae8d75ff8b7e06b9fffff2aef7d12bf987fe8b4604f7c601007402a449d1e9f3a513c9f3a48bf38bfa5dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strcat",
+      "identity_only": true,
+      "name": "strcat",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strcat.asm",
+        "offset": 0,
+        "public_symbol": "_strcat",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78bde8b76068bfe8cd88ec033c0b9fffff2aef7d18b7e048bc7a8017402a449d1e9f3a513c9f3a48bf38bfa5dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strcpy",
+      "identity_only": true,
+      "name": "strcpy",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strcpy.asm",
+        "offset": 0,
+        "public_symbol": "_strcpy",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78bde8cd88ec08b76048b7e0633c0b9fffff2aef7d12bf9f3a674051bc01dffff8bf38bfa5dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strcmp",
+      "identity_only": true,
+      "name": "strcmp",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strcmp.asm",
+        "offset": 0,
+        "public_symbol": "_strcmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78cd88ec08b7e0433c0b9fffff2aef7d149918bfa5dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strlen",
+      "identity_only": true,
+      "name": "strlen",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strlen.asm",
+        "offset": 0,
+        "public_symbol": "_strlen",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57561e078b7e048bd733c0b9fffff2ae4f8bf78b7e068bdf8b4e08f2ae7501412b4e08f7d98bfe8bf3f3a4aa8bc25e5f5dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strncat",
+      "identity_only": true,
+      "name": "strncat",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strncat.asm",
+        "offset": 0,
+        "public_symbol": "_strncat",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57561e078b7e048b76068bdf8b4e08e30cac0ac07403aae2f832c0f3aa8bc35e5f8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strncpy",
+      "identity_only": true,
+      "name": "strncpy",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strncpy.asm",
+        "offset": 0,
+        "public_symbol": "_strncpy",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57561e078b4e08e3268bd98b7e048bf733c0f2aef7d903cb8bfe8b7606f3a68a44ff33c93a45ff770474044949f7d18bc15e5f8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strncmp",
+      "identity_only": true,
+      "name": "strncmp",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strncmp.asm",
+        "offset": 0,
+        "public_symbol": "_strncmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57568b760433c09933dbac3c2074fb3c0974f7503c2d74043c2b7501ac3c39771f2c30721bd1e3d1d28bcb8bfad1e3d1d2d1e3d1d203d913d703d883d200ebdc583c2d937507f7d883d200f7da5e5f5dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._catox",
+      "identity_only": true,
+      "name": "_catox",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "atox.asm",
+        "offset": 0,
+        "public_symbol": "__catox",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b460499f77e068be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.div",
+      "identity_only": true,
+      "name": "div",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "div.asm",
+        "offset": 0,
+        "public_symbol": "_div",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec53068b460ac45e06268907075b8be55dca0600",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.53._DOSCREATECSALIAS",
+      "identity_only": true,
+      "name": "_DOSCREATECSALIAS",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\apisim.asm",
+        "offset": 53,
+        "public_symbol": "__DOSCREATECSALIAS",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8be55dca0200",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.75._DOSFREESEG",
+      "identity_only": true,
+      "name": "_DOSFREESEG",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\apisim.asm",
+        "offset": 75,
+        "public_symbol": "__DOSFREESEG",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec5306c45e0633c0268807075b8be55dca0400",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.23._DOSGETMACHINEMODE",
+      "identity_only": true,
+      "name": "_DOSGETMACHINEMODE",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\apisim.asm",
+        "offset": 23,
+        "public_symbol": "__DOSGETMACHINEMODE",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec5306c45e0a26c707010033c0075b8be55dca0800",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._DOSDEVCONFIG",
+      "identity_only": true,
+      "name": "_DOSDEVCONFIG",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\apisim.asm",
+        "offset": 0,
+        "public_symbol": "__DOSDEVCONFIG",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8be55dca0a00",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.44._DOSSETVEC",
+      "identity_only": true,
+      "name": "_DOSSETVEC",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\apisim.asm",
+        "offset": 44,
+        "public_symbol": "__DOSSETVEC",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b5e048b47fe24fe8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._msize",
+      "identity_only": true,
+      "name": "_msize",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "nmsize.asm",
+        "offset": 0,
+        "public_symbol": "__msize",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b5e048b47fe24fe8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._nmsize",
+      "identity_only": true,
+      "name": "_nmsize",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "nmsize.asm",
+        "offset": 0,
+        "public_symbol": "__nmsize",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558becc45e04268b47fe24fe8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._fmsize",
+      "identity_only": true,
+      "name": "_fmsize",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "fmsize.asm",
+        "offset": 0,
+        "public_symbol": "__fmsize",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec56571e8e5e048b76068e46088b7e0a8b4e0cf3a41f5f5e8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.movedata",
+      "identity_only": true,
+      "name": "movedata",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "movedata.asm",
+        "offset": 0,
+        "public_symbol": "_movedata",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b5e048c5f068c078c4f028c57048be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.segread",
+      "identity_only": true,
+      "name": "segread",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "segread.asm",
+        "offset": 0,
+        "public_symbol": "_segread",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b5604ec32e48be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.inp",
+      "identity_only": true,
+      "name": "inp",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\inp.asm",
+        "offset": 0,
+        "public_symbol": "_inp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b56048a4606eeb4005dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.outp",
+      "identity_only": true,
+      "name": "outp",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\outp.asm",
+        "offset": 0,
+        "public_symbol": "_outp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec578b7e041e078bdf33c0b9fffff2ae41f7d98a46068bfbf2ae4f3805740233ff8bc75f8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strchr",
+      "identity_only": true,
+      "name": "strchr",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strchr.asm",
+        "offset": 0,
+        "public_symbol": "_strchr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd68b76068b5e04b0ff0ac0742cac8a27433ae074f42c413c1a1ac980e12002c1044186e02c413c1a1ac980e12002c104413ac474d41ac01cff988bf25dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.stricmp",
+      "identity_only": true,
+      "name": "stricmp",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "stricmp.asm",
+        "offset": 0,
+        "public_symbol": "_stricmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd68b76068b5e04b0ff0ac0742cac8a27433ae074f42c413c1a1ac980e12002c1044186e02c413c1a1ac980e12002c104413ac474d41ac01cff988bf25dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strcmpi",
+      "identity_only": true,
+      "name": "strcmpi",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "stricmp.asm",
+        "offset": 0,
+        "public_symbol": "_strcmpi",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57568b76048b7e061e078b4e08e33db741b35ab6208a248a050ae474200ac0741c46473ae772063ae3770202e63ac772063ac3770202c63ae07508e2d833c93ae07409b9000072024949f7d18bc15e5f8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strnicmp",
+      "identity_only": true,
+      "name": "strnicmp",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strnicmp.asm",
+        "offset": 0,
+        "public_symbol": "_strnicmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec578b7e041e078bd78b5e0833c08bcbf2ae7503e301412bd98bcb8bfa8a4606f3aa8bc25f8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strnset",
+      "identity_only": true,
+      "name": "strnset",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strnset.asm",
+        "offset": 0,
+        "public_symbol": "_strnset",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec571e078b7e0433c0b9fffff2ae41f7d94f8a4606fdf2ae473805740433c0eb028bc7fc5f8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strrchr",
+      "identity_only": true,
+      "name": "strrchr",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strrchr.asm",
+        "offset": 0,
+        "public_symbol": "_strrchr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57561e078b7e048bdf8bf733c0b9fffff2ae83f9fe74124f4f3bf7730c8a248a0588048825464febf08bc35e5f8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strrev",
+      "identity_only": true,
+      "name": "strrev",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strrev.asm",
+        "offset": 0,
+        "public_symbol": "_strrev",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec578b7e041e078bd733c0b9fffff2ae4141f7d98a46068bfaf3aa8bc25f8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strset",
+      "identity_only": true,
+      "name": "strset",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strset.asm",
+        "offset": 0,
+        "public_symbol": "_strset",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b5e048bd38a070ac074112c413c1a730404618807438a070ac075ef925dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strlwr",
+      "identity_only": true,
+      "name": "strlwr",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strlwr.asm",
+        "offset": 0,
+        "public_symbol": "_strlwr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b5e048bd38a070ac074112c613c1a730404418807438a070ac075ef925dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strupr",
+      "identity_only": true,
+      "name": "strupr",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strupr.asm",
+        "offset": 0,
+        "public_symbol": "_strupr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec83ec2056578b76068cd08ec0b9100033c08d7ee0f3abac0ac074148bf88bc8b00180e107d2e0b103d3ef0843e0ebe78b7604bbffff43ac25ff0074148bf88bc8b00180e107d2e0b103d3ef2243e074e5935f5e8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strcspn",
+      "identity_only": true,
+      "name": "strcspn",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strcspn.asm",
+        "offset": 0,
+        "public_symbol": "_strcspn",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec83ec2056578b76068cd08ec0b9100033c08d7ee0f3abac0ac074148bf88bc8b00180e107d2e0b103d3ef0843e0ebe78b7604ac25ff0074178bf88bc8b00180e107d2e0b103d3ef2243e074e68d44ff5f5e8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strpbrk",
+      "identity_only": true,
+      "name": "strpbrk",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strpbrk.asm",
+        "offset": 0,
+        "public_symbol": "_strpbrk",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec83ec2056578b76068cd08ec0b9100033c08d7ee0f3abac0ac074148bf88bc8b00180e107d2e0b103d3ef0843e0ebe78b7604bbffff43ac25ff0074148bf88bc8b00180e107d2e0b103d3ef2243e075e5935f5e8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strspn",
+      "identity_only": true,
+      "name": "strspn",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strspn.asm",
+        "offset": 0,
+        "public_symbol": "_strspn",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec83ec0256571e078b7e0633c0b9fffff2aef7d149e33a49894efe8b7e048bdf33c0b9fffff2aef7d1498bd12b56fe76208bfb8b7606ac8bfb8bcaf2ae75128bd18bdf8b4efee304f3a675e78d47ffeb0233c05f5e8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.strstr",
+      "identity_only": true,
+      "name": "strstr",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strstr.asm",
+        "offset": 0,
+        "public_symbol": "_strstr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57561e078b7e048b76068a66088b4e0ae308acaa3ac47404e2f833ff8bc75e5f8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.memccpy",
+      "identity_only": true,
+      "name": "memccpy",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "memccpy.asm",
+        "offset": 0,
+        "public_symbol": "_memccpy",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec33c08b4e08e3188bdf8cd88ec08b7e048a4606f2aeb8000075038d45ff8bfb5dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.memchr",
+      "identity_only": true,
+      "name": "memchr",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "memchr.asm",
+        "offset": 0,
+        "public_symbol": "_memchr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78bde8cd88ec08b76068b7e048bc78b4e08e32a3bfe76168bc603c13bf8730e8bc703f103f94e4ffdf3a4fceb108bc7a8017402a449d1e9f3a513c9f3a48bf38bfa5dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.memmove",
+      "identity_only": true,
+      "name": "memmove",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "memcpy.asm",
+        "offset": 0,
+        "public_symbol": "_memmove",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec56578b76048b7e061e078b4e08e335b741b35ab6208a248a0546473ae772063ae3770202e63ac772063ac3770202c63ae07508e2e033c93ae07409b9000072024949f7d18bc15f5e8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.memicmp",
+      "identity_only": true,
+      "name": "memicmp",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "memicmp.asm",
+        "offset": 0,
+        "public_symbol": "_memicmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78bde8cd88ec08b76048b7e0633c08b4e08e309f3a674051bc01dffff8bf38bfa5dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.memcmp",
+      "identity_only": true,
+      "name": "memcmp",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "memcmp.asm",
+        "offset": 0,
+        "public_symbol": "_memcmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78bde8cd88ec08b76068b7e048bc78b4e08e30ea8017402a449d1e9f3a513c9f3a48bf38bfa5dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.memcpy",
+      "identity_only": true,
+      "name": "memcpy",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "memcpy.asm",
+        "offset": 0,
+        "public_symbol": "_memcpy",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78cd88ec08b7e048bdf8b4e08e3158a46068ae0f7c701007402aa49d1e9f3ab13c9f3aa8bfa935dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.memset",
+      "identity_only": true,
+      "name": "memset",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "memset.asm",
+        "offset": 0,
+        "public_symbol": "_memset",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "571e07fc930ac0741383f90a750e0bd2790ab02daaf7db83d200f7da8bf79233d20bc07402f7f193f7f19287d304303c3976020427aa8bc20bc375e288054fac86058844ff8d44013bc772f2585f5e8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.12._cxtoa",
+      "identity_only": true,
+      "name": "_cxtoa",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "xtoa.asm",
+        "offset": 12,
+        "public_symbol": "__cxtoa",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b4e08d1f97e1356578b76048b7e061e07fcad86e0abe2fa5f5e8be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.swab",
+      "identity_only": true,
+      "name": "swab",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "swab.asm",
+        "offset": 0,
+        "public_symbol": "_swab",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "8bc58bec8b5e028907897f028977048967068b4e00894f088be833c0c3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.setjmp",
+      "identity_only": true,
+      "name": "setjmp",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "setjmp.asm",
+        "offset": 0,
+        "public_symbol": "_setjmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "8bec8b46040bc07501408b5e028b7f028b77048b67068bec8b4f08894e008b2fc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.29.longjmp",
+      "identity_only": true,
+      "name": "longjmp",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "setjmp.asm",
+        "offset": 29,
+        "public_symbol": "_longjmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b46048b56068b4e0883e11fe309d1e0d1d2150000e2f78be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._lrotl",
+      "identity_only": true,
+      "name": "_lrotl",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lrotl.asm",
+        "offset": 0,
+        "public_symbol": "__lrotl",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b46048b56068b4e0883e11fe30a8bdad1ebd1d8d1dae2f68be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._lrotr",
+      "identity_only": true,
+      "name": "_lrotr",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lrotr.asm",
+        "offset": 0,
+        "public_symbol": "__lrotr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b46048b4e06d3c08be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._rotl",
+      "identity_only": true,
+      "name": "_rotl",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "rotl.asm",
+        "offset": 0,
+        "public_symbol": "__rotl",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b46048b4e06d3c88be55dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._rotr",
+      "identity_only": true,
+      "name": "_rotr",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "rotr.asm",
+        "offset": 0,
+        "public_symbol": "__rotr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b46068b4e045d8be5874612874e10071f5f5e5d5b5b5acb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._chain_intr",
+      "identity_only": true,
+      "name": "_chain_intr",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\chainint.asm",
+        "offset": 0,
+        "public_symbol": "__chain_intr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b5604ed5dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.inpw",
+      "identity_only": true,
+      "name": "inpw",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\inpw.asm",
+        "offset": 0,
+        "public_symbol": "_inpw",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b56048b4606ef5dc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0.outpw",
+      "identity_only": true,
+      "name": "outpw",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\outpw.asm",
+        "offset": 0,
+        "public_symbol": "_outpw",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "32ede306d1e0d1d2e2facb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._aFlshl",
+      "identity_only": true,
+      "name": "_aFlshl",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lshl.asm",
+        "offset": 0,
+        "public_symbol": "__aFlshl",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "32ede306d1fad1d8e2facb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._aFlshr",
+      "identity_only": true,
+      "name": "_aFlshr",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lshr.asm",
+        "offset": 0,
+        "public_symbol": "__aFlshr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "32ede306d1ead1d8e2facb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._aFulshr",
+      "identity_only": true,
+      "name": "_aFulshr",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "ulshr.asm",
+        "offset": 0,
+        "public_symbol": "__aFulshr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "32ede306d1e0d1d2e2fac3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._aNlshl",
+      "identity_only": true,
+      "name": "_aNlshl",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lshl.asm",
+        "offset": 0,
+        "public_symbol": "__aNlshl",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "32ede306d1fad1d8e2fac3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._aNlshr",
+      "identity_only": true,
+      "name": "_aNlshr",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lshr.asm",
+        "offset": 0,
+        "public_symbol": "__aNlshr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "32ede306d1ead1d8e2fac3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._aNulshr",
+      "identity_only": true,
+      "name": "_aNulshr",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "ulshr.asm",
+        "offset": 0,
+        "public_symbol": "__aNulshr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "83e11fe309d1e0d1d2150000e2f7c3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._aNllrot",
+      "identity_only": true,
+      "name": "_aNllrot",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "llrot.asm",
+        "offset": 0,
+        "public_symbol": "__aNllrot",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "83e11fe309d1e0d1d2150000e2f7cb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._aFllrot",
+      "identity_only": true,
+      "name": "_aFllrot",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "llrot.asm",
+        "offset": 0,
+        "public_symbol": "__aFllrot",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "83e11fe30c538bdad1ebd1d8d1dae2f65bc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._aNlrrot",
+      "identity_only": true,
+      "name": "_aNlrrot",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lrrot.asm",
+        "offset": 0,
+        "public_symbol": "__aNlrrot",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_near",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "83e11fe30c538bdad1ebd1d8d1dae2f65bcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.d077b91d63d051d3.1.0._aFlrrot",
+      "identity_only": true,
+      "name": "_aFlrrot",
+      "provenance": {
+        "library_sha256": "d077b91d63d051d3333ca53f81cb15b0597cfdb6ec8a7fadc60f76ab6883e24f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lrrot.asm",
+        "offset": 0,
+        "public_symbol": "__aFlrrot",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/SLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78bde8cd88ec08b7e0633c0b9fffff2ae8d75ff8b7e08b9fffff2aef7d12bf987fe8b4606f7c601007402a449d1e9f3a513c9f3a48bf38bfa5dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strcat",
+      "identity_only": true,
+      "name": "strcat",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strcat.asm",
+        "offset": 0,
+        "public_symbol": "_strcat",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78bde8b76088bfe8cd88ec033c0b9fffff2aef7d18b7e068bc7a8017402a449d1e9f3a513c9f3a48bf38bfa5dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strcpy",
+      "identity_only": true,
+      "name": "strcpy",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strcpy.asm",
+        "offset": 0,
+        "public_symbol": "_strcpy",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78bde8cd88ec08b76068b7e0833c0b9fffff2aef7d12bf9f3a674051bc01dffff8bf38bfa5dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strcmp",
+      "identity_only": true,
+      "name": "strcmp",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strcmp.asm",
+        "offset": 0,
+        "public_symbol": "_strcmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78cd88ec08b7e0633c0b9fffff2aef7d149918bfa5dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strlen",
+      "identity_only": true,
+      "name": "strlen",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strlen.asm",
+        "offset": 0,
+        "public_symbol": "_strlen",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57561e078b7e068bd733c0b9fffff2ae4f8bf78b7e088bdf8b4e0af2ae7501412b4e0af7d98bfe8bf3f3a4aa8bc25e5f5dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strncat",
+      "identity_only": true,
+      "name": "strncat",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strncat.asm",
+        "offset": 0,
+        "public_symbol": "_strncat",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57561e078b7e068b76088bdf8b4e0ae30cac0ac07403aae2f832c0f3aa8bc35e5f8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strncpy",
+      "identity_only": true,
+      "name": "strncpy",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strncpy.asm",
+        "offset": 0,
+        "public_symbol": "_strncpy",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57561e078b4e0ae3268bd98b7e068bf733c0f2aef7d903cb8bfe8b7608f3a68a44ff33c93a45ff770474044949f7d18bc15e5f8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strncmp",
+      "identity_only": true,
+      "name": "strncmp",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strncmp.asm",
+        "offset": 0,
+        "public_symbol": "_strncmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57568b760633c09933dbac3c2074fb3c0974f7503c2d74043c2b7501ac3c39771f2c30721bd1e3d1d28bcb8bfad1e3d1d2d1e3d1d203d913d703d883d200ebdc583c2d937507f7d883d200f7da5e5f5dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._catox",
+      "identity_only": true,
+      "name": "_catox",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "atox.asm",
+        "offset": 0,
+        "public_symbol": "__catox",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b460699f77e088be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.div",
+      "identity_only": true,
+      "name": "div",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "div.asm",
+        "offset": 0,
+        "public_symbol": "_div",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec53068b460ac45e06268907075b8be55dca0600",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.53._DOSCREATECSALIAS",
+      "identity_only": true,
+      "name": "_DOSCREATECSALIAS",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\apisim.asm",
+        "offset": 53,
+        "public_symbol": "__DOSCREATECSALIAS",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8be55dca0200",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.75._DOSFREESEG",
+      "identity_only": true,
+      "name": "_DOSFREESEG",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\apisim.asm",
+        "offset": 75,
+        "public_symbol": "__DOSFREESEG",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec5306c45e0633c0268807075b8be55dca0400",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.23._DOSGETMACHINEMODE",
+      "identity_only": true,
+      "name": "_DOSGETMACHINEMODE",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\apisim.asm",
+        "offset": 23,
+        "public_symbol": "__DOSGETMACHINEMODE",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec5306c45e0a26c707010033c0075b8be55dca0800",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._DOSDEVCONFIG",
+      "identity_only": true,
+      "name": "_DOSDEVCONFIG",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\apisim.asm",
+        "offset": 0,
+        "public_symbol": "__DOSDEVCONFIG",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8be55dca0a00",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.44._DOSSETVEC",
+      "identity_only": true,
+      "name": "_DOSSETVEC",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\apisim.asm",
+        "offset": 44,
+        "public_symbol": "__DOSSETVEC",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b5e068b47fe24fe8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._msize",
+      "identity_only": true,
+      "name": "_msize",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "nmsize.asm",
+        "offset": 0,
+        "public_symbol": "__msize",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b5e068b47fe24fe8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._nmsize",
+      "identity_only": true,
+      "name": "_nmsize",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "nmsize.asm",
+        "offset": 0,
+        "public_symbol": "__nmsize",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558becc45e06268b47fe24fe8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._fmsize",
+      "identity_only": true,
+      "name": "_fmsize",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "fmsize.asm",
+        "offset": 0,
+        "public_symbol": "__fmsize",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec56571e8e5e068b76088e460a8b7e0c8b4e0ef3a41f5f5e8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.movedata",
+      "identity_only": true,
+      "name": "movedata",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "movedata.asm",
+        "offset": 0,
+        "public_symbol": "_movedata",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b5e068c5f068c078c4f028c57048be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.segread",
+      "identity_only": true,
+      "name": "segread",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "segread.asm",
+        "offset": 0,
+        "public_symbol": "_segread",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b5606ec32e48be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.inp",
+      "identity_only": true,
+      "name": "inp",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\inp.asm",
+        "offset": 0,
+        "public_symbol": "_inp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b56068a4608eeb4005dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.outp",
+      "identity_only": true,
+      "name": "outp",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\outp.asm",
+        "offset": 0,
+        "public_symbol": "_outp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec578b7e061e078bdf33c0b9fffff2ae41f7d98a46088bfbf2ae4f3805740233ff8bc75f8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strchr",
+      "identity_only": true,
+      "name": "strchr",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strchr.asm",
+        "offset": 0,
+        "public_symbol": "_strchr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd68b76088b5e06b0ff0ac0742cac8a27433ae074f42c413c1a1ac980e12002c1044186e02c413c1a1ac980e12002c104413ac474d41ac01cff988bf25dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.stricmp",
+      "identity_only": true,
+      "name": "stricmp",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "stricmp.asm",
+        "offset": 0,
+        "public_symbol": "_stricmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd68b76088b5e06b0ff0ac0742cac8a27433ae074f42c413c1a1ac980e12002c1044186e02c413c1a1ac980e12002c104413ac474d41ac01cff988bf25dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strcmpi",
+      "identity_only": true,
+      "name": "strcmpi",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "stricmp.asm",
+        "offset": 0,
+        "public_symbol": "_strcmpi",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57568b76068b7e081e078b4e0ae33db741b35ab6208a248a050ae474200ac0741c46473ae772063ae3770202e63ac772063ac3770202c63ae07508e2d833c93ae07409b9000072024949f7d18bc15e5f8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strnicmp",
+      "identity_only": true,
+      "name": "strnicmp",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strnicmp.asm",
+        "offset": 0,
+        "public_symbol": "_strnicmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec578b7e061e078bd78b5e0a33c08bcbf2ae7503e301412bd98bcb8bfa8a4608f3aa8bc25f8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strnset",
+      "identity_only": true,
+      "name": "strnset",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strnset.asm",
+        "offset": 0,
+        "public_symbol": "_strnset",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec571e078b7e0633c0b9fffff2ae41f7d94f8a4608fdf2ae473805740433c0eb028bc7fc5f8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strrchr",
+      "identity_only": true,
+      "name": "strrchr",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strrchr.asm",
+        "offset": 0,
+        "public_symbol": "_strrchr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57561e078b7e068bdf8bf733c0b9fffff2ae83f9fe74124f4f3bf7730c8a248a0588048825464febf08bc35e5f8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strrev",
+      "identity_only": true,
+      "name": "strrev",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strrev.asm",
+        "offset": 0,
+        "public_symbol": "_strrev",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec578b7e061e078bd733c0b9fffff2ae4141f7d98a46088bfaf3aa8bc25f8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strset",
+      "identity_only": true,
+      "name": "strset",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strset.asm",
+        "offset": 0,
+        "public_symbol": "_strset",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b5e068bd38a070ac074112c413c1a730404618807438a070ac075ef925dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strlwr",
+      "identity_only": true,
+      "name": "strlwr",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strlwr.asm",
+        "offset": 0,
+        "public_symbol": "_strlwr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b5e068bd38a070ac074112c613c1a730404418807438a070ac075ef925dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strupr",
+      "identity_only": true,
+      "name": "strupr",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strupr.asm",
+        "offset": 0,
+        "public_symbol": "_strupr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec83ec2056578b76088cd08ec0b9100033c08d7ee0f3abac0ac074148bf88bc8b00180e107d2e0b103d3ef0843e0ebe78b7606bbffff43ac25ff0074148bf88bc8b00180e107d2e0b103d3ef2243e074e5935f5e8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strcspn",
+      "identity_only": true,
+      "name": "strcspn",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strcspn.asm",
+        "offset": 0,
+        "public_symbol": "_strcspn",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec83ec2056578b76088cd08ec0b9100033c08d7ee0f3abac0ac074148bf88bc8b00180e107d2e0b103d3ef0843e0ebe78b7606ac25ff0074178bf88bc8b00180e107d2e0b103d3ef2243e074e68d44ff5f5e8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strpbrk",
+      "identity_only": true,
+      "name": "strpbrk",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strpbrk.asm",
+        "offset": 0,
+        "public_symbol": "_strpbrk",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec83ec2056578b76088cd08ec0b9100033c08d7ee0f3abac0ac074148bf88bc8b00180e107d2e0b103d3ef0843e0ebe78b7606bbffff43ac25ff0074148bf88bc8b00180e107d2e0b103d3ef2243e075e5935f5e8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strspn",
+      "identity_only": true,
+      "name": "strspn",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strspn.asm",
+        "offset": 0,
+        "public_symbol": "_strspn",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec83ec0256571e078b7e0833c0b9fffff2aef7d149e33a49894efe8b7e068bdf33c0b9fffff2aef7d1498bd12b56fe76208bfb8b7608ac8bfb8bcaf2ae75128bd18bdf8b4efee304f3a675e78d47ffeb0233c05f5e8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.strstr",
+      "identity_only": true,
+      "name": "strstr",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strstr.asm",
+        "offset": 0,
+        "public_symbol": "_strstr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57561e078b7e068b76088a660a8b4e0ce308acaa3ac47404e2f833ff8bc75e5f8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.memccpy",
+      "identity_only": true,
+      "name": "memccpy",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "memccpy.asm",
+        "offset": 0,
+        "public_symbol": "_memccpy",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec33c08b4e0ae3188bdf8cd88ec08b7e068a4608f2aeb8000075038d45ff8bfb5dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.memchr",
+      "identity_only": true,
+      "name": "memchr",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "memchr.asm",
+        "offset": 0,
+        "public_symbol": "_memchr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78bde8cd88ec08b76088b7e068bc78b4e0ae32a3bfe76168bc603c13bf8730e8bc703f103f94e4ffdf3a4fceb108bc7a8017402a449d1e9f3a513c9f3a48bf38bfa5dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.memmove",
+      "identity_only": true,
+      "name": "memmove",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "memcpy.asm",
+        "offset": 0,
+        "public_symbol": "_memmove",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec56578b76068b7e081e078b4e0ae335b741b35ab6208a248a0546473ae772063ae3770202e63ac772063ac3770202c63ae07508e2e033c93ae07409b9000072024949f7d18bc15f5e8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.memicmp",
+      "identity_only": true,
+      "name": "memicmp",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "memicmp.asm",
+        "offset": 0,
+        "public_symbol": "_memicmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78bde8cd88ec08b76068b7e0833c08b4e0ae309f3a674051bc01dffff8bf38bfa5dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.memcmp",
+      "identity_only": true,
+      "name": "memcmp",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "memcmp.asm",
+        "offset": 0,
+        "public_symbol": "_memcmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78bde8cd88ec08b76088b7e068bc78b4e0ae30ea8017402a449d1e9f3a513c9f3a48bf38bfa5dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.memcpy",
+      "identity_only": true,
+      "name": "memcpy",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "memcpy.asm",
+        "offset": 0,
+        "public_symbol": "_memcpy",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78cd88ec08b7e068bdf8b4e0ae3158a46088ae0f7c701007402aa49d1e9f3ab13c9f3aa8bfa935dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.memset",
+      "identity_only": true,
+      "name": "memset",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "memset.asm",
+        "offset": 0,
+        "public_symbol": "_memset",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "571e07fc930ac0741383f90a750e0bd2790ab02daaf7db83d200f7da8bf79233d20bc07402f7f193f7f19287d304303c3976020427aa8bc20bc375e288054fac86058844ff8d44013bc772f2585f5e8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.12._cxtoa",
+      "identity_only": true,
+      "name": "_cxtoa",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "xtoa.asm",
+        "offset": 12,
+        "public_symbol": "__cxtoa",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b4e0ad1f97e1356578b76068b7e081e07fcad86e0abe2fa5f5e8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.swab",
+      "identity_only": true,
+      "name": "swab",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "swab.asm",
+        "offset": 0,
+        "public_symbol": "_swab",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "8bc58bec8b5e048907897f028977048967068b4e00894f088b4e02894f0a8be833c0cb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.setjmp",
+      "identity_only": true,
+      "name": "setjmp",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "setjmp.asm",
+        "offset": 0,
+        "public_symbol": "_setjmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "8bec8b46060bc07501408b5e048b7f028b77048b67068bec8b4f08894e008b4f0a894e028b2fcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.35.longjmp",
+      "identity_only": true,
+      "name": "longjmp",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "setjmp.asm",
+        "offset": 35,
+        "public_symbol": "_longjmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b46068b56088b4e0a83e11fe309d1e0d1d2150000e2f78be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._lrotl",
+      "identity_only": true,
+      "name": "_lrotl",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lrotl.asm",
+        "offset": 0,
+        "public_symbol": "__lrotl",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b46068b56088b4e0a83e11fe30a8bdad1ebd1d8d1dae2f68be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._lrotr",
+      "identity_only": true,
+      "name": "_lrotr",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lrotr.asm",
+        "offset": 0,
+        "public_symbol": "__lrotr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b46068b4e08d3c08be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._rotl",
+      "identity_only": true,
+      "name": "_rotl",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "rotl.asm",
+        "offset": 0,
+        "public_symbol": "__rotl",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b46068b4e08d3c88be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._rotr",
+      "identity_only": true,
+      "name": "_rotr",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "rotr.asm",
+        "offset": 0,
+        "public_symbol": "__rotr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b46088b4e065d8be5874612874e10071f5f5e5d5b5b5acb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._chain_intr",
+      "identity_only": true,
+      "name": "_chain_intr",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\chainint.asm",
+        "offset": 0,
+        "public_symbol": "__chain_intr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b5606ed5dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.inpw",
+      "identity_only": true,
+      "name": "inpw",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\inpw.asm",
+        "offset": 0,
+        "public_symbol": "_inpw",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b56068b4608ef5dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0.outpw",
+      "identity_only": true,
+      "name": "outpw",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\outpw.asm",
+        "offset": 0,
+        "public_symbol": "_outpw",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "32ede306d1e0d1d2e2facb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._aFlshl",
+      "identity_only": true,
+      "name": "_aFlshl",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lshl.asm",
+        "offset": 0,
+        "public_symbol": "__aFlshl",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "32ede306d1fad1d8e2facb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._aFlshr",
+      "identity_only": true,
+      "name": "_aFlshr",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lshr.asm",
+        "offset": 0,
+        "public_symbol": "__aFlshr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "32ede306d1ead1d8e2facb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._aFulshr",
+      "identity_only": true,
+      "name": "_aFulshr",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "ulshr.asm",
+        "offset": 0,
+        "public_symbol": "__aFulshr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "32ede306d1e0d1d2e2fac3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._aNlshl",
+      "identity_only": true,
+      "name": "_aNlshl",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lshl.asm",
+        "offset": 0,
+        "public_symbol": "__aNlshl",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "32ede306d1fad1d8e2fac3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._aNlshr",
+      "identity_only": true,
+      "name": "_aNlshr",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lshr.asm",
+        "offset": 0,
+        "public_symbol": "__aNlshr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "32ede306d1ead1d8e2fac3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._aNulshr",
+      "identity_only": true,
+      "name": "_aNulshr",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "ulshr.asm",
+        "offset": 0,
+        "public_symbol": "__aNulshr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "83e11fe309d1e0d1d2150000e2f7c3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._aNllrot",
+      "identity_only": true,
+      "name": "_aNllrot",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "llrot.asm",
+        "offset": 0,
+        "public_symbol": "__aNllrot",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "83e11fe309d1e0d1d2150000e2f7cb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._aFllrot",
+      "identity_only": true,
+      "name": "_aFllrot",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "llrot.asm",
+        "offset": 0,
+        "public_symbol": "__aFllrot",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "83e11fe30c538bdad1ebd1d8d1dae2f65bc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._aNlrrot",
+      "identity_only": true,
+      "name": "_aNlrrot",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lrrot.asm",
+        "offset": 0,
+        "public_symbol": "__aNlrrot",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "83e11fe30c538bdad1ebd1d8d1dae2f65bcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.fd7775a15c5b9436.1.0._aFlrrot",
+      "identity_only": true,
+      "name": "_aFlrrot",
+      "provenance": {
+        "library_sha256": "fd7775a15c5b94361dc59ad93f1d79f2eedb0a90cefc4c47c3483dc4eddbcad6",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lrrot.asm",
+        "offset": 0,
+        "public_symbol": "__aFlrrot",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/MLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78bde1ec47e0633c0b9fffff2ae8d75ffc47e0ab9fffff2aef7d12bf98cc08ed88e460887fe8b4606f7c601007402a449d1e9f3a513c9f3a48bf38bfa1f8cc25dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strcat",
+      "identity_only": true,
+      "name": "strcat",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strcat.asm",
+        "offset": 0,
+        "public_symbol": "_strcat",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78bde1ec5760a8bfe8cd88ec033c0b9fffff2aef7d1c47e068bc7a8017402a449d1e9f3a513c9f3a48bf38bfa1f8cc25dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strcpy",
+      "identity_only": true,
+      "name": "strcpy",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strcpy.asm",
+        "offset": 0,
+        "public_symbol": "_strcpy",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd78bde1ec57606c47e0a33c0b9fffff2aef7d12bf9f3a674051bc01dffff1f8bf38bfa5dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strcmp",
+      "identity_only": true,
+      "name": "strcmp",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strcmp.asm",
+        "offset": 0,
+        "public_symbol": "_strcmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd7c47e0633c0b9fffff2aef7d149918bfa5dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strlen",
+      "identity_only": true,
+      "name": "strlen",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strlen.asm",
+        "offset": 0,
+        "public_symbol": "_strlen",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57561ec47e068bd733c0b9fffff2ae4f8bf706c47e0a8bdf8b4e0ef2ae7501412b4e0ef7d98bfe8bf3061f07f3a4aa8bc28cc21f5e5f5dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strncat",
+      "identity_only": true,
+      "name": "strncat",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strncat.asm",
+        "offset": 0,
+        "public_symbol": "_strncat",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57561ec47e06c5760a8bdf8b4e0ee30cac0ac07403aae2f832c0f3aa8bc38cc21f5e5f8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strncpy",
+      "identity_only": true,
+      "name": "strncpy",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strncpy.asm",
+        "offset": 0,
+        "public_symbol": "_strncpy",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57561e8b4e0ee3278bd9c47e068bf733c0f2aef7d903cb8bfec5760af3a68a44ff33c9263a45ff770474044949f7d18bc11f5e5f8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strncmp",
+      "identity_only": true,
+      "name": "strncmp",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strncmp.asm",
+        "offset": 0,
+        "public_symbol": "_strncmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57561ec5760633c09933dbac3c2074fb3c0974f7503c2d74043c2b7501ac3c39771f2c30721bd1e3d1d28bcb8bfad1e3d1d2d1e3d1d203d913d703d883d200ebdc583c2d937507f7d883d200f7da1f5e5f5dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._catox",
+      "identity_only": true,
+      "name": "_catox",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "atox.asm",
+        "offset": 0,
+        "public_symbol": "__catox",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b460699f77e088be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.div",
+      "identity_only": true,
+      "name": "div",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "div.asm",
+        "offset": 0,
+        "public_symbol": "_div",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec53068b460ac45e06268907075b8be55dca0600",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.53._DOSCREATECSALIAS",
+      "identity_only": true,
+      "name": "_DOSCREATECSALIAS",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\apisim.asm",
+        "offset": 53,
+        "public_symbol": "__DOSCREATECSALIAS",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8be55dca0200",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.75._DOSFREESEG",
+      "identity_only": true,
+      "name": "_DOSFREESEG",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\apisim.asm",
+        "offset": 75,
+        "public_symbol": "__DOSFREESEG",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec5306c45e0633c0268807075b8be55dca0400",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.23._DOSGETMACHINEMODE",
+      "identity_only": true,
+      "name": "_DOSGETMACHINEMODE",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\apisim.asm",
+        "offset": 23,
+        "public_symbol": "__DOSGETMACHINEMODE",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec5306c45e0a26c707010033c0075b8be55dca0800",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._DOSDEVCONFIG",
+      "identity_only": true,
+      "name": "_DOSDEVCONFIG",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\apisim.asm",
+        "offset": 0,
+        "public_symbol": "__DOSDEVCONFIG",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8be55dca0a00",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.44._DOSSETVEC",
+      "identity_only": true,
+      "name": "_DOSSETVEC",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\apisim.asm",
+        "offset": 44,
+        "public_symbol": "__DOSSETVEC",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b5e068b47fe24fe8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._nmsize",
+      "identity_only": true,
+      "name": "_nmsize",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "nmsize.asm",
+        "offset": 0,
+        "public_symbol": "__nmsize",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558becc45e06268b47fe24fe8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._msize",
+      "identity_only": true,
+      "name": "_msize",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "fmsize.asm",
+        "offset": 0,
+        "public_symbol": "__msize",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558becc45e06268b47fe24fe8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._fmsize",
+      "identity_only": true,
+      "name": "_fmsize",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "fmsize.asm",
+        "offset": 0,
+        "public_symbol": "__fmsize",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec56571e8e5e068b76088e460a8b7e0c8b4e0ef3a41f5f5e8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.movedata",
+      "identity_only": true,
+      "name": "movedata",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "movedata.asm",
+        "offset": 0,
+        "public_symbol": "_movedata",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8cc0c45e06268c5f06268907268c4f02268c57048ec08be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.segread",
+      "identity_only": true,
+      "name": "segread",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "segread.asm",
+        "offset": 0,
+        "public_symbol": "_segread",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b5606ec32e48be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.inp",
+      "identity_only": true,
+      "name": "inp",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\inp.asm",
+        "offset": 0,
+        "public_symbol": "_inp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b56068a4608eeb4005dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.outp",
+      "identity_only": true,
+      "name": "outp",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\outp.asm",
+        "offset": 0,
+        "public_symbol": "_outp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57c47e068bdf33c0b9fffff2ae41f7d98a460a8bfbf2ae4f263805740433ff8ec78bc78cc25f8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strchr",
+      "identity_only": true,
+      "name": "strchr",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strchr.asm",
+        "offset": 0,
+        "public_symbol": "_strchr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd61ec5760ac45e06b0ff0ac0742dac268a27433ae074f32c413c1a1ac980e12002c1044186e02c413c1a1ac980e12002c104413ac474d31ac01cff981f8bf25dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.stricmp",
+      "identity_only": true,
+      "name": "stricmp",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "stricmp.asm",
+        "offset": 0,
+        "public_symbol": "_stricmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8bd61ec5760ac45e06b0ff0ac0742dac268a27433ae074f32c413c1a1ac980e12002c1044186e02c413c1a1ac980e12002c104413ac474d31ac01cff981f8bf25dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strcmpi",
+      "identity_only": true,
+      "name": "strcmpi",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "stricmp.asm",
+        "offset": 0,
+        "public_symbol": "_strcmpi",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57561ec57606c47e0a8b4e0ee33eb741b35ab6208a24268a050ae474200ac0741c46473ae772063ae3770202e63ac772063ac3770202c63ae07508e2d733c93ae07409b9000072024949f7d18bc11f5e5f8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strnicmp",
+      "identity_only": true,
+      "name": "strnicmp",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strnicmp.asm",
+        "offset": 0,
+        "public_symbol": "_strnicmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57c47e068bd78b5e0c33c08bcbf2ae7503e301412bd98bcb8bfa8a460af3aa8bc28cc25f8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strnset",
+      "identity_only": true,
+      "name": "strnset",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strnset.asm",
+        "offset": 0,
+        "public_symbol": "_strnset",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57c47e0633c0b9fffff2ae41f7d94f8a460afdf2ae47263805740633c08bd0eb048bc78cc2fc5f8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strrchr",
+      "identity_only": true,
+      "name": "strrchr",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strrchr.asm",
+        "offset": 0,
+        "public_symbol": "_strrchr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57561ec47e06061f8bdf8bf733c0b9fffff2ae83f9fe74124f4f3bf7730c8a248a0588048825464febf08bc38cda1f5e5f8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strrev",
+      "identity_only": true,
+      "name": "strrev",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strrev.asm",
+        "offset": 0,
+        "public_symbol": "_strrev",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec57c47e068bd733c0b9fffff2ae4141f7d98a460a8bfaf3aa8bc28cc25f8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strset",
+      "identity_only": true,
+      "name": "strset",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strset.asm",
+        "offset": 0,
+        "public_symbol": "_strset",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8cd9c55e068bd38a070ac074112c413c1a730404618807438a070ac075ef928cda8ed95dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strlwr",
+      "identity_only": true,
+      "name": "strlwr",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strlwr.asm",
+        "offset": 0,
+        "public_symbol": "_strlwr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8cd9c55e068bd38a070ac074112c613c1a730404418807438a070ac075ef928cda8ed95dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strupr",
+      "identity_only": true,
+      "name": "strupr",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strupr.asm",
+        "offset": 0,
+        "public_symbol": "_strupr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec83ec2056571ec5760a8cd08ec0b9100033c08d7ee0f3abac0ac074148bf88bc8b00180e107d2e0b103d3ef0843e0ebe7c57606bbffff43ac25ff0074148bf88bc8b00180e107d2e0b103d3ef2243e074e5931f5f5e8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strcspn",
+      "identity_only": true,
+      "name": "strcspn",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strcspn.asm",
+        "offset": 0,
+        "public_symbol": "_strcspn",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec83ec2056571ec5760a8cd08ec0b9100033c08d7ee0f3abac0ac074148bf88bc8b00180e107d2e0b103d3ef0843e0ebe7c5760633d2ac25ff0074198bf88bc8b00180e107d2e0b103d3ef2243e074e68d44ff8cda1f5f5e8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strpbrk",
+      "identity_only": true,
+      "name": "strpbrk",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strpbrk.asm",
+        "offset": 0,
+        "public_symbol": "_strpbrk",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec83ec2056571ec5760a8cd08ec0b9100033c08d7ee0f3abac0ac074148bf88bc8b00180e107d2e0b103d3ef0843e0ebe7c57606bbffff43ac25ff0074148bf88bc8b00180e107d2e0b103d3ef2243e075e5931f5f5e8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strspn",
+      "identity_only": true,
+      "name": "strspn",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strspn.asm",
+        "offset": 0,
+        "public_symbol": "_strspn",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec83ec0256571ec47e0a061f33c0b9fffff2aef7d149e33c49894efec47e068bdf33c0b9fffff2aef7d1498bd12b56fe76228bfb8b760aac8bfb8bcaf2ae75148bd18bdf8b4efee304f3a675e78d47ff8cc2eb0333c0991f5f5e8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.strstr",
+      "identity_only": true,
+      "name": "strstr",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "strstr.asm",
+        "offset": 0,
+        "public_symbol": "_strstr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "571e07fc930ac0741383f90a750e0bd2790ab02daaf7db83d200f7da8bf79233d20bc07402f7f193f7f19287d304303c3976020427aa8bc20bc375e288054fac86058844ff8d44013bc772f28cda581f5f5e8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.13._cxtoa",
+      "identity_only": true,
+      "name": "_cxtoa",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "xtoa.asm",
+        "offset": 13,
+        "public_symbol": "__cxtoa",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b4e0ed1f97e1356571ec57606c47e0afcad86e0abe2fa1f5f5e8be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.swab",
+      "identity_only": true,
+      "name": "swab",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "swab.asm",
+        "offset": 0,
+        "public_symbol": "_swab",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "8bc58bec8cdac55e048907897f028977048967068b4e00894f088b4e02894f0a89570c8eda8be833c0cb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.setjmp",
+      "identity_only": true,
+      "name": "setjmp",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "setjmp.asm",
+        "offset": 0,
+        "public_symbol": "_setjmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "8bec8b46080bc0750140c55e048b7f028b77048b67068bec8b4f08894e008b4f0a894e028b2f8e5f0ccb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.42.longjmp",
+      "identity_only": true,
+      "name": "longjmp",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "setjmp.asm",
+        "offset": 42,
+        "public_symbol": "_longjmp",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b46068b56088b4e0a83e11fe309d1e0d1d2150000e2f78be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._lrotl",
+      "identity_only": true,
+      "name": "_lrotl",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lrotl.asm",
+        "offset": 0,
+        "public_symbol": "__lrotl",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b46068b56088b4e0a83e11fe30a8bdad1ebd1d8d1dae2f68be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._lrotr",
+      "identity_only": true,
+      "name": "_lrotr",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lrotr.asm",
+        "offset": 0,
+        "public_symbol": "__lrotr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b46068b4e08d3c08be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._rotl",
+      "identity_only": true,
+      "name": "_rotl",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "rotl.asm",
+        "offset": 0,
+        "public_symbol": "__rotl",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b46068b4e08d3c88be55dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._rotr",
+      "identity_only": true,
+      "name": "_rotr",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "rotr.asm",
+        "offset": 0,
+        "public_symbol": "__rotr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b46088b4e065d8be5874612874e10071f5f5e5d5b5b5acb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._chain_intr",
+      "identity_only": true,
+      "name": "_chain_intr",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\chainint.asm",
+        "offset": 0,
+        "public_symbol": "__chain_intr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b5606ed5dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.inpw",
+      "identity_only": true,
+      "name": "inpw",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\inpw.asm",
+        "offset": 0,
+        "public_symbol": "_inpw",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "558bec8b56068b4608ef5dcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0.outpw",
+      "identity_only": true,
+      "name": "outpw",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "dos\\outpw.asm",
+        "offset": 0,
+        "public_symbol": "_outpw",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "32ede306d1e0d1d2e2facb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._aFlshl",
+      "identity_only": true,
+      "name": "_aFlshl",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lshl.asm",
+        "offset": 0,
+        "public_symbol": "__aFlshl",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "32ede306d1fad1d8e2facb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._aFlshr",
+      "identity_only": true,
+      "name": "_aFlshr",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lshr.asm",
+        "offset": 0,
+        "public_symbol": "__aFlshr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "32ede306d1ead1d8e2facb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._aFulshr",
+      "identity_only": true,
+      "name": "_aFulshr",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "ulshr.asm",
+        "offset": 0,
+        "public_symbol": "__aFulshr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "32ede306d1e0d1d2e2fac3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._aNlshl",
+      "identity_only": true,
+      "name": "_aNlshl",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lshl.asm",
+        "offset": 0,
+        "public_symbol": "__aNlshl",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "32ede306d1fad1d8e2fac3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._aNlshr",
+      "identity_only": true,
+      "name": "_aNlshr",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lshr.asm",
+        "offset": 0,
+        "public_symbol": "__aNlshr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "32ede306d1ead1d8e2fac3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._aNulshr",
+      "identity_only": true,
+      "name": "_aNulshr",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "ulshr.asm",
+        "offset": 0,
+        "public_symbol": "__aNulshr",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "83e11fe309d1e0d1d2150000e2f7c3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._aNllrot",
+      "identity_only": true,
+      "name": "_aNllrot",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "llrot.asm",
+        "offset": 0,
+        "public_symbol": "__aNllrot",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "83e11fe309d1e0d1d2150000e2f7cb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._aFllrot",
+      "identity_only": true,
+      "name": "_aFllrot",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "llrot.asm",
+        "offset": 0,
+        "public_symbol": "__aFllrot",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "83e11fe30c538bdad1ebd1d8d1dae2f65bc3",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._aNlrrot",
+      "identity_only": true,
+      "name": "_aNlrrot",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lrrot.asm",
+        "offset": 0,
+        "public_symbol": "__aNlrrot",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    },
+    {
+      "abi": "x86_16_cdecl_far",
+      "arch": "x86",
+      "bits": 16,
+      "bytes": "83e11fe30c538bdad1ebd1d8d1dae2f65bcb",
+      "confidence": "public OMF symbol; closed contiguous fixup-free body",
+      "id": "omf.5a1b1f376b59a029.1.0._aFlrrot",
+      "identity_only": true,
+      "name": "_aFlrrot",
+      "provenance": {
+        "library_sha256": "5a1b1f376b59a029fd60dcdb3bcb1f1f350786e1442b09529590aac0c81f156f",
+        "method": "OMF public metadata plus bounded native control-flow traversal",
+        "module": "lrrot.asm",
+        "offset": 0,
+        "public_symbol": "__aFlrrot",
+        "segment": 1
+      },
+      "source": "https://github.com/microsoft/MS-DOS/blob/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB/LLIBCE.LIB"
+    }
+  ],
+  "source_commit": "2d04cacc5322951f187bb17e017c12920ac8ebe2"
+}

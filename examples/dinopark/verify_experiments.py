@@ -34,7 +34,7 @@ def click(x, y, name, guest_ms, hold_ms=150):
             {'op': 'run', 'guest_ms': guest_ms, 'timeout_ms': 5000}]
 
 
-def main():
+def main(*, temporal=False, observation_wait=False):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--executable', required=True, type=Path)
     parser.add_argument('--game-dir', required=True, type=Path)
@@ -70,11 +70,28 @@ def main():
     (evidence / 'street-to-concessions.json').write_text(json.dumps({'format': 'fdisbull-script-1', 'steps': store}, indent=2) + '\n')
     with Project.create(database, mounted / 'DINOPARK.EXE', load_segment=0x1000) as p:
         p.analyze(start='334b:0ca2', max_instructions=8)
+        if temporal:p.analyze(start='334b:0c9e',max_instructions=8)
         with p.debugger(backend, mounted) as d:
             processes.append(d.rpc.process)
             routed = d.script({'format': 'fdisbull-script-1', 'steps': boot}, timeout_ms=60000)
             assert routed['ok'], routed
             street = d.save_state('street.sav')
+            if observation_wait:
+                observed=d.memory('0x46a75',length=8)['hex']
+                descriptor={'prices':dict(kind='memory',address='0x46a75',length=8)}
+                route={'format':'fdisbull-script-1','steps':[
+                    dict(op='wait',observations=descriptor,until=dict(observation='prices',equals=observed),guest_ms=100)]}
+                saved_wait=p.debug_save_script('price-bytes-observation',route)
+                immediate=d.script(script_id=saved_wait['script_id'])
+                assert immediate['ok'] and not immediate['steps'][0]['result']['runs']
+                impossible=bytes([bytes.fromhex(observed)[0]^1])+bytes.fromhex(observed)[1:]
+                failure=d.wait(descriptor,dict(observation='prices',equals=impossible.hex()),
+                               guest_ms=40,slice_ms=10,timeout_ms=5000)
+                assert not failure['complete'] and failure['outcome']=='guest_budget' and failure['diagnostic_frame']
+                report['observation_wait']=dict(initial=immediate,bounded_failure=failure,
+                    scope='Observed price bytes only; does not establish UI readiness or reproduce E32 cancellation')
+                (evidence/'wait-script.json').write_text(json.dumps(route,indent=2)+'\n')
+                d.load_state(street['artifact'])
         with p.debugger(backend, mounted) as d:
             processes.append(d.rpc.process)
             d.load_state(street['artifact'])
@@ -135,16 +152,62 @@ def main():
             assert d.layers()['active'] == []
             assert d.code('334b:0c9e', length=4, view='ram')['hex'] == '8b877568'
             assert d.memory('0x46a75', length=8)['hex'] == '8813e8034c1d1027'
+            if temporal:
+                ram=d.capture_code('334b:0c9e',cs=0x334b,length=8,view='ram',name='price-ram.json')
+                d.layers([layer])
+                execute=d.capture_code('334b:0c9e',cs=0x334b,length=8,view='execute',name='price-execute.json')
+                d.layers([])
+                witnesses=[]
+                for name,active,expected in [('ram',[],7500),('execute',[layer],5000)]:
+                    d.restore_experiment(saved['artifact'])
+                    for control in d.controls()['hooks']:d.delete_hook(control['key'])
+                    for control in d.controls()['breakpoints']:d.delete_breakpoint(control['key'])
+                    assert d.run(guest_ms=120,timeout_ms=3000,fast_forward=True)['outcome']=='guest_time'
+                    d.layers(active)
+                    entry=d.breakpoint('334b:0c9e')
+                    d.click_frame(195,85,name=name+'-lookup-click.png',hold_ms=150,grid_step=8)
+                    stopped=d.run(timeout_ms=5000,fast_forward=True)
+                    assert stopped['session']['stop_reason']['project_address']=='0x3414e'
+                    d.delete_breakpoint(entry['breakpoint_id'])
+                    traced=d.trace(name+'-lookup.json',count=2,timeout_ms=5000)
+                    assert traced['metadata']['complete']
+                    assert int(d.registers()['general']['eax'],16)&0xffff==expected
+                    witnesses.append({'name':name,'trace':traced['artifact'],'ax':expected})
+                d.restore_experiment(saved['artifact'])
+                assert len(d.controls()['breakpoints'])==9 and d.hooks()['hooks'][0]['hits']==0
+                report['lookup_witnesses']=witnesses
             report.update(result='pass', prices=prices, comparison=compared['artifact'], breakpoint_restored=True,
                           read_watch_bytes_restored=8, once_hook_restored=True, once_hook_fired_once_per_trial=True,
                           hook_hit_count_restored=0, baseline_layers_restored=True, code_ram_unchanged=True,
                           price_table_unchanged=True, fresh_session_restore=True)
+        if temporal:
+            base=p.debug_promote_code(ram['artifact'],max_instructions=64)
+            changed=p.debug_promote_code(execute['artifact'],max_instructions=64)
+            assert base['parent']==changed['parent']==1 and base['version']!=changed['version']
+            report['temporal']={'ram':base,'execute':changed}
     # Reopen once more: export only reports, scripts, traces and authentic frames.
     with Project(database) as p:
         p.debug_export(compared['artifact'], evidence / 'comparison.json')
-        for item in p.debug_artifacts()['artifacts']:
-            if item['kind'] in ('script', 'script-result', 'trace', 'screenshot', 'screenshot-grid'):
+        for item in p.debug_artifacts(version=1)['artifacts']:
+            if item['kind'] in ('script', 'script-result', 'trace', 'screenshot', 'screenshot-grid','code-snapshot'):
                 p.debug_export(item['id'], evidence / (item['id'] + '-' + item['name']))
+        if temporal:
+            from fdisbull.render import render_snapshot
+            from fdisbull.cfg_render import render_cfg
+            v=changed['version']
+            view=p.disassembly('334b:0c9e',cs=0x334b,version=v,lines=8)
+            assert view['instructions'][0]['bytes']=='8b877168'
+            assert p.disassembly('334b:0c9e',cs=0x334b,version=1,lines=1)['instructions'][0]['bytes']=='8b877568'
+            render_snapshot(view,evidence/'temporal-disassembly.png')
+            render_cfg(p.cfg('334b:0c9e',cs=0x334b,version=v,max_instructions=64),evidence/'temporal-cfg.svg')
+            for name in ('baseline','layer'):
+                for trace in compared[name]['traces']:
+                    (evidence/(name+'-trace-view.json')).write_text(json.dumps(p.debug_trace_view(trace['artifact'],version=v),indent=2)+'\n')
+            for witness in report['lookup_witnesses']:
+                derived=p.debug_trace_view(witness['trace'],version=v)
+                assert derived['events'][0]['bytes_match']==(witness['name']=='execute')
+                assert derived['events'][0]['identity']['context']=='real:334b'
+                (evidence/(witness['name']+'-lookup-view.json')).write_text(json.dumps(derived,indent=2)+'\n')
     assert all(process.poll() is not None for process in processes)
     assert inventory(game) == original and inventory(mounted) == original
     report.update(processes_reaped=True, game_files_unchanged=len(original), native_states_exported=False,

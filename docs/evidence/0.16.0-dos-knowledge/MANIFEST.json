@@ -1,0 +1,19 @@
+{
+  "ACCEPTANCE.json": "9021f56f2029ded9cfd15db384982d94694d2570b5cbbfa88f39ff35337cb0e5",
+  "comparison-hardening.log": "3217965060eaf7b62e564b3a7c185f358a1c061e303a99eda717af1104fa2ce8",
+  "comparison-hardening.xml": "deba78304919850948e89417e005a8bd22093f1b4e49a91b9628d63a7a510c15",
+  "final-focused-r3.log": "9ac91c51bb3b0b683fe88eb6804af5af5d7347a859bccf44198ea46384c3c2b4",
+  "final-focused-r3.xml": "edae13fb43ba432c0aedcb1f398038f1a4c23fd7d7c615389476cb45a55db6ac",
+  "layout-correction.log": "da50af131c21308f8d4d4bff4c55e59a02ca996417a04dc20e59bf90da037674",
+  "native/exit-codes.json": "62a3ebc450c0447d52ab1442f73002efe59ec861a1b194414adf7e114a13e631",
+  "native/identity.json": "e6968f8b596f7d06b068f85fc54cbab118c215b9c2507f7391d159bbca09596c",
+  "native/native.log": "0a90dad79d7aad154841ac4da235adaeedc6576567df9404610e9da179a94613",
+  "native/native.xml": "9b80ffd2bfb1811c0ad581c05b936eb4bd76a66a878c46ff19e0f0dea7d308d0",
+  "native-wait-final.log": "d5cdac28377596362fe23d3471c4d19cdfada6759ea3f63546e6f67a82b92cdc",
+  "native-wait-final.xml": "7a9bae7b1fa4b6df293d671036913bc3ee2459b661597a81152db121d1338194",
+  "ordinary/exit-codes.json": "3bc83d113308220bbaf6ff7de2bfc341a49a87dac46989de64a9e90360fc92ac",
+  "ordinary/identity.json": "e6968f8b596f7d06b068f85fc54cbab118c215b9c2507f7391d159bbca09596c",
+  "ordinary/ordinary.log": "9c911d50793148f02ad96826beda86ee3ae86028b8a19fe3c25408e7c94c767a",
+  "ordinary/ordinary.xml": "8d6aa006525f7d686d6731e434b86fbd9504c821b42deb953aca09765e6cf82b",
+  "prior-layout-reproduction.log": "1695e367b06288f7c24c526a03dfddc9a4e2808444db044947b1ece3c634bb05"
+}

@@ -1,0 +1,36 @@
+{
+  "result": "pass",
+  "sha256": "d493481b5404ae3cdc0707adaf5ea3bb554660593b08ed22c1e0c8926eba5e50",
+  "payload_files": 311,
+  "original_assets_preserved": 5,
+  "added_assets": [
+    {
+      "apiUrl": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/releases/assets/678287883",
+      "contentType": "application/zip",
+      "createdAt": "2026-10-26T13:40:44Z",
+      "digest": "sha256:d493481b5404ae3cdc0707adaf5ea3bb554660593b08ed22c1e0c8926eba5e50",
+      "downloadCount": 0,
+      "id": "RA_kwDOVUzRvc4obdoL",
+      "label": "",
+      "name": "fdisbull-linux-dos-offline-0.15.0-e91879c-2026-10-26.zip",
+      "size": 56318296,
+      "state": "uploaded",
+      "updatedAt": "2026-10-26T13:40:46Z",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.14.0/fdisbull-linux-dos-offline-0.15.0-e91879c-2026-10-26.zip"
+    },
+    {
+      "apiUrl": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/releases/assets/678287888",
+      "contentType": "application/octet-stream",
+      "createdAt": "2026-10-26T13:40:44Z",
+      "digest": "sha256:7afbf7cfb08daa83eb97c3e951fd665fa836dc794a48a02e113d4dec3b2ebc57",
+      "downloadCount": 0,
+      "id": "RA_kwDOVUzRvc4obdoQ",
+      "label": "",
+      "name": "fdisbull-linux-dos-offline-0.15.0-e91879c-2026-10-26.zip.sha256",
+      "size": 123,
+      "state": "uploaded",
+      "updatedAt": "2026-10-26T13:40:44Z",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.14.0/fdisbull-linux-dos-offline-0.15.0-e91879c-2026-10-26.zip.sha256"
+    }
+  ]
+}

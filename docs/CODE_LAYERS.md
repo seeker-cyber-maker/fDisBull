@@ -103,7 +103,7 @@ Traces from the layers backend carry per-event `ram_bytes`, `execution_bytes`, a
 
 `project.debug_events(run, after=0, limit=1000)` reads persisted transitions, hook events, captures and run outcomes after restart. This is an event/snapshot history, not automatic instruction-by-instruction rewind.
 
-A code snapshot decodes observed bytes into its own runtime artifact. It does not automatically create a new static version/context, enqueue traversal of the observed targets, or regenerate static xrefs for that interpretation. Previous static facts and runtime snapshots are retained separately. The automatic loop from observed self-modification to a connected static interpretation is not implemented by this layer API.
+A code snapshot decodes observed bytes into its own runtime artifact. Version 0.16.0 adds [explicit offline promotion](RUNTIME_CODE.md) into a preserved temporal child with fresh traversal, xrefs, CFG and visible byte provenance. Capturing alone still does not change static analysis or prove execution. Promotion retains raw observations and earlier facts; it does not reconstruct a patched disk image. An automatic self-modification discovery loop remains future work.
 
 ## JSON and scripts
 

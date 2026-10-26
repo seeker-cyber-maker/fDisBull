@@ -1,0 +1,47 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "run",
+      "guest_ms": 35000,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    },
+    {
+      "op": "click-frame",
+      "x": 160,
+      "y": 160,
+      "name": "old-game.png",
+      "hold_ms": 150
+    },
+    {
+      "op": "run",
+      "guest_ms": 1500,
+      "timeout_ms": 5000
+    },
+    {
+      "op": "click-frame",
+      "x": 90,
+      "y": 70,
+      "name": "select-pmm.png",
+      "hold_ms": 150
+    },
+    {
+      "op": "run",
+      "guest_ms": 300,
+      "timeout_ms": 5000
+    },
+    {
+      "op": "click-frame",
+      "x": 250,
+      "y": 73,
+      "name": "load-pmm.png",
+      "hold_ms": 150
+    },
+    {
+      "op": "run",
+      "guest_ms": 3000,
+      "timeout_ms": 5000
+    }
+  ]
+}

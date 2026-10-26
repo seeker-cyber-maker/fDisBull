@@ -78,6 +78,25 @@ def _trace_event(event):
 
 def compare_trials(baseline, layer):
     """Compare captured observations only; an incomplete run cannot prove equality."""
+    # Pair only captures of the same operation/range. zip alone silently loses
+    # unmatched evidence and can turn malformed trial records into false equality.
+    for field in ('memory','traces','screenshots','observations'):
+        left_items=baseline.get(field,[]);right_items=layer.get(field,[])
+        if not isinstance(left_items,list) or not isinstance(right_items,list) or len(left_items)!=len(right_items):
+            raise ValueError('Experiment capture alignment mismatch: '+field+' count')
+        seen=set()
+        for index,(a,b) in enumerate(zip(left_items,right_items,strict=True)):
+            if field=='memory':
+                same=(a['project_address']==b['project_address'] and len(bytes.fromhex(a['hex']))==len(bytes.fromhex(b['hex']))
+                      and a.get('context')==b.get('context') and a.get('project_cs')==b.get('project_cs'))
+            else:
+                same=a['step']==b['step'] and a['step'] not in seen
+                seen.add(a['step'])
+                if field=='traces':same= same and a['semantics']==b['semantics']
+                if field=='observations':
+                    same= same and a['op']==b['op']
+                    if a['op']=='memory':same= same and a['value']['address']==b['value']['address']
+            if not same:raise ValueError(f'Experiment capture alignment mismatch: {field} identity at {index}')
     complete = baseline['ok'] and layer['ok']
     left = _register_values(baseline['registers'])
     right = _register_values(layer['registers'])
@@ -315,8 +334,11 @@ class ExperimentSessionMixin:
             trial['memory'] = [self.memory(**item) for item in document['observations']]
         for record in report['steps']:
             result = record.get('result', {})
-            if record['op'] in ('registers', 'memory', 'run') and result:
-                if record['op'] == 'run':
+            if record['op'] in ('registers', 'memory', 'run', 'wait') and result:
+                if record['op'] == 'wait':
+                    value = {k: result[k] for k in ('complete', 'matched', 'outcome', 'last_observation')}
+                    value['polls'] = [poll['values'] for poll in result['polls']]
+                elif record['op'] == 'run':
                     value = _stop_value(result)
                 elif record['op'] == 'registers':
                     value = _register_values(result)

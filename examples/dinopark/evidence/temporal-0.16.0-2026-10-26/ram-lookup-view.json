@@ -1,0 +1,62 @@
+{
+  "artifact": "608b119ca86741fbaee7cf7a596f9b6d",
+  "artifact_sha256": "bdb08036fda4c0c29d0b04077cdeb93f31168cf67f0a4ecdb07920127d64df6c",
+  "version": 3,
+  "events": [
+    {
+      "index": 0,
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x00000C9E",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x3414e"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      },
+      "bytes_match": false,
+      "analysis_match": false,
+      "byte_provenance": {
+        "kind": "runtime-capture",
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "view": "execute",
+        "fully_observed": true,
+        "execution_proven": false
+      }
+    },
+    {
+      "index": 1,
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x00000CA2",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x34152"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": false,
+        "evidence": "pending fetch at trace budget"
+      },
+      "bytes_match": true,
+      "analysis_match": true,
+      "byte_provenance": {
+        "kind": "runtime-capture",
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "view": "execute",
+        "fully_observed": true,
+        "execution_proven": false
+      }
+    }
+  ],
+  "scope": "Per-instruction byte/context comparison only; completion remains native; no claim the entire temporal version executed"
+}

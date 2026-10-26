@@ -8,7 +8,16 @@ An agent-first disassembler with a persistent SQLite analysis database, explicit
 
 Requires Python **3.12 or later**.
 
-The **0.15.0 source candidate** adds [saved experiments and baseline-versus-layer
+The **0.16.0 source** adds [temporal code interpretations](docs/RUNTIME_CODE.md), [explicit debugger observation semantics](docs/DEBUGGER_SEMANTICS.md) and a [real runtime doctor](docs/RUNTIME_DOCTOR.md). It also rejects misaligned experiment captures before comparison. See the [release notes](docs/RELEASE-0.16.0.md) and [local acceptance record](docs/VERIFICATION-DOS-KNOWLEDGE.md). Exact-commit ordinary and native Linux CI gate tagging; GitHub release publication is recorded separately.
+
+The candidate also adds [bounded observation waits](docs/OBSERVATION_WAIT.md) to
+saved DOS scripts and [standalone DOS analysis knowledge](docs/DOS_KNOWLEDGE.md):
+182 provenance-bound runtime signatures, 37 DOS/BIOS service descriptions,
+reusable signature catalogs, enums/flags, unions, bitfields, aliases and declared
+function types with near/far Pascal profiles. These remain bounded interpretations;
+compiler overlay loading and dedicated COM/SYS loaders are not implemented.
+
+The **0.15.0 CI-verified source candidate** adds [saved experiments and baseline-versus-layer
 comparisons](docs/DEBUGGER_EXPERIMENTS.md): capture a checkpoint, its breakpoints,
 watches and hooks, then restore that setup for both trials and compare stored
 registers, memory, screenshots and traces. Native control IDs are rebound for
@@ -41,9 +50,12 @@ feature limits and the ordinary/native Linux checks required before tagging.
 
 | Track | Source and availability | Verification |
 | --- | --- | --- |
-| **Working source candidate: 0.15.0** | [Saved debugger experiments](docs/DEBUGGER_EXPERIMENTS.md) on the existing unified debugger | [Candidate notes](docs/RELEASE-0.15.0.md) and [local verification](docs/VERIFICATION-0.15.md). This candidate has not been published. |
+| **Working candidate: 0.16.0** | Temporal interpretations, observation contracts and runtime doctor; uncommitted | [Candidate notes](docs/RELEASE-0.16.0.md) and [verification](docs/VERIFICATION-0.16.md). No tag or release CI yet. |
+| **CI-verified main candidate: 0.15.0** | [Saved debugger experiments](docs/DEBUGGER_EXPERIMENTS.md) on the existing unified debugger | [Candidate notes](docs/RELEASE-0.15.0.md) and [local verification](docs/VERIFICATION-0.15.md). No 0.15.0 tag/release; exact CI packages are additionally available in the GitHub offline asset. |
 | **Latest published package release: 0.14.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0), commit `6a0aeb3` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623197): 817 passed, 45 skipped. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623209): 15 stable DOS, 38 layers/endpoint, 14 PE64 and 10 DOS/QEMU/boot checks passed, no native skips. |
 | **Repository branch** | [main](https://github.com/seeker-cyber-maker/fDisBull/tree/main) is the only active branch | Release promotion requires both ordinary and native Linux CI. Use version tags for fixed source snapshots. The old experimental checkpoint is preserved under an archive tag. |
+
+The [0.15.0 Linux/DOS offline candidate kit](https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.14.0/fdisbull-linux-dos-offline-0.15.0-e91879c-2026-10-26.zip) is now hosted on GitHub, with a [checksum](https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.14.0/fdisbull-linux-dos-offline-0.15.0-e91879c-2026-10-26.zip.sha256). It supplies the exact `e91879c` CI packages, genuine Python dependencies, and the corrected Linux backend with private SDL2_net libraries. Its 0.15.0 contents predate the current 0.16.0 work; its URL uses the existing 0.14.0 release as an asset host.
 
 The Python packages do **not** include an emulator. Stable debugging needs the [0.10 backend patch](experimental/dosbox-x/README.md); execution layers need the separate [layers backend patch](experimental/dosbox-x/layers/README.md). Both pin an upstream source commit and require an explicit executable path. Coordinate grids work with either backend.
 
@@ -122,7 +134,7 @@ Version 0.13.0 adds PE64 `r`, `w` and `rw` watchpoints, reversible RAM layers, g
 
 Static analysis does not establish runtime execution. A drained queue does not establish complete code coverage. Authored labels and links record interpretations, and unresolved segment/pointer state stays explicit. Native macOS debugger acceptance passes; the full suite still has Linux ELF fixture failures on Apple's compiler/linker. Runtime integration launches original unpatched DOS MZ or x86-64 PE EXE versions; static child patches are never applied silently. PE support has its own runtime and acceptance gate. The PE watches, layers and states use different mechanisms and formats from DOS; published 0.12.0 packages do not contain those additions.
 
-Runtime code snapshots can preserve and decode observed self-modified or layered bytes alongside earlier views. They do not automatically create a new static code interpretation, traverse its targets, or rebuild its xrefs. A mapped runtime address alone does not verify equality with static instructions. Headless execution is not security isolation, and restoring a machine checkpoint does not roll back mounted host files.
+Runtime code snapshots preserve and decode observed self-modified or layered bytes alongside earlier views. The 0.16.0 candidate adds explicit offline promotion into a preserved temporal interpretation, fresh traversal/xrefs/CFG and byte/context trace comparisons. Captured bytes do not prove execution; inherited bytes remain unobserved, and no patched disk image is reconstructed. A mapped runtime address alone does not verify equality with static instructions. Headless execution is not security isolation, and restoring a machine checkpoint does not roll back mounted host files.
 
 No first-party distribution license has been selected. Public visibility does not grant an open-source license. See [THIRD_PARTY.md](docs/THIRD_PARTY.md) for dependency provenance. The separate DOSBox-X checkpoint retains its upstream GPL notices.
 

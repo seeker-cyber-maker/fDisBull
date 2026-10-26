@@ -11,9 +11,10 @@ import zipfile
 EXCLUDED_DIRECTORIES = {"examples", "history", "experimental", "build", "dist", ".git", "__pycache__"}
 EXCLUDED_SUFFIXES = {".fdb", ".db", ".sqlite", ".sqlite3", ".sav", ".state", ".exe", ".com", ".dll", ".bin", ".dat", ".so", ".dylib", ".o", ".pyc"}
 REQUIRED_TEST_HELPERS = {"tests/fixtures_formats.py", "tests/fixtures_macho.py", "tests/ida_rpc_vectors.json", "tests/dosbox_zip_empty_write.cpp"}
-REQUIRED_PE_RESOURCES = {"wine_guest/agent.c", "wine_guest/init.sh", "wine_guest/broker.py"}
+REQUIRED_PE_RESOURCES = {"wine_guest/agent.c", "wine_guest/init.sh", "wine_guest/broker.py", "wine_guest/selftest.c"}
 REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/broker.py", "ida_guest/SDK-LICENSE.txt", "ida_wire.py", "ida_remote.py", "ida_trace.py"}
 REQUIRED_PE_RESOURCES |= {"dos_guest/__init__.py", "dos_guest/init.sh", "dos_guest/broker.py", "dos_qemu.py", "dos_runtime.py", "qemu_machine.py", "gdb_rpc.py", "guest_assets.py"}
+REQUIRED_KNOWLEDGE_RESOURCES = {"data/dos-runtime-signatures.json", "data/MICROSOFT-DOS-LICENSE.txt"}
 
 
 def archive_names(path: Path) -> list[str]:
@@ -53,6 +54,8 @@ def check_archive(path: Path) -> int:
         missing = {"fdisbull/" + name for name in REQUIRED_PE_RESOURCES} - set(names)
         if missing:
             raise ValueError(f"Wheel is missing PE backend sources: {sorted(missing)}")
+        missing={"fdisbull/"+name for name in REQUIRED_KNOWLEDGE_RESOURCES}-set(names)
+        if missing:raise ValueError(f"Wheel is missing DOS analysis resources: {sorted(missing)}")
     else:
         roots = {entry.parts[0] for entry in entries}
         if len(roots) != 1 or not next(iter(roots)).startswith("fdisbull-"):
@@ -60,6 +63,7 @@ def check_archive(path: Path) -> int:
         relative = {PurePosixPath(*entry.parts[1:]).as_posix() for entry in entries}
         required = REQUIRED_TEST_HELPERS | {"src/fdisbull/__init__.py", "pyproject.toml", "tests/wine_gui_fixture.c"}
         required |= {"src/fdisbull/" + name for name in REQUIRED_PE_RESOURCES}
+        required |= {"src/fdisbull/" + name for name in REQUIRED_KNOWLEDGE_RESOURCES}
         missing = required - relative
         if missing:
             raise ValueError(f"Source archive is missing required files: {sorted(missing)}")

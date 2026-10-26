@@ -356,7 +356,7 @@ class Project(DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, Advanc
                 if references:
                     display += ' ; ' + ', '.join(ref['name'] + (f" <{ref['representation']}>" if ref['representation'] else '') for ref in references)
                 display,file_refs,file_refs_summary=self._file_reference_display(v['id'],self.context,int(r['address'],16),display)
-                result.append({"references":references,"file_references":file_refs,"file_reference_summary":file_refs_summary,"display_operands":display,"address":address_hex,"size":r["size"],"bytes":r["bytes"],"mnemonic":r["mnemonic"],"operands":r["operands"],"flow":r["flow"],"target":hx(int(r["target"],16)) if r["target"] else None,"name":self._shared_name(v["id"],("memory","",int(r["address"],16))) or r["name"] or (fn[0] if fn else None),"comment":r["comment"],"comment_author":r["comment_author"],"comment_inherited_from":r["comment_inherited_from"],"xrefs":self.xrefs(address_hex,"to",v["id"]),"context":self.context})
+                result.append({"references":references,"file_references":file_refs,"file_reference_summary":file_refs_summary,"display_operands":display,"address":address_hex,"size":r["size"],"bytes":r["bytes"],"mnemonic":r["mnemonic"],"operands":r["operands"],"flow":r["flow"],"target":hx(int(r["target"],16)) if r["target"] else None,"name":self._shared_name(v["id"],("memory","",int(r["address"],16))) or r["name"] or (self._label(v["id"],int(r["address"],16)) if fn or self._signature_name(v["id"],self.context,int(r["address"],16)) else None),"comment":r["comment"],"comment_author":r["comment_author"],"comment_inherited_from":r["comment_inherited_from"],"xrefs":self.xrefs(address_hex,"to",v["id"]),"context":self.context})
             return {"title":self.meta["filename"],"arch":self.arch,"bits":self.bits,"context":self.context,"version":v["id"],"sha256":v["sha256"],"source_sha256":self.meta["source_sha256"],"address":hx(a),"instructions":result,"analysis":self.analysis_status(v['id']),"view":"stored instructions ordered by address; gaps are not decoded implicitly"}
 
     def patch(self, address, data, label="patch", origin="agent supplied bytes", version=None):
@@ -375,6 +375,8 @@ class Project(DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, Advanc
             raise ValueError("origin must contain 1..1024 characters")
         with self.transaction(True):
             parent = self.version(version)["id"]
+            if self._runtime_record(parent) is not None:
+                return self._runtime_patch(parent,a,replacement,label,origin)
             regions = self.regions(parent)
             match = next((r for r in regions if r.start <= a and a+len(replacement) <= r.start+len(r.data)),None)
             if match is None:

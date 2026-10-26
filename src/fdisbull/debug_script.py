@@ -10,6 +10,7 @@ import time
 from .debugger import bounded
 
 OPERATIONS = {
+    'wait':'wait',
     'run':'run', 'click':'click', 'click-frame':'click_frame', 'screenshot':'screenshot', 'trace':'trace',
     'breakpoint':'breakpoint', 'delete-breakpoint':'delete_breakpoint',
     'save-state':'save_state', 'load-state':'load_state',
@@ -54,6 +55,9 @@ def validate_script(script):
                 elif op in OPERATIONS:
                     signature = inspect.signature(getattr(DebugSession,OPERATIONS[op]))
                     signature.bind(None,**params)
+                    if op=='wait':
+                        from .debug_wait import validate_wait
+                        validate_wait(**params)
                 else:
                     raise ValueError('Unknown script operation: '+op)
                 expanded.append(step)
@@ -97,7 +101,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None):
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
-            if step['op'] in ('run','trace'):
+            if step['op'] in ('run','trace','wait'):
                 params['timeout_ms'] = min(params.get('timeout_ms',remaining),remaining)
             if step['op']=='assert':
                 if params['value'] != params['equals']:
@@ -106,6 +110,8 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None):
             else:
                 result = getattr(session,OPERATIONS[step['op']])(**params)
             record['result'] = result
+            if step['op']=='wait' and not (result.get('complete') and result.get('matched')):
+                raise ValueError('Wait did not match: '+result.get('outcome','incomplete'))
             if step['op']=='run':
                 expected = step.get('expect','guest_time' if 'guest_ms' in params else 'breakpoint')
                 if result['outcome'] != expected:

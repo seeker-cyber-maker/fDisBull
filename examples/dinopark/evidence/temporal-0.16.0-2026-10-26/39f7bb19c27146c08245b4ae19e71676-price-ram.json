@@ -1,0 +1,119 @@
+{
+  "address": {
+    "offset": "0x0002C38E",
+    "space": "linear"
+  },
+  "byte_count": 8,
+  "data_base64": "i4d1aJlSUA4=",
+  "layer_generation": 6,
+  "overlay_valid": true,
+  "session_id": "ses-1",
+  "sha256": "1450dcefd30dae62f0cd6639f40092fc8cd82ecf2cd8e3adbe5641d75a504b58",
+  "state_revision": 72,
+  "view": "ram",
+  "hex": "8b8775689952500e",
+  "project_address": "0x3414e",
+  "runtime_address": "0x2c38e",
+  "instructions": [
+    {
+      "runtime_address": "0x2c38e",
+      "project_address": "0x3414e",
+      "cs": "0x2b6f",
+      "ip": "0xc9e",
+      "size": 4,
+      "bytes": "8b877568",
+      "instruction": "mov ax,[bx+6875h]"
+    },
+    {
+      "runtime_address": "0x2c392",
+      "project_address": "0x34152",
+      "cs": "0x2b6f",
+      "ip": "0xca2",
+      "size": 1,
+      "bytes": "99",
+      "instruction": "cwd"
+    },
+    {
+      "runtime_address": "0x2c393",
+      "project_address": "0x34153",
+      "cs": "0x2b6f",
+      "ip": "0xca3",
+      "size": 1,
+      "bytes": "52",
+      "instruction": "push dx"
+    },
+    {
+      "runtime_address": "0x2c394",
+      "project_address": "0x34154",
+      "cs": "0x2b6f",
+      "ip": "0xca4",
+      "size": 1,
+      "bytes": "50",
+      "instruction": "push ax"
+    },
+    {
+      "runtime_address": "0x2c395",
+      "project_address": "0x34155",
+      "cs": "0x2b6f",
+      "ip": "0xca5",
+      "size": 1,
+      "bytes": "0e",
+      "instruction": "push cs"
+    }
+  ],
+  "runtime_cs": "0x2b6f",
+  "project_cs": "0x334b",
+  "instruction_pointer": "0xc9e",
+  "active_layers": [],
+  "generation": 6,
+  "evidence": "runtime observation; static analysis is unchanged",
+  "format": "fdisbull-runtime-code-1",
+  "identity": {
+    "run": "51fe2bd6a53940cc8d4b60d814e9c778",
+    "source_version": 1,
+    "source_version_sha256": "8006cbd191e3ff0a80f537f6d5163559542270f3bf706b7f86d8c4c54248c743",
+    "source_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+    "arch": "x86",
+    "bits": 16,
+    "cpu_mode": "real",
+    "captured_at": "2026-10-26T13:51:51.740108+00:00",
+    "project_base": "0x10000",
+    "runtime_base": "0x8240",
+    "delta": -32192,
+    "backend": "dosbox",
+    "backend_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+    "runtime_inputs": {},
+    "runtime_cs": 11119,
+    "project_cs": 13131,
+    "layer_hashes": {}
+  },
+  "capture_registers": {
+    "cpu_mode": "real",
+    "flags": "0x00007002",
+    "general": {
+      "eax": "0x00000003",
+      "ebp": "0x00001F10",
+      "ebx": "0x00000000",
+      "ecx": "0x00000186",
+      "edi": "0x00000001",
+      "edx": "0x00000036",
+      "esi": "0x00000007",
+      "esp": "0x00001EFC"
+    },
+    "instruction_pointer": "0x0000001D",
+    "segments": {
+      "cs": "0xC402",
+      "ds": "0x3844",
+      "es": "0x3844",
+      "fs": "0x0000",
+      "gs": "0x0000",
+      "ss": "0x4528"
+    },
+    "session_id": "ses-1",
+    "state_revision": 72,
+    "cs": "0xC402",
+    "ip": "0x0000001D",
+    "project_address": null
+  },
+  "execution_proven": false
+}

@@ -8,7 +8,7 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-from .typesystem import _field_at, _int, _name, type_layout
+from .typesystem import _field_at, _int, _name, type_layout, _rich_value
 
 
 MAX_EXTERNAL_FILE_SIZE = 64 * 1024 * 1024
@@ -51,7 +51,7 @@ def _compact_layout(layout):
     result={key:layout[key] for key in ('name','kind','size','signed','target','address_space','segment','count') if key in layout}
     if layout['kind']=='array':
         result['element']={key:layout['element'][key] for key in ('name','kind','size')}
-    if layout['kind']=='struct':
+    if layout['kind'] in ('struct','union'):
         result['fields']=[dict(name=field['name'],offset=field['offset'],type=field['type']['name'],size=field['type']['size']) for field in layout['fields']]
     return result
 
@@ -145,6 +145,7 @@ class ExternalFilesMixin:
             row = self._external_file(v, file)
             layout = type_layout(type_name, self._type_registry(v))
             size = layout['size']
+            if not size:raise ValueError('file type must have storage')
             if offset + size > row['size']:
                 raise ValueError('file type binding must fit in the external file')
             for other in self.db.execute(
@@ -165,6 +166,7 @@ class ExternalFilesMixin:
                 'LEFT JOIN external_files e ON e.version=b.version AND e.name=b.file '
                 'WHERE b.version=? ORDER BY b.file,b.offset', (v,)):
             size = type_layout(row['type_name'], registry)['size']
+            if not size:raise ValueError('bound file type must retain storage')
             if row['file_size'] is None or row['offset'] < 0 or row['offset'] + size > row['file_size']:
                 raise ValueError('updated file type binding exceeds its external file')
             if row['file'] == previous_file and row['offset'] < previous_end:
@@ -226,11 +228,16 @@ class ExternalFilesMixin:
                 if len(items) >= max_items or work > work_limit:
                     truncated = True
                     return
-                if t['kind'] == 'struct':
+                if t['kind'] == 'typedef':
+                    visit(dict(t['target'],name=t['name']),relative,path)
+                elif t['kind'] in ('struct','union'):
                     for field in t['fields']:
                         visit(field['type'], relative + field['offset'], path + '.' + field['name'])
                         if truncated:
                             break
+                elif t['kind'] == 'bitfield':
+                    for field in t['fields']:
+                        visit(dict(name=t['name'],kind='scalar',size=t['size'],bit_range=field),relative,path+'.'+field['name'])
                 elif t['kind'] == 'array':
                     for index in range(t['count']):
                         visit(t['element'], relative + index * t['element']['size'], path + f'[{index}]')
@@ -241,6 +248,7 @@ class ExternalFilesMixin:
                     item = dict(file=file, file_offset=offset + relative, path=path, type=t['name'],
                                 kind=t['kind'], size=t['size'], bytes=raw.hex(),
                                 value=int.from_bytes(raw, 'little', signed=t.get('signed', False)))
+                    item.update(_rich_value(t,item['value']))
                     if t['kind'] == 'pointer':
                         item.update(target_type=t['target'], address_space=t['address_space'],
                                     interpretation='encoded pointer value only; no native or file target inferred')

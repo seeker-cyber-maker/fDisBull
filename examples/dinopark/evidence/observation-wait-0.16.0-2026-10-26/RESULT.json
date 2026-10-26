@@ -1,0 +1,244 @@
+{
+  "version": "0.16.0",
+  "module": "/Users/tiga/Documents/ChatGPT/fDisBull/src/fdisbull/__init__.py",
+  "driver_sha256": "ca26f6dfd65f1ae02ad0d9428a177105bdb80df3433b00e334369496d887dc5a",
+  "backend_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+  "source_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+  "observation_wait": {
+    "initial": {
+      "format": "fdisbull-script-result-1",
+      "script_artifact": "de092d2aeada451cb43cf2cc00dc2cf9",
+      "script_sha256": "cc4817641d625652d4e35200dcfaa29e83bce3b1aacc0f589e75181ec42f8fdb",
+      "run": "70981132d47d48aa9a78473b07ba4fec",
+      "ok": true,
+      "error": null,
+      "completed_steps": 1,
+      "requested_steps": 1,
+      "host_elapsed_ms": 1.401,
+      "steps": [
+        {
+          "index": 0,
+          "op": "wait",
+          "result": {
+            "format": "fdisbull-wait-result-1",
+            "complete": true,
+            "matched": true,
+            "outcome": "predicate",
+            "requested_guest_ms": 100,
+            "guest_elapsed_ms": 0,
+            "polls": [
+              {
+                "values": {
+                  "prices": "8813e8034c1d1027"
+                },
+                "captures": {
+                  "prices": {
+                    "address": {
+                      "offset": "0x0003ECB5",
+                      "space": "linear"
+                    },
+                    "byte_count": 8,
+                    "data_base64": "iBPoA0wdECc=",
+                    "layer_generation": 1,
+                    "overlay_valid": true,
+                    "session_id": "ses-1",
+                    "sha256": "5d24e982dcdcb1fd67911cf1378f9cbf2f142ce34138d0415f536b186e7c0f92",
+                    "state_revision": 11,
+                    "view": "ram",
+                    "project_address": "0x46a75",
+                    "hex": "8813e8034c1d1027"
+                  }
+                },
+                "guest_elapsed_ms": 0,
+                "host_elapsed_ms": 1.003
+              }
+            ],
+            "runs": [],
+            "last_observation": {
+              "prices": "8813e8034c1d1027"
+            },
+            "initial_observation": {
+              "prices": "8813e8034c1d1027"
+            },
+            "diagnostic_frame": null,
+            "error": null,
+            "host_elapsed_ms": 1.021,
+            "last_observed_guest_ms": 0,
+            "guest_budget_overshoot_ms": 0
+          },
+          "ok": true
+        }
+      ],
+      "artifact": "ecfed99a088d43ab868357b2f88037d0"
+    },
+    "bounded_failure": {
+      "format": "fdisbull-wait-result-1",
+      "complete": false,
+      "matched": false,
+      "outcome": "guest_budget",
+      "requested_guest_ms": 40,
+      "guest_elapsed_ms": 130,
+      "polls": [
+        {
+          "values": {
+            "prices": "8813e8034c1d1027"
+          },
+          "captures": {
+            "prices": {
+              "address": {
+                "offset": "0x0003ECB5",
+                "space": "linear"
+              },
+              "byte_count": 8,
+              "data_base64": "iBPoA0wdECc=",
+              "layer_generation": 1,
+              "overlay_valid": true,
+              "session_id": "ses-1",
+              "sha256": "5d24e982dcdcb1fd67911cf1378f9cbf2f142ce34138d0415f536b186e7c0f92",
+              "state_revision": 11,
+              "view": "ram",
+              "project_address": "0x46a75",
+              "hex": "8813e8034c1d1027"
+            }
+          },
+          "guest_elapsed_ms": 0,
+          "host_elapsed_ms": 1.244
+        },
+        {
+          "values": {
+            "prices": "8813e8034c1d1027"
+          },
+          "captures": {
+            "prices": {
+              "address": {
+                "offset": "0x0003ECB5",
+                "space": "linear"
+              },
+              "byte_count": 8,
+              "data_base64": "iBPoA0wdECc=",
+              "layer_generation": 1,
+              "overlay_valid": true,
+              "session_id": "ses-1",
+              "sha256": "5d24e982dcdcb1fd67911cf1378f9cbf2f142ce34138d0415f536b186e7c0f92",
+              "state_revision": 14,
+              "view": "ram",
+              "project_address": "0x46a75",
+              "hex": "8813e8034c1d1027"
+            }
+          },
+          "guest_elapsed_ms": 130,
+          "host_elapsed_ms": 18.751
+        }
+      ],
+      "runs": [
+        {
+          "run": "70981132d47d48aa9a78473b07ba4fec",
+          "outcome": "guest_time",
+          "timed_out": false,
+          "requested_guest_ms": 10,
+          "guest_elapsed_ms": 130,
+          "host_elapsed_ms": 15.188,
+          "fast_forward": true,
+          "timing_after": {
+            "fast_forward": false,
+            "guest_ticks": 40104,
+            "session_id": "ses-1",
+            "state_revision": 14
+          },
+          "session": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 13,
+            "stop_reason": {
+              "kind": "pause"
+            }
+          },
+          "hook_hits": [],
+          "stop": {
+            "format": "fdisbull-debug-stop-1",
+            "trigger": "guest_time",
+            "native_kind": "pause",
+            "causing_instruction": null,
+            "resume_pc": null,
+            "instruction_completed": null,
+            "registers_stage": "stopped; stage unknown",
+            "context": "dos-cpu"
+          }
+        }
+      ],
+      "last_observation": {
+        "prices": "8813e8034c1d1027"
+      },
+      "initial_observation": {
+        "prices": "8813e8034c1d1027"
+      },
+      "diagnostic_frame": {
+        "artifact": "dc4fc4ac539d472dbd7c22cd4e2cf67a",
+        "run": "70981132d47d48aa9a78473b07ba4fec",
+        "version": 1,
+        "name": "wait-timeout.png",
+        "kind": "screenshot",
+        "sha256": "3e5eaeb63ee83c47aae54267714b5f38c12414e647bfa8e5ee2c535b3c0edc77",
+        "size": 21383,
+        "metadata": {
+          "captured_ticks": 40096,
+          "double_height": true,
+          "double_width": true,
+          "format": "png",
+          "frame_id": 2132,
+          "height": 200,
+          "mode_id": 5,
+          "session_id": "ses-1",
+          "sha256": "3e5eaeb63ee83c47aae54267714b5f38c12414e647bfa8e5ee2c535b3c0edc77",
+          "source": "last_completed_guest_frame",
+          "source_bpp": 32,
+          "state_revision": 14,
+          "width": 320
+        }
+      },
+      "error": null,
+      "host_elapsed_ms": 21.998,
+      "last_observed_guest_ms": 130,
+      "guest_budget_overshoot_ms": 90
+    },
+    "scope": "Observed price bytes only; does not establish UI readiness or reproduce E32 cancellation"
+  },
+  "experiment": "f62c88f2577a480ebc0e1a02de06699b",
+  "layer": "3139956cdb9642d4a1d678079f0d82f3",
+  "layer_definition": {
+    "id": "3139956cdb9642d4a1d678079f0d82f3",
+    "version": 1,
+    "name": "Gift lookup selects the 5000 entry",
+    "kind": "execute",
+    "created": "2026-10-26T16:32:42.405218+00:00",
+    "sha256": "049cff7458aa2ca80543e2c2ff8e6354a667d618b80c5c6d48208f192ab09e43",
+    "patches": [
+      {
+        "address": "0x3414e",
+        "data_hex": "8b877168",
+        "expected_hex": "8b877568"
+      }
+    ]
+  },
+  "original_controls_removed": true,
+  "result": "pass",
+  "prices": [
+    7500,
+    5000
+  ],
+  "comparison": "6115abca28974be7b4d48eb8f855fa22",
+  "breakpoint_restored": true,
+  "read_watch_bytes_restored": 8,
+  "once_hook_restored": true,
+  "once_hook_fired_once_per_trial": true,
+  "hook_hit_count_restored": 0,
+  "baseline_layers_restored": true,
+  "code_ram_unchanged": true,
+  "price_table_unchanged": true,
+  "fresh_session_restore": true,
+  "processes_reaped": true,
+  "game_files_unchanged": 192,
+  "native_states_exported": false,
+  "database_exported": false,
+  "evidence_exported_after_restart": true
+}

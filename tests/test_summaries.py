@@ -24,7 +24,7 @@ def contract(name):
     return resolve_summary(name, source={'kind': 'import', 'module': 'test-libc'})
 
 
-@pytest.mark.parametrize('signature', builtin_signatures(), ids=lambda item: item['id'])
+@pytest.mark.parametrize('signature', [s for s in builtin_signatures() if not s.get('identity_only')], ids=lambda item: item['id'])
 def test_real_helper_bytes_match_whole_bodies_in_explicit_modes(signature):
     rows = instructions(bytes.fromhex(signature['bytes']), signature['arch'], signature['bits'])
     result = match_signatures(rows, arch=signature['arch'], bits=signature['bits'])

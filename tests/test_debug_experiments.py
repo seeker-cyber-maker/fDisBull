@@ -26,6 +26,35 @@ def test_incomplete_trials_cannot_be_reported_as_equal():
     assert result['complete'] is False and result['observed_difference'] is None
 
 
+@pytest.mark.parametrize('field,item',[
+    ('memory',{'project_address':'0x10020','hex':'00'}),
+    ('traces',{'step':1,'artifact':'trace-a','events':[],'semantics':'before-fetch'}),
+    ('screenshots',{'step':1,'artifact':'frame-a','sha256':'abc'}),
+    ('observations',{'step':1,'op':'registers','value':{}}),
+])
+@pytest.mark.parametrize('side',['baseline','layer'])
+def test_mismatched_capture_counts_fail_closed(field,item,side):
+    from copy import deepcopy
+    trial={'ok':True,'registers':{},'memory':[],'traces':[],'screenshots':[],'observations':[]}
+    pair={'baseline':deepcopy(trial),'layer':deepcopy(trial)}
+    pair[side][field].append(item)
+    with pytest.raises(ValueError,match='capture alignment'):
+        compare_trials(pair['baseline'],pair['layer'])
+
+
+@pytest.mark.parametrize('field,first,second',[
+    ('memory',{'project_address':'0x10020','hex':'00'},{'project_address':'0x10021','hex':'00'}),
+    ('memory',{'project_address':'0x10020','hex':'00'},{'project_address':'0x10020','hex':'0000'}),
+    ('screenshots',{'step':1,'artifact':'a','sha256':'x'},{'step':2,'artifact':'b','sha256':'x'}),
+    ('traces',{'step':1,'artifact':'a','events':[],'semantics':'fetch'},{'step':1,'artifact':'b','events':[],'semantics':'completed'}),
+    ('observations',{'step':1,'op':'run','value':{}},{'step':1,'op':'registers','value':{}}),
+])
+def test_capture_identity_mismatch_is_not_equality(field,first,second):
+    trial={'ok':True,'registers':{},'memory':[],'traces':[],'screenshots':[],'observations':[]}
+    with pytest.raises(ValueError,match='capture alignment'):
+        compare_trials({**trial,field:[first]},{**trial,field:[second]})
+
+
 def test_experiment_listing_is_available_through_the_offline_cli(tmp_path):
     binary=tmp_path/'LIST.EXE';binary.write_bytes(mz_file(b'\xeb\xfe'+bytes(510)))
     path=tmp_path/'list.fdb'

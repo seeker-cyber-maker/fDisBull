@@ -1,0 +1,15 @@
+{
+  "ACCEPTANCE.json": "ce295100d7f412eb0726e66878948272a85f21b0443b31f16a38cd6cac7164d6",
+  "exit-codes.json": "0ac0f09556ca15afe75fb92c30f6681ad73340d35ad941aa7c1ad66ba6802e0d",
+  "identity.json": "cf356317efd9f47ffbf193b16745abf0c2e0c9a585e1c42a6b580c7509b09c60",
+  "install.log": "c6bf39b184fccd88130eb10dbb232be8388317863421b3bfd664f440fba111dd",
+  "kit-verify.log": "87b1f4e98e55a661dda0fed4d641f0cb96d3b674573b0da343d8ffe6926f225c",
+  "kit015-native.log": "82bd9a61b215c2fc9bd7be5d52d14a95e2e64d4694815785badcebed37c720c5",
+  "kit015-native.xml": "fde14c5a0d844044ba6d0c98b9e97aaabca5d80c009a82b9f60e8a2888228204",
+  "mac-installed-native.xml": "57883dd2d719455c41ebeeff37ea8715725e0a24a93c680485b0af7ed762856c",
+  "native.log": "3792ef0146b305accea2f8326207b367e0f6dab22c6f8d909bbdd094c41f14a9",
+  "native.xml": "5b121bccdf0bfc3e4908fa8176330754c9b7490f799a67fa9fc81d3a2dc5da0f",
+  "ordinary.log": "fdf725d98c02c99ef5ec284ea56fa272a946680c5acb29ae2896e00f12bce293",
+  "ordinary.xml": "9265dc51961ce807130dfb7c4728bd4ea8c67f3660726b5fea7ffe3f6ed5dd03",
+  "wine-installed.xml": "10b11b72261b9f8ec3bc70a53b6e1adc131a3983a5b2bdc215594d105705c9f0"
+}

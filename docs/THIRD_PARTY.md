@@ -2,6 +2,13 @@
 
 Dependencies are installed separately; their upstream licenses apply. This archive does not vendor their source or native wheels.
 
+The DOS runtime identity catalog is derived from the publicly released
+[Microsoft MS-DOS C runtime libraries](https://github.com/microsoft/MS-DOS/tree/2d04cacc5322951f187bb17e017c12920ac8ebe2/v4.0/src/TOOLS/BLD/LIB).
+Its 182 byte signatures retain pinned input hashes, public-symbol provenance
+and the upstream MIT notice in `src/fdisbull/data/MICROSOFT-DOS-LICENSE.txt`.
+`scripts/build_dos_signatures.py` reproduces the catalog from exact inputs.
+The original libraries are not included in fDisBull distributions.
+
 | Component | Role | Source |
 | --- | --- | --- |
 | iced-x86 1.21.0 | Native x86 16/32/64-bit decoding | [icedland/iced](https://github.com/icedland/iced) |

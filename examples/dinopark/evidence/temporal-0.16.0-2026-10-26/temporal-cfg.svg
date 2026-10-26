@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2152" height="2536" viewBox="0 0 2152 2536" role="img" aria-labelledby="cfg-title cfg-desc">
+<title id="cfg-title">fDisBull static candidate control-flow graph</title>
+<desc id="cfg-desc">Selectable instruction text. Highlighted blocks contain selected addresses. Calls are not entered; continuation assumes return. Edge labels link to their target blocks.</desc>
+<metadata>{&quot;block_count&quot;: 8, &quot;budget_exhausted&quot;: false, &quot;edge_count&quot;: 9, &quot;entry&quot;: &quot;x86:16:little:cs=334b@0x3414e&quot;, &quot;frontier_count&quot;: 0, &quot;gap_count&quot;: 1, &quot;instruction_count&quot;: 24, &quot;status&quot;: &quot;candidate&quot;, &quot;unresolved_count&quot;: 0, &quot;version&quot;: 3}</metadata>
+<style>.edge path{fill:none;stroke-width:2;pointer-events:stroke}.edge:hover path{stroke:#fff;stroke-width:5}.block:target rect,.block:hover rect{stroke:#fff;stroke-width:3}a:hover text{fill:#fff;text-decoration:underline}text{user-select:text}</style>
+<defs><marker id="cfg-arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#c7d6eb"/></marker></defs>
+<rect width="100%" height="100%" fill="#101722"/>
+<g font-family="DejaVu Sans Mono, Menlo, Consolas, monospace">
+<text x="36" y="62" font-size="26" fill="#f1f5fb" xml:space="preserve" >fDisBull / CONTROL FLOW</text>
+<text x="36" y="100" font-size="18" fill="#b8c6d9" xml:space="preserve" >ENTRY 334b:0c9e  |  VERSION 3  |  CONTEXT x86:16:little:cs=334b</text>
+<text x="36" y="126" font-size="18" fill="#ffdc91" xml:space="preserve" >STATUS candidate / function boundary not proven / static stored-graph slice</text>
+<text x="36" y="152" font-size="18" fill="#f1f5fb" xml:space="preserve" >24 instructions / 8 blocks / 9 block edges / 2 calls (not entered)</text>
+<text x="36" y="178" font-size="18" fill="#f1f5fb" xml:space="preserve" >Graph closed: False  |  budget exhausted: False  |  unresolved: 0  |  gaps: 1  |  frontier: 0</text>
+<text x="36" y="204" font-size="18" fill="#ffdc91" xml:space="preserve" >TEMPORAL runtime-capture / execute / captured span only; other bytes inherited</text>
+<text x="36" y="230" font-size="18" fill="#b8c6d9" xml:space="preserve" >ASSUMPTION: Calls are not entered; each call continuation assumes the call returns.</text>
+<text x="36" y="256" font-size="18" fill="#b8c6d9" xml:space="preserve" >ASSUMPTION: Branch outcomes are not evaluated. Stored state alternatives can introduce infeasible paths.</text>
+<text x="36" y="282" font-size="18" fill="#b8c6d9" xml:space="preserve" >No branch outcomes are evaluated; this view is not runtime execution evidence.</text>
+<text x="36" y="308" font-size="18" fill="#b8c6d9" xml:space="preserve" >Read top to bottom. Dashed edges assume a call returns. Hover an edge for exact endpoints/evidence; click an edge label to jump to its </text>
+<text x="36" y="334" font-size="18" fill="#b8c6d9" xml:space="preserve" >target block.</text>
+<g class="edge" id="cfg-edge-0" data-source-block="b0" data-target-block="b1"><title>e0: b0 (x86:16:little:cs=334b@0x34156) -&gt; b1 (x86:16:little:cs=334b@0x34159); fallthrough; provenance: stored; permitted call-return fallthrough; return is assumed; assumes call returns</title><path d="M 960 696 V 726 H 2036 V 778 H 64 V 808" stroke="#758ba9" stroke-dasharray="8 5" marker-end="url(#cfg-arrow)"/></g>
+<g class="edge" id="cfg-edge-1" data-source-block="b1" data-target-block="b2"><title>e1: b1 (x86:16:little:cs=334b@0x34161) -&gt; b2 (x86:16:little:cs=334b@0x34166); branch; provenance: stored; segmented decoded operand; outcome: taken; truth not evaluated</title><path d="M 960 1042 V 1072 H 2044 V 1124 H 64 V 1154" stroke="#a9c8ff" marker-end="url(#cfg-arrow)"/></g>
+<g class="edge" id="cfg-edge-2" data-source-block="b1" data-target-block="b3"><title>e2: b1 (x86:16:little:cs=334b@0x34161) -&gt; b3 (x86:16:little:cs=334b@0x34163); fallthrough; provenance: stored; 16-bit conditional CS/IP fallthrough; outcome: not_taken; truth not evaluated</title><path d="M 960 1042 V 1072 H 2052 V 1124 H 1080 V 1154" stroke="#758ba9" marker-end="url(#cfg-arrow)"/></g>
+<g class="edge" id="cfg-edge-3" data-source-block="b3" data-target-block="b4"><title>e3: b3 (x86:16:little:cs=334b@0x34163) -&gt; b4 (x86:16:little:cs=334b@0x34386); branch; provenance: stored; segmented decoded operand</title><path d="M 1976 1310 V 1418 H 2060 V 2084 H 64 V 2114" stroke="#a9c8ff" marker-end="url(#cfg-arrow)"/></g>
+<g class="edge" id="cfg-edge-4" data-source-block="b2" data-target-block="b5"><title>e4: b2 (x86:16:little:cs=334b@0x3416a) -&gt; b5 (x86:16:little:cs=334b@0x3416f); fallthrough; provenance: stored; permitted call-return fallthrough; return is assumed; assumes call returns</title><path d="M 960 1388 V 1418 H 2068 V 1470 H 64 V 1500" stroke="#758ba9" stroke-dasharray="8 5" marker-end="url(#cfg-arrow)"/></g>
+<g class="edge" id="cfg-edge-5" data-source-block="b5" data-target-block="b6"><title>e5: b5 (x86:16:little:cs=334b@0x34174) -&gt; b6 (x86:16:little:cs=334b@0x34179); branch; provenance: stored; segmented decoded operand; outcome: taken; truth not evaluated</title><path d="M 960 1734 V 1764 H 2076 V 1816 H 64 V 1846" stroke="#a9c8ff" marker-end="url(#cfg-arrow)"/></g>
+<g class="edge" id="cfg-edge-6" data-source-block="b5" data-target-block="b7"><title>e6: b5 (x86:16:little:cs=334b@0x34174) -&gt; b7 (x86:16:little:cs=334b@0x34176); fallthrough; provenance: stored; 16-bit conditional CS/IP fallthrough; outcome: not_taken; truth not evaluated</title><path d="M 960 1734 V 1764 H 2084 V 1816 H 1080 V 1846" stroke="#758ba9" marker-end="url(#cfg-arrow)"/></g>
+<g class="edge" id="cfg-edge-7" data-source-block="b6" data-target-block=""><title>e7: b6 (x86:16:little:cs=334b@0x34179) -&gt; outside rendered graph (x86:16:little:cs=334b@0x3417e); fallthrough; provenance: stored; 16-bit straight-line CS/IP fallthrough</title><path d="M 960 2002 V 2032 H 2092" stroke="#758ba9" stroke-dasharray="8 5" marker-end="url(#cfg-arrow)"/></g>
+<g class="edge" id="cfg-edge-8" data-source-block="b7" data-target-block="b4"><title>e8: b7 (x86:16:little:cs=334b@0x34176) -&gt; b4 (x86:16:little:cs=334b@0x34386); branch; provenance: stored; segmented decoded operand</title><path d="M 1976 2002 V 2032 H 2100 V 2084 H 64 V 2114" stroke="#a9c8ff" marker-end="url(#cfg-arrow)"/></g>
+<g class="block" id="cfg-block-0" data-block-id="b0" data-instruction-count="6">
+<title>b0: 6 exact stored instructions; context x86:16:little:cs=334b</title>
+<rect class="block-box" x="36" y="384" width="952" height="312" rx="8" fill="#182334" stroke="#60738d" stroke-width="2"/>
+<text x="54" y="414" font-size="18" fill="#f1f5fb" xml:space="preserve" font-weight="700">b0  334b:0c9e  sub_334b_0c9e</text>
+<text x="54" y="440" font-size="18" fill="#b8c6d9" xml:space="preserve" >x86:16:little:cs=334b</text>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x3414e"><title>x86:16:little:cs=334b@0x3414e; bytes: 8b877168; raw: mov ax,[bx+6871h]</title><text x="54" y="466" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0c9e  mov ax,[bx+6871h]</text></g>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x34152"><title>x86:16:little:cs=334b@0x34152; bytes: 99; raw: cwd </title><text x="54" y="492" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0ca2  cwd</text></g>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x34153"><title>x86:16:little:cs=334b@0x34153; bytes: 52; raw: push dx</title><text x="54" y="518" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0ca3  push dx</text></g>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x34154"><title>x86:16:little:cs=334b@0x34154; bytes: 50; raw: push ax</title><text x="54" y="544" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0ca4  push ax</text></g>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x34155"><title>x86:16:little:cs=334b@0x34155; bytes: 0e; raw: push cs</title><text x="54" y="570" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0ca5  push cs</text></g>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x34156"><title>x86:16:little:cs=334b@0x34156; bytes: e85ff3; raw: call 8</title><text x="54" y="596" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0ca6  call 8 ; sub_334b_0008</text></g>
+<text x="54" y="622" font-size="18" fill="#b8c6d9" xml:space="preserve" >  call target: 334b:0008 (not entered)</text>
+<a href="#cfg-block-1"><text x="54" y="648" font-size="18" fill="#accbff" xml:space="preserve" >e0 -&gt; b1  [fallthrough; assumes return]</text></a>
+</g>
+<g class="block" id="cfg-block-1" data-block-id="b1" data-instruction-count="3">
+<title>b1: 3 exact stored instructions; context x86:16:little:cs=334b</title>
+<rect class="block-box" x="36" y="808" width="952" height="234" rx="8" fill="#182334" stroke="#60738d" stroke-width="2"/>
+<text x="54" y="838" font-size="18" fill="#f1f5fb" xml:space="preserve" font-weight="700">b1  334b:0ca9  loc_334b_0ca9</text>
+<text x="54" y="864" font-size="18" fill="#b8c6d9" xml:space="preserve" >x86:16:little:cs=334b</text>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x34159"><title>x86:16:little:cs=334b@0x34159; bytes: 83c404; raw: add sp,4</title><text x="54" y="890" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0ca9  add sp,4</text></g>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x3415c"><title>x86:16:little:cs=334b@0x3415c; bytes: 833ebb9a02; raw: cmp word [9ABBh],2</title><text x="54" y="916" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0cac  cmp word [9ABBh],2</text></g>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x34161"><title>x86:16:little:cs=334b@0x34161; bytes: 7403; raw: je short 0CB6h</title><text x="54" y="942" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0cb1  je short 0CB6h ; mem_34166</text></g>
+<a href="#cfg-block-2"><text x="54" y="968" font-size="18" fill="#accbff" xml:space="preserve" >e1 -&gt; b2  [taken]</text></a>
+<a href="#cfg-block-3"><text x="54" y="994" font-size="18" fill="#accbff" xml:space="preserve" >e2 -&gt; b3  [not taken]</text></a>
+</g>
+<g class="block" id="cfg-block-2" data-block-id="b2" data-instruction-count="3">
+<title>b2: 3 exact stored instructions; context x86:16:little:cs=334b</title>
+<rect class="block-box" x="36" y="1154" width="952" height="234" rx="8" fill="#182334" stroke="#60738d" stroke-width="2"/>
+<text x="54" y="1184" font-size="18" fill="#f1f5fb" xml:space="preserve" font-weight="700">b2  334b:0cb6  loc_334b_0cb6</text>
+<text x="54" y="1210" font-size="18" fill="#b8c6d9" xml:space="preserve" >x86:16:little:cs=334b</text>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x34166"><title>x86:16:little:cs=334b@0x34166; bytes: b80900; raw: mov ax,9</title><text x="54" y="1236" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0cb6  mov ax,9</text></g>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x34169"><title>x86:16:little:cs=334b@0x34169; bytes: 50; raw: push ax</title><text x="54" y="1262" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0cb9  push ax</text></g>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x3416a"><title>x86:16:little:cs=334b@0x3416a; bytes: 9a260c291b; raw: call 1B29h:0C26h</title><text x="54" y="1288" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0cba  call 1B29h:0C26h ; sub_1b29_0c26</text></g>
+<text x="54" y="1314" font-size="18" fill="#b8c6d9" xml:space="preserve" >  call target: 1b29:0c26 (not entered)</text>
+<a href="#cfg-block-5"><text x="54" y="1340" font-size="18" fill="#accbff" xml:space="preserve" >e4 -&gt; b5  [fallthrough; assumes return]</text></a>
+</g>
+<g class="block" id="cfg-block-3" data-block-id="b3" data-instruction-count="1">
+<title>b3: 1 exact stored instructions; context x86:16:little:cs=334b</title>
+<rect class="block-box" x="1052" y="1154" width="952" height="156" rx="8" fill="#182334" stroke="#60738d" stroke-width="2"/>
+<text x="1070" y="1184" font-size="18" fill="#f1f5fb" xml:space="preserve" font-weight="700">b3  334b:0cb3  loc_334b_0cb3</text>
+<text x="1070" y="1210" font-size="18" fill="#b8c6d9" xml:space="preserve" >x86:16:little:cs=334b</text>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x34163"><title>x86:16:little:cs=334b@0x34163; bytes: e92002; raw: jmp 0ED6h</title><text x="1070" y="1236" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0cb3  jmp 0ED6h ; mem_34386</text></g>
+<a href="#cfg-block-4"><text x="1070" y="1262" font-size="18" fill="#accbff" xml:space="preserve" >e3 -&gt; b4  [branch]</text></a>
+</g>
+<g class="block" id="cfg-block-4" data-block-id="b4" data-instruction-count="6">
+<title>b4: 6 exact stored instructions; context x86:16:little:cs=334b</title>
+<rect class="block-box" x="36" y="2114" width="952" height="260" rx="8" fill="#182334" stroke="#60738d" stroke-width="2"/>
+<text x="54" y="2144" font-size="18" fill="#f1f5fb" xml:space="preserve" font-weight="700">b4  334b:0ed6  loc_334b_0ed6</text>
+<text x="54" y="2170" font-size="18" fill="#b8c6d9" xml:space="preserve" >x86:16:little:cs=334b</text>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x34386"><title>x86:16:little:cs=334b@0x34386; bytes: 33c0; raw: xor ax,ax</title><text x="54" y="2196" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0ed6  xor ax,ax</text></g>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x34388"><title>x86:16:little:cs=334b@0x34388; bytes: 5f; raw: pop di</title><text x="54" y="2222" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0ed8  pop di</text></g>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x34389"><title>x86:16:little:cs=334b@0x34389; bytes: 5e; raw: pop si</title><text x="54" y="2248" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0ed9  pop si</text></g>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x3438a"><title>x86:16:little:cs=334b@0x3438a; bytes: 8be5; raw: mov sp,bp</title><text x="54" y="2274" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0eda  mov sp,bp</text></g>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x3438c"><title>x86:16:little:cs=334b@0x3438c; bytes: 5d; raw: pop bp</title><text x="54" y="2300" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0edc  pop bp</text></g>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x3438d"><title>x86:16:little:cs=334b@0x3438d; bytes: cb; raw: retf </title><text x="54" y="2326" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0edd  retf</text></g>
+</g>
+<g class="block" id="cfg-block-5" data-block-id="b5" data-instruction-count="3">
+<title>b5: 3 exact stored instructions; context x86:16:little:cs=334b</title>
+<rect class="block-box" x="36" y="1500" width="952" height="234" rx="8" fill="#182334" stroke="#60738d" stroke-width="2"/>
+<text x="54" y="1530" font-size="18" fill="#f1f5fb" xml:space="preserve" font-weight="700">b5  334b:0cbf  loc_334b_0cbf</text>
+<text x="54" y="1556" font-size="18" fill="#b8c6d9" xml:space="preserve" >x86:16:little:cs=334b</text>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x3416f"><title>x86:16:little:cs=334b@0x3416f; bytes: 83c402; raw: add sp,2</title><text x="54" y="1582" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0cbf  add sp,2</text></g>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x34172"><title>x86:16:little:cs=334b@0x34172; bytes: 0bc0; raw: or ax,ax</title><text x="54" y="1608" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0cc2  or ax,ax</text></g>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x34174"><title>x86:16:little:cs=334b@0x34174; bytes: 7503; raw: jne short 0CC9h</title><text x="54" y="1634" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0cc4  jne short 0CC9h ; mem_34179</text></g>
+<a href="#cfg-block-6"><text x="54" y="1660" font-size="18" fill="#accbff" xml:space="preserve" >e5 -&gt; b6  [taken]</text></a>
+<a href="#cfg-block-7"><text x="54" y="1686" font-size="18" fill="#accbff" xml:space="preserve" >e6 -&gt; b7  [not taken]</text></a>
+</g>
+<g class="block" id="cfg-block-6" data-block-id="b6" data-instruction-count="1">
+<title>b6: 1 exact stored instructions; context x86:16:little:cs=334b</title>
+<rect class="block-box" x="36" y="1846" width="952" height="156" rx="8" fill="#182334" stroke="#60738d" stroke-width="2"/>
+<text x="54" y="1876" font-size="18" fill="#f1f5fb" xml:space="preserve" font-weight="700">b6  334b:0cc9  loc_334b_0cc9</text>
+<text x="54" y="1902" font-size="18" fill="#b8c6d9" xml:space="preserve" >x86:16:little:cs=334b</text>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x34179"><title>x86:16:little:cs=334b@0x34179; bytes: 833e92ba00; raw: cmp word [0BA92h],0</title><text x="54" y="1928" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0cc9  cmp word [0BA92h],0</text></g>
+<text x="54" y="1954" font-size="18" fill="#accbff" xml:space="preserve" >e7 -&gt; outside 334b:0cce  [fallthrough]</text>
+</g>
+<g class="block" id="cfg-block-7" data-block-id="b7" data-instruction-count="1">
+<title>b7: 1 exact stored instructions; context x86:16:little:cs=334b</title>
+<rect class="block-box" x="1052" y="1846" width="952" height="156" rx="8" fill="#182334" stroke="#60738d" stroke-width="2"/>
+<text x="1070" y="1876" font-size="18" fill="#f1f5fb" xml:space="preserve" font-weight="700">b7  334b:0cc6  loc_334b_0cc6</text>
+<text x="1070" y="1902" font-size="18" fill="#b8c6d9" xml:space="preserve" >x86:16:little:cs=334b</text>
+<g class="instruction" data-instruction-id="x86:16:little:cs=334b@0x34176"><title>x86:16:little:cs=334b@0x34176; bytes: e90d02; raw: jmp 0ED6h</title><text x="1070" y="1928" font-size="18" fill="#edf5ff" xml:space="preserve" >334b:0cc6  jmp 0ED6h ; mem_34386</text></g>
+<a href="#cfg-block-4"><text x="1070" y="1954" font-size="18" fill="#accbff" xml:space="preserve" >e8 -&gt; b4  [branch]</text></a>
+</g>
+<text x="36" y="2511" font-size="18" fill="#b8c6d9" xml:space="preserve" >STATIC DATABASE FACTS / Candidate reachability, not execution or proven function ownership.</text>
+</g></svg>

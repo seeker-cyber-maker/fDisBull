@@ -207,6 +207,9 @@ def render_cfg(snapshot: dict, path: str | Path) -> dict:
                (f'STATUS {_clean(snapshot.get("status", "candidate"), 128)} / function boundary not proven / static stored-graph slice', 'warning'),
                (f'{len(nodes)} instructions / {len(blocks)} blocks / {len(edges)} block edges / {len(calls)} calls (not entered)', 'text'),
                (f'Graph closed: {bool(snapshot.get("graph_closed"))}  |  budget exhausted: {bool(snapshot.get("budget_exhausted"))}  |  unresolved: {len(snapshot.get("unresolved", []))}  |  gaps: {len(snapshot.get("gaps", []))}  |  frontier: {len(snapshot.get("frontier", []))}', 'text')]
+    if snapshot.get('temporal'):
+        temporal=snapshot['temporal']
+        header.append((f"TEMPORAL {temporal['kind']} / {temporal['view']} / captured span only; other bytes inherited",'warning'))
     assumptions = snapshot.get('assumptions', [])
     if not isinstance(assumptions, list) or len(assumptions) > 100:
         raise ValueError('CFG assumptions must be a list of at most 100 strings')

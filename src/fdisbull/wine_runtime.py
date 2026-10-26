@@ -58,7 +58,7 @@ def compact_base(base, output):
 def resources():
     root = Path(__file__).with_name('wine_guest')
     return {'init':root/'init.sh', 'opt/fdisbull/agent.c':root/'agent.c',
-            'opt/fdisbull/broker.py':root/'broker.py'}
+            'opt/fdisbull/broker.py':root/'broker.py','opt/fdisbull/selftest.c':root/'selftest.c'}
 
 
 def prepare(base, output, *, resource_files=None):

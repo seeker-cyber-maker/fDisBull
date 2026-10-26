@@ -1,0 +1,331 @@
+{
+  "events": [
+    {
+      "address": "0x140001518",
+      "bytes": "55",
+      "registers": {
+        "rip": "0x140001518",
+        "rflags": "0x202",
+        "thread": 376,
+        "general": {
+          "rax": "0x1",
+          "rbx": "0x40078",
+          "rcx": "0x6ffffdc2ca44",
+          "rdx": "0x0",
+          "rsi": "0x0",
+          "rdi": "0x500050",
+          "rbp": "0x7ffffe2ff9f0",
+          "rsp": "0x7ffffe2ff968",
+          "r8": "0x0",
+          "r9": "0x0",
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x202",
+          "r13": "0x140001523",
+          "r14": "0x0",
+          "r15": "0x6ffffe0146f0"
+        }
+      },
+      "ram_bytes": "55",
+      "execution_bytes": "55",
+      "active_layers": [
+        "40b2cbb1498f403ca9dd0264828ec9c7"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140001518",
+      "instruction": {
+        "address": 5368714520,
+        "size": 1,
+        "bytes": "55",
+        "mnemonic": "push",
+        "operands": "rbp",
+        "text": "push rbp",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      },
+      "identity": {
+        "source_version": 1,
+        "context": "flat",
+        "runtime_address": "0x140001518",
+        "project_address": "0x140001518"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": true,
+        "evidence": "confirmed native step"
+      }
+    },
+    {
+      "address": "0x140001519",
+      "bytes": "4889e5",
+      "registers": {
+        "rip": "0x140001519",
+        "rflags": "0x202",
+        "thread": 376,
+        "general": {
+          "rax": "0x1",
+          "rbx": "0x40078",
+          "rcx": "0x6ffffdc2ca44",
+          "rdx": "0x0",
+          "rsi": "0x0",
+          "rdi": "0x500050",
+          "rbp": "0x7ffffe2ff9f0",
+          "rsp": "0x7ffffe2ff960",
+          "r8": "0x0",
+          "r9": "0x0",
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x202",
+          "r13": "0x140001523",
+          "r14": "0x0",
+          "r15": "0x6ffffe0146f0"
+        }
+      },
+      "ram_bytes": "4889e5",
+      "execution_bytes": "4889e5",
+      "active_layers": [
+        "40b2cbb1498f403ca9dd0264828ec9c7"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x140001519",
+      "instruction": {
+        "address": 5368714521,
+        "size": 3,
+        "bytes": "4889e5",
+        "mnemonic": "mov",
+        "operands": "rbp,rsp",
+        "text": "mov rbp,rsp",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      },
+      "identity": {
+        "source_version": 1,
+        "context": "flat",
+        "runtime_address": "0x140001519",
+        "project_address": "0x140001519"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": true,
+        "evidence": "confirmed native step"
+      }
+    },
+    {
+      "address": "0x14000151c",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x14000151c",
+        "rflags": "0x202",
+        "thread": 376,
+        "general": {
+          "rax": "0x1",
+          "rbx": "0x40078",
+          "rcx": "0x6ffffdc2ca44",
+          "rdx": "0x0",
+          "rsi": "0x0",
+          "rdi": "0x500050",
+          "rbp": "0x7ffffe2ff960",
+          "rsp": "0x7ffffe2ff960",
+          "r8": "0x0",
+          "r9": "0x0",
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x202",
+          "r13": "0x140001523",
+          "r14": "0x0",
+          "r15": "0x6ffffe0146f0"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "40b2cbb1498f403ca9dd0264828ec9c7"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x14000151c",
+      "instruction": {
+        "address": 5368714524,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      },
+      "identity": {
+        "source_version": 1,
+        "context": "flat",
+        "runtime_address": "0x14000151c",
+        "project_address": "0x14000151c"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": true,
+        "evidence": "confirmed native step"
+      }
+    },
+    {
+      "address": "0x14000151d",
+      "bytes": "90",
+      "registers": {
+        "rip": "0x14000151d",
+        "rflags": "0x202",
+        "thread": 376,
+        "general": {
+          "rax": "0x1",
+          "rbx": "0x40078",
+          "rcx": "0x6ffffdc2ca44",
+          "rdx": "0x0",
+          "rsi": "0x0",
+          "rdi": "0x500050",
+          "rbp": "0x7ffffe2ff960",
+          "rsp": "0x7ffffe2ff960",
+          "r8": "0x0",
+          "r9": "0x0",
+          "r10": "0x8",
+          "r11": "0x202",
+          "r12": "0x202",
+          "r13": "0x140001523",
+          "r14": "0x0",
+          "r15": "0x6ffffe0146f0"
+        }
+      },
+      "ram_bytes": "90",
+      "execution_bytes": "90",
+      "active_layers": [
+        "40b2cbb1498f403ca9dd0264828ec9c7"
+      ],
+      "layer_generation": 1,
+      "project_address": "0x14000151d",
+      "instruction": {
+        "address": 5368714525,
+        "size": 1,
+        "bytes": "90",
+        "mnemonic": "nop",
+        "operands": "",
+        "text": "nop",
+        "flow": "next",
+        "target": null,
+        "data_refs": [],
+        "references": [],
+        "immediates": []
+      },
+      "identity": {
+        "source_version": 1,
+        "context": "flat",
+        "runtime_address": "0x14000151d",
+        "project_address": "0x14000151d"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": true,
+        "evidence": "confirmed native step"
+      }
+    }
+  ],
+  "complete": true,
+  "session": {
+    "state": "stopped",
+    "stop_reason": {
+      "kind": "step",
+      "address": "0x14000151e",
+      "thread": 376,
+      "exception_code": 2147483652,
+      "first_chance": 1,
+      "access_address": "0x140004000",
+      "access_code": 1,
+      "before_access": false
+    },
+    "exit_code": 0
+  },
+  "run": "c04cbfe442e94814b70149ef0c1f6e1b",
+  "version": 1,
+  "mapping": {
+    "backend": "wine-qemu",
+    "runtime_profile": "pe64-win32-debug-2",
+    "source_sha256": "60f915ed0f66f4028b22afa5dab9e64d4d7fd51b1da83e160662e0cf998dcece",
+    "version_sha256": "5b89effc9ee74a2c451a0256de82e4a03950d1531b959ab01fa16dbf35563ab4",
+    "static_image_base": "0x140000000",
+    "runtime_image_base": "0x140000000",
+    "address_mapping": "observed main-module base + project RVA",
+    "capabilities": {
+      "backend": "wine-qemu",
+      "architecture": "x86-64",
+      "execution_breakpoints": true,
+      "memory_read": true,
+      "memory_write": true,
+      "instruction_trace": true,
+      "screenshots": true,
+      "mouse": true,
+      "save_states": true,
+      "code_layers": true,
+      "data_watchpoints": true,
+      "register_edit": true,
+      "fast_forward": false,
+      "watchpoint_access": [
+        "r",
+        "w",
+        "rw"
+      ],
+      "watchpoint_mechanism": "Win32 guard pages with single-step rearming",
+      "execution_layer_mechanism": "guarded relocated instructions; 4 KiB target buffer; host overhead",
+      "native_state_format": "QEMU whole-VM migration; private project sidecar"
+    },
+    "runtime_inputs": {
+      "qemu": {
+        "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.14.0-6a0aeb3/backend/native-macos-arm64/qemu-system-x86_64",
+        "sha256": "10bed8dc7571b0fc6c51ea484711b3802d2fb2dc00ba5d9af4d610cb2e2142cb",
+        "version": "QEMU emulator version 11.1.2"
+      },
+      "kernel": {
+        "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.14.0-6a0aeb3/backend/runtime/linux-amd64",
+        "sha256": "d8808aa4ca188560da1e6d749dcb930c87a5fd8b11ebff1f3fa6d728af35203d"
+      },
+      "initramfs": {
+        "path": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-26/next-recommendations/runtime/wine-0.16-r2.cpio.gz",
+        "sha256": "d784d94a0fbf81896e693cde6daa850cf81c1f2c6f391811913d234009fe7676"
+      }
+    },
+    "files": [
+      {
+        "path": "SELFTEST.exe",
+        "sha256": "60f915ed0f66f4028b22afa5dab9e64d4d7fd51b1da83e160662e0cf998dcece"
+      }
+    ],
+    "target_pid": 372,
+    "qemu_pid": 98469,
+    "guest_runtime": {
+      "wine_version": "wine-9.0 (Ubuntu 9.0~repack-4build3)",
+      "guest_kernel": "6.1.0-50-amd64",
+      "agent_binary_sha256": "5d2e6b70336276f2e98e6687ccdbd36b1467af8a799774d6a4abb6a5304db5cb",
+      "resources": {
+        "init": "1d88753c741ff775444e95b3469a77aaeccaba5c5889d53ed2b63e9ae0d5ad43",
+        "opt/fdisbull/agent.c": "7f790582fc115fc3036f33c7a78bb11401619b4ce5adf0d624ca81d51c33d34a",
+        "opt/fdisbull/selftest.c": "70b5e3f4b443154f8346ba45103324fd95cc27ac24c508fc1f59c2542b6fa104",
+        "opt/fdisbull/broker.py": "7e6263017345bd1b6c8132f39aaab3c7181516c4210ca8aef8cf6e70ef2eae21"
+      }
+    }
+  },
+  "requested_count": 4,
+  "semantics": "instructions completed by the selected stopped thread; pre-instruction registers; peer threads held per step",
+  "observation_contract": {
+    "format": "fdisbull-debug-semantics-1",
+    "backend": "wine-qemu",
+    "execution_breakpoint_stage": "before-instruction",
+    "watchpoint_stage": "before-access",
+    "trace_registers_stage": "before-instruction",
+    "trace_completion": "confirmed completed steps",
+    "timing": "host bounded; stepping has no elapsed-time fidelity",
+    "address_context": "selected process virtual address"
+  }
+}

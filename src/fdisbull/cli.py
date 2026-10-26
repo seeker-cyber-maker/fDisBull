@@ -4,10 +4,19 @@ import json
 from pathlib import Path
 import sqlite3
 import sys
-from .project import Project, number
 from . import __version__
 
 METHODS = {
+    'capture-signature': 'Capture a named closed stored function for cross-project reuse; address,name,[version,cs,author,max_instructions]',
+    'import-signatures': 'Atomically import an explicit signature catalog; catalog,[version]',
+    'export-signatures': 'Export registered project identities as a reusable JSON catalog; [version]',
+    'omf-catalog': 'Extract fixup-free DOS16 public routines from an OMF library; path,[abi]',
+    'dos-services': 'List the authored DOS/BIOS interrupt contract catalog',
+    'debug-wait': 'Poll explicit observations with separate guest/host budgets; run,observations,until,guest_ms,[slice_ms,timeout_ms,fast_forward,max_polls,timeout_screenshot]',
+    'debug-trace-view': 'Compare stored trace instruction bytes/context against a temporal interpretation; artifact,version',
+    'doctor': 'Run disposable authored debugger acceptance; backend,executable,[kernel,initramfs,output,boot_timeout_ms]',
+    'debug-promote-code': 'Analyze a qualified runtime code capture as a preserved temporal child; artifact,[label,max_instructions,defer]',
+    'runtime-version-info': 'Inspect temporal capture/edit provenance for a byte version; [version]',
     'debug-controls': 'Inspect owned breakpoint/watch/hook definitions for experiment capture; run',
     'debug-save-experiment': 'Capture a native checkpoint, controls, script and observations; run,name,[script,script_id,observations]',
     'debug-experiments': 'List immutable saved experiments; [version]',
@@ -73,7 +82,8 @@ METHODS = {
     'advanced-status': 'Derived job states, pending entries and fixed point; [version]',
     'function-analysis': 'Stored frame, indirect-target, signature and effect evidence; address,[version,cs]',
     'function-membership': 'Shared instruction/block membership from candidate entries; [version,max_work,max_instructions]',
-    'define-type': 'Register or revise a scalar/pointer/array/struct; name,definition,[version,author]',
+    'define-type': 'Register scalar/pointer/array/struct/union/enum/bitfield/typedef/function; name,definition,[version,author]',
+    'set-function-type': 'Apply a declared function prototype and ABI; address,type_name,[version,cs,author]',
     'apply-type': 'Bind a type to shared data identity; address,type_name,[name,version,author]',
     'types': 'Registered layouts and data bindings; [version]',
     'typed-data': 'Interpret a bound data object; address,[version,max_items]',
@@ -132,6 +142,19 @@ def invoke(method, params, debugger=None):
     if not isinstance(params,dict):
         raise ValueError("params must be an object")
     p = dict(params)
+    if method=='omf-catalog':
+        from .omf_catalog import omf_signatures
+        path=Path(p.pop('path'))
+        if not path.is_file() or path.stat().st_size>16*1024*1024:raise ValueError('OMF library must be at most 16 MiB')
+        return omf_signatures(path.read_bytes(),source=str(path),**p)
+    if method=='dos-services':
+        from .dos_services import service_catalog
+        if p:raise ValueError('dos-services takes no parameters')
+        return service_catalog()
+    if method=='doctor':
+        from .doctor import doctor
+        return doctor(**p)
+    from .project import Project, number
     for field in ("base", "entry"):
         if field in p and p[field] is not None:
             p[field] = number(p[field])
@@ -172,7 +195,7 @@ def invoke(method, params, debugger=None):
     project = p.pop("project",None)
     if not project:
         raise ValueError("project path is required")
-    if method.startswith('debug-') and method not in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-layer','debug-layer-info','debug-layers','debug-events','debug-experiments','debug-experiment-info'):
+    if method.startswith('debug-') and method not in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-layer','debug-layer-info','debug-layers','debug-events','debug-experiments','debug-experiment-info','debug-promote-code','debug-trace-view'):
         if debugger is None:
             raise ValueError('Live debugger commands require fdisbull serve or fdisbull debug; sessions close on server exit')
         return debugger.invoke(method,project,p)
@@ -183,20 +206,20 @@ def invoke(method, params, debugger=None):
         with Project.create(project,binary,**p) as db:
             return db.status()
     with Project(project) as db:
-        if method in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-layer','debug-layer-info','debug-layers','debug-events','debug-experiments','debug-experiment-info'):
+        if method in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-layer','debug-layer-info','debug-layers','debug-events','debug-experiments','debug-experiment-info','debug-promote-code','debug-trace-view','runtime-version-info'):
             return getattr(db,method.replace('-','_'))(**p)
         if method in ('link-labels','rename-file','label-info','label-links','unlink-labels'):return getattr(db,method.replace('-','_'))(**p)
         if method=='refresh-dos-state':return db.refresh_dos_state(**p)
         file_methods={'attach-file':'attach_file','files':'external_files','file-bytes':'file_bytes','apply-file-type':'apply_file_type','file-data':'typed_file','file-reference':'file_reference','file-xrefs':'file_xrefs'}
         if method in file_methods:return getattr(db,file_methods[method])(**p)
-        if method in ('define-type','add-signature','set-summary'):
-            for field in ('definition','signature','prototype','summary'):
+        if method in ('define-type','add-signature','set-summary','import-signatures'):
+            for field in ('definition','signature','prototype','summary','catalog'):
                 filename=p.pop(field+'_file',None)
                 if filename is not None:
                     path=Path(filename)
-                    if not path.is_file() or path.stat().st_size>1024*1024:raise ValueError('expected a JSON file at most 1 MiB')
+                    if not path.is_file() or path.stat().st_size>4*1024*1024:raise ValueError('expected a JSON file at most 4 MiB')
                     p[field]=json.loads(path.read_text())
-        if method in ('auto-analyze', 'advanced-status', 'function-analysis', 'function-membership', 'define-type', 'apply-type', 'types', 'typed-data', 'set-summary', 'summaries', 'add-signature', 'signatures', 'call-effects'):
+        if method in ('auto-analyze', 'advanced-status', 'function-analysis', 'function-membership', 'define-type', 'apply-type', 'types', 'typed-data', 'set-summary', 'set-function-type', 'capture-signature', 'import-signatures', 'export-signatures', 'summaries', 'add-signature', 'signatures', 'call-effects'):
             return getattr(db,method.replace('-','_'))(**p)
         if method=="memory-accesses":
             return db.memory_accesses(**p)
@@ -260,7 +283,7 @@ def respond(request, default_project=None, debugger=None):
         if not isinstance(request,dict) or not isinstance(request.get("method"),str):
             raise ValueError("request must be an object with method and optional params/id")
         params = request.get("params",{})
-        standalone=request['method'] in ('identify','inspect','help','decoder-check') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         return {"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
@@ -304,6 +327,14 @@ def parser():
     root = argparse.ArgumentParser(prog="fdisbull",description="Agent-first disassembly with SQLite persistence and headless image export")
     root.add_argument("--version",action="version",version=__version__)
     sub = root.add_subparsers(dest="command",required=True)
+    sub.add_parser('dos-services',help=METHODS['dos-services'])
+    c=sub.add_parser('omf-catalog',help=METHODS['omf-catalog'])
+    c.add_argument('path');c.add_argument('--abi',default='x86_16_cdecl_near')
+    c=sub.add_parser('doctor',help=METHODS['doctor'])
+    c.add_argument('--backend',choices=['dosbox','dosbox-qemu','wine-qemu'],required=True)
+    c.add_argument('--executable',required=True)
+    c.add_argument('--kernel');c.add_argument('--initramfs');c.add_argument('--output')
+    c.add_argument('--boot-timeout-ms',type=int,default=240000)
     c = sub.add_parser('debug',help='Launch a DOS or PE64 project and accept live debugger JSON commands on stdin')
     c.add_argument('project');c.add_argument('--executable',required=True);c.add_argument('--game-dir',required=True)
     c.add_argument('--version',type=int)
@@ -312,10 +343,15 @@ def parser():
     c.add_argument('--kernel');c.add_argument('--initramfs');c.add_argument('--files',type=json.loads)
     c.add_argument('--boot-timeout-ms',type=int,default=240000)
     c.add_argument('--state',help='PE64 native checkpoint artifact to restore without cold launch')
-    for name in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-experiments','debug-experiment-info'):
+    for name in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-experiments','debug-experiment-info','debug-promote-code','debug-trace-view','runtime-version-info'):
         c = sub.add_parser(name,help=METHODS[name]);c.add_argument('project')
         if name in ('debug-state-info','debug-experiment-info'):
             c.add_argument('artifact')
+        elif name=='debug-trace-view':
+            c.add_argument('artifact');c.add_argument('--version',type=int,required=True)
+        elif name=='debug-promote-code':
+            c.add_argument('artifact');c.add_argument('--label',default='runtime interpretation')
+            c.add_argument('--max-instructions',type=int,default=128);c.add_argument('--defer',action='store_true')
         elif name=='debug-fork-state':
             c.add_argument('artifact');c.add_argument('--executable',required=True);c.add_argument('--game-dir',required=True)
             c.add_argument('--name',default='derived.sav');c.add_argument('--memory',type=json.loads,default=[])
@@ -419,10 +455,10 @@ def parser():
         if name == "render":
             c.add_argument("output")
             c.add_argument("--format",choices=["svg","png"])
-    for name in ('auto-analyze', 'advanced-status', 'function-analysis', 'function-membership', 'define-type', 'apply-type', 'types', 'typed-data', 'set-summary', 'summaries', 'add-signature', 'signatures', 'call-effects'):
+    for name in ('auto-analyze', 'advanced-status', 'function-analysis', 'function-membership', 'define-type', 'apply-type', 'types', 'typed-data', 'set-summary', 'set-function-type', 'capture-signature', 'import-signatures', 'export-signatures', 'summaries', 'add-signature', 'signatures', 'call-effects'):
         c=sub.add_parser(name,help=METHODS[name]);c.add_argument('project');c.add_argument('--version',type=int)
-        if name in ('function-analysis','apply-type','typed-data','set-summary'):c.add_argument('address')
-        if name in ('function-analysis','set-summary','auto-analyze'):c.add_argument('--cs',type=lambda s:int(s,0))
+        if name in ('function-analysis','apply-type','typed-data','set-summary','set-function-type','capture-signature'):c.add_argument('address')
+        if name in ('function-analysis','set-summary','auto-analyze','set-function-type','capture-signature'):c.add_argument('--cs',type=lambda s:int(s,0))
         if name=='auto-analyze':
             c.add_argument('--start');c.add_argument('--abi')
             for field,default in [('max-instructions',10000),('max-functions',200),('max-steps',100000),('max-entries',256),('max-rounds',8)]:c.add_argument('--'+field,type=int,default=default)
@@ -431,11 +467,15 @@ def parser():
             c.add_argument('--max-work',type=int,default=1000000);c.add_argument('--max-instructions',type=int,default=100000)
         if name=='define-type':c.add_argument('name');c.add_argument('definition_file')
         if name=='apply-type':c.add_argument('type_name');c.add_argument('--name')
+        if name=='set-function-type':c.add_argument('type_name')
         if name=='typed-data':c.add_argument('--max-items',type=int,default=256)
         if name=='set-summary':
             c.add_argument('name');c.add_argument('--abi');c.add_argument('--prototype-file');c.add_argument('--summary-file')
+        if name=='capture-signature':
+            c.add_argument('name');c.add_argument('--max-instructions',type=int,default=4096)
+        if name=='import-signatures':c.add_argument('catalog_file')
         if name=='add-signature':c.add_argument('signature_file')
-        if name in ('define-type','apply-type','set-summary'):c.add_argument('--author',default='agent')
+        if name in ('define-type','apply-type','set-summary','set-function-type','capture-signature'):c.add_argument('--author',default='agent')
         if name=='call-effects':
             c.add_argument('--address');c.add_argument('--size',type=int,default=1)
             c.add_argument('--access',choices=['all','read','write'],default='all')
@@ -502,4 +542,5 @@ def main(argv=None):
         request = {"method":"help" if command=="methods" else command,"params":{k:v for k,v in args.items() if v is not None}}
     result = respond(request)
     emit(result)
+    if command=='doctor' and result['ok'] and result['result']['status']!='passed':return 1
     return 0 if result["ok"] else 1

@@ -1,0 +1,201 @@
+{
+  "version": "0.16.0",
+  "module": "/Users/tiga/Documents/ChatGPT/fDisBull/src/fdisbull/__init__.py",
+  "driver_sha256": "e402c743449f9298ee38ecd6bd8c74fb5eb9975e79cc1b76585c1d9f880f43d2",
+  "backend_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+  "source_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+  "experiment": "0c255b7a4f8043719accc1a6f7067237",
+  "layer": "305c07d0d5674bc5b4de068f022dcf88",
+  "layer_definition": {
+    "id": "305c07d0d5674bc5b4de068f022dcf88",
+    "version": 1,
+    "name": "Gift lookup selects the 5000 entry",
+    "kind": "execute",
+    "created": "2026-10-26T13:51:47.822908+00:00",
+    "sha256": "049cff7458aa2ca80543e2c2ff8e6354a667d618b80c5c6d48208f192ab09e43",
+    "patches": [
+      {
+        "address": "0x3414e",
+        "data_hex": "8b877168",
+        "expected_hex": "8b877568"
+      }
+    ]
+  },
+  "original_controls_removed": true,
+  "lookup_witnesses": [
+    {
+      "name": "ram",
+      "trace": "608b119ca86741fbaee7cf7a596f9b6d",
+      "ax": 7500
+    },
+    {
+      "name": "execute",
+      "trace": "a77ca86aacd842da9feb986d0e4b4d48",
+      "ax": 5000
+    }
+  ],
+  "result": "pass",
+  "prices": [
+    7500,
+    5000
+  ],
+  "comparison": "dad3b88ecea446aaaf8f7570cc035a50",
+  "breakpoint_restored": true,
+  "read_watch_bytes_restored": 8,
+  "once_hook_restored": true,
+  "once_hook_fired_once_per_trial": true,
+  "hook_hit_count_restored": 0,
+  "baseline_layers_restored": true,
+  "code_ram_unchanged": true,
+  "price_table_unchanged": true,
+  "fresh_session_restore": true,
+  "temporal": {
+    "ram": {
+      "version": 2,
+      "parent": 1,
+      "artifact": "39f7bb19c27146c08245b4ae19e71676",
+      "sha256": "8006cbd191e3ff0a80f537f6d5163559542270f3bf706b7f86d8c4c54248c743",
+      "analysis": {
+        "version": 2,
+        "decoded": 64,
+        "attempted": 64,
+        "data_processed": 0,
+        "new_facts": 169,
+        "pending": 377,
+        "pending_code": 8,
+        "pending_data": 6,
+        "pending_seeds": 360,
+        "pending_segment_scans": 2,
+        "entry_complete": false,
+        "stable": false,
+        "budget_exhausted": true,
+        "assumptions": [
+          "Static minimum allocation; no PSP memory fabricated.",
+          "Call fallthrough preserves DS/SS/BP/SP by conventional DOS C calling convention; general registers and ES are unknown.",
+          "Deferred relocation candidates may assume startup DS (or the unique observed DS); candidate provenance is retained.",
+          "Stability covers implemented static rules; unresolved indirect/dynamic code remains explicit."
+        ]
+      },
+      "temporal": {
+        "version": 2,
+        "temporal": true,
+        "active_layers": [],
+        "address": 213326,
+        "artifact": "39f7bb19c27146c08245b4ae19e71676",
+        "artifact_sha256": "0190079017f3c857ba5bf698568ea794413a06242c6dd926e7aa51296057fa8d",
+        "edits": [],
+        "execution_proven": false,
+        "generation": 6,
+        "identity": {
+          "arch": "x86",
+          "backend": "dosbox",
+          "backend_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+          "bits": 16,
+          "captured_at": "2026-10-26T13:51:51.740108+00:00",
+          "cpu_mode": "real",
+          "delta": -32192,
+          "layer_hashes": {},
+          "project_base": "0x10000",
+          "project_cs": 13131,
+          "run": "51fe2bd6a53940cc8d4b60d814e9c778",
+          "runtime_base": "0x8240",
+          "runtime_cs": 11119,
+          "runtime_inputs": {},
+          "source_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+          "source_version": 1,
+          "source_version_sha256": "8006cbd191e3ff0a80f537f6d5163559542270f3bf706b7f86d8c4c54248c743"
+        },
+        "kind": "runtime-capture",
+        "normalized_sha256": "1450dcefd30dae62f0cd6639f40092fc8cd82ecf2cd8e3adbe5641d75a504b58",
+        "parent": 1,
+        "project_cs": 13131,
+        "raw_sha256": "1450dcefd30dae62f0cd6639f40092fc8cd82ecf2cd8e3adbe5641d75a504b58",
+        "relocations": [],
+        "run": "51fe2bd6a53940cc8d4b60d814e9c778",
+        "scope": "Captured span normalized into project space; all other bytes inherited and unobserved",
+        "size": 8,
+        "source_version": 1,
+        "source_version_sha256": "8006cbd191e3ff0a80f537f6d5163559542270f3bf706b7f86d8c4c54248c743",
+        "view": "ram"
+      }
+    },
+    "execute": {
+      "version": 3,
+      "parent": 1,
+      "artifact": "8706ecfd13c848f4bebd2985326025dc",
+      "sha256": "325f3b246d17f77e7396fa4c5344b9f2feeb552b60e2b8b05f5b53be987cd311",
+      "analysis": {
+        "version": 3,
+        "decoded": 64,
+        "attempted": 64,
+        "data_processed": 0,
+        "new_facts": 169,
+        "pending": 377,
+        "pending_code": 8,
+        "pending_data": 6,
+        "pending_seeds": 360,
+        "pending_segment_scans": 2,
+        "entry_complete": false,
+        "stable": false,
+        "budget_exhausted": true,
+        "assumptions": [
+          "Static minimum allocation; no PSP memory fabricated.",
+          "Call fallthrough preserves DS/SS/BP/SP by conventional DOS C calling convention; general registers and ES are unknown.",
+          "Deferred relocation candidates may assume startup DS (or the unique observed DS); candidate provenance is retained.",
+          "Stability covers implemented static rules; unresolved indirect/dynamic code remains explicit."
+        ]
+      },
+      "temporal": {
+        "version": 3,
+        "temporal": true,
+        "active_layers": [
+          "305c07d0d5674bc5b4de068f022dcf88"
+        ],
+        "address": 213326,
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "artifact_sha256": "80b01507f9910f997fa95b903d5d41d29a150fd279dda1644e9b89a8755123d1",
+        "edits": [],
+        "execution_proven": false,
+        "generation": 7,
+        "identity": {
+          "arch": "x86",
+          "backend": "dosbox",
+          "backend_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+          "bits": 16,
+          "captured_at": "2026-10-26T13:51:51.744818+00:00",
+          "cpu_mode": "real",
+          "delta": -32192,
+          "layer_hashes": {
+            "305c07d0d5674bc5b4de068f022dcf88": "049cff7458aa2ca80543e2c2ff8e6354a667d618b80c5c6d48208f192ab09e43"
+          },
+          "project_base": "0x10000",
+          "project_cs": 13131,
+          "run": "51fe2bd6a53940cc8d4b60d814e9c778",
+          "runtime_base": "0x8240",
+          "runtime_cs": 11119,
+          "runtime_inputs": {},
+          "source_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+          "source_version": 1,
+          "source_version_sha256": "8006cbd191e3ff0a80f537f6d5163559542270f3bf706b7f86d8c4c54248c743"
+        },
+        "kind": "runtime-capture",
+        "normalized_sha256": "f652ea1a410f86e7a7663e8a85230dc1a5068ce697666601ce54e4c246b5508b",
+        "parent": 1,
+        "project_cs": 13131,
+        "raw_sha256": "f652ea1a410f86e7a7663e8a85230dc1a5068ce697666601ce54e4c246b5508b",
+        "relocations": [],
+        "run": "51fe2bd6a53940cc8d4b60d814e9c778",
+        "scope": "Captured span normalized into project space; all other bytes inherited and unobserved",
+        "size": 8,
+        "source_version": 1,
+        "source_version_sha256": "8006cbd191e3ff0a80f537f6d5163559542270f3bf706b7f86d8c4c54248c743",
+        "view": "execute"
+      }
+    }
+  },
+  "processes_reaped": true,
+  "game_files_unchanged": 192,
+  "native_states_exported": false,
+  "database_exported": false,
+  "evidence_exported_after_restart": true
+}

@@ -1,0 +1,440 @@
+{
+  "artifact": "16dcd2e7feb64d79b63bcd6a9f7c0996",
+  "artifact_sha256": "158ef111c83be8b0bbc113d9d54e4f9f1c54f3e9b9a75f1818d936f34b2c96fb",
+  "version": 3,
+  "events": [
+    {
+      "index": 0,
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x00000CA3",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x34153"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      },
+      "bytes_match": true,
+      "analysis_match": true,
+      "byte_provenance": {
+        "kind": "runtime-capture",
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "view": "execute",
+        "fully_observed": true,
+        "execution_proven": false
+      }
+    },
+    {
+      "index": 1,
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x00000CA4",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x34154"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      },
+      "bytes_match": true,
+      "analysis_match": true,
+      "byte_provenance": {
+        "kind": "runtime-capture",
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "view": "execute",
+        "fully_observed": true,
+        "execution_proven": false
+      }
+    },
+    {
+      "index": 2,
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x00000CA5",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x34155"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      },
+      "bytes_match": true,
+      "analysis_match": true,
+      "byte_provenance": {
+        "kind": "runtime-capture",
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "view": "execute",
+        "fully_observed": true,
+        "execution_proven": false
+      }
+    },
+    {
+      "index": 3,
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x00000CA6",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x34156"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      },
+      "bytes_match": true,
+      "analysis_match": true,
+      "byte_provenance": {
+        "kind": "inherited-unobserved",
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "view": "execute",
+        "fully_observed": false,
+        "execution_proven": false
+      }
+    },
+    {
+      "index": 4,
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x00000008",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x334b8"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      },
+      "bytes_match": true,
+      "analysis_match": true,
+      "byte_provenance": {
+        "kind": "inherited-unobserved",
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "view": "execute",
+        "fully_observed": false,
+        "execution_proven": false
+      }
+    },
+    {
+      "index": 5,
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x00000009",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x334b9"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      },
+      "bytes_match": true,
+      "analysis_match": true,
+      "byte_provenance": {
+        "kind": "inherited-unobserved",
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "view": "execute",
+        "fully_observed": false,
+        "execution_proven": false
+      }
+    },
+    {
+      "index": 6,
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x0000000B",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x334bb"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      },
+      "bytes_match": true,
+      "analysis_match": true,
+      "byte_provenance": {
+        "kind": "inherited-unobserved",
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "view": "execute",
+        "fully_observed": false,
+        "execution_proven": false
+      }
+    },
+    {
+      "index": 7,
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x0000000E",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x334be"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      },
+      "bytes_match": true,
+      "analysis_match": true,
+      "byte_provenance": {
+        "kind": "inherited-unobserved",
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "view": "execute",
+        "fully_observed": false,
+        "execution_proven": false
+      }
+    },
+    {
+      "index": 8,
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x0000000F",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x334bf"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      },
+      "bytes_match": true,
+      "analysis_match": true,
+      "byte_provenance": {
+        "kind": "inherited-unobserved",
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "view": "execute",
+        "fully_observed": false,
+        "execution_proven": false
+      }
+    },
+    {
+      "index": 9,
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x00000013",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x334c3"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      },
+      "bytes_match": true,
+      "analysis_match": true,
+      "byte_provenance": {
+        "kind": "inherited-unobserved",
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "view": "execute",
+        "fully_observed": false,
+        "execution_proven": false
+      }
+    },
+    {
+      "index": 10,
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x0000001A",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x334ca"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      },
+      "bytes_match": true,
+      "analysis_match": true,
+      "byte_provenance": {
+        "kind": "inherited-unobserved",
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "view": "execute",
+        "fully_observed": false,
+        "execution_proven": false
+      }
+    },
+    {
+      "index": 11,
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x0000001D",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x334cd"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      },
+      "bytes_match": true,
+      "analysis_match": true,
+      "byte_provenance": {
+        "kind": "inherited-unobserved",
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "view": "execute",
+        "fully_observed": false,
+        "execution_proven": false
+      }
+    },
+    {
+      "index": 12,
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x00000020",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x334d0"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      },
+      "bytes_match": true,
+      "analysis_match": true,
+      "byte_provenance": {
+        "kind": "inherited-unobserved",
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "view": "execute",
+        "fully_observed": false,
+        "execution_proven": false
+      }
+    },
+    {
+      "index": 13,
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x00000024",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x334d4"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      },
+      "bytes_match": true,
+      "analysis_match": true,
+      "byte_provenance": {
+        "kind": "inherited-unobserved",
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "view": "execute",
+        "fully_observed": false,
+        "execution_proven": false
+      }
+    },
+    {
+      "index": 14,
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x00000026",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x334d6"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      },
+      "bytes_match": true,
+      "analysis_match": true,
+      "byte_provenance": {
+        "kind": "inherited-unobserved",
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "view": "execute",
+        "fully_observed": false,
+        "execution_proven": false
+      }
+    },
+    {
+      "index": 15,
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x00000028",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x334d8"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": false,
+        "evidence": "pending fetch at trace budget"
+      },
+      "bytes_match": true,
+      "analysis_match": false,
+      "byte_provenance": {
+        "kind": "inherited-unobserved",
+        "artifact": "8706ecfd13c848f4bebd2985326025dc",
+        "view": "execute",
+        "fully_observed": false,
+        "execution_proven": false
+      }
+    }
+  ],
+  "scope": "Per-instruction byte/context comparison only; completion remains native; no claim the entire temporal version executed"
+}

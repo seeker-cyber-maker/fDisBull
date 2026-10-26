@@ -9,6 +9,7 @@ from .wine_runtime import resources as wine_resources, prepare as prepare_wine
 def resources():
     root = Path(__file__).parent
     result = wine_resources()
+    result.pop('opt/fdisbull/selftest.c') # IDA profile does not offer the Wine self-test RPC.
     result.update({
         'init': root/'ida_guest'/'init.sh',
         'opt/fdisbull/ida_broker.py': root/'ida_guest'/'broker.py',

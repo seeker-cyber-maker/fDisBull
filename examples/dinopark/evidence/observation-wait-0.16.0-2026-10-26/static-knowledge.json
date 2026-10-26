@@ -1,0 +1,4840 @@
+{
+  "scope": "Bounded static traversal of actual DinoPark; not complete program coverage",
+  "status": {
+    "version": 1,
+    "stable": false,
+    "budget_exhausted": true,
+    "rounds": 1,
+    "processed_jobs": 80,
+    "jobs": [
+      {
+        "address": "0x10000",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x10157",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x1016a",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x1016b",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x1017d",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x101c0",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x101ed",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x10231",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x10272",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x103b5",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x10690",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x112a9",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x112c1",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x114ae",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x114c0",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x115ad",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x11604",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x11613",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x11656",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x11673",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x11686",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x11699",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x116d2",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x1171b",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x118e3",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x1190b",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x11a09",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x11a32",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x11b73",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x11ba2",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x11d61",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x11d8d",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x11dbd",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x11de4",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x11ded",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x1231f",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x12378",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x123a1",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x12522",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x12530",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x12756",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x127a6",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x12804",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x128b0",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x12932",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x12ace",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x12b5c",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x12b85",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x12b97",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x12dc1",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x12e38",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x131ff",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x13211",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x133bb",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x13488",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x134a5",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x134cd",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x134eb",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x13f37",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x13fef",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x140bc",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x141f9",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x1423b",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x14266",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x1441e",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x14468",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x14cb2",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x14ddf",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x14ebf",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x14fb8",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x15092",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x150ad",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x150bf",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x1522e",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x1527d",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x15660",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x15789",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x15988",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x15dcd",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      },
+      {
+        "address": "0x15e79",
+        "context": "x86:16:little:cs=1000",
+        "state": "done",
+        "generation": 1,
+        "added_edges": 0,
+        "budget_exhausted": false
+      }
+    ],
+    "analysis": {
+      "version": 1,
+      "stable": false,
+      "scope": "native code/data discovery queues",
+      "advanced": {
+        "version": 1,
+        "states": {
+          "done": 80,
+          "pending": 45
+        },
+        "unregistered_entries": 0,
+        "pending": 45,
+        "stable": false,
+        "scope": "implemented derived-analysis jobs",
+        "note": "A fixed point is not complete binary coverage. Unknown transfers and semantic operations remain explicit.",
+        "facts_stale": false
+      },
+      "overall_stable": false,
+      "pending": 501,
+      "pending_code": 55,
+      "pending_data": 83,
+      "pending_seeds": 360,
+      "pending_segment_scans": 2,
+      "pending_seed_phase": true,
+      "seed_states": {
+        "deferred": 360
+      },
+      "issues": 1453,
+      "mode": "static",
+      "note": "Current stored state. A static fixed point does not establish complete code coverage or runtime behavior.",
+      "facts_stale": false,
+      "dos_pointer_revision": 2,
+      "required_dos_pointer_revision": 2
+    },
+    "advanced": {
+      "version": 1,
+      "states": {
+        "done": 80,
+        "pending": 45
+      },
+      "unregistered_entries": 0,
+      "pending": 45,
+      "stable": false,
+      "scope": "implemented derived-analysis jobs",
+      "note": "A fixed point is not complete binary coverage. Unknown transfers and semantic operations remain explicit.",
+      "facts_stale": false
+    },
+    "base_runs": [
+      {
+        "version": 1,
+        "decoded": 4063,
+        "attempted": 5000,
+        "data_processed": 0,
+        "new_facts": 9908,
+        "pending": 501,
+        "pending_code": 55,
+        "pending_data": 83,
+        "pending_seeds": 360,
+        "pending_segment_scans": 2,
+        "entry_complete": false,
+        "stable": false,
+        "budget_exhausted": true,
+        "assumptions": [
+          "Static minimum allocation; no PSP memory fabricated.",
+          "Call fallthrough preserves DS/SS/BP/SP by conventional DOS C calling convention; general registers and ES are unknown.",
+          "Deferred relocation candidates may assume startup DS (or the unique observed DS); candidate provenance is retained.",
+          "Stability covers implemented static rules; unresolved indirect/dynamic code remains explicit."
+        ]
+      }
+    ],
+    "options": {
+      "max_instructions": 5000,
+      "max_steps": 100000,
+      "max_entries": 256,
+      "abi": null,
+      "analysis_revision": "dos-knowledge-1",
+      "signature_catalog_sha256": "6b54611874f2cf890eca47f0cd235faa8b8f699c8049aaac3e77c3a3dcc95d12"
+    },
+    "legacy_snapshot_edges_retracted": 0,
+    "note": "Resumable fixed point of implemented static rules; unknown targets and semantic ambiguity remain in function-analysis."
+  },
+  "runtime_identities": [],
+  "interrupts": [
+    {
+      "address": "0x1000a",
+      "cs": 4096,
+      "ip": 10,
+      "segmented_address": "1000:000a",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.get_version",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_000a",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x30",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "get_version",
+        "terminates": false,
+        "inputs": {},
+        "outputs": {
+          "al": "major",
+          "ah": "minor",
+          "bx": "version_specific",
+          "cx": "version_specific"
+        },
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x10008",
+          "target": "0x1000a",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:0008",
+          "target_segmented_address": "1000:000a",
+          "source_name": "loc_1000_0008",
+          "target_name": "loc_1000_000a",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ah": 48,
+          "ds": 4080,
+          "dx": 16416,
+          "es": 4080,
+          "sp": 128,
+          "ss": 19716
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x10097",
+      "cs": 4096,
+      "ip": 151,
+      "segmented_address": "1000:0097",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.resize_memory",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_0097",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x4a",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "resize_memory",
+        "terminates": false,
+        "inputs": {
+          "es": {
+            "role": "block_segment",
+            "value": null
+          },
+          "bx": {
+            "role": "paragraphs",
+            "value": null
+          }
+        },
+        "outputs": {
+          "ax": "error_if_carry",
+          "bx": "available_on_failure",
+          "cf": "error_if_set"
+        },
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x10096",
+          "target": "0x10097",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:0096",
+          "target_segmented_address": "1000:0097",
+          "source_name": "loc_1000_0096",
+          "target_name": "loc_1000_0097",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null
+          ],
+          "ah": 74,
+          "cl": 4,
+          "cx": 4,
+          "ds": 16416,
+          "dx": 19716,
+          "sp": 126,
+          "ss": 19716
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x100db",
+      "cs": 4096,
+      "ip": 219,
+      "segmented_address": "1000:00db",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_00db",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x58",
+        "family": "dos",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x100d8",
+          "target": "0x100db",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:00d8",
+          "target_segmented_address": "1000:00db",
+          "source_name": "loc_1000_00d8",
+          "target_name": "loc_1000_00db",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ax": 22529,
+          "bx": 2,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x100e5",
+      "cs": 4096,
+      "ip": 229,
+      "segmented_address": "1000:00e5",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_00e5",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x67",
+        "family": "dos",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x100e1",
+          "target": "0x100e5",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:00e1",
+          "target_segmented_address": "1000:00e5",
+          "source_name": "loc_1000_00e1",
+          "target_name": "loc_1000_00e5",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ah": 103,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x100ee",
+      "cs": 4096,
+      "ip": 238,
+      "segmented_address": "1000:00ee",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.allocate_memory",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_00ee",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x48",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "allocate_memory",
+        "terminates": false,
+        "inputs": {
+          "bx": {
+            "role": "paragraphs",
+            "value": 1
+          }
+        },
+        "outputs": {
+          "ax": "segment_or_error",
+          "bx": "largest_block_on_failure",
+          "cf": "error_if_set"
+        },
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x100eb",
+          "target": "0x100ee",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:00eb",
+          "target_segmented_address": "1000:00ee",
+          "source_name": "loc_1000_00eb",
+          "target_name": "loc_1000_00ee",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ah": 72,
+          "bx": 1,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x100fb",
+      "cs": 4096,
+      "ip": 251,
+      "segmented_address": "1000:00fb",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.free_memory",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_00fb",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x49",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "free_memory",
+        "terminates": false,
+        "inputs": {
+          "es": {
+            "role": "block_segment",
+            "value": null
+          }
+        },
+        "outputs": {
+          "ax": "error_if_carry",
+          "cf": "error_if_set"
+        },
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x100f9",
+          "target": "0x100fb",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:00f9",
+          "target_segmented_address": "1000:00fb",
+          "source_name": "loc_1000_00f9",
+          "target_name": "loc_1000_00fb",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ah": 73,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x10105",
+      "cs": 4096,
+      "ip": 261,
+      "segmented_address": "1000:0105",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_0105",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x58",
+        "family": "dos",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x10102",
+          "target": "0x10105",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:0102",
+          "target_segmented_address": "1000:0105",
+          "source_name": "loc_1000_0102",
+          "target_name": "loc_1000_0105",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ax": 22529,
+          "bx": 0,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x1010e",
+      "cs": 4096,
+      "ip": 270,
+      "segmented_address": "1000:010e",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd1a",
+      "mnemonic": "int",
+      "operands": "1Ah",
+      "raw_operands": "1Ah",
+      "display_operands": "1Ah ; BIOS.read_clock_ticks",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_010e",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x1a",
+        "function": "0x0",
+        "family": "bios",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/manuals/ibm/pc/techref/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "read_clock_ticks",
+        "terminates": false,
+        "inputs": {},
+        "outputs": {
+          "cx:dx": "ticks_since_midnight",
+          "al": "midnight_indicator"
+        },
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x1010c",
+          "target": "0x1010e",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:010c",
+          "target_segmented_address": "1000:010e",
+          "source_name": "loc_1000_010c",
+          "target_name": "loc_1000_010e",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ah": 0,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x10172",
+      "cs": 4096,
+      "ip": 370,
+      "segmented_address": "1000:0172",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.exit",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "stop",
+      "target": null,
+      "name": "loc_1000_0172",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x4c",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "exit",
+        "terminates": true,
+        "inputs": {
+          "al": {
+            "role": "exit_code",
+            "value": null
+          }
+        },
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x1016f",
+          "target": "0x10172",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:016f",
+          "target_segmented_address": "1000:0172",
+          "source_name": "loc_1000_016f",
+          "target_name": "loc_1000_0172",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ah": 76
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x10181",
+      "cs": 4096,
+      "ip": 385,
+      "segmented_address": "1000:0181",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.get_interrupt_vector",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_0181",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x35",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "get_interrupt_vector",
+        "terminates": false,
+        "inputs": {
+          "al": {
+            "role": "vector",
+            "value": 0
+          }
+        },
+        "outputs": {
+          "es:bx": "handler"
+        },
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x1017e",
+          "target": "0x10181",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:017e",
+          "target_segmented_address": "1000:0181",
+          "source_name": "loc_1000_017e",
+          "target_name": "loc_1000_0181",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            16416
+          ],
+          "ax": 13568,
+          "ds": 16416,
+          "dx": 16416,
+          "es": 4080,
+          "sp": 124,
+          "ss": 19716
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x1018e",
+      "cs": 4096,
+      "ip": 398,
+      "segmented_address": "1000:018e",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.get_interrupt_vector",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_018e",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x35",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "get_interrupt_vector",
+        "terminates": false,
+        "inputs": {
+          "al": {
+            "role": "vector",
+            "value": 4
+          }
+        },
+        "outputs": {
+          "es:bx": "handler"
+        },
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x1018b",
+          "target": "0x1018e",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:018b",
+          "target_segmented_address": "1000:018e",
+          "source_name": "loc_1000_018b",
+          "target_name": "loc_1000_018e",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ax": 13572,
+          "ds": 16416,
+          "es": 4080,
+          "ss": 19716
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x1019b",
+      "cs": 4096,
+      "ip": 411,
+      "segmented_address": "1000:019b",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.get_interrupt_vector",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_019b",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x35",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "get_interrupt_vector",
+        "terminates": false,
+        "inputs": {
+          "al": {
+            "role": "vector",
+            "value": 5
+          }
+        },
+        "outputs": {
+          "es:bx": "handler"
+        },
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x10198",
+          "target": "0x1019b",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:0198",
+          "target_segmented_address": "1000:019b",
+          "source_name": "loc_1000_0198",
+          "target_name": "loc_1000_019b",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ax": 13573,
+          "ds": 16416,
+          "es": 4080,
+          "ss": 19716
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x101a8",
+      "cs": 4096,
+      "ip": 424,
+      "segmented_address": "1000:01a8",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.get_interrupt_vector",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_01a8",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x35",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "get_interrupt_vector",
+        "terminates": false,
+        "inputs": {
+          "al": {
+            "role": "vector",
+            "value": 6
+          }
+        },
+        "outputs": {
+          "es:bx": "handler"
+        },
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x101a5",
+          "target": "0x101a8",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:01a5",
+          "target_segmented_address": "1000:01a8",
+          "source_name": "loc_1000_01a5",
+          "target_name": "loc_1000_01a8",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ax": 13574,
+          "ds": 16416,
+          "es": 4080,
+          "ss": 19716
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x101bc",
+      "cs": 4096,
+      "ip": 444,
+      "segmented_address": "1000:01bc",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.set_interrupt_vector",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_01bc",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x25",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "set_interrupt_vector",
+        "terminates": false,
+        "inputs": {
+          "al": {
+            "role": "vector",
+            "value": 0
+          },
+          "ds:dx": {
+            "role": "handler",
+            "value": [
+              4096,
+              372
+            ]
+          }
+        },
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x101b9",
+          "target": "0x101bc",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:01b9",
+          "target_segmented_address": "1000:01bc",
+          "source_name": "loc_1000_01b9",
+          "target_name": "loc_1000_01bc",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ax": 9472,
+          "ds": 4096,
+          "dx": 372,
+          "es": 4080,
+          "ss": 19716
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x101c8",
+      "cs": 4096,
+      "ip": 456,
+      "segmented_address": "1000:01c8",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.set_interrupt_vector",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_01c8",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x25",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "set_interrupt_vector",
+        "terminates": false,
+        "inputs": {
+          "al": {
+            "role": "vector",
+            "value": 0
+          },
+          "ds:dx": {
+            "role": "handler",
+            "value": [
+              null,
+              null
+            ]
+          }
+        },
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x101c4",
+          "target": "0x101c8",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:01c4",
+          "target_segmented_address": "1000:01c8",
+          "source_name": "loc_1000_01c4",
+          "target_name": "loc_1000_01c8",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null
+          ],
+          "ax": 9472
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x101d3",
+      "cs": 4096,
+      "ip": 467,
+      "segmented_address": "1000:01d3",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.set_interrupt_vector",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_01d3",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x25",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "set_interrupt_vector",
+        "terminates": false,
+        "inputs": {
+          "al": {
+            "role": "vector",
+            "value": 4
+          },
+          "ds:dx": {
+            "role": "handler",
+            "value": [
+              null,
+              null
+            ]
+          }
+        },
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x101cf",
+          "target": "0x101d3",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:01cf",
+          "target_segmented_address": "1000:01d3",
+          "source_name": "loc_1000_01cf",
+          "target_name": "loc_1000_01d3",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null
+          ],
+          "ax": 9476
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x101de",
+      "cs": 4096,
+      "ip": 478,
+      "segmented_address": "1000:01de",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.set_interrupt_vector",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_01de",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x25",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "set_interrupt_vector",
+        "terminates": false,
+        "inputs": {
+          "al": {
+            "role": "vector",
+            "value": 5
+          },
+          "ds:dx": {
+            "role": "handler",
+            "value": [
+              null,
+              null
+            ]
+          }
+        },
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x101da",
+          "target": "0x101de",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:01da",
+          "target_segmented_address": "1000:01de",
+          "source_name": "loc_1000_01da",
+          "target_name": "loc_1000_01de",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null
+          ],
+          "ax": 9477
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x101e9",
+      "cs": 4096,
+      "ip": 489,
+      "segmented_address": "1000:01e9",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.set_interrupt_vector",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_01e9",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x25",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "set_interrupt_vector",
+        "terminates": false,
+        "inputs": {
+          "al": {
+            "role": "vector",
+            "value": 6
+          },
+          "ds:dx": {
+            "role": "handler",
+            "value": [
+              null,
+              null
+            ]
+          }
+        },
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x101e5",
+          "target": "0x101e9",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:01e5",
+          "target_segmented_address": "1000:01e9",
+          "source_name": "loc_1000_01e5",
+          "target_name": "loc_1000_01e9",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null
+          ],
+          "ax": 9478
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x10277",
+      "cs": 4096,
+      "ip": 631,
+      "segmented_address": "1000:0277",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.write_file",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_0277",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x40",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "write_file",
+        "terminates": false,
+        "inputs": {
+          "bx": {
+            "role": "handle",
+            "value": 2
+          },
+          "cx": {
+            "role": "requested_bytes",
+            "value": 30
+          },
+          "ds:dx": {
+            "role": "buffer",
+            "value": [
+              null,
+              61
+            ]
+          }
+        },
+        "outputs": {
+          "ax": "actual_bytes_or_error",
+          "cf": "error_if_set"
+        },
+        "memory_effects": [
+          {
+            "access": "read",
+            "pointer": "ds:dx",
+            "address": null,
+            "length": 30,
+            "extent": "requested_buffer",
+            "actual_transfer": "unknown until return status and actual byte count are observed"
+          }
+        ]
+      },
+      "xrefs": [
+        {
+          "source": "0x10274",
+          "target": "0x10277",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:0274",
+          "target_segmented_address": "1000:0277",
+          "source_name": "loc_1000_0274",
+          "target_name": "loc_1000_0277",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ah": 64,
+          "bx": 2,
+          "cx": 30,
+          "dx": 61
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x112b2",
+      "cs": 4096,
+      "ip": 4786,
+      "segmented_address": "1000:12b2",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_12b2",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x3b",
+        "family": "dos",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x112af",
+          "target": "0x112b2",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:12af",
+          "target_segmented_address": "1000:12b2",
+          "source_name": "loc_1000_12af",
+          "target_name": "loc_1000_12b2",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null,
+            16416
+          ],
+          "ah": 59
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x114b3",
+      "cs": 4096,
+      "ip": 5299,
+      "segmented_address": "1000:14b3",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_14b3",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x19",
+        "family": "dos",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x114b1",
+          "target": "0x114b3",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:14b1",
+          "target_segmented_address": "1000:14b3",
+          "source_name": "loc_1000_14b1",
+          "target_name": "loc_1000_14b3",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null
+          ],
+          "ah": 25,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x114ca",
+      "cs": 4096,
+      "ip": 5322,
+      "segmented_address": "1000:14ca",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_14ca",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0xe",
+        "family": "dos",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x114c8",
+          "target": "0x114ca",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:14c8",
+          "target_segmented_address": "1000:14ca",
+          "source_name": "loc_1000_14c8",
+          "target_name": "loc_1000_14ca",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null
+          ],
+          "ah": 14,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x11663",
+      "cs": 4096,
+      "ip": 5731,
+      "segmented_address": "1000:1663",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_1663",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x47",
+        "family": "dos",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x11660",
+          "target": "0x11663",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:1660",
+          "target_segmented_address": "1000:1663",
+          "source_name": "loc_1000_1660",
+          "target_name": "loc_1000_1663",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null,
+            null,
+            16416
+          ],
+          "ah": 71,
+          "ax": 18176
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x11678",
+      "cs": 4096,
+      "ip": 5752,
+      "segmented_address": "1000:1678",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.get_date",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_1678",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x2a",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "get_date",
+        "terminates": false,
+        "inputs": {},
+        "outputs": {
+          "cx": "year",
+          "dh": "month",
+          "dl": "day",
+          "al": "weekday"
+        },
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x11676",
+          "target": "0x11678",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:1676",
+          "target_segmented_address": "1000:1678",
+          "source_name": "loc_1000_1676",
+          "target_name": "loc_1000_1678",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null
+          ],
+          "ah": 42,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x1168b",
+      "cs": 4096,
+      "ip": 5771,
+      "segmented_address": "1000:168b",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.get_time",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_168b",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x2c",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "get_time",
+        "terminates": false,
+        "inputs": {},
+        "outputs": {
+          "ch": "hour",
+          "cl": "minute",
+          "dh": "second",
+          "dl": "hundredths"
+        },
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x11689",
+          "target": "0x1168b",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:1689",
+          "target_segmented_address": "1000:168b",
+          "source_name": "loc_1000_1689",
+          "target_name": "loc_1000_168b",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null
+          ],
+          "ah": 44,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x116dc",
+      "cs": 4096,
+      "ip": 5852,
+      "segmented_address": "1000:16dc",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_16dc",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x57",
+        "family": "dos",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x116d9",
+          "target": "0x116dc",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:16d9",
+          "target_segmented_address": "1000:16dc",
+          "source_name": "loc_1000_16d9",
+          "target_name": "loc_1000_16dc",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null,
+            null
+          ],
+          "ax": 22272,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x11727",
+      "cs": 4096,
+      "ip": 5927,
+      "segmented_address": "1000:1727",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.set_interrupt_vector",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_1727",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x25",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "set_interrupt_vector",
+        "terminates": false,
+        "inputs": {
+          "al": {
+            "role": "vector",
+            "value": null
+          },
+          "ds:dx": {
+            "role": "handler",
+            "value": [
+              null,
+              null
+            ]
+          }
+        },
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x11724",
+          "target": "0x11727",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:1724",
+          "target_segmented_address": "1000:1727",
+          "source_name": "loc_1000_1724",
+          "target_name": "loc_1000_1727",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null,
+            16416
+          ],
+          "ah": 37
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x11b95",
+      "cs": 4096,
+      "ip": 7061,
+      "segmented_address": "1000:1b95",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.read_file",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_1b95",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x3f",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "read_file",
+        "terminates": false,
+        "inputs": {
+          "bx": {
+            "role": "handle",
+            "value": null
+          },
+          "cx": {
+            "role": "requested_bytes",
+            "value": null
+          },
+          "ds:dx": {
+            "role": "buffer",
+            "value": [
+              null,
+              null
+            ]
+          }
+        },
+        "outputs": {
+          "ax": "actual_bytes_or_error",
+          "cf": "error_if_set"
+        },
+        "memory_effects": [
+          {
+            "access": "write",
+            "pointer": "ds:dx",
+            "address": null,
+            "length": null,
+            "extent": "upper_bound_on_success",
+            "actual_transfer": "unknown until return status and actual byte count are observed"
+          }
+        ]
+      },
+      "xrefs": [
+        {
+          "source": "0x11b92",
+          "target": "0x11b95",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:1b92",
+          "target_segmented_address": "1000:1b95",
+          "source_name": "loc_1000_1b92",
+          "target_name": "loc_1000_1b95",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            16416
+          ],
+          "ah": 63
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x12543",
+      "cs": 4096,
+      "ip": 9539,
+      "segmented_address": "1000:2543",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd10",
+      "mnemonic": "int",
+      "operands": "10h",
+      "raw_operands": "10h",
+      "display_operands": "10h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_2543",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x10",
+        "function": null,
+        "family": "bios",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/manuals/ibm/pc/techref/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x12541",
+          "target": "0x12543",
+          "kind": "fallthrough",
+          "evidence": "16-bit conditional CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:2541",
+          "target_segmented_address": "1000:2543",
+          "source_name": "loc_1000_2541",
+          "target_name": "loc_1000_2543",
+          "target_representation": "code"
+        },
+        {
+          "source": "0x12566",
+          "target": "0x12543",
+          "kind": "branch",
+          "evidence": "segmented decoded operand",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:2566",
+          "target_segmented_address": "1000:2543",
+          "source_name": "loc_1000_2566",
+          "target_name": "loc_1000_2543",
+          "target_representation": "code"
+        },
+        {
+          "source": "0x1256a",
+          "target": "0x12543",
+          "kind": "branch",
+          "evidence": "segmented decoded operand",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:256a",
+          "target_segmented_address": "1000:2543",
+          "source_name": "loc_1000_256a",
+          "target_name": "loc_1000_2543",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ds": 64
+        },
+        "state": "done",
+        "reason": "branch"
+      }
+    },
+    {
+      "address": "0x12553",
+      "cs": 4096,
+      "ip": 9555,
+      "segmented_address": "1000:2553",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd10",
+      "mnemonic": "int",
+      "operands": "10h",
+      "raw_operands": "10h",
+      "display_operands": "10h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_2553",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x10",
+        "function": "0x1a",
+        "family": "bios",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/manuals/ibm/pc/techref/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x12550",
+          "target": "0x12553",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:2550",
+          "target_segmented_address": "1000:2553",
+          "source_name": "loc_1000_2550",
+          "target_name": "loc_1000_2553",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null
+          ],
+          "ax": 6656,
+          "ds": 64
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x12563",
+      "cs": 4096,
+      "ip": 9571,
+      "segmented_address": "1000:2563",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd10",
+      "mnemonic": "int",
+      "operands": "10h",
+      "raw_operands": "10h",
+      "display_operands": "10h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_2563",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x10",
+        "function": "0x1",
+        "family": "bios",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/manuals/ibm/pc/techref/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x12560",
+          "target": "0x12563",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:2560",
+          "target_segmented_address": "1000:2563",
+          "source_name": "loc_1000_2560",
+          "target_name": "loc_1000_2563",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ah": 1,
+          "cx": 1543,
+          "ds": 64
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x12570",
+      "cs": 4096,
+      "ip": 9584,
+      "segmented_address": "1000:2570",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd10",
+      "mnemonic": "int",
+      "operands": "10h",
+      "raw_operands": "10h",
+      "display_operands": "10h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_2570",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x10",
+        "function": "0x12",
+        "family": "bios",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/manuals/ibm/pc/techref/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x1256e",
+          "target": "0x12570",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:256e",
+          "target_segmented_address": "1000:2570",
+          "source_name": "loc_1000_256e",
+          "target_name": "loc_1000_2570",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ah": 18,
+          "bl": 16,
+          "ds": 64
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x1257c",
+      "cs": 4096,
+      "ip": 9596,
+      "segmented_address": "1000:257c",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd10",
+      "mnemonic": "int",
+      "operands": "10h",
+      "raw_operands": "10h",
+      "display_operands": "10h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_257c",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x10",
+        "function": "0x11",
+        "family": "bios",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/manuals/ibm/pc/techref/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x1257a",
+          "target": "0x1257c",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:257a",
+          "target_segmented_address": "1000:257c",
+          "source_name": "loc_1000_257a",
+          "target_name": "loc_1000_257c",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ax": 4370,
+          "bl": 0,
+          "ds": 64
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x12583",
+      "cs": 4096,
+      "ip": 9603,
+      "segmented_address": "1000:2583",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd10",
+      "mnemonic": "int",
+      "operands": "10h",
+      "raw_operands": "10h",
+      "display_operands": "10h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_2583",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x10",
+        "function": "0x12",
+        "family": "bios",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/manuals/ibm/pc/techref/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x12581",
+          "target": "0x12583",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:2581",
+          "target_segmented_address": "1000:2583",
+          "source_name": "loc_1000_2581",
+          "target_name": "loc_1000_2583",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ax": 4608,
+          "bl": 32,
+          "ds": 64
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x12588",
+      "cs": 4096,
+      "ip": 9608,
+      "segmented_address": "1000:2588",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd10",
+      "mnemonic": "int",
+      "operands": "10h",
+      "raw_operands": "10h",
+      "display_operands": "10h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_2588",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x10",
+        "function": "0x1a",
+        "family": "bios",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/manuals/ibm/pc/techref/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x12585",
+          "target": "0x12588",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:2585",
+          "target_segmented_address": "1000:2588",
+          "source_name": "loc_1000_2585",
+          "target_name": "loc_1000_2588",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ax": 6656,
+          "ds": 64
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x12598",
+      "cs": 4096,
+      "ip": 9624,
+      "segmented_address": "1000:2598",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd10",
+      "mnemonic": "int",
+      "operands": "10h",
+      "raw_operands": "10h",
+      "display_operands": "10h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_2598",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x10",
+        "function": "0x1",
+        "family": "bios",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/manuals/ibm/pc/techref/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x12595",
+          "target": "0x12598",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:2595",
+          "target_segmented_address": "1000:2598",
+          "source_name": "loc_1000_2595",
+          "target_name": "loc_1000_2598",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ah": 1,
+          "cx": 1536,
+          "ds": 64
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x1259c",
+      "cs": 4096,
+      "ip": 9628,
+      "segmented_address": "1000:259c",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd10",
+      "mnemonic": "int",
+      "operands": "10h",
+      "raw_operands": "10h",
+      "display_operands": "10h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_259c",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x10",
+        "function": null,
+        "family": "bios",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/manuals/ibm/pc/techref/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x12541",
+          "target": "0x1259c",
+          "kind": "branch",
+          "evidence": "segmented decoded operand",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:2541",
+          "target_segmented_address": "1000:259c",
+          "source_name": "loc_1000_2541",
+          "target_name": "loc_1000_259c",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ds": 64
+        },
+        "state": "done",
+        "reason": "branch"
+      }
+    },
+    {
+      "address": "0x127ba",
+      "cs": 4096,
+      "ip": 10170,
+      "segmented_address": "1000:27ba",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_27ba",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x7",
+        "family": "dos",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x127b7",
+          "target": "0x127ba",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:27b7",
+          "target_segmented_address": "1000:27ba",
+          "source_name": "loc_1000_27b7",
+          "target_name": "loc_1000_27ba",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ax": 1792,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x12b6e",
+      "cs": 4096,
+      "ip": 11118,
+      "segmented_address": "1000:2b6e",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_2b6e",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x44",
+        "family": "dos",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x12b6b",
+          "target": "0x12b6e",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:2b6b",
+          "target_segmented_address": "1000:2b6e",
+          "source_name": "loc_1000_2b6b",
+          "target_name": "loc_1000_2b6e",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null,
+            16416
+          ],
+          "ah": 68
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x1320a",
+      "cs": 4096,
+      "ip": 12810,
+      "segmented_address": "1000:320a",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.string_output",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_320a",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x9",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "string_output",
+        "terminates": false,
+        "inputs": {
+          "ds:dx": {
+            "role": "dollar_terminated_string",
+            "value": [
+              4096,
+              12781
+            ]
+          }
+        },
+        "outputs": {},
+        "memory_effects": [
+          {
+            "access": "read",
+            "pointer": "ds:dx",
+            "address": "0x131ed",
+            "length": null,
+            "extent": "dollar_terminated",
+            "actual_transfer": "unknown until return status and actual byte count are observed"
+          }
+        ]
+      },
+      "xrefs": [
+        {
+          "source": "0x13208",
+          "target": "0x1320a",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:3208",
+          "target_segmented_address": "1000:320a",
+          "source_name": "loc_1000_3208",
+          "target_name": "loc_1000_320a",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ah": 9,
+          "ax": 2304,
+          "bx": 16416,
+          "ds": 4096,
+          "dx": 12781
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x13497",
+      "cs": 4096,
+      "ip": 13463,
+      "segmented_address": "1000:3497",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.file_attributes",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_3497",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x43",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "file_attributes",
+        "terminates": false,
+        "inputs": {
+          "al": {
+            "role": "subfunction",
+            "value": null
+          },
+          "ds:dx": {
+            "role": "path",
+            "value": [
+              null,
+              null
+            ]
+          },
+          "cx": {
+            "role": "attributes_for_set",
+            "value": null
+          }
+        },
+        "outputs": {
+          "cx": "attributes_for_get",
+          "ax": "error_if_carry",
+          "cf": "error_if_set"
+        },
+        "memory_effects": [
+          {
+            "access": "read",
+            "pointer": "ds:dx",
+            "address": null,
+            "length": null,
+            "extent": "nul_terminated",
+            "actual_transfer": "unknown until return status and actual byte count are observed"
+          }
+        ]
+      },
+      "xrefs": [
+        {
+          "source": "0x13494",
+          "target": "0x13497",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:3494",
+          "target_segmented_address": "1000:3497",
+          "source_name": "loc_1000_3494",
+          "target_name": "loc_1000_3497",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null,
+            16416
+          ],
+          "ah": 67
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x134d5",
+      "cs": 4096,
+      "ip": 13525,
+      "segmented_address": "1000:34d5",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.close_file",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_34d5",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x3e",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "close_file",
+        "terminates": false,
+        "inputs": {
+          "bx": {
+            "role": "handle",
+            "value": null
+          }
+        },
+        "outputs": {
+          "ax": "error_if_carry",
+          "cf": "error_if_set"
+        },
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x134d2",
+          "target": "0x134d5",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:34d2",
+          "target_segmented_address": "1000:34d5",
+          "source_name": "loc_1000_34d2",
+          "target_name": "loc_1000_34d5",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null
+          ],
+          "ah": 62,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x1509e",
+      "cs": 4096,
+      "ip": 20638,
+      "segmented_address": "1000:509e",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.create_file",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_509e",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x3c",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "create_file",
+        "terminates": false,
+        "inputs": {
+          "ds:dx": {
+            "role": "path",
+            "value": [
+              null,
+              null
+            ]
+          },
+          "cx": {
+            "role": "attributes",
+            "value": null
+          }
+        },
+        "outputs": {
+          "ax": "handle_or_error",
+          "cf": "error_if_set"
+        },
+        "memory_effects": [
+          {
+            "access": "read",
+            "pointer": "ds:dx",
+            "address": null,
+            "length": null,
+            "extent": "nul_terminated",
+            "actual_transfer": "unknown until return status and actual byte count are observed"
+          }
+        ]
+      },
+      "xrefs": [
+        {
+          "source": "0x1509b",
+          "target": "0x1509e",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:509b",
+          "target_segmented_address": "1000:509e",
+          "source_name": "loc_1000_509b",
+          "target_name": "loc_1000_509e",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null,
+            16416
+          ],
+          "ah": 60
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x150b9",
+      "cs": 4096,
+      "ip": 20665,
+      "segmented_address": "1000:50b9",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.write_file",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_50b9",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x40",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "write_file",
+        "terminates": false,
+        "inputs": {
+          "bx": {
+            "role": "handle",
+            "value": null
+          },
+          "cx": {
+            "role": "requested_bytes",
+            "value": null
+          },
+          "ds:dx": {
+            "role": "buffer",
+            "value": [
+              16416,
+              null
+            ]
+          }
+        },
+        "outputs": {
+          "ax": "actual_bytes_or_error",
+          "cf": "error_if_set"
+        },
+        "memory_effects": [
+          {
+            "access": "read",
+            "pointer": "ds:dx",
+            "address": null,
+            "length": null,
+            "extent": "requested_buffer",
+            "actual_transfer": "unknown until return status and actual byte count are observed"
+          }
+        ]
+      },
+      "xrefs": [
+        {
+          "source": "0x150b7",
+          "target": "0x150b9",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:50b7",
+          "target_segmented_address": "1000:50b9",
+          "source_name": "loc_1000_50b7",
+          "target_name": "loc_1000_50b9",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null
+          ],
+          "ah": 64,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x15256",
+      "cs": 4096,
+      "ip": 21078,
+      "segmented_address": "1000:5256",
+      "context": "x86:16:little:cs=1000",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.open_file",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1000_5256",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x3d",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "open_file",
+        "terminates": false,
+        "inputs": {
+          "ds:dx": {
+            "role": "path",
+            "value": [
+              null,
+              null
+            ]
+          },
+          "al": {
+            "role": "access_and_sharing",
+            "value": null
+          }
+        },
+        "outputs": {
+          "ax": "handle_or_error",
+          "cf": "error_if_set"
+        },
+        "memory_effects": [
+          {
+            "access": "read",
+            "pointer": "ds:dx",
+            "address": null,
+            "length": null,
+            "extent": "nul_terminated",
+            "actual_transfer": "unknown until return status and actual byte count are observed"
+          }
+        ]
+      },
+      "xrefs": [
+        {
+          "source": "0x15254",
+          "target": "0x15256",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1000",
+          "source_context": "x86:16:little:cs=1000",
+          "target_context": "x86:16:little:cs=1000",
+          "source_cs": 4096,
+          "target_cs": 4096,
+          "source_segmented_address": "1000:5254",
+          "target_segmented_address": "1000:5256",
+          "source_name": "loc_1000_5254",
+          "target_name": "loc_1000_5256",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            16416
+          ],
+          "ah": 61
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x1f546",
+      "cs": 7947,
+      "ip": 1174,
+      "segmented_address": "1f0b:0496",
+      "context": "x86:16:little:cs=1f0b",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd10",
+      "mnemonic": "int",
+      "operands": "10h",
+      "raw_operands": "10h",
+      "display_operands": "10h ; BIOS.set_video_mode",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_1f0b_0496",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x10",
+        "function": "0x0",
+        "family": "bios",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/manuals/ibm/pc/techref/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "set_video_mode",
+        "terminates": false,
+        "inputs": {
+          "al": {
+            "role": "mode",
+            "value": 3
+          }
+        },
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x1f543",
+          "target": "0x1f546",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=1f0b",
+          "source_context": "x86:16:little:cs=1f0b",
+          "target_context": "x86:16:little:cs=1f0b",
+          "source_cs": 7947,
+          "target_cs": 7947,
+          "source_segmented_address": "1f0b:0493",
+          "target_segmented_address": "1f0b:0496",
+          "source_name": "loc_1f0b_0493",
+          "target_name": "loc_1f0b_0496",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ax": 3,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x2b563",
+      "cs": 11089,
+      "ip": 83,
+      "segmented_address": "2b51:0053",
+      "context": "x86:16:little:cs=2b51",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd10",
+      "mnemonic": "int",
+      "operands": "10h",
+      "raw_operands": "10h",
+      "display_operands": "10h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_2b51_0053",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x10",
+        "function": "0x1a",
+        "family": "bios",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/manuals/ibm/pc/techref/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x2b560",
+          "target": "0x2b563",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=2b51",
+          "source_context": "x86:16:little:cs=2b51",
+          "target_context": "x86:16:little:cs=2b51",
+          "source_cs": 11089,
+          "target_cs": 11089,
+          "source_segmented_address": "2b51:0050",
+          "target_segmented_address": "2b51:0053",
+          "source_name": "loc_2b51_0050",
+          "target_name": "loc_2b51_0053",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "ax": 6656,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x2b586",
+      "cs": 11089,
+      "ip": 118,
+      "segmented_address": "2b51:0076",
+      "context": "x86:16:little:cs=2b51",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd10",
+      "mnemonic": "int",
+      "operands": "10h",
+      "raw_operands": "10h",
+      "display_operands": "10h",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_2b51_0076",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x10",
+        "function": "0x12",
+        "family": "bios",
+        "known": false,
+        "source": "https://www.pcjs.org/documents/manuals/ibm/pc/techref/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": null,
+        "reason": "unknown selector or unimplemented service",
+        "inputs": {},
+        "outputs": {},
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x2b584",
+          "target": "0x2b586",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=2b51",
+          "source_context": "x86:16:little:cs=2b51",
+          "target_context": "x86:16:little:cs=2b51",
+          "source_cs": 11089,
+          "target_cs": 11089,
+          "source_segmented_address": "2b51:0074",
+          "target_segmented_address": "2b51:0076",
+          "source_name": "loc_2b51_0074",
+          "target_name": "loc_2b51_0076",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ax": 4608,
+          "bx": 65296,
+          "cl": 15,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x3ef0a",
+      "cs": 16097,
+      "ip": 250,
+      "segmented_address": "3ee1:00fa",
+      "context": "x86:16:little:cs=3ee1",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.free_memory",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_3ee1_00fa",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x49",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "free_memory",
+        "terminates": false,
+        "inputs": {
+          "es": {
+            "role": "block_segment",
+            "value": null
+          }
+        },
+        "outputs": {
+          "ax": "error_if_carry",
+          "cf": "error_if_set"
+        },
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x3ef08",
+          "target": "0x3ef0a",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=3ee1",
+          "source_context": "x86:16:little:cs=3ee1",
+          "target_context": "x86:16:little:cs=3ee1",
+          "source_cs": 16097,
+          "target_cs": 16097,
+          "source_segmented_address": "3ee1:00f8",
+          "target_segmented_address": "3ee1:00fa",
+          "source_name": "loc_3ee1_00f8",
+          "target_name": "loc_3ee1_00fa",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "_stack": [
+            null,
+            null
+          ],
+          "ah": 73,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    },
+    {
+      "address": "0x3f037",
+      "cs": 16097,
+      "ip": 551,
+      "segmented_address": "3ee1:0227",
+      "context": "x86:16:little:cs=3ee1",
+      "alternative_contexts": [],
+      "size": 2,
+      "bytes": "cd21",
+      "mnemonic": "int",
+      "operands": "21h",
+      "raw_operands": "21h",
+      "display_operands": "21h ; DOS.allocate_memory",
+      "file_references": [],
+      "file_reference_summary": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false
+      },
+      "flow": "next",
+      "target": null,
+      "name": "loc_3ee1_0227",
+      "show_label": false,
+      "references": [],
+      "comment": null,
+      "comment_author": null,
+      "comment_inherited_from": null,
+      "interrupt_service": {
+        "vector": "0x21",
+        "function": "0x48",
+        "family": "dos",
+        "known": true,
+        "source": "https://www.pcjs.org/documents/books/mspl13/msdos/encyclopedia/section5/",
+        "evidence": "documented API selected by stored pre-instruction register facts",
+        "runtime_observed": false,
+        "assumptions": [
+          "Original DOS/BIOS interrupt handler implements this API; custom handlers may differ."
+        ],
+        "name": "allocate_memory",
+        "terminates": false,
+        "inputs": {
+          "bx": {
+            "role": "paragraphs",
+            "value": null
+          }
+        },
+        "outputs": {
+          "ax": "segment_or_error",
+          "bx": "largest_block_on_failure",
+          "cf": "error_if_set"
+        },
+        "memory_effects": []
+      },
+      "xrefs": [
+        {
+          "source": "0x3f035",
+          "target": "0x3f037",
+          "kind": "fallthrough",
+          "evidence": "16-bit straight-line CS/IP fallthrough",
+          "version": 1,
+          "context": "x86:16:little:cs=3ee1",
+          "source_context": "x86:16:little:cs=3ee1",
+          "target_context": "x86:16:little:cs=3ee1",
+          "source_cs": 16097,
+          "target_cs": 16097,
+          "source_segmented_address": "3ee1:0225",
+          "target_segmented_address": "3ee1:0227",
+          "source_name": "loc_3ee1_0225",
+          "target_name": "loc_3ee1_0227",
+          "target_representation": "code"
+        }
+      ],
+      "assumptions": {
+        "registers": {
+          "ah": 72,
+          "cl": 4,
+          "ds": 16416
+        },
+        "state": "done",
+        "reason": "fallthrough"
+      }
+    }
+  ],
+  "known_service_count": 29
+}

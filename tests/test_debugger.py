@@ -66,7 +66,8 @@ def test_real_breakpoint_translation_trace_restart_and_patch_isolation(game,emul
             debug.delete_breakpoint(breakpoint['breakpoint_id'])
             trace=debug.trace(count=4)
             assert trace['metadata']['complete'] and trace['metadata']['event_count']==4
-            moved=debug.run(guest_ms=1000,timeout_ms=2000,fast_forward=True)
+            # This verifies guest progress, not a minimum emulator throughput.
+            moved=debug.run(guest_ms=1000,timeout_ms=10000,fast_forward=True)
             assert moved['outcome']=='guest_time' and moved['guest_elapsed_ms']>=1000
             screenshot=debug.screenshot('guest.png')
             pid=debug.rpc.process.pid
@@ -228,6 +229,73 @@ def test_script_validation_persistence_and_real_execution(access_game,emulator):
         failed=debug.script({'format':'fdisbull-script-1','steps':[
             {'op':'assert','value':1,'equals':2},{'op':'run','guest_ms':100}]})
         assert not failed['ok'] and failed['completed_steps']==0 and len(failed['steps'])==1
+
+
+def test_real_saved_wait_progress_timeout_and_restart(access_game, emulator, tmp_path):
+    path, binary = access_game
+    observations = {'word': {'kind': 'memory', 'address': '1000:0100', 'length': 2}}
+    script = {'format': 'fdisbull-script-1', 'steps': [
+        dict(op='wait', observations=observations, until=dict(observation='word', equals='3412'),
+             guest_ms=1000, slice_ms=10, timeout_ms=10000)]}
+    with Project(path) as db:
+        stored = db.debug_save_script('wait.json', script)
+    with Project(path) as db, db.debugger(emulator, binary.parent) as debug:
+        bp = debug.breakpoint('1000:0005')
+        assert debug.run(timeout_ms=5000)['outcome'] == 'breakpoint'
+        debug.delete_breakpoint(bp['breakpoint_id'])
+        report = debug.script(script_id=stored['script_id'])
+        assert report['ok'], report
+        wait = report['steps'][0]['result']
+        assert len(wait['polls']) >= 2 and wait['guest_elapsed_ms'] > 0
+        initial = debug.wait(observations, dict(observation='word', equals='3412'), guest_ms=100)
+        assert initial['complete'] and not initial['runs']
+        # Short CPU slices need not have produced the first completed VGA frame.
+        # Establish a real frame before requiring a timeout diagnostic image.
+        assert debug.run(guest_ms=1000,timeout_ms=10000,fast_forward=True)['outcome']=='guest_time'
+        assert debug.screenshot('established-frame.png')['artifact']
+        failed = debug.wait(observations, dict(observation='word', equals='ffff'),
+                            guest_ms=20, slice_ms=10, timeout_ms=10000)
+        assert failed['outcome'] == 'guest_budget' and not failed['complete']
+        assert failed['diagnostic_frame'],failed
+        frame = failed['diagnostic_frame']['artifact']
+    with Project(path) as db:
+        output = tmp_path / 'wait-diagnostic.png'
+        db.debug_export(frame, output)
+        assert output.read_bytes().startswith(b'\x89PNG\r\n\x1a\n')
+
+
+def test_real_wait_preserves_execution_and_data_breakpoints(access_game, emulator):
+    path, binary = access_game
+    observations = {'word': {'kind': 'memory', 'address': '1000:0100', 'length': 2}}
+    with Project(path) as db, db.debugger(emulator, binary.parent) as debug:
+        bp = debug.breakpoint('1000:0005')
+        wait = debug.wait(observations, dict(observation='word', equals='3412'), guest_ms=100, timeout_ms=5000)
+        assert not wait['complete'] and wait['outcome'] == 'breakpoint'
+        assert int(debug.registers()['ip'], 16) == 5
+        debug.delete_breakpoint(bp['breakpoint_id'])
+        watch = debug.breakpoint('1000:0100', access='w', length=2)
+        wait = debug.wait(observations, dict(observation='word', equals='3412'), guest_ms=100, timeout_ms=5000)
+        assert not wait['complete'] and wait['stop']['session']['stop_reason']['data_access']
+        assert debug.memory('1000:0100', length=2)['hex'] == '3412'
+
+
+def test_real_catalog_strlen_returns_expected_value(emulator,tmp_path):
+    from fdisbull.summaries import builtin_signatures
+    signature=next(s for s in builtin_signatures() if s['name']=='strlen' and s.get('abi')=='x86_16_cdecl_near')
+    module=bytearray(1024)
+    # DS=CS; push address of hello; call library strlen; caller cleanup; loop.
+    module[:15]=bytes.fromhex('0e1fb8000150e8370083c40290ebfe')
+    body=bytes.fromhex(signature['bytes']);module[0x40:0x40+len(body)]=body
+    module[0x100:0x106]=b'hello\0'
+    binary=tmp_path/'LIBCALL.EXE';binary.write_bytes(mz_file(module,ss=0,sp=0x300))
+    with Project.create(tmp_path/'libcall.fdb',binary) as p:
+        p.auto_analyze(max_instructions=100,max_functions=8)
+        assert p.disassembly('1000:0040',lines=1)['instructions'][0]['name']=='strlen'
+        with p.debugger(emulator,tmp_path) as debug:
+            bp=debug.breakpoint('1000:0009')
+            result=debug.run(timeout_ms=5000)
+            assert result['outcome']=='breakpoint'
+            assert int(debug.registers()['general']['eax'],16)&0xffff==5
 
 
 def test_native_state_fork_edits_and_reinjects_without_changing_parent(access_game,emulator):

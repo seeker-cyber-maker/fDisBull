@@ -113,6 +113,10 @@ def _layout(snapshot: dict) -> tuple[list[_Text], list[tuple[int, int, str]], in
         add(_PAD, y + 2, line, "muted")
         y += _LINE
     y += 4
+    if snapshot.get('temporal'):
+        temporal=snapshot['temporal']
+        add(_PAD,y,f"TEMPORAL {temporal['kind']} / {temporal['view']} / captured span only; other bytes inherited",'muted',15)
+        y += 25
     analysis = snapshot.get('analysis')
     if isinstance(analysis,dict):
         state = 'fixed point' if analysis.get('stable') is True else 'partial' if analysis.get('stable') is False else 'on demand'

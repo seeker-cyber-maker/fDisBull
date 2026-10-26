@@ -98,7 +98,8 @@ def test_summary_and_signature_files_are_qualified_and_persistent(advanced_proje
     assert cli('add-signature', database, signature)['signature']['id'] == 'cli.fixture.fill'
     catalog = cli('signatures', database)
     assert catalog['registered'][0]['id'] == 'cli.fixture.fill'
-    assert len(catalog['builtin']) == 4
+    assert len([s for s in catalog['builtin'] if not s.get('identity_only')]) == 4
+    assert {'strlen','strcpy','memcpy'} <= {s['name'] for s in catalog['builtin'] if s['bits']==16}
     assert cli('auto-analyze', database, '--abi', 'x86_64_sysv')['stable']
     effects = cli('call-effects', database, '--address', '0x1040', '--access', 'write', '--no-unresolved')
     assert effects['items'][0]['summary_name'] == 'reviewed_fill'

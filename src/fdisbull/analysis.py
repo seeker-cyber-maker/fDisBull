@@ -74,6 +74,8 @@ class AnalysisMixin:
         row = self.db.execute("SELECT module,name FROM symbols WHERE version=? AND address=? ORDER BY CASE kind WHEN 'recovered_import' THEN 0 WHEN 'imports' THEN 1 ELSE 2 END,name LIMIT 1",(version,k(address))).fetchone()
         if row:
             return (row[0]+'!' if row[0] else '')+row[1]
+        recognized=self._signature_name(version,self.context,address)
+        if recognized:return recognized
         row = self.db.execute('SELECT name FROM functions WHERE version=? AND context=? AND address=?',(version,self.context,k(address))).fetchone()
         return row[0] if row else f'mem_{address:x}'
 
@@ -265,10 +267,16 @@ class AnalysisMixin:
                     raise ValueError('analysis start is not in executable mapped bytes')
                 self._queue_code(v,a,'user seed')
                 self.db.execute('INSERT OR IGNORE INTO functions(version,context,address,name,source) VALUES (?,?,?,?,?)',(v,self.context,k(a),f'sub_{a:x}','user seed'))
+            preferred = k(a) if start is not None else None
             before=fact_count()
             attempted=decoded=data_processed=passes=0
             while attempted<budget:
-                work=self.db.execute("SELECT address FROM work WHERE version=? AND context=? AND state='pending' ORDER BY rowid LIMIT 1",(v,self.context)).fetchone()
+                work=None
+                if preferred is not None:
+                    work=self.db.execute("SELECT address FROM work WHERE version=? AND context=? AND address=? AND state='pending'",(v,self.context,preferred)).fetchone()
+                    preferred=None
+                if work is None:
+                    work=self.db.execute("SELECT address FROM work WHERE version=? AND context=? AND state='pending' ORDER BY rowid LIMIT 1",(v,self.context)).fetchone()
                 if work:
                     attempted+=1
                     a=int(work[0],16)

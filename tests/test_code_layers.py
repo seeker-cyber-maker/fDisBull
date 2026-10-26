@@ -265,6 +265,17 @@ def test_real_script_layer_controls_and_hook_removal(layered_game,layer_backend)
         assert {'code-snapshot','script','script-result'}<={a['kind'] for a in p.debug_artifacts()['artifacts']}
 
 
+def test_real_observation_wait_reports_hook_without_resuming(layered_game,layer_backend):
+    path,binary=layered_game
+    with Project(path) as p,p.debugger(layer_backend,binary.parent) as d:
+        hook=d.hook('1000:0002',actions=[{'op':'layers','layers':[]}])
+        result=d.wait({'operand':dict(kind='memory',address='1000:0003',length=2)},
+                      dict(observation='operand',equals='ffff'),guest_ms=1000,timeout_ms=5000)
+        assert not result['complete'] and result['outcome']=='hook'
+        assert len(result['runs'])==1 and len(result['stop']['hook_hits'])==1
+        assert int(d.registers()['ip'],16)==2
+
+
 def test_layer_guards_reject_malformed_or_overlapping_definitions(layered_game):
     path,binary=layered_game
     with Project(path) as p:

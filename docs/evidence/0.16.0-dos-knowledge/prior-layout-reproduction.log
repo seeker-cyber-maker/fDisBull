@@ -1,0 +1,21 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_typed_file_item_budget_does_not_repeat_expanded_nested_layouts ______
+/Users/tiga/Documents/ChatGPT/fDisBull/tests/test_file_references.py:176: in test_typed_file_item_budget_does_not_repeat_expanded_nested_layouts
+    project.define_type('Large',dict(kind='struct',size=16384,fields=[dict(name=f'r{i}',offset=i*128,type='Small') for i in range(128)]))
+.recovery/2026-10-26/dos-knowledge-wait/prior-layout-wheel/fdisbull/typesystem.py:180: in define_type
+    layouts={n:type_layout(n,registry) for n in registry}
+               ^^^^^^^^^^^^^^^^^^^^^^^
+.recovery/2026-10-26/dos-knowledge-wait/prior-layout-wheel/fdisbull/typesystem.py:140: in type_layout
+    layout=type_layout(_name(field.get('type')),registry,active+(name,),_budget)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.recovery/2026-10-26/dos-knowledge-wait/prior-layout-wheel/fdisbull/typesystem.py:140: in type_layout
+    layout=type_layout(_name(field.get('type')),registry,active+(name,),_budget)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.recovery/2026-10-26/dos-knowledge-wait/prior-layout-wheel/fdisbull/typesystem.py:48: in type_layout
+    if _budget[0]<0:raise ValueError('type expansion exceeds 8192 nodes')
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   ValueError: type expansion exceeds 8192 nodes
+=========================== short test summary info ============================
+FAILED tests/test_file_references.py::test_typed_file_item_budget_does_not_repeat_expanded_nested_layouts
+1 failed in 0.71s

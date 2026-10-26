@@ -123,8 +123,10 @@ class MachineContext:
 
     @machine_operation
     def status(self):
+        from .debug_semantics import contract
         state=self.vm.qmp.call('query-status')
-        return dict(context='machine',state='running' if state['running'] else 'stopped',native_state=state,capabilities=self.capabilities)
+        return dict(context='machine',state='running' if state['running'] else 'stopped',native_state=state,capabilities=self.capabilities,
+                    semantics=contract('qemu-machine'))
 
     @machine_operation
     def pause(self):
@@ -230,6 +232,8 @@ class MachineContext:
         kind='exited' if reply[:1] in (b'W',b'X') else 'timeout' if timed_out else 'watchpoint' if watch else 'breakpoint' if ids else 'exception' if signal!=5 else 'step' if command=='s' else 'stopped'
         result=dict(context='machine',outcome=kind,timed_out=timed_out,session=dict(state='exited' if kind=='exited' else 'stopped',stop_reason=dict(kind=kind,
                     address=hex(pc) if pc is not None else None,breakpoint_ids=ids,native_reply=native)),registers=regs)
+        from .debug_semantics import normalize_stop
+        result['stop']=normalize_stop('qemu-machine',result['session']['stop_reason'],outcome=kind)
         if self.project:self._event('machine-'+('step' if command=='s' else 'run'),result)
         return result
 
@@ -272,6 +276,9 @@ class MachineContext:
             state=dict(context='machine',outcome='timeout',timed_out=True,session=dict(state='stopped',stop_reason=dict(kind='timeout',origin='trace-deadline')))
         result=dict(context='machine',events=events,complete=len(events)==count,requested_count=count,session=state,
                     semantics='completed steps on selected vCPU; QEMU default stepping masks IRQs/timers; full machine stopped between calls',bits=bits)
+        from .debug_semantics import normalize_trace,contract
+        normalize_trace('qemu-machine',events,version=self.version['id'] if hasattr(self,'version') else None)
+        result['observation_contract']=contract('qemu-machine')
         return self._artifact(name,'trace',json.dumps(result,indent=2).encode(),dict(event_count=len(events),complete=result['complete'],context='machine'))
 
     @machine_operation

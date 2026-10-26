@@ -40,6 +40,11 @@ ABI_PROFILES['aarch64_darwin']=dict(ABI_PROFILES['aarch64_aapcs64'],name='aarch6
     stack_argument_offset=None,outgoing_stack_argument_offset=None,
     stack_arguments_require_types=True,platform='Darwin',
     note='Integer register arguments only; Darwin packed stack and variadic arguments are not inferred.')
+for _distance,_return in (('near',2),('far',4)):
+    _name='x86_16_pascal_'+_distance
+    ABI_PROFILES[_name]=dict(_profile(_name,'x86',16,'sp','bp',[],['ax','dx'],_return,_return,
+        clobbers=('ax','cx','dx')),argument_order='left_to_right',
+        note='Pascal stack arguments need a declared prototype to recover source argument order.')
 
 _ALIASES = {'darwin_arm64':'aarch64_darwin','sysv_x86_64': 'x86_64_sysv', 'sysv_amd64': 'x86_64_sysv', 'sysv': 'x86_64_sysv',
             'win64': 'x86_64_win64', 'windows_x64': 'x86_64_win64', 'aapcs64': 'aarch64_aapcs64',
@@ -170,7 +175,18 @@ def _arguments(profile, state, evaluate):
                               value=value, known=_known(value), candidate=True))
     sp = evaluate(dict(op='reg', name=profile['stack_pointer']), state)
     origin, start, word = _offset(sp), profile.get('outgoing_stack_argument_offset'), profile.get('word_size')
-    if origin is not None and start is not None and word:
+    if 'parameter_layout' in profile:
+        for parameter in profile['parameter_layout']:
+            offset=parameter['offset'];width=parameter['width']
+            entry_offset=origin+offset if origin is not None else None
+            cells=[value for key,value in state.get('memory',{}).items()
+                   if (match:=_STACK_KEY.fullmatch(key)) and (int(match[1]),int(match[2]))==(entry_offset,width)]
+            cell=cells[0] if cells and all(v==cells[0] for v in cells) else None
+            value=evaluate(_expr(cell),state) if cell is not None else _unknown('no exact typed argument cell')
+            arguments.append(dict(index=parameter['index'],name=parameter['name'],
+                location=dict(kind='stack',offset=offset,entry_sp_offset=entry_offset,width=width),
+                value=value,known=_known(value),candidate=False))
+    elif origin is not None and start is not None and word:
         cells = []
         for key, value in state.get('memory', {}).items():
             match = _STACK_KEY.fullmatch(str(key))
@@ -181,7 +197,7 @@ def _arguments(profile, state, evaluate):
             if start <= relative < start + 256 and width > 0:
                 cells.append((relative, width, offset, value))
         for relative, width, offset, value in sorted(cells, key=lambda cell: (cell[0], -cell[1]))[:64]:
-            index = len(profile['argument_registers']) + (relative - start) // word if (relative - start) % word == 0 else None
+            index = len(profile['argument_registers']) + (relative - start) // word if (relative - start) % word == 0 and profile.get('argument_order')!='left_to_right' else None
             value = evaluate(_expr(value), state)
             arguments.append(dict(index=index, location=dict(kind='stack', offset=relative, entry_sp_offset=offset, width=width),
                                   value=value, known=_known(value), candidate=True))

@@ -1,0 +1,32 @@
+{
+  "format": "fdisbull-0.16-verification-1",
+  "source_base": "e91879c03d7072dc214ea81900f7f70ec5304c46",
+  "working_version": "0.16.0",
+  "git_status": "uncommitted candidate",
+  "python": "3.13.5",
+  "linux": {
+    "ordinary": {
+      "tests": 897,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 55
+    },
+    "native": {
+      "tests": 84,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "kit015-native": {
+      "tests": 60,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "tested_wheel_sha256": "6c8469f891aa1ca74cd0e4a42ac3ee0b7f2de2aea9150ef1770cb8789a7ebd9f",
+  "kit_initial_failure": "test requested 1000 guest ms with 2000 host ms; observed timeout; original receipt retained; fresh retries separate",
+  "vm_network": "none",
+  "native_states_exported": false,
+  "project_databases_exported": false
+}

@@ -1,0 +1,47 @@
+"""Additive observation contracts. Native evidence is never replaced."""
+
+
+def contract(backend):
+    dos=backend in ('dosbox','dosbox-qemu')
+    pe=backend in ('wine-qemu','ida-wine-qemu')
+    return {'format':'fdisbull-debug-semantics-1','backend':backend,
+            'execution_breakpoint_stage':'before-instruction',
+            'watchpoint_stage':'after-instruction' if dos else 'before-access' if backend=='wine-qemu' else 'unsupported' if backend=='ida-wine-qemu' else 'unknown; inspect native reply',
+            'trace_registers_stage':'before-instruction',
+            'trace_completion':'fetch-observed; completion unknown' if dos else 'confirmed completed steps',
+            'timing':'guest ticks supported' if dos else 'host bounded; stepping has no elapsed-time fidelity',
+            'address_context':'real-mode CS plus linear address' if dos else 'selected process virtual address' if pe else 'selected vCPU; explicit address space'}
+
+
+def normalize_stop(backend,native,*,outcome):
+    dos=backend in ('dosbox','dosbox-qemu')
+    access=native.get('data_access')
+    watch=bool(access) or native.get('kind')=='watchpoint'
+    trigger='watchpoint' if watch else outcome
+    stage='stopped; stage unknown';completed=None;cause=None
+    if dos and access:
+        stage='after-instruction';completed=True;cause=access.get('instruction')
+    elif backend=='wine-qemu' and watch and native.get('before_access'):
+        stage='before-instruction';completed=False;cause=native.get('address')
+    elif trigger=='breakpoint':
+        stage='before-instruction';completed=False;cause=native.get('address')
+    return {'format':'fdisbull-debug-stop-1','trigger':trigger,'native_kind':native.get('kind'),
+            'causing_instruction':cause,'resume_pc':native.get('address'),
+            'instruction_completed':completed,'registers_stage':stage,
+            'context':'dos-cpu' if dos else 'process' if backend in ('wine-qemu','ida-wine-qemu') else 'machine'}
+
+
+def normalize_trace(backend,events,*,version,delta=0,budget_reached=False):
+    dos=backend in ('dosbox','dosbox-qemu')
+    for index,event in enumerate(events):
+        context='flat' if backend in ('wine-qemu','ida-wine-qemu') else 'machine'
+        address=event.get('address')
+        if dos and isinstance(address,dict) and address.get('space')=='segmented':
+            cs=int(address['segment'],16)-delta//16
+            context=f'real:{cs:04x}' if 0<=cs<=0xffff else None
+        event['identity']={'source_version':version,'context':context,'runtime_address':address,
+                           'project_address':event.get('project_address')}
+        event['observation']={'registers_stage':'before-instruction',
+                              'instruction_completed':False if dos and budget_reached and index==len(events)-1 else None if dos else True,
+                              'evidence':'pending fetch at trace budget' if dos and budget_reached and index==len(events)-1 else 'native fetch' if dos else 'confirmed native step'}
+    return events

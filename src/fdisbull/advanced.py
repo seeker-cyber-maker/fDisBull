@@ -26,6 +26,13 @@ def _automatic_summary(contract):
 
 
 class AdvancedMixin:
+    def _signature_name(self,v,context,address):
+        query='SELECT r.document FROM advanced_results r JOIN advanced_jobs j USING(version,context,address) WHERE r.version=? AND r.address=? AND j.state=\'done\''
+        params=[v,_key(address)]
+        if context is not None:query+=' AND r.context=?';params.append(context)
+        names={match['name'] for row in self.db.execute(query,params)
+               for match in json.loads(row[0]).get('signature_matches',[])}
+        return next(iter(names)) if len(names)==1 else None
     def _advanced_identity(self,address,cs=None,version=None):
         v=self.version(version)['id']
         if self.meta['format']=='MZ':
@@ -102,6 +109,56 @@ class AdvancedMixin:
     def signatures(self,version=None):
         v=self.version(version)['id']
         return dict(version=v,builtin=builtin_signatures(),registered=[json.loads(r[0]) for r in self.db.execute('SELECT document FROM library_signatures WHERE version=? ORDER BY name',(v,))])
+
+    def import_signatures(self,catalog,version=None):
+        if not isinstance(catalog,dict) or catalog.get('format')!='fdisbull-signatures-1':
+            raise ValueError('Expected fdisbull-signatures-1 catalog')
+        if len(_dump(catalog).encode())>4*1024*1024:raise ValueError('Signature catalog exceeds 4 MiB')
+        rows=catalog.get('signatures')
+        if not isinstance(rows,list) or not 1<=len(rows)<=4096:raise ValueError('Catalog requires 1..4096 signatures')
+        documents=[validate_signature(row) for row in rows]
+        ids=[row['id'] for row in documents]
+        if len(set(ids))!=len(ids):raise ValueError('Duplicate signature IDs in catalog')
+        if set(ids)&{row['id'] for row in builtin_signatures()}:raise ValueError('Catalog cannot replace built-in identities')
+        with self.transaction(True):
+            v=self.version(version)['id']
+            self.db.executemany('INSERT OR REPLACE INTO library_signatures VALUES (?,?,?)',[(v,row['id'],_dump(row)) for row in documents])
+            invalidated=self._invalidate_derived(v,reason='signature catalog imported')
+            return dict(version=v,imported=len(documents),ids=ids,invalidated_tasks=invalidated)
+
+    def export_signatures(self,version=None):
+        catalog=self.signatures(version)
+        return dict(format='fdisbull-signatures-1',source='Versioned, explicitly registered project signatures',
+                    version=catalog['version'],signatures=catalog['registered'])
+
+    def capture_signature(self,address,name,version=None,cs=None,author='agent',max_instructions=4096):
+        if not isinstance(author,str) or not 1<=len(author)<=256:raise ValueError('author must contain 1..256 characters')
+        with self.transaction(True):
+            v,context,a=self._advanced_identity(address,cs,version)
+            snapshot=self.cfg(address,version=v,cs=cs,max_instructions=max_instructions)
+            rows=sorted(snapshot['nodes'],key=lambda node:int(node['address'],16))
+            if not snapshot['graph_closed'] or not rows or int(rows[0]['address'],16)!=a or any(row['context']!=context for row in rows):
+                raise ValueError('Signature capture requires a closed complete function in one context')
+            raw=b''.join(bytes.fromhex(row['bytes']) for row in rows)
+            if len(raw)>65536:raise ValueError('Signature capture exceeds 65536 bytes')
+            expected=a
+            for row in rows:
+                if int(row['address'],16)!=expected:raise ValueError('Signature capture requires contiguous instruction bytes')
+                expected+=row['size']
+            mask=bytearray(b'\xff'*len(raw));relocations=[]
+            for site in self._document(v).get('dos',{}).get('relocations',[]):
+                offset=site['linear_address']-a
+                if offset<len(raw) and offset+2>0:
+                    if offset<0 or offset+2>len(raw):raise ValueError('Relocation straddles captured function boundary')
+                    mask[offset:offset+2]=b'\0\0'
+                    relocations.append(dict(offset=offset,size=2,kind='MZ_segment_word'))
+            signature=validate_signature(dict(id='captured.'+hashlib.sha256(_dump([name,raw.hex(),mask.hex(),context]).encode()).hexdigest()[:24],
+                name=name,arch=self.arch,bits=self.bits,bytes=raw.hex(),mask=mask.hex(),relocations=relocations,
+                source='User-confirmed routine captured by '+author,identity_only=True,
+                provenance=dict(author=author,version=v,version_sha256=self.version(v)['sha256'],
+                                context=context,address=hex(a),input_sha256=hashlib.sha256(raw).hexdigest())))
+            registered=self.add_signature(signature,version=v)
+            return dict(registered,scope='Retained closed body; user-assigned identity, not independently established compiler provenance')
 
     def _summary_at(self,v,context,a):
         row=self.db.execute('SELECT document FROM function_summaries WHERE version=? AND context=? AND address=?',(v,context,_key(a))).fetchone()
@@ -262,13 +319,13 @@ class AdvancedMixin:
         registered=[json.loads(r[0]) for r in self.db.execute('SELECT document FROM library_signatures WHERE version=?',(v,))]
         rows=[dict(n,address=int(n['address'],16)) for n in sorted(snapshot['nodes'],key=lambda n:int(n['address'],16))]
         signature_scope=bool(snapshot['graph_closed'] and rows and rows[0]['address']==address and all(n['context']==context for n in rows))
-        matches=match_signatures(rows,builtin_signatures()+registered,arch=self.arch,bits=self.bits) if signature_scope else []
+        matches=match_signatures(rows,builtin_signatures(arch=self.arch,bits=self.bits)+registered,arch=self.arch,bits=self.bits) if signature_scope else []
         if not contract and len({m['name'] for m in matches})==1:
             match=matches[0]
             source=dict(kind='exact_signature',id=match['signature_id'],match=match['match'],
                         input_sha256=hashlib.sha256(bytes.fromhex(match['input_hex'])).hexdigest(),
                         masked_offsets=match.get('masked_offsets',[]))
-            contract=resolve_summary(match['name'],source=source,confidence=match.get('confidence'))
+            contract=None if match.get('identity_only') else resolve_summary(match['name'],source=source,confidence=match.get('confidence'))
             if contract:
                 if match.get('abi'):contract['abi']=match['abi']
                 if previous_contract!=contract:
@@ -358,7 +415,9 @@ class AdvancedMixin:
             previous=json.loads(stored[0]) if stored else {}
             selected=abi if abi is not None else previous.get('abi',self._default_abi())
             _select_abi(dict(arch=self.arch,bits=self.bits),{},selected)
-            options=dict(max_instructions=max_instructions,max_steps=max_steps,max_entries=max_entries,abi=selected)
+            options=dict(max_instructions=max_instructions,max_steps=max_steps,max_entries=max_entries,abi=selected,
+                         analysis_revision='dos-knowledge-1',
+                         signature_catalog_sha256=hashlib.sha256(_dump(builtin_signatures()).encode()).hexdigest())
             if previous and previous!=options:self._invalidate_derived(v,reason='analysis options changed')
             self.db.execute('INSERT OR REPLACE INTO metadata VALUES (?,?)',(option_key,_dump(options)))
             self.db.execute("UPDATE advanced_jobs SET state='pending' WHERE version=? AND state='partial'",(v,))

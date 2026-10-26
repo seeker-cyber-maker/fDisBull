@@ -87,6 +87,8 @@ class DOSViewsMixin:
                               (v, _BASE_CONTEXT, _key(a))).fetchone()
         if row:
             return row[0]
+        recognized=self._signature_name(v,context,a)
+        if recognized:return recognized
         row = None
         if context is not None:
             row = self.db.execute("SELECT name FROM functions WHERE version=? AND context=? AND address=?",
@@ -235,6 +237,12 @@ class DOSViewsMixin:
                                           (v["id"], _BASE_CONTEXT, row["address"])).fetchone()
                 state = self.db.execute("SELECT registers,state,reason FROM dos_states WHERE version=? AND context=? AND address=?",
                                         (v["id"], row["context"], row["address"])).fetchone()
+                service=None
+                if row['mnemonic'].lower() in ('int','int3'):
+                    from .dos_services import describe_interrupt
+                    vector=3 if row['mnemonic'].lower()=='int3' else int(row['bytes'][-2:],16)
+                    service=describe_interrupt(vector,json.loads(state[0]) if state else {})
+                    if service and service['known']:display+=' ; '+service['family'].upper()+'.'+service['name']
                 has_label = self.db.execute("SELECT 1 FROM annotations WHERE version=? AND context=? AND address=? AND kind='name'",
                                             (v["id"], _BASE_CONTEXT, row["address"])).fetchone() is not None
                 if not has_label:
@@ -250,6 +258,7 @@ class DOSViewsMixin:
                                      "name": self._dos_label(v["id"], linear, row["context"]), "show_label": has_label, "references": references,
                                      "comment": comment[0] if comment else None, "comment_author": comment[1] if comment else None,
                                      "comment_inherited_from": comment[2] if comment else None,
+                                     "interrupt_service":service,
                                      "xrefs": self._dos_xrefs(linear, "to", v["id"], cs=row_cs),
                                      "assumptions": {"registers": json.loads(state[0]), "state": state[1], "reason": state[2]} if state else None})
             return {"title": self.meta["filename"], "arch": self.arch, "bits": self.bits,

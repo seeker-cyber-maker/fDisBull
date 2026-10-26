@@ -20,6 +20,7 @@ PY
 chown ubuntu:ubuntu /dev/ttyS1
 chmod 600 /dev/ttyS1
 x86_64-w64-mingw32-gcc -O2 -Wall -Wextra -o /opt/fdisbull/agent.exe /opt/fdisbull/agent.c -luser32 -lgdi32 -lcrypt32
+x86_64-w64-mingw32-gcc -O0 -Wall -Wextra -o /opt/fdisbull/selftest.exe /opt/fdisbull/selftest.c -mwindows -luser32 -lgdi32
 Xvfb :99 -screen 0 1280x800x24 -nolisten tcp > /work/xvfb.log 2>&1 &
 runuser -u ubuntu -- env DISPLAY=:99 WINEPREFIX=/work/prefix WINEARCH=win64 WINEDEBUG=-all \
   XDG_RUNTIME_DIR=/work/runtime XDG_CACHE_HOME=/work/cache python3 /opt/fdisbull/broker.py

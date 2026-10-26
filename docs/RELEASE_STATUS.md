@@ -1,9 +1,14 @@
 # Release status checked on 2026-10-26
 
-The working source is a **0.15.0 candidate** with
-[saved experiments and layer comparisons](DEBUGGER_EXPERIMENTS.md).
-It has not been tagged or published. The latest published package release is
-**0.14.0**.
+The source is **0.16.0**, adding [standalone DOS knowledge](DOS_KNOWLEDGE.md),
+[bounded saved-script waits](OBSERVATION_WAIT.md), temporal code interpretations,
+explicit observation semantics and the runtime doctor. Local offline Linux
+Python 3.13.5 acceptance passed **1,065 ordinary checks (59 skipped)** and
+**311 installed-wheel/native-gate checks with no skips**. See the
+[acceptance record](VERIFICATION-DOS-KNOWLEDGE.md). The earlier failure receipts
+remain historical evidence. Exact-commit ordinary and native GitHub Linux CI
+must pass before tagging. Tag CI and GitHub publication are separate gates.
+The latest published package release is **0.14.0**.
 [v0.14.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0)
 is published, not draft or prerelease, and targets
 `6a0aeb3830eb544cd744d3410881c1c951a5ffb7`. Five unchanged tag-CI assets were
@@ -23,8 +28,9 @@ directory and ZIP integrity/exclusion checks before the latest pointers were
 updated. Copied Mac gates passed 48 DOS/boot, 4 optional IDA checks and a real
 Wine smoke; the clean Mac offline suite passed 51 checks. The separate Linux
 x86-64 Python 3.13.5 offline installation/CLI probe passed, but native tests
-reported **49 passed, 2 native-state restore CRC failures**. Failed receipts
-are retained and this probe's state restoration remains unqualified. The
+reported **49 passed, 2 native-state restore CRC failures**. Those historical
+failed receipts are retained; that initial probe did not qualify state restoration.
+The later statefix1 and 0.16 acceptance are recorded separately above. The
 reported external DeepSeek environment has not been accessed or changed.
 Games, saved states, project databases and vendor IDA server/keys are excluded.
 Earlier deliveries and evidence remain unchanged.

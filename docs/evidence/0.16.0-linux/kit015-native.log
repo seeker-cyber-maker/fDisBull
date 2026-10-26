@@ -1,0 +1,35 @@
+..F.........................................................             [100%]
+=================================== FAILURES ===================================
+______ test_real_breakpoint_translation_trace_restart_and_patch_isolation ______
+
+game = (PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_real_breakpoint_translati0/game.fdb'), PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_real_breakpoint_translati0/GAME.EXE'))
+emulator = '/opt/kit015/backend/linux-amd64/dosbox-x-offline'
+tmp_path = PosixPath('/tmp/pytest-of-ubuntu/pytest-0/test_real_breakpoint_translati0')
+
+    def test_real_breakpoint_translation_trace_restart_and_patch_isolation(game,emulator,tmp_path):
+        path,binary=game
+        with Project(path) as db:
+            with db.debugger(emulator,binary.parent) as debug:
+                breakpoint=debug.breakpoint('1000:0003')
+                assert breakpoint['bytes_verified'] and breakpoint['runtime_bytes']=='bb7856'
+                stopped=debug.run(timeout_ms=2000,fast_forward=True)
+                assert stopped['outcome']=='breakpoint' and not stopped['timed_out']
+                assert stopped['session']['stop_reason']['project_address']=='0x10003'
+                assert not stopped['timing_after']['fast_forward']
+                registers=debug.registers()
+                assert registers['cs']==registers['segments']['cs'] and registers['ip']==registers['instruction_pointer']
+                assert int(registers['general']['eax'],16)==0x1234
+                debug.delete_breakpoint(breakpoint['breakpoint_id'])
+                trace=debug.trace(count=4)
+                assert trace['metadata']['complete'] and trace['metadata']['event_count']==4
+                moved=debug.run(guest_ms=1000,timeout_ms=2000,fast_forward=True)
+>               assert moved['outcome']=='guest_time' and moved['guest_elapsed_ms']>=1000
+E               AssertionError: assert ('timeout' == 'guest_time'
+E                 
+E                 - guest_time
+E                 + timeout)
+
+tests/test_debugger.py:70: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_debugger.py::test_real_breakpoint_translation_trace_restart_and_patch_isolation
+1 failed, 59 passed in 120.63s (0:02:00)

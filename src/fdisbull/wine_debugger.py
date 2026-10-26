@@ -129,8 +129,9 @@ class PEDebugSession(ExperimentSessionMixin,PELayerSessionMixin,PEExecutionMixin
         return hex(value) if any(r.start<=value<(r.start+len(r.data)) for r in self.regions) else None
 
     def status(self):
+        from .debug_semantics import contract
         return {'run':self.run_id,'version':self.version['id'],'live':not self.closed,
-                **self.call('status'),'mapping':self.metadata}
+                **self.call('status'),'mapping':self.metadata,'semantics':contract(self.backend_name)}
 
     def registers(self):
         result=self.call('registers');result['project_address']=self.project_address(result['rip'])
@@ -208,6 +209,8 @@ class PEDebugSession(ExperimentSessionMixin,PELayerSessionMixin,PEExecutionMixin
         stop=result['stop_reason'];stop['project_address']=self.project_address(stop['address'])
         evidence={'run':self.run_id,'outcome':stop['kind'],'timed_out':stop['kind']=='timeout','session':result,
                   'host_elapsed_ms':round((time.monotonic()-start)*1000,3)}
+        from .debug_semantics import normalize_stop
+        evidence['stop']=normalize_stop(self.backend_name,stop,outcome=evidence['outcome'])
         self._event('run',evidence);return evidence
 
     def trace(self,name='trace.json',*,count=512,timeout_ms=10000,fast_forward=False):
@@ -221,6 +224,9 @@ class PEDebugSession(ExperimentSessionMixin,PELayerSessionMixin,PEExecutionMixin
             if decoded:event['instruction']=decoded
         result.update(run=self.run_id,version=self.version['id'],mapping=self.metadata,requested_count=count,
                       semantics='instructions completed by the selected stopped thread; pre-instruction registers; peer threads held per step')
+        from .debug_semantics import normalize_trace,contract
+        normalize_trace(self.backend_name,result['events'],version=self.version['id'],delta=self.delta)
+        result['observation_contract']=contract(self.backend_name)
         if len(result['events'])>count:raise DebuggerError('PE trace exceeds requested count')
         return self._artifact(name,'trace',json.dumps(result,indent=2).encode(),
                               {'event_count':len(result['events']),'complete':result['complete']})

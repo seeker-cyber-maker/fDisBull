@@ -16,6 +16,7 @@ from .dosbox_rpc import DOSBoxRPC, DebuggerError
 from .external_files import _file_name
 from .code_layers import LayerProjectMixin, LayerSessionMixin, LAYER_DDL
 from .debug_experiments import ExperimentProjectMixin, ExperimentSessionMixin
+from .runtime_code import RuntimeCodeMixin, RUNTIME_DDL
 
 
 DEBUG_DDL = '''
@@ -47,9 +48,10 @@ def stamp():
 
 
 DEBUG_DDL += LAYER_DDL
+DEBUG_DDL += RUNTIME_DDL
 
 
-class DebugProjectMixin(ExperimentProjectMixin, LayerProjectMixin):
+class DebugProjectMixin(RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
     def machine(self, executable, *, boot_image, version=None, boot_timeout_ms=30000):
         from .qemu_machine import MachineDebugSession
         return MachineDebugSession(self,executable,boot_image=boot_image,version=version,boot_timeout_ms=boot_timeout_ms)
@@ -339,20 +341,31 @@ class DebugSession(ExperimentSessionMixin, LayerSessionMixin):
                 self.project.db.execute('UPDATE debug_runs SET state=? WHERE id=?',(state,self.run_id))
 
     def status(self):
+        from .debug_semantics import contract
         result = self.call('session.status')
-        return {'run':self.run_id,'version':self.version['id'],'live':True,**result,'mapping':self.metadata}
+        return {'run':self.run_id,'version':self.version['id'],'live':True,**result,'mapping':self.metadata,
+                'semantics':contract(self.metadata.get('backend','dosbox'))}
 
     def _timing(self, enabled=None):
         if not self.rpc.capabilities.get('timing',{}).get('fast_forward'):
             raise DebuggerError('DOSBox build lacks execution.timing; rebuild with the current agent patch')
         return self.call('execution.timing',{} if enabled is None else {'fast_forward':enabled})
 
-    def run(self, *, timeout_ms=10000, guest_ms=None, fast_forward=False):
+    def wait(self, observations, until, *, guest_ms, slice_ms=50, timeout_ms=10000,
+             fast_forward=True, max_polls=1000, timeout_screenshot='wait-timeout.png'):
+        from .debug_wait import wait_until
+        return wait_until(self, observations, until, guest_ms=guest_ms, slice_ms=slice_ms,
+                          timeout_ms=timeout_ms, fast_forward=fast_forward, max_polls=max_polls,
+                          timeout_screenshot=timeout_screenshot)
+
+    def run(self, *, timeout_ms=10000, guest_ms=None, fast_forward=False, stop_on_hook=False):
         bounded(timeout_ms,'timeout_ms',1,600000)
         if guest_ms is not None:
             bounded(guest_ms,'guest_ms',1,3600000)
         if type(fast_forward) is not bool:
             raise ValueError('fast_forward must be boolean')
+        if type(stop_on_hook) is not bool:
+            raise ValueError('stop_on_hook must be boolean')
         before = self._timing()
         started = time.monotonic()
         deadline = started + timeout_ms/1000
@@ -376,6 +389,9 @@ class DebugSession(ExperimentSessionMixin, LayerSessionMixin):
                     hook_hit = self._dispatch_hook(result)
                     if hook_hit is not None:
                         hook_hits.append(hook_hit)
+                        if stop_on_hook:
+                            outcome = 'hook'
+                            break
                         if time.monotonic() >= deadline:
                             break
                         operation = self.call('execution.continue')
@@ -411,6 +427,8 @@ class DebugSession(ExperimentSessionMixin, LayerSessionMixin):
         if result and result.get('stop_reason',{}).get('data_access'):
             access = result['stop_reason']['data_access']
             access['project_instruction'] = self.project_address(access['instruction'])
+        from .debug_semantics import normalize_stop
+        evidence['stop']=normalize_stop(self.metadata.get('backend','dosbox'),(result or {}).get('stop_reason',{}),outcome=outcome)
         self._event('run',evidence)
         return evidence
 
@@ -692,8 +710,11 @@ class DebugSession(ExperimentSessionMixin, LayerSessionMixin):
                 event['project_segmented_address'] = (f"{segment:04x}:{int(event['address']['offset'],16):04x}"
                     if 0 <= segment <= 0xffff else None)
         self._layer_trace(events)
+        from .debug_semantics import normalize_trace,contract
+        backend=self.metadata.get('backend','dosbox')
+        normalize_trace(backend,events,version=self.version['id'],delta=self.delta,budget_reached=len(events)==count)
         result = {'run':run,'version':self.version['id'],'mapping':self.metadata,'events':events,
-                  'requested_count':count,'complete':len(events)==count}
+                  'requested_count':count,'complete':len(events)==count,'observation_contract':contract(backend)}
         return self._artifact(name,'trace',json.dumps(result,indent=2).encode(),
                               {'event_count':len(events),'complete':result['complete'],'run':run})
 
@@ -742,7 +763,7 @@ class DebugWorkspace:
         if session is None or session.project.path != Path(project).resolve():
             raise ValueError('Live run not owned by this server; use debug-runs for saved history')
         methods = {'debug-status':'status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
-                   'debug-run':'run','debug-click':'click','debug-click-frame':'click_frame','debug-screenshot':'screenshot','debug-trace':'trace',
+                   'debug-run':'run','debug-wait':'wait','debug-click':'click','debug-click-frame':'click_frame','debug-screenshot':'screenshot','debug-trace':'trace',
                    'debug-memory':'memory','debug-write-memory':'write_memory','debug-write-registers':'write_registers','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script',
                    'debug-contexts':'contexts','debug-pause':'pause','debug-resume':'resume'}
         methods.update({'debug-layer-stack':'layers','debug-layer-enable':'layer_enable','debug-layer-patch':'layer_patch',

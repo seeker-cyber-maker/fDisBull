@@ -1,0 +1,178 @@
+Looking in links: /opt/kit015/dependencies/wheels, /opt/kit015/packages
+Processing /opt/kit015/dependencies/wheels/capstone-5.0.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (from -r /opt/kit015/dependencies/requirements-offline.txt (line 1))
+Processing /opt/kit015/packages/fdisbull-0.15.0-py3-none-any.whl (from -r /opt/kit015/dependencies/requirements-offline.txt (line 2))
+Processing /opt/kit015/dependencies/wheels/iced_x86-1.21.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (from -r /opt/kit015/dependencies/requirements-offline.txt (line 3))
+Processing /opt/kit015/dependencies/wheels/lief-1.0.0-cp312-abi3-manylinux_2_28_x86_64.whl (from -r /opt/kit015/dependencies/requirements-offline.txt (line 4))
+Processing /opt/kit015/dependencies/wheels/pillow-12.3.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (from -r /opt/kit015/dependencies/requirements-offline.txt (line 5))
+Processing /opt/kit015/dependencies/wheels/pip-25.2-py3-none-any.whl (from -r /opt/kit015/dependencies/requirements-offline.txt (line 6))
+Processing /opt/kit015/dependencies/wheels/iniconfig-2.3.1-py3-none-any.whl (from -r /opt/kit015/dependencies/requirements-offline-tests.txt (line 2))
+Processing /opt/kit015/dependencies/wheels/packaging-26.3-py3-none-any.whl (from -r /opt/kit015/dependencies/requirements-offline-tests.txt (line 3))
+Processing /opt/kit015/dependencies/wheels/pluggy-1.7.0-py3-none-any.whl (from -r /opt/kit015/dependencies/requirements-offline-tests.txt (line 4))
+Processing /opt/kit015/dependencies/wheels/pygments-2.21.0-py3-none-any.whl (from -r /opt/kit015/dependencies/requirements-offline-tests.txt (line 5))
+Processing /opt/kit015/dependencies/wheels/pytest-9.1.1-py3-none-any.whl (from -r /opt/kit015/dependencies/requirements-offline-tests.txt (line 6))
+Installing collected packages: pygments, pluggy, pip, pillow, packaging, lief, iniconfig, iced-x86, capstone, pytest, fdisbull
+
+Successfully installed capstone-5.0.9 fdisbull-0.15.0 iced-x86-1.21.0 iniconfig-2.3.1 lief-1.0.0 packaging-26.3 pillow-12.3.0 pip-25.2 pluggy-1.7.0 pygments-2.21.0 pytest-9.1.1
+{"python": "3.13.5 (main, Jul 23 2025, 00:37:22) [Clang 20.1.4 ]", "fdisbull": "0.15.0", "module": "/work/venv/lib/python3.13/site-packages/fdisbull/__init__.py", "capstone": "5.0.7", "lief": "1.0.0-d05b3499b", "pillow": "12.3.0"}
+usage: fdisbull [-h] [--version]
+                {debug,debug-runs,debug-artifacts,debug-export,debug-grid,debug-save-script,debug-scripts,debug-state-info,debug-fork-state,debug-experiments,debug-experiment-info,identify,inspect,import,analyze-module,managed,decoder-check,status,analyze,functions,disasm,xrefs,rename,comment,versions,patch,issues,render,info,header,sections,imports,exports,strings,items,queue,represent,recover-imports,segments,code-regions,locate,function-patterns,analysis-status,calls,cfg,render-cfg,memory-accesses,refresh-facts,libraries,relocations,linkage,refresh-metadata,refresh-dos-state,auto-analyze,advanced-status,function-analysis,function-membership,define-type,apply-type,types,typed-data,set-summary,summaries,add-signature,signatures,call-effects,attach-file,files,file-bytes,apply-file-type,file-data,file-reference,file-xrefs,link-labels,rename-file,label-info,label-links,unlink-labels,serve,request,methods} ...
+
+Agent-first disassembly with SQLite persistence and headless image export
+
+positional arguments:
+  {debug,debug-runs,debug-artifacts,debug-export,debug-grid,debug-save-script,debug-scripts,debug-state-info,debug-fork-state,debug-experiments,debug-experiment-info,identify,inspect,import,analyze-module,managed,decoder-check,status,analyze,functions,disasm,xrefs,rename,comment,versions,patch,issues,render,info,header,sections,imports,exports,strings,items,queue,represent,recover-imports,segments,code-regions,locate,function-patterns,analysis-status,calls,cfg,render-cfg,memory-accesses,refresh-facts,libraries,relocations,linkage,refresh-metadata,refresh-dos-state,auto-analyze,advanced-status,function-analysis,function-membership,define-type,apply-type,types,typed-data,set-summary,summaries,add-signature,signatures,call-effects,attach-file,files,file-bytes,apply-file-type,file-data,file-reference,file-xrefs,link-labels,rename-file,label-info,label-links,unlink-labels,serve,request,methods}
+    debug               Launch a DOS or PE64 project and accept live debugger
+                        JSON commands on stdin
+    debug-runs          Saved runtime history for a static version; [version]
+    debug-artifacts     Saved screenshots and traces, available after restart;
+                        [version,run]
+    debug-export        Export a saved artifact without running an emulator;
+                        artifact,output
+    debug-grid          Derive a coordinate grid from a stored clean
+                        screenshot offline; artifact,[name,step,target]
+    debug-save-script   Save an immutable version-bound script;
+                        name,script,[version]
+    debug-scripts       List saved scripts; [version]
+    debug-state-info    Inspect native checkpoint metadata and component sizes
+                        offline; artifact
+    debug-fork-state    Restore, edit and recapture native state with target
+                        stopped; artifact,executable,game_dir,[name,memory,reg
+                        isters,backend,kernel,initramfs]
+    debug-experiments   List immutable saved experiments; [version]
+    debug-experiment-info
+                        Inspect a saved experiment and verify its identities
+                        offline; artifact
+    identify            Identify file header from bytes; path; no project
+                        required
+    inspect             Parse file metadata; path; no project required
+    import              create project from executable or explicit raw code
+    analyze-module      Offline DLL/shared-library analysis; path,project,[exp
+                        ort,entry,max_instructions,slice_arch,image]
+    managed             Inspect .NET metadata or disassemble one CIL method;
+                        path or project,[token,max_instructions,version]
+    decoder-check       Compare x86 iced/Capstone proposals without execution;
+                        data,[bits,address,scan_offsets,max_candidates]
+    status              Image mappings, hashes, counts and remaining work;
+                        [version]
+    analyze             Recursive code/data analysis;
+                        [version,start,max_instructions,cs,ds,es,ss]
+    functions           Candidate function entries; [version,limit,offset]
+    disasm              Stored decoded rows; [version,address,lines,cs]
+    xrefs               Direct control/data references; address,
+                        [version,direction,limit,cs]
+    rename              Persistent address label;
+                        address,name,[version,author]
+    comment             Persistent evidence note;
+                        address,text,[version,author]
+    versions            Immutable mapped-byte snapshots and provenance
+    patch               Create a new snapshot, preserve parent;
+                        address,data,[version,label,origin]
+    issues              Pending/rejected/unresolved work; [version,limit]
+    render              Export stored rows as SVG/PNG;
+                        output,[version,address,lines,format,cs]
+    info                Parsed container summary; [version]
+    header              Parsed header fields; [version]
+    sections            Disk and virtual section layout;
+                        [version,limit,offset]
+    imports             Static imports and persisted IAT recovery;
+                        [version,limit,offset]
+    exports             Export addresses, ordinals and forwarders;
+                        [version,limit,offset]
+    strings             File-backed ASCII/UTF16 strings;
+                        [version,limit,offset]
+    items               Investigated memory locations; [version,limit,offset]
+    queue               Code/data investigation work; [version,limit,offset]
+    represent           Shared data/code/unexplored definition; address,repres
+                        entation,[size,author,version,max_instructions,defer]
+    recover-imports     Offline CHimpREC-derived recovery; module_exports or e
+                        xport_map,[candidate_slots,version,max_slots,gap_limit
+                        ]
+    segments            DOS inferred segment inventory; [version]
+    code-regions        DOS decoded instruction runs by CS; [version]
+    locate              Byte position in stored instructions/data and
+                        unexplored memory; address,[version,cs]
+    function-patterns   Candidate prologue/epilogue evidence;
+                        [version,limit,offset,scan_unexplored]
+    analysis-status     Current persisted queues, seed states and fixed-point
+                        status; [version]
+    calls               Grouped native function/library calls with incoming
+                        xrefs; [version,limit,offset,kind]
+    cfg                 Reachable stored CFG from exact entry;
+                        address,[version,cs,max_instructions,highlights]
+    render-cfg          Export reachable basic-block CFG as SVG; address,outpu
+                        t,[version,cs,max_instructions,highlights]
+    memory-accesses     Read/write/overlap and unresolved memory evidence; add
+                        ress,[size,version,access,limit,offset,include_unresol
+                        ved]
+    refresh-facts       Backfill persisted fallthrough and memory-access facts
+                        from stored instructions; [version]
+    libraries           Declared dependency names and load ordinals;
+                        [version,limit,offset]
+    relocations         Static relocation records with symbol/addend
+                        provenance; [version,limit,offset]
+    linkage             GOT/PLT or dyld slot/stub metadata; [version]
+    refresh-metadata    Reinspect retained ELF/Mach-O/PE bytes and invalidate
+                        consumers; [version]
+    refresh-dos-state   Rebuild legacy DOS states and dependent facts;
+                        [version,max_instructions]
+    auto-analyze        Run persistent native and derived analysis to a
+                        bounded fixed point; [version,start,cs,ds,es,ss,max_in
+                        structions,max_functions,max_steps,max_entries,max_rou
+                        nds,abi]
+    advanced-status     Derived job states, pending entries and fixed point;
+                        [version]
+    function-analysis   Stored frame, indirect-target, signature and effect
+                        evidence; address,[version,cs]
+    function-membership
+                        Shared instruction/block membership from candidate
+                        entries; [version,max_work,max_instructions]
+    define-type         Register or revise a scalar/pointer/array/struct;
+                        name,definition,[version,author]
+    apply-type          Bind a type to shared data identity;
+                        address,type_name,[name,version,author]
+    types               Registered layouts and data bindings; [version]
+    typed-data          Interpret a bound data object;
+                        address,[version,max_items]
+    set-summary         Register a qualified function contract;
+                        address,name,[prototype,summary,abi,version,cs,author]
+    summaries           Registered and signature-qualified function contracts;
+                        [version]
+    add-signature       Register an exact or relocation-masked full-body
+                        signature; signature,[version]
+    signatures          Builtin and registered function signatures; [version]
+    call-effects        Qualified memory effects at call sites; [address,size,
+                        access,version,include_unresolved,limit,offset]
+    attach-file         Snapshot an external data/save/resource file;
+                        path,[name,kind,version,author]
+    files               Attached file identities, hashes and type bindings;
+                        [version,limit,offset]
+    file-bytes          Read bounded attached-file hex and text;
+                        name,[offset,size,version]
+    apply-file-type     Bind a structural type in file-offset space;
+                        file,type_name,[offset,name,version,author]
+    file-data           Read an exact typed attached-file binding;
+                        file,[offset,version,max_items]
+    file-reference      Author an instruction-to-file relationship; address,fi
+                        le,evidence,[offset,width,count,stride,access,cs,versi
+                        on,author]
+    file-xrefs          Query authored references to attached-file bytes; file
+                        ,[offset,size,version,limit,page_offset,include_stale]
+    link-labels         Link corresponding native/file byte ranges;
+                        left,right,evidence,[size,name,version,author]
+    rename-file         Rename a file field and every linked identity;
+                        file,offset,name,[version,author]
+    label-info          Resolve a shared field label and its evidence chain;
+                        endpoint,[version]
+    label-links         List shared label links and optional removal history;
+                        [version,include_removed,limit,offset]
+    unlink-labels       Retract a mistaken shared label link with provenance;
+                        link_id,reason,[version,author]
+    serve               JSON-lines stdin/stdout protocol; no listening socket
+    request             one JSON request
+    methods             describe JSON methods
+
+options:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+
+OFFLINE INSTALL PASS: /work/venv

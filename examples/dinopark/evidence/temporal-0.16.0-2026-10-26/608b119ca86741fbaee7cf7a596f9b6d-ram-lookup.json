@@ -1,0 +1,221 @@
+{
+  "run": {
+    "run": "51fe2bd6a53940cc8d4b60d814e9c778",
+    "outcome": "pause",
+    "timed_out": false,
+    "requested_guest_ms": null,
+    "guest_elapsed_ms": 0,
+    "host_elapsed_ms": 3.459,
+    "fast_forward": false,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 46989,
+      "session_id": "ses-1",
+      "state_revision": 116
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 116,
+      "stop_reason": {
+        "kind": "pause"
+      }
+    },
+    "hook_hits": [],
+    "stop": {
+      "format": "fdisbull-debug-stop-1",
+      "trigger": "pause",
+      "native_kind": "pause",
+      "causing_instruction": null,
+      "resume_pc": null,
+      "instruction_completed": null,
+      "registers_stage": "stopped; stage unknown",
+      "context": "dos-cpu"
+    }
+  },
+  "version": 1,
+  "mapping": {
+    "fdisbull_version": "0.16.0",
+    "source_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+    "version_sha256": "8006cbd191e3ff0a80f537f6d5163559542270f3bf706b7f86d8c4c54248c743",
+    "executable": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.14.0-6a0aeb3/backend/native-macos-arm64/dosbox-x",
+    "emulator_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
+    "runtime_profile": "real-normal-v1",
+    "game_dir": "/Users/tiga/Conversions/DinoParkTycoon/debugger-runs/temporal-0.16.0-2026-10-26-fetch-witness/private/game",
+    "target": "DINOPARK.EXE",
+    "static_load_segment": 4096,
+    "runtime_load_segment": 2084,
+    "entry_registers": {
+      "cpu_mode": "real",
+      "flags": "0x00007202",
+      "general": {
+        "eax": "0x00000000",
+        "ebp": "0x0000091C",
+        "ebx": "0x00000000",
+        "ecx": "0x000000FF",
+        "edi": "0x00000080",
+        "edx": "0x00000814",
+        "esi": "0x00000000",
+        "esp": "0x00000080"
+      },
+      "instruction_pointer": "0x00000000",
+      "segments": {
+        "cs": "0x0824",
+        "ds": "0x0814",
+        "es": "0x0814",
+        "fs": "0x0000",
+        "gs": "0x0000",
+        "ss": "0x4528"
+      },
+      "session_id": "ses-1",
+      "state_revision": 1
+    },
+    "capabilities": {
+      "address_spaces": [
+        "segmented",
+        "linear",
+        "physical"
+      ],
+      "breakpoints": {
+        "data_access": "normal_core_real_mode_byte_addresses",
+        "memory_change": true,
+        "memory_change_address_spaces": [
+          "segmented",
+          "linear"
+        ]
+      },
+      "code_layers": "normal_core_real_mode_guarded_fetch_v1",
+      "debugger": true,
+      "input": {
+        "absolute_mouse": true,
+        "click_timing": "guest_emulated_milliseconds",
+        "coordinate_space": "guest_frame_pixels",
+        "driver": "builtin_dos_int33_only"
+      },
+      "limits": {
+        "max_memory_read_bytes": 65536,
+        "max_message_bytes": 8388608,
+        "max_trace_events": 10000
+      },
+      "protocol_version": "1.0",
+      "register_edit": true,
+      "save_states": true,
+      "timing": {
+        "fast_forward": true,
+        "guest_clock": "PIC_Ticks_milliseconds"
+      },
+      "trace": {
+        "cpu": true
+      },
+      "video": {
+        "format": "png",
+        "headless": true,
+        "screenshot": true,
+        "source": "last_completed_guest_frame"
+      }
+    },
+    "pid": 97718
+  },
+  "events": [
+    {
+      "address": {
+        "offset": "0x00000C9E",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "execution_bytes": "8b8775689952500ee85ff383c40483",
+      "instruction": "mov ax,[bx+6875h]",
+      "layer_generation": 10,
+      "native_instruction_view": "ram",
+      "ram_bytes": "8b8775689952500ee85ff383c40483",
+      "register_changes": {
+        "cs": "0x2B6F",
+        "ds": "0x3844",
+        "eax": "0x00000002",
+        "ebp": "0x00001EBC",
+        "ebx": "0x00000004",
+        "ecx": "0x000000CF",
+        "edi": "0x000000CF",
+        "edx": "0x00000004",
+        "es": "0x3844",
+        "esi": "0x00000007",
+        "esp": "0x00001EAE",
+        "flags": "0x00007212",
+        "fs": "0x0000",
+        "gs": "0x0000",
+        "instruction_pointer": "0x00000C9E",
+        "ss": "0x4528"
+      },
+      "sequence": 1,
+      "project_address": "0x3414e",
+      "project_segmented_address": "334b:0c9e",
+      "native_instruction": "mov  ax,[bx+6875]",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x00000C9E",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x3414e"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00000CA2",
+        "segment": "0x2B6F",
+        "space": "segmented"
+      },
+      "execution_bytes": "9952500ee85ff383c404833ebb9a02",
+      "instruction": "cwd",
+      "layer_generation": 10,
+      "native_instruction_view": "ram",
+      "ram_bytes": "9952500ee85ff383c404833ebb9a02",
+      "register_changes": {
+        "eax": "0x00001D4C",
+        "instruction_pointer": "0x00000CA2"
+      },
+      "sequence": 2,
+      "project_address": "0x34152",
+      "project_segmented_address": "334b:0ca2",
+      "native_instruction": "cwd",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:334b",
+        "runtime_address": {
+          "offset": "0x00000CA2",
+          "segment": "0x2B6F",
+          "space": "segmented"
+        },
+        "project_address": "0x34152"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": false,
+        "evidence": "pending fetch at trace budget"
+      }
+    }
+  ],
+  "requested_count": 2,
+  "complete": true,
+  "observation_contract": {
+    "format": "fdisbull-debug-semantics-1",
+    "backend": "dosbox",
+    "execution_breakpoint_stage": "before-instruction",
+    "watchpoint_stage": "after-instruction",
+    "trace_registers_stage": "before-instruction",
+    "trace_completion": "fetch-observed; completion unknown",
+    "timing": "guest ticks supported",
+    "address_context": "real-mode CS plus linear address"
+  }
+}

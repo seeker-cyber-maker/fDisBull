@@ -100,6 +100,11 @@ def stage_files(params):
 def invoke(method, params):
     global process
     if method=='identity':return identity()
+    if method=='selftest.image':
+        if process is not None or params:raise ValueError('Self-test image requires an idle VM and no parameters')
+        data=Path('/opt/fdisbull/selftest.exe').read_bytes()
+        return {'data_base64':base64.b64encode(data).decode(),'sha256':hashlib.sha256(data).hexdigest(),
+                'source_sha256':hashlib.sha256(Path('/opt/fdisbull/selftest.c').read_bytes()).hexdigest()}
     if method == 'session.start':
         if process is not None:
             raise ValueError('This VM already owns a target')
@@ -162,7 +167,8 @@ def identity():
     return {'protocol':'fdisbull-wine-qemu-1','agent_sha256':AGENT_HASH,
       'resources':{name:hashlib.sha256(Path(path).read_bytes()).hexdigest()
                    for name,path in {'init':'/init','opt/fdisbull/agent.c':'/opt/fdisbull/agent.c',
-                                     'opt/fdisbull/broker.py':__file__}.items()},
+                                     'opt/fdisbull/selftest.c':'/opt/fdisbull/selftest.c',
+                                     'opt/fdisbull/broker.py':__file__}.items() if Path(path).is_file()},
       'wine_version':subprocess.check_output(['wine','--version'],stderr=subprocess.DEVNULL,text=True,timeout=10).strip(),
       'guest_kernel':os.uname().release,
       'agent_binary_sha256':hashlib.sha256(Path('/opt/fdisbull/agent.exe').read_bytes()).hexdigest()}

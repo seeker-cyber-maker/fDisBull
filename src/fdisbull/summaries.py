@@ -3,14 +3,15 @@
 This module neither executes helpers nor assigns meaning from an arbitrary
 label. Metadata identities remain conditional contracts. Byte signatures match
 the complete supplied contiguous function body, never a prologue or substring.
-The bundled byte loops are small, authored fixtures, not signatures for every
-implementation of a C library function. Normalized expressions use ``op`` and
+The four authored byte loops supply memory contracts. The separate DOS library
+catalog supplies qualified byte identities only. Normalized expressions use ``op`` and
 ``args`` as in the flow-data API; unknown values remain visible.
 """
 from __future__ import annotations
 
 from copy import deepcopy
 import re
+from functools import lru_cache
 
 
 _IDENTITIES = {'import', 'export', 'exact_signature', 'user_confirmed'}
@@ -62,10 +63,20 @@ _SIGNATURES = (
 )
 
 
-def builtin_signatures():
-    """Return an editable copy of the narrow, authored helper catalog."""
-    return [dict(item, source='authored byte-loop fixture; not a vendor-library fingerprint',
-                 confidence='exact_bytes', whole_function=True) for item in _SIGNATURES]
+@lru_cache(maxsize=1)
+def _dos_signatures():
+    import json
+    from importlib.resources import files
+    return json.loads(files('fdisbull').joinpath('data/dos-runtime-signatures.json').read_text())['signatures']
+
+
+def builtin_signatures(*,arch=None,bits=None):
+    """Return authored helper contracts and the provenance-bound DOS identities."""
+    if arch is not None or bits is not None:_mode(arch,bits)
+    fixtures=[dict(item, source='authored byte-loop fixture; not a vendor-library fingerprint',
+                 confidence='exact_bytes', whole_function=True) for item in _SIGNATURES
+              if arch is None or (item['arch'],item['bits'])==(arch,bits)]
+    return fixtures+(deepcopy(_dos_signatures()) if arch is None or (arch,bits)==('x86',16) else [])
 
 
 def _mode(arch, bits):
@@ -131,7 +142,7 @@ def match_signatures(instructions, signatures=None, arch='x86', bits=64):
     """
     _mode(arch, bits)
     rows = list(instructions)
-    catalog = [validate_signature(item) for item in (builtin_signatures() if signatures is None else signatures)]
+    catalog = [validate_signature(item) for item in (builtin_signatures(arch=arch,bits=bits) if signatures is None else signatures)]
     if not rows:
         return []
     chunks, expected, start = [], None, None
@@ -164,7 +175,8 @@ def match_signatures(instructions, signatures=None, arch='x86', bits=64):
                                match='masked_bytes' if 0 in mask else 'exact_bytes',
                                masked_offsets=[i for i, value in enumerate(mask) if not value],
                                input_hex=data.hex(), whole_supplied_body=True,
-                               function_boundary_proven=False, runtime_observed=False))
+                               function_boundary_proven=False, runtime_observed=False,
+                               identity_only=item.get('identity_only',False),provenance=item.get('provenance')))
     return result
 
 
