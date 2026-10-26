@@ -1,0 +1,53 @@
+{
+  "format": "fdisbull-script-result-1",
+  "script_artifact": "fa80b84911ce482f8ae9a1e5a8b68a2d",
+  "script_sha256": "f2447acde222484ae56503699e201c67472f65f807869ae349e1ede6aab74ded",
+  "run": "f2a100c7699547aaa471d9eec2653977",
+  "ok": true,
+  "error": null,
+  "completed_steps": 1,
+  "requested_steps": 1,
+  "host_elapsed_ms": 267.783,
+  "steps": [
+    {
+      "index": 0,
+      "op": "run",
+      "result": {
+        "run": "f2a100c7699547aaa471d9eec2653977",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 3000,
+        "guest_elapsed_ms": 3086,
+        "host_elapsed_ms": 265.482,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 46058,
+          "session_id": "ses-1",
+          "state_revision": 39
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 38,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    }
+  ],
+  "artifact": "644a5ec6862d4dee8d4f19e6c1c1e6ee"
+}

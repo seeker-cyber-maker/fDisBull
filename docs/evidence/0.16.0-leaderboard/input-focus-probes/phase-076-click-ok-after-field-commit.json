@@ -1,0 +1,243 @@
+{
+  "command": {
+    "op": "script"
+  },
+  "result": {
+    "format": "fdisbull-script-result-1",
+    "script_artifact": "820ff1a6d3df40b1b55a1a2c21408cdb",
+    "script_sha256": "01e874910e7dd10c8c84620142e7566d7c633fec7ca3ec4f6b76ac4788910722",
+    "run": "1f6f5fcf5909492f9fcf950863d73176",
+    "ok": true,
+    "error": null,
+    "completed_steps": 2,
+    "requested_steps": 2,
+    "host_elapsed_ms": 39.735,
+    "steps": [
+      {
+        "index": 0,
+        "op": "click-frame",
+        "result": {
+          "run": "1f6f5fcf5909492f9fcf950863d73176",
+          "x": 160,
+          "y": 126,
+          "mode_id": 11,
+          "frame": {
+            "artifact": "c4b92e09328b4c94ac583d13297c18f1",
+            "run": "1f6f5fcf5909492f9fcf950863d73176",
+            "version": 1,
+            "name": "ok-after-field-commit.png",
+            "kind": "screenshot-grid",
+            "sha256": "55edfbec75ff38a83ea3abe29f00bfc68dbe9bd5f5eecdc978ed201e8e582eea",
+            "size": 50249,
+            "metadata": {
+              "captured_ticks": 49753,
+              "double_height": true,
+              "double_width": true,
+              "format": "png",
+              "frame_id": 17406,
+              "height": 200,
+              "mode_id": 11,
+              "session_id": "ses-1",
+              "sha256": "55edfbec75ff38a83ea3abe29f00bfc68dbe9bd5f5eecdc978ed201e8e582eea",
+              "source": "last_completed_guest_frame",
+              "source_bpp": 32,
+              "state_revision": 109,
+              "width": 320,
+              "coordinate_grid": {
+                "coordinate_space": "screenshot_pixels",
+                "origin": [
+                  0,
+                  0
+                ],
+                "max_coordinate": [
+                  319,
+                  199
+                ],
+                "step": 8,
+                "x_lines": [
+                  0,
+                  8,
+                  16,
+                  24,
+                  32,
+                  40,
+                  48,
+                  56,
+                  64,
+                  72,
+                  80,
+                  88,
+                  96,
+                  104,
+                  112,
+                  120,
+                  128,
+                  136,
+                  144,
+                  152,
+                  160,
+                  168,
+                  176,
+                  184,
+                  192,
+                  200,
+                  208,
+                  216,
+                  224,
+                  232,
+                  240,
+                  248,
+                  256,
+                  264,
+                  272,
+                  280,
+                  288,
+                  296,
+                  304,
+                  312
+                ],
+                "y_lines": [
+                  0,
+                  8,
+                  16,
+                  24,
+                  32,
+                  40,
+                  48,
+                  56,
+                  64,
+                  72,
+                  80,
+                  88,
+                  96,
+                  104,
+                  112,
+                  120,
+                  128,
+                  136,
+                  144,
+                  152,
+                  160,
+                  168,
+                  176,
+                  184,
+                  192
+                ],
+                "label_step": 32,
+                "x_labels": [
+                  0,
+                  32,
+                  64,
+                  96,
+                  128,
+                  160,
+                  192,
+                  224,
+                  256,
+                  288
+                ],
+                "y_labels": [
+                  0,
+                  32,
+                  64,
+                  96,
+                  128,
+                  160,
+                  192
+                ],
+                "target": [
+                  160,
+                  126
+                ],
+                "x_direction": "right",
+                "y_direction": "down",
+                "resized": false,
+                "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+                "source_artifact": "41de94670ec5443b9b277afe0b747bce",
+                "source_sha256": "074be05a9d16ec942cf1b32dff1a5ced4fe1c3bb275f8f04fb736ce52561c6ab"
+              }
+            }
+          },
+          "click": {
+            "accepted": true,
+            "coordinate_space": "guest_frame_pixels",
+            "delivery": "queued",
+            "mouse": {
+              "buttons": 1,
+              "max_x": 639,
+              "max_y": 199,
+              "min_x": 0,
+              "min_y": 0,
+              "owned_buttons": 1,
+              "pending_release_buttons": 1,
+              "release_pending": true,
+              "screen_max_x": 640,
+              "screen_max_y": 200,
+              "x": 320,
+              "y": 126
+            },
+            "session_id": "ses-1",
+            "state_revision": 110
+          },
+          "frame_phase": "before_queued_click"
+        },
+        "ok": true
+      },
+      {
+        "index": 1,
+        "op": "run",
+        "result": {
+          "run": "1f6f5fcf5909492f9fcf950863d73176",
+          "outcome": "breakpoint",
+          "timed_out": false,
+          "requested_guest_ms": null,
+          "guest_elapsed_ms": 218,
+          "host_elapsed_ms": 28.25,
+          "fast_forward": true,
+          "timing_after": {
+            "fast_forward": false,
+            "guest_ticks": 49988,
+            "session_id": "ses-1",
+            "state_revision": 113
+          },
+          "session": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 112,
+            "stop_reason": {
+              "address": {
+                "offset": "0x000081C9",
+                "segment": "0x1824",
+                "space": "segmented"
+              },
+              "breakpoint_id": "bp-1",
+              "kind": "breakpoint",
+              "project_address": "0x281c9"
+            }
+          },
+          "hook_hits": [],
+          "stop": {
+            "format": "fdisbull-debug-stop-1",
+            "trigger": "breakpoint",
+            "native_kind": "breakpoint",
+            "causing_instruction": {
+              "offset": "0x000081C9",
+              "segment": "0x1824",
+              "space": "segmented"
+            },
+            "resume_pc": {
+              "offset": "0x000081C9",
+              "segment": "0x1824",
+              "space": "segmented"
+            },
+            "instruction_completed": false,
+            "registers_stage": "before-instruction",
+            "context": "dos-cpu"
+          }
+        },
+        "ok": true
+      }
+    ],
+    "artifact": "97244b98e72a4e64a521ae66d5672730"
+  }
+}

@@ -1,0 +1,25 @@
+[
+  {
+    "command": [
+      "gcc",
+      "--version"
+    ],
+    "returncode": 0,
+    "stdout": "Apple clang version 21.0.0 (clang-2100.3.34.2)\nTarget: arm64-apple-darwin27.2.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "gcc",
+      "-nostdlib",
+      "-no-pie",
+      "-Wl,--build-id=none",
+      ".recovery/2026-10-26/leaderboard-publish/minimal-elf.s",
+      "-o",
+      ".recovery/2026-10-26/leaderboard-publish/minimal.elf"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "clang: warning: argument unused during compilation: '-no-pie' [-Wunused-command-line-argument]\n.recovery/2026-10-26/leaderboard-publish/minimal-elf.s:3:11: error: unknown token in expression\n mov $60, %rax\n          ^\n.recovery/2026-10-26/leaderboard-publish/minimal-elf.s:3:11: error: invalid operand\n mov $60, %rax\n          ^\n.recovery/2026-10-26/leaderboard-publish/minimal-elf.s:4:6: error: unknown token in expression\n xor %rdi, %rdi\n     ^\n.recovery/2026-10-26/leaderboard-publish/minimal-elf.s:4:6: error: invalid operand\n xor %rdi, %rdi\n     ^\n.recovery/2026-10-26/leaderboard-publish/minimal-elf.s:5:2: error: unrecognized instruction mnemonic\n syscall\n ^\n"
+  }
+]

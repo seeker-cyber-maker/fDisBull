@@ -53,6 +53,22 @@ python examples/dinopark/verify_debugger.py \
 
 The output includes `dinopark.fdb`, which retains the original game bytes and is a local input/evidence file, excluded from public packages and Git history. The script itself includes no game assets.
 
+## Delivered 0.16.0: durable leaderboard entry
+
+[verify_leaderboard.py](verify_leaderboard.py) creates a private game copy, types
+`DeepSeek016`, clicks OK, and verifies the game's full leaderboard readback in a
+second emulator and separate project. The accepted Mac run showed rank 7 at
+$9,608. It saves script JSON, clean/grid screenshots, bounded writer/reader traces
+and file-change receipts, with game files and databases outside Git. See the
+[runtime verification and replay instructions](../../docs/VERIFICATION-DINOPARK-LEADERBOARD.md),
+including the game's Ctrl+O text-editor focus step. Neither accepted session
+saves or loads a native checkpoint.
+
+The [latest E35 investigation example](notes/INVESTIGATION_E35.md), read from
+Space/Library, records the separate reported Linux persistence route, the
+save-padding finding and the remaining NEW GAME and save-field work. Its
+external results are labeled as reported, with source links and scope limits.
+
 ## Editable DOSBox machine states
 
 `verify_states.py --executable PATH --game-dir DIR --output NEW_LOCAL_DIR` captures a native DOSBox state, restores it after emulator restart, forks it with checked RAM edits, reinjects the derivative, hits an execution breakpoint, captures a trace, verifies CPU data watches, and restores the unchanged parent. Native state bytes stay embedded in the local `.fdb`. This is distinct from loading a DinoPark `DINOSG` file through the menu; that menu route is used only to prepare the test fixture. See [state editing and scripting](../../docs/DEBUGGER_SCRIPTS.md).

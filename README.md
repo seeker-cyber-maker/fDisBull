@@ -61,6 +61,13 @@ The [release-status record](docs/RELEASE_STATUS.md) distinguishes tagged source,
 
 The current [0.16 DeepSeek delivery](docs/DELIVERY-0.16.md) contains the published packages, keyboard-capable DOSBox, tested Mac QEMU/Wine profiles and audited pristine boot filesystems. Its Linux 3.13.5 offline kit passed 312 native checks and 46 save/load CRC checks; both copied bundles passed complete manifest and ZIP readback.
 
+The [delivered DinoPark leaderboard replay](docs/VERIFICATION-DINOPARK-LEADERBOARD.md)
+typed `DeepSeek016`, clicked OK and verified the saved score table through the
+original game in a second emulator and separate project. Its Mac evidence
+includes clean/8px-grid screenshots, bounded writer/reader traces and unchanged
+original-file checks. The [E35 investigation example](examples/dinopark/notes/INVESTIGATION_E35.md)
+adds the latest attributed Library findings and remaining NEW GAME work.
+
 The earlier user-designated [0.14 DeepSeek delivery](docs/DELIVERY-0.14.md) contains the exact published packages, tested Mac ARM64 DOSBox/QEMU backends, Linux DOSBox and matching pristine DOS/Wine/optional-IDA boot runtimes. A smaller Linux/DOS offline kit supplies genuine hash-locked Python wheels and private libraries including SDL2_net. Copied Mac gates and 51 clean-offline checks passed. The additional Linux Python 3.13.5 probe passed installation and 49 native checks, with **2 native-state restore CRC failures**; the external DeepSeek environment remains unverified. See the delivery record for the separate scopes and failed receipts. Earlier deliveries are preserved. Game files, saved states and project databases are excluded.
 
 The direct Linux backend now has a separate [native-state CRC correction and

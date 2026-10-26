@@ -1,0 +1,124 @@
+{
+  "format": "fdisbull-script-result-1",
+  "script_artifact": "857f9c499f63499686569066e2a1126b",
+  "script_sha256": "7a600aac3c885f36de9e42b3d3e42abe826e50de6ef55c5306efc21d78e6f593",
+  "run": "d243e0db0c65463d90f8044d916cc4e1",
+  "ok": true,
+  "error": null,
+  "completed_steps": 4,
+  "requested_steps": 4,
+  "host_elapsed_ms": 203.294,
+  "steps": [
+    {
+      "index": 0,
+      "op": "keyboard.type",
+      "result": {
+        "accepted": true,
+        "delivery": "queued",
+        "keyboard": {
+          "owned_keys": 0,
+          "pending_events": 26,
+          "queued_guest_ms": 870
+        },
+        "session_id": "ses-1",
+        "state_revision": 30
+      },
+      "ok": true
+    },
+    {
+      "index": 1,
+      "op": "run",
+      "result": {
+        "run": "d243e0db0c65463d90f8044d916cc4e1",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 1600,
+        "guest_elapsed_ms": 1610,
+        "host_elapsed_ms": 161.865,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 47591,
+          "session_id": "ses-1",
+          "state_revision": 33
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 32,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 2,
+      "op": "keyboard.press",
+      "result": {
+        "accepted": true,
+        "delivery": "queued",
+        "keyboard": {
+          "owned_keys": 0,
+          "pending_events": 4,
+          "queued_guest_ms": 46
+        },
+        "session_id": "ses-1",
+        "state_revision": 34
+      },
+      "ok": true
+    },
+    {
+      "index": 3,
+      "op": "run",
+      "result": {
+        "run": "d243e0db0c65463d90f8044d916cc4e1",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 300,
+        "guest_elapsed_ms": 305,
+        "host_elapsed_ms": 37.548,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 47896,
+          "session_id": "ses-1",
+          "state_revision": 37
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 36,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    }
+  ],
+  "artifact": "ccfb1a7b87b9489894e467f779dca4b1"
+}

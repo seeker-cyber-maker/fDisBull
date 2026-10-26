@@ -1,0 +1,7 @@
+{
+  "exit_code": 0,
+  "output": "VERIFIED: 0.16.0 453 payload files; 63 private libraries; 2 audited pristine runtimes",
+  "source_commit": "e1e3fb4913d6d8fae7893c2c9b8edf364d144953",
+  "delivery_manifest_sha256": "18087f1ae72270700e0d7eae5c6d6cf13d3b61fe9fc0d2fe9bf6b0ef4fa20688",
+  "verification": "Freshly ran the unchanged delivered VERIFY-DELIVERY.py before curating this packet."
+}

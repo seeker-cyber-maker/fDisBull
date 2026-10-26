@@ -1,0 +1,47 @@
+{
+  "artifact": "25d0541397534b70a63953b54f981842",
+  "run": "f2a100c7699547aaa471d9eec2653977",
+  "version": 1,
+  "name": "fresh-reader-entry.trace.json",
+  "kind": "trace",
+  "sha256": "16d67998f85ec8f6debccc224702fe86f36ceb1180abe1d7f180d4caf3ec6293",
+  "size": 143180,
+  "metadata": {
+    "event_count": 128,
+    "complete": true,
+    "run": {
+      "run": "f2a100c7699547aaa471d9eec2653977",
+      "outcome": "pause",
+      "timed_out": false,
+      "requested_guest_ms": null,
+      "guest_elapsed_ms": 0,
+      "host_elapsed_ms": 3.748,
+      "fast_forward": false,
+      "timing_after": {
+        "fast_forward": false,
+        "guest_ticks": 42969,
+        "session_id": "ses-1",
+        "state_revision": 31
+      },
+      "session": {
+        "session_id": "ses-1",
+        "state": "stopped",
+        "state_revision": 31,
+        "stop_reason": {
+          "kind": "pause"
+        }
+      },
+      "hook_hits": [],
+      "stop": {
+        "format": "fdisbull-debug-stop-1",
+        "trigger": "pause",
+        "native_kind": "pause",
+        "causing_instruction": null,
+        "resume_pc": null,
+        "instruction_completed": null,
+        "registers_stage": "stopped; stage unknown",
+        "context": "dos-cpu"
+      }
+    }
+  }
+}

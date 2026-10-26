@@ -1,0 +1,44 @@
+{
+  "ok": true,
+  "original_files_unchanged": 192,
+  "source_matches_executed_sha256": true,
+  "png_count": 25,
+  "png_dimensions": [
+    320,
+    200
+  ],
+  "traces": [
+    {
+      "file": "fresh-reader-entry.trace.json",
+      "event_count": 128,
+      "first_runtime_address": {
+        "offset": "0x000003D8",
+        "segment": "0x2009",
+        "space": "segmented"
+      },
+      "first_project_address": "27e5:03d8",
+      "ram_and_execute_bytes_equal": true
+    },
+    {
+      "file": "writer-entry.trace.json",
+      "event_count": 128,
+      "first_runtime_address": {
+        "offset": "0x00000379",
+        "segment": "0x2009",
+        "space": "segmented"
+      },
+      "first_project_address": "27e5:0379",
+      "ram_and_execute_bytes_equal": true
+    }
+  ],
+  "forbidden_payloads_found": 0,
+  "allowed_file_suffixes": [
+    ".json",
+    ".md",
+    ".png",
+    ".py"
+  ],
+  "local_markdown_targets_exist": true,
+  "repository_evidence_matches_delivery": true,
+  "scope": "Artifact audit plus completed two-emulator native game replay; no production source changes."
+}

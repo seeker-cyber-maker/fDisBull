@@ -1,0 +1,49 @@
+{
+  "run": "f2a100c7699547aaa471d9eec2653977",
+  "outcome": "breakpoint",
+  "timed_out": false,
+  "requested_guest_ms": null,
+  "guest_elapsed_ms": 3,
+  "host_elapsed_ms": 4.18,
+  "fast_forward": true,
+  "timing_after": {
+    "fast_forward": false,
+    "guest_ticks": 42972,
+    "session_id": "ses-1",
+    "state_revision": 35
+  },
+  "session": {
+    "session_id": "ses-1",
+    "state": "stopped",
+    "state_revision": 34,
+    "stop_reason": {
+      "address": {
+        "offset": "0x00000527",
+        "segment": "0x2009",
+        "space": "segmented"
+      },
+      "breakpoint_id": "bp-2",
+      "kind": "breakpoint",
+      "project_address": "0x28377"
+    }
+  },
+  "hook_hits": [],
+  "stop": {
+    "format": "fdisbull-debug-stop-1",
+    "trigger": "breakpoint",
+    "native_kind": "breakpoint",
+    "causing_instruction": {
+      "offset": "0x00000527",
+      "segment": "0x2009",
+      "space": "segmented"
+    },
+    "resume_pc": {
+      "offset": "0x00000527",
+      "segment": "0x2009",
+      "space": "segmented"
+    },
+    "instruction_completed": false,
+    "registers_stage": "before-instruction",
+    "context": "dos-cpu"
+  }
+}

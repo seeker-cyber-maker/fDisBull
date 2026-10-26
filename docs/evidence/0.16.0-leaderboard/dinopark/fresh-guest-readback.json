@@ -1,0 +1,15 @@
+{
+  "byte_count": 250,
+  "sha256": "537ad9cace9ec0a4eff40ea32173abf19d8fbf47c4d5fecf8ee7b55d39ea3ec6",
+  "project_stop": "27e5:0527",
+  "observed_entry": {
+    "rank": 7,
+    "name": "DeepSeek016",
+    "value": 9608
+  },
+  "full_table_equal_to_written_disk": true,
+  "address": {
+    "offset": "0x00046F94",
+    "space": "linear"
+  }
+}

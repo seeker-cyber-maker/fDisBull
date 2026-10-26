@@ -1,0 +1,28 @@
+{
+  "cpu_mode": "real",
+  "flags": "0x00007202",
+  "general": {
+    "eax": "0x00000001",
+    "ebp": "0x00001CA2",
+    "ebx": "0x00001C30",
+    "ecx": "0x00004528",
+    "edi": "0x00000006",
+    "edx": "0x00000002",
+    "esi": "0x00001DBF",
+    "esp": "0x00001C9C"
+  },
+  "instruction_pointer": "0x00000379",
+  "segments": {
+    "cs": "0x2009",
+    "ds": "0x3844",
+    "es": "0x4528",
+    "fs": "0x0000",
+    "gs": "0x0000",
+    "ss": "0x4528"
+  },
+  "session_id": "ses-1",
+  "state_revision": 41,
+  "cs": "0x2009",
+  "ip": "0x00000379",
+  "project_address": "0x281c9"
+}

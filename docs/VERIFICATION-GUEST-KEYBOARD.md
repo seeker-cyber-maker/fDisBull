@@ -63,3 +63,10 @@ receipts enter Git. Game files, checkpoint bytes and project databases remain
 private. The [evidence manifest](evidence/0.16.0-keyboard/SHA256SUMS.json) binds the
 sealed receipts. [Keyboard API and limits](GUEST_KEYBOARD.md) document queued
 delivery, guest-time timing and keyboard-layout assumptions.
+
+A separate [delivered 0.16.0 leaderboard replay](VERIFICATION-DINOPARK-LEADERBOARD.md)
+now qualifies the durable-entry boundary: type `DeepSeek016`, release the game's
+modal text editor with Ctrl+O, click OK, and read the completed score table through
+the original game in a fresh emulator and separate project. The accepted Mac run
+recorded rank 7 at $9,608. This follow-up does not alter the earlier sealed
+save-name evidence or extend the gameplay result to Linux.

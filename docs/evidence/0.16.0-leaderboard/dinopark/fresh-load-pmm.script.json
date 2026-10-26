@@ -1,0 +1,72 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "run",
+      "guest_ms": 35000,
+      "timeout_ms": 15000,
+      "fast_forward": true,
+      "expect": "guest_time"
+    },
+    {
+      "op": "click-frame",
+      "x": 160,
+      "y": 160,
+      "name": "old-game.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 1500,
+      "timeout_ms": 15000,
+      "fast_forward": true,
+      "expect": "guest_time"
+    },
+    {
+      "op": "click-frame",
+      "x": 90,
+      "y": 70,
+      "name": "pmm-row.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 300,
+      "timeout_ms": 15000,
+      "fast_forward": true,
+      "expect": "guest_time"
+    },
+    {
+      "op": "click-frame",
+      "x": 250,
+      "y": 73,
+      "name": "load-arrow.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 3000,
+      "timeout_ms": 15000,
+      "fast_forward": true,
+      "expect": "guest_time"
+    },
+    {
+      "op": "click-frame",
+      "x": 175,
+      "y": 140,
+      "name": "office.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 1800,
+      "timeout_ms": 15000,
+      "fast_forward": true,
+      "expect": "guest_time"
+    }
+  ]
+}

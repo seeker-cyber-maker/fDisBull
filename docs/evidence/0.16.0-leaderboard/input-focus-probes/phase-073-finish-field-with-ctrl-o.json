@@ -1,0 +1,74 @@
+{
+  "command": {
+    "op": "script"
+  },
+  "result": {
+    "format": "fdisbull-script-result-1",
+    "script_artifact": "6a4d9327e07746c984e837b5316fd499",
+    "script_sha256": "db58dced70368a8bd31a953f4be9973aae0b4d48c552712f14f80600c3d6f0e8",
+    "run": "1f6f5fcf5909492f9fcf950863d73176",
+    "ok": true,
+    "error": null,
+    "completed_steps": 2,
+    "requested_steps": 2,
+    "host_elapsed_ms": 43.014,
+    "steps": [
+      {
+        "index": 0,
+        "op": "keyboard.press",
+        "result": {
+          "accepted": true,
+          "delivery": "queued",
+          "keyboard": {
+            "owned_keys": 0,
+            "pending_events": 4,
+            "queued_guest_ms": 46
+          },
+          "session_id": "ses-1",
+          "state_revision": 106
+        },
+        "ok": true
+      },
+      {
+        "index": 1,
+        "op": "run",
+        "result": {
+          "run": "1f6f5fcf5909492f9fcf950863d73176",
+          "outcome": "guest_time",
+          "timed_out": false,
+          "requested_guest_ms": 300,
+          "guest_elapsed_ms": 340,
+          "host_elapsed_ms": 40.504,
+          "fast_forward": true,
+          "timing_after": {
+            "fast_forward": false,
+            "guest_ticks": 49770,
+            "session_id": "ses-1",
+            "state_revision": 109
+          },
+          "session": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 108,
+            "stop_reason": {
+              "kind": "pause"
+            }
+          },
+          "hook_hits": [],
+          "stop": {
+            "format": "fdisbull-debug-stop-1",
+            "trigger": "guest_time",
+            "native_kind": "pause",
+            "causing_instruction": null,
+            "resume_pc": null,
+            "instruction_completed": null,
+            "registers_stage": "stopped; stage unknown",
+            "context": "dos-cpu"
+          }
+        },
+        "ok": true
+      }
+    ],
+    "artifact": "0fb81fb6f04a449386547792c84798aa"
+  }
+}

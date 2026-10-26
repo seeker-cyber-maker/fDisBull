@@ -65,3 +65,6 @@ PE64 keyboard input and PC-98 keyboard injection are outside this addition.
 Screenshots, traces and script results remain ordinary project artifacts. A
 leaderboard entry is durable only after the actual game saves it and a fresh
 session reads it back; queue acceptance and a typed dialog do not prove that.
+The [DinoPark leaderboard replay](VERIFICATION-DINOPARK-LEADERBOARD.md) exercises
+that complete boundary with delivered 0.16.0 on the Mac native backend. Its
+game-specific Ctrl+O step ends text editing before the mouse OK click.
