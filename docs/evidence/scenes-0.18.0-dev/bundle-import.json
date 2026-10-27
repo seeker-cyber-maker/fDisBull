@@ -1,0 +1,25 @@
+{
+  "format": "fdisbull-scene-import-1",
+  "bundle_sha256": "3b6217446b5fd066958fb3d3c268bf6ecdf9fbec1eae1993392594172b90ed72",
+  "version": 1,
+  "run": "c08e5b7094a54bc0bb0c72a61df4283b",
+  "scene_map": {
+    "f30fbc72125f472b86868ee0c1ac2a0b": "d8ea94e3ca804e249c4636f79715d6f1",
+    "f8b67ea7dea34db0b800efde8a27571c": "bfad13bc91064a1f87718b32783f84dd",
+    "ce3bd557051b4b4da23e069b2df0a6ac": "0494bf7d1d9148b1986cce9c9022df08"
+  },
+  "object_map": {
+    "2d9f6c785c5d480e88133f81c04f45ce": "84108ee1f775484d9b47b3117a64c209",
+    "00968827fa4643838452eedb88098236": "01167059b2f9458bad1d26347b46906b",
+    "47ddb0d69bdf4855ad588d95b7870e74": "5d91a2a881e546058ac629e77b9ad7b0",
+    "8c7f04ea4c294c1cb5e43e7ee61a14a7": "ae20fabd0ebd4ddc942271fd7a361836",
+    "a06b86557084430db6172c37d996ba66": "31b4f5205839486692c00eeeea70dca3"
+  },
+  "artifact_map": {
+    "48901f3c736242d4baa23df9e0660ff5": "aaab2909ce30496ca4cee3cdd257c9d9",
+    "770360028215447c89fa97c51b0f0b4e": "ab86a97463e24c99b969c2a60a9a8ca5",
+    "a76d13bd1ef3494c818fdf868737a847": "1e89a440bf6e4742b7d4a8490863611c"
+  },
+  "historical_only": true,
+  "live_state_verified": false
+}

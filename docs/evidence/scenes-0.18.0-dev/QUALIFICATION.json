@@ -1,0 +1,80 @@
+{
+  "candidate": "0.18.0.dev0",
+  "date": "2026-10-27",
+  "source_base_commit": "41da677bcfda708d2d03c60d9f7f853b86bcb641",
+  "scope": "Uncommitted local implementation; no Linux CI, tag or publication",
+  "native_profiles": [
+    {
+      "profile": "stable",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "54",
+      "time": "25.733",
+      "timestamp": "2026-10-27T00:06:45.436970-04:00",
+      "hostname": "Studio.local"
+    },
+    {
+      "profile": "layers",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "335",
+      "time": "50.128",
+      "timestamp": "2026-10-27T00:07:11.510268-04:00",
+      "hostname": "Studio.local"
+    }
+  ],
+  "installed_focused": {
+    "passed": 33,
+    "skipped": 0
+  },
+  "full_mac": {
+    "passed": 1120,
+    "skipped": 16,
+    "failed": 2,
+    "errors": 23,
+    "limitation": "Linux ELF fixtures invoked Apple gcc/clang; not a green full suite"
+  },
+  "installed_wheel": {
+    "wheel": "fdisbull-0.18.0.dev0-py3-none-any.whl",
+    "sha256": "88ddf7f48c9727e0308ff78878bfcdc4b424cff8f9a7c29b91e8cf340141c582",
+    "entries_identical": 100,
+    "record_excluded": "pip rewrites RECORD on installation",
+    "python": "3.13"
+  },
+  "framework_source": {
+    "scenes.py": "2b5e039c82139327165fbc4b5311845747a3f1d93674bc0295cb14192b414cb1",
+    "scene_geometry.py": "b742795f9fc4994793d20b87732f0bec562749247f2d31f29832e79ef1d9b30d",
+    "scene_values.py": "e923467221fdc6d9aa5b40c08a72b303efdb3beb316bbd3d395c02cc5613d1d4",
+    "scene_bundles.py": "5e83ef107e1cfa07860bf6eddd95c34f7e25fe3700da7d57a1ede9e8fd5cccc0",
+    "debugger.py": "1c677dcb4769e99c75bb4d10917a751ae69f9f9cc2a9b323b64acda5703e377f",
+    "debug_script.py": "0dd8512caf176df8508bd79ce99c8e35081681ec2ef37a35f577f4a8b40cb571",
+    "cli.py": "215f80282e1b20326e19a9f5947a74ed1ac64dcee6c41c337c8de8f0facbf802"
+  },
+  "exclusions": {
+    "game_files": false,
+    "native_states": false,
+    "project_databases": false
+  },
+  "prior_deliveries_modified": false,
+  "packages": [
+    {
+      "file": "fdisbull-0.18.0.dev0-py3-none-any.whl",
+      "sha256": "88ddf7f48c9727e0308ff78878bfcdc4b424cff8f9a7c29b91e8cf340141c582",
+      "size": 379676
+    },
+    {
+      "file": "fdisbull-0.18.0.dev0-tool.zip",
+      "sha256": "f9d0646b791572e86e9bf0c651e7d00ab3efa98032e4f3c30ef39db68b9f33e4",
+      "size": 891844
+    },
+    {
+      "file": "fdisbull-0.18.0.dev0.tar.gz",
+      "sha256": "f465970dcfe5bb573460f14a2ca303fd8df0b7f3711ee43a71e85ff59b4283fc",
+      "size": 748681
+    }
+  ]
+}

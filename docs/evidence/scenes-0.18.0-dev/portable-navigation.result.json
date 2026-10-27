@@ -1,0 +1,654 @@
+{
+  "format": "fdisbull-script-result-1",
+  "script_artifact": "9fc9581cd1dd4ffcaec160912f1d28dd",
+  "script_sha256": "2bb2817a26a23b516449c5cd044d97908f904f069fdc720dce1c8d3cb3cf6ecd",
+  "run": "8a81318a6919451eb0e767e5eb9f11fd",
+  "ok": true,
+  "error": null,
+  "completed_steps": 8,
+  "requested_steps": 8,
+  "host_elapsed_ms": 1339.998,
+  "steps": [
+    {
+      "index": 0,
+      "op": "scene-click",
+      "result": {
+        "scene_revision": "d8ea94e3ca804e249c4636f79715d6f1",
+        "manifest_sha256": "533cd52d8ab47c6daede7a2fa6d16c79431c99789c9dda5eab7be73ca495b0af",
+        "object_id": null,
+        "status": "matched",
+        "complete": true,
+        "availability": {},
+        "conflicts": [],
+        "handlers": [],
+        "run": "8a81318a6919451eb0e767e5eb9f11fd",
+        "frame": {
+          "captured_ticks": 62136,
+          "double_height": true,
+          "double_width": true,
+          "format": "rgb-samples",
+          "frame_id": 152,
+          "height": 200,
+          "mode_id": 7,
+          "session_id": "ses-1",
+          "source": "last_completed_guest_frame",
+          "source_bpp": 32,
+          "state_revision": 24,
+          "width": 320,
+          "samples_count": 110
+        },
+        "scene_matched": false,
+        "objects": {
+          "84108ee1f775484d9b47b3117a64c209": {
+            "visible": false,
+            "ready": true,
+            "enabled": true
+          },
+          "01167059b2f9458bad1d26347b46906b": {
+            "visible": false,
+            "ready": true,
+            "enabled": true
+          },
+          "5d91a2a881e546058ac629e77b9ad7b0": {
+            "visible": false,
+            "ready": true,
+            "enabled": true
+          }
+        },
+        "predicate_matched": true,
+        "read_statistics": {
+          "evaluations": 16,
+          "unique_reads": 2,
+          "cache_hits": 14
+        },
+        "guest_elapsed_ms": 1300,
+        "action_object": "84108ee1f775484d9b47b3117a64c209",
+        "before_observation": "f01702d588844eaea6c12f1b1cd65519",
+        "input": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 102,
+            "y": 26
+          },
+          "session_id": "ses-1",
+          "state_revision": 6
+        },
+        "observation": "a601c9444c834e9c83ffff9b64b11685",
+        "evidence_count": 24,
+        "memory_captures_count": 2,
+        "polls_count": 7,
+        "baseline_retained": true,
+        "reply_format": "fdisbull-scene-compact-1"
+      },
+      "ok": true
+    },
+    {
+      "index": 1,
+      "op": "scene-click",
+      "result": {
+        "scene_revision": "bfad13bc91064a1f87718b32783f84dd",
+        "manifest_sha256": "51e4dd1464fff1b7de6d9790ad632ea7252625ea805b918f780dc091ddac0fd0",
+        "object_id": null,
+        "status": "matched",
+        "complete": true,
+        "availability": {},
+        "conflicts": [],
+        "handlers": [],
+        "run": "8a81318a6919451eb0e767e5eb9f11fd",
+        "frame": {
+          "captured_ticks": 63439,
+          "double_height": true,
+          "double_width": true,
+          "format": "rgb-samples",
+          "frame_id": 206,
+          "height": 200,
+          "mode_id": 7,
+          "session_id": "ses-1",
+          "source": "last_completed_guest_frame",
+          "source_bpp": 32,
+          "state_revision": 49,
+          "width": 320,
+          "samples_count": 54
+        },
+        "scene_matched": false,
+        "objects": {
+          "ae20fabd0ebd4ddc942271fd7a361836": {
+            "visible": false,
+            "ready": true,
+            "enabled": true
+          }
+        },
+        "predicate_matched": true,
+        "read_statistics": {
+          "evaluations": 2,
+          "unique_reads": 2,
+          "cache_hits": 0
+        },
+        "guest_elapsed_ms": 1285,
+        "action_object": "ae20fabd0ebd4ddc942271fd7a361836",
+        "before_observation": "98ad7b9c1b654cf4a095842b0cd39c95",
+        "input": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 346,
+            "y": 187
+          },
+          "session_id": "ses-1",
+          "state_revision": 25
+        },
+        "observation": "11d8650f31a54cc591ab204667bfc308",
+        "evidence_count": 7,
+        "memory_captures_count": 2,
+        "polls_count": 9,
+        "baseline_retained": true,
+        "reply_format": "fdisbull-scene-compact-1"
+      },
+      "ok": true
+    },
+    {
+      "index": 2,
+      "op": "scene-click",
+      "result": {
+        "scene_revision": "d8ea94e3ca804e249c4636f79715d6f1",
+        "manifest_sha256": "533cd52d8ab47c6daede7a2fa6d16c79431c99789c9dda5eab7be73ca495b0af",
+        "object_id": null,
+        "status": "matched",
+        "complete": true,
+        "availability": {},
+        "conflicts": [],
+        "handlers": [],
+        "run": "8a81318a6919451eb0e767e5eb9f11fd",
+        "frame": {
+          "captured_ticks": 64105,
+          "double_height": true,
+          "double_width": true,
+          "format": "rgb-samples",
+          "frame_id": 249,
+          "height": 200,
+          "mode_id": 7,
+          "session_id": "ses-1",
+          "source": "last_completed_guest_frame",
+          "source_bpp": 32,
+          "state_revision": 65,
+          "width": 320,
+          "samples_count": 110
+        },
+        "scene_matched": false,
+        "objects": {
+          "84108ee1f775484d9b47b3117a64c209": {
+            "visible": false,
+            "ready": true,
+            "enabled": true
+          },
+          "01167059b2f9458bad1d26347b46906b": {
+            "visible": false,
+            "ready": true,
+            "enabled": true
+          },
+          "5d91a2a881e546058ac629e77b9ad7b0": {
+            "visible": false,
+            "ready": true,
+            "enabled": true
+          }
+        },
+        "predicate_matched": true,
+        "read_statistics": {
+          "evaluations": 16,
+          "unique_reads": 2,
+          "cache_hits": 14
+        },
+        "guest_elapsed_ms": 675,
+        "action_object": "01167059b2f9458bad1d26347b46906b",
+        "before_observation": "b04c80b73dfd45a2b58d6eeebab7bb51",
+        "input": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 338,
+            "y": 118
+          },
+          "session_id": "ses-1",
+          "state_revision": 50
+        },
+        "observation": "3aab64300e424f9887c1e8100fd4ac9b",
+        "evidence_count": 24,
+        "memory_captures_count": 2,
+        "polls_count": 6,
+        "baseline_retained": true,
+        "reply_format": "fdisbull-scene-compact-1"
+      },
+      "ok": true
+    },
+    {
+      "index": 3,
+      "op": "scene-click",
+      "result": {
+        "scene_revision": "0494bf7d1d9148b1986cce9c9022df08",
+        "manifest_sha256": "609acfa01d3e3d8f309452781ee644f8fafadfb497e8402b1d3ef25cc57e2834",
+        "object_id": null,
+        "status": "matched",
+        "complete": true,
+        "availability": {},
+        "conflicts": [],
+        "handlers": [],
+        "run": "8a81318a6919451eb0e767e5eb9f11fd",
+        "frame": {
+          "captured_ticks": 64318,
+          "double_height": true,
+          "double_width": true,
+          "format": "rgb-samples",
+          "frame_id": 257,
+          "height": 200,
+          "mode_id": 7,
+          "session_id": "ses-1",
+          "source": "last_completed_guest_frame",
+          "source_bpp": 32,
+          "state_revision": 69,
+          "width": 320,
+          "samples_count": 54
+        },
+        "scene_matched": false,
+        "objects": {
+          "31b4f5205839486692c00eeeea70dca3": {
+            "visible": false,
+            "ready": true,
+            "enabled": true
+          }
+        },
+        "predicate_matched": true,
+        "read_statistics": {
+          "evaluations": 2,
+          "unique_reads": 2,
+          "cache_hits": 0
+        },
+        "guest_elapsed_ms": 210,
+        "action_object": "31b4f5205839486692c00eeeea70dca3",
+        "before_observation": "9eee80d793ff4981919139cc9f440410",
+        "input": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 346,
+            "y": 187
+          },
+          "session_id": "ses-1",
+          "state_revision": 66
+        },
+        "observation": "f942f2123e904982917149c86a67c288",
+        "evidence_count": 7,
+        "memory_captures_count": 2,
+        "polls_count": 2,
+        "baseline_retained": true,
+        "reply_format": "fdisbull-scene-compact-1"
+      },
+      "ok": true
+    },
+    {
+      "index": 4,
+      "op": "scene-click",
+      "result": {
+        "scene_revision": "d8ea94e3ca804e249c4636f79715d6f1",
+        "manifest_sha256": "533cd52d8ab47c6daede7a2fa6d16c79431c99789c9dda5eab7be73ca495b0af",
+        "object_id": null,
+        "status": "matched",
+        "complete": true,
+        "availability": {},
+        "conflicts": [],
+        "handlers": [],
+        "run": "8a81318a6919451eb0e767e5eb9f11fd",
+        "frame": {
+          "captured_ticks": 65579,
+          "double_height": true,
+          "double_width": true,
+          "format": "rgb-samples",
+          "frame_id": 312,
+          "height": 200,
+          "mode_id": 7,
+          "session_id": "ses-1",
+          "source": "last_completed_guest_frame",
+          "source_bpp": 32,
+          "state_revision": 97,
+          "width": 320,
+          "samples_count": 110
+        },
+        "scene_matched": false,
+        "objects": {
+          "84108ee1f775484d9b47b3117a64c209": {
+            "visible": false,
+            "ready": true,
+            "enabled": true
+          },
+          "01167059b2f9458bad1d26347b46906b": {
+            "visible": false,
+            "ready": true,
+            "enabled": true
+          },
+          "5d91a2a881e546058ac629e77b9ad7b0": {
+            "visible": false,
+            "ready": true,
+            "enabled": true
+          }
+        },
+        "predicate_matched": true,
+        "read_statistics": {
+          "evaluations": 16,
+          "unique_reads": 2,
+          "cache_hits": 14
+        },
+        "guest_elapsed_ms": 1265,
+        "action_object": "84108ee1f775484d9b47b3117a64c209",
+        "before_observation": "0613b57d39f448ddad884647e3983513",
+        "input": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 102,
+            "y": 26
+          },
+          "session_id": "ses-1",
+          "state_revision": 70
+        },
+        "observation": "973c2f51083c41669ae3548d5fa54f32",
+        "evidence_count": 24,
+        "memory_captures_count": 2,
+        "polls_count": 10,
+        "baseline_retained": true,
+        "reply_format": "fdisbull-scene-compact-1"
+      },
+      "ok": true
+    },
+    {
+      "index": 5,
+      "op": "scene-click",
+      "result": {
+        "scene_revision": "bfad13bc91064a1f87718b32783f84dd",
+        "manifest_sha256": "51e4dd1464fff1b7de6d9790ad632ea7252625ea805b918f780dc091ddac0fd0",
+        "object_id": null,
+        "status": "matched",
+        "complete": true,
+        "availability": {},
+        "conflicts": [],
+        "handlers": [],
+        "run": "8a81318a6919451eb0e767e5eb9f11fd",
+        "frame": {
+          "captured_ticks": 66783,
+          "double_height": true,
+          "double_width": true,
+          "format": "rgb-samples",
+          "frame_id": 361,
+          "height": 200,
+          "mode_id": 7,
+          "session_id": "ses-1",
+          "source": "last_completed_guest_frame",
+          "source_bpp": 32,
+          "state_revision": 119,
+          "width": 320,
+          "samples_count": 54
+        },
+        "scene_matched": false,
+        "objects": {
+          "ae20fabd0ebd4ddc942271fd7a361836": {
+            "visible": false,
+            "ready": true,
+            "enabled": true
+          }
+        },
+        "predicate_matched": true,
+        "read_statistics": {
+          "evaluations": 2,
+          "unique_reads": 2,
+          "cache_hits": 0
+        },
+        "guest_elapsed_ms": 1200,
+        "action_object": "ae20fabd0ebd4ddc942271fd7a361836",
+        "before_observation": "eeee9b5021414ad39c00d7e0c85cd83c",
+        "input": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 346,
+            "y": 187
+          },
+          "session_id": "ses-1",
+          "state_revision": 98
+        },
+        "observation": "c64b973bb69141448311149a4de6a895",
+        "evidence_count": 7,
+        "memory_captures_count": 2,
+        "polls_count": 8,
+        "baseline_retained": true,
+        "reply_format": "fdisbull-scene-compact-1"
+      },
+      "ok": true
+    },
+    {
+      "index": 6,
+      "op": "scene-click",
+      "result": {
+        "scene_revision": "d8ea94e3ca804e249c4636f79715d6f1",
+        "manifest_sha256": "533cd52d8ab47c6daede7a2fa6d16c79431c99789c9dda5eab7be73ca495b0af",
+        "object_id": null,
+        "status": "matched",
+        "complete": true,
+        "availability": {},
+        "conflicts": [],
+        "handlers": [],
+        "run": "8a81318a6919451eb0e767e5eb9f11fd",
+        "frame": {
+          "captured_ticks": 67449,
+          "double_height": true,
+          "double_width": true,
+          "format": "rgb-samples",
+          "frame_id": 403,
+          "height": 200,
+          "mode_id": 7,
+          "session_id": "ses-1",
+          "source": "last_completed_guest_frame",
+          "source_bpp": 32,
+          "state_revision": 135,
+          "width": 320,
+          "samples_count": 110
+        },
+        "scene_matched": false,
+        "objects": {
+          "84108ee1f775484d9b47b3117a64c209": {
+            "visible": false,
+            "ready": true,
+            "enabled": true
+          },
+          "01167059b2f9458bad1d26347b46906b": {
+            "visible": false,
+            "ready": true,
+            "enabled": true
+          },
+          "5d91a2a881e546058ac629e77b9ad7b0": {
+            "visible": false,
+            "ready": true,
+            "enabled": true
+          }
+        },
+        "predicate_matched": true,
+        "read_statistics": {
+          "evaluations": 16,
+          "unique_reads": 2,
+          "cache_hits": 14
+        },
+        "guest_elapsed_ms": 665,
+        "action_object": "01167059b2f9458bad1d26347b46906b",
+        "before_observation": "2093babdc51f4284829a36d8a87ba01d",
+        "input": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 338,
+            "y": 118
+          },
+          "session_id": "ses-1",
+          "state_revision": 120
+        },
+        "observation": "34726433f88d424a94d9f5eec43197cf",
+        "evidence_count": 24,
+        "memory_captures_count": 2,
+        "polls_count": 6,
+        "baseline_retained": true,
+        "reply_format": "fdisbull-scene-compact-1"
+      },
+      "ok": true
+    },
+    {
+      "index": 7,
+      "op": "scene-click",
+      "result": {
+        "scene_revision": "0494bf7d1d9148b1986cce9c9022df08",
+        "manifest_sha256": "609acfa01d3e3d8f309452781ee644f8fafadfb497e8402b1d3ef25cc57e2834",
+        "object_id": null,
+        "status": "matched",
+        "complete": true,
+        "availability": {},
+        "conflicts": [],
+        "handlers": [],
+        "run": "8a81318a6919451eb0e767e5eb9f11fd",
+        "frame": {
+          "captured_ticks": 67690,
+          "double_height": true,
+          "double_width": true,
+          "format": "rgb-samples",
+          "frame_id": 416,
+          "height": 200,
+          "mode_id": 7,
+          "session_id": "ses-1",
+          "source": "last_completed_guest_frame",
+          "source_bpp": 32,
+          "state_revision": 142,
+          "width": 320,
+          "samples_count": 54
+        },
+        "scene_matched": false,
+        "objects": {
+          "31b4f5205839486692c00eeeea70dca3": {
+            "visible": false,
+            "ready": true,
+            "enabled": true
+          }
+        },
+        "predicate_matched": true,
+        "read_statistics": {
+          "evaluations": 2,
+          "unique_reads": 2,
+          "cache_hits": 0
+        },
+        "guest_elapsed_ms": 240,
+        "action_object": "31b4f5205839486692c00eeeea70dca3",
+        "before_observation": "5763411b90b147a2837aaa07594962bc",
+        "input": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 346,
+            "y": 187
+          },
+          "session_id": "ses-1",
+          "state_revision": 136
+        },
+        "observation": "1f6d0858a1d6463db98ba3e71a519c50",
+        "evidence_count": 7,
+        "memory_captures_count": 2,
+        "polls_count": 3,
+        "baseline_retained": true,
+        "reply_format": "fdisbull-scene-compact-1"
+      },
+      "ok": true
+    }
+  ],
+  "artifact": "16de00803dc64c90a65cff379e70df38"
+}

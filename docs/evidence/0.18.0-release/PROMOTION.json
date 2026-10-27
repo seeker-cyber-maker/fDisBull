@@ -1,0 +1,28 @@
+{
+  "version": "0.18.0",
+  "base_commit": "41da677bcfda708d2d03c60d9f7f853b86bcb641",
+  "accepted_gameplay_version": "0.18.0.dev0",
+  "tested_platform": "macOS ARM64",
+  "tested_python": "3.13.14",
+  "native_profiles": {
+    "stable": 54,
+    "layers": 335
+  },
+  "installed_focused": 33,
+  "framework_source_sha256": {
+    "scenes.py": "2b5e039c82139327165fbc4b5311845747a3f1d93674bc0295cb14192b414cb1",
+    "scene_geometry.py": "b742795f9fc4994793d20b87732f0bec562749247f2d31f29832e79ef1d9b30d",
+    "scene_values.py": "e923467221fdc6d9aa5b40c08a72b303efdb3beb316bbd3d395c02cc5613d1d4",
+    "scene_bundles.py": "5e83ef107e1cfa07860bf6eddd95c34f7e25fe3700da7d57a1ede9e8fd5cccc0",
+    "debugger.py": "1c677dcb4769e99c75bb4d10917a751ae69f9f9cc2a9b323b64acda5703e377f",
+    "debug_script.py": "0dd8512caf176df8508bd79ce99c8e35081681ec2ef37a35f577f4a8b40cb571",
+    "cli.py": "215f80282e1b20326e19a9f5947a74ed1ac64dcee6c41c337c8de8f0facbf802"
+  },
+  "driver_sha256": "14a4cd4f5b23626f8d602684a5107c67f31950101a43b245d31d38a4499578e8",
+  "backend_sha256": "afa92bda2184e0c6f2fd685b164700058d212dd29b74af687de86234473d98d6",
+  "accepted_evidence_sha256": "0c5290c6cad936ebbfa48fc1767a6b41934cec8cdb5b817640ecda4848ed4a38",
+  "unchanged_accepted_source_verified": true,
+  "scope": "Release metadata and documentation promotion; accepted scene/runtime modules, driver and backend patches unchanged",
+  "linux_ci": "Required on the exact eventual release commit before tagging; actual results are attached to that GitHub commit",
+  "game_files_states_databases_excluded": true
+}

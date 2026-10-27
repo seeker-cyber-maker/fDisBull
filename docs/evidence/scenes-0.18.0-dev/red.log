@@ -1,0 +1,30 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_one_observation_deduplicates_aliases_but_next_observation_is_fresh ____
+
+mouse_game = (PosixPath('/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-619/test_one_observation_de...folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-619/test_one_observation_deduplica0/game/SCENE.EXE'))
+emulator = '/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-26/keyboard/layers/src/dosbox-x'
+
+    def test_one_observation_deduplicates_aliases_but_next_observation_is_fresh(mouse_game,emulator):
+        path,binary=mouse_game
+        with Project(path) as p,p.debugger(emulator,binary.parent) as d:
+            d.run(guest_ms=100,timeout_ms=3000,fast_forward=True)
+            doc=definition(d.screenshot());mem={'memory':dict(address='1000:0100',length=1,hex='00')}
+            doc['match']={'all':[deepcopy(mem) for _ in range(5)]}
+            for field in ('visible','ready','enabled'):doc['objects'][0][field]=deepcopy(mem)
+            # Same static byte through a different segmented spelling.
+            doc['objects'][0]['enabled']['memory']['address']='1010:0000'
+            scene=p.debug_save_scene('repeat',doc)
+            calls=[];original=d.memory
+            def counted(*args,**kwargs):calls.append((args,kwargs));return original(*args,**kwargs)
+            d.memory=counted
+            full=d.scene_check(scene['id'])
+            assert full['status']=='matched'
+>           assert len(calls)==1
+E           AssertionError: assert 8 == 1
+E            +  where 8 = len([(('1000:0100',), {'length': 1}), (('1000:0100',), {'length': 1}), (('1000:0100',), {'length': 1}), (('1000:0100',), {'length': 1}), (('1000:0100',), {'length': 1}), (('1000:0100',), {'length': 1}), ...])
+
+tests/test_scene_improvements.py:34: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_scene_improvements.py::test_one_observation_deduplicates_aliases_but_next_observation_is_fresh
+1 failed, 2 deselected in 1.24s

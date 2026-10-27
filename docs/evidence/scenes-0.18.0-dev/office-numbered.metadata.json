@@ -1,0 +1,75 @@
+{
+  "artifact": "718e9ed1a9d4482695b387646a410c18",
+  "run": "bd22090d603f4b8692cc7de759cc9338",
+  "version": 1,
+  "name": "scene-overlay.png",
+  "kind": "scene-overlay",
+  "sha256": "edc3e3519008aba41ee9f18ab356c97b00a6435d80363f27d6543030b42ade28",
+  "size": 67035,
+  "metadata": {
+    "source_artifact": "6657334bb3564dab8127f378610e6768",
+    "source_sha256": "b30d3e5ed4cf7036cf3af09dbe980e1eaaabefa4129e15b4bdcc2ea7fba197a2",
+    "scene_revision": "f30fbc72125f472b86868ee0c1ac2a0b",
+    "manifest_sha256": "847327d4df0ea9b282d5a6fc73d171be9c38c5f72045df82e5f3ac4dc73d4a31",
+    "width": 320,
+    "height": 200,
+    "mode_id": 7,
+    "coordinate_space": "native_pixels",
+    "geometry": "rect-half-open; polygon-raster-inclusive",
+    "grid_step": 8,
+    "labels": "numbers",
+    "legend": [
+      {
+        "marker": 1,
+        "object_id": "2d9f6c785c5d480e88133f81c04f45ce",
+        "name": "office.bank_account",
+        "aliases": [
+          "office.bank"
+        ],
+        "point": [
+          51,
+          26
+        ],
+        "area_sha256": "4d7abc01d15891cc6f9425508c1cdcdfd1ebbc253a536268dd3967014d05cb7a",
+        "color": [
+          0,
+          255,
+          170
+        ]
+      },
+      {
+        "marker": 2,
+        "object_id": "00968827fa4643838452eedb88098236",
+        "name": "office.ledger",
+        "aliases": [],
+        "point": [
+          169,
+          118
+        ],
+        "area_sha256": "d880e27aa8929e9e02c3669e390d1dadf268047fb8eaf254e0c0bc621f5b71c7",
+        "color": [
+          255,
+          150,
+          50
+        ]
+      },
+      {
+        "marker": 3,
+        "object_id": "47ddb0d69bdf4855ad588d95b7870e74",
+        "name": "office.sell_park",
+        "aliases": [],
+        "point": [
+          251,
+          153
+        ],
+        "area_sha256": "2fd779cf36e8fbcc8551509dcaa3cdeff10a092e03c33e5875a3e1973a6e7cde",
+        "color": [
+          140,
+          160,
+          255
+        ]
+      }
+    ]
+  },
+  "legend_artifact": "977eb23d0ebf41a0b0796472a428a27a"
+}

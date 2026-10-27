@@ -4,6 +4,14 @@ This directory illustrates fDisBull with one real reverse-engineering investigat
 
 Included: authored structures in `layouts/`, field/resource audits in `notes/`, and selected historical disassembly/typed-data renders in `images/`.
 
+The [0.18 scene improvement replay](verify_scene_improvements.py) reuses the
+private NEW GAME calibration route, then checks deduplicated reads, compact/full
+retained evidence, a portable three-scene bundle, numbered overlays and eight
+named actions with fresh relative baselines in an independent project. It
+exports scripts, screenshots and bounded traces; game files, databases and
+native checkpoints remain in its private output directory. See
+[the candidate verification](../../docs/VERIFICATION-SCENE-IMPROVEMENTS.md).
+
 The original executable, `VARS.DAT`, `DINOSG.*` saves and the byte-retaining analysis database are local inputs. Keep your own copies in `local/`, which is ignored by Git. The original database contained executable bytes and is excluded from public history.
 
 ## Create a local project

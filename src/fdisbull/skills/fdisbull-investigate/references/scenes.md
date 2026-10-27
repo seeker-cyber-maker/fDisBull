@@ -1,5 +1,33 @@
 # fDisBull scene investigation reference
 
+Version 0.18 supports `compact=True` on scene checks/actions/waits and
+saved-script operations. Full evidence stays in the database; retrieve it with
+`project.debug_scene_observation(result["observation"])`. Prefer compact replies
+for expected routes and inspect retained evidence when results are surprising.
+Never reuse historical success as proof of present readiness.
+
+Repeated exact memory ranges share one capture inside an observation, including
+segmented aliases; each subsequent observation reads fresh values. Keep related
+conditions in one check instead of making repeated round trips.
+
+Use `project.debug_scene_overlay(revision, labels="numbers")` for crowded scenes.
+Its `legend_artifact` maps markers to stable object IDs, names and geometry.
+Numbers follow that revision's object order; scripts should use names/IDs.
+
+`project.debug_export_scenes([revision], output)` writes definitions and clean
+PNGs only. `debug_import_scenes(bundle)` remaps local IDs and rejects incompatible
+source/mapping or existing names. It imports historical evidence, not live
+readiness. Recheck after starting/restoring the guest. States and databases do
+not belong in a portable scene bundle.
+
+Outcomes can use typed `compare` expressions with current memory, `before`
+memory, integers and `add`/`sub`. Example: current `u16` counter equals
+`{"add":[{"before":{"memory":{"address":"0x471ac","type":"u16"}}},1]}`.
+Arithmetic does not implicitly wrap; use `wrap: {type, value}` when required.
+The address is a schema example, not a qualified purchase route. Combine relative
+state evidence with independent destination pixels. Every action captures its
+own baseline; unavailable data remains incomplete even under `any`.
+
 The packaged Python and JSON interfaces share the project database:
 
 ```python

@@ -1,0 +1,7 @@
+{
+  "wheel": "fdisbull-0.18.0.dev0-py3-none-any.whl",
+  "sha256": "88ddf7f48c9727e0308ff78878bfcdc4b424cff8f9a7c29b91e8cf340141c582",
+  "entries_identical": 100,
+  "record_excluded": "pip rewrites RECORD on installation",
+  "python": "3.13"
+}

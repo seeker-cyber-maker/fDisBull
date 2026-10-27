@@ -1,4 +1,18 @@
-# Release status checked on 2026-10-26
+# Release status checked on 2026-10-27
+
+## 0.18.0 source promotion
+
+The [0.18.0 source](RELEASE-0.18.0.md) adds observation read deduplication,
+compact replies with retained evidence, portable scene bundles, typed relative
+outcomes and numbered overlays. The installed development-wheel DinoPark
+verification remains sealed as `0.18.0.dev0`; promotion preserves the accepted
+runtime source identities and changes release metadata/documentation.
+
+Ordinary Linux test/package CI and the full native Linux workflow must pass on
+the exact release commit before tagging. The native gate includes stable DOS,
+layered DOS with Python 3.13.5, and installed-wheel unified DOS/boot/PE64 checks.
+Tag CI and GitHub release publication are separate follow-up gates. The published
+0.17.0 assets and local deliveries below remain unchanged.
 
 ## Published 0.17.0
 

@@ -1,5 +1,9 @@
 # Persistent debugger scenes (0.17.0)
 
+Version **0.18.0** adds [read deduplication, compact replies,
+portable bundles, typed relative outcomes and numbered overlays](SCENE_IMPROVEMENTS.md).
+The published 0.17.0 packages retain their original behavior.
+
 For published packages, tag CI and copied qualification, see the
 [0.17 delivery record](DELIVERY-0.17.md).
 

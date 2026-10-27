@@ -1,0 +1,12 @@
+{
+  "output": "/Users/tiga/Conversions/DinoParkTycoon/debugger-runs/scenes-0.18.0.dev0-installed-final/evidence/office-scenes.zip",
+  "sha256": "3b6217446b5fd066958fb3d3c268bf6ecdf9fbec1eae1993392594172b90ed72",
+  "size": 71474,
+  "scenes": 3,
+  "snapshots": 3,
+  "snapshot_hashes": [
+    "a75597cb6ecef9ee4ceb14b603e093cf090a449d4eabe5840c833f987be77fbf",
+    "d0baa55ae17a5d79779b5a60526f6a9f96d361dcd27a9230fd1f0aea4c7b1ad8",
+    "e9deaf556483428963a312419999d83ac6764cdc474b53791a4123f5828ab274"
+  ]
+}

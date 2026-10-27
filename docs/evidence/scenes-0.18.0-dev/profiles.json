@@ -1,0 +1,48 @@
+[
+  {
+    "profile": "stable",
+    "command": [
+      "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-26/scenes-018/candidate-venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_debugger.py",
+      "tests/test_keyboard.py",
+      "tests/test_screenshot_grid.py",
+      "tests/test_scenes.py",
+      "tests/test_scene_improvements.py",
+      "--require-native",
+      "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-26/scenes-018/stable.xml"
+    ],
+    "exit_code": 0
+  },
+  {
+    "profile": "layers",
+    "command": [
+      "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-26/scenes-018/candidate-venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_debugger.py",
+      "tests/test_keyboard.py",
+      "tests/test_debug_wait.py",
+      "tests/test_code_layers.py",
+      "tests/test_debug_experiments.py",
+      "tests/test_runtime_code.py",
+      "tests/test_debug_semantics.py",
+      "tests/test_doctor.py",
+      "tests/test_screenshot_grid.py",
+      "tests/test_scenes.py",
+      "tests/test_scene_improvements.py",
+      "tests/test_scene_layers.py",
+      "tests/test_ida_dosbox.py",
+      "tests/test_dosbox_zip_stream.py",
+      "tests/test_library_catalog.py",
+      "tests/test_rich_types.py",
+      "tests/test_dos_services.py",
+      "--require-native",
+      "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-26/scenes-018/layers.xml"
+    ],
+    "exit_code": 0
+  }
+]

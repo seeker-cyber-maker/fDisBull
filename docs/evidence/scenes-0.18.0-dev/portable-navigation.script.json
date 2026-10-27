@@ -1,0 +1,53 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "scene-click",
+      "scene": "d8ea94e3ca804e249c4636f79715d6f1",
+      "object": "office.bank",
+      "compact": true
+    },
+    {
+      "op": "scene-click",
+      "scene": "bfad13bc91064a1f87718b32783f84dd",
+      "object": "bank.back",
+      "compact": true
+    },
+    {
+      "op": "scene-click",
+      "scene": "d8ea94e3ca804e249c4636f79715d6f1",
+      "object": "office.ledger",
+      "compact": true
+    },
+    {
+      "op": "scene-click",
+      "scene": "0494bf7d1d9148b1986cce9c9022df08",
+      "object": "ledger.back",
+      "compact": true
+    },
+    {
+      "op": "scene-click",
+      "scene": "d8ea94e3ca804e249c4636f79715d6f1",
+      "object": "office.bank",
+      "compact": true
+    },
+    {
+      "op": "scene-click",
+      "scene": "bfad13bc91064a1f87718b32783f84dd",
+      "object": "bank.back",
+      "compact": true
+    },
+    {
+      "op": "scene-click",
+      "scene": "d8ea94e3ca804e249c4636f79715d6f1",
+      "object": "office.ledger",
+      "compact": true
+    },
+    {
+      "op": "scene-click",
+      "scene": "0494bf7d1d9148b1986cce9c9022df08",
+      "object": "ledger.back",
+      "compact": true
+    }
+  ]
+}

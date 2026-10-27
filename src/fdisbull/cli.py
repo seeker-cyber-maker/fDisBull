@@ -11,14 +11,17 @@ METHODS = {
     'debug-save-scene':'Save a versioned scene manifest with persistent objects and screenshot evidence; name,definition,[parent,version,author]',
     'debug-scenes':'List current scene revisions; [version]',
     'debug-scene-info':'Read a scene manifest, evidence and persistent object identities; scene,[version]',
-    'debug-scene-overlay':'Render shared object masks and names on a stored frame; scene,[artifact,name,grid_step,version]',
+    'debug-scene-overlay':'Render shared masks with names or numbers and a legend; scene,[artifact,name,grid_step,version,labels]',
+    'debug-scene-observation':'Read one retained full or compact historical observation; observation,[compact]',
+    'debug-export-scenes':'Export compatible scene definitions and clean PNG evidence only; scenes,output,[version]',
+    'debug-import-scenes':'Atomically import a portable scene bundle with new local IDs; bundle,[version]',
     'debug-scene-observations':'Read persisted checks, collisions and diagnostic captures; [revision,run,limit]',
     'debug-frame-probe':'Read at most 4096 RGB pixels from one native completed frame, without PNG transfer; run,points',
-    'debug-scene-check':'Check scene identity and optional object availability; run,scene,[object]',
-    'debug-scene-assert':'Assert current scene/object or save a diagnostic snapshot; run,scene,[object]',
-    'debug-scene-click':'Perform checked real input and verify its bounded outcome; run,scene,object,[handle_popups]',
-    'debug-scene-act':'Perform a named guest mouse/keyboard action and verify its outcome; run,scene,object,[handle_popups,timeout_ms]',
-    'debug-scene-wait':'Wait on authored scene/object conditions with explicit budgets; run,scene,[object,guest_ms,timeout_ms,slice_ms]',
+    'debug-scene-check':'Check scene identity and optional object availability; run,scene,[object,compact]',
+    'debug-scene-assert':'Assert current scene/object or save a diagnostic snapshot; run,scene,[object,compact]',
+    'debug-scene-click':'Perform checked real input and verify its bounded outcome; run,scene,object,[handle_popups,compact]',
+    'debug-scene-act':'Perform a named guest mouse/keyboard action and verify its outcome; run,scene,object,[handle_popups,timeout_ms,compact]',
+    'debug-scene-wait':'Wait on authored scene/object conditions with explicit budgets; run,scene,[object,guest_ms,timeout_ms,slice_ms,compact]',
     'capture-signature': 'Capture a named closed stored function for cross-project reuse; address,name,[version,cs,author,max_instructions]',
     'import-signatures': 'Atomically import an explicit signature catalog; catalog,[version]',
     'export-signatures': 'Export registered project identities as a reusable JSON catalog; [version]',
@@ -215,7 +218,8 @@ def invoke(method, params, debugger=None):
     project = p.pop("project",None)
     if not project:
         raise ValueError("project path is required")
-    scene_offline=('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations')
+    scene_offline=('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations',
+                   'debug-scene-observation','debug-export-scenes','debug-import-scenes')
     if method in scene_offline:
         if 'definition_file' in p:
             file=Path(p.pop('definition_file'))
@@ -356,17 +360,24 @@ def parser():
     root.add_argument("--version",action="version",version=__version__)
     sub = root.add_subparsers(dest="command",required=True)
     sub.add_parser('agent-skill',help=METHODS['agent-skill'])
-    for name in ('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations'):
+    for name in ('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations',
+                 'debug-scene-observation','debug-export-scenes','debug-import-scenes'):
         c=sub.add_parser(name,help=METHODS[name]);c.add_argument('project')
-        if name!='debug-scene-observations':c.add_argument('--version',type=int)
+        if name not in ('debug-scene-observations','debug-scene-observation'):c.add_argument('--version',type=int)
         if name=='debug-save-scene':
             c.add_argument('name');c.add_argument('definition_file');c.add_argument('--parent');c.add_argument('--author',default='agent')
         elif name in ('debug-scene-info','debug-scene-overlay'):
             c.add_argument('scene')
             if name=='debug-scene-overlay':
                 c.add_argument('--artifact');c.add_argument('--name',default='scene-overlay.png');c.add_argument('--grid-step',type=int,default=8)
+                c.add_argument('--labels',choices=['names','numbers'],default='names')
         elif name=='debug-scene-observations':
             c.add_argument('--revision');c.add_argument('--run');c.add_argument('--limit',type=int,default=100)
+        elif name=='debug-scene-observation':
+            c.add_argument('observation');c.add_argument('--compact',action='store_true')
+        elif name=='debug-export-scenes':
+            c.add_argument('output');c.add_argument('scenes',nargs='+')
+        elif name=='debug-import-scenes':c.add_argument('bundle')
     sub.add_parser('dos-services',help=METHODS['dos-services'])
     c=sub.add_parser('omf-catalog',help=METHODS['omf-catalog'])
     c.add_argument('path');c.add_argument('--abi',default='x86_16_cdecl_near')

@@ -1,0 +1,61 @@
+{
+  "version": "0.18.0.dev0",
+  "scope": "Local candidate, real private DinoPark NEW GAME and fresh native restore",
+  "source_script_sha256": "14a4cd4f5b23626f8d602684a5107c67f31950101a43b245d31d38a4499578e8",
+  "tool_module": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-26/scenes-018/candidate-venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+  "framework_source_sha256": {
+    "scenes.py": "2b5e039c82139327165fbc4b5311845747a3f1d93674bc0295cb14192b414cb1",
+    "scene_geometry.py": "b742795f9fc4994793d20b87732f0bec562749247f2d31f29832e79ef1d9b30d",
+    "scene_values.py": "e923467221fdc6d9aa5b40c08a72b303efdb3beb316bbd3d395c02cc5613d1d4",
+    "scene_bundles.py": "5e83ef107e1cfa07860bf6eddd95c34f7e25fe3700da7d57a1ede9e8fd5cccc0",
+    "debugger.py": "1c677dcb4769e99c75bb4d10917a751ae69f9f9cc2a9b323b64acda5703e377f",
+    "debug_script.py": "0dd8512caf176df8508bd79ce99c8e35081681ec2ef37a35f577f4a8b40cb571",
+    "cli.py": "215f80282e1b20326e19a9f5947a74ed1ac64dcee6c41c337c8de8f0facbf802"
+  },
+  "observation": {
+    "statistics": {
+      "cache_hits": 15,
+      "evaluations": 17,
+      "unique_reads": 2
+    },
+    "backend_calls_two_observations": 4,
+    "full_reply_bytes": 25210,
+    "compact_reply_bytes": 1233,
+    "full_call_ms": 9.857959114015102,
+    "compact_call_ms": 9.030999848619103,
+    "scope": "Two checks on one paused guest; compact and full sizes use the same retained observation"
+  },
+  "numbered_overlay_sha256": "edc3e3519008aba41ee9f18ab356c97b00a6435d80363f27d6543030b42ade28",
+  "backend_sha256": "afa92bda2184e0c6f2fd685b164700058d212dd29b74af687de86234473d98d6",
+  "bundle": {
+    "output": "/Users/tiga/Conversions/DinoParkTycoon/debugger-runs/scenes-0.18.0.dev0-installed-final/evidence/office-scenes.zip",
+    "sha256": "3b6217446b5fd066958fb3d3c268bf6ecdf9fbec1eae1993392594172b90ed72",
+    "size": 71474,
+    "scenes": 3,
+    "snapshots": 3,
+    "snapshot_hashes": [
+      "a75597cb6ecef9ee4ceb14b603e093cf090a449d4eabe5840c833f987be77fbf",
+      "d0baa55ae17a5d79779b5a60526f6a9f96d361dcd27a9230fd1f0aea4c7b1ad8",
+      "e9deaf556483428963a312419999d83ac6764cdc474b53791a4123f5828ab274"
+    ]
+  },
+  "relative_checks": {
+    "actions": 8,
+    "fresh_baselines": 8,
+    "condition": "u16 parking counter equals its own pre-action value AND destination pixels match",
+    "limitation": "Navigation invariant; increment/decrement and wrap arithmetic are separately tested with an authored native guest"
+  },
+  "ok": true,
+  "processes_reaped": true,
+  "original_files_unchanged": 192,
+  "private_files_unchanged": 184,
+  "scene_bundle_native_rechecked": true,
+  "offline_overlay_restart_identical": true,
+  "private_state_in_bundle": false,
+  "preserved_stops": [
+    "breakpoint",
+    "watchpoint",
+    "hook"
+  ],
+  "game_files_states_databases_in_evidence": false
+}

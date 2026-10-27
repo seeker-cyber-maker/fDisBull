@@ -8,6 +8,10 @@ An agent-first disassembler with a persistent SQLite analysis database, explicit
 
 Requires Python **3.12 or later**.
 
+Source version **0.18.0** adds portable scenes, deduplicated observation reads,
+compact replies, relative outcomes and numbered overlays. See the
+[0.18 release notes](docs/RELEASE-0.18.0.md) for verification and release gates.
+
 [**fDisBull 0.17.0 is published**](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.17.0),
 with CI-verified packages and the updated
 [Linux/DOS offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.17.0/fdisbull-linux-dos-offline-0.17.0-4f736f2-2026-10-26.zip).
@@ -117,7 +121,16 @@ Launch an original DOS MZ project with `fdisbull debug PROJECT --executable PATH
 
 The real DinoPark path was verified through this interface. A ten-second guest skip completed in about 0.45 host seconds on the tested Mac, with actual elapsed values recorded; this is not a speed guarantee. The separately built DOSBox backend is required and is not bundled with the Python tool.
 
-## Persistent scenes (0.17.0)
+## Persistent scenes (0.17–0.18)
+
+Version **0.18.0** adds per-observation memory-read deduplication,
+opt-in compact replies with retained evidence, portable scene bundles, typed
+relative outcomes and numbered overlays with legends. See the
+[scene improvements guide](docs/SCENE_IMPROVEMENTS.md) and
+[development verification record](docs/VERIFICATION-SCENE-IMPROVEMENTS.md).
+The [content/engine/player design](docs/GAME_CONTENT_AND_PLAYER.md) describes a
+later agent-authored script-language extension framework. That engine work is
+proposed; it is not supplied by this release.
 
 The [scene framework](docs/SCENE_FRAMEWORK.md) saves object context, trigger
 provenance, revisions and supporting screenshots in the project database. One

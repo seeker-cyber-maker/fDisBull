@@ -4,6 +4,7 @@ Runtime recognizers never cache availability across calls. Definitions are
 version-bound; snapshots and observations retain their own run/context identity.
 """
 from copy import deepcopy
+from functools import wraps
 import hashlib
 import io
 import json
@@ -12,6 +13,8 @@ import time
 import uuid
 
 from .scene_geometry import dimensions, integer, region
+from .scene_values import ObservationReads, before_refs, comparison, evaluate_comparison, compact_result
+from .scene_bundles import SceneBundleMixin
 
 SCENE_DDL = '''
 CREATE TABLE IF NOT EXISTS debug_scenes(
@@ -56,7 +59,7 @@ def context(value):
     encoded(value)
 
 
-def predicate(value, width, height, depth=0):
+def predicate(value, width, height, depth=0, allow_before=False):
     if depth > 8 or not isinstance(value, dict) or len(value) != 1:
         raise ValueError('Invalid scene predicate')
     op, data = next(iter(value.items()))
@@ -65,9 +68,9 @@ def predicate(value, width, height, depth=0):
     elif op in ('all', 'any'):
         if not isinstance(data, list) or not 1 <= len(data) <= 64:
             raise ValueError('Predicate requires 1..64 operands')
-        for child in data: predicate(child, width, height, depth+1)
+        for child in data: predicate(child, width, height, depth+1,allow_before)
     elif op == 'not':
-        predicate(data, width, height, depth+1)
+        predicate(data, width, height, depth+1,allow_before)
     elif op == 'pixels':
         if not isinstance(data, dict) or set(data)-{'samples','min_matches','tolerance'}:
             raise ValueError('Invalid pixel predicate')
@@ -94,6 +97,7 @@ def predicate(value, width, height, depth=0):
         expected=bytes.fromhex(data.get('hex',''))
         mask=bytes.fromhex(data.get('mask','ff'*len(expected)))
         if len(expected)!=data['length'] or len(mask)!=len(expected):raise ValueError('Memory predicate length mismatch')
+    elif op=='compare':comparison(data,allow_before=allow_before)
     else: raise ValueError('Unknown scene predicate '+op)
 
 
@@ -120,7 +124,7 @@ def action(value):
     else:raise ValueError('Scene actions must use guest click, press or type input')
 
 
-class SceneProjectMixin:
+class SceneProjectMixin(SceneBundleMixin):
     def _scene_snapshot(self, artifact, version):
         row=self.db.execute('SELECT a.*,r.version FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run WHERE a.id=?',(artifact,)).fetchone()
         if row is None or row['kind']!='screenshot' or row['version']!=version:
@@ -180,7 +184,7 @@ class SceneProjectMixin:
             if not mask.getpixel(tuple(point)):raise ValueError('Click point is outside object action mask')
             for key in ('visible','ready','enabled'):predicate(obj.get(key),width,height)
             action(obj.get('action'))
-            predicate(obj.get('outcome'),width,height)
+            predicate(obj.get('outcome'),width,height,allow_before=True)
             integer(obj.setdefault('guest_ms',5000),1,120000);integer(obj.setdefault('timeout_ms',5000),1,60000)
             obj.setdefault('evidence',[reference])
             if not isinstance(obj['evidence'],list) or not 1<=len(obj['evidence'])<=32:raise ValueError('Every object needs supporting snapshots')
@@ -189,7 +193,7 @@ class SceneProjectMixin:
         doc.setdefault('handlers',[])
         if not isinstance(doc['handlers'],list) or len(doc['handlers'])>16:raise ValueError('Too many popup handlers')
         for handler in doc['handlers']:
-            globals()['name'](handler['name']);predicate(handler['when'],width,height);predicate(handler['outcome'],width,height)
+            globals()['name'](handler['name']);predicate(handler['when'],width,height);predicate(handler['outcome'],width,height,allow_before=True)
             action(handler['action'])
             if handler['action']['kind']=='click':
                 p=handler.get('point')
@@ -215,7 +219,7 @@ class SceneProjectMixin:
         if row is None:raise ValueError('Unknown scene revision for this byte version')
         doc=json.loads(row['document'])
         if hashlib.sha256(encoded(doc)).hexdigest()!=row['sha256']:raise ValueError('Scene manifest hash mismatch')
-        for item in self.db.execute('SELECT artifact FROM debug_scene_evidence WHERE revision=?',(row['id'],)):
+        for item in self.db.execute('SELECT DISTINCT artifact FROM debug_scene_evidence WHERE revision=?',(row['id'],)):
             self._scene_snapshot(item['artifact'],v)
         for obj in doc['objects']:
             if hashlib.sha256(region(obj['area'],doc['width'],doc['height']).tobytes()).hexdigest()!=obj['area_sha256']:
@@ -231,11 +235,20 @@ class SceneProjectMixin:
         rows=self.db.execute('SELECT * FROM debug_scene_observations WHERE (? IS NULL OR revision=?) AND (? IS NULL OR run=?) ORDER BY rowid DESC LIMIT ?',(revision,revision,run,run,limit))
         return {'observations':[dict(id=r['id'],revision=r['revision'],run=r['run'],created=r['created'],kind=r['kind'],result=json.loads(r['document'])) for r in rows]}
 
-    def debug_scene_overlay(self, scene, *, artifact=None, name='scene-overlay.png', grid_step=8, version=None):
+    def debug_scene_observation(self, observation, *, compact=False):
+        row=self.db.execute('SELECT * FROM debug_scene_observations WHERE id=?',(observation,)).fetchone()
+        if row is None:raise ValueError('Unknown scene observation')
+        if type(compact) is not bool:raise ValueError('compact must be boolean')
+        result=dict(json.loads(row['document']),observation=row['id'])
+        return dict(id=row['id'],revision=row['revision'],run=row['run'],created=row['created'],
+                    historical=True,live_state_verified=False,result=compact_result(result) if compact else result)
+
+    def debug_scene_overlay(self, scene, *, artifact=None, name='scene-overlay.png', grid_step=8, version=None, labels='names'):
         from PIL import Image,ImageDraw,ImageFilter
         from .screenshot_grid import coordinate_grid
         from .external_files import _file_name
         _file_name(name)
+        if labels not in ('names','numbers'):raise ValueError('labels must be names or numbers')
         info=self.debug_scene_info(scene,version=version);doc=info['definition']
         artifact=artifact or doc['reference'];row,meta=self._scene_snapshot(artifact,info['version'])
         if video_signature(meta)!=doc['video']:raise ValueError('Overlay frame does not match scene video signature')
@@ -243,15 +256,23 @@ class SceneProjectMixin:
         if grid_step is not None:base,_=coordinate_grid(base,step=grid_step)
         with Image.open(io.BytesIO(base)) as original:image=original.convert('RGBA')
         colors=[(0,255,170),(255,150,50),(140,160,255),(255,100,180)]
+        legend=[]
         for index,obj in enumerate(doc['objects']):
             color=colors[index%len(colors)];mask=region(obj['area'],doc['width'],doc['height'])
             tint=Image.new('RGBA',image.size,(*color,0));tint.putalpha(mask.point(lambda x:48 if x else 0))
             image=Image.alpha_composite(image,tint)
             edge=mask.filter(ImageFilter.FIND_EDGES);image.paste((*color,255),(0,0),edge)
             pen=ImageDraw.Draw(image);x,y=obj['point'];pen.ellipse((x-2,y-2,x+2,y+2),fill=(*color,255))
-            box=mask.getbbox();pen.text((box[0]+2,box[1]+2),obj['name'],fill=(*color,255),stroke_width=1,stroke_fill=(0,0,0,255))
+            box=mask.getbbox();text=str(index+1) if labels=='numbers' else obj['name']
+            pen.text((box[0]+2,box[1]+2),text,fill=(*color,255),stroke_width=1,stroke_fill=(0,0,0,255))
+            legend.append(dict(marker=index+1,object_id=obj['id'],name=obj['name'],aliases=obj['aliases'],point=obj['point'],area_sha256=obj['area_sha256'],color=list(color)))
         stream=io.BytesIO();image.save(stream,format='PNG')
-        return self._debug_artifact(row['run'],name,'scene-overlay',stream.getvalue(),dict(source_artifact=artifact,source_sha256=row['sha256'],scene_revision=info['id'],manifest_sha256=info['sha256'],width=doc['width'],height=doc['height'],mode_id=meta['mode_id'],coordinate_space='native_pixels',geometry='rect-half-open; polygon-raster-inclusive',grid_step=grid_step))
+        metadata=dict(source_artifact=artifact,source_sha256=row['sha256'],scene_revision=info['id'],manifest_sha256=info['sha256'],width=doc['width'],height=doc['height'],mode_id=meta['mode_id'],coordinate_space='native_pixels',geometry='rect-half-open; polygon-raster-inclusive',grid_step=grid_step,labels=labels,legend=legend)
+        result=self._debug_artifact(row['run'],name,'scene-overlay',stream.getvalue(),metadata)
+        if labels=='numbers':
+            data=dict(format='fdisbull-scene-legend-1',scene_revision=info['id'],manifest_sha256=info['sha256'],source_artifact=artifact,targets=legend)
+            result['legend_artifact']=self._debug_artifact(row['run'],name+'.legend.json','scene-legend',encoded(data),dict(scene_revision=info['id'],manifest_sha256=info['sha256']))['artifact']
+        return result
 
 
 def _predicates(doc):
@@ -268,15 +289,15 @@ class SceneError(ValueError):
         super().__init__('Scene operation '+result['status']+'; observation '+result.get('observation','not stored'))
 
 
-def _evaluate(spec, session, samples, observations):
+def _evaluate(spec, session, samples, observations, reads, baseline=None):
     op,data=next(iter(spec.items()))
     if op=='constant':return data
     if op in ('all','any'):
-        values=[_evaluate(p,session,samples,observations) for p in data]
+        values=[_evaluate(p,session,samples,observations,reads,baseline) for p in data]
         if None in values:return None
         return all(values) if op=='all' else any(values)
     if op=='not':
-        value=_evaluate(data,session,samples,observations)
+        value=_evaluate(data,session,samples,observations,reads,baseline)
         return None if value is None else not value
     if op=='pixels':
         tolerance=data.get('tolerance',0)
@@ -285,15 +306,31 @@ def _evaluate(spec, session, samples, observations):
         observations.append(dict(kind='pixels',spec=spec,matches=score,matched=matched))
         return matched
     try:
-        value=session.memory(data['address'],length=data['length'],**({'cs':data['cs']} if 'cs' in data else {}))
-        actual=bytes.fromhex(value['hex']);expected=bytes.fromhex(data['hex']);mask=bytes.fromhex(data.get('mask','ff'*len(expected)))
+        if op=='compare':
+            matched,left,right=evaluate_comparison(data,reads,baseline)
+            observations.append(dict(kind='compare',spec=spec,left=left,right=right,matched=matched))
+            return matched
+        actual,capture=reads.read(data['address'],data['length'],data.get('cs'))
+        expected=bytes.fromhex(data['hex']);mask=bytes.fromhex(data.get('mask','ff'*len(expected)))
         if len(actual)!=len(expected):raise ValueError('Incomplete scene memory capture')
         matched=all((a&m)==(b&m) for a,b,m in zip(actual,expected,mask,strict=True))
-        observations.append(dict(kind='memory',spec=spec,hex=actual.hex(),matched=matched))
+        observations.append(dict(kind='memory',spec=spec,hex=actual.hex(),matched=matched,capture=capture))
         return matched
     except Exception as error:
-        observations.append(dict(kind='memory',spec=spec,error=str(error)))
+        observations.append(dict(kind=op,spec=spec,error=str(error)))
         return None
+
+
+def reply_option(method):
+    @wraps(method)
+    def wrapped(self,*args,compact=False,**kwargs):
+        if type(compact) is not bool:raise ValueError('compact must be boolean')
+        try:result=method(self,*args,**kwargs)
+        except SceneError as error:
+            if compact:raise SceneError(compact_result(error.result)) from error
+            raise
+        return compact_result(result) if compact else result
+    return wrapped
 
 
 class SceneSessionMixin:
@@ -315,16 +352,16 @@ class SceneSessionMixin:
         self._event('frame-probe',result)
         return result
 
-    def scene_check(self, scene, *, object=None):return self.scene(scene).check(object)
+    def scene_check(self, scene, *, object=None, compact=False):return self.scene(scene).check(object,compact=compact)
 
-    def scene_assert(self, scene, *, object=None):return self.scene(scene).assert_current(object)
+    def scene_assert(self, scene, *, object=None, compact=False):return self.scene(scene).assert_current(object,compact=compact)
 
-    def scene_click(self, scene, object, *, handle_popups=False, timeout_ms=None):return self.scene(scene).click(object,handle_popups=handle_popups,timeout_ms=timeout_ms)
+    def scene_click(self, scene, object, *, handle_popups=False, timeout_ms=None, compact=False):return self.scene(scene).click(object,handle_popups=handle_popups,timeout_ms=timeout_ms,compact=compact)
 
-    def scene_act(self, scene, object, *, handle_popups=False, timeout_ms=None):return self.scene(scene).act(object,handle_popups=handle_popups,timeout_ms=timeout_ms)
+    def scene_act(self, scene, object, *, handle_popups=False, timeout_ms=None, compact=False):return self.scene(scene).act(object,handle_popups=handle_popups,timeout_ms=timeout_ms,compact=compact)
 
-    def scene_wait(self, scene, *, object=None, guest_ms=5000, timeout_ms=5000, slice_ms=100):
-        return self.scene(scene).wait(object,guest_ms=guest_ms,timeout_ms=timeout_ms,slice_ms=slice_ms)
+    def scene_wait(self, scene, *, object=None, guest_ms=5000, timeout_ms=5000, slice_ms=100, compact=False):
+        return self.scene(scene).wait(object,guest_ms=guest_ms,timeout_ms=timeout_ms,slice_ms=slice_ms,compact=compact)
 
 
 class SceneHandle:
@@ -340,7 +377,7 @@ class SceneHandle:
 
     def object(self, target):return SceneObject(self,target)
 
-    def _observe(self, target=None, extra=None):
+    def _observe(self, target=None, extra=None, baseline=None):
         d=self.session;p=d.project
         # Reverify persisted manifest/evidence on each operation, never a cached
         # availability result, including across load_state/camera/layer changes.
@@ -349,6 +386,7 @@ class SceneHandle:
         others=[s for s in p.debug_scenes(version=d.version['id'])['scenes'] if s['scene']!=self.info['scene'] and s['definition']['video']==doc['video']]
         result=dict(scene_revision=self.revision,manifest_sha256=self.info['sha256'],object_id=selected['id'] if selected else None,
                     status='unavailable',complete=False,availability={},evidence=[],conflicts=[],handlers=[],run=d.run_id)
+        reads=ObservationReads(d)
         try:
             if d.call('session.status')['state']!='stopped':raise ValueError('Scene checks require a paused guest')
             specs=list(_predicates(doc))+[s['definition']['match'] for s in others]+([extra] if extra else [])
@@ -358,7 +396,7 @@ class SceneHandle:
             if video_signature(frame)!=doc['video']:
                 raise ValueError('Scene video dimensions or mode changed')
             samples={(s['x'],s['y']):s['rgb'] for s in frame['samples']}
-            evaluate=lambda v:_evaluate(v,d,samples,result['evidence'])
+            evaluate=lambda v:_evaluate(v,d,samples,result['evidence'],reads,baseline)
             matched=evaluate(doc['match']);result['scene_matched']=matched
             missing_required=False
             for other in others:
@@ -382,9 +420,22 @@ class SceneHandle:
             for handler in doc['handlers']:
                 value=evaluate(handler['when']);missing_required|=value is None
                 if value is True:result['handlers'].append(handler['name'])
+            refs=list(before_refs(selected['outcome'])) if selected else []
+            if extra is not None:refs+=list(before_refs(extra))
+            for handler in doc['handlers']:
+                if handler['name'] in result['handlers']:refs+=list(before_refs(handler['outcome']))
+            binding=dict(run=d.run_id,version=d.version['id'],scene_revision=self.revision)
+            if baseline is not None:
+                if any(baseline.get(k)!=v for k,v in binding.items()):raise ValueError('Pre-action baseline context differs')
+            elif refs:
+                baseline=reads.freeze(refs,dict(binding,frame={k:frame[k] for k in ('frame_id','mode_id','state_revision')}))
+            if baseline is not None:
+                result['baseline']=baseline
+                missing_required|=any('error' in value for value in baseline['values'].values())
             if selected:
                 result['availability']=available[selected['id']]
                 result['initial_outcome']=evaluate(selected['outcome'])
+                missing_required|=result['initial_outcome'] is None
                 for obj in doc['objects']:
                     if obj['id']==selected['id']:continue
                     state=available[obj['id']]
@@ -402,6 +453,8 @@ class SceneHandle:
             result['complete']=result['status'] not in ('ambiguous','unavailable')
         except Exception as error:
             result['error']=str(error)
+        result['read_statistics']=reads.stats()
+        result['memory_captures']=list(reads.captures.values())
         return result
 
     def _store(self, result, diagnostic=False):
@@ -421,16 +474,19 @@ class SceneHandle:
                         except Exception as error:result['overlay_error']=str(error)
             except Exception as error:result['snapshot_error']=str(error)
         oid=uuid.uuid4().hex
+        if result.get('baseline') is not None:result['baseline'].setdefault('observation',oid)
         from .project import now
         with p.transaction(True):
             p.db.execute('INSERT INTO debug_scene_observations VALUES (?,?,?,?,?,?)',
                          (oid,self.revision,d.run_id,now(),result['status'],encoded(result).decode()))
         return dict(result,observation=oid)
 
+    @reply_option
     def check(self, object=None):
         result=self._observe(object)
         return self._store(result,diagnostic=result['status']=='ambiguous')
 
+    @reply_option
     def assert_current(self, object=None):
         result=self._observe(object)
         result=self._store(result,diagnostic=result['status']!='matched')
@@ -456,6 +512,7 @@ class SceneHandle:
                 result.update(status='stopped',complete=False,stop=stop,polls=polls,guest_elapsed_ms=elapsed)
                 raise SceneError(self._store(result,diagnostic=True))
 
+    @reply_option
     def wait(self, object=None, *, guest_ms=5000, timeout_ms=5000, slice_ms=100):
         return self._wait(object,None,guest_ms=guest_ms,timeout_ms=timeout_ms,slice_ms=slice_ms)
 
@@ -465,11 +522,13 @@ class SceneHandle:
             return d.click(*point,button=spec.get('button','left'),hold_ms=spec.get('hold_ms',80),mode_id=frame['mode_id'],frame_id=frame['frame_id'])
         return getattr(d,'keyboard_'+spec['kind'])(**{k:v for k,v in spec.items() if k!='kind'})
 
+    @reply_option
     def click(self, object, *, handle_popups=False, timeout_ms=None):
         obj=self._object(object)
         if obj['action']['kind']!='click':raise ValueError('Named click requires a mouse action')
         return self.act(object,handle_popups=handle_popups,timeout_ms=timeout_ms)
 
+    @reply_option
     def act(self, object, *, handle_popups=False, timeout_ms=None):
         if type(handle_popups) is not bool:raise ValueError('handle_popups must be boolean')
         self.info=self.session.project.debug_scene_info(self.revision,version=self.session.version['id'])
@@ -489,7 +548,7 @@ class SceneHandle:
                 handlers.append(self._input(handler['action'],handler.get('point'),before['frame']))
                 # Verify the popup's own postcondition without requiring its
                 # containing scene's main-match predicate during dismissal.
-                outcome=self._wait_outcome(handler['outcome'],**budgets())
+                outcome=self._wait_outcome(handler['outcome'],baseline=before.get('baseline'),**budgets())
                 elapsed+=outcome.get('guest_elapsed_ms',0)
                 handlers.append(outcome)
                 continue
@@ -508,15 +567,15 @@ class SceneHandle:
             raise SceneError(self._store(before,diagnostic=True)) from error
         # Postconditions describe the destination, so its pixels may no longer
         # match the containing scene. Observe only that explicit predicate.
-        outcome=self._wait_outcome(obj['outcome'],**budgets())
+        outcome=self._wait_outcome(obj['outcome'],baseline=before.get('baseline'),**budgets())
         outcome['guest_elapsed_ms']+=elapsed
         outcome.update(action_object=obj['id'],before_observation=checked['observation'],input=queued,handlers=handlers)
         return self._store(outcome)
 
-    def _wait_outcome(self, predicate, *, guest_ms, timeout_ms):
+    def _wait_outcome(self, predicate, *, guest_ms, timeout_ms, baseline=None):
         started=time.monotonic();elapsed=0;polls=[]
         while True:
-            result=self._observe(extra=predicate)
+            result=self._observe(extra=predicate,baseline=baseline)
             # A destination match is independent of the old scene name; keep
             # conflicts, absent captures and blocking modals as explicit failures.
             ok=result.get('predicate_matched') is True and result['status'] not in ('ambiguous','unavailable')
@@ -537,7 +596,7 @@ class SceneHandle:
 
 class SceneObject:
     def __init__(self, handle, target):self.handle=handle;self.target=target;handle._object(target)
-    def check(self):return self.handle.check(self.target)
+    def check(self,**options):return self.handle.check(self.target,**options)
     def click(self, **options):return self.handle.click(self.target,**options)
     def act(self, **options):return self.handle.act(self.target,**options)
     def exists(self):
