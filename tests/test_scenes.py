@@ -115,7 +115,15 @@ def test_real_availability_collisions_revision_history_and_stop(mouse_game,emula
         off=deepcopy(competitor['definition']);off['match']={'constant':False}
         p.debug_save_scene('ambiguous',off,parent=competitor['id'])
         assert d.scene_assert(second['id'])['status']=='matched'
-        bp=d.breakpoint('1000:0009')
+        # The polling instruction may already be the paused PC. Resuming at a
+        # breakpoint there can legitimately step over it and immediately take
+        # the click path. Pin that pause position, then break on the unavoidable
+        # post-click instruction before the guest paints the success pixel.
+        loop=d.breakpoint('1000:0009')
+        assert d.run(timeout_ms=3000,fast_forward=True)['outcome']=='breakpoint'
+        d.delete_breakpoint(loop['breakpoint_id'])
+        bp=d.breakpoint('1000:0014')
+        assert bp['bytes_verified']
         with pytest.raises(SceneError) as stopped:d.scene_click(second['id'],'test.button')
         assert stopped.value.result['status']=='stopped'
         assert stopped.value.result['stop']['outcome']=='breakpoint'

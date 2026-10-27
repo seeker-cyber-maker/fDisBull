@@ -1,0 +1,24 @@
+{
+  "initial_commit": "e73f8dd6b5813193f586ddbf8b32d9d167832222",
+  "ordinary_ci": {
+    "run_id": 40449157504,
+    "passed": 1089,
+    "skipped": 72
+  },
+  "native_ci": {
+    "run_id": 40449157516,
+    "stable_passed": 53,
+    "stable_failed": 1,
+    "tag_created": false
+  },
+  "failure": "The test expected another stop at polling instruction 1000:0009 even when that instruction was already the paused PC.",
+  "reproduction": "Force a native stop at that loop PC, then click; the guest legitimately steps past the current breakpoint and paints the success pixel.",
+  "correction": "Force the loop pause, remove its breakpoint, and place a byte-verified breakpoint at unavoidable post-click instruction 1000:0014 before the paint.",
+  "production_runtime_changed": false,
+  "original_game_evidence_unchanged": true,
+  "local_corrected_tests": {
+    "stable_targeted": 1,
+    "layered_scene_suite": 23
+  },
+  "final_gate": "Both ordinary and complete native Linux workflows must pass again on the corrected commit before tagging."
+}

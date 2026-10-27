@@ -1,0 +1,23 @@
+{
+  "backend": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-26/keyboard/stable/src/dosbox-x",
+  "paused_loop_breakpoint": {
+    "format": "fdisbull-debug-stop-1",
+    "trigger": "breakpoint",
+    "native_kind": "breakpoint",
+    "causing_instruction": {
+      "offset": "0x00000009",
+      "segment": "0x0824",
+      "space": "segmented"
+    },
+    "resume_pc": {
+      "offset": "0x00000009",
+      "segment": "0x0824",
+      "space": "segmented"
+    },
+    "instruction_completed": false,
+    "registers_stage": "before-instruction",
+    "context": "dos-cpu"
+  },
+  "scene_action_result": "matched",
+  "interpretation": "Breakpoint in current polling instruction can be stepped over on resume; test must stop on the unavoidable post-click path"
+}

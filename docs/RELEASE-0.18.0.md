@@ -46,6 +46,13 @@ The broad Mac run recorded 1,120 passed, 16 skipped, two failures and 23 errors
 in Linux ELF fixtures using Apple clang; it is not a green complete-suite or
 Linux result. Promotion preserves the recorded scene/runtime modules and driver.
 
+The initial native Linux gate exposed a polling-loop breakpoint assertion that
+depended on the guest's pause position. The corrected regression first forces
+that pause, then places a byte-verified breakpoint on the unavoidable post-click
+path before the success pixel is painted. Production runtime code is unchanged.
+The [failed gate and deterministic reproduction](evidence/0.18.0-release/CI-GATE-CORRECTION.json)
+are retained; both Linux workflows must pass again on the corrected commit.
+
 Before tagging, both GitHub workflows must pass on the exact release commit:
 ordinary Linux tests/package audits, and native stable DOS, layered DOS (Python
 3.13.5), plus installed-wheel unified DOS/boot/PE64 acceptance. Tag CI is a
