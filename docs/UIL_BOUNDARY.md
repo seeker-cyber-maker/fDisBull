@@ -18,6 +18,88 @@ may instead translate the same export into Python, JavaScript, Rust, a diagram,
 a test corpus or another representation. None of those downstream products is
 part of fDisBull merely because UIL made it possible.
 
+## UIL as semantic intermediate representation
+
+UIL is not only an interchange file from which another source language can be
+generated. It is the proposed semantic intermediate representation of the game
+world itself: the versioned contract between recovered meaning and every later
+execution, observation or presentation surface.
+
+More precisely, UIL is the intermediate language and its canonical parsed world
+graph, state model and event rules are the intermediate representation. JSON or
+another future encoding transports that model; the serialization is not the
+architecture by itself.
+
+A Zork-like venue can therefore be a reference projection of UIL rather than a
+separate prose adaptation. Its two directions have distinct roles:
+
+- the text renderer derives room descriptions, visible objects, exits and
+  transitional messages from the UIL world state, observation policy and
+  emitted events; and
+- the parser resolves player verbs, nouns and qualifiers into canonical UIL
+  intents or actions before the world state changes.
+
+The same UIL state can feed a point-and-click scene, graphical replay, debugger,
+headless agent protocol, test fixture or verifier. Those surfaces may organize
+authorized observations differently, but they must not privately invent world
+facts, commands, collision behavior or outcomes that are absent from the bound
+UIL version and its declared extensions.
+
+This makes the text venue useful as more than an accessibility or output mode.
+It can be a conformance surface for the intermediate representation. Given the
+same starting state and canonical intent sequence, independently implemented
+text, graphical and headless consumers should agree on the canonical state and
+event trace within the declared comparison contract. Pixel layout, prose and
+input affordances may differ without changing game semantics.
+
+Presentation still has authority boundaries. A prose renderer may summarize or
+name an authorized observation, but it does not turn hidden, occluded, unknown
+or merely inferred state into player-visible truth. A parser may offer aliases,
+but each accepted command resolves to an attributable canonical intent. When a
+consumer cannot represent a required UIL capability, it fails closed or invokes
+the RFC process instead of approximating the rule silently.
+
+fDisBull remains only one evidence-backed UIL producer. AEC may later author an
+original game directly against the same semantic contract, with separate
+authorship and qualification provenance. Such native content is not described
+as recovered from an original executable merely because it uses the same IR.
+
+### Round-trip loss accounting
+
+Treating the text venue as an IR projection makes the path measurable. A
+`Zork-like source or transcript → UIL → Zork-like venue` comparison should emit
+a loss receipt rather than rely on whether two passages sound similar.
+
+The comparison should retain at least these independent dimensions:
+
+- **observable facts** — visible entities, properties, exits and relations
+  retained, omitted or invented;
+- **epistemic state** — `present`, `absent`, `occluded`, `unknown`, `inferred`
+  and hidden facts preserved without unauthorized promotion or leakage;
+- **affordances** — original player intents still expressible, newly invented
+  interactions and aliases or disambiguation that did not survive;
+- **transition semantics** — matched starting state and canonical intents yield
+  the same state changes, failures and ordered events;
+- **time and randomness** — declared ticks, waits and random-stream consumption
+  remain equivalent within the comparison contract;
+- **narrative payload** — required authored messages, tone-bearing labels or
+  clues retained separately from freely paraphrasable connective prose; and
+- **unresolved meaning** — ambiguity and unsupported constructs remain explicit
+  rather than being resolved by the renderer's guess.
+
+Do not collapse those dimensions into one flattering similarity score. Report
+precision and recall for typed observable facts and affordances, trace
+differences for transitions/events, explicit leak counts for hidden facts, and
+a ledger of unsupported or changed constructs. Exact text equality is required
+only for content declared verbatim; otherwise prose may differ while the
+semantic projection remains lossless under its declared observation contract.
+
+Both round-trip directions are informative. `UIL → text → recovered UIL` tests
+whether the venue expresses enough authorized information to reconstruct its
+declared observable projection. `Text/source → UIL → text` measures recovery and
+rendering loss against the original interaction surface. Neither finite test
+proves that the complete game or every paraphrase is equivalent.
+
 ## fDisBull responsibilities
 
 fDisBull owns work that requires access to the original artifact or its

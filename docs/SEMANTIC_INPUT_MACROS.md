@@ -259,6 +259,15 @@ runtime coordinate object and current conditional-collider state have been
 resolved. A bounding box alone is never proof that all enclosed points are
 walkable.
 
+Together with entities, state, rules and events, this source-backed navigation
+model reinforces UIL as a semantic world IR. A Zork-like venue can render a
+room and its available actions from that representation, then compile a player
+command back into a canonical intent that invokes the selected semantic input
+macro or native cartridge action. Point-and-click, debugger and headless agent
+venues can consume the same world transition without defining separate game
+truths. The wording, visual layout and control affordance may change; the bound
+state and event semantics do not.
+
 ## Contrasting control profiles
 
 These examples describe the intended distinction, not an implemented schema.
