@@ -1,5 +1,10 @@
 # Temporal code layers backend
 
+The current complete patch adds `video.probe` for sparse native RGB samples,
+with frame/mode metadata and no PNG payload. The shared persistent scene model
+and named input are described in [SCENE_FRAMEWORK.md](../../../docs/SCENE_FRAMEWORK.md).
+Previously delivered binaries do not gain this capability without a rebuild.
+
 The current complete patch also fixes native ZIP CRC corruption from empty
 buffer writes. `zip_ostreambuf::xsputn()` returns immediately for zero bytes,
 so an unallocated optional VGA scanline buffer cannot call

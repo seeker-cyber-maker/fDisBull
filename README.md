@@ -111,6 +111,28 @@ Launch an original DOS MZ project with `fdisbull debug PROJECT --executable PATH
 
 The real DinoPark path was verified through this interface. A ten-second guest skip completed in about 0.45 host seconds on the tested Mac, with actual elapsed values recorded; this is not a speed guarantee. The separately built DOSBox backend is required and is not bundled with the Python tool.
 
+## Persistent scenes (0.17.0 source)
+
+The [scene framework](docs/SCENE_FRAMEWORK.md) saves object context, trigger
+provenance, revisions and supporting screenshots in the project database. One
+manifest drives native-pixel overlays and named guest actions, with composite
+rectangle/polygon masks, separate visible/ready/enabled checks, bounded outcome
+verification and saved desynchronization/collision evidence. The updated DOSBox
+patch provides sparse RGB probes without PNG transfer. This source addition
+requires rebuilding the backend; published 0.16.0 binaries do not contain it.
+
+The bundled `fdisbull-investigate` agent skill is available with
+`fdisbull agent-skill`. It guides evidence-based reverse engineering and scene
+authoring, prioritizing expected decision value and cost alongside confidence.
+The scene runtime currently targets DOSBox; PE64 native pixel probing is not
+implemented. [Implementation and limits](docs/SCENE_FRAMEWORK.md).
+The [installed-wheel DinoPark verification](docs/VERIFICATION-SCENES.md) exercises
+named controls, a popup handler, masks, collisions, restart and debugger stops.
+It records the original `0.17.0.dev0` development build. The
+[0.17.0 release notes](docs/RELEASE-0.17.0.md) describe source promotion and the
+ordinary/native Linux CI gates required before tagging. The latest published
+packages remain 0.16.0 until a separate GitHub release is published.
+
 ## Tool packages and examples
 
 The wheel, source distribution, and standalone tool ZIP contain the tool, tests, and relevant documentation. **DinoPark is a repository example and is excluded from tool release packages.**

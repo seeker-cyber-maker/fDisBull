@@ -10,6 +10,8 @@ import time
 from .debugger import bounded
 
 OPERATIONS = {
+    'frame-probe':'frame_probe','scene-check':'scene_check','scene-assert':'scene_assert',
+    'scene-click':'scene_click','scene-act':'scene_act','scene-wait':'scene_wait',
     'keyboard.press':'keyboard_press','keyboard.type':'keyboard_type','keyboard.state':'keyboard_state',
     'wait':'wait',
     'run':'run', 'click':'click', 'click-frame':'click_frame', 'screenshot':'screenshot', 'trace':'trace',
@@ -106,8 +108,10 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None):
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
-            if step['op'] in ('run','trace','wait'):
-                params['timeout_ms'] = min(params.get('timeout_ms',remaining),remaining)
+            if step['op'] in ('run','trace','wait','scene-wait','scene-click','scene-act'):
+                requested=params.get('timeout_ms')
+                if requested is None:requested=remaining
+                params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)
             if step['op']=='assert':
                 if params['value'] != params['equals']:
                     raise ValueError(f"Assertion failed: {params['value']!r} != {params['equals']!r}")
@@ -129,6 +133,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None):
         except Exception as error:
             failure = {'index':index,'op':step['op'],'type':type(error).__name__,'message':str(error)}
             record.update(ok=False,error=failure)
+            if hasattr(error,'result'):record['result']=error.result
         records.append(record)
         if failure:
             break

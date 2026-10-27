@@ -1,0 +1,24 @@
+{
+  "artifact": "d6eaa1e7acb3476ea7b4ceb9613c5ab9",
+  "run": "296a10fb8d96482cbdf0e9dfa8f1833a",
+  "version": 1,
+  "name": "ledger-reference.png",
+  "kind": "screenshot",
+  "sha256": "e9deaf556483428963a312419999d83ac6764cdc474b53791a4123f5828ab274",
+  "size": 15290,
+  "metadata": {
+    "captured_ticks": 52966,
+    "double_height": true,
+    "double_width": true,
+    "format": "png",
+    "frame_id": 2866,
+    "height": 200,
+    "mode_id": 5,
+    "session_id": "ses-1",
+    "sha256": "e9deaf556483428963a312419999d83ac6764cdc474b53791a4123f5828ab274",
+    "source": "last_completed_guest_frame",
+    "source_bpp": 32,
+    "state_revision": 28,
+    "width": 320
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "stable": {
+    "upstream": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+    "patch_sha256": "def5b5a227ba7501f2346f40f3f0c6d863df85f6b15e6d86425cbfaa2f38de2d",
+    "replayed_source_files": 28,
+    "all_replayed_blobs_match_manifest": true
+  },
+  "layers": {
+    "upstream": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+    "patch_sha256": "7747e0db96914a0a4c609916c27318c463addbabbba54e50803189b41eaa190c",
+    "replayed_source_files": 29,
+    "all_replayed_blobs_match_manifest": true
+  }
+}

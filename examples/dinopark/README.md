@@ -69,6 +69,15 @@ Space/Library, records the separate reported Linux persistence route, the
 save-padding finding and the remaining NEW GAME and save-field work. Its
 external results are labeled as reported, with source links and scope limits.
 
+## Persistent scenes (0.17.0)
+
+[verify_scenes.py](verify_scenes.py) authors persistent office/bank/ledger objects
+from real native frames, uses composite action areas and shared overlays, and
+tests named input, popup handling, availability rejection, collision snapshots,
+debugger stops and checkpoint/session restart. The [verification report](../../docs/VERIFICATION-SCENES.md)
+uses an installed development wheel and rebuilt DOSBox backend. All original
+game files and private state/database output remain outside Git.
+
 ## Editable DOSBox machine states
 
 `verify_states.py --executable PATH --game-dir DIR --output NEW_LOCAL_DIR` captures a native DOSBox state, restores it after emulator restart, forks it with checked RAM edits, reinjects the derivative, hits an execution breakpoint, captures a trace, verifies CPU data watches, and restores the unchanged parent. Native state bytes stay embedded in the local `.fdb`. This is distinct from loading a DinoPark `DINOSG` file through the menu; that menu route is used only to prepare the test fixture. See [state editing and scripting](../../docs/DEBUGGER_SCRIPTS.md).

@@ -1,0 +1,73 @@
+{
+  "scope": "Unreleased scene implementation with native DOSBox probe; private original NEW GAME",
+  "original_exe_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+  "source_script_sha256": "ea401e9110f89e07ed25ad07496cf0ef10bbf947f48e6dfd48be4e089e6efbd1",
+  "sessions": [
+    "296a10fb8d96482cbdf0e9dfa8f1833a",
+    "20bc1d96a35a4cb7abe0ef4f9bbec06f"
+  ],
+  "tool_version": "0.17.0.dev0",
+  "tool_module": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-scenes-0.17.0.dev0-2026-10-26/tool/fdisbull/__init__.py",
+  "framework_source_sha256": {
+    "scenes.py": "9254ebaf0d6c4508ec8d269e276173c2dd53ae942514a7eb6ff88988c9dce0ee",
+    "scene_geometry.py": "b742795f9fc4994793d20b87732f0bec562749247f2d31f29832e79ef1d9b30d",
+    "debugger.py": "1c677dcb4769e99c75bb4d10917a751ae69f9f9cc2a9b323b64acda5703e377f",
+    "debug_script.py": "0dd8512caf176df8508bd79ce99c8e35081681ec2ef37a35f577f4a8b40cb571",
+    "cli.py": "1fdfb3afbbf8e329771f54846ae59fbf294ba7f802f6368cd2ea2b8fbc78c750"
+  },
+  "backend_sha256": "afa92bda2184e0c6f2fd685b164700058d212dd29b74af687de86234473d98d6",
+  "probe_measurement": {
+    "samples": 48,
+    "iterations": 10,
+    "median_probe_ms": 0.5110208876430988,
+    "median_png_ms": 2.690624911338091,
+    "probe_response_bytes": [
+      2395,
+      2395,
+      2395,
+      2395,
+      2395,
+      2395,
+      2395,
+      2395,
+      2395,
+      2395
+    ],
+    "png_response_bytes": [
+      42600,
+      42600,
+      42600,
+      42600,
+      42600,
+      42600,
+      42600,
+      42600,
+      42600,
+      42600
+    ],
+    "scope": "Same stopped native guest; probe includes event persistence, raw PNG call does not"
+  },
+  "object_id": "72524d3d7a724ce68708b71ffb0704b8",
+  "scene_revision": "d8dcffb3ad834a5ab1c5f0075587b083",
+  "collision_observation": "0cc2bd437f9544d29c4cadd29ccd4dd5",
+  "controls_ready_limit": {
+    "memory": {
+      "address": "4020:3c5c",
+      "length": 2,
+      "hex": "ffff"
+    }
+  },
+  "ok": true,
+  "original_files_unchanged": 192,
+  "private_files_unchanged": 184,
+  "processes_reaped": true,
+  "native_checkpoint_restores": 1,
+  "private_state_exported": false,
+  "offline_overlay_byte_identical": true,
+  "game_files_states_databases_in_evidence": false,
+  "preserved_stops": [
+    "breakpoint",
+    "watchpoint",
+    "hook"
+  ]
+}

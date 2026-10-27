@@ -1,6 +1,6 @@
 {
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "052ca436868af16c477620730353180b419fc6658d8288501d66ff87b7aa01c0",
+  "patch_sha256": "def5b5a227ba7501f2346f40f3f0c6d863df85f6b15e6d86425cbfaa2f38de2d",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -74,8 +74,8 @@
     },
     {
       "path": "src/agent/server/agent_server.cpp",
-      "size": 192721,
-      "sha256": "8d0dfe5f2d1ff29d04066eb69a98264a52de82514617e502e176230e4fe43a3d"
+      "size": 194864,
+      "sha256": "3b3bf4155419012701dba891aec3ff2aca06cfe18b80d9a79a1a629c4d54ba81"
     },
     {
       "path": "src/agent/transport/local_transport.cpp",
@@ -394,5 +394,12 @@
     "emulator_sha256": "e749b6e50775de2807c2515f83e455dc705cdf6ddcdfb257e781f215d987865a"
   },
   "keyboard_capability": "ibm_pc_controller_us_ascii_v1",
-  "keyboard_verification": "See docs/VERIFICATION-GUEST-KEYBOARD.md; final exact-commit CI gates tagging"
+  "keyboard_verification": "See docs/VERIFICATION-GUEST-KEYBOARD.md; final exact-commit CI gates tagging",
+  "pixel_probe_capability": "video.probe: 0..4096 native RGB points from one completed frame; no PNG encoding or transfer",
+  "scene_verification": {
+    "platform": "macOS ARM64",
+    "native_sha256": "8a4c2915e109017c16a0ca678f7f605d949aa3f22f0d5318a5057fc6987b6f86",
+    "evidence": "docs/VERIFICATION-SCENES.md",
+    "linux_ci": "configured; not run for this uncommitted candidate"
+  }
 }

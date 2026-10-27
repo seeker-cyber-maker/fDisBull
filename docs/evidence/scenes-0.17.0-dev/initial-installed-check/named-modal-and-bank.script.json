@@ -1,0 +1,21 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "scene-click",
+      "scene": "e7d176270d934803aac98784f539366a",
+      "object": "office.sell_park"
+    },
+    {
+      "op": "scene-click",
+      "scene": "e7d176270d934803aac98784f539366a",
+      "object": "office.bank",
+      "handle_popups": true
+    },
+    {
+      "op": "scene-click",
+      "scene": "c4c0f11571ad4be6ad6710e7108bc35b",
+      "object": "bank.back"
+    }
+  ]
+}

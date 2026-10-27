@@ -1,0 +1,24 @@
+{
+  "artifact": "3abfe8cf09fb4cdb935afe88d2fc3fc9",
+  "run": "296a10fb8d96482cbdf0e9dfa8f1833a",
+  "version": 1,
+  "name": "bank-reference.png",
+  "kind": "screenshot",
+  "sha256": "2ee047ae75456354e88f1ec176c32bdcf65c602ea4e8628e2741dea50f8d3f21",
+  "size": 20687,
+  "metadata": {
+    "captured_ticks": 47858,
+    "double_height": true,
+    "double_width": true,
+    "format": "png",
+    "frame_id": 2553,
+    "height": 200,
+    "mode_id": 5,
+    "session_id": "ses-1",
+    "sha256": "2ee047ae75456354e88f1ec176c32bdcf65c602ea4e8628e2741dea50f8d3f21",
+    "source": "last_completed_guest_frame",
+    "source_bpp": 32,
+    "state_revision": 20,
+    "width": 320
+  }
+}

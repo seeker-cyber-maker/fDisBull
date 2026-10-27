@@ -1,0 +1,6 @@
+{
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "exit_code": 1,
+  "stderr": "clang: warning: argument unused during compilation: '-no-pie' [-Wunused-command-line-argument]\n.recovery/2026-10-26/scenes/elf-probe.s:3:1: error: unknown directive\n.type _start,@function\n^\n",
+  "scope": "Fresh reproduction of the unchanged Linux ELF fixture command on macOS; no production-code failure inferred"
+}

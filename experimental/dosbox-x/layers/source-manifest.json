@@ -1,7 +1,7 @@
 {
   "feature": "Temporal code layers and zero-byte native ZIP write CRC fix",
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "5e70ab0f840e2f7a9d9d4ee3b3445000d5910f74770d65f3baa17a1865d28f31",
+  "patch_sha256": "7747e0db96914a0a4c609916c27318c463addbabbba54e50803189b41eaa190c",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -80,8 +80,8 @@
     },
     {
       "path": "src/agent/server/agent_server.cpp",
-      "size": 199004,
-      "sha256": "baab0a59ef9fbb031b0e47fc73106f54b14d89d4c94e383083e540bb9af64a5a"
+      "size": 201147,
+      "sha256": "1c13583ca7515c55600fb353a9006c06632b0e17832d219013cd4cc1c2c7934b"
     },
     {
       "path": "src/agent/transport/local_transport.cpp",
@@ -166,5 +166,12 @@
     }
   },
   "keyboard_capability": "ibm_pc_controller_us_ascii_v1",
-  "keyboard_verification": "See docs/VERIFICATION-GUEST-KEYBOARD.md; final exact-commit CI gates tagging"
+  "keyboard_verification": "See docs/VERIFICATION-GUEST-KEYBOARD.md; final exact-commit CI gates tagging",
+  "pixel_probe_capability": "video.probe: 0..4096 native RGB points from one completed frame; no PNG encoding or transfer",
+  "scene_verification": {
+    "platform": "macOS ARM64",
+    "native_sha256": "afa92bda2184e0c6f2fd685b164700058d212dd29b74af687de86234473d98d6",
+    "evidence": "docs/VERIFICATION-SCENES.md",
+    "linux_ci": "configured; not run for this uncommitted candidate"
+  }
 }

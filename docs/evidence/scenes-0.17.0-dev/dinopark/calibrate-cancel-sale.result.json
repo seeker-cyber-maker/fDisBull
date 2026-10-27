@@ -1,0 +1,223 @@
+{
+  "format": "fdisbull-script-result-1",
+  "script_artifact": "b988801877e84bdebd99e93287bfa1c3",
+  "script_sha256": "c9f1c98c45e4b2064b7b48bdc93b2ecb76c7fbcbaec9522c897db3b5600b7c94",
+  "run": "296a10fb8d96482cbdf0e9dfa8f1833a",
+  "ok": true,
+  "error": null,
+  "completed_steps": 2,
+  "requested_steps": 2,
+  "host_elapsed_ms": 261.727,
+  "steps": [
+    {
+      "index": 0,
+      "op": "click-frame",
+      "result": {
+        "run": "296a10fb8d96482cbdf0e9dfa8f1833a",
+        "x": 147,
+        "y": 110,
+        "mode_id": 5,
+        "frame": {
+          "artifact": "3ec5780bb05d47b5891c87512d58888a",
+          "run": "296a10fb8d96482cbdf0e9dfa8f1833a",
+          "version": 1,
+          "name": "cancel-sale.png",
+          "kind": "screenshot-grid",
+          "sha256": "c281d0053fa56b7dc76339d61b1bfaf33db794f1e7fd2a8d241b82ed25e71ab1",
+          "size": 53332,
+          "metadata": {
+            "captured_ticks": 56747,
+            "double_height": true,
+            "double_width": true,
+            "format": "png",
+            "frame_id": 3120,
+            "height": 200,
+            "mode_id": 5,
+            "session_id": "ses-1",
+            "sha256": "c281d0053fa56b7dc76339d61b1bfaf33db794f1e7fd2a8d241b82ed25e71ab1",
+            "source": "last_completed_guest_frame",
+            "source_bpp": 32,
+            "state_revision": 36,
+            "width": 320,
+            "coordinate_grid": {
+              "coordinate_space": "screenshot_pixels",
+              "origin": [
+                0,
+                0
+              ],
+              "max_coordinate": [
+                319,
+                199
+              ],
+              "step": 8,
+              "x_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192,
+                200,
+                208,
+                216,
+                224,
+                232,
+                240,
+                248,
+                256,
+                264,
+                272,
+                280,
+                288,
+                296,
+                304,
+                312
+              ],
+              "y_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192
+              ],
+              "label_step": 32,
+              "x_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192,
+                224,
+                256,
+                288
+              ],
+              "y_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192
+              ],
+              "target": [
+                147,
+                110
+              ],
+              "x_direction": "right",
+              "y_direction": "down",
+              "resized": false,
+              "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+              "source_artifact": "d6625df3994a4682bba94d6c297d6f70",
+              "source_sha256": "4eb42beaabe9392d61dfc287b00310185ab3d1f6c2b83b481935c7ea231d4539"
+            }
+          }
+        },
+        "click": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 294,
+            "y": 110
+          },
+          "session_id": "ses-1",
+          "state_revision": 37
+        },
+        "frame_phase": "before_queued_click"
+      },
+      "ok": true
+    },
+    {
+      "index": 1,
+      "op": "run",
+      "result": {
+        "run": "296a10fb8d96482cbdf0e9dfa8f1833a",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 2500,
+        "guest_elapsed_ms": 2595,
+        "host_elapsed_ms": 251.105,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 59356,
+          "session_id": "ses-1",
+          "state_revision": 40
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 39,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    }
+  ],
+  "artifact": "c573454489be4be2aa0be2475dc827e2"
+}

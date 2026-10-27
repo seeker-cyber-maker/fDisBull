@@ -22,7 +22,9 @@ def test_distribution_check_rejects_game_state_and_database_files(tmp_path,unwan
                          'src/fdisbull/dos_guest/__init__.py','src/fdisbull/dos_guest/init.sh','src/fdisbull/dos_guest/broker.py',
                          'src/fdisbull/dos_qemu.py','src/fdisbull/dos_runtime.py','src/fdisbull/qemu_machine.py',
                          'src/fdisbull/gdb_rpc.py','src/fdisbull/guest_assets.py',
-                         'src/fdisbull/data/dos-runtime-signatures.json','src/fdisbull/data/MICROSOFT-DOS-LICENSE.txt')
+                         'src/fdisbull/data/dos-runtime-signatures.json','src/fdisbull/data/MICROSOFT-DOS-LICENSE.txt',
+                         'src/fdisbull/skills/fdisbull-investigate/SKILL.md',
+                         'src/fdisbull/skills/fdisbull-investigate/references/scenes.md')
     with zipfile.ZipFile(archive,'w') as output:
         for required in required_files:
             output.writestr('fdisbull-test/'+required,'')

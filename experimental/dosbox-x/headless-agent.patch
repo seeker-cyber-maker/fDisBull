@@ -1110,7 +1110,7 @@ index a315ca1..4f17576 100644
      return "unknown";
  }
 diff --git a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cpp
-index 29363cf..c84e4c6 100644
+index 29363cf..9ced869 100644
 --- a/src/agent/server/agent_server.cpp
 +++ b/src/agent/server/agent_server.cpp
 @@ -5,6 +5,12 @@
@@ -1144,7 +1144,7 @@ index 29363cf..c84e4c6 100644
             method == "execution.wait" ||
 +           method == "execution.timing" || method == "state.save" || method == "state.load" || method == "state.set_register" ||
             method == "state.get_registers" ||
-+           method == "video.screenshot" ||
++           method == "video.screenshot" || method == "video.probe" ||
 +           method == "input.keyboard.press" || method == "input.keyboard.type" || method == "input.keyboard.state" ||
 +           method == "input.mouse.move" || method == "input.mouse.click" ||
 +           method == "input.mouse.button" || method == "input.mouse.state" ||
@@ -1268,12 +1268,13 @@ index 29363cf..c84e4c6 100644
  static std::string Capabilities(const AgentConfig& config)
  {
      JsonValue result = Object();
-@@ -1194,6 +1299,25 @@ static std::string Capabilities(const AgentConfig& config)
+@@ -1194,6 +1299,26 @@ static std::string Capabilities(const AgentConfig& config)
  #else
      Add(&result, "debugger", JsonValue::Bool(false));
  #endif
 +    JsonValue video = Object();
 +    Add(&video, "screenshot", JsonValue::Bool(true));
++    Add(&video, "pixel_probe", JsonValue::Bool(true));
 +    Add(&video, "format", String("png"));
 +    Add(&video, "source", String("last_completed_guest_frame"));
 +    Add(&video, "headless", JsonValue::Bool(AGENT_IsHeadless()));
@@ -1294,7 +1295,7 @@ index 29363cf..c84e4c6 100644
      JsonValue trace = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&trace, "cpu", JsonValue::Bool(true));
-@@ -1204,6 +1328,7 @@ static std::string Capabilities(const AgentConfig& config)
+@@ -1204,6 +1329,7 @@ static std::string Capabilities(const AgentConfig& config)
      JsonValue breakpoints = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&breakpoints, "memory_change", JsonValue::Bool(true));
@@ -1302,7 +1303,7 @@ index 29363cf..c84e4c6 100644
  #else
      Add(&breakpoints, "memory_change", JsonValue::Bool(false));
  #endif
-@@ -1754,6 +1879,354 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1754,6 +1880,385 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  }
              }
          }
@@ -1360,8 +1361,10 @@ index 29363cf..c84e4c6 100644
 +                } else response=pending.finish();
 +            }
 +        }
-+    } else if (parsed.method == "video.screenshot" || parsed.method.compare(0, 12, "input.mouse.") == 0) {
++    } else if (parsed.method == "video.screenshot" || parsed.method == "video.probe" || parsed.method.compare(0, 12, "input.mouse.") == 0) {
 +        const bool screenshot = parsed.method == "video.screenshot";
++        const bool probe = parsed.method == "video.probe";
++        std::vector<std::pair<std::uint32_t,std::uint32_t>> points;
 +        const bool move = parsed.method == "input.mouse.move";
 +        const bool click = parsed.method == "input.mouse.click";
 +        const bool button_op = parsed.method == "input.mouse.button";
@@ -1372,6 +1375,18 @@ index 29363cf..c84e4c6 100644
 +        std::string button_name = "left";
 +        bool valid = OptionalFrameNumber(parsed.params, "frame_id", &has_frame, &frame_id) &&
 +                     OptionalFrameNumber(parsed.params, "mode_id", &has_mode, &mode_id);
++        if (probe) {
++            const JsonValue* samples = parsed.params.Find("points");
++            valid = valid && samples && samples->type == JsonType::Array && samples->array.size() <= 4096;
++            if (valid) for (const auto& point : samples->array) {
++                std::uint32_t px=0, py=0;
++                if (point.type != JsonType::Array || point.array.size()!=2 ||
++                    !GetUnsignedInteger(point.array[0],&px) || !GetUnsignedInteger(point.array[1],&py) || px>4095 || py>4095) {
++                    valid=false; break;
++                }
++                points.emplace_back(px,py);
++            }
++        }
 +        if (move || click) {
 +            const JsonValue* xv = parsed.params.Find("x");
 +            const JsonValue* yv = parsed.params.Find("y");
@@ -1395,14 +1410,19 @@ index 29363cf..c84e4c6 100644
 +        } else {
 +            const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
 +            const std::string session_id = session->id;
-+            if (SubmitEmulationCommandLocked(impl, [operation, screenshot, move, click, button_op,
++            if (SubmitEmulationCommandLocked(impl, [operation, screenshot, probe, points, move, click, button_op,
 +                    x, y, button, hold_ms, pressed, has_frame, frame_id, has_mode, mode_id](const std::uint64_t) {
 +                    std::string error;
 +                    FrameSnapshot frame;
 +                    AgentMouseState mouse;
 +                    std::vector<std::uint8_t> png;
 +                    bool success = true, stale = false;
-+                    if (screenshot || move || click) success = AGENT_GetFrameSnapshot(&frame, &error);
++                    if (screenshot || probe || move || click) success = AGENT_GetFrameSnapshot(&frame, &error);
++                    if (success && probe) {
++                        for (const auto& point : points) if (point.first>=frame.width || point.second>=frame.height) {
++                            success=false; error="Probe point outside completed guest frame"; break;
++                        }
++                    }
 +                    if (success && (move || click) &&
 +                        ((has_frame && frame_id != frame.frame_id) || (has_mode && mode_id != frame.mode_id))) {
 +                        success = false; stale = true; error = "Screenshot frame or video mode has changed";
@@ -1416,7 +1436,7 @@ index 29363cf..c84e4c6 100644
 +                        success = AGENT_MouseClickAbsolute(x, y, frame.width, frame.height, button, hold_ms, &mouse, &error);
 +                    } else if (success && button_op) {
 +                        success = AGENT_MouseButton(button, pressed, &mouse, &error);
-+                    } else if (success) success = AGENT_MouseGetState(&mouse, &error);
++                    } else if (success && !probe) success = AGENT_MouseGetState(&mouse, &error);
 +                    {
 +                        std::lock_guard<std::mutex> operation_lock(operation->mutex);
 +                        operation->success = success; operation->error = error;
@@ -1435,7 +1455,7 @@ index 29363cf..c84e4c6 100644
 +                    return operation->completed.wait_for(operation_lock, std::chrono::milliseconds(timeout_ms),
 +                                                          [operation]() { return operation->done; });
 +                };
-+                pending.finish = [impl, session_id, response_id, operation, screenshot, mutation]() {
++                pending.finish = [impl, session_id, response_id, operation, screenshot, probe, points, mutation]() {
 +                    if (!operation->success)
 +                        return Error(response_id, kErrorCapabilityUnavailable, operation->error,
 +                                     operation->stale_frame ? "STALE_FRAME" : "COMMAND_REJECTED");
@@ -1444,15 +1464,27 @@ index 29363cf..c84e4c6 100644
 +                    Impl::Session& active = *impl->session;
 +                    if (mutation) ++active.state_revision;
 +                    JsonValue result = SessionResult(active);
-+                    if (screenshot) {
++                    if (screenshot || probe) {
 +                        const FrameSnapshot& frame = operation->frame;
 +                        // Include JSON metadata and base64 expansion in the configured message budget.
 +                        if ((operation->data.size() + 2) / 3 * 4 + 1024 > impl->config.max_message_bytes)
 +                            return Error(response_id, kErrorRequestTooLarge,
 +                                         "PNG exceeds max_message_bytes; raise the configured response budget", "RESPONSE_TOO_LARGE");
++                        if (probe) {
++                            JsonValue samples=JsonValue::Array();
++                            for (const auto& point : points) {
++                                JsonValue sample=Object(),rgb=JsonValue::Array();
++                                Add(&sample,"x",Number(point.first)); Add(&sample,"y",Number(point.second));
++                                const std::size_t offset=(static_cast<std::size_t>(point.second)*frame.width+point.first)*4;
++                                for (int channel=0;channel<3;++channel) rgb.array.push_back(Number(frame.rgba[offset+channel]));
++                                Add(&sample,"rgb",rgb);samples.array.push_back(sample);
++                            }
++                            Add(&result,"samples",samples); Add(&result,"format",String("rgb-samples"));
++                        } else {
 +                        Add(&result, "format", String("png"));
 +                        Add(&result, "png_base64", String(EncodeBase64(operation->data)));
 +                        Add(&result, "sha256", String(Sha256Hex(operation->data)));
++                        }
 +                        Add(&result, "width", Number(frame.width)); Add(&result, "height", Number(frame.height));
 +                        Add(&result, "source_bpp", Number(frame.source_bpp));
 +                        Add(&result, "frame_id", Number(frame.frame_id)); Add(&result, "mode_id", Number(frame.mode_id));
@@ -1657,7 +1689,7 @@ index 29363cf..c84e4c6 100644
      } else if (parsed.method == "state.get_registers") {
          if (session->state == Impl::SessionState::Running) {
              response = SessionError(parsed.id, kErrorTargetRunning,
-@@ -1955,7 +2428,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1955,7 +2460,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                   item != session->breakpoints.end(); ++item) {
                  JsonValue entry = Object();
                  Add(&entry, "breakpoint_id", String(item->second.id));
@@ -1666,7 +1698,7 @@ index 29363cf..c84e4c6 100644
                  Add(&entry, "enabled", JsonValue::Bool(item->second.enabled));
                  Add(&entry, "once", JsonValue::Bool(item->second.native.once));
                  Add(&entry, "address", EncodeMemoryAddress(item->second.native.address));
-@@ -1970,7 +2443,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1970,7 +2475,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
          MemoryAddress address;
          bool once = false;
          const JsonValue* once_value = parsed.params.Find("once");
@@ -1675,7 +1707,7 @@ index 29363cf..c84e4c6 100644
              !ParseMemoryAddress(parsed.params, "breakpoints.create", &address, &validation_error) ||
              (once_value != NULL && !GetBool(parsed.params, "once", &once))) {
              response = InvalidParams(parsed.id, validation_error.empty() ?
-@@ -1982,7 +2455,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1982,7 +2487,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              response = SessionError(parsed.id, kErrorCapabilityUnavailable,
                                      "Target must be stopped before creating breakpoints", "TARGET_NOT_STOPPED", session);
          } else {
@@ -1684,7 +1716,7 @@ index 29363cf..c84e4c6 100644
  #ifndef C_HEAVY_DEBUG
              if (kind == BreakpointKind::MemoryChange) {
                  response = Error(parsed.id, kErrorCapabilityUnavailable,
-@@ -2856,6 +3329,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
+@@ -2856,6 +3361,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
                                                 const std::string& workdir)
  {
      AgentRuntime& adapter = *impl->runtime;
@@ -1692,7 +1724,7 @@ index 29363cf..c84e4c6 100644
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -2930,6 +3404,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
+@@ -2930,6 +3436,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
                                                               const std::string& operation_id)
  {
      AgentRuntime& adapter = *impl->runtime;
@@ -1700,7 +1732,7 @@ index 29363cf..c84e4c6 100644
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -3008,6 +3483,8 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3008,6 +3515,8 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
          return;
      AgentRuntime& adapter = *impl->runtime;
      const std::uintptr_t native_breakpoint = adapter.ConsumeLastBreakpointHandle();
@@ -1709,7 +1741,7 @@ index 29363cf..c84e4c6 100644
      std::vector<TraceSample> trace_samples;
      bool native_trace_active = false;
      std::string trace_error;
-@@ -3037,6 +3514,18 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3037,6 +3546,18 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
              impl->session->trace.Stop();
      }
      impl->session->state = Impl::SessionState::Stopped;

@@ -1,0 +1,20 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 51,
+      "y": 26,
+      "name": "bank.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 2500,
+      "timeout_ms": 15000,
+      "fast_forward": true,
+      "expect": "guest_time"
+    }
+  ]
+}

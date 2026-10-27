@@ -17,6 +17,7 @@ from .external_files import _file_name
 from .code_layers import LayerProjectMixin, LayerSessionMixin, LAYER_DDL
 from .debug_experiments import ExperimentProjectMixin, ExperimentSessionMixin
 from .runtime_code import RuntimeCodeMixin, RUNTIME_DDL
+from .scenes import SceneProjectMixin, SceneSessionMixin, SCENE_DDL
 
 
 DEBUG_DDL = '''
@@ -49,9 +50,10 @@ def stamp():
 
 DEBUG_DDL += LAYER_DDL
 DEBUG_DDL += RUNTIME_DDL
+DEBUG_DDL += SCENE_DDL
 
 
-class DebugProjectMixin(RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
+class DebugProjectMixin(SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
     def machine(self, executable, *, boot_image, version=None, boot_timeout_ms=30000):
         from .qemu_machine import MachineDebugSession
         return MachineDebugSession(self,executable,boot_image=boot_image,version=version,boot_timeout_ms=boot_timeout_ms)
@@ -227,7 +229,7 @@ class DebugProjectMixin(RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMi
         return self._debug_artifact(row['run'],name,'screenshot-grid',rendered,metadata)
 
 
-class DebugSession(ExperimentSessionMixin, LayerSessionMixin):
+class DebugSession(SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
     @property
     def script_operations(self):
         from .debug_script import OPERATIONS
@@ -655,13 +657,15 @@ class DebugSession(ExperimentSessionMixin, LayerSessionMixin):
     def keyboard_state(self):
         return self._keyboard_call('state')
 
-    def click(self, x, y, *, button='left', hold_ms=80, mode_id=None):
+    def click(self, x, y, *, button='left', hold_ms=80, mode_id=None, frame_id=None):
         bounded(x,'x',0,4095); bounded(y,'y',0,4095); bounded(hold_ms,'hold_ms',1,1000)
         if button not in ('left','right','middle'):
             raise ValueError('button must be left, right or middle')
         params = dict(x=x,y=y,button=button,hold_ms=hold_ms)
         if mode_id is not None:
             params['mode_id'] = bounded(mode_id,'mode_id',0,(1<<53)-1)
+        if frame_id is not None:
+            params['frame_id'] = bounded(frame_id,'frame_id',0,(1<<53)-1)
         result = self.call('input.mouse.click',params)
         self._event('click',result)
         return result
@@ -801,6 +805,8 @@ class DebugWorkspace:
                         'debug-cave':'cave','debug-hook':'hook','debug-hooks':'hooks','debug-delete-hook':'delete_hook'})
         methods.update({'debug-controls':'controls','debug-save-experiment':'save_experiment',
                         'debug-restore-experiment':'restore_experiment','debug-compare-experiment':'compare_experiment'})
+        methods.update({'debug-frame-probe':'frame_probe','debug-scene-check':'scene_check',
+                        'debug-scene-assert':'scene_assert','debug-scene-click':'scene_click','debug-scene-act':'scene_act','debug-scene-wait':'scene_wait'})
         context=params.pop('context',None)
         if method=='debug-stop':
             if params:

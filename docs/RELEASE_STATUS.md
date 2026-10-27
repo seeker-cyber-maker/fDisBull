@@ -1,5 +1,23 @@
 # Release status checked on 2026-10-26
 
+## Current 0.17.0 source
+
+The [0.17.0 source](RELEASE-0.17.0.md) adds persistent scenes, shared named
+actions/overlays, composite action masks, native RGB sampling and a bundled
+investigation skill. The [DinoPark verification](VERIFICATION-SCENES.md) and its
+immutable receipts record the original `0.17.0.dev0` installed-wheel run on
+macOS ARM64; they are not relabeled as Linux or final-version gameplay runs.
+The release source retains the verified scene/runtime code and complete backend
+patches. Version metadata and release documentation are promoted separately.
+
+Both ordinary and native Linux workflows must pass on the exact release commit
+before creating `v0.17.0`. The native gate includes stable DOS, layered DOS with
+Python 3.13.5, and installed-wheel unified DOS/boot/PE64 acceptance. GitHub Actions
+records the actual results for each commit. Tag CI and GitHub release publication
+are separate later gates; this source note does not claim published packages.
+
+## Published 0.16.0
+
 [**0.16.0 is published**](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.16.0),
 not draft or prerelease, at `e1e3fb4913d6d8fae7893c2c9b8edf364d144953`.
 Both pre-tag workflows and tag workflows passed. Tag CI reported **1,077 ordinary

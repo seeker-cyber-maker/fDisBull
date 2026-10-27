@@ -1,0 +1,24 @@
+{
+  "artifact": "fcaa8c62cfd64a81b6de2c41e13b2f64",
+  "run": "6c59672e41fc425997ea4ee38d86a182",
+  "version": 1,
+  "name": "after-named-actions.png",
+  "kind": "screenshot",
+  "sha256": "afb4d723c605d21c498efa2b57eb30132148f00a4b57ec9c56ccea3fe7086c3a",
+  "size": 31687,
+  "metadata": {
+    "captured_ticks": 63567,
+    "double_height": true,
+    "double_width": true,
+    "format": "png",
+    "frame_id": 3495,
+    "height": 200,
+    "mode_id": 5,
+    "session_id": "ses-1",
+    "sha256": "afb4d723c605d21c498efa2b57eb30132148f00a4b57ec9c56ccea3fe7086c3a",
+    "source": "last_completed_guest_frame",
+    "source_bpp": 32,
+    "state_revision": 131,
+    "width": 320
+  }
+}

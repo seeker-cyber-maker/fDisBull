@@ -10,13 +10,19 @@ The local fDisBull 0.9.0 development integration now uses this backend through i
 
 ## Source and recovery
 
+The current complete patch also provides `video.probe`: 0..4096 native `[x,y]`
+points return RGB triples and completed-frame metadata without PNG encoding or
+transfer. Mouse input can be bound to that observation's frame and mode IDs.
+See the [unreleased scene framework](../../docs/SCENE_FRAMEWORK.md). Previous
+binary identities below are historical; the new probe requires a rebuild.
+
 Upstream: https://github.com/joncampbell123/dosbox-x
 
 Baseline: `029bd65c5dcc7cdc7f2e14e35278620d9707d969`.
 
 - `recovered-work.patch`: original unfinished archive checkpoint, preserved unchanged.
 - `headless-agent.patch`: complete current patch against the baseline, including recovered cloud changes and local fixes. Apply this patch alone to the clean baseline.
-- `source-manifest.json`: hashes for all 27 resulting source files, complete patch, tested emulator, and evidence; also records cloud recovery provenance.
+- `source-manifest.json`: hashes for all 28 resulting source files, complete patch, tested emulator, and evidence; also records cloud recovery provenance.
 - `evidence/2026-10-23/`: real guest acceptance JSON and screenshots, client/transport test log, and a separate command-line launcher result.
 
 The later cloud files were recovered by replaying nine complete saved `fileChange` diffs from interrupted chat `01a168ae-ed38-7565-b9db-557772f800d6` and pipe-client task `01a16916-46ba-76ab-a177-a234771da0e0`. These restore the pipe client/tests, package exports, SDL header placement, launcher diagnostics, and guest acceptance runner. Old passing-test statements were independently rechecked locally.

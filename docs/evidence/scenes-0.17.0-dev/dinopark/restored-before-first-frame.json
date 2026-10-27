@@ -1,0 +1,14 @@
+{
+  "scene_revision": "d8dcffb3ad834a5ab1c5f0075587b083",
+  "manifest_sha256": "95a26a1a066703cffddebb0f000ceab01e708b040de2e102bbf24e0d7a1033c7",
+  "object_id": null,
+  "status": "unavailable",
+  "complete": false,
+  "availability": {},
+  "evidence": [],
+  "conflicts": [],
+  "handlers": [],
+  "run": "20bc1d96a35a4cb7abe0ef4f9bbec06f",
+  "error": "No complete framebuffer is available for the current video mode (COMMAND_REJECTED)",
+  "observation": "136153b2e99b427c9bde02422c990b52"
+}

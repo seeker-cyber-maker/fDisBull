@@ -1,0 +1,24 @@
+{
+  "artifact": "e6371d9d993e46ec9dc813a3f03eb52c",
+  "run": "6c59672e41fc425997ea4ee38d86a182",
+  "version": 1,
+  "name": "office-reference.png",
+  "kind": "screenshot",
+  "sha256": "d0baa55ae17a5d79779b5a60526f6a9f96d361dcd27a9230fd1f0aea4c7b1ad8",
+  "size": 31586,
+  "metadata": {
+    "captured_ticks": 45304,
+    "double_height": true,
+    "double_width": true,
+    "format": "png",
+    "frame_id": 2422,
+    "height": 200,
+    "mode_id": 5,
+    "session_id": "ses-1",
+    "sha256": "d0baa55ae17a5d79779b5a60526f6a9f96d361dcd27a9230fd1f0aea4c7b1ad8",
+    "source": "last_completed_guest_frame",
+    "source_bpp": 32,
+    "state_revision": 16,
+    "width": 320
+  }
+}

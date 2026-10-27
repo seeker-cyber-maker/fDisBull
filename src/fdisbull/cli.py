@@ -7,6 +7,18 @@ import sys
 from . import __version__
 
 METHODS = {
+    'agent-skill':'Read the bundled fDisBull investigation skill and its scene reference; no project required',
+    'debug-save-scene':'Save a versioned scene manifest with persistent objects and screenshot evidence; name,definition,[parent,version,author]',
+    'debug-scenes':'List current scene revisions; [version]',
+    'debug-scene-info':'Read a scene manifest, evidence and persistent object identities; scene,[version]',
+    'debug-scene-overlay':'Render shared object masks and names on a stored frame; scene,[artifact,name,grid_step,version]',
+    'debug-scene-observations':'Read persisted checks, collisions and diagnostic captures; [revision,run,limit]',
+    'debug-frame-probe':'Read at most 4096 RGB pixels from one native completed frame, without PNG transfer; run,points',
+    'debug-scene-check':'Check scene identity and optional object availability; run,scene,[object]',
+    'debug-scene-assert':'Assert current scene/object or save a diagnostic snapshot; run,scene,[object]',
+    'debug-scene-click':'Perform checked real input and verify its bounded outcome; run,scene,object,[handle_popups]',
+    'debug-scene-act':'Perform a named guest mouse/keyboard action and verify its outcome; run,scene,object,[handle_popups,timeout_ms]',
+    'debug-scene-wait':'Wait on authored scene/object conditions with explicit budgets; run,scene,[object,guest_ms,timeout_ms,slice_ms]',
     'capture-signature': 'Capture a named closed stored function for cross-project reuse; address,name,[version,cs,author,max_instructions]',
     'import-signatures': 'Atomically import an explicit signature catalog; catalog,[version]',
     'export-signatures': 'Export registered project identities as a reusable JSON catalog; [version]',
@@ -145,6 +157,11 @@ def invoke(method, params, debugger=None):
     if not isinstance(params,dict):
         raise ValueError("params must be an object")
     p = dict(params)
+    if method=='agent-skill':
+        if p:raise ValueError('agent-skill takes no parameters')
+        from importlib.resources import files
+        root=files('fdisbull').joinpath('skills/fdisbull-investigate')
+        return {'name':'fdisbull-investigate','files':{n:root.joinpath(n).read_text() for n in ('SKILL.md','references/scenes.md')}}
     if method=='omf-catalog':
         from .omf_catalog import omf_signatures
         path=Path(p.pop('path'))
@@ -198,6 +215,14 @@ def invoke(method, params, debugger=None):
     project = p.pop("project",None)
     if not project:
         raise ValueError("project path is required")
+    scene_offline=('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations')
+    if method in scene_offline:
+        if 'definition_file' in p:
+            file=Path(p.pop('definition_file'))
+            if method!='debug-save-scene' or 'definition' in p or not file.is_file() or file.stat().st_size>1024*1024:
+                raise ValueError('Expected one scene definition JSON file at most 1 MiB')
+            p['definition']=json.loads(file.read_text())
+        with Project(project) as db:return getattr(db,method.replace('-','_'))(**p)
     if method.startswith('debug-') and method not in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-layer','debug-layer-info','debug-layers','debug-events','debug-experiments','debug-experiment-info','debug-promote-code','debug-trace-view'):
         if debugger is None:
             raise ValueError('Live debugger commands require fdisbull serve or fdisbull debug; sessions close on server exit')
@@ -286,7 +311,7 @@ def respond(request, default_project=None, debugger=None):
         if not isinstance(request,dict) or not isinstance(request.get("method"),str):
             raise ValueError("request must be an object with method and optional params/id")
         params = request.get("params",{})
-        standalone=request['method'] in ('identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         return {"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
@@ -330,6 +355,18 @@ def parser():
     root = argparse.ArgumentParser(prog="fdisbull",description="Agent-first disassembly with SQLite persistence and headless image export")
     root.add_argument("--version",action="version",version=__version__)
     sub = root.add_subparsers(dest="command",required=True)
+    sub.add_parser('agent-skill',help=METHODS['agent-skill'])
+    for name in ('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations'):
+        c=sub.add_parser(name,help=METHODS[name]);c.add_argument('project')
+        if name!='debug-scene-observations':c.add_argument('--version',type=int)
+        if name=='debug-save-scene':
+            c.add_argument('name');c.add_argument('definition_file');c.add_argument('--parent');c.add_argument('--author',default='agent')
+        elif name in ('debug-scene-info','debug-scene-overlay'):
+            c.add_argument('scene')
+            if name=='debug-scene-overlay':
+                c.add_argument('--artifact');c.add_argument('--name',default='scene-overlay.png');c.add_argument('--grid-step',type=int,default=8)
+        elif name=='debug-scene-observations':
+            c.add_argument('--revision');c.add_argument('--run');c.add_argument('--limit',type=int,default=100)
     sub.add_parser('dos-services',help=METHODS['dos-services'])
     c=sub.add_parser('omf-catalog',help=METHODS['omf-catalog'])
     c.add_argument('path');c.add_argument('--abi',default='x86_16_cdecl_near')

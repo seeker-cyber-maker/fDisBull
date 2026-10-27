@@ -1,0 +1,24 @@
+{
+  "artifact": "9d26af42ad544048b8f49e97fbeb2690",
+  "run": "6c59672e41fc425997ea4ee38d86a182",
+  "version": 1,
+  "name": "sell-modal-reference.png",
+  "kind": "screenshot",
+  "sha256": "e7cd9dcc47583d491d480aea6abefae0801cbb87d2e77a05efe0bdd89c1b13c6",
+  "size": 28671,
+  "metadata": {
+    "captured_ticks": 56833,
+    "double_height": true,
+    "double_width": true,
+    "format": "png",
+    "frame_id": 3131,
+    "height": 200,
+    "mode_id": 5,
+    "session_id": "ses-1",
+    "sha256": "e7cd9dcc47583d491d480aea6abefae0801cbb87d2e77a05efe0bdd89c1b13c6",
+    "source": "last_completed_guest_frame",
+    "source_bpp": 32,
+    "state_revision": 36,
+    "width": 320
+  }
+}

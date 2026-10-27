@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "decoded": 16,
+  "attempted": 16,
+  "data_processed": 0,
+  "new_facts": 39,
+  "pending": 364,
+  "pending_code": 2,
+  "pending_data": 1,
+  "pending_seeds": 360,
+  "pending_segment_scans": 0,
+  "entry_complete": false,
+  "stable": false,
+  "budget_exhausted": true,
+  "assumptions": [
+    "Static minimum allocation; no PSP memory fabricated.",
+    "Call fallthrough preserves DS/SS/BP/SP by conventional DOS C calling convention; general registers and ES are unknown.",
+    "Deferred relocation candidates may assume startup DS (or the unique observed DS); candidate provenance is retained.",
+    "Stability covers implemented static rules; unresolved indirect/dynamic code remains explicit."
+  ]
+}

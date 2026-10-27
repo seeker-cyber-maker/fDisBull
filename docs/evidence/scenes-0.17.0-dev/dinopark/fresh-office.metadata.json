@@ -1,0 +1,24 @@
+{
+  "artifact": "9091ef993c0a451ab8590dc8079a3a1b",
+  "run": "20bc1d96a35a4cb7abe0ef4f9bbec06f",
+  "version": 1,
+  "name": "fresh-office.png",
+  "kind": "screenshot",
+  "sha256": "afb4d723c605d21c498efa2b57eb30132148f00a4b57ec9c56ccea3fe7086c3a",
+  "size": 31687,
+  "metadata": {
+    "captured_ticks": 63042,
+    "double_height": true,
+    "double_width": true,
+    "format": "png",
+    "frame_id": 186,
+    "height": 200,
+    "mode_id": 7,
+    "session_id": "ses-1",
+    "sha256": "afb4d723c605d21c498efa2b57eb30132148f00a4b57ec9c56ccea3fe7086c3a",
+    "source": "last_completed_guest_frame",
+    "source_bpp": 32,
+    "state_revision": 58,
+    "width": 320
+  }
+}

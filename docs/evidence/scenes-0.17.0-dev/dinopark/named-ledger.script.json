@@ -1,0 +1,15 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "scene-click",
+      "scene": "d8dcffb3ad834a5ab1c5f0075587b083",
+      "object": "office.ledger"
+    },
+    {
+      "op": "scene-click",
+      "scene": "8464f28d387d4ea7917bdcc866c6f9b0",
+      "object": "ledger.back"
+    }
+  ]
+}
