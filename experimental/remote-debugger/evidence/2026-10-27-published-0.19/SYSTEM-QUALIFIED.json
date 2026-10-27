@@ -1,0 +1,213 @@
+{
+  "version": "0.19.0",
+  "source_commit": "57824bd9a06c7f25f6a25172b3f4dcb4dfcfdc95",
+  "installation": "/Users/Shared/fDisBull/releases/0.19.0-57824bd",
+  "status": "qualified_not_active",
+  "previous_default": "/Users/Shared/fDisBull/releases/0.18.0-416b64d",
+  "matching_installed_package_resources": 100,
+  "wheel_sha256": "c169d90f46c706469fe06b198006f45182d43df246650276d71c016e9eae3b1e",
+  "dosbox_macos_sha256": "4c98e9371fb834f4c004ecfaf55a721cbc1b673c9baf086d8a48f65c22266ce0",
+  "dosbox_linux_sha256": "367c554a2405d50a929f64b107476084bf2fae2c266b240a7419d40ba646b0ad",
+  "qemu_binary_sha256": "a8ee5cdeaa1b04fa6fcfbaf210c03209ab7c91357ce2b6eb4dff10c2b7bc7816",
+  "dos_runtime_sha256": "6159fd1904cdbfb8b2a7f023386e7f25ae8bfa01458f84787bf2634aa1dc8d6e",
+  "wine_runtime_sha256": "d784d94a0fbf81896e693cde6daa850cf81c1f2c6f391811913d234009fe7676",
+  "project_environments_modified": false,
+  "game_files_states_databases_included": false,
+  "payload_entries": 1738,
+  "payload_manifest_sha256": "3059bb0e38fa19c8e3d43aaab18e362b6cd84ad4bfdd6be8f7d3cf231271c6db",
+  "qualification": {
+    "mac_dosbox": {
+      "tests": 372,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "boot": {
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "doctors": {
+      "dos": {
+        "status": "passed",
+        "native_state_restored": true,
+        "checks": [
+          {
+            "name": "genuine dependencies and native decoding",
+            "status": "passed"
+          },
+          {
+            "name": "backend inputs",
+            "status": "passed"
+          },
+          {
+            "name": "launch authored target",
+            "status": "passed"
+          },
+          {
+            "name": "execution breakpoint",
+            "status": "passed"
+          },
+          {
+            "name": "execution overlay",
+            "status": "passed"
+          },
+          {
+            "name": "native save",
+            "status": "passed"
+          },
+          {
+            "name": "screenshot",
+            "status": "passed"
+          },
+          {
+            "name": "click with coordinate frame",
+            "status": "passed"
+          },
+          {
+            "name": "data watch",
+            "status": "passed"
+          },
+          {
+            "name": "bounded instruction trace",
+            "status": "passed"
+          },
+          {
+            "name": "native restore",
+            "status": "passed"
+          },
+          {
+            "name": "offline temporal interpretation",
+            "status": "passed"
+          },
+          {
+            "name": "restart and export stored evidence",
+            "status": "passed"
+          }
+        ]
+      },
+      "dos_qemu": {
+        "status": "passed",
+        "native_state_restored": true,
+        "checks": [
+          {
+            "name": "genuine dependencies and native decoding",
+            "status": "passed"
+          },
+          {
+            "name": "backend inputs",
+            "status": "passed"
+          },
+          {
+            "name": "launch authored target",
+            "status": "passed"
+          },
+          {
+            "name": "execution breakpoint",
+            "status": "passed"
+          },
+          {
+            "name": "execution overlay",
+            "status": "passed"
+          },
+          {
+            "name": "native save",
+            "status": "passed"
+          },
+          {
+            "name": "screenshot",
+            "status": "passed"
+          },
+          {
+            "name": "click with coordinate frame",
+            "status": "passed"
+          },
+          {
+            "name": "data watch",
+            "status": "passed"
+          },
+          {
+            "name": "bounded instruction trace",
+            "status": "passed"
+          },
+          {
+            "name": "native restore",
+            "status": "passed"
+          },
+          {
+            "name": "offline temporal interpretation",
+            "status": "passed"
+          },
+          {
+            "name": "restart and export stored evidence",
+            "status": "passed"
+          }
+        ]
+      },
+      "wine": {
+        "status": "passed",
+        "native_state_restored": true,
+        "checks": [
+          {
+            "name": "genuine dependencies and native decoding",
+            "status": "passed"
+          },
+          {
+            "name": "backend inputs",
+            "status": "passed"
+          },
+          {
+            "name": "compile and retrieve fixed authored source",
+            "status": "passed"
+          },
+          {
+            "name": "launch authored target",
+            "status": "passed"
+          },
+          {
+            "name": "execution breakpoint",
+            "status": "passed"
+          },
+          {
+            "name": "native save",
+            "status": "passed"
+          },
+          {
+            "name": "screenshot",
+            "status": "passed"
+          },
+          {
+            "name": "click with coordinate frame",
+            "status": "passed"
+          },
+          {
+            "name": "data watch",
+            "status": "passed"
+          },
+          {
+            "name": "bounded instruction trace",
+            "status": "passed"
+          },
+          {
+            "name": "guarded memory editing",
+            "status": "passed"
+          },
+          {
+            "name": "native restore",
+            "status": "passed"
+          },
+          {
+            "name": "offline temporal interpretation",
+            "status": "passed"
+          },
+          {
+            "name": "restart and export stored evidence",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    "runtime_images_audited": true
+  }
+}

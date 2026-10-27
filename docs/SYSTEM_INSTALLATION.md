@@ -1,55 +1,41 @@
-# fDisBull 0.18.0 — shared Mac installation
+# fDisBull 0.19.0 — shared Mac installation
 
-Installed source: `416b64d9f4bfcf56e2876656d43f1d6a3d6cfdae`, tag `v0.18.0`.
-The stable selector is `/Users/Shared/fDisBull/current`. Global commands are
-in `/usr/local/bin`, also exposed through Homebrew's bin directory. The old
-user-local 0.8.1 launcher now forwards to the shared installation.
+Installed source: `57824bd9a06c7f25f6a25172b3f4dcb4dfcfdc95`, tag `v0.19.0`.
+The selector `/Users/Shared/fDisBull/current` chooses the active version. Global
+commands in `/usr/local/bin` and Homebrew's bin directory follow that selector.
 
-## Commands
+Use `fdisbull --version`, `fdisbull --help`, `fdisbull agent-skill` and
+`fdisbull-runtime` to inspect the active package and launch profiles.
+`fdisbull-python` is the managed interpreter for API scripts; project-specific
+PYTHONPATH is cleared. Existing project/Conda environments are preserved.
+`fdisbull-dosbox` selects native Mac DOSBox; `fdisbull-qemu` selects copied QEMU
+with matching firmware. RUNTIME.json contains version-bound DOS, DOS-in-QEMU,
+Wine/QEMU and raw-machine profiles.
 
-```bash
-fdisbull --version
-fdisbull --help
-fdisbull agent-skill
-fdisbull-runtime
-fdisbull-python -c 'import fdisbull; print(fdisbull.__version__, fdisbull.__file__)'
-```
+0.19.0 adds guarded DOS filename aliases, persistent screenshot pre/post policies,
+callback-safe DOSBox continuation, stop-race handling and expanded bundled skill
+references. Screenshot hooks and scene probes currently support direct DOSBox.
+Frame freshness alone does not establish readiness. C/C++ decompilation, UIL
+engines and semantic navigation remain unimplemented proposals.
 
-`fdisbull-python` is the managed interpreter for Python API scripts. Existing
-Conda and project environments were not modified. App launchers select the
-qualified environment and do not inherit a project-specific PYTHONPATH.
-`fdisbull-dosbox` selects the native Mac backend; `fdisbull-qemu` selects the
-copied QEMU with its matching firmware. `fdisbull-runtime` returns version-bound
-Python/JSON launch profiles for DOSBox, DOS-in-QEMU, Wine/QEMU and raw machines.
+The previous 0.18.0 prefix remains at
+`/Users/Shared/fDisBull/releases/0.18.0-416b64d`. Retain its backend for native
+checkpoints bound to that executable identity. New commands select the active
+prefix; existing processes and private projects are not migrated or terminated.
+The guarded `share/rollback-to-0.18.py` script can atomically select the previous
+prefix if 0.19.0 is still the active version.
 
-```python
-import json, subprocess
-from fdisbull.project import Project
-runtime = json.loads(subprocess.check_output(["fdisbull-runtime"], text=True))
-with Project("your-private-project.fdb") as project:
-    with project.debugger(game_dir="/path/to/your/private/game",
-                          **runtime["profiles"]["dos"]) as debug:
-        print(debug.registers())
-```
+Keep game files, saved games, native states and project databases outside this
+installation. Included boot filesystems are audited pristine OS/runtime inputs,
+not captured sessions. Mac executables use existing Homebrew libraries; this
+installation is qualified on this Mac, not advertised as arbitrary-host portable.
+No vendor IDA servers/keys or new DeepSeek delivery is included.
 
-Keep game files, projects and saved states outside this installation. The
-included boot filesystems are audited pristine OS/runtime inputs, not captured
-sessions. Scene probing currently supports direct DOSBox; C/C++ decompilation
-and source-view debugging are not implemented in 0.18. Mac backends use the
-existing Homebrew shared libraries on this machine.
-
-The source docs, two replay drivers, bundled skill and selected verification
-receipts are under `share/`. Run the local payload verifier with:
-
-```bash
-fdisbull-python /Users/Shared/fDisBull/current/share/verify-system.py
-```
-
-The previous 0.8.1 launcher is preserved in
-`/Users/Shared/fDisBull/backups/2026-10-27-before-0.18.0/`.
-The shared `current` selector and recorded launcher backups make activation
-reversible; the installer did not migrate or open existing project databases.
-No new DeepSeek delivery folder or offline archive was created.
+Verify the sealed payload with:
+`fdisbull-python /Users/Shared/fDisBull/current/share/verify-system.py`.
 
 This tool is not currently suitable for malware analysis or security work.
 Must bring your own weapons. I have only done this once before. Safety not guaranteed.
+
+The [0.19.0 GitHub release](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.19.0) is published. Its five assets
+passed download readback; identities are retained under share/verification.

@@ -1,0 +1,85 @@
+{
+  "source_commit": "57824bd9a06c7f25f6a25172b3f4dcb4dfcfdc95",
+  "files": {
+    "mac-wine-doctor.json": {
+      "size": 6309,
+      "sha256": "a1175e083310ad8035345b3068659d83784b71bbe6b1b862689375410367ba91"
+    },
+    "mac-dos-doctor.json": {
+      "size": 6766,
+      "sha256": "38ac4b4dbc42a878a03edd55dd08c40abd5dd83240476cbd3e25b864ceea437a"
+    },
+    "system-preactivation-verification.json": {
+      "size": 354,
+      "sha256": "e1b34c3ac4d05d24c320e5dfc949b304b0fc2c14a2f90a0403b5a9acd722a845"
+    },
+    "SYSTEM-PREPARED.json": {
+      "size": 951,
+      "sha256": "d8748f0ae33e4ec7888915873412e83cd41db33b368f5168e625922e103c7453"
+    },
+    "SYSTEM-QUALIFIED.json": {
+      "size": 5802,
+      "sha256": "5e008f8b4ae88b7dbedc014f1b62994c091b70b7dc1794bc4521b6726dd4ca67"
+    },
+    "mac-boot.xml": {
+      "size": 1155,
+      "sha256": "327ff458e12c431a9a8f2028c939608e220a5d81aa791230a6d0cb9d5b1fb20f"
+    },
+    "tag-stable.xml": {
+      "size": 8226,
+      "sha256": "be9e8610bc2c797058cba79da1669ea8c970e92ed07a438a0044b5e7380d236c"
+    },
+    "ASSET-READBACK.json": {
+      "size": 2200,
+      "sha256": "76f7b8a0e0b36d56a8493e531812333d33bc39fa4657b303c2c7d1bfb74d7393"
+    },
+    "tag-layers.xml": {
+      "size": 56765,
+      "sha256": "a2a1e6eee6aeed6f952a88992cc30102bbb8521f0f8992ffe8b2d9f5c29abaee"
+    },
+    "SYSTEM-INSTALLATION.json": {
+      "size": 8873,
+      "sha256": "5b989eb0a347148d226b5d94549a4bf92256ad1404ea1f58ecc58faa9c2ffbc0"
+    },
+    "runtime-dos-audit.json": {
+      "size": 1653,
+      "sha256": "7f09f162545c54488f940e5e47a7fd05ac59dd73e77977e419789a0d84ea7294"
+    },
+    "global-dos-doctor.json": {
+      "size": 6766,
+      "sha256": "c46b555b1836ab0e9606c1086b22f92fb27a622e3cd96e7b131f6e2b7ecf21e6"
+    },
+    "tag-unified.xml": {
+      "size": 1967,
+      "sha256": "4f7817715eaa518a5611aa30b950938c370ee6eb71ad6bf0d183c13e09eb982c"
+    },
+    "mac-dosbox.xml": {
+      "size": 56764,
+      "sha256": "dbbb6f905bbe6a7424b80da8776e47b84317622a9117be1c127cce0530f8725b"
+    },
+    "TAG-ARTIFACT-AUDIT.json": {
+      "size": 3494,
+      "sha256": "0aa90be203d43c36b57fadb5ac956ff5d073dd44e83d4f222edf368016e51142"
+    },
+    "runtime-wine-audit.json": {
+      "size": 1532,
+      "sha256": "6d9a161ac699b24c3959b26bec1affdde6b9fc26a61a2217015cadb513868718"
+    },
+    "tag-pe64.xml": {
+      "size": 2306,
+      "sha256": "02b70229da827716211f7138a12a0ccae04487ca8bdb0f0cbf45c84dd1e3c276"
+    },
+    "system-active-verification.json": {
+      "size": 353,
+      "sha256": "0ef878c8c5a248ba2e7dba5e9d143a3eb4365837c671130ce876310dcfe7a92c"
+    },
+    "previous-system-verified.json": {
+      "size": 353,
+      "sha256": "f71b7add0481db8db796db2ea2c5bb4d7bf864c7f3ea566312994b5ecc242711"
+    },
+    "mac-dos_qemu-doctor.json": {
+      "size": 7221,
+      "sha256": "ce415a67ecf66d737ffa8c6816c688101d465fb92af5013dadf8fa31d7213df8"
+    }
+  }
+}

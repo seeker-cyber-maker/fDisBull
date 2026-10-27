@@ -1,27 +1,26 @@
 # Release status checked on 2026-10-27
 
-## Final 0.19.0 source and tagging gate
+## Published 0.19.0 and shared Mac installation
 
-The source version is 0.19.0. Its [release notes](RELEASE-0.19.0.md) describe DOS
-filename aliases, persistent screenshot hooks, callback-safe DOSBox continuation,
-bounded-run stop handling and the reviewed skill/test/design changes. Finalization
-changes version metadata and documentation; the runtime and backend patches from
-development commit `8fc086b6066b4867ad841e041c8ab98c67d01452` are preserved.
+[0.19.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.19.0),
+not draft or prerelease, at fixed tag source `57824bd9a06c7f25f6a25172b3f4dcb4dfcfdc95`.
+Both final-commit workflows passed before tagging and both tag workflows passed.
+Tag CI recorded 1,112 ordinary tests (91 skipped), 66 stable DOSBox, 372 layers
+(Python 3.13.5), 16 PE64 and 13 DOS/QEMU/boot checks; no native failures, errors
+or skips. All 105 wheel entries match the native-tested wheel. Five published
+assets passed download/hash readback.
 
-That development commit passed hosted ordinary CI (1,112 passed, 91 skipped) and
-native Linux CI (66 stable DOSBox, 372 layers under Python 3.13.5, 16 PE64 and
-13 DOS/QEMU/boot checks; no native failures, errors or skips). The
-[candidate CI receipt](evidence/0.19.0-release/CANDIDATE-CI.json) retains those
-exact identities. The [development notes](UNRELEASED-0.19.md) and their earlier
-pending-CI statements remain a historical record, not the current gate result.
+The shared `current` selector now activates `releases/0.19.0-57824bd`. Mac
+qualification passed 372 DOSBox tests, seven boot/GDB checks and three runtime
+doctors with native-state restoration. The global commands and a further DOS
+runtime check passed after activation; all 1,738 payload entries verified.
+The 0.18.0 prefix and unrelated project work remain preserved. No game files,
+saved states or project databases entered Git or the installed payload.
 
-The final 0.19.0 commit must pass both ordinary and native Linux CI before
-`v0.19.0` is created and pushed. Its workflow runs and tag annotation identify
-the final commit and accepted runs; development CI does not substitute for this
-gate. Tagging is authorized. GitHub release publication and shared-installation
-promotion are separate steps. Published and system-installed 0.18.0 below remain
-fixed. Reviewed PR changes were reconciled as source; this work did not merge
-the GitHub PRs, and draft PR #7 remains separate.
+See the [publication record](PUBLICATION-0.19.md), [release notes](RELEASE-0.19.0.md)
+and [system commands](SYSTEM_INSTALLATION.md). The [development notes](UNRELEASED-0.19.md)
+retain their historical candidate/pending-CI statements. Movement/navigation and
+content-readiness PR proposals remain separate from this fixed release.
 
 ## Published 0.18.0 and shared Mac installation
 

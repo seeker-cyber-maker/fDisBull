@@ -1,0 +1,47 @@
+{
+  "tag": "v0.19.0",
+  "source_commit": "57824bd9a06c7f25f6a25172b3f4dcb4dfcfdc95",
+  "published_at": "2026-10-27T14:58:49Z",
+  "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.19.0",
+  "draft": false,
+  "prerelease": false,
+  "assets": [
+    {
+      "name": "fdisbull-0.19.0-py3-none-any.whl",
+      "size": 393120,
+      "sha256": "c169d90f46c706469fe06b198006f45182d43df246650276d71c016e9eae3b1e",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.19.0/fdisbull-0.19.0-py3-none-any.whl",
+      "github_digest": "sha256:c169d90f46c706469fe06b198006f45182d43df246650276d71c016e9eae3b1e"
+    },
+    {
+      "name": "fdisbull-0.19.0-tool.zip",
+      "size": 954101,
+      "sha256": "00357d2a0ee109306d75310ebb2e9c1053962eb4aeefab3ce906ed6b6101ee5a",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.19.0/fdisbull-0.19.0-tool.zip",
+      "github_digest": "sha256:00357d2a0ee109306d75310ebb2e9c1053962eb4aeefab3ce906ed6b6101ee5a"
+    },
+    {
+      "name": "fdisbull-0.19.0.tar.gz",
+      "size": 795799,
+      "sha256": "db18531eee23224dbdae3222423635a3c6bf6495f4146858cd68bc47efaf8201",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.19.0/fdisbull-0.19.0.tar.gz",
+      "github_digest": "sha256:db18531eee23224dbdae3222423635a3c6bf6495f4146858cd68bc47efaf8201"
+    },
+    {
+      "name": "SHA256SUMS",
+      "size": 370,
+      "sha256": "65c8feacf1aee4789dc3bc4c983553f3a3d2a7edaeda9b1e638a1c4b1a401a20",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.19.0/SHA256SUMS",
+      "github_digest": "sha256:65c8feacf1aee4789dc3bc4c983553f3a3d2a7edaeda9b1e638a1c4b1a401a20"
+    },
+    {
+      "name": "VERIFICATION-0.19.0.json",
+      "size": 3494,
+      "sha256": "0aa90be203d43c36b57fadb5ac956ff5d073dd44e83d4f222edf368016e51142",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.19.0/VERIFICATION-0.19.0.json",
+      "github_digest": "sha256:0aa90be203d43c36b57fadb5ac956ff5d073dd44e83d4f222edf368016e51142"
+    }
+  ],
+  "all_assets_downloaded_and_matched": true,
+  "game_files_states_databases_included": false
+}

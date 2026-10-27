@@ -8,23 +8,18 @@ An agent-first disassembler with a persistent SQLite analysis database, explicit
 
 Requires Python **3.12 or later**.
 
-Source version **0.19.0** contains DOS filename aliases, persistent screenshot
-hooks, callback-safe DOSBox continuation and the combined investigation-skill
-updates. See the [0.19 release notes](docs/RELEASE-0.19.0.md) for behavior,
-compatibility and verification gates. The [development record](docs/UNRELEASED-0.19.md)
-preserves the earlier candidate's evidence. GitHub release publication remains
-a separate step; the published and shared-installed version below is 0.18.0.
+Version **0.19.0** adds guarded DOS filename aliases, persistent screenshot
+hooks, callback-safe DOSBox continuation and expanded investigation-skill
+references. See the [release notes](docs/RELEASE-0.19.0.md) for behavior and
+limits; the [development record](docs/UNRELEASED-0.19.md) retains earlier evidence.
 
-Published version **0.18.0** adds portable scenes, deduplicated observation reads,
-compact replies, relative outcomes and numbered overlays. See the
-[0.18 release notes](docs/RELEASE-0.18.0.md) for verification and release gates.
-
-[**fDisBull 0.18.0 is published**](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.18.0)
-with CI-verified wheel, source distribution and tool ZIP. See the
-[publication record](docs/PUBLICATION-0.18.md) and
-[shared Mac installation](docs/SYSTEM_INSTALLATION.md). The system-wide commands
-now select 0.18.0; existing project environments are preserved. Per the revised
-deployment request, no new DeepSeek delivery or offline bundle was produced.
+[**fDisBull 0.19.0 is published**](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.19.0)
+with CI-verified wheel, source distribution and tool ZIP. The
+[publication record](docs/PUBLICATION-0.19.md) records tag CI, asset hashes,
+download readback and the [shared Mac installation](docs/SYSTEM_INSTALLATION.md).
+Global commands select 0.19.0; the previous 0.18.0 prefix remains available for
+rollback and compatible checkpoints. Existing project environments are preserved.
+No new DeepSeek delivery or offline bundle was produced.
 
 Persistent scenes share object context, supporting snapshots and composite masks
 between overlays and checked named actions. The updated DOSBox backend provides
@@ -65,7 +60,8 @@ feature limits and the ordinary/native Linux checks required before tagging.
 
 | Track | Source and availability | Verification |
 | --- | --- | --- |
-| **Latest published release: 0.18.0** | [Verified packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.18.0), source `416b64d` | [Publication and shared installation](docs/PUBLICATION-0.18.md): 1,089 ordinary, 54 stable DOS, 335 layers, 16 PE64 and 10 DOS/boot checks passed; zero native skips. |
+| **Latest published release: 0.19.0** | [Verified packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.19.0), source `57824bd` | [Publication and shared installation](docs/PUBLICATION-0.19.md): 1,112 ordinary, 66 stable DOSBox, 372 layers, 16 PE64 and 13 DOS/boot checks; zero native skips. |
+| **Earlier published release: 0.18.0** | [Verified packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.18.0), source `416b64d` | [Publication and shared installation](docs/PUBLICATION-0.18.md): 1,089 ordinary, 54 stable DOS, 335 layers, 16 PE64 and 10 DOS/boot checks passed; zero native skips. |
 | **Earlier published release: 0.17.0** | [Packages and updated offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.17.0), source `4f736f2` | [Tag CI and copied-pair verification](docs/DELIVERY-0.17.md): 1,079 ordinary, 38 stable DOS, 318 layers, 16 PE64 and 10 DOS/boot checks passed; zero native skips. |
 | **Earlier published release: 0.16.0** | [Packages and updated offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.16.0), source `e1e3fb4` | [Tag CI and copied-pair verification](docs/DELIVERY-0.16.md): 1,077 ordinary, 32 stable DOS, 312 layers, 16 PE64 and 10 DOS/QEMU/boot checks passed; no native skips. |
 | **Historical source candidate: 0.15.0** | [Saved debugger experiments](docs/DEBUGGER_EXPERIMENTS.md) on the existing unified debugger | [Candidate notes](docs/RELEASE-0.15.0.md) and [local verification](docs/VERIFICATION-0.15.md). No 0.15.0 tag/release; exact CI packages are additionally available in the GitHub offline asset. |

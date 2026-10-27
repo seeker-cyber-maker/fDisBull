@@ -1,0 +1,121 @@
+{
+  "version": "0.19.0",
+  "tag": "v0.19.0",
+  "source_commit": "57824bd9a06c7f25f6a25172b3f4dcb4dfcfdc95",
+  "checked_at_utc": "2026-10-27T14:56:42.330336+00:00",
+  "runs": {
+    "ordinary": {
+      "id": 40517808271,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40517808271",
+      "head_sha": "57824bd9a06c7f25f6a25172b3f4dcb4dfcfdc95",
+      "head_branch": "v0.19.0",
+      "conclusion": "success",
+      "run_attempt": 1
+    },
+    "native": {
+      "id": 40517808062,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40517808062",
+      "head_sha": "57824bd9a06c7f25f6a25172b3f4dcb4dfcfdc95",
+      "head_branch": "v0.19.0",
+      "conclusion": "success",
+      "run_attempt": 1
+    }
+  },
+  "ordinary_tests": {
+    "passed": 1112,
+    "skipped": 91,
+    "failures": 0,
+    "errors": 0
+  },
+  "native_suites": {
+    "stable": {
+      "tests": 66,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "layers": {
+      "tests": 372,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "pe64": {
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "unified": {
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "all_native_tests_required": true,
+  "all_ordinary_and_native_wheel_entries_equal": 105,
+  "package_resources_matching_tag": 100,
+  "package_entry_counts": {
+    "wheel": 105,
+    "tool_zip": 288,
+    "sdist": 296
+  },
+  "packages": {
+    "fdisbull-0.19.0-tool.zip": {
+      "size": 954101,
+      "sha256": "00357d2a0ee109306d75310ebb2e9c1053962eb4aeefab3ce906ed6b6101ee5a"
+    },
+    "fdisbull-0.19.0.tar.gz": {
+      "size": 795799,
+      "sha256": "db18531eee23224dbdae3222423635a3c6bf6495f4146858cd68bc47efaf8201"
+    },
+    "fdisbull-0.19.0-py3-none-any.whl": {
+      "size": 393120,
+      "sha256": "c169d90f46c706469fe06b198006f45182d43df246650276d71c016e9eae3b1e"
+    }
+  },
+  "native_artifacts": [
+    {
+      "name": "native-debugger-stable-backend",
+      "artifact_id": 12742160616,
+      "sha256": "a36e9a98230d8e50e9f8f330148e5c449c94aa4cd3d368c1e6961c831226540d",
+      "matches_github_digest": true
+    },
+    {
+      "name": "native-debugger-layers-backend",
+      "artifact_id": 12741865810,
+      "sha256": "0607e06caa13d616b977f70b23292fd8464c634b99e53b44a680eecd016830e2",
+      "matches_github_digest": true
+    },
+    {
+      "name": "native-debugger-pe64",
+      "artifact_id": 12743034257,
+      "sha256": "4f96544df709dae58fa0a139af7b2361c3d32563c0c0e5fefec7ba8048600cb1",
+      "matches_github_digest": true
+    },
+    {
+      "name": "native-debugger-unified",
+      "artifact_id": 12742954664,
+      "sha256": "70b40fa65f7fd5426adf2a8267cce6412b33f071101f4fbcef22f5141ac8d31b",
+      "matches_github_digest": true
+    },
+    {
+      "name": "fdisbull-pe-tested-wheel",
+      "artifact_id": 12743029460,
+      "sha256": "4c286872fae3274caf71dce6faeaf250c44b0167fb558f97b99e33075dcf9431",
+      "matches_github_digest": true
+    }
+  ],
+  "backend_identities": {
+    "linux_dosbox_sha256": "367c554a2405d50a929f64b107476084bf2fae2c266b240a7419d40ba646b0ad",
+    "patch_sha256": "84a17d4d1695472aecdafaa7a998037f1b1e6681cca2e626138f4056847b256d"
+  },
+  "exclusions": [
+    "game files",
+    "saved states",
+    "project databases",
+    "vendor IDA executables and keys"
+  ],
+  "scope": "Exact tag CI and package identity; original-game development evidence remains separately scoped."
+}
