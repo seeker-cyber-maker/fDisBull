@@ -125,6 +125,7 @@ METHODS = {
     "locate": "Byte position in stored instructions/data and unexplored memory; address,[version,cs]",
     "function-patterns": "Candidate prologue/epilogue evidence; [version,limit,offset,scan_unexplored]",
     "managed": "Inspect .NET metadata or disassemble one CIL method; path or project,[token,max_instructions,version]",
+    "agi-logic": "Read-only partial AGI 2.917 logic decoding; logdir, volume_dir, logic, profile, [max_instructions]",
     "decoder-check": "Compare x86 iced/Capstone proposals without execution; data,[bits,address,scan_offsets,max_candidates]",
     "import": "Create a new project from binary; params: project, path, [arch,bits,base,entry,load_segment,slice_arch,image]",
     "segments": "DOS inferred segment inventory; [version]",
@@ -208,6 +209,9 @@ def invoke(method, params, debugger=None):
         if p:
             raise ValueError('unexpected managed inspection options')
         return inspect_managed(data)
+    if method=='agi-logic':
+        from .agi import inspect_logic
+        return inspect_logic(**p)
     if method in ('identify','inspect'):
         from .inspection import identify_header, inspect_binary
         path=Path(p.pop('path'))
@@ -318,7 +322,7 @@ def respond(request, default_project=None, debugger=None):
         if not isinstance(request,dict) or not isinstance(request.get("method"),str):
             raise ValueError("request must be an object with method and optional params/id")
         params = request.get("params",{})
-        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','agi-logic') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         return {"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
@@ -449,6 +453,9 @@ def parser():
     c=sub.add_parser('managed',help=METHODS['managed'])
     c.add_argument('path');c.add_argument('--token',type=lambda s:int(s,0))
     c.add_argument('--max-instructions',type=int)
+    c=sub.add_parser('agi-logic',help=METHODS['agi-logic'])
+    c.add_argument('logdir');c.add_argument('volume_dir');c.add_argument('logic',type=int)
+    c.add_argument('--profile',required=True,choices=['2.917']);c.add_argument('--max-instructions',type=int,default=1000)
     c=sub.add_parser('decoder-check',help=METHODS['decoder-check'])
     c.add_argument('data');c.add_argument('--bits',type=int,choices=[16,32,64],default=64)
     c.add_argument('--address',type=lambda s:int(s,0),default=0)

@@ -12,6 +12,7 @@ Version **0.19.0** adds guarded DOS filename aliases, persistent screenshot
 hooks, callback-safe DOSBox continuation and expanded investigation-skill
 references. See the [release notes](docs/RELEASE-0.19.0.md) for behavior and
 limits; the [development record](docs/UNRELEASED-0.19.md) retains earlier evidence.
+The [unreleased 0.20 candidate notes](docs/UNRELEASED-0.20.md) summarize current development and verification limits.
 
 [**fDisBull 0.19.0 is published**](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.19.0)
 with CI-verified wheel, source distribution and tool ZIP. The

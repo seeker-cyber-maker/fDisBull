@@ -31,10 +31,10 @@ Baseline: `029bd65c5dcc7cdc7f2e14e35278620d9707d969`.
 
 - `recovered-work.patch`: original unfinished archive checkpoint, preserved unchanged.
 - `headless-agent.patch`: complete current patch against the baseline, including recovered cloud changes and local fixes. Apply this patch alone to the clean baseline.
-- `source-manifest.json`: hashes for all 28 resulting source files, complete patch, tested emulator, and evidence; also records cloud recovery provenance.
+- `source-manifest.json`: hashes for the complete patch and all 28 resulting source files; see [spectator verification](../../docs/VERIFICATION-SPECTATOR-CLOUD.md) for the bounded build and test evidence.
 - `evidence/2026-10-23/`: real guest acceptance JSON and screenshots, client/transport test log, and a separate command-line launcher result.
 
-The later cloud files were recovered by replaying nine complete saved `fileChange` diffs from interrupted chat `01a168ae-ed38-7565-b9db-557772f800d6` and pipe-client task `01a16916-46ba-76ab-a177-a234771da0e0`. These restore the pipe client/tests, package exports, SDL header placement, launcher diagnostics, and guest acceptance runner. Old passing-test statements were independently rechecked locally.
+The restored changes include the pipe client/tests, package exports, SDL header placement, launcher diagnostics, and guest acceptance runner. Earlier passing-test statements were independently rechecked locally.
 
 Local corrections select native-resolution rendering, refresh RGBA pixels on every completed frame so palette changes cannot stay stale, compare CPU values separately from input mutation revisions, and make the same-FIFO test portable to Darwin. The runner verifies actual traced EAX and stepped IP/SI against the authored assembly.
 
@@ -65,11 +65,11 @@ python tests/agent_headless/verify_headless.py \
   --output /absolute/path/to/new-evidence-directory
 ```
 
-Local checkout: `/Users/tiga/Documents/ChatGPT/fDisBull/.recovery/2026-10-23/dosbox-checkout`.
+Local checkout: `/path/to/dosbox-checkout`.
 
-Project Python: `/Users/tiga/Documents/ChatGPT/fDisBull/.venv/bin/python`.
+Project Python: `/path/to/fdisbull/.venv/bin/python`.
 
-Local NASM: `/Users/tiga/Documents/ChatGPT/fDisBull/.recovery/2026-10-23/toolchain/nasm-2.16.03/nasm`.
+Local NASM: `/path/to/toolchain/nasm-2.16.03/nasm`.
 
 | Behavior | Fresh result |
 | --- | --- |
