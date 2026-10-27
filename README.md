@@ -128,9 +128,15 @@ opt-in compact replies with retained evidence, portable scene bundles, typed
 relative outcomes and numbered overlays with legends. See the
 [scene improvements guide](docs/SCENE_IMPROVEMENTS.md) and
 [development verification record](docs/VERIFICATION-SCENE-IMPROVEMENTS.md).
-The [content/engine/player design](docs/GAME_CONTENT_AND_PLAYER.md) describes a
-later agent-authored script-language extension framework. That engine work is
-proposed; it is not supplied by this release.
+The [content-recovery design](docs/GAME_CONTENT_AND_PLAYER.md) and
+[UIL export boundary](docs/UIL_BOUNDARY.md) describe a future
+agent-authored semantic recovery framework. fDisBull would produce a
+provenance-bound Universal Interaction Language export and stop there. AEC
+cartridges, game runtimes, players and general Python/JavaScript/other language
+generators remain independent downstream projects. No UIL exporter is supplied
+by this release. Human and agent authors may propose evidence-backed language
+amendments through the [UIL RFC process](docs/UIL_RFC_PROCESS.md); acceptance of
+an RFC remains separate from implementation or game qualification.
 
 The [scene framework](docs/SCENE_FRAMEWORK.md) saves object context, trigger
 provenance, revisions and supporting screenshots in the project database. One
