@@ -1,7 +1,7 @@
 {
   "feature": "Callback-safe agent continuation; original headless/state/input features preserved",
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "b9ce575a5f52c06bfc97df5523168a92274263fce367b6b5718a328ccf8eb083",
+  "patch_sha256": "4730751c261729935a165f7cf195c828f91d16f3d414e8247c9cec8af9fd6f49",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -40,8 +40,8 @@
     },
     {
       "path": "include/agent/input_adapter.h",
-      "size": 2833,
-      "sha256": "2e5f619a9d792f65c6b03b1155c6bc2c01cda7b8ad42501e1acfa1aa1a4c444f"
+      "size": 2992,
+      "sha256": "3f9d88d4a82d69a446ef0ba0df522f7bd503251012dd92d68503077bfd49638c"
     },
     {
       "path": "include/agent/video_adapter.h",
@@ -80,8 +80,8 @@
     },
     {
       "path": "src/agent/server/agent_server.cpp",
-      "size": 202018,
-      "sha256": "56f0c4249e5c7387b007ada0f12bb7cb81410c726f79cfb298692294ae07281b"
+      "size": 202913,
+      "sha256": "1fccbbd688c4845598a0bcf2cfab3f9fc556c2636109bab1f1206bf00808094d"
     },
     {
       "path": "src/agent/transport/local_transport.cpp",
@@ -120,8 +120,8 @@
     },
     {
       "path": "src/hardware/keyboard.cpp",
-      "size": 118876,
-      "sha256": "173e23a19d77dfa6233bfd13c5dfac9eccf8a0ed350b5a30bd6625e3b10fc19b"
+      "size": 120051,
+      "sha256": "d0af05a501e33bb709da18038e49f295f15db45c04b4ccdaa14cd03ed6acd4b4"
     },
     {
       "path": "src/ints/mouse.cpp",
@@ -202,5 +202,6 @@
       "src/gui/sdlmain.cpp"
     ],
     "verification": "Full patch applied to all pinned-baseline files with matching Git blob identities; resulting source hashes checked. Build, GUI and input/paused-runtime acceptance remain unverified."
-  }
+  },
+  "keyboard_held_leases": "source merged; see verification record for tested scope"
 }

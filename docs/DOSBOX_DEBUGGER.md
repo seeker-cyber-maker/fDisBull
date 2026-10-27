@@ -27,19 +27,19 @@ Use the returned ID in place of `RUN` below. One-shot `request` calls cannot ret
 
 A prepared local project can retain analyzed routines, actual-game sessions, screenshots and traces. Keep original game files and runtime artifacts in a private local workspace; use your own project, game-directory and backend paths in the examples above.
 
-## Spectator window
+## Dot-mode
 
 Headless is the default. To request a **view-only** native window for the same
 agent-owned DOSBox session, use a backend rebuilt from the current compatible
 patch and launch with:
 
 ```bash
-fdisbull debug dinopark.fdb --executable /path/to/patched/dosbox-x --game-dir /path/to/dinopark --window
+fdisbull debug dinopark.fdb --executable /path/to/patched/dosbox-x --game-dir /path/to/dinopark --dot-mode
 ```
 
 For `serve`, add `"window":true` to `debug-launch` parameters; in Python use
 `project.debugger(executable, game_dir, version=1, window=True)`. The native
-DOSBox IDA endpoint also accepts `--window` / `window=True`. State-fork launches
+DOSBox IDA endpoint also accepts `--dot-mode` (`--window` remains an alias) / `window=True`. State-fork launches
 accept the same option. Other backends reject it. The agent remains the sole
 source of guest keyboard and mouse input; window events do not provide manual
 game control. The target starts stopped at entry, and an image updates only as

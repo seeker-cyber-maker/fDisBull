@@ -19,6 +19,9 @@ from .debug_experiments import ExperimentProjectMixin, ExperimentSessionMixin
 from .runtime_code import RuntimeCodeMixin, RUNTIME_DDL
 from .scenes import SceneProjectMixin, SceneSessionMixin, SCENE_DDL
 from .screenshot_hooks import ScreenshotHookProjectMixin, ScreenshotHookSessionMixin, DDL as SCREENSHOT_HOOK_DDL
+from .input_macros import MacroProjectMixin, MacroSessionMixin, MACRO_DDL
+from .runtime_observations import RuntimeObservationMixin
+from .movement import MovementSessionMixin
 
 
 DEBUG_DDL = '''
@@ -53,9 +56,10 @@ DEBUG_DDL += LAYER_DDL
 DEBUG_DDL += RUNTIME_DDL
 DEBUG_DDL += SCENE_DDL
 DEBUG_DDL += SCREENSHOT_HOOK_DDL
+DEBUG_DDL += MACRO_DDL
 
 
-class DebugProjectMixin(ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
+class DebugProjectMixin(MacroProjectMixin, ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
     def machine(self, executable, *, boot_image, version=None, boot_timeout_ms=30000):
         from .qemu_machine import MachineDebugSession
         return MachineDebugSession(self,executable,boot_image=boot_image,version=version,boot_timeout_ms=boot_timeout_ms)
@@ -235,7 +239,7 @@ class DebugProjectMixin(ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCo
         return self._debug_artifact(row['run'],name,'screenshot-grid',rendered,metadata)
 
 
-class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
+class DebugSession(MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
     @property
     def script_operations(self):
         from .debug_script import OPERATIONS
@@ -362,7 +366,13 @@ class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSess
     def call(self, method, params=None):
         if self.closed:
             raise DebuggerError('Debugger session is closed')
-        return self.rpc.call(method,{'session_id':self.session_id,**(params or {})})
+        deadline=getattr(self,'_rpc_deadline',None)
+        options={}
+        if deadline is not None:
+            remaining=int((deadline-time.monotonic())*1000)
+            if remaining<=0:raise TimeoutError('Shared debugger host-time budget expired')
+            options['timeout_ms']=min(15000,remaining)
+        return self.rpc.call(method,{'session_id':self.session_id,**(params or {})},**options)
 
     def _event(self, operation, evidence):
         with self.project.transaction(True):
@@ -653,6 +663,8 @@ class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSess
                 raise
         result.update(artifact=artifact,sha256=row['sha256'],registers=registers,
                       framebuffer='invalidated_until_next_completed_frame')
+        self._keyboard_leases={}
+        self._invalidate_runtime_bindings()
         self._event('load-state',result)
         return result
 
@@ -704,6 +716,32 @@ class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSess
 
     def keyboard_state(self):
         return self._keyboard_call('state')
+
+    def keyboard_key_down(self, key):
+        from .keyboard_input import KEYS
+        if key not in KEYS:raise ValueError('Unknown physical keyboard key')
+        if not self.rpc.capabilities.get('input',{}).get('keyboard_held_leases'):
+            raise ValueError('Backend lacks held-key leases')
+        leases=getattr(self,'_keyboard_leases',{})
+        if key in leases.values():raise ValueError('Physical key already has an owned lease')
+        token=uuid.uuid4().hex
+        result=self._keyboard_call('down',{'key':key,'lease':token})
+        leases[token]=key;self._keyboard_leases=leases
+        return {**result,'lease':token,'key':key,'run':self.run_id,'claim':'Physical make queued; game consumption not established.'}
+
+    def keyboard_key_up(self, lease):
+        leases=getattr(self,'_keyboard_leases',{})
+        if not isinstance(lease,str) or lease not in leases:raise ValueError('Unknown, consumed or unrelated input lease')
+        key=leases[lease]
+        result=self._keyboard_call('up',{'lease':lease})
+        del leases[lease]
+        return {**result,'lease':lease,'key':key,'consumed':True,'claim':'Physical break queued; release must be observed.'}
+
+    def proof_check(self,spec, *, timeout_ms=1000,author='agent',evidence=None):
+        result=self.project.proof_check(spec,version=self.version['id'],timeout_ms=timeout_ms,author=author,
+                                        evidence=[{'run':self.run_id},*(evidence or [])])
+        self._event('proof-check',{'id':result['id'],'status':result['result']['status']})
+        return result
 
     def click(self, x, y, *, button='left', hold_ms=80, mode_id=None, frame_id=None):
         bounded(x,'x',0,4095); bounded(y,'y',0,4095); bounded(hold_ms,'hold_ms',1,1000)
@@ -821,6 +859,8 @@ class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSess
         finally:
             self.rpc.close()
             self.closed = True
+            self._keyboard_leases={}
+            self._invalidate_runtime_bindings()
             if self._launch_alias is not None:
                 result['launch_alias_cleanup'] = self._launch_alias.close()
             result['process_reaped'] = self.rpc.process.poll() is not None
@@ -866,6 +906,9 @@ class DebugWorkspace:
                         'debug-restore-experiment':'restore_experiment','debug-compare-experiment':'compare_experiment'})
         methods.update({'debug-frame-probe':'frame_probe','debug-scene-check':'scene_check',
                         'debug-scene-assert':'scene_assert','debug-scene-click':'scene_click','debug-scene-act':'scene_act','debug-scene-wait':'scene_wait'})
+        methods.update({'debug-keyboard-down':'keyboard_key_down','debug-keyboard-up':'keyboard_key_up',
+                        'debug-macro':'macro','debug-move':'move','debug-bind-runtime-memory':'bind_runtime_memory',
+                        'debug-runtime-memory':'runtime_memory','debug-proof-check':'proof_check','debug-scene-navigation':'scene_navigation'})
         context=params.pop('context',None)
         if method=='debug-stop':
             if params:

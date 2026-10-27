@@ -1,6 +1,6 @@
 {
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "f86b574e89f1f88add9613ebce7f612cc10dbacb6fb20d40fdedfa7120ac664e",
+  "patch_sha256": "3c282d4cf09c72e38e95f43ca1449d7fa9bdd102127442e65f59d65e32ffe07d",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -39,8 +39,8 @@
     },
     {
       "path": "include/agent/input_adapter.h",
-      "size": 2833,
-      "sha256": "2e5f619a9d792f65c6b03b1155c6bc2c01cda7b8ad42501e1acfa1aa1a4c444f"
+      "size": 2992,
+      "sha256": "3f9d88d4a82d69a446ef0ba0df522f7bd503251012dd92d68503077bfd49638c"
     },
     {
       "path": "include/agent/video_adapter.h",
@@ -74,8 +74,8 @@
     },
     {
       "path": "src/agent/server/agent_server.cpp",
-      "size": 195735,
-      "sha256": "9491035c9a0266e007bdab557e855a630373985a4f051e1a4e9f5475826c50eb"
+      "size": 196630,
+      "sha256": "2de1d2aa7ba993c6c37632749679334b2f8583b65ee8be0d81b7ec491873dd83"
     },
     {
       "path": "src/agent/transport/local_transport.cpp",
@@ -114,8 +114,8 @@
     },
     {
       "path": "src/hardware/keyboard.cpp",
-      "size": 118876,
-      "sha256": "173e23a19d77dfa6233bfd13c5dfac9eccf8a0ed350b5a30bd6625e3b10fc19b"
+      "size": 120051,
+      "sha256": "d0af05a501e33bb709da18038e49f295f15db45c04b4ccdaa14cd03ed6acd4b4"
     },
     {
       "path": "src/ints/mouse.cpp",
@@ -159,5 +159,6 @@
     ],
     "verification": "Full patch applied to all pinned-baseline files with matching Git blob identities; resulting source hashes checked. Build, GUI and input/paused-runtime acceptance remain unverified."
   },
-  "verification_scope_note": "Source replay hashes are retained here. Runtime qualification and limitations are recorded separately in repository verification documents."
+  "verification_scope_note": "Source replay hashes are retained here. Runtime qualification and limitations are recorded separately in repository verification documents.",
+  "keyboard_held_leases": "source merged; see verification record for tested scope"
 }

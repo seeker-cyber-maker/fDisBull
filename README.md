@@ -126,7 +126,7 @@ See the [user guide](docs/USER_GUIDE.md), [API](docs/API.md), [architecture](doc
 
 Launch an original DOS MZ or explicitly selected COM project with `fdisbull debug PROJECT --executable PATH_TO_PATCHED_DOSBOX --game-dir GAME_DIRECTORY`. Import COM with `fdisbull import GAME.COM PROJECT --image com`; a `.COM` suffix alone is not format evidence. The foreground JSON interface can set byte-checked breakpoints from disassembly addresses, click in guest screenshots, run until a breakpoint with a host timeout, and fast-forward a requested number of guest milliseconds. Screenshots and traces are stored inside the project and remain exportable after restart. See [DOSBox debugger usage and acceptance](docs/DOSBOX_DEBUGGER.md).
 
-The current source adds an opt-in spectator window for the **same** native agent-controlled session: append `--window` to the command above. Headless remains the default. This requires a compatible rebuilt backend and an accessible display; see the [window requirements and limitations](docs/DOSBOX_DEBUGGER.md#spectator-window).
+The current source adds an opt-in dot-mode watch-only window for the **same** native agent-controlled session: append `--dot-mode` (`--window` remains an alias) to the command above. Headless remains the default. This requires a compatible rebuilt backend and an accessible display; see the [window requirements and limitations](docs/DOSBOX_DEBUGGER.md#dot-mode).
 
 The current unreleased source also separates [structural MZ eligibility from
 DOS guest filenames](docs/DOS_INPUT_NAMES.md), supporting extensionless/long host

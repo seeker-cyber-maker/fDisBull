@@ -1,14 +1,13 @@
-diff --git a/client/python/dosbox_agent/__init__.py b/client/python/dosbox_agent/__init__.py
-index 933d423..679ac9d 100644
---- a/client/python/dosbox_agent/__init__.py
-+++ b/client/python/dosbox_agent/__init__.py
+diff -ruN a/client/python/dosbox_agent/__init__.py b/client/python/dosbox_agent/__init__.py
+--- a/client/python/dosbox_agent/__init__.py	2026-10-20 12:05:03.000000000 -0400
++++ b/client/python/dosbox_agent/__init__.py	2026-10-27 17:48:37.128867672 -0400
 @@ -1,4 +1,4 @@
 -from .client import AgentClient
 +from .client import AgentClient, PipeTransport
  from .errors import (
      AddressNotMappedError,
      AgentConnectionError,
-@@ -43,7 +43,7 @@ __all__ = [
+@@ -43,7 +43,7 @@
      "AgentProtocolError", "AgentRpcError", "Breakpoint", "BreakpointNotFoundError",
      "CapabilityUnavailableError", "CommandRejectedError", "CursorExpiredError", "DiagnosticCommandResult",
      "InvalidBinaryLengthError", "MemoryAddress", "MemoryPreconditionFailedError", "MemoryRead", "MemoryWrite",
@@ -17,11 +16,10 @@ index 933d423..679ac9d 100644
      "RequestIdConflictError", "RequestTooLargeError", "Session", "SessionBusyError", "SessionNotFoundError",
      "StopReason", "TargetExitedError", "TargetNotStoppedError", "TargetRunningError", "TraceEvent",
      "TracePage", "WaitResult",
-diff --git a/client/python/dosbox_agent/client.py b/client/python/dosbox_agent/client.py
-index 552858c..b4313d4 100644
---- a/client/python/dosbox_agent/client.py
-+++ b/client/python/dosbox_agent/client.py
-@@ -6,6 +6,10 @@ import ctypes
+diff -ruN a/client/python/dosbox_agent/client.py b/client/python/dosbox_agent/client.py
+--- a/client/python/dosbox_agent/client.py	2026-10-20 12:05:03.000000000 -0400
++++ b/client/python/dosbox_agent/client.py	2026-10-27 17:48:37.129017909 -0400
+@@ -6,6 +6,10 @@
  from ctypes import wintypes
  import json
  import os
@@ -32,7 +30,7 @@ index 552858c..b4313d4 100644
  from pathlib import Path
  import time
  from collections.abc import Mapping
-@@ -170,12 +174,243 @@ class NamedPipeTransport:
+@@ -170,12 +174,243 @@
          self._handle = None
  
  
@@ -278,7 +276,7 @@ index 552858c..b4313d4 100644
          self._next_request_id = 1
  
      @classmethod
-@@ -203,9 +438,9 @@ class AgentClient:
+@@ -203,9 +438,9 @@
          # it writes the JSON-RPC response. Reserve local IPC time so a valid
          # terminal response is not mistaken for a transport failure at that edge.
          request_transport = self._transport
@@ -290,7 +288,7 @@ index 552858c..b4313d4 100644
          try:
              response_text = request_transport.request(
                  payload,
-@@ -450,8 +685,12 @@ def load_config(path: str | Path) -> AgentConfig:
+@@ -450,8 +685,12 @@
              details.append("unexpected=" + ",".join(sorted(unexpected)))
          raise ValueError("invalid agent config: " + " ".join(details))
      transport = values["transport"]
@@ -305,11 +303,10 @@ index 552858c..b4313d4 100644
      profile = values.get("profile", "production")
      if profile not in {"production", "test"}:
          raise ValueError("profile must be production or test")
-diff --git a/client/python/tests/test_client.py b/client/python/tests/test_client.py
-index 2cb854d..b9d075e 100644
---- a/client/python/tests/test_client.py
-+++ b/client/python/tests/test_client.py
-@@ -94,7 +94,7 @@ class AgentClientTests(unittest.TestCase):
+diff -ruN a/client/python/tests/test_client.py b/client/python/tests/test_client.py
+--- a/client/python/tests/test_client.py	2026-10-20 12:05:03.000000000 -0400
++++ b/client/python/tests/test_client.py	2026-10-27 17:48:37.129105581 -0400
+@@ -94,7 +94,7 @@
                  "\n".join((
                      "transport=named_pipe",
                      r"endpoint=\\.\pipe\client-test",
@@ -318,7 +315,7 @@ index 2cb854d..b9d075e 100644
                      "dosbox_workdir=runtime",
                      "profile=test",
                      "request_timeout_ms=50",
-@@ -117,7 +117,7 @@ class AgentClientTests(unittest.TestCase):
+@@ -117,7 +117,7 @@
                  "\n".join((
                      "transport=named_pipe",
                      r"endpoint=\\.\pipe\client-test",
@@ -327,11 +324,9 @@ index 2cb854d..b9d075e 100644
                      "dosbox_workdir=runtime",
                      "request_timeout_ms=50",
                      "max_message_bytes=64",
-diff --git a/client/python/tests/test_pipe_transport.py b/client/python/tests/test_pipe_transport.py
-new file mode 100644
-index 0000000..5160e08
---- /dev/null
-+++ b/client/python/tests/test_pipe_transport.py
+diff -ruN a/client/python/tests/test_pipe_transport.py b/client/python/tests/test_pipe_transport.py
+--- a/client/python/tests/test_pipe_transport.py	1969-12-31 19:00:00.000000000 -0500
++++ b/client/python/tests/test_pipe_transport.py	2026-10-27 17:48:37.129201245 -0400
 @@ -0,0 +1,255 @@
 +"""Real inherited-pipe RPC tests; no local socket service is required."""
 +from __future__ import annotations
@@ -588,11 +583,9 @@ index 0000000..5160e08
 +
 +if __name__ == "__main__":
 +    unittest.main()
-diff --git a/client/python/tests/test_unix_transport.py b/client/python/tests/test_unix_transport.py
-new file mode 100644
-index 0000000..aed1ff4
---- /dev/null
-+++ b/client/python/tests/test_unix_transport.py
+diff -ruN a/client/python/tests/test_unix_transport.py b/client/python/tests/test_unix_transport.py
+--- a/client/python/tests/test_unix_transport.py	1969-12-31 19:00:00.000000000 -0500
++++ b/client/python/tests/test_unix_transport.py	2026-10-27 17:48:37.129246272 -0400
 @@ -0,0 +1,233 @@
 +"""Real local IPC tests for the POSIX debugger transport and client."""
 +from __future__ import annotations
@@ -827,11 +820,10 @@ index 0000000..aed1ff4
 +
 +if __name__ == '__main__':
 +    unittest.main()
-diff --git a/include/agent/agent_protocol.h b/include/agent/agent_protocol.h
-index 3c4d612..7ee69b1 100644
---- a/include/agent/agent_protocol.h
-+++ b/include/agent/agent_protocol.h
-@@ -11,7 +11,8 @@ namespace dosbox_agent {
+diff -ruN a/include/agent/agent_protocol.h b/include/agent/agent_protocol.h
+--- a/include/agent/agent_protocol.h	2026-10-20 12:05:03.000000000 -0400
++++ b/include/agent/agent_protocol.h	2026-10-27 17:48:37.129366984 -0400
+@@ -11,7 +11,8 @@
  
  enum class AgentTransport {
      NamedPipe,
@@ -841,11 +833,10 @@ index 3c4d612..7ee69b1 100644
  };
  
  struct AgentConfig {
-diff --git a/include/agent/debugger_adapter.h b/include/agent/debugger_adapter.h
-index d1abe84..6a63d0b 100644
---- a/include/agent/debugger_adapter.h
-+++ b/include/agent/debugger_adapter.h
-@@ -63,7 +63,7 @@ enum class StepMode {
+diff -ruN a/include/agent/debugger_adapter.h b/include/agent/debugger_adapter.h
+--- a/include/agent/debugger_adapter.h	2026-10-20 12:05:03.000000000 -0400
++++ b/include/agent/debugger_adapter.h	2026-10-27 17:48:37.129420304 -0400
+@@ -63,7 +63,7 @@
  
  enum class BreakpointKind {
      Execution,
@@ -854,12 +845,10 @@ index d1abe84..6a63d0b 100644
  };
  
  struct NativeBreakpoint {
-diff --git a/include/agent/input_adapter.h b/include/agent/input_adapter.h
-new file mode 100644
-index 0000000..9f214a1
---- /dev/null
-+++ b/include/agent/input_adapter.h
-@@ -0,0 +1,66 @@
+diff -ruN a/include/agent/input_adapter.h b/include/agent/input_adapter.h
+--- a/include/agent/input_adapter.h	1969-12-31 19:00:00.000000000 -0500
++++ b/include/agent/input_adapter.h	2026-10-27 17:48:37.166706054 -0400
+@@ -0,0 +1,68 @@
 +#ifndef DOSBOX_AGENT_INPUT_ADAPTER_H
 +#define DOSBOX_AGENT_INPUT_ADAPTER_H
 +
@@ -922,15 +911,15 @@ index 0000000..9f214a1
 +                         AgentKeyboardState* state, std::string* error);
 +void AGENT_KeyboardGetState(AgentKeyboardState* state);
 +void AGENT_KeyboardResetInput();
++bool AGENT_KeyboardLease(const std::string& key, const std::string& lease,
++                         bool down, AgentKeyboardState* state, std::string* error);
 +
 +} // namespace dosbox_agent
 +
 +#endif
-diff --git a/include/agent/video_adapter.h b/include/agent/video_adapter.h
-new file mode 100644
-index 0000000..a226f19
---- /dev/null
-+++ b/include/agent/video_adapter.h
+diff -ruN a/include/agent/video_adapter.h b/include/agent/video_adapter.h
+--- a/include/agent/video_adapter.h	1969-12-31 19:00:00.000000000 -0500
++++ b/include/agent/video_adapter.h	2026-10-27 17:48:37.129481106 -0400
 @@ -0,0 +1,35 @@
 +#ifndef DOSBOX_AGENT_VIDEO_ADAPTER_H
 +#define DOSBOX_AGENT_VIDEO_ADAPTER_H
@@ -967,11 +956,10 @@ index 0000000..a226f19
 +} // namespace dosbox_agent
 +
 +#endif
-diff --git a/include/debug.h b/include/debug.h
-index f4ee552..c9e2b80 100644
---- a/include/debug.h
-+++ b/include/debug.h
-@@ -33,12 +33,21 @@ Bitu DEBUG_EnableDebugger(void);
+diff -ruN a/include/debug.h b/include/debug.h
+--- a/include/debug.h	2026-10-20 12:05:03.000000000 -0400
++++ b/include/debug.h	2026-10-27 17:48:37.129526564 -0400
+@@ -33,12 +33,21 @@
  #if C_DEBUG
  bool DEBUG_AgentStep(bool over, bool* continued);
  bool DEBUG_AgentResumeAfterTerminate(void);
@@ -993,11 +981,10 @@ index f4ee552..c9e2b80 100644
  void DEBUG_AgentClearLastBreakpoint(void);
  bool DEBUG_AgentBeginOutputCapture(void);
  std::string DEBUG_AgentEndOutputCapture(void);
-diff --git a/include/paging.h b/include/paging.h
-index e7e6974..990eccb 100644
---- a/include/paging.h
-+++ b/include/paging.h
-@@ -436,15 +436,25 @@ static INLINE PhysPt64 PAGING_GetPhysicalAddress64(const LinearPt linAddr) {
+diff -ruN a/include/paging.h b/include/paging.h
+--- a/include/paging.h	2026-10-20 12:05:03.000000000 -0400
++++ b/include/paging.h	2026-10-27 17:48:37.129561837 -0400
+@@ -436,15 +436,25 @@
  	return ((PhysPt64)(paging.tlb.phys_page[linAddr>>12]&PHYSPAGE_ADDR)<<(PhysPt64)12)|(linAddr&0xfff);
  }
  
@@ -1023,7 +1010,7 @@ index e7e6974..990eccb 100644
  	if ((address & 0xfff)<0xfff) {
  		const HostPt tlb_addr=get_tlb_read(address);
  		if (tlb_addr) return host_readw(tlb_addr+address);
-@@ -453,6 +463,9 @@ static INLINE uint16_t mem_readw_inline(const LinearPt address) {
+@@ -453,6 +463,9 @@
  }
  
  static INLINE uint32_t mem_readd_inline(const LinearPt address) {
@@ -1033,7 +1020,7 @@ index e7e6974..990eccb 100644
  	if ((address & 0xfff)<0xffd) {
  		const HostPt tlb_addr=get_tlb_read(address);
  		if (tlb_addr) return host_readd(tlb_addr+address);
-@@ -461,12 +474,18 @@ static INLINE uint32_t mem_readd_inline(const LinearPt address) {
+@@ -461,12 +474,18 @@
  }
  
  static INLINE void mem_writeb_inline(const LinearPt address,const uint8_t val) {
@@ -1052,7 +1039,7 @@ index e7e6974..990eccb 100644
  	if ((address & 0xfffu)<0xfffu) {
  		const HostPt tlb_addr=get_tlb_write(address);
  		if (tlb_addr) host_writew(tlb_addr+address,val);
-@@ -475,6 +494,9 @@ static INLINE void mem_writew_inline(const LinearPt address,const uint16_t val)
+@@ -475,6 +494,9 @@
  }
  
  static INLINE void mem_writed_inline(const LinearPt address,const uint32_t val) {
@@ -1062,10 +1049,9 @@ index e7e6974..990eccb 100644
  	if ((address & 0xfffu)<0xffdu) {
  		const HostPt tlb_addr=get_tlb_write(address);
  		if (tlb_addr) host_writed(tlb_addr+address,val);
-diff --git a/src/agent/Makefile.am b/src/agent/Makefile.am
-index 437b7c3..fd601cd 100644
---- a/src/agent/Makefile.am
-+++ b/src/agent/Makefile.am
+diff -ruN a/src/agent/Makefile.am b/src/agent/Makefile.am
+--- a/src/agent/Makefile.am	2026-10-20 12:05:03.000000000 -0400
++++ b/src/agent/Makefile.am	2026-10-27 17:48:37.129645533 -0400
 @@ -1,4 +1,6 @@
 -AM_CPPFLAGS = -I$(top_srcdir)/include
 +# Agent translation units gate their entire implementation on configure defines.
@@ -1074,11 +1060,10 @@ index 437b7c3..fd601cd 100644
  
  noinst_LIBRARIES = libagent.a
  
-diff --git a/src/agent/debugger/debugger_adapter.cpp b/src/agent/debugger/debugger_adapter.cpp
-index 465f7e7..10c3426 100644
---- a/src/agent/debugger/debugger_adapter.cpp
-+++ b/src/agent/debugger/debugger_adapter.cpp
-@@ -241,8 +241,7 @@ bool DebuggerAdapter::Continue(std::string* error) const
+diff -ruN a/src/agent/debugger/debugger_adapter.cpp b/src/agent/debugger/debugger_adapter.cpp
+--- a/src/agent/debugger/debugger_adapter.cpp	2026-10-20 12:05:03.000000000 -0400
++++ b/src/agent/debugger/debugger_adapter.cpp	2026-10-27 17:48:37.129691603 -0400
+@@ -241,8 +241,7 @@
  
  #if C_DEBUG
      DEBUG_AgentClearLastBreakpoint();
@@ -1088,7 +1073,7 @@ index 465f7e7..10c3426 100644
          return true;
  
      if (error != NULL)
-@@ -491,6 +490,17 @@ bool DebuggerAdapter::CreateBreakpoint(const BreakpointKind kind,
+@@ -491,6 +490,17 @@
                  *error = "Debugger rejected the execution breakpoint";
              return false;
          }
@@ -1106,11 +1091,10 @@ index 465f7e7..10c3426 100644
      } else {
  #if C_HEAVY_DEBUG
          if (once) {
-diff --git a/src/agent/protocol/agent_protocol.cpp b/src/agent/protocol/agent_protocol.cpp
-index a315ca1..4f17576 100644
---- a/src/agent/protocol/agent_protocol.cpp
-+++ b/src/agent/protocol/agent_protocol.cpp
-@@ -569,6 +569,8 @@ bool AGENT_LoadConfigFile(const std::string& path,
+diff -ruN a/src/agent/protocol/agent_protocol.cpp b/src/agent/protocol/agent_protocol.cpp
+--- a/src/agent/protocol/agent_protocol.cpp	2026-10-20 12:05:03.000000000 -0400
++++ b/src/agent/protocol/agent_protocol.cpp	2026-10-27 17:48:37.129772394 -0400
+@@ -569,6 +569,8 @@
          parsed.transport = AgentTransport::NamedPipe;
      else if (values["transport"] == "unix_socket")
          parsed.transport = AgentTransport::UnixSocket;
@@ -1119,7 +1103,7 @@ index a315ca1..4f17576 100644
      else {
          *error = "Unsupported agent transport: " + values["transport"];
          return false;
-@@ -636,6 +638,7 @@ const char* AGENT_TransportName(const AgentTransport transport)
+@@ -636,6 +638,7 @@
      switch (transport) {
      case AgentTransport::NamedPipe: return "named_pipe";
      case AgentTransport::UnixSocket: return "unix_socket";
@@ -1127,10 +1111,9 @@ index a315ca1..4f17576 100644
      }
      return "unknown";
  }
-diff --git a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cpp
-index 29363cf..cb0b8a0 100644
---- a/src/agent/server/agent_server.cpp
-+++ b/src/agent/server/agent_server.cpp
+diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cpp
+--- a/src/agent/server/agent_server.cpp	2026-10-20 12:05:03.000000000 -0400
++++ b/src/agent/server/agent_server.cpp	2026-10-27 17:48:37.161782281 -0400
 @@ -5,6 +5,12 @@
  #include "agent/debugger_adapter.h"
  #include "agent/debugger_output_parser.h"
@@ -1156,20 +1139,20 @@ index 29363cf..cb0b8a0 100644
  namespace dosbox_agent {
  namespace {
  
-@@ -447,7 +458,12 @@ static bool IsKnownMethod(const std::string& method)
+@@ -447,7 +458,12 @@
             method == "execution.pause" ||
             method == "execution.step" ||
             method == "execution.wait" ||
 +           method == "execution.timing" || method == "state.save" || method == "state.load" || method == "state.set_register" ||
             method == "state.get_registers" ||
 +           method == "video.screenshot" || method == "video.probe" ||
-+           method == "input.keyboard.press" || method == "input.keyboard.type" || method == "input.keyboard.state" ||
++           method == "input.keyboard.press" || method == "input.keyboard.type" || method == "input.keyboard.state" || method == "input.keyboard.down" || method == "input.keyboard.up" ||
 +           method == "input.mouse.move" || method == "input.mouse.click" ||
 +           method == "input.mouse.button" || method == "input.mouse.state" ||
             method == "memory.read" ||
             method == "memory.write" ||
             method == "breakpoints.create" ||
-@@ -518,6 +534,13 @@ public:
+@@ -518,6 +534,13 @@
          NativeBreakpoint breakpoint;
          std::string raw_output;
          std::vector<TraceSample> trace_samples;
@@ -1183,7 +1166,7 @@ index 29363cf..cb0b8a0 100644
          bool trace_active = false;
          std::size_t trace_event_count = 0;
      };
-@@ -553,6 +576,7 @@ public:
+@@ -553,6 +576,7 @@
          std::string last_stop_breakpoint_id;
          MemoryAddress last_stop_breakpoint_address;
          bool has_last_stop_breakpoint_address = false;
@@ -1191,7 +1174,7 @@ index 29363cf..cb0b8a0 100644
          std::string failure_message;
          std::uint64_t state_revision = 0;
          std::uint64_t next_operation = 1;
-@@ -941,6 +965,8 @@ static JsonValue StopReason(const AgentServer::Impl::Session& session)
+@@ -941,6 +965,8 @@
  {
      JsonValue stop = Object();
      Add(&stop, "kind", String(session.last_stop_kind));
@@ -1200,7 +1183,7 @@ index 29363cf..cb0b8a0 100644
      if (!session.last_stop_breakpoint_id.empty())
          Add(&stop, "breakpoint_id", String(session.last_stop_breakpoint_id));
      if (session.has_last_stop_breakpoint_address) {
-@@ -1185,6 +1211,85 @@ static void CacheResponse(AgentServer::Impl::Session* session,
+@@ -1185,6 +1211,85 @@
      }
  }
  
@@ -1286,7 +1269,7 @@ index 29363cf..cb0b8a0 100644
  static std::string Capabilities(const AgentConfig& config)
  {
      JsonValue result = Object();
-@@ -1194,6 +1299,31 @@ static std::string Capabilities(const AgentConfig& config)
+@@ -1194,6 +1299,32 @@
  #else
      Add(&result, "debugger", JsonValue::Bool(false));
  #endif
@@ -1310,6 +1293,7 @@ index 29363cf..cb0b8a0 100644
 +    Add(&result, "timing", timing);
 +    JsonValue input = Object();
 +    Add(&input, "keyboard", String("ibm_pc_controller_us_ascii_v1"));
++    Add(&input, "keyboard_held_leases", JsonValue::Bool(true));
 +    Add(&input, "absolute_mouse", JsonValue::Bool(true));
 +    Add(&input, "driver", String("builtin_dos_int33_only"));
 +    Add(&input, "coordinate_space", String("guest_frame_pixels"));
@@ -1318,7 +1302,7 @@ index 29363cf..cb0b8a0 100644
      JsonValue trace = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&trace, "cpu", JsonValue::Bool(true));
-@@ -1204,6 +1334,7 @@ static std::string Capabilities(const AgentConfig& config)
+@@ -1204,6 +1335,7 @@
      JsonValue breakpoints = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&breakpoints, "memory_change", JsonValue::Bool(true));
@@ -1326,16 +1310,25 @@ index 29363cf..cb0b8a0 100644
  #else
      Add(&breakpoints, "memory_change", JsonValue::Bool(false));
  #endif
-@@ -1754,6 +1885,385 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1754,6 +1886,395 @@
                  }
              }
          }
 +    } else if (parsed.method.compare(0,15,"input.keyboard.")==0) {
 +        const bool typing=parsed.method=="input.keyboard.type";
 +        const bool query=parsed.method=="input.keyboard.state";
-+        std::string key,text,modifiers;
++        const bool down=parsed.method=="input.keyboard.down";
++        const bool up=parsed.method=="input.keyboard.up";
++        const bool press=parsed.method=="input.keyboard.press";
++        std::string key,text,modifiers,lease;
 +        std::uint32_t hold_ms=40,gap_ms=40;
-+        bool valid=query || GetString(parsed.params,typing?"text":"key",typing?&text:&key);
++        bool valid=(query || up || GetString(parsed.params,typing?"text":"key",typing?&text:&key)) && (query || up || down || press || typing);
++        if(down || up) {
++            valid=valid && GetString(parsed.params,"lease",&lease) && lease.size()==32;
++            for(const auto c:lease) if(!((c>='0' && c<='9') || (c>='a' && c<='f'))) valid=false;
++            for(const auto& item:parsed.params.object)
++                if(item.first!="session_id" && item.first!="lease" && !(down && item.first=="key")) valid=false;
++        }
 +        if(parsed.params.Find("modifiers")) valid=valid && GetString(parsed.params,"modifiers",&modifiers);
 +        if(parsed.params.Find("hold_ms")) valid=valid && GetUnsignedInteger(*parsed.params.Find("hold_ms"),&hold_ms);
 +        if(parsed.params.Find("gap_ms")) valid=valid && GetUnsignedInteger(*parsed.params.Find("gap_ms"),&gap_ms);
@@ -1346,10 +1339,11 @@ index 29363cf..cb0b8a0 100644
 +        } else {
 +            const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
 +            const std::string session_id=session->id;
-+            if(SubmitEmulationCommandLocked(impl,[operation,typing,query,key,text,modifiers,hold_ms,gap_ms](const std::uint64_t) {
++            if(SubmitEmulationCommandLocked(impl,[operation,typing,query,down,up,key,text,modifiers,hold_ms,gap_ms,lease,session_id](const std::uint64_t) {
 +                std::string error; AgentKeyboardState keyboard;
 +                bool ok=true;
 +                if(query) AGENT_KeyboardGetState(&keyboard);
++                else if(down || up) ok=AGENT_KeyboardLease(key,session_id+":"+lease,down,&keyboard,&error);
 +                else ok=AGENT_KeyboardQueue(key,text,modifiers,typing,hold_ms,gap_ms,&keyboard,&error);
 +                std::lock_guard<std::mutex> guard(operation->mutex);
 +                operation->success=ok;operation->error=error;operation->keyboard=keyboard;operation->done=true;
@@ -1712,7 +1706,7 @@ index 29363cf..cb0b8a0 100644
      } else if (parsed.method == "state.get_registers") {
          if (session->state == Impl::SessionState::Running) {
              response = SessionError(parsed.id, kErrorTargetRunning,
-@@ -1955,7 +2465,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1955,7 +2476,7 @@
                   item != session->breakpoints.end(); ++item) {
                  JsonValue entry = Object();
                  Add(&entry, "breakpoint_id", String(item->second.id));
@@ -1721,7 +1715,7 @@ index 29363cf..cb0b8a0 100644
                  Add(&entry, "enabled", JsonValue::Bool(item->second.enabled));
                  Add(&entry, "once", JsonValue::Bool(item->second.native.once));
                  Add(&entry, "address", EncodeMemoryAddress(item->second.native.address));
-@@ -1970,7 +2480,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1970,7 +2491,7 @@
          MemoryAddress address;
          bool once = false;
          const JsonValue* once_value = parsed.params.Find("once");
@@ -1730,7 +1724,7 @@ index 29363cf..cb0b8a0 100644
              !ParseMemoryAddress(parsed.params, "breakpoints.create", &address, &validation_error) ||
              (once_value != NULL && !GetBool(parsed.params, "once", &once))) {
              response = InvalidParams(parsed.id, validation_error.empty() ?
-@@ -1982,7 +2492,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1982,7 +2503,7 @@
              response = SessionError(parsed.id, kErrorCapabilityUnavailable,
                                      "Target must be stopped before creating breakpoints", "TARGET_NOT_STOPPED", session);
          } else {
@@ -1739,7 +1733,7 @@ index 29363cf..cb0b8a0 100644
  #ifndef C_HEAVY_DEBUG
              if (kind == BreakpointKind::MemoryChange) {
                  response = Error(parsed.id, kErrorCapabilityUnavailable,
-@@ -2856,6 +3366,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
+@@ -2856,6 +3377,7 @@
                                                 const std::string& workdir)
  {
      AgentRuntime& adapter = *impl->runtime;
@@ -1747,7 +1741,7 @@ index 29363cf..cb0b8a0 100644
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -2888,6 +3399,21 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
+@@ -2888,6 +3410,21 @@
          return;
      }
  
@@ -1769,7 +1763,7 @@ index 29363cf..cb0b8a0 100644
      {
          std::lock_guard<std::mutex> command_lock(impl->mutex);
          if (impl->stopping || !impl->session || impl->session->id != session_id ||
-@@ -2930,6 +3456,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
+@@ -2930,6 +3467,7 @@
                                                               const std::string& operation_id)
  {
      AgentRuntime& adapter = *impl->runtime;
@@ -1777,7 +1771,7 @@ index 29363cf..cb0b8a0 100644
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -3008,6 +3535,8 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3008,6 +3546,8 @@
          return;
      AgentRuntime& adapter = *impl->runtime;
      const std::uintptr_t native_breakpoint = adapter.ConsumeLastBreakpointHandle();
@@ -1786,7 +1780,7 @@ index 29363cf..cb0b8a0 100644
      std::vector<TraceSample> trace_samples;
      bool native_trace_active = false;
      std::string trace_error;
-@@ -3037,6 +3566,18 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3037,6 +3577,18 @@
              impl->session->trace.Stop();
      }
      impl->session->state = Impl::SessionState::Stopped;
@@ -1805,10 +1799,9 @@ index 29363cf..cb0b8a0 100644
      impl->session->last_stop_kind = startup ? "startup" :
              (native_breakpoint != 0 ? "breakpoint" :
               (!impl->session->pending_stop_kind.empty() ? impl->session->pending_stop_kind :
-diff --git a/src/agent/transport/local_transport.cpp b/src/agent/transport/local_transport.cpp
-index 363f635..7da0d74 100644
---- a/src/agent/transport/local_transport.cpp
-+++ b/src/agent/transport/local_transport.cpp
+diff -ruN a/src/agent/transport/local_transport.cpp b/src/agent/transport/local_transport.cpp
+--- a/src/agent/transport/local_transport.cpp	2026-10-20 12:05:03.000000000 -0400
++++ b/src/agent/transport/local_transport.cpp	2026-10-27 17:48:37.130713241 -0400
 @@ -2,6 +2,12 @@
  #include "rpc_transport.h"
  
@@ -1838,7 +1831,7 @@ index 363f635..7da0d74 100644
  #endif
  
  namespace dosbox_agent {
-@@ -291,29 +306,466 @@ private:
+@@ -291,29 +306,466 @@
  
  class UnixSocketTransport final : public IRpcTransport {
  public:
@@ -2025,10 +2018,9 @@ index 363f635..7da0d74 100644
 +            if (result < 0) return false;
 +            if (result > 0) return (descriptor.revents & events) != 0;
 +        }
-         return false;
-     }
- 
--    void Stop() override {}
++        return false;
++    }
++
 +    bool WriteAll(const int fd, const std::string& message)
 +    {
 +        if (message.size() > max_message_bytes + 1) return false;
@@ -2159,7 +2151,7 @@ index 363f635..7da0d74 100644
 +    {
 +        if (!ValidateConfiguration(config, error) || !handler) return false;
 +#ifdef WIN32
-+        return false;
+         return false;
 +#else
 +        if (worker.joinable()) {
 +            if (error != NULL) *error = "Pipe transport is already running";
@@ -2190,8 +2182,9 @@ index 363f635..7da0d74 100644
 +        if (worker.joinable()) worker.join();
 +        CloseDescriptors();
 +#endif
-+    }
-+
+     }
+ 
+-    void Stop() override {}
 +private:
 +#ifndef WIN32
 +    int read_fd = -1;
@@ -2314,7 +2307,7 @@ index 363f635..7da0d74 100644
  };
  
  } // namespace
-@@ -325,6 +777,8 @@ std::unique_ptr<IRpcTransport> AGENT_CreateLocalTransport(const AgentTransport t
+@@ -325,6 +777,8 @@
          return std::unique_ptr<IRpcTransport>(new NamedPipeTransport());
      case AgentTransport::UnixSocket:
          return std::unique_ptr<IRpcTransport>(new UnixSocketTransport());
@@ -2323,11 +2316,9 @@ index 363f635..7da0d74 100644
      }
      return std::unique_ptr<IRpcTransport>();
  }
-diff --git a/src/agent/transport/unix_transport_probe.cpp b/src/agent/transport/unix_transport_probe.cpp
-new file mode 100644
-index 0000000..0dedf94
---- /dev/null
-+++ b/src/agent/transport/unix_transport_probe.cpp
+diff -ruN a/src/agent/transport/unix_transport_probe.cpp b/src/agent/transport/unix_transport_probe.cpp
+--- a/src/agent/transport/unix_transport_probe.cpp	1969-12-31 19:00:00.000000000 -0500
++++ b/src/agent/transport/unix_transport_probe.cpp	2026-10-27 17:48:37.130791689 -0400
 @@ -0,0 +1,27 @@
 +// Standalone transport acceptance fixture; not part of the DOSBox executable.
 +#include "rpc_transport.h"
@@ -2356,11 +2347,10 @@ index 0000000..0dedf94
 +    std::cout << "STOPPED" << std::endl;
 +    return 0;
 +}
-diff --git a/src/cpu/core_normal.cpp b/src/cpu/core_normal.cpp
-index e582cc0..1cd5cac 100644
---- a/src/cpu/core_normal.cpp
-+++ b/src/cpu/core_normal.cpp
-@@ -57,6 +57,9 @@ extern bool ignore_opcode_63;
+diff -ruN a/src/cpu/core_normal.cpp b/src/cpu/core_normal.cpp
+--- a/src/cpu/core_normal.cpp	2026-10-20 12:05:03.000000000 -0400
++++ b/src/cpu/core_normal.cpp	2026-10-27 17:48:37.130845009 -0400
+@@ -57,6 +57,9 @@
  
  #include "lock.h"
  static INLINE uint8_t LockPrefixRead(PhysPt address) {
@@ -2370,7 +2360,7 @@ index e582cc0..1cd5cac 100644
  	return mem_readb_inline(address);
  }
  
-@@ -130,22 +133,34 @@ static INLINE void FetchDiscardb() {
+@@ -130,22 +133,34 @@
  }
  
  static INLINE uint8_t FetchPeekb() {
@@ -2405,7 +2395,7 @@ index e582cc0..1cd5cac 100644
  	uint32_t temp=LoadMd(core.cseip);
  	core.cseip+=4;
  	return temp;
-@@ -164,6 +179,9 @@ static INLINE uint32_t Fetchd() {
+@@ -164,6 +179,9 @@
  #define EALookupTable (core.ea_table)
  
  Bits CPU_Core_Normal_Run(void) {
@@ -2415,7 +2405,7 @@ index e582cc0..1cd5cac 100644
  	if (CPU_Cycles <= 0)
  		return CBRET_NONE;
  
-@@ -179,13 +197,19 @@ Bits CPU_Core_Normal_Run(void) {
+@@ -179,13 +197,19 @@
  		core.base_val_ds=ds;
  #if C_DEBUG
  #if C_HEAVY_DEBUG
@@ -2437,11 +2427,10 @@ index e582cc0..1cd5cac 100644
  restart_opcode:
  		switch (core.opcode_index+Fetchb()) {
  		#include "core_normal/prefix_none.h"
-diff --git a/src/debug/debug.cpp b/src/debug/debug.cpp
-index 36c909c..c71964b 100644
---- a/src/debug/debug.cpp
-+++ b/src/debug/debug.cpp
-@@ -45,6 +45,7 @@ using namespace std;
+diff -ruN a/src/debug/debug.cpp b/src/debug/debug.cpp
+--- a/src/debug/debug.cpp	2026-10-20 12:05:03.000000000 -0400
++++ b/src/debug/debug.cpp	2026-10-27 17:48:37.131331101 -0400
+@@ -45,6 +45,7 @@
  #include "debug.h"
  #if defined(C_DOSBOX_AGENT)
  #include "agent/agent_bridge.h"
@@ -2449,7 +2438,7 @@ index 36c909c..c71964b 100644
  #endif
  #include "cross.h" //snprintf
  #include "fpu_state.h"
-@@ -636,7 +637,7 @@ static void AnnotateDirectBranch(char* line, const size_t line_size)
+@@ -636,7 +637,7 @@
  bool mustCompleteInstruction = false;
  bool skipFirstInstruction = false;
  
@@ -2458,7 +2447,7 @@ index 36c909c..c71964b 100644
  
  #define BPINT_ALL 0x100
  
-@@ -706,6 +707,8 @@ private:
+@@ -706,6 +707,8 @@
  	static CBreakpoint*	lastTriggered;
  #if C_HEAVY_DEBUG
  	friend bool DEBUG_HeavyIsBreakpoint(void);
@@ -2467,7 +2456,7 @@ index 36c909c..c71964b 100644
  #endif
  };
  
-@@ -816,9 +819,16 @@ void CBreakpoint::ActivateBreakpointsExceptAt(PhysPt adr)
+@@ -816,9 +819,16 @@
  	}
  }
  
@@ -2484,7 +2473,7 @@ index 36c909c..c71964b 100644
  	// Quick exit if there are no breakpoints
  	if (BPoints.empty()) return false;
  
-@@ -1161,6 +1171,16 @@ bool DEBUG_AgentResumeAfterTerminate(void)
+@@ -1161,6 +1171,16 @@
  	return true;
  }
  
@@ -2501,7 +2490,7 @@ index 36c909c..c71964b 100644
  bool DEBUG_AgentCanStartTarget(void)
  {
  #if !defined(OSFREE)
-@@ -1175,6 +1195,46 @@ uint64_t DEBUG_AgentEntryBreakpointSequence(void)
+@@ -1175,6 +1195,46 @@
  	return agent_entry_breakpoint_sequence.load(std::memory_order_relaxed);
  }
  
@@ -2548,7 +2537,7 @@ index 36c909c..c71964b 100644
  bool DEBUG_AgentCreateExecutionBreakpoint(uint16_t seg, uint32_t off, bool once, uintptr_t* handle)
  {
  	if (handle == nullptr || GetAddress(seg,off) == mem_no_address)
-@@ -1221,7 +1281,10 @@ bool DEBUG_AgentCreateMemoryBreakpoint(uint16_t seg,
+@@ -1221,7 +1281,10 @@
  
  bool DEBUG_AgentDeleteBreakpoint(uintptr_t handle)
  {
@@ -2560,7 +2549,7 @@ index 36c909c..c71964b 100644
  }
  
  uintptr_t DEBUG_AgentConsumeLastBreakpoint(void)
-@@ -1231,6 +1294,16 @@ uintptr_t DEBUG_AgentConsumeLastBreakpoint(void)
+@@ -1231,6 +1294,16 @@
  
  void DEBUG_AgentClearLastBreakpoint(void)
  {
@@ -2577,7 +2566,7 @@ index 36c909c..c71964b 100644
  	(void)CBreakpoint::ConsumeLastTriggered();
  }
  
-@@ -4814,6 +4887,9 @@ static int dbg_getch_vt(void) {
+@@ -4814,6 +4887,9 @@
  #endif
  
  uint32_t DEBUG_CheckKeys(void) {
@@ -2587,7 +2576,7 @@ index 36c909c..c71964b 100644
  	Bits ret=0;
  	bool numberrun = false;
  	bool skipDraw = false;
-@@ -5287,7 +5363,12 @@ Bitu DEBUG_Loop(void) {
+@@ -5287,7 +5363,12 @@
          // Interrupt started ? - then skip it
          uint16_t oldCS	= SegValue(cs);
          uint32_t oldEIP	= reg_eip;
@@ -2601,7 +2590,7 @@ index 36c909c..c71964b 100644
          SDL_Delay(1);
  
  #if (C_DYNAMIC_X86)
-@@ -5359,6 +5440,9 @@ void DEBUG_Enable_Handler(bool pressed) {
+@@ -5359,6 +5440,9 @@
  	if (!pressed || control->opt_display2)
  		return;
  
@@ -2611,7 +2600,7 @@ index 36c909c..c71964b 100644
      if (hidedebugger) {
          hidedebugger=false;
  #if defined(WIN32) && !defined(_WIN32_WINDOWS)
-@@ -5377,6 +5461,9 @@ void DEBUG_Enable_Handler(bool pressed) {
+@@ -5377,6 +5461,9 @@
          if (runnormal) return;
      }
  
@@ -2621,7 +2610,7 @@ index 36c909c..c71964b 100644
      /* this command is now a toggle! */
      /* However this should break back into the debugger if RUNWATCH is active */
      if (debug_running) {
-@@ -5416,6 +5503,9 @@ void DEBUG_Enable_Handler(bool pressed) {
+@@ -5416,6 +5503,9 @@
      if (!isatty(0) || !isatty(1) || !isatty(2))
  	    allow = false;
  
@@ -2631,7 +2620,7 @@ index 36c909c..c71964b 100644
      if (!allow) {
  # if defined(MACOSX)
  	    LOG_MSG("Debugger in Mac OS X is not available unless you start DOSBox-X from a terminal or from the Terminal application");
-@@ -5464,6 +5554,9 @@ void DEBUG_Enable_Handler(bool pressed) {
+@@ -5464,6 +5554,9 @@
  }
  
  void DEBUG_DrawScreen(void) {
@@ -2641,7 +2630,7 @@ index 36c909c..c71964b 100644
  	DrawData();
  	DrawCode();
      DrawInput();
-@@ -6185,6 +6278,9 @@ void DBGBlock::set_data_view(unsigned int view) {
+@@ -6185,6 +6278,9 @@
  }
  
  void DEBUG_SetupConsole(void) {
@@ -2651,10 +2640,9 @@ index 36c909c..c71964b 100644
  	if (dbg.win_main == NULL) {
          LOG(LOG_MISC, LOG_DEBUG)("DEBUG_SetupConsole initializing GUI");
  
-diff --git a/src/debug/debug_gui.cpp b/src/debug/debug_gui.cpp
-index 6de6f1f..7e027a5 100644
---- a/src/debug/debug_gui.cpp
-+++ b/src/debug/debug_gui.cpp
+diff -ruN a/src/debug/debug_gui.cpp b/src/debug/debug_gui.cpp
+--- a/src/debug/debug_gui.cpp	2026-10-20 12:05:03.000000000 -0400
++++ b/src/debug/debug_gui.cpp	2026-10-27 17:48:37.131726567 -0400
 @@ -36,6 +36,9 @@
  #include "debug.h"
  #include "debug_mcp.h"
@@ -2665,7 +2653,7 @@ index 6de6f1f..7e027a5 100644
  #include "pic.h"
  
  #include <stdexcept>
-@@ -589,6 +592,9 @@ void DEBUG_FlushInput(void) {
+@@ -589,6 +592,9 @@
  }
  
  void DBGUI_StartUp(void) {
@@ -2675,10 +2663,9 @@ index 6de6f1f..7e027a5 100644
  	mainMenu.get_item("show_console").check(true).enable(false).refresh_item(mainMenu);
  	mainMenu.get_item("clear_console").check(false).enable(false).refresh_item(mainMenu);
  
-diff --git a/src/gui/render.cpp b/src/gui/render.cpp
-index 82e2ae2..e6ed4f5 100644
---- a/src/gui/render.cpp
-+++ b/src/gui/render.cpp
+diff -ruN a/src/gui/render.cpp b/src/gui/render.cpp
+--- a/src/gui/render.cpp	2026-10-20 12:05:03.000000000 -0400
++++ b/src/gui/render.cpp	2026-10-27 17:48:37.131840458 -0400
 @@ -41,6 +41,9 @@
  #include "pc98_cg.h"
  #include "pc98_gdc.h"
@@ -2689,7 +2676,7 @@ index 82e2ae2..e6ed4f5 100644
  
  #include "render_scalers.h"
  #include "render_glsl.h"
-@@ -100,6 +103,108 @@ ScalerLineHandler_t                     RENDER_DrawLine;
+@@ -100,6 +103,108 @@
  
  uint32_t                                GFX_palette32bpp[256] = {0};
  
@@ -2798,7 +2785,7 @@ index 82e2ae2..e6ed4f5 100644
  unsigned int                            GFX_GetBShift();
  void                                    aspect_ratio_menu();
  void                                    RENDER_CallBack( GFX_CallBackFunctions_t function );
-@@ -480,6 +585,11 @@ void RENDER_EndUpdate( bool abort ) {
+@@ -480,6 +585,11 @@
      if (video_debug_overlay && !abort && render.active && render.scale.outLine != 0)
          VGA_DebugOverlay();
  
@@ -2810,7 +2797,7 @@ index 82e2ae2..e6ed4f5 100644
      if (!abort && render.active && RENDER_DrawLine == RENDER_ClearCacheHandler)
          render.scale.clearCache = false;
  
-@@ -562,6 +672,9 @@ std::string RENDER_GetScaler(void) {
+@@ -562,6 +672,9 @@
  static int aspect_x=0, aspect_y=0;
  
  void RENDER_Shutdown() {
@@ -2820,7 +2807,7 @@ index 82e2ae2..e6ed4f5 100644
  	Scaler_AspectChangedLinesFree();
  	scalerSourceCacheBufferFree();
  	scalerChangeCacheFree();
-@@ -571,6 +684,9 @@ void RENDER_Shutdown() {
+@@ -571,6 +684,9 @@
  }
  
  void RENDER_Reset( void ) {
@@ -2830,7 +2817,7 @@ index 82e2ae2..e6ed4f5 100644
  	Bitu width=render.src.width;
  	Bitu height=render.src.height;
  	bool dblw=render.src.dblw;
-@@ -1126,6 +1242,9 @@ void RENDER_CalcDoubleWidthHeight(Bitu width, Bitu height, double scrn_ratio, bo
+@@ -1126,6 +1242,9 @@
  void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double scrn_ratio) {
      RENDER_Halt( );
      if (!width || !height) {
@@ -2840,10 +2827,9 @@ index 82e2ae2..e6ed4f5 100644
          LOG(LOG_MISC,LOG_WARN)("RENDER_SetSize() rejected video mode %u x %u",(unsigned int)width,(unsigned int)height);
          return; 
      }
-diff --git a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
-index 79624b0..1a3467e 100644
---- a/src/gui/sdlmain.cpp
-+++ b/src/gui/sdlmain.cpp
+diff -ruN a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
+--- a/src/gui/sdlmain.cpp	2026-10-20 12:05:03.000000000 -0400
++++ b/src/gui/sdlmain.cpp	2026-10-27 17:48:37.132855576 -0400
 @@ -32,11 +32,6 @@
  # endif
  #endif
@@ -2856,7 +2842,7 @@ index 79624b0..1a3467e 100644
  #ifdef OS2
  # define INCL_DOS
  # define INCL_WIN
-@@ -135,6 +130,11 @@ char* revert_escape_newlines(const char* aMessage);
+@@ -135,6 +130,11 @@
  #include "control.h"
  #include "dos_inc.h"
  #include "dosbox.h"
@@ -2868,7 +2854,7 @@ index 79624b0..1a3467e 100644
  #include "menudef.h"
  #include "pic.h"
  #include "timer.h"
-@@ -148,6 +148,22 @@ char* revert_escape_newlines(const char* aMessage);
+@@ -148,6 +148,22 @@
  #include "ptrop.h"
  #include "mapper.h"
  #include "sdlmain.h"
@@ -2891,7 +2877,7 @@ index 79624b0..1a3467e 100644
  #include "zipfile.h"
  #include "glidedef.h"
  #include "bios_disk.h"
-@@ -1873,7 +1889,12 @@ SDL_Window* GFX_SetSDLWindowMode(uint16_t width, uint16_t height, SCREEN_TYPES s
+@@ -1873,7 +1889,12 @@
                                        width, height,
                                        (GFX_IsFullscreen() ? (sdl.desktop.full.display_res ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN) : 0)
                                        | ((screenType == SCREEN_OPENGL) ? SDL_WINDOW_OPENGL : 0) | (maximize && !TTF_using()? SDL_WINDOW_MAXIMIZED : 0)
@@ -2905,7 +2891,7 @@ index 79624b0..1a3467e 100644
                                        | (dpi_aware_enable ? SDL_WINDOW_ALLOW_HIGHDPI : 0));
          if (sdl.window) {
              GFX_SetTitle(-1, -1, -1, false); //refresh title.
-@@ -4158,9 +4179,17 @@ static void GUI_StartUp() {
+@@ -4158,9 +4179,17 @@
      if (output == "surface")
      {
  #if C_DIRECT3D
@@ -2925,7 +2911,7 @@ index 79624b0..1a3467e 100644
  #endif
          OUTPUT_SURFACE_Select();
          init_output = true;
-@@ -5905,7 +5934,68 @@ bool gfx_in_mapper = false;
+@@ -5905,7 +5934,68 @@
  #define DB_POLLSKIP 1
  #endif
  
@@ -2994,7 +2980,7 @@ index 79624b0..1a3467e 100644
      CheckMapperKeyboardLayout();
  #if defined(C_SDL2) /* SDL 2.x---------------------------------- */
      //Don't poll too often. This can be heavy on the OS, especially Macs.
-@@ -7496,6 +7586,7 @@ bool DOSBOX_parse_argv() {
+@@ -7496,6 +7586,7 @@
              fprintf(stderr,"  -tests                                  Run unit tests to test the DOSBox-X code\n");
  #if defined(C_DOSBOX_AGENT)
              fprintf(stderr,"  -agent-config <path>                    Load agent configuration from an explicit file\n");
@@ -3002,7 +2988,7 @@ index 79624b0..1a3467e 100644
              fprintf(stderr,"  -agent-self-test                        Verify agent startup and emulation queue behavior\n");
  #endif
              fprintf(stderr,"  -print-ticks                            (Debug) Print emulator time and SDL_GetTicks()\n");
-@@ -7530,6 +7621,9 @@ bool DOSBOX_parse_argv() {
+@@ -7530,6 +7621,9 @@
          else if (optname == "agent-self-test") {
              control->opt_agent_self_test = true;
          }
@@ -3012,7 +2998,7 @@ index 79624b0..1a3467e 100644
  #endif
          else if (optname == "nolog") {
              control->opt_nolog = true;
-@@ -8468,6 +8562,44 @@ int main(int argc, char* argv[]) SDL_MAIN_NOEXCEPT {
+@@ -8468,6 +8562,44 @@
      /* -- parse command line arguments */
      if (!DOSBOX_parse_argv()) return 1;
  
@@ -3057,7 +3043,7 @@ index 79624b0..1a3467e 100644
      if (control->opt_time_limit > 0)
          time_limit_ms = (Bitu)(control->opt_time_limit * 1000);
  
-@@ -9414,6 +9546,21 @@ int main(int argc, char* argv[]) SDL_MAIN_NOEXCEPT {
+@@ -9414,6 +9546,21 @@
          control->ParseEnv(environ);
  #endif
  
@@ -3079,11 +3065,10 @@ index 79624b0..1a3467e 100644
          /* -- initialize logging first, so that higher level inits can report problems to the log file */
          LOG::Init();
  
-diff --git a/src/hardware/keyboard.cpp b/src/hardware/keyboard.cpp
-index 423e8d2..529c36a 100644
---- a/src/hardware/keyboard.cpp
-+++ b/src/hardware/keyboard.cpp
-@@ -3043,3 +3043,139 @@ public:
+diff -ruN a/src/hardware/keyboard.cpp b/src/hardware/keyboard.cpp
+--- a/src/hardware/keyboard.cpp	2026-10-20 12:05:03.000000000 -0400
++++ b/src/hardware/keyboard.cpp	2026-10-27 17:48:37.155129133 -0400
+@@ -3043,3 +3043,166 @@
      }
  } dummy;
  }
@@ -3092,6 +3077,7 @@ index 423e8d2..529c36a 100644
 +#if C_DOSBOX_AGENT
 +#include "agent/input_adapter.h"
 +#include <deque>
++#include <map>
 +#include <set>
 +#include <vector>
 +namespace dosbox_agent {
@@ -3099,6 +3085,7 @@ index 423e8d2..529c36a 100644
 +struct AgentKeyEvent { KBD_KEYS key; bool pressed; std::uint32_t delay; };
 +std::deque<AgentKeyEvent> agent_key_events;
 +std::set<KBD_KEYS> agent_owned_keys;
++std::map<std::string,KBD_KEYS> agent_key_leases;
 +
 +KBD_KEYS AgentNamedKey(const std::string& name)
 +{
@@ -3154,6 +3141,31 @@ index 423e8d2..529c36a 100644
 +    agent_key_events.clear();
 +    for (const auto key:agent_owned_keys) KEYBOARD_AddKey(key,false);
 +    agent_owned_keys.clear();
++    agent_key_leases.clear();
++}
++
++bool AGENT_KeyboardLease(const std::string& key, const std::string& lease,
++                         bool down, AgentKeyboardState* state, std::string* error)
++{
++    const auto fail=[error](const char* why) { if(error)*error=why; return false; };
++    if (IS_PC98_ARCH) return fail("Keyboard adapter supports IBM PC targets only");
++    if (!agent_key_events.empty()) return fail("Keyboard input is pending");
++    KBD_KEYS code=KBD_NONE;
++    if (down) {
++        code=AgentNamedKey(key);
++        if(code==KBD_NONE) return fail("Unknown keyboard key");
++        if(agent_key_leases.count(lease) || agent_owned_keys.count(code)) return fail("Keyboard lease or key already owned");
++        agent_key_leases.emplace(lease,code);
++    } else {
++        const auto found=agent_key_leases.find(lease);
++        if(found==agent_key_leases.end()) return fail("Unknown keyboard lease");
++        code=found->second;
++        agent_key_leases.erase(found);
++    }
++    agent_key_events.push_back({code,down,2});
++    AGENT_KeyboardGetState(state);
++    PIC_AddEvent(AgentKeyDispatch,2);
++    return true;
 +}
 +
 +bool AGENT_KeyboardQueue(const std::string& key, const std::string& text,
@@ -3223,10 +3235,9 @@ index 423e8d2..529c36a 100644
 +}
 +} // namespace dosbox_agent
 +#endif
-diff --git a/src/ints/mouse.cpp b/src/ints/mouse.cpp
-index 84ada2d..0ae2528 100644
---- a/src/ints/mouse.cpp
-+++ b/src/ints/mouse.cpp
+diff -ruN a/src/ints/mouse.cpp b/src/ints/mouse.cpp
+--- a/src/ints/mouse.cpp	2026-10-20 12:05:03.000000000 -0400
++++ b/src/ints/mouse.cpp	2026-10-27 17:48:37.133728260 -0400
 @@ -43,6 +43,10 @@
  #include "control.h"
  #include "SDL.h"
@@ -3238,7 +3249,7 @@ index 84ada2d..0ae2528 100644
  #if defined(_MSC_VER)
  # pragma warning(disable:4244) /* const fmath::local::uint64_t to double possible loss of data */
  #endif
-@@ -110,8 +114,15 @@ static Bitu call_mouse_bd = 0;
+@@ -110,8 +114,15 @@
  static Bitu call_int33 = 0;
  static Bitu call_int74 = 0;
  static Bitu call_ps2, call_uir = 0;
@@ -3254,7 +3265,7 @@ index 84ada2d..0ae2528 100644
      if (call_mouse_bd != 0) {
          CALLBACK_DeAllocate(call_mouse_bd);
          call_mouse_bd = 0;
-@@ -1341,6 +1352,179 @@ void Mouse_WheelMoved(int32_t scroll) {
+@@ -1341,6 +1352,179 @@
  	mouse.last_scrolled_y=POS_Y;
  }
  
@@ -3434,7 +3445,7 @@ index 84ada2d..0ae2528 100644
  static void Mouse_SetMickeyPixelRate(int16_t px, int16_t py){
      if ((px!=0) && (py!=0)) {
          mouse.mickeysPerPixel_x  = (float)px/X_MICKEY;
-@@ -1544,6 +1728,9 @@ void Mouse_AfterNewVideoMode(bool setmode) {
+@@ -1544,6 +1728,9 @@
  
  //Much too empty, Mouse_NewVideoMode contains stuff that should be in here
  static void Mouse_Reset(void) {
@@ -3444,7 +3455,7 @@ index 84ada2d..0ae2528 100644
      Mouse_BeforeNewVideoMode(false);
      Mouse_AfterNewVideoMode(false);
      Mouse_SetMickeyPixelRate(8,16);
-@@ -2517,6 +2704,9 @@ void MOUSE_Startup(Section *sec) {
+@@ -2517,6 +2704,9 @@
  
      // Wasteland needs low(seg(int33))!=0 and low(ofs(int33))!=0
      real_writed(0,0x33<<2,i33loc);
@@ -3454,10 +3465,9 @@ index 84ada2d..0ae2528 100644
  
      call_mouse_bd=CALLBACK_Allocate();
      CALLBACK_Setup(call_mouse_bd,&MOUSE_BD_Handler,CB_RETF8,
-diff --git a/src/misc/savestates.cpp b/src/misc/savestates.cpp
-index 27545af..d0daf4c 100644
---- a/src/misc/savestates.cpp
-+++ b/src/misc/savestates.cpp
+diff -ruN a/src/misc/savestates.cpp b/src/misc/savestates.cpp
+--- a/src/misc/savestates.cpp	2026-10-20 12:05:03.000000000 -0400
++++ b/src/misc/savestates.cpp	2026-10-27 17:48:37.134145959 -0400
 @@ -1,935 +1,979 @@
 -#include <stdio.h>
 -#include <stdlib.h>
@@ -5364,11 +5374,9 @@ index 27545af..d0daf4c 100644
 +    return agent_state_error.empty();
 +}
 +#endif
-diff --git a/tests/agent_headless/MOUSEVID.asm b/tests/agent_headless/MOUSEVID.asm
-new file mode 100644
-index 0000000..18a2649
---- /dev/null
-+++ b/tests/agent_headless/MOUSEVID.asm
+diff -ruN a/tests/agent_headless/MOUSEVID.asm b/tests/agent_headless/MOUSEVID.asm
+--- a/tests/agent_headless/MOUSEVID.asm	1969-12-31 19:00:00.000000000 -0500
++++ b/tests/agent_headless/MOUSEVID.asm	2026-10-27 17:48:37.134261563 -0400
 @@ -0,0 +1,257 @@
 +; Real DOS/INT33 acceptance fixture. Build: nasm -f bin MOUSEVID.asm -o MOUSEVID.COM
 +; All offsets below are runtime CS-relative offsets (COM origin = 0100h).
@@ -5627,11 +5635,9 @@ index 0000000..18a2649
 +command_sequence:   dw 0
 +    times 0840h - ($ - $$ + 0100h) db 0
 +command:            dw 0
-diff --git a/tests/agent_headless/verify_headless.py b/tests/agent_headless/verify_headless.py
-new file mode 100644
-index 0000000..11087f2
---- /dev/null
-+++ b/tests/agent_headless/verify_headless.py
+diff -ruN a/tests/agent_headless/verify_headless.py b/tests/agent_headless/verify_headless.py
+--- a/tests/agent_headless/verify_headless.py	1969-12-31 19:00:00.000000000 -0500
++++ b/tests/agent_headless/verify_headless.py	2026-10-27 17:48:37.134279350 -0400
 @@ -0,0 +1,222 @@
 +#!/usr/bin/env python3
 +"""Exercise the real emulator through inherited pipes; never mock DOS/INT33.
@@ -5855,11 +5861,9 @@ index 0000000..11087f2
 +
 +if __name__=='__main__':
 +    raise SystemExit(main())
-diff --git a/tools/headless_agent.py b/tools/headless_agent.py
-new file mode 100644
-index 0000000..31561fd
---- /dev/null
-+++ b/tools/headless_agent.py
+diff -ruN a/tools/headless_agent.py b/tools/headless_agent.py
+--- a/tools/headless_agent.py	1969-12-31 19:00:00.000000000 -0500
++++ b/tools/headless_agent.py	2026-10-27 17:48:37.134403597 -0400
 @@ -0,0 +1,212 @@
 +#!/usr/bin/env python3
 +"""Launch a trusted DOS fixture using dedicated inherited POSIX RPC pipes.

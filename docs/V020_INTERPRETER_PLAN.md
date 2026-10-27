@@ -1,6 +1,6 @@
 # From game investigation to reusable semantics: design notes and proposed backlog
 
-This document records the conceptual direction alongside the 0.20 work, not a claim that the proposed pipeline has shipped. The processor seam in this candidate is minimal native/CIL/toy decoding—not an AGI or Z-machine module, generic persistence, or a complete VM. The COM and spectator changes are also candidate work; see their verification notes for the scope actually tested.
+This document records the conceptual direction alongside the 0.20 work, not a claim that the proposed pipeline has shipped. The processor seam in this candidate is minimal native/CIL/toy decoding—not an AGI or Z-machine module, generic persistence, or a complete VM. The COM and dot-mode changes are also candidate work; see their verification notes for the scope actually tested. The candidate additionally includes bounded movement, typed input macros, navigation/readiness, runtime observations, and persisted model proofs; these do not constitute a full recovery.
 
 ## Direction captured
 

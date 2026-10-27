@@ -364,7 +364,7 @@ def main():
     parser.add_argument('--idle-timeout',type=int,default=120)
     parser.add_argument('--backend',choices=['dosbox','dosbox-qemu'],default='dosbox')
     parser.add_argument('--kernel');parser.add_argument('--initramfs');parser.add_argument('--files',type=json.loads)
-    parser.add_argument('--window',action='store_true',help='Request a controlled native DOSBox window')
+    parser.add_argument('--dot-mode','--window',dest='window',action='store_true',help='Request dot-mode: a watch-only native DOSBox window')
     args=parser.parse_args()
     with Endpoint(args.project,args.executable,args.game_dir,port=args.port,idle_timeout=args.idle_timeout,
                   backend=args.backend,kernel=args.kernel,initramfs=args.initramfs,files=args.files,window=args.window) as endpoint:

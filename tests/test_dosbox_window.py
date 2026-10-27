@@ -254,3 +254,11 @@ time.sleep(30)
         DOSBoxRPC(executable, tmp_path, on_spawn=spawned.append)
     assert error.value.errno != 9  # EBADF from a double-close must not mask the actual failure.
     assert spawned and spawned[0].poll() is not None
+
+def test_dot_mode_cli_alias_preserves_window_contract():
+    from fdisbull.cli import parser
+    for command in ('debug',):
+        base=[command,'example.fdb','--executable','dosbox','--game-dir','.']
+        dot=vars(parser().parse_args(base+['--dot-mode']))
+        old=vars(parser().parse_args(base+['--window']))
+        assert dot==old and dot['window'] is True
