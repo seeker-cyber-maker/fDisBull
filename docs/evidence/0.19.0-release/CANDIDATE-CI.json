@@ -1,0 +1,64 @@
+{
+  "version": "0.19.0.dev0",
+  "commit": "8fc086b6066b4867ad841e041c8ab98c67d01452",
+  "remote_main_verified": true,
+  "checked_at_utc": "2026-10-27T13:15:34.754305+00:00",
+  "ordinary": {
+    "run_id": 40505498448,
+    "conclusion": "success",
+    "passed": 1112,
+    "skipped": 91,
+    "failures": 0,
+    "errors": 0,
+    "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40505498448"
+  },
+  "native": {
+    "run_id": 40505498445,
+    "conclusion": "success",
+    "stable": {
+      "tests": 66,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "layers_python_3_13_5": {
+      "tests": 372,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "pe64_installed_wheel": {
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "dos_qemu_and_boot_installed_wheel": {
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40505498445"
+  },
+  "packages": {
+    "wheel_entries": 105,
+    "tool_zip_entries": 287,
+    "sdist_entries": 295,
+    "all_audits_passed": true,
+    "all_105_wheel_entries_equal_ordinary_and_native": true,
+    "downloaded_evidence_and_package_archives_match_github_digests": true
+  },
+  "committed_paths": 81,
+  "unrelated_paths_preserved": 930,
+  "no_new_tag_verified": true,
+  "latest_published_release": "v0.18.0",
+  "shared_current_unchanged": "/Users/Shared/fDisBull/releases/0.18.0-416b64d",
+  "exclusions": [
+    "game files",
+    "saved states",
+    "project databases"
+  ],
+  "new_release_published": false,
+  "reruns": 0
+}

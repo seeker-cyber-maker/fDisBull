@@ -1,23 +1,27 @@
 # Release status checked on 2026-10-27
 
-## Development 0.19.0.dev0 integration
+## Final 0.19.0 source and tagging gate
 
-The working source combines DOS executable-name aliases, persistent screenshot
-hooks, corrected bounded-run pause handling and the reviewed skill/test/design
-PR changes. It also includes the [DOSBox callback continuation correction](DOS_CONTINUE_CALLBACK_FIX.md):
-the forced BIOS-callback test fails on the original backend and passes after the
-fix, including checkpoint restoration. Mac qualification passed 386 layers and
-66 stable checks without skips. A corrected offline Linux Python 3.13.5 ordinary
-run passed 1,112 tests with 91 native-dependent skips; its package source and
-helper identities were verified. The [development notes](UNRELEASED-0.19.md)
-distinguish implemented behavior from runtime-resource and UIL proposals.
+The source version is 0.19.0. Its [release notes](RELEASE-0.19.0.md) describe DOS
+filename aliases, persistent screenshot hooks, callback-safe DOSBox continuation,
+bounded-run stop handling and the reviewed skill/test/design changes. Finalization
+changes version metadata and documentation; the runtime and backend patches from
+development commit `8fc086b6066b4867ad841e041c8ab98c67d01452` are preserved.
 
-The user authorized committing and pushing this development integration to main
-and running ordinary and native Linux CI. Hosted results must be tied to the
-exact pushed commit; the local qualification above does not replace those gates.
-The GitHub PRs have not been merged by this work; draft PR #7 stays separate.
-No tag, publication or shared-installation promotion is authorized by this step.
-Published and system-installed 0.18.0 below remain fixed.
+That development commit passed hosted ordinary CI (1,112 passed, 91 skipped) and
+native Linux CI (66 stable DOSBox, 372 layers under Python 3.13.5, 16 PE64 and
+13 DOS/QEMU/boot checks; no native failures, errors or skips). The
+[candidate CI receipt](evidence/0.19.0-release/CANDIDATE-CI.json) retains those
+exact identities. The [development notes](UNRELEASED-0.19.md) and their earlier
+pending-CI statements remain a historical record, not the current gate result.
+
+The final 0.19.0 commit must pass both ordinary and native Linux CI before
+`v0.19.0` is created and pushed. Its workflow runs and tag annotation identify
+the final commit and accepted runs; development CI does not substitute for this
+gate. Tagging is authorized. GitHub release publication and shared-installation
+promotion are separate steps. Published and system-installed 0.18.0 below remain
+fixed. Reviewed PR changes were reconciled as source; this work did not merge
+the GitHub PRs, and draft PR #7 remains separate.
 
 ## Published 0.18.0 and shared Mac installation
 

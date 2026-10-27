@@ -8,10 +8,12 @@ An agent-first disassembler with a persistent SQLite analysis database, explicit
 
 Requires Python **3.12 or later**.
 
-Development source **0.19.0.dev0** contains DOS filename aliases, persistent
-screenshot hooks and the combined investigation-skill updates. See the
-[unreleased integration notes](docs/UNRELEASED-0.19.md) for verification gates and
-the distinction between implemented behavior and proposed runtime/UIL features.
+Source version **0.19.0** contains DOS filename aliases, persistent screenshot
+hooks, callback-safe DOSBox continuation and the combined investigation-skill
+updates. See the [0.19 release notes](docs/RELEASE-0.19.0.md) for behavior,
+compatibility and verification gates. The [development record](docs/UNRELEASED-0.19.md)
+preserves the earlier candidate's evidence. GitHub release publication remains
+a separate step; the published and shared-installed version below is 0.18.0.
 
 Published version **0.18.0** adds portable scenes, deduplicated observation reads,
 compact replies, relative outcomes and numbered overlays. See the
