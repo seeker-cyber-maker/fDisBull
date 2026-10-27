@@ -1,6 +1,6 @@
 {
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "def5b5a227ba7501f2346f40f3f0c6d863df85f6b15e6d86425cbfaa2f38de2d",
+  "patch_sha256": "978b15d3f7480a7c395022e04c8155b9b1b775b9a5efd5313482724d03678d24",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -49,8 +49,8 @@
     },
     {
       "path": "include/debug.h",
-      "size": 3004,
-      "sha256": "07f5102d5af2b4fc4f5feb8c604267215a26ec7b0bc164a2a2a2342abc8fde39"
+      "size": 3036,
+      "sha256": "9579ff8b38281c3b91e30fdbeb2dcbe96dd3243182c7f07bc91a40abe4854738"
     },
     {
       "path": "include/paging.h",
@@ -64,8 +64,8 @@
     },
     {
       "path": "src/agent/debugger/debugger_adapter.cpp",
-      "size": 24339,
-      "sha256": "a8b779422567576ae80b23a62ac14dac6c3945578c088e023ca623dfb35193e1"
+      "size": 24311,
+      "sha256": "c0a5ef4df2f75e8a48105d25ec64613a65da2dadb44caff7b4eaff1c53f430a8"
     },
     {
       "path": "src/agent/protocol/agent_protocol.cpp",
@@ -94,8 +94,8 @@
     },
     {
       "path": "src/debug/debug.cpp",
-      "size": 229553,
-      "sha256": "7faa57204e701696c3591bf0a3c6cde9d6a9d47f02361845079830b4bc1896bd"
+      "size": 229880,
+      "sha256": "aebe8710923c3fa53c7157fb083d294d58a692bea94d509a33de8befbf8c1535"
     },
     {
       "path": "src/debug/debug_gui.cpp",
@@ -194,7 +194,8 @@
     "execution.timing: emulation-thread PIC clock and native DOSBox fast-forward getter/setter",
     "Native state save/load RPC with headless error handling and flagged-file restore disabled",
     "Normal-core real-mode CPU data access watches, excluding instruction fetch and debugger/host reads",
-    "Structured bounded register edits for derived machine-state snapshots"
+    "Structured bounded register edits for derived machine-state snapshots",
+    "Callback-safe agent Continue: normal-loop dispatch without discarded debugger pre-step"
   ],
   "nasm_version": "2.16.03",
   "nasm_source_sha256": "1412a1c760bbd05db026b6c0d1657affd6631cd0a63cddb6f73cc6d4aa616148",
@@ -401,5 +402,25 @@
     "native_sha256": "8a4c2915e109017c16a0ca678f7f605d949aa3f22f0d5318a5057fc6987b6f86",
     "evidence": "docs/VERIFICATION-SCENES.md",
     "linux_ci": "configured; not run for this uncommitted candidate"
-  }
+  },
+  "feature": "Callback-safe agent continuation; original headless/state/input features preserved",
+  "continue_callback_verification": {
+    "platform": "macOS ARM64",
+    "python": "3.13.17",
+    "emulator_sha256": "8d31a8a054557b0c07bf2cb3d5bce9f0e0f039d04bb588c51c6821bbc3bc706d",
+    "passed": 66,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "regression": "test_real_continue_at_bios_callback_does_not_invent_keyboard_input",
+    "source_files_changed": [
+      "include/debug.h",
+      "src/debug/debug.cpp",
+      "src/agent/debugger/debugger_adapter.cpp"
+    ],
+    "source_replay_files_verified": 28,
+    "evidence": "docs/DOS_CONTINUE_CALLBACK_FIX.md",
+    "scope": "agent continuation; explicit native stepping not qualified"
+  },
+  "verification_scope_note": "Original verification section is historical; current callback correction qualification is recorded separately in continue_callback_verification"
 }

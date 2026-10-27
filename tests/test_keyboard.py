@@ -1,4 +1,5 @@
 """Guest controller input contracts, including real BIOS consumption."""
+import base64
 import pytest
 
 from fdisbull.debug_script import validate_script
@@ -6,6 +7,38 @@ from fdisbull.project import Project
 from test_debugger import emulator
 from test_dos_loader import mz_file
 from fdisbull.keyboard_input import validate_keyboard
+
+
+def test_real_continue_at_bios_callback_does_not_invent_keyboard_input(tmp_path,emulator):
+    # Each completed BIOS read must account for exactly one counter increment.
+    binary=tmp_path/'CALLBACK.EXE'
+    binary.write_bytes(mz_file(bytes.fromhex('b81300cd100e1f30e4cd16ff060001ebf6')+bytes(1024),ss=0,sp=0x400))
+    with Project.create(tmp_path/'callback.fdb',binary) as project:
+        project.analyze(max_instructions=30)
+        with project.debugger(emulator,tmp_path) as debug:
+            # Native-ROM instrumentation for this backend regression only. The
+            # project API continues to reject addresses outside its MZ regions.
+            vector=debug.call('memory.read',dict(address=dict(space='linear',offset='0x00000058'),length=4))
+            data=base64.b64decode(vector['data_base64'],validate=True)
+            offset=int.from_bytes(data[:2],'little')+1
+            segment=int.from_bytes(data[2:],'little')
+            address=dict(space='segmented',segment=f'0x{segment:04X}',offset=f'0x{offset:08X}')
+            opcode=debug.call('memory.read',dict(address=address,length=4))
+            assert base64.b64decode(opcode['data_base64'],validate=True)[:2]==b'\xfe\x38'
+            bp=debug.call('breakpoints.create',dict(kind='execution',address=address,once=False))
+            assert debug.run(timeout_ms=5000,fast_forward=True)['outcome']=='breakpoint'
+            registers=debug.registers()
+            assert int(registers['cs'],16)==segment and int(registers['ip'],16)==offset
+            assert debug.memory('1000:0100',length=2)['hex']=='0000'
+            checkpoint=debug.save_state('bios-callback.sav')
+            debug.delete_breakpoint(bp['breakpoint_id'])
+            for restored in (False,True):
+                if restored:debug.load_state(checkpoint['artifact'])
+                assert debug.run(guest_ms=100,timeout_ms=5000,fast_forward=True)['outcome']=='guest_time'
+                assert debug.memory('1000:0100',length=2)['hex']=='0000'
+                debug.keyboard.press('a',hold_ms=20,gap_ms=20)
+                assert debug.run(guest_ms=100,timeout_ms=5000,fast_forward=True)['outcome']=='guest_time'
+                assert debug.memory('1000:0100',length=2)['hex']=='0100'
 
 
 @pytest.mark.parametrize('options',[
@@ -104,3 +137,121 @@ def test_real_keyboard_chords_atomic_rejection_and_pending_restore(keyboard_game
         debug.run(guest_ms=200,timeout_ms=3000,fast_forward=True)
         assert debug.memory('1000:0100',length=6)['hex']=='411e004b003b'
         assert debug.keyboard.state()['keyboard']['owned_keys']==0
+
+
+@pytest.mark.parametrize("hold_ms,expected_control", [(80, 0), (500, 4)])
+def test_real_keyboard_delivery_and_late_modifier_poll(tmp_path, emulator,
+                                                     hold_ms, expected_control):
+    """A delivered pulse can expire before a target samples modifier state.
+
+    The authored guest waits four BIOS clock ticks, samples keyboard flags once,
+    and stores the Control bit plus a completion byte. Timing comes from the
+    emulated clock, not host sleep or instruction counts. No game is required.
+    """
+    # push cs; pop ds; sti; xor ah,ah; int 1a; mov bx,dx
+    # wait: xor ah,ah; int 1a; sub dx,bx; cmp dx,4; jb wait
+    # mov ah,02; int 16; and al,04; mov [0201],al
+    # mov byte [0202],1; done: jmp done
+    code = bytes.fromhex(
+        "0e1ffb30e4cd1a89d330e4cd1a29da83fa0472f5"
+        "b402cd162404a20102c606020201ebfe")
+    binary = tmp_path / "POLL.EXE"
+    binary.write_bytes(mz_file(code + bytes(1024), ss=0, sp=0x400))
+    path = tmp_path / "poll.fdb"
+    with Project.create(path, binary) as project:
+        project.analyze(max_instructions=32)
+        with project.debugger(emulator, binary.parent) as debug:
+            entered = debug.breakpoint("1000:0003")
+            assert debug.run(timeout_ms=5000, fast_forward=True)["outcome"] == "breakpoint"
+            debug.delete_breakpoint(entered["breakpoint_id"])
+            assert debug.memory("1000:0201", length=2)["hex"] == "0000"
+            finished = debug.breakpoint("1000:0022")
+            queued = debug.keyboard.press("ctrl", hold_ms=hold_ms, gap_ms=40)
+            assert queued["accepted"] and queued["delivery"] == "queued"
+            assert debug.run(timeout_ms=5000, fast_forward=True)["outcome"] == "breakpoint"
+            observed = bytes.fromhex(debug.memory("1000:0201", length=2)["hex"])
+            assert observed == bytes([expected_control, 1])
+            queue = debug.keyboard.state()["keyboard"]
+            if expected_control == 0:
+                # Delivery completed, but the application observed no held Ctrl.
+                assert queue == dict(pending_events=0, owned_keys=0,
+                                     queued_guest_ms=0)
+            else:
+                assert queue["owned_keys"] == 1 and queue["pending_events"] > 0
+            # Explicitly permit release; never resume through an armed stop.
+            debug.delete_breakpoint(finished["breakpoint_id"])
+            assert debug.run(guest_ms=700, timeout_ms=5000,
+                             fast_forward=True)["outcome"] == "guest_time"
+            assert debug.keyboard.state()["keyboard"] == dict(
+                pending_events=0, owned_keys=0, queued_guest_ms=0)
+            assert debug.memory("1000:0201", length=2)["hex"] == observed.hex()
+
+
+def test_real_keyboard_mid_dialog_checkpoint_restore(keyboard_game,emulator):
+    path,binary=keyboard_game
+    with Project(path) as db, db.debugger(emulator,binary.parent) as debug:
+        wait=debug.breakpoint('1000:0009')
+        assert debug.run(timeout_ms=5000,fast_forward=True)['outcome']=='breakpoint'
+        debug.delete_breakpoint(wait['breakpoint_id'])
+        debug.run(guest_ms=20,timeout_ms=3000,fast_forward=True)
+        checkpoint=debug.save_state('waiting-for-name.sav')
+
+        end=debug.breakpoint('1000:0010')
+        debug.keyboard.type('TIGA16\n')
+        assert debug.run(timeout_ms=5000,fast_forward=True)['outcome']=='breakpoint'
+        assert bytes.fromhex(debug.memory('1000:0100',length=14)['hex'])[::2]==b'TIGA16\r'
+        debug.delete_breakpoint(end['breakpoint_id'])
+
+        restored=debug.load_state(checkpoint['artifact'])
+        assert restored['framebuffer']=='invalidated_until_next_completed_frame'
+        assert debug.keyboard.state()['keyboard']==dict(
+            pending_events=0,owned_keys=0,queued_guest_ms=0)
+        debug.run(guest_ms=50,timeout_ms=3000,fast_forward=True)
+        assert debug.screenshot('restored-dialog.png')['artifact']
+
+        end=debug.breakpoint('1000:0010')
+        debug.keyboard.type('TIGA16\n')
+        assert debug.run(timeout_ms=5000,fast_forward=True)['outcome']=='breakpoint'
+        assert bytes.fromhex(debug.memory('1000:0100',length=14)['hex'])[::2]==b'TIGA16\r'
+
+
+@pytest.mark.parametrize('prefix',['','TI'])
+def test_real_keyboard_mid_dialog_checkpoint_fresh_session(keyboard_game,emulator,prefix):
+    path,binary=keyboard_game
+    expected=b'TIGA16\r'
+    suffix='TIGA16'[len(prefix):]+'\n'
+    with Project(path) as db:
+        with db.debugger(emulator,binary.parent) as debug:
+            wait=debug.breakpoint('1000:0009')
+            assert debug.run(timeout_ms=5000,fast_forward=True)['outcome']=='breakpoint'
+            debug.delete_breakpoint(wait['breakpoint_id'])
+            debug.run(guest_ms=20,timeout_ms=3000,fast_forward=True)
+            if prefix:
+                debug.keyboard.type(prefix)
+                debug.run(guest_ms=300,timeout_ms=3000,fast_forward=True)
+                assert bytes.fromhex(debug.memory('1000:0100',length=2*len(prefix))['hex'])[::2]==prefix.encode('ascii')
+            assert debug.keyboard.state()['keyboard']==dict(
+                pending_events=0,owned_keys=0,queued_guest_ms=0)
+            checkpoint=debug.save_state('waiting-for-name-fresh.sav')
+            first_process=debug.rpc.process
+            debug.breakpoint('1000:0010')
+            debug.keyboard.type(suffix)
+            assert debug.run(timeout_ms=5000,fast_forward=True)['outcome']=='breakpoint'
+            assert bytes.fromhex(debug.memory('1000:0100',length=14)['hex'])[::2]==expected
+        assert first_process.poll() is not None
+
+    # Reopen both project and emulator, not just the native state in one session.
+    with Project(path) as db, db.debugger(emulator,binary.parent) as debug:
+        assert debug.rpc.process.pid!=first_process.pid
+        restored=debug.load_state(checkpoint['artifact'])
+        assert restored['framebuffer']=='invalidated_until_next_completed_frame'
+        assert debug.keyboard.state()['keyboard']==dict(
+            pending_events=0,owned_keys=0,queued_guest_ms=0)
+        debug.run(guest_ms=50,timeout_ms=3000,fast_forward=True)
+        assert debug.screenshot('fresh-restored-dialog.png')['artifact']
+        if prefix:
+            assert bytes.fromhex(debug.memory('1000:0100',length=2*len(prefix))['hex'])[::2]==prefix.encode('ascii')
+        debug.breakpoint('1000:0010')
+        debug.keyboard.type(suffix)
+        assert debug.run(timeout_ms=5000,fast_forward=True)['outcome']=='breakpoint'
+        assert bytes.fromhex(debug.memory('1000:0100',length=14)['hex'])[::2]==expected

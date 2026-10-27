@@ -2,6 +2,7 @@
 from copy import deepcopy
 import io
 import json
+import re
 
 from PIL import Image
 import pytest
@@ -165,7 +166,11 @@ def test_bundled_investigation_skill_is_readable_without_project():
     from fdisbull.cli import invoke,respond
     result=invoke('agent-skill',{})
     assert result['name']=='fdisbull-investigate'
-    assert set(result['files'])=={'SKILL.md','references/scenes.md'}
+    assert set(result['files'])=={'SKILL.md','references/scenes.md','references/methodology.md',
+                                  'references/runtime-navigation.md'}
+    local_links={target for target in re.findall(r'\[[^]]+\]\(([^)]+)\)',result['files']['SKILL.md'])
+                 if '://' not in target and not target.startswith('#')}
+    assert local_links <= set(result['files'])
     assert respond({'method':'agent-skill'},default_project='/nonexistent-project')['ok']
 
 

@@ -1,5 +1,24 @@
 # Release status checked on 2026-10-27
 
+## Development 0.19.0.dev0 integration
+
+The working source combines DOS executable-name aliases, persistent screenshot
+hooks, corrected bounded-run pause handling and the reviewed skill/test/design
+PR changes. It also includes the [DOSBox callback continuation correction](DOS_CONTINUE_CALLBACK_FIX.md):
+the forced BIOS-callback test fails on the original backend and passes after the
+fix, including checkpoint restoration. Mac qualification passed 386 layers and
+66 stable checks without skips. A corrected offline Linux Python 3.13.5 ordinary
+run passed 1,112 tests with 91 native-dependent skips; its package source and
+helper identities were verified. The [development notes](UNRELEASED-0.19.md)
+distinguish implemented behavior from runtime-resource and UIL proposals.
+
+The user authorized committing and pushing this development integration to main
+and running ordinary and native Linux CI. Hosted results must be tied to the
+exact pushed commit; the local qualification above does not replace those gates.
+The GitHub PRs have not been merged by this work; draft PR #7 stays separate.
+No tag, publication or shared-installation promotion is authorized by this step.
+Published and system-installed 0.18.0 below remain fixed.
+
 ## Published 0.18.0 and shared Mac installation
 
 [0.18.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.18.0),

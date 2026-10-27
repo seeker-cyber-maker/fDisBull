@@ -1,0 +1,39 @@
+{
+  "emulator_sha256": "4c98e9371fb834f4c004ecfaf55a721cbc1b673c9baf086d8a48f65c22266ce0",
+  "breakpoint": {
+    "address": {
+      "offset": "0x00000006",
+      "segment": "0x0824",
+      "space": "segmented"
+    },
+    "breakpoint_id": "bp-1",
+    "kind": "execution",
+    "once": false,
+    "session_id": "ses-1",
+    "state_revision": 2,
+    "run": "468b527896ad4ed7b7b585e2c2c6c598",
+    "version": 1,
+    "project_address": "0x10006",
+    "project_cs": "0x1000",
+    "instruction_context": "x86:16:little:cs=1000",
+    "runtime_bytes": "ff060001",
+    "bytes_verified": true
+  },
+  "stops": [
+    {
+      "outcome": "breakpoint",
+      "address": "0x10006",
+      "counter": "0000"
+    },
+    {
+      "outcome": "breakpoint",
+      "address": "0x10006",
+      "counter": "0100"
+    },
+    {
+      "outcome": "breakpoint",
+      "address": "0x10006",
+      "counter": "0200"
+    }
+  ]
+}

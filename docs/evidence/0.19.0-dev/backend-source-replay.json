@@ -1,0 +1,16 @@
+[
+  {
+    "profile": "stable",
+    "baseline": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+    "patch_sha256": "978b15d3f7480a7c395022e04c8155b9b1b775b9a5efd5313482724d03678d24",
+    "matching_source_files": 28,
+    "status": "passed"
+  },
+  {
+    "profile": "layers",
+    "baseline": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+    "patch_sha256": "84a17d4d1695472aecdafaa7a998037f1b1e6681cca2e626138f4056847b256d",
+    "matching_source_files": 29,
+    "status": "passed"
+  }
+]

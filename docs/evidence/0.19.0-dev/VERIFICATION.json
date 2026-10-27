@@ -1,0 +1,99 @@
+{
+  "version": "0.19.0.dev0",
+  "status": "local native qualification passed; hosted release gates pending",
+  "counts": {
+    "native-layers.xml": {
+      "tests": 386,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "native-stable.xml": {
+      "tests": 66,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "callback-original.xml": {
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "callback-fixed.xml": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "published_release_unchanged": "v0.18.0 at416b64d",
+  "new_release_created": false,
+  "github_prs_merged": false,
+  "shared_installation_promoted": false,
+  "source_sha256": {
+    ".github/workflows/native-debugger.yml": "af0037e5372f4a82ac7d45499764ada0316be233206ff277d3304fe7b3fedf04",
+    "README.md": "eef16cbee67f78637ac4d5a2106317b1221bf7c33fe20ee2a8c0cf998620ebc7",
+    "docs/DOS_INPUT_NAMES.md": "56c825b232c46121d15eba08e92176f86a44da17f2abdd7dcbaf9e91075f92f3",
+    "docs/SCREENSHOT_HOOKS.md": "6b01227ddb497e87d1d0a4436814b694b60a289bf9f15cfa0717a608caa1b0ed",
+    "docs/VERIFICATION-DOS-CAPTURE-UNRELEASED.md": "41ff1e229df9d4c2349cf70e03cc5e4dc5a5e2bbac5691a15fad9a354c3d5121",
+    "experimental/dosbox-x/headless-agent.patch": "978b15d3f7480a7c395022e04c8155b9b1b775b9a5efd5313482724d03678d24",
+    "experimental/dosbox-x/layers/headless-agent.patch": "84a17d4d1695472aecdafaa7a998037f1b1e6681cca2e626138f4056847b256d",
+    "experimental/dosbox-x/layers/source-manifest.json": "a5de092e4a831a22d256c7561773bfcf74e5eacec7b5a9778a4df194045b4114",
+    "experimental/dosbox-x/source-manifest.json": "14393715790c8e316c1a59be18106f8e011e785e6d13f8ed8e1417f061ebbaf9",
+    "pyproject.toml": "dee97155090c4aa09c9ac6bcbebcf2cae5fd97d7625fba6562823be38a4bbf80",
+    "scripts/check_dist.py": "17c19a889ec8dfb6355b1675ca340394e7cc8b3b0011a32b96390fa4f0554251",
+    "src/fdisbull/__init__.py": "968533157f7a067c33dad79d55632aeb10725f8e2e54f1d586179cfe6447a693",
+    "src/fdisbull/cli.py": "a79b84c65c1ddf76646b4ac0267eb4abd9b0f9705514564b4949432810486b77",
+    "src/fdisbull/debug_script.py": "ee7a146e11d1a42be8ccf9895c621c68c4a0dd2b3cdee4cbce4e7ab9b03d643f",
+    "src/fdisbull/debugger.py": "30ce84938a83ea5a0d348c156f7dfe7e1f237701fbe782a58379a5c1e5a7baff",
+    "src/fdisbull/dos_launch.py": "ebecd4d4941797297073c2d18404be407f8df03f7787542f645fed7631e2263f",
+    "src/fdisbull/dos_qemu.py": "c04f47f4f0e74d488f5d7e8241a702a36cf7f0523c3eec1ad5166696be0c61a3",
+    "src/fdisbull/guest_assets.py": "7e5019b6f7ed34442c5547f8746f0f656e44c1d28bcc509a28e5c055948a20ae",
+    "src/fdisbull/screenshot_hooks.py": "517f27ea1c986be150d2c398a152e33566804cfadb97057324126bcc89212955",
+    "src/fdisbull/skills/fdisbull-investigate/SKILL.md": "3618b6f63e9be94ac3f10cf1bb727b2ba87bcd23670f491ad5aa893b236ccf2b",
+    "src/fdisbull/skills/fdisbull-investigate/references/methodology.md": "ea7fef9f4bb597ccf79d78238e135a7634c7fc3f135673d57f4bc94be765ce48",
+    "src/fdisbull/skills/fdisbull-investigate/references/runtime-navigation.md": "654814fb27cebfa5ec50723ae4e419b5b0ddfefe141be12b74412d32947c28da",
+    "tests/test_debugger.py": "40748717202c0c8fc39abde5484e85075dd0db366099cb92af2e7f3ddd843070",
+    "tests/test_distribution.py": "9d9f03d130ed043e325b17e76fc36df45a055e6c6bcc1bdc5f89c81f521b45ed",
+    "tests/test_dos_launch.py": "4bf81ac23b06a965d92070fe8b1f12e23565531f7221874124d4f8fac923805b",
+    "tests/test_dos_qemu.py": "1f7d54aa41ab37fe2de1ade49769130b054bc255789c848311d9f91310167920",
+    "tests/test_keyboard.py": "0c9fe5aa3f0e14876bc5038758b79c7248f73134fb20fd7367640f0773a00dd4",
+    "tests/test_run_boundaries.py": "c35a55a4ab1a6c9fd9ad670ec6894fa9859c558b9ae2f865613f934b21d521a0",
+    "tests/test_scenes.py": "75adc233645e9d13a3fdb048820c630b3b283379ec9e449c6c9b23d1fc1fb362",
+    "tests/test_screenshot_hooks.py": "c2833422450b8383b6a6662452764a5f55f5e84a18bdc1b04f8c1f0f70696f55"
+  },
+  "exclusions": [
+    "original game files",
+    "native state bytes",
+    "project databases",
+    "compiled guest fixtures",
+    "emulator executables"
+  ],
+  "limitations": [
+    "Explicit low-level debugger stepping across native callbacks not qualified",
+    "Runtime-resource resolver/layer and conditional navigation remain proposed",
+    "No UIL exporter or C/C++ decompiler supplied"
+  ],
+  "linux_ordinary": {
+    "passed": 1112,
+    "skipped": 91,
+    "failed": 0,
+    "errors": 0,
+    "python": "3.13.5",
+    "network": "none",
+    "scope": "ordinary suite, native runtime tests skipped; not hosted CI"
+  },
+  "installed_native": {
+    "passed": 66,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "source_imports_disabled": true,
+    "python": "3.13.17"
+  },
+  "package_identity": {
+    "all_three_audits_passed": true,
+    "identical_linux_and_mac_wheel_contents": 105
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "status": "failed",
+  "test": "test_relative_outcomes_repeat_restore_and_compact_saved_script",
+  "test_source": "unchanged from published416b64d",
+  "derivation": "Read-only SQLite query inspected during this turn; temporary pytest DB later pruned by pytest retention; no DB/state bytes copied",
+  "failure_receipt": "reviewed-native.xml",
+  "run": "8e7adb8cfffb42618364b80e517b6a35",
+  "observation": "fc9fa21d19e5444fb41bf9c1d6b396f0",
+  "script_artifact": "89c34386a11045de858b6c189ec47e13",
+  "error": "Scene operation timeout",
+  "expected": 1,
+  "observed": 2,
+  "baseline": 0,
+  "memory_hex": "0200",
+  "source_address": "1000:0100",
+  "guest_elapsed_ms": 1070,
+  "polls": 8,
+  "scene_matched": true,
+  "complete": false,
+  "classification": "unresolved; installed published baseline also failed at a different action boundary",
+  "native_state_bytes_included": false,
+  "project_database_included": false
+}

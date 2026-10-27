@@ -1,0 +1,78 @@
+{
+  "status": "partial: focused feature checks pass; broad scene regression unresolved",
+  "scope": "Unreleased working-source DOS name aliases and screenshot pre/post hooks",
+  "repository_baseline": "2544b604bd5736d5f754fbdc2b099cd8905b609a",
+  "published_release_commit": "416b64d9f4bfcf56e2876656d43f1d6a3d6cfdae",
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "counts": {
+    "reviewed-native.xml": {
+      "tests": 378,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "qemu-reviewed.xml": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "reviewed-installed.xml": {
+      "tests": 46,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "review-before.xml": {
+      "tests": 4,
+      "failures": 4,
+      "errors": 0,
+      "skipped": 0
+    },
+    "pe-guards.xml": {
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "baseline-restore/baseline-restore-19.xml": {
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "source_sha256": {
+    "src/fdisbull/dos_launch.py": "ebecd4d4941797297073c2d18404be407f8df03f7787542f645fed7631e2263f",
+    "src/fdisbull/screenshot_hooks.py": "517f27ea1c986be150d2c398a152e33566804cfadb97057324126bcc89212955",
+    "src/fdisbull/debugger.py": "30ce84938a83ea5a0d348c156f7dfe7e1f237701fbe782a58379a5c1e5a7baff",
+    "src/fdisbull/debug_script.py": "ee7a146e11d1a42be8ccf9895c621c68c4a0dd2b3cdee4cbce4e7ab9b03d643f",
+    "src/fdisbull/dos_qemu.py": "c04f47f4f0e74d488f5d7e8241a702a36cf7f0523c3eec1ad5166696be0c61a3",
+    "src/fdisbull/guest_assets.py": "7e5019b6f7ed34442c5547f8746f0f656e44c1d28bcc509a28e5c055948a20ae",
+    "src/fdisbull/cli.py": "5f374840f3fccba47d376d2cd84f841681ae4a10313ee15efb78fc09fc17ce40",
+    "tests/test_debugger.py": "40748717202c0c8fc39abde5484e85075dd0db366099cb92af2e7f3ddd843070",
+    "tests/test_dos_launch.py": "4bf81ac23b06a965d92070fe8b1f12e23565531f7221874124d4f8fac923805b",
+    "tests/test_dos_qemu.py": "1f7d54aa41ab37fe2de1ade49769130b054bc255789c848311d9f91310167920",
+    "tests/test_screenshot_hooks.py": "c2833422450b8383b6a6662452764a5f55f5e84a18bdc1b04f8c1f0f70696f55",
+    "tests/test_run_boundaries.py": "c35a55a4ab1a6c9fd9ad670ec6894fa9859c558b9ae2f865613f934b21d521a0",
+    ".github/workflows/native-debugger.yml": "af0037e5372f4a82ac7d45499764ada0316be233206ff277d3304fe7b3fedf04"
+  },
+  "claims": [
+    "authored native DOS pixel visibility, suspended/restored layers, grid, click-frame, persistence and source-version isolation",
+    "native breakpoint stop preservation and failure cleanup",
+    "final layer-change frame barrier and explicit freshness-only policy rejection",
+    "structural MZ aliases, neighboring resources, trace/image export and native restore after restart",
+    "real DOS-in-QEMU aliases and prepared screenshot layer restoration",
+    "deterministic host transport model for pause/terminal-stop races",
+    "large-overlay upload preflight and atomic pathname replacement cleanup regression"
+  ],
+  "limits": [
+    "No actual AGI or new DinoPark gameplay qualification in these new checks",
+    "No hosted Linux CI for uncommitted source",
+    "Broad native suite:377 passed,1 existing scene test failed; baseline also failed at a different point; cause unresolved",
+    "Screenshot hooks currently DOS only",
+    "Concurrent external alias writes through open handles during teardown unsupported",
+    "Published/system-wide 0.18.0 remains fixed; the private source candidate is not a release replacement"
+  ]
+}

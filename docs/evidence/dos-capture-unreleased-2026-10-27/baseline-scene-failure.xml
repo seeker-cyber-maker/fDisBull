@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="1.383" timestamp="2026-10-27T03:02:05.410300-04:00" hostname="Studio.local"><testcase classname="tests.test_scene_improvements" name="test_relative_outcomes_repeat_restore_and_compact_saved_script" time="1.190"><failure message="fdisbull.scenes.SceneError: Scene operation timeout; observation ac6488c94128454b8337ca27f59b4631">self = &lt;fdisbull.scenes.SceneHandle object at 0x10a2d9550&gt;, compact = True
+args = ('test.button',), kwargs = {'handle_popups': False, 'timeout_ms': None}
+
+    @wraps(method)
+    def wrapped(self,*args,compact=False,**kwargs):
+        if type(compact) is not bool:raise ValueError('compact must be boolean')
+&gt;       try:result=method(self,*args,**kwargs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/Shared/fDisBull/releases/0.18.0-416b64d/venv/lib/python3.13/site-packages/fdisbull/scenes.py:328: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/Shared/fDisBull/releases/0.18.0-416b64d/venv/lib/python3.13/site-packages/fdisbull/scenes.py:570: in act
+    outcome=self._wait_outcome(obj['outcome'],baseline=before.get('baseline'),**budgets())
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;fdisbull.scenes.SceneHandle object at 0x10a2d9550&gt;
+predicate = {'compare': {'left': {'memory': {'address': '1000:0100', 'type': 'u16'}}, 'op': 'eq', 'right': {'add': [{'before': {'memory': {...}}}, 1]}}}
+guest_ms = 1000, timeout_ms = 2995
+baseline = {'run': '7a7a7393c77a4b6bb57e11e55faa996c', 'version': 1, 'scene_revision': 'c139e4de1be74a2990eb5953a8ebd3a1', 'frame': {'frame_id': 9, 'mode_id': 5, 'state_revision': 5}, ...}
+
+    def _wait_outcome(self, predicate, *, guest_ms, timeout_ms, baseline=None):
+        started=time.monotonic();elapsed=0;polls=[]
+        while True:
+            result=self._observe(extra=predicate,baseline=baseline)
+            # A destination match is independent of the old scene name; keep
+            # conflicts, absent captures and blocking modals as explicit failures.
+            ok=result.get('predicate_matched') is True and result['status'] not in ('ambiguous','unavailable')
+            polls.append(dict(frame_id=result.get('frame',{}).get('frame_id'),matched=ok))
+            remaining=timeout_ms-int((time.monotonic()-started)*1000)
+            if ok and remaining&gt;0:
+                result.update(status='matched',complete=True,polls=polls,guest_elapsed_ms=elapsed)
+                return result
+            if remaining&lt;=0 or elapsed&gt;=guest_ms or result['status'] in ('ambiguous','unavailable') or len(polls)&gt;=1000:
+                result.update(status='timeout' if result['status'] in ('mismatch','matched','blocked') else result['status'],complete=False,polls=polls,guest_elapsed_ms=elapsed)
+&gt;               raise SceneError(self._store(result,diagnostic=True))
+E               fdisbull.scenes.SceneError: Scene operation timeout; observation ac6488c94128454b8337ca27f59b4631
+
+/Users/Shared/fDisBull/releases/0.18.0-416b64d/venv/lib/python3.13/site-packages/fdisbull/scenes.py:589: SceneError
+
+The above exception was the direct cause of the following exception:
+
+counter_game = (PosixPath('/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-728/test_relative_outcomes_...folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-728/test_relative_outcomes_repeat_0/game/COUNT.EXE'))
+emulator = '/Users/Shared/fDisBull/releases/0.18.0-416b64d/backend/native-macos-arm64/dosbox-x'
+
+    def test_relative_outcomes_repeat_restore_and_compact_saved_script(counter_game,emulator):
+        path,binary=counter_game
+        with Project(path) as p,p.debugger(emulator,binary.parent) as d:
+            d.run(guest_ms=100,timeout_ms=3000,fast_forward=True)
+            scene=p.debug_save_scene('counter',counter_definition(d.screenshot()))
+            checkpoint=d.save_state('zero.sav')
+            for expected in (1,2):
+&gt;               result=d.scene_act('counter','test.button',compact=True)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_scene_improvements.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/Shared/fDisBull/releases/0.18.0-416b64d/venv/lib/python3.13/site-packages/fdisbull/scenes.py:361: in scene_act
+    def scene_act(self, scene, object, *, handle_popups=False, timeout_ms=None, compact=False):return self.scene(scene).act(object,handle_popups=handle_popups,timeout_ms=timeout_ms,compact=compact)
+                                                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;fdisbull.scenes.SceneHandle object at 0x10a2d9550&gt;, compact = True
+args = ('test.button',), kwargs = {'handle_popups': False, 'timeout_ms': None}
+
+    @wraps(method)
+    def wrapped(self,*args,compact=False,**kwargs):
+        if type(compact) is not bool:raise ValueError('compact must be boolean')
+        try:result=method(self,*args,**kwargs)
+        except SceneError as error:
+&gt;           if compact:raise SceneError(compact_result(error.result)) from error
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           fdisbull.scenes.SceneError: Scene operation timeout; observation ac6488c94128454b8337ca27f59b4631
+
+/Users/Shared/fDisBull/releases/0.18.0-416b64d/venv/lib/python3.13/site-packages/fdisbull/scenes.py:330: SceneError</failure></testcase></testsuite></testsuites>

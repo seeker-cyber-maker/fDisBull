@@ -1,0 +1,15 @@
+{
+  "status": "locally reconciled; not merged on GitHub",
+  "heads": {
+    "1": "120580f2203c071f9fb2616c177d0eb78e65f264",
+    "2": "23002fe937b22be0130a3b644e995bab4995c2cc",
+    "3": "bdebd9d877c2402722130fc6b1254fd54ef7bda0",
+    "4": "a508c67aec74a674c9d1fbc67d13a00fc5eecbe4",
+    "5": "78b2f5b35321b1b58a30da69d6467fe0f266ad3b",
+    "6": "52980c55fea176a9c6320c946eecb8778d28ca8a",
+    "8": "6d87814cdcbf5c82eb3c1ea687568238fb993884"
+  },
+  "draft_pr7": "left separate",
+  "release_notes_correction": "PR2 methodology changes documented under unreleased0.19, not published0.18",
+  "keyboard": "PR1 and4 both retained"
+}

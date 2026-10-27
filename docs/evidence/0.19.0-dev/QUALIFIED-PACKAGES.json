@@ -1,0 +1,22 @@
+{
+  "version": "0.19.0.dev0",
+  "release": false,
+  "artifacts": {
+    "fdisbull-0.19.0.dev0-py3-none-any.whl": {
+      "size": 393187,
+      "sha256": "ccb28b10d828868ff7a016ec53910bbcca720e79346e734c9ff4667e2fbf7bc7"
+    },
+    "fdisbull-0.19.0.dev0-tool.zip": {
+      "size": 953959,
+      "sha256": "624b1816b68f84ed671f4a4865ae971ac47515889104fe5ecea941556c424d43"
+    },
+    "fdisbull-0.19.0.dev0.tar.gz": {
+      "size": 793674,
+      "sha256": "4e21a4729a4513b9429de18be17d4b7c7716cd3e1c71bb8346bdaa147451fd22"
+    }
+  },
+  "excluded_unrelated": [
+    "docs/NEXT_RELEASE_DECOMPILER_DEBUGGER.md",
+    "docs/VERIFICATION-DINOPARK-NEWGAME-PROFIT.md"
+  ]
+}

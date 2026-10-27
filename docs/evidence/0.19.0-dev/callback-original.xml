@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="1.230" timestamp="2026-10-27T04:06:49.098954-04:00" hostname="Studio.local"><testcase classname="tests.test_keyboard" name="test_real_continue_at_bios_callback_does_not_invent_keyboard_input" time="1.063"><failure message="AssertionError: assert '0100' == '0000'&#10;  &#10;  - 0000&#10;  + 0100">tmp_path = PosixPath('/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-737/test_real_continue_at_bios_cal0')
+emulator = '/Users/Shared/fDisBull/releases/0.18.0-416b64d/backend/native-macos-arm64/dosbox-x'
+
+    def test_real_continue_at_bios_callback_does_not_invent_keyboard_input(tmp_path,emulator):
+        # Each completed BIOS read must account for exactly one counter increment.
+        binary=tmp_path/'CALLBACK.EXE'
+        binary.write_bytes(mz_file(bytes.fromhex('b81300cd100e1f30e4cd16ff060001ebf6')+bytes(1024),ss=0,sp=0x400))
+        with Project.create(tmp_path/'callback.fdb',binary) as project:
+            project.analyze(max_instructions=30)
+            with project.debugger(emulator,tmp_path) as debug:
+                # Native-ROM instrumentation for this backend regression only. The
+                # project API continues to reject addresses outside its MZ regions.
+                vector=debug.call('memory.read',dict(address=dict(space='linear',offset='0x00000058'),length=4))
+                data=base64.b64decode(vector['data_base64'],validate=True)
+                offset=int.from_bytes(data[:2],'little')+1
+                segment=int.from_bytes(data[2:],'little')
+                address=dict(space='segmented',segment=f'0x{segment:04X}',offset=f'0x{offset:08X}')
+                opcode=debug.call('memory.read',dict(address=address,length=4))
+                assert base64.b64decode(opcode['data_base64'],validate=True)[:2]==b'\xfe\x38'
+                bp=debug.call('breakpoints.create',dict(kind='execution',address=address,once=False))
+                assert debug.run(timeout_ms=5000,fast_forward=True)['outcome']=='breakpoint'
+                registers=debug.registers()
+                assert int(registers['cs'],16)==segment and int(registers['ip'],16)==offset
+                assert debug.memory('1000:0100',length=2)['hex']=='0000'
+                checkpoint=debug.save_state('bios-callback.sav')
+                debug.delete_breakpoint(bp['breakpoint_id'])
+                for restored in (False,True):
+                    if restored:debug.load_state(checkpoint['artifact'])
+                    assert debug.run(guest_ms=100,timeout_ms=5000,fast_forward=True)['outcome']=='guest_time'
+&gt;                   assert debug.memory('1000:0100',length=2)['hex']=='0000'
+E                   AssertionError: assert '0100' == '0000'
+E                     
+E                     - 0000
+E                     + 0100
+
+tests/test_keyboard.py:38: AssertionError</failure></testcase></testsuite></testsuites>

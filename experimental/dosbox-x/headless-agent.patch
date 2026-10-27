@@ -965,10 +965,15 @@ index 0000000..efc01ae
 +
 +#endif
 diff --git a/include/debug.h b/include/debug.h
-index f4ee552..601afc4 100644
+index f4ee552..c9e2b80 100644
 --- a/include/debug.h
 +++ b/include/debug.h
-@@ -37,8 +37,16 @@ bool DEBUG_AgentCanStartTarget(void);
+@@ -33,12 +33,21 @@ Bitu DEBUG_EnableDebugger(void);
+ #if C_DEBUG
+ bool DEBUG_AgentStep(bool over, bool* continued);
+ bool DEBUG_AgentResumeAfterTerminate(void);
++bool DEBUG_AgentContinue(void);
+ bool DEBUG_AgentCanStartTarget(void);
  uint64_t DEBUG_AgentEntryBreakpointSequence(void);
  bool DEBUG_AgentCreateExecutionBreakpoint(uint16_t seg, uint32_t off, bool once, uintptr_t* handle);
  bool DEBUG_AgentCreateMemoryBreakpoint(uint16_t seg, uint32_t off, bool protected_mode, bool linear, uintptr_t* handle);
@@ -1067,10 +1072,20 @@ index 437b7c3..fd601cd 100644
  noinst_LIBRARIES = libagent.a
  
 diff --git a/src/agent/debugger/debugger_adapter.cpp b/src/agent/debugger/debugger_adapter.cpp
-index 465f7e7..4e04848 100644
+index 465f7e7..10c3426 100644
 --- a/src/agent/debugger/debugger_adapter.cpp
 +++ b/src/agent/debugger/debugger_adapter.cpp
-@@ -491,6 +491,17 @@ bool DebuggerAdapter::CreateBreakpoint(const BreakpointKind kind,
+@@ -241,8 +241,7 @@ bool DebuggerAdapter::Continue(std::string* error) const
+ 
+ #if C_DEBUG
+     DEBUG_AgentClearLastBreakpoint();
+-    char command[] = "RUN";
+-    if (ParseCommand(command))
++    if (DEBUG_AgentContinue())
+         return true;
+ 
+     if (error != NULL)
+@@ -491,6 +490,17 @@ bool DebuggerAdapter::CreateBreakpoint(const BreakpointKind kind,
                  *error = "Debugger rejected the execution breakpoint";
              return false;
          }
@@ -2393,7 +2408,7 @@ index e582cc0..1cd5cac 100644
  		switch (core.opcode_index+Fetchb()) {
  		#include "core_normal/prefix_none.h"
 diff --git a/src/debug/debug.cpp b/src/debug/debug.cpp
-index 36c909c..4e1067c 100644
+index 36c909c..a14926b 100644
 --- a/src/debug/debug.cpp
 +++ b/src/debug/debug.cpp
 @@ -45,6 +45,7 @@ using namespace std;
@@ -2439,7 +2454,24 @@ index 36c909c..4e1067c 100644
  	// Quick exit if there are no breakpoints
  	if (BPoints.empty()) return false;
  
-@@ -1175,6 +1185,46 @@ uint64_t DEBUG_AgentEntryBreakpointSequence(void)
+@@ -1161,6 +1171,16 @@ bool DEBUG_AgentResumeAfterTerminate(void)
+ 	return true;
+ }
+ 
++bool DEBUG_AgentContinue(void)
++{
++    if (!debugging || debug_running)
++        return false;
++    // Continue once past an execution breakpoint at the current instruction.
++    // The normal loop must dispatch any callback returned by the decoder.
++    skipFirstInstruction = true;
++    return DEBUG_AgentResumeAfterTerminate();
++}
++
+ bool DEBUG_AgentCanStartTarget(void)
+ {
+ #if !defined(OSFREE)
+@@ -1175,6 +1195,46 @@ uint64_t DEBUG_AgentEntryBreakpointSequence(void)
  	return agent_entry_breakpoint_sequence.load(std::memory_order_relaxed);
  }
  
@@ -2486,7 +2518,7 @@ index 36c909c..4e1067c 100644
  bool DEBUG_AgentCreateExecutionBreakpoint(uint16_t seg, uint32_t off, bool once, uintptr_t* handle)
  {
  	if (handle == nullptr || GetAddress(seg,off) == mem_no_address)
-@@ -1221,7 +1271,10 @@ bool DEBUG_AgentCreateMemoryBreakpoint(uint16_t seg,
+@@ -1221,7 +1281,10 @@ bool DEBUG_AgentCreateMemoryBreakpoint(uint16_t seg,
  
  bool DEBUG_AgentDeleteBreakpoint(uintptr_t handle)
  {
@@ -2498,7 +2530,7 @@ index 36c909c..4e1067c 100644
  }
  
  uintptr_t DEBUG_AgentConsumeLastBreakpoint(void)
-@@ -1231,6 +1284,16 @@ uintptr_t DEBUG_AgentConsumeLastBreakpoint(void)
+@@ -1231,6 +1294,16 @@ uintptr_t DEBUG_AgentConsumeLastBreakpoint(void)
  
  void DEBUG_AgentClearLastBreakpoint(void)
  {
@@ -2515,7 +2547,7 @@ index 36c909c..4e1067c 100644
  	(void)CBreakpoint::ConsumeLastTriggered();
  }
  
-@@ -4814,6 +4877,9 @@ static int dbg_getch_vt(void) {
+@@ -4814,6 +4887,9 @@ static int dbg_getch_vt(void) {
  #endif
  
  uint32_t DEBUG_CheckKeys(void) {
@@ -2525,7 +2557,7 @@ index 36c909c..4e1067c 100644
  	Bits ret=0;
  	bool numberrun = false;
  	bool skipDraw = false;
-@@ -5287,7 +5353,12 @@ Bitu DEBUG_Loop(void) {
+@@ -5287,7 +5363,12 @@ Bitu DEBUG_Loop(void) {
          // Interrupt started ? - then skip it
          uint16_t oldCS	= SegValue(cs);
          uint32_t oldEIP	= reg_eip;
@@ -2539,7 +2571,7 @@ index 36c909c..4e1067c 100644
          SDL_Delay(1);
  
  #if (C_DYNAMIC_X86)
-@@ -5359,6 +5430,9 @@ void DEBUG_Enable_Handler(bool pressed) {
+@@ -5359,6 +5440,9 @@ void DEBUG_Enable_Handler(bool pressed) {
  	if (!pressed || control->opt_display2)
  		return;
  
@@ -2549,7 +2581,7 @@ index 36c909c..4e1067c 100644
      if (hidedebugger) {
          hidedebugger=false;
  #if defined(WIN32) && !defined(_WIN32_WINDOWS)
-@@ -5377,6 +5451,9 @@ void DEBUG_Enable_Handler(bool pressed) {
+@@ -5377,6 +5461,9 @@ void DEBUG_Enable_Handler(bool pressed) {
          if (runnormal) return;
      }
  
@@ -2559,7 +2591,7 @@ index 36c909c..4e1067c 100644
      /* this command is now a toggle! */
      /* However this should break back into the debugger if RUNWATCH is active */
      if (debug_running) {
-@@ -5416,6 +5493,9 @@ void DEBUG_Enable_Handler(bool pressed) {
+@@ -5416,6 +5503,9 @@ void DEBUG_Enable_Handler(bool pressed) {
      if (!isatty(0) || !isatty(1) || !isatty(2))
  	    allow = false;
  
@@ -2569,7 +2601,7 @@ index 36c909c..4e1067c 100644
      if (!allow) {
  # if defined(MACOSX)
  	    LOG_MSG("Debugger in Mac OS X is not available unless you start DOSBox-X from a terminal or from the Terminal application");
-@@ -5464,6 +5544,9 @@ void DEBUG_Enable_Handler(bool pressed) {
+@@ -5464,6 +5554,9 @@ void DEBUG_Enable_Handler(bool pressed) {
  }
  
  void DEBUG_DrawScreen(void) {
@@ -2579,7 +2611,7 @@ index 36c909c..4e1067c 100644
  	DrawData();
  	DrawCode();
      DrawInput();
-@@ -6185,6 +6268,9 @@ void DBGBlock::set_data_view(unsigned int view) {
+@@ -6185,6 +6278,9 @@ void DBGBlock::set_data_view(unsigned int view) {
  }
  
  void DEBUG_SetupConsole(void) {

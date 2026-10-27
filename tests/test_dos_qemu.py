@@ -28,6 +28,51 @@ def test_dos_qemu_preflight_rejects_implicit_private_assets_before_launch(tmp_pa
         assert project.debug_runs()['runs']==[]
 
 
+def test_dos_qemu_alias_upload_budget_is_checked_before_spawn(tmp_path):
+    # A valid small MZ module with a large uninterpreted overlay remains an MZ;
+    # duplicating its executable name must still fit the explicit upload budget.
+    binary=tmp_path/'AGI';binary.write_bytes(mz_file()+bytes(32*1024*1024))
+    with Project.create(tmp_path/'large.fdb',binary) as project:
+        with pytest.raises(ValueError,match='including executable alias exceeds'):
+            project.debugger('/does/not/exist',tmp_path,backend='dosbox-qemu',kernel='missing',initramfs='missing')
+        assert project.debug_runs()['runs']==[]
+
+
+@pytest.mark.parametrize('filename',['AGI','A long executable.SAV'])
+def test_real_dos_qemu_structural_mz_alias_stays_in_guest(tmp_path,filename):
+    qemu,kernel,runtime=inputs()
+    binary=tmp_path/filename
+    binary.write_bytes(mz_file(bytes.fromhex('b81300cd10b83412ebfe')+bytes(512),ss=0,sp=0x200))
+    original=binary.read_bytes()
+    with Project.create(tmp_path/'alias.fdb',binary) as project:
+        project.analyze(max_instructions=8)
+        with project.debugger(qemu,tmp_path,backend='dosbox-qemu',kernel=kernel,initramfs=runtime) as debug:
+            assert debug.metadata['source_filename']==filename and debug.metadata['target_aliased']
+            assert not (tmp_path/debug.metadata['target']).exists()
+            bp=debug.breakpoint('1000:0008')
+            assert debug.run(timeout_ms=10000,fast_forward=True)['outcome']=='breakpoint'
+            assert int(debug.registers()['general']['eax'],16)==0x1234
+            debug.delete_breakpoint(bp['breakpoint_id'])
+            debug.run(guest_ms=60,timeout_ms=10000,fast_forward=True)
+            state=debug.save_state()
+            trace=debug.trace(count=4)
+            frame=debug.screenshot('alias.png')
+            layer=debug.layer_patch('temporary capture layer','1000:0006',expected_hex='3412',data_hex='7856',kind='execute')['layer']
+            debug.screenshot_hooks(dict(suspend_layers=[layer],pre=[dict(op='run',guest_ms=60,fast_forward=True)]))
+            prepared=debug.screenshot('prepared-alias.png')
+            assert prepared['metadata']['screenshot_hooks']['capture_layers']==[]
+            assert prepared['screenshot_hooks']['restore']==dict(ok=True,active=[layer])
+            debug.screenshot_hooks({});debug.layers([])
+            debug.load_state(state['artifact'])
+            assert int(debug.registers()['general']['eax'],16)==0x1234
+        assert debug.rpc.process.poll() is not None
+        project.debug_export(trace['artifact'],tmp_path/'trace.json')
+        project.debug_export(frame['artifact'],tmp_path/'frame.png')
+        assert len(json.loads((tmp_path/'trace.json').read_text())['events'])==4
+        assert (tmp_path/'frame.png').read_bytes().startswith(b'\x89PNG\r\n\x1a\n')
+    assert binary.read_bytes()==original
+
+
 def test_real_dos_qemu_same_api_layers_watches_states_grid_click_machine_context_and_restart(tmp_path):
     qemu,kernel,runtime=inputs()
     # Mode 13h; DS=CS; AX immediate; BX reads that immediate as data;

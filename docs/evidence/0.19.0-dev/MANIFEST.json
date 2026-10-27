@@ -1,0 +1,96 @@
+{
+  "files": {
+    "callback-original.json": {
+      "size": 5685,
+      "sha256": "4d99cd20556797a84c63ddd1e524f973e86e48eb9cf3d125d31c3aef7e7ff4ec"
+    },
+    "PACKAGE-CONTENT-IDENTITY.json": {
+      "size": 245,
+      "sha256": "de02406a64395037d66a0096634e02318d08b83c153a1ecee0300bd41beacc3e"
+    },
+    "linux-ordinary.xml": {
+      "size": 241155,
+      "sha256": "7add0f8d557200f94f449b081e929846a2da72c8fcc6fddb3744da0320e36d5b"
+    },
+    "native-stable-identity.json": {
+      "size": 291,
+      "sha256": "c065b28e009d258b6becfd665c9352b56f8b5aaf1156e60ded9f264addf0bde9"
+    },
+    "combined-pr-skill.xml": {
+      "size": 371,
+      "sha256": "b957cf78df45bfffe270141a5a7b292aed23d3e5391d56e558f6a6adf6370050"
+    },
+    "native-stable.xml": {
+      "size": 8225,
+      "sha256": "60c7a4c26645036884b11f2d374e45b2b18540bd83a572ede425275331046ea6"
+    },
+    "combined-pr-keyboard.xml": {
+      "size": 2305,
+      "sha256": "41fc96f034a77e98f32c8c59e8ce30b2df3d9516758cdf75d4d8836452924010"
+    },
+    "installed-native.xml": {
+      "size": 8711,
+      "sha256": "132a42a88df7a09accb1d1d454b2e5ff6c8adf2b4fc0e58d52566be24973f140"
+    },
+    "native-layers.xml": {
+      "size": 58702,
+      "sha256": "5ef29f55dae911f392408e79db68ada2af81b488e57d13720b1ee99034a890d1"
+    },
+    "callback-original.xml": {
+      "size": 3010,
+      "sha256": "5f63352b0400663a8a9bc9ab33c001bc8a79317d7a45b1fb32191e87cc8943eb"
+    },
+    "PACKAGE-SOURCE.json": {
+      "size": 29488,
+      "sha256": "d0c61fab6f69cf59017a4602c86f538498ccbad6c9819acb92a2df892ab19652"
+    },
+    "breakpoint-rehits.json": {
+      "size": 891,
+      "sha256": "12e01e4fd24a79efecc9f21874a522d6f91a802845b74eacf3275b41c092c035"
+    },
+    "linux-exit-codes.json": {
+      "size": 66,
+      "sha256": "2b7bab979fc4b2730432ce0230c5e9694be657f4120dfc1a81e3ad9ced8e5c17"
+    },
+    "backend-source-replay.json": {
+      "size": 479,
+      "sha256": "057175b9b587914e87811ae2f4f7058be129991299e13087f3c6720a94447e25"
+    },
+    "callback-native-fix.patch": {
+      "size": 1236,
+      "sha256": "3572f35c9cb56a050da31740541ea5b09e332eea805a2398886ab8295048b677"
+    },
+    "native-layers-identity.json": {
+      "size": 1141,
+      "sha256": "1369cd495e554c52c1bcc3e254a7bd744f5abb6a424cc76467270e91a1fcb2f0"
+    },
+    "callback-fixed.json": {
+      "size": 5685,
+      "sha256": "6e56009cc7f6725c893c5d1eddb7a420e1c5973aa30cfd0d8768a6495c6c5d88"
+    },
+    "VERIFICATION.json": {
+      "size": 4878,
+      "sha256": "8041b6c3fa97a096180d84461bcab0ca35cdd20b2a0f9e72d337ba0eb78a1695"
+    },
+    "LOCAL-PR-INTEGRATION.json": {
+      "size": 627,
+      "sha256": "050b25a04c49c43f632235ddaa2638d7e77cc46f9a060daa016131fc6b6cda9c"
+    },
+    "QUALIFIED-PACKAGES.json": {
+      "size": 661,
+      "sha256": "5c431cc0be1f297abf2fc648b66682cd2ee58a0eb92646fa2bc1ddf5c4b4ff67"
+    },
+    "linux-identity.json": {
+      "size": 1128,
+      "sha256": "d41180b4f2b69108886202ac6ec290f72f5b65896697d911c5a9addc4b499cbc"
+    },
+    "callback-fixed.xml": {
+      "size": 379,
+      "sha256": "e75ad3cbe7511db0595b470ad85bc8316a351065ea23acb062388b8bf242ca4d"
+    },
+    "combined-pr-distribution.xml": {
+      "size": 1931,
+      "sha256": "d7cd8b23bb716c6df41c3b815b9b5b64c1145151e8203197f34bae86a642ec51"
+    }
+  }
+}

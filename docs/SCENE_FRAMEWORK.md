@@ -154,10 +154,13 @@ fdisbull debug-scene-overlay project.fdb REVISION_ID
 fdisbull agent-skill
 ```
 
-`agent-skill` returns the bundled [fdisbull-investigate skill](../src/fdisbull/skills/fdisbull-investigate/SKILL.md)
-and its scene reference. It prioritizes expected decision value per cost along
-with evidence-backed confidence. It is included in wheels, source distributions
-and tool ZIPs; it does not depend on the author's local skill directory.
+`agent-skill` returns the bundled [fdisbull-investigate skill](../src/fdisbull/skills/fdisbull-investigate/SKILL.md),
+its scene, behavioral-investigation methodology and runtime-navigation
+references: four resources in the unreleased 0.19 source. Published 0.18.0
+contains the entrypoint and scene reference only. The current skill
+prioritizes expected decision value per cost along with evidence-backed
+confidence. It is included in wheels, source distributions and tool ZIPs; it
+does not depend on the author's local skill directory.
 
 The [DinoPark acceptance driver](../examples/dinopark/verify_scenes.py) uses a
 private NEW GAME copy and exports only authored evidence. Native state bytes,

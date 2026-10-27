@@ -14,6 +14,7 @@ OPERATIONS = {
     'scene-click':'scene_click','scene-act':'scene_act','scene-wait':'scene_wait',
     'keyboard.press':'keyboard_press','keyboard.type':'keyboard_type','keyboard.state':'keyboard_state',
     'wait':'wait',
+    'screenshot-hooks':'screenshot_hooks',
     'run':'run', 'click':'click', 'click-frame':'click_frame', 'screenshot':'screenshot', 'trace':'trace',
     'breakpoint':'breakpoint', 'delete-breakpoint':'delete_breakpoint',
     'save-state':'save_state', 'load-state':'load_state',
@@ -65,6 +66,9 @@ def validate_script(script):
                     if op=='wait':
                         from .debug_wait import validate_wait
                         validate_wait(**params)
+                    if op=='screenshot-hooks' and params.get('configuration') is not None:
+                        from .screenshot_hooks import validate_configuration
+                        validate_configuration(params['configuration'])
                 else:
                     raise ValueError('Unknown script operation: '+op)
                 expanded.append(step)
@@ -76,7 +80,7 @@ def validate_script(script):
     return expanded
 
 
-def execute_script(session, script, *, timeout_ms=60000, bindings=None):
+def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_step=None):
     bounded(timeout_ms,'timeout_ms',1,600000)
     steps = validate_script(script) # Reject malformed later steps before any guest mutation.
     if getattr(session,'script_operations',None) is not None:
@@ -127,6 +131,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None):
                     raise ValueError(f"Run expected {expected}, observed {result['outcome']}")
             if step['op']=='trace' and not result['metadata']['complete']:
                 raise ValueError('Trace stopped before the requested event count')
+            if _after_step is not None:_after_step(step,result)
             if 'as' in step:
                 results[step['as']] = result
             record.update(ok=True,result=result)

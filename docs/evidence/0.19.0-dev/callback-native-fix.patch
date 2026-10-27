@@ -1,0 +1,41 @@
+--- a/include/debug.h
++++ b/include/debug.h
+@@ -33,6 +33,7 @@
+ #if C_DEBUG
+ bool DEBUG_AgentStep(bool over, bool* continued);
+ bool DEBUG_AgentResumeAfterTerminate(void);
++bool DEBUG_AgentContinue(void);
+ bool DEBUG_AgentCanStartTarget(void);
+ uint64_t DEBUG_AgentEntryBreakpointSequence(void);
+ bool DEBUG_AgentCreateExecutionBreakpoint(uint16_t seg, uint32_t off, bool once, uintptr_t* handle);
+--- a/src/debug/debug.cpp
++++ b/src/debug/debug.cpp
+@@ -1170,6 +1170,16 @@
+ 	DOSBOX_SetNormalLoop();
+ 	GFX_SetTitle(-1,-1,-1,is_paused);
+ 	return true;
++}
++
++bool DEBUG_AgentContinue(void)
++{
++    if (!debugging || debug_running)
++        return false;
++    // Continue once past an execution breakpoint at the current instruction.
++    // The normal loop must dispatch any callback returned by the decoder.
++    skipFirstInstruction = true;
++    return DEBUG_AgentResumeAfterTerminate();
+ }
+ 
+ bool DEBUG_AgentCanStartTarget(void)
+--- a/src/agent/debugger/debugger_adapter.cpp
++++ b/src/agent/debugger/debugger_adapter.cpp
+@@ -241,8 +241,7 @@
+ 
+ #if C_DEBUG
+     DEBUG_AgentClearLastBreakpoint();
+-    char command[] = "RUN";
+-    if (ParseCommand(command))
++    if (DEBUG_AgentContinue())
+         return true;
+ 
+     if (error != NULL)

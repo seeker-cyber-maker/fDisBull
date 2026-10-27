@@ -1,5 +1,14 @@
 # DOSBox-X headless debugger
 
+The current 0.19 development patch also fixes agent continuation from BIOS
+callbacks. Continue resumes through the normal emulator loop, rather than
+executing and discarding one decoder result inside the debugger's `RUN`
+command. The previous path could skip an INT 16h handler and return stale AX,
+producing an apparent extra input with no keyboard event. See the
+[deterministic regression and verification](../../docs/DOS_CONTINUE_CALLBACK_FIX.md).
+Existing published binary identities below remain historical; rebuild to obtain
+the correction. This changes agent Continue, not explicit raw debugger stepping.
+
 The experimental backend now passes real headless DOS acceptance on macOS Apple Silicon. It runs an actual DOSBox-X emulator through inherited POSIX pipes. Screenshots come from completed guest frames; click acceptance comes from the guest's INT33 counters and callbacks.
 
 A subsequent [actual DinoPark session](DINOPARK-VERIFICATION.md) also passed: title menu to bank to Dino City to Real Estate, with a game-code breakpoint and a 512-instruction trace showing the game consuming the New Game click. The backend source and executable were unchanged for that verification.

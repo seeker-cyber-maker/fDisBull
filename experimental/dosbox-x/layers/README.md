@@ -1,5 +1,13 @@
 # Temporal code layers backend
 
+The current 0.19 development patch also includes the
+[callback-safe continuation fix](../../../docs/DOS_CONTINUE_CALLBACK_FIX.md).
+The normal emulator loop dispatches the pending BIOS callback when an agent
+continues from its instruction boundary. No keyboard hold duration or scene
+predicate was changed to hide the failure. Old native state archives remain
+bound to their recorded backend identity; the previous executables remain
+necessary when those exact identities are required.
+
 The current complete patch adds `video.probe` for sparse native RGB samples,
 with frame/mode metadata and no PNG payload. The shared persistent scene model
 and named input are described in [SCENE_FRAMEWORK.md](../../../docs/SCENE_FRAMEWORK.md).

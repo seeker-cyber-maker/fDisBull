@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="4" time="3.337" timestamp="2026-10-27T02:52:22.566085-04:00" hostname="Studio.local"><testcase classname="tests.test_screenshot_hooks" name="test_real_freshness_only_and_layer_change_after_repaint_reject_stale_frames[freshness-only]" time="1.092"><failure message="Failed: DID NOT RAISE ScreenshotHookError">sprite = (PosixPath('/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-702/test_real_freshness_onl...0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+emulator = '/Users/Shared/fDisBull/releases/0.18.0-416b64d/backend/native-macos-arm64/dosbox-x'
+case = 'freshness-only'
+
+    @pytest.mark.parametrize('case',['freshness-only','layer-after-repaint'])
+    def test_real_freshness_only_and_layer_change_after_repaint_reject_stale_frames(sprite,emulator,case):
+        path,binary,_=sprite
+        with Project(path) as project,project.debugger(emulator,binary.parent) as debug:
+            layer=hide_sprite(debug);debug.layers([])
+            debug.run(guest_ms=60,timeout_ms=3000,fast_forward=True)
+            config=(dict(require_fresh_frame=True) if case=='freshness-only' else dict(pre=[
+                    dict(op='run',guest_ms=60,fast_forward=True),dict(op='layer-enable',layer=layer)]))
+            debug.screenshot_hooks(config)
+&gt;           with pytest.raises(ScreenshotHookError) as failed:debug.screenshot()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE ScreenshotHookError
+
+tests/test_screenshot_hooks.py:141: Failed</failure></testcase><testcase classname="tests.test_screenshot_hooks" name="test_real_freshness_only_and_layer_change_after_repaint_reject_stale_frames[layer-after-repaint]" time="0.632"><failure message="Failed: DID NOT RAISE ScreenshotHookError">sprite = (PosixPath('/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-702/test_real_freshness_onl...0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+emulator = '/Users/Shared/fDisBull/releases/0.18.0-416b64d/backend/native-macos-arm64/dosbox-x'
+case = 'layer-after-repaint'
+
+    @pytest.mark.parametrize('case',['freshness-only','layer-after-repaint'])
+    def test_real_freshness_only_and_layer_change_after_repaint_reject_stale_frames(sprite,emulator,case):
+        path,binary,_=sprite
+        with Project(path) as project,project.debugger(emulator,binary.parent) as debug:
+            layer=hide_sprite(debug);debug.layers([])
+            debug.run(guest_ms=60,timeout_ms=3000,fast_forward=True)
+            config=(dict(require_fresh_frame=True) if case=='freshness-only' else dict(pre=[
+                    dict(op='run',guest_ms=60,fast_forward=True),dict(op='layer-enable',layer=layer)]))
+            debug.screenshot_hooks(config)
+&gt;           with pytest.raises(ScreenshotHookError) as failed:debug.screenshot()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE ScreenshotHookError
+
+tests/test_screenshot_hooks.py:141: Failed</failure></testcase><testcase classname="tests.test_dos_launch" name="test_alias_replacement_between_check_and_cleanup_is_preserved" time="0.002"><failure message="AssertionError: assert 'removed' == 'retained_changed'&#10;  &#10;  - retained_changed&#10;  + removed">tmp_path = PosixPath('/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-702/test_alias_replacement_between0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x10b995940&gt;
+
+    def test_alias_replacement_between_check_and_cleanup_is_preserved(tmp_path,monkeypatch):
+        data=mz_file();alias=LaunchAlias(tmp_path,'TEMP.EXE',data)
+        read=Path.read_bytes;replaced=False
+        def replace_after_read(path):
+            nonlocal replaced
+            result=read(path)
+            if path==alias.path and not replaced:
+                replaced=True
+                replacement=tmp_path/'replacement';replacement.write_bytes(b'external user output')
+                replacement.replace(alias.path)
+            return result
+        monkeypatch.setattr(Path,'read_bytes',replace_after_read)
+        result=alias.close()
+&gt;       assert result['status']=='retained_changed'
+E       AssertionError: assert 'removed' == 'retained_changed'
+E         
+E         - retained_changed
+E         + removed
+
+tests/test_dos_launch.py:51: AssertionError</failure></testcase><testcase classname="tests.test_dos_qemu" name="test_dos_qemu_alias_upload_budget_is_checked_before_spawn" time="1.341"><failure message="FileNotFoundError: [Errno 2] No such file or directory: '/does'">tmp_path = PosixPath('/private/var/folders/pg/c0zj7z713zq484873gm877sr0000gn/T/pytest-of-tiga/pytest-702/test_dos_qemu_alias_upload_bud0')
+
+    def test_dos_qemu_alias_upload_budget_is_checked_before_spawn(tmp_path):
+        # A valid small MZ module with a large uninterpreted overlay remains an MZ;
+        # duplicating its executable name must still fit the explicit upload budget.
+        binary=tmp_path/'AGI';binary.write_bytes(mz_file()+bytes(32*1024*1024))
+        with Project.create(tmp_path/'large.fdb',binary) as project:
+            with pytest.raises(ValueError,match='including executable alias exceeds'):
+&gt;               project.debugger('/does/not/exist',tmp_path,backend='dosbox-qemu',kernel='missing',initramfs='missing')
+
+tests/test_dos_qemu.py:37: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.recovery/2026-10-27/extensionless-launch/candidate-venv/lib/python3.13/site-packages/fdisbull/debugger.py:73: in debugger
+    return DOSQemuSession(self,executable,game_dir,kernel=kernel,initramfs=initramfs,version=version,
+.recovery/2026-10-27/extensionless-launch/candidate-venv/lib/python3.13/site-packages/fdisbull/dos_qemu.py:69: in __init__
+    super().__init__(project,executable,game_dir,version=version,_on_spawn=_on_spawn)
+.recovery/2026-10-27/extensionless-launch/candidate-venv/lib/python3.13/site-packages/fdisbull/debugger.py:261: in __init__
+    executable = Path(executable).expanduser().resolve(strict=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.13/3.13.17/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_local.py:670: in resolve
+    return self.with_segments(os.path.realpath(self, strict=strict))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+filename = '/does/not/exist', strict = True
+
+&gt;   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: '/does'
+
+&lt;frozen posixpath&gt;:451: FileNotFoundError</failure></testcase></testsuite></testsuites>

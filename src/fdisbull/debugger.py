@@ -6,18 +6,19 @@ import hashlib
 import io
 import json
 from pathlib import Path
-import re
 import struct
 import time
 import uuid
 import tempfile
 
 from .dosbox_rpc import DOSBoxRPC, DebuggerError
+from .dos_launch import LaunchAlias, guest_name
 from .external_files import _file_name
 from .code_layers import LayerProjectMixin, LayerSessionMixin, LAYER_DDL
 from .debug_experiments import ExperimentProjectMixin, ExperimentSessionMixin
 from .runtime_code import RuntimeCodeMixin, RUNTIME_DDL
 from .scenes import SceneProjectMixin, SceneSessionMixin, SCENE_DDL
+from .screenshot_hooks import ScreenshotHookProjectMixin, ScreenshotHookSessionMixin, DDL as SCREENSHOT_HOOK_DDL
 
 
 DEBUG_DDL = '''
@@ -51,9 +52,10 @@ def stamp():
 DEBUG_DDL += LAYER_DDL
 DEBUG_DDL += RUNTIME_DDL
 DEBUG_DDL += SCENE_DDL
+DEBUG_DDL += SCREENSHOT_HOOK_DDL
 
 
-class DebugProjectMixin(SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
+class DebugProjectMixin(ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
     def machine(self, executable, *, boot_image, version=None, boot_timeout_ms=30000):
         from .qemu_machine import MachineDebugSession
         return MachineDebugSession(self,executable,boot_image=boot_image,version=version,boot_timeout_ms=boot_timeout_ms)
@@ -229,7 +231,7 @@ class DebugProjectMixin(SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMi
         return self._debug_artifact(row['run'],name,'screenshot-grid',rendered,metadata)
 
 
-class DebugSession(SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
+class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
     @property
     def script_operations(self):
         from .debug_script import OPERATIONS
@@ -240,6 +242,7 @@ class DebugSession(SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin)
         self.project = project
         self._spawn_callback=_on_spawn
         self.rpc = None
+        self._launch_alias = None
         self.closed = False
         self.run_id = uuid.uuid4().hex
         self.version = project.version(version)
@@ -247,20 +250,22 @@ class DebugSession(SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin)
             raise ValueError('Runtime launch requires the original, unpatched DOS MZ version; select version=1 explicitly if needed')
         self.dos = project._document(self.version['id'])['dos']
         self.game_dir = Path(game_dir).expanduser().resolve(strict=True)
-        target = project.meta['filename']
-        if not re.fullmatch(r'[A-Za-z0-9_-]{1,8}\.[A-Za-z0-9]{1,3}',target):
-            raise ValueError('DOS target must have a safe 8.3 filename')
-        source = (self.game_dir / target).resolve(strict=True)
+        filename = project.meta['filename']
+        target = guest_name(filename, project.meta['source_sha256'])
+        source = (self.game_dir / filename).resolve(strict=True)
         if source.parent != self.game_dir or not source.is_file() or source.stat().st_size > 64*1024*1024:
             raise ValueError('Target must be a regular file directly inside game_dir, at most 64 MiB')
-        if hashlib.sha256(source.read_bytes()).hexdigest() != project.meta['source_sha256']:
+        source_data = source.read_bytes()
+        if hashlib.sha256(source_data).hexdigest() != project.meta['source_sha256']:
             raise ValueError('Game executable does not match the project source hash')
         executable = Path(executable).expanduser().resolve(strict=True)
         from . import __version__
         self.metadata = {'fdisbull_version':__version__,'source_sha256':project.meta['source_sha256'],'version_sha256':self.version['sha256'],
                          'executable':str(executable),'emulator_sha256':hashlib.sha256(executable.read_bytes()).hexdigest(),
-                         'runtime_profile':'real-normal-v1','game_dir':str(self.game_dir),'target':target,'static_load_segment':self.dos['load_segment']}
+                         'runtime_profile':'real-normal-v1','game_dir':str(self.game_dir),'target':target,
+                         'source_filename':filename,'target_aliased':target!=filename,'static_load_segment':self.dos['load_segment']}
         try:
+            self._prepare_launch_target(target, source_data)
             self.rpc = self._open_rpc(executable,self.game_dir)
             self.metadata.update(self._transport_metadata())
             result = self.rpc.call('session.start',{'target':{'command':target,'arguments':[]},
@@ -296,6 +301,8 @@ class DebugSession(SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin)
         except BaseException:
             if self.rpc is not None:
                 self.rpc.close()
+            if self._launch_alias is not None:
+                self._launch_alias.close()
             raise
 
     def __enter__(self):
@@ -306,6 +313,10 @@ class DebugSession(SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin)
 
     def _open_rpc(self,executable,game_dir):return DOSBoxRPC(executable,game_dir,on_spawn=self._spawn_callback)
     def _transport_metadata(self):return {}
+
+    def _prepare_launch_target(self, target, data):
+        if target != self.project.meta['filename']:
+            self._launch_alias = LaunchAlias(self.game_dir, target, data)
 
     @property
     def machine(self):
@@ -410,10 +421,20 @@ class DebugSession(SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin)
             if not self.closed:
                 try:
                     if running:
-                        pause = self.call('execution.pause')
-                        result = self.call('execution.wait',{'operation_id':pause['operation_id'],'timeout_ms':3000})
+                        try:
+                            pause = self.call('execution.pause')
+                            terminal_operation=pause['operation_id']
+                        except DebuggerError as error:
+                            if not str(error).endswith('(TARGET_NOT_RUNNING)'):raise
+                            # A real stop can win the race with our budget pause.
+                            # Observe the existing operation; never continue/replay.
+                            terminal_operation=operation['operation_id']
+                        result = self.call('execution.wait',{'operation_id':terminal_operation,'timeout_ms':3000})
                         if result.get('running'):
                             raise DebuggerError('Target failed to pause after bounded run')
+                        kind=result.get('stop_reason',{}).get('kind')
+                        if not kind:raise DebuggerError('Bounded run ended without a terminal stop reason')
+                        if kind!='pause':outcome=kind
                     if result is None or result.get('state') != 'exited':
                         timing = self._timing(before['fast_forward'])
                 except BaseException:
@@ -695,13 +716,20 @@ class DebugSession(SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin)
     def _artifact(self, name, kind, data, metadata):
         return self.project._debug_artifact(self.run_id,name,kind,data,metadata)
 
-    def screenshot(self, name='screenshot.png', *, grid=False, grid_step=32):
+    def screenshot(self, name='screenshot.png', *, grid=False, grid_step=32, hooks=True):
         from .screenshot_grid import validate_step
         _file_name(name)
         if type(grid) is not bool:
             raise ValueError('grid must be boolean')
         validate_step(grid_step)
+        return self._capture_with_hooks(lambda evidence:self._screenshot_capture(name,grid,grid_step,evidence),hooks=hooks)
+
+    def _screenshot_capture(self,name,grid,grid_step,hook_evidence):
         result = self.call('video.screenshot')
+        if hook_evidence and hook_evidence.get('require_fresh_frame'):
+            before=hook_evidence['before_frame_id'];after=result.get('frame_id')
+            if type(after) is not int or (before is not None and after<=before):
+                raise DebuggerError('Screenshot preparation did not produce a newly completed frame')
         data = base64.b64decode(result.pop('png_base64'),validate=True)
         if not data.startswith(b'\x89PNG\r\n\x1a\n') or hashlib.sha256(data).hexdigest()!=result['sha256']:
             raise DebuggerError('Screenshot signature/hash mismatch')
@@ -710,6 +738,7 @@ class DebugSession(SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin)
             if image.size != (result['width'],result['height']):
                 raise DebuggerError('Screenshot dimensions differ from metadata')
             image.verify()
+        if hook_evidence is not None:result['screenshot_hooks']=hook_evidence
         if not grid:
             return self._artifact(name,'screenshot',data,result)
         raw=self._artifact(name[:248]+'.raw.png','screenshot',data,result)
@@ -765,6 +794,8 @@ class DebugSession(SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin)
         finally:
             self.rpc.close()
             self.closed = True
+            if self._launch_alias is not None:
+                result['launch_alias_cleanup'] = self._launch_alias.close()
             result['process_reaped'] = self.rpc.process.poll() is not None
             try:
                 self._event('close',result)
@@ -798,6 +829,7 @@ class DebugWorkspace:
         methods = {'debug-status':'status','debug-registers':'registers','debug-breakpoint':'breakpoint','debug-delete-breakpoint':'delete_breakpoint',
                    'debug-keyboard-press':'keyboard_press','debug-keyboard-type':'keyboard_type','debug-keyboard-state':'keyboard_state',
                    'debug-run':'run','debug-wait':'wait','debug-click':'click','debug-click-frame':'click_frame','debug-screenshot':'screenshot','debug-trace':'trace',
+                   'debug-screenshot-hooks':'screenshot_hooks',
                    'debug-memory':'memory','debug-write-memory':'write_memory','debug-write-registers':'write_registers','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script',
                    'debug-contexts':'contexts','debug-pause':'pause','debug-resume':'resume'}
         methods.update({'debug-layer-stack':'layers','debug-layer-enable':'layer_enable','debug-layer-patch':'layer_patch',

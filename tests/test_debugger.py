@@ -45,9 +45,63 @@ def test_launch_rejects_wrong_source_and_patched_versions_before_spawn(game):
         assert not db.debug_runs(version=1)['runs']
 
 
+@pytest.mark.parametrize('filename,aliased', [('AGI',True), ('A long AGI executable',True),
+                                            ('GAME.BIN',True), ('GAME.COM',False), ('GAME.SAV',True)])
+def test_real_mz_launch_uses_structure_not_host_extension(tmp_path, emulator, filename, aliased):
+    # Mode 13h; DS=CS; open/read/close a neighboring resource, then mark completion.
+    code = bytes.fromhex('b81300cd100e1fba0001b8003dcd2189c3ba1001b90400b43fcd21b43ecd21c606140101')
+    loop = len(code)
+    module = (code + bytes.fromhex('ebfe')).ljust(0x100, b'\0') + b'DATA.BIN\0'
+    binary = tmp_path/filename
+    binary.write_bytes(mz_file(module.ljust(1024, b'\0'), ss=0, sp=0x400))
+    resource = tmp_path/'DATA.BIN'; resource.write_bytes(b'AGI!')
+    original = binary.read_bytes()
+    database = tmp_path/'analysis.fdb'
+    with Project.create(database, binary) as project:
+        assert project.meta['format'] == 'MZ' and project.meta['filename'] == filename
+        project.analyze(max_instructions=32)
+        with project.debugger(emulator, tmp_path) as debug:
+            alias = tmp_path/debug.metadata['target']
+            assert (alias.name != filename) == aliased and alias.read_bytes() == original
+            assert debug.metadata['source_filename'] == filename
+            bp = debug.breakpoint(f'1000:{loop:04x}')
+            assert debug.run(timeout_ms=5000, fast_forward=True)['outcome'] == 'breakpoint'
+            assert debug.memory('1000:0110', length=5)['hex'] == b'AGI!\x01'.hex()
+            debug.delete_breakpoint(bp['breakpoint_id'])
+            debug.run(guest_ms=60, timeout_ms=5000, fast_forward=True)
+            frame = debug.screenshot('structural-mz.png')
+            trace = debug.trace(count=4)
+            state = debug.save_state()
+        assert alias.exists() != aliased and binary.read_bytes() == original
+    # The same deterministic guest alias also permits native restore after restart.
+    with Project(database) as project:
+        with project.debugger(emulator, tmp_path) as debug:
+            assert debug.metadata['target'] == alias.name
+            debug.load_state(state['artifact'])
+            assert debug.memory('1000:0110', length=5)['hex'] == b'AGI!\x01'.hex()
+        assert alias.exists() != aliased
+        project.debug_export(frame['artifact'], tmp_path/'frame.png')
+        project.debug_export(trace['artifact'], tmp_path/'trace.json')
+        assert (tmp_path/'frame.png').read_bytes().startswith(b'\x89PNG\r\n\x1a\n')
+        assert len(json.loads((tmp_path/'trace.json').read_text())['events']) == 4
+    assert binary.read_bytes() == original and resource.read_bytes() == b'AGI!'
+
+
 def test_one_shot_launch_requires_owned_server(game):
     result=respond({'method':'debug-launch','params':{'project':str(game[0]),'executable':'anything','game_dir':str(game[1].parent)}})
     assert not result['ok'] and 'serve' in result['error']['message']
+
+
+def test_extensionless_launch_cleans_alias_after_transport_failure(tmp_path):
+    binary=tmp_path/'AGI';binary.write_bytes(mz_file())
+    with Project.create(tmp_path/'analysis.fdb',binary) as project:
+        before={p.name:p.read_bytes() for p in tmp_path.iterdir() if p.is_file() and p.name=='AGI'}
+        names={p.name for p in tmp_path.iterdir()}
+        with pytest.raises((ValueError,OSError)):
+            project.debugger('/usr/bin/false',tmp_path)
+        assert {p.name for p in tmp_path.iterdir()}==names
+        assert {n:(tmp_path/n).read_bytes() for n in before}==before
+        assert project.debug_runs()['runs']==[]
 
 
 def test_real_breakpoint_translation_trace_restart_and_patch_isolation(game,emulator,tmp_path):

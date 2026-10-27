@@ -1,7 +1,7 @@
 {
-  "feature": "Temporal code layers and zero-byte native ZIP write CRC fix",
+  "feature": "Callback-safe agent continuation; original headless/state/input features preserved",
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "7747e0db96914a0a4c609916c27318c463addbabbba54e50803189b41eaa190c",
+  "patch_sha256": "84a17d4d1695472aecdafaa7a998037f1b1e6681cca2e626138f4056847b256d",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -50,8 +50,8 @@
     },
     {
       "path": "include/debug.h",
-      "size": 3572,
-      "sha256": "8cd3ef4d3c007b96a268a268e3fd895441bbf423bef1ac8ac854beb891f292b3"
+      "size": 3604,
+      "sha256": "e70c49e9bcd7c7fb770acd6eb0ee8c738006d3e473b2803a29ee68627113549e"
     },
     {
       "path": "include/paging.h",
@@ -70,8 +70,8 @@
     },
     {
       "path": "src/agent/debugger/debugger_adapter.cpp",
-      "size": 24513,
-      "sha256": "f18bace9e7ee669eedc313c1c62695d4cd2f3474a1beda45da98ea626299336a"
+      "size": 24485,
+      "sha256": "71f2e3dd15fe7e428e94a807fdbb599e29f9987872b003e88db7eb24c5d7bef9"
     },
     {
       "path": "src/agent/protocol/agent_protocol.cpp",
@@ -100,8 +100,8 @@
     },
     {
       "path": "src/debug/debug.cpp",
-      "size": 233946,
-      "sha256": "658c8f0c42e2785d17d928f7c10928af3b749b745e266ccda28ef49503b8aaa4"
+      "size": 234273,
+      "sha256": "10a1a09e3207514613f64ab7520bb9f90a0fbc963ac0d0af47541cae547ce0f6"
     },
     {
       "path": "src/debug/debug_gui.cpp",
@@ -150,7 +150,7 @@
     }
   ],
   "legacy_0_10_backend_sha256": "e749b6e50775de2807c2515f83e455dc705cdf6ddcdfb257e781f215d987865a",
-  "source_replay_files_verified": 28,
+  "source_replay_files_verified": 29,
   "source_patch_scope": "complete patch against declared upstream baseline; not incremental over 0.10",
   "initial_macos_emulator_sha256": "0876e686d6a85f8c1b790db03314b81f471f5a5791dcad4929b90b63a1ebeced",
   "initial_build_platform": "macOS ARM64; normal CPU core; heavy debugger",
@@ -173,5 +173,23 @@
     "native_sha256": "afa92bda2184e0c6f2fd685b164700058d212dd29b74af687de86234473d98d6",
     "evidence": "docs/VERIFICATION-SCENES.md",
     "linux_ci": "configured; not run for this uncommitted candidate"
+  },
+  "continue_callback_verification": {
+    "platform": "macOS ARM64",
+    "python": "3.13.17",
+    "emulator_sha256": "4c98e9371fb834f4c004ecfaf55a721cbc1b673c9baf086d8a48f65c22266ce0",
+    "passed": 386,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "regression": "test_real_continue_at_bios_callback_does_not_invent_keyboard_input",
+    "source_files_changed": [
+      "include/debug.h",
+      "src/debug/debug.cpp",
+      "src/agent/debugger/debugger_adapter.cpp"
+    ],
+    "source_replay_files_verified": 29,
+    "evidence": "docs/DOS_CONTINUE_CALLBACK_FIX.md",
+    "scope": "agent continuation; explicit native stepping not qualified"
   }
 }

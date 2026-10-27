@@ -1,0 +1,237 @@
+{
+  "emulator_sha256": "4c98e9371fb834f4c004ecfaf55a721cbc1b673c9baf086d8a48f65c22266ce0",
+  "ivt": "c0cf00f0",
+  "callback": {
+    "space": "segmented",
+    "segment": "0xF000",
+    "offset": "0x0000CFC1"
+  },
+  "callback_bytes": "fe382e00",
+  "breakpoint": {
+    "address": {
+      "offset": "0x0000CFC1",
+      "segment": "0xF000",
+      "space": "segmented"
+    },
+    "breakpoint_id": "bp-1",
+    "kind": "execution",
+    "once": false,
+    "session_id": "ses-1",
+    "state_revision": 2
+  },
+  "stop": {
+    "run": "a5409eb4672542f7ace2e1179d60874a",
+    "outcome": "breakpoint",
+    "timed_out": false,
+    "requested_guest_ms": 1000,
+    "guest_elapsed_ms": 0,
+    "host_elapsed_ms": 3.671,
+    "fast_forward": true,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 26,
+      "session_id": "ses-1",
+      "state_revision": 5
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 4,
+      "stop_reason": {
+        "address": {
+          "offset": "0x0000CFC1",
+          "segment": "0xF000",
+          "space": "segmented"
+        },
+        "breakpoint_id": "bp-1",
+        "kind": "breakpoint",
+        "project_address": null
+      }
+    },
+    "hook_hits": [],
+    "stop": {
+      "format": "fdisbull-debug-stop-1",
+      "trigger": "breakpoint",
+      "native_kind": "breakpoint",
+      "causing_instruction": {
+        "offset": "0x0000CFC1",
+        "segment": "0xF000",
+        "space": "segmented"
+      },
+      "resume_pc": {
+        "offset": "0x0000CFC1",
+        "segment": "0xF000",
+        "space": "segmented"
+      },
+      "instruction_completed": false,
+      "registers_stage": "before-instruction",
+      "context": "dos-cpu"
+    }
+  },
+  "at_breakpoint": {
+    "cpu_mode": "real",
+    "flags": "0x00007246",
+    "general": {
+      "eax": "0x00000013",
+      "ebp": "0x0000091C",
+      "ebx": "0x00000000",
+      "ecx": "0x000000FF",
+      "edi": "0x00000400",
+      "edx": "0x00000814",
+      "esi": "0x00000000",
+      "esp": "0x000003FA"
+    },
+    "instruction_pointer": "0x0000CFC1",
+    "segments": {
+      "cs": "0xF000",
+      "ds": "0x0824",
+      "es": "0x0814",
+      "fs": "0x0000",
+      "gs": "0x0000",
+      "ss": "0x0824"
+    },
+    "session_id": "ses-1",
+    "state_revision": 5,
+    "cs": "0xF000",
+    "ip": "0x0000CFC1",
+    "project_address": null
+  },
+  "counter_at_breakpoint": "0000",
+  "run_no_input": {
+    "run": "a5409eb4672542f7ace2e1179d60874a",
+    "outcome": "guest_time",
+    "timed_out": false,
+    "requested_guest_ms": 100,
+    "guest_elapsed_ms": 150,
+    "host_elapsed_ms": 14.363,
+    "fast_forward": true,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 176,
+      "session_id": "ses-1",
+      "state_revision": 9
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 8,
+      "stop_reason": {
+        "kind": "pause"
+      }
+    },
+    "hook_hits": [],
+    "stop": {
+      "format": "fdisbull-debug-stop-1",
+      "trigger": "guest_time",
+      "native_kind": "pause",
+      "causing_instruction": null,
+      "resume_pc": null,
+      "instruction_completed": null,
+      "registers_stage": "stopped; stage unknown",
+      "context": "dos-cpu"
+    }
+  },
+  "counter_no_input": "0000",
+  "regs_no_input": {
+    "cpu_mode": "real",
+    "flags": "0x00007246",
+    "general": {
+      "eax": "0x00000013",
+      "ebp": "0x0000091C",
+      "ebx": "0x00000000",
+      "ecx": "0x000000FF",
+      "edi": "0x00000400",
+      "edx": "0x00000814",
+      "esi": "0x00000000",
+      "esp": "0x000003FA"
+    },
+    "instruction_pointer": "0x0000CFC6",
+    "segments": {
+      "cs": "0xF000",
+      "ds": "0x0824",
+      "es": "0x0814",
+      "fs": "0x0000",
+      "gs": "0x0000",
+      "ss": "0x0824"
+    },
+    "session_id": "ses-1",
+    "state_revision": 9,
+    "cs": "0xF000",
+    "ip": "0x0000CFC6",
+    "project_address": null
+  },
+  "press": {
+    "accepted": true,
+    "delivery": "queued",
+    "keyboard": {
+      "owned_keys": 0,
+      "pending_events": 2,
+      "queued_guest_ms": 22
+    },
+    "session_id": "ses-1",
+    "state_revision": 10
+  },
+  "run_one_key": {
+    "run": "a5409eb4672542f7ace2e1179d60874a",
+    "outcome": "guest_time",
+    "timed_out": false,
+    "requested_guest_ms": 100,
+    "guest_elapsed_ms": 160,
+    "host_elapsed_ms": 15.426,
+    "fast_forward": true,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 336,
+      "session_id": "ses-1",
+      "state_revision": 13
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 12,
+      "stop_reason": {
+        "kind": "pause"
+      }
+    },
+    "hook_hits": [],
+    "stop": {
+      "format": "fdisbull-debug-stop-1",
+      "trigger": "guest_time",
+      "native_kind": "pause",
+      "causing_instruction": null,
+      "resume_pc": null,
+      "instruction_completed": null,
+      "registers_stage": "stopped; stage unknown",
+      "context": "dos-cpu"
+    }
+  },
+  "counter_one_key": "0100",
+  "regs_one_key": {
+    "cpu_mode": "real",
+    "flags": "0x00007246",
+    "general": {
+      "eax": "0x00000061",
+      "ebp": "0x0000091C",
+      "ebx": "0x00000000",
+      "ecx": "0x000000FF",
+      "edi": "0x00000400",
+      "edx": "0x00000814",
+      "esi": "0x00000000",
+      "esp": "0x000003FA"
+    },
+    "instruction_pointer": "0x0000CFCD",
+    "segments": {
+      "cs": "0xF000",
+      "ds": "0x0824",
+      "es": "0x0814",
+      "fs": "0x0000",
+      "gs": "0x0000",
+      "ss": "0x0824"
+    },
+    "session_id": "ses-1",
+    "state_revision": 13,
+    "cs": "0xF000",
+    "ip": "0x0000CFCD",
+    "project_address": null
+  }
+}

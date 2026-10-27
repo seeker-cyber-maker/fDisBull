@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="0.073" timestamp="2026-10-27T03:51:01.553877-04:00" hostname="Studio.local"><testcase classname="tests.test_scenes" name="test_bundled_investigation_skill_is_readable_without_project" time="0.001" /></testsuite></testsuites>

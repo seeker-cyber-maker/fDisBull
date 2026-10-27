@@ -1,0 +1,354 @@
+{
+  "purpose": "failure characterization against unchanged installed published 0.18.0; not green-by-retry qualification",
+  "expected_module": "/Users/Shared/fDisBull/releases/0.18.0-416b64d/venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+  "identity_exit_code": 0,
+  "identity_output": "/Users/Shared/fDisBull/releases/0.18.0-416b64d/venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+  "invocations": [
+    {
+      "index": 1,
+      "exit_code": 0,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-01.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-01.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-01.xml"
+    },
+    {
+      "index": 2,
+      "exit_code": 0,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-02.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-02.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-02.xml"
+    },
+    {
+      "index": 3,
+      "exit_code": 0,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-03.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-03.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-03.xml"
+    },
+    {
+      "index": 4,
+      "exit_code": 0,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-04.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-04.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-04.xml"
+    },
+    {
+      "index": 5,
+      "exit_code": 0,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-05.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-05.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-05.xml"
+    },
+    {
+      "index": 6,
+      "exit_code": 0,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-06.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-06.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-06.xml"
+    },
+    {
+      "index": 7,
+      "exit_code": 0,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-07.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-07.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-07.xml"
+    },
+    {
+      "index": 8,
+      "exit_code": 0,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-08.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-08.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-08.xml"
+    },
+    {
+      "index": 9,
+      "exit_code": 0,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-09.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-09.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-09.xml"
+    },
+    {
+      "index": 10,
+      "exit_code": 0,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-10.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-10.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-10.xml"
+    },
+    {
+      "index": 11,
+      "exit_code": 0,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-11.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-11.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-11.xml"
+    },
+    {
+      "index": 12,
+      "exit_code": 0,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-12.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-12.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-12.xml"
+    },
+    {
+      "index": 13,
+      "exit_code": 0,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-13.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-13.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-13.xml"
+    },
+    {
+      "index": 14,
+      "exit_code": 0,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-14.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-14.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-14.xml"
+    },
+    {
+      "index": 15,
+      "exit_code": 0,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-15.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-15.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-15.xml"
+    },
+    {
+      "index": 16,
+      "exit_code": 0,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-16.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-16.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-16.xml"
+    },
+    {
+      "index": 17,
+      "exit_code": 0,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-17.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-17.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-17.xml"
+    },
+    {
+      "index": 18,
+      "exit_code": 0,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-18.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-18.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-18.xml"
+    },
+    {
+      "index": 19,
+      "exit_code": 1,
+      "command": [
+        "/Users/Shared/fDisBull/current/venv/bin/python",
+        "-m",
+        "pytest",
+        "-o",
+        "pythonpath=",
+        "-q",
+        "--require-native",
+        "tests/test_scene_improvements.py::test_relative_outcomes_repeat_restore_and_compact_saved_script",
+        "--junitxml=/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-19.xml"
+      ],
+      "log": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-19.log",
+      "junit": "/Volumes/CODEX/Codex_Projects/fDisBull/.recovery/2026-10-27/extensionless-launch/baseline-restore/baseline-restore-19.xml"
+    }
+  ],
+  "stop_reason": "first failing baseline invocation: 19",
+  "passed_before_stop": 18,
+  "failed_invocation": 19,
+  "total_invocations": 19,
+  "per_invocation": {
+    "tests": 1,
+    "pass": 1,
+    "fail": 0,
+    "errors": 0,
+    "skips": 0,
+    "exit_code": 0,
+    "range": "01-18"
+  },
+  "failing_invocation_result": {
+    "tests": 1,
+    "pass": 0,
+    "fail": 1,
+    "errors": 0,
+    "skips": 0,
+    "exit_code": 1
+  },
+  "failure_observed": "Scene operation timeout during the initial scene_act call, at expected-count loop before the test reaches restore; this differs from the new-source suite failure location.",
+  "interpretation": "Failure characterization only. The baseline reproduced an intermittent failure in unchanged installed published 0.18.0. The 18 prior passes are not a green-by-retry qualification and do not establish a cause or clear the new-source failure."
+}

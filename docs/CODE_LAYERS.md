@@ -39,6 +39,15 @@ debug.layer_enable(layer["layer"], enabled=False)
 
 Definitions use project addresses in the selected MZ load context. The session translates them into runtime addresses. Patches must fit a mapped DOS allocation, cannot resize memory, and must translate to conventional RAM below `0xa0000`. Limits are 64 KiB per layer, 64 patches per definition, 256 saved definitions per static version, and 64 active layers with at most 256 patches and 64 KiB of touched bytes per transition.
 
+Interpreter-managed resources copied into a separate runtime heap are not
+currently eligible for public persistent layers merely because they remain in
+conventional RAM. The mapped-allocation check intentionally rejects them rather
+than treating one observed heap address as static project authority. The
+[PQ1 runtime-resource finding](PQ1_RUNTIME_RESOURCE_LAYER_FINDING.md) records a
+concrete 0.18.0 reproduction, exact tested binary identities, a bounded guarded
+backend proof and acceptance requirements for a future resolver-backed resource
+authority.
+
 Execution breakpoints keep their existing default: `view="static"` requires analyzed, relocated-byte-verified original instructions. `debug.breakpoint(address, view="execute")` explicitly binds to a decoded live instruction view, including a layer or self-modified instruction. Its receipt distinguishes runtime byte verification from static byte verification. It does not add an instruction to static analysis.
 
 ## Branch theories and virtual code caves

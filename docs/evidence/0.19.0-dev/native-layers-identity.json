@@ -1,0 +1,31 @@
+{
+  "exit_code": 0,
+  "tests": [
+    "tests/test_debugger.py",
+    "tests/test_keyboard.py",
+    "tests/test_debug_wait.py",
+    "tests/test_code_layers.py",
+    "tests/test_debug_experiments.py",
+    "tests/test_runtime_code.py",
+    "tests/test_debug_semantics.py",
+    "tests/test_doctor.py",
+    "tests/test_screenshot_grid.py",
+    "tests/test_scenes.py",
+    "tests/test_scene_improvements.py",
+    "tests/test_scene_layers.py",
+    "tests/test_ida_dosbox.py",
+    "tests/test_dosbox_zip_stream.py",
+    "tests/test_library_catalog.py",
+    "tests/test_rich_types.py",
+    "tests/test_dos_services.py",
+    "tests/test_dos_launch.py",
+    "tests/test_run_boundaries.py",
+    "tests/test_screenshot_hooks.py",
+    "tests/test_distribution.py",
+    "tests/test_dos_qemu.py::test_dos_qemu_preflight_rejects_implicit_private_assets_before_launch",
+    "tests/test_dos_qemu.py::test_dos_qemu_alias_upload_budget_is_checked_before_spawn"
+  ],
+  "backend_sha256": "4c98e9371fb834f4c004ecfaf55a721cbc1b673c9baf086d8a48f65c22266ce0",
+  "python": "/Users/Shared/fDisBull/current/venv/bin/python",
+  "source": "0.19.0.dev0 working integration"
+}

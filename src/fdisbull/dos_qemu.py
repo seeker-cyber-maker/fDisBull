@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .debugger import DebugSession, bounded
 from .dosbox_rpc import DebuggerError
+from .dos_launch import guest_name
 from .guest_assets import uploads
 from .wine_rpc import WineQemuRPC
 
@@ -51,11 +52,35 @@ class DOSQemuRPC(WineQemuRPC):
 class DOSQemuSession(DebugSession):
     def __init__(self,project,executable,game_dir,*,kernel,initramfs,version=None,files=None,boot_timeout_ms=240000,_on_spawn=None):
         bounded(boot_timeout_ms,'boot_timeout_ms',1000,600000)
-        self._transport_options=dict(kernel=kernel,initramfs=initramfs,files=uploads(project,game_dir,project.meta['filename'],files),
-                                     target=project.meta['filename'],boot_timeout_ms=boot_timeout_ms,on_spawn=_on_spawn)
+        filename=project.meta['filename']
+        target=guest_name(filename,project.meta['source_sha256'])
+        assets=uploads(project,game_dir,filename,files)
+        if target!=filename:
+            if any(f['path'].casefold()==target.casefold() for f in assets):
+                raise ValueError('DOS launch alias collides with an upload or exceeds the asset budget')
+            original=next(f for f in assets if f['path']==filename)
+            if Path(filename).suffix.lower() in ('.fdb','.db','.sqlite','.sqlite3','.sav','.state'):
+                # Only the byte-identical executable alias enters the guest;
+                # retain the broker's state/database exclusion for every asset.
+                assets.remove(original)
+            assets.append(dict(original,path=target))
+        # Include the alias in both limits before any VM is spawned. Each encoded
+        # payload is canonical base64 from uploads(), so decoded size is exact.
+        total=0
+        for item in assets:
+            encoded=item['data_base64']
+            padding=2 if encoded.endswith('==') else 1 if encoded.endswith('=') else 0
+            total+=len(encoded)//4*3-padding
+        if len(assets)>1024 or total>64*1024*1024:
+            raise ValueError('Final DOS guest upload including executable alias exceeds asset budget')
+        self._transport_options=dict(kernel=kernel,initramfs=initramfs,files=assets,
+                                     target=target,boot_timeout_ms=boot_timeout_ms,on_spawn=_on_spawn)
         super().__init__(project,executable,game_dir,version=version,_on_spawn=_on_spawn)
 
     def _open_rpc(self,executable,game_dir):return DOSQemuRPC(executable,game_dir,**self._transport_options)
+
+    def _prepare_launch_target(self,target,data):
+        pass # Alias bytes are explicitly uploaded; the host directory is untouched.
 
     def _transport_metadata(self):
         return dict(backend='dosbox-qemu',runtime_profile='dosbox-qemu-real-normal-v1',runtime_inputs=self.rpc.inputs,

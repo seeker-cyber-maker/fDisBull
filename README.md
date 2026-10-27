@@ -8,7 +8,12 @@ An agent-first disassembler with a persistent SQLite analysis database, explicit
 
 Requires Python **3.12 or later**.
 
-Source version **0.18.0** adds portable scenes, deduplicated observation reads,
+Development source **0.19.0.dev0** contains DOS filename aliases, persistent
+screenshot hooks and the combined investigation-skill updates. See the
+[unreleased integration notes](docs/UNRELEASED-0.19.md) for verification gates and
+the distinction between implemented behavior and proposed runtime/UIL features.
+
+Published version **0.18.0** adds portable scenes, deduplicated observation reads,
 compact replies, relative outcomes and numbered overlays. See the
 [0.18 release notes](docs/RELEASE-0.18.0.md) for verification and release gates.
 
@@ -121,6 +126,15 @@ See the [user guide](docs/USER_GUIDE.md), [API](docs/API.md), [architecture](doc
 
 Launch an original DOS MZ project with `fdisbull debug PROJECT --executable PATH_TO_PATCHED_DOSBOX --game-dir GAME_DIRECTORY`. The foreground JSON interface can set relocation-checked breakpoints from disassembly addresses, click in guest screenshots, run until a breakpoint with a host timeout, and fast-forward a requested number of guest milliseconds. Screenshots and traces are stored inside the project and remain exportable after restart. See [DOSBox debugger usage and acceptance](docs/DOSBOX_DEBUGGER.md).
 
+The current unreleased source also separates [structural MZ eligibility from
+DOS guest filenames](docs/DOS_INPUT_NAMES.md), supporting extensionless/long host
+names through guarded executable aliases. Published 0.18.0 and the shared system
+installation retain their recorded filename limitation.
+
+The unreleased source includes persistent [screenshot pre/post hooks](docs/SCREENSHOT_HOOKS.md)
+for temporarily suspending sprite-render layers, bounded preparation, recorded
+capture provenance and automatic restoration of the previous layer stack.
+
 The real DinoPark path was verified through this interface. A ten-second guest skip completed in about 0.45 host seconds on the tested Mac, with actual elapsed values recorded; this is not a speed guarantee. The separately built DOSBox backend is required and is not bundled with the Python tool.
 
 ## Persistent scenes (0.17–0.18)
@@ -130,9 +144,15 @@ opt-in compact replies with retained evidence, portable scene bundles, typed
 relative outcomes and numbered overlays with legends. See the
 [scene improvements guide](docs/SCENE_IMPROVEMENTS.md) and
 [development verification record](docs/VERIFICATION-SCENE-IMPROVEMENTS.md).
-The [content/engine/player design](docs/GAME_CONTENT_AND_PLAYER.md) describes a
-later agent-authored script-language extension framework. That engine work is
-proposed; it is not supplied by this release.
+The [content-recovery design](docs/GAME_CONTENT_AND_PLAYER.md) and
+[UIL export boundary](docs/UIL_BOUNDARY.md) describe a future
+agent-authored semantic recovery framework. fDisBull would produce a
+provenance-bound Universal Interaction Language export and stop there. AEC
+cartridges, game runtimes, players and general Python/JavaScript/other language
+generators remain independent downstream projects. No UIL exporter is supplied
+by this release. Human and agent authors may propose evidence-backed language
+amendments through the [UIL RFC process](docs/UIL_RFC_PROCESS.md); acceptance of
+an RFC remains separate from implementation or game qualification.
 
 The [scene framework](docs/SCENE_FRAMEWORK.md) saves object context, trigger
 provenance, revisions and supporting screenshots in the project database. One
@@ -146,6 +166,11 @@ earlier 0.16.0 binaries do not contain this probe.
 The bundled `fdisbull-investigate` agent skill is available with
 `fdisbull agent-skill`. It guides evidence-based reverse engineering and scene
 authoring, prioritizing expected decision value and cost alongside confidence.
+The unreleased skill returns four resources covering the scene API,
+claim-specific evidence, action boundaries, failed-probe triage, matched-run
+preparation and a capability ladder for runtime navigation and actor-free
+observations. The ladder distinguishes current APIs from future resolver and
+target-adapter work; it does not implement those capabilities.
 The scene runtime currently targets DOSBox; PE64 native pixel probing is not
 implemented. [Implementation and limits](docs/SCENE_FRAMEWORK.md).
 The [installed-wheel DinoPark verification](docs/VERIFICATION-SCENES.md) exercises

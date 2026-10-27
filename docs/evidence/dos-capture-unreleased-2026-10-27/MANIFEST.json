@@ -1,0 +1,48 @@
+{
+  "files": {
+    "dos-qemu.xml": {
+      "size": 516,
+      "sha256": "ae9ae0c7ad3471e914ad6347ec4416a06697651dd6de71ac4375e247b6bec245"
+    },
+    "native-regression.xml": {
+      "size": 60031,
+      "sha256": "a24d624da6631fbd3bb7332fa81615c674933527281ab9fb5028f58c86009e19"
+    },
+    "pe-guards.xml": {
+      "size": 2091,
+      "sha256": "adf9ce593cb599a9a8611b4818c13df341b2db6a25d21b6bd5e1c66d61a47b61"
+    },
+    "baseline-scene-failure.xml": {
+      "size": 5878,
+      "sha256": "66fee0e18adff2f7632acaf1edea84a79c52072165ea5817170649a2bdc37cb8"
+    },
+    "baseline-restore-summary.json": {
+      "size": 16101,
+      "sha256": "c82f40d1f89d1f988789fc4f71c4c3b9b16f61e42b73aa107a29fe4d8856a505"
+    },
+    "reviewed-native-exit.json": {
+      "size": 55,
+      "sha256": "7fbe794854f10a979c17fd383a9a8ebe4d9cc39f50ca2f41c703000a8e88b2e4"
+    },
+    "REVIEWED-INSTALLED-CANDIDATE.json": {
+      "size": 708,
+      "sha256": "354e2d9a44b61e312f4d4d6092645404d78335cc3ad7169d66ad4597365e9991"
+    },
+    "FAILED-SCENE-RESTORE.json": {
+      "size": 920,
+      "sha256": "0ee44c8b0d41c7f86e227d3994408a1efc3dc722d848d094a8e2359845122e2b"
+    },
+    "VERIFICATION.json": {
+      "size": 3617,
+      "sha256": "bf2ed91d8fc17492aeb84d8cbfa1aef737a48577d6552c8f08bae2293d0eb2ef"
+    },
+    "reproduced-before-fix.xml": {
+      "size": 6940,
+      "sha256": "9676b32a18f4524a6d16713d3549cbd0339f76f185f68fcf4ead71ca1a9b80fc"
+    },
+    "installed-candidate.xml": {
+      "size": 6524,
+      "sha256": "cc48114524873c99afe5ebd5f77b07ca6b74dbd75fcd988d790c5f3d6b87c02c"
+    }
+  }
+}

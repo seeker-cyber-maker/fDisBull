@@ -7,7 +7,7 @@ import sys
 from . import __version__
 
 METHODS = {
-    'agent-skill':'Read the bundled fDisBull investigation skill and its scene reference; no project required',
+    'agent-skill':'Read the bundled fDisBull investigation skill and references; no project required',
     'debug-save-scene':'Save a versioned scene manifest with persistent objects and screenshot evidence; name,definition,[parent,version,author]',
     'debug-scenes':'List current scene revisions; [version]',
     'debug-scene-info':'Read a scene manifest, evidence and persistent object identities; scene,[version]',
@@ -66,7 +66,8 @@ METHODS = {
     'debug-keyboard-type': 'Queue 1..64 US-layout ASCII characters; run,text,[hold_ms,gap_ms]',
     'debug-keyboard-state': 'Inspect queued guest keyboard events and owned keys; run',
     'debug-click-frame': 'Capture and label the chosen point, then queue its frame-mode-bound click; run,x,y,[name,grid_step,button,hold_ms,mode_id]',
-    'debug-screenshot': 'Store an actual guest PNG with optional native-pixel grid; run,[name,grid,grid_step]',
+    'debug-screenshot': 'Store an actual guest PNG with optional native-pixel grid and persistent DOS hooks; run,[name,grid,grid_step,hooks]',
+    'debug-screenshot-hooks': 'Inspect or persist DOS screenshot pre/post scripts and suspended layers; run,[configuration]',
     'debug-grid': 'Derive a coordinate grid from a stored clean screenshot offline; artifact,[name,step,target]',
     'debug-trace': 'Store bounded CPU trace with project address mappings; run,[name,count,timeout_ms,fast_forward]',
     'debug-memory': 'Read project-mapped runtime bytes; run,address,[cs,length]',
@@ -164,7 +165,9 @@ def invoke(method, params, debugger=None):
         if p:raise ValueError('agent-skill takes no parameters')
         from importlib.resources import files
         root=files('fdisbull').joinpath('skills/fdisbull-investigate')
-        return {'name':'fdisbull-investigate','files':{n:root.joinpath(n).read_text() for n in ('SKILL.md','references/scenes.md')}}
+        resources=('SKILL.md','references/scenes.md','references/methodology.md',
+                   'references/runtime-navigation.md')
+        return {'name':'fdisbull-investigate','files':{n:root.joinpath(n).read_text() for n in resources}}
     if method=='omf-catalog':
         from .omf_catalog import omf_signatures
         path=Path(p.pop('path'))

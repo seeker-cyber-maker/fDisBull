@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "backend_sha256": "8d31a8a054557b0c07bf2cb3d5bce9f0e0f039d04bb588c51c6821bbc3bc706d",
+  "tests": [
+    "tests/test_debugger.py",
+    "tests/test_keyboard.py",
+    "tests/test_screenshot_grid.py",
+    "tests/test_scenes.py",
+    "tests/test_scene_improvements.py"
+  ]
+}
