@@ -1,0 +1,224 @@
+{
+  "commit": "416b64d9f4bfcf56e2876656d43f1d6a3d6cfdae",
+  "tag": "v0.18.0",
+  "runs": {
+    "ordinary": {
+      "id": 40453499822,
+      "head_sha": "416b64d9f4bfcf56e2876656d43f1d6a3d6cfdae",
+      "head_branch": "v0.18.0",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40453499822",
+      "run_attempt": 1,
+      "created_at": "2026-10-27T05:07:18Z",
+      "updated_at": "2026-10-27T05:08:21Z"
+    },
+    "native": {
+      "id": 40453499853,
+      "head_sha": "416b64d9f4bfcf56e2876656d43f1d6a3d6cfdae",
+      "head_branch": "v0.18.0",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40453499853",
+      "run_attempt": 1,
+      "created_at": "2026-10-27T05:07:18Z",
+      "updated_at": "2026-10-27T05:36:20Z"
+    }
+  },
+  "counts": {
+    "stable-backend": {
+      "tests": 54,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "layers-backend": {
+      "tests": 335,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "pe64": {
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "unified": {
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "artifacts": [
+    {
+      "id": 12711391390,
+      "node_id": "MDg6QXJ0aWZhY3QxMjcxMTM5MTM5MA==",
+      "name": "fdisbull-tool-packages",
+      "size_in_bytes": 1979078,
+      "url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/artifacts/12711391390",
+      "archive_download_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/artifacts/12711391390/zip",
+      "expired": false,
+      "digest": "sha256:e9fc33df6f3c364f96cd091b33d1aa290db702b10a6044b635a7ccf508527025",
+      "created_at": "2026-10-27T05:08:17Z",
+      "updated_at": "2026-10-27T05:08:17Z",
+      "expires_at": "2027-01-25T05:07:18Z",
+      "workflow_run": {
+        "id": 40453499822,
+        "repository_id": 1431097789,
+        "head_repository_id": 1431097789,
+        "head_branch": "v0.18.0",
+        "head_sha": "416b64d9f4bfcf56e2876656d43f1d6a3d6cfdae"
+      }
+    },
+    {
+      "id": 12712710787,
+      "node_id": "MDg6QXJ0aWZhY3QxMjcxMjcxMDc4Nw==",
+      "name": "native-debugger-pe64",
+      "size_in_bytes": 80796,
+      "url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/artifacts/12712710787",
+      "archive_download_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/artifacts/12712710787/zip",
+      "expired": false,
+      "digest": "sha256:0e4a50969a146d243cf07d07d32dbce72f75b2684f9baacf792addc2b2114020",
+      "created_at": "2026-10-27T05:36:14Z",
+      "updated_at": "2026-10-27T05:36:14Z",
+      "expires_at": "2027-01-25T05:07:18Z",
+      "workflow_run": {
+        "id": 40453499853,
+        "repository_id": 1431097789,
+        "head_repository_id": 1431097789,
+        "head_branch": "v0.18.0",
+        "head_sha": "416b64d9f4bfcf56e2876656d43f1d6a3d6cfdae"
+      }
+    },
+    {
+      "id": 12712665819,
+      "node_id": "MDg6QXJ0aWZhY3QxMjcxMjY2NTgxOQ==",
+      "name": "native-debugger-unified",
+      "size_in_bytes": 27652,
+      "url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/artifacts/12712665819",
+      "archive_download_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/artifacts/12712665819/zip",
+      "expired": false,
+      "digest": "sha256:a9f93f0d19ea897961876d36cf86079c5fcbbcd19987a4eb6c6bdca9ef045677",
+      "created_at": "2026-10-27T05:36:15Z",
+      "updated_at": "2026-10-27T05:36:15Z",
+      "expires_at": "2027-01-25T05:07:18Z",
+      "workflow_run": {
+        "id": 40453499853,
+        "repository_id": 1431097789,
+        "head_repository_id": 1431097789,
+        "head_branch": "v0.18.0",
+        "head_sha": "416b64d9f4bfcf56e2876656d43f1d6a3d6cfdae"
+      }
+    },
+    {
+      "id": 12712630947,
+      "node_id": "MDg6QXJ0aWZhY3QxMjcxMjYzMDk0Nw==",
+      "name": "fdisbull-pe-tested-wheel",
+      "size_in_bytes": 373363,
+      "url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/artifacts/12712630947",
+      "archive_download_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/artifacts/12712630947/zip",
+      "expired": false,
+      "digest": "sha256:eb6297b472379b2b7302877a9cfff926a5e8e1d80553ef0683d33fab77c5d6df",
+      "created_at": "2026-10-27T05:36:17Z",
+      "updated_at": "2026-10-27T05:36:17Z",
+      "expires_at": "2027-01-25T05:07:18Z",
+      "workflow_run": {
+        "id": 40453499853,
+        "repository_id": 1431097789,
+        "head_repository_id": 1431097789,
+        "head_branch": "v0.18.0",
+        "head_sha": "416b64d9f4bfcf56e2876656d43f1d6a3d6cfdae"
+      }
+    },
+    {
+      "id": 12712245529,
+      "node_id": "MDg6QXJ0aWZhY3QxMjcxMjI0NTUyOQ==",
+      "name": "native-debugger-stable-backend",
+      "size_in_bytes": 2069,
+      "url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/artifacts/12712245529",
+      "archive_download_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/artifacts/12712245529/zip",
+      "expired": false,
+      "digest": "sha256:eb47c5c20e8659bfa25c7c62581a4353e7495368bbd4cbe3b74a8f26dcdb4d7f",
+      "created_at": "2026-10-27T05:13:53Z",
+      "updated_at": "2026-10-27T05:13:53Z",
+      "expires_at": "2027-01-25T05:07:18Z",
+      "workflow_run": {
+        "id": 40453499853,
+        "repository_id": 1431097789,
+        "head_repository_id": 1431097789,
+        "head_branch": "v0.18.0",
+        "head_sha": "416b64d9f4bfcf56e2876656d43f1d6a3d6cfdae"
+      }
+    },
+    {
+      "id": 12711937144,
+      "node_id": "MDg6QXJ0aWZhY3QxMjcxMTkzNzE0NA==",
+      "name": "linux-dosbox-layers",
+      "size_in_bytes": 52780276,
+      "url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/artifacts/12711937144",
+      "archive_download_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/artifacts/12711937144/zip",
+      "expired": false,
+      "digest": "sha256:4b3c77559ba3439e920b1f6437a14c9edd65679f7bcdd9fa8352517f2095f2b4",
+      "created_at": "2026-10-27T05:15:24Z",
+      "updated_at": "2026-10-27T05:15:24Z",
+      "expires_at": "2027-01-25T05:07:18Z",
+      "workflow_run": {
+        "id": 40453499853,
+        "repository_id": 1431097789,
+        "head_repository_id": 1431097789,
+        "head_branch": "v0.18.0",
+        "head_sha": "416b64d9f4bfcf56e2876656d43f1d6a3d6cfdae"
+      }
+    },
+    {
+      "id": 12711872349,
+      "node_id": "MDg6QXJ0aWZhY3QxMjcxMTg3MjM0OQ==",
+      "name": "native-debugger-layers-backend",
+      "size_in_bytes": 5679,
+      "url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/artifacts/12711872349",
+      "archive_download_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/artifacts/12711872349/zip",
+      "expired": false,
+      "digest": "sha256:71b4cbd8d7feaa4195168bcb715aa352db57d91475ac8acb6d5ea6600ff89f0b",
+      "created_at": "2026-10-27T05:15:20Z",
+      "updated_at": "2026-10-27T05:15:20Z",
+      "expires_at": "2027-01-25T05:07:18Z",
+      "workflow_run": {
+        "id": 40453499853,
+        "repository_id": 1431097789,
+        "head_repository_id": 1431097789,
+        "head_branch": "v0.18.0",
+        "head_sha": "416b64d9f4bfcf56e2876656d43f1d6a3d6cfdae"
+      }
+    }
+  ],
+  "matching_wheel_entries": 101,
+  "matching_tool_entries": 96,
+  "backend": {
+    "source_commit": "416b64d9f4bfcf56e2876656d43f1d6a3d6cfdae",
+    "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+    "backend_sha256": "c04b1c189530af93cf054505ee92f2336c83b86e819bae8d8370350d23259fc6",
+    "patch_sha256": "7747e0db96914a0a4c609916c27318c463addbabbba54e50803189b41eaa190c",
+    "profile": "experimental/dosbox-x/layers",
+    "acceptance_tests": [
+      "tests/test_debugger.py",
+      "tests/test_keyboard.py",
+      "tests/test_debug_wait.py",
+      "tests/test_code_layers.py",
+      "tests/test_debug_experiments.py",
+      "tests/test_runtime_code.py",
+      "tests/test_debug_semantics.py",
+      "tests/test_doctor.py",
+      "tests/test_screenshot_grid.py",
+      "tests/test_scenes.py",
+      "tests/test_scene_improvements.py",
+      "tests/test_scene_layers.py",
+      "tests/test_ida_dosbox.py",
+      "tests/test_dosbox_zip_stream.py",
+      "tests/test_library_catalog.py",
+      "tests/test_rich_types.py",
+      "tests/test_dos_services.py"
+    ]
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "linux_no_network": {
+    "python": "3.13.5",
+    "tests": 335,
+    "archive_crc_checks": 51,
+    "saves": 18,
+    "loads": 33,
+    "invalid_archives": 0,
+    "matching_installed_tool_files": 96
+  },
+  "mac_copied_pair": {
+    "python": "3.13.17",
+    "dos_tests": 335,
+    "boot_tests": 7,
+    "wine_doctor": "passed",
+    "dos_qemu_doctor": "passed"
+  },
+  "shared_system": {
+    "version": "0.18.0",
+    "source_commit": "416b64d9f4bfcf56e2876656d43f1d6a3d6cfdae",
+    "python": "3.13.17 (main, Oct 21 2026, 13:48:20) [Clang 21.0.0 (clang-2100.3.34.2)]",
+    "matching_installed_wheel_entries": 100,
+    "global_commands": {
+      "/usr/local/bin/fdisbull": "0.18.0",
+      "/opt/homebrew/bin/fdisbull": "0.18.0",
+      "/Users/tiga/.local/bin/fdisbull": "0.18.0"
+    },
+    "doctors": {
+      "dos": {
+        "status": "passed",
+        "native_state_restored": true,
+        "checks": [
+          "genuine dependencies and native decoding",
+          "backend inputs",
+          "launch authored target",
+          "execution breakpoint",
+          "execution overlay",
+          "native save",
+          "screenshot",
+          "click with coordinate frame",
+          "data watch",
+          "bounded instruction trace",
+          "native restore",
+          "offline temporal interpretation",
+          "restart and export stored evidence"
+        ]
+      },
+      "dos-qemu": {
+        "status": "passed",
+        "native_state_restored": true,
+        "checks": [
+          "genuine dependencies and native decoding",
+          "backend inputs",
+          "launch authored target",
+          "execution breakpoint",
+          "execution overlay",
+          "native save",
+          "screenshot",
+          "click with coordinate frame",
+          "data watch",
+          "bounded instruction trace",
+          "native restore",
+          "offline temporal interpretation",
+          "restart and export stored evidence"
+        ]
+      },
+      "wine": {
+        "status": "passed",
+        "native_state_restored": true,
+        "checks": [
+          "genuine dependencies and native decoding",
+          "backend inputs",
+          "compile and retrieve fixed authored source",
+          "launch authored target",
+          "execution breakpoint",
+          "native save",
+          "screenshot",
+          "click with coordinate frame",
+          "data watch",
+          "bounded instruction trace",
+          "guarded memory editing",
+          "native restore",
+          "offline temporal interpretation",
+          "restart and export stored evidence"
+        ]
+      }
+    },
+    "boot_tests": 7,
+    "prior_default_version": "0.8.1",
+    "project_environments_modified": false,
+    "system_python_packages_modified": false
+  },
+  "external_deepseek_environment_accessed": false
+}

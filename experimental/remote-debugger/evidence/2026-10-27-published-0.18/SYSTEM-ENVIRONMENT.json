@@ -1,0 +1,17 @@
+{
+  "version": "0.18.0",
+  "python": "3.13.17 (main, Oct 21 2026, 13:48:20) [Clang 21.0.0 (clang-2100.3.34.2)]",
+  "executable": "/Users/Shared/fDisBull/releases/0.18.0-416b64d/venv/bin/python",
+  "module": "/Users/Shared/fDisBull/releases/0.18.0-416b64d/venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+  "dependencies": {
+    "fdisbull": "0.18.0",
+    "capstone": "5.0.9",
+    "iced-x86": "1.21.0",
+    "lief": "1.0.0",
+    "Pillow": "12.3.0",
+    "pytest": "9.1.1"
+  },
+  "matching_wheel_entries": 100,
+  "wheel_sha256": "415d0b5a70418e69e8668d135139f1e09a8e94b7143f232f426c400f293f35e3",
+  "dosbox_sha256": "afa92bda2184e0c6f2fd685b164700058d212dd29b74af687de86234473d98d6"
+}

@@ -1,0 +1,41 @@
+{
+  "status": "passed",
+  "release_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.18.0",
+  "source_commit": "416b64d9f4bfcf56e2876656d43f1d6a3d6cfdae",
+  "published_at": "2026-10-27T06:06:56Z",
+  "assets": [
+    {
+      "name": "fdisbull-0.18.0-py3-none-any.whl",
+      "sha256": "415d0b5a70418e69e8668d135139f1e09a8e94b7143f232f426c400f293f35e3",
+      "size": 379613,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.18.0/fdisbull-0.18.0-py3-none-any.whl"
+    },
+    {
+      "name": "fdisbull-0.18.0-tool.zip",
+      "sha256": "7de206c39dd0c2a9f557660ae6a5267a1500fb30fa629169c3cbdcee549ec488",
+      "size": 888133,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.18.0/fdisbull-0.18.0-tool.zip"
+    },
+    {
+      "name": "fdisbull-0.18.0.tar.gz",
+      "sha256": "e3d0e769422eccf5d0d6f2add37b57e23034e14fb4f15128508054d687582622",
+      "size": 743498,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.18.0/fdisbull-0.18.0.tar.gz"
+    },
+    {
+      "name": "SHA256SUMS",
+      "sha256": "ad8884846560e45e28fae547724173ad522146ca4fb0b01420a3ecc0a70fff04",
+      "size": 370,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.18.0/SHA256SUMS"
+    },
+    {
+      "name": "VERIFICATION-0.18.0.json",
+      "sha256": "8a92f31ac621fa3550fd63b6d9cb48e70c94d8b407008c9d6be07c0d15e9ad42",
+      "size": 6598,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.18.0/VERIFICATION-0.18.0.json"
+    }
+  ],
+  "system_packages_match_published_assets": true,
+  "offline_bundle_published": false,
+  "deepseek_delivery_created": false
+}

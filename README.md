@@ -12,11 +12,12 @@ Source version **0.18.0** adds portable scenes, deduplicated observation reads,
 compact replies, relative outcomes and numbered overlays. See the
 [0.18 release notes](docs/RELEASE-0.18.0.md) for verification and release gates.
 
-[**fDisBull 0.17.0 is published**](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.17.0),
-with CI-verified packages and the updated
-[Linux/DOS offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.17.0/fdisbull-linux-dos-offline-0.17.0-4f736f2-2026-10-26.zip).
-See the [release notes](docs/RELEASE-0.17.0.md) and
-[publication/delivery verification](docs/DELIVERY-0.17.md).
+[**fDisBull 0.18.0 is published**](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.18.0)
+with CI-verified wheel, source distribution and tool ZIP. See the
+[publication record](docs/PUBLICATION-0.18.md) and
+[shared Mac installation](docs/SYSTEM_INSTALLATION.md). The system-wide commands
+now select 0.18.0; existing project environments are preserved. Per the revised
+deployment request, no new DeepSeek delivery or offline bundle was produced.
 
 Persistent scenes share object context, supporting snapshots and composite masks
 between overlays and checked named actions. The updated DOSBox backend provides
@@ -57,7 +58,8 @@ feature limits and the ordinary/native Linux checks required before tagging.
 
 | Track | Source and availability | Verification |
 | --- | --- | --- |
-| **Latest published release: 0.17.0** | [Packages and updated offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.17.0), source `4f736f2` | [Tag CI and copied-pair verification](docs/DELIVERY-0.17.md): 1,079 ordinary, 38 stable DOS, 318 layers, 16 PE64 and 10 DOS/boot checks passed; zero native skips. |
+| **Latest published release: 0.18.0** | [Verified packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.18.0), source `416b64d` | [Publication and shared installation](docs/PUBLICATION-0.18.md): 1,089 ordinary, 54 stable DOS, 335 layers, 16 PE64 and 10 DOS/boot checks passed; zero native skips. |
+| **Earlier published release: 0.17.0** | [Packages and updated offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.17.0), source `4f736f2` | [Tag CI and copied-pair verification](docs/DELIVERY-0.17.md): 1,079 ordinary, 38 stable DOS, 318 layers, 16 PE64 and 10 DOS/boot checks passed; zero native skips. |
 | **Earlier published release: 0.16.0** | [Packages and updated offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.16.0), source `e1e3fb4` | [Tag CI and copied-pair verification](docs/DELIVERY-0.16.md): 1,077 ordinary, 32 stable DOS, 312 layers, 16 PE64 and 10 DOS/QEMU/boot checks passed; no native skips. |
 | **Historical source candidate: 0.15.0** | [Saved debugger experiments](docs/DEBUGGER_EXPERIMENTS.md) on the existing unified debugger | [Candidate notes](docs/RELEASE-0.15.0.md) and [local verification](docs/VERIFICATION-0.15.md). No 0.15.0 tag/release; exact CI packages are additionally available in the GitHub offline asset. |
 | **Earlier published release: 0.14.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0), commit `6a0aeb3` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623197): 817 passed, 45 skipped. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623209): 15 stable DOS, 38 layers/endpoint, 14 PE64 and 10 DOS/QEMU/boot checks passed, no native skips. |
@@ -69,7 +71,7 @@ The Python packages do **not** include an emulator. Source builds use the [stabl
 
 The [release-status record](docs/RELEASE_STATUS.md) distinguishes tagged source, published packages and historical candidate receipts. Ordinary Python CI may skip native tests; [required native acceptance](docs/DOSBOX_DEBUGGER.md#required-native-acceptance) builds or selects the real patched backend and runs the existing tests against it.
 
-The current [0.17 DeepSeek delivery](docs/DELIVERY-0.17.md) contains the published packages, scene-capable DOSBox, bundled agent skill, tested Mac QEMU/Wine profiles and audited pristine boot filesystems. Its no-network Linux 3.13.5 kit passed 318 checks and 49 save/load archive CRC checks; the actual ZIP separately passed extraction, permission repair, installation and 20 keyboard/scene checks. Both copied bundles passed complete manifest and ZIP readback.
+The historical [0.17 DeepSeek delivery](docs/DELIVERY-0.17.md) contains the published packages, scene-capable DOSBox, bundled agent skill, tested Mac QEMU/Wine profiles and audited pristine boot filesystems. Its no-network Linux 3.13.5 kit passed 318 checks and 49 save/load archive CRC checks; the actual ZIP separately passed extraction, permission repair, installation and 20 keyboard/scene checks. Both copied bundles passed complete manifest and ZIP readback.
 
 The [delivered DinoPark leaderboard replay](docs/VERIFICATION-DINOPARK-LEADERBOARD.md)
 typed `DeepSeek016`, clicked OK and verified the saved score table through the
@@ -137,8 +139,9 @@ provenance, revisions and supporting screenshots in the project database. One
 manifest drives native-pixel overlays and named guest actions, with composite
 rectangle/polygon masks, separate visible/ready/enabled checks, bounded outcome
 verification and saved desynchronization/collision evidence. The updated DOSBox
-patch provides sparse RGB probes without PNG transfer. The 0.17.0 offline kit
-supplies the tested backend; earlier 0.16.0 binaries do not contain this probe.
+patch provides sparse RGB probes without PNG transfer. The shared 0.18.0 system
+installation and historical 0.17.0 offline kit supply the tested backend;
+earlier 0.16.0 binaries do not contain this probe.
 
 The bundled `fdisbull-investigate` agent skill is available with
 `fdisbull agent-skill`. It guides evidence-based reverse engineering and scene

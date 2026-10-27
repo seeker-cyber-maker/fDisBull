@@ -51,13 +51,13 @@ depended on the guest's pause position. The corrected regression first forces
 that pause, then places a byte-verified breakpoint on the unavoidable post-click
 path before the success pixel is painted. Production runtime code is unchanged.
 The [failed gate and deterministic reproduction](evidence/0.18.0-release/CI-GATE-CORRECTION.json)
-are retained; both Linux workflows must pass again on the corrected commit.
+are retained. Both Linux workflows passed on corrected commit `416b64d`,
+before tagging and on the tag. See the [publication record](PUBLICATION-0.18.md)
+for fresh tag CI and installation receipts.
 
-Before tagging, both GitHub workflows must pass on the exact release commit:
-ordinary Linux tests/package audits, and native stable DOS, layered DOS (Python
-3.13.5), plus installed-wheel unified DOS/boot/PE64 acceptance. Tag CI is a
-separate follow-up. Publication and offline-kit delivery are not implied by a
-source commit or tag.
+The published tag remains fixed. Its five assets passed download readback.
+The later deployment request selected a shared Mac system installation instead
+of a new DeepSeek delivery or offline kit. Existing deliveries remain unchanged.
 
 ## Limits and exclusions
 
@@ -67,6 +67,11 @@ Different mapped views/load segments reject scene bundles. SVG equations,
 classifier recognition, automatic learning and deterministic replay are outside
 this implementation. The [content/engine/player extension contract](GAME_CONTENT_AND_PLAYER.md)
 is a future design, not an implemented AGI/SCI extractor or engine.
+
+The 0.18.0 DOS launcher still requires an 8.3-style target filename with a
+nonempty extension. Static MZ import already uses file structure. Private
+guest-name aliasing for extensionless/long host names is follow-up work; original
+source names and bytes must remain preserved.
 
 Game files, saved games, native checkpoint bytes, project databases and vendor
 IDA servers/keys remain excluded from Git and tool packages. The included scene

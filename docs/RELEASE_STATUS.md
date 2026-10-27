@@ -1,18 +1,28 @@
 # Release status checked on 2026-10-27
 
-## 0.18.0 source promotion
+## Published 0.18.0 and shared Mac installation
 
-The [0.18.0 source](RELEASE-0.18.0.md) adds observation read deduplication,
-compact replies with retained evidence, portable scene bundles, typed relative
-outcomes and numbered overlays. The installed development-wheel DinoPark
-verification remains sealed as `0.18.0.dev0`; promotion preserves the accepted
-runtime source identities and changes release metadata/documentation.
+[0.18.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.18.0),
+not draft or prerelease, at fixed source `416b64d9f4bfcf56e2876656d43f1d6a3d6cfdae`.
+Both exact-commit workflows passed before tagging and on the tag. Tag CI passed
+1,089 ordinary tests (72 skipped), 54 stable DOS, 335 layers (Python 3.13.5),
+16 PE64 and 10 DOS/boot checks; all native suites had zero failures/errors/skips.
+All 101 wheel entries match the native-tested wheel. Five published assets
+were downloaded again and matched against their local bytes and GitHub digests.
 
-Ordinary Linux test/package CI and the full native Linux workflow must pass on
-the exact release commit before tagging. The native gate includes stable DOS,
-layered DOS with Python 3.13.5, and installed-wheel unified DOS/boot/PE64 checks.
-Tag CI and GitHub release publication are separate follow-up gates. The published
-0.17.0 assets and local deliveries below remain unchanged.
+The user replaced the DeepSeek delivery request with a system-wide update.
+The [shared Mac installation](SYSTEM_INSTALLATION.md) is active at
+`/Users/Shared/fDisBull/current`, with global CLI, managed Python and tested
+DOSBox/QEMU backends. No new offline archive or DeepSeek delivery was created;
+existing deliveries and project environments are preserved. Fresh no-network
+Linux Python 3.13.5 passed 335 checks and 51 archive CRC checks. Fresh Mac
+qualification passed 335 DOS checks, seven boot/GDB checks and DOS/QEMU and
+Wine/QEMU doctors; the actual activated system also passed all three doctors,
+seven boot checks and its complete 1,805-entry payload verification.
+
+See the [publication record](PUBLICATION-0.18.md) for hashes, CI links, evidence
+and limits. Game files, saved states and project databases are excluded.
+The sealed original-game development evidence remains `0.18.0.dev0`.
 
 ## Published 0.17.0
 

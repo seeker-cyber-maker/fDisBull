@@ -1,0 +1,77 @@
+{
+  "source_commit": "416b64d9f4bfcf56e2876656d43f1d6a3d6cfdae",
+  "files": {
+    "linux-3135-native.xml": {
+      "size": 51596,
+      "sha256": "4e4b6b5d50cc514e35c1ffd66cedee8d0dad6793edb8b8ca9221716a95c2af5b"
+    },
+    "linux-3135-identity.json": {
+      "size": 619,
+      "sha256": "8c92ca37e4758c22af1b6fd04e59cb6c149548fbac1d68ed435832e04b4cdc3b"
+    },
+    "SYSTEM-QUALIFICATION.json": {
+      "size": 2804,
+      "sha256": "90687a57350be05aeb57c696ffed9aa1bc3506c6c168524830fe3042370072f8"
+    },
+    "linux-3135-state-integrity.json": {
+      "size": 8417,
+      "sha256": "2fef0dab1fdced1b974257f95d62b98c12423c54d541deed55948ed4d790f584"
+    },
+    "system-wine-doctor.json": {
+      "size": 6309,
+      "sha256": "d8a02f64be45c6fe2559028cd5818a12e91e44e912ea466c0be28f53b70040f4"
+    },
+    "linux-3135-exit-codes.json": {
+      "size": 47,
+      "sha256": "81fe66499d99a4a31f1cdb6faf254b705d4d357cc4ea963436e181baca3d234f"
+    },
+    "SYSTEM-ENVIRONMENT.json": {
+      "size": 688,
+      "sha256": "2a9b23c18a2b73d2f3d6f55a716dabeb7a65c0e83029a13a45ce1187347a01e6"
+    },
+    "system-boot.xml": {
+      "size": 1155,
+      "sha256": "a2597614de8b8907c133d47db6fe116ff8f9a1d3773d24d54a4f58b07250fc73"
+    },
+    "tag-stable.xml": {
+      "size": 6694,
+      "sha256": "02ff1d0802aa268ed377471094eb2ca1f473d4e1f0fa019bed7ee2affaf3e2b2"
+    },
+    "ASSET-READBACK.json": {
+      "size": 1710,
+      "sha256": "2904c1da278191fb9e28850f90af92f3b57ccb0a14a098c7bd07ad0e31250b55"
+    },
+    "tag-layers.xml": {
+      "size": 51595,
+      "sha256": "bc0a04dabe4c9ffe27f5215b29cb0d180d4960f150770191667698f26f5ffd35"
+    },
+    "system-dos-doctor.json": {
+      "size": 6766,
+      "sha256": "8266724698be38542f99deb179f44237437eb8408cb0cf7950f1fbf048a6e139"
+    },
+    "SYSTEM-INSTALLATION.json": {
+      "size": 7282,
+      "sha256": "270066720623849760f7acbd6e4286b42f11f0880d6a9eda650f4b20850fa483"
+    },
+    "system-dos-qemu-doctor.json": {
+      "size": 7221,
+      "sha256": "98f253b87342ea55a6c139bce739d55b60a19084af13b3586f30db51ca1f460c"
+    },
+    "final-system-verification.json": {
+      "size": 353,
+      "sha256": "f71b7add0481db8db796db2ea2c5bb4d7bf864c7f3ea566312994b5ecc242711"
+    },
+    "tag-unified.xml": {
+      "size": 1577,
+      "sha256": "121ed09dc9a2234446aa06d266943583c10903eed4f2c26e76dc49af4d2addb3"
+    },
+    "TAG-ARTIFACT-AUDIT.json": {
+      "size": 8558,
+      "sha256": "9563c3724ea0176d425b735527412fc97f117d5985ddc66772b440737ceeb15b"
+    },
+    "tag-pe64.xml": {
+      "size": 2304,
+      "sha256": "877ebdd9f5221d5fc9bc8f4bd4373ab7eab2a00d94142493677ef333eb384c66"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "python": "3.13.5 (main, Jul 23 2025, 00:37:22) [Clang 20.1.4 ]",
+  "module": "/work/venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+  "version": "0.18.0",
+  "wheel_sha256": "415d0b5a70418e69e8668d135139f1e09a8e94b7143f232f426c400f293f35e3",
+  "matching_installed_tool_entries": 96,
+  "backend_sha256": "c04b1c189530af93cf054505ee92f2336c83b86e819bae8d8370350d23259fc6",
+  "state_archive_checks": 51,
+  "save_checks": 18,
+  "load_checks": 33,
+  "invalid_archives": 0,
+  "network": "QEMU -nic none; pip --no-index --require-hashes",
+  "external_deepseek_environment_accessed": false,
+  "test_exit_code": 0
+}
