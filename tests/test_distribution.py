@@ -18,7 +18,8 @@ REQUIRED_SOURCE_FILES=('src/fdisbull/__init__.py','pyproject.toml','tests/fixtur
                        'src/fdisbull/data/dos-runtime-signatures.json','src/fdisbull/data/MICROSOFT-DOS-LICENSE.txt',
                        'src/fdisbull/skills/fdisbull-investigate/SKILL.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/scenes.md',
-                       'src/fdisbull/skills/fdisbull-investigate/references/methodology.md')
+                       'src/fdisbull/skills/fdisbull-investigate/references/methodology.md',
+                       'src/fdisbull/skills/fdisbull-investigate/references/runtime-navigation.md')
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):
@@ -47,4 +48,13 @@ def test_distribution_check_requires_methodology_reference(tmp_path):
     methodology='src/fdisbull/skills/fdisbull-investigate/references/methodology.md'
     source_archive(archive,tuple(path for path in REQUIRED_SOURCE_FILES if path!=methodology))
     with pytest.raises(ValueError,match='methodology[.]md'):
+        check(archive)
+
+
+def test_distribution_check_requires_runtime_navigation_reference(tmp_path):
+    check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+    archive=tmp_path/'fdisbull-missing-runtime-navigation.zip'
+    reference='src/fdisbull/skills/fdisbull-investigate/references/runtime-navigation.md'
+    source_archive(archive,tuple(path for path in REQUIRED_SOURCE_FILES if path!=reference))
+    with pytest.raises(ValueError,match='runtime-navigation[.]md'):
         check(archive)

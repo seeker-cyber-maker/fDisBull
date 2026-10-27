@@ -164,7 +164,8 @@ def invoke(method, params, debugger=None):
         if p:raise ValueError('agent-skill takes no parameters')
         from importlib.resources import files
         root=files('fdisbull').joinpath('skills/fdisbull-investigate')
-        resources=('SKILL.md','references/scenes.md','references/methodology.md')
+        resources=('SKILL.md','references/scenes.md','references/methodology.md',
+                   'references/runtime-navigation.md')
         return {'name':'fdisbull-investigate','files':{n:root.joinpath(n).read_text() for n in resources}}
     if method=='omf-catalog':
         from .omf_catalog import omf_signatures

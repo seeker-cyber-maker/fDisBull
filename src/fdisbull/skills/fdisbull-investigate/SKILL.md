@@ -98,6 +98,39 @@ For APIs, authoring shape conventions and a runnable route pattern, read
 requires the scene-capable DOSBox backend; do not claim a PNG fallback is a
 native cheap probe or infer unsupported backend behavior.
 
+## Choose navigation and observation methods explicitly
+
+For interactive programs, prefer the least invasive method that can answer the
+question while preserving the program's own action authority. Ordinary guest
+input is the default. A bounded timed movement is suitable for exploration; a
+coordinate or state predicate is better for a repeatable route when that state
+has been independently identified. Compose named routes from verified segments
+instead of presenting one successful timing as a universal path.
+
+Treat direct state placement or teleportation as an authoring, recovery or
+declared projection capability, never as evidence that the ordinary route was
+completed. For visual object checks, choose among a reversible render-only
+actor-hiding layer, a guarded hide/capture/restore sequence, movement to a
+verified neutral observation anchor, or an authentic actor-visible frame. Keep
+the actor logically present unless the experiment explicitly concerns actor
+logic. Return **present**, **absent** or **unknown**; occlusion, unstable frames,
+wrong context and failed restoration are unknown, not absence. Corroborate
+pixels with the target's parser, inventory, score or other semantic state when
+claiming an interaction succeeded.
+
+Read [references/runtime-navigation.md](references/runtime-navigation.md) before
+authoring a reusable movement route, conditional stop, diagnostic teleport or
+actor-free observation projection. It defines the capability ladder, safeguards
+and fallback choices. Some rungs require consumer adapters or future fDisBull
+support; check live capabilities and label unsupported steps rather than
+simulating them silently.
+
+Promote qualified discoveries into versioned reusable artifacts: semantic
+observations, scene objects, named anchors, bounded routes, reversible
+projections or target adapters. Preserve the evidence and authority that created
+each shortcut. The growing harness should make later investigation faster
+without rewriting diagnostic setup as authentic player progress.
+
 ## Prove the action and report its ceiling
 
 Drive actual guest input, then verify the transaction/transition within explicit

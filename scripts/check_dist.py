@@ -16,7 +16,8 @@ REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/brok
 REQUIRED_PE_RESOURCES |= {"dos_guest/__init__.py", "dos_guest/init.sh", "dos_guest/broker.py", "dos_qemu.py", "dos_runtime.py", "qemu_machine.py", "gdb_rpc.py", "guest_assets.py"}
 REQUIRED_KNOWLEDGE_RESOURCES = {"data/dos-runtime-signatures.json", "data/MICROSOFT-DOS-LICENSE.txt"}
 REQUIRED_KNOWLEDGE_RESOURCES |= {"skills/fdisbull-investigate/SKILL.md", "skills/fdisbull-investigate/references/scenes.md",
-                                 "skills/fdisbull-investigate/references/methodology.md"}
+                                 "skills/fdisbull-investigate/references/methodology.md",
+                                 "skills/fdisbull-investigate/references/runtime-navigation.md"}
 
 
 def archive_names(path: Path) -> list[str]:
