@@ -169,6 +169,96 @@ explicitly labeled branch, re-resolves the semantic object and verifies the new
 context. It does not change the walked route from failure to success and must not
 be exposed as ordinary player progress unless the game itself provides teleport.
 
+## Proposed scene navigation geometry
+
+The scene definition is the natural home for a version-bound virtual
+representation of a room. This should be a separate `navigation` extension, not
+an overload of the existing screen-pixel action areas. A game's movement
+coordinates may describe an actor baseline, feet, tile, world point or logical
+room position and may not equal native screenshot pixels.
+
+One possible design shape is:
+
+```json
+{
+  "navigation":{
+    "format":"fdisbull-scene-navigation-1",
+    "coordinate_space":{
+      "name":"agi-room-baseline",
+      "units":"game-pixels",
+      "origin":"top-left",
+      "actor_anchor":"ego-baseline"
+    },
+    "room_bounds":{"rect":[0,36,160,168]},
+    "walkable":{"subtract":[
+      {"rect":[0,36,160,168]},
+      {"union":[
+        {"polygon":[[0,36],[160,36],[160,48],[0,48]]},
+        {"rect":[72,80,91,121]}
+      ]}
+    ]},
+    "colliders":[
+      {
+        "name":"room.wall.north",
+        "kind":"solid",
+        "area":{"polygon":[[0,36],[160,36],[160,48],[0,48]]},
+        "condition":{"constant":true},
+        "derived_from":["project-fact:example-only"]
+      }
+    ],
+    "portals":[
+      {
+        "name":"room.exit.south",
+        "area":{"rect":[70,164,90,168]},
+        "destination":"next-room.entry.north"
+      }
+    ],
+    "anchors":[
+      {
+        "name":"room.safe.center",
+        "point":[80,100],
+        "qualification":"actor footprint clear under current collider set"
+      }
+    ]
+  }
+}
+```
+
+The numbers and identifiers above illustrate a schema only. They are not PQ1
+facts. A production extension should support the same bounded rectangle,
+polygon, union, intersection and subtraction vocabulary as scene action areas,
+plus explicit conditional colliders, transition portals and qualified anchors.
+If the actor has a non-point collision footprint, store that footprint and its
+anchor convention too; a point inside a walkable polygon does not establish
+that the complete sprite footprint fits.
+
+Prefer static derivation from the selected game's code and room/control
+resources over trial-and-error walking. Every derived region should retain the
+exact project/static version, source facts or resource hash, extraction rule,
+coordinate transform and evidence status. Deterministic recovery from an exact
+room table or control map may support `derived`; a shape inferred from a
+decompiler hypothesis remains `inferred` until the relevant semantics are
+qualified. Dynamic doors, moving actors, inventory gates and script-controlled
+barriers remain conditions, not permanently baked geometry.
+
+This representation improves both movement and diagnosis:
+
+- reject an impossible destination or actor footprint before sending input;
+- predict the first static boundary intersected by a route;
+- classify a constant-position failure at that boundary as
+  `blocked_known_boundary` while preserving the ordinary screenshot;
+- keep `blocked_unknown` when runtime state disagrees with static geometry;
+- select only anchors proven clear for the current room/state before a
+  diagnostic teleport; and
+- compare runtime discoveries with the source-derived map and preserve any
+  contradiction as evidence rather than silently editing the map.
+
+The route receipt should bind the navigation-extension hash and record the
+expected/intersected region or portal. Geometry is advisory until the exact
+runtime coordinate object and current conditional-collider state have been
+resolved. A bounding box alone is never proof that all enclosed points are
+walkable.
+
 ## Contrasting control profiles
 
 These examples describe the intended distinction, not an implemented schema.
@@ -312,6 +402,13 @@ Use redistributable authored fixtures rather than proprietary game assets.
   movement failure receipt.
 - A diagnostic teleport after obstruction creates a separate recovery receipt
   and cannot rewrite the failed walked-route result.
+- Source-derived room bounds, walkable areas, colliders, portals and anchors
+  retain byte-version and extraction provenance; a known-boundary blockage is
+  distinguished from an unexplained constant-position failure.
+- Navigation geometry uses an explicit game-coordinate space and actor anchor;
+  screenshot-pixel areas are not silently treated as movement coordinates.
+- A conditional collider change invalidates the active route preflight and
+  forces a fresh semantic observation before movement or teleport.
 - Restart preserves immutable macro definitions but not session-owned leases or
   stale runtime addresses.
 - Existing `fdisbull-script-1`, `keyboard.press`, `keyboard.type`, scenes,
@@ -335,9 +432,12 @@ identified PQ1 edition, not a universal movement rule.
   observations can express the route.
 - Do not make fDisBull the AEC cartridge runtime merely because both can consume
   the same qualified control vocabulary.
+- Do not treat a rectangular room bound as a complete collision map or erase a
+  runtime counterexample to source-derived geometry.
 
 ## Claim ceiling
 
 This document recommends a boundary and acceptance contract. It does not
 implement macro persistence or expansion, separate key-down/key-up input,
-semantic navigation, an AGI adapter or an AEC control profile.
+semantic navigation, scene-navigation geometry, an AGI adapter or an AEC
+control profile.

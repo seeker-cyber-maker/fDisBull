@@ -63,6 +63,17 @@ after the blocked receipt is frozen. Record it as a separate diagnostic branch,
 re-resolve runtime objects and verify context. Never relabel the failed walked
 route as completed because teleport bypassed the obstruction.
 
+Prefer source-derived navigation geometry over discovering every wall by
+walking into it. A proposed scene `navigation` extension can retain room bounds,
+walkable regions, collision regions, transition portals, safe anchors and actor
+footprint in an explicit game-coordinate space. Bind each shape to the exact
+byte/resource version and the code, room/control resource, extraction rule and
+coordinate transform that produced it. Screen-pixel action masks are not
+silently game movement coordinates. Conditional doors, actors and scripted
+barriers must remain conditional. A static boundary plus a stalled runtime
+coordinate can support `blocked_known_boundary`; without that corroboration,
+retain `blocked_unknown` and the counterexample.
+
 A useful conditional vocabulary is `eq`, `ne`, `lt`, `le`, `gt`, `ge`,
 `in_range`, `changed`, `unchanged_for`, `crossed_up` and `crossed_down`. A result
 should retain the semantic resolver and field, session-resolved address as

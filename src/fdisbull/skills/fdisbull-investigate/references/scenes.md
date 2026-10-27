@@ -97,6 +97,28 @@ Track an investigation decision alongside the object's context, for example:
 Confidence is not a score to maximize by collecting more prose. Prefer the
 smallest probe that can change the next decision; preserve counterexamples.
 
+## Proposed navigation geometry extension
+
+The implemented `fdisbull-scene-1` areas above are native screen-pixel masks for
+recognition and input. Do not reuse them implicitly as game movement geometry.
+A future, separately versioned `navigation` extension should be able to retain:
+
+- an explicit logical coordinate space, origin, units and actor anchor;
+- the actor collision footprint when it is not a point;
+- room bounds and a bounded walkable region;
+- named static or conditional colliders;
+- room-transition portals and their destination anchors; and
+- qualified safe anchors for separately authorized diagnostic teleportation.
+
+Derive this geometry from exact-version code, room tables, control maps or other
+static game resources when available instead of learning it through repeated
+collisions. Preserve source/resource hashes, project facts, extraction rule,
+coordinate transform and `derived` versus `inferred` evidence status. Runtime
+contradictions are evidence and must not be hidden by rewriting the definition.
+Dynamic doors, actors and script-controlled barriers remain conditions requiring
+fresh observation. A room bounding box alone does not prove its interior is
+walkable, and a diagnostic teleport never proves that an ordinary route worked.
+
 ## Adaptation provenance
 
 This skill paraphrases selected investigation principles from the user-provided
