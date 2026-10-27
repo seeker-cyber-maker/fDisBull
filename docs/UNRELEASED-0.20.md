@@ -12,6 +12,5 @@ This is development work, not a version bump, release, or complete game recovery
 
 The integrated local Python suite passed 1,169 tests with 94 skipped. Focused tests with the configured Linux layers DOSBox-X binary passed 49 tests for COM, window, native contract and processor seams, and 24 debugger/semantics tests including a real watch-stop check. These are scoped checks, not a blanket platform qualification. See [spectator verification](VERIFICATION-SPECTATOR-CLOUD.md) for the synthetic GUI test and its limits. The stable non-layers patch was not built in that run; macOS remains unverified.
 
-Read-only checks of two 2.917 game installations exercised the partial resource decoder; paths stopped at unsupported opcodes. A prior observed branch was consistent with one decoded conditional, subject to the cross-session evidence boundary. This does not demonstrate complete compatibility or recovery.
 
 UIL and target-language generators remain future work. A playable harness is a separate, weaker gate than full implementation recovery; neither is claimed here.

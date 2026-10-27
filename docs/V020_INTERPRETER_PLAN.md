@@ -1,6 +1,6 @@
 # From game investigation to reusable semantics: design notes and proposed backlog
 
-This document records the conceptual direction alongside the 0.20 work, not a claim that the proposed pipeline has shipped. The PQ1 and KQ1 experiments provide bounded evidence, not a complete recovered game. The processor seam in this candidate is minimal native/CIL/toy decoding—not an AGI or Z-machine module, generic persistence, or a complete VM. The COM and spectator changes are also candidate work; see their verification notes for the scope actually tested.
+This document records the conceptual direction alongside the 0.20 work, not a claim that the proposed pipeline has shipped. The processor seam in this candidate is minimal native/CIL/toy decoding—not an AGI or Z-machine module, generic persistence, or a complete VM. The COM and spectator changes are also candidate work; see their verification notes for the scope actually tested.
 
 ## Direction captured
 
@@ -30,4 +30,4 @@ These are design proposals beyond the implemented candidate seams, not features 
 
 ## Evidence boundaries and immediate next questions
 
-PQ1's natural input, message-byte read and display do not yet establish its guest opcode/branch or disk-load chain. KQ1's separate DOS open/read and interpreter-fetch runs support a qualified cross-session connection; byte alignment suggests the source offset, but the seek was not traced. Neither experiment proves complete action semantics or the proposed UIL pipeline. Next practical design validation is one reproducible scene with a proven action and contrasting control; define output contracts and failure cases before claiming portability or broader automation.
+The implemented AGI decoder is a conservative static subset. Next practical validation is one reproducible authored scene with an action and contrasting control. Define output contracts and failure cases before claiming portability or broader automation.
