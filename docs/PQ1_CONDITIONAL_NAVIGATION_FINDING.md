@@ -7,7 +7,7 @@ Observed: 2026-10-27
 Tested fDisBull release: `v0.18.0` at `416b64d9f4bfcf56e2876656d43f1d6a3d6cfdae`
 
 Current applicability: the relevant public debugger restrictions are unchanged
-on `main` at `2544b604bd5736d5f754fbdc2b099cd8905b609a`
+in finalized 0.19.0 source at `57824bd9a06c7f25f6a25172b3f4dcb4dfcfdc95`
 
 ## Summary
 
@@ -99,7 +99,10 @@ The relevant APIs deliberately bind observations to static project authority:
 - `wait()` can compare memory, registers or status, but its memory observation
   calls the restricted public memory method;
 - `hook()` has no condition/predicate and can only change layer stacks, redirect
-  execution or apply checked register edits after each admitted hit.
+  execution or apply checked register edits after each admitted hit;
+- keyboard input exposes an atomic make/hold/break `press`, but not separate
+  controller-owned key-down and key-up primitives for movement held across a
+  semantic wait.
 
 Those restrictions are safer than accepting an arbitrary conventional-RAM
 address. The gap is an explicit semantic runtime authority that re-resolves the
@@ -141,12 +144,28 @@ Required invariants:
    uses the same movement latch.
 10. Preserve existing mapped-module memory, breakpoint and hook behavior.
 
+A movement route should also define expected progress. If x/y remains unchanged
+for a bounded number of qualified frames, semantic samples or watched writes
+while the destination is still false, the route should neutralize input and end
+early as `blocked`. Its receipt should retain the last-changing/final coordinates,
+budgets, stop result and an immediate authentic diagnostic screenshot. Constant
+coordinates are compatible with a wall/collision, but that cause should remain a
+hypothesis unless a game flag or traced collision branch corroborates it.
+
 The consumer can then implement a target-specific `walk until` transaction:
 send ordinary direction input, wait on the semantic predicate, send the target's
 ordinary neutralizing input, and verify settled direction, in-range coordinate,
 unchanged context and an empty input queue. If the coordinate remains unchanged
 for the declared limit or the adapter reports a no-movement flag, the route ends
 as blocked rather than consuming its entire budget blindly.
+
+The target-specific start/stop policy should be expressed through a selected,
+versioned macro set rather than hard-coded into the semantic navigator. PQ1 can
+define `move.start(direction)` and `move.stop(direction)` as two complete presses
+of the same arrow. A hold-to-move game can define start as key-down and stop as
+key-up. User-defined names such as `down`, `stop`, `press` or `release` remain
+local to that macro set, while receipts preserve the stable physical expansion.
+See [Versioned semantic input macros](SEMANTIC_INPUT_MACROS.md).
 
 ## Acceptance checks for a future implementation
 
@@ -161,10 +180,18 @@ Use a deterministic open fixture rather than PQ1 assets.
   positive and negative tests.
 - Wrong target hash, ambiguous object, stale address after relocation, context
   change and exhausted budgets fail closed with distinct incomplete outcomes.
+- A stalled route with constant x/y fails as `blocked` before exhausting the
+  whole guest-time budget, settles input and retains an authentic screenshot;
+  reaching the destination on the last allowed sample is not a false blockage.
 - Restore/restart forces fresh resolution and never trusts the old address.
 - A target-specific fixture route clears its latched input and verifies a
   settled final state after the predicate stop.
+- A hold-to-move fixture uses separate key-down/key-up with an owned input lease;
+  a latch fixture uses repeated atomic presses. The same semantic macro names
+  expand differently and retain distinct identities/receipts.
 - Existing module-bound memory waits, breakpoints and hooks remain unchanged.
+- A named-anchor teleport after a blocked route is a separate diagnostic
+  recovery receipt and does not promote the walked route to success.
 - Distribution checks prove no game files, states, screenshots, databases or
   proprietary evidence entered the package.
 
