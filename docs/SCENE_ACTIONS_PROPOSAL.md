@@ -3,7 +3,7 @@
 Status: design specification. The first implementation is documented in
 [SCENE_FRAMEWORK.md](SCENE_FRAMEWORK.md): persistent definitions/evidence, shared
 overlays, composite rectangles/polygons, named actions and native DOS RGB probes.
-It is unreleased source, separate from the published 0.16.0 packages. SVG/bitmap
+That implementation ships in [0.17.0](DELIVERY-0.17.md). SVG/bitmap
 imports, classifier integration and a graphical authoring editor remain future
 work; the broader design below must not be read as an implementation claim.
 

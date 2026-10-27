@@ -1,0 +1,125 @@
+{
+  "version": "0.17.0",
+  "tag": "v0.17.0",
+  "source_commit": "4f736f27fed30b4277c931428a675a692e457e76",
+  "release_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.17.0",
+  "tag_ci": {
+    "ordinary": {
+      "run": 40438615862,
+      "passed": 1079,
+      "skipped": 65
+    },
+    "native": {
+      "run": 40438615842,
+      "stable-backend": {
+        "tests": 38,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "layers-backend": {
+        "tests": 318,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pe64": {
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "unified": {
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    }
+  },
+  "packages": {
+    "fdisbull-0.17.0.tar.gz": {
+      "size": 721078,
+      "sha256": "37c5c31830607189a7c9ae65d8844314330c34fac55909472b4e9347e7896d57"
+    },
+    "fdisbull-0.17.0-py3-none-any.whl": {
+      "size": 372500,
+      "sha256": "1f098a8c26a4e573a9819ad0d681d55865101b547f4ec217b986c0179eaaa3cc"
+    },
+    "fdisbull-0.17.0-tool.zip": {
+      "size": 857887,
+      "sha256": "8deeb13ad1887f207d57d5783af2db7bdfadb056e05dfccc94f4b39d09e3fce0"
+    }
+  },
+  "matching_wheel_entries": 99,
+  "matching_tool_entries": 94,
+  "backend": {
+    "source_commit": "4f736f27fed30b4277c931428a675a692e457e76",
+    "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+    "backend_sha256": "c04b1c189530af93cf054505ee92f2336c83b86e819bae8d8370350d23259fc6",
+    "patch_sha256": "7747e0db96914a0a4c609916c27318c463addbabbba54e50803189b41eaa190c",
+    "profile": "experimental/dosbox-x/layers",
+    "acceptance_tests": [
+      "tests/test_debugger.py",
+      "tests/test_keyboard.py",
+      "tests/test_debug_wait.py",
+      "tests/test_code_layers.py",
+      "tests/test_debug_experiments.py",
+      "tests/test_runtime_code.py",
+      "tests/test_debug_semantics.py",
+      "tests/test_doctor.py",
+      "tests/test_screenshot_grid.py",
+      "tests/test_scenes.py",
+      "tests/test_ida_dosbox.py",
+      "tests/test_dosbox_zip_stream.py",
+      "tests/test_library_catalog.py",
+      "tests/test_rich_types.py",
+      "tests/test_dos_services.py"
+    ],
+    "tag": "v0.17.0",
+    "tag_ci_run": 40438615842,
+    "launcher_sha256": "0a33bb3fdada3e422e3c222892b768da6f340626689201537979a2ed67200ae6",
+    "binary_transformations": "none; exact tag-CI ELF",
+    "native_pixel_probe": true
+  },
+  "offline_kit": {
+    "sha256": "5e624e6289fe6a2be83467db0a8e9ba4c5115b22b49a1a90c767b07048680b34",
+    "size": 99201694,
+    "payload_files": 335,
+    "manifest_sha256": "bdb9e5964976b2b8bbd1b42a97c451fbf040c6510d7c5ed40f37b70818db0050",
+    "filename": "fdisbull-linux-dos-offline-0.17.0-4f736f2-2026-10-26.zip"
+  },
+  "local_copied_qualification": {
+    "mac_native_checks": 318,
+    "mac_boot_checks": 7,
+    "mac_wine": "isolated copied-runtime doctor passed",
+    "mac_dos_qemu": "copied-runtime doctor passed",
+    "linux_offline_native_checks": 318,
+    "linux_native_archive_checks": 49,
+    "linux_native_invalid_archives": 0,
+    "linux_python": "3.13.5",
+    "mac_python": "3.13.14",
+    "tag_ci": {
+      "ordinary": 40438615862,
+      "native": 40438615842
+    },
+    "external_deepseek_environment_accessed": false,
+    "linux_archive_extraction_checks": 20,
+    "linux_archive_manifest_install_and_modes": "passed after actual Python ZIP extraction, without a network interface"
+  },
+  "original_game_evidence": "docs/VERIFICATION-SCENES.md preserves the original 0.17.0.dev0 installed DinoPark run; scene/runtime source identities retained in the release",
+  "exclusions": [
+    "game files",
+    "saved games",
+    "captured emulator/native states",
+    "project databases",
+    "vendor IDA servers/keys"
+  ],
+  "caveats": [
+    "New backend hashes require compatible checkpoints",
+    "Native pixel scene probing is direct DOSBox only",
+    "Readiness predicates are authored; pixel presence alone does not prove readiness",
+    "Mac QEMU uses existing Homebrew libraries",
+    "Linux QEMU is a separate host dependency; compact kit is direct Linux DOS"
+  ]
+}

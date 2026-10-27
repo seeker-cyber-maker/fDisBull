@@ -1,0 +1,24 @@
+{
+  "exit_codes": {
+    "verify": 0,
+    "install": 0,
+    "helper": 0,
+    "native": 0
+  },
+  "identity": {
+    "python": "3.13.5 (main, Jul 23 2025, 00:37:22) [Clang 20.1.4 ]",
+    "module": "/work/venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+    "version": "0.17.0",
+    "wheel_sha256": "1f098a8c26a4e573a9819ad0d681d55865101b547f4ec217b986c0179eaaa3cc",
+    "matching_installed_tool_entries": 94,
+    "backend_sha256": "c04b1c189530af93cf054505ee92f2336c83b86e819bae8d8370350d23259fc6",
+    "state_archive_checks": 49,
+    "save_checks": 17,
+    "load_checks": 32,
+    "invalid_archives": 0,
+    "network": "QEMU -nic none; pip --no-index --require-hashes",
+    "external_deepseek_environment_accessed": false,
+    "test_exit_code": 0
+  },
+  "external_deepseek_environment_accessed": false
+}

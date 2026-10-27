@@ -8,13 +8,18 @@ An agent-first disassembler with a persistent SQLite analysis database, explicit
 
 Requires Python **3.12 or later**.
 
-[**fDisBull 0.16.0 is published**](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.16.0),
-with CI-verified packages and an updated
-[Linux/DOS offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.16.0/fdisbull-linux-dos-offline-0.16.0-e1e3fb4-2026-10-26.zip).
-See the [release notes](docs/RELEASE-0.16.0.md) and
-[publication/delivery verification](docs/DELIVERY-0.16.md).
+[**fDisBull 0.17.0 is published**](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.17.0),
+with CI-verified packages and the updated
+[Linux/DOS offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.17.0/fdisbull-linux-dos-offline-0.17.0-4f736f2-2026-10-26.zip).
+See the [release notes](docs/RELEASE-0.17.0.md) and
+[publication/delivery verification](docs/DELIVERY-0.17.md).
 
-This release consolidates [saved experiments and baseline/layer comparisons](docs/DEBUGGER_EXPERIMENTS.md),
+Persistent scenes share object context, supporting snapshots and composite masks
+between overlays and checked named actions. The updated DOSBox backend provides
+native RGB probes without PNG transfer. The bundled `fdisbull-investigate` skill
+prioritizes expected reward and probe cost alongside confidence.
+
+Version 0.16.0 consolidated [saved experiments and baseline/layer comparisons](docs/DEBUGGER_EXPERIMENTS.md),
 [guest keyboard input](docs/GUEST_KEYBOARD.md), [bounded observation waits](docs/OBSERVATION_WAIT.md),
 [temporal code interpretations](docs/RUNTIME_CODE.md), [observation semantics](docs/DEBUGGER_SEMANTICS.md)
 and the [runtime doctor](docs/RUNTIME_DOCTOR.md). Its
@@ -48,7 +53,8 @@ feature limits and the ordinary/native Linux checks required before tagging.
 
 | Track | Source and availability | Verification |
 | --- | --- | --- |
-| **Latest published release: 0.16.0** | [Packages and updated offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.16.0), source `e1e3fb4` | [Tag CI and copied-pair verification](docs/DELIVERY-0.16.md): 1,077 ordinary, 32 stable DOS, 312 layers, 16 PE64 and 10 DOS/QEMU/boot checks passed; no native skips. |
+| **Latest published release: 0.17.0** | [Packages and updated offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.17.0), source `4f736f2` | [Tag CI and copied-pair verification](docs/DELIVERY-0.17.md): 1,079 ordinary, 38 stable DOS, 318 layers, 16 PE64 and 10 DOS/boot checks passed; zero native skips. |
+| **Earlier published release: 0.16.0** | [Packages and updated offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.16.0), source `e1e3fb4` | [Tag CI and copied-pair verification](docs/DELIVERY-0.16.md): 1,077 ordinary, 32 stable DOS, 312 layers, 16 PE64 and 10 DOS/QEMU/boot checks passed; no native skips. |
 | **Historical source candidate: 0.15.0** | [Saved debugger experiments](docs/DEBUGGER_EXPERIMENTS.md) on the existing unified debugger | [Candidate notes](docs/RELEASE-0.15.0.md) and [local verification](docs/VERIFICATION-0.15.md). No 0.15.0 tag/release; exact CI packages are additionally available in the GitHub offline asset. |
 | **Earlier published release: 0.14.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0), commit `6a0aeb3` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623197): 817 passed, 45 skipped. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623209): 15 stable DOS, 38 layers/endpoint, 14 PE64 and 10 DOS/QEMU/boot checks passed, no native skips. |
 | **Repository branch** | [main](https://github.com/seeker-cyber-maker/fDisBull/tree/main) is the only active branch | Release promotion requires both ordinary and native Linux CI. Use version tags for fixed source snapshots. The old experimental checkpoint is preserved under an archive tag. |
@@ -59,7 +65,7 @@ The Python packages do **not** include an emulator. Source builds use the [stabl
 
 The [release-status record](docs/RELEASE_STATUS.md) distinguishes tagged source, published packages and historical candidate receipts. Ordinary Python CI may skip native tests; [required native acceptance](docs/DOSBOX_DEBUGGER.md#required-native-acceptance) builds or selects the real patched backend and runs the existing tests against it.
 
-The current [0.16 DeepSeek delivery](docs/DELIVERY-0.16.md) contains the published packages, keyboard-capable DOSBox, tested Mac QEMU/Wine profiles and audited pristine boot filesystems. Its Linux 3.13.5 offline kit passed 312 native checks and 46 save/load CRC checks; both copied bundles passed complete manifest and ZIP readback.
+The current [0.17 DeepSeek delivery](docs/DELIVERY-0.17.md) contains the published packages, scene-capable DOSBox, bundled agent skill, tested Mac QEMU/Wine profiles and audited pristine boot filesystems. Its no-network Linux 3.13.5 kit passed 318 checks and 49 save/load archive CRC checks; the actual ZIP separately passed extraction, permission repair, installation and 20 keyboard/scene checks. Both copied bundles passed complete manifest and ZIP readback.
 
 The [delivered DinoPark leaderboard replay](docs/VERIFICATION-DINOPARK-LEADERBOARD.md)
 typed `DeepSeek016`, clicked OK and verified the saved score table through the
@@ -111,15 +117,15 @@ Launch an original DOS MZ project with `fdisbull debug PROJECT --executable PATH
 
 The real DinoPark path was verified through this interface. A ten-second guest skip completed in about 0.45 host seconds on the tested Mac, with actual elapsed values recorded; this is not a speed guarantee. The separately built DOSBox backend is required and is not bundled with the Python tool.
 
-## Persistent scenes (0.17.0 source)
+## Persistent scenes (0.17.0)
 
 The [scene framework](docs/SCENE_FRAMEWORK.md) saves object context, trigger
 provenance, revisions and supporting screenshots in the project database. One
 manifest drives native-pixel overlays and named guest actions, with composite
 rectangle/polygon masks, separate visible/ready/enabled checks, bounded outcome
 verification and saved desynchronization/collision evidence. The updated DOSBox
-patch provides sparse RGB probes without PNG transfer. This source addition
-requires rebuilding the backend; published 0.16.0 binaries do not contain it.
+patch provides sparse RGB probes without PNG transfer. The 0.17.0 offline kit
+supplies the tested backend; earlier 0.16.0 binaries do not contain this probe.
 
 The bundled `fdisbull-investigate` agent skill is available with
 `fdisbull agent-skill`. It guides evidence-based reverse engineering and scene
@@ -129,9 +135,8 @@ implemented. [Implementation and limits](docs/SCENE_FRAMEWORK.md).
 The [installed-wheel DinoPark verification](docs/VERIFICATION-SCENES.md) exercises
 named controls, a popup handler, masks, collisions, restart and debugger stops.
 It records the original `0.17.0.dev0` development build. The
-[0.17.0 release notes](docs/RELEASE-0.17.0.md) describe source promotion and the
-ordinary/native Linux CI gates required before tagging. The latest published
-packages remain 0.16.0 until a separate GitHub release is published.
+[publication/delivery record](docs/DELIVERY-0.17.md) documents the completed
+ordinary/native tag CI, exact published packages and copied backend checks.
 
 ## Tool packages and examples
 

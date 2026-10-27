@@ -1,22 +1,26 @@
 # Release status checked on 2026-10-26
 
-## Current 0.17.0 source
+## Published 0.17.0
 
-The [0.17.0 source](RELEASE-0.17.0.md) adds persistent scenes, shared named
-actions/overlays, composite action masks, native RGB sampling and a bundled
-investigation skill. The [DinoPark verification](VERIFICATION-SCENES.md) and its
-immutable receipts record the original `0.17.0.dev0` installed-wheel run on
-macOS ARM64; they are not relabeled as Linux or final-version gameplay runs.
-The release source retains the verified scene/runtime code and complete backend
-patches. Version metadata and release documentation are promoted separately.
+[0.17.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.17.0),
+not draft or prerelease, at fixed source `4f736f27fed30b4277c931428a675a692e457e76`.
+Both exact-commit workflows passed before tagging and on the tag. Tag CI passed
+1,079 ordinary tests (65 skipped), 38 stable DOS, 318 layers (Python 3.13.5),
+16 PE64 and 10 DOS/boot checks; all native suites had zero failures/errors/skips.
+All 99 wheel entry contents match the native-tested wheel. Seven published
+assets were downloaded and matched against their GitHub digests and local bytes.
 
-Both ordinary and native Linux workflows must pass on the exact release commit
-before creating `v0.17.0`. The native gate includes stable DOS, layered DOS with
-Python 3.13.5, and installed-wheel unified DOS/boot/PE64 acceptance. GitHub Actions
-records the actual results for each commit. Tag CI and GitHub release publication
-are separate later gates; this source note does not claim published packages.
+The [0.17 publication/delivery record](DELIVERY-0.17.md) describes the updated
+Linux/DOS offline kit, complete copied Mac backends and pristine boot inputs.
+Fresh no-network Linux 3.13.5 passed 318 checks and 49 state-archive CRC checks;
+the actual sealed ZIP separately passed extraction, executable-mode restoration,
+verification, installation and 20 keyboard/scene checks. Copied Mac acceptance
+passed 318 DOS checks, seven boot/GDB checks and isolated DOS/QEMU and Wine/QEMU
+doctors. Game files, native states, databases and vendor IDA servers/keys are
+excluded. The source tag and package bytes remain fixed; these later publication
+notes do not relabel the immutable 0.17.0.dev0 original-game evidence.
 
-## Published 0.16.0
+## Earlier published 0.16.0
 
 [**0.16.0 is published**](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.16.0),
 not draft or prerelease, at `e1e3fb4913d6d8fae7893c2c9b8edf364d144953`.

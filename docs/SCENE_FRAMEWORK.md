@@ -1,4 +1,7 @@
-# Persistent debugger scenes (unreleased)
+# Persistent debugger scenes (0.17.0)
+
+For published packages, tag CI and copied qualification, see the
+[0.17 delivery record](DELIVERY-0.17.md).
 
 Scenes are now project database objects. A versioned manifest drives both the
 headless overlay and named guest actions. Clean snapshots, object identities,

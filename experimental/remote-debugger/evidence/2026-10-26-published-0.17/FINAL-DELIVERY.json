@@ -1,0 +1,55 @@
+{
+  "version": "0.17.0",
+  "tag": "v0.17.0",
+  "source_commit": "4f736f27fed30b4277c931428a675a692e457e76",
+  "release_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.17.0",
+  "published_assets_verified": 7,
+  "qualification": {
+    "mac_native_checks": 318,
+    "mac_boot_checks": 7,
+    "mac_wine": "isolated copied-runtime doctor passed",
+    "mac_dos_qemu": "copied-runtime doctor passed",
+    "linux_offline_native_checks": 318,
+    "linux_native_archive_checks": 49,
+    "linux_native_invalid_archives": 0,
+    "linux_python": "3.13.5",
+    "mac_python": "3.13.14",
+    "tag_ci": {
+      "ordinary": 40438615862,
+      "native": 40438615842
+    },
+    "external_deepseek_environment_accessed": false,
+    "linux_archive_extraction_checks": 20,
+    "linux_archive_manifest_install_and_modes": "passed after actual Python ZIP extraction, without a network interface"
+  },
+  "deliveries": {
+    "full": {
+      "directory": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.17.0-4f736f2",
+      "bundle": {
+        "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-unified-debugger-0.17.0-published-2026-10-26-4f736f2.zip",
+        "sha256": "88c5b342234ee21ed3802b52c17e3c84a046d03b3e997cb0507babdffee7b29f",
+        "size": 1571164911
+      },
+      "payload_files": 598,
+      "manifest_sha256": "8ee1cf76cc8646e83c0bed7a969a335bc3d4cfbae13a3e851a70626162e7cde5",
+      "verifier": "VERIFIED: 0.17.0 598 payload files; 63 private libraries; 2 audited pristine runtimes",
+      "zip_readback": "CRC, every member hash and executable mode passed"
+    },
+    "compact": {
+      "directory": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-linux-dos-offline-0.17.0-4f736f2",
+      "bundle": {
+        "path": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-linux-dos-offline-0.17.0-4f736f2-2026-10-26.zip",
+        "sha256": "5e624e6289fe6a2be83467db0a8e9ba4c5115b22b49a1a90c767b07048680b34",
+        "size": 99201694
+      },
+      "payload_files": 335,
+      "manifest_sha256": "bdb9e5964976b2b8bbd1b42a97c451fbf040c6510d7c5ed40f37b70818db0050",
+      "verifier": "VERIFIED: 0.17.0 335 payload files; 63 private libraries; 0 audited pristine runtimes",
+      "zip_readback": "CRC, every member hash and executable mode passed"
+    }
+  },
+  "captured_states_included": false,
+  "project_databases_included": false,
+  "game_files_included": false,
+  "previous_deliveries_preserved": true
+}
