@@ -15,7 +15,7 @@ class Session(movement.MovementSessionMixin):
         return {'ok':self.stop_ok if name=='stop' else True}
     def run(self,**kwargs):
         self.calls.append(('run',kwargs));return next(self.runs,{'outcome':'guest_time','guest_elapsed_ms':10,'hook_hits':[]})
-    def keyboard_state(self):return {'keyboard':{'pending_events':[],'owned_keys':[]}}
+    def keyboard_state(self):return {'keyboard':{'pending_events':0,'owned_keys':0}}
     def screenshot(self,name,*,hooks=True):
         self.calls.append(('screenshot',hooks));return {'artifact':'diagnostic','metadata':{}}
     def close(self):self.calls.append(('close',));self.closed=True
@@ -163,3 +163,27 @@ def test_control_macro_cannot_consume_guest_budget(monkeypatch):
     s._macro_plan=lambda *args:({'id':'macros','sha256':'hash'},{'script':{'steps':[{'op':'run','guest_ms':100}]}})
     with pytest.raises(ValueError,match='physical input only'):invoke(monkeypatch,s)
     assert not s.calls
+
+
+def test_native_move_preserves_caller_owned_key(keyboard_game,emulator):
+    from fdisbull.project import Project
+    path,binary=keyboard_game
+    with Project(path) as project, project.debugger(emulator,binary.parent) as session:
+        session.run(guest_ms=100,timeout_ms=3000,fast_forward=True)
+        macros=project.debug_define_macros({'format':'fdisbull-macro-set-1','name':'fixture', 'macros':{
+            'start':{'steps':[{'op':'keyboard.press','key':'a','hold_ms':20,'gap_ms':20}]},
+            'stop':{'steps':[{'op':'keyboard.press','key':'b','hold_ms':20,'gap_ms':20}]}}})
+        lease=session.keyboard_key_down('left')['lease']
+        session.run(guest_ms=100,timeout_ms=3000,fast_forward=True)
+        before=session.keyboard_state()['keyboard']
+        assert before['owned_keys']==1 and not before['pending_events']
+        result=session.move(macros['id'],start={'name':'start'},stop={'name':'stop'},
+            observations={'x':{'memory':{'address':'1000:0100','type':'u8'}}},
+            until={'field':'x','op':'eq','value':97},progress={'fields':['x'],'samples':10},
+            settle={'field':'x','op':'in_range','value':[0,255]},slice_ms=100,guest_ms=1000,timeout_ms=5000)
+        assert result['outcome']=='initial_input_not_clear' and not result['ok']
+        assert not result['cleanup']['attempted'] and not session.closed
+        assert session.keyboard_state()['keyboard']==before and lease in session._keyboard_leases
+        session.keyboard_key_up(lease)
+        session.run(guest_ms=100,timeout_ms=3000,fast_forward=True)
+        assert session.keyboard_state()['keyboard']['owned_keys']==0

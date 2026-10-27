@@ -10,7 +10,7 @@ This is development work, not a version bump, release, or complete game recovery
 
 ## Verification and limits
 
-The integrated local Python suite passed 1,169 tests with 94 skipped. Focused tests with the configured Linux layers DOSBox-X binary passed 49 tests for COM, window, native contract and processor seams, and 24 debugger/semantics tests including a real watch-stop check. These are scoped checks, not a blanket platform qualification. See [spectator verification](VERIFICATION-SPECTATOR-CLOUD.md) for the synthetic GUI test and its limits. The stable non-layers patch was not built in that run; macOS remains unverified.
+The latest integrated local Python suite passed 1,231 tests with 98 skipped. An earlier integration run passed 1,169 tests with 94 skipped. Focused tests with the configured Linux layers DOSBox-X binary passed 49 tests for COM, window, native contract and processor seams, and 24 debugger/semantics tests including a real watch-stop check. These are scoped checks, not a blanket platform qualification. See [spectator verification](VERIFICATION-SPECTATOR-CLOUD.md) for the synthetic GUI test and its limits. The stable non-layers patch was not built in that run; macOS remains unverified.
 
 
 UIL and target-language generators remain future work. A playable harness is a separate, weaker gate than full implementation recovery; neither is claimed here.
@@ -25,7 +25,7 @@ assumptions; it does not establish that the model matches the game. Bindings mus
 be re-established after state restoration. Movement rejects unqualified geometry
 and reports arrival separately from a qualified stop.
 
-The combined layers backend passed 414 configured native tests, including
+The combined layers backend passed 415 configured native tests in the latest run (the earlier run passed 414), including
 synthetic held-key ownership and movement checks. The exact optional Z3 dependency
 was used in proof tests. Both combined backend patches replayed against the pinned
 source and matched their 28 stable and 29 layers manifest hashes; only the layers

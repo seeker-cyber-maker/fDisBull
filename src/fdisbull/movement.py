@@ -74,6 +74,15 @@ def _refs(value,start):
     return value
 
 
+def _keyboard_counts(session):
+    keyboard=session.keyboard_state()['keyboard']
+    for field in ('pending_events','owned_keys'):
+        value=keyboard.get(field)
+        if type(value) is not int or value<0:
+            raise ValueError(f'Invalid keyboard {field} count')
+    return keyboard
+
+
 class MovementSessionMixin:
     @rpc_budget
     def move(self,macro_set, *, start,stop,observations,until,progress,settle,guest_ms=10000,timeout_ms=10000,
@@ -147,13 +156,14 @@ class MovementSessionMixin:
             if nav is not None and nav['classification']!='clear':
                 result['outcome']='geometry_disagreement';result['geometry_counterexample']=nav
                 raise ValueError('Initial footprint is not qualified clear')
+            keyboard=_keyboard_counts(self);result['cleanup']['keyboard']=keyboard
+            if keyboard['pending_events'] or keyboard['owned_keys']:
+                result['outcome']='initial_input_not_clear'
+                raise ValueError('Movement requires no pending or owned keyboard input')
             if matches(until,initial['values']):
                 result.update(outcome='already_arrived')
                 result['cleanup']['settled']=matches(settle,initial['values'])
                 if not result['cleanup']['settled']:result.update(ok=False,complete=False,outcome='initial_motion_not_settled')
-                keyboard=self.keyboard_state()['keyboard'];result['cleanup']['keyboard']=keyboard
-                if keyboard['pending_events'] or keyboard['owned_keys']:
-                    result.update(ok=False,complete=False,outcome='initial_input_not_clear')
                 if handle is not None and [initial['values'][position[k]] for k in ('x','y')]!=target:
                     result.update(ok=False,complete=False,outcome='destination_predicate_disagreement')
                 if result['outcome']=='already_arrived':result.update(ok=True,complete=True)
@@ -189,7 +199,7 @@ class MovementSessionMixin:
                         if handle is not None and [values[position[k]] for k in ('x','y')]!=target:
                             result['outcome']='destination_predicate_disagreement'
                         break
-                    keyboard=self.keyboard_state()['keyboard'];sample['keyboard']=keyboard
+                    keyboard=_keyboard_counts(self);sample['keyboard']=keyboard
                     if keyboard['pending_events']:
                         continue # Delivery accepted is not evidence it was consumed.
                     consumed=True
@@ -233,7 +243,7 @@ class MovementSessionMixin:
                         # Finish a queued make/hold/break before asking a latched
                         # profile to send its next complete press. These slices
                         # consume the reserved cleanup budget and preserve stops.
-                        while self.keyboard_state()['keyboard']['pending_events']:
+                        while _keyboard_counts(self)['pending_events']:
                             left=cleanup_guest_ms-result['cleanup_guest_elapsed_ms']
                             if left<=0:raise TimeoutError('Input delivery exceeded cleanup guest budget')
                             run=self.run(guest_ms=min(slice_ms,left),timeout_ms=wall_budget(),fast_forward=True,stop_on_hook=True)
@@ -246,7 +256,7 @@ class MovementSessionMixin:
                         if not stopped['ok']:raise ValueError('Stop macro failed')
                         while remaining() and result['cleanup_guest_elapsed_ms']<=cleanup_guest_ms:
                             sample=capture_observations(self,observations);result['cleanup']['last_observation']=sample
-                            keyboard=self.keyboard_state()['keyboard'];result['cleanup']['keyboard']=keyboard
+                            keyboard=_keyboard_counts(self);result['cleanup']['keyboard']=keyboard
                             if sample['complete'] and matches(settle,sample['values']) and not keyboard['pending_events'] and not keyboard['owned_keys']:
                                 result['cleanup']['settled']=True
                                 if result['outcome']=='arrived':
