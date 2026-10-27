@@ -17,7 +17,7 @@ def uploads(project,directory,target,files=None):
         seen.add(name.casefold());path=directory/name
         if any(p.is_symlink() for p in [path,*path.parents] if p!=directory.parent) or not path.is_file() or not path.resolve().is_relative_to(directory):
             raise ValueError('Assets must be regular files without symbolic links')
-        structured_mz_target = name==target and project.meta['format']=='MZ'
+        structured_mz_target = name==target and project.meta['format'] in ('MZ', 'COM')
         if path.resolve() in (project.path,Path(str(project.path)+'-wal'),Path(str(project.path)+'-shm')) or (path.suffix.lower() in ('.fdb','.db','.sqlite','.sqlite3','.sav','.state') and not structured_mz_target):
             raise ValueError('Do not upload project databases or saved states as game assets')
         total+=path.stat().st_size

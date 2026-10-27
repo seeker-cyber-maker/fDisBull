@@ -33,7 +33,7 @@ class AnalysisMixin:
     def _init_information(self, image, version=1):
         from .inspection import inspect_binary
         document = inspect_binary(image.source_bytes,slice_arch=image.metadata.get('slice_arch'),image=image.metadata.get('selected_image'))
-        if image.format == 'MZ':
+        if image.format in ('MZ', 'COM'):
             document=self._dos_document_for_image(image,document)
         if image.metadata.get('managed'):
             document['header']['managed']=image.metadata['managed']
@@ -48,7 +48,7 @@ class AnalysisMixin:
         self.db.execute('INSERT INTO analysis_state(version) VALUES (?)',(version,))
         self._index_symbols(version, document)
         self._fresh_facts(version)
-        if image.format=="MZ":
+        if image.format in ('MZ', 'COM'):
             self._dos_init(image,version)
 
     def _index_symbols(self, version, document):
@@ -232,7 +232,7 @@ class AnalysisMixin:
         self.db.execute("UPDATE investigations SET state='done',detail=NULL WHERE version=? AND context=? AND address=?",(version,self.context,k(address)))
 
     def analyze(self, version=None, start=None, max_instructions=10000,cs=None,ds=None,es=None,ss=None):
-        if self.meta["format"]=="MZ":
+        if self.meta["format"] in ('MZ', 'COM'):
             return self._dos_analyze(version,start,max_instructions,cs,ds,es,ss)
         if self.meta['format']=='PE':
             from .managed import managed_kind
@@ -244,7 +244,8 @@ class AnalysisMixin:
         if any(x is not None for x in (cs,ds,es,ss)):
             raise ValueError("segment registers apply only to DOS MZ")
         from .project import integer,number
-        from .decoder import decode
+        from .processor import NativeProcessor, Location, decode_instruction
+        processor=NativeProcessor(self.arch,self.bits)
         budget=integer(max_instructions,'max_instructions',1,1_000_000)
         with self.transaction(True):
             v=self.version(version)['id']
@@ -281,7 +282,8 @@ class AnalysisMixin:
                     attempted+=1
                     a=int(work[0],16)
                     region=mapped(a)
-                    ins=decode(region.data[a-region.start:a-region.start+16],a,self.arch,self.bits) if region and executable(a) else None
+                    result=decode_instruction(processor,region.data[a-region.start:a-region.start+16],Location(processor.info.address_space,a)) if region and executable(a) else None
+                    ins=result.facts if result else None
                     if ins is None or blocked(a,ins['size']):
                         state='blocked' if ins is not None else 'invalid'
                         self.db.execute('UPDATE work SET state=?,detail=? WHERE version=? AND context=? AND address=?',(state,'user data definition' if state=='blocked' else 'invalid or outside executable mapping',v,self.context,k(a)))
@@ -353,7 +355,7 @@ class AnalysisMixin:
 
     def _reset_analysis(self, version):
         self._reset_derived(version)
-        if self.meta["format"]=="MZ":
+        if self.meta["format"] in ('MZ', 'COM'):
             return self._dos_reset(version)
         for table in ('instructions','xrefs','operand_refs','data_items','work','investigations','memory_refs','analysis_facts_revision'):
             self.db.execute(f'DELETE FROM {table} WHERE version=?',(version,))

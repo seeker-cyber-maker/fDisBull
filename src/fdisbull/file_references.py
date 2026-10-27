@@ -67,7 +67,7 @@ class FileReferencesMixin:
             attached = self._external_file(v, file)
             if offset+(count-1)*stride+width > attached['size']:
                 raise ValueError('file reference exceeds attached file bytes')
-            if self.meta['format'] == 'MZ':
+            if self.meta['format'] in ('MZ', 'COM'):
                 a, selector = self._dos_parse_address(address, cs)
                 rows = self.db.execute('SELECT context,bytes FROM instructions WHERE version=? AND address=?',
                                        (v, key(a))).fetchall()
@@ -76,7 +76,7 @@ class FileReferencesMixin:
                 if len(rows) > 1:
                     raise ValueError('source has multiple CS interpretations; specify cs or CS:IP')
             else:
-                if cs is not None:raise ValueError('cs applies only to DOS MZ projects')
+                if cs is not None:raise ValueError('cs applies only to DOS projects')
                 a = number(address)
                 rows = self.db.execute('SELECT context,bytes FROM instructions WHERE version=? AND context=? AND address=?',
                                        (v, self.context, key(a))).fetchall()

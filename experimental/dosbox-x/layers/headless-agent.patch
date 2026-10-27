@@ -937,10 +937,10 @@ index 0000000..9f214a1
 +#endif
 diff --git a/include/agent/video_adapter.h b/include/agent/video_adapter.h
 new file mode 100644
-index 0000000..efc01ae
+index 0000000..a226f19
 --- /dev/null
 +++ b/include/agent/video_adapter.h
-@@ -0,0 +1,32 @@
+@@ -0,0 +1,35 @@
 +#ifndef DOSBOX_AGENT_VIDEO_ADAPTER_H
 +#define DOSBOX_AGENT_VIDEO_ADAPTER_H
 +
@@ -969,6 +969,9 @@ index 0000000..efc01ae
 +void AGENT_EnableFrameCapture(bool enabled);
 +bool AGENT_GetFrameSnapshot(FrameSnapshot* frame, std::string* error);
 +bool AGENT_IsHeadless();
++bool AGENT_IsSession();
++// Call on the emulation thread before starting the target.
++bool AGENT_ValidateWindow(std::string* error);
 +
 +} // namespace dosbox_agent
 +
@@ -1188,7 +1191,7 @@ index a315ca1..4f17576 100644
      return "unknown";
  }
 diff --git a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cpp
-index 29363cf..09e56dd 100644
+index 29363cf..1bd6bd0 100644
 --- a/src/agent/server/agent_server.cpp
 +++ b/src/agent/server/agent_server.cpp
 @@ -5,6 +5,12 @@
@@ -1366,7 +1369,7 @@ index 29363cf..09e56dd 100644
  static std::string Capabilities(const AgentConfig& config)
  {
      JsonValue result = Object();
-@@ -1194,6 +1305,31 @@ static std::string Capabilities(const AgentConfig& config)
+@@ -1194,6 +1305,36 @@ static std::string Capabilities(const AgentConfig& config)
  #else
      Add(&result, "debugger", JsonValue::Bool(false));
  #endif
@@ -1376,6 +1379,11 @@ index 29363cf..09e56dd 100644
 +    Add(&video, "format", String("png"));
 +    Add(&video, "source", String("last_completed_guest_frame"));
 +    Add(&video, "headless", JsonValue::Bool(AGENT_IsHeadless()));
++#if defined(C_SDL2)
++    Add(&video, "controlled_window", JsonValue::Bool(true));
++#else
++    Add(&video, "controlled_window", JsonValue::Bool(false));
++#endif
 +    Add(&result, "video", video);
 +    Add(&result, "save_states", JsonValue::Bool(true));
 +    Add(&result, "register_edit", JsonValue::Bool(true));
@@ -1398,7 +1406,7 @@ index 29363cf..09e56dd 100644
      JsonValue trace = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&trace, "cpu", JsonValue::Bool(true));
-@@ -1204,6 +1340,7 @@ static std::string Capabilities(const AgentConfig& config)
+@@ -1204,6 +1345,7 @@ static std::string Capabilities(const AgentConfig& config)
      JsonValue breakpoints = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&breakpoints, "memory_change", JsonValue::Bool(true));
@@ -1406,7 +1414,7 @@ index 29363cf..09e56dd 100644
  #else
      Add(&breakpoints, "memory_change", JsonValue::Bool(false));
  #endif
-@@ -1754,6 +1891,448 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1754,6 +1896,448 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  }
              }
          }
@@ -1855,7 +1863,7 @@ index 29363cf..09e56dd 100644
      } else if (parsed.method == "state.get_registers") {
          if (session->state == Impl::SessionState::Running) {
              response = SessionError(parsed.id, kErrorTargetRunning,
-@@ -1801,6 +2380,10 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1801,6 +2385,10 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              }
          }
      } else if (parsed.method == "memory.read") {
@@ -1866,7 +1874,7 @@ index 29363cf..09e56dd 100644
          const JsonValue* length_value = parsed.params.Find("length");
          std::uint32_t length = 0;
          MemoryAddress address;
-@@ -1820,12 +2403,18 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1820,12 +2408,18 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
          } else {
              const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
              const std::string session_id = session->id;
@@ -1886,7 +1894,7 @@ index 29363cf..09e56dd 100644
                      {
                          std::lock_guard<std::mutex> operation_lock(operation->mutex);
                          operation->success = success;
-@@ -1857,6 +2446,9 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1857,6 +2451,9 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  } else {
                      JsonValue result = SessionResult(*session);
                      Add(&result, "address", EncodeMemoryAddress(address));
@@ -1896,7 +1904,7 @@ index 29363cf..09e56dd 100644
                      Add(&result, "byte_count", Number(operation->data.size()));
                      Add(&result, "data_base64", String(EncodeBase64(operation->data)));
                      Add(&result, "sha256", String(Sha256Hex(operation->data)));
-@@ -1955,7 +2547,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1955,7 +2552,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                   item != session->breakpoints.end(); ++item) {
                  JsonValue entry = Object();
                  Add(&entry, "breakpoint_id", String(item->second.id));
@@ -1905,7 +1913,7 @@ index 29363cf..09e56dd 100644
                  Add(&entry, "enabled", JsonValue::Bool(item->second.enabled));
                  Add(&entry, "once", JsonValue::Bool(item->second.native.once));
                  Add(&entry, "address", EncodeMemoryAddress(item->second.native.address));
-@@ -1970,7 +2562,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1970,7 +2567,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
          MemoryAddress address;
          bool once = false;
          const JsonValue* once_value = parsed.params.Find("once");
@@ -1914,7 +1922,7 @@ index 29363cf..09e56dd 100644
              !ParseMemoryAddress(parsed.params, "breakpoints.create", &address, &validation_error) ||
              (once_value != NULL && !GetBool(parsed.params, "once", &once))) {
              response = InvalidParams(parsed.id, validation_error.empty() ?
-@@ -1982,7 +2574,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+@@ -1982,7 +2579,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              response = SessionError(parsed.id, kErrorCapabilityUnavailable,
                                      "Target must be stopped before creating breakpoints", "TARGET_NOT_STOPPED", session);
          } else {
@@ -1923,7 +1931,7 @@ index 29363cf..09e56dd 100644
  #ifndef C_HEAVY_DEBUG
              if (kind == BreakpointKind::MemoryChange) {
                  response = Error(parsed.id, kErrorCapabilityUnavailable,
-@@ -2856,6 +3448,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
+@@ -2856,6 +3453,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
                                                 const std::string& workdir)
  {
      AgentRuntime& adapter = *impl->runtime;
@@ -1931,7 +1939,29 @@ index 29363cf..09e56dd 100644
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -2930,6 +3523,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
+@@ -2888,6 +3486,21 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
+         return;
+     }
+ 
++    // The capabilities RPC can run before SDL initializes. Verify the actual
++    // selected driver and shown window here, on the emulation thread, before any
++    // target code executes; a stale DISPLAY can otherwise select SDL offscreen.
++    std::string window_error;
++    if (!AGENT_ValidateWindow(&window_error)) {
++        std::lock_guard<std::mutex> command_lock(impl->mutex);
++        if (impl->session && impl->session->id == session_id &&
++            impl->session->state == Impl::SessionState::Starting) {
++            impl->session->state = Impl::SessionState::Failed;
++            impl->session->failure_message = window_error;
++            impl->state_changed.notify_all();
++        }
++        return;
++    }
++
+     {
+         std::lock_guard<std::mutex> command_lock(impl->mutex);
+         if (impl->stopping || !impl->session || impl->session->id != session_id ||
+@@ -2930,6 +3543,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
                                                               const std::string& operation_id)
  {
      AgentRuntime& adapter = *impl->runtime;
@@ -1939,7 +1969,7 @@ index 29363cf..09e56dd 100644
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -3008,6 +3602,8 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3008,6 +3622,8 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
          return;
      AgentRuntime& adapter = *impl->runtime;
      const std::uintptr_t native_breakpoint = adapter.ConsumeLastBreakpointHandle();
@@ -1948,7 +1978,7 @@ index 29363cf..09e56dd 100644
      std::vector<TraceSample> trace_samples;
      bool native_trace_active = false;
      std::string trace_error;
-@@ -3037,7 +3633,19 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
+@@ -3037,7 +3653,19 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
              impl->session->trace.Stop();
      }
      impl->session->state = Impl::SessionState::Stopped;
@@ -2625,7 +2655,7 @@ index e582cc0..80944d7 100644
  		switch (core.opcode_index+Fetchb()) {
  		#include "core_normal/prefix_none.h"
 diff --git a/src/debug/debug.cpp b/src/debug/debug.cpp
-index 36c909c..ef05498 100644
+index 36c909c..7781813 100644
 --- a/src/debug/debug.cpp
 +++ b/src/debug/debug.cpp
 @@ -45,6 +45,7 @@ using namespace std;
@@ -2777,7 +2807,7 @@ index 36c909c..ef05498 100644
  
  uint32_t DEBUG_CheckKeys(void) {
 +#if defined(C_DOSBOX_AGENT)
-+    if (dosbox_agent::AGENT_IsHeadless()) return 0;
++    if (dosbox_agent::AGENT_IsSession()) return 0;
 +#endif
  	Bits ret=0;
  	bool numberrun = false;
@@ -2790,7 +2820,7 @@ index 36c909c..ef05498 100644
 +#if defined(C_DOSBOX_AGENT)
 +        // RPC stop is a stable inspection point. Deliver pending interrupts only
 +        // when execution resumes, not while polling screenshot/input requests.
-+        if (!dosbox_agent::AGENT_IsHeadless())
++        if (!dosbox_agent::AGENT_IsSession())
 +#endif
 +            PIC_runIRQs();
          SDL_Delay(1);
@@ -2801,7 +2831,7 @@ index 36c909c..ef05498 100644
  		return;
  
 +#if defined(C_DOSBOX_AGENT)
-+    if (!dosbox_agent::AGENT_IsHeadless()) {
++    if (!dosbox_agent::AGENT_IsSession()) {
 +#endif
      if (hidedebugger) {
          hidedebugger=false;
@@ -2821,7 +2851,7 @@ index 36c909c..ef05498 100644
  	    allow = false;
  
 +#if defined(C_DOSBOX_AGENT)
-+    if (dosbox_agent::AGENT_IsHeadless()) allow = true;
++    if (dosbox_agent::AGENT_IsSession()) allow = true;
 +#endif
      if (!allow) {
  # if defined(MACOSX)
@@ -2831,7 +2861,7 @@ index 36c909c..ef05498 100644
  
  void DEBUG_DrawScreen(void) {
 +#if defined(C_DOSBOX_AGENT)
-+    if (dosbox_agent::AGENT_IsHeadless()) return;
++    if (dosbox_agent::AGENT_IsSession()) return;
 +#endif
  	DrawData();
  	DrawCode();
@@ -2841,7 +2871,7 @@ index 36c909c..ef05498 100644
  
  void DEBUG_SetupConsole(void) {
 +#if defined(C_DOSBOX_AGENT)
-+    if (dosbox_agent::AGENT_IsHeadless()) return;
++    if (dosbox_agent::AGENT_IsSession()) return;
 +#endif
  	if (dbg.win_main == NULL) {
          LOG(LOG_MISC, LOG_DEBUG)("DEBUG_SetupConsole initializing GUI");
@@ -2958,7 +2988,7 @@ index 36c909c..ef05498 100644
  
  #endif // DEBUG
 diff --git a/src/debug/debug_gui.cpp b/src/debug/debug_gui.cpp
-index 6de6f1f..e451c77 100644
+index 6de6f1f..7e027a5 100644
 --- a/src/debug/debug_gui.cpp
 +++ b/src/debug/debug_gui.cpp
 @@ -36,6 +36,9 @@
@@ -2976,7 +3006,7 @@ index 6de6f1f..e451c77 100644
  
  void DBGUI_StartUp(void) {
 +#if defined(C_DOSBOX_AGENT)
-+    if (dosbox_agent::AGENT_IsHeadless()) return;
++    if (dosbox_agent::AGENT_IsSession()) return;
 +#endif
  	mainMenu.get_item("show_console").check(true).enable(false).refresh_item(mainMenu);
  	mainMenu.get_item("clear_console").check(false).enable(false).refresh_item(mainMenu);
@@ -3147,7 +3177,7 @@ index 82e2ae2..e6ed4f5 100644
          return; 
      }
 diff --git a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
-index 79624b0..8aea08e 100644
+index 79624b0..1a3467e 100644
 --- a/src/gui/sdlmain.cpp
 +++ b/src/gui/sdlmain.cpp
 @@ -32,11 +32,6 @@
@@ -3174,7 +3204,7 @@ index 79624b0..8aea08e 100644
  #include "menudef.h"
  #include "pic.h"
  #include "timer.h"
-@@ -148,6 +148,17 @@ char* revert_escape_newlines(const char* aMessage);
+@@ -148,6 +148,22 @@ char* revert_escape_newlines(const char* aMessage);
  #include "ptrop.h"
  #include "mapper.h"
  #include "sdlmain.h"
@@ -3183,16 +3213,21 @@ index 79624b0..8aea08e 100644
 +namespace dosbox_agent {
 +static bool agent_visible_window = false;
 +
++bool AGENT_IsSession()
++{
++    return control && !control->opt_agent_config.empty();
++}
++
 +bool AGENT_IsHeadless()
 +{
-+    return control && !control->opt_agent_config.empty() && !agent_visible_window;
++    return AGENT_IsSession() && !agent_visible_window;
 +}
 +} // namespace dosbox_agent
 +#endif
  #include "zipfile.h"
  #include "glidedef.h"
  #include "bios_disk.h"
-@@ -1873,7 +1884,12 @@ SDL_Window* GFX_SetSDLWindowMode(uint16_t width, uint16_t height, SCREEN_TYPES s
+@@ -1873,7 +1889,12 @@ SDL_Window* GFX_SetSDLWindowMode(uint16_t width, uint16_t height, SCREEN_TYPES s
                                        width, height,
                                        (GFX_IsFullscreen() ? (sdl.desktop.full.display_res ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN) : 0)
                                        | ((screenType == SCREEN_OPENGL) ? SDL_WINDOW_OPENGL : 0) | (maximize && !TTF_using()? SDL_WINDOW_MAXIMIZED : 0)
@@ -3206,7 +3241,7 @@ index 79624b0..8aea08e 100644
                                        | (dpi_aware_enable ? SDL_WINDOW_ALLOW_HIGHDPI : 0));
          if (sdl.window) {
              GFX_SetTitle(-1, -1, -1, false); //refresh title.
-@@ -4158,9 +4174,17 @@ static void GUI_StartUp() {
+@@ -4158,9 +4179,17 @@ static void GUI_StartUp() {
      if (output == "surface")
      {
  #if C_DIRECT3D
@@ -3226,7 +3261,76 @@ index 79624b0..8aea08e 100644
  #endif
          OUTPUT_SURFACE_Select();
          init_output = true;
-@@ -7496,6 +7520,7 @@ bool DOSBOX_parse_argv() {
+@@ -5905,7 +5934,68 @@ bool gfx_in_mapper = false;
+ #define DB_POLLSKIP 1
+ #endif
+ 
++#if defined(C_DOSBOX_AGENT)
++namespace dosbox_agent {
++// SDL must only be inspected on its owning emulation thread, after GUI startup.
++bool AGENT_ValidateWindow(std::string* error)
++{
++    if (!AGENT_IsSession() || AGENT_IsHeadless()) return true;
++#if defined(C_SDL2)
++    if (!(SDL_WasInit(SDL_INIT_VIDEO) & SDL_INIT_VIDEO)) {
++        *error = "SDL video is not initialized for the requested agent window";
++        return false;
++    }
++    const char* driver = SDL_GetCurrentVideoDriver();
++    if (!driver || !*driver || !strcmp(driver, "dummy") || !strcmp(driver, "offscreen")) {
++        *error = "Requested agent window has no visible SDL video driver";
++        return false;
++    }
++    if (!sdl.window || !(SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_SHOWN) ||
++            (SDL_GetWindowFlags(sdl.window) & (SDL_WINDOW_HIDDEN | SDL_WINDOW_MINIMIZED))) {
++        *error = "Requested agent window was not created and shown";
++        return false;
++    }
++    return true;
++#else
++    *error = "Controlled agent windows require SDL2";
++    return false;
++#endif
++}
++} // namespace dosbox_agent
++#endif
++
+ void GFX_Events() {
++#if defined(C_DOSBOX_AGENT) && defined(C_SDL2)
++    if (dosbox_agent::AGENT_IsSession() && !dosbox_agent::AGENT_IsHeadless()) {
++        // Spectator window: do not deliver host input or mapper/menu shortcuts
++        // to the guest. In particular, bypass direct joystick and mouse polling
++        // and focus handlers that synthesize guest keyboard releases.
++        SDL_Event event;
++        while (SDL_PollEvent(&event)) {
++            if (event.type == SDL_QUIT ||
++                (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)) {
++                throw(0);
++            }
++            if (event.type == SDL_WINDOWEVENT) {
++                switch (event.window.event) {
++                case SDL_WINDOWEVENT_RESTORED: GFX_ResetScreen(); break;
++                case SDL_WINDOWEVENT_RESIZED: GFX_HandleVideoResize(event.window.data1, event.window.data2); break;
++                case SDL_WINDOWEVENT_EXPOSED:
++                    if (sdl.draw.callback) sdl.draw.callback(GFX_CallBackRedraw);
++                    break;
++                default: break;
++                }
++            }
++            // SDL owns payloads on drop events until the application frees them.
++            if (event.type == SDL_DROPFILE
++#if SDL_VERSION_ATLEAST(2, 0, 5)
++                || event.type == SDL_DROPTEXT
++#endif
++               ) SDL_free(event.drop.file);
++        }
++        return;
++    }
++#endif
+     CheckMapperKeyboardLayout();
+ #if defined(C_SDL2) /* SDL 2.x---------------------------------- */
+     //Don't poll too often. This can be heavy on the OS, especially Macs.
+@@ -7496,6 +7586,7 @@ bool DOSBOX_parse_argv() {
              fprintf(stderr,"  -tests                                  Run unit tests to test the DOSBox-X code\n");
  #if defined(C_DOSBOX_AGENT)
              fprintf(stderr,"  -agent-config <path>                    Load agent configuration from an explicit file\n");
@@ -3234,7 +3338,7 @@ index 79624b0..8aea08e 100644
              fprintf(stderr,"  -agent-self-test                        Verify agent startup and emulation queue behavior\n");
  #endif
              fprintf(stderr,"  -print-ticks                            (Debug) Print emulator time and SDL_GetTicks()\n");
-@@ -7530,6 +7555,9 @@ bool DOSBOX_parse_argv() {
+@@ -7530,6 +7621,9 @@ bool DOSBOX_parse_argv() {
          else if (optname == "agent-self-test") {
              control->opt_agent_self_test = true;
          }
@@ -3244,15 +3348,30 @@ index 79624b0..8aea08e 100644
  #endif
          else if (optname == "nolog") {
              control->opt_nolog = true;
-@@ -8468,6 +8496,29 @@ int main(int argc, char* argv[]) SDL_MAIN_NOEXCEPT {
+@@ -8468,6 +8562,44 @@ int main(int argc, char* argv[]) SDL_MAIN_NOEXCEPT {
      /* -- parse command line arguments */
      if (!DOSBOX_parse_argv()) return 1;
  
 +#if defined(C_DOSBOX_AGENT)
 +    dosbox_agent::AGENT_EnableFrameCapture(!control->opt_agent_config.empty());
++    if (dosbox_agent::AGENT_IsSession() && !dosbox_agent::AGENT_IsHeadless()) {
++#if !defined(C_SDL2)
++        fprintf(stderr, "Controlled agent windows require an SDL2 build.\n");
++        return 1;
++#else
++        // Keep the window, but no native menus or startup configuration GUI.
++        control->opt_fullscreen = false;
++        control->opt_console = false;
++        control->opt_noconsole = true;
++        control->opt_nomenu = true;
++        control->opt_nogui = true;
++        control->opt_fastlaunch = true;
++        control->opt_promptfolder = 0;
++#endif
++    }
 +    if (dosbox_agent::AGENT_IsHeadless()) {
 +#if !defined(C_SDL2)
-+        fprintf(stderr, "Headless agent sessions require an SDL2 build; use --agent-window for an interactive session.\n");
++        fprintf(stderr, "Agent sessions require an SDL2 build.\n");
 +        return 1;
 +#else
 +        // Set these before any path chooser, console or SDL initialization.
@@ -3274,7 +3393,7 @@ index 79624b0..8aea08e 100644
      if (control->opt_time_limit > 0)
          time_limit_ms = (Bitu)(control->opt_time_limit * 1000);
  
-@@ -9414,6 +9465,21 @@ int main(int argc, char* argv[]) SDL_MAIN_NOEXCEPT {
+@@ -9414,6 +9546,21 @@ int main(int argc, char* argv[]) SDL_MAIN_NOEXCEPT {
          control->ParseEnv(environ);
  #endif
  

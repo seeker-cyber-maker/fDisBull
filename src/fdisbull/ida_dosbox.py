@@ -271,14 +271,18 @@ class Session:
 class Endpoint:
     """Explicitly started, finite single-client server; disconnect reaps DOSBox."""
     def __init__(self, project, executable, game_dir, *, port=0, idle_timeout=120,
-                 backend='dosbox',kernel=None,initramfs=None,files=None,boot_timeout_ms=240000):
+                 backend='dosbox',kernel=None,initramfs=None,files=None,boot_timeout_ms=240000,window=False):
         if type(port) is not int or not 0<=port<=65535 or not 1<=idle_timeout<=3600:
             raise ValueError('Invalid endpoint port/idle deadline')
+        if type(window) is not bool:
+            raise ValueError('window must be boolean')
+        if window and backend != 'dosbox':
+            raise ValueError('window is supported only by the native DOSBox backend')
         self.project=Path(project).resolve(strict=True)
         self.executable=Path(executable).resolve(strict=True)
         self.game_dir=Path(game_dir).resolve(strict=True)
         if backend not in ('dosbox','dosbox-qemu'):raise ValueError('Expected a DOS backend')
-        self.debug_options=dict(backend=backend,kernel=kernel,initramfs=initramfs,files=files,boot_timeout_ms=boot_timeout_ms)
+        self.debug_options=dict(backend=backend,kernel=kernel,initramfs=initramfs,files=files,boot_timeout_ms=boot_timeout_ms,window=window)
         self._closing=threading.Event();self._spawned=None
         self.debug_options['_on_spawn']=self._own_process
         self.listener=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -360,9 +364,10 @@ def main():
     parser.add_argument('--idle-timeout',type=int,default=120)
     parser.add_argument('--backend',choices=['dosbox','dosbox-qemu'],default='dosbox')
     parser.add_argument('--kernel');parser.add_argument('--initramfs');parser.add_argument('--files',type=json.loads)
+    parser.add_argument('--window',action='store_true',help='Request a controlled native DOSBox window')
     args=parser.parse_args()
     with Endpoint(args.project,args.executable,args.game_dir,port=args.port,idle_timeout=args.idle_timeout,
-                  backend=args.backend,kernel=args.kernel,initramfs=args.initramfs,files=args.files) as endpoint:
+                  backend=args.backend,kernel=args.kernel,initramfs=args.initramfs,files=args.files,window=args.window) as endpoint:
         print(json.dumps(dict(host=endpoint.address[0],port=endpoint.address[1],interface=w.INTERFACE,debugger_id=10)),flush=True)
         endpoint.thread.join()
         if endpoint.error and not isinstance(endpoint.error,(w.ProtocolError,OSError)):

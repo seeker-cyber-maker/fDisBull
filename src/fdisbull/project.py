@@ -236,7 +236,7 @@ class Project(DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, Advanc
             work = dict(self.db.execute("SELECT state,count(*) FROM work WHERE version=? GROUP BY state",(v["id"],)))
             regions = [{"name":r.name,"start":hx(r.start),"size":len(r.data),"executable":r.executable,"writable":r.writable} for r in self.regions(v["id"])]
             metadata=dict(self.meta)
-            if self.meta['format']=='MZ':
+            if self.meta['format'] in ('MZ', 'COM'):
                 loader=dict(metadata['loader_metadata'])
                 dos=dict(loader['dos'])
                 dos['relocation_count']=len(dos.pop('relocations',[]))
@@ -255,7 +255,7 @@ class Project(DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, Advanc
             pending_data=self.db.execute("SELECT count(*) FROM investigations WHERE version=? AND state='pending'",(v,)).fetchone()[0]
             seed_states={}
             pending_scans=0
-            if self.meta['format']=='MZ':
+            if self.meta['format'] in ('MZ', 'COM'):
                 seed_states=dict(self.db.execute('SELECT state,count(*) FROM dos_seeds WHERE version=? GROUP BY state',(v,)))
                 scanned={r[0] for r in self.db.execute('SELECT selector FROM dos_data_scans WHERE version=?',(v,))}
                 pending_scans=sum('data' in json.loads(r[1]) and r[0] not in scanned for r in self.db.execute('SELECT selector,roles FROM dos_segments WHERE version=?',(v,)))
@@ -281,23 +281,23 @@ class Project(DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, Advanc
                         note='Current stored state. A static fixed point does not establish complete code coverage or runtime behavior.')
 
     def _address(self,value):
-        return self._dos_parse_address(value)[0] if self.meta['format']=='MZ' else number(value)
+        return self._dos_parse_address(value)[0] if self.meta['format'] in ('MZ', 'COM') else number(value)
 
     def segments(self,version=None):
-        if self.meta['format']!='MZ':
-            raise ValueError('DOS segment inventory requires an MZ project; use sections for other formats')
+        if self.meta['format'] not in ('MZ', 'COM'):
+            raise ValueError('DOS segment inventory requires a DOS project; use sections for other formats')
         return self._dos_segments(version)
 
     def code_regions(self,version=None):
-        if self.meta['format']!='MZ':
-            raise ValueError('DOS code-region inventory requires an MZ project')
+        if self.meta['format'] not in ('MZ', 'COM'):
+            raise ValueError('DOS code-region inventory requires a DOS project')
         return self._dos_regions(version)
 
     def versions(self):
         return [dict(r) for r in self.db.execute("SELECT * FROM versions ORDER BY id")]
 
     def functions(self, version=None, limit=200, offset=0):
-        if self.meta["format"]=="MZ":
+        if self.meta["format"] in ('MZ', 'COM'):
             return self._dos_functions(version,limit,offset)
         v = self.version(version)["id"]
         limit = integer(limit,"limit",1,10000)
@@ -326,7 +326,7 @@ class Project(DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, Advanc
             return {"version":v,"address":hx(a),"kind":kind,"text":text,"author":author}
 
     def _stored_xrefs(self, address, direction="to", version=None, limit=200,cs=None):
-        if self.meta["format"]=="MZ":
+        if self.meta["format"] in ('MZ', 'COM'):
             return self._dos_xrefs(address,direction,version,limit,cs)
         if direction not in ("to","from"):
             raise ValueError("direction must be to or from")
@@ -337,7 +337,7 @@ class Project(DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, Advanc
         return [{"source":hx(int(r["source"],16)),"target":hx(int(r["target"],16)),"kind":r["kind"],"evidence":r["evidence"],"version":v,"source_name":self._label(v,int(r["source"],16)),"target_name":self._label(v,int(r["target"],16)),"target_representation":self._presentation(v,int(r["target"],16))["representation"]} for r in rows]
 
     def _stored_disassembly(self, address=None, lines=50, version=None,cs=None):
-        if self.meta["format"]=="MZ":
+        if self.meta["format"] in ('MZ', 'COM'):
             return self._dos_disassembly(address,lines,version,cs)
         count = integer(lines,"lines",1,500)
         with self.transaction():
@@ -390,7 +390,7 @@ class Project(DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, Advanc
             self.db.execute("INSERT INTO functions SELECT ?,context,address,name,source,status FROM functions WHERE version=? AND source!='direct call'",(v,parent))
             self.db.execute("INSERT INTO definitions SELECT ?,context,address,representation,size,author FROM definitions WHERE version=?",(v,parent))
             info=self.db.execute('SELECT document,source_bytes FROM binary_info WHERE version=?',(parent,)).fetchone()
-            if info and self.meta["format"]=="MZ":
+            if info and self.meta["format"] in ('MZ', 'COM'):
                 self._dos_patch_document(parent,v,bytes(info[1]),patched)
             elif info:
                 document=json.loads(info[0])

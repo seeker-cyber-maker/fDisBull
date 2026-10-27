@@ -240,7 +240,7 @@ def _strings(data: bytes, mappings: list[tuple[int, int, int]], warnings: list[s
     return sorted(found, key=lambda item: (item["file_offset"], item["encoding"]))
 
 
-def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | None = None) -> dict:
+def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | None = None, _com_child: bool = False) -> dict:
     """Inspect metadata and ASCII/ASCII-range UTF-16LE strings from file bytes.
 
     Unresolved addresses are None. Returned addresses are preferred static VAs,
@@ -250,9 +250,16 @@ def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | N
     data = _input(data)
     header = identify_header(data)
     if image=='auto':image=None
-    if image not in (None,'pe','mz'):raise ValueError('image must be auto, pe or mz')
+    if image not in (None,'pe','mz','com'):raise ValueError('image must be auto, pe, mz or com')
     container_header=None
-    if image=='mz':
+    if image=='com':
+        if slice_arch is not None:raise ValueError('slice_arch cannot select a COM image')
+        from .dos import load_com
+        load_com(data,_allow_child_signature=_com_child)
+        container_header=header
+        header=dict(format='DOS COM',family='DOS',valid=True,bits=16,arch='x86',endian='little',
+                    header_offset=0,source='explicit COM selection; not signature-identified',warnings=[])
+    elif image=='mz':
         if slice_arch is not None:raise ValueError('slice_arch cannot select an MZ image')
         from .dos import load_mz
         selected=load_mz(data,allow_secondary=True)
@@ -298,6 +305,21 @@ def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | N
     result['selected_image']=image or ('pe' if header['family']=='PE' else 'mz' if header['format']=='DOS MZ' else None)
     warnings = result["warnings"]
     mappings = []
+    if header['format'] == 'DOS COM':
+        from .dos import load_com
+        selected = load_com(data,_allow_child_signature=_com_child)
+        dos = selected.metadata['dos']
+        header.update(load_segment=dos['load_segment'], entrypoint=selected.entry,
+                      entry_cs=dos['entry_cs'], entry_ip=dos['entry_ip'],
+                      load_model='explicit COM selection; static PSP segment, file bytes only')
+        result['dos'] = dos
+        result['file_mappings'] = selected.metadata['file_mappings']
+        result['sections'] = [dict(name='DOS COM file bytes (unclassified)',
+            virtual_address=dos['image_base'],virtual_size=dos['module_size'],
+            file_offset=0,file_size=dos['module_size'],permissions='rwx; possible code/data, not classification')]
+        warnings.append('COM is explicitly declared, not signature-identified; PSP, stack and dynamic loads are not mapped.')
+        result['strings'] = _strings(data,[(0,len(data),dos['image_base'])],warnings)
+        return result
     if header['format'] in ('PE32','PE32+'):
         from .managed import managed_kind
         clr=managed_kind(data)

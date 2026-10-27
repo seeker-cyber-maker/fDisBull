@@ -31,10 +31,10 @@ def ctx(cs):
 
 class DOSMixin(DOSViewsMixin):
     def _label(self,version,address):
-        return self._dos_label(version,address) if self.meta['format']=='MZ' else super()._label(version,address)
+        return self._dos_label(version,address) if self.meta['format'] in ('MZ', 'COM') else super()._label(version,address)
 
     def _presentation(self,version,address):
-        return self._dos_presentation(version,address) if self.meta['format']=='MZ' else super()._presentation(version,address)
+        return self._dos_presentation(version,address) if self.meta['format'] in ('MZ', 'COM') else super()._presentation(version,address)
 
     def _dos_prepare(self,version):
         self._dos_cached_v=version
@@ -48,7 +48,8 @@ class DOSMixin(DOSViewsMixin):
         metadata=self._dos_cached_meta
         entry_cs=metadata.get('selected_entry_cs',metadata['entry_cs'])
         address=self.meta['entry']
-        state=dict(ds=metadata['psp_segment'],es=metadata['psp_segment'],ss=metadata['stack_ss'],sp=metadata['sp'])
+        state=dict(ds=metadata['psp_segment'],es=metadata['psp_segment'],ss=metadata['stack_ss'])
+        if metadata['sp'] is not None: state['sp']=metadata['sp']
         for _ in range(128):
             region=next((r for r in self._dos_cached_regions if r.start<=address<r.start+len(r.data)),None)
             if region is None or not 0<=address-entry_cs*16<=65535:
@@ -68,7 +69,7 @@ class DOSMixin(DOSViewsMixin):
         return self._dos_cached_meta
 
     def _mapping(self,version,address):
-        if self.meta['format']!='MZ':
+        if self.meta['format'] not in ('MZ', 'COM'):
             return super()._mapping(version,address)
         if getattr(self,'_dos_cached_v',None)!=version:
             self._dos_prepare(version)
@@ -96,17 +97,20 @@ class DOSMixin(DOSViewsMixin):
                 if not candidates_cs:
                     raise ValueError('entry override has no available DOS CS context')
                 cs=max(candidates_cs)
-            self._dos_note_segment(version,cs,'code',{'kind':'MZ entry'})
-            self._dos_note_segment(version,metadata['stack_ss'],'stack',{'kind':'MZ initial SS'})
-            regs={'ds':metadata['psp_segment'],'es':metadata['psp_segment'],'ss':metadata['stack_ss'],'sp':metadata['sp']}
-            self._dos_enqueue(version,cs,image.entry,regs,'MZ entry')
-            self._dos_function(version,cs,image.entry,'entry','MZ entry')
+            self._dos_note_segment(version,cs,'code',{'kind':image.format+' entry'})
+            self._dos_note_segment(version,metadata['stack_ss'],'stack',{'kind':image.format+' initial SS'})
+            regs={'ds':metadata['psp_segment'],'es':metadata['psp_segment'],'ss':metadata['stack_ss']}
+            if metadata['sp'] is not None: regs['sp']=metadata['sp']
+            self._dos_enqueue(version,cs,image.entry,regs,image.format+' entry')
+            self._dos_function(version,cs,image.entry,'entry',image.format+' entry')
             self.db.execute('INSERT OR REPLACE INTO analysis_state VALUES (?,0,0)',(version,))
             self._dos_catalog(version)
 
     def _dos_note_segment(self,v,cs,role,source):
         base=cs*16
         region=self._mapping(v,base)
+        if not region and self.meta['format']=='COM':
+            region=next((r for r in self.regions(v) if base < r.start < base+65536),None)
         if not region:
             return False
         row=self.db.execute('SELECT roles,sources FROM dos_segments WHERE version=? AND selector=?',(v,cs)).fetchone()
@@ -121,7 +125,7 @@ class DOSMixin(DOSViewsMixin):
             self.db.execute('UPDATE dos_segments SET roles=?,sources=? WHERE version=? AND selector=?',(json.dumps(sorted(set(roles))),json.dumps(sources),v,cs))
         else:
             bound=min(region.start+len(region.data),base+65536)
-            self.db.execute('INSERT INTO dos_segments VALUES (?,?,?,?,?,?)',(v,cs,key(base),f'{bound:016x}',json.dumps([role]),json.dumps([source])))
+            self.db.execute('INSERT INTO dos_segments VALUES (?,?,?,?,?,?)',(v,cs,key(max(base,region.start)),f'{bound:016x}',json.dumps([role]),json.dumps([source])))
             changed=True
         if role=='code' and changed:
             metadata=self._dos_metadata(v)
@@ -463,11 +467,12 @@ class DOSMixin(DOSViewsMixin):
             sources=original_candidates.get(row[0],[{'kind':'prior inferred selector; roles require revalidation'}])
             self.db.execute('UPDATE dos_segments SET roles=?,sources=? WHERE version=? AND selector=?',(json.dumps(['candidate']),json.dumps(sources),v,row[0]))
         cs=metadata.get('selected_entry_cs',metadata['entry_cs'])
-        self._dos_note_segment(v,cs,'code',{'kind':'MZ selected entry'})
-        self._dos_note_segment(v,metadata['stack_ss'],'stack',{'kind':'MZ initial SS'})
-        registers=dict(ds=metadata['psp_segment'],es=metadata['psp_segment'],ss=metadata['stack_ss'],sp=metadata['sp'])
-        self._dos_enqueue(v,cs,self.meta['entry'],registers,'MZ entry')
-        self._dos_function(v,cs,self.meta['entry'],'entry','MZ entry')
+        self._dos_note_segment(v,cs,'code',{'kind':self.meta['format']+' selected entry'})
+        self._dos_note_segment(v,metadata['stack_ss'],'stack',{'kind':self.meta['format']+' initial SS'})
+        registers=dict(ds=metadata['psp_segment'],es=metadata['psp_segment'],ss=metadata['stack_ss'])
+        if metadata['sp'] is not None: registers['sp']=metadata['sp']
+        self._dos_enqueue(v,cs,self.meta['entry'],registers,self.meta['format']+' entry')
+        self._dos_function(v,cs,self.meta['entry'],'entry',self.meta['format']+' entry')
         self._dos_catalog(v)
         for row in self.db.execute('SELECT address,representation FROM definitions WHERE version=?',(v,)).fetchall():
             a=int(row[0],16)
@@ -485,14 +490,16 @@ class DOSMixin(DOSViewsMixin):
         document['sections']=[dict(name='DOS load module (unclassified)',virtual_address=metadata['image_base'],virtual_size=metadata['allocation_size'],file_offset=metadata['header_size'],file_size=metadata['module_size'],permissions='rwx; possible code/data, not classification')]
         document['file_mappings']=image.metadata['file_mappings']
         document['warnings']=[s for s in document.get('warnings',[]) if 'structural metadata unavailable' not in s]
-        document['warnings'].append('MZ has no explicit code/data section permissions; segment roles and bounds are inferred from references.')
+        document['warnings'].append(image.format+' has no explicit code/data section permissions; segment roles and bounds are inferred from references.')
+        if image.format=='COM':
+            document['warnings'].append('Only original COM file bytes are mapped; PSP, stack, allocation and dynamically loaded code are not modeled. Initial SP depends on DOS allocation and is unknown.')
         for item in document['strings']:
             offset=item['file_offset']-metadata['header_size']
             item['address']=metadata['image_base']+offset if 0<=offset and offset+item['size']<=metadata['module_size'] else None
         return document
 
     def _dos_patch_document(self,parent,version,source_bytes,patched):
-        from .dos import load_mz
+        from .dos import load_mz, load_com
         from .inspection import inspect_binary
         from dataclasses import replace
         metadata=self._dos_metadata(parent)
@@ -504,12 +511,15 @@ class DOSMixin(DOSViewsMixin):
             word=int.from_bytes(module[offset:offset+2],'little')
             module[offset:offset+2]=((word-metadata['load_segment'])&65535).to_bytes(2,'little')
         source=source_bytes[:metadata['header_size']]+bytes(module)+source_bytes[metadata['declared_file_size']:]
-        image=load_mz(source,load_segment=metadata['load_segment'],entry=self.meta['entry'],allow_secondary=metadata.get('secondary_format') is not None)
+        image=(load_com(source,load_segment=metadata['load_segment'],entry=self.meta['entry'],_allow_child_signature=True) if self.meta['format']=='COM'
+               else load_mz(source,load_segment=metadata['load_segment'],entry=self.meta['entry'],allow_secondary=metadata.get('secondary_format') is not None))
         image.metadata['dos']['selected_entry_cs']=metadata.get('selected_entry_cs',metadata['entry_cs'])
         image.metadata['dos']['selected_entry_ip']=self.meta['entry']-16*image.metadata['dos']['selected_entry_cs']
         image.metadata['dos']['selected_entry_cs_source']='inherited selected entry context from parent version'
         image=replace(image,regions=patched)
-        document=self._dos_document_for_image(image,inspect_binary(source,image='mz' if metadata.get('secondary_format') else None))
+        document=self._dos_document_for_image(image,inspect_binary(source,image='com' if self.meta['format']=='COM' else 'mz' if metadata.get('secondary_format') else None,_com_child=self.meta['format']=='COM'))
+        if self.meta['format']=='COM' and source[:2] in (b'MZ',b'ZM'):
+            document['warnings'].append('Edited child now begins with an MZ signature; stored COM mapping is inherited, not a claim that DOS would load the edited file as COM.')
         if patched[0].data[metadata['module_size']:]!=bytes(metadata['allocation_size']-metadata['module_size']):
             document['warnings'].append('Allocation-only memory edits are retained in the project snapshot and have no disk file counterpart.')
         self.db.execute('INSERT INTO binary_info VALUES (?,?,?)',(version,json.dumps(document),source))

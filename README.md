@@ -33,8 +33,9 @@ and the [runtime doctor](docs/RUNTIME_DOCTOR.md). Its
 [standalone DOS knowledge](docs/DOS_KNOWLEDGE.md) supplies 182 provenance-bound
 runtime signatures, 37 DOS/BIOS service descriptions, reusable catalogs and
 richer declared types with near/far Pascal profiles. Comparison captures are
-validated before pairing. Compiler overlay loading and dedicated COM/SYS
-loaders remain outside this implementation.
+validated before pairing. Compiler overlay loading and a dedicated SYS loader
+remain outside this implementation; the current source adds the explicit COM
+profile described below, without claiming dynamic overlay coverage.
 
 Version 0.14.0 adds an optional [IDA 9.4 remote-server adapter and matching
 DOSBox endpoint](docs/IDA_REMOTE.md). These use a common binary debugger
@@ -110,7 +111,7 @@ On Windows, activate `.venv\Scripts\Activate.ps1` in PowerShell. Install `.[mana
 
 ## Capabilities
 
-- x86 16/32/64 and ARM64 decoding; DOS MZ, PE, ELF, Mach-O, universal Mach-O slices, and explicit raw images.
+- x86 16/32/64 and ARM64 decoding; DOS MZ, explicitly selected DOS COM, PE, ELF, Mach-O, universal Mach-O slices, and explicit raw images.
 - Persistent instructions, control flow, references, annotations, types, and immutable byte versions.
 - Explicit PE versus DOS-stub selection and segment-aware DOS instruction identities.
 - Bounded analysis with pending work and unresolved targets kept visible.
@@ -118,11 +119,13 @@ On Windows, activate `.venv\Scripts\Activate.ps1` in PowerShell. Install `.[mana
 - Repairable label links with retained history.
 - Disassembly and control-flow graph images generated from stored state.
 
-See the [user guide](docs/USER_GUIDE.md), [API](docs/API.md), [architecture](docs/ARCHITECTURE.md), [platform support](docs/PLATFORMS.md), and [external-file workflow](docs/EXTERNAL_FILES.md).
+See the [user guide](docs/USER_GUIDE.md), [API](docs/API.md), [architecture](docs/ARCHITECTURE.md), [platform support](docs/PLATFORMS.md), and [external-file workflow](docs/EXTERNAL_FILES.md). The development [processor decoder seam](docs/PROCESSOR_MODULES.md) does not yet support importing or persisting arbitrary VM projects.
 
 ## DOSBox debugging
 
-Launch an original DOS MZ project with `fdisbull debug PROJECT --executable PATH_TO_PATCHED_DOSBOX --game-dir GAME_DIRECTORY`. The foreground JSON interface can set relocation-checked breakpoints from disassembly addresses, click in guest screenshots, run until a breakpoint with a host timeout, and fast-forward a requested number of guest milliseconds. Screenshots and traces are stored inside the project and remain exportable after restart. See [DOSBox debugger usage and acceptance](docs/DOSBOX_DEBUGGER.md).
+Launch an original DOS MZ or explicitly selected COM project with `fdisbull debug PROJECT --executable PATH_TO_PATCHED_DOSBOX --game-dir GAME_DIRECTORY`. Import COM with `fdisbull import GAME.COM PROJECT --image com`; a `.COM` suffix alone is not format evidence. The foreground JSON interface can set byte-checked breakpoints from disassembly addresses, click in guest screenshots, run until a breakpoint with a host timeout, and fast-forward a requested number of guest milliseconds. Screenshots and traces are stored inside the project and remain exportable after restart. See [DOSBox debugger usage and acceptance](docs/DOSBOX_DEBUGGER.md).
+
+The current source adds an opt-in spectator window for the **same** native agent-controlled session: append `--window` to the command above. Headless remains the default. This requires a compatible rebuilt backend and an accessible display; see the [window requirements and limitations](docs/DOSBOX_DEBUGGER.md#spectator-window).
 
 The current unreleased source also separates [structural MZ eligibility from
 DOS guest filenames](docs/DOS_INPUT_NAMES.md), supporting extensionless/long host
@@ -205,7 +208,7 @@ Version 0.13.0 adds PE64 `r`, `w` and `rw` watchpoints, reversible RAM layers, g
 
 ## Limits and licensing
 
-Static analysis does not establish runtime execution. A drained queue does not establish complete code coverage. Authored labels and links record interpretations, and unresolved segment/pointer state stays explicit. Native macOS debugger acceptance passes; the full suite still has Linux ELF fixture failures on Apple's compiler/linker. Runtime integration launches original unpatched DOS MZ or x86-64 PE EXE versions; static child patches are never applied silently. PE support has its own runtime and acceptance gate. The PE watches, layers and states use different mechanisms and formats from DOS; published 0.12.0 packages do not contain those additions.
+Static analysis does not establish runtime execution. A drained queue does not establish complete code coverage. Authored labels and links record interpretations, and unresolved segment/pointer state stays explicit. Native macOS debugger acceptance passes; the full suite still has Linux ELF fixture failures on Apple's compiler/linker. Runtime integration launches original unpatched DOS MZ, explicitly selected COM, or x86-64 PE EXE versions; static child patches are never applied silently. COM support has been tested on Linux, not yet on macOS. PE support has its own runtime and acceptance gate. The PE watches, layers and states use different mechanisms and formats from DOS; published 0.12.0 packages do not contain those additions.
 
 Runtime code snapshots preserve and decode observed self-modified or layered bytes alongside earlier views. The 0.16.0 candidate adds explicit offline promotion into a preserved temporal interpretation, fresh traversal/xrefs/CFG and byte/context trace comparisons. Captured bytes do not prove execution; inherited bytes remain unobserved, and no patched disk image is reconstructed. A mapped runtime address alone does not verify equality with static instructions. Headless execution is not security isolation, and restoring a machine checkpoint does not roll back mounted host files.
 

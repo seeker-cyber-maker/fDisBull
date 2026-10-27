@@ -3,12 +3,14 @@ from fdisbull.debug_semantics import contract, normalize_stop, normalize_trace
 
 
 def test_dos_data_stop_is_after_access_but_pe_is_before_access():
-    native={'kind':'breakpoint','address':{'space':'segmented','segment':'0x1000','offset':'0x25'},
+    native={'kind':'breakpoint','address':{'space':'linear','offset':'0x12345'},
             'data_access':{'instruction':{'space':'segmented','segment':'0x1000','offset':'0x20'},'access':'w'}}
-    result=normalize_stop('dosbox',native,outcome='breakpoint')
+    next_pc={'space':'segmented','segment':'0x1000','offset':'0x25'}
+    result=normalize_stop('dosbox',native,outcome='breakpoint',stopped_pc=next_pc)
     assert result['trigger']=='watchpoint' and result['instruction_completed'] is True
     assert result['causing_instruction']==native['data_access']['instruction']
-    assert result['resume_pc']==native['address'] and result['registers_stage']=='after-instruction'
+    assert result['resume_pc']==next_pc and result['registers_stage']=='after-instruction'
+    assert normalize_stop('dosbox',native,outcome='breakpoint')['resume_pc'] is None
     pe=normalize_stop('wine-qemu',{'kind':'watchpoint','address':'0x140001000','before_access':True},outcome='watchpoint')
     assert pe['instruction_completed'] is False and pe['registers_stage']=='before-instruction'
     assert contract('dosbox')['trace_completion']=='fetch-observed; completion unknown'

@@ -13,7 +13,7 @@ def contract(backend):
             'address_context':'real-mode CS plus linear address' if dos else 'selected process virtual address' if pe else 'selected vCPU; explicit address space'}
 
 
-def normalize_stop(backend,native,*,outcome):
+def normalize_stop(backend,native,*,outcome,stopped_pc=None):
     dos=backend in ('dosbox','dosbox-qemu')
     access=native.get('data_access')
     watch=bool(access) or native.get('kind')=='watchpoint'
@@ -25,8 +25,9 @@ def normalize_stop(backend,native,*,outcome):
         stage='before-instruction';completed=False;cause=native.get('address')
     elif trigger=='breakpoint':
         stage='before-instruction';completed=False;cause=native.get('address')
+    resume_pc = stopped_pc if dos and access else native.get('address')
     return {'format':'fdisbull-debug-stop-1','trigger':trigger,'native_kind':native.get('kind'),
-            'causing_instruction':cause,'resume_pc':native.get('address'),
+            'causing_instruction':cause,'resume_pc':resume_pc,
             'instruction_completed':completed,'registers_stage':stage,
             'context':'dos-cpu' if dos else 'process' if backend in ('wine-qemu','ida-wine-qemu') else 'machine'}
 

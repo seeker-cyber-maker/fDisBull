@@ -1,6 +1,6 @@
 {
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "978b15d3f7480a7c395022e04c8155b9b1b775b9a5efd5313482724d03678d24",
+  "patch_sha256": "f86b574e89f1f88add9613ebce7f612cc10dbacb6fb20d40fdedfa7120ac664e",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -44,8 +44,8 @@
     },
     {
       "path": "include/agent/video_adapter.h",
-      "size": 960,
-      "sha256": "850d5ab351ec1b65ccf9541be5304351e18570bb35e5d588b1986be5daf68398"
+      "size": 1091,
+      "sha256": "acf1e77ef8c4a3034b3300a0f6637b29fccbab7fe7ada012b1e51c3ac0f0ca8d"
     },
     {
       "path": "include/debug.h",
@@ -74,8 +74,8 @@
     },
     {
       "path": "src/agent/server/agent_server.cpp",
-      "size": 194864,
-      "sha256": "3b3bf4155419012701dba891aec3ff2aca06cfe18b80d9a79a1a629c4d54ba81"
+      "size": 195735,
+      "sha256": "9491035c9a0266e007bdab557e855a630373985a4f051e1a4e9f5475826c50eb"
     },
     {
       "path": "src/agent/transport/local_transport.cpp",
@@ -94,13 +94,13 @@
     },
     {
       "path": "src/debug/debug.cpp",
-      "size": 229880,
-      "sha256": "aebe8710923c3fa53c7157fb083d294d58a692bea94d509a33de8befbf8c1535"
+      "size": 229874,
+      "sha256": "394ed48acbccca372d771b8b2516a3fc06ad6819e1352b8fcd7edbc511556c0e"
     },
     {
       "path": "src/debug/debug_gui.cpp",
-      "size": 30707,
-      "sha256": "24a94105770a0b9f2a588325f64974a1205688b494387c677f5e45d4f67aa779"
+      "size": 30706,
+      "sha256": "ab7bcb51a274a77d9cc1ec46ff1d269318726b6747df5fb83c58e81eea709f19"
     },
     {
       "path": "src/gui/render.cpp",
@@ -109,8 +109,8 @@
     },
     {
       "path": "src/gui/sdlmain.cpp",
-      "size": 426398,
-      "sha256": "46c16b0d2b886b3263d8f2b93feea4630b29d5e465b35ea39fe53964a3b797ef"
+      "size": 429452,
+      "sha256": "489d0bffd31e0c194e756a7411c6313babbe6c50d2f236a78f4f94dbc8d6263b"
     },
     {
       "path": "src/hardware/keyboard.cpp",
@@ -143,284 +143,21 @@
       "sha256": "02a57b279af206d952e76ba23a204ffc986e9b52228f7bfe3dbe12211b6a45f7"
     }
   ],
-  "cloud_recovery": {
-    "parent_chat": "01a168ae-ed38-7565-b9db-557772f800d6",
-    "pipe_client_chat": "01a16916-46ba-76ab-a177-a234771da0e0",
-    "method": "Replay nine complete fileChange diffs, in order within each chat, over the hash-verified archive checkpoint",
-    "patches": [
-      {
-        "path": "cloud-01.patch",
-        "sha256": "7313b2248b3f185d87ecc289c620a3310549ab83e45c79bfe79571e331a98ead"
-      },
-      {
-        "path": "cloud-02.patch",
-        "sha256": "0862891dd8d1716be49caf23b88483ab1fb0850a6bfa0a05f522a6b5d4be5868"
-      },
-      {
-        "path": "cloud-03.patch",
-        "sha256": "23cf09ec089b7667b976cc8ec33e53166d9b7964b732f773d1259d51a2666ff6"
-      },
-      {
-        "path": "cloud-04.patch",
-        "sha256": "7b57b069c9a424fb5a19bdc1ce8c3cef2d3e96043cc429d2cf3a0d9805fbabe1"
-      },
-      {
-        "path": "cloud-05.patch",
-        "sha256": "e78e2df09ae45e16cdc66ed2abae797d360ed894adf06dfdfd6930338dc51083"
-      },
-      {
-        "path": "cloud-06.patch",
-        "sha256": "77031d02eff5a6d593d25efabfadd49f7646aaf778b6f4356bc7775f48e7ddc6"
-      },
-      {
-        "path": "cloud-07.patch",
-        "sha256": "57efe5f2dacacd381494c80b58ce7c5746568f9ecf4484d4e87d5be96e133a18"
-      },
-      {
-        "path": "cloud-08.patch",
-        "sha256": "6b398dbf4ba5e7a78e8c1d590d4d4b07866e2c2d13a61863ae50a276424b83fb"
-      },
-      {
-        "path": "cloud-09.patch",
-        "sha256": "d70c951b18f1eff2666110452667913ec026f9c1e190e9066f4c6ae73c00afeb"
-      }
-    ]
-  },
-  "local_changes": [
-    "Portable same-FIFO validation fixture",
-    "Launcher selects native-resolution render doublescan=false",
-    "Acceptance compares CPU values separately from input mutation revisions",
-    "Refresh cached RGBA pixels on every completed frame to include palette-only changes",
-    "execution.timing: emulation-thread PIC clock and native DOSBox fast-forward getter/setter",
-    "Native state save/load RPC with headless error handling and flagged-file restore disabled",
-    "Normal-core real-mode CPU data access watches, excluding instruction fetch and debugger/host reads",
-    "Structured bounded register edits for derived machine-state snapshots",
-    "Callback-safe agent Continue: normal-loop dispatch without discarded debugger pre-step"
-  ],
   "nasm_version": "2.16.03",
   "nasm_source_sha256": "1412a1c760bbd05db026b6c0d1657affd6631cd0a63cddb6f73cc6d4aa616148",
-  "verification": {
-    "host": "macOS Apple Silicon",
-    "client_transport_tests": 31,
-    "guest_acceptance": "pass",
-    "guest_run": "acceptance-verified",
-    "cli_smoke": "pass",
-    "source_patch_replay": "21 file hashes match",
-    "project_integration": "DinoPark through fDisBull 0.9.0 serve: pass",
-    "backend_fixture_acceptance": "timing-backend-acceptance: pass"
-  },
-  "evidence": [
-    {
-      "path": "evidence/2026-10-23/acceptance-final.log",
-      "sha256": "560234b21b883d3b203d1d4b9801abc578ac95c9163341d21bc4dcfb758bb198"
-    },
-    {
-      "path": "evidence/2026-10-23/acceptance-verified.log",
-      "sha256": "560234b21b883d3b203d1d4b9801abc578ac95c9163341d21bc4dcfb758bb198"
-    },
-    {
-      "path": "evidence/2026-10-23/cli-screenshot.png",
-      "sha256": "381962f595c9d88fe4a106ae6a507cc068520418de961a7d2036c3e92f544326"
-    },
-    {
-      "path": "evidence/2026-10-23/cli-session.json",
-      "sha256": "a58a872e343438c2a1924eab3cb152d806929f4d4bdedfc59cca7f1e194ec9c0"
-    },
-    {
-      "path": "evidence/2026-10-23/click-queued.png",
-      "sha256": "381962f595c9d88fe4a106ae6a507cc068520418de961a7d2036c3e92f544326"
-    },
-    {
-      "path": "evidence/2026-10-23/dosbox-python-integrated.log",
-      "sha256": "dad17f49a953c8dbde565571c9c94fae3b67bf35c06610c9d20e98d238a7b3e2"
-    },
-    {
-      "path": "evidence/2026-10-23/mode12.png",
-      "sha256": "6f7271dc31301e2d3e89d69048b91c1154e4d6fadc29e4d5a338eaee89544e6e"
-    },
-    {
-      "path": "evidence/2026-10-23/mode13-repeat.png",
-      "sha256": "381962f595c9d88fe4a106ae6a507cc068520418de961a7d2036c3e92f544326"
-    },
-    {
-      "path": "evidence/2026-10-23/mode13-restored.png",
-      "sha256": "381962f595c9d88fe4a106ae6a507cc068520418de961a7d2036c3e92f544326"
-    },
-    {
-      "path": "evidence/2026-10-23/mode13.png",
-      "sha256": "381962f595c9d88fe4a106ae6a507cc068520418de961a7d2036c3e92f544326"
-    },
-    {
-      "path": "evidence/2026-10-23/palette-magenta.png",
-      "sha256": "c55777ee256f1988d767233c7ab239f753c7e426921dd28eb10f88277e58722e"
-    },
-    {
-      "path": "evidence/2026-10-23/verification.json",
-      "sha256": "0b1d0cc55bccb0d657d03dc79555991614515273583b3559032d2fc16f6770e8"
-    }
-  ],
-  "integration_evidence": [
-    {
-      "path": "evidence/integration-2026-10-23/bank-loan.png",
-      "sha256": "e0d15200c77d32d4eef92429e81555d3d0bf250af6596807b3bb6ed5334053be"
-    },
-    {
-      "path": "evidence/integration-2026-10-23/city.png",
-      "sha256": "ff8706952e08ea7d8451396860a8253e22fed8d3a3c91e32e12aadec66c30f71"
-    },
-    {
-      "path": "evidence/integration-2026-10-23/commands.jsonl",
-      "sha256": "457cf920d182157c0757e2ba066d47a1e52e307c41cb40f0ca0286cc776eb2f9"
-    },
-    {
-      "path": "evidence/integration-2026-10-23/integration-full-tests.log",
-      "sha256": "5638807bf1521eb582aaee089b34faa53a0e9ac8ea35bba04fc9e1300f07d454"
-    },
-    {
-      "path": "evidence/integration-2026-10-23/integration-release.log",
-      "sha256": "a6ae4f30f5ede4c472db39bd41405de38c9fb585d20284fd4794fad04133a487"
-    },
-    {
-      "path": "evidence/integration-2026-10-23/intro-skipped.png",
-      "sha256": "a3eb933dea773c62bbc1331fea099fa820a81e0931a6a116e7d5bca879fc4ddf"
-    },
-    {
-      "path": "evidence/integration-2026-10-23/new-game-input.json",
-      "sha256": "4d9334a69f3d5ca6471e1fccf90252a8829b7bc2695a415e11a051d76794f9d6"
-    },
-    {
-      "path": "evidence/integration-2026-10-23/project-debugger-final-tests.log",
-      "sha256": "9e469918c79527b0837786aea941fb87f2fd8e5ae308c58613befdb5d3e74e36"
-    },
-    {
-      "path": "evidence/integration-2026-10-23/real-estate.png",
-      "sha256": "4ab00022fa6fc8bc67d7dbc00ef80bc3dcb73f91355697a62d3a3b6a2182deac"
-    },
-    {
-      "path": "evidence/integration-2026-10-23/summary.json",
-      "sha256": "5b2dd162ea615d300c5b5153d4f7543266ec9763923ce615d9854181d466466b"
-    },
-    {
-      "path": "evidence/integration-2026-10-23/timing-backend-acceptance.log",
-      "sha256": "560234b21b883d3b203d1d4b9801abc578ac95c9163341d21bc4dcfb758bb198"
-    },
-    {
-      "path": "evidence/integration-2026-10-23/title.png",
-      "sha256": "eaffa5b875bfdae263a63a3a717a13f053889223e29c9b83e8f54a2ebebccacc"
-    }
-  ],
-  "previous_integration": {
-    "commit": "a6cfea46fc255a347a397441137ae9e2d7116124",
-    "patch_sha256": "664a8b6dc05bb720504489490819c8f7a886dce2ee7c7a6cba67bce2229573f2",
-    "emulator_sha256": "0f83e85df107ab4a502d3e973a53f8a15f1e9d3e36d08896cab92aefbe449902"
-  },
-  "state_evidence": [
-    {
-      "path": "evidence/states-2026-10-23/backend-acceptance.log",
-      "sha256": "560234b21b883d3b203d1d4b9801abc578ac95c9163341d21bc4dcfb758bb198",
-      "size": 121
-    },
-    {
-      "path": "evidence/states-2026-10-23/client-tests.log",
-      "sha256": "337c1b1293d4ee8a1dd59ae579c055c6344880073559b460a4e98633320e363f",
-      "size": 5046
-    },
-    {
-      "path": "evidence/states-2026-10-23/commands.jsonl",
-      "sha256": "4262768fdac715a51a44352c09d653ab13615360196c8ecbf32861db411d25c2",
-      "size": 124047
-    },
-    {
-      "path": "evidence/states-2026-10-23/debugger-tests.log",
-      "sha256": "2d3933bdcb321551a0441ac727576ac3ff03bb76538e640c0c404873d4dde42c",
-      "size": 100
-    },
-    {
-      "path": "evidence/states-2026-10-23/first-save.png",
-      "sha256": "3e1717775391fad68bc81ec46d3074ea9a8ce3449d7d642c112fc0d817ea6e99",
-      "size": 21478
-    },
-    {
-      "path": "evidence/states-2026-10-23/full-tests.log",
-      "sha256": "4f4d80bc21475e85979255ece44e0159de96e52e188784b66893636d21f536fa",
-      "size": 25323
-    },
-    {
-      "path": "evidence/states-2026-10-23/game-state-acceptance.log",
-      "sha256": "ee85b0e709c2e7a2a3b270279fc33d5bae03cf3ebec8e44592feacf6fd313328",
-      "size": 125
-    },
-    {
-      "path": "evidence/states-2026-10-23/load-dialog.png",
-      "sha256": "9ddbe8c9bff1d163877162ad8789fd70d7cf7cab8c949fe0c648ccb6db2c22f7",
-      "size": 21171
-    },
-    {
-      "path": "evidence/states-2026-10-23/main-menu.png",
-      "sha256": "922b369e15efdde57e30032e40a95be2d1aa3263532c2160381c1d48a10bc9c8",
-      "size": 33016
-    },
-    {
-      "path": "evidence/states-2026-10-23/modified-state-resume.json",
-      "sha256": "a1fdd5c89dd37fc54080c2b56e25c1ad60dd400815448360987dc58fd1b5584a",
-      "size": 27200
-    },
-    {
-      "path": "evidence/states-2026-10-23/restored-dialog.png",
-      "sha256": "9ddbe8c9bff1d163877162ad8789fd70d7cf7cab8c949fe0c648ccb6db2c22f7",
-      "size": 21171
-    },
-    {
-      "path": "evidence/states-2026-10-23/state-package-check.log",
-      "sha256": "be9c08e0ecb018498a788466cd4710df1296822ce26728a4424844c9a5624bef",
-      "size": 155
-    },
-    {
-      "path": "evidence/states-2026-10-23/state-wheel-smoke.log",
-      "sha256": "ea420958e03e956df80bf2f721887b329096f324a64a9d2035528dab3a6d2002",
-      "size": 143
-    },
-    {
-      "path": "evidence/states-2026-10-23/summary.json",
-      "sha256": "2dba6c86ffe2c93516cac8e4b0775e559fde3314ac4e5f8ceb89d263891eacb4",
-      "size": 210179
-    },
-    {
-      "path": "evidence/states-2026-10-23/verification.json",
-      "sha256": "4b46d765b9c6802a5abdbac357e1c2994daa486328f7f9fad5e71ef081cca002",
-      "size": 5390
-    }
-  ],
-  "historical_pre_keyboard": {
-    "emulator_sha256": "e749b6e50775de2807c2515f83e455dc705cdf6ddcdfb257e781f215d987865a"
-  },
   "keyboard_capability": "ibm_pc_controller_us_ascii_v1",
-  "keyboard_verification": "See docs/VERIFICATION-GUEST-KEYBOARD.md; final exact-commit CI gates tagging",
   "pixel_probe_capability": "video.probe: 0..4096 native RGB points from one completed frame; no PNG encoding or transfer",
-  "scene_verification": {
-    "platform": "macOS ARM64",
-    "native_sha256": "8a4c2915e109017c16a0ca678f7f605d949aa3f22f0d5318a5057fc6987b6f86",
-    "evidence": "docs/VERIFICATION-SCENES.md",
-    "linux_ci": "configured; not run for this uncommitted candidate"
-  },
   "feature": "Callback-safe agent continuation; original headless/state/input features preserved",
-  "continue_callback_verification": {
-    "platform": "macOS ARM64",
-    "python": "3.13.17",
-    "emulator_sha256": "8d31a8a054557b0c07bf2cb3d5bce9f0e0f039d04bb588c51c6821bbc3bc706d",
-    "passed": 66,
-    "failed": 0,
-    "errors": 0,
-    "skipped": 0,
-    "regression": "test_real_continue_at_bios_callback_does_not_invent_keyboard_input",
-    "source_files_changed": [
-      "include/debug.h",
+  "controlled_window_source": {
+    "scope": "SDL2 spectator event filtering, stopped-agent safeguards, and pre-target selected-driver/window validation; controlled_window capability",
+    "source_paths": [
+      "include/agent/video_adapter.h",
+      "src/agent/server/agent_server.cpp",
       "src/debug/debug.cpp",
-      "src/agent/debugger/debugger_adapter.cpp"
+      "src/debug/debug_gui.cpp",
+      "src/gui/sdlmain.cpp"
     ],
-    "source_replay_files_verified": 28,
-    "evidence": "docs/DOS_CONTINUE_CALLBACK_FIX.md",
-    "scope": "agent continuation; explicit native stepping not qualified"
+    "verification": "Full patch applied to all pinned-baseline files with matching Git blob identities; resulting source hashes checked. Build, GUI and input/paused-runtime acceptance remain unverified."
   },
-  "verification_scope_note": "Original verification section is historical; current callback correction qualification is recorded separately in continue_callback_verification"
+  "verification_scope_note": "Source replay hashes are retained here. Runtime qualification and limitations are recorded separately in repository verification documents."
 }

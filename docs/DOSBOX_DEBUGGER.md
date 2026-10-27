@@ -25,7 +25,44 @@ In 0.10.0 an explicit DOS seed is attempted first within that call's instruction
 
 Use the returned ID in place of `RUN` below. One-shot `request` calls cannot retain live sessions; live operations require the same foreground server. EOF, server exit, `debug-stop`, or Python context exit stops and reaps owned emulators. Saved history is explicitly not a liveness check; it cannot reattach an emulator after server restart.
 
-The prepared local DinoPark project is `/Users/tiga/Documents/ChatGPT/fDisBull/examples/dinopark/local/dinopark-debug.fdb`. It includes the analyzed mouse-polling routine, a completed actual-game session, five guest screenshots, and a 512-instruction trace. The current game directory is `/Users/tiga/Documents/ChatGPT/fDisBull/examples/dinopark/local/dosbox-20261023/dinopark`; the backend is `/Users/tiga/Documents/ChatGPT/fDisBull/.recovery/2026-10-23/dosbox-checkout/src/dosbox-x`.
+A prepared local project can retain analyzed routines, actual-game sessions, screenshots and traces. Keep original game files and runtime artifacts in a private local workspace; use your own project, game-directory and backend paths in the examples above.
+
+## Spectator window
+
+Headless is the default. To request a **view-only** native window for the same
+agent-owned DOSBox session, use a backend rebuilt from the current compatible
+patch and launch with:
+
+```bash
+fdisbull debug dinopark.fdb --executable /path/to/patched/dosbox-x --game-dir /path/to/dinopark --window
+```
+
+For `serve`, add `"window":true` to `debug-launch` parameters; in Python use
+`project.debugger(executable, game_dir, version=1, window=True)`. The native
+DOSBox IDA endpoint also accepts `--window` / `window=True`. State-fork launches
+accept the same option. Other backends reject it. The agent remains the sole
+source of guest keyboard and mouse input; window events do not provide manual
+game control. The target starts stopped at entry, and an image updates only as
+agent commands run the guest. Closing the window can terminate the owned
+emulator; the server must not treat saved run history as live state.
+
+A window requires an accessible host display and a compatible native backend
+advertising `video.controlled_window: true` and `video.headless: false`; older
+backends are rejected before starting the game, not silently treated as safe.
+SDL's `dummy` and `offscreen` video drivers (including fallback lists containing
+either) are rejected for window requests. Before starting the target, the rebuilt
+backend checks the actual selected SDL driver and that an SDL window was created
+and shown; it rejects dummy/offscreen fallback or a missing/hidden/minimized window. On
+Linux without an explicitly chosen
+SDL driver, `DISPLAY` or `WAYLAND_DISPLAY` must be set. Environment variables
+alone do not prove the display is reachable or visible to the user; remote and
+container sessions may have no display connection. The launch metadata records
+`window_requested`, not proof that pixels were seen. No desktop, browser stream,
+or display forwarding is configured by fDisBull. A Linux/X11 cloud-desktop
+smoke test on a synthetic guest showed a window and
+checked host-input filtering, RPC input, paused frames, and cleanup. It does not
+qualify every platform or prove general stopped IRQ stability; see the
+[verification record](VERIFICATION-SPECTATOR-CLOUD.md).
 
 ## Fast-forward and bounded runs
 
@@ -103,9 +140,13 @@ The `click-frame` script operation has the same fields. Capture/mark/click, boun
 
 The coordinate is an explicit input. When an agent must choose a new target from pixels, it still has to inspect a frame before sending that coordinate; scripts do not contain image recognition or invoke an agent inside the emulator. The compound action removes separate client calls for capturing/marking/queuing an already chosen point. Internal native RPCs still occur while the guest is paused, and a later run consumes the queued input. Clean source images, the target marker and the input receipt remain linked in project history.
 
-Execution breakpoint placement pins the static version and instruction context, checks the on-disk executable against the project's source hash, derives the runtime MZ load segment from observed entry registers, relocates the expected instruction bytes, and compares those bytes with live memory before creating the native breakpoint. Addresses outside the mapped MZ image, missing stored instructions, byte mismatches, wrapping translations, and patched static versions are rejected explicitly.
+Execution breakpoint placement pins the static version and instruction context, checks the on-disk executable against the project's source hash, derives the runtime DOS load segment from observed entry registers, adjusts MZ relocation words where applicable, and compares expected bytes with live memory before creating the native breakpoint. Addresses outside the mapped original image, missing stored instructions, byte mismatches, wrapping translations, and patched static versions are rejected explicitly.
 
-The first implementation launches the **original unpatched MZ version** only. It does not silently apply a child project's patches to a game. Use `version:1` when a project's latest version is a child. Runtime evidence remains attached to its launch version and is not copied into patched children.
+The current source launches the **original unpatched MZ or explicitly selected COM version** only. It does not silently apply a child project's patches to a game. Use `version:1` when a project's latest version is a child. Runtime evidence remains attached to its launch version and is not copied into patched children.
+
+### Explicit COM profile
+
+Use `fdisbull import GAME.COM PROJECT --image com` (or JSON `import` with `image: "com"`). An extension alone does not identify a COM program; explicit selection is required. Inputs must contain 1–65,280 bytes and cannot have an MZ signature. `--load-segment` identifies the static PSP segment (default `0x1000`). Only the original file bytes are mapped at PSP:0100; the PSP, stack, allocation beyond the file, and later dynamically loaded or overlaid code are not fabricated. Initial SP depends on DOS allocation and is unknown statically. Launch checks CS:IP, the COM startup segment registers, and up to the first 16 file bytes in guest memory; static execution breakpoints separately compare the instruction bytes at placement. The numeric address translation is not evidence that later self-modified or dynamically loaded bytes remain the original code. The selected source hash and original version are required, and long or non-COM guest names use guarded disposable `.COM` aliases. This profile does not statically map additional game executables or resources.
 
 For the verified DinoPark image, project `1000:75bc` becomes runtime `0824:75bc`; the CPU may report equivalent alias `0eb7:0c8c`. Both runtime forms name the same linear byte. Source bytes are verified at placement, not inferred from matching numeric addresses.
 

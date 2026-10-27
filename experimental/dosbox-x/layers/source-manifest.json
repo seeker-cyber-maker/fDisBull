@@ -1,7 +1,7 @@
 {
   "feature": "Callback-safe agent continuation; original headless/state/input features preserved",
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "84a17d4d1695472aecdafaa7a998037f1b1e6681cca2e626138f4056847b256d",
+  "patch_sha256": "b9ce575a5f52c06bfc97df5523168a92274263fce367b6b5718a328ccf8eb083",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -45,8 +45,8 @@
     },
     {
       "path": "include/agent/video_adapter.h",
-      "size": 960,
-      "sha256": "850d5ab351ec1b65ccf9541be5304351e18570bb35e5d588b1986be5daf68398"
+      "size": 1091,
+      "sha256": "acf1e77ef8c4a3034b3300a0f6637b29fccbab7fe7ada012b1e51c3ac0f0ca8d"
     },
     {
       "path": "include/debug.h",
@@ -80,8 +80,8 @@
     },
     {
       "path": "src/agent/server/agent_server.cpp",
-      "size": 201147,
-      "sha256": "1c13583ca7515c55600fb353a9006c06632b0e17832d219013cd4cc1c2c7934b"
+      "size": 202018,
+      "sha256": "56f0c4249e5c7387b007ada0f12bb7cb81410c726f79cfb298692294ae07281b"
     },
     {
       "path": "src/agent/transport/local_transport.cpp",
@@ -100,13 +100,13 @@
     },
     {
       "path": "src/debug/debug.cpp",
-      "size": 234273,
-      "sha256": "10a1a09e3207514613f64ab7520bb9f90a0fbc963ac0d0af47541cae547ce0f6"
+      "size": 234267,
+      "sha256": "abc3be13458362929cef0a8d98adfc29b7afecb9c8e3233a7692c3361277f208"
     },
     {
       "path": "src/debug/debug_gui.cpp",
-      "size": 30707,
-      "sha256": "24a94105770a0b9f2a588325f64974a1205688b494387c677f5e45d4f67aa779"
+      "size": 30706,
+      "sha256": "ab7bcb51a274a77d9cc1ec46ff1d269318726b6747df5fb83c58e81eea709f19"
     },
     {
       "path": "src/gui/render.cpp",
@@ -115,8 +115,8 @@
     },
     {
       "path": "src/gui/sdlmain.cpp",
-      "size": 426398,
-      "sha256": "46c16b0d2b886b3263d8f2b93feea4630b29d5e465b35ea39fe53964a3b797ef"
+      "size": 429452,
+      "sha256": "489d0bffd31e0c194e756a7411c6313babbe6c50d2f236a78f4f94dbc8d6263b"
     },
     {
       "path": "src/hardware/keyboard.cpp",
@@ -191,5 +191,16 @@
     "source_replay_files_verified": 29,
     "evidence": "docs/DOS_CONTINUE_CALLBACK_FIX.md",
     "scope": "agent continuation; explicit native stepping not qualified"
+  },
+  "controlled_window_source": {
+    "scope": "SDL2 spectator event filtering, stopped-agent safeguards, and pre-target selected-driver/window validation; controlled_window capability",
+    "source_paths": [
+      "include/agent/video_adapter.h",
+      "src/agent/server/agent_server.cpp",
+      "src/debug/debug.cpp",
+      "src/debug/debug_gui.cpp",
+      "src/gui/sdlmain.cpp"
+    ],
+    "verification": "Full patch applied to all pinned-baseline files with matching Git blob identities; resulting source hashes checked. Build, GUI and input/paused-runtime acceptance remain unverified."
   }
 }

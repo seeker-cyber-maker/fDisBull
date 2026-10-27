@@ -7,10 +7,11 @@ import stat
 import tempfile
 
 
-def guest_name(filename, source_sha256):
-    if re.fullmatch(r'[A-Za-z0-9_-]{1,8}\.(?:exe|com)', filename, re.IGNORECASE):
+def guest_name(filename, source_sha256, image_format='MZ'):
+    extensions = r'com' if image_format == 'COM' else r'(?:exe|com)'
+    if re.fullmatch(r'[A-Za-z0-9_-]{1,8}\.' + extensions, filename, re.IGNORECASE):
         return filename
-    return 'FB' + source_sha256[:6].upper() + '.EXE'
+    return 'FB' + source_sha256[:6].upper() + ('.COM' if image_format == 'COM' else '.EXE')
 
 
 class LaunchAlias:

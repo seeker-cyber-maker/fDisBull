@@ -46,7 +46,7 @@ class CallViewsMixin:
             raise ValueError('kind must be all, function, library or unresolved')
         with self.transaction():
             v = self.version(version)['id']
-            dos = self.meta['format'] == 'MZ'
+            dos = self.meta['format'] in ('MZ', 'COM')
 
             def label(address, context=None):
                 return self._dos_label(v, address, context) if dos else self._label(v, address)

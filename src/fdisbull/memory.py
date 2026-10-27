@@ -398,7 +398,7 @@ class MemoryMixin:
             raise ValueError('access must be all, read, write, read_write, conditional_write, or address_only')
         if not isinstance(include_unresolved, bool):
             raise ValueError('include_unresolved must be a boolean')
-        if self.meta.get('format') == 'MZ':
+        if self.meta.get('format') in ('MZ', 'COM'):
             queried, selector = self._dos_parse_address(address)
         else:
             try:
@@ -479,7 +479,7 @@ class MemoryMixin:
                 items = uncertain[offset-exact_count:offset-exact_count+limit]
             for item in items:
                 source=int(item['source'],16)
-                item['source_name']=self._dos_label(version_id,source,item['context']) if self.meta['format']=='MZ' else self._label(version_id,source)
+                item['source_name']=self._dos_label(version_id,source,item['context']) if self.meta['format'] in ('MZ', 'COM') else self._label(version_id,source)
                 target=item.get('concrete_target')
                 item['target_name']=self._label(version_id,target) if target is not None else None
             return dict(version=version_id, address=f'0x{queried:x}', name=self._label(version_id,queried), size=size, selector=selector,

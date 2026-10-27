@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import select
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -18,7 +19,15 @@ class DebuggerError(ValueError):
 class DOSBoxRPC:
     limit = 8 * 1024 * 1024
 
-    def __init__(self, executable, game_dir, *, on_spawn=None):
+    def __init__(self, executable, game_dir, *, window=False, on_spawn=None):
+        if type(window) is not bool:
+            raise ValueError('window must be boolean')
+        if window:
+            driver = os.environ.get('SDL_VIDEODRIVER', '').strip().lower()
+            if any(item.strip() in ('dummy', 'offscreen') for item in driver.split(',')):
+                raise DebuggerError('Window requires a visible SDL video driver; SDL_VIDEODRIVER is '+driver)
+            if sys.platform.startswith('linux') and not driver and not (os.environ.get('DISPLAY') or os.environ.get('WAYLAND_DISPLAY')):
+                raise DebuggerError('Window requires an available display (DISPLAY or WAYLAND_DISPLAY)')
         if os.name != 'posix':
             raise DebuggerError('Inherited-pipe debugger currently requires macOS or Linux')
         executable = Path(executable).expanduser().resolve(strict=True)
@@ -36,8 +45,9 @@ class DOSBoxRPC:
         descriptors = []
         try:
             child_read, self.writer = os.pipe()
+            descriptors.append(child_read)
             self.reader, child_write = os.pipe()
-            descriptors = [child_read, self.writer, self.reader, child_write]
+            descriptors.append(child_write)
             config = directory / 'agent.env'
             config.write_text(
                 f'transport=pipe\nendpoint=fd:{child_read}:{child_write}\n'
@@ -47,10 +57,13 @@ class DOSBoxRPC:
             config.chmod(0o600)
             environment = {k:v for k,v in os.environ.items() if not k.upper().startswith('DOSBOX_')}
             environment['XDG_CONFIG_HOME'] = str(directory / 'config')
+            arguments = [str(executable), '--defaultconf', '--noautoexec', '--noconfig',
+                         '-set', 'render doublescan=false', '-set', 'cpu core=normal', '--agent-config', str(config)]
+            if window:
+                arguments.append('-agent-window')
             with (directory / 'emulator.log').open('wb') as log:
                 self.process = subprocess.Popen(
-                    [str(executable), '--defaultconf', '--noautoexec', '--noconfig',
-                     '-set', 'render doublescan=false', '-set', 'cpu core=normal', '--agent-config', str(config)],
+                    arguments,
                     cwd=directory, env=environment, stdin=subprocess.DEVNULL,
                     stdout=log, stderr=subprocess.STDOUT, pass_fds=(child_read,child_write))
             if on_spawn is not None:on_spawn(self.process)
@@ -59,11 +72,20 @@ class DOSBoxRPC:
             os.set_blocking(self.reader, False)
             os.set_blocking(self.writer, False)
             self.capabilities = self.call('agent.capabilities')
+            video = self.capabilities.get('video')
+            if window and (not isinstance(video, dict) or video.get('headless') is not False or
+                           video.get('controlled_window') is not True):
+                raise DebuggerError('Backend does not advertise a safe controlled window; rebuild with a compatible agent backend')
         except BaseException:
             for fd in descriptors:
-                if fd not in (self.reader,self.writer):
+                try:
                     os.close(fd)
-            self.close()
+                except OSError:
+                    pass
+            try:
+                self.close()
+            except Exception:
+                pass  # Preserve the original startup error while attempting cleanup.
             raise
 
     def call(self, method, params=None, timeout_ms=15000):
