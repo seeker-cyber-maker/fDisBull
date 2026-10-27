@@ -7,7 +7,7 @@ import sys
 from . import __version__
 
 METHODS = {
-    'agent-skill':'Read the bundled fDisBull investigation skill and its scene reference; no project required',
+    'agent-skill':'Read the bundled fDisBull investigation skill and references; no project required',
     'debug-save-scene':'Save a versioned scene manifest with persistent objects and screenshot evidence; name,definition,[parent,version,author]',
     'debug-scenes':'List current scene revisions; [version]',
     'debug-scene-info':'Read a scene manifest, evidence and persistent object identities; scene,[version]',
@@ -164,7 +164,8 @@ def invoke(method, params, debugger=None):
         if p:raise ValueError('agent-skill takes no parameters')
         from importlib.resources import files
         root=files('fdisbull').joinpath('skills/fdisbull-investigate')
-        return {'name':'fdisbull-investigate','files':{n:root.joinpath(n).read_text() for n in ('SKILL.md','references/scenes.md')}}
+        resources=('SKILL.md','references/scenes.md','references/methodology.md')
+        return {'name':'fdisbull-investigate','files':{n:root.joinpath(n).read_text() for n in resources}}
     if method=='omf-catalog':
         from .omf_catalog import omf_signatures
         path=Path(p.pop('path'))

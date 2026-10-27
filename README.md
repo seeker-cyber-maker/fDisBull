@@ -143,6 +143,8 @@ supplies the tested backend; earlier 0.16.0 binaries do not contain this probe.
 The bundled `fdisbull-investigate` agent skill is available with
 `fdisbull agent-skill`. It guides evidence-based reverse engineering and scene
 authoring, prioritizing expected decision value and cost alongside confidence.
+Its references cover the scene API plus claim-specific evidence, action
+boundaries, failed-probe triage and matched-run preparation.
 The scene runtime currently targets DOSBox; PE64 native pixel probing is not
 implemented. [Implementation and limits](docs/SCENE_FRAMEWORK.md).
 The [installed-wheel DinoPark verification](docs/VERIFICATION-SCENES.md) exercises

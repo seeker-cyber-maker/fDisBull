@@ -24,6 +24,28 @@ convergence. Decompilation and names suggest hypotheses; traces, accesses and
 observed state transitions establish the tested behavior. Preserve unknown
 indirect behavior and competing explanations when they remain unresolved.
 
+## Match evidence to the claim
+
+For claims about what a user can currently see or invoke, fresh evidence from
+the authorized interface outranks an inferred backend meaning. It does not
+replace state or persistence evidence for claims about commitment or storage.
+A scene number, selected-item field, success code or plausible variable name
+does not by itself establish a ready control or completed action.
+
+This is not "every displayed number is correct." A display can be delayed,
+rounded, cached or inconsistent with committed state. Keep displayed values,
+internal state and persisted results distinct. When they disagree, preserve the
+observations and trace the first divergence. For nonvisual programs, use the
+authorized ordinary command, protocol or file interface rather than requiring a
+GUI.
+
+Follow the smallest useful causal interval from input/focus through dispatch,
+validation, pending changes, commitment or cancellation, presentation and
+persistence where relevant. A direct callback or constructed state can isolate
+a mechanism without proving ordinary reachability. Prefer before/after
+relationships and unchanged-state controls to one magic final value. Do not
+retry a state-changing action after a timeout until its effects are checked.
+
 ## Prioritize cost, reward and confidence together
 
 For a genuine fork, record a compact branch: question, target/context, hypothesis,
@@ -36,8 +58,15 @@ Choose high expected information/decision value per cost. A few RGB samples,
 one known memory range or one verified breakpoint may settle more than a long
 trace. High confidence does not justify an expensive low-yield probe; low
 confidence can justify a cheap decisive test with substantial downstream value.
-Check the existing evidence before repeating work. Reassess after a failed probe
-or a result that does not reduce uncertainty; do not blindly repeat a route.
+Check the latest applicable evidence before repeating work and record why a
+settled claim needs reopening. Reassess after a failed probe or a result that
+does not reduce uncertainty; distinguish wrong context, readiness, focus,
+observation timing and harness assumptions before declaring a target/tool defect.
+
+Reuse qualified setup and scope regression to the change. Capture full evidence
+on first qualification, failure or material change; return compact results and
+references for routine successes. Stop when the acceptance condition is met, or
+record the unresolved boundary and next discriminating test.
 
 Keep one active question. Use a task list for a settled sequence and a decision
 tree only for real alternatives. Retain concise disproved-branch records with
@@ -51,7 +80,12 @@ Use the project's versioned scene manifest as the source for both named actions
 and overlays. Give each object persistent context: what state it represents,
 what triggers it, its original geometry, a valid interior point, confidence and
 supporting clean snapshots. Keep action geometry separate from recognition masks.
-Composite rectangles and polygons can exclude overlaps or holes.
+Composite rectangles and polygons can exclude overlaps or holes. Preserve one
+object identity when the same control remains the same object across revisions
+or state-dependent availability and relative outcomes. Use a separate action
+identity when the interaction itself has a genuinely different meaning.
+Recognition, availability and action meaning remain separate facts; an unknown,
+unavailable or occluded view is not proof of absence.
 
 Check **visible**, **ready** and **enabled** separately. A new frame or a changed
 screen does not prove controls have been registered. Start with cheap pixel or
@@ -75,12 +109,21 @@ successful navigation.
 
 Use a byte watch to identify a writer and a bounded trace to explain its path.
 For theory testing, capture a baseline and change only the declared layer or
-state component. Restore the same preparation and controls; missing or unmatched
-captures cannot establish equality. Keep game/program files, native states and
-byte-retaining databases private when requested; export authored scripts,
-selected screenshots/traces and hash-bound receipts separately.
+state component. Restore the same preparation and controls, including relevant
+external files, pending inputs, clocks and random state. Equal seeds alone do
+not establish equal experiments, and observation that advances the guest is an
+intervention. Missing or unmatched captures cannot establish equality. Keep
+game/program files, native states and byte-retaining databases private when
+requested; export authored scripts, selected screenshots/traces and hash-bound
+receipts separately.
 
 Finish with what the object/control is, where the evidence places it, what it
 did, confidence and the tested limits. Distinguish reported, static-only,
 runtime-observed and repeated/restart-verified results. Do not turn one successful
-route into a deterministic replay or general UI-readiness claim.
+route into a deterministic replay or general UI-readiness claim. Keep verdict,
+evidence method, tested scope and independence separate: more snapshots or a
+second script by the same investigator are not independent confirmation.
+
+For disagreement triage, action boundaries and matched-run preparation, read
+[references/methodology.md](references/methodology.md). Keep program-specific
+addresses, controls and strategies in project evidence, not in this skill.

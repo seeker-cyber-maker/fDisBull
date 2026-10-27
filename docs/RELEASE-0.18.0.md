@@ -23,6 +23,12 @@ Python, JSON, saved scripts and the bundled investigation skill expose the
 changes. Existing full replies and name labels remain defaults. See the
 [scene improvements guide](SCENE_IMPROVEMENTS.md) for schemas, limits and usage.
 
+The bundled investigation skill also adds a progressive behavioral-methodology
+reference for claim-specific interface evidence, action-boundary tracing,
+failed-probe triage and matched-run preparation. `fdisbull agent-skill` returns
+the entrypoint plus both scene and methodology references, and package audits
+require all three resources.
+
 ## Verification and release gates
 
 The [sealed development record](VERIFICATION-SCENE-IMPROVEMENTS.md) preserves a
