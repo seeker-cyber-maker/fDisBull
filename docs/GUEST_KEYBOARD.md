@@ -59,6 +59,19 @@ and releases its keys. Already consumed input and mounted-file writes are not
 undone by cancellation. New native checkpoints use this new backend identity;
 older backend hashes remain incompatible in project metadata.
 
+## Proposed semantic macro boundary
+
+The current API queues complete key presses; it does not expose a public key-down
+that remains held across a later wait and a matching key-up. That distinction
+matters for game-independent routes. PQ1-style movement toggles on complete
+direction presses, while many games move between key-down and key-up.
+
+The [semantic input macro proposal](SEMANTIC_INPUT_MACROS.md) keeps physical
+operations stable and lets a version-bound user, adapter or cartridge macro set
+define names such as `down`, `stop`, `press` and `release` for each game. It also
+specifies the missing controller-owned key-down/key-up leases, bounded expansion,
+cleanup and evidence requirements. This is a proposal, not a 0.19.0 capability.
+
 The capability is `input.keyboard: ibm_pc_controller_us_ascii_v1`. Older DOS
 backends fail clearly and must be rebuilt from either updated backend patch.
 PE64 keyboard input and PC-98 keyboard injection are outside this addition.

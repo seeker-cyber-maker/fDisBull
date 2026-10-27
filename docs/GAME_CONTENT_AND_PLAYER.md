@@ -72,5 +72,27 @@ qualification process. fDisBull stops at that format; AEC may compile it into a
 cartridge, while an unrelated project may translate it into Python,
 JavaScript or another target without becoming part of fDisBull.
 
+UIL should also be treated as the semantic IR between a cartridge and its
+replaceable venues. A Zork-like text venue is not merely generated prose: it
+renders observable world state and events from UIL, while its parser compiles
+player language into canonical UIL intents. A point-and-click venue, debugger,
+headless agent interface and verifier can consume the same state transition
+model. Their presentation and ergonomics may differ, but a matched starting
+state and intent sequence should retain the same canonical world-state/event
+result within the declared capability contract.
+
+That separation keeps the prose honest. Text generation cannot reveal hidden
+or unknown state, and graphical affordances cannot create an interaction that
+the semantic world does not contain. It also permits original AEC games to be
+authored natively against the same IR under separate provenance rather than
+pretending they were recovered by fDisBull.
+
+It also permits an explicit loss study. A Zork-like source or transcript can be
+lifted into UIL and rendered back through the reference text venue. Compare
+typed observable facts, epistemic states, available intents and canonical
+state/event traces rather than demanding identical paraphrasing. Omitted facts,
+invented affordances, hidden-state leaks, lost ambiguity and changed transition
+order become separate measured defects instead of one opaque similarity score.
+
 The complete responsibility split is defined in the
 [UIL export boundary](UIL_BOUNDARY.md).

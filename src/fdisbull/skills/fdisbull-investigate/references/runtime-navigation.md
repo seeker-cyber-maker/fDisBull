@@ -49,6 +49,31 @@ invalid route when the coordinate is unchanged for a bounded number of updates,
 the target reports a no-movement condition, the context changes unexpectedly,
 direction changes, or any guest-time/watch-hit budget expires.
 
+Treat unchanged x/y over a declared completed-frame, semantic-sample or watched-
+write window as an early `blocked` route failure when the destination predicate
+is still false. Stop/neutralize input, retain the last-changing and final values,
+and capture an immediate authentic diagnostic screenshot without preparation
+that advances the guest. A capture error belongs in the same failure receipt;
+it does not turn the blocked route into an unknown success. Constant position is
+compatible with a wall/collision but needs a target collision flag or traced
+branch before claiming that specific cause.
+
+A diagnostic teleport to a qualified anchor can recover the authoring session
+after the blocked receipt is frozen. Record it as a separate diagnostic branch,
+re-resolve runtime objects and verify context. Never relabel the failed walked
+route as completed because teleport bypassed the obstruction.
+
+Prefer source-derived navigation geometry over discovering every wall by
+walking into it. A proposed scene `navigation` extension can retain room bounds,
+walkable regions, collision regions, transition portals, safe anchors and actor
+footprint in an explicit game-coordinate space. Bind each shape to the exact
+byte/resource version and the code, room/control resource, extraction rule and
+coordinate transform that produced it. Screen-pixel action masks are not
+silently game movement coordinates. Conditional doors, actors and scripted
+barriers must remain conditional. A static boundary plus a stalled runtime
+coordinate can support `blocked_known_boundary`; without that corroboration,
+retain `blocked_unknown` and the counterexample.
+
 A useful conditional vocabulary is `eq`, `ne`, `lt`, `le`, `gt`, `ge`,
 `in_range`, `changed`, `unchanged_for`, `crossed_up` and `crossed_down`. A result
 should retain the semantic resolver and field, session-resolved address as
@@ -68,6 +93,35 @@ Example design shape, not a currently guaranteed fDisBull API:
   "limits": {"guest_ms": 3000, "watch_hits": 256, "unchanged_hits": 8}
 }
 ```
+
+## Keep physical input separate from game-defined commands
+
+Do not assume that `down`, `stop`, `press`, `release`, `interact` or another
+player word has one universal physical meaning. In a latched-movement game, a
+complete press may start movement and another complete press of the same key may
+stop it. In a hold-to-move game, key-down starts movement and key-up stops it.
+
+Prefer a versioned, explicitly selected user/cartridge macro set above stable
+physical primitives. Macro names may be user-defined, including `down`, `stop`,
+`press` and `release`, but calls should remain visibly namespaced and receipts
+must retain the exact expansion. Do not redefine the core meaning of an atomic
+keyboard press merely because one game interprets it as a toggle.
+
+A reusable route should therefore record:
+
+- the exact macro-set identity and target/static version;
+- the semantic macro and bound arguments;
+- expanded physical operations and their delivery receipts;
+- any held-key lease created or consumed;
+- the target-level condition used to establish success; and
+- whether the macro is ordinary player input, authoring setup or a diagnostic
+  shortcut.
+
+Separate key-down and key-up require explicit input ownership and fail-closed
+cleanup. If the current backend only supports an atomic press, retain that limit
+instead of pretending a long press and a held-until-predicate movement are the
+same operation. Macro expansion must remain bounded, declarative and free of
+arbitrary host code.
 
 ## Observation ladder
 
