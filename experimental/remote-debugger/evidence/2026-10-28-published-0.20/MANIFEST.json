@@ -1,0 +1,41 @@
+{
+  "source_commit": "4f7791baa2cca7bb3c62fc9a997dc8f86316c98d",
+  "files": {
+    "ASSET-READBACK.json": {
+      "size": 3039,
+      "sha256": "ecbc695109489420a8dac8f65a775aeda32227badb2f55afb72ad3fec2aa7a11"
+    },
+    "SYSTEM-INSTALLATION.json": {
+      "size": 2383,
+      "sha256": "71de6195d3e146ca07446e7a52aec0e451522058ba1e1cff633cf8e28096aa90"
+    },
+    "TAG-ARTIFACT-AUDIT.json": {
+      "size": 8998,
+      "sha256": "baeea045064f990d1e280c0591853ce9da5888400916dcced19cceb62aa1e2eb"
+    },
+    "mac-layers.xml": {
+      "size": 61723,
+      "sha256": "864ff332bcb59890ec1b1ec83a477a270de26d3dac6b8683170806faf890ad45"
+    },
+    "mac-machine.xml": {
+      "size": 1155,
+      "sha256": "ba81350514e9e228dd1c89fa637701642ac5b0ad7f04cf369d7a7fc4b2665340"
+    },
+    "mac-proofs.xml": {
+      "size": 1217,
+      "sha256": "e837bd9131f35d773c521da6336a0a5a09063f8bf777575aefbaab96140d57e2"
+    },
+    "previous-system-verified.json": {
+      "size": 354,
+      "sha256": "e1b34c3ac4d05d24c320e5dfc949b304b0fc2c14a2f90a0403b5a9acd722a845"
+    },
+    "runtime-dos-audit.json": {
+      "size": 1653,
+      "sha256": "89a50e6505a909d0b944e66597960f600c4f94dc38aae23db52d2eb17b3d761f"
+    },
+    "runtime-wine-audit.json": {
+      "size": 1532,
+      "sha256": "bdbf698cd0fba4e5f3f0933d38fae95221be18f58c06801306f5edebc50640cf"
+    }
+  }
+}

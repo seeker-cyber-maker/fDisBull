@@ -1,0 +1,80 @@
+{
+  "version": "0.20.0",
+  "source_commit": "4f7791baa2cca7bb3c62fc9a997dc8f86316c98d",
+  "status": "active_verified",
+  "installation": "/Users/Shared/fDisBull/releases/0.20.0-4f7791b",
+  "activated_at_utc": "2026-10-28T22:05:54.939419+00:00",
+  "payload_entries": 1796,
+  "payload_manifest_sha256": "e8473fff0d58cad85e35788df58ff4601af96cdb631170b7af741e22af776ec5",
+  "qualification": {
+    "layers": {
+      "tests": 415,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "machine": {
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "proofs": {
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "doctors": {
+      "dos": {
+        "status": "passed",
+        "native_state_restored": true
+      },
+      "dos_qemu": {
+        "status": "passed",
+        "native_state_restored": true
+      },
+      "wine": {
+        "status": "passed",
+        "native_state_restored": true
+      }
+    },
+    "runtime_images_audited": true
+  },
+  "global_commands": {
+    "/usr/local/bin/fdisbull": "0.20.0",
+    "/opt/homebrew/bin/fdisbull": "0.20.0",
+    "/Users/tiga/.local/bin/fdisbull": "0.20.0"
+  },
+  "active_module": {
+    "version": "0.20.0",
+    "module": "/Users/Shared/fDisBull/releases/0.20.0-4f7791b/venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+    "solver": "5.3.2.0",
+    "z3": "5.3.2"
+  },
+  "active_payload_verification": {
+    "status": "passed",
+    "version": "0.20.0",
+    "source_commit": "4f7791baa2cca7bb3c62fc9a997dc8f86316c98d",
+    "payload_entries": 1796,
+    "active_default": true,
+    "module": "/Users/Shared/fDisBull/releases/0.20.0-4f7791b/venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+    "z3": "5.3.2"
+  },
+  "global_dos_doctor": {
+    "status": "passed",
+    "native_state_restored": true
+  },
+  "backup": "/Users/Shared/fDisBull/backups/2026-10-28-before-0.20.0",
+  "skill_resources": [
+    "SKILL.md",
+    "references/methodology.md",
+    "references/proofs.md",
+    "references/runtime-navigation.md",
+    "references/scenes.md"
+  ],
+  "default_selector_only_changed": true,
+  "previous_default": "/Users/Shared/fDisBull/releases/0.19.0-57824bd",
+  "linux_dosbox_sha256": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+  "mac_dosbox_sha256": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277"
+}

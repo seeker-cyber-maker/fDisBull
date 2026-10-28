@@ -1,0 +1,281 @@
+{
+  "format": "fdisbull-release-verification-1",
+  "tag": "v0.20.0",
+  "source_commit": "4f7791baa2cca7bb3c62fc9a997dc8f86316c98d",
+  "runs": {
+    "ordinary": {
+      "id": 40770388692,
+      "head_sha": "4f7791baa2cca7bb3c62fc9a997dc8f86316c98d",
+      "head_branch": "v0.20.0",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40770388692",
+      "run_attempt": 1,
+      "created_at": "2026-10-28T21:15:13Z",
+      "updated_at": "2026-10-28T21:16:35Z",
+      "jobs": [
+        {
+          "id": 123105674638,
+          "name": "test-and-package",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-28T21:15:15Z",
+          "completed_at": "2026-10-28T21:16:34Z"
+        }
+      ]
+    },
+    "native": {
+      "id": 40770388455,
+      "head_sha": "4f7791baa2cca7bb3c62fc9a997dc8f86316c98d",
+      "head_branch": "v0.20.0",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40770388455",
+      "run_attempt": 1,
+      "created_at": "2026-10-28T21:15:12Z",
+      "updated_at": "2026-10-28T22:01:34Z",
+      "jobs": [
+        {
+          "id": 123105674238,
+          "name": "Native debugger (layers-backend)",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-28T21:15:15Z",
+          "completed_at": "2026-10-28T21:27:44Z"
+        },
+        {
+          "id": 123105674781,
+          "name": "Native debugger (stable-backend)",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-28T21:15:15Z",
+          "completed_at": "2026-10-28T21:24:06Z"
+        },
+        {
+          "id": 123111825130,
+          "name": "Unified DOS, boot and PE64 (installed wheel)",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-10-28T21:27:46Z",
+          "completed_at": "2026-10-28T22:01:33Z"
+        }
+      ]
+    }
+  },
+  "counts": {
+    "stable": 109,
+    "layers": 415,
+    "pe64": 16,
+    "unified": 13,
+    "ordinary": 1236,
+    "ordinary_skipped": 98
+  },
+  "suite_counts": {
+    "stable": {
+      "tests": 109,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "layers": {
+      "tests": 415,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "pe64": {
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "unified": {
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "all_native_suites_no_skips": true,
+  "assets": [
+    {
+      "name": "fdisbull-0.20.0-py3-none-any.whl",
+      "size": 428048,
+      "sha256": "4dc75da040dd33dbdf95d4c409315f28ece8571191577c5f1c13bb890cdf3f7c"
+    },
+    {
+      "name": "fdisbull-0.20.0-tool.zip",
+      "size": 1052352,
+      "sha256": "7f35f37f8da3b32d300a54641a6aca910eafac76e78ed5f8df09c683ce8579a1"
+    },
+    {
+      "name": "fdisbull-0.20.0.tar.gz",
+      "size": 875734,
+      "sha256": "40d00af1287502dd5088e941e909b1e454d83de7f57cc367438fc9175bc4c8de"
+    },
+    {
+      "name": "fdisbull-0.20.0-linux-x86_64-offline.tar.gz",
+      "size": 102186190,
+      "sha256": "7de3024f731363dc926447b0fe777592528b984f4638e6ddc6ee3f9c5b350f38"
+    },
+    {
+      "name": "fdisbull-0.20.0-linux-x86_64-source-companion.tar",
+      "size": 106885120,
+      "sha256": "b655a9edc2364fc6572051845b59172bf5d90b110ad9aa464f51f6ebb07010d8"
+    }
+  ],
+  "package_audit": {
+    "source_commit": "4f7791baa2cca7bb3c62fc9a997dc8f86316c98d",
+    "tag": "v0.20.0",
+    "run_id": 40770388692,
+    "artifact_id": 12850754265,
+    "artifact_sha256": "2a79a14ea7212ce120f68fe8f41b9d35da458919f7088a89ffaee7b430a8d10c",
+    "packages": [
+      {
+        "name": "fdisbull-0.20.0-py3-none-any.whl",
+        "bytes": 428048,
+        "sha256": "4dc75da040dd33dbdf95d4c409315f28ece8571191577c5f1c13bb890cdf3f7c",
+        "tool_only_entries": 114
+      },
+      {
+        "name": "fdisbull-0.20.0-tool.zip",
+        "bytes": 1052352,
+        "sha256": "7f35f37f8da3b32d300a54641a6aca910eafac76e78ed5f8df09c683ce8579a1",
+        "tool_only_entries": 326
+      },
+      {
+        "name": "fdisbull-0.20.0.tar.gz",
+        "bytes": 875734,
+        "sha256": "40d00af1287502dd5088e941e909b1e454d83de7f57cc367438fc9175bc4c8de",
+        "tool_only_entries": 334
+      }
+    ]
+  },
+  "offline_kit_audit": {
+    "source_commit": "4f7791baa2cca7bb3c62fc9a997dc8f86316c98d",
+    "tag": "v0.20.0",
+    "artifact_id": 12853475663,
+    "artifact_sha256": "f2b1e4355ebb9169d6fcd96b6d8a07bace2abddd1b9f103f245734c17a1a6941",
+    "payload_checksums_verified": 17,
+    "wheel_entries_identical_to_ordinary_tag_ci": 114,
+    "source_overlay_files_verified": 29,
+    "pinned_upstream_archive_matches_local_verified_probe": true,
+    "backend_sha256": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+    "native_acceptance": {
+      "package_version": "0.20.0",
+      "solver_version": "5.3.2",
+      "python_version": "3.13.5",
+      "platform": "Linux",
+      "machine": "x86_64",
+      "counterexample": "counterexample",
+      "equivalence": "equivalent_under_assumptions",
+      "keyboard": true,
+      "memory": true,
+      "native_restore": true,
+      "screenshot_sha256": "1c12718a10d90d901a004896bd408ac89ac4f14cc5425281a5aadf83f950f578",
+      "backend_sha256": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+      "project_restart": true
+    },
+    "native_profile_counts": {
+      "stable": 109,
+      "layers": 415
+    },
+    "archives": [
+      {
+        "name": "fdisbull-0.20.0-linux-x86_64-offline.tar.gz",
+        "size": 102186190,
+        "sha256": "7de3024f731363dc926447b0fe777592528b984f4638e6ddc6ee3f9c5b350f38"
+      },
+      {
+        "name": "fdisbull-0.20.0-linux-x86_64-source-companion.tar",
+        "size": 106885120,
+        "sha256": "b655a9edc2364fc6572051845b59172bf5d90b110ad9aa464f51f6ebb07010d8"
+      }
+    ]
+  },
+  "native_tested_wheel_entries_match": 114,
+  "native_artifacts": [
+    {
+      "id": 12855995016,
+      "name": "native-debugger-pe64",
+      "size_in_bytes": 80822,
+      "digest": "sha256:114e456280f290c9c390699b2bddd45c98ca27b53170c509ba9f67653cec41b3"
+    },
+    {
+      "id": 12855810601,
+      "name": "native-debugger-unified",
+      "size_in_bytes": 27798,
+      "digest": "sha256:fbedcd27a5920b1a2c877db7cc0e27228a557b6e8ea2105ca3eb9d21cd5704bc"
+    },
+    {
+      "id": 12855710826,
+      "name": "fdisbull-pe-tested-wheel",
+      "size_in_bytes": 420788,
+      "digest": "sha256:21eda605e91a1de013e19e97e6ba5f487f9a301cc9981ac3eb170b8fab476172"
+    },
+    {
+      "id": 12853680214,
+      "name": "linux-dosbox-layers",
+      "size_in_bytes": 52828018,
+      "digest": "sha256:d4ffe34ecbd57e632ff5b58c9ac40d106109b4508f5b73e0ab82c62ec0c52e98"
+    },
+    {
+      "id": 12853475663,
+      "name": "linux-dos-offline-kit",
+      "size_in_bytes": 208737262,
+      "digest": "sha256:f2b1e4355ebb9169d6fcd96b6d8a07bace2abddd1b9f103f245734c17a1a6941"
+    },
+    {
+      "id": 12852966963,
+      "name": "native-debugger-layers-backend",
+      "size_in_bytes": 9176,
+      "digest": "sha256:64ef142efece34b9d2f2c5a5ff26b829b122bf0b56e4bf54743e2cc7c9194597"
+    },
+    {
+      "id": 12852638561,
+      "name": "native-debugger-stable-backend",
+      "size_in_bytes": 3327,
+      "digest": "sha256:eafac2e2d78a91af57fe3fe112a8ff99a56277b7f1d4a321712ce6af6b1dbb20"
+    }
+  ],
+  "release_notes_sha256": "0e7a7922ae2d5764cc7408cb91d4e87b63adb7f8bad542f5733ff02f04d98d5e",
+  "game_files_saved_states_and_project_databases_included": false,
+  "scope": "Exact tag Linux CI; local Mac installation qualification is a separate receipt.",
+  "publication_assets": [
+    {
+      "name": "SHA256SUMS",
+      "size": 596,
+      "sha256": "46b1fffde25111579fb3f9ef284df09ed30302ae67c0a90fa8cc568f7c39bad2"
+    },
+    {
+      "name": "VERIFICATION-0.20.0.json",
+      "size": 7810,
+      "sha256": "48bfc80ae904cc6171ed01c0e405a3dfd68fdc92b656adaa4a6afe0604e32ead"
+    },
+    {
+      "name": "fdisbull-0.20.0-linux-x86_64-offline.tar.gz",
+      "size": 102186190,
+      "sha256": "7de3024f731363dc926447b0fe777592528b984f4638e6ddc6ee3f9c5b350f38"
+    },
+    {
+      "name": "fdisbull-0.20.0-linux-x86_64-source-companion.tar",
+      "size": 106885120,
+      "sha256": "b655a9edc2364fc6572051845b59172bf5d90b110ad9aa464f51f6ebb07010d8"
+    },
+    {
+      "name": "fdisbull-0.20.0-py3-none-any.whl",
+      "size": 428048,
+      "sha256": "4dc75da040dd33dbdf95d4c409315f28ece8571191577c5f1c13bb890cdf3f7c"
+    },
+    {
+      "name": "fdisbull-0.20.0-tool.zip",
+      "size": 1052352,
+      "sha256": "7f35f37f8da3b32d300a54641a6aca910eafac76e78ed5f8df09c683ce8579a1"
+    },
+    {
+      "name": "fdisbull-0.20.0.tar.gz",
+      "size": 875734,
+      "sha256": "40d00af1287502dd5088e941e909b1e454d83de7f57cc367438fc9175bc4c8de"
+    }
+  ]
+}

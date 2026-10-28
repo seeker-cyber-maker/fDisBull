@@ -1,0 +1,32 @@
+{
+  "profile": "wine",
+  "kind": "Pristine gzip/newc boot filesystem; streamed in place, not extracted",
+  "sha256": "d784d94a0fbf81896e693cde6daa850cf81c1f2c6f391811913d234009fe7676",
+  "size": 648719411,
+  "member_count": 21530,
+  "expanded_member_bytes": 1876847233,
+  "resources": {
+    "init": "1d88753c741ff775444e95b3469a77aaeccaba5c5889d53ed2b63e9ae0d5ad43",
+    "opt/fdisbull/agent.c": "7f790582fc115fc3036f33c7a78bb11401619b4ce5adf0d624ca81d51c33d34a",
+    "opt/fdisbull/broker.py": "7e6263017345bd1b6c8132f39aaab3c7181516c4210ca8aef8cf6e70ef2eae21",
+    "opt/fdisbull/selftest.c": "70b5e3f4b443154f8346ba45103324fd95cc27ac24c508fc1f59c2542b6fa104"
+  },
+  "known_static_os_support": [
+    {
+      "path": "var/lib/shells.state",
+      "size": 84,
+      "sha256": "76d76e1be9b95bf126b60928151bc4c9e11b8a4f66697be0e02aa03d076d348a",
+      "kind": "OS shells configuration or GCC plugin type descriptors; not an emulator/game state"
+    },
+    {
+      "path": "usr/lib/gcc/x86_64-w64-mingw32/13-win32/plugin/gtype.state",
+      "size": 1371523,
+      "sha256": "bf9f98cd7f8f5e78ade351c65b369850d860a5489235f1d21e1e5d0e39b8cb0d",
+      "kind": "OS shells configuration or GCC plugin type descriptors; not an emulator/game state"
+    }
+  ],
+  "excluded_payloads_found": 0,
+  "candidate_version": "0.20.0",
+  "candidate_module": "/Users/Shared/fDisBull/releases/0.20.0-4f7791b/venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+  "linux_dosbox_sha256": "367c554a2405d50a929f64b107476084bf2fae2c266b240a7419d40ba646b0ad"
+}

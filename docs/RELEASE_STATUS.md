@@ -1,12 +1,28 @@
 # Release status checked on 2026-10-28
 
-## 0.20.0 source finalization
+## Published 0.20.0 and shared Mac installation
 
-PR #12 is merged. The final source includes the local AGI filesystem-test correction, public Police Quest verifier, API documentation, and a Linux Python 3.13.5 offline kit builder that requires genuine Z3. The native workflow builds the corresponding backend source companion, installs the kit offline, and tests Z3 plus a real authored DOS save/restore session. See [0.20 release notes](RELEASE-0.20.0.md).
+[0.20.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.20.0) at fixed source `4f7791baa2cca7bb3c62fc9a997dc8f86316c98d`.
+Both main workflows passed before tagging; both complete tag workflows also
+passed. Tag results are 1,236 ordinary checks (98 skipped), 109 stable DOSBox,
+415 layers, 16 PE64 and 13 DOS/QEMU/boot checks, with zero native skips. Seven
+assets, including the genuine Z3 offline kit and corresponding backend source,
+passed public download/hash readback.
 
-The exact final main commit must pass ordinary and native Linux CI before its annotated tag is created. The tag and CI artifacts are distinct from GitHub release publication. Shared system commands continue selecting published 0.19.0 until a separate installation promotion. Game files, native states and databases remain excluded.
+The shared selector now activates `releases/0.20.0-4f7791b`. Qualification passed
+415 installed-wheel Mac DOSBox checks, seven boot/GDB checks, nine proof checks,
+and three runtime doctors with native-state restoration. Global commands and a
+further direct-DOS doctor passed after activation. The complete 1796-entry
+payload verified. The 0.19.0 prefix remains available for guarded rollback;
+private projects, game files and captured states were preserved.
+
+See the [publication record](PUBLICATION-0.20.md), [release notes](RELEASE-0.20.0.md)
+and [system commands](SYSTEM_INSTALLATION.md). Future proof/world/intent RFCs
+remain separate from this fixed implementation release.
 
 ## Published 0.19.0 and shared Mac installation
+
+This section records the earlier publication and activation, superseded by 0.20.0 above.
 
 [0.19.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.19.0),
 not draft or prerelease, at fixed tag source `57824bd9a06c7f25f6a25172b3f4dcb4dfcfdc95`.
