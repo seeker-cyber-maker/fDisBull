@@ -40,7 +40,7 @@ an expansion of fDisBull's ownership. UIL amendments continue through the
 | Machine/VM decoding and execution evidence | Decode source-specific instructions or guest bytecode, and collect bounded execution, state and I/O observations where available. | Instruction facts, control-flow candidates, traces and stops, all tied to addresses and source identity. A decoder does not execute a guest or establish its semantics. |
 | C/C++-like structural reduction | Reduce instruction-level detail into understandable operations, data flow, control structures and candidate routines. | An evidence-linked analysis **view**, including unresolved edges and alternatives. It need not be compilable C/C++, and decoded bytecode need not detour through literal C/C++. |
 | Z: Zork-like behavioral layer | Organize reduced operations and direct guest evidence into scenes, entities, state, actions and processes: what happens, when and under which conditions. | Candidate behavioral model with guards, effects, timing and evidence. A scene here is a semantic context, distinct from an existing screenshot-based debugger scene. |
-| UDL: semantic definitions and mappings | Define vocabulary and mappings from source patterns and Z concepts to intent primitives, retaining input evidence and competing interpretations. | Versioned mapping results and provenance, including unknowns. UDL is recovery machinery and an optional design reference for a new backend, not a runtime dependency of a finished UIL package. |
+| UDL: user-defined language/definition layer | User authors define vocabulary and input recognition mappings from source patterns and Z concepts to intent primitives, retaining input evidence and competing interpretations. They can also define target compiler mappings and libraries. | Versioned definitions, mapping results and provenance, including unknowns. UDL is recovery machinery and an optional design reference for a new backend, not a runtime dependency of a finished UIL package. |
 | UIL: universal interaction blueprint | Capture the reconstructed game's meaning in defined, composable primitive and macro blocks. | A self-contained semantic source, interpretable without the original source or UDL recognition machinery. It includes or binds its declared dependencies and unresolved behavior; unsupported required semantics must be refused, not guessed. |
 | Target definitions and code libraries | Bind each supported UIL construct to target-specific implementations and declared runtime services. | A compiler and libraries can produce, for example, Rust, Swift, JavaScript or Python, potentially hosted in Godot or an iOS application. Capability gaps and runtime dependencies are explicit. |
 | Agent access and optional presentation | Expose the same authoritative simulation through semantic operations; project its state visually when desired. | Agent interface and optional renderer over one simulation, with declared observation limits and reproducible event ordering. |
@@ -53,7 +53,9 @@ reference evaluator remain decisions for later work.
 
 ## Blocks and semantic obligations
 
-A block is a defined operation, not merely a suggestive name. Its contract
+The UIL blueprint includes the semantic definitions of its blocks; it does not
+need the original source recognition machinery. A block is a defined operation,
+not merely a suggestive name. Its contract
 specifies typed parameters and units, preconditions and action availability,
 effects and persistent state, emitted events, ordering and scheduling,
 nondeterminism and random streams, external services, failure behavior and
@@ -79,11 +81,14 @@ must respect its redistribution classification.
 
 Suppose a synthetic source has an action that awards $200. Investigation finds
 an unsigned balance in whole dollars, a cap of $999, and a threshold event
-emitted once when the balance first reaches $500. The action is available only
-when `award_pending` is true. At the action boundary it clears that flag,
-sets `money = min(999, money + 200)`, then emits `threshold_reached` if the old
-balance was below $500 and the new balance is at least $500. It then emits
-`award_completed`; persistent balance and flag survive a checkpoint. These
+emitted only once, on the first upward crossing of $500. A persistent
+`threshold_announced` flag starts false. The action is available only when
+`award_pending` is true. At the action boundary it clears that flag and sets
+`money = min(999, money + 200)`. If `threshold_announced` is false, the old
+balance was below $500 and the new balance is at least $500, it sets
+`threshold_announced` to true and then emits `threshold_reached`. It then emits
+`award_completed`; the balance, both flags and their values survive a
+checkpoint, so a later decrease and recrossing cannot re-emit the event. These
 are example assumptions, not facts about a real program.
 
 The structural view might show loads, arithmetic, a comparison and stores. Z
@@ -154,9 +159,9 @@ conditions. Visual output may still be needed to test visual fidelity.
   separate guest-language layer atop the host machine. Retain distinct guest PC,
   resource offset and native dispatch addresses and evidence for their mapping.
   Decode guest operations separately from implementing an interpreter or
-  demonstrating execution. An external ACT assessment mentions an E51 model
-  and a DinoMart show/wait/hide loop; these are conceptual leads, not a public
-  behavioral specification or verified numeric claim.
+  demonstrating execution. An ACT-style embedded animation can be modeled as
+  a conceptual show/wait/hide process without assuming its implementation or
+  timing.
 
 Each adapter needs explicit source identity, decoding and service versions,
 address units, capabilities, unknowns and bounded tests. Source-specific data
