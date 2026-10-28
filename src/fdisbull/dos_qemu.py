@@ -53,8 +53,9 @@ class DOSQemuSession(DebugSession):
     def __init__(self,project,executable,game_dir,*,kernel,initramfs,version=None,files=None,boot_timeout_ms=240000,_on_spawn=None):
         bounded(boot_timeout_ms,'boot_timeout_ms',1000,600000)
         filename=project.meta['filename']
-        target=guest_name(filename,project.meta['source_sha256'])
+        target=guest_name(filename,project.meta['source_sha256'],project.meta['format'])
         assets=uploads(project,game_dir,filename,files)
+        self._source_files=[dict(path=item['path'],sha256=item['sha256']) for item in assets]
         if target!=filename:
             if any(f['path'].casefold()==target.casefold() for f in assets):
                 raise ValueError('DOS launch alias collides with an upload or exceeds the asset budget')
@@ -83,9 +84,10 @@ class DOSQemuSession(DebugSession):
         pass # Alias bytes are explicitly uploaded; the host directory is untouched.
 
     def _transport_metadata(self):
-        return dict(backend='dosbox-qemu',runtime_profile='dosbox-qemu-real-normal-v1',runtime_inputs=self.rpc.inputs,
+        return dict(backend='dosbox-qemu',runtime_profile='dosbox-qemu-real-normal-com-v1' if self.project.meta['format']=='COM' else 'dosbox-qemu-real-normal-v1',runtime_inputs=self.rpc.inputs,
                     emulator_sha256=self.rpc.hello['emulator_sha256'],guest_kernel=self.rpc.hello['guest_kernel'],
                     target_pid=self.rpc.started['pid'],files=[dict(path=f['path'],sha256=f['sha256']) for f in self._transport_options['files']],
+                    source_files=self._source_files,
                     state_scope='DOSBox CPU/devices; guest files checked separately')
 
     def _disk_manifest(self):return self.rpc._bridge('dos.manifest')['files']

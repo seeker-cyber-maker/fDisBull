@@ -38,7 +38,7 @@ class FactsMixin:
         unknown; this index describes the stored static assumptions, not runtime.
         """
         from .project import key
-        dos = self.meta['format'] == 'MZ'
+        dos = self.meta['format'] in ('MZ', 'COM')
         with self.transaction(True):
             v = self.version(version)['id']
             self._invalidate_derived(v,reason='derived facts refreshed')

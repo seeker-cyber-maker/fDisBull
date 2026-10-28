@@ -4,6 +4,74 @@ Use this reference when a plausible internal explanation disagrees with an
 interaction, a probe fails, or an observation is being generalized. It adds no
 new tool API and does not authorize actions beyond the user's task.
 
+## Screen for and map interpreted control flow
+
+Early, use a cheap, task-relevant check for a possible interpreter alongside
+native execution and other explanations. Follow the outer game/input loop from
+a qualified input or update boundary. Look for repeated consumption of a data
+stream and changes in a candidate virtual program counter or VM state; a loop,
+jump table or unusual bytes alone proves neither an interpreter nor its role.
+Compare ordinary event dispatch, decompression, rendering and native code as
+alternatives. If a bounded trace only repeats idle polling, move to a qualified
+input or loop-exit boundary rather than repeatedly sampling the idle loop.
+Execution can mix native routines, interpreted scripts and native callbacks;
+dispatch can be direct, threaded or another form.
+The interpreter execution cycle may carry the guest game's logic; input,
+rendering and timing may be outer scheduling or host services. Establish their
+actual boundaries rather than assuming either layer contains all game logic.
+
+If warranted, use a bounded trace/watch at the suspected boundary to connect
+fetch and operand consumption to dispatch, state changes and the next fetch.
+Qualify the stream, virtual PC, operand lengths, dispatch mechanism and relevant
+VM state from observed behavior, not only decoder guesses. For the question at
+hand, trace guest branch conditions and destinations and their effects, including
+calls out to native code and returns. Record native execution coordinates together
+with guest script identity/version and guest PC/offset, the source of each
+mapping, relevant input/state and observed versus inferred edges. Retain raw
+bytes and trace timing (e.g., before-instruction), registers and relevant state
+so the transition is interpretable. Preserve unknown paths; neither a single
+handler nor one run proves the whole language.
+
+For a game-backed action model, trace text commands or UI controls through their
+respective input paths to the underlying guest/native behavior. Associate a
+proposed action and its effects with qualified code provenance and distinguish
+observed semantics from hypotheses. A reusable game-independent representation
+may later express those semantics without requiring the original code at runtime;
+evidence links do not themselves prove a faithful translation or full coverage.
+
+Do not treat a filename, region label or executable extension as a code boundary:
+code or scripts may share a resource container with graphics or live in an
+external data file. Inspect relevant load/asset paths cheaply, rather than
+scanning every file. Connect file identity and offset through load, decompression
+or copy to the loaded address and runtime generation, then to native execution
+or VM fetch. A byte match suggests identity but does not prove a file-read or
+load edge; incidental decodability is not execution evidence. Distinguish a
+traced file/handle read into RAM from content-derived offsets, and qualify links
+across sessions. Keep missing links and permissions explicit.
+
+A memory watch covers only the access paths it instruments. A non-hit does not
+prove unchanged memory; compare before/after bytes and inspect relevant service
+entry and return or other plausible write paths when the distinction matters.
+
+Prefer execution-led discovery on relevant unresolved indirect targets over
+assuming where code must be stored: observe natural targets first. Where useful
+and authorized, a disposable checkpoint can support a bounded counterfactual
+branch force; declare the changed condition, preconditions and possible side
+effects, and keep forced reachability distinct from ordinary reachability.
+Observed valid CPU execution establishes code use only for those bytes and that
+context; attempted fetch, decoder acceptance or a corrupted forced pointer does
+not. Track the byte generation through overlays or self-modification. For guest
+scripts, establish interpreter fetch rather than expecting the CPU PC to enter
+the script. Bound attempts and stop when they no longer distinguish the question.
+
+Choose a discriminating probe and negative control: vary the relevant input or
+condition while holding preparation comparable, and check both the predicted
+guest branch/effect and an alternative explanation. A failed fetch, unmatched
+trace, or unsupported observation is not proof of absence. Stop when the
+requested causal claim is supported to its needed scope, when a bounded test
+reasonably favors an alternative, or when cost/capability prevents a useful
+next discriminator; report evidence, limits and the condition for reopening.
+
 ## Select evidence for the exact claim
 
 | Claim | Evidence needed |
@@ -23,6 +91,10 @@ controls exist. A stale display can coexist with a successfully committed action
 Preserve both facts rather than inventing a contradiction or retrying blindly.
 
 ## Trace a complete action, not just an interesting field
+
+For typed input, qualify parser readiness separately from queue acceptance. An
+input accepted during a transition may be consumed before the intended prompt;
+verify the ready context before attributing the resulting text to a command.
 
 Write the smallest causal account needed for the question:
 

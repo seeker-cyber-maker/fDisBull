@@ -146,7 +146,7 @@ class SharedLabelsMixin:
                               (v, self.context, key(address))).fetchone()
         if row:
             return row[0]
-        if self.meta['format'] == 'MZ':
+        if self.meta['format'] in ('MZ', 'COM'):
             from .dos_views import DOSViewsMixin
             return DOSViewsMixin._dos_label(self,v,address)
         from .analysis import AnalysisMixin

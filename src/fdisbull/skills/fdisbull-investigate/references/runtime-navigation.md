@@ -127,3 +127,7 @@ Preserve both the ordinary route and diagnostic shortcut when both were used.
 Report which one established each claim. Keep target-specific addresses,
 coordinates, anchors and object pixels in project evidence or cartridge data,
 not in this reusable skill.
+
+## 0.20 bounded controller
+
+Select an exact `debug_define_macros` ID for every `macro` or `move` operation. Latched games require a second full same-direction press; held games require a returned owned lease and its key-up. `move` requires explicit observations, destination, progress window and stopped-state predicate. A blocked receipt is failure, even if a separate diagnostic intervention later recovers the session. Capture its immediate authentic frame without screenshot hooks. Re-resolve runtime bindings after checkpoint restore. Navigation masks use a declared game coordinate space and actor footprint; keep their source facts, inferred/derived status, conditional colliders and contradictions. Requested content, displayed content and control readiness are separate conditions. Use [bounded proofs](proofs.md) to test an explicit model without promoting its fidelity to fact.

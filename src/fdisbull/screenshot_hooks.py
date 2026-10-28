@@ -50,7 +50,7 @@ class ScreenshotHookProjectMixin:
         from .project import now
         v=self.version(version)['id']
         if configuration is not None:
-            if self.meta['format']!='MZ':raise ValueError('Screenshot hooks currently support DOS sessions')
+            if self.meta['format'] not in ('MZ', 'COM'):raise ValueError('Screenshot hooks currently support DOS sessions')
             config=validate_configuration(configuration)
             for layer in config['suspend_layers']:
                 if self.debug_layer_info(layer)['version']!=v:raise ValueError('Screenshot hook layer belongs to another version')

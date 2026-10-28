@@ -97,6 +97,12 @@ def predicate(value, width, height, depth=0, allow_before=False):
         expected=bytes.fromhex(data.get('hex',''))
         mask=bytes.fromhex(data.get('mask','ff'*len(expected)))
         if len(expected)!=data['length'] or len(mask)!=len(expected):raise ValueError('Memory predicate length mismatch')
+    elif op=='runtime_memory':
+        if not isinstance(data,dict) or set(data)-{'binding','offset','length','hex','mask'} or not isinstance(data.get('binding'),str) or not data['binding']:
+            raise ValueError('Invalid runtime memory predicate')
+        integer(data.get('offset',0),0,65535);integer(data.get('length'),1,256)
+        expected=bytes.fromhex(data.get('hex',''));mask=bytes.fromhex(data.get('mask','ff'*len(expected)))
+        if len(expected)!=data['length'] or len(mask)!=len(expected):raise ValueError('Runtime predicate length mismatch')
     elif op=='compare':comparison(data,allow_before=allow_before)
     else: raise ValueError('Unknown scene predicate '+op)
 
@@ -146,6 +152,13 @@ class SceneProjectMixin(SceneBundleMixin):
         width,height=doc.get('width'),doc.get('height');dimensions(width,height)
         integer(doc.get('mode_id'),0,(1<<53)-1)
         context(doc.get('context'));predicate(doc.get('match'),width,height)
+        if 'content' in doc:
+            if not isinstance(doc['content'],dict) or set(doc['content'])!={'requested','displayed','ready'}:raise ValueError('Content requires requested, displayed and ready predicates')
+            for value in doc['content'].values():predicate(value,width,height)
+        if 'navigation' in doc:
+            from .navigation_geometry import validate_navigation
+            validate_navigation(doc['navigation'])
+            for collider in doc['navigation'].get('colliders',[]):predicate(collider['when'],width,height)
         doc.setdefault('exclusive_group','main');globals()['name'](doc['exclusive_group'])
         objects=doc.get('objects')
         if not isinstance(objects,list) or not 1<=len(objects)<=64:raise ValueError('Scene requires 1..64 objects')
@@ -185,6 +198,7 @@ class SceneProjectMixin(SceneBundleMixin):
             for key in ('visible','ready','enabled'):predicate(obj.get(key),width,height)
             action(obj.get('action'))
             predicate(obj.get('outcome'),width,height,allow_before=True)
+            if obj.get('outcome_phase','unspecified') not in ('state','interface','persistence','unspecified'):raise ValueError('Invalid outcome phase')
             integer(obj.setdefault('guest_ms',5000),1,120000);integer(obj.setdefault('timeout_ms',5000),1,60000)
             obj.setdefault('evidence',[reference])
             if not isinstance(obj['evidence'],list) or not 1<=len(obj['evidence'])<=32:raise ValueError('Every object needs supporting snapshots')
@@ -277,6 +291,8 @@ class SceneProjectMixin(SceneBundleMixin):
 
 def _predicates(doc):
     yield doc['match']
+    yield from doc.get('content',{}).values()
+    for collider in doc.get('navigation',{}).get('colliders',[]):yield collider['when']
     for obj in doc['objects']:
         for key in ('visible','ready','enabled','outcome'):yield obj[key]
     for handler in doc.get('handlers',[]):
@@ -310,7 +326,8 @@ def _evaluate(spec, session, samples, observations, reads, baseline=None):
             matched,left,right=evaluate_comparison(data,reads,baseline)
             observations.append(dict(kind='compare',spec=spec,left=left,right=right,matched=matched))
             return matched
-        actual,capture=reads.read(data['address'],data['length'],data.get('cs'))
+        if op=='runtime_memory':actual,capture=reads.read_runtime(data['binding'],data.get('offset',0),data['length'])
+        else:actual,capture=reads.read(data['address'],data['length'],data.get('cs'))
         expected=bytes.fromhex(data['hex']);mask=bytes.fromhex(data.get('mask','ff'*len(expected)))
         if len(actual)!=len(expected):raise ValueError('Incomplete scene memory capture')
         matched=all((a&m)==(b&m) for a,b,m in zip(actual,expected,mask,strict=True))
@@ -351,6 +368,8 @@ class SceneSessionMixin:
         if 'png_base64' in result:raise ValueError('Native probe unexpectedly transferred a screenshot')
         self._event('frame-probe',result)
         return result
+
+    def scene_navigation(self, scene, point, *, footprint=None):return self.scene(scene).navigation_check(point,footprint=footprint)
 
     def scene_check(self, scene, *, object=None, compact=False):return self.scene(scene).check(object,compact=compact)
 
@@ -398,6 +417,8 @@ class SceneHandle:
             samples={(s['x'],s['y']):s['rgb'] for s in frame['samples']}
             evaluate=lambda v:_evaluate(v,d,samples,result['evidence'],reads,baseline)
             matched=evaluate(doc['match']);result['scene_matched']=matched
+            result['content']={k:evaluate(v) for k,v in doc.get('content',{}).items()}
+            result['navigation_conditions']={c['id']:evaluate(c['when']) for c in doc.get('navigation',{}).get('colliders',[])}
             missing_required=False
             for other in others:
                 if other['definition']['exclusive_group']==doc['exclusive_group']:
@@ -444,7 +465,7 @@ class SceneHandle:
             if extra is not None:result['predicate_matched']=evaluate(extra)
             after=d.frame_probe([])
             if any(after[k]!=frame[k] for k in ('frame_id','mode_id','state_revision')):raise ValueError('Scene observations span different frame/context revisions')
-            required=[matched,*result['availability'].values()]
+            required=[matched,*result['content'].values(),*result['availability'].values()]
             if extra is not None:required.append(result['predicate_matched'])
             if result['conflicts'] or len(result['handlers'])>1:result['status']='ambiguous'
             elif None in required or missing_required:result['status']='unavailable'
@@ -457,11 +478,21 @@ class SceneHandle:
         result['memory_captures']=list(reads.captures.values())
         return result
 
+    def navigation_check(self, point, *, footprint=None):
+        from .navigation_geometry import navigation_check
+        observed=self._observe()
+        doc=self.info['definition'].get('navigation')
+        if doc is None:raise ValueError('Scene has no navigation definition')
+        result=navigation_check(doc,point,conditions=observed.get('navigation_conditions',{}),footprint=footprint)
+        if observed['status'] != 'matched':result['classification']='unknown'
+        result.update(scene_revision=self.revision,manifest_sha256=self.info['sha256'],observation=observed)
+        return result
+
     def _store(self, result, diagnostic=False):
         d=self.session;p=d.project
         if diagnostic:
             try:
-                raw=d.screenshot('scene-diagnostic.png');result['snapshot']=raw['artifact']
+                raw=d.screenshot('scene-diagnostic.png',hooks=False);result['snapshot']=raw['artifact']
                 result['snapshot_matches_probe']=raw['metadata'].get('frame_id')==result.get('frame',{}).get('frame_id')
                 try:result['overlay']=p.debug_scene_overlay(self.revision,artifact=raw['artifact'],version=d.version['id'])['artifact']
                 except Exception as error:result['overlay_error']=str(error)
@@ -569,7 +600,7 @@ class SceneHandle:
         # match the containing scene. Observe only that explicit predicate.
         outcome=self._wait_outcome(obj['outcome'],baseline=before.get('baseline'),**budgets())
         outcome['guest_elapsed_ms']+=elapsed
-        outcome.update(action_object=obj['id'],before_observation=checked['observation'],input=queued,handlers=handlers)
+        outcome.update(action_object=obj['id'],outcome_phase=obj.get('outcome_phase','unspecified'),before_observation=checked['observation'],input=queued,handlers=handlers)
         return self._store(outcome)
 
     def _wait_outcome(self, predicate, *, guest_ms, timeout_ms, baseline=None):

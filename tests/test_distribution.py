@@ -19,7 +19,8 @@ REQUIRED_SOURCE_FILES=('src/fdisbull/__init__.py','pyproject.toml','tests/fixtur
                        'src/fdisbull/skills/fdisbull-investigate/SKILL.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/scenes.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/methodology.md',
-                       'src/fdisbull/skills/fdisbull-investigate/references/runtime-navigation.md')
+                       'src/fdisbull/skills/fdisbull-investigate/references/runtime-navigation.md',
+                       'src/fdisbull/skills/fdisbull-investigate/references/proofs.md')
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):

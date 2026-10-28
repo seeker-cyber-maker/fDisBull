@@ -19,6 +19,9 @@ from .debug_experiments import ExperimentProjectMixin, ExperimentSessionMixin
 from .runtime_code import RuntimeCodeMixin, RUNTIME_DDL
 from .scenes import SceneProjectMixin, SceneSessionMixin, SCENE_DDL
 from .screenshot_hooks import ScreenshotHookProjectMixin, ScreenshotHookSessionMixin, DDL as SCREENSHOT_HOOK_DDL
+from .input_macros import MacroProjectMixin, MacroSessionMixin, MACRO_DDL
+from .runtime_observations import RuntimeObservationMixin
+from .movement import MovementSessionMixin
 
 
 DEBUG_DDL = '''
@@ -53,15 +56,20 @@ DEBUG_DDL += LAYER_DDL
 DEBUG_DDL += RUNTIME_DDL
 DEBUG_DDL += SCENE_DDL
 DEBUG_DDL += SCREENSHOT_HOOK_DDL
+DEBUG_DDL += MACRO_DDL
 
 
-class DebugProjectMixin(ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
+class DebugProjectMixin(MacroProjectMixin, ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
     def machine(self, executable, *, boot_image, version=None, boot_timeout_ms=30000):
         from .qemu_machine import MachineDebugSession
         return MachineDebugSession(self,executable,boot_image=boot_image,version=version,boot_timeout_ms=boot_timeout_ms)
 
     def debugger(self, executable, game_dir, *, version=None, backend=None, kernel=None,
-                 initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None,_on_spawn=None):
+                 initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None, window=False,_on_spawn=None):
+        if type(window) is not bool:
+            raise ValueError('window must be boolean')
+        if window and (backend not in (None, 'dosbox') or (backend is None and self.meta['format']=='PE')):
+            raise ValueError('window is supported only by the native DOSBox backend')
         if backend=='qemu-machine':
             if any(x is not None for x in (kernel,initramfs,files,state,remote_server)):
                 raise ValueError('Raw boot launch uses its project image without guest-controller options')
@@ -88,7 +96,7 @@ class DebugProjectMixin(ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCo
                 version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state)
         if backend not in (None,'dosbox') or kernel is not None or initramfs is not None or files is not None or state is not None:
             raise ValueError('Unexpected DOS backend or Wine-only launch options')
-        return DebugSession(self, executable, game_dir, version=version,_on_spawn=_on_spawn)
+        return DebugSession(self, executable, game_dir, version=version,window=window,_on_spawn=_on_spawn)
 
     def debug_runs(self, version=None):
         v = self.version(version)['id']
@@ -138,7 +146,7 @@ class DebugProjectMixin(ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCo
                 'metadata':json.loads(row['metadata']),'components':components}
 
     def debug_fork_state(self, artifact, executable, game_dir, *, name='derived.sav', memory=None, registers=None,
-                         backend=None,kernel=None,initramfs=None,boot_timeout_ms=240000):
+                         backend=None,kernel=None,initramfs=None,boot_timeout_ms=240000,window=False):
         info = self.debug_state_info(artifact)
         memory = [] if memory is None else memory
         registers = {} if registers is None else registers
@@ -153,14 +161,14 @@ class DebugProjectMixin(ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCo
         validate_edits(memory,registers)
         if not memory and not registers:
             raise ValueError('A state fork requires at least one explicit edit')
-        options=dict(backend=backend,kernel=kernel,initramfs=initramfs,boot_timeout_ms=boot_timeout_ms)
+        options=dict(backend=backend,kernel=kernel,initramfs=initramfs,boot_timeout_ms=boot_timeout_ms,window=window)
         if pe:
             options['state']=artifact
             # A state binds every explicitly uploaded asset, not only its EXE.
             # Reuse that allowlist and let launch reverify each source hash.
             options['files']=[item['path'] for item in info['metadata']['files']]
         elif backend=='dosbox-qemu':
-            options['files']=[item['path'] for item in info['metadata']['files']]
+            options['files']=[item['path'] for item in info['metadata'].get('source_files',info['metadata']['files'])]
         with self.debugger(executable,game_dir,version=info['version'],**options) as debug:
             if not pe:debug.load_state(artifact)
             edits = apply_edits(debug,memory,registers)
@@ -231,14 +239,17 @@ class DebugProjectMixin(ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCo
         return self._debug_artifact(row['run'],name,'screenshot-grid',rendered,metadata)
 
 
-class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
+class DebugSession(MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
     @property
     def script_operations(self):
         from .debug_script import OPERATIONS
         return (set(OPERATIONS)|{'assert'})-{'write-memory','write-registers'}
 
     """One explicitly owned emulator; closing the project also closes sessions."""
-    def __init__(self, project, executable, game_dir, *, version=None,_on_spawn=None):
+    def __init__(self, project, executable, game_dir, *, version=None,window=False,_on_spawn=None):
+        if type(window) is not bool:
+            raise ValueError('window must be boolean')
+        self.window = window
         self.project = project
         self._spawn_callback=_on_spawn
         self.rpc = None
@@ -246,12 +257,12 @@ class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSess
         self.closed = False
         self.run_id = uuid.uuid4().hex
         self.version = project.version(version)
-        if project.meta['format'] != 'MZ' or self.version['parent'] is not None:
-            raise ValueError('Runtime launch requires the original, unpatched DOS MZ version; select version=1 explicitly if needed')
+        if project.meta['format'] not in ('MZ', 'COM') or self.version['parent'] is not None:
+            raise ValueError('Runtime launch requires the original, unpatched DOS MZ or explicitly declared COM version; select version=1 explicitly if needed')
         self.dos = project._document(self.version['id'])['dos']
         self.game_dir = Path(game_dir).expanduser().resolve(strict=True)
         filename = project.meta['filename']
-        target = guest_name(filename, project.meta['source_sha256'])
+        target = guest_name(filename, project.meta['source_sha256'], project.meta['format'])
         source = (self.game_dir / filename).resolve(strict=True)
         if source.parent != self.game_dir or not source.is_file() or source.stat().st_size > 64*1024*1024:
             raise ValueError('Target must be a regular file directly inside game_dir, at most 64 MiB')
@@ -262,8 +273,9 @@ class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSess
         from . import __version__
         self.metadata = {'fdisbull_version':__version__,'source_sha256':project.meta['source_sha256'],'version_sha256':self.version['sha256'],
                          'executable':str(executable),'emulator_sha256':hashlib.sha256(executable.read_bytes()).hexdigest(),
-                         'runtime_profile':'real-normal-v1','game_dir':str(self.game_dir),'target':target,
-                         'source_filename':filename,'target_aliased':target!=filename,'static_load_segment':self.dos['load_segment']}
+                         'runtime_profile':'real-normal-com-v1' if project.meta['format']=='COM' else 'real-normal-v1','game_dir':str(self.game_dir),'target':target,
+                         'source_filename':filename,'target_aliased':target!=filename,'static_load_segment':self.dos['load_segment'],
+                         'window_requested':window}
         try:
             self._prepare_launch_target(target, source_data)
             self.rpc = self._open_rpc(executable,self.game_dir)
@@ -273,14 +285,15 @@ class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSess
             self.session_id = result['session_id']
             regs = self.call('state.get_registers')
             if regs['cpu_mode'] != 'real':
-                raise DebuggerError('Expected real-mode MZ entry')
+                raise DebuggerError('Expected real-mode DOS entry')
             header = self.dos['header_fields']
-            self.runtime_load = int(regs['segments']['cs'],16) - header['e_cs']
-            if (not 0x10 <= self.runtime_load <= 0xffff or
-                    int(regs['instruction_pointer'],16) != header['e_ip']):
-                raise DebuggerError('Runtime entry does not establish an unwrapped MZ load segment')
+            is_com = project.meta['format'] == 'COM'
+            self.runtime_load = int(regs['segments']['cs'],16) - (0 if is_com else header['e_cs'])
+            if (not (0 if is_com else 0x10) <= self.runtime_load <= 0xffff or
+                    int(regs['instruction_pointer'],16) != (0x100 if is_com else header['e_ip'])):
+                raise DebuggerError('Runtime entry does not establish an unwrapped DOS load segment')
             self.static_base = self.dos['image_base']
-            self.runtime_base = self.runtime_load * 16
+            self.runtime_base = self.runtime_load * 16 + (0x100 if is_com else 0)
             self.delta = self.runtime_base - self.static_base
             self.module_size = self.dos['module_size']
             if self.runtime_base+self.module_size > 0x100000:
@@ -291,8 +304,18 @@ class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSess
                 index = relocation['linear_address']-self.static_base
                 value = struct.unpack_from('<H',self.expected,index)[0]
                 struct.pack_into('<H',self.expected,index,(value+self.runtime_load-self.dos['load_segment']) & 0xffff)
+            if is_com:
+                if any(int(regs['segments'][name],16) != self.runtime_load for name in ('ds','es','ss')):
+                    raise DebuggerError('COM startup DS, ES and SS must equal the PSP segment')
+                length = min(16, self.module_size)
+                observed = self.call('memory.read', {'address':{'space':'linear','offset':f'0x{self.runtime_base:08X}'}, 'length':length})
+                if base64.b64decode(observed['data_base64'],validate=True) != self.expected[:length]:
+                    raise DebuggerError('COM runtime entry bytes differ from the project source')
             self.metadata.update(runtime_load_segment=self.runtime_load,entry_registers=regs,
                                  capabilities=self.rpc.capabilities,pid=self.rpc.process.pid)
+            if is_com:
+                self.metadata['mapping_scope'] = 'COM file-backed span only; PSP, stack and dynamically loaded or overwritten code are not identified by address alone'
+                self.metadata['entry_bytes_verified'] = length
             with project.transaction(True):
                 project.db.execute('INSERT INTO debug_runs VALUES (?,?,?,?,?,?)',
                     (self.run_id,self.version['id'],stamp(),None,'stopped',json.dumps(self.metadata)))
@@ -311,7 +334,7 @@ class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSess
     def __exit__(self, *args):
         self.close()
 
-    def _open_rpc(self,executable,game_dir):return DOSBoxRPC(executable,game_dir,on_spawn=self._spawn_callback)
+    def _open_rpc(self,executable,game_dir):return DOSBoxRPC(executable,game_dir,window=self.window,on_spawn=self._spawn_callback)
     def _transport_metadata(self):return {}
 
     def _prepare_launch_target(self, target, data):
@@ -324,7 +347,7 @@ class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSess
         return self.rpc.machine.bind(self.project,self.run_id)
 
     def contexts(self):
-        primary='dos-cpu' if self.project.meta['format']=='MZ' else 'process'
+        primary='dos-cpu' if self.project.meta['format'] in ('MZ', 'COM') else 'process'
         contexts=[dict(id=primary,kind=primary,trace_phase='before-fetch; last record pending' if primary=='dos-cpu' else 'completed-step')]
         if hasattr(self.rpc,'machine'):contexts.append(dict(id='machine',kind='machine',parent_of=primary,capabilities=self.rpc.machine.capabilities))
         return dict(run=self.run_id,selected=primary,contexts=contexts)
@@ -343,7 +366,13 @@ class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSess
     def call(self, method, params=None):
         if self.closed:
             raise DebuggerError('Debugger session is closed')
-        return self.rpc.call(method,{'session_id':self.session_id,**(params or {})})
+        deadline=getattr(self,'_rpc_deadline',None)
+        options={}
+        if deadline is not None:
+            remaining=int((deadline-time.monotonic())*1000)
+            if remaining<=0:raise TimeoutError('Shared debugger host-time budget expired')
+            options['timeout_ms']=min(15000,remaining)
+        return self.rpc.call(method,{'session_id':self.session_id,**(params or {})},**options)
 
     def _event(self, operation, evidence):
         with self.project.transaction(True):
@@ -451,7 +480,15 @@ class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSess
             access = result['stop_reason']['data_access']
             access['project_instruction'] = self.project_address(access['instruction'])
         from .debug_semantics import normalize_stop
-        evidence['stop']=normalize_stop(self.metadata.get('backend','dosbox'),(result or {}).get('stop_reason',{}),outcome=outcome)
+        stopped_pc = None
+        if result and result.get('stop_reason',{}).get('data_access') and result.get('state') != 'exited':
+            try:
+                registers = self.registers()
+                stopped_pc = {'space':'segmented','segment':registers['segments']['cs'],
+                              'offset':registers['instruction_pointer']}
+            except (DebuggerError, KeyError):
+                pass  # Preserve the stop evidence even if the post-stop PC is unavailable.
+        evidence['stop']=normalize_stop(self.metadata.get('backend','dosbox'),(result or {}).get('stop_reason',{}),outcome=outcome,stopped_pc=stopped_pc)
         self._event('run',evidence)
         return evidence
 
@@ -499,7 +536,7 @@ class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSess
         linear, selector = self.project._dos_parse_address(address,cs)
         offset = linear-self.static_base
         if not 0 <= offset < self.module_size:
-            raise ValueError('Breakpoint is outside the original mapped MZ module')
+            raise ValueError('Breakpoint is outside the original mapped DOS module')
         snapshot = self.project.disassembly(address=address,cs=cs,version=self.version['id'],lines=1)
         rows = snapshot['instructions']
         if not rows or int(rows[0]['address'],16) != linear:
@@ -528,7 +565,7 @@ class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSess
         linear, _ = self.project._dos_parse_address(address,cs)
         offset = linear-self.static_base
         if not 0 <= offset or offset+length > self.module_size:
-            raise ValueError('Data breakpoint range is outside the original mapped MZ module')
+            raise ValueError('Data breakpoint range is outside the original mapped DOS module')
         results = []
         try:
             for i in range(length):
@@ -551,7 +588,7 @@ class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSess
         linear, _ = self.project._dos_parse_address(address,cs)
         offset = linear-self.static_base
         if offset < 0 or offset+length > self.module_size:
-            raise ValueError('Memory range is outside the original mapped MZ module')
+            raise ValueError('Memory range is outside the original mapped DOS module')
         result = self.call('memory.read',{'address':{'space':'linear','offset':f'0x{linear+self.delta:08X}'},'length':length})
         result.update(project_address=hex(linear),hex=base64.b64decode(result['data_base64'],validate=True).hex())
         return result
@@ -626,6 +663,8 @@ class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSess
                 raise
         result.update(artifact=artifact,sha256=row['sha256'],registers=registers,
                       framebuffer='invalidated_until_next_completed_frame')
+        self._keyboard_leases={}
+        self._invalidate_runtime_bindings()
         self._event('load-state',result)
         return result
 
@@ -677,6 +716,32 @@ class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSess
 
     def keyboard_state(self):
         return self._keyboard_call('state')
+
+    def keyboard_key_down(self, key):
+        from .keyboard_input import KEYS
+        if key not in KEYS:raise ValueError('Unknown physical keyboard key')
+        if not self.rpc.capabilities.get('input',{}).get('keyboard_held_leases'):
+            raise ValueError('Backend lacks held-key leases')
+        leases=getattr(self,'_keyboard_leases',{})
+        if key in leases.values():raise ValueError('Physical key already has an owned lease')
+        token=uuid.uuid4().hex
+        result=self._keyboard_call('down',{'key':key,'lease':token})
+        leases[token]=key;self._keyboard_leases=leases
+        return {**result,'lease':token,'key':key,'run':self.run_id,'claim':'Physical make queued; game consumption not established.'}
+
+    def keyboard_key_up(self, lease):
+        leases=getattr(self,'_keyboard_leases',{})
+        if not isinstance(lease,str) or lease not in leases:raise ValueError('Unknown, consumed or unrelated input lease')
+        key=leases[lease]
+        result=self._keyboard_call('up',{'lease':lease})
+        del leases[lease]
+        return {**result,'lease':lease,'key':key,'consumed':True,'claim':'Physical break queued; release must be observed.'}
+
+    def proof_check(self,spec, *, timeout_ms=1000,author='agent',evidence=None):
+        result=self.project.proof_check(spec,version=self.version['id'],timeout_ms=timeout_ms,author=author,
+                                        evidence=[{'run':self.run_id},*(evidence or [])])
+        self._event('proof-check',{'id':result['id'],'status':result['result']['status']})
+        return result
 
     def click(self, x, y, *, button='left', hold_ms=80, mode_id=None, frame_id=None):
         bounded(x,'x',0,4095); bounded(y,'y',0,4095); bounded(hold_ms,'hold_ms',1,1000)
@@ -794,6 +859,8 @@ class DebugSession(ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSess
         finally:
             self.rpc.close()
             self.closed = True
+            self._keyboard_leases={}
+            self._invalidate_runtime_bindings()
             if self._launch_alias is not None:
                 result['launch_alias_cleanup'] = self._launch_alias.close()
             result['process_reaped'] = self.rpc.process.poll() is not None
@@ -839,6 +906,9 @@ class DebugWorkspace:
                         'debug-restore-experiment':'restore_experiment','debug-compare-experiment':'compare_experiment'})
         methods.update({'debug-frame-probe':'frame_probe','debug-scene-check':'scene_check',
                         'debug-scene-assert':'scene_assert','debug-scene-click':'scene_click','debug-scene-act':'scene_act','debug-scene-wait':'scene_wait'})
+        methods.update({'debug-keyboard-down':'keyboard_key_down','debug-keyboard-up':'keyboard_key_up',
+                        'debug-macro':'macro','debug-move':'move','debug-bind-runtime-memory':'bind_runtime_memory',
+                        'debug-runtime-memory':'runtime_memory','debug-proof-check':'proof_check','debug-scene-navigation':'scene_navigation'})
         context=params.pop('context',None)
         if method=='debug-stop':
             if params:

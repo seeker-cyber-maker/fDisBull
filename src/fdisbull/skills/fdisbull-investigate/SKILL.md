@@ -19,6 +19,12 @@ runtime address, project address and file offset are different coordinates.
 Check relocated instruction bytes for execution breakpoints. Keep failed
 placement or missing capability distinct from a guest program outcome.
 
+Early in an investigation, cheaply screen for an interpreter as one possible
+explanation, not a default assumption. Follow the outer input/game loop as
+usual; if evidence supports a VM, map the relevant guest control flow as well
+as native execution. For discriminating probes and cross-file code provenance,
+read the interpreter section of [references/methodology.md](references/methodology.md).
+
 Use native decoder facts and bounded traversal. A traversal budget stop is not
 convergence. Decompilation and names suggest hypotheses; traces, accesses and
 observed state transitions establish the tested behavior. Preserve unknown

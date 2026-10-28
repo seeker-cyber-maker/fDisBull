@@ -19,6 +19,7 @@ The local engine separates decoding, recoverable facts, shared address interpret
 | `shared_labels.py` | Evidenced byte correspondences and bidirectional labels across native/file fields. |
 | `dos_state_refresh.py` | Legacy DOS fact guards and explicit bounded state rebuilding. |
 | `decoder.py` | Flat x86/ARM64 decode and structured operand references. |
+| `processor.py` | Explicit in-process decoder seam; native and method-local CIL adapters (not a generic persisted VM project). |
 | `dos.py` | Classic MZ validation, relocated real-mode image and minimum allocation. |
 | `dos_decoder.py` | CS-relative iced16 decoding and conservative register transfer. |
 | `dos_analysis.py` | CS-keyed DOS states/edges, segment evidence and recursive candidate discovery. |

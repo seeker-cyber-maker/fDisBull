@@ -16,6 +16,14 @@ def memory_ref(value):
     if value.get('endian','little') not in ('little','big'):raise ValueError('Invalid scene byte order')
 
 
+def runtime_memory_ref(value):
+    if not isinstance(value,dict) or set(value)-{'binding','offset','type','endian'} or not isinstance(value.get('binding'),str) or not value['binding']:
+        raise ValueError('Invalid typed runtime memory reference')
+    if type(value.get('offset',0)) is not int or value.get('offset',0)<0:raise ValueError('Invalid runtime offset')
+    scalar_type(value.get('type'))
+    if value.get('endian','little') not in ('little','big'):raise ValueError('Invalid scene byte order')
+
+
 def expression(value, *, allow_before=False, depth=0):
     if depth>8:raise ValueError('Scene expression is too deep')
     if type(value) is int:
@@ -24,6 +32,7 @@ def expression(value, *, allow_before=False, depth=0):
     if not isinstance(value,dict) or len(value)!=1:raise ValueError('Invalid scene scalar expression')
     op,data=next(iter(value.items()))
     if op=='memory':memory_ref(data)
+    elif op=='runtime_memory':runtime_memory_ref(data)
     elif op=='before':
         if not allow_before or not isinstance(data,dict) or set(data)!={'memory'}:
             raise ValueError('before memory is only valid in an action outcome')
@@ -78,6 +87,28 @@ class ObservationReads:
         if 'error' in capture:raise ValueError(capture['error'])
         return bytes.fromhex(capture['hex']),capture['id']
 
+    def read_runtime(self,binding,offset,length):
+        self.evaluations+=1
+        key=f'runtime/{binding}/{offset}/{length}'
+        if key in self.captures:self.hits+=1
+        else:
+            capture=dict(id='m'+str(len(self.captures)+1),binding=binding,offset=offset,length=length)
+            try:
+                result=self.session.runtime_memory(binding,offset=offset,length=length)
+                data=bytes.fromhex(result['hex'])
+                if len(data)!=length:raise ValueError('Incomplete runtime memory capture')
+                capture.update(result)
+            except Exception as error:capture['error']=str(error)
+            self.captures[key]=capture
+        capture=self.captures[key]
+        if 'error' in capture:raise ValueError(capture['error'])
+        return bytes.fromhex(capture['hex']),capture['id']
+
+    def runtime_scalar(self,ref):
+        length,signed=scalar_type(ref['type'])
+        data,_=self.read_runtime(ref['binding'],ref.get('offset',0),length)
+        return int.from_bytes(data,ref.get('endian','little'),signed=signed)
+
     def scalar_key(self,ref):
         length,_=scalar_type(ref['type'])
         return self.key(ref['address'],length,ref.get('cs'))+'/'+ref['type']+'/'+ref.get('endian','little')
@@ -104,6 +135,7 @@ def evaluate_expression(value,reads,baseline):
     if type(value) is int:return value
     op,data=next(iter(value.items()))
     if op=='memory':return reads.scalar(data)
+    if op=='runtime_memory':return reads.runtime_scalar(data)
     if op=='before':
         if baseline is None:raise ValueError('Missing pre-action baseline')
         captured=baseline['values'].get(reads.scalar_key(data['memory']))

@@ -22,7 +22,7 @@ def packed(value):
 def qualify_capture(session, observed):
     from .project import now
     registers = session.registers()
-    dos = session.project.meta['format'] == 'MZ'
+    dos = session.project.meta['format'] in ('MZ', 'COM')
     identity = {'run': session.run_id, 'source_version': session.version['id'],
                 'source_version_sha256': session.version['sha256'],
                 'source_sha256': session.project.meta['source_sha256'],
@@ -105,7 +105,7 @@ class RuntimeCodeMixin:
         if not delta:
             return raw, []
         fixups = []
-        if self.meta['format'] == 'MZ':
+        if self.meta['format'] in ('MZ', 'COM'):
             fixups = [(r['linear_address'], 2, delta//16) for r in self._document(version)['dos']['relocations']]
         elif self.meta['format'] == 'PE':
             import lief
@@ -160,9 +160,9 @@ class RuntimeCodeMixin:
                 or identity['source_sha256'] != self.meta['source_sha256'] or identity['run'] != row['run']
                 or identity['arch'] != self.arch or identity['bits'] != self.bits):
             raise ValueError('Runtime capture source identity mismatch')
-        if self.meta['format'] not in ('MZ', 'PE') or identity['cpu_mode'] != ('real' if self.meta['format'] == 'MZ' else 'long64'):
-            raise ValueError('Runtime promotion supports real-mode MZ and x86-64 PE code')
-        expected_base = self._document(parent['id'])['dos']['image_base'] if self.meta['format'] == 'MZ' else self.meta['loader_metadata']['imagebase']
+        if self.meta['format'] not in ('MZ', 'COM', 'PE') or identity['cpu_mode'] != ('real' if self.meta['format'] in ('MZ', 'COM') else 'long64'):
+            raise ValueError('Runtime promotion supports real-mode DOS and x86-64 PE code')
+        expected_base = self._document(parent['id'])['dos']['image_base'] if self.meta['format'] in ('MZ', 'COM') else self.meta['loader_metadata']['imagebase']
         if isinstance(expected_base,str):expected_base=int(expected_base,0)
         if self.arch != 'x86' or int(identity['project_base'], 16) != expected_base or type(identity['delta']) is not int:
             raise ValueError('Runtime capture architecture or base mapping mismatch')
@@ -184,7 +184,7 @@ class RuntimeCodeMixin:
         if match is None or not match.executable:
             raise ValueError('Runtime code capture must fit an executable project region')
         cs = identity.get('project_cs')
-        if self.meta['format'] == 'MZ':
+        if self.meta['format'] in ('MZ', 'COM'):
             if delta % 16:
                 raise ValueError('DOS relocation delta must preserve paragraph alignment')
             self._dos_parse_address(address, cs)
@@ -229,7 +229,7 @@ class RuntimeCodeMixin:
         document=json.loads(data);target=self.version(version)['id'];record=self._runtime_record(target)
         if record is None or record['source_version']!=row['version']:raise ValueError('Trace and temporal interpretation require the same source version')
         if 'observation_contract' not in document:raise ValueError('Trace lacks qualified observation semantics; capture a new trace')
-        regions=self.regions(target);events=[];dos=self.meta['format']=='MZ'
+        regions=self.regions(target);events=[];dos=self.meta['format'] in ('MZ', 'COM')
         for index,event in enumerate(document['events']):
             item={'index':index,'identity':event.get('identity'),'observation':event.get('observation'),
                   'bytes_match':None,'analysis_match':False}

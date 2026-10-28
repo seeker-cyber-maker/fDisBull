@@ -110,14 +110,14 @@ class CFGMixin:
             highlights = []
         if not isinstance(highlights, (list, tuple)) or len(highlights) > 100:
             raise ValueError('highlights must be a list of at most 100 addresses or address objects')
-        dos = self.meta['format'] == 'MZ'
+        dos = self.meta['format'] in ('MZ', 'COM')
 
         def parse(value, selector=None):
             if dos:
                 a, segment = self._dos_parse_address(value, selector)
                 return a, f'x86:16:little:cs={segment:04x}' if segment is not None else None
             if selector is not None:
-                raise ValueError('CS selection applies only to DOS MZ projects')
+                raise ValueError('CS selection applies only to DOS projects')
             return number(value), self.context
 
         start, context = parse(address, cs)

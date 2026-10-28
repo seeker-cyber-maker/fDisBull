@@ -101,7 +101,7 @@ class IncrementalMixin:
         for r in self.db.execute('SELECT context,address,size FROM instructions WHERE version=? AND address<?',(v,_key(start+size))):
             if int(r['address'],16)+r['size']>start:identities.add((r['context'],r['address']))
         saved={}
-        if self.meta['format']=='MZ':
+        if self.meta['format'] in ('MZ', 'COM'):
             for ctx,entry in affected:
                 row=self.db.execute('SELECT registers FROM dos_states WHERE version=? AND context=? AND address=?',(v,ctx,entry)).fetchone()
                 saved[(ctx,entry)]=json.loads(row[0]) if row else {}
@@ -118,14 +118,14 @@ class IncrementalMixin:
         self.db.execute('DELETE FROM investigations WHERE version=? AND address>=? AND address<=?',(v,_key(start),_key(start+size-1)))
         # Stored input bytes are unchanged, so unrelated memory/access facts stay valid.
         for ctx,entry in affected:
-            if self.meta['format']=='MZ' and ':cs=' in ctx:
+            if self.meta['format'] in ('MZ', 'COM') and ':cs=' in ctx:
                 self._dos_enqueue(v,int(ctx.rsplit('=',1)[1],16),int(entry,16),saved.get((ctx,entry),{}),'dependency reanalysis',force=True)
             else:self._queue_code(v,int(entry,16),'dependency reanalysis')
-        if self.meta['format']=='MZ':
+        if self.meta['format'] in ('MZ', 'COM'):
             self.db.execute('DELETE FROM dos_data_scans WHERE version=?',(v,));self._dos_scanned_segments=set()
         definition=self.db.execute('SELECT representation FROM definitions WHERE version=? AND address=?',(v,_key(start))).fetchone()
         if definition and definition[0]=='code':
-            if self.meta['format']=='MZ':
+            if self.meta['format'] in ('MZ', 'COM'):
                 contexts=[ctx for ctx,_ in identities if ':cs=' in ctx and 0<=start-int(ctx.rsplit('=',1)[1],16)*16<=65535]
                 if not contexts:
                     metadata=self._dos_metadata(v);contexts=[f"x86:16:little:cs={metadata.get('selected_entry_cs',metadata['entry_cs']):04x}"]

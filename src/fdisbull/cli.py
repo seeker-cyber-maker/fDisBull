@@ -7,6 +7,22 @@ import sys
 from . import __version__
 
 METHODS = {
+    'proof-check':'Check a bounded explicit bitvector model and persist assumptions/result; spec,[version,timeout_ms,author,evidence]',
+    'proofs':'List source/version-bound proof results; [version]',
+    'proof-info':'Read and authenticate a persisted bounded proof; proof,[version]',
+    'debug-define-macros':'Save an immutable typed source-bound input vocabulary; definition,[version,author,parent]',
+    'debug-macro-sets':'List exact-version input vocabularies; [version]',
+    'debug-macro-info':'Inspect a saved vocabulary; macro_set,[version]',
+    'debug-export-macros':'Return a metadata-only portable vocabulary envelope; macro_set,[version]',
+    'debug-import-macros':'Import a matching source/version vocabulary envelope; envelope,[version,author]',
+    'debug-macro':'Expand and execute a selected typed input macro; run,macro_set,name,[args,timeout_ms,allowed_authorities]',
+    'debug-move':'Observe a bounded route with explicit controls, destination, progress and stop contracts; run,macro_set,start,stop,observations,until,progress,settle,[guest_ms,timeout_ms,scene,position,target]',
+    'debug-bind-runtime-memory':'Qualify a session-local read-only DOS runtime view; run,name,address,length,expected_hex,provenance,[mask_hex]',
+    'debug-runtime-memory':'Read a qualified runtime view; run,binding,[offset,length]',
+    'debug-proof-check':'Persist a bounded model check with live run provenance; run,spec,[timeout_ms,author,evidence]',
+    'debug-keyboard-down':'Queue make and return an owned physical key lease; run,key',
+    'debug-keyboard-up':'Consume an owned lease and queue physical break; run,lease',
+    'debug-scene-navigation':'Check an actor footprint in explicit game-space geometry; run,scene,point,[footprint]',
     'agent-skill':'Read the bundled fDisBull investigation skill and references; no project required',
     'debug-save-scene':'Save a versioned scene manifest with persistent objects and screenshot evidence; name,definition,[parent,version,author]',
     'debug-scenes':'List current scene revisions; [version]',
@@ -41,7 +57,7 @@ METHODS = {
     'debug-contexts': 'List explicit DOS/process and outer-machine execution contexts; run',
     'debug-pause': 'Pause all vCPUs in the selected machine context; run,context=machine',
     'debug-resume': 'Resume the selected machine so guest services can run; run,context=machine',
-    'debug-launch': 'Launch project-bound DOSBox or PE64 Wine/QEMU/IDA; executable,game_dir,[version,backend,kernel,initramfs,files,boot_timeout_ms,state,remote_server]',
+    'debug-launch': 'Launch project-bound DOSBox or PE64 Wine/QEMU/IDA; executable,game_dir,[version,backend,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window]',
     'debug-status': 'Live debugger status and address mapping; run',
     'debug-registers': 'Live CPU registers with project address mapping; run',
     'debug-layer': 'Save an immutable guarded RAM or execution layer; name,kind,patches,[version]',
@@ -79,7 +95,7 @@ METHODS = {
     'debug-save-script': 'Save an immutable version-bound script; name,script,[version]',
     'debug-scripts': 'List saved scripts; [version]',
     'debug-state-info': 'Inspect native checkpoint metadata and component sizes offline; artifact',
-    'debug-fork-state': 'Restore, edit and recapture native state with target stopped; artifact,executable,game_dir,[name,memory,registers,backend,kernel,initramfs]',
+    'debug-fork-state': 'Restore, edit and recapture native state with target stopped; artifact,executable,game_dir,[name,memory,registers,backend,kernel,initramfs,window]',
     'debug-stop': 'Stop and reap a live emulator; run',
     'debug-runs': 'Saved runtime history for a static version; [version]',
     'debug-artifacts': 'Saved screenshots and traces, available after restart; [version,run]',
@@ -125,6 +141,7 @@ METHODS = {
     "locate": "Byte position in stored instructions/data and unexplored memory; address,[version,cs]",
     "function-patterns": "Candidate prologue/epilogue evidence; [version,limit,offset,scan_unexplored]",
     "managed": "Inspect .NET metadata or disassemble one CIL method; path or project,[token,max_instructions,version]",
+    "agi-logic": "Read-only partial AGI 2.917 logic decoding; logdir, volume_dir, logic, profile, [max_instructions]",
     "decoder-check": "Compare x86 iced/Capstone proposals without execution; data,[bits,address,scan_offsets,max_candidates]",
     "import": "Create a new project from binary; params: project, path, [arch,bits,base,entry,load_segment,slice_arch,image]",
     "segments": "DOS inferred segment inventory; [version]",
@@ -166,7 +183,7 @@ def invoke(method, params, debugger=None):
         from importlib.resources import files
         root=files('fdisbull').joinpath('skills/fdisbull-investigate')
         resources=('SKILL.md','references/scenes.md','references/methodology.md',
-                   'references/runtime-navigation.md')
+                   'references/runtime-navigation.md','references/proofs.md')
         return {'name':'fdisbull-investigate','files':{n:root.joinpath(n).read_text() for n in resources}}
     if method=='omf-catalog':
         from .omf_catalog import omf_signatures
@@ -208,6 +225,9 @@ def invoke(method, params, debugger=None):
         if p:
             raise ValueError('unexpected managed inspection options')
         return inspect_managed(data)
+    if method=='agi-logic':
+        from .agi import inspect_logic
+        return inspect_logic(**p)
     if method in ('identify','inspect'):
         from .inspection import identify_header, inspect_binary
         path=Path(p.pop('path'))
@@ -223,7 +243,8 @@ def invoke(method, params, debugger=None):
         raise ValueError("project path is required")
     scene_offline=('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations',
                    'debug-scene-observation','debug-export-scenes','debug-import-scenes')
-    if method in scene_offline:
+    macro_offline=('debug-define-macros','debug-macro-sets','debug-macro-info','debug-export-macros','debug-import-macros')
+    if method in scene_offline+macro_offline:
         if 'definition_file' in p:
             file=Path(p.pop('definition_file'))
             if method!='debug-save-scene' or 'definition' in p or not file.is_file() or file.stat().st_size>1024*1024:
@@ -241,6 +262,8 @@ def invoke(method, params, debugger=None):
         with Project.create(project,binary,**p) as db:
             return db.status()
     with Project(project) as db:
+        if method in ('proof-check','proofs','proof-info'):
+            return getattr(db,method.replace('-','_'))(**p)
         if method in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-layer','debug-layer-info','debug-layers','debug-events','debug-experiments','debug-experiment-info','debug-promote-code','debug-trace-view','runtime-version-info'):
             return getattr(db,method.replace('-','_'))(**p)
         if method in ('link-labels','rename-file','label-info','label-links','unlink-labels'):return getattr(db,method.replace('-','_'))(**p)
@@ -318,7 +341,7 @@ def respond(request, default_project=None, debugger=None):
         if not isinstance(request,dict) or not isinstance(request.get("method"),str):
             raise ValueError("request must be an object with method and optional params/id")
         params = request.get("params",{})
-        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','agi-logic') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         return {"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
@@ -397,6 +420,7 @@ def parser():
     c.add_argument('--kernel');c.add_argument('--initramfs');c.add_argument('--files',type=json.loads)
     c.add_argument('--boot-timeout-ms',type=int,default=240000)
     c.add_argument('--state',help='PE64 native checkpoint artifact to restore without cold launch')
+    c.add_argument('--dot-mode','--window',dest='window',action='store_true',help='Request dot-mode: a watch-only native DOSBox window (requires compatible backend and display)')
     for name in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-experiments','debug-experiment-info','debug-promote-code','debug-trace-view','runtime-version-info'):
         c = sub.add_parser(name,help=METHODS[name]);c.add_argument('project')
         if name in ('debug-state-info','debug-experiment-info'):
@@ -411,6 +435,7 @@ def parser():
             c.add_argument('--name',default='derived.sav');c.add_argument('--memory',type=json.loads,default=[])
             c.add_argument('--registers',type=json.loads,default={})
             c.add_argument('--backend',choices=['dosbox','dosbox-qemu','wine-qemu']);c.add_argument('--kernel');c.add_argument('--initramfs')
+            c.add_argument('--dot-mode','--window',dest='window',action='store_true',help='Request dot-mode: a watch-only native DOSBox window')
         elif name=='debug-export':
             c.add_argument('artifact');c.add_argument('output')
         elif name=='debug-grid':
@@ -426,7 +451,7 @@ def parser():
         c.add_argument('path')
         if name=='inspect':
             c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'])
-            c.add_argument('--image',choices=['auto','pe','mz'])
+            c.add_argument('--image',choices=['auto','pe','mz','com'])
     c = sub.add_parser("import",help="create project from executable or explicit raw code")
     c.add_argument("path")
     c.add_argument("project")
@@ -435,7 +460,7 @@ def parser():
     c.add_argument("--base",default=0,type=lambda s:int(s,0))
     c.add_argument("--entry",type=lambda s:int(s,0))
     c.add_argument("--load-segment",type=lambda s:int(s,0),default=0x1000)
-    c.add_argument('--image',choices=['auto','pe','mz'],help='select a PE native image or its DOS MZ image')
+    c.add_argument('--image',choices=['auto','pe','mz','com'],help='select a PE, MZ or explicitly declared DOS COM image')
     c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'],help='select a thin/universal Mach-O CPU slice')
     c.add_argument('--module',action='store_true',help='allow a library without an executable entry')
     c=sub.add_parser('analyze-module',help=METHODS['analyze-module'])
@@ -447,6 +472,9 @@ def parser():
     c=sub.add_parser('managed',help=METHODS['managed'])
     c.add_argument('path');c.add_argument('--token',type=lambda s:int(s,0))
     c.add_argument('--max-instructions',type=int)
+    c=sub.add_parser('agi-logic',help=METHODS['agi-logic'])
+    c.add_argument('logdir');c.add_argument('volume_dir');c.add_argument('logic',type=int)
+    c.add_argument('--profile',required=True,choices=['2.917']);c.add_argument('--max-instructions',type=int,default=1000)
     c=sub.add_parser('decoder-check',help=METHODS['decoder-check'])
     c.add_argument('data');c.add_argument('--bits',type=int,choices=[16,32,64],default=64)
     c.add_argument('--address',type=lambda s:int(s,0),default=0)

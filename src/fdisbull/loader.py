@@ -51,7 +51,7 @@ def _is_executable(address: int, regions: list[Region]) -> bool:
 def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = None,
                base: int = 0, entry: int | None = None, load_segment: int = 0x1000,
                module: bool = False, slice_arch: str | None = None, image: str | None = None) -> Image:
-    """Load classic MZ, ELF, PE, thin Mach-O or explicitly declared raw code.
+    """Load classic MZ, ELF, PE, thin Mach-O, explicitly selected COM or raw code.
 
     Native file mappings use their preferred image addresses (PIE load bias is
     not applied). Raw mode requires ``arch`` and defaults to 64 bits. DLLs
@@ -59,7 +59,7 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
     Module mode also permits an absent entry for other explicitly chosen libraries.
     """
     if image=='auto':image=None
-    if image not in (None,'pe','mz'):raise ValueError('image must be auto, pe or mz')
+    if image not in (None,'pe','mz','com'):raise ValueError('image must be auto, pe, mz or com')
     path = Path(path)
     if not isinstance(module,bool):
         raise ValueError('module must be a boolean')
@@ -97,6 +97,11 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
             raise ValueError("arm64 entry point must be 4-byte aligned")
         return Image("raw", arch, bits, entry, regions, [Seed(entry, "entry", "entry")],
                      {"mapping": "flat", "filename": path.name, "source_sha256": hashlib.sha256(data).hexdigest(), "file_mappings":[dict(virtual_address=base,file_offset=0,file_size=len(data))]}, source_bytes=data)
+    if image=='com':
+        if slice_arch is not None or bits is not None or base or module:
+            raise ValueError('COM uses load_segment and cannot use raw, module or slice options')
+        from .dos import load_com
+        return load_com(data,load_segment=load_segment,entry=entry)
     if image=='mz':
         if slice_arch is not None:raise ValueError('slice_arch selects Mach-O CPUs and cannot select an MZ view')
         if bits is not None or base:raise ValueError('DOS MZ uses load_segment; bits/base require raw mode')
@@ -116,7 +121,7 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
             from .dos import load_mz
             return load_mz(data,load_segment=load_segment,entry=entry)
     if load_segment!=0x1000:
-        raise ValueError('load_segment applies only to classic DOS MZ')
+        raise ValueError('load_segment applies only to DOS MZ or explicitly selected COM')
     if bits is not None or base:
         raise ValueError("bits and base overrides require an explicit raw architecture")
     original_data=data

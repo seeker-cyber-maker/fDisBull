@@ -24,7 +24,7 @@ class DOSStateRefreshMixin:
             return row[0]
 
     def _dos_pointer_facts_stale(self, version):
-        if self.meta['format'] != 'MZ':
+        if self.meta['format'] not in ('MZ', 'COM'):
             return False
         revision = self._dos_pointer_revision(version)
         if type(revision) is int and revision == DOS_POINTER_REVISION:
@@ -40,7 +40,7 @@ class DOSStateRefreshMixin:
 
     def analysis_status(self, version=None):
         result = self._stored_analysis_status(version)
-        if self.meta['format'] == 'MZ':
+        if self.meta['format'] in ('MZ', 'COM'):
             stale = self._dos_pointer_facts_stale(result['version'])
             result.update(facts_stale=stale,
                           dos_pointer_revision=self._dos_pointer_revision(result['version']),
@@ -53,7 +53,7 @@ class DOSStateRefreshMixin:
 
     def advanced_status(self, version=None):
         result = super().advanced_status(version)
-        if self.meta['format'] == 'MZ':
+        if self.meta['format'] in ('MZ', 'COM'):
             stale = self._dos_pointer_facts_stale(result['version'])
             result['facts_stale'] = stale
             if stale:
@@ -114,7 +114,7 @@ class DOSStateRefreshMixin:
 
     def disassembly(self, address=None, lines=50, version=None, cs=None):
         result = self._runtime_snapshot(self._stored_disassembly(address, lines, version, cs))
-        if self.meta['format'] != 'MZ':
+        if self.meta['format'] not in ('MZ', 'COM'):
             return result
         stale = self._dos_pointer_facts_stale(result['version'])
         result['stored_facts_stale'] = stale
@@ -138,8 +138,8 @@ class DOSStateRefreshMixin:
 
     def refresh_dos_state(self, version=None, max_instructions=10000):
         from .project import integer
-        if self.meta['format'] != 'MZ':
-            raise ValueError('refresh-dos-state requires a DOS MZ project')
+        if self.meta['format'] not in ('MZ', 'COM'):
+            raise ValueError('refresh-dos-state requires a DOS MZ or COM project')
         budget = integer(max_instructions, 'max_instructions', 1, 1000000)
         with self.transaction(True):
             v = self.version(version)['id']

@@ -23,6 +23,43 @@ _HEADER_NAMES = (
 )
 
 
+def load_com(data: bytes, *, load_segment: int = 0x1000, entry: int | None = None, _allow_child_signature: bool = False) -> Image:
+    """Model an explicitly selected DOS COM image, not a format identification.
+
+    Only file bytes are mapped: DOS's PSP, stack, free allocation, and any
+    dynamically loaded code remain unknown. load_segment is the PSP segment.
+    """
+    if not isinstance(data, bytes) or not 1 <= len(data) <= 0xff00:
+        raise ValueError('COM source must contain 1..65280 immutable bytes')
+    if data[:2] in (b'MZ', b'ZM') and not _allow_child_signature:
+        raise ValueError('MZ-signature input cannot be selected as a COM image')
+    if isinstance(load_segment, bool) or not isinstance(load_segment, int) or not 0 <= load_segment <= 0xffff:
+        raise ValueError('COM load_segment must be a 16-bit PSP segment')
+    base = load_segment * 16 + 0x100
+    if base + len(data) > _REAL_MODE_LIMIT:
+        raise ValueError('COM image exceeds the unwrapped 1 MiB address space')
+    selected = base if entry is None else entry
+    if isinstance(selected, bool) or not isinstance(selected, int) or not base <= selected < base + len(data):
+        raise ValueError('COM analysis entry must be inside the file-backed image')
+    dos = dict(selected_image='com', load_segment=load_segment, psp_segment=load_segment,
+        image_base=base, module_size=len(data), allocation_size=len(data),
+        entry_cs=load_segment, entry_ip=0x100, header_entry=base,
+        selected_entry=selected, selected_entry_cs=load_segment,
+        selected_entry_ip=selected-load_segment*16,
+        selected_entry_cs_source='COM PSP segment', stack_ss=load_segment, sp=None,
+        stack_linear=None, relocations=[],
+        segment_candidates=[dict(segment=load_segment, linear_base=load_segment*16,
+            status='candidate', sources=[dict(kind='COM startup segment')])],
+        header_fields={}, header_size=0, declared_file_size=len(data), overlay_offset=len(data),
+        overlay_size=0, allocation_policy='Only file bytes mapped; PSP, stack and allocation are not fabricated',
+        permissions='possible executable/writable DOS memory; not a code classification', a20_wrap=False)
+    metadata = dict(selected_image='com', source_sha256=hashlib.sha256(data).hexdigest(),
+        mapping='Explicit COM file bytes at PSP:0100; no PSP or dynamic loads modeled',
+        file_mappings=[dict(virtual_address=base,file_offset=0,file_size=len(data))], dos=dos)
+    return Image('COM','x86',16,selected,[Region('loaded_image',base,data,True,True)],
+        [Seed(selected,'entry','com_entry' if entry is None else 'explicit_entry')],metadata,source_bytes=data)
+
+
 def load_mz(data: bytes, *, load_segment: int = 0x1000, entry: int | None = None,
             allow_secondary: bool = False) -> Image:
     """Load a classic MZ module at a chosen DOS load segment.

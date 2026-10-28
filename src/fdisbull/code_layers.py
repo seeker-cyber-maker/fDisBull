@@ -47,7 +47,7 @@ class LayerProjectMixin:
         from .project import now
         _file_name(name)
         pe=self.meta['format']=='PE' and self.bits==64 and self.meta['arch']=='x86'
-        if self.meta['format']!='MZ' and not pe or kind not in ('ram','execute'):
+        if self.meta['format'] not in ('MZ', 'COM') and not pe or kind not in ('ram','execute'):
             raise ValueError('DOS/PE64 layers require kind=ram or execute')
         if not isinstance(patches,list) or not 1<=len(patches)<=64:
             raise ValueError('A layer requires 1..64 guarded patches')

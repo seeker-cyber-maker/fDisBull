@@ -433,6 +433,9 @@ def test_real_rep_word_watch_stops_after_copy_without_duplicate_byte_hit(tmp_pat
             assert debug.memory('1000:0110',length=8)['hex']=='1122334455667788'
             registers=debug.registers()
             assert int(registers['ip'],16)==0x10
+            assert hit['stop']['resume_pc']=={'space':'segmented','segment':registers['segments']['cs'],
+                                               'offset':registers['instruction_pointer']}
+            assert hit['stop']['causing_instruction']==access['instruction']
             assert int(registers['general']['ecx'],16)==0
             assert int(registers['general']['esi'],16)==0x108
             assert int(registers['general']['edi'],16)==0x118
