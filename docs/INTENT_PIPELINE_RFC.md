@@ -51,6 +51,17 @@ provenance and contradictions. UIL is the executable semantic contract in this
 proposal; the structural and Z views help derive it. The exact UIL encoding and
 reference evaluator remain decisions for later work.
 
+Z names the behavioral model in this pipeline; Z-machine names a possible
+source VM. Zork-like organization does not require text input or discrete
+player turns. Autonomous processes, concurrent activities and graphical
+interfaces can share the same recovered behavioral model.
+
+The [recovery experience amendment](INTENT_PIPELINE_RECOVERY_CASES.md)
+adds practical distinctions and synthetic acceptance cases from bounded
+DinoPark reconstruction work: signal state versus queued delivery, action
+completion, persistence, agent observation and compatibility behavior. It
+refines this draft's requirements without choosing canonical UIL syntax.
+
 ## Blocks and semantic obligations
 
 The UIL blueprint includes the semantic definitions of its blocks; it does not
@@ -233,6 +244,8 @@ by matching outputs; security findings do not establish complete game recovery.
 1. Specify one small synthetic adventure scene: typed state, one guarded action,
    scheduling, evidence/unknowns and agent operations. Agree on a versioned UIL
    contract and public positive, negative and malformed fixtures.
+   Use the [recovery cases](INTENT_PIPELINE_RECOVERY_CASES.md#synthetic-acceptance-cases)
+   to distinguish plausible but observably different implementations.
 2. Recover a bounded adventure-game vertical slice with source-specific
    evidence, an explicit Z/UDL mapping and a self-contained UIL package. Compare
    original and reconstructed transitions, replay and optional visual output;
