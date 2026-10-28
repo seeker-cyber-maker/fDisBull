@@ -238,3 +238,9 @@ and ACT interpreter provide inputs and bounded comparisons; they are not an
 already-qualified UIL implementation. No new syntax or runtime is introduced
 by this amendment, and the exact encoding and evaluator remain decisions for
 the UIL owner.
+
+The [progressive scene workflow](SCENE_STREAMING_WORKFLOW.md) adds a separate
+experiment for time to useful interaction: scene knowledge can become usable
+while deeper recovery continues. Its proposed workflow cases complement the
+semantic cases above and do not imply that a downloaded scene bundle executes
+the game independently.

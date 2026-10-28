@@ -62,6 +62,12 @@ DinoPark reconstruction work: signal state versus queued delivery, action
 completion, persistence, agent observation and compatibility behavior. It
 refines this draft's requirements without choosing canonical UIL syntax.
 
+The [progressive scene workflow](SCENE_STREAMING_WORKFLOW.md) proposes how to
+produce usable scene knowledge during gameplay, compare sequential and
+on-demand recovery, and reuse downloaded scene packages. A live-original agent
+harness and a reconstructed runtime share evidence and scene descriptions,
+with different requirements for which component executes the game rules.
+
 ## Blocks and semantic obligations
 
 The UIL blueprint includes the semantic definitions of its blocks; it does not
