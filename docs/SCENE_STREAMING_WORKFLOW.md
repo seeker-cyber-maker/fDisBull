@@ -27,6 +27,11 @@ while deeper internal rules remain under investigation. Each resulting claim
 keeps its actual scope. The [UIL ownership boundary](UIL_BOUNDARY.md) remains
 unchanged; recovery orchestration is distinct from owning a downstream player.
 
+The [Z text-adventure projection](Z_TEXT_PROJECTION.md) lets either consumer
+present usable scene knowledge as descriptions and named commands. A text
+view can start with the first qualified action and grow with the package;
+it does not require complete UIL recovery before driving the original game.
+
 ## Existing support and remaining workflow work
 
 The [scene framework](SCENE_FRAMEWORK.md) already supplies immutable revisions,
@@ -222,6 +227,12 @@ failed outcomes; stale/ambiguous checks; and verified package or adapter reuse.
 Break out setup, import, analysis and guest-execution time. Compare latency only
 at equal declared behavior/observation requirements, and report failure rates
 alongside speed. Count unresolved budget stops as incomplete work.
+
+Run the [graphics/text comparison](Z_TEXT_PROJECTION.md#test-the-agent-benefit)
+as a separate controlled dimension. Hold the analysis policy and package
+knowledge fixed while changing presentation, and hold presentation fixed while
+measuring recovery scheduling. Avoid attributing their combined effects to
+one change.
 
 Choose the first policy from these measurements. The target is lower latency
 to useful interaction and less repeated analysis while retaining the action's

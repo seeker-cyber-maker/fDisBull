@@ -39,7 +39,7 @@ an expansion of fDisBull's ownership. UIL amendments continue through the
 | Artifact and platform adapter | Identify source containers, resources, load context and platform; preserve original identities. | Versioned artifact inventory, address spaces and platform services, with evidence and unresolved mappings. |
 | Machine/VM decoding and execution evidence | Decode source-specific instructions or guest bytecode, and collect bounded execution, state and I/O observations where available. | Instruction facts, control-flow candidates, traces and stops, all tied to addresses and source identity. A decoder does not execute a guest or establish its semantics. |
 | C/C++-like structural reduction | Reduce instruction-level detail into understandable operations, data flow, control structures and candidate routines. | An evidence-linked analysis **view**, including unresolved edges and alternatives. It need not be compilable C/C++, and decoded bytecode need not detour through literal C/C++. |
-| Z: Zork-like behavioral layer | Organize reduced operations and direct guest evidence into scenes, entities, state, actions and processes: what happens, when and under which conditions. | Candidate behavioral model with guards, effects, timing and evidence. A scene here is a semantic context, distinct from an existing screenshot-based debugger scene. |
+| Z: Zork-like behavioral layer | Organize reduced operations and direct guest evidence into scenes, entities, state, actions and processes: what happens, when and under which conditions. | Candidate behavioral model with guards, effects, timing and evidence, supporting a playable text-adventure projection as well as semantic export. A scene here is a semantic context, distinct from an existing screenshot-based debugger scene. |
 | UDL: user-defined language/definition layer | User authors define vocabulary and input recognition mappings from source patterns and Z concepts to intent primitives, retaining input evidence and competing interpretations. They can also define target compiler mappings and libraries. | Versioned definitions, mapping results and provenance, including unknowns. UDL is recovery machinery and an optional design reference for a new backend, not a runtime dependency of a finished UIL package. |
 | UIL: universal interaction blueprint | Capture the reconstructed game's meaning in defined, composable primitive and macro blocks. | A self-contained semantic source, interpretable without the original source or UDL recognition machinery. It includes or binds its declared dependencies and unresolved behavior; unsupported required semantics must be refused, not guessed. |
 | Target definitions and code libraries | Bind each supported UIL construct to target-specific implementations and declared runtime services. | A compiler and libraries can produce, for example, Rust, Swift, JavaScript or Python, potentially hosted in Godot or an iOS application. Capability gaps and runtime dependencies are explicit. |
@@ -52,9 +52,11 @@ proposal; the structural and Z views help derive it. The exact UIL encoding and
 reference evaluator remain decisions for later work.
 
 Z names the behavioral model in this pipeline; Z-machine names a possible
-source VM. Zork-like organization does not require text input or discrete
-player turns. Autonomous processes, concurrent activities and graphical
-interfaces can share the same recovered behavioral model.
+source VM. Z should also support a [playable text-adventure projection](Z_TEXT_PROJECTION.md)
+for testing: agents observe grounded scene descriptions and submit named
+actions to the same authoritative execution backend. Graphical views and
+autonomous processes can share that model. Text presentation alone does not
+change the game's timing, observation privileges or action semantics.
 
 The [recovery experience amendment](INTENT_PIPELINE_RECOVERY_CASES.md)
 adds practical distinctions and synthetic acceptance cases from bounded
