@@ -188,6 +188,46 @@ bounded traces or prove a narrowly stated property, but neither a finite test
 nor a local proof establishes whole-game equivalence. Corrections are separate
 variants, compared against the faithful baseline and never silently substituted.
 
+## Methodology: reproduce and compare a bounded behavior
+
+**Anthropic reports:** Its [27 October 2026 report](https://www.anthropic.com/research/discovering-vulnerabilities-with-claude)
+describes using binary-analysis tools, an annotated C reproduction of relevant
+features, and comparison with the binary before further analysis. It also
+observes that intended component behaviors can combine into unexpected
+outcomes. Its broader process tracks coverage, uses diverse analysis approaches,
+measures marginal discoveries, examines variants and standardizes verification.
+The report does not disclose the exact comparison harness, fixtures or coverage,
+complete prompts or reproduction, a formal proof, or completion of the whole
+binary. Its account is an inspiration, not evidence of game equivalence.
+
+**Proposed fDisBull practice:**
+
+1. Choose a small behavior slice with named entry conditions, observable
+   actions, state, timing and explicit boundaries. Preserve artifact identity,
+   source evidence, assumptions and competing interpretations. Structural
+   reduction may include an executable C-like reproduction when useful; it is
+   still an analysis view, not a required language or a substitute for evidence.
+2. Apply matched inputs and starting conditions to the original and model;
+   compare available semantic observations, action guards, state deltas and
+   events at declared boundaries. Record stops and counterexamples, investigate
+   discrepancies, and refine the candidate before expanding the slice. Compare
+   rendering separately when the claim includes visual behavior. Agent-mode
+   must preserve simulation behavior even when drawing is omitted.
+3. Compose primitives only within their verified bounds, then test interactions
+   through shared state, event order, timers and external services. Retain
+   unknowns: individual agreement does not prove the composition. Carry the
+   same inputs, evidence and comparison obligations through Z, UDL mapping, UIL
+   and each target; a mapping or generator must not silently widen the claim.
+4. Track which behaviors and conditions have actually been compared and their
+   claim ceilings. Use a different targeted analysis or a related variant when
+   it can resolve a gap; measure added verified coverage and counterexamples,
+   not the amount of output. Scale effort to the question rather than requiring
+   multiple agents or a new framework.
+
+Observed agreement supports only the stated bounded behavior. Intent remains an
+interpretation supported by evidence, not something established automatically
+by matching outputs; security findings do not establish complete game recovery.
+
 ## Staged milestones and decisions
 
 1. Specify one small synthetic adventure scene: typed state, one guarded action,
