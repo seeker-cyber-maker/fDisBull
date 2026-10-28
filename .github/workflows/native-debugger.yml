@@ -9,6 +9,9 @@ on:
       - src/fdisbull/**
       - tests/**
       - pyproject.toml
+      - scripts/build_offline_kit.py
+      - scripts/build_dosbox_source_companion.py
+      - scripts/verify_offline_kit.py
   pull_request:
     paths:
       - .github/workflows/native-debugger.yml
@@ -17,6 +20,9 @@ on:
       - src/fdisbull/**
       - tests/**
       - pyproject.toml
+      - scripts/build_offline_kit.py
+      - scripts/build_dosbox_source_companion.py
+      - scripts/verify_offline_kit.py
   workflow_dispatch:
 
 permissions:
@@ -64,7 +70,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential autoconf automake pkg-config nasm \
             libsdl2-dev libsdl2-net-dev libncurses-dev libpng-dev zlib1g-dev libfreetype6-dev
-          python -m pip install ".[test]"
+          python -m pip install ".[test]" build
       - name: Verify pinned baseline and apply the complete patch
         run: |
           python - <<'PY'
@@ -113,6 +119,44 @@ jobs:
           set -euo pipefail
           python -m pytest -q --require-native $FDISBULL_NATIVE_TESTS \
             --junitxml=native-evidence/tests.xml 2>&1 | tee native-evidence/tests.log
+      - name: Build and verify the offline kit with genuine Z3
+        if: matrix.profile == 'layers-backend'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .native/offline/packages .native/offline/wheels .native/offline/lib native-evidence/offline
+          python -m build --wheel --outdir .native/offline/packages
+          kit_wheel=$(find .native/offline/packages -name '*.whl' -print -quit)
+          python -m pip download --only-binary=:all: --dest .native/offline/wheels "$kit_wheel[proof]"
+          kit_sdl=$(ldd "$FDISBULL_DOSBOX" | awk '/libSDL2_net/{print $3; exit}')
+          test -f "$kit_sdl"
+          cp -L "$kit_sdl" .native/offline/lib/libSDL2_net-2.0.so.0
+          python scripts/build_dosbox_source_companion.py \
+            --source "$FDISBULL_DOSBOX_SOURCE" \
+            --manifest experimental/dosbox-x/layers/source-manifest.json \
+            --source-commit "$GITHUB_SHA" --output .native/offline/source-companion.tar \
+            > native-evidence/offline/source-companion.json
+          python scripts/build_offline_kit.py --wheelhouse .native/offline/wheels \
+            --backend "$FDISBULL_DOSBOX" --sdl-lib .native/offline/lib/libSDL2_net-2.0.so.0 \
+            --dosbox-license "$FDISBULL_DOSBOX_SOURCE/COPYING" \
+            --sdl-license /usr/share/doc/libsdl2-net-2.0-0/copyright \
+            --source-companion .native/offline/source-companion.tar --source-commit "$GITHUB_SHA" \
+            --backend-receipt native-evidence/backend-identity.json \
+            --patch-manifest experimental/dosbox-x/layers/source-manifest.json --output .native/offline/output
+          mkdir .native/offline/unpacked
+          tar -xzf .native/offline/output/fdisbull-0.20.0-linux-x86_64-offline.tar.gz -C .native/offline/unpacked
+          kit_root="$GITHUB_WORKSPACE/.native/offline/unpacked/fdisbull-0.20.0-linux-x86_64-offline"
+          "$kit_root/install.sh" "$GITHUB_WORKSPACE/.native/offline/installed" \
+            2>&1 | tee native-evidence/offline/install.log
+          .native/offline/installed/bin/python -I scripts/verify_offline_kit.py \
+            --kit "$kit_root" --output native-evidence/offline/acceptance.json
+          sha256sum .native/offline/output/* > native-evidence/offline/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        if: success() && matrix.profile == 'layers-backend'
+        with:
+          name: linux-dos-offline-kit
+          path: .native/offline/output/*
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         if: always()
         with:

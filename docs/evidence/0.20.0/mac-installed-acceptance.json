@@ -1,0 +1,19 @@
+{
+  "package_version": "0.20.0",
+  "solver_version": "5.3.2",
+  "python_version": "3.13.17",
+  "platform": "Darwin",
+  "machine": "arm64",
+  "counterexample": "counterexample",
+  "equivalence": "equivalent_under_assumptions",
+  "keyboard": true,
+  "memory": true,
+  "native_restore": true,
+  "screenshot_sha256": "1c12718a10d90d901a004896bd408ac89ac4f14cc5425281a5aadf83f950f578",
+  "backend_sha256": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277",
+  "project_restart": true,
+  "scope": "Local installed-wheel authored DOS acceptance; not Linux offline-kit acceptance",
+  "implementation_candidate": "cadf491f3fba92b82c028b38943ca5a67d05845e",
+  "integration_base": "db13e587c57be3d8e87a33d0a31fa094e105cf18",
+  "wheel_sha256": "cea429ed34f295248b924aa7d72306b1dfbf28e903e9c1c330ab5a8cf9c5717f"
+}

@@ -64,11 +64,17 @@ def test_overlapping_branches_are_not_complete(tmp_path):
     result=inspect(tmp_path,bytes.fromhex('ff0701ff010003010000'))
     assert result['overlapping_instructions'] and not result['complete']
 
-def test_mixed_case_volume_and_duplicate_rejected(tmp_path):
+def test_mixed_case_volume_is_accepted(tmp_path):
     log=fixture(tmp_path,b'\x00')
     (tmp_path/'VOL.0').rename(tmp_path/'Vol.0')
     assert inspect_logic(log,tmp_path,0,profile='2.917')['complete']
+
+def test_duplicate_case_volume_is_rejected(tmp_path):
+    log=fixture(tmp_path,b'\x00')
+    (tmp_path/'VOL.0').rename(tmp_path/'Vol.0')
     (tmp_path/'vol.0').write_bytes((tmp_path/'Vol.0').read_bytes())
+    if (tmp_path/'vol.0').samefile(tmp_path/'Vol.0'):
+        pytest.skip('duplicate-case fixture requires a case-sensitive filesystem')
     with pytest.raises(ValueError,match='exactly one'): inspect_logic(log,tmp_path,0,profile='2.917')
 
 def test_bounded_inputs_and_empty_bytecode_rejected(tmp_path):

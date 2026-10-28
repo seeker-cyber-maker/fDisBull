@@ -1,4 +1,10 @@
-# Release status checked on 2026-10-27
+# Release status checked on 2026-10-28
+
+## 0.20.0 source finalization
+
+PR #12 is merged. The final source includes the local AGI filesystem-test correction, public Police Quest verifier, API documentation, and a Linux Python 3.13.5 offline kit builder that requires genuine Z3. The native workflow builds the corresponding backend source companion, installs the kit offline, and tests Z3 plus a real authored DOS save/restore session. See [0.20 release notes](RELEASE-0.20.0.md).
+
+The exact final main commit must pass ordinary and native Linux CI before its annotated tag is created. The tag and CI artifacts are distinct from GitHub release publication. Shared system commands continue selecting published 0.19.0 until a separate installation promotion. Game files, native states and databases remain excluded.
 
 ## Published 0.19.0 and shared Mac installation
 

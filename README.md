@@ -8,12 +8,12 @@ An agent-first disassembler with a persistent SQLite analysis database, explicit
 
 Requires Python **3.12 or later**.
 
+Version **0.20.0** integrates [typed input macros and bounded movement](docs/SEMANTIC_INPUT_MACROS.md), [scene geometry and content readiness](docs/SCENE_NAVIGATION.md), explicit DOS COM support, watch-only dot-mode, a partial AGI inspector, and [bounded Z3 model checks](docs/BOUNDED_PROOFS.md). See the [release notes](docs/RELEASE-0.20.0.md) and [offline kit with Z3](docs/OFFLINE_KIT_0.20.md). Final main CI gates the tag; GitHub release publication and shared installation promotion are separate steps. The [candidate history](docs/UNRELEASED-0.20.md) and [Library reconciliation](docs/RECONCILIATION-0.20.md) preserve earlier identities and limitations.
+
 Version **0.19.0** adds guarded DOS filename aliases, persistent screenshot
 hooks, callback-safe DOSBox continuation and expanded investigation-skill
 references. See the [release notes](docs/RELEASE-0.19.0.md) for behavior and
 limits; the [development record](docs/UNRELEASED-0.19.md) retains earlier evidence.
-The [unreleased 0.20 candidate notes](docs/UNRELEASED-0.20.md) summarize current development and verification limits.
-
 [**fDisBull 0.19.0 is published**](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.19.0)
 with CI-verified wheel, source distribution and tool ZIP. The
 [publication record](docs/PUBLICATION-0.19.md) records tag CI, asset hashes,
@@ -68,7 +68,7 @@ feature limits and the ordinary/native Linux checks required before tagging.
 | **Earlier published release: 0.16.0** | [Packages and updated offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.16.0), source `e1e3fb4` | [Tag CI and copied-pair verification](docs/DELIVERY-0.16.md): 1,077 ordinary, 32 stable DOS, 312 layers, 16 PE64 and 10 DOS/QEMU/boot checks passed; no native skips. |
 | **Historical source candidate: 0.15.0** | [Saved debugger experiments](docs/DEBUGGER_EXPERIMENTS.md) on the existing unified debugger | [Candidate notes](docs/RELEASE-0.15.0.md) and [local verification](docs/VERIFICATION-0.15.md). No 0.15.0 tag/release; exact CI packages are additionally available in the GitHub offline asset. |
 | **Earlier published release: 0.14.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0), commit `6a0aeb3` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623197): 817 passed, 45 skipped. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623209): 15 stable DOS, 38 layers/endpoint, 14 PE64 and 10 DOS/QEMU/boot checks passed, no native skips. |
-| **Repository branch** | [main](https://github.com/seeker-cyber-maker/fDisBull/tree/main) is the only active branch | Release promotion requires both ordinary and native Linux CI. Use version tags for fixed source snapshots. The old experimental checkpoint is preserved under an archive tag. |
+| **Repository branch** | [main](https://github.com/seeker-cyber-maker/fDisBull/tree/main) is the release branch; feature and RFC branches may exist | Release promotion requires both ordinary and native Linux CI. Use version tags for fixed source snapshots. The old experimental checkpoint is preserved under an archive tag. |
 
 The historical [0.15.0 Linux/DOS offline candidate kit](https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.14.0/fdisbull-linux-dos-offline-0.15.0-e91879c-2026-10-26.zip) is now hosted on GitHub, with a [checksum](https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.14.0/fdisbull-linux-dos-offline-0.15.0-e91879c-2026-10-26.zip.sha256). It supplies the exact `e91879c` CI packages, genuine Python dependencies, and the corrected Linux backend with private SDL2_net libraries. Its 0.15.0 contents predate the current 0.16.0 work; its URL uses the existing 0.14.0 release as an asset host.
 
