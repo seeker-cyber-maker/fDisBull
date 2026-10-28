@@ -151,6 +151,8 @@ generators remain independent downstream projects. No UIL exporter is supplied
 by this release. Human and agent authors may propose evidence-backed language
 amendments through the [UIL RFC process](docs/UIL_RFC_PROCESS.md); acceptance of
 an RFC remains separate from implementation or game qualification.
+The [intent pipeline RFC](docs/INTENT_PIPELINE_RFC.md) defines the proposed
+source-to-UIL layers, agent access and downstream reconstruction contracts.
 
 The [scene framework](docs/SCENE_FRAMEWORK.md) saves object context, trigger
 provenance, revisions and supporting screenshots in the project database. One
