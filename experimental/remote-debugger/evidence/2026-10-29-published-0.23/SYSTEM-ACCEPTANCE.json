@@ -1,0 +1,71 @@
+{
+  "version": "0.23.0",
+  "source_commit": "ed89abca061964385b176537bc9fd275dd02afa5",
+  "status": "active_verified",
+  "selector": "releases/0.23.0-ed89abc",
+  "payload_entries": 2464,
+  "payload_manifest_sha256": "ac2dcacbd143be48e6f5d49ccf28e13dd3c468c1b07de0b19fea674720ff9e36",
+  "installed_qualification": {
+    "passed": 709,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "core_aliases": 3,
+  "player_aliases": 3,
+  "fresh_player_processes": 6,
+  "native_doctors": {
+    "dos": {
+      "status": "passed",
+      "native_state_restored": true
+    },
+    "dos-qemu": {
+      "status": "passed",
+      "native_state_restored": true
+    },
+    "wine": {
+      "status": "passed",
+      "native_state_restored": true
+    }
+  },
+  "runtime_image_audits": "passed",
+  "published_asset_readback": "passed",
+  "rollback": {
+    "status": "rollback_ready",
+    "previous": "0.22.0-75bbd7e",
+    "wrappers_preserved": 14,
+    "applied": false
+  },
+  "initial_qualification_attempt": {
+    "passed": 697,
+    "failures": 12,
+    "output_guard_refusals_due_to_basetemp_inside_git": 10,
+    "native_startup_aborts": 2,
+    "native_abort_evidence": "macOS SIGABRT stack-buffer-overflow reports in DEBUG_ShowMsg/main; cause unresolved",
+    "rerun": "709 passed after basetemp moved outside Git to shorter private path; later pass does not establish abort cause"
+  },
+  "limits": [
+    "Qualification covers this Mac and tested paths, not all macOS hosts or path lengths",
+    "Interactive dot-mode remains unqualified",
+    "General il-run output amplification remains; source notes include measured reproduction"
+  ],
+  "postflight_checked_at_utc": "2026-10-29T20:16:47.364700+00:00",
+  "backend_profiles": {
+    "dos": {
+      "executable_sha256": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277",
+      "size_bytes": 20414344
+    },
+    "dos_qemu": {
+      "executable_sha256": "10bed8dc7571b0fc6c51ea484711b3802d2fb2dc00ba5d9af4d610cb2e2142cb",
+      "size_bytes": 152
+    },
+    "wine": {
+      "executable_sha256": "10bed8dc7571b0fc6c51ea484711b3802d2fb2dc00ba5d9af4d610cb2e2142cb",
+      "size_bytes": 152
+    },
+    "machine": {
+      "executable_sha256": "10bed8dc7571b0fc6c51ea484711b3802d2fb2dc00ba5d9af4d610cb2e2142cb",
+      "size_bytes": 152
+    }
+  }
+}

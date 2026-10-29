@@ -163,6 +163,8 @@ and [verification](docs/VERIFICATION-0.23.md).
 
 ## Status, testing and history
 
+[Version 0.23.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.23.0) with eight download-verified assets and the Linux offline kit. The [publication record](docs/PUBLICATION-0.23.md) documents tag CI, known limits and the verified [shared Mac installation](docs/SYSTEM_INSTALLATION.md).
+
 The **0.23.0 release source** adds the original-backed DOS UDC, per-layer
 verification and refreshed agent guidance. Ordinary and native Linux CI must
 pass on the exact release commit before tagging. Check [Actions](https://github.com/seeker-cyber-maker/fDisBull/actions)
