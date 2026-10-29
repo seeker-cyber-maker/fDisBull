@@ -22,6 +22,7 @@ SHOP_PATTERNS = Path(__file__).resolve().parent / 'data' / 'dinopark-e55-shop.js
 SAVE_PATTERNS = Path(__file__).resolve().parent / 'data' / 'dinopark-e55-save.json'
 STREET_PATTERNS = Path(__file__).resolve().parent / 'data' / 'dinopark-e55-street.json'
 MART_PATTERNS = Path(__file__).resolve().parent / 'data' / 'dinopark-e55-mart.json'
+OPERATING_PATTERNS = Path(__file__).resolve().parent / 'data' / 'dinopark-e55-operating.json'
 MART_OBSERVATIONS = json.loads(MART_PATTERNS.read_text())['scenes']
 BORROW_POPUP = {'samples': [{'x': x, 'y': 73, 'rgb': [44, 44, 44]} for x in
     (80, 87, 99, 105, 111, 123, 132, 137, 147, 167, 172, 178, 184, 195, 201, 212, 217, 222, 230, 235, 244)],
@@ -112,7 +113,22 @@ def document_hash(value):
 
 def pattern_hashes():
     return {'main': digest(PATTERNS), 'shop': digest(SHOP_PATTERNS),
-            'save': digest(SAVE_PATTERNS), 'street': digest(STREET_PATTERNS)}
+            'save': digest(SAVE_PATTERNS), 'street': digest(STREET_PATTERNS),
+            'operating': digest(OPERATING_PATTERNS)}
+
+
+def native_save_label(game, number):
+    """A native title is distinct from its possibly renumbered disk slot."""
+    titles = set()
+    for path in game.glob('DINOSG.*'):
+        data = path.read_bytes()
+        native_fields(data)
+        titles.add(data[6:42].split(b'\0', 1)[0].lower())
+    for offset in range(1000):
+        label = f'agent{(number + offset) % 1000:03d}'
+        if label.encode() not in titles:
+            return label
+    raise ValueError('No unused native save title is available; no save input sent.')
 
 
 def read_save_bundle(path, source_files):
@@ -132,8 +148,9 @@ def read_save_bundle(path, source_files):
     # original pattern identities must still match exactly. The original disk
     # data is checked after loading, and street controls always receive fresh
     # recognition using the current profile; no old scene revision is reused.
-    legacy_patterns = {key: value for key, value in expected_patterns.items() if key != 'street'}
-    if payload['patterns'] not in (expected_patterns, legacy_patterns):
+    previous_patterns = {key: value for key, value in expected_patterns.items() if key != 'operating'}
+    legacy_patterns = {key: value for key, value in previous_patterns.items() if key != 'street'}
+    if payload['patterns'] not in (expected_patterns, previous_patterns, legacy_patterns):
         raise ValueError('Saved park scene qualification is incompatible.')
     if set(payload['qualifications']) != set(QUALIFICATIONS) or any(
             payload['qualifications'][key] is not True for key in QUALIFICATIONS):
@@ -217,25 +234,25 @@ def click(debug, x, y):
     return debug.click(x, y, hold_ms=80)
 
 
-def prepare_bank_pointer(debug, scene, event, *, object_name='office.bank'):
-    """Consume cursor movement in the original guest before the bank press.
+def prepare_scene_pointer(debug, scene, event, *, object_name='office.bank'):
+    """Consume cursor movement before a qualified named control is pressed.
 
     Frame recognition establishes appearance, not consumption of prior mouse
     callbacks. Do not merge movement and press or repeat a timed-out press.
     """
     commands={'office.bank':'go bank','bank.payoff':'repay',
-              'bank.borrow':'borrow','bank.back':'go office'}
+              'bank.borrow':'borrow','bank.back':'go office','mart.back':'go street'}
     if object_name not in commands:
-        raise ValueError('Unqualified bank control')
+        raise ValueError('Unqualified named control')
     document=debug.project.debug_scene_info(scene,version=debug.version['id'])['definition']
     targets=[o for o in document['objects'] if o['name']==object_name]
     if len(targets)!=1 or targets[0]['action']['kind']!='click':
-        raise ValueError('Bank control definition unavailable; press withheld')
+        raise ValueError('Named control definition unavailable; press withheld')
     point=targets[0]['point']
     before=debug.scene_assert(scene,object=object_name)
     mouse=debug.call('input.mouse.state')['mouse']
     if mouse['buttons'] or mouse['release_pending']:
-        raise ValueError('Bank pointer is held or releasing; bank press withheld')
+        raise ValueError('Pointer is held or releasing; press withheld')
     frame=before['frame']
     moved=debug.call('input.mouse.move',{'x':point[0],'y':point[1],
         'mode_id':frame['mode_id'],'frame_id':frame['frame_id']})
@@ -243,20 +260,21 @@ def prepare_bank_pointer(debug, scene, event, *, object_name='office.bank'):
     after=debug.call('input.mouse.state')['mouse']
     if (after['buttons'] or after['release_pending'] or
             any(after[k]!=moved['mouse'][k] for k in ('x','y'))):
-        raise ValueError('Bank pointer did not settle; bank press withheld')
+        raise ValueError('Pointer did not settle; press withheld')
     checked=debug.scene_assert(scene,object=object_name)
     event({'phase':'pointer_prepared','command':commands[object_name],
            'object':object_name,'point':point,
            'guest_ms':150,'mouse_before':mouse,'mouse_after':after,
-           'observation':checked['observation'],'bank_press':'not_sent'})
+           'observation':checked['observation'],'bank_press':'not_sent', 'press':'not_sent'})
+    return point
+
+
+# Retain the original helper entry point for existing native probes.
+prepare_bank_pointer = prepare_scene_pointer
 
 
 class BankInputSession:
-    """Realize bank controls with separate movement and press in the native guest.
-
-    The TextScene business methods remain unchanged. Other native operations
-    delegate directly to the owned debugger session.
-    """
+    """Prepare bank controls and catalogue exit; delegate other native calls."""
     def __init__(self, native, event):
         self.native, self.event = native, event
 
@@ -264,9 +282,39 @@ class BankInputSession:
         return getattr(self.native,name)
 
     def scene_click(self, scene, object, **options):
-        if object in ('office.bank','bank.payoff','bank.borrow','bank.back'):
-            prepare_bank_pointer(self.native,scene,self.event,object_name=object)
+        if object in ('office.bank','bank.payoff','bank.borrow','bank.back','mart.back'):
+            prepare_scene_pointer(self.native,scene,self.event,object_name=object)
         return self.native.scene_click(scene,object,**options)
+
+
+def prepare_mart_first_page(text):
+    """Resolve the Coelophysis intent independently of the last catalogue read."""
+    text.debug.scene_assert(text.mart, object='mart.back')
+    selector = text.debug.memory('4020:3c5c', length=2)['hex']
+    for attempt in range(49):
+        frame, image = take_frame(text.project, text.debug, 'mart-first-page')
+        if matches(image, text.patterns['coel_page']):
+            predicate = pixel_predicate(text.patterns['coel_page'])
+            context = {'memory': {'address': '4020:3c5c', 'length': 2, 'hex': selector}}
+            doc = definition(frame, 'DinoMart first catalogue page', predicate, context,
+                             'mart.back', [216, 187], pixel_predicate(text.patterns['shop_street']))
+            text.mart = text.project.debug_save_scene('dinomart', doc, parent=text.mart)['id']
+            text.event({'phase': 'catalogue_prepared', 'command': 'buy coelophysis',
+                        'page': 'first', 'frame': frame, 'purchase_input': 'not_sent'})
+            return
+        if (not matches(image, MART_OBSERVATIONS['toolbar']) or
+                text.debug.memory('4020:3c5c', length=2)['hex'] != selector or
+                any(matches(image, text.patterns[n]) for n in
+                    ('quarter_popup', 'parking_hint', 'game_menu', 'save_dialog', 'load_dialog'))):
+            raise RuntimeError('Catalogue navigation context changed; purchase input withheld')
+        if attempt == 48:
+            break
+        moved = text.debug.call('input.mouse.move', {'x': 0, 'y': 50})
+        text.event({'phase': 'mart_pan_input', 'result': moved, 'point': [0, 50]})
+        if moved.get('accepted') is not True:
+            raise RuntimeError('Catalogue movement outcome unknown; do not retry')
+        run_guest(text.debug, 80)
+    raise RuntimeError('First catalogue page not reached within the pan budget; purchase input withheld')
 
 
 def definition(reference, title, predicate, selector, action, point, outcome):
@@ -398,6 +446,7 @@ class TextScene:
         self.food_bought = False
         self.park_opened = False
         self.notice_outcome_unknown = False
+        self.pending_park_entry = False
         self.project, self.patterns, self.event = project, patterns, event
         self.current = 'office'
         self.last_action = None
@@ -411,7 +460,7 @@ class TextScene:
             save_name(name)
         except ValueError as exc:
             return str(exc) + ' No input was sent.'
-        if self.notice_outcome_unknown or not all(getattr(self, key) for key in QUALIFICATIONS):
+        if self.notice_outcome_unknown or self.pending_park_entry or not all(getattr(self, key) for key in QUALIFICATIONS):
             return 'Saving is available after completing the running-park setup. No input was sent.'
         if (self.save_library / name).exists():
             return 'That saved-park name already exists. Choose a new name. No input was sent.'
@@ -468,7 +517,7 @@ class TextScene:
         number = next((i for i in range(1000) if f'DINOSG.{i:03d}' not in old_files), None)
         if number is None:
             return 'No unused native save slot is available. No input was sent.'
-        label = f'agent{number:03d}'
+        label = native_save_label(self.game, number)
         self.event({'phase': 'intent', 'command': 'save park ' + name, 'before': before,
                     'native_label': label, 'input': 'not_yet_sent'})
         self.save_key('escape')
@@ -656,7 +705,7 @@ class TextScene:
                     'persistence': 'unknown'})
         if result.get('accepted') is not True or result.get('delivery') != 'queued':
             raise RuntimeError('shop input not queued; outcome unknown')
-        run_guest(self.debug, ms)
+        return run_guest(self.debug, ms)
 
     def observe_resources(self, expected, label):
         observed = park_resources(self.debug)
@@ -744,7 +793,8 @@ class TextScene:
                         'notices': notices, 'frame': frame})
             return 'No uniquely recognized notice is visible. No input was sent.'
         notice = notices[0]
-        if notice != 'quarter_popup' or self.current != 'park':
+        entering = self.pending_park_entry and self.current == 'street'
+        if notice != 'quarter_popup' or self.current != 'park' and not entering:
             self.event({'phase': 'refused', 'command': 'acknowledge notice', 'input': 'not_sent',
                         'notice': notice, 'reason': 'notice and scene not qualified', 'frame': frame})
             return 'Acknowledging this notice in the current scene is not qualified. No input was sent.'
@@ -769,11 +819,18 @@ class TextScene:
             self.event({'phase': 'indeterminate', 'command': 'acknowledge notice',
                         'remaining_notices': remaining, 'frame': frame, 'persistence': 'unknown'})
             return 'A notice remains after input; the outcome is unknown. Do not retry automatically.'
-        view = 'park_view' if self.current == 'park' else 'street_view'
+        view = 'park_view' if self.current == 'park' or entering else 'street_view'
         if not matches(image, self.patterns[view]):
             self.event({'phase': 'indeterminate', 'command': 'acknowledge notice',
                         'reason': 'unexpected view', 'frame': frame, 'persistence': 'unknown'})
             return 'The resulting view is not recognized; the outcome is unknown. Do not retry automatically.'
+        if entering:
+            selector = {'memory': {'address': '4020:3c5c', 'length': 2,
+                                   'hex': self.debug.memory('4020:3c5c', length=2)['hex']}}
+            doc = definition(frame, 'park after quarter notice', pixel_predicate(self.patterns['park_view']),
+                             selector, 'park.back', [173, 187], pixel_predicate(self.patterns['street_view']))
+            self.park = self.project.debug_save_scene('park', doc, parent=self.park)['id']
+            self.current, self.pending_park_entry = 'park', False
         selected, obj = (self.park, 'park.back') if self.current == 'park' else (self.street, 'street.office')
         self.debug.scene_assert(selected, object=obj)
         after = park_snapshot(self.debug)
@@ -1000,13 +1057,22 @@ class TextScene:
             if not self.land_bought:
                 return 'Buy the $500 desert plot first. No input was sent.'
             return 'This purchase is not qualified for the current balances. No input was sent.'
+        prepare_mart_first_page(self)
         self.debug.scene_assert(self.mart, object='mart.back')
         self.event({'phase': 'intent', 'command': 'buy coelophysis', 'before': before, 'input': 'not_yet_sent'})
         unchanged = {'cash': 4500, 'loan': 5000, 'working_cash': 4500}
         self.shop_click((160, 87), 5000, 'select dinosaur')
-        self.shop_observe('picked', unchanged, 'dinosaur-picked')
+        self.shop_observe('coel_picked', unchanged, 'dinosaur-picked')
         self.shop_click((160, 103), 6000, 'select price')
-        self.shop_observe('selected', unchanged, 'dinosaur-selected')
+        self.shop_observe('coel_selected', unchanged, 'dinosaur-selected')
+        # The original purchase code indexes 26-byte species records from
+        # DS:4550 using DS:68a5, then posts that price at 334b:205e..2087.
+        selected = int.from_bytes(bytes.fromhex(self.debug.memory('4020:68a5', length=2)['hex']), 'little')
+        price = int.from_bytes(bytes.fromhex(self.debug.memory('4020:45b8', length=4)['hex']), 'little')
+        self.event({'phase': 'dinosaur_selection', 'species': selected, 'price': price,
+                    'purchase_input': 'not_sent'})
+        if selected != 4 or price != 1250:
+            raise RuntimeError('Original species or price is not the qualified Coelophysis order; BUY withheld')
         self.shop_click((187, 187), 6000, 'order dinosaur')
         staged = {'cash': 4500, 'loan': 5000, 'working_cash': 3250}
         observed = balances(self.debug)
@@ -1102,6 +1168,26 @@ class TextScene:
         self.current = 'street'
         self.event({'phase': 'result', 'command': 'go street', 'scene': 'street',
                     'before': before, 'after': after, 'action_scope': 'navigation only', 'persistence': 'unknown'})
+        return self.describe()
+
+    def leave_mart(self):
+        before = balances(self.debug)
+        if before['cash'] != before['working_cash']:
+            self.event({'phase': 'refused', 'command': 'go street', 'scene': 'dinomart',
+                        'input': 'not_sent', 'reason': 'unresolved dinosaur reservation'})
+            return 'The catalogue has an unresolved reservation. No input was sent.'
+        self.event({'phase': 'intent', 'command': 'go street', 'scene': 'dinomart',
+                    'before': before, 'input': 'not_yet_sent'})
+        point = prepare_scene_pointer(self.debug, self.mart, self.event, object_name='mart.back')
+        # The original catalogue completes this input during one continuous
+        # guest interval. Verify its destination after that interval rather
+        # than relying on the generic 100 ms scene-polling path.
+        self.shop_click(point, 2000, 'leave DinoMart catalogue', hold_ms=80)
+        self.shop_observe('shop_street', {}, 'mart-exit', wait_slices=12)
+        self.debug.scene_assert(self.street, object='street.office')
+        self.current = 'street'
+        self.event({'phase': 'result', 'command': 'go street', 'scene': 'street',
+                    'before': before, 'after': balances(self.debug), 'persistence': 'unknown'})
         return self.describe()
 
     def buy_fence(self):
@@ -1368,10 +1454,15 @@ class TextScene:
             return message
         self.event({'phase': 'intent', 'command': 'go park', 'input': 'not_yet_sent',
                     'before': before, 'persistence': 'unknown'})
-        self.shop_click((201, 187), 8000, 'return to park view', hold_ms=80)
+        entry_run = self.shop_click((201, 187), 8000, 'return to park view', hold_ms=80)
         frame, image = take_frame(self.project, self.debug, 'park-revisited')
         notices = [n for n in ('quarter_popup', 'parking_hint') if matches(image, self.patterns[n])]
         if notices:
+            if notices == ['quarter_popup']:
+                self.pending_park_entry = True
+                self.event({'phase': 'interrupted', 'command': 'go park', 'notices': notices,
+                            'frame': frame, 'run': entry_run, 'destination': 'not_yet_verified'})
+                return 'A quarter notice interrupted park entry. Use acknowledge notice to continue.'
             self.event({'phase': 'indeterminate', 'command': 'go park', 'frame': frame,
                         'notices': notices, 'persistence': 'unknown'})
             raise RuntimeError('notice during park entry; outcome unknown')
@@ -1425,6 +1516,8 @@ class TextScene:
             return self.acknowledge_notice()
         if self.current == 'general_store' and command == 'go street':
             return self.leave_store()
+        if self.current == 'dinomart' and command == 'go street':
+            return self.leave_mart()
         if self.current == 'street' and command in ('go dinomart', 'go store', 'go employment', 'go diner') and not self.land_bought:
             self.event({'phase': 'refused', 'command': command, 'input': 'not_sent',
                         'reason': 'location is closed before land purchase'})
@@ -1489,6 +1582,7 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
     patterns.update({('shop_street' if key == 'street' else key): value
                      for key, value in shop_patterns.items()})
     patterns.update(json.loads(SAVE_PATTERNS.read_text())['scenes'])
+    patterns.update(json.loads(OPERATING_PATTERNS.read_text())['scenes'])
     street_guard = json.loads(STREET_PATTERNS.read_text())['scenes']['street']
     street_guard['reject'] = [patterns[name] for name in
                               ('quarter_popup', 'parking_hint', 'game_menu', 'save_dialog', 'load_dialog')]
@@ -1507,6 +1601,7 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                'save_patterns_sha256': digest(SAVE_PATTERNS),
                'street_patterns_sha256': digest(STREET_PATTERNS),
                'mart_patterns_sha256': digest(MART_PATTERNS),
+               'operating_patterns_sha256': digest(OPERATING_PATTERNS),
                'script_sha256': digest(Path(__file__)), 'fdisbull_version': fdisbull.__version__,
                'e55_handoff_sha256': 'e6f9da13a3ab1d1de485a496f5d807121bcd929ba67bd87256b449870aa718ea',
                'source_inventory_sha256': hashlib.sha256(json.dumps(before, sort_keys=True).encode()).hexdigest(),
@@ -1577,6 +1672,11 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                 travel = deque()
                 expected_hop = None
                 while True:
+                    if expected_hop == 'park' and text.pending_park_entry:
+                        event({'phase': 'travel_paused', 'expected_scene': 'park',
+                               'reason': 'qualified quarter notice', 'following_input': 'not_sent'})
+                        travel.clear()
+                        expected_hop = None
                     if expected_hop is not None and text.current != expected_hop:
                         event({'phase': 'travel_stopped', 'expected_scene': expected_hop,
                                'actual_scene': text.current, 'following_input': 'not_sent'})

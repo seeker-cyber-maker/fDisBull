@@ -25,6 +25,7 @@ TITLES = {'office': 'Park office', 'bank': 'Bank', 'street': 'Park street', 'din
 SNAPSHOT_FIELDS = ('office', 'bank', 'street', 'mart', 'park', 'locations', 'current',
                    'land_bought', 'dinosaur_bought', 'fence_bought', 'guide_hired',
                    'food_bought', 'park_opened', 'notice_outcome_unknown', 'transaction_count',
+                   'pending_park_entry',
                    'vegasaurus_attempted', 'vegasaurus_proof', 'vegasaurus_extinct', 'last_action')
 
 
@@ -104,6 +105,7 @@ class ZService:
         self.revision = 0
         self.pending = None
         self.snapshots = {}
+        self.latest_native_save = None
         self.processes = []
         self.history = []
         self.restarted = False
@@ -116,6 +118,7 @@ class ZService:
         atomic_json(self.work/'z-session.json',{
             'status':status, 'complete':complete, 'stop_reason':self.stop_reason,
             'history':self.history, 'pending_command':self.pending['command'] if self.pending else None,
+            'latest_native_save':self.latest_native_save,
             'pending_effects':('applied-confirmed' if self.pending and any(e.get('phase') in
                 ('food_purchase_committed','vegasaurus_purchase_confirmed') for e in self.pending['events'])
                 else 'unknown' if self.pending else 'none-pending'),
@@ -124,6 +127,8 @@ class ZService:
 
     def event(self, item):
         self.history.append(deepcopy(item))
+        if item.get('phase') == 'result' and item.get('command', '').startswith('save park '):
+            self.latest_native_save = item['command'].removeprefix('save park ')
         if self.pending is not None:
             self.pending['events'].append(deepcopy(item))
         if item.get('phase') in ('food_purchase_committed','vegasaurus_purchase_confirmed'):
@@ -132,6 +137,10 @@ class ZService:
 
     def ready(self, text):
         self.text = text
+        if (self.pending and self.pending['command'].startswith('load park ') and any(
+                e.get('phase') == 'result' and e.get('command') == 'load park'
+                for e in self.pending['events'])):
+            self.latest_native_save = self.pending['command'].removeprefix('load park ')
         self.revision += 1
         self.restarted = True
         self.snapshots.clear()
@@ -164,6 +173,34 @@ class ZService:
             return 'The command produced an oversized response; inspect private evidence before continuing.'
         return text
 
+    def native_save_names(self):
+        library = getattr(self.text, 'save_library', None)
+        if library is None:
+            return []
+        names = []
+        for path in sorted(library.glob('*/save.json')):
+            name = path.parent.name
+            try:
+                load_scenes().save_name(name)
+            except ValueError:
+                continue
+            names.append(name)
+            if len(names) == 64:
+                break
+        return names
+
+    def next_native_save_name(self):
+        library = getattr(self.text, 'save_library', None)
+        if library is None:
+            return self.slot
+        if len(self.native_save_names()) >= 64:
+            return None
+        for number in range(1, 1000):
+            name = self.slot if number == 1 else f'{self.slot[:28]}-{number:03d}'
+            if not (library / name).exists():
+                return name
+        return None
+
     def objects(self):
         view = self.text.current
         objects = []
@@ -176,7 +213,10 @@ class ZService:
         for name, target in NAVIGATION.items():
             actions = {'go': 'go '+name}
             if name == 'park':
-                actions.update(save='save park '+self.slot, load='load park '+self.slot)
+                next_save = self.next_native_save_name()
+                if next_save is not None:
+                    actions['save'] = 'save park '+next_save
+                actions['load'] = 'load park '+(self.latest_native_save or self.slot)
                 if view == 'street': actions['open'] = 'open park'
             if target == view and name != 'park': continue
             add('route-'+name, name, [], 'Known route to '+TITLES[target]+'.', actions)
@@ -200,6 +240,10 @@ class ZService:
             add('time','time',[], 'Advance one bounded original-game interval.', {'advance':'advance time'})
             add('notice','notice',[], 'Acknowledge a currently recognized notice.', {'acknowledge':'acknowledge notice'})
         add('saves','saves',[], 'List named native saves in this private session library.', {'list':'list saves'})
+        for name in self.native_save_names():
+            add('save-'+name, 'saved park '+name, [name],
+                'A named native park save. Load it in a fresh original-game session.',
+                {'load': 'load park '+name})
         return objects, bindings
 
     def oracle(self, phase):
@@ -233,7 +277,9 @@ class ZService:
                 # A known modal is itself an observable context. Do not require
                 # the obscured background scene before offering its handler.
                 scenes = load_scenes()
-                if self.text.current != 'park' or not self.text.park_opened or self.text.notice_outcome_unknown:
+                entering = getattr(self.text, 'pending_park_entry', False) and self.text.current == 'street'
+                if (self.text.current != 'park' and not entering or
+                        not self.text.park_opened or self.text.notice_outcome_unknown):
                     raise
                 _,image = scenes.take_frame(self.text.project,self.text.debug,'z-modal-observation')
                 if (not scenes.matches(image,self.text.patterns['quarter_popup']) or
@@ -242,7 +288,8 @@ class ZService:
                 modal = True
                 description = 'A recognized quarter notice is visible. Acknowledge it to continue.'
             registers = self.text.debug.registers()
-            context = self.text.current + ('.quarter-notice' if modal else '')
+            context = ('park-entry.quarter-notice' if modal and getattr(self.text, 'pending_park_entry', False)
+                       else self.text.current + ('.quarter-notice' if modal else ''))
             opaque = [self.epoch, self.revision, context, description,
                       registers.get('state_revision'), getattr(self.text.debug, '_runtime_epoch', None)]
             token = hashlib.sha256(json.dumps(opaque, sort_keys=True).encode()).hexdigest()
@@ -274,11 +321,22 @@ class ZService:
             verified = self.text.current == NAVIGATION.get(pending['command'][3:])
         if pending['command'].startswith('load park '):
             verified = self.restarted and any(e.get('phase') == 'result' and e.get('command') == 'load park' for e in events)
-        if uncertain or (refusal or text_refusal) and sent or not verified and not (refusal or text_refusal):
+        quarter_context = {'advance time': 'park.quarter-notice', 'go park': 'park-entry.quarter-notice'}
+        quarter_pause = (not uncertain and pending['command'] in quarter_context and any(
+            e.get('phase') == 'interrupted' and e.get('command') == pending['command'] and
+            e.get('notices') == ['quarter_popup'] and e.get('run', {}).get('outcome') == 'guest_time'
+            for e in events))
+        if quarter_pause:
+            observed = self.observe()
+            quarter_pause = (observed.get('complete') is True and
+                             observed.get('context', {}).get('id') == quarter_context[pending['command']])
+        if quarter_pause:
+            status = 'accepted'
+        elif uncertain or (refusal or text_refusal) and sent or not verified and not (refusal or text_refusal):
             status = 'incomplete'
         else:
             status = 'rejected' if refusal or text_refusal else 'success'
-        effects = ('partial' if (refusal or text_refusal) and sent else
+        effects = ('partial' if quarter_pause or (refusal or text_refusal) and sent else
                    'none-confirmed' if status == 'rejected' or pending['command'] in ('status','list saves') else
                    'unknown' if status == 'incomplete' else 'applied-confirmed')
         self.send({'status':status, 'complete':status != 'incomplete',
@@ -394,9 +452,25 @@ def main(argv=None):
     service.receipt('starting')
     try:
         game = build_game(source,work)
+        # Import only the selected native bundle into this owned library. Keep
+        # the original bundle unchanged and make later public loads usable.
+        selected_save = None
+        if args.load_save:
+            original = args.load_save.resolve(strict=True)
+            scenes.read_save_bundle(original, scenes.inventory(game))
+            try:
+                selected_name = scenes.save_name(original.name)
+            except ValueError:
+                selected_name = args.slot
+            selected_save = work/'saves'/selected_name
+            selected_save.mkdir(parents=True)
+            for name in ('save.json', 'DINOSG.000'):
+                shutil.copyfile(original/name, selected_save/name)
+            scenes.read_save_bundle(selected_save, scenes.inventory(game))
+            service.latest_native_save = selected_name
         next_args = ['--game-dir',str(game),'--backend',str(args.backend.resolve()),
                      '--work-dir',str(work/'native'),'--save-library',str(work/'saves')]
-        if args.load_save: next_args += ['--load-save',str(args.load_save.resolve(strict=True))]
+        if selected_save: next_args += ['--load-save',str(selected_save)]
         while next_args is not None:
             next_args = scenes.run_session(next_args,command_reader=service.command,output=service.output,
                         on_ready=service.ready,on_event=service.event,on_spawn=service.spawned)
