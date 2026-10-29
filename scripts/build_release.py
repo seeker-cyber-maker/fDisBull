@@ -43,6 +43,10 @@ SOURCE_PATTERNS = (
     ("docs/evidence/udc-2026-10-29", "dino.json"),
     ("docs/evidence/udc-2026-10-29", "zork.json"),
     ("docs/evidence/udc-2026-10-29", "synthetic.json"),
+    ("docs/evidence/output-024", "amplification.json"),
+    ("docs/evidence/output-024", "dinopark-native.json"),
+    ("docs/evidence/output-024", "dinopark-output.json"),
+    ("docs/evidence/output-024", "tests.json"),
     ("scripts", "*.py"),
 )
 

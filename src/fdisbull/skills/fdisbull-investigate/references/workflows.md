@@ -102,6 +102,13 @@ isolation boundary. `--fair-play` locks the host to physical movement. Otherwise
 choose `--spatial-mode physical|assisted|story` explicitly for a controlled
 experiment. Read `docs/TEXT_PROJECTION.md` and `docs/SPATIAL_MAPS.md`.
 
+## Research-backed progression
+
+When the goal is normal progression or recovery, read
+[recovery-research.md](recovery-research.md) for version-qualified prior work,
+a source-attributed milestone checklist and tests of candidate scene transitions.
+Do not confuse a guide-derived route with a route observed on this target.
+
 ## Retain knowledge without overstating it
 
 Promote verified reusable facts into versioned scene objects, named anchors,
@@ -110,3 +117,22 @@ reduces later probe cost. Preserve the evidence and authority behind the
 shortcut. Revalidate after a source/version, resource, room, backend or runtime
 context change. Keep target-specific addresses, masks and paths in project
 evidence rather than this reusable skill.
+
+## Retrieve bounded output
+
+The core defaults to 64 KiB inline. An `fdisbull-output-ref-1` marker with
+`complete: false` and `status: artifact_required` replaces an oversized reply;
+the separate execution summary keeps the original status/completeness, including
+unknown values. The marker is in a successful wrapped `request` result, in `output` for a
+wrapped error, or is the raw `il-run` response. It is not a failure, a rollback or proof of equality.
+`output-info ARTIFACT` inspects the private archived JSON; `output-select
+ARTIFACT JSON_POINTER --max-bytes N` returns a selected value only if complete,
+`output-read ARTIFACT --offset N --length N` reads bounded base64 byte ranges,
+and `output-export ARTIFACT NEW_FILE` exports to a new private path outside Git.
+For example, use `/state` for a raw `il-run` artifact and `/result/state` for a
+wrapped `request`. Do not repeat a side effect to obtain its response. Retrieval
+does not run the target or refresh state. `output_unavailable` means full output could not be retained, including
+a storage or serialization failure, with no artifact; it does not undo execution or authorize a retry. These
+output references differ from project debug artifact IDs. The default private
+store is user-data `fdisbull/output-artifacts`; `FDISBULL_OUTPUT_ARTIFACT_DIR`
+may select a location outside Git. Artifacts have no automatic deletion.

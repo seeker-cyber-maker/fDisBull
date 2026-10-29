@@ -25,6 +25,7 @@ fdisbull agent-skill --reference references/workflows.md
 fdisbull agent-skill --reference references/scenes.md
 fdisbull agent-skill --reference references/runtime-navigation.md
 fdisbull agent-skill --reference references/udl-uil-udc.md
+fdisbull agent-skill --reference references/recovery-research.md
 ```
 
 With a source checkout, the bundled files are under
@@ -185,3 +186,39 @@ surfaces. Report which one supports each conclusion, with source/version and
 context. Keep missing or unsupported behavior unknown. Keep game assets,
 checkpoints and byte-retaining project databases private; export only the
 requested authored scripts, selected evidence and receipts.
+
+## Research a progression or recovery task
+
+For a game recovery or normal-progress request, qualify the supplied edition and
+search for prior source, interpreter and reverse-engineering work before choosing
+probes. Use manuals and walkthroughs to draft a source-attributed milestone
+checklist, with missing or version-specific steps marked unknown. Treat its scene
+compositions as hypotheses until bounded native observations establish them.
+The bundled `references/recovery-research.md` describes the progression from
+source bytes to supported UDL/UIL and the scope of a bounded proof.
+
+## Retrieve a large response
+
+The core defaults to a 64 KiB inline response. When a reply contains an
+`fdisbull-output-ref-1` marker with `status: artifact_required`, the wire payload
+is incomplete and the original JSON is stored privately. Read its execution
+summary separately: the operation can have completed or remain unknown.
+
+```text
+fdisbull output-info ARTIFACT
+fdisbull output-select ARTIFACT /result/state --max-bytes 8192
+fdisbull output-read ARTIFACT --offset 0 --length 4096
+fdisbull output-export ARTIFACT /private/new-response.json
+```
+
+`output-select` returns a value only when it fits in full; `output-read` returns
+a bounded base64-encoded byte range. The pointer for a raw `il-run` response is
+`/state`, whereas a wrapped `request` response uses `/result/state`. Export
+requires a new private path outside Git. Retrieving an artifact never reruns the
+operation or advances the guest; the archived response is not a fresh runtime
+observation. `output_unavailable` means full output could not be retained (for example,
+storage or serialization failed), and no artifact exists;
+it does not imply rollback or permission to retry. Output references are
+distinct from project debugger artifact IDs. The default store is the user data
+`fdisbull/output-artifacts` directory; `FDISBULL_OUTPUT_ARTIFACT_DIR` selects a
+private location outside Git. Artifacts are not automatically deleted.

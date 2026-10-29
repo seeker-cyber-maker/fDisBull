@@ -29,6 +29,8 @@ def main():
     parser.add_argument("--transcript", help="write private structured self-play transcript")
     parser.add_argument("--quiet", action="store_true", help="print only session status; requires an agent and transcript")
     args = parser.parse_args()
+    if args.backend_command is not None and not args.backend_command.strip():
+        parser.error('--backend-command must not be blank')
     if not math.isfinite(args.backend_timeout) or not 0 < args.backend_timeout <= 60:
         parser.error('--backend-timeout must be finite and between 0 and 60 seconds')
     if args.backend_command and args.save_dir:

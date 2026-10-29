@@ -75,7 +75,8 @@ def test_type_commands_load_json_files_and_keep_binary_bytes(advanced_project, t
         assert project.regions(1)[0].data[0x40:0x48] == bytes.fromhex('0100020003000400')
 
 
-def test_summary_and_signature_files_are_qualified_and_persistent(advanced_project, tmp_path):
+def test_summary_and_signature_files_are_qualified_and_persistent(advanced_project, tmp_path, monkeypatch):
+    monkeypatch.setenv('FDISBULL_OUTPUT_ARTIFACT_DIR',str(tmp_path/'outputs'))
     database, _ = advanced_project
     prototype = tmp_path / 'prototype.json'
     prototype.write_text(json.dumps(dict(arguments=[
@@ -96,7 +97,12 @@ def test_summary_and_signature_files_are_qualified_and_persistent(advanced_proje
                                         bytes='4989f84889d189f0fcf3aa4c89c0c3', abi='x86_64_sysv',
                                         source='authored CLI test helper')))
     assert cli('add-signature', database, signature)['signature']['id'] == 'cli.fixture.fill'
-    catalog = cli('signatures', database)
+    delivery = cli('signatures', database)
+    assert delivery['format']=='fdisbull-output-ref-1' and not delivery['complete']
+    assert delivery['execution']['ok'] is True and delivery['retry_safe'] is False
+    retained=tmp_path/'catalog.json'
+    assert cli('output-export',delivery['artifact']['id'],retained)['complete']
+    catalog=json.loads(retained.read_text())['result']
     assert catalog['registered'][0]['id'] == 'cli.fixture.fill'
     assert len([s for s in catalog['builtin'] if not s.get('identity_only')]) == 4
     assert {'strlen','strcpy','memcpy'} <= {s['name'] for s in catalog['builtin'] if s['bits']==16}

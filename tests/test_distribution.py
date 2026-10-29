@@ -7,7 +7,7 @@ import zipfile
 import pytest
 
 
-REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md',
+REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scripts/check_agent_skill.py',
                        'player/pyproject.toml','player/fdisbull_player/__init__.py',
                        'player/fdisbull_player/__main__.py','player/fdisbull_player/player.py','player/fdisbull_player/runtime.py','player/fdisbull_player/live.py',
                        'src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py','tests/fixtures_z_scenes.py',
@@ -26,12 +26,20 @@ REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/runtime-navigation.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/proofs.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/workflows.md',
+                       'src/fdisbull/skills/fdisbull-investigate/references/recovery-research.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/udl-uil-udc.md')
 UDC_EVIDENCE_FILES = {
     'docs/evidence/udc-2026-10-29/dino.json',
     'docs/evidence/udc-2026-10-29/zork.json',
     'docs/evidence/udc-2026-10-29/synthetic.json',
 }
+OUTPUT_EVIDENCE_FILES = {
+    'docs/evidence/output-024/amplification.json',
+    'docs/evidence/output-024/dinopark-native.json',
+    'docs/evidence/output-024/dinopark-output.json',
+    'docs/evidence/output-024/tests.json',
+}
+REQUIRED_SOURCE_FILES += tuple(sorted(OUTPUT_EVIDENCE_FILES))
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):
@@ -85,7 +93,7 @@ def test_distribution_check_requires_agent_onboarding_resources(tmp_path,require
         check(archive)
 
 
-def test_release_allowlists_include_only_the_three_public_udc_receipts():
+def test_release_allowlists_include_only_the_public_udc_and_output_receipts():
     root = Path(__file__).resolve().parents[1]
     build = runpy.run_path(str(root/'scripts/build_release.py'))
     selected = {path.relative_to(root).as_posix() for path in build['release_files'](root)}
@@ -96,3 +104,8 @@ def test_release_allowlists_include_only_the_three_public_udc_receipts():
                          if line.startswith('include docs/evidence/udc-2026-10-29/')}
     assert manifest_receipts == UDC_EVIDENCE_FILES
     assert all((root/path).is_file() for path in UDC_EVIDENCE_FILES)
+    assert {path for path in selected if path.startswith('docs/evidence/output-024/')} == OUTPUT_EVIDENCE_FILES
+    output_receipts = {line.removeprefix('include ') for line in manifest_lines
+                       if line.startswith('include docs/evidence/output-024/')}
+    assert output_receipts == OUTPUT_EVIDENCE_FILES
+    assert all((root/path).is_file() for path in OUTPUT_EVIDENCE_FILES)

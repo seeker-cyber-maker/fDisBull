@@ -5,6 +5,7 @@ from pathlib import Path
 import sqlite3
 import sys
 from . import __version__
+from .output_limits import OutputPolicy, current_output_policy, output_policy_context, validate_request_id
 
 AGENT_SKILL_GUIDES = {
     'SKILL.md': 'Start here: investigation technique, cost/reward/confidence and evidence boundaries',
@@ -14,10 +15,15 @@ AGENT_SKILL_GUIDES = {
     'references/proofs.md': 'Build explicit bounded Z3 models and report their assumptions and scope',
     'references/workflows.md': 'Choose static analysis, native debugging, scene or text-player entry points',
     'references/udl-uil-udc.md': 'Qualify source blocks, shared UDL/UIL primitives and original-backed DOS compilation',
+    'references/recovery-research.md': 'Use edition-qualified research and guide leads to recover and check scene behavior',
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
 
 METHODS = {
+    'output-info':'Inspect an immutable private output artifact; artifact',
+    'output-read':'Read a bounded base64 byte range without executing the original operation; artifact,[offset,length]',
+    'output-select':'Read a complete small JSON Pointer selection or an explicit incomplete descriptor; artifact,[pointer,max_bytes]',
+    'output-export':'Export retained JSON to a new private file outside Git; artifact,output',
     'debug-save-spatial-map':'Save an immutable source-bound room map; name,document,[parent,version,author]',
     'debug-spatial-map-info':'Read a pinned room-map revision; revision,[version]',
     'debug-spatial-check':'Check actor footprint against known safe masks; revision,point,[conditions,version]',
@@ -207,6 +213,32 @@ def invoke(method, params, debugger=None):
     if not isinstance(params,dict):
         raise ValueError("params must be an object")
     p = dict(params)
+    if method in ('output-info','output-read','output-select','output-export'):
+        policy=current_output_policy()
+        artifact=p.pop('artifact')
+        store=policy.store()
+        if method=='output-info':
+            if p:raise ValueError('output-info accepts only artifact')
+            return store.info(artifact)
+        if method=='output-read':
+            offset=p.pop('offset',0);length=p.pop('length',1024)
+            if p:raise ValueError('unknown output-read parameter')
+            if type(length) is not int or length<1 or ((length+2)//3)*4+2048>policy.max_inline_bytes:
+                raise ValueError('requested range exceeds the inline output budget')
+            return store.read(artifact,offset=offset,length=length)
+        if method=='output-select':
+            pointer=p.pop('pointer','');maximum=p.pop('max_bytes',16384)
+            if p:raise ValueError('unknown output-select parameter')
+            if not isinstance(pointer,str) or len(json.dumps(pointer,ensure_ascii=True))>policy.max_inline_bytes-2048:
+                raise ValueError('pointer exceeds the inline output budget')
+            result=store.select(artifact,pointer=pointer,max_bytes=maximum)
+            if len(json.dumps(result,ensure_ascii=True,separators=(',',':')).encode())+1024>policy.max_inline_bytes:
+                result={k:v for k,v in result.items() if k not in ('value','selected_bytes')}
+                result.update(complete=False,reason='selection_too_large')
+            return result
+        output=p.pop('output')
+        if p:raise ValueError('unknown output-export parameter')
+        return store.export(artifact,output)
     if method=='agent-skill':
         reference=p.pop('reference',None)
         index=p.pop('index',False)
@@ -375,17 +407,21 @@ def public_addresses(value, field=None):
 
 
 def respond(request, default_project=None, debugger=None):
-    request_id = request.get("id") if isinstance(request,dict) else None
+    request_id = None
+    policy = None
     try:
+        policy=current_output_policy()
         if not isinstance(request,dict) or not isinstance(request.get("method"),str):
             raise ValueError("request must be an object with method and optional params/id")
+        request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','agi-logic') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','agi-logic','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
-        return {"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
+        value={"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
     except (ValueError,TypeError,KeyError,OSError,sqlite3.Error,OverflowError,AttributeError,RecursionError) as e:
-        return {"id":request_id,"ok":False,"error":{"type":type(e).__name__,"message":str(e)}}
+        value={"id":request_id,"ok":False,"error":{"type":type(e).__name__,"message":str(e)}}
+    return (policy or OutputPolicy()).bound(value)
 
 def load_request(value):
     def invalid_constant(value):
@@ -393,7 +429,14 @@ def load_request(value):
     return json.loads(value,parse_constant=invalid_constant)
 
 def emit(value):
-    print(json.dumps(value,ensure_ascii=True,separators=(",",":")),flush=True)
+    line=current_output_policy().render(value)+'\n'
+    binary=getattr(sys.stdout,'buffer',None)
+    if binary is not None:
+        # Keep the promised wire budget even if the text stream translates LF.
+        sys.stdout.flush()
+        binary.write(line.encode('ascii'));binary.flush()
+    else:
+        sys.stdout.write(line);sys.stdout.flush()
 
 def serve(default_project=None, debug_launch=None):
     from .debugger import DebugWorkspace
@@ -423,7 +466,16 @@ def serve(default_project=None, debug_launch=None):
 def parser():
     root = argparse.ArgumentParser(prog="fdisbull",description="Agent-first disassembly with SQLite persistence and headless image export")
     root.add_argument("--version",action="version",version=__version__)
+    root.add_argument('--max-output-bytes',type=int,help='Core JSON reply budget including newline (4096..1048576; default 65536)')
+    root.add_argument('--output-artifact-dir',help='Private output-artifact directory outside Git')
     sub = root.add_subparsers(dest="command",required=True)
+    for name in ('output-info','output-read','output-select','output-export'):
+        c=sub.add_parser(name,help=METHODS[name]);c.add_argument('artifact')
+        if name=='output-read':
+            c.add_argument('--offset',type=int,default=0);c.add_argument('--length',type=int,default=1024)
+        elif name=='output-select':
+            c.add_argument('pointer',nargs='?',default='');c.add_argument('--max-bytes',type=int,default=16384)
+        elif name=='output-export':c.add_argument('output')
     c=sub.add_parser('text-host',help='Serve one local text player over a qualified original-game projection')
     c.add_argument('configuration',help='Private JSON configuration; game, state and project paths remain local')
     c.add_argument('--fair-play',action='store_true',help='Disable assisted within-room teleports and room jumps for this host')
@@ -817,6 +869,17 @@ def _language_command(command,args):
 
 def main(argv=None):
     args = vars(parser().parse_args(argv))
+    try:
+        policy=OutputPolicy.from_environment(max_inline_bytes=args.pop('max_output_bytes'),artifact_dir=args.pop('output_artifact_dir'))
+    except ValueError as error:
+        print(json.dumps({'complete':False,'status':'refused','error':str(error)},separators=(',',':')),flush=True)
+        return 1
+    with output_policy_context(policy):
+        code=_dispatch(args)
+        return 2 if code==0 and policy.delivery_failed else code
+
+
+def _dispatch(args):
     command = args.pop("command")
     if command.startswith(('udc-','udl-')):return _udc_command(command,args)
     if command in ('story-info','zork','zork-recover','il-check','il-run','il-store','il-info'):
@@ -851,5 +914,8 @@ def main(argv=None):
         request = {"method":"help" if command=="methods" else command,"params":{k:v for k,v in args.items() if v is not None}}
     result = respond(request)
     emit(result)
-    if command=='doctor' and result['ok'] and result['result']['status']!='passed':return 1
+    if command=='doctor' and result['ok']:
+        body=result['result']
+        status=body['execution']['status'] if body.get('format')=='fdisbull-output-ref-1' else body['status']
+        if status!='passed':return 1
     return 0 if result["ok"] else 1

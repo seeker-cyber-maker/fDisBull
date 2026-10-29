@@ -24,6 +24,10 @@ include docs/evidence/zork-2026-10-29/verification.json
 include docs/evidence/udc-2026-10-29/dino.json
 include docs/evidence/udc-2026-10-29/zork.json
 include docs/evidence/udc-2026-10-29/synthetic.json
+include docs/evidence/output-024/amplification.json
+include docs/evidence/output-024/dinopark-native.json
+include docs/evidence/output-024/dinopark-output.json
+include docs/evidence/output-024/tests.json
 recursive-include scripts *.py
 prune examples
 prune history
