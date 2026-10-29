@@ -1,8 +1,9 @@
 # DinoPark scenes through the original-backed UDC
 
-Development integration, 29 October 2026. This connects the existing DinoPark
-native scenes to the Z player from PR #18. It requires the separate v0.23
-original-backed DOS UDC APIs; published 0.22.0 does not supply them. The later
+Integration candidate on v0.23.0, 29 October 2026. This connects the existing
+DinoPark native scenes to the Z player from PR #18. The v0.23.0 tag supplies
+the required original-backed DOS UDC APIs; the Z additions come from these PRs.
+The later
 [reliability follow-up](VERIFICATION-DINOPARK-Z-RELIABILITY-2026-10-29.md)
 uses the committed 0.23 compiler source. See also the
 [0.23 integration review and proposed 0.24 priorities](Z_PLAYER_INTEGRATION_0.23_0.24.md).
@@ -48,7 +49,7 @@ of hidden hints for the player.
 
 ## Run Z
 
-Use a Python environment containing the v0.23 UDC candidate, this integration,
+Use a Python environment containing the v0.23 core, this integration,
 the standalone player and normal fDisBull dependencies. Select the genuine
 patched DOSBox-X backend explicitly. From a combined source checkout:
 

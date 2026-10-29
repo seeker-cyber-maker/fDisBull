@@ -1,0 +1,27 @@
+{
+  "format": "rfc-0001-fixtures-1",
+  "scope": "Authored synthetic commit operation, not a game reconstruction or a complete compiler",
+  "keys": ["cash", "working", "stock", "pending", "expense"],
+  "ordered_effects": ["stock", "expense", "cash"],
+  "cases": [
+    {"id": "prepared", "state": ["4507", "4007", "18", "38", "500"], "ready": true,
+     "status": "complete", "after": ["4007", "4007", "38", "38", "1000"],
+     "checkpoints": [["4507", "4007", "38", "38", "500"], ["4507", "4007", "38", "38", "1000"], ["4007", "4007", "38", "38", "1000"]]},
+    {"id": "expense-wrap", "state": ["1000", "500", "0", "20", "4294967200"], "ready": true,
+     "status": "complete", "after": ["500", "500", "20", "20", "404"],
+     "checkpoints": [["1000", "500", "20", "20", "4294967200"], ["1000", "500", "20", "20", "404"], ["500", "500", "20", "20", "404"]]},
+    {"id": "missing-prepared-order", "state": ["4507", "4007", "18", "38", "500"], "ready": false,
+     "status": "refused", "after": ["4507", "4007", "18", "38", "500"], "checkpoints": []},
+    {"id": "missing-reservation", "state": ["4507", "4507", "18", "38", "500"], "ready": true,
+     "status": "refused", "after": ["4507", "4507", "18", "38", "500"], "checkpoints": []},
+    {"id": "wrong-quantity", "state": ["4507", "4007", "18", "39", "500"], "ready": true,
+     "status": "refused", "after": ["4507", "4007", "18", "39", "500"], "checkpoints": []}
+  ],
+  "malformed": [
+    {"state": ["4294967296", "0", "0", "20", "0"], "ready": true},
+    {"state": ["-1", "0", "0", "20", "0"], "ready": true},
+    {"state": ["01", "0", "0", "20", "0"], "ready": true},
+    {"state": ["500", "0", "0", "20", "0"], "ready": 1},
+    {"state": ["500", "0", "0", "20", "0"], "ready": true, "execute_host": "not permitted"}
+  ]
+}

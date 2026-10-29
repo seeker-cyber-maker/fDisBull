@@ -36,15 +36,19 @@ an expansion of fDisBull's ownership. UIL amendments continue through the
 
 ## Layer contracts
 
+Terminology clarification: [RFC 0001](uil-rfcs/0001-shared-intents-and-compiler-definitions.md)
+names the directions **original code → UDL mapping → UIL → UDC → code**.
+The shared block representation and existing v1 role strings remain unchanged.
+
 | Layer | Goal and input | Output and boundary |
 | --- | --- | --- |
 | Artifact and platform adapter | Identify source containers, resources, load context and platform; preserve original identities. | Versioned artifact inventory, address spaces and platform services, with evidence and unresolved mappings. |
 | Machine/VM decoding and execution evidence | Decode source-specific instructions or guest bytecode, and collect bounded execution, state and I/O observations where available. | Instruction facts, control-flow candidates, traces and stops, all tied to addresses and source identity. A decoder does not execute a guest or establish its semantics. |
 | C/C++-like structural reduction | Reduce instruction-level detail into understandable operations, data flow, control structures and candidate routines. | An evidence-linked analysis **view**, including unresolved edges and alternatives. It need not be compilable C/C++, and decoded bytecode need not detour through literal C/C++. |
 | Z: Zork-like behavioral layer | Organize reduced operations and direct guest evidence into scenes, entities, state, actions and processes: what happens, when and under which conditions. | Candidate behavioral model with guards, effects, timing and evidence, supporting a playable text-adventure projection as well as semantic export. A scene here is a semantic context, distinct from an existing screenshot-based debugger scene. |
-| UDL: user-defined input role | Represent authored or recovered behavior as simple, typed primitive blocks, retaining source evidence and unresolved interpretations. | The same block representation as UIL, with the `udl` role identifying its use as input. Recognition and compiler-definition extensions are separate. |
-| UIL: universal interaction output role | Carry reconstructed behavior forward in those same primitive blocks, with the `uil` role identifying output. | A semantic source whose finished implementation need not depend on the original runtime or source recognition. Unsupported required semantics must be refused, not guessed. |
-| Target definitions and code libraries | Bind each supported UIL construct to target-specific implementations and declared runtime services. | A compiler and libraries can produce, for example, Rust, Swift, JavaScript or Python, potentially hosted in Godot or an iOS application. Capability gaps and runtime dependencies are explicit. |
+| UDL: User-Defined Language mappings | Map original code into UIL's typed primitive blocks, retaining source evidence and unresolved interpretations. | UIL behavior and source correspondences in the same shared block vocabulary; existing `udl` role metadata is retained for compatibility. |
+| UIL: Universal Interaction Language | Carry authored or recovered behavior in those shared primitive blocks. | The semantic representation consumed by a UDC; unsupported required semantics must be refused, not guessed. |
+| UDC: User-Defined Compiler and code libraries | Read UIL and bind each supported construct to target-specific implementations and declared runtime services. | Original-backed pass-through or generated Rust, Swift, JavaScript, Python or binary code. Capability gaps and runtime dependencies remain explicit; a finished reconstruction need not depend on the original runtime or source recognition. |
 | Agent access and optional presentation | Expose the same authoritative simulation through semantic operations; project its state visually when desired. | Agent interface and optional renderer over one simulation, with declared observation limits and reproducible event ordering. |
 
 The arrows describe contracts, not a claim that all recovery proceeds linearly.

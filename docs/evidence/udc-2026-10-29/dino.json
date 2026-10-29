@@ -1,0 +1,79 @@
+{
+  "format": "fdisbull-udc-native-evidence-1",
+  "source_version": "0.23.0",
+  "game": "dino",
+  "source_hashes": {
+    "udc.py": "bd43d42d598192f54a7d7c4fe69f22469e089408a47ff75f83bf2213c3f81c6c",
+    "udl_blocks.py": "989a114fa3fb1a64878963200744643b55ae511d83d6545cdd301a9d7ca73c8d",
+    "verify_native.py": "0879a979ece42faa4c50a5229d1cc472e92abcaaa88202a0fb887e002509a2ae",
+    "synthetic_game.asm": "f804803ba4275487cc140f49e6501bdc82c73ab54b6aa12c26f5d3abb537dfd0"
+  },
+  "definition_sha256": "0f1a8db7412df5dbf29e95e94db342716dfc9596aa657ecd548d0d20e805f629",
+  "qualification": {
+    "byte_identity": true,
+    "semantic_blocks": 0,
+    "status": "original_bytes_only",
+    "proofs": {}
+  },
+  "compiled_artifact_count": 183,
+  "native": {
+    "format": "fdisbull-udc-native-dinopark-1",
+    "source_exe_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+    "backend_sha256": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277",
+    "input_files": 183,
+    "scope": "Independent fresh NEW GAME office-bank-return; observed selector and stored frames only",
+    "selector_equal": {
+      "office": true,
+      "bank": true,
+      "returned": true
+    },
+    "visual_samples": {
+      "count": 48,
+      "same_scene_matches": {
+        "office": 48,
+        "bank": 48,
+        "returned": 48
+      },
+      "office_vs_bank_differing": 48,
+      "office_vs_return_matches": 48
+    },
+    "frames": {
+      "original": {
+        "office": {
+          "sha256": "d0baa55ae17a5d79779b5a60526f6a9f96d361dcd27a9230fd1f0aea4c7b1ad8",
+          "selector_hex": "ffff"
+        },
+        "bank": {
+          "sha256": "185cecc21e04c5ce7b64e7c89ea9a9609f41fc08d4349700302e7518da42fc05",
+          "selector_hex": "ffff"
+        },
+        "returned": {
+          "sha256": "afb4d723c605d21c498efa2b57eb30132148f00a4b57ec9c56ccea3fe7086c3a",
+          "selector_hex": "ffff"
+        }
+      },
+      "emitted": {
+        "office": {
+          "sha256": "d0baa55ae17a5d79779b5a60526f6a9f96d361dcd27a9230fd1f0aea4c7b1ad8",
+          "selector_hex": "ffff"
+        },
+        "bank": {
+          "sha256": "239bc4d8e8cc3dc629903bc2c828be72513554cc89173fb58884b19d4405ac94",
+          "selector_hex": "ffff"
+        },
+        "returned": {
+          "sha256": "afb4d723c605d21c498efa2b57eb30132148f00a4b57ec9c56ccea3fe7086c3a",
+          "selector_hex": "ffff"
+        }
+      }
+    },
+    "trace_complete": {
+      "original": true,
+      "emitted": true
+    },
+    "inputs_unchanged": true,
+    "stored_screenshot_reopen": true,
+    "elapsed_seconds": 10.449
+  },
+  "scope_note": "Byte-preserving capture and emission with bounded native observations; opaque game blocks are not recovered semantics. No game assets, states, captures or project databases included."
+}

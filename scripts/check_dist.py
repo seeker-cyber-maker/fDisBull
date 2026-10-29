@@ -21,7 +21,9 @@ REQUIRED_KNOWLEDGE_RESOURCES = {"data/dos-runtime-signatures.json", "data/MICROS
 REQUIRED_KNOWLEDGE_RESOURCES |= {"skills/fdisbull-investigate/SKILL.md", "skills/fdisbull-investigate/references/scenes.md",
                                  "skills/fdisbull-investigate/references/methodology.md",
                                  "skills/fdisbull-investigate/references/runtime-navigation.md",
-                                 "skills/fdisbull-investigate/references/proofs.md"}
+                                 "skills/fdisbull-investigate/references/proofs.md",
+                                 "skills/fdisbull-investigate/references/workflows.md",
+                                 "skills/fdisbull-investigate/references/udl-uil-udc.md"}
 
 
 def archive_names(path: Path) -> list[str]:
@@ -84,6 +86,7 @@ def check_archive(path: Path) -> int:
         required = REQUIRED_TEST_HELPERS | REQUIRED_PLAYER_SOURCE | {"src/fdisbull/__init__.py", "pyproject.toml", "tests/wine_gui_fixture.c"}
         required |= {"src/fdisbull/" + name for name in REQUIRED_PE_RESOURCES}
         required |= {"src/fdisbull/" + name for name in REQUIRED_KNOWLEDGE_RESOURCES}
+        required |= {"AGENTS.md", "CLAUDE.md", "docs/AGENT_QUICKSTART.md"}
         missing = required - relative
         if missing:
             raise ValueError(f"Source archive is missing required files: {sorted(missing)}")

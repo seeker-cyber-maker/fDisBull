@@ -1,5 +1,12 @@
 # Z alongside the 0.23 compiler and proposed 0.24 work
 
+Later integration follow-up: the v0.23.0 tag now resolves to the reviewed
+commit. Both Z branches have been updated against it, and the README conflict
+has been resolved while retaining the new human capability chooser. See
+[merge-readiness verification](VERIFICATION-Z-V023-MERGE-READINESS.md) for the
+installed-player retest and current PR targeting. The review below preserves
+the source/publication observations made before that follow-up.
+
 Source review, 29 October 2026. The inspected compiler checkout is clean at
 `ed89abca061964385b176537bc9fd275dd02afa5`, also observed on remote main.
 Its version is 0.23.0. At the review's initial ref check, no `v0.23.0` tag was

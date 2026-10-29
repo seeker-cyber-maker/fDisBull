@@ -1,14 +1,15 @@
 # Z: a small scene consumer over shared IL
 
-Development candidate, 29 October 2026. **Z** is shorthand for the Zork-like
+Integration candidate on v0.23.0, 29 October 2026. **Z** is shorthand for the Zork-like
 text testing interface, not another rule language. This candidate connects
 existing shared IL to the standalone player without starting a debugger.
-It is not part of the published 0.22.0 installation.
+The published v0.23.0 tag predates this addition.
 
 UDL maps original code into UIL; a UDC realizes UIL as executable code. This
 adapter consumes already available `fdisbull-il-1` operations and public scene
-metadata. It uses the existing pure IL evaluator as its backing. Original-code
-UDC pass-through and generic DOS generation remain separate work.
+metadata. It uses the existing pure IL evaluator as its backing. Version 0.23
+supplies an original-backed DOS UDC separately; a native scene provider connects
+that output to the same player. Generic DOS generation remains separate work.
 
 ## Play a scene
 
