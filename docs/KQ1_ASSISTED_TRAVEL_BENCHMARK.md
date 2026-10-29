@@ -90,3 +90,24 @@ No implementation, new automated native-suite result for this documentation PR,
 private game asset, screenshot, save, project database or raw game code is
 included in this handoff. The benchmark observations above came from native
 game runs.
+
+## Continuation usability notes
+
+Further play reached the gold egg and gold walnut through the original parser
+and inventory/score behavior. No confirmed fDisBull defect was found. Two
+controller lessons may help long modal-heavy routes; related native coverage
+already exists in the keyboard and checkpoint tests.
+
+- A `guest_time` result means the requested guest-time slice completed; it does
+  not guarantee queued input releases have drained. Before queuing another
+  operation, inspect keyboard state and wait in bounded guest slices until
+  `pending_events` and `owned_keys` are both zero. Preserve the live session when
+  an action is rejected so the queue can be reconciled.
+- Loading a checkpoint invalidates runtime bindings and the current framebuffer
+  until a completed frame is available. Rebind observations for the restored
+  session and request a bounded frame-producing guest slice before capturing or
+  asserting a scene. Include that wait in the operation's guest-time budget.
+
+These are controller workflow notes, not new claims about backend behavior; the
+existing tests explicitly cover keyboard draining and framebuffer invalidation
+after restore.
