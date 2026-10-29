@@ -114,6 +114,25 @@ explicitly. `--fair-play` locks the host to physical movement and is a voluntary
 policy, not an anti-tamper boundary. See `docs/TEXT_PROJECTION.md` and
 `docs/SPATIAL_MAPS.md`.
 
+### Test shared interaction scenes with Z
+
+Install the core tool and the separate player from the integration candidate.
+From a checkout, the authored key-and-gate example runs as follows:
+
+```sh
+PYTHONPATH=src:player python -m fdisbull_player \
+  --backend-command "python -m fdisbull.il_scenes examples/z/key-and-gate.json" \
+  --backend-timeout 3
+```
+
+Try `look`, `take key`, `use key on gate`, `n` and `look`. With installed
+packages, give the service a private scene document you supply; the example
+directory is checkout-only. The player can be installed without the core;
+the selected scene service needs its own matching core environment. Commands
+are passed without a shell. Public observations stay partial and omit private
+programs and evidence. Use `--quiet` for bounded external-driver runs with
+full results kept in the private transcript. See [Z scenes](Z_SCENES.md).
+
 ### Inspect interpreted game data
 
 For one AGI 2.917 logic resource in an uncompressed version-2 LOGDIR/VOL set:

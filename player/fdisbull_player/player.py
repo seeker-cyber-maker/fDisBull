@@ -1,6 +1,12 @@
 """A deterministic player which exposes only the declared public projection."""
 import json
+import math
 import re
+
+_DIRECTIONS = dict(n='north', ne='northeast', e='east', se='southeast',
+                   s='south', sw='southwest', w='west', nw='northwest',
+                   u='up', d='down', inside='in', outside='out')
+_DIRECTIONS.update({name: name for name in list(_DIRECTIONS.values())})
 
 
 def _text(value):
@@ -100,7 +106,9 @@ class Player:
                 return "No inventory items are recorded in this partial view."
             return "Carrying: " + (", ".join(o["label"] for o in obs["inventory"]) or "nothing") + "."
         if lower in ("help", "?"):
-            return "Passive reads: look, examine <object>, inventory, help. Actions: <verb> <object>, go <direction>, use <item> on <target>. Clarify by number."
+            return "Passive reads: look, examine <object>, inventory, help. Actions: <verb> <object>, go <direction> (or n/e/s/w/u/d), use <item> on <target>. Clarify by number."
+        if lower in _DIRECTIONS:
+            return self._resolve(obs, "go", _DIRECTIONS[lower], None)
         match = re.fullmatch(r"(?:examine|x)\s+(.+)", command, re.I)
         if match:
             found = self._lookup(obs, match.group(1))
@@ -195,3 +203,33 @@ class JsonLineBackend:
 
     def load(self, checkpoint="live"):
         return self._request({"op": "load", "checkpoint": checkpoint})
+
+
+class ProcessBackend(JsonLineBackend):
+    """Caller-selected local content service, with a whole-request deadline.
+
+    A failed exchange stops this connection; an uncertain action is never retried.
+    The same player can consume an IL scene or any compatible backend protocol.
+    """
+    def __init__(self, argv, timeout=10):
+        if (not isinstance(timeout, (int, float)) or isinstance(timeout, bool)
+                or not math.isfinite(timeout) or not 0 < timeout <= 60):
+            raise ValueError('Invalid backend timeout')
+        from .live import AgentProcess
+        self.worker = AgentProcess(argv)
+        self.timeout, self.failed = timeout, False
+
+    def _request(self, payload):
+        if self.failed:
+            raise EOFError('Backend stopped after a transport failure')
+        try:
+            return self.worker.request(payload, self.timeout)
+        except (OSError, ValueError, EOFError, RecursionError) as exc:
+            self.failed = True
+            self.close()
+            if isinstance(exc, TimeoutError):
+                raise TimeoutError('Backend request timed out; action outcome may be unknown') from exc
+            raise ValueError('Backend transport failed; action outcome may be unknown') from exc
+
+    def close(self):
+        self.worker.close()

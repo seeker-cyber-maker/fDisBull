@@ -24,6 +24,7 @@ play an authored text projection without opening the debugger yourself.
 | Compare a hypothesis, a checkpoint or a temporary patch | [Layers, states and experiments](#layers-states-and-experiments) |
 | Give an agent reliable scene context and navigation | [Scenes, maps and interaction policies](#scenes-maps-and-interaction-policies) |
 | Play a supported projection or a user-supplied Zork story | [Text play and interpreter inspection](#text-play-and-interpreter-inspection) |
+| Try shared interaction scenes through Z | [Z scene play](docs/Z_SCENES.md) |
 | Test a small recovered block against its original DOS backing | [The bounded UDC pipeline](#the-bounded-udc-pipeline) |
 
 Agents can start with [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) and the
@@ -125,6 +126,13 @@ The exact conditions and evidence for these choices are in the
 [spatial guide](docs/SPATIAL_MAPS.md) and [assisted travel guide](docs/ASSISTED_TRAVEL.md).
 
 ## Text play and interpreter inspection
+
+Z gives agents a small text interface for exercising shared interaction scenes:
+look around, pick up an object, try a guarded action and observe the result.
+The same player consumes a local scene service while the shared IL supplies the
+state and effects. See [Z scene play](docs/Z_SCENES.md) for a working authored
+example, model-driver support and current limits. This is an integration
+candidate on v0.23.0; the published v0.23.0 tag predates this addition.
 
 The separately installable [text player](docs/TEXT_PLAYER.md) can consume an
 authored projection or connect to a compatible local backend. Its live mode

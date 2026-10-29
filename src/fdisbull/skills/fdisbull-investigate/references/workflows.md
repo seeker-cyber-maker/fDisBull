@@ -74,6 +74,16 @@ backend's durability. Optional external agents are trusted processes, not
 sandboxed programs. Read `docs/TEXT_PLAYER.md` and `docs/PLAYER_LIVE.md` before
 choosing this surface.
 
+The integration candidate also supplies Z scene consumption through
+`--backend-command`: select a trusted local content service and a finite
+`--backend-timeout`. `python -m fdisbull.il_scenes /private/scene.json` consumes
+shared IL without starting a debugger. The player supports public object verbs,
+compass aliases, partial observations and opaque freshness tokens. A failed
+exchange stops the connection; inspect unknown effects before any retry.
+`--quiet` keeps external-driver transcripts private. Checkout examples are not
+installed runtime resources; provide your own authored or qualified scene input.
+Read `docs/Z_SCENES.md` for the envelope and exact limits.
+
 The debugger-backed `text-host` exposes a deliberately qualified public
 projection over a live session. It needs a private configuration, project,
 backend, game directory, resource root and explicit runtime witnesses. It is
