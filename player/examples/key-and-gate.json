@@ -1,0 +1,190 @@
+{
+  "format": "fdisbull-text-slice-1",
+  "state": {
+    "unlocked": false,
+    "private": false
+  },
+  "initial_context": "yard",
+  "contexts": {
+    "yard": {
+      "context": {
+        "id": "yard",
+        "title": "Yard",
+        "description": "A yard."
+      },
+      "objects": [
+        {
+          "id": "key",
+          "label": "brass key",
+          "aliases": [
+            "key"
+          ],
+          "description": "brass key description",
+          "verbs": [
+            "take",
+            "drop"
+          ]
+        },
+        {
+          "id": "gate",
+          "label": "gate",
+          "aliases": [],
+          "description": "gate description",
+          "verbs": [
+            "use"
+          ]
+        },
+        {
+          "id": "east",
+          "label": "east",
+          "aliases": [],
+          "description": "east description",
+          "verbs": [
+            "go"
+          ]
+        }
+      ]
+    },
+    "hall": {
+      "context": {
+        "id": "hall",
+        "title": "Hall",
+        "description": "A hall."
+      },
+      "objects": [
+        {
+          "id": "west",
+          "label": "west",
+          "aliases": [],
+          "description": "west description",
+          "verbs": [
+            "go"
+          ]
+        }
+      ]
+    }
+  },
+  "inventory": [],
+  "actions": [
+    {
+      "context": "yard",
+      "verb": "take",
+      "target": "key",
+      "item": null,
+      "steps": [
+        {
+          "effects": [
+            {
+              "op": "carry",
+              "id": "key"
+            }
+          ],
+          "ticks": 1
+        }
+      ],
+      "message": "Taken."
+    },
+    {
+      "context": "yard",
+      "verb": "use",
+      "target": "gate",
+      "item": "key",
+      "guards": [
+        {
+          "carrying": "key"
+        }
+      ],
+      "rejected_message": "You must carry the key.",
+      "steps": [
+        {
+          "effects": [
+            {
+              "op": "set",
+              "key": "unlocked",
+              "value": true
+            }
+          ],
+          "ticks": 1
+        }
+      ],
+      "message": "The gate unlocks."
+    },
+    {
+      "context": "yard",
+      "verb": "go",
+      "target": "east",
+      "item": null,
+      "guards": [
+        {
+          "key": "unlocked",
+          "equals": true
+        }
+      ],
+      "rejected_message": "The gate is locked.",
+      "steps": [
+        {
+          "effects": [
+            {
+              "op": "context",
+              "id": "hall"
+            }
+          ],
+          "ticks": 1
+        }
+      ],
+      "message": "You enter the hall."
+    },
+    {
+      "context": "hall",
+      "verb": "drop",
+      "target": "key",
+      "item": null,
+      "steps": [
+        {
+          "effects": [
+            {
+              "op": "drop",
+              "id": "key"
+            }
+          ]
+        }
+      ],
+      "message": "Dropped."
+    },
+    {
+      "context": "hall",
+      "verb": "take",
+      "target": "key",
+      "item": null,
+      "steps": [
+        {
+          "effects": [
+            {
+              "op": "carry",
+              "id": "key"
+            }
+          ]
+        }
+      ],
+      "message": "Taken."
+    },
+    {
+      "context": "hall",
+      "verb": "go",
+      "target": "west",
+      "item": null,
+      "steps": [
+        {
+          "effects": [
+            {
+              "op": "context",
+              "id": "yard"
+            }
+          ]
+        }
+      ],
+      "message": "You return to the yard."
+    }
+  ],
+  "scheduled": []
+}

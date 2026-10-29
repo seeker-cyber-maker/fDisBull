@@ -4,12 +4,15 @@
 from __future__ import annotations
 
 import argparse
+from email.parser import BytesParser
 from pathlib import Path, PurePosixPath
 import tarfile
 import zipfile
 
 EXCLUDED_DIRECTORIES = {"examples", "history", "experimental", "build", "dist", ".git", "__pycache__"}
 EXCLUDED_SUFFIXES = {".fdb", ".db", ".sqlite", ".sqlite3", ".sav", ".state", ".exe", ".com", ".dll", ".bin", ".dat", ".so", ".dylib", ".o", ".pyc"}
+PLAYER_MODULES = {"__init__.py", "__main__.py", "player.py", "runtime.py", "live.py"}
+REQUIRED_PLAYER_SOURCE = {"player/pyproject.toml"} | {"player/fdisbull_player/" + name for name in PLAYER_MODULES}
 REQUIRED_TEST_HELPERS = {"tests/fixtures_formats.py", "tests/fixtures_macho.py", "tests/ida_rpc_vectors.json", "tests/dosbox_zip_empty_write.cpp"}
 REQUIRED_PE_RESOURCES = {"wine_guest/agent.c", "wine_guest/init.sh", "wine_guest/broker.py", "wine_guest/selftest.c"}
 REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/broker.py", "ida_guest/SDK-LICENSE.txt", "ida_wire.py", "ida_remote.py", "ida_trace.py"}
@@ -50,22 +53,35 @@ def check_archive(path: Path) -> int:
             raise ValueError(f"Excluded binary/data file in {path.name}: {entry}")
     if path.suffix == ".whl":
         roots = {entry.parts[0] for entry in entries}
-        metadata = {name for name in roots if name.startswith("fdisbull-") and name.endswith(".dist-info")}
-        if len(metadata) != 1 or roots != {"fdisbull", *metadata}:
-            raise ValueError(f"Wheel contains files outside fdisbull and its metadata: {sorted(roots)}")
-        if "fdisbull/__init__.py" not in names:
-            raise ValueError("Wheel is missing fdisbull/__init__.py")
-        missing = {"fdisbull/" + name for name in REQUIRED_PE_RESOURCES} - set(names)
-        if missing:
-            raise ValueError(f"Wheel is missing PE backend sources: {sorted(missing)}")
-        missing={"fdisbull/"+name for name in REQUIRED_KNOWLEDGE_RESOURCES}-set(names)
-        if missing:raise ValueError(f"Wheel is missing DOS analysis resources: {sorted(missing)}")
+        player_metadata = {name for name in roots if name.startswith("fdisbull_player-") and name.endswith(".dist-info")}
+        core_metadata = {name for name in roots if name.startswith("fdisbull-") and name.endswith(".dist-info")}
+        if len(player_metadata) == 1 and roots == {"fdisbull_player", *player_metadata}:
+            metadata = next(iter(player_metadata))
+            expected = {"fdisbull_player/" + name for name in PLAYER_MODULES}
+            package_files = {name for name in names if name.startswith("fdisbull_player/")}
+            if package_files != expected:
+                raise ValueError(f"Player wheel has missing or unexpected modules: {sorted(expected ^ package_files)}")
+            with zipfile.ZipFile(path) as archive:
+                try: message = BytesParser().parsebytes(archive.read(metadata + "/METADATA"))
+                except KeyError: raise ValueError("Player wheel is missing METADATA") from None
+            if message.get("Name", "").lower().replace("_", "-") != "fdisbull-player":
+                raise ValueError("Player wheel distribution metadata has wrong Name")
+        elif len(core_metadata) == 1 and roots == {"fdisbull", *core_metadata}:
+            if "fdisbull/__init__.py" not in names:
+                raise ValueError("Wheel is missing fdisbull/__init__.py")
+            missing = {"fdisbull/" + name for name in REQUIRED_PE_RESOURCES} - set(names)
+            if missing:
+                raise ValueError(f"Wheel is missing PE backend sources: {sorted(missing)}")
+            missing={"fdisbull/"+name for name in REQUIRED_KNOWLEDGE_RESOURCES}-set(names)
+            if missing:raise ValueError(f"Wheel is missing DOS analysis resources: {sorted(missing)}")
+        else:
+            raise ValueError(f"Wheel contains unexpected package or metadata roots: {sorted(roots)}")
     else:
         roots = {entry.parts[0] for entry in entries}
         if len(roots) != 1 or not next(iter(roots)).startswith("fdisbull-"):
             raise ValueError(f"Unexpected source archive root: {sorted(roots)}")
         relative = {PurePosixPath(*entry.parts[1:]).as_posix() for entry in entries}
-        required = REQUIRED_TEST_HELPERS | {"src/fdisbull/__init__.py", "pyproject.toml", "tests/wine_gui_fixture.c"}
+        required = REQUIRED_TEST_HELPERS | REQUIRED_PLAYER_SOURCE | {"src/fdisbull/__init__.py", "pyproject.toml", "tests/wine_gui_fixture.c"}
         required |= {"src/fdisbull/" + name for name in REQUIRED_PE_RESOURCES}
         required |= {"src/fdisbull/" + name for name in REQUIRED_KNOWLEDGE_RESOURCES}
         missing = required - relative

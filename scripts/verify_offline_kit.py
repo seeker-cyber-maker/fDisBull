@@ -17,7 +17,12 @@ def verify(kit):
     kit=Path(kit).resolve()
     import fdisbull
     import z3
-    if importlib.metadata.version('fdisbull')!='0.20.0':raise ValueError('Wrong installed fDisBull')
+    manifest=json.loads((kit/'manifest.json').read_text())
+    expected=manifest['wheels']['fdisbull']['version']
+    if manifest['wheels']['fdisbull-player']['version'] != expected:raise ValueError('Kit package versions differ')
+    if importlib.metadata.version('fdisbull') != expected or importlib.metadata.version('fdisbull-player') != expected:raise ValueError('Wrong installed fDisBull or player')
+    import fdisbull_player
+    if 'site-packages' not in str(Path(fdisbull_player.__file__)):raise ValueError('Expected installed player, not source injection')
     if 'site-packages' not in str(Path(fdisbull.__file__)):raise ValueError('Expected installed package, not source injection')
     spec={'format':'fdisbull-proof-1','scope':'authored 8-bit offline installation acceptance','variables':{'x':8},'assumptions':[],
           'left':{'op':'add','args':[{'var':'x'},{'const':1,'width':8}]},'right':{'var':'x'}}
@@ -32,6 +37,22 @@ def verify(kit):
     struct.pack_into('<13H',header,2,*fields)
     with tempfile.TemporaryDirectory(prefix='fdisbull-offline-acceptance-') as temporary:
         root=Path(temporary);program=root/'KEY.EXE';program.write_bytes(header+code);project_path=root/'private.fdb'
+        # Genuine installed independent player: one model turn, no save command,
+        # then a fresh runtime automatically resumes the persisted effect.
+        from fdisbull_player import LiveSession, LocalRuntime
+        package={'format':'fdisbull-text-slice-1','state':{'count':0},
+                 'context':{'id':'room','title':'Authored room','description':'Offline acceptance fixture.'},
+                 'objects':[{'id':'lever','label':'lever','aliases':[],'description':'An authored lever.','verbs':['press']}],
+                 'actions':[{'verb':'press','target':'lever','item':None,
+                             'steps':[{'ticks':1,'effects':[{'op':'add','key':'count','value':1}]}],
+                             'message':'Lever pressed.'}]}
+        turn=LiveSession(LocalRuntime(package,root/'player-saves')).run_turn(['press lever'])
+        resumed=LocalRuntime(package,root/'player-saves')
+        second=LiveSession(resumed).run_turn(['look'])
+        if (turn.get('status')!='complete' or turn['checkpoint'].get('status')!='saved' or
+                second['restore'].get('status')!='restored' or second['checkpoint'].get('status')!='saved' or
+                resumed.state['count']!=1 or resumed.tick!=1):
+            raise ValueError('Installed player automatic turn save/resume failed')
         with Project.create(project_path,program) as project,project.debugger(kit/'bin/dosbox',root) as session:
             session.run(guest_ms=100,timeout_ms=5000,fast_forward=True)
             state=session.save_state('before.sav')
@@ -42,10 +63,11 @@ def verify(kit):
             if session.memory('1000:0100',length=1)['hex']!='00':raise ValueError('Native restore failed')
             session.keyboard.press('b');session.run(guest_ms=250,timeout_ms=5000,fast_forward=True)
             if session.memory('1000:0100',length=1)['hex']!='62':raise ValueError('Post-restore keyboard failed')
-            output={'package_version':importlib.metadata.version('fdisbull'),'solver_version':z3.get_version_string(),
+            output={'package_version':importlib.metadata.version('fdisbull'),'player_version':importlib.metadata.version('fdisbull-player'),'solver_version':z3.get_version_string(),
                     'python_version':platform.python_version(),'platform':platform.system(),'machine':platform.machine(),
                     'counterexample':counterexample['status'],'equivalence':equivalence['status'],
-                    'keyboard':True,'memory':True,'native_restore':True,'screenshot_sha256':screenshot['sha256'],
+                    'keyboard':True,'memory':True,'native_restore':True,'player_live_resume':True,
+                    'screenshot_sha256':screenshot['sha256'],
                     'backend_sha256':hashlib.sha256((kit/'bin/dosbox-x').read_bytes()).hexdigest()}
         with Project(project_path) as reopened:
             if not reopened.debug_artifacts()['artifacts']:raise ValueError('Artifacts did not survive restart')

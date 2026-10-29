@@ -1,5 +1,21 @@
 # Runtime navigation and observation reference
 
+The 0.21 development workflow supports a small qualified action subset while
+unrelated scene research remains incomplete. Pin a progressive workflow and
+resource inventory, then expose only grounded public objects through a text
+projection. The separate `fdisbull-player` consumes that projection; it does not
+need disassembly or investigator-only state. Use cheap observations for routine
+checks and retain diagnostic frames on a mismatch.
+
+Travel assistance is an explicit control policy. `assisted_travel` can place a
+qualified actor inside a room or at an observed portal followed by original
+transition input. It must not write the declared room field. Require destination
+position and readiness, not just a changed room byte. Report skipped traversal,
+different guest time and possible changed hazard exposure. Prioritize a reusable
+action when its expected benefit justifies qualification cost and confidence;
+do not recover every room before the first useful action. See the candidate's
+`PROGRESSIVE_SCENES.md`, `TEXT_PROJECTION.md` and `ASSISTED_TRAVEL.md` docs.
+
 Use this reference when an investigation must move an actor through a running
 program, repeatedly reach a state, or inspect scene pixels that the actor can
 occlude. It describes a capability ladder, not a promise that every backend or

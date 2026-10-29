@@ -7,6 +7,16 @@ import sys
 from . import __version__
 
 METHODS = {
+    'debug-save-workflow':'Save a resource-bound partial workflow; name,definition,resource_root,[parent,version,author]',
+    'debug-workflow-info':'Read an immutable workflow revision; workflow,[version]',
+    'debug-workflow-receipts':'Read persisted workflow attempts and outcomes; workflow,[version]',
+    'debug-save-text-projection':'Save a public projection over a pinned workflow; name,definition,[parent,version]',
+    'debug-text-projection-info':'Read a projection revision for authoring; name,[version]',
+    'debug-workflow-observe':'Inspect qualified coverage and fresh action conditions; run,workflow,resource_root,[action,research_context]',
+    'debug-workflow-act':'Dispatch a qualified scene action; run,workflow,action,resource_root,[timeout_ms]',
+    'debug-text-observe':'Read the public text view without guest execution; run,projection,resource_root',
+    'debug-text-act':'Dispatch a resolved public command; run,projection,request,resource_root',
+    'debug-assisted-travel':'Apply qualified travel assistance and observe the original engine; run,plan,[timeout_ms]',
     'proof-check':'Check a bounded explicit bitvector model and persist assumptions/result; spec,[version,timeout_ms,author,evidence]',
     'proofs':'List source/version-bound proof results; [version]',
     'proof-info':'Read and authenticate a persisted bounded proof; proof,[version]',
@@ -242,7 +252,8 @@ def invoke(method, params, debugger=None):
     if not project:
         raise ValueError("project path is required")
     scene_offline=('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations',
-                   'debug-scene-observation','debug-export-scenes','debug-import-scenes')
+                   'debug-scene-observation','debug-export-scenes','debug-import-scenes',
+                   'debug-save-workflow','debug-workflow-info','debug-workflow-receipts','debug-save-text-projection','debug-text-projection-info')
     macro_offline=('debug-define-macros','debug-macro-sets','debug-macro-info','debug-export-macros','debug-import-macros')
     if method in scene_offline+macro_offline:
         if 'definition_file' in p:
@@ -385,6 +396,8 @@ def parser():
     root = argparse.ArgumentParser(prog="fdisbull",description="Agent-first disassembly with SQLite persistence and headless image export")
     root.add_argument("--version",action="version",version=__version__)
     sub = root.add_subparsers(dest="command",required=True)
+    c=sub.add_parser('text-host',help='Serve one local text player over a qualified original-game projection')
+    c.add_argument('configuration',help='Private JSON configuration; game, state and project paths remain local')
     sub.add_parser('agent-skill',help=METHODS['agent-skill'])
     for name in ('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations',
                  'debug-scene-observation','debug-export-scenes','debug-import-scenes'):
@@ -609,6 +622,17 @@ def parser():
 def main(argv=None):
     args = vars(parser().parse_args(argv))
     command = args.pop("command")
+    if command == 'text-host':
+        from .text_host import host
+        try:
+            path=Path(args['configuration'])
+            if not path.is_file() or path.stat().st_size>1024*1024:raise ValueError('Expected a text host configuration at most 1 MiB')
+            configuration=json.loads(path.read_text())
+            emit(host(configuration,on_listen=lambda address:emit({'text_player_endpoint':address})))
+            return 0
+        except (ValueError,OSError) as error:
+            emit({'ok':False,'error':str(error)})
+            return 1
     if command == "serve":
         return serve(args["project"])
     if command == 'debug':

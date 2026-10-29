@@ -6,7 +6,9 @@ import zipfile
 import pytest
 
 
-REQUIRED_SOURCE_FILES=('src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py',
+REQUIRED_SOURCE_FILES=('player/pyproject.toml','player/fdisbull_player/__init__.py',
+                       'player/fdisbull_player/__main__.py','player/fdisbull_player/player.py','player/fdisbull_player/runtime.py','player/fdisbull_player/live.py',
+                       'src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py',
                        'tests/wine_gui_fixture.c','tests/dosbox_zip_empty_write.cpp','src/fdisbull/wine_guest/agent.c',
                        'src/fdisbull/wine_guest/init.sh','src/fdisbull/wine_guest/broker.py','src/fdisbull/wine_guest/selftest.c',
                        'tests/ida_rpc_vectors.json','src/fdisbull/ida_wire.py','src/fdisbull/ida_remote.py',

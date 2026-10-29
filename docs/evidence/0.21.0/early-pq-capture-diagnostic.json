@@ -1,0 +1,15 @@
+{
+  "qualification": "Diagnostic only: accepted an intermediate room change, not completed render or settled controls",
+  "development_version": "0.21.0.dev0",
+  "baseline_png_sha256": "f0962e7a4bef933d7c61e0aee3881169b3b9c1b00bae4c24d1f325779ae2debd",
+  "early_jump_png_sha256": "f0962e7a4bef933d7c61e0aee3881169b3b9c1b00bae4c24d1f325779ae2debd",
+  "byte_identical_pngs": true,
+  "early_memory_outcome": {
+    "x": 143,
+    "y": 150,
+    "direction": 0,
+    "room": 5
+  },
+  "control_direction": "unknown; absent from this original capture",
+  "correction": "Release verification declares landing ranges, checks both direction values, executes observed cleanup and requires a pinned destination scene."
+}

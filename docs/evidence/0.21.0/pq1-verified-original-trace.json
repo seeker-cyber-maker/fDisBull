@@ -1,0 +1,1317 @@
+{
+  "run": {
+    "run": "a37a8426379b48b8a714f45f708e52f3",
+    "outcome": "pause",
+    "timed_out": false,
+    "requested_guest_ms": null,
+    "guest_elapsed_ms": 0,
+    "host_elapsed_ms": 3.606,
+    "fast_forward": false,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 10553,
+      "session_id": "ses-1",
+      "state_revision": 560
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 560,
+      "stop_reason": {
+        "kind": "pause"
+      }
+    },
+    "hook_hits": [],
+    "stop": {
+      "format": "fdisbull-debug-stop-1",
+      "trigger": "pause",
+      "native_kind": "pause",
+      "causing_instruction": null,
+      "resume_pc": null,
+      "instruction_completed": null,
+      "registers_stage": "stopped; stage unknown",
+      "context": "dos-cpu"
+    }
+  },
+  "version": 1,
+  "mapping": {
+    "fdisbull_version": "0.21.0",
+    "source_sha256": "29ddd3f3b91d65b6eade156608d7915e3c8b7f47701cb226ff119b717f3e8bd7",
+    "version_sha256": "d03e353d6329297dd210c58d687b1b5e5af8ef0215551b43dcdcf708954d03d7",
+    "executable": "<tested-native-backend>",
+    "emulator_sha256": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277",
+    "runtime_profile": "real-normal-v1",
+    "game_dir": "<private-game-directory>",
+    "target": "FB29DDD3.EXE",
+    "source_filename": "AGI",
+    "target_aliased": true,
+    "static_load_segment": 4096,
+    "window_requested": false,
+    "runtime_load_segment": 2084,
+    "entry_registers": {
+      "cpu_mode": "real",
+      "flags": "0x00007202",
+      "general": {
+        "eax": "0x00000000",
+        "ebp": "0x0000091C",
+        "ebx": "0x00000000",
+        "ecx": "0x000000FF",
+        "edi": "0x00000080",
+        "edx": "0x00000814",
+        "esi": "0x000066B0",
+        "esp": "0x00000080"
+      },
+      "instruction_pointer": "0x000066B0",
+      "segments": {
+        "cs": "0x0824",
+        "ds": "0x0814",
+        "es": "0x0814",
+        "fs": "0x0000",
+        "gs": "0x0000",
+        "ss": "0x1400"
+      },
+      "session_id": "ses-1",
+      "state_revision": 1
+    },
+    "capabilities": {
+      "address_spaces": [
+        "segmented",
+        "linear",
+        "physical"
+      ],
+      "breakpoints": {
+        "data_access": "normal_core_real_mode_byte_addresses",
+        "memory_change": true,
+        "memory_change_address_spaces": [
+          "segmented",
+          "linear"
+        ]
+      },
+      "code_layers": "normal_core_real_mode_guarded_fetch_v1",
+      "debugger": true,
+      "input": {
+        "absolute_mouse": true,
+        "click_timing": "guest_emulated_milliseconds",
+        "coordinate_space": "guest_frame_pixels",
+        "driver": "builtin_dos_int33_only",
+        "keyboard": "ibm_pc_controller_us_ascii_v1",
+        "keyboard_held_leases": true
+      },
+      "limits": {
+        "max_memory_read_bytes": 65536,
+        "max_message_bytes": 8388608,
+        "max_trace_events": 10000
+      },
+      "protocol_version": "1.0",
+      "register_edit": true,
+      "save_states": true,
+      "timing": {
+        "fast_forward": true,
+        "guest_clock": "PIC_Ticks_milliseconds"
+      },
+      "trace": {
+        "cpu": true
+      },
+      "video": {
+        "controlled_window": true,
+        "format": "png",
+        "headless": true,
+        "pixel_probe": true,
+        "screenshot": true,
+        "source": "last_completed_guest_frame"
+      }
+    },
+    "pid": 11942
+  },
+  "events": [
+    {
+      "address": {
+        "offset": "0x00007EC2",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "72f2c7067a1700005d5f5ec3005657",
+      "instruction": "jb short 7EB6h",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "72f2c7067a1700005d5f5ec3005657",
+      "register_changes": {
+        "cs": "0x0824",
+        "ds": "0x1219",
+        "eax": "0x00000000",
+        "ebp": "0x00002870",
+        "ebx": "0x00004A87",
+        "ecx": "0x00009815",
+        "edi": "0x00000002",
+        "edx": "0x000003CF",
+        "es": "0x1219",
+        "esi": "0x00002880",
+        "esp": "0x00002870",
+        "flags": "0x00007293",
+        "fs": "0x0000",
+        "gs": "0x0000",
+        "instruction_pointer": "0x00007EC2",
+        "ss": "0x1219"
+      },
+      "sequence": 1,
+      "project_address": "0x17ec2",
+      "project_segmented_address": "1000:7ec2",
+      "native_instruction": "jc   00007EB6 ($-e)",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EC2",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ec2"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EB6",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "a013002ae48bf8a17a173bc772f2c7",
+      "instruction": "mov al,[13h]",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "a013002ae48bf8a17a173bc772f2c7",
+      "register_changes": {
+        "instruction_pointer": "0x00007EB6"
+      },
+      "sequence": 2,
+      "project_address": "0x17eb6",
+      "project_segmented_address": "1000:7eb6",
+      "native_instruction": "mov  al,[0013]",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EB6",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17eb6"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EB9",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "2ae48bf8a17a173bc772f2c7067a17",
+      "instruction": "sub ah,ah",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "2ae48bf8a17a173bc772f2c7067a17",
+      "register_changes": {
+        "eax": "0x00000002",
+        "instruction_pointer": "0x00007EB9"
+      },
+      "sequence": 3,
+      "project_address": "0x17eb9",
+      "project_segmented_address": "1000:7eb9",
+      "native_instruction": "sub  ah,ah",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EB9",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17eb9"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EBB",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "8bf8a17a173bc772f2c7067a170000",
+      "instruction": "mov di,ax",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "8bf8a17a173bc772f2c7067a170000",
+      "register_changes": {
+        "instruction_pointer": "0x00007EBB"
+      },
+      "sequence": 4,
+      "project_address": "0x17ebb",
+      "project_segmented_address": "1000:7ebb",
+      "native_instruction": "mov  di,ax",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EBB",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ebb"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EBD",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "a17a173bc772f2c7067a1700005d5f",
+      "instruction": "mov ax,[177Ah]",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "a17a173bc772f2c7067a1700005d5f",
+      "register_changes": {
+        "instruction_pointer": "0x00007EBD"
+      },
+      "sequence": 5,
+      "project_address": "0x17ebd",
+      "project_segmented_address": "1000:7ebd",
+      "native_instruction": "mov  ax,[177A]",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EBD",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ebd"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EC0",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "3bc772f2c7067a1700005d5f5ec300",
+      "instruction": "cmp ax,di",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "3bc772f2c7067a1700005d5f5ec300",
+      "register_changes": {
+        "eax": "0x00000000",
+        "instruction_pointer": "0x00007EC0"
+      },
+      "sequence": 6,
+      "project_address": "0x17ec0",
+      "project_segmented_address": "1000:7ec0",
+      "native_instruction": "cmp  ax,di",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EC0",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ec0"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EC2",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "72f2c7067a1700005d5f5ec3005657",
+      "instruction": "jb short 7EB6h",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "72f2c7067a1700005d5f5ec3005657",
+      "register_changes": {
+        "instruction_pointer": "0x00007EC2"
+      },
+      "sequence": 7,
+      "project_address": "0x17ec2",
+      "project_segmented_address": "1000:7ec2",
+      "native_instruction": "jc   00007EB6 ($-e)",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EC2",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ec2"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EB6",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "a013002ae48bf8a17a173bc772f2c7",
+      "instruction": "mov al,[13h]",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "a013002ae48bf8a17a173bc772f2c7",
+      "register_changes": {
+        "instruction_pointer": "0x00007EB6"
+      },
+      "sequence": 8,
+      "project_address": "0x17eb6",
+      "project_segmented_address": "1000:7eb6",
+      "native_instruction": "mov  al,[0013]",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EB6",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17eb6"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EB9",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "2ae48bf8a17a173bc772f2c7067a17",
+      "instruction": "sub ah,ah",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "2ae48bf8a17a173bc772f2c7067a17",
+      "register_changes": {
+        "eax": "0x00000002",
+        "instruction_pointer": "0x00007EB9"
+      },
+      "sequence": 9,
+      "project_address": "0x17eb9",
+      "project_segmented_address": "1000:7eb9",
+      "native_instruction": "sub  ah,ah",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EB9",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17eb9"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EBB",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "8bf8a17a173bc772f2c7067a170000",
+      "instruction": "mov di,ax",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "8bf8a17a173bc772f2c7067a170000",
+      "register_changes": {
+        "instruction_pointer": "0x00007EBB"
+      },
+      "sequence": 10,
+      "project_address": "0x17ebb",
+      "project_segmented_address": "1000:7ebb",
+      "native_instruction": "mov  di,ax",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EBB",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ebb"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EBD",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "a17a173bc772f2c7067a1700005d5f",
+      "instruction": "mov ax,[177Ah]",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "a17a173bc772f2c7067a1700005d5f",
+      "register_changes": {
+        "instruction_pointer": "0x00007EBD"
+      },
+      "sequence": 11,
+      "project_address": "0x17ebd",
+      "project_segmented_address": "1000:7ebd",
+      "native_instruction": "mov  ax,[177A]",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EBD",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ebd"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EC0",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "3bc772f2c7067a1700005d5f5ec300",
+      "instruction": "cmp ax,di",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "3bc772f2c7067a1700005d5f5ec300",
+      "register_changes": {
+        "eax": "0x00000000",
+        "instruction_pointer": "0x00007EC0"
+      },
+      "sequence": 12,
+      "project_address": "0x17ec0",
+      "project_segmented_address": "1000:7ec0",
+      "native_instruction": "cmp  ax,di",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EC0",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ec0"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EC2",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "72f2c7067a1700005d5f5ec3005657",
+      "instruction": "jb short 7EB6h",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "72f2c7067a1700005d5f5ec3005657",
+      "register_changes": {
+        "instruction_pointer": "0x00007EC2"
+      },
+      "sequence": 13,
+      "project_address": "0x17ec2",
+      "project_segmented_address": "1000:7ec2",
+      "native_instruction": "jc   00007EB6 ($-e)",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EC2",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ec2"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EB6",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "a013002ae48bf8a17a173bc772f2c7",
+      "instruction": "mov al,[13h]",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "a013002ae48bf8a17a173bc772f2c7",
+      "register_changes": {
+        "instruction_pointer": "0x00007EB6"
+      },
+      "sequence": 14,
+      "project_address": "0x17eb6",
+      "project_segmented_address": "1000:7eb6",
+      "native_instruction": "mov  al,[0013]",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EB6",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17eb6"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EB9",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "2ae48bf8a17a173bc772f2c7067a17",
+      "instruction": "sub ah,ah",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "2ae48bf8a17a173bc772f2c7067a17",
+      "register_changes": {
+        "eax": "0x00000002",
+        "instruction_pointer": "0x00007EB9"
+      },
+      "sequence": 15,
+      "project_address": "0x17eb9",
+      "project_segmented_address": "1000:7eb9",
+      "native_instruction": "sub  ah,ah",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EB9",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17eb9"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EBB",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "8bf8a17a173bc772f2c7067a170000",
+      "instruction": "mov di,ax",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "8bf8a17a173bc772f2c7067a170000",
+      "register_changes": {
+        "instruction_pointer": "0x00007EBB"
+      },
+      "sequence": 16,
+      "project_address": "0x17ebb",
+      "project_segmented_address": "1000:7ebb",
+      "native_instruction": "mov  di,ax",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EBB",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ebb"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EBD",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "a17a173bc772f2c7067a1700005d5f",
+      "instruction": "mov ax,[177Ah]",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "a17a173bc772f2c7067a1700005d5f",
+      "register_changes": {
+        "instruction_pointer": "0x00007EBD"
+      },
+      "sequence": 17,
+      "project_address": "0x17ebd",
+      "project_segmented_address": "1000:7ebd",
+      "native_instruction": "mov  ax,[177A]",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EBD",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ebd"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EC0",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "3bc772f2c7067a1700005d5f5ec300",
+      "instruction": "cmp ax,di",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "3bc772f2c7067a1700005d5f5ec300",
+      "register_changes": {
+        "eax": "0x00000000",
+        "instruction_pointer": "0x00007EC0"
+      },
+      "sequence": 18,
+      "project_address": "0x17ec0",
+      "project_segmented_address": "1000:7ec0",
+      "native_instruction": "cmp  ax,di",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EC0",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ec0"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EC2",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "72f2c7067a1700005d5f5ec3005657",
+      "instruction": "jb short 7EB6h",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "72f2c7067a1700005d5f5ec3005657",
+      "register_changes": {
+        "instruction_pointer": "0x00007EC2"
+      },
+      "sequence": 19,
+      "project_address": "0x17ec2",
+      "project_segmented_address": "1000:7ec2",
+      "native_instruction": "jc   00007EB6 ($-e)",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EC2",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ec2"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EB6",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "a013002ae48bf8a17a173bc772f2c7",
+      "instruction": "mov al,[13h]",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "a013002ae48bf8a17a173bc772f2c7",
+      "register_changes": {
+        "instruction_pointer": "0x00007EB6"
+      },
+      "sequence": 20,
+      "project_address": "0x17eb6",
+      "project_segmented_address": "1000:7eb6",
+      "native_instruction": "mov  al,[0013]",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EB6",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17eb6"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EB9",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "2ae48bf8a17a173bc772f2c7067a17",
+      "instruction": "sub ah,ah",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "2ae48bf8a17a173bc772f2c7067a17",
+      "register_changes": {
+        "eax": "0x00000002",
+        "instruction_pointer": "0x00007EB9"
+      },
+      "sequence": 21,
+      "project_address": "0x17eb9",
+      "project_segmented_address": "1000:7eb9",
+      "native_instruction": "sub  ah,ah",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EB9",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17eb9"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EBB",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "8bf8a17a173bc772f2c7067a170000",
+      "instruction": "mov di,ax",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "8bf8a17a173bc772f2c7067a170000",
+      "register_changes": {
+        "instruction_pointer": "0x00007EBB"
+      },
+      "sequence": 22,
+      "project_address": "0x17ebb",
+      "project_segmented_address": "1000:7ebb",
+      "native_instruction": "mov  di,ax",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EBB",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ebb"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EBD",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "a17a173bc772f2c7067a1700005d5f",
+      "instruction": "mov ax,[177Ah]",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "a17a173bc772f2c7067a1700005d5f",
+      "register_changes": {
+        "instruction_pointer": "0x00007EBD"
+      },
+      "sequence": 23,
+      "project_address": "0x17ebd",
+      "project_segmented_address": "1000:7ebd",
+      "native_instruction": "mov  ax,[177A]",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EBD",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ebd"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EC0",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "3bc772f2c7067a1700005d5f5ec300",
+      "instruction": "cmp ax,di",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "3bc772f2c7067a1700005d5f5ec300",
+      "register_changes": {
+        "eax": "0x00000000",
+        "instruction_pointer": "0x00007EC0"
+      },
+      "sequence": 24,
+      "project_address": "0x17ec0",
+      "project_segmented_address": "1000:7ec0",
+      "native_instruction": "cmp  ax,di",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EC0",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ec0"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EC2",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "72f2c7067a1700005d5f5ec3005657",
+      "instruction": "jb short 7EB6h",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "72f2c7067a1700005d5f5ec3005657",
+      "register_changes": {
+        "instruction_pointer": "0x00007EC2"
+      },
+      "sequence": 25,
+      "project_address": "0x17ec2",
+      "project_segmented_address": "1000:7ec2",
+      "native_instruction": "jc   00007EB6 ($-e)",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EC2",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ec2"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EB6",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "a013002ae48bf8a17a173bc772f2c7",
+      "instruction": "mov al,[13h]",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "a013002ae48bf8a17a173bc772f2c7",
+      "register_changes": {
+        "instruction_pointer": "0x00007EB6"
+      },
+      "sequence": 26,
+      "project_address": "0x17eb6",
+      "project_segmented_address": "1000:7eb6",
+      "native_instruction": "mov  al,[0013]",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EB6",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17eb6"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EB9",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "2ae48bf8a17a173bc772f2c7067a17",
+      "instruction": "sub ah,ah",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "2ae48bf8a17a173bc772f2c7067a17",
+      "register_changes": {
+        "eax": "0x00000002",
+        "instruction_pointer": "0x00007EB9"
+      },
+      "sequence": 27,
+      "project_address": "0x17eb9",
+      "project_segmented_address": "1000:7eb9",
+      "native_instruction": "sub  ah,ah",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EB9",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17eb9"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EBB",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "8bf8a17a173bc772f2c7067a170000",
+      "instruction": "mov di,ax",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "8bf8a17a173bc772f2c7067a170000",
+      "register_changes": {
+        "instruction_pointer": "0x00007EBB"
+      },
+      "sequence": 28,
+      "project_address": "0x17ebb",
+      "project_segmented_address": "1000:7ebb",
+      "native_instruction": "mov  di,ax",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EBB",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ebb"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EBD",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "a17a173bc772f2c7067a1700005d5f",
+      "instruction": "mov ax,[177Ah]",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "a17a173bc772f2c7067a1700005d5f",
+      "register_changes": {
+        "instruction_pointer": "0x00007EBD"
+      },
+      "sequence": 29,
+      "project_address": "0x17ebd",
+      "project_segmented_address": "1000:7ebd",
+      "native_instruction": "mov  ax,[177A]",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EBD",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ebd"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EC0",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "3bc772f2c7067a1700005d5f5ec300",
+      "instruction": "cmp ax,di",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "3bc772f2c7067a1700005d5f5ec300",
+      "register_changes": {
+        "eax": "0x00000000",
+        "instruction_pointer": "0x00007EC0"
+      },
+      "sequence": 30,
+      "project_address": "0x17ec0",
+      "project_segmented_address": "1000:7ec0",
+      "native_instruction": "cmp  ax,di",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EC0",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ec0"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EC2",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "72f2c7067a1700005d5f5ec3005657",
+      "instruction": "jb short 7EB6h",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "72f2c7067a1700005d5f5ec3005657",
+      "register_changes": {
+        "instruction_pointer": "0x00007EC2"
+      },
+      "sequence": 31,
+      "project_address": "0x17ec2",
+      "project_segmented_address": "1000:7ec2",
+      "native_instruction": "jc   00007EB6 ($-e)",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EC2",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17ec2"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": null,
+        "evidence": "native fetch"
+      }
+    },
+    {
+      "address": {
+        "offset": "0x00007EB6",
+        "segment": "0x0824",
+        "space": "segmented"
+      },
+      "execution_bytes": "a013002ae48bf8a17a173bc772f2c7",
+      "instruction": "mov al,[13h]",
+      "layer_generation": 12,
+      "native_instruction_view": "ram",
+      "ram_bytes": "a013002ae48bf8a17a173bc772f2c7",
+      "register_changes": {
+        "instruction_pointer": "0x00007EB6"
+      },
+      "sequence": 32,
+      "project_address": "0x17eb6",
+      "project_segmented_address": "1000:7eb6",
+      "native_instruction": "mov  al,[0013]",
+      "instruction_view": "execute",
+      "active_layers": [],
+      "identity": {
+        "source_version": 1,
+        "context": "real:1000",
+        "runtime_address": {
+          "offset": "0x00007EB6",
+          "segment": "0x0824",
+          "space": "segmented"
+        },
+        "project_address": "0x17eb6"
+      },
+      "observation": {
+        "registers_stage": "before-instruction",
+        "instruction_completed": false,
+        "evidence": "pending fetch at trace budget"
+      }
+    }
+  ],
+  "requested_count": 32,
+  "complete": true,
+  "observation_contract": {
+    "format": "fdisbull-debug-semantics-1",
+    "backend": "dosbox",
+    "execution_breakpoint_stage": "before-instruction",
+    "watchpoint_stage": "after-instruction",
+    "trace_registers_stage": "before-instruction",
+    "trace_completion": "fetch-observed; completion unknown",
+    "timing": "guest ticks supported",
+    "address_context": "real-mode CS plus linear address"
+  }
+}

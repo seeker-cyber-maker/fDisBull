@@ -1,0 +1,232 @@
+{
+  "format": "fdisbull-live-original-1",
+  "source_version": "0.21.0",
+  "backend_sha256": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277",
+  "qualification": "Installed core wheel and independent player wheel; three fresh host/client pairs per game. External story agent is an authored scripted fixture, not an LLM. Checkpoints remain private.",
+  "games": {
+    "pq1": {
+      "format": "fdisbull-live-turn-verification-1",
+      "sessions": [
+        {
+          "new_host_process": true,
+          "new_player_process": true,
+          "receipt": {
+            "restore": {
+              "status": "missing",
+              "complete": true,
+              "checkpoint": "live"
+            },
+            "outcomes": [
+              {
+                "command": "teleport east marker",
+                "outcome": "Success: Action completed.\nAssistance: assisted-travel.",
+                "status": "success"
+              },
+              {
+                "command": "go east exit",
+                "outcome": "Success: Action completed.\nAssistance: assisted-travel.",
+                "status": "success"
+              },
+              {
+                "command": "look",
+                "outcome": "Observed neighboring room\nThe original room initialization completed; further actions are not recovered.\nObservation coverage is partial.",
+                "status": "complete"
+              }
+            ],
+            "status": "complete",
+            "checkpoint": {
+              "status": "saved",
+              "complete": true,
+              "checkpoint": "dbfdc4a951124df29a7fb9c1690b83fe",
+              "slot": "live"
+            }
+          }
+        },
+        {
+          "new_host_process": true,
+          "new_player_process": true,
+          "receipt": {
+            "restore": {
+              "status": "restored",
+              "complete": true,
+              "checkpoint": "dbfdc4a951124df29a7fb9c1690b83fe"
+            },
+            "outcomes": [
+              {
+                "command": "look",
+                "outcome": "Observed neighboring room\nThe original room initialization completed; further actions are not recovered.\nObservation coverage is partial.",
+                "status": "complete"
+              },
+              {
+                "command": "inventory",
+                "outcome": "No inventory items are recorded in this partial view.",
+                "status": "complete"
+              }
+            ],
+            "status": "complete",
+            "checkpoint": {
+              "status": "saved",
+              "complete": true,
+              "checkpoint": "10ee3c688ad740b7aa5bc3381f088aff",
+              "slot": "live"
+            }
+          }
+        },
+        {
+          "new_host_process": true,
+          "new_player_process": true,
+          "receipt": {
+            "restore": {
+              "status": "restored",
+              "complete": true,
+              "checkpoint": "10ee3c688ad740b7aa5bc3381f088aff"
+            },
+            "turns": [
+              {
+                "restore": {
+                  "status": "restored",
+                  "complete": true,
+                  "checkpoint": "10ee3c688ad740b7aa5bc3381f088aff"
+                },
+                "outcomes": [
+                  {
+                    "command": "look",
+                    "outcome": "Observed neighboring room\nThe original room initialization completed; further actions are not recovered.\nObservation coverage is partial.",
+                    "status": "complete"
+                  }
+                ],
+                "status": "complete",
+                "checkpoint": {
+                  "status": "saved",
+                  "complete": true,
+                  "checkpoint": "752e5cf364ea4ce786ff7650b9abd375",
+                  "slot": "live"
+                },
+                "narration": "I choose to look around the neighboring room before taking another step.",
+                "done": true
+              }
+            ],
+            "status": "agent_done"
+          }
+        }
+      ],
+      "claim": "Fresh-process native resume and scripted story protocol; not autonomous puzzle completion.",
+      "complete": true,
+      "finished_at_unix": 1793233982.518218,
+      "private_result_sha256": "43404bc1c7514db50c0a5b5a2cdbdad72bb26deb8db2797e50894f48726b2604",
+      "source_and_working_files_unchanged": true
+    },
+    "kq1": {
+      "format": "fdisbull-live-turn-verification-1",
+      "sessions": [
+        {
+          "new_host_process": true,
+          "new_player_process": true,
+          "receipt": {
+            "restore": {
+              "status": "missing",
+              "complete": true,
+              "checkpoint": "live"
+            },
+            "outcomes": [
+              {
+                "command": "teleport east marker",
+                "outcome": "Success: Action completed.\nAssistance: assisted-travel.",
+                "status": "success"
+              },
+              {
+                "command": "go east exit",
+                "outcome": "Success: Action completed.\nAssistance: assisted-travel.",
+                "status": "success"
+              },
+              {
+                "command": "look",
+                "outcome": "Observed neighboring room\nThe original room initialization completed; further actions are not recovered.\nObservation coverage is partial.",
+                "status": "complete"
+              }
+            ],
+            "status": "complete",
+            "checkpoint": {
+              "status": "saved",
+              "complete": true,
+              "checkpoint": "21255537444243cba7470dffa938cbda",
+              "slot": "live"
+            }
+          }
+        },
+        {
+          "new_host_process": true,
+          "new_player_process": true,
+          "receipt": {
+            "restore": {
+              "status": "restored",
+              "complete": true,
+              "checkpoint": "21255537444243cba7470dffa938cbda"
+            },
+            "outcomes": [
+              {
+                "command": "look",
+                "outcome": "Observed neighboring room\nThe original room initialization completed; further actions are not recovered.\nObservation coverage is partial.",
+                "status": "complete"
+              },
+              {
+                "command": "inventory",
+                "outcome": "No inventory items are recorded in this partial view.",
+                "status": "complete"
+              }
+            ],
+            "status": "complete",
+            "checkpoint": {
+              "status": "saved",
+              "complete": true,
+              "checkpoint": "5256ded997f94a05b329910e978b5700",
+              "slot": "live"
+            }
+          }
+        },
+        {
+          "new_host_process": true,
+          "new_player_process": true,
+          "receipt": {
+            "restore": {
+              "status": "restored",
+              "complete": true,
+              "checkpoint": "5256ded997f94a05b329910e978b5700"
+            },
+            "turns": [
+              {
+                "restore": {
+                  "status": "restored",
+                  "complete": true,
+                  "checkpoint": "5256ded997f94a05b329910e978b5700"
+                },
+                "outcomes": [
+                  {
+                    "command": "look",
+                    "outcome": "Observed neighboring room\nThe original room initialization completed; further actions are not recovered.\nObservation coverage is partial.",
+                    "status": "complete"
+                  }
+                ],
+                "status": "complete",
+                "checkpoint": {
+                  "status": "saved",
+                  "complete": true,
+                  "checkpoint": "50ee4e5082c14253a4809cf204a4a753",
+                  "slot": "live"
+                },
+                "narration": "I choose to look around the neighboring room before taking another step.",
+                "done": true
+              }
+            ],
+            "status": "agent_done"
+          }
+        }
+      ],
+      "claim": "Fresh-process native resume and scripted story protocol; not autonomous puzzle completion.",
+      "complete": true,
+      "finished_at_unix": 1793234009.150063,
+      "private_result_sha256": "9793b43a1be78910bff9066d98b64f8d38736d3f271ffca2b655347b541ab9ea",
+      "source_and_working_files_unchanged": true
+    }
+  }
+}

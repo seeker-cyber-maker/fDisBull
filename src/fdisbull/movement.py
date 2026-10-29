@@ -251,11 +251,25 @@ class MovementSessionMixin:
                             result['cleanup'].setdefault('runs',[]).append(run)
                             if run['outcome']!='guest_time' or run.get('hook_hits'):
                                 result['cleanup']['stop']=run;raise ValueError('Debugger stop preserved during input drain')
-                        stopped=self.macro(macro_set,stop['name'],args=_refs(stop.get('args',{}),start_result),timeout_ms=wall_budget())
-                        result['cleanup']['macro']=stopped
-                        if not stopped['ok']:raise ValueError('Stop macro failed')
+                        # A latched direction may already have auto-neutralized at
+                        # a room boundary. Sending its toggle again would restart it.
+                        sample=capture_observations(self,observations)
+                        keyboard=_keyboard_counts(self)
+                        result['cleanup']['pre_stop_observation']=sample
+                        result['cleanup']['pre_stop_keyboard']=keyboard
+                        already_settled=(sample['complete'] and matches(settle,sample['values'])
+                                         and not keyboard['pending_events'] and not keyboard['owned_keys'])
+                        result['cleanup']['already_settled']=already_settled
+                        if not already_settled:
+                            stopped=self.macro(macro_set,stop['name'],args=_refs(stop.get('args',{}),start_result),timeout_ms=wall_budget())
+                            result['cleanup']['macro']=stopped
+                            if not stopped['ok']:raise ValueError('Stop macro failed')
+                        first_sample=sample if already_settled else None
                         while remaining() and result['cleanup_guest_elapsed_ms']<=cleanup_guest_ms:
-                            sample=capture_observations(self,observations);result['cleanup']['last_observation']=sample
+                            if first_sample is not None:
+                                sample=first_sample;first_sample=None
+                            else:sample=capture_observations(self,observations)
+                            result['cleanup']['last_observation']=sample
                             keyboard=_keyboard_counts(self);result['cleanup']['keyboard']=keyboard
                             if sample['complete'] and matches(settle,sample['values']) and not keyboard['pending_events'] and not keyboard['owned_keys']:
                                 result['cleanup']['settled']=True

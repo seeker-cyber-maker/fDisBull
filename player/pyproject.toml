@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fdisbull-player"
+version = "0.21.0"
+description = "Standalone deterministic text player for declared scene slices"
+requires-python = ">=3.10"
+
+[project.scripts]
+fdisbull-player = "fdisbull_player.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["fdisbull_player", "fdisbull_player.*"]
+exclude = ["build", "build.*", "tests", "tests.*", "examples", "examples.*"]

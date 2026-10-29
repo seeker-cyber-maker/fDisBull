@@ -24,6 +24,14 @@ jobs:
         run: python -m pytest -q
       - name: Build wheel and source distribution
         run: python -m build
+      - name: Build standalone player wheel
+        run: python -m build --wheel ./player --outdir dist
+      - name: Smoke test standalone player in an isolated environment
+        run: |
+          python -m venv "$RUNNER_TEMP/fdisbull-player-smoke"
+          "$RUNNER_TEMP/fdisbull-player-smoke/bin/python" -m pip install --no-index --no-deps dist/fdisbull_player-*.whl
+          "$RUNNER_TEMP/fdisbull-player-smoke/bin/python" -I -c "import importlib.util; import fdisbull_player; assert importlib.util.find_spec('fdisbull') is None"
+          "$RUNNER_TEMP/fdisbull-player-smoke/bin/python" -I -m fdisbull_player --help
       - name: Check wheel and source distribution contents
         run: python scripts/check_dist.py
       - name: Build tool-only source ZIP

@@ -1,5 +1,23 @@
 # Release status checked on 2026-10-28
 
+## 0.21.0 source finalization and release gates
+
+The 0.21.0 source candidate adds progressive scene workflows, a separate text
+player, automatic turn persistence, bounded story sessions and qualified
+assisted travel. Its feature scope and current bounded
+evidence are in the [release notes](RELEASE-0.21.0.md),
+[candidate record](UNRELEASED-0.21.md) and
+[verification record](VERIFICATION-0.21.md). This preparation record precedes the
+exact-commit CI readback and tag. Publication and shared-system activation are
+separate actions; the latest published and installed release remains 0.20.0 below.
+
+Promotion requires both the ordinary Linux workflow and native Linux workflow
+to pass on the exact final source commit before tagging. Workflow configuration
+is a gate definition, not run evidence. The completed workflow and commit
+identities are recorded in GitHub Actions and the annotated release tag after readback. macOS development-host results do
+not replace Linux CI, and no system installation or package publication is
+implied by candidate verification.
+
 ## Published 0.20.0 and shared Mac installation
 
 [0.20.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.20.0) at fixed source `4f7791baa2cca7bb3c62fc9a997dc8f86316c98d`.

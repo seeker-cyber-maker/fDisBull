@@ -9,11 +9,17 @@ import re
 import shutil
 import tarfile
 import tempfile
+import tomllib
+import importlib.util
 import zipfile
 from email.parser import BytesParser
 from email.policy import default
 
-REQUIRED = {'fdisbull': '0.20.0', 'iced-x86': '1.21.0', 'capstone': '5.0.9',
+ROOT = Path(__file__).resolve().parents[1]
+VERSION = tomllib.loads((ROOT / 'pyproject.toml').read_text())['project']['version']
+if not re.fullmatch(r'[0-9A-Za-z.+!]+', VERSION):
+    raise ValueError('Invalid project version')
+REQUIRED = {'fdisbull': VERSION, 'fdisbull-player': VERSION, 'iced-x86': '1.21.0', 'capstone': '5.0.9',
             'lief': '1.0.0', 'z3-solver': '5.3.2.0'}
 
 def digest(path):
@@ -48,6 +54,10 @@ def inspect_wheel(path, python_tag):
     name, version = normalize(msg['Name']), str(msg['Version'])
     if normalize(parts[0]) != name or parts[1] != version:
         raise ValueError(f'wheel filename and metadata disagree: {path.name}')
+    if name in ('fdisbull', 'fdisbull-player'):
+        spec = importlib.util.spec_from_file_location('_offline_dist_guard', ROOT / 'scripts/check_dist.py')
+        guard = importlib.util.module_from_spec(spec); spec.loader.exec_module(guard)
+        guard.check_archive(path)
     return name, version
 
 INSTALL = r'''#!/bin/sh
@@ -62,7 +72,7 @@ sha256sum -c SHA256SUMS
 python3 -c 'import platform,sys; assert sys.version_info[:3] == (3,13,5), "Python 3.13.5 required"; assert sys.platform == "linux" and platform.machine() == "x86_64", "Linux x86_64 required"'
 python3 -m venv "$DEST"
 "$DEST/bin/python" -m pip install --no-index --find-links "$HERE/wheels" --require-hashes -r "$HERE/requirements.txt"
-"$DEST/bin/python" -c 'import importlib.metadata as m; assert m.version("fdisbull") == "0.20.0"; import z3; x=z3.Int("x"); s=z3.Solver(); s.add(x+1 != 1+x); assert s.check()==z3.unsat; s=z3.Solver(); s.add(x+1 != x); assert s.check()==z3.sat; print("Installed fdisbull 0.20.0; Z3 equivalent and counterexample checks passed")'
+"$DEST/bin/python" -c 'import importlib.metadata as m; assert m.version("fdisbull") == "__FDISBULL_VERSION__"; assert m.version("fdisbull-player") == "__FDISBULL_VERSION__"; import fdisbull_player; import z3; x=z3.Int("x"); s=z3.Solver(); s.add(x+1 != 1+x); assert s.check()==z3.unsat; s=z3.Solver(); s.add(x+1 != x); assert s.check()==z3.sat; print("Installed fdisbull and fdisbull-player __FDISBULL_VERSION__; Z3 equivalent and counterexample checks passed")'
 printf '%s\n' "DOSBox backend with private libraries: $HERE/bin/dosbox"
 '''
 
@@ -110,13 +120,13 @@ def build(args):
         raise ValueError('backend receipt and patch manifest disagree')
     out = Path(args.output)
     out.mkdir(parents=True, exist_ok=True)
-    archive = out / 'fdisbull-0.20.0-linux-x86_64-offline.tar.gz'
+    archive = out / f'fdisbull-{VERSION}-linux-x86_64-offline.tar.gz'
     suffix = '.tar.gz' if str(args.source_companion).endswith('.tar.gz') else '.tar'
-    companion = out / ('fdisbull-0.20.0-linux-x86_64-source-companion' + suffix)
+    companion = out / (f'fdisbull-{VERSION}-linux-x86_64-source-companion' + suffix)
     if archive.exists() or companion.exists():
         raise ValueError('output already exists')
     with tempfile.TemporaryDirectory() as temp:
-        root = Path(temp) / 'fdisbull-0.20.0-linux-x86_64-offline'
+        root = Path(temp) / f'fdisbull-{VERSION}-linux-x86_64-offline'
         for d in ('wheels', 'bin', 'lib', 'evidence','licenses'):
             (root / d).mkdir(parents=True, exist_ok=True)
         for _, wheel in found.values(): shutil.copyfile(wheel, root / 'wheels' / wheel.name)
@@ -137,14 +147,14 @@ def build(args):
                     'wheels': {n: {'version': v, 'filename': p.name, 'sha256': digest(p)} for n, (v, p) in sorted(found.items())}}
         (root / 'manifest.json').write_text(json.dumps(manifest, indent=2, sort_keys=True) + '\n')
         (root / 'requirements.txt').write_text(''.join(f'{n}=={v} --hash=sha256:{digest(p)}\n' for n, (v,p) in sorted(found.items())))
-        (root/'README.txt').write_text('fDisBull 0.20.0 Linux x86-64 offline kit, including genuine Z3.\n'
+        (root/'README.txt').write_text(f'fDisBull {VERSION} Linux x86-64 offline kit, including standalone player and genuine Z3.\n'
             'Requires Python 3.13.5 and system SDL2, GL/X11, FreeType, PNG, ncurses, zlib and a compatible glibc.\n'
             'Run ./install.sh /absolute/path/to/NEW-venv; use bin/dosbox as the backend. Headless is default.\n'
             'No game assets, saved states or project databases are supplied. Existing projects are not changed.\n'
             f'Keep {companion.name} with this binary kit; manifest.json records its SHA-256 and source identity.\n'
             'The paired source includes the upstream GPL license; private SDL2_net notices are in licenses/.\n'
             'Z3 checks concern supplied bounded models and assumptions, not full recovered-program correctness.\n')
-        (root / 'install.sh').write_text(INSTALL)
+        (root / 'install.sh').write_text(INSTALL.replace('__FDISBULL_VERSION__', VERSION))
         (root / 'install.sh').chmod(0o755)
         files = sorted(p for p in root.rglob('*') if p.is_file())
         (root / 'SHA256SUMS').write_text(''.join(f'{digest(p)}  {p.relative_to(root).as_posix()}\n' for p in files))

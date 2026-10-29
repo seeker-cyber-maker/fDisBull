@@ -8,6 +8,7 @@ from pathlib import Path, PurePosixPath
 import subprocess
 import tarfile
 import tempfile
+import tomllib
 
 
 def digest(path):
@@ -17,7 +18,9 @@ def digest(path):
     return h.hexdigest()
 
 
-def build(source,manifest,source_commit,output):
+def build(source,manifest,source_commit,output,version=None):
+    if version is None:
+        version=tomllib.loads((Path(__file__).resolve().parents[1]/'pyproject.toml').read_text())['project']['version']
     source=Path(source).resolve();manifest=json.loads(Path(manifest).read_text());output=Path(output)
     baseline=subprocess.check_output(['git','-C',str(source),'rev-parse','HEAD'],text=True).strip()
     if baseline!=manifest['baseline_commit']:raise ValueError('Wrong upstream baseline')
@@ -49,7 +52,7 @@ def build(source,manifest,source_commit,output):
                 with path.open('rb') as stream:archive.addfile(info,stream)
         (root/'source-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
         (root/'README.txt').write_text(
-            'DOSBox-X corresponding source for fDisBull 0.20.0\n\n'
+            f'DOSBox-X corresponding source for fDisBull {version}\n\n'
             f'fDisBull commit: {source_commit}\nUpstream: https://github.com/joncampbell123/dosbox-x\n'
             f'Pinned upstream commit: {baseline}\nPatch SHA-256: {manifest["patch_sha256"]}\n'
             f'All {len(paths)} patched source files matched source-manifest.json before archiving.\n'

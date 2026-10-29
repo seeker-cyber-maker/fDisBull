@@ -22,6 +22,9 @@ from .screenshot_hooks import ScreenshotHookProjectMixin, ScreenshotHookSessionM
 from .input_macros import MacroProjectMixin, MacroSessionMixin, MACRO_DDL
 from .runtime_observations import RuntimeObservationMixin
 from .movement import MovementSessionMixin
+from .progressive_scenes import ProgressiveSceneProjectMixin, ProgressiveSceneSessionMixin
+from .assisted_travel import AssistedTravelSessionMixin
+from .text_projection import TextProjectionProjectMixin, TextProjectionSessionMixin
 
 
 DEBUG_DDL = '''
@@ -59,7 +62,7 @@ DEBUG_DDL += SCREENSHOT_HOOK_DDL
 DEBUG_DDL += MACRO_DDL
 
 
-class DebugProjectMixin(MacroProjectMixin, ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
+class DebugProjectMixin(TextProjectionProjectMixin, ProgressiveSceneProjectMixin, MacroProjectMixin, ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
     def machine(self, executable, *, boot_image, version=None, boot_timeout_ms=30000):
         from .qemu_machine import MachineDebugSession
         return MachineDebugSession(self,executable,boot_image=boot_image,version=version,boot_timeout_ms=boot_timeout_ms)
@@ -239,7 +242,7 @@ class DebugProjectMixin(MacroProjectMixin, ScreenshotHookProjectMixin, SceneProj
         return self._debug_artifact(row['run'],name,'screenshot-grid',rendered,metadata)
 
 
-class DebugSession(MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
+class DebugSession(TextProjectionSessionMixin, AssistedTravelSessionMixin, ProgressiveSceneSessionMixin, MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
     @property
     def script_operations(self):
         from .debug_script import OPERATIONS
@@ -909,6 +912,8 @@ class DebugWorkspace:
         methods.update({'debug-keyboard-down':'keyboard_key_down','debug-keyboard-up':'keyboard_key_up',
                         'debug-macro':'macro','debug-move':'move','debug-bind-runtime-memory':'bind_runtime_memory',
                         'debug-runtime-memory':'runtime_memory','debug-proof-check':'proof_check','debug-scene-navigation':'scene_navigation'})
+        methods.update({'debug-workflow-observe':'workflow_observe','debug-workflow-act':'workflow_act',
+                        'debug-text-observe':'text_observe','debug-text-act':'text_act','debug-assisted-travel':'assisted_travel'})
         context=params.pop('context',None)
         if method=='debug-stop':
             if params:

@@ -1,4 +1,5 @@
-include README.md AGENTS.md pyproject.toml MANIFEST.in
+include README.md AGENTS.md pyproject.toml MANIFEST.in player/pyproject.toml
+include player/fdisbull_player/*.py
 recursive-include src/fdisbull *.py *.c *.sh
 recursive-include src/fdisbull/data *.json *.txt
 recursive-include src/fdisbull/skills *.md

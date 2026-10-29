@@ -8,6 +8,21 @@ An agent-first disassembler with a persistent SQLite analysis database, explicit
 
 Requires Python **3.12 or later**.
 
+Version **0.21.0** adds [progressive scene workflows](docs/PROGRESSIVE_SCENES.md),
+a [separate text player](docs/TEXT_PLAYER.md), [automatic live-turn saves and resume](docs/PLAYER_LIVE.md),
+and [qualified travel assistance](docs/ASSISTED_TRAVEL.md). Live mode checkpoints
+after each model turn without a save command. An external agent can choose
+commands and narrate their observed results in bounded story sessions. Voice
+input/output is planned future work: Qwen TTS is available locally, while
+speech recognition and their combined interaction still need qualification.
+The source candidate and its current evidence are described in the
+[0.21.0 release notes](docs/RELEASE-0.21.0.md),
+[candidate scope](docs/UNRELEASED-0.21.md), and
+[verification record](docs/VERIFICATION-0.21.md). Linux ordinary and native CI
+must both pass on the exact final commit before tagging. No 0.21.0 tag, package
+publication, or shared-system update is recorded yet; 0.20.0 remains the latest
+published and installed release.
+
 Version **0.20.0** integrates [typed input macros and bounded movement](docs/SEMANTIC_INPUT_MACROS.md), [scene geometry and content readiness](docs/SCENE_NAVIGATION.md), explicit DOS COM support, watch-only dot-mode, a partial AGI inspector, and [bounded Z3 model checks](docs/BOUNDED_PROOFS.md). See the [release notes](docs/RELEASE-0.20.0.md) and [offline kit with Z3](docs/OFFLINE_KIT_0.20.md). [0.20.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.20.0) with verified packages and the Z3 offline kit. The [publication record](docs/PUBLICATION-0.20.md) records tag CI, asset readback and the updated [shared Mac installation](docs/SYSTEM_INSTALLATION.md). The [candidate history](docs/UNRELEASED-0.20.md) and [Library reconciliation](docs/RECONCILIATION-0.20.md) preserve earlier identities and limitations.
 
 Version **0.19.0** adds guarded DOS filename aliases, persistent screenshot
@@ -63,6 +78,7 @@ feature limits and the ordinary/native Linux checks required before tagging.
 
 | Track | Source and availability | Verification |
 | --- | --- | --- |
+| **Source candidate: 0.21.0** | Progressive workflows, independent text player and qualified travel; publication pending | [Candidate scope](docs/UNRELEASED-0.21.md), [release notes](docs/RELEASE-0.21.0.md), and [verification](docs/VERIFICATION-0.21.md). Ordinary and native Linux CI are required on the final commit before tagging. |
 | **Latest published release: 0.20.0** | [Verified packages and Z3 offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.20.0), source `4f7791b` | [Publication and shared installation](docs/PUBLICATION-0.20.md): 1,236 ordinary, 109 stable DOSBox, 415 layers, 16 PE64 and 13 DOS/boot checks; zero native skips. |
 | **Earlier published release: 0.19.0** | [Verified packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.19.0), source `57824bd` | [Publication and shared installation](docs/PUBLICATION-0.19.md): 1,112 ordinary, 66 stable DOSBox, 372 layers, 16 PE64 and 13 DOS/boot checks; zero native skips. |
 | **Earlier published release: 0.18.0** | [Verified packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.18.0), source `416b64d` | [Publication and shared installation](docs/PUBLICATION-0.18.md): 1,089 ordinary, 54 stable DOS, 335 layers, 16 PE64 and 10 DOS/boot checks passed; zero native skips. |

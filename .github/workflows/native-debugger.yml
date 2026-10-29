@@ -9,6 +9,7 @@ on:
       - src/fdisbull/**
       - tests/**
       - pyproject.toml
+      - player/**
       - scripts/build_offline_kit.py
       - scripts/build_dosbox_source_companion.py
       - scripts/verify_offline_kit.py
@@ -20,6 +21,7 @@ on:
       - src/fdisbull/**
       - tests/**
       - pyproject.toml
+      - player/**
       - scripts/build_offline_kit.py
       - scripts/build_dosbox_source_companion.py
       - scripts/verify_offline_kit.py
@@ -40,11 +42,11 @@ jobs:
           - profile: stable-backend
             patch_directory: experimental/dosbox-x
             python_version: "3.12"
-            tests: tests/test_debugger.py tests/test_dos_com.py tests/test_keyboard.py tests/test_screenshot_grid.py tests/test_scenes.py tests/test_scene_improvements.py tests/test_input_macros.py tests/test_movement.py tests/test_runtime_observations.py tests/test_scene_readiness.py
+            tests: tests/test_debugger.py tests/test_dos_com.py tests/test_keyboard.py tests/test_screenshot_grid.py tests/test_scenes.py tests/test_scene_improvements.py tests/test_input_macros.py tests/test_movement.py tests/test_runtime_observations.py tests/test_scene_readiness.py tests/test_progressive_scenes.py tests/test_progressive_cli.py tests/test_text_projection.py tests/test_text_host.py tests/test_text_player.py tests/test_assisted_travel.py tests/test_distribution.py tests/test_text_distribution.py tests/test_offline_kit.py tests/test_player_live.py
           - profile: layers-backend
             patch_directory: experimental/dosbox-x/layers
             python_version: "3.13.5"
-            tests: tests/test_debugger.py tests/test_dos_com.py tests/test_dos_launch.py tests/test_run_boundaries.py tests/test_keyboard.py tests/test_debug_wait.py tests/test_code_layers.py tests/test_debug_experiments.py tests/test_runtime_code.py tests/test_debug_semantics.py tests/test_doctor.py tests/test_screenshot_grid.py tests/test_screenshot_hooks.py tests/test_scenes.py tests/test_scene_improvements.py tests/test_scene_layers.py tests/test_ida_dosbox.py tests/test_dosbox_zip_stream.py tests/test_library_catalog.py tests/test_rich_types.py tests/test_dos_services.py tests/test_input_macros.py tests/test_movement.py tests/test_runtime_observations.py tests/test_scene_readiness.py
+            tests: tests/test_debugger.py tests/test_dos_com.py tests/test_dos_launch.py tests/test_run_boundaries.py tests/test_keyboard.py tests/test_debug_wait.py tests/test_code_layers.py tests/test_debug_experiments.py tests/test_runtime_code.py tests/test_debug_semantics.py tests/test_doctor.py tests/test_screenshot_grid.py tests/test_screenshot_hooks.py tests/test_scenes.py tests/test_scene_improvements.py tests/test_scene_layers.py tests/test_ida_dosbox.py tests/test_dosbox_zip_stream.py tests/test_library_catalog.py tests/test_rich_types.py tests/test_dos_services.py tests/test_input_macros.py tests/test_movement.py tests/test_runtime_observations.py tests/test_scene_readiness.py tests/test_progressive_scenes.py tests/test_progressive_cli.py tests/test_text_projection.py tests/test_text_host.py tests/test_text_player.py tests/test_assisted_travel.py tests/test_distribution.py tests/test_text_distribution.py tests/test_offline_kit.py tests/test_player_live.py tests/test_player_checkpoints.py
     env:
       FDISBULL_DOSBOX: ${{ github.workspace }}/.native/dosbox-x/src/dosbox-x
       FDISBULL_DOSBOX_SOURCE: ${{ github.workspace }}/.native/dosbox-x
@@ -128,6 +130,7 @@ jobs:
           python -m build --wheel --outdir .native/offline/packages
           kit_wheel=$(find .native/offline/packages -name '*.whl' -print -quit)
           python -m pip download --only-binary=:all: --dest .native/offline/wheels "$kit_wheel[proof]"
+          python -m build --wheel ./player --outdir .native/offline/wheels
           kit_sdl=$(ldd "$FDISBULL_DOSBOX" | awk '/libSDL2_net/{print $3; exit}')
           test -f "$kit_sdl"
           cp -L "$kit_sdl" .native/offline/lib/libSDL2_net-2.0.so.0
@@ -144,8 +147,9 @@ jobs:
             --backend-receipt native-evidence/backend-identity.json \
             --patch-manifest experimental/dosbox-x/layers/source-manifest.json --output .native/offline/output
           mkdir .native/offline/unpacked
-          tar -xzf .native/offline/output/fdisbull-0.20.0-linux-x86_64-offline.tar.gz -C .native/offline/unpacked
-          kit_root="$GITHUB_WORKSPACE/.native/offline/unpacked/fdisbull-0.20.0-linux-x86_64-offline"
+          kit_version=$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          tar -xzf ".native/offline/output/fdisbull-${kit_version}-linux-x86_64-offline.tar.gz" -C .native/offline/unpacked
+          kit_root="$GITHUB_WORKSPACE/.native/offline/unpacked/fdisbull-${kit_version}-linux-x86_64-offline"
           "$kit_root/install.sh" "$GITHUB_WORKSPACE/.native/offline/installed" \
             2>&1 | tee native-evidence/offline/install.log
           .native/offline/installed/bin/python -I scripts/verify_offline_kit.py \

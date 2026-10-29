@@ -9,9 +9,10 @@ import tomllib
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-ROOT_FILES = ("README.md", "AGENTS.md", "pyproject.toml", "MANIFEST.in")
+ROOT_FILES = ("README.md", "AGENTS.md", "pyproject.toml", "MANIFEST.in", "player/pyproject.toml")
 SOURCE_PATTERNS = (
     ("src/fdisbull", "*.py"),
+    ("player/fdisbull_player", "*.py"),
     ("src/fdisbull/data", "*.json"),
     ("src/fdisbull/data", "*.txt"),
     ("src/fdisbull/skills", "*.md"),
@@ -34,7 +35,8 @@ def release_files(root: Path) -> list[Path]:
     """Exclude examples, generated files and experimental backends by construction."""
     files = [root / name for name in ROOT_FILES]
     for directory, pattern in SOURCE_PATTERNS:
-        files.extend((root / directory).rglob(pattern))
+        files.extend((root / directory).glob(pattern) if directory == "player/fdisbull_player"
+                     else (root / directory).rglob(pattern))
     selected = []
     for path in sorted(set(files)):
         if not path.is_file() or path.is_symlink():

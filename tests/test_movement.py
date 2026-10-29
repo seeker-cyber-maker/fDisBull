@@ -24,8 +24,8 @@ class Session(movement.MovementSessionMixin):
     def scene(self,name):return self.nav
 
 
-def sample(x, *, complete=True):
-    return {'values':{'x':x,'y':1,'stopped':True},'captures':[], 'complete':complete,'errors':{} if complete else {'x':'missing capture'},'context':{}}
+def sample(x, *, complete=True, stopped=True):
+    return {'values':{'x':x,'y':1,'stopped':stopped},'captures':[], 'complete':complete,'errors':{} if complete else {'x':'missing capture'},'context':{}}
 
 
 def invoke(monkeypatch,session,*,destination=3,**kwargs):
@@ -47,11 +47,12 @@ def test_arrival_wins_over_final_stall_sample(monkeypatch):
     s=Session([sample(1),sample(1),sample(3),sample(3)])
     result=invoke(monkeypatch,s)
     assert result['outcome']=='arrived' and result['ok'] and result['cleanup']['settled']
-    assert [c[1] for c in s.calls if c[0]=='macro']==['start','stop']
+    assert result['cleanup']['already_settled']
+    assert [c[1] for c in s.calls if c[0]=='macro']==['start']
 
 
 def test_blocked_captures_diagnostic_before_stop(monkeypatch):
-    s=Session([sample(1),sample(1),sample(1),sample(1)])
+    s=Session([sample(1),sample(1),sample(1),sample(1,stopped=False),sample(1)])
     result=invoke(monkeypatch,s)
     assert result['outcome']=='blocked' and result['classification']=='blocked_unknown'
     assert s.calls.index(('screenshot',False)) < s.calls.index(('macro','stop'))
@@ -74,7 +75,7 @@ def test_debugger_stop_closes_without_resuming(monkeypatch):
 
 
 def test_failed_stop_closes_session(monkeypatch):
-    s=Session([sample(1),sample(3)],stop_ok=False)
+    s=Session([sample(1),sample(3),sample(3,stopped=False)],stop_ok=False)
     result=invoke(monkeypatch,s)
     assert result['outcome']=='arrived' and not result['ok'] and s.closed
     assert 'Stop macro failed' in result['cleanup']['error']
@@ -187,3 +188,42 @@ def test_native_move_preserves_caller_owned_key(keyboard_game,emulator):
         session.keyboard_key_up(lease)
         session.run(guest_ms=100,timeout_ms=3000,fast_forward=True)
         assert session.keyboard_state()['keyboard']['owned_keys']==0
+
+
+def test_owned_key_is_released_even_if_guest_reports_settled(monkeypatch):
+    s=Session([sample(1),sample(3),sample(3),sample(3)])
+    owned=[0]
+    def plan(macro_set,name,args):
+        if name=='start':
+            return ({'id':'macros','sha256':'hash'}, {'script':{'steps':[{'op':'keyboard.key-down','as':'down'}]}, 'outputs':{'held':'$down.lease'}})
+        return ({'id':'macros','sha256':'hash'}, {'script':{'steps':[{'op':'keyboard.key-up'}]}})
+    def macro(macro_set,name,**kwargs):
+        s.calls.append(('macro',name,kwargs.get('args')))
+        if name=='start':
+            owned[0]=1
+            return {'ok':True,'outputs':{'held':'lease-1'}}
+        assert kwargs['args']=={'lease':'lease-1'}
+        owned[0]=0
+        return {'ok':True}
+    s._macro_plan=plan;s.macro=macro
+    s.keyboard_state=lambda:{'keyboard':{'pending_events':0,'owned_keys':owned[0]}}
+    monkeypatch.setattr(movement,'capture_observations',lambda session,specs:next(session.samples))
+    fields={k:{'register':'general.ax'} for k in ('x','y','stopped')}
+    result=s.move('macros', start={'name':'start'},stop={'name':'stop','args':{'lease':'$start.outputs.held'}},
+                  observations=fields,until={'field':'x','op':'eq','value':3},
+                  progress={'fields':['x'],'samples':2},settle={'field':'stopped','op':'eq','value':True},
+                  slice_ms=10,guest_ms=100,timeout_ms=10000)
+    assert result['ok'] and not result['cleanup']['already_settled']
+    assert result['cleanup']['pre_stop_keyboard']['owned_keys']==1
+    assert [c[1] for c in s.calls if c[0]=='macro']==['start','stop']
+    assert owned[0]==0 and result['cleanup']['settled']
+
+
+def test_autoneutral_arrival_keeps_destination_without_toggle(monkeypatch):
+    s=Session([sample(1),sample(3),sample(3)])
+    result=invoke(monkeypatch,s)
+    assert result['ok'] and result['cleanup']['already_settled']
+    assert result['cleanup']['pre_stop_observation']['values']['x']==3
+    assert result['cleanup']['pre_stop_keyboard']=={'pending_events':0,'owned_keys':0}
+    assert [c[1] for c in s.calls if c[0]=='macro']==['start']
+    assert result['cleanup']['last_observation']['values']['x']==3
