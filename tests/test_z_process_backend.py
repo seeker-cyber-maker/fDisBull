@@ -6,6 +6,7 @@ import sys
 import time
 
 import pytest
+from fixtures_z_scenes import scene_definition, write_scene, quiet_player
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'player'))
 from fdisbull_player import Player, ProcessBackend
@@ -13,10 +14,10 @@ from fdisbull_player import Player, ProcessBackend
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_shared_scene_works_over_real_process_protocol(monkeypatch):
+def test_shared_scene_works_over_real_process_protocol(monkeypatch, tmp_path):
     monkeypatch.setenv('PYTHONPATH', str(ROOT / 'src'))
     backend = ProcessBackend([sys.executable, '-u', str(ROOT / 'src/fdisbull/il_scenes.py'),
-                              str(ROOT / 'examples/z/key-and-gate.json')], timeout=3)
+                              str(write_scene(tmp_path/'scene.json'))], timeout=3)
     try:
         player = Player(backend)
         assert 'Courtyard' in player.execute('l')
@@ -66,10 +67,10 @@ def test_bad_deadlines_rejected_before_launch(value):
     with pytest.raises(ValueError): ProcessBackend(['not-started'], timeout=value)
 
 
-def test_cli_uses_content_service_without_a_debugger(monkeypatch):
+def test_cli_uses_content_service_without_a_debugger(monkeypatch, tmp_path):
     import os, shlex
     env = dict(os.environ, PYTHONPATH=str(ROOT/'src') + ':' + str(ROOT/'player'))
-    command = shlex.join([sys.executable, '-u', '-m', 'fdisbull.il_scenes', str(ROOT/'examples/z/key-and-gate.json')])
+    command = shlex.join([sys.executable, '-u', '-m', 'fdisbull.il_scenes', str(write_scene(tmp_path/'scene.json'))])
     result = subprocess.run([sys.executable, '-m', 'fdisbull_player', '--backend-command', command],
                             input='take key\nuse key on gate\nn\nl\nquit\n', text=True,
                             capture_output=True, env=env, timeout=10)
@@ -84,7 +85,7 @@ def test_interactive_prompt_and_command_size_limit(monkeypatch, capsys):
     from fdisbull.il_scenes import ILSceneBackend
     class Terminal(io.StringIO):
         def isatty(self): return True
-    content = json.loads((ROOT/'examples/z/key-and-gate.json').read_text())
+    content = scene_definition()
     backend = ILSceneBackend(content)
     monkeypatch.setattr(sys, 'stdin', Terminal('look\nquit\n'))
     run(Player(backend))
@@ -97,11 +98,9 @@ def test_interactive_prompt_and_command_size_limit(monkeypatch, capsys):
 
 
 def test_socket_peer_without_response_obeys_cli_timeout():
-    import runpy
-    quiet = runpy.run_path(str(ROOT/'examples/z/verify_release.py'))['quiet_player']
     import tempfile
     with tempfile.TemporaryDirectory() as folder:
-        result = quiet(sys.executable, Path(folder), 'candidate', player_path=ROOT/'player')
+        result = quiet_player(sys.executable, Path(folder), 'candidate', player_path=ROOT/'player')
     assert result == {'outer_timeout': False, 'exit_code': 1}
 
 
@@ -111,7 +110,7 @@ def test_quiet_model_protocol_keeps_full_transcript_out_of_stdout(tmp_path):
     driver.write_text('import json,sys\nfor line in sys.stdin:\n print(json.dumps({"commands":["take key","use key on gate","n","look"],"narration":"private transcript text","done":True}),flush=True)\n')
     transcript = tmp_path/'turns.json'
     env = dict(os.environ, PYTHONPATH=str(ROOT/'src') + ':' + str(ROOT/'player'))
-    command = shlex.join([sys.executable, '-u', '-m', 'fdisbull.il_scenes', str(ROOT/'examples/z/key-and-gate.json')])
+    command = shlex.join([sys.executable, '-u', '-m', 'fdisbull.il_scenes', str(write_scene(tmp_path/'scene.json'))])
     process = subprocess.run([sys.executable, '-m', 'fdisbull_player', '--backend-command', command,
         '--backend-timeout', '3', '--live', '--agent-command', shlex.join([sys.executable, str(driver)]),
         '--max-turns', '1', '--transcript', str(transcript), '--quiet'],

@@ -9,6 +9,7 @@ import pytest
 from fdisbull.il_scenes import ILSceneBackend
 from fdisbull.il_recovery import recover_v3_attributes, save_il
 from fdisbull.project import Project
+from fixtures_z_scenes import scene_definition
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'player'))
 from fdisbull_player import Player, LiveSession
@@ -17,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def definition():
-    return json.loads((ROOT / 'examples/z/key-and-gate.json').read_text())
+    return scene_definition()
 
 
 def test_z_uses_shared_il_for_guard_inventory_and_scene_changes():
