@@ -23,6 +23,7 @@ SAVE_PATTERNS = Path(__file__).resolve().parent / 'data' / 'dinopark-e55-save.js
 STREET_PATTERNS = Path(__file__).resolve().parent / 'data' / 'dinopark-e55-street.json'
 MART_PATTERNS = Path(__file__).resolve().parent / 'data' / 'dinopark-e55-mart.json'
 OPERATING_PATTERNS = Path(__file__).resolve().parent / 'data' / 'dinopark-e55-operating.json'
+CATALOGUE_PATTERNS = Path(__file__).resolve().parent / 'data' / 'dinopark-e55-catalogue.json'
 MART_OBSERVATIONS = json.loads(MART_PATTERNS.read_text())['scenes']
 BORROW_POPUP = {'samples': [{'x': x, 'y': 73, 'rgb': [44, 44, 44]} for x in
     (80, 87, 99, 105, 111, 123, 132, 137, 147, 167, 172, 178, 184, 195, 201, 212, 217, 222, 230, 235, 244)],
@@ -114,7 +115,7 @@ def document_hash(value):
 def pattern_hashes():
     return {'main': digest(PATTERNS), 'shop': digest(SHOP_PATTERNS),
             'save': digest(SAVE_PATTERNS), 'street': digest(STREET_PATTERNS),
-            'operating': digest(OPERATING_PATTERNS)}
+            'operating': digest(OPERATING_PATTERNS), 'catalogue': digest(CATALOGUE_PATTERNS)}
 
 
 def native_save_label(game, number):
@@ -148,9 +149,10 @@ def read_save_bundle(path, source_files):
     # original pattern identities must still match exactly. The original disk
     # data is checked after loading, and street controls always receive fresh
     # recognition using the current profile; no old scene revision is reused.
-    previous_patterns = {key: value for key, value in expected_patterns.items() if key != 'operating'}
+    operating_patterns = {key: value for key, value in expected_patterns.items() if key != 'catalogue'}
+    previous_patterns = {key: value for key, value in operating_patterns.items() if key != 'operating'}
     legacy_patterns = {key: value for key, value in previous_patterns.items() if key != 'street'}
-    if payload['patterns'] not in (expected_patterns, previous_patterns, legacy_patterns):
+    if payload['patterns'] not in (expected_patterns, operating_patterns, previous_patterns, legacy_patterns):
         raise ValueError('Saved park scene qualification is incompatible.')
     if set(payload['qualifications']) != set(QUALIFICATIONS) or any(
             payload['qualifications'][key] is not True for key in QUALIFICATIONS):
@@ -302,7 +304,7 @@ def prepare_mart_first_page(text):
             text.event({'phase': 'catalogue_prepared', 'command': 'buy coelophysis',
                         'page': 'first', 'frame': frame, 'purchase_input': 'not_sent'})
             return
-        if (not matches(image, MART_OBSERVATIONS['toolbar']) or
+        if (not matches(image, text.patterns['mart_surface']) or
                 text.debug.memory('4020:3c5c', length=2)['hex'] != selector or
                 any(matches(image, text.patterns[n]) for n in
                     ('quarter_popup', 'parking_hint', 'game_menu', 'save_dialog', 'load_dialog'))):
@@ -916,7 +918,7 @@ class TextScene:
                 self.vegasaurus_extinct = matches(image, MART_OBSERVATIONS['vegasaurus_extinct'])
                 self.qualify_mart_last_page(frame)
                 return
-            if (not matches(image, MART_OBSERVATIONS['toolbar']) or
+            if (not matches(image, self.patterns['mart_surface']) or
                     self.debug.memory('4020:3c5c', length=2)['hex'] != selector or
                     any(matches(image, self.patterns[name]) for name in
                         ('quarter_popup', 'parking_hint', 'game_menu', 'save_dialog', 'load_dialog'))):
@@ -1583,6 +1585,7 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                      for key, value in shop_patterns.items()})
     patterns.update(json.loads(SAVE_PATTERNS.read_text())['scenes'])
     patterns.update(json.loads(OPERATING_PATTERNS.read_text())['scenes'])
+    patterns.update(json.loads(CATALOGUE_PATTERNS.read_text())['scenes'])
     street_guard = json.loads(STREET_PATTERNS.read_text())['scenes']['street']
     street_guard['reject'] = [patterns[name] for name in
                               ('quarter_popup', 'parking_hint', 'game_menu', 'save_dialog', 'load_dialog')]
@@ -1602,6 +1605,7 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                'street_patterns_sha256': digest(STREET_PATTERNS),
                'mart_patterns_sha256': digest(MART_PATTERNS),
                'operating_patterns_sha256': digest(OPERATING_PATTERNS),
+               'catalogue_patterns_sha256': digest(CATALOGUE_PATTERNS),
                'script_sha256': digest(Path(__file__)), 'fdisbull_version': fdisbull.__version__,
                'e55_handoff_sha256': 'e6f9da13a3ab1d1de485a496f5d807121bcd929ba67bd87256b449870aa718ea',
                'source_inventory_sha256': hashlib.sha256(json.dumps(before, sort_keys=True).encode()).hexdigest(),

@@ -25,7 +25,8 @@ def test_native_title_survives_filename_renumbering_without_collision(tmp_path):
     assert {p.name: p.read_bytes() for p in tmp_path.iterdir()} == before
 
 
-@pytest.mark.parametrize('omit', [(), ('operating',), ('street', 'operating')])
+@pytest.mark.parametrize('omit', [(), ('catalogue',), ('operating', 'catalogue'),
+                                  ('street', 'operating', 'catalogue')])
 def test_original_native_bundles_remain_loadable_with_new_recognition(tmp_path, omit):
     data = native_save(b'previous')
     (tmp_path / 'DINOSG.000').write_bytes(data)

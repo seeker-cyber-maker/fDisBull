@@ -11,11 +11,12 @@
   "native_text_scene_class_ast_sha256": "e44f3ebee8431f93822434e7d264fcd59e680aa96f604a6b7c1ef1a5cfa5fbe2",
   "native_text_scene_class_ast_python": "3.13",
   "native_text_scene_class_source_sha256": "05a4b1d350fa033e2e178870a0a9b33b0b056d51963de405ed6537190f87436d",
-  "adapted_text_scene_class_source_sha256": "653474d98044e6d520297a5e470bddc28ece61c8bea54a0a2d48c583bdd328c7",
+  "adapted_text_scene_class_source_sha256": "ee65488f9e1f9754691f1ecd1cbec48047a4ba8f7839f74c654945bf3ba263d6",
   "adapter_edits": [
     "Native save titles are allocated independently from renumbered disk slots.",
     "Coelophysis selection uses qualified catalogue navigation, static markers and original species/price fields.",
     "DinoMart exit uses one continuous original guest interval before destination verification.",
-    "A known quarter modal can pause park entry; its destination is qualified after acknowledgment. Original game code supplies every business effect."
+    "A known quarter modal can pause park entry; its destination is qualified after acknowledgment. Original game code supplies every business effect.",
+    "Catalogue panning uses stable container edges, separately from enabled-state icons and purchase-selection markers."
   ]
 }
