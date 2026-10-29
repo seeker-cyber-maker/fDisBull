@@ -110,6 +110,13 @@ unchanged source; the re-exported PNG was 67,411 bytes.
    not a published release. This PR intentionally fails without those APIs.
    Re-run the combined installed-package native gate when the compiler lands;
    opaque byte reconstruction must not become a semantic equivalence claim.
+7. **Provenance test portability.** The first Linux CI run had one new failure:
+   Python 3.12 and 3.13 serialize empty AST fields differently. On the Mac,
+   `ast.dump(..., show_empty=True)` reproduced the Linux hash exactly. The
+   provenance test now checks the exact original class source with a stable
+   SHA-256 instead; it was independently compared with the retained original
+   adapter. The Python 3.13 AST hash remains labeled in provenance metadata.
+   Native scene and Z worker code are unchanged by this correction.
 
 The separate crashed-chat investigation reported conversation-history HTTP 429s
 and incomplete local history. That evidence does not establish an fDisBull
@@ -125,6 +132,10 @@ and 23 errors**. All 36 failure/error test identities exactly match the PR #18
 baseline; there are no new failure identities. The local full suite remains
 not green. The existing failures include host-incompatible ELF fixture setup,
 unavailable optional managed support and the pre-existing CLI case.
+
+The ready local launcher additionally passed the fresh bank/repay/borrow/office
+cycle without the optional oracle enabled, in 7.55 host seconds including
+startup and compilation. This is one observed smoke run, not a timing guarantee.
 
 Built the core wheel, standalone player wheel and tool source ZIP offline.
 `scripts/check_dist.py` passed with 139, 10 and 412 tool-only entries,

@@ -123,8 +123,12 @@ def test_promoted_profiles_and_native_business_methods_keep_provenance():
            'street_patterns.json':'street','mart_patterns.json':'mart'}
     for name,target in names.items():
         assert hashlib.sha256((data/('dinopark-e55-'+target+'.json')).read_bytes()).hexdigest()==provenance['source_files_sha256'][name]
-    node=next(n for n in ast.parse(Path(dinopark_scenes.__file__).read_text()).body if isinstance(n,ast.ClassDef) and n.name=='TextScene')
-    assert hashlib.sha256(ast.dump(node,include_attributes=False).encode()).hexdigest()==provenance['native_text_scene_class_ast_sha256']
+    source=Path(dinopark_scenes.__file__).read_text()
+    node=next(n for n in ast.parse(source).body if isinstance(n,ast.ClassDef) and n.name=='TextScene')
+    # ast.dump changes its empty-field formatting between Python 3.12 and 3.13.
+    # The exact unchanged class source provides a version-independent identity.
+    original_class=ast.get_source_segment(source,node)
+    assert hashlib.sha256(original_class.encode()).hexdigest()==provenance['native_text_scene_class_source_sha256']
 
 
 def test_no_udc_means_no_game_copy_or_implicit_legacy_fallback(tmp_path,monkeypatch):
