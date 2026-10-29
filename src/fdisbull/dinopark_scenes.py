@@ -258,7 +258,8 @@ def prepare_scene_pointer(debug, scene, event, *, object_name='office.bank'):
     frame=before['frame']
     moved=debug.call('input.mouse.move',{'x':point[0],'y':point[1],
         'mode_id':frame['mode_id'],'frame_id':frame['frame_id']})
-    run_guest(debug,150)
+    settle_ms = 1000 if object_name == 'mart.back' else 150
+    run_guest(debug,settle_ms)
     after=debug.call('input.mouse.state')['mouse']
     if (after['buttons'] or after['release_pending'] or
             any(after[k]!=moved['mouse'][k] for k in ('x','y'))):
@@ -266,13 +267,37 @@ def prepare_scene_pointer(debug, scene, event, *, object_name='office.bank'):
     checked=debug.scene_assert(scene,object=object_name)
     event({'phase':'pointer_prepared','command':commands[object_name],
            'object':object_name,'point':point,
-           'guest_ms':150,'mouse_before':mouse,'mouse_after':after,
+           'guest_ms':settle_ms,'mouse_before':mouse,'mouse_after':after,
            'observation':checked['observation'],'bank_press':'not_sent', 'press':'not_sent'})
     return point
 
 
 # Retain the original helper entry point for existing native probes.
 prepare_bank_pointer = prepare_scene_pointer
+
+
+def park_catalogue_pointer(text):
+    """Move the original software cursor away from labels and toolbar probes."""
+    moved = text.debug.call('input.mouse.move', {'x': 270, 'y': 170})
+    text.event({'phase': 'mart_pointer_parked', 'point': [270, 170], 'result': moved})
+    if moved.get('accepted') is not True:
+        raise RuntimeError('Catalogue pointer movement unavailable; no purchase input sent')
+    run_guest(text.debug, 150)
+
+
+def catalogue_pan_valid(text, frame, image, selector):
+    surface = matches(image, text.patterns['mart_surface'])
+    current = text.debug.memory('4020:3c5c', length=2)['hex']
+    modals = [name for name in ('quarter_popup', 'parking_hint', 'game_menu',
+                               'save_dialog', 'load_dialog')
+              if matches(image, text.patterns[name])]
+    valid = surface and current == selector and not modals
+    if not valid:
+        text.event({'phase': 'catalogue_pan_rejected', 'frame': frame,
+                    'surface_matched': surface, 'scene_request_before': selector,
+                    'scene_request_after': current, 'modal_matches': modals,
+                    'purchase_input': 'not_sent'})
+    return valid
 
 
 class BankInputSession:
@@ -292,6 +317,7 @@ class BankInputSession:
 def prepare_mart_first_page(text):
     """Resolve the Coelophysis intent independently of the last catalogue read."""
     text.debug.scene_assert(text.mart, object='mart.back')
+    park_catalogue_pointer(text)
     selector = text.debug.memory('4020:3c5c', length=2)['hex']
     for attempt in range(49):
         frame, image = take_frame(text.project, text.debug, 'mart-first-page')
@@ -304,10 +330,7 @@ def prepare_mart_first_page(text):
             text.event({'phase': 'catalogue_prepared', 'command': 'buy coelophysis',
                         'page': 'first', 'frame': frame, 'purchase_input': 'not_sent'})
             return
-        if (not matches(image, text.patterns['mart_surface']) or
-                text.debug.memory('4020:3c5c', length=2)['hex'] != selector or
-                any(matches(image, text.patterns[n]) for n in
-                    ('quarter_popup', 'parking_hint', 'game_menu', 'save_dialog', 'load_dialog'))):
+        if not catalogue_pan_valid(text, frame, image, selector):
             raise RuntimeError('Catalogue navigation context changed; purchase input withheld')
         if attempt == 48:
             break
@@ -316,6 +339,7 @@ def prepare_mart_first_page(text):
         if moved.get('accepted') is not True:
             raise RuntimeError('Catalogue movement outcome unknown; do not retry')
         run_guest(text.debug, 80)
+        park_catalogue_pointer(text)
     raise RuntimeError('First catalogue page not reached within the pan budget; purchase input withheld')
 
 
@@ -822,11 +846,17 @@ class TextScene:
                         'remaining_notices': remaining, 'frame': frame, 'persistence': 'unknown'})
             return 'A notice remains after input; the outcome is unknown. Do not retry automatically.'
         view = 'park_view' if self.current == 'park' or entering else 'street_view'
-        if not matches(image, self.patterns[view]):
+        returned_to_street = entering and matches(image, self.patterns['shop_street'])
+        if not matches(image, self.patterns[view]) and not returned_to_street:
             self.event({'phase': 'indeterminate', 'command': 'acknowledge notice',
                         'reason': 'unexpected view', 'frame': frame, 'persistence': 'unknown'})
             return 'The resulting view is not recognized; the outcome is unknown. Do not retry automatically.'
-        if entering:
+        if returned_to_street:
+            # A quarter can interrupt the original entry before travel occurs.
+            # Its acknowledgment returns to the street; a new public intent
+            # must request park entry rather than replaying the earlier click.
+            self.pending_park_entry = False
+        elif entering:
             selector = {'memory': {'address': '4020:3c5c', 'length': 2,
                                    'hex': self.debug.memory('4020:3c5c', length=2)['hex']}}
             doc = definition(frame, 'park after quarter notice', pixel_predicate(self.patterns['park_view']),
@@ -838,8 +868,12 @@ class TextScene:
         after = park_snapshot(self.debug)
         self.notice_outcome_unknown = False
         self.event({'phase': 'result', 'command': 'acknowledge notice', 'notice': notice,
-                    'after': after, 'frame': frame, 'persistence': 'unknown'})
-        return 'Notice acknowledged.\n' + self.format_status(after)
+                    'after': after, 'frame': frame, 'persistence': 'unknown',
+                    'park_entry_outcome': ('not_completed' if returned_to_street else
+                                           'completed' if entering else 'not_applicable')})
+        continuation = (' You are on the street; park entry has not completed. Use go park to enter.'
+                        if returned_to_street else '')
+        return 'Notice acknowledged.' + continuation + '\n' + self.format_status(after)
 
     def observe_one_of(self, views, expected, label, *, wait_slices=12):
         for attempt in range(wait_slices + 1):
@@ -909,6 +943,7 @@ class TextScene:
 
     def mart_last_page(self):
         self.debug.scene_assert(self.mart, object='mart.back')
+        park_catalogue_pointer(self)
         selector = self.debug.memory('4020:3c5c', length=2)['hex']
         # Pan the original wide catalogue with ordinary mouse movement. The
         # margin receives no clicks, and no camera or story memory is edited.
@@ -918,10 +953,7 @@ class TextScene:
                 self.vegasaurus_extinct = matches(image, MART_OBSERVATIONS['vegasaurus_extinct'])
                 self.qualify_mart_last_page(frame)
                 return
-            if (not matches(image, self.patterns['mart_surface']) or
-                    self.debug.memory('4020:3c5c', length=2)['hex'] != selector or
-                    any(matches(image, self.patterns[name]) for name in
-                        ('quarter_popup', 'parking_hint', 'game_menu', 'save_dialog', 'load_dialog'))):
+            if not catalogue_pan_valid(self, frame, image, selector):
                 raise RuntimeError('Catalogue pan context changed; further input withheld')
             if attempt == 48:
                 break
@@ -930,6 +962,7 @@ class TextScene:
             if moved.get('accepted') is not True:
                 raise RuntimeError('Catalogue movement outcome unknown; do not retry')
             run_guest(self.debug, 80)
+            park_catalogue_pointer(self)
         raise RuntimeError('Last catalogue page not reached within the pan budget')
 
     def read_vegasaurus(self):

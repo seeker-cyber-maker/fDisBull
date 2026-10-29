@@ -153,3 +153,30 @@ def test_commit_hook_journals_proof_without_nested_native_witness_queries(tmp_pa
     service.finish()
     assert witnessed == ['command-complete']
     assert json.loads(writer.getvalue())['effects'] == 'applied-confirmed'
+
+
+def test_entry_notice_can_return_to_street_without_replaying_entry(monkeypatch):
+    from types import SimpleNamespace
+    from fdisbull import dinopark_scenes as scenes
+    text = scenes.TextScene.__new__(scenes.TextScene)
+    text.current, text.street = 'street', 'verified-street'
+    text.park_opened, text.pending_park_entry = True, True
+    text.notice_outcome_unknown = False
+    text.patterns = {name: name for name in ('quarter_popup', 'parking_hint', 'park_view', 'shop_street')}
+    events, inputs, assertions = [], [], []
+    text.event, text.format_status = events.append, lambda value: 'status'
+    text.project = object()
+    text.debug = SimpleNamespace(
+        keyboard_press=lambda key: (inputs.append(key) or {'accepted': True, 'delivery': 'queued'}),
+        scene_assert=lambda scene, **kw: assertions.append((scene, kw)))
+    frames = iter(['quarter_popup', 'quarter_popup', 'shop_street'])
+    monkeypatch.setattr(scenes, 'take_frame', lambda *args: ({'artifact': 'retained'}, next(frames)))
+    monkeypatch.setattr(scenes, 'matches', lambda image, pattern: image == pattern)
+    monkeypatch.setattr(scenes, 'run_guest', lambda *args: None)
+    monkeypatch.setattr(scenes, 'park_snapshot', lambda debug: {})
+    result = text.acknowledge_notice()
+    assert inputs == ['enter']
+    assert text.current == 'street' and not text.pending_park_entry and not text.notice_outcome_unknown
+    assert assertions == [('verified-street', {'object': 'street.office'})]
+    assert events[-1]['park_entry_outcome'] == 'not_completed'
+    assert 'Use go park' in result
