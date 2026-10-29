@@ -1,0 +1,139 @@
+{
+  "format": "rfc-0001-native-observation-1",
+  "date": "2026-10-29",
+  "scope": "Original food commit slice only; isolated state bridge, not a complete purchase or supported live action",
+  "original_exe_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+  "runtime": "fDisBull 0.21.0-a253600, native macOS ARM64 DOSBox-X",
+  "backend_sha256": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277",
+  "source_adapter_sha256": "0fd84f33f655f3326e141c1ec939967057d9fc7cc1a9d055ef4fcbbf7fa3c91c",
+  "entry": "2d0a:2810",
+  "exit_before": "2d0a:283d",
+  "callee": "1000:4fb8",
+  "bridge": {
+    "changed_data_bytes": 48,
+    "argument_bytes": 10,
+    "changed_registers": [
+      "eax",
+      "ebp",
+      "ebx",
+      "ecx",
+      "edi",
+      "edx",
+      "esi",
+      "esp",
+      "cs",
+      "eip"
+    ],
+    "provenance": "values and caller frame copied from a naturally prepared original order into a derived office snapshot"
+  },
+  "comparison": {
+    "prepared_effect_fields_equal": true,
+    "prepared_instruction_sequence_equal": true,
+    "office_context_preserved_to_exit": true,
+    "parent_sha256_preserved": true,
+    "captured_game_files_unchanged": true
+  },
+  "cases": {
+    "native-replay": {
+      "before": {
+        "cash": 4507,
+        "working_cash": 4007,
+        "stock": 18,
+        "pending_stock": 38,
+        "cost": 500,
+        "month": 0,
+        "month_expense": 500,
+        "context_marker": 4,
+        "pause_word": 0
+      },
+      "after": {
+        "cash": 4007,
+        "working_cash": 4007,
+        "stock": 38,
+        "pending_stock": 38,
+        "cost": 500,
+        "month": 0,
+        "month_expense": 1000,
+        "context_marker": 4,
+        "pause_word": 0
+      },
+      "trace_entries": 35,
+      "trace_budget_complete": false,
+      "region_exit_reached": true,
+      "trace_sha256": "1f1738737a930fbffec306d8aa6aecb48b00d5b5937735f1c21da7c0126ecc52"
+    },
+    "office-prepared": {
+      "before": {
+        "cash": 4507,
+        "working_cash": 4007,
+        "stock": 18,
+        "pending_stock": 38,
+        "cost": 500,
+        "month": 0,
+        "month_expense": 500,
+        "context_marker": 6,
+        "pause_word": 1
+      },
+      "after": {
+        "cash": 4007,
+        "working_cash": 4007,
+        "stock": 38,
+        "pending_stock": 38,
+        "cost": 500,
+        "month": 0,
+        "month_expense": 1000,
+        "context_marker": 6,
+        "pause_word": 1
+      },
+      "trace_entries": 35,
+      "trace_budget_complete": false,
+      "region_exit_reached": true,
+      "trace_sha256": "0cd4348ecfb48c08b3d52b6d0e5f6ab44a4f6e74e4536afd70de6414d6231a81"
+    },
+    "office-unprepared": {
+      "before": {
+        "cash": 3165,
+        "working_cash": 3165,
+        "stock": 20,
+        "pending_stock": 20,
+        "cost": 0,
+        "month": 0,
+        "month_expense": 500,
+        "context_marker": 6,
+        "pause_word": 1
+      },
+      "after": {
+        "cash": 3165,
+        "working_cash": 3165,
+        "stock": 20,
+        "pending_stock": 20,
+        "cost": 0,
+        "month": 0,
+        "month_expense": 500,
+        "context_marker": 6,
+        "pause_word": 1
+      },
+      "trace_entries": 35,
+      "trace_budget_complete": false,
+      "region_exit_reached": true,
+      "trace_sha256": "07d7e5e82c4f7d549ef14d1d944aea1e87b0f72ddfaaabf1ab8a7f688a77e538"
+    }
+  },
+  "limits": [
+    "All cases keep the complete original executable and runtime; no relocation of machine code was tested.",
+    "The prepared bridge intentionally edits cloned data and CPU entry state; it is not normal gameplay or input-equivalence evidence.",
+    "Execution stops before the original scene-change request; return to the office caller, full-order guards, animation and persistence are not qualified.",
+    "The pending scene-request word is -1 in both contexts; it is not a unique scene identifier.",
+    "No scene-independent whole-game compiler or complete buy operation is implemented."
+  ],
+  "parent_snapshots": {
+    "office_parent": {
+      "sha256": "6f69f41ac0617d7b74800520865603a68a74e113747bbd001f9803fbb96df22f"
+    },
+    "prepared_parent": {
+      "sha256": "24b45a88406269b3d43a2e3924b7b354b8869e6bd268045dd3e814c3cb4c2646"
+    }
+  },
+  "replayer_source_sha256": "180f9f98c0e3649b1a0c3af1b112bfd7d17ebd3ad95456a226ad877eaef7b816",
+  "trace_observation": "before-instruction fetch observations, not retired instructions; final entry is the unexecuted region-exit instruction"
+}

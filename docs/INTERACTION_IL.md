@@ -9,6 +9,12 @@ may be developed later; they are not implicit in the role. A completed target
 need not depend on the original runtime, but this implementation does not yet
 produce a complete game or a target compiler.
 
+[Draft RFC 0001](uil-rfcs/0001-shared-intents-and-compiler-definitions.md)
+proposes explicit original/source compiler definitions over this same
+representation, including unchanged UDL pass-through, effect binding and
+qualified cross-language reuse. Its catalog and new capabilities are proposals;
+they do not change the v1 behavior documented here.
+
 ```json
 {
   "format": "fdisbull-il-1",

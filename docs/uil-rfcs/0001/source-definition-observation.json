@@ -1,0 +1,73 @@
+{
+  "format": "rfc-0001-synthetic-check-1",
+  "cases": [
+    {
+      "case": "prepared",
+      "admitted": true,
+      "backings_agree": [
+        "pass-through",
+        "python",
+        "javascript",
+        "rust"
+      ]
+    },
+    {
+      "case": "expense-wrap",
+      "admitted": true,
+      "backings_agree": [
+        "pass-through",
+        "python",
+        "javascript",
+        "rust"
+      ]
+    },
+    {
+      "case": "missing-prepared-order",
+      "admitted": false,
+      "backings_agree": [
+        "pass-through",
+        "python",
+        "javascript",
+        "rust"
+      ]
+    },
+    {
+      "case": "missing-reservation",
+      "admitted": false,
+      "backings_agree": [
+        "pass-through",
+        "python",
+        "javascript",
+        "rust"
+      ]
+    },
+    {
+      "case": "wrong-quantity",
+      "admitted": false,
+      "backings_agree": [
+        "pass-through",
+        "python",
+        "javascript",
+        "rust"
+      ]
+    }
+  ],
+  "malformed_refused": 5,
+  "backing_comparisons": 20,
+  "role_conversion_required": false,
+  "selected_fixture_candidate": "new-equivalent",
+  "cost_kind": "invented fixture units, not measurements",
+  "wrong_order_rejected": true,
+  "compiler_definition_propagation_implemented": false,
+  "versions": {
+    "python": "3.13.13",
+    "node": "v22.22.3",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13) (Homebrew)"
+  },
+  "source_digests": {
+    "commit.py": "1c9511c00e711a65f99583b21c21477c2db0c61b7b44262b49c15c7215b465c5",
+    "commit.js": "9bf56b275d33c72c3e4743ea9a410ab24c08e413b293375cd9b72c7a71cbafd1",
+    "commit.rs": "efd3b0fd309f575caa0ffb3f9ed24b01bfa605e49b86a5c7c97d19f528ae310d",
+    "vectors.json": "080714ca45f2d215f1e12b26fc74043760dbadf2a01cea967e4305d4c009b811"
+  }
+}
