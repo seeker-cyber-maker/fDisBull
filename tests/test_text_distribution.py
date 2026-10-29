@@ -8,7 +8,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 CHECK = runpy.run_path(str(ROOT/'scripts/check_dist.py'))['check_archive']
 RELEASE_FILES = runpy.run_path(str(ROOT/'scripts/build_release.py'))['release_files']
-MODULES = ('__init__.py','__main__.py','player.py','runtime.py','live.py')
+MODULES = ('__init__.py','__main__.py','player.py','runtime.py','live.py','word16.py')
 
 
 def player_wheel(path, *, omit=None, extra=None, metadata_name='fdisbull-player'):

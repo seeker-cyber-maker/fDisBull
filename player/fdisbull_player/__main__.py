@@ -15,6 +15,7 @@ def main():
     parser = argparse.ArgumentParser(description="Play a declared text scene slice")
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument("--package", help="local JSON text-slice package")
+    source.add_argument("--uil", help="standalone executable word16 UIL program (.json or .json.gz)")
     source.add_argument("--connect", help="JSON-lines backend host:port")
     source.add_argument("--backend-command", help="local content-service command, without a shell")
     parser.add_argument("--backend-timeout", type=float, default=60,
@@ -28,7 +29,26 @@ def main():
     parser.add_argument("--agent-timeout", type=float, default=10)
     parser.add_argument("--transcript", help="write private structured self-play transcript")
     parser.add_argument("--quiet", action="store_true", help="print only session status; requires an agent and transcript")
+    parser.add_argument("--seed", type=int, default=12, help="reproducible random seed for --uil")
+    parser.add_argument("--commands", help="JSON command list for --uil")
+    parser.add_argument("--checkpoint", help="durable continuation after each --uil command")
+    parser.add_argument("--resume", help="resume a compatible --uil checkpoint")
     args = parser.parse_args()
+    if args.uil:
+        if args.live or args.agent_command or args.save_dir or args.quiet:
+            parser.error('--uil uses --checkpoint/--resume and its own command loop')
+        from .word16 import main as run_uil
+        options = [args.uil, '--seed', str(args.seed)]
+        for flag in ('commands', 'checkpoint', 'resume', 'transcript'):
+            if getattr(args, flag):
+                options.extend(['--' + flag, getattr(args, flag)])
+        try:
+            return run_uil(options)
+        except (OSError, ValueError, EOFError) as exc:
+            print(f"UIL player stopped: {exc}", file=sys.stderr)
+            return 1
+    if args.commands or args.checkpoint or args.resume:
+        parser.error('--commands, --checkpoint and --resume require --uil')
     if args.backend_command is not None and not args.backend_command.strip():
         parser.error('--backend-command must not be blank')
     if not math.isfinite(args.backend_timeout) or not 0 < args.backend_timeout <= 60:

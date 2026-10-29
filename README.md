@@ -24,6 +24,7 @@ play an authored text projection without opening the debugger yourself.
 | Compare a hypothesis, a checkpoint or a temporary patch | [Layers, states and experiments](#layers-states-and-experiments) |
 | Give an agent reliable scene context and navigation | [Scenes, maps and interaction policies](#scenes-maps-and-interaction-policies) |
 | Play a supported projection or a user-supplied Zork story | [Text play and interpreter inspection](#text-play-and-interpreter-inspection) |
+| Convert Zork I into a standalone executable UIL program | [Zork UIL conversion](docs/ZORK_UIL.md) |
 | Try shared interaction scenes through Z | [Z scene play](docs/Z_SCENES.md) |
 | Run a qualified DinoPark park through the original game | [DinoPark in Z](docs/DINOPARK_Z.md) |
 | Test a small recovered block against its original DOS backing | [The bounded UDC pipeline](#the-bounded-udc-pipeline) |
@@ -169,6 +170,13 @@ can run a user-supplied version-3 story using a separately selected Python and
 Jericho environment. Story inspection and the recovered mailbox slice are
 bounded evidence, not recovery of the parser, turn loop or complete game.
 No original game or story files are distributed.
+
+The [standalone Zork UIL converter](docs/ZORK_UIL.md) adds a separate executable
+profile for a complete v3 story. It lowers the original parser and game logic
+into arithmetic, memory, control and object operations; its independent player
+uses the resulting UIL file without an original interpreter. The documented
+edition, verification routes and remaining limits distinguish this translation
+from the earlier mailbox slice and original-story harness.
 
 ## The bounded UDC pipeline
 
