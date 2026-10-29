@@ -25,7 +25,7 @@ TITLES = {'office': 'Park office', 'bank': 'Bank', 'street': 'Park street', 'din
 SNAPSHOT_FIELDS = ('office', 'bank', 'street', 'mart', 'park', 'locations', 'current',
                    'land_bought', 'dinosaur_bought', 'fence_bought', 'guide_hired',
                    'food_bought', 'park_opened', 'notice_outcome_unknown', 'transaction_count',
-                   'pending_park_entry',
+                   'pending_park_entry', 'pending_food_notice',
                    'vegasaurus_attempted', 'vegasaurus_proof', 'vegasaurus_extinct', 'last_action')
 
 
@@ -276,32 +276,42 @@ class ZService:
     def observe(self):
         try:
             modal = False
-            try:
-                description = self.text.describe().split('Commands:')[0].strip()
-            except Exception:
-                # A known modal is itself an observable context. Do not require
-                # the obscured background scene before offering its handler.
+            parking = getattr(self.text, 'pending_food_notice', False) and self.text.current == 'dino_diner'
+            if parking:
                 scenes = load_scenes()
-                entering = getattr(self.text, 'pending_park_entry', False) and self.text.current == 'street'
-                if (self.text.current != 'park' and not entering or
-                        not self.text.park_opened or self.text.notice_outcome_unknown):
-                    raise
-                _,image = scenes.take_frame(self.text.project,self.text.debug,'z-modal-observation')
-                if (not scenes.matches(image,self.text.patterns['quarter_popup']) or
-                        scenes.matches(image,self.text.patterns['parking_hint'])):
-                    raise ValueError('Unqualified modal')
-                modal = True
-                description = 'A recognized quarter notice is visible. Acknowledge it to continue.'
+                _, image = scenes.take_frame(self.text.project, self.text.debug, 'z-parking-observation')
+                if (self.text.notice_outcome_unknown or
+                        not scenes.matches(image, self.text.patterns['parking_hint']) or
+                        scenes.matches(image, self.text.patterns['quarter_popup'])):
+                    raise ValueError('Unqualified parking advice')
+                modal = 'parking-notice'
+                description = 'Parking advice interrupted the food menu. No food order was submitted. Acknowledge the advice to continue.'
+            else:
+                try:
+                    description = self.text.describe().split('Commands:')[0].strip()
+                except Exception:
+                    # Qualify the modal independently of its obscured parent.
+                    scenes = load_scenes()
+                    entering = getattr(self.text, 'pending_park_entry', False) and self.text.current == 'street'
+                    if (self.text.current != 'park' and not entering or
+                            not self.text.park_opened or self.text.notice_outcome_unknown):
+                        raise
+                    _,image = scenes.take_frame(self.text.project,self.text.debug,'z-modal-observation')
+                    if (not scenes.matches(image,self.text.patterns['quarter_popup']) or
+                            scenes.matches(image,self.text.patterns['parking_hint'])):
+                        raise ValueError('Unqualified modal')
+                    modal = 'quarter-notice'
+                    description = 'A recognized quarter notice is visible. Acknowledge it to continue.'
             registers = self.text.debug.registers()
-            context = ('park-entry.quarter-notice' if modal and getattr(self.text, 'pending_park_entry', False)
-                       else self.text.current + ('.quarter-notice' if modal else ''))
+            context = ('park-entry.quarter-notice' if modal == 'quarter-notice' and getattr(self.text, 'pending_park_entry', False)
+                       else self.text.current + ('.' + modal if modal else ''))
             opaque = [self.epoch, self.revision, context, description,
                       registers.get('state_revision'), getattr(self.text.debug, '_runtime_epoch', None)]
             token = hashlib.sha256(json.dumps(opaque, sort_keys=True).encode()).hexdigest()
             objects,_ = self.objects()
             if modal: objects = [o for o in objects if o['id'] == 'notice']
             return {'complete':True, 'context':{'id':context, 'token':token,
-                    'title':'Quarter notice' if modal else TITLES[self.text.current], 'description':description},
+                    'title':'Parking advice' if parking else 'Quarter notice' if modal else TITLES[self.text.current], 'description':description},
                     'objects':objects, 'inventory':[], 'coverage':{'partial':True}}
         except Exception:
             return {'complete':False}
@@ -335,13 +345,21 @@ class ZService:
             observed = self.observe()
             quarter_pause = (observed.get('complete') is True and
                              observed.get('context', {}).get('id') == quarter_context[pending['command']])
-        if quarter_pause:
+        food_pause = (not uncertain and pending['command'] == 'buy 20 small feeders' and any(
+            e.get('phase') == 'interrupted' and e.get('command') == pending['command'] and
+            e.get('notices') == ['parking_hint'] and e.get('food_order_submitted') is False and
+            e.get('run', {}).get('outcome') == 'guest_time' for e in events))
+        if food_pause:
+            observed = self.observe()
+            food_pause = (observed.get('complete') is True and
+                          observed.get('context', {}).get('id') == 'dino_diner.parking-notice')
+        if quarter_pause or food_pause:
             status = 'accepted'
         elif uncertain or (refusal or text_refusal) and sent or not verified and not (refusal or text_refusal):
             status = 'incomplete'
         else:
             status = 'rejected' if refusal or text_refusal else 'success'
-        effects = ('partial' if quarter_pause or (refusal or text_refusal) and sent else
+        effects = ('partial' if quarter_pause or food_pause or (refusal or text_refusal) and sent else
                    'none-confirmed' if status == 'rejected' or pending['command'] in ('status','list saves') else
                    'unknown' if status == 'incomplete' else 'applied-confirmed')
         self.send({'status':status, 'complete':status != 'incomplete',

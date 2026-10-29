@@ -180,3 +180,94 @@ def test_entry_notice_can_return_to_street_without_replaying_entry(monkeypatch):
     assert assertions == [('verified-street', {'object': 'street.office'})]
     assert events[-1]['park_entry_outcome'] == 'not_completed'
     assert 'Use go park' in result
+
+
+@pytest.mark.parametrize('submitted,trigger,context,expected', [
+    (False, 'guest_time', 'dino_diner.parking-notice', 'accepted'),
+    (True, 'guest_time', 'dino_diner.parking-notice', 'incomplete'),
+    (False, 'breakpoint', 'dino_diner.parking-notice', 'incomplete'),
+    (False, 'guest_time', 'dino_diner', 'incomplete'),
+])
+def test_food_pause_requires_unsubmitted_order_and_verified_modal(tmp_path, submitted, trigger, context, expected):
+    service = bridge.ZService(tmp_path, io.StringIO(), io.StringIO())
+    service.observe = lambda: {'complete': True, 'context': {'id': context}}
+    service.pending = {'command': 'buy 20 small feeders', 'messages': ['Parking advice interrupted the menu.'],
+                       'events': [{'phase': 'interrupted', 'command': 'buy 20 small feeders',
+                                   'notices': ['parking_hint'], 'food_order_submitted': submitted,
+                                   'run': {'outcome': trigger}}]}
+    service.finish()
+    reply = json.loads(service.writer.getvalue())
+    assert reply['status'] == expected
+    assert reply['effects'] == ('partial' if expected == 'accepted' else 'unknown')
+
+
+@pytest.mark.parametrize('visible,known', [({'parking_hint'}, True),
+    ({'parking_hint', 'food_menu'}, False), ({'parking_hint', 'quarter_popup'}, False)])
+def test_menu_interruption_is_unique_and_does_not_wait_or_send_input(monkeypatch, visible, known):
+    from types import SimpleNamespace
+    from fdisbull import dinopark_scenes as scenes
+    text = scenes.TextScene.__new__(scenes.TextScene)
+    text.project, text.debug = object(), SimpleNamespace()
+    text.patterns = {n: n for n in ('food_menu', 'parking_hint', 'quarter_popup')}
+    text.event = lambda event: None
+    monkeypatch.setattr(scenes, 'take_frame', lambda *a: ({'artifact': 'actual-frame'}, visible))
+    monkeypatch.setattr(scenes, 'matches', lambda image, pattern: pattern in image)
+    monkeypatch.setattr(scenes, 'balances', lambda debug: {'loan': 5000})
+    error = scenes.KnownSceneNotice if known else RuntimeError
+    with pytest.raises(error) as caught:
+        text.shop_observe('food_menu', {'loan': 5000}, 'menu', interrupts=('parking_hint',))
+    if known:
+        assert caught.value.notice == 'parking_hint'
+        assert caught.value.frame == {'artifact': 'actual-frame'}
+    else:
+        assert not isinstance(caught.value, scenes.KnownSceneNotice)
+
+
+@pytest.mark.parametrize('after,qualified', [('food_menu', True), ('food_selected', False)])
+def test_parking_acknowledgment_never_submits_or_replays_food_order(monkeypatch, after, qualified):
+    from types import SimpleNamespace
+    from fdisbull import dinopark_scenes as scenes
+    text = scenes.TextScene.__new__(scenes.TextScene)
+    text.current, text.pending_food_notice, text.notice_outcome_unknown = 'dino_diner', True, False
+    text.locations, text.project = {'dino_diner': 'diner-revision'}, object()
+    text.patterns = {n: n for n in ('parking_hint', 'quarter_popup', 'dino_diner',
+                                  'food_menu', 'food_selected', 'shop_street')}
+    inputs, assertions, events = [], [], []
+    text.event = events.append
+    text.debug = SimpleNamespace(
+        keyboard_press=lambda key: (inputs.append(key) or {'accepted': True, 'delivery': 'queued'}),
+        scene_assert=lambda scene, **kw: assertions.append((scene, kw)))
+    frames = iter(['parking_hint', 'parking_hint', after])
+    monkeypatch.setattr(scenes, 'take_frame', lambda *a: ({'artifact': 'retained'}, next(frames)))
+    monkeypatch.setattr(scenes, 'matches', lambda image, pattern: image == pattern)
+    monkeypatch.setattr(scenes, 'run_guest', lambda *a: None)
+    result = text.acknowledge_notice()
+    assert inputs == ['enter']
+    assert text.pending_food_notice is (not qualified)
+    assert text.notice_outcome_unknown is (not qualified)
+    if qualified:
+        assert assertions == [('diner-revision', {'object': 'dino_diner.back'})]
+        assert events[-1]['food_order_submitted'] is False
+        assert 'submit a new order' in result
+    else:
+        assert assertions == [] and 'outcome unknown' in result
+
+
+@pytest.mark.parametrize('ambiguous', [False, True])
+def test_pending_parking_advice_exposes_only_its_verified_action(tmp_path, monkeypatch, ambiguous):
+    from types import SimpleNamespace
+    from fdisbull import dinopark_scenes as scenes
+    service = bridge.ZService(tmp_path, io.StringIO(), io.StringIO())
+    service.text = SimpleNamespace(current='dino_diner', pending_food_notice=True,
+        notice_outcome_unknown=False, project=object(), patterns={'parking_hint': 'parking', 'quarter_popup': 'quarter'},
+        describe=lambda: 'The background diner still matches.',
+        debug=SimpleNamespace(registers=lambda: {'state_revision': 42}))
+    service.objects = lambda: ([{'id': 'notice'}, {'id': 'food'}, {'id': 'route-street'}], {})
+    visible = {'parking', 'quarter'} if ambiguous else {'parking'}
+    monkeypatch.setattr(scenes, 'take_frame', lambda *a: ({}, visible))
+    monkeypatch.setattr(scenes, 'matches', lambda image, pattern: pattern in image)
+    observed = service.observe()
+    assert observed['complete'] is (not ambiguous)
+    if not ambiguous:
+        assert observed['context']['id'] == 'dino_diner.parking-notice'
+        assert observed['objects'] == [{'id': 'notice'}]

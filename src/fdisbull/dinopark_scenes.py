@@ -314,6 +314,12 @@ class BankInputSession:
         return self.native.scene_click(scene,object,**options)
 
 
+class KnownSceneNotice(RuntimeError):
+    def __init__(self, notice, frame):
+        super().__init__('Recognized original notice: ' + notice)
+        self.notice, self.frame = notice, frame
+
+
 def prepare_mart_first_page(text):
     """Resolve the Coelophysis intent independently of the last catalogue read."""
     text.debug.scene_assert(text.mart, object='mart.back')
@@ -473,6 +479,7 @@ class TextScene:
         self.park_opened = False
         self.notice_outcome_unknown = False
         self.pending_park_entry = False
+        self.pending_food_notice = False
         self.project, self.patterns, self.event = project, patterns, event
         self.current = 'office'
         self.last_action = None
@@ -486,7 +493,8 @@ class TextScene:
             save_name(name)
         except ValueError as exc:
             return str(exc) + ' No input was sent.'
-        if self.notice_outcome_unknown or self.pending_park_entry or not all(getattr(self, key) for key in QUALIFICATIONS):
+        if (self.notice_outcome_unknown or self.pending_park_entry or self.pending_food_notice or
+                not all(getattr(self, key) for key in QUALIFICATIONS)):
             return 'Saving is available after completing the running-park setup. No input was sent.'
         if (self.save_library / name).exists():
             return 'That saved-park name already exists. Choose a new name. No input was sent.'
@@ -706,17 +714,20 @@ class TextScene:
         return (f"{'Repayment' if command == 'repay' else 'Borrowing'} completed. "
                 f"Cash: ${after['cash']:,}. Loan: ${after['loan']:,}.")
 
-    def shop_observe(self, view, expected, name, *, wait_slices=0):
+    def shop_observe(self, view, expected, name, *, wait_slices=0, interrupts=()):
         for attempt in range(wait_slices + 1):
             frame, image = take_frame(self.project, self.debug, name)
             observed = balances(self.debug)
             matched = matches(image, self.patterns[view])
+            notices = [n for n in interrupts if matches(image, self.patterns[n])]
             self.event({'phase': 'shop_observation', 'view': view, 'frame': frame,
                         'matched': matched, 'observed_balances': observed, 'persistence': 'unknown'})
             if any(observed[k] != v for k, v in expected.items()):
                 raise RuntimeError('shop balances not qualified: ' + view + '; outcome unknown')
-            if matched:
+            if matched and not notices:
                 return frame
+            if not matched and len(notices) == 1 and not matches(image, self.patterns['quarter_popup']):
+                raise KnownSceneNotice(notices[0], frame)
             if attempt < wait_slices:
                 run_guest(self.debug, 500)
         raise RuntimeError('shop observation not qualified: ' + view + '; outcome unknown')
@@ -810,6 +821,8 @@ class TextScene:
         return prefix + '\n' + self.format_status(after)
 
     def acknowledge_notice(self):
+        if getattr(self, 'pending_food_notice', False):
+            return self.acknowledge_food_notice()
         if self.current not in ('street', 'park') or not self.park_opened or self.notice_outcome_unknown:
             return 'No notice acknowledgment is qualified in this state. No input was sent.'
         frame, image = take_frame(self.project, self.debug, 'notice-before')
@@ -874,6 +887,47 @@ class TextScene:
         continuation = (' You are on the street; park entry has not completed. Use go park to enter.'
                         if returned_to_street else '')
         return 'Notice acknowledged.' + continuation + '\n' + self.format_status(after)
+
+    def acknowledge_food_notice(self):
+        if self.current != 'dino_diner' or self.notice_outcome_unknown:
+            return 'This notice is not qualified for acknowledgment. No input was sent.'
+        frame, image = take_frame(self.project, self.debug, 'food-notice-before')
+        if (not matches(image, self.patterns['parking_hint']) or
+                matches(image, self.patterns['quarter_popup'])):
+            return 'No unique parking advice is visible. No input was sent.'
+        self.event({'phase': 'intent', 'command': 'acknowledge notice',
+                    'notice': 'parking_hint', 'frame': frame, 'purchase_input': 'not_sent'})
+        run_guest(self.debug, 1200)
+        frame, image = take_frame(self.project, self.debug, 'food-notice-settled')
+        if (not matches(image, self.patterns['parking_hint']) or
+                matches(image, self.patterns['quarter_popup'])):
+            return 'The advice changed before acknowledgment. No input was sent; inspect the session.'
+        self.notice_outcome_unknown = True
+        result = self.debug.keyboard_press('enter')
+        self.event({'phase': 'notice_input', 'command': 'acknowledge notice',
+                    'notice': 'parking_hint', 'result': result, 'purchase_input': 'not_sent'})
+        if result.get('accepted') is not True or result.get('delivery') != 'queued':
+            return 'Notice input outcome unknown. Do not retry automatically.'
+        run_guest(self.debug, 1200)
+        frame, image = take_frame(self.project, self.debug, 'food-notice-after')
+        views = [n for n in ('dino_diner', 'food_menu', 'shop_street')
+                 if matches(image, self.patterns[n])]
+        if (len(views) != 1 or any(matches(image, self.patterns[n]) for n in
+                ('parking_hint', 'quarter_popup', 'food_selected'))):
+            self.event({'phase': 'indeterminate', 'command': 'acknowledge notice',
+                        'frame': frame, 'views': views, 'purchase_input': 'not_sent'})
+            return 'The resulting view is not recognized; outcome unknown. Do not retry automatically.'
+        self.current = 'street' if views == ['shop_street'] else 'dino_diner'
+        scene, obj = ((self.street, 'street.office') if self.current == 'street' else
+                      (self.locations['dino_diner'], 'dino_diner.back'))
+        self.debug.scene_assert(scene, object=obj)
+        self.pending_food_notice = self.notice_outcome_unknown = False
+        self.event({'phase': 'result', 'command': 'acknowledge notice',
+                    'notice': 'parking_hint', 'frame': frame, 'purchase_input': 'not_sent',
+                    'food_order_submitted': False, 'scene': self.current})
+        return ('Parking advice acknowledged. No food order was submitted. ' +
+                ('Use go diner, then buy 20 small feeders.' if self.current == 'street' else
+                 'Use buy 20 small feeders to submit a new order.'))
 
     def observe_one_of(self, views, expected, label, *, wait_slices=12):
         for attempt in range(wait_slices + 1):
@@ -1390,8 +1444,17 @@ class TextScene:
             return 'The current food menu is not qualified for a new order. No input was sent.'
         self.event({'phase': 'intent', 'command': 'buy 20 small feeders', 'input': 'not_yet_sent', 'before': before})
         if not menu_open:
-            self.shop_click((133, 54), 4000, 'open meat menu')
-            self.shop_observe('food_menu', {'loan': before['loan']}, 'food-menu', wait_slices=12)
+            opened = self.shop_click((133, 54), 4000, 'open meat menu')
+            try:
+                self.shop_observe('food_menu', {'loan': before['loan']}, 'food-menu',
+                                  wait_slices=12, interrupts=('parking_hint',))
+            except KnownSceneNotice as notice:
+                self.pending_food_notice = True
+                self.event({'phase': 'interrupted', 'command': 'buy 20 small feeders',
+                            'notices': [notice.notice], 'frame': notice.frame, 'run': opened,
+                            'purchase_input': 'not_sent', 'food_order_submitted': False})
+                return ('Parking advice interrupted the food menu before an order was submitted. '
+                        'Use acknowledge notice, then inspect the available actions.')
         self.shop_click((44, 101), 600, 'select small feeders', hold_ms=80)
         self.shop_observe('food_selected', {'loan': before['loan']}, 'food-selected', wait_slices=12)
         selected_balances = balances(self.debug)
@@ -1519,6 +1582,9 @@ class TextScene:
             self.event({'phase': 'refused', 'command': command, 'input': 'not_sent',
                         'reason': 'notice acknowledgment outcome unknown'})
             return 'The notice acknowledgment outcome is unknown. No input was sent; do not retry blindly.'
+        if (getattr(self, 'pending_food_notice', False) and
+                command not in ('status', 'acknowledge notice')):
+            return 'Acknowledge the parking advice before continuing. No input was sent.'
         if command == 'look':
             return self.describe()
         if command in ('borrow', 'repay'):
@@ -1755,7 +1821,8 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                         break
                     if command == 'quit':
                         break
-                    if text.notice_outcome_unknown and command != 'status':
+                    if (text.notice_outcome_unknown and command != 'status' or
+                            text.pending_food_notice and command not in ('status', 'acknowledge notice')):
                         say(text.act(command), flush=True)
                         continue
                     if command == 'list saves':
