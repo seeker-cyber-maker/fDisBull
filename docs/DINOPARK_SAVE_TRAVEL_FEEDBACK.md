@@ -84,6 +84,12 @@ and state outcome. A successful input transport is insufficient.
 Adapter mitigation: save uses the freshly recognized Escape menu and save
 dialog. Navigation uses original scene actions with destination checks.
 
+The independent food-boundary reproduction encountered the same class of
+friction: a Diner click was queued while the prior street capture was black,
+and the subsequent view was still street. After the street was visibly
+established, a fresh non-transactional navigation opened the Diner. No purchase
+was replayed. See `food-commit-luna-research-20261029-01/RESULT.md`.
+
 Next release: generated interfaces should expose named semantic controls and
 modal state, and invalidate stale routes before input. Include the inventory
 overlay as a negative route test. Do not classify this research mistake as an
@@ -144,8 +150,9 @@ Expected: a valid purchase remains distinguishable from ordinary feeding or
 spoilage during the same operation. Rejecting ambiguity is preferable to
 silently assigning every stock difference to the purchase.
 
-Current status: unresolved operating-interface gap. Save/load acceptance does
-not establish every possible food-order/calendar phase.
+Status at the original save/load handoff: unresolved operating-interface gap.
+The subsequent correction and fresh original-game verification are recorded
+below; the initial failure remains retained rather than rewritten as a pass.
 
 Next release: observe the original commit boundary and independently attributed
 stock-consumption transitions. Check the order's quantity and cost exactly once
@@ -195,7 +202,172 @@ qualification compatibility. Test unchanged native bytes across a pattern
 revision, explicit refusal, and an independently verified migration path.
 Keep the original bundle and report what was requalified.
 
-## Acceptance record
+## F9: a food-word watch can stop partway through REP MOVSW
+
+A new native probe watched the two-byte small-feeder field during the Diner's
+stock copy. At the stop, the causing instruction and resume PC both identified
+`1000:4fcb` (`F3 A5`, REP MOVSW), with `CX=5`, `SI=b9ec`, `DI=6f9c`. The small
+feeder word had already changed, but five words remained in the nine-word copy
+and committed cash had not yet changed. The following native trace observed
+the remaining iterations, return to `2d0a:2815`, expense posting, and the cash
+stores at `2d0a:2836/2839`.
+
+The current normalized stop reported `instruction_completed: true` and
+`registers_stage: after-instruction` for that partial-repeat stop. The raw
+native reply says after-access and the observed registers preserve the partial
+state. A consumer must not promote that normalized completion flag to proof
+that the whole REP or the transaction finished.
+
+Evidence: `food-commit-main-research-20261029-01/events.jsonl` and its
+`after-write-0.json`, under the private parent above. The trace is bounded to
+256 fetched observations; it is not exhaustive execution coverage.
+
+Adapter mitigation: use separately byte-verified original execution boundaries
+before the copy (`2d0a:2810`) and after the stock, history and cash commit
+(`2d0a:283d`). Do not infer completion from a changed first word or a fixed
+number of trace records. These are observation breakpoints, not guest edits.
+
+Next release: distinguish a completed memory access, a partial repeated
+instruction and a completed instruction in normalized stop semantics. Retain
+the raw reply, causing and resume PCs, count/index registers and backend
+qualification. Test a data watch during a multiword REP copy where the first
+word changes before the remainder, and a watch after the full repeat ends.
+Do not change the underlying native evidence to fit a completion label.
+
+## Food-confirmation correction
+
+The user subsequently requested a fix to F6. The active DinoPark adapter now
+observes the original transaction before advancing through the return view:
+
+1. Analyze the original entry traversal with a bounded budget, then seed the
+   two trace-established Diner instruction addresses. Preserve budget-exhausted
+   status; do not describe that analysis as stable.
+2. Arm both byte-verified execution breakpoints before sending one original
+   confirmation click. An unverified boundary withholds that input.
+3. At `2d0a:2810`, check pending minus live food is exactly 20 small feeders and
+   zero in the other eight bins, with a $500 committed/working cash gap. Read
+   the current calendar and month's food-expense history at this point, so
+   ordinary simulation before the commit is not mistaken for order contents.
+4. At `2d0a:283d`, require all nine live bins to equal that pending snapshot,
+   pending bins to remain unchanged, cash to equal the prior working balance,
+   the loan and calendar to remain unchanged within this span, and food-expense
+   history to increase by exactly $500 modulo the original 32-bit storage.
+5. Flush a `food_purchase_committed` event before allowing the return to the
+   street to advance time. Report stock at the commit separately from current
+   stock, cash and staff. A later feeding, spoilage or other stock change does
+   not turn this proven purchase into unknown or trigger a second order.
+
+Unexpected stops or accounting mismatches before proof still stop without
+claiming success. A later display/status failure retains the proven purchase
+in the error and failure receipt, while the follow-up remains unknown. Unit
+regressions cover one confirmation input, wrong stock/cash/expense rejection,
+unverified boundary refusal, unexpected stops and late display failure.
+
+The adapter change is local research code; the reusable framework boundary
+contract and F9 normalization correction remain next-release engineering work.
+
+## F10: sampled waits are not equivalent to one exact guest interval
+
+Luna's independent reproduction advanced 24 intervals of 250 requested guest
+milliseconds after one original confirmation click. Requested total: 6,000;
+observed elapsed total: 6,975. The first 13 intervals requested 3,250 and
+observed 4,030. A separate fresh single-run reproduction requested 6,000 and
+observed 6,100. These are different runs under uncontrolled host timing, not
+identical complete-world trajectories or a performance benchmark.
+
+The segmented run first observed live/pending stock 38/38 and synchronized
+charged cash while its last-completed frame still displayed a transition.
+Later, the weekly counter reset and stock became 37/37. A rendered frame,
+native commit and requested duration are separate observations.
+
+Evidence: `food-commit-luna-research-20261029-01/RESULT.md`, `events.jsonl`, and
+the preserved `single-run/` sibling data. This reproduces F6 with both sampling
+styles without attributing the discrepancy to screenshot calls alone.
+
+Adapter mitigation: exact execution boundaries prove the purchase; observed
+current stock and actual guest progress describe subsequent simulation. The
+action sends one confirmation input, regardless of how many observations occur.
+
+Next release: expose requested versus actual guest progress prominently in
+generated wait/observe operations. Do not treat a loop count as an exact
+calendar duration. Test overshoot and sampled/single-run reporting separately,
+and preserve completion/render boundaries in transaction results.
+
+## Food-correction acceptance on 0.21.0
+
+The frozen corrected script SHA-256 is
+`199de30c8a36b5b7db8fb18fb63314a03e52e7222417b8d01c12159bf1fbe511`.
+Scene-pattern identities are unchanged, so the previously verified native
+`first` bundle remains compatible without conversion or manifest edits.
+
+Luna independently exercised three successful native-game cases:
+
+| Private directory suffix | Commit calendar (year/month/day/week) | Live before | Proven stock at commit | Stock after return | Purchase |
+| --- | --- | ---: | ---: | ---: | --- |
+| `food-commit-luna-acceptance-20261029-01` | 0/0/21/0 | 17 | 37 | 37 | 20 for $500 |
+| `food-commit-luna-acceptance-20261029-02` | 0/0/19/5 | 18 | 38 | 37 | 20 for $500 |
+| `food-commit-luna-acceptance-20261029-04` | 0/0/28/0 | 16 | 36 | 27 | 20 for $500 |
+
+The first includes food use before the commit; the second crosses a weekly
+boundary during confirmation; the third crosses month end during the return.
+In the third case the later loan was 4,885, distinct from the 5,000 loan at
+commit. The confirmed purchase remains separate from that monthly settlement.
+The public result reports stock at confirmation and stock now, with the change
+while returning; it does not label every negative stock delta as feeding.
+
+The coordinator independently verified all three receipts and journal equality,
+current code hash, source inventory equality, exactly one confirmation per
+purchase, both byte-verified native stops, all nine stock bins, the exact cash
+and expense changes, and all 147 exported PNG/database byte matches. Evidence
+audit: `food-commit-main-research-20261029-02/acceptance-audit.json` under the
+private parent. Luna's failed preparatory case `-03` is retained separately;
+it is not counted as successful food confirmation.
+
+The coordinator also completed a normal restock followed by native save and
+fresh load at `food-commit-main-acceptance-20261029-01` and its `resume-001`.
+A bank regression at `food-commit-bank-regression-20261029-01` passed payoff,
+reborrowing, project reopening, stored overlay export and patched scene
+isolation. Focused tests: 52 passed. Required active research-checkout full
+suite: 1,154 passed, 102 skipped, 24 failed, 23 errors, with the prior
+failure/error counts unchanged. The PR checkout's required full-suite baseline
+was 1,282 passed, 115 skipped, 13 failed and 23 errors. Neither local full suite
+is represented as green.
+
+## F11: an animated street frame can fail the current scene samples
+
+During preparatory case `food-commit-luna-acceptance-20261029-03`, a street
+`advance time` requested 1,000 guest milliseconds and observed 1,125. The next
+scene check rejected a visibly valid street frame at 28/32 matching samples,
+below its 29-sample threshold. Three sample locations were covered by a
+passing vehicle and one by the animated upper sign. The stored scene result
+reported ready/enabled true and visible false from the pixel predicate.
+
+The differing samples were `(56,162)`, `(23,159)`, `(38,162)` and `(152,9)`.
+The exported `advance-after-14.png` and database-only diagnostic have identical
+SHA-256 `77cfeed89e05f91c45003b1dae39f95a7b7554eac009831af096660eeb953f2c`,
+frame ID 3141, captured guest tick 57432 and state revision 98. Scene
+observation `4dee2c7ed52c41cdab9133d79f937f73` retains the actual mismatch.
+The coordinator inspected that stored observation and the exported image.
+
+Impact: the interface stopped before any food purchase in this run. The
+advance was not replayed and the failed process was not resumed. A separate
+fresh native-load case advanced in the park and completed the month-end food
+test. There is no per-failure before/after source-inventory receipt for `-03`;
+the separately recomputed inventory matching successful receipts does not
+retroactively establish that missing pair.
+
+Current status: documented recognition gap, separate from the corrected food
+commit. Keep the diagnostic and strict refusal; lowering a threshold based on
+one frame would not establish safe recognition of every mismatch.
+
+Next release: qualify stable scene samples outside animated/occluded areas,
+retain modal/control readiness separately, and support a bounded fresh-view
+recheck without replaying an already-delivered advance or purchase. Test both
+this passing-vehicle/sign frame and genuinely wrong scenes/notices. Evidence
+and exact expected/actual RGB values are in
+`food-commit-luna-acceptance-20261029-02/FINAL-FRICTION.md`.
+
+## Native-save acceptance before the food correction
 
 The final adapter was independently tested by Luna on pinned 0.21.0. Its script
 SHA-256 is `b58cb41aee44497edb6d67e541615cb1fdd8b08b1c75c0754780a1993acf0409`;
