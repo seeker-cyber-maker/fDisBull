@@ -128,3 +128,27 @@ def test_unqualified_species_or_price_never_sends_the_purchase_press(tmp_path, m
     with pytest.raises(RuntimeError, match='BUY withheld'):
         text.buy_dinosaur()
     assert actions == ['select dinosaur', 'select price']
+
+
+def test_native_save_response_teaches_the_public_z_load_command(tmp_path):
+    service = bridge.ZService(tmp_path, io.StringIO(), io.StringIO())
+    native = ('Park saved as zpark-002. Resume folder: /Users/operator/private/saves/zpark-002\n'
+              'Use load park zpark-002, or --load-save with that folder in a later session.')
+    public = service.public_message(native)
+    assert public == ('Park saved as zpark-002.\n'
+                      'Use load zpark-002 to restore this backup, or load park for the latest backup.')
+
+
+def test_commit_hook_journals_proof_without_nested_native_witness_queries(tmp_path):
+    writer = io.StringIO()
+    service = bridge.ZService(tmp_path, io.StringIO(), writer)
+    service.pending = {'command': 'buy vegasaurus', 'messages': ['Order confirmed.'], 'events': []}
+    witnessed = []
+    service.oracle = witnessed.append
+    service.event({'phase': 'vegasaurus_purchase_confirmed', 'proof': {'reservation_released': 25000}})
+    assert witnessed == []
+    receipt = json.loads((tmp_path / 'z-session.json').read_text())
+    assert receipt['pending_effects'] == 'applied-confirmed' and receipt['complete'] is False
+    service.finish()
+    assert witnessed == ['command-complete']
+    assert json.loads(writer.getvalue())['effects'] == 'applied-confirmed'

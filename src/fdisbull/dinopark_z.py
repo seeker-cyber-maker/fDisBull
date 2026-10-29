@@ -133,7 +133,9 @@ class ZService:
             self.pending['events'].append(deepcopy(item))
         if item.get('phase') in ('food_purchase_committed','vegasaurus_purchase_confirmed'):
             self.receipt('acting')
-            self.oracle(item['phase'])
+            # The handler has already captured its native commit proof. Do
+            # not insert optional native RPCs while it is paused at an
+            # instruction boundary; witness readback runs at command end.
 
     def ready(self, text):
         self.text = text
@@ -169,6 +171,9 @@ class ZService:
         import re
         text = re.sub(r'Commands:[^\n]*', '', text)
         text = re.sub(r'/(?:Users|Volumes|private|var|tmp|home|workspace)/\S+', '[private evidence]', text)
+        text = re.sub(r' Resume folder: [^\n]*| Evidence: [^\n]*', '', text)
+        text = re.sub(r'Use load park ([a-z0-9][a-z0-9_-]{0,31}), or --load-save with that folder in a later session\.',
+                      r'Use load \1 to restore this backup, or load park for the latest backup.', text)
         if len(text.encode('utf-8')) > 24000:
             return 'The command produced an oversized response; inspect private evidence before continuing.'
         return text
