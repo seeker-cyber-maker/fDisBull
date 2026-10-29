@@ -28,6 +28,19 @@ BORROW_POPUP = {'samples': [{'x': x, 'y': 73, 'rgb': [44, 44, 44]} for x in
     'min_matches': 21, 'tolerance': 0}
 QUALIFICATIONS = ('land_bought', 'dinosaur_bought', 'fence_bought', 'guide_hired',
                   'food_bought', 'park_opened')
+
+
+class SceneInterrupted(BaseException):
+    """Owned session cancellation; it must retain an incomplete native receipt."""
+
+
+def atomic_json(path, value):
+    temporary = path.with_name(path.name + '.tmp')
+    with temporary.open('w', encoding='utf-8') as output:
+        json.dump(value, output, indent=2, default=str)
+        output.write('\n'); output.flush(); os.fsync(output.fileno())
+    os.replace(temporary, path)
+
 # E49 save overlay, freshly checked against native writer and fresh loader.
 # Pen geometry prefixes are rebuilt by the original loader; the trailing ten
 # bytes hold the qualified saved pen state and must survive exactly.
@@ -202,6 +215,30 @@ def run_guest(debug, ms):
 
 def click(debug, x, y):
     return debug.click(x, y, hold_ms=80)
+
+
+def prepare_bank_pointer(debug, office, event):
+    """Consume cursor movement in the original guest before the bank press.
+
+    Frame recognition establishes appearance, not consumption of prior mouse
+    callbacks. Do not merge movement and press or repeat a timed-out press.
+    """
+    before=debug.scene_assert(office,object='office.bank')
+    mouse=debug.call('input.mouse.state')['mouse']
+    if mouse['buttons'] or mouse['release_pending']:
+        raise ValueError('Bank pointer is held or releasing; bank press withheld')
+    frame=before['frame']
+    moved=debug.call('input.mouse.move',{'x':51,'y':26,
+        'mode_id':frame['mode_id'],'frame_id':frame['frame_id']})
+    run_guest(debug,150)
+    after=debug.call('input.mouse.state')['mouse']
+    if (after['buttons'] or after['release_pending'] or
+            any(after[k]!=moved['mouse'][k] for k in ('x','y'))):
+        raise ValueError('Bank pointer did not settle; bank press withheld')
+    checked=debug.scene_assert(office,object='office.bank')
+    event({'phase':'pointer_prepared','command':'go bank','point':[51,26],
+           'guest_ms':150,'mouse_before':mouse,'mouse_after':after,
+           'observation':checked['observation'],'bank_press':'not_sent'})
 
 
 def definition(reference, title, predicate, selector, action, point, outcome):
@@ -1450,6 +1487,8 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                'loaded_save': str(args.load_save.resolve()) if args.load_save else None, 'events': []}
     start = time.perf_counter()
     restart = None
+    receipt.update(status='running', complete=False, ok=False)
+    atomic_json(work/'receipt.json', receipt)
     try:
         with (work / 'events.jsonl').open('x', encoding='utf-8') as journal, Project.create(work / 'scene.fdb', game / 'DINOPARK.EXE', load_segment=0x1000) as project:
             def event(item):
@@ -1614,6 +1653,8 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                         say('That action is not available in this scene.', flush=True)
                         continue
                     event({'phase': 'intent', 'command': command, 'scene': text.current, 'input': 'not_yet_sent'})
+                    if command == 'go bank' and text.current == 'office':
+                        prepare_bank_pointer(debug,text.office,event)
                     if command == 'go bank' and bank is None:
                         action = debug.scene_click(office['id'], 'office.bank')
                         bank_frame, bank_image = take_frame(project, debug, 'bank-after')
@@ -1706,7 +1747,7 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                         action = text.last_action
                     result_event = {'phase': 'result', 'command': command, 'scene': text.current, 'result': action,
                                     'persistence': 'unknown', 'semantic_financial_effect': 'not assessed'}
-                    if command in ('go bank', 'go office'):
+                    if command in ('go bank', 'go office', 'repay', 'borrow'):
                         result_event['observed_balances'] = balances(debug)
                     event(result_event)
                     say(rendered, flush=True)
@@ -1740,14 +1781,15 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
         receipt['elapsed_seconds'] = round(time.perf_counter() - start, 3)
         receipt['ok'] = bool(receipt['source_unchanged'] and (not args.verify or
             [(e['phase'], e['command']) for e in receipt['events']] == [
-                ('intent','go bank'), ('result','go bank'), ('intent','repay'), ('modal','repay'), ('result','repay'),
+                ('intent','go bank'), ('pointer_prepared','go bank'), ('result','go bank'), ('intent','repay'), ('modal','repay'), ('result','repay'),
                 ('intent','borrow'), ('modal','borrow'), ('result','borrow'), ('intent','go office'), ('result','go office')]))
-        with (work / 'receipt.json').open('x') as output:
-            json.dump(receipt, output, indent=2)
+        receipt.update(status='completed', complete=receipt['ok'])
         if not receipt['ok']:
             raise RuntimeError('verification did not complete')
         return restart
-    except Exception as exc:
+    except BaseException as exc:
+        receipt.update(status='interrupted' if isinstance(exc,(SceneInterrupted,KeyboardInterrupt,SystemExit)) else 'failed',
+                       complete=False, ok=False, error_type=type(exc).__name__)
         confirmed_food = [e['result'] for e in receipt['events'] if e['phase'] == 'food_purchase_committed']
         confirmed_dinosaurs = [e['proof'] for e in receipt['events'] if e['phase'] == 'vegasaurus_purchase_confirmed']
         with (work / 'failure.json').open('x') as output:
@@ -1758,6 +1800,10 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                        'confirmed_dinosaur_orders': confirmed_dinosaurs,
                        'do_not_retry_blindly': True}, output, indent=2, default=str)
         raise
+    finally:
+        receipt['elapsed_seconds'] = round(time.perf_counter() - start, 3)
+        receipt['source_unchanged'] = inventory(source) == before
+        atomic_json(work/'receipt.json',receipt)
 
 
 def main():

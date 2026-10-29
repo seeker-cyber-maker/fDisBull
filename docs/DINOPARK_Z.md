@@ -2,7 +2,10 @@
 
 Development integration, 29 October 2026. This connects the existing DinoPark
 native scenes to the Z player from PR #18. It requires the separate v0.23
-original-backed DOS UDC APIs; published 0.22.0 does not supply them.
+original-backed DOS UDC APIs; published 0.22.0 does not supply them. The later
+[reliability follow-up](VERIFICATION-DINOPARK-Z-RELIABILITY-2026-10-29.md)
+uses the committed 0.23 compiler source. See also the
+[0.23 integration review and proposed 0.24 priorities](Z_PLAYER_INTEGRATION_0.23_0.24.md).
 
 UDL maps original code to UIL; a UDC realizes UIL as code. Z consumes the public
 scene view. This integration exercises the first, original-backed DOS compiler:
@@ -129,8 +132,16 @@ record below concerns native saves, not a new live-mode acceptance claim.
 Requests and responses are bounded; the player has a whole-request deadline.
 An unknown post-input outcome returns incomplete and is not retried. Confirmed
 purchase events survive a failed follow-up so an agent is not invited to buy
-twice. The worker tracks only native processes it owns and terminates them when
-the connection is stopped. A known quarter notice can be exposed as its own
+twice. Normal close sends EOF and allows a bounded three seconds for receipt
+finalization. A failed request skips that grace; termination has a separate
+one-second bound before forced cleanup. On POSIX the player owns a new process
+group, allowing it to stop descendants even if the worker crashed. Native and
+outer receipts start incomplete, are replaced atomically, and distinguish clean
+completion from interruption. A forced kill can leave an unfinished receipt;
+it cannot establish a clean shutdown. Bank entry now moves the cursor, executes
+150 guest milliseconds, checks released/stable input and rechecks the original
+office before a single press. The earlier intermittent failure's cause remains
+unproved. A known quarter notice can be exposed as its own
 context with only its acknowledgment action; this native case remains untested.
 
 See [native verification and open friction](VERIFICATION-DINOPARK-Z-2026-10-29.md)

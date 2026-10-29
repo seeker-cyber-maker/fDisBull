@@ -80,8 +80,10 @@ class AgentProcess:
         if not argv:
             raise ValueError("Empty agent command")
         self.process = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                        stderr=subprocess.DEVNULL, shell=False, bufsize=0)
+                                        stderr=subprocess.DEVNULL, shell=False, bufsize=0,
+                                        start_new_session=os.name == 'posix')
         self.buffer = b""
+        self.closed = False
 
     def request(self, payload, timeout):
         encoded = json.dumps(payload, ensure_ascii=False, allow_nan=False).encode() + b"\n"
@@ -123,14 +125,29 @@ class AgentProcess:
         line, self.buffer = self.buffer.split(b"\n", 1)
         return json.loads(line)
 
-    def close(self):
-        if self.process.poll() is None:
-            self.process.terminate()
-            try:
-                self.process.wait(timeout=1)
-            except subprocess.TimeoutExpired:
-                self.process.kill(); self.process.wait()
-        self.process.stdin.close(); self.process.stdout.close()
+    def close(self, *, graceful=False):
+        if self.closed:
+            return
+        self.closed = True
+        try:
+            if graceful and self.process.poll() is None:
+                # A successful content service needs EOF to finalize native receipts.
+                self.process.stdin.close()
+                try: self.process.wait(timeout=3)
+                except subprocess.TimeoutExpired: pass
+            if self.process.poll() is None:
+                self.process.terminate()
+                try: self.process.wait(timeout=1)
+                except subprocess.TimeoutExpired:
+                    self.process.kill(); self.process.wait(timeout=1)
+        finally:
+            # A crashed worker can leave descendants holding its stdout pipe.
+            # This group was created for this worker, never discovered by PID scan.
+            if os.name == 'posix':
+                import signal
+                try: os.killpg(self.process.pid,signal.SIGKILL)
+                except ProcessLookupError: pass
+            self.process.stdin.close(); self.process.stdout.close()
 
 
 def self_play(session, argv, max_turns=20, max_actions=16, wall_seconds=60, agent_timeout=10, emit=print):

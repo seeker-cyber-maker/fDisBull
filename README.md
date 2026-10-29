@@ -40,6 +40,11 @@ covers bank transactions, shopping, park opening, operating reports and native
 save/load. This candidate requires the separate v0.23 UDC work; its original
 bytes are preserved, with no recovered semantic game blocks. The earlier bank
 timeout and remaining coverage gaps are recorded alongside the passing runs.
+The [reliability follow-up](docs/VERIFICATION-DINOPARK-Z-RELIABILITY-2026-10-29.md)
+adds bank input preparation, clean EOF shutdown, atomic receipts and owned-process
+cleanup, with Luna's retest on committed 0.23 source. The
+[integration review](docs/Z_PLAYER_INTEGRATION_0.23_0.24.md) relates Z to the new
+compiler and agent guides and proposes priorities for 0.24.
 
 Version **0.21.0** adds [progressive scene workflows](docs/PROGRESSIVE_SCENES.md),
 a [separate text player](docs/TEXT_PLAYER.md), [automatic live-turn saves and resume](docs/PLAYER_LIVE.md),

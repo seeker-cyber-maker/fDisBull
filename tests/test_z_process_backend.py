@@ -61,6 +61,48 @@ def test_malformed_response_is_private_and_stops_connection():
         backend.close()
 
 
+def test_normal_close_delivers_eof_and_waits_for_receipt(tmp_path):
+    receipt = tmp_path/'closed.json'
+    code = ('import sys,time,pathlib; '
+            'sys.stdin.readline(); print("{}",flush=True); '
+            'sys.stdin.read(); time.sleep(.1); '
+            'pathlib.Path(sys.argv[1]).write_text("clean EOF")')
+    backend = ProcessBackend([sys.executable,'-u','-c',code,str(receipt)],timeout=2)
+    backend.observe()
+    backend.close()
+    assert receipt.read_text() == 'clean EOF'
+    assert backend.worker.process.returncode == 0
+    backend.close()  # Finalization is idempotent.
+
+
+@pytest.mark.skipif(sys.platform == 'win32', reason='POSIX owned process group')
+def test_crashed_worker_does_not_leave_its_child_holding_the_pipe(tmp_path):
+    import os,signal
+    pidfile=tmp_path/'child.pid'
+    code = ('import subprocess,sys,pathlib; '
+            'p=subprocess.Popen([sys.executable,"-c","import time; time.sleep(30)"]); '
+            'pathlib.Path(sys.argv[1]).write_text(str(p.pid)); '
+            'sys.stdin.readline(); print("{}",flush=True); sys.stdin.read()')
+    backend=ProcessBackend([sys.executable,'-u','-c',code,str(pidfile)],timeout=2)
+    backend.observe()
+    child=int(pidfile.read_text())
+    pipe=os.dup(backend.worker.process.stdout.fileno())
+    os.kill(backend.worker.process.pid,signal.SIGKILL)
+    backend.worker.process.wait(timeout=2)
+    try:
+        backend.close()
+        # An inherited pipe closes only after every writer in the owned group stops.
+        import selectors
+        with selectors.DefaultSelector() as ready:
+            ready.register(pipe,selectors.EVENT_READ)
+            assert ready.select(.5)
+            assert os.read(pipe,1) == b''
+    finally:
+        os.close(pipe)
+        try: os.kill(child,signal.SIGKILL)
+        except ProcessLookupError: pass
+
+
 @pytest.mark.parametrize('value', [float('inf'), float('nan'), 0, -1, True, 61])
 def test_bad_deadlines_rejected_before_launch(value):
     with pytest.raises(ValueError): ProcessBackend(['not-started'], timeout=value)

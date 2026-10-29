@@ -150,3 +150,72 @@ def test_running_inventory_uses_qualified_operating_report_without_replaying_ui(
     backend.text.current='park'
     objects,bindings=backend.objects()
     assert any('inventory' in o['aliases'] and o['id']=='park-status' for o in objects)
+
+
+@pytest.mark.parametrize('interrupt', [False,True])
+def test_native_launch_failure_or_interrupt_always_finalizes_receipt(tmp_path,monkeypatch,interrupt):
+    import hashlib
+    from fdisbull import dinopark_scenes as scenes
+    game=tmp_path/'game';game.mkdir()
+    for name in ('DINOPARK.EXE','VARS.DAT'):
+        (game/name).write_bytes(b'authored setup failure fixture')
+    value=hashlib.sha256((game/'DINOPARK.EXE').read_bytes()).hexdigest()
+    monkeypatch.setattr(scenes,'EXPECTED_EXE',value)
+    monkeypatch.setattr(scenes,'EXPECTED_VARS',value)
+    backend=tmp_path/'not-launched';backend.write_bytes(b'not an emulator')
+    error=scenes.SceneInterrupted if interrupt else RuntimeError
+    class FailBeforeLaunch:
+        @staticmethod
+        def create(*args,**kwargs): raise error('injected setup boundary failure')
+    monkeypatch.setattr(scenes,'Project',FailBeforeLaunch)
+    work=tmp_path/'run'
+    with pytest.raises(error):
+        scenes.run_session(['--game-dir',str(game),'--backend',str(backend),'--work-dir',str(work)])
+    receipt=json.loads((work/'receipt.json').read_text())
+    assert receipt['status']==('interrupted' if interrupt else 'failed')
+    assert receipt['complete'] is False and receipt['ok'] is False
+    assert receipt['source_unchanged'] is True
+
+
+def test_interrupted_receipt_preserves_known_purchase_and_unknown_followup(tmp_path):
+    backend,_=service(tmp_path)
+    backend.pending={'command':'buy 20 small feeders','events':[{'phase':'food_purchase_committed'}]}
+    backend.stop_reason='SIGTERM'
+    backend.receipt('interrupted')
+    receipt=json.loads((tmp_path/'z-session.json').read_text())
+    assert receipt['complete'] is False
+    assert receipt['pending_effects']=='applied-confirmed'
+    assert receipt['pending_command']=='buy 20 small feeders'
+
+
+def test_bank_preparation_runs_move_in_guest_then_rechecks_before_any_press():
+    from fdisbull import dinopark_scenes as scenes
+    calls=[];events=[]
+    mouse={'buttons':0,'release_pending':False,'x':350,'y':140}
+    class Mouse:
+        def scene_assert(self,*args,**kwargs):
+            calls.append('observe');return {'frame':{'mode_id':5,'frame_id':42},'observation':'fresh'}
+        def call(self,method,params=None):
+            calls.append(method)
+            if method=='input.mouse.move':
+                assert params=={'x':51,'y':26,'mode_id':5,'frame_id':42}
+                mouse.update(x=102,y=26)
+            return {'mouse':dict(mouse)}
+        def run(self,**kwargs):
+            calls.append('guest-consumes-move');return {'outcome':'guest_time'}
+    scenes.prepare_bank_pointer(Mouse(),'office',events.append)
+    assert calls==['observe','input.mouse.state','input.mouse.move','guest-consumes-move','input.mouse.state','observe']
+    assert events[0]['bank_press']=='not_sent'
+    assert events[0]['mouse_after']['x']==102
+
+
+def test_held_pointer_never_sends_bank_move_or_press():
+    from fdisbull import dinopark_scenes as scenes
+    calls=[]
+    class Held:
+        def scene_assert(self,*args,**kwargs): return {'frame':{'mode_id':5,'frame_id':1}}
+        def call(self,method,params=None):
+            calls.append(method);return {'mouse':{'buttons':1,'release_pending':True}}
+    with pytest.raises(ValueError,match='withheld'):
+        scenes.prepare_bank_pointer(Held(),'office',lambda e:None)
+    assert calls==['input.mouse.state']

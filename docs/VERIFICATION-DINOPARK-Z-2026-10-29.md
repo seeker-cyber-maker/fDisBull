@@ -1,5 +1,10 @@
 # DinoPark Z native acceptance, 29 October 2026
 
+This is the initial acceptance record. The later
+[reliability follow-up](VERIFICATION-DINOPARK-Z-RELIABILITY-2026-10-29.md)
+records fixes, the committed 0.23 compiler retest and current claim limits;
+the original observations below remain historical evidence.
+
 Luna (`gpt-6-luna`) independently drove the actual Z player against disposable
 original-game copies, through the real v0.23 development UDC. Native memory,
 source events and stored screenshots were checked separately from the public

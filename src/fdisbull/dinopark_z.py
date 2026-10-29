@@ -108,12 +108,26 @@ class ZService:
         self.history = []
         self.restarted = False
         self.oracle_enabled, self.oracle_count = oracle, 0
+        self.stop_reason = None
+
+    def receipt(self, status, *, complete=False):
+        from fdisbull.dinopark_scenes import atomic_json
+        processes=[{'pid':p.pid,'returncode':p.poll()} for p in self.processes]
+        atomic_json(self.work/'z-session.json',{
+            'status':status, 'complete':complete, 'stop_reason':self.stop_reason,
+            'history':self.history, 'pending_command':self.pending['command'] if self.pending else None,
+            'pending_effects':('applied-confirmed' if self.pending and any(e.get('phase') in
+                ('food_purchase_committed','vegasaurus_purchase_confirmed') for e in self.pending['events'])
+                else 'unknown' if self.pending else 'none-pending'),
+            'processes':processes, 'cleanup_complete':all(p['returncode'] is not None for p in processes),
+            'scope':'original-backed UDC with existing native scene actions'})
 
     def event(self, item):
         self.history.append(deepcopy(item))
         if self.pending is not None:
             self.pending['events'].append(deepcopy(item))
         if item.get('phase') in ('food_purchase_committed','vegasaurus_purchase_confirmed'):
+            self.receipt('acting')
             self.oracle(item['phase'])
 
     def ready(self, text):
@@ -121,7 +135,12 @@ class ZService:
         self.revision += 1
         self.restarted = True
         self.snapshots.clear()
+        self.receipt('ready')
         self.oracle('ready')
+
+    def spawned(self, process):
+        self.processes.append(process)
+        self.receipt('running')
 
     def output(self, *values, sep=' ', end='\n', **kwargs):
         message = sep.join(map(str, values))
@@ -323,6 +342,7 @@ class ZService:
                     self.send({'complete':True,'status':'rejected','message':'Action unavailable; no input sent.'});continue
                 self.pending = {'command':command,'messages':[],'events':[]}
                 self.restarted = False
+                self.receipt('acting')
                 return command
             except (ValueError,TypeError,KeyError):
                 self.send({'complete':False,'status':'incomplete','message':'Invalid Z request; no input sent.'})
@@ -340,12 +360,17 @@ class ZService:
         (self.work/'z-failure.json').write_text(json.dumps({'error_type':type(error).__name__,
             'error':str(error),'pending':self.pending,'confirmed_effects':confirmed},indent=2,default=str)+'\n')
 
-    def stop(self, *_):
+    def stop(self, signum, _frame=None):
+        self.stop_reason=signal.Signals(signum).name
+        # Prevent a second termination signal from interrupting receipt finalization.
+        signal.signal(signal.SIGTERM,signal.SIG_IGN)
+        signal.signal(signal.SIGINT,signal.SIG_IGN)
+        self.receipt('interrupted')
         for process in self.processes:
             if process.poll() is None:
                 try: process.terminate()
                 except OSError: pass
-        raise SystemExit(0)
+        raise load_scenes().SceneInterrupted(self.stop_reason)
 
 
 def main(argv=None):
@@ -364,6 +389,9 @@ def main(argv=None):
     work.mkdir(parents=True,mode=0o700)
     service = ZService(work,sys.stdin,sys.stdout,slot=args.slot,oracle=args.oracle)
     signal.signal(signal.SIGTERM,service.stop)
+    signal.signal(signal.SIGINT,service.stop)
+    status='failed'
+    service.receipt('starting')
     try:
         game = build_game(source,work)
         next_args = ['--game-dir',str(game),'--backend',str(args.backend.resolve()),
@@ -371,21 +399,26 @@ def main(argv=None):
         if args.load_save: next_args += ['--load-save',str(args.load_save.resolve(strict=True))]
         while next_args is not None:
             next_args = scenes.run_session(next_args,command_reader=service.command,output=service.output,
-                        on_ready=service.ready,on_event=service.event,on_spawn=service.processes.append)
+                        on_ready=service.ready,on_event=service.event,on_spawn=service.spawned)
+        status='completed'
         return 0
+    except scenes.SceneInterrupted:
+        status='interrupted'
+        return 130 if service.stop_reason=='SIGINT' else 143
     except Exception as error:
         (work/'z-service-error.log').write_text(traceback.format_exc())
         service.failure(error)
         return 1
     finally:
-        (work/'z-session.json').write_text(json.dumps({'history':service.history,
-            'processes':[{'pid':p.pid,'returncode':p.poll()} for p in service.processes],
-            'scope':'original-backed UDC with existing native scene actions'},indent=2,default=str)+'\n')
         for process in service.processes:
             if process.poll() is None:
                 process.terminate()
                 try: process.wait(timeout=.5)
-                except Exception: process.kill()
+                except Exception:
+                    process.kill()
+                    try: process.wait(timeout=.5)
+                    except Exception: pass
+        service.receipt(status, complete=status=='completed' and all(p.poll() is not None for p in service.processes))
 
 
 if __name__ == '__main__':
