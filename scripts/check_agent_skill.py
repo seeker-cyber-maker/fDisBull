@@ -330,12 +330,19 @@ def _load_cli_json(raw: bytes, label: str) -> dict:
     return value["result"]
 
 
+def _interpreter_executable(python: str) -> str:
+    # Child probes run from a separate working directory. Make relative paths
+    # absolute without resolving the launcher symlink out of its virtualenv.
+    expanded = os.path.expanduser(python)
+    return os.path.abspath(shutil.which(expanded) or expanded)
+
+
 def check_installed(python: str, *, command_timeout: float = 5.0,
                     total_timeout: float = 30.0) -> dict:
     if not 0 < command_timeout <= 30 or not 0 < total_timeout <= 120:
         raise GateError("timeouts must be positive and within the supported bounds")
     checkout = Path(__file__).resolve().parents[1]
-    executable = shutil.which(python) or str(Path(python).expanduser().resolve())
+    executable = _interpreter_executable(python)
     environment = {key: value for key, value in os.environ.items()
                    if not key.startswith("PYTHON")}
     environment['FDISBULL_MAX_OUTPUT_BYTES'] = str(MAX_RESPONSE_BYTES)

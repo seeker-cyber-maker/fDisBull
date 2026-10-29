@@ -15,6 +15,16 @@ The final-version local selection covering output, advanced CLI, skill/index,
 source/player packaging and Z/provider integration passed **130 tests**. The
 development full-suite/platform limitations below remain recorded unchanged.
 
+The first main-push Linux attempt (`d31c175`) passed the ordinary suite
+(1,588 passed, 103 skipped), stable native tests (448 passed) and layers native
+tests (759 passed). Its layers offline-kit skill gate failed before spawning
+Python: a relative interpreter path was retained while probes changed working
+directory. The dependent unified job was consequently skipped, and that attempt
+did not qualify a tag. The gate now makes the selected launcher path absolute
+without resolving it out of its virtual environment. Two real-venv regressions
+cover explicit relative paths and a relative PATH entry. The corrected source
+requires fresh exact-commit ordinary/native CI before tagging.
+
 ## Development acceptance record
 
 This records `0.24.0.dev0` from the local `codex/v024-output-artifacts` worktree.

@@ -2,9 +2,11 @@
 
 import importlib.util
 import json
+import os
 from pathlib import Path
 import sys
 import time
+import venv
 
 import pytest
 
@@ -17,6 +19,25 @@ assert SPEC and SPEC.loader
 gate = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = gate
 SPEC.loader.exec_module(gate)
+
+
+@pytest.mark.parametrize('lookup',['relative_path','relative_path_entry'])
+def test_relative_interpreter_keeps_virtualenv_from_another_working_directory(tmp_path,monkeypatch,lookup):
+    environment=tmp_path/'.native/offline/installed'
+    venv.EnvBuilder(with_pip=False,symlinks=os.name!='nt').create(environment)
+    relative=Path('.native/offline/installed')/('Scripts/python.exe' if os.name=='nt' else 'bin/python')
+    monkeypatch.chdir(tmp_path)
+    if lookup=='relative_path_entry':
+        monkeypatch.setenv('PATH',str(relative.parent))
+        requested=relative.name
+    else:requested=str(relative)
+    executable=gate._interpreter_executable(requested)
+    raw,code=gate.run_bounded([executable,'-I','-c',
+                              'import json,sys;print(json.dumps({"prefix":sys.prefix,"executable":sys.executable}))'],
+                             timeout=5,output_limit=4096)
+    identity=json.loads(raw)
+    assert code==0 and Path(identity['prefix'])==environment
+    assert Path(identity['executable'])==tmp_path/relative
 
 
 def good_bundle():
