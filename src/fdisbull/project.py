@@ -244,6 +244,18 @@ class Project(ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, Shared
                 dos['segment_candidate_count']=len(dos.pop('segment_candidates',[]))
                 loader['dos']=dos
                 metadata['loader_metadata']=loader
+            elif self.meta['format'] == 'LE':
+                loader = dict(metadata['loader_metadata'])
+                le = dict(loader['le'])
+                le['fixup_count'] = len(le.pop('fixups', []))
+                le['page_count'] = len(le.pop('pages', []))
+                objects = le.pop('objects', [])
+                le['object_count'] = len(objects)
+                le['objects_preview'] = objects[:16]
+                le['objects_truncated'] = len(objects) > 16
+                loader['file_mapping_count'] = len(loader.pop('file_mappings', []))
+                loader['le'] = le
+                metadata['loader_metadata'] = loader
             return {"project":str(self.path),**metadata,"entry":hx(self.meta["entry"]),"context":self.context,
                     "version":v,"counts":counts,"work":work,"regions":regions,"analysis":self.analysis_status(v['id'])}
 
@@ -393,6 +405,18 @@ class Project(ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, Shared
             info=self.db.execute('SELECT document,source_bytes FROM binary_info WHERE version=?',(parent,)).fetchone()
             if info and self.meta["format"] in ('MZ', 'COM'):
                 self._dos_patch_document(parent,v,bytes(info[1]),patched)
+            elif info and self.meta['format'] == 'LE':
+                # Internal LE fixups can overwrite encoded file bytes during
+                # loading. A patch to relocated memory is not a reversible
+                # file edit without rewriting those fixup records as well.
+                # Retain the exact original container for each memory version.
+                document = json.loads(info[0])
+                note = 'LE mapped-memory patch only; retained source bytes and file metadata remain inherited. No inverse fixup or LE executable rewrite is performed.'
+                if note not in document.setdefault('warnings', []):
+                    document['warnings'].append(note)
+                self.db.execute('INSERT INTO binary_info VALUES (?,?,?)',
+                                (v, json.dumps(document), bytes(info[1]) if info[1] is not None else None))
+                self._index_symbols(v, document)
             elif info:
                 document=json.loads(info[0])
                 source_bytes=bytes(info[1]) if info[1] is not None else None

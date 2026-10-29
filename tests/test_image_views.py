@@ -88,7 +88,10 @@ def test_other_secondary_headers_require_explicit_opt_in(signature):
     with pytest.raises(ValueError,match='secondary'):
         load_mz(bytes(data))
     assert load_mz(bytes(data),allow_secondary=True).metadata['secondary_format']==signature.decode()
-    assert [v['image'] for v in image_views(bytes(data))]==['mz']
+    views = image_views(bytes(data))
+    assert [v['image'] for v in views] == (['mz', 'le'] if signature == b'LE' else ['mz'])
+    if signature == b'LE':
+        assert not views[1]['available'] and views[1]['error']
 
 
 def test_relocation_overlap_never_invents_independent_secondary_header():

@@ -75,6 +75,9 @@ files, record types and links, and export disassembly and control-flow images
 from stored state without operating a GUI. See [architecture](docs/ARCHITECTURE.md)
 and [external files](docs/EXTERNAL_FILES.md).
 
+The unreleased [DOS/4GW LE module](docs/dos4gw-le.md) adds bounded loading of
+supported 32-bit LE objects and internal fixups for the existing x86 analyzer.
+
 ## Debug the original program
 
 The DOS debugger uses a separately built, compatible patched DOSBox backend.
