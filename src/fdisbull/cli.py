@@ -6,11 +6,16 @@ import sqlite3
 import sys
 from . import __version__
 
-AGENT_SKILL_RESOURCES = (
-    'SKILL.md', 'references/scenes.md', 'references/methodology.md',
-    'references/runtime-navigation.md', 'references/proofs.md',
-    'references/workflows.md', 'references/udl-uil-udc.md',
-)
+AGENT_SKILL_GUIDES = {
+    'SKILL.md': 'Start here: investigation technique, cost/reward/confidence and evidence boundaries',
+    'references/scenes.md': 'Define scene objects, masks, recognition, readiness and named actions',
+    'references/methodology.md': 'Trace causality, screen for interpreters and resolve conflicting observations',
+    'references/runtime-navigation.md': 'Choose movement, spatial policies, assistance and observation projections',
+    'references/proofs.md': 'Build explicit bounded Z3 models and report their assumptions and scope',
+    'references/workflows.md': 'Choose static analysis, native debugging, scene or text-player entry points',
+    'references/udl-uil-udc.md': 'Qualify source blocks, shared UDL/UIL primitives and original-backed DOS compilation',
+}
+AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
 
 METHODS = {
     'debug-save-spatial-map':'Save an immutable source-bound room map; name,document,[parent,version,author]',
@@ -47,7 +52,7 @@ METHODS = {
     'debug-keyboard-down':'Queue make and return an owned physical key lease; run,key',
     'debug-keyboard-up':'Consume an owned lease and queue physical break; run,lease',
     'debug-scene-navigation':'Check an actor footprint in explicit game-space geometry; run,scene,point,[footprint]',
-    'agent-skill':'Read the bundled investigation skill; [reference] selects one file; no project required',
+    'agent-skill':'Discover or read the bundled investigation skill; [index,reference]; no project required',
     'debug-save-scene':'Save a versioned scene manifest with persistent objects and screenshot evidence; name,definition,[parent,version,author]',
     'debug-scenes':'List current scene revisions; [version]',
     'debug-scene-info':'Read a scene manifest, evidence and persistent object identities; scene,[version]',
@@ -204,7 +209,13 @@ def invoke(method, params, debugger=None):
     p = dict(params)
     if method=='agent-skill':
         reference=p.pop('reference',None)
-        if p:raise ValueError('agent-skill accepts only reference')
+        index=p.pop('index',False)
+        if p:raise ValueError('agent-skill accepts only index or reference')
+        if type(index) is not bool:raise ValueError('index must be boolean')
+        if index and reference is not None:raise ValueError('index and reference are mutually exclusive')
+        if index:
+            return {'name':'fdisbull-investigate','format':'fdisbull-skill-index-1','entrypoint':'SKILL.md',
+                    'guides':[{'reference':name,'purpose':purpose} for name,purpose in AGENT_SKILL_GUIDES.items()]}
         if reference is not None and (not isinstance(reference,str) or reference not in AGENT_SKILL_RESOURCES):
             raise ValueError('unknown bundled skill reference')
         from importlib.resources import files
@@ -454,7 +465,9 @@ def parser():
     c.add_argument('lift');c.add_argument('program');c.add_argument('--timeout-ms',type=int,default=1000)
     c.add_argument('--output',help='Save the full proof specifications; stdout stays compact')
     c=sub.add_parser('agent-skill',help=METHODS['agent-skill'])
-    c.add_argument('--reference',choices=AGENT_SKILL_RESOURCES,help='Read one bundled file instead of the complete skill')
+    g=c.add_mutually_exclusive_group()
+    g.add_argument('--reference',choices=AGENT_SKILL_RESOURCES,help='Read one bundled file instead of the complete skill')
+    g.add_argument('--index',action='store_true',help='List guide purposes without fetching any guide contents')
     for name in ('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations',
                  'debug-scene-observation','debug-export-scenes','debug-import-scenes'):
         c=sub.add_parser(name,help=METHODS[name]);c.add_argument('project')

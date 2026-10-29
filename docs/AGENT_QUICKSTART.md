@@ -9,10 +9,13 @@ include a native emulator, game files, saved states or project databases.
 ```text
 fdisbull --version
 fdisbull methods
+fdisbull agent-skill --index
 fdisbull agent-skill --reference SKILL.md
 ```
 
 `methods` prints the JSON method names and their parameter summaries.
+`agent-skill --index` lists each guide's purpose without transferring its text.
+Choose the relevant guide, then use `--reference` to retrieve it.
 `agent-skill` returns the packaged investigation instructions and references as
 JSON; it reads no project and does not register or install a skill into an
 agent's own discovery directory. Fetch a single resource when needed:
