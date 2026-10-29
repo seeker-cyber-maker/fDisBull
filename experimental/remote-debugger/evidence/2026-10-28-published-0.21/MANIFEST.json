@@ -1,0 +1,27 @@
+{
+  "version": "0.21.0",
+  "tag": "v0.21.0",
+  "source_commit": "a253600b94f7006f8962ada842eba699279fdbfe",
+  "publication": "https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.21.0",
+  "date_local": "2026-10-28",
+  "status": "published_and_system_active_verified",
+  "files": {
+    "asset-readback.json": {
+      "size": 3493,
+      "sha256": "a10cfd9d0cc10cb7c586703d61d152712e2836d5a0f2e06216eca4d1f78c2e4d"
+    },
+    "offline-kit.json": {
+      "size": 2653,
+      "sha256": "87e3916a65eea9b2b594eee2fd3b0a91e6dfc81c65b601e21597292397aba7ed"
+    },
+    "system-verification.json": {
+      "size": 4546,
+      "sha256": "8dc690360935a237f1004b3c85a92ef9cbf76c6bbd1b3a522b000fa173dacd3c"
+    },
+    "tag-ci.json": {
+      "size": 3496,
+      "sha256": "bf4e850e6a07e470b3e61d1f0842ebdc62eed12fe388c34509933d0d318375d8"
+    }
+  },
+  "scope": "Tag artifacts, public download readback, offline kit and this Mac installation; no user game resources, native captures or project databases included."
+}

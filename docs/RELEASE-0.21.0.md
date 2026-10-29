@@ -1,5 +1,8 @@
 # fDisBull 0.21.0
 
+
+> **Publication follow-up — 2026-10-28 (America/New_York).** The source-finalization status below predates the exact-commit CI, tag, publication, and system activation; its “pending” statements are historical. Version 0.21.0 is now published at tag [`v0.21.0`](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.21.0), source `a253600b94f7006f8962ada842eba699279fdbfe`. Ordinary tag CI passed 1,333 tests with 100 skips; tag-native CI passed 218 stable, 529 layers, 16 PE64 and 13 DOS/boot tests with zero native skips. The release assets were downloaded and hash-checked, and the shared Mac selector now activates 0.21.0. See the [publication record](PUBLICATION-0.21.md) and [release status](RELEASE_STATUS.md) for the later receipts. This follow-up is a later documentation note; it does not change the fixed source tag or its published package bytes.
+
 **Source documentation for release finalization.** Version 0.21.0
 extends fDisBull's scene and runtime investigation tools with resumable,
 revision-bound workflows, an independent text player, and qualified assisted

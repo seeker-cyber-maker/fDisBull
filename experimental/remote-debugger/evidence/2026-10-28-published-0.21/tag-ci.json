@@ -1,0 +1,114 @@
+{
+  "tag": "v0.21.0",
+  "source_commit": "a253600b94f7006f8962ada842eba699279fdbfe",
+  "runs": {
+    "native": {
+      "conclusion": "success",
+      "head_branch": "v0.21.0",
+      "head_sha": "a253600b94f7006f8962ada842eba699279fdbfe",
+      "id": 40801427016,
+      "jobs": {
+        "Native debugger (layers-backend)": 123210184482,
+        "Native debugger (stable-backend)": 123210184824,
+        "Unified DOS, boot and PE64 (installed wheel)": 123213521828
+      },
+      "status": "completed",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40801427016"
+    },
+    "ordinary": {
+      "conclusion": "success",
+      "head_branch": "v0.21.0",
+      "head_sha": "a253600b94f7006f8962ada842eba699279fdbfe",
+      "id": 40801426999,
+      "jobs": {
+        "test-and-package": 123210184515
+      },
+      "status": "completed",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40801426999"
+    }
+  },
+  "counts": {
+    "layers": 529,
+    "ordinary": 1333,
+    "ordinary_skipped": 100,
+    "pe64": 16,
+    "stable": 218,
+    "unified": 13
+  },
+  "all_native_suites_no_skips": true,
+  "assets": {
+    "fdisbull-0.21.0-linux-x86_64-offline.tar.gz": {
+      "sha256": "5f031f181e72c365ec14424215d8c2bf3ab174ce5a9f7a3c1931d77beb1a975f",
+      "size": 102217596
+    },
+    "fdisbull-0.21.0-linux-x86_64-source-companion.tar": {
+      "sha256": "d829f674022ae0497e6207b985e91965479f6d5b2bd65af322450a02fac58772",
+      "size": 106885120
+    },
+    "fdisbull-0.21.0-py3-none-any.whl": {
+      "sha256": "e185e7275c2082c1698d66680cdf3fb0e4dfa28b4bce2732e65df8a3b32e7c81",
+      "size": 447419
+    },
+    "fdisbull-0.21.0-tool.zip": {
+      "sha256": "1e88a6cf383aabcd26d9ff352bd0a30326b07d84dcb0bfdfc8a18914a860aa22",
+      "size": 1170413
+    },
+    "fdisbull-0.21.0.tar.gz": {
+      "sha256": "e614fbf25d1035ebb2ee460524ef572958089801b6c2bdff420c6dfbb2a76fc7",
+      "size": 974670
+    },
+    "fdisbull_player-0.21.0-py3-none-any.whl": {
+      "sha256": "c2ddae376e4ccc21672be195e4295c4ff96f57eed119a57c1e216c3d6a2bcbfb",
+      "size": 13147
+    }
+  },
+  "pe_tested_wheel_sha256": "1dffcd9a14d507a88e392791dda21ae847a5592a5e2a3dba61a0f68a8bf1c8f8",
+  "pe_wheel_entries_match_tag_package": 119,
+  "native_junit": {
+    "native-debugger-layers-backend": {
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "529",
+      "time": "66.906"
+    },
+    "native-debugger-pe64": {
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "16",
+      "time": "960.225"
+    },
+    "native-debugger-stable-backend": {
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "218",
+      "time": "33.590"
+    },
+    "native-debugger-unified": {
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "13",
+      "time": "162.608"
+    }
+  },
+  "offline_acceptance": {
+    "backend_sha256": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+    "counterexample": "counterexample",
+    "equivalence": "equivalent_under_assumptions",
+    "keyboard": true,
+    "machine": "x86_64",
+    "memory": true,
+    "native_restore": true,
+    "package_version": "0.21.0",
+    "platform": "Linux",
+    "player_live_resume": true,
+    "player_version": "0.21.0",
+    "project_restart": true,
+    "python_version": "3.13.5",
+    "screenshot_sha256": "1c12718a10d90d901a004896bd408ac89ac4f14cc5425281a5aadf83f950f578",
+    "solver_version": "5.3.2"
+  }
+}

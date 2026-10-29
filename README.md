@@ -13,17 +13,21 @@ a [separate text player](docs/TEXT_PLAYER.md), [automatic live-turn saves and re
 and [qualified travel assistance](docs/ASSISTED_TRAVEL.md). Live mode checkpoints
 after each model turn without a save command. An external agent can choose
 commands and narrate their observed results in bounded story sessions. Voice
-input/output is planned future work: Qwen TTS is available locally, while
-speech recognition and their combined interaction still need qualification.
-The source candidate and its current evidence are described in the
-[0.21.0 release notes](docs/RELEASE-0.21.0.md),
-[candidate scope](docs/UNRELEASED-0.21.md), and
-[verification record](docs/VERIFICATION-0.21.md). Linux ordinary and native CI
-must both pass on the exact final commit before tagging. No 0.21.0 tag, package
-publication, or shared-system update is recorded yet; 0.20.0 remains the latest
-published and installed release.
+input/output is planned future work: Qwen TTS is available locally according to
+the user; speech recognition and a complete voice interaction are unqualified.
+[Version 0.21.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.21.0)
+at source `a253600b94f7006f8962ada842eba699279fdbfe`. The exact-source ordinary
+workflow passed 1,333 tests with 100 skips; tag-native Linux CI passed 218 stable
+backend, 529 layers, 16 PE64, and 13 DOS/QEMU/boot tests with no native failures,
+errors, or skips. Eight published assets were downloaded and matched against
+GitHub digests. The [publication record](docs/PUBLICATION-0.21.md) documents the
+asset readback, Linux offline kit, and shared Mac activation at 0.21.0. The
+[candidate scope](docs/UNRELEASED-0.21.md) and [verification record](docs/VERIFICATION-0.21.md)
+retain their original evidence boundaries; the pending-status text in the
+[release notes](docs/RELEASE-0.21.0.md) is identified as a source-finalization
+snapshot by its publication follow-up.
 
-Version **0.20.0** integrates [typed input macros and bounded movement](docs/SEMANTIC_INPUT_MACROS.md), [scene geometry and content readiness](docs/SCENE_NAVIGATION.md), explicit DOS COM support, watch-only dot-mode, a partial AGI inspector, and [bounded Z3 model checks](docs/BOUNDED_PROOFS.md). See the [release notes](docs/RELEASE-0.20.0.md) and [offline kit with Z3](docs/OFFLINE_KIT_0.20.md). [0.20.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.20.0) with verified packages and the Z3 offline kit. The [publication record](docs/PUBLICATION-0.20.md) records tag CI, asset readback and the updated [shared Mac installation](docs/SYSTEM_INSTALLATION.md). The [candidate history](docs/UNRELEASED-0.20.md) and [Library reconciliation](docs/RECONCILIATION-0.20.md) preserve earlier identities and limitations.
+Version **0.20.0** integrates [typed input macros and bounded movement](docs/SEMANTIC_INPUT_MACROS.md), [scene geometry and content readiness](docs/SCENE_NAVIGATION.md), explicit DOS COM support, watch-only dot-mode, a partial AGI inspector, and [bounded Z3 model checks](docs/BOUNDED_PROOFS.md). See the [release notes](docs/RELEASE-0.20.0.md) and [offline kit with Z3](docs/OFFLINE_KIT_0.20.md). [0.20.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.20.0) with verified packages and the Z3 offline kit. The [publication record](docs/PUBLICATION-0.20.md) records its tag CI, asset readback and historical activation. The current [shared Mac installation](docs/SYSTEM_INSTALLATION.md) selects 0.21.0. The [candidate history](docs/UNRELEASED-0.20.md) and [Library reconciliation](docs/RECONCILIATION-0.20.md) preserve earlier identities and limitations.
 
 Version **0.19.0** adds guarded DOS filename aliases, persistent screenshot
 hooks, callback-safe DOSBox continuation and expanded investigation-skill
@@ -33,9 +37,9 @@ limits; the [development record](docs/UNRELEASED-0.19.md) retains earlier eviden
 with CI-verified wheel, source distribution and tool ZIP. The
 [publication record](docs/PUBLICATION-0.19.md) records tag CI, asset hashes,
 download readback and the [shared Mac installation](docs/SYSTEM_INSTALLATION.md).
-This records the earlier 0.19.0 publication. Global commands now select 0.20.0;
-retained 0.19.0 and 0.18.0 prefixes remain available for rollback and compatible
-checkpoints. Existing project environments are preserved. The 0.19.0 publication
+This records the earlier 0.19.0 publication. Global commands now select 0.21.0;
+retained 0.20.0, 0.19.0 and 0.18.0 prefixes remain available for guarded
+rollback and compatible checkpoints. Existing project environments are preserved. The 0.19.0 publication
 did not produce a new DeepSeek delivery or offline bundle.
 
 Persistent scenes share object context, supporting snapshots and composite masks
@@ -78,8 +82,8 @@ feature limits and the ordinary/native Linux checks required before tagging.
 
 | Track | Source and availability | Verification |
 | --- | --- | --- |
-| **Source candidate: 0.21.0** | Progressive workflows, independent text player and qualified travel; publication pending | [Candidate scope](docs/UNRELEASED-0.21.md), [release notes](docs/RELEASE-0.21.0.md), and [verification](docs/VERIFICATION-0.21.md). Ordinary and native Linux CI are required on the final commit before tagging. |
-| **Latest published release: 0.20.0** | [Verified packages and Z3 offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.20.0), source `4f7791b` | [Publication and shared installation](docs/PUBLICATION-0.20.md): 1,236 ordinary, 109 stable DOSBox, 415 layers, 16 PE64 and 13 DOS/boot checks; zero native skips. |
+| **Latest published and installed release: 0.21.0** | [Verified packages and Linux/DOS offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.21.0), source `a253600b94f7006f8962ada842eba699279fdbfe` | [Publication and shared installation](docs/PUBLICATION-0.21.md): 1,333 ordinary (100 skipped), 218 stable, 529 layers, 16 PE64 and 13 DOS/boot checks; zero native skips. |
+| **Previous published release: 0.20.0** | [Verified packages and Z3 offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.20.0), source `4f7791b` | [Publication and retained installation](docs/PUBLICATION-0.20.md): 1,236 ordinary, 109 stable DOSBox, 415 layers, 16 PE64 and 13 DOS/boot checks; zero native skips. |
 | **Earlier published release: 0.19.0** | [Verified packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.19.0), source `57824bd` | [Publication and shared installation](docs/PUBLICATION-0.19.md): 1,112 ordinary, 66 stable DOSBox, 372 layers, 16 PE64 and 13 DOS/boot checks; zero native skips. |
 | **Earlier published release: 0.18.0** | [Verified packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.18.0), source `416b64d` | [Publication and shared installation](docs/PUBLICATION-0.18.md): 1,089 ordinary, 54 stable DOS, 335 layers, 16 PE64 and 10 DOS/boot checks passed; zero native skips. |
 | **Earlier published release: 0.17.0** | [Packages and updated offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.17.0), source `4f736f2` | [Tag CI and copied-pair verification](docs/DELIVERY-0.17.md): 1,079 ordinary, 38 stable DOS, 318 layers, 16 PE64 and 10 DOS/boot checks passed; zero native skips. |
@@ -146,12 +150,12 @@ Launch an original DOS MZ or explicitly selected COM project with `fdisbull debu
 
 The current source adds an opt-in dot-mode watch-only window for the **same** native agent-controlled session: append `--dot-mode` (`--window` remains an alias) to the command above. Headless remains the default. This requires a compatible rebuilt backend and an accessible display; see the [window requirements and limitations](docs/DOSBOX_DEBUGGER.md#dot-mode).
 
-The current unreleased source also separates [structural MZ eligibility from
-DOS guest filenames](docs/DOS_INPUT_NAMES.md), supporting extensionless/long host
-names through guarded executable aliases. Published 0.18.0 and the shared system
-installation retain their recorded filename limitation.
+Version 0.21.0 also separates [structural MZ eligibility from DOS guest
+filenames](docs/DOS_INPUT_NAMES.md), supporting extensionless/long host names
+through guarded executable aliases. Published 0.20.0 and its retained system
+prefix keep their recorded filename limitation.
 
-The unreleased source includes persistent [screenshot pre/post hooks](docs/SCREENSHOT_HOOKS.md)
+Version 0.21.0 includes persistent [screenshot pre/post hooks](docs/SCREENSHOT_HOOKS.md)
 for temporarily suspending sprite-render layers, bounded preparation, recorded
 capture provenance and automatic restoration of the previous layer stack.
 

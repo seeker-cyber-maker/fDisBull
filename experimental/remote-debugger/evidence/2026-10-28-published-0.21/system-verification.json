@@ -1,0 +1,121 @@
+{
+  "version": "0.21.0",
+  "source_commit": "a253600b94f7006f8962ada842eba699279fdbfe",
+  "status": "active_verified",
+  "host_qualification": "This macOS ARM64 host only; not portable-Mac or interactive-window qualification",
+  "installation": "/Users/Shared/fDisBull/releases/0.21.0-a253600",
+  "selector": "releases/0.21.0-a253600",
+  "payload_entries": 2430,
+  "payload_manifest_sha256": "bb5eed9b948700f279f7ce7c34fa2a31bd6e146642c12a3311b1d896f7604710",
+  "installed_source_resources": {
+    "fdisbull-0.21.0-py3-none-any.whl": 114,
+    "fdisbull_player-0.21.0-py3-none-any.whl": 5
+  },
+  "installed_tests": {
+    "tests": 546,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "runtime_doctors": {
+    "dos": {
+      "status": "passed",
+      "version": "0.21.0",
+      "native_state_restored": true
+    },
+    "dos_qemu": {
+      "status": "passed",
+      "version": "0.21.0",
+      "native_state_restored": true
+    },
+    "wine": {
+      "status": "passed",
+      "version": "0.21.0",
+      "native_state_restored": true
+    }
+  },
+  "global_dos_doctor": {
+    "status": "passed",
+    "version": "0.21.0",
+    "native_state_restored": true
+  },
+  "global_player": {
+    "status": "passed",
+    "fresh_processes": 2,
+    "automatic_save": true,
+    "automatic_resume": true,
+    "checkpoint_private_outside_installation": true
+  },
+  "runtime_audits": {
+    "dos": {
+      "result": "pass",
+      "sha256": "00abe71a17f960a70afbd7204792566f76e80be7daaf9f1ae0700b709925c40d",
+      "size": 699995735,
+      "member_count": 21537,
+      "resources": {
+        "init": "a46aeacc5b34ed94a33d8b7d44eac2a20e8724088655aef046c9621bf3dd0383",
+        "opt/fdisbull/agent.c": "7f790582fc115fc3036f33c7a78bb11401619b4ce5adf0d624ca81d51c33d34a",
+        "opt/fdisbull/broker.py": "7e6263017345bd1b6c8132f39aaab3c7181516c4210ca8aef8cf6e70ef2eae21",
+        "opt/fdisbull/selftest.c": "70b5e3f4b443154f8346ba45103324fd95cc27ac24c508fc1f59c2542b6fa104",
+        "opt/fdisbull/dos_broker.py": "8054f409edcf75b78c3218ced24a839162ea1ef874fec9715db906d62826c93c",
+        "opt/fdisbull/remote/__init__.py": "037ab42b952c74c8964c3e13f336081398f6a3753688a25dded72a8a03af2c35",
+        "opt/fdisbull/remote/dosbox_rpc.py": "a4c2b21ac20c64b18dc99ca1e496a5e7745311613445537ab36d020d6c56bba7",
+        "opt/fdisbull/dosbox-x": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346"
+      },
+      "known_static_os_support": {
+        "var/lib/shells.state": {
+          "size": 84,
+          "sha256": "76d76e1be9b95bf126b60928151bc4c9e11b8a4f66697be0e02aa03d076d348a"
+        },
+        "usr/lib/gcc/x86_64-w64-mingw32/13-win32/plugin/gtype.state": {
+          "size": 1371523,
+          "sha256": "bf9f98cd7f8f5e78ade351c65b369850d860a5489235f1d21e1e5d0e39b8cb0d"
+        }
+      },
+      "excluded_payloads_found": 0
+    },
+    "wine": {
+      "result": "pass",
+      "sha256": "d784d94a0fbf81896e693cde6daa850cf81c1f2c6f391811913d234009fe7676",
+      "size": 648719411,
+      "member_count": 21530,
+      "resources": {
+        "init": "1d88753c741ff775444e95b3469a77aaeccaba5c5889d53ed2b63e9ae0d5ad43",
+        "opt/fdisbull/agent.c": "7f790582fc115fc3036f33c7a78bb11401619b4ce5adf0d624ca81d51c33d34a",
+        "opt/fdisbull/broker.py": "7e6263017345bd1b6c8132f39aaab3c7181516c4210ca8aef8cf6e70ef2eae21",
+        "opt/fdisbull/selftest.c": "70b5e3f4b443154f8346ba45103324fd95cc27ac24c508fc1f59c2542b6fa104"
+      },
+      "known_static_os_support": {
+        "var/lib/shells.state": {
+          "size": 84,
+          "sha256": "76d76e1be9b95bf126b60928151bc4c9e11b8a4f66697be0e02aa03d076d348a"
+        },
+        "usr/lib/gcc/x86_64-w64-mingw32/13-win32/plugin/gtype.state": {
+          "size": 1371523,
+          "sha256": "bf9f98cd7f8f5e78ade351c65b369850d860a5489235f1d21e1e5d0e39b8cb0d"
+        }
+      },
+      "excluded_payloads_found": 0
+    }
+  },
+  "package_directory_policy": {
+    "read_only": true,
+    "directories": 211,
+    "state_location": "private user data outside the installation"
+  },
+  "bytecode_reconciliation": {
+    "generated_files_quarantined": 280,
+    "source_resource_bytes_changed": 0
+  },
+  "source_resource_bytes_changed_by_cache_policy": 0,
+  "previous_release": "0.20.0-4f7791b",
+  "rollback": {
+    "status": "passed",
+    "old_sealed_entries_verified": 1796,
+    "owned_entrypoints_verified": 4,
+    "actual_rollback_performed": false
+  },
+  "existing_projects_or_sessions_migrated": false,
+  "game_files_saved_states_project_databases_included": false,
+  "new_deepseek_delivery_created": false
+}

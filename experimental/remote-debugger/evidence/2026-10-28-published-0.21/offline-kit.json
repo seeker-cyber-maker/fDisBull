@@ -1,0 +1,61 @@
+{
+  "all_checks_passed": true,
+  "checksummed_files": 18,
+  "companion_sha256": "d829f674022ae0497e6207b985e91965479f6d5b2bd65af322450a02fac58772",
+  "kit_files": 19,
+  "kit_sha256": "5f031f181e72c365ec14424215d8c2bf3ab174ce5a9f7a3c1931d77beb1a975f",
+  "manifest": {
+    "backend_receipt_sha256": "2d8fa1ae14d77a8ede0ce137eaf5049cf4ebd5af69b749a86ffed3df0cfe3604",
+    "backend_sha256": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+    "patch_manifest_sha256": "524f72813b665d3e82a5be4310128def6227384ecf6f2108a04afff0aaec6628",
+    "platform": "linux-x86_64",
+    "python": "3.13.5",
+    "source_commit": "a253600b94f7006f8962ada842eba699279fdbfe",
+    "source_companion": "fdisbull-0.21.0-linux-x86_64-source-companion.tar",
+    "source_companion_sha256": "d829f674022ae0497e6207b985e91965479f6d5b2bd65af322450a02fac58772",
+    "wheels": {
+      "capstone": {
+        "filename": "capstone-5.0.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        "sha256": "273fd8d747d2e35c88f91450be51a603ecfaafb00d96d9f315dcb8689c86193e",
+        "version": "5.0.9"
+      },
+      "fdisbull": {
+        "filename": "fdisbull-0.21.0-py3-none-any.whl",
+        "sha256": "e6c79434697a1f1e9509dc12bb0d8b93ff6354102db371643c875616ad3b4757",
+        "version": "0.21.0"
+      },
+      "fdisbull-player": {
+        "filename": "fdisbull_player-0.21.0-py3-none-any.whl",
+        "sha256": "b38e57fabe75aff5d4f70561bb58d8fd1a5658e860a9047f920edb33658155e7",
+        "version": "0.21.0"
+      },
+      "iced-x86": {
+        "filename": "iced_x86-1.21.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        "sha256": "489789377bfc1fe432bd2a8a5780c9f3e7c35be2e6133b0de5432cd901cad32c",
+        "version": "1.21.0"
+      },
+      "lief": {
+        "filename": "lief-1.0.0-cp312-abi3-manylinux_2_28_x86_64.whl",
+        "sha256": "41ff868f5328fc8e5237a9e1f4718590e0ee9180c1422b3e4948b7116ba4517c",
+        "version": "1.0.0"
+      },
+      "pillow": {
+        "filename": "pillow-12.3.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+        "sha256": "0847a763afefb695bc912d7c131e7e0632d4edc1d8698f58ddabec8e46b8b6d3",
+        "version": "12.3.0"
+      },
+      "z3-solver": {
+        "filename": "z3_solver-5.3.2.0-py3-none-manylinux_2_27_x86_64.whl",
+        "sha256": "f17df07300228a383470d4b4e1ad9daf429dc94885996712a1844a8242803935",
+        "version": "5.3.2.0"
+      }
+    }
+  },
+  "python_module_counts": {
+    "fdisbull": 100,
+    "fdisbull-player": 5
+  },
+  "python_source_mismatches": [],
+  "source_commit": "a253600b94f7006f8962ada842eba699279fdbfe",
+  "source_companion_checksum_verified": true
+}

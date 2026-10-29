@@ -1,6 +1,47 @@
-# Release status checked on 2026-10-28
+# Release status checked on 2026-10-28 (America/New_York)
 
-## 0.21.0 source finalization and release gates
+## Published 0.21.0 and activated shared Mac installation
+
+[0.21.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.21.0)
+at fixed source `a253600b94f7006f8962ada842eba699279fdbfe`. The exact-source
+[ordinary tag workflow](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40801426999)
+passed 1,333 tests with 100 skips. The [tag-native workflow](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40801427016)
+passed 218 stable-backend, 529 layers-backend, 16 installed-wheel PE64, and 13
+DOS-in-QEMU/boot-context tests. There were zero native failures, errors, or
+skips. The layers job also built and verified the Linux x86-64 offline kit with
+genuine Z3. Eight public assets were downloaded and matched against their
+GitHub SHA-256 digests.
+
+The shared selector at `/Users/Shared/fDisBull/current` now selects
+`releases/0.21.0-a253600`. The sealed installed payload contains 2,430 entries;
+Mac installed-wheel qualification passed 546 tests with zero skips, and the DOS,
+DOS/QEMU, and Wine/QEMU runtime doctors passed with native-state restoration.
+After activation, the global DOS doctor and global `fdisbull-player` checks for
+cross-process save/resume passed. Core and standalone-player global Python entry
+points resolve to 0.21.0. The former `releases/0.20.0-4f7791b` prefix remains
+available through `current/share/rollback-to-0.20.py`; rollback was preflight-checked without changing the active selection. Existing projects and captured
+states were preserved.
+
+The Mac checks qualify this host's installed prefix only. They do not establish
+portability to other macOS machines; interactive dot-mode remains unqualified.
+No full AGI interpreter or UIL/world equivalence is claimed. Voice remains
+future work: local Qwen TTS availability is user-reported, while speech
+recognition and a complete voice interaction are unqualified. No new DeepSeek
+delivery was made.
+
+See the [publication record](PUBLICATION-0.21.md) for the eight asset hashes,
+CI identities, installation evidence, and scope limits. The evidence manifest
+is [here](../experimental/remote-debugger/evidence/2026-10-28-published-0.21/MANIFEST.json).
+The frozen tag/source-finalization snapshots remain documented in the
+[candidate record](UNRELEASED-0.21.md), [release notes](RELEASE-0.21.0.md), and
+[verification record](VERIFICATION-0.21.md); those historical pending statements
+do not describe the current published/default state.
+
+### Historical 0.21.0 source finalization and release gates
+
+The following paragraphs describe the 0.21.0 source-finalization snapshot,
+before exact-commit CI and promotion. Their pending statements are historical;
+the current published and activated state is recorded above.
 
 The 0.21.0 source candidate adds progressive scene workflows, a separate text
 player, automatic turn persistence, bounded story sessions and qualified
@@ -18,7 +59,10 @@ identities are recorded in GitHub Actions and the annotated release tag after re
 not replace Linux CI, and no system installation or package publication is
 implied by candidate verification.
 
-## Published 0.20.0 and shared Mac installation
+## Previous published 0.20.0: earlier shared Mac installation
+
+This records the 0.20.0 publication and activation as they stood then; 0.21.0
+above is the current published and activated release.
 
 [0.20.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.20.0) at fixed source `4f7791baa2cca7bb3c62fc9a997dc8f86316c98d`.
 Both main workflows passed before tagging; both complete tag workflows also
@@ -27,7 +71,7 @@ passed. Tag results are 1,236 ordinary checks (98 skipped), 109 stable DOSBox,
 assets, including the genuine Z3 offline kit and corresponding backend source,
 passed public download/hash readback.
 
-The shared selector now activates `releases/0.20.0-4f7791b`. Qualification passed
+At that time, the shared selector activated `releases/0.20.0-4f7791b`. Qualification passed
 415 installed-wheel Mac DOSBox checks, seven boot/GDB checks, nine proof checks,
 and three runtime doctors with native-state restoration. Global commands and a
 further direct-DOS doctor passed after activation. The complete 1796-entry
