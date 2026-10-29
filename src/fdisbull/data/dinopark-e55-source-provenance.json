@@ -1,0 +1,14 @@
+{
+  "scope": "authored existing scene adapter and sampled pixel predicates; no game assets",
+  "source_files_sha256": {
+    "scene.py": "0fd84f33f655f3326e141c1ec939967057d9fc7cc1a9d055ef4fcbbf7fa3c91c",
+    "shop_patterns.json": "56b840fdd0a4a21b7e4223cdd922459aac4e1bbb019f472f64bc4be209ad5046",
+    "street_patterns.json": "cce87b5c4da70adccb1364142106c4b8669768619a8f878edcb33a4b9e7e4c6a",
+    "mart_patterns.json": "e5da3e3f68e6cacf1db788b4327eb127b2151a7d0c619d0fb85392985ac39378",
+    "save_patterns.json": "71537783f8aebee49a75c5edfb314fed938daed811aa8cbfec75a0dcfd8aa55f",
+    "newgame-pixel-patterns.json": "5b2acae80d3ddf6a83af9e76c1e4154f5466014be8dd310189fe8a197094c9a4"
+  },
+  "native_text_scene_class_ast_sha256": "e44f3ebee8431f93822434e7d264fcd59e680aa96f604a6b7c1ef1a5cfa5fbe2",
+  "native_text_scene_class_ast_python": "3.13",
+  "native_text_scene_class_source_sha256": "05a4b1d350fa033e2e178870a0a9b33b0b056d51963de405ed6537190f87436d"
+}

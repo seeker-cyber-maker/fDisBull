@@ -25,6 +25,7 @@ play an authored text projection without opening the debugger yourself.
 | Give an agent reliable scene context and navigation | [Scenes, maps and interaction policies](#scenes-maps-and-interaction-policies) |
 | Play a supported projection or a user-supplied Zork story | [Text play and interpreter inspection](#text-play-and-interpreter-inspection) |
 | Try shared interaction scenes through Z | [Z scene play](docs/Z_SCENES.md) |
+| Run a qualified DinoPark park through the original game | [DinoPark in Z](docs/DINOPARK_Z.md) |
 | Test a small recovered block against its original DOS backing | [The bounded UDC pipeline](#the-bounded-udc-pipeline) |
 
 Agents can start with [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) and the
@@ -133,6 +134,14 @@ The same player consumes a local scene service while the shared IL supplies the
 state and effects. See [Z scene play](docs/Z_SCENES.md) for a working authored
 example, model-driver support and current limits. This is an integration
 candidate on v0.23.0; the published v0.23.0 tag predates this addition.
+
+The [DinoPark Z provider](docs/DINOPARK_Z.md) lets an agent borrow and repay,
+buy supplies, prepare a pen, hire a guide, open the park and save its progress
+through a bounded text interface. The original-backed compiler reconstructs
+your own qualified game files before play, and the original engine performs
+the actions. Bring the game and a compatible native backend. See the
+[native verification and coverage limits](docs/VERIFICATION-DINOPARK-Z-RELIABILITY-2026-10-29.md)
+and [v0.23 merge-readiness checks](docs/VERIFICATION-Z-V023-MERGE-READINESS.md).
 
 The separately installable [text player](docs/TEXT_PLAYER.md) can consume an
 authored projection or connect to a compatible local backend. Its live mode

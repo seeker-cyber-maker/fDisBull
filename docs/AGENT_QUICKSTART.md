@@ -133,6 +133,26 @@ are passed without a shell. Public observations stay partial and omit private
 programs and evidence. Use `--quiet` for bounded external-driver runs with
 full results kept in the private transcript. See [Z scenes](Z_SCENES.md).
 
+### Play the original-backed DinoPark provider
+
+With the core and player installed in the same selected Python environment:
+
+```sh
+fdisbull-player \
+  --backend-command "python -m fdisbull.dinopark_z --game-dir /private/game --backend /private/backend/dosbox-x --work-dir /private/new-z-run" \
+  --backend-timeout 60
+```
+
+The work directory must be new, outside Git and separate from the qualified
+original. Try `look`, `go bank`, `repay loan`, `borrow loan` and `go office`.
+The provider first emits and verifies the original game through the v0.23 UDC;
+the native engine supplies effects. Its private receipts distinguish action
+completion from shutdown and interrupted/unknown outcomes. Use native `save
+park` for durable park persistence; live engine checkpoints have a separate
+ownership and resource-identity contract. Keep game files and evidence private.
+See [DinoPark Z](DINOPARK_Z.md) for the tested opening route, native requirements,
+partial coverage and remaining untested cases.
+
 ### Inspect interpreted game data
 
 For one AGI 2.917 logic resource in an uncompressed version-2 LOGDIR/VOL set:

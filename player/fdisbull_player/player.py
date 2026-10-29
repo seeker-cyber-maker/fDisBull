@@ -232,4 +232,4 @@ class ProcessBackend(JsonLineBackend):
             raise ValueError('Backend transport failed; action outcome may be unknown') from exc
 
     def close(self):
-        self.worker.close()
+        self.worker.close(graceful=not self.failed)

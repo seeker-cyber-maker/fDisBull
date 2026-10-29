@@ -84,6 +84,15 @@ exchange stops the connection; inspect unknown effects before any retry.
 installed runtime resources; provide your own authored or qualified scene input.
 Read `docs/Z_SCENES.md` for the envelope and exact limits.
 
+For the original-backed DinoPark provider, run
+`python -m fdisbull.dinopark_z` as the selected service with explicit original
+game, compatible backend and a new private work directory. It uses the v0.23
+DOS UDC before launching the original engine. Verify native receipts, keep
+unfinished or interrupted sessions distinct from successful cleanup, and never
+repeat an action solely because its follow-up view failed. `save park` uses the
+original disk writer and a fresh loader; a live snapshot is a separate facility.
+The qualified scene surface is partial. See `docs/DINOPARK_Z.md`.
+
 The debugger-backed `text-host` exposes a deliberately qualified public
 projection over a live session. It needs a private configuration, project,
 backend, game directory, resource root and explicit runtime witnesses. It is
