@@ -7,12 +7,15 @@ from .text_projection import serve_stream
 
 def _config(config):
     required = {'format', 'project', 'backend', 'game_dir', 'projection'}
-    allowed = required | {'version', 'state', 'bindings', 'port', 'timeout_ms', 'prepare_guest_ms', 'checkpoint_prepare_guest_ms'}
+    allowed = required | {'version', 'state', 'bindings', 'port', 'timeout_ms', 'prepare_guest_ms', 'checkpoint_prepare_guest_ms', 'fair_play', 'spatial_mode'}
     if not isinstance(config, dict) or not required <= set(config) <= allowed or config['format'] != 'fdisbull-text-host-1':
         raise ValueError('Invalid text host configuration')
     for key in ('project', 'backend', 'game_dir', 'projection'):
         if not isinstance(config[key], str) or not config[key]: raise ValueError('Invalid text host '+key)
     if 'state' in config and (not isinstance(config['state'], str) or not config['state']): raise ValueError('Invalid state artifact')
+    if type(config.get('fair_play', False)) is not bool: raise ValueError('Invalid fair play policy')
+    from .spatial import validate_mode
+    validate_mode(config.get('spatial_mode', 'physical' if config.get('fair_play') else 'assisted'), config.get('fair_play', False))
     port = config.get('port', 0); timeout = config.get('timeout_ms', 60000)
     if type(port) is not int or not 0 <= port <= 65535: raise ValueError('Invalid port')
     if type(timeout) is not int or not 1 <= timeout <= 600000: raise ValueError('Invalid timeout')
@@ -42,6 +45,11 @@ def host(config, *, on_listen=None):
     if on_listen is not None and not callable(on_listen): raise ValueError('on_listen must be callable')
     with Project(config['project']) as project:
         with project.debugger(config['backend'], config['game_dir'], version=config.get('version')) as session:
+            session.spatial_policy(config.get('spatial_mode', 'physical' if config.get('fair_play') else 'assisted'),
+                                   fair_play=config.get('fair_play', False))
+            if hasattr(session, '_event'):
+                session._event('run-policy', {'assisted_travel': session._allow_assisted_travel,
+                                              'source': 'text-host startup', 'voluntary': True})
             if config.get('state') is not None:
                 session.load_state(config['state'])
             for binding in config.get('bindings', []):
@@ -66,7 +74,9 @@ def host(config, *, on_listen=None):
                 listener.bind(('127.0.0.1', port))
                 listener.listen(1)
                 listener.settimeout(timeout / 1000)
-                address = {'host':'127.0.0.1', 'port':listener.getsockname()[1]}
+                address = {'host':'127.0.0.1', 'port':listener.getsockname()[1],
+                           'policy': {'assisted_travel': session._allow_assisted_travel,
+                                      'spatial_mode':session._spatial_mode, 'fair_play':session._fair_play}}
                 if preparation is not None: address['preparation'] = preparation
                 if on_listen: on_listen(address)
                 try:

@@ -227,3 +227,96 @@ def test_autoneutral_arrival_keeps_destination_without_toggle(monkeypatch):
     assert result['cleanup']['pre_stop_keyboard']=={'pending_events':0,'owned_keys':0}
     assert [c[1] for c in s.calls if c[0]=='macro']==['start']
     assert result['cleanup']['last_observation']['values']['x']==3
+
+
+class SpatialAdapter:
+    def __init__(self,target_class='clear', *, unknown_after=None):
+        self.target_class=target_class;self.points=[];self.unknown_after=unknown_after;self.boundaries=[]
+    def navigation_check(self,point):
+        self.points.append(point)
+        classification=self.target_class if point==[3,1] else 'clear'
+        if self.unknown_after is not None and len(self.points)>=self.unknown_after: classification='unknown'
+        return {'classification':classification,'conditions':{'wall':True},'manifest_sha256':'map-hash'}
+    def first_boundary(self,point,target,*,conditions):
+        self.boundaries.append((point,target,conditions))
+        return {'result':{'classification':'blocked','point':[2,1]}}
+
+
+def map_invoke(monkeypatch,s,**kwargs):
+    monkeypatch.setattr(movement,'capture_observations',lambda session,specs:next(session.samples))
+    fields={k:{'register':'general.ax'} for k in ('x','y','stopped','room')}
+    return s.move('macros',start={'name':'start'},stop={'name':'stop'},observations=fields,
+        until={'field':'x','op':'eq','value':3},progress={'fields':['x'],'samples':2},
+        settle={'field':'stopped','op':'eq','value':True},slice_ms=10,guest_ms=100,timeout_ms=10000,
+        spatial_map='map-revision',position={'x':'x','y':'y'},target=[3,1],**kwargs)
+
+
+@pytest.mark.parametrize('classification',['blocked','unknown'])
+def test_spatial_map_refuses_unqualified_destination_before_input(monkeypatch,classification):
+    adapter=SpatialAdapter(classification);s=Session([sample(1)])
+    s.spatial_navigation=lambda name,**kwargs:adapter
+    result=map_invoke(monkeypatch,s)
+    assert result['outcome']=='destination_'+classification and not result['ok']
+    assert not any(c[0] in ('macro','run') for c in s.calls)
+
+
+def test_spatial_map_boundary_uses_adapter_and_refreshes_cleanup(monkeypatch):
+    adapter=SpatialAdapter();s=Session([sample(1),sample(1),sample(1),sample(1)])
+    s.spatial_navigation=lambda name,**kwargs:adapter
+    result=map_invoke(monkeypatch,s,map_conditions={'wall':{'field':'stopped','op':'eq','value':True}})
+    assert result['classification']=='blocked_known_boundary'
+    assert adapter.boundaries==[([1,1],[3,1],{'wall':True})]
+    assert result['cleanup']['last_navigation']['classification']=='clear'
+
+
+def test_spatial_map_dynamic_unknown_stops_movement(monkeypatch):
+    adapter=SpatialAdapter(unknown_after=4);s=Session([sample(1),sample(2),sample(2)])
+    s.spatial_navigation=lambda name,**kwargs:adapter
+    result=map_invoke(monkeypatch,s)
+    assert result['outcome']=='geometry_disagreement' and not result['ok']
+    assert result['geometry_counterexample']['classification']=='unknown'
+
+
+def test_spatial_map_rejects_scene_and_bad_condition(monkeypatch):
+    s=Session([]);s.spatial_navigation=lambda name,**kwargs:SpatialAdapter()
+    with pytest.raises(ValueError,match='either scene'):
+        map_invoke(monkeypatch,s,scene='scene')
+    with pytest.raises(ValueError,match='known field'):
+        map_invoke(monkeypatch,s,map_conditions={'wall':{'field':'missing','op':'eq','value':1}})
+
+
+def test_target_tolerance_preserves_observed_arrival_and_map(monkeypatch):
+    adapter=SpatialAdapter();s=Session([sample(1),sample(2),sample(2)])
+    s.spatial_navigation=lambda name,**kwargs:adapter
+    monkeypatch.setattr(movement,'capture_observations',lambda session,specs:next(session.samples))
+    fields={k:{'register':'general.ax'} for k in ('x','y','stopped','room')}
+    result=s.move('macros',start={'name':'start'},stop={'name':'stop'},observations=fields,
+        until={'field':'x','op':'in_range','value':[2,4]},progress={'fields':['x'],'samples':2},
+        settle={'field':'stopped','op':'eq','value':True},slice_ms=10,guest_ms=100,timeout_ms=10000,
+        spatial_map='map-revision',position={'x':'x','y':'y'},target=[3,1],target_tolerance=2)
+    assert result['ok'] and [2,1] in adapter.points
+
+
+def test_target_tolerance_refuses_outside_range(monkeypatch):
+    s=Session([sample(1),sample(2),sample(2)],scene=Navigation())
+    result=invoke(monkeypatch,s,destination=2,scene='room',position={'x':'x','y':'y'},target=[5,1],target_tolerance=2)
+    assert not result['ok'] and result['outcome']=='destination_predicate_disagreement'
+
+
+@pytest.mark.parametrize('tolerance',[-1,True,65])
+def test_target_tolerance_invalid(monkeypatch,tolerance):
+    with pytest.raises(ValueError,match='target_tolerance'):
+        invoke(monkeypatch,Session([]),target_tolerance=tolerance)
+
+
+def test_target_tolerance_checks_final_settled_position(monkeypatch):
+    adapter=SpatialAdapter();s=Session([sample(1),sample(3),sample(4)])
+    s.spatial_navigation=lambda name,**kwargs:adapter
+    monkeypatch.setattr(movement,'capture_observations',lambda session,specs:next(session.samples))
+    fields={k:{'register':'general.ax'} for k in ('x','y','stopped','room')}
+    result=s.move('macros',start={'name':'start'},stop={'name':'stop'},observations=fields,
+        until={'field':'x','op':'in_range','value':[3,4]},progress={'fields':['x'],'samples':2},
+        settle={'field':'stopped','op':'eq','value':True},slice_ms=10,guest_ms=100,timeout_ms=10000,
+        spatial_map='map-revision',position={'x':'x','y':'y'},target=[3,1],target_tolerance=2)
+    assert result['ok'] and result['cleanup']['last_observation']['values']['x']==4
+    assert [4,1] in adapter.points

@@ -158,3 +158,50 @@ def test_wire_rejects_oversized_line_without_dispatch():
     backend = Backend(); output = io.StringIO()
     serve_stream(backend, io.StringIO('x' * (1024 * 1024) + '\n{"op":"observe"}\n'), output)
     assert output.getvalue() == '{"complete":false}\n' and not backend.called
+
+
+def test_fair_play_hides_travel_actions_and_invalidates_tokens(setup):
+    from test_assisted_travel import plan
+    p,root,doc=setup
+    wf=p.debug_workflow_info(doc['workflow_revision']); changed=copy.deepcopy(wf['definition'])
+    action=copy.deepcopy(changed['actions'][0]); action.update(name='travel-action', kind='assisted-travel')
+    changed['actions'].append(action)
+    revised=p.debug_save_workflow('wf',changed,resource_root=root,parent=wf['id'])
+    doc['workflow_revision']=revised['id']
+    obj=doc['contexts'][0]['objects'][0]
+    obj['bindings'].append({'verb':'teleport','item':None,'action':'travel-action',
+                            'dispatch':{'kind':'assisted-travel','plan':plan(), 'timeout_ms':1000}})
+    # Travel's pinned scene must match the context.
+    obj['bindings'][-1]['dispatch']['plan']['scene_revision']='scene1'
+    saved=p.debug_save_text_projection('text',doc); s=Session(p)
+    h=s.text_projection(saved['id'],root); before=h.observe()
+    assert 'teleport' in before['objects'][0]['verbs']
+    s._allow_assisted_travel=False
+    after=h.observe(); assert after['policy']['assisted_travel'] is False
+    assert after['objects'][0]['verbs']==['open']
+    req={'verb':'teleport','target':after['objects'][0]['id'],'item':None,'context_token':after['context']['token']}
+    assert h.act(req)['status'] != 'success' and s.inputs==0
+    req['context_token']=before['context']['token']
+    assert h.act(req)['status']=='rejected'
+
+
+def test_spatial_dispatch_keeps_guards_private_and_policy_invalidates_token(setup):
+    p,root,doc=setup
+    wf=p.debug_workflow_info(doc['workflow_revision']); changed=copy.deepcopy(wf['definition'])
+    changed['actions'][0]['kind']='spatial'
+    revised=p.debug_save_workflow('wf',changed,resource_root=root,parent=wf['id'])
+    doc['workflow_revision']=revised['id']
+    p.debug_spatial_map_info=lambda revision,**kw:{'id':'map1'}
+    descriptor={'map_revision':'map1','definition':{'map_revision':'map1','private-guard':'SECRET'}}
+    doc['contexts'][0]['objects'][0]['bindings'][0]['dispatch']={'kind':'spatial','args':descriptor}
+    saved=p.debug_save_text_projection('text',doc); s=Session(p)
+    s._spatial_mode='story';s._allow_assisted_travel=False
+    calls=[]
+    s.spatial_action=lambda **kw:calls.append(kw) or {'ok':True,'complete':True,'private':'SECRET'}
+    h=s.text_projection(saved['id'],root); before=h.observe()
+    req={'verb':'open','target':before['objects'][0]['id'],'item':None,'context_token':before['context']['token']}
+    result=h.act(req)
+    assert result['status']=='success' and result['assistance']=={'kind':'spatial','mode':'story'}
+    assert calls==[descriptor] and 'SECRET' not in json.dumps(result) and 'guard' not in json.dumps(before)
+    s._spatial_mode='physical';s._fair_play=True
+    assert h.act(req)['status']=='rejected' and len(calls)==1

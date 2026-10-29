@@ -44,7 +44,7 @@ def _call(value):
     if not isinstance(value,dict) or set(value)-{'name','args'} or not isinstance(value.get('name'),str):raise ValueError('Movement start/stop require a macro name and args')
 
 
-def validate_movement(observations,until,progress,settle, *, guest_ms=10000,timeout_ms=10000,slice_ms=50,cleanup_guest_ms=250,max_polls=1000,context=None,position=None,target=None,scene=None,boundary_tolerance=1):
+def validate_movement(observations,until,progress,settle, *, guest_ms=10000,timeout_ms=10000,slice_ms=50,cleanup_guest_ms=250,max_polls=1000,context=None,position=None,target=None,scene=None,boundary_tolerance=1,spatial_map=None,map_conditions=None,room_field='room',target_tolerance=0):
     validate_observations(observations)
     for p in (until,settle):validate_predicate(p,observations)
     if context is not None:validate_predicate(context,observations)
@@ -52,14 +52,23 @@ def validate_movement(observations,until,progress,settle, *, guest_ms=10000,time
     _bounded(slice_ms,'slice_ms',1,1000);_bounded(cleanup_guest_ms,'cleanup_guest_ms',1,10000)
     _bounded(max_polls,'max_polls',1,10000)
     _bounded(boundary_tolerance,'boundary_tolerance',0,64)
+    _bounded(target_tolerance,'target_tolerance',0,64)
     if not isinstance(progress,dict) or set(progress)-{'fields','samples','frames','frame_field'}:raise ValueError('Invalid progress contract')
     fields=progress.get('fields')
     if not isinstance(fields,list) or not fields or len(set(fields))!=len(fields) or any(f not in observations for f in fields):raise ValueError('Progress needs known fields')
     if ('samples' in progress)==('frames' in progress):raise ValueError('Progress requires exactly one samples or frames window')
     _bounded(progress.get('samples',progress.get('frames')),'progress window',1,1000)
     if 'frames' in progress and progress.get('frame_field') not in observations:raise ValueError('Frame progress needs an explicit frame observation')
-    if scene is not None:
-        if not isinstance(scene,str) or not isinstance(position,dict) or set(position)!={'x','y'} or any(v not in observations for v in position.values()):raise ValueError('Geometry needs scene and x/y fields')
+    if scene is not None and spatial_map is not None:raise ValueError('Choose either scene or spatial map')
+    if spatial_map is not None:
+        if not isinstance(spatial_map,str) or not spatial_map or not isinstance(room_field,str) or room_field not in observations:
+            raise ValueError('Spatial map requires a revision and observed room field')
+        if map_conditions is not None:
+            if not isinstance(map_conditions,dict) or any(not isinstance(k,str) or not k for k in map_conditions):raise ValueError('Invalid map conditions')
+            for predicate in map_conditions.values():validate_predicate(predicate,observations)
+    elif map_conditions is not None:raise ValueError('Map conditions require a spatial map')
+    if scene is not None or spatial_map is not None:
+        if (scene is not None and not isinstance(scene,str)) or not isinstance(position,dict) or set(position)!={'x','y'} or any(v not in observations for v in position.values()):raise ValueError('Geometry needs scene and x/y fields')
         if not isinstance(target,list) or len(target)!=2 or any(type(v) is not int for v in target):raise ValueError('Geometry needs explicit target point')
     elif position is not None or target is not None:raise ValueError('Navigation coordinates require a selected scene')
 
@@ -86,9 +95,11 @@ def _keyboard_counts(session):
 class MovementSessionMixin:
     @rpc_budget
     def move(self,macro_set, *, start,stop,observations,until,progress,settle,guest_ms=10000,timeout_ms=10000,
-             slice_ms=50,cleanup_guest_ms=250,max_polls=1000,context=None,scene=None,position=None,target=None,boundary_tolerance=1):
+             slice_ms=50,cleanup_guest_ms=250,max_polls=1000,context=None,scene=None,position=None,target=None,boundary_tolerance=1,
+             spatial_map=None,map_conditions=None,room_field='room',target_tolerance=0):
         validate_movement(observations,until,progress,settle,guest_ms=guest_ms,timeout_ms=timeout_ms,slice_ms=slice_ms,
-                          cleanup_guest_ms=cleanup_guest_ms,max_polls=max_polls,context=context,scene=scene,position=position,target=target,boundary_tolerance=boundary_tolerance)
+                          cleanup_guest_ms=cleanup_guest_ms,max_polls=max_polls,context=context,scene=scene,position=position,target=target,boundary_tolerance=boundary_tolerance,
+                          spatial_map=spatial_map,map_conditions=map_conditions,room_field=room_field,target_tolerance=target_tolerance)
         _call(start);_call(stop)
         # Validate both expansions/capabilities before sending any input. Only
         # typed lease references may depend on the start's runtime result.
@@ -114,7 +125,8 @@ class MovementSessionMixin:
         if any(s['op'] not in physical for plan in (start_plan,stop_plan) for s in plan['script']['steps']):
             raise ValueError('Movement control macros must contain physical input only; movement owns execution budgets')
         if not self.rpc.capabilities.get('timing',{}).get('fast_forward'):raise ValueError('Movement requires measured guest time')
-        handle=self.scene(scene) if scene is not None else None
+        handle=(self.spatial_navigation(spatial_map,observations=observations,room_field=room_field,conditions=map_conditions)
+                if spatial_map is not None else self.scene(scene) if scene is not None else None)
         if handle is not None:handle.navigation_check(target) # validate geometry/schema before input
         began=time.monotonic();deadline=began+timeout_ms/1000
         result={'format':'fdisbull-movement-result-1','run':self.run_id,'version':self.version['id'],'macro_set':info['id'],
@@ -164,7 +176,7 @@ class MovementSessionMixin:
                 result.update(outcome='already_arrived')
                 result['cleanup']['settled']=matches(settle,initial['values'])
                 if not result['cleanup']['settled']:result.update(ok=False,complete=False,outcome='initial_motion_not_settled')
-                if handle is not None and [initial['values'][position[k]] for k in ('x','y')]!=target:
+                if handle is not None and math.dist([initial['values'][position[k]] for k in ('x','y')],target)>target_tolerance:
                     result.update(ok=False,complete=False,outcome='destination_predicate_disagreement')
                 if result['outcome']=='already_arrived':result.update(ok=True,complete=True)
             else:
@@ -196,7 +208,7 @@ class MovementSessionMixin:
                     # Arrival wins over the final progress-window sample.
                     if matches(until,values):
                         result['outcome']='arrived'
-                        if handle is not None and [values[position[k]] for k in ('x','y')]!=target:
+                        if handle is not None and math.dist([values[position[k]] for k in ('x','y')],target)>target_tolerance:
                             result['outcome']='destination_predicate_disagreement'
                         break
                     keyboard=_keyboard_counts(self);sample['keyboard']=keyboard
@@ -217,8 +229,12 @@ class MovementSessionMixin:
                         result.update(outcome='blocked',classification='blocked_unknown')
                         if handle is not None:
                             from .navigation_geometry import route_first_boundary
-                            doc=handle.info['definition']['navigation'];point=[values[position[k]] for k in ('x','y')]
-                            boundary=route_first_boundary(doc,[point,target],conditions=nav['conditions'])
+                            point=[values[position[k]] for k in ('x','y')]
+                            if hasattr(handle,'first_boundary'):
+                                boundary=handle.first_boundary(point,target,conditions=nav['conditions'])
+                            else:
+                                doc=handle.info['definition']['navigation']
+                                boundary=route_first_boundary(doc,[point,target],conditions=nav['conditions'])
                             result['expected_boundary']=boundary
                             if boundary and boundary['result']['classification']=='blocked' and math.dist(point,boundary['result']['point'])<=boundary_tolerance:
                                 result['classification']='blocked_known_boundary'
@@ -251,10 +267,18 @@ class MovementSessionMixin:
                             result['cleanup'].setdefault('runs',[]).append(run)
                             if run['outcome']!='guest_time' or run.get('hook_hits'):
                                 result['cleanup']['stop']=run;raise ValueError('Debugger stop preserved during input drain')
+                            if handle is not None:
+                                sample=capture_observations(self,observations)
+                                if not sample['complete']:raise ValueError('Cleanup map observation incomplete')
+                                nav=geometry(sample);result['cleanup']['drain_navigation']=nav
+                                if nav['classification']!='clear':raise ValueError('Cleanup footprint is not qualified clear')
                         # A latched direction may already have auto-neutralized at
                         # a room boundary. Sending its toggle again would restart it.
                         sample=capture_observations(self,observations)
                         keyboard=_keyboard_counts(self)
+                        if sample['complete'] and handle is not None:
+                            nav=geometry(sample);result['cleanup']['pre_stop_navigation']=nav
+                            if nav['classification']!='clear':raise ValueError('Cleanup footprint is not qualified clear')
                         result['cleanup']['pre_stop_observation']=sample
                         result['cleanup']['pre_stop_keyboard']=keyboard
                         already_settled=(sample['complete'] and matches(settle,sample['values'])
@@ -270,6 +294,9 @@ class MovementSessionMixin:
                                 sample=first_sample;first_sample=None
                             else:sample=capture_observations(self,observations)
                             result['cleanup']['last_observation']=sample
+                            if sample['complete'] and handle is not None:
+                                nav=geometry(sample);result['cleanup']['last_navigation']=nav
+                                if nav['classification']!='clear':raise ValueError('Cleanup footprint is not qualified clear')
                             keyboard=_keyboard_counts(self);result['cleanup']['keyboard']=keyboard
                             if sample['complete'] and matches(settle,sample['values']) and not keyboard['pending_events'] and not keyboard['owned_keys']:
                                 result['cleanup']['settled']=True
@@ -281,7 +308,7 @@ class MovementSessionMixin:
                                         nav=geometry(sample)
                                         if nav is not None and nav['classification']!='clear':
                                             result['outcome']='geometry_disagreement';result['geometry_counterexample']=nav
-                                        elif handle is not None and [values[position[k]] for k in ('x','y')]!=target:
+                                        elif handle is not None and math.dist([values[position[k]] for k in ('x','y')],target)>target_tolerance:
                                             result['outcome']='destination_predicate_disagreement'
                                         else:result.update(ok=True,complete=True)
                                 break

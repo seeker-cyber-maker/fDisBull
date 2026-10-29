@@ -16,6 +16,7 @@ OPERATIONS = {
     'keyboard.press':'keyboard_press','keyboard.type':'keyboard_type','keyboard.state':'keyboard_state',
     'keyboard.key-down':'keyboard_key_down','keyboard.key-up':'keyboard_key_up',
     'macro':'macro','move':'move','assisted-travel':'assisted_travel','proof-check':'proof_check','scene-navigation':'scene_navigation',
+    'spatial-policy':'spatial_policy','spatial-action':'spatial_action',
     'bind-runtime-memory':'bind_runtime_memory','runtime-memory':'runtime_memory',
     'workflow-observe':'workflow_observe','workflow-act':'workflow_act','text-observe':'text_observe','text-act':'text_act',
     'wait':'wait',
@@ -137,7 +138,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
-            if step['op'] in ('run','trace','wait','scene-wait','scene-click','scene-act','macro','move','proof-check'):
+            if step['op'] in ('run','trace','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
                 requested=params.get('timeout_ms')
                 if requested is None:requested=remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)

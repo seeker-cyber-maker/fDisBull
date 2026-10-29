@@ -7,6 +7,14 @@ import sys
 from . import __version__
 
 METHODS = {
+    'debug-save-spatial-map':'Save an immutable source-bound room map; name,document,[parent,version,author]',
+    'debug-spatial-map-info':'Read a pinned room-map revision; revision,[version]',
+    'debug-spatial-check':'Check actor footprint against known safe masks; revision,point,[conditions,version]',
+    'debug-spatial-candidates':'Propose clear anchors in game units; revision,[zone,origin,limit,clearance,conditions,version]',
+    'debug-spatial-route':'Plan a bounded cardinal route through known clear cells; revision,start,goal,[conditions,maxnodes,version]',
+    'debug-spatial-overlay':'Export a stored game-unit map as PNG; revision,output,[conditions,version]',
+    'debug-spatial-policy':'Inspect or select physical, assisted or story policy; run,[mode,fair_play]',
+    'debug-spatial-action':'Run an original input under a qualified spatial policy; run,map_revision,definition,[room_field,conditions,zone,actor_recipe,travel_plan,timeout_ms]',
     'debug-save-workflow':'Save a resource-bound partial workflow; name,definition,resource_root,[parent,version,author]',
     'debug-workflow-info':'Read an immutable workflow revision; workflow,[version]',
     'debug-workflow-receipts':'Read persisted workflow attempts and outcomes; workflow,[version]',
@@ -26,7 +34,7 @@ METHODS = {
     'debug-export-macros':'Return a metadata-only portable vocabulary envelope; macro_set,[version]',
     'debug-import-macros':'Import a matching source/version vocabulary envelope; envelope,[version,author]',
     'debug-macro':'Expand and execute a selected typed input macro; run,macro_set,name,[args,timeout_ms,allowed_authorities]',
-    'debug-move':'Observe a bounded route with explicit controls, destination, progress and stop contracts; run,macro_set,start,stop,observations,until,progress,settle,[guest_ms,timeout_ms,scene,position,target]',
+    'debug-move':'Observe a bounded route with explicit controls, destination, progress and stop contracts; run,macro_set,start,stop,observations,until,progress,settle,[guest_ms,timeout_ms,scene,spatial_map,map_conditions,room_field,position,target,target_tolerance]',
     'debug-bind-runtime-memory':'Qualify a session-local read-only DOS runtime view; run,name,address,length,expected_hex,provenance,[mask_hex]',
     'debug-runtime-memory':'Read a qualified runtime view; run,binding,[offset,length]',
     'debug-proof-check':'Persist a bounded model check with live run provenance; run,spec,[timeout_ms,author,evidence]',
@@ -67,7 +75,7 @@ METHODS = {
     'debug-contexts': 'List explicit DOS/process and outer-machine execution contexts; run',
     'debug-pause': 'Pause all vCPUs in the selected machine context; run,context=machine',
     'debug-resume': 'Resume the selected machine so guest services can run; run,context=machine',
-    'debug-launch': 'Launch project-bound DOSBox or PE64 Wine/QEMU/IDA; executable,game_dir,[version,backend,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window]',
+    'debug-launch': 'Launch project-bound DOSBox or PE64 Wine/QEMU/IDA; executable,game_dir,[version,backend,kernel,initramfs,files,boot_timeout_ms,state,remote_server,window,spatial_mode,fair_play]',
     'debug-status': 'Live debugger status and address mapping; run',
     'debug-registers': 'Live CPU registers with project address mapping; run',
     'debug-layer': 'Save an immutable guarded RAM or execution layer; name,kind,patches,[version]',
@@ -253,7 +261,8 @@ def invoke(method, params, debugger=None):
         raise ValueError("project path is required")
     scene_offline=('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations',
                    'debug-scene-observation','debug-export-scenes','debug-import-scenes',
-                   'debug-save-workflow','debug-workflow-info','debug-workflow-receipts','debug-save-text-projection','debug-text-projection-info')
+                   'debug-save-workflow','debug-workflow-info','debug-workflow-receipts','debug-save-text-projection','debug-text-projection-info',
+                   'debug-save-spatial-map','debug-spatial-map-info','debug-spatial-check','debug-spatial-candidates','debug-spatial-route','debug-spatial-overlay')
     macro_offline=('debug-define-macros','debug-macro-sets','debug-macro-info','debug-export-macros','debug-import-macros')
     if method in scene_offline+macro_offline:
         if 'definition_file' in p:
@@ -398,6 +407,25 @@ def parser():
     sub = root.add_subparsers(dest="command",required=True)
     c=sub.add_parser('text-host',help='Serve one local text player over a qualified original-game projection')
     c.add_argument('configuration',help='Private JSON configuration; game, state and project paths remain local')
+    c.add_argument('--fair-play',action='store_true',help='Disable assisted within-room teleports and room jumps for this host')
+    c.add_argument('--spatial-mode',choices=['physical','assisted','story'],help='Choose ordinary movement, qualified placement or source-identified proximity waivers')
+    c=sub.add_parser('zork',help='Bounded original-story JSON-lines harness with an explicitly selected Jericho Python')
+    c.add_argument('story'); c.add_argument('--python',required=True)
+    c.add_argument('--seed',type=int,default=123); c.add_argument('--timeout-ms',type=int,default=10000)
+    c.add_argument('--resume'); c.add_argument('--checkpoint',help='Private checkpoint updated atomically after each completed command')
+    c.add_argument('--scenes',help='Private qualified named-scene/action JSON mapping')
+    c=sub.add_parser('story-info',help='Recognize raw Z-machine v3 by structure, independent of extension')
+    c.add_argument('story')
+    c=sub.add_parser('zork-recover',help='Recover the qualified R88 mailbox action into shared source-backed IL')
+    c.add_argument('story')
+    for name in ('il-check','il-run'):
+        c=sub.add_parser(name,help='Validate or evaluate the shared UDL/UIL primitive block representation')
+        c.add_argument('program'); c.add_argument('--state'); c.add_argument('--capability',action='append',choices=('graphics','audio','input'),default=[])
+    c=sub.add_parser('il-store',help='Store an immutable source-checked shared IL revision with a project')
+    c.add_argument('project'); c.add_argument('name'); c.add_argument('program'); c.add_argument('--version',type=int)
+    c.add_argument('--parent'); c.add_argument('--source'); c.add_argument('--source-name',default='story')
+    c=sub.add_parser('il-info',help='Read an immutable IL revision and verify its attached source evidence')
+    c.add_argument('project'); c.add_argument('revision'); c.add_argument('--version',type=int)
     sub.add_parser('agent-skill',help=METHODS['agent-skill'])
     for name in ('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations',
                  'debug-scene-observation','debug-export-scenes','debug-import-scenes'):
@@ -434,6 +462,8 @@ def parser():
     c.add_argument('--boot-timeout-ms',type=int,default=240000)
     c.add_argument('--state',help='PE64 native checkpoint artifact to restore without cold launch')
     c.add_argument('--dot-mode','--window',dest='window',action='store_true',help='Request dot-mode: a watch-only native DOSBox window (requires compatible backend and display)')
+    c.add_argument('--spatial-mode',choices=['physical','assisted','story'])
+    c.add_argument('--fair-play',action='store_true',help='Lock this session to physical mode')
     for name in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-experiments','debug-experiment-info','debug-promote-code','debug-trace-view','runtime-version-info'):
         c = sub.add_parser(name,help=METHODS[name]);c.add_argument('project')
         if name in ('debug-state-info','debug-experiment-info'):
@@ -619,15 +649,82 @@ def parser():
     sub.add_parser("methods",help="describe JSON methods")
     return root
 
+def _language_command(command,args):
+    """Local language/harness entry points; user stories and states stay external."""
+    def read_json(path,limit=65536):
+        with open(path,'rb') as stream:
+            raw=stream.read(limit+1)
+        if len(raw)>limit:raise ValueError('JSON input exceeds its size budget')
+        return json.loads(raw)
+    try:
+        if command=='story-info':
+            from .zmachine import inspect_story
+            emit(inspect_story(args['story']));return 0
+        if command=='zork-recover':
+            from .zork_recovery import recover_mailbox
+            emit(recover_mailbox(args['story']));return 0
+        if command.startswith('il-'):
+            from .interaction_il import execute_il,validate_il
+            from .il_recovery import save_il,load_il
+            if command in ('il-check','il-run'):
+                program=read_json(args['program']);validate_il(program)
+                result=({'complete':True,'status':'valid','role':program['role']} if command=='il-check' else
+                        execute_il(program,state=read_json(args['state']) if args['state'] else None,capabilities=args['capability']))
+                emit(result);return 0 if result['complete'] else 1
+            from .project import Project
+            with Project(args['project']) as project:
+                if command=='il-info':result=load_il(project,args['revision'],version=args['version'])
+                else:
+                    if args['source']:project.attach_file(args['source'],name=args['source_name'],version=args['version'])
+                    result=save_il(project,args['name'],read_json(args['program']),version=args['version'],parent=args['parent'])
+                emit(result)
+            return 0
+        from .zork import ZorkSession,NamedZorkHarness,ZorkError
+        with ZorkSession(args['story'],python=args['python'],seed=args['seed'],timeout_ms=args['timeout_ms']) as session:
+            if args['resume']:session.restore_checkpoint(args['resume'])
+            harness=NamedZorkHarness(session,read_json(args['scenes'])) if args['scenes'] else None
+            emit({'status':'ready',**session.observe(),'story':session.story_info,
+                  'policy':{'assisted_travel':False}})
+            while True:
+                line=sys.stdin.readline(1024*1024+1)
+                if not line:break
+                if len(line.encode())>1024*1024 or not line.endswith('\n'):raise ValueError('Incomplete or excessive request line')
+                request=json.loads(line)
+                if not isinstance(request,dict):raise ValueError('Expected request object')
+                op=request.get('op'); executed=False
+                if op=='observe' and set(request)=={'op'}:result=session.observe()
+                elif op=='command' and set(request)=={'op','text'}:result=session.command(request['text']);executed=True
+                elif op in ('save','restore') and set(request)=={'op','path'}:
+                    result=(session.save_checkpoint if op=='save' else session.restore_checkpoint)(request['path'])
+                elif harness and op in ('scene','reacquire') and set(request)=={'op','scene'}:
+                    result=(harness.observe if op=='scene' else harness.reacquire)(request['scene'])
+                elif harness and op=='act' and set(request)=={'op','scene','action','token'}:
+                    result=harness.act(request['scene'],request['action'],request['token']);executed=True
+                else:raise ValueError('Unsupported request or fields')
+                if executed and args['checkpoint']:result['checkpoint']=session.save_checkpoint(args['checkpoint'])
+                emit(result)
+                if result.get('outcome')=='unexpected':return 1
+        return 0
+    except (ValueError,OSError,RuntimeError,EOFError,KeyError,TypeError) as error:
+        emit({'complete':False,'status':'stopped','error':str(error)})
+        return 1
+
+
 def main(argv=None):
     args = vars(parser().parse_args(argv))
     command = args.pop("command")
+    if command in ('story-info','zork','zork-recover','il-check','il-run','il-store','il-info'):
+        return _language_command(command,args)
     if command == 'text-host':
         from .text_host import host
         try:
             path=Path(args['configuration'])
             if not path.is_file() or path.stat().st_size>1024*1024:raise ValueError('Expected a text host configuration at most 1 MiB')
             configuration=json.loads(path.read_text())
+            if args['fair_play']:
+                configuration=dict(configuration,fair_play=True,spatial_mode='physical')
+            if args['spatial_mode'] is not None:
+                configuration=dict(configuration,spatial_mode=args['spatial_mode'])
             emit(host(configuration,on_listen=lambda address:emit({'text_player_endpoint':address})))
             return 0
         except (ValueError,OSError) as error:

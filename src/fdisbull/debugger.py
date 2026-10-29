@@ -25,6 +25,7 @@ from .movement import MovementSessionMixin
 from .progressive_scenes import ProgressiveSceneProjectMixin, ProgressiveSceneSessionMixin
 from .assisted_travel import AssistedTravelSessionMixin
 from .text_projection import TextProjectionProjectMixin, TextProjectionSessionMixin
+from .spatial import SpatialProjectMixin, SpatialSessionMixin, validate_mode
 
 
 DEBUG_DDL = '''
@@ -62,13 +63,18 @@ DEBUG_DDL += SCREENSHOT_HOOK_DDL
 DEBUG_DDL += MACRO_DDL
 
 
-class DebugProjectMixin(TextProjectionProjectMixin, ProgressiveSceneProjectMixin, MacroProjectMixin, ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
+class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, ProgressiveSceneProjectMixin, MacroProjectMixin, ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
     def machine(self, executable, *, boot_image, version=None, boot_timeout_ms=30000):
         from .qemu_machine import MachineDebugSession
         return MachineDebugSession(self,executable,boot_image=boot_image,version=version,boot_timeout_ms=boot_timeout_ms)
 
     def debugger(self, executable, game_dir, *, version=None, backend=None, kernel=None,
-                 initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None, window=False,_on_spawn=None):
+                 initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None, window=False,_on_spawn=None,
+                 spatial_mode=None, fair_play=False):
+        if spatial_mode is None: spatial_mode = 'physical' if fair_play else 'assisted'
+        validate_mode(spatial_mode, fair_play)
+        if (spatial_mode != 'assisted' or fair_play) and (backend not in (None, 'dosbox') or self.meta['format'] == 'PE'):
+            raise ValueError('Spatial game policy currently requires native DOSBox')
         if type(window) is not bool:
             raise ValueError('window must be boolean')
         if window and (backend not in (None, 'dosbox') or (backend is None and self.meta['format']=='PE')):
@@ -99,7 +105,8 @@ class DebugProjectMixin(TextProjectionProjectMixin, ProgressiveSceneProjectMixin
                 version=version,files=files,boot_timeout_ms=boot_timeout_ms,state=state)
         if backend not in (None,'dosbox') or kernel is not None or initramfs is not None or files is not None or state is not None:
             raise ValueError('Unexpected DOS backend or Wine-only launch options')
-        return DebugSession(self, executable, game_dir, version=version,window=window,_on_spawn=_on_spawn)
+        return DebugSession(self, executable, game_dir, version=version,window=window,_on_spawn=_on_spawn,
+                            spatial_mode=spatial_mode, fair_play=fair_play)
 
     def debug_runs(self, version=None):
         v = self.version(version)['id']
@@ -242,14 +249,19 @@ class DebugProjectMixin(TextProjectionProjectMixin, ProgressiveSceneProjectMixin
         return self._debug_artifact(row['run'],name,'screenshot-grid',rendered,metadata)
 
 
-class DebugSession(TextProjectionSessionMixin, AssistedTravelSessionMixin, ProgressiveSceneSessionMixin, MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
+class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTravelSessionMixin, ProgressiveSceneSessionMixin, MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
     @property
     def script_operations(self):
         from .debug_script import OPERATIONS
         return (set(OPERATIONS)|{'assert'})-{'write-memory','write-registers'}
 
     """One explicitly owned emulator; closing the project also closes sessions."""
-    def __init__(self, project, executable, game_dir, *, version=None,window=False,_on_spawn=None):
+    def __init__(self, project, executable, game_dir, *, version=None,window=False,_on_spawn=None,
+                 spatial_mode=None, fair_play=False):
+        if spatial_mode is None: spatial_mode = 'physical' if fair_play else 'assisted'
+        validate_mode(spatial_mode, fair_play)
+        self._spatial_mode, self._fair_play = spatial_mode, fair_play
+        self._allow_assisted_travel = spatial_mode == 'assisted' and not fair_play
         if type(window) is not bool:
             raise ValueError('window must be boolean')
         self.window = window
@@ -611,6 +623,8 @@ class DebugSession(TextProjectionSessionMixin, AssistedTravelSessionMixin, Progr
         return entries
 
     def save_state(self, name='checkpoint.sav'):
+        if getattr(self, '_spatial_guard_active', False) or getattr(self, '_spatial_guard_failed', False):
+            raise ValueError('Cannot checkpoint a temporary or unrestored spatial guard')
         _file_name(name)
         if not self.rpc.capabilities.get('save_states'):
             raise DebuggerError('DOSBox build lacks native state operations')
@@ -914,6 +928,7 @@ class DebugWorkspace:
                         'debug-runtime-memory':'runtime_memory','debug-proof-check':'proof_check','debug-scene-navigation':'scene_navigation'})
         methods.update({'debug-workflow-observe':'workflow_observe','debug-workflow-act':'workflow_act',
                         'debug-text-observe':'text_observe','debug-text-act':'text_act','debug-assisted-travel':'assisted_travel'})
+        methods.update({'debug-spatial-policy':'spatial_policy','debug-spatial-action':'spatial_action'})
         context=params.pop('context',None)
         if method=='debug-stop':
             if params:

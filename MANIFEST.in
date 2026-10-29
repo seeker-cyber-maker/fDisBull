@@ -9,6 +9,8 @@ include tests/dosbox_zip_empty_write.cpp
 include tests/ida_rpc_vectors.json
 include src/fdisbull/ida_guest/SDK-LICENSE.txt
 recursive-include docs *.md
+include docs/evidence/spatial-2026-10-29/verification.json
+include docs/evidence/zork-2026-10-29/verification.json
 recursive-include scripts *.py
 prune examples
 prune history

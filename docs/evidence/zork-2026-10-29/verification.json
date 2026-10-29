@@ -1,0 +1,106 @@
+{
+  "format": "fdisbull-zork-public-verification-1",
+  "date": "2026-10-29",
+  "status": "verified bounded source candidate; uncommitted and unpublished",
+  "base_commit": "7a01c1efa61e524ea36cea458ffaf9fa593fa6ff",
+  "story_sha256": "0ae5ac229e79094ff368b6669356444af0f35e21d862a1baaa546989085c15fd",
+  "dos_interpreter_sha256": "2a6f366349be71ef4a164e3fc9c31a4a3d8c24ee6ddac93ed345c993c3562514",
+  "dosbox_sha256": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277",
+  "jericho_version": "3.3.1",
+  "jericho_native_sha256": "9bc3d22d239a076ccd0713ed78142318de438485405c602b3b641bb1713dabc9",
+  "comparisons": [
+    {
+      "case": "first-open",
+      "state_equal": true,
+      "text_equal": true
+    },
+    {
+      "case": "repeated-open",
+      "state_equal": true,
+      "text_equal": true
+    },
+    {
+      "case": "frotz-state-vs-dos",
+      "state_equal": true
+    },
+    {
+      "case": "frotz-first-vs-dos",
+      "text_equal": true
+    },
+    {
+      "case": "frotz-repeat-vs-dos",
+      "text_equal": true
+    }
+  ],
+  "scope": {
+    "story_sha256": "0ae5ac229e79094ff368b6669356444af0f35e21d862a1baaa546989085c15fd",
+    "scope": "mailbox open, first or repeated, qualified single-child source path",
+    "object_variable": 134,
+    "object_number": 160,
+    "child_number": 161,
+    "unknown": [
+      "parser and object binding",
+      "turn loop",
+      "global processes",
+      "other object and list states"
+    ]
+  },
+  "state_scope": "only explicitly declared action-entry fields; no full RAM, RNG, parser or world equivalence across interpreters",
+  "text_normalization": "whitespace folding only; DOS command echo/prompt removed by fresh-screen overlap attribution",
+  "source_writes": [
+    {
+      "source_offset": 32931,
+      "next_virtual_pc": 32934,
+      "source_bytes": "4b860b",
+      "object_record_after_hex": "00141000b400a11a38",
+      "native_project_instruction": "1000:17ab",
+      "stop_timing": "after_access_before_next_instruction"
+    },
+    {
+      "source_offset": 32934,
+      "next_virtual_pc": 32937,
+      "source_bytes": "4b8603",
+      "object_record_after_hex": "10141000b400a11a38",
+      "native_project_instruction": "1000:17ab",
+      "stop_timing": "after_access_before_next_instruction"
+    }
+  ],
+  "checkpoint_same_native_session": true,
+  "checkpoint_warm_fresh_native_session": true,
+  "cold_native_restore": "not qualified; prior attempts failed; initialization to original opening prompt is part of recipe",
+  "checkpoint_fresh_story_worker_response": true,
+  "checkpoint_fresh_story_worker_all_nine_components": true,
+  "database_restart": true,
+  "udl_uil_identical_behavior": true,
+  "named_action": "expected",
+  "inputs_unchanged": true,
+  "installed_wheel_smoke": {
+    "installed_from_private_candidate_wheel": true,
+    "cli_autosave": true,
+    "fresh_cli_resume": true,
+    "repeated_response_equal": true,
+    "extracted_il_runs_without_story_interpreter_or_db": true,
+    "source_state_equal": true
+  },
+  "focused_tests": {
+    "passed": 90,
+    "skipped": 1
+  },
+  "full_mac_tests": {
+    "passed": 1362,
+    "skipped": 104,
+    "failed": 2,
+    "setup_errors": 23,
+    "status": "not green",
+    "cause": "Linux ELF fixture assumptions with Apple gcc; .type is rejected by native assembler",
+    "new_failure_names_since_prior_run": []
+  },
+  "fair_play": {
+    "startup_flag": "text-host --fair-play",
+    "assisted_travel": false,
+    "coverage": "direct refusal, projection filtering/tokens, checkpoint retains current policy; unit/contract tested",
+    "claim": "voluntary policy; no anti-cheat or manual debugger restriction"
+  },
+  "exclusions": "No game files, saved states, databases, raw RAM, retail IL message resources, or full transcripts in this public receipt",
+  "private_receipt_sha256": "0b036e78462aae98191796b488ec6e2cdfb81f7f05d0a0c74671781894a99097"
+}

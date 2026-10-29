@@ -8,6 +8,24 @@ An agent-first disassembler with a persistent SQLite analysis database, explicit
 
 Requires Python **3.12 or later**.
 
+Version **0.22.0** adds [room maps and physical, assisted and story policies](docs/SPATIAL_MAPS.md),
+a [qualified Z-machine story harness](docs/ZORK_HARNESS.md)
+and [shared primitive interaction blocks](docs/INTERACTION_IL.md). UDL and UIL
+use the same representation in input and output roles. The bounded Zork I
+mailbox recovery is linked to story instructions and compared with the original
+DOS interpreter; the parser and turn loop remain outside the extracted slice.
+Room maps use game coordinates, actor footprints, separate obstacle/hazard and
+object-zone layers, immutable source references and supporting snapshots.
+Map-aware movement refuses unknown or hazardous destinations. Story mode uses
+qualified, temporary position-test overrides while sending original game input.
+The [native spatial verification](docs/VERIFICATION-SPATIAL-2026-10-29.md) records
+KQ1's tree and moat probes and PQ1's radio pickup with unchanged actor coordinates.
+`fdisbull text-host CONFIG --fair-play` locks physical mode and disables assisted
+teleports, room jumps and story waivers for that session. The
+[release notes](docs/RELEASE-0.22.0.md) and [release verification](docs/VERIFICATION-0.22.md)
+describe the source finalization and exact-commit CI gate. The published packages
+and shared installation remain at 0.21.0 until a separate publication/update.
+
 Version **0.21.0** adds [progressive scene workflows](docs/PROGRESSIVE_SCENES.md),
 a [separate text player](docs/TEXT_PLAYER.md), [automatic live-turn saves and resume](docs/PLAYER_LIVE.md),
 and [qualified travel assistance](docs/ASSISTED_TRAVEL.md). Live mode checkpoints
@@ -231,7 +249,7 @@ Version 0.13.0 adds PE64 `r`, `w` and `rw` watchpoints, reversible RAM layers, g
 
 ## Limits and licensing
 
-Static analysis does not establish runtime execution. A drained queue does not establish complete code coverage. Authored labels and links record interpretations, and unresolved segment/pointer state stays explicit. Native macOS debugger acceptance passes; the full suite still has Linux ELF fixture failures on Apple's compiler/linker. Runtime integration launches original unpatched DOS MZ, explicitly selected COM, or x86-64 PE EXE versions; static child patches are never applied silently. COM support has been tested on Linux, not yet on macOS. PE support has its own runtime and acceptance gate. The PE watches, layers and states use different mechanisms and formats from DOS; published 0.12.0 packages do not contain those additions.
+Static analysis does not establish runtime execution. A drained queue does not establish complete code coverage. Authored labels and links record interpretations, and unresolved segment/pointer state stays explicit. Native macOS debugger acceptance passes; the full suite still has Linux ELF fixture failures on Apple's compiler/linker. Runtime integration launches original unpatched DOS MZ, explicitly selected COM, or x86-64 PE EXE versions; static child patches are never applied silently. COM support is tested on Linux and on this Mac with the qualified Zork I reference. PE support has its own runtime and acceptance gate. The PE watches, layers and states use different mechanisms and formats from DOS; published 0.12.0 packages do not contain those additions.
 
 Runtime code snapshots preserve and decode observed self-modified or layered bytes alongside earlier views. The 0.16.0 candidate adds explicit offline promotion into a preserved temporal interpretation, fresh traversal/xrefs/CFG and byte/context trace comparisons. Captured bytes do not prove execution; inherited bytes remain unobserved, and no patched disk image is reconstructed. A mapped runtime address alone does not verify equality with static instructions. Headless execution is not security isolation, and restoring a machine checkpoint does not roll back mounted host files.
 

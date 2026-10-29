@@ -86,6 +86,14 @@ class AssistedTravelSessionMixin:
         input. They never change the room number or bypass room initialization.
         Errors preserve actual partial writes and stops; no rollback is implied.
         """
+        if not getattr(self, '_allow_assisted_travel', True):
+            result = {'format': 'fdisbull-assisted-travel-result-1',
+                      'run': self.run_id, 'version': self.version['id'],
+                      'ok': False, 'complete': True, 'status': 'refused',
+                      'policy': {'assisted_travel': False},
+                      'writes': [], 'inputs': []}
+            self._event('assisted-travel', result)
+            return result
         plan = deepcopy(validate_travel(plan))
         started = time.monotonic()
         result = {'format': 'fdisbull-assisted-travel-result-1', 'run': self.run_id,

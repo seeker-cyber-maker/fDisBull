@@ -68,6 +68,14 @@ def test_backend_outcome_is_not_invented():
     assert runtime.state["position"] == 0
 
 
+def test_separate_player_displays_spatial_policy_without_guard_details():
+    runtime=LocalRuntime(package())
+    runtime.act=lambda request:{'status':'success','complete':True,'message':'Moved.',
+        'assistance':{'kind':'spatial','mode':'story'},'private_guard':'SECRET'}
+    reply=Player(runtime).execute('go east')
+    assert reply=='Success: Moved.\nSpatial policy: story.' and 'SECRET' not in reply
+
+
 def test_standalone_module_cli(tmp_path):
     path = tmp_path / "slice.json"; path.write_text(json.dumps(package()))
     proc = subprocess.run([sys.executable, "-m", "fdisbull_player", "--package", str(path)],

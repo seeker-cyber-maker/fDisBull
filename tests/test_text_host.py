@@ -19,10 +19,14 @@ class Backend:
     def act(self, request): return {'status':'incomplete','complete':False,'message':'Unavailable.'}
 
 
-class Session:
+from fdisbull.spatial import SpatialSessionMixin
+
+
+class Session(SpatialSessionMixin):
     def __init__(self, trace, fail=False): self.trace=trace; self.fail=fail
     def __enter__(self): self.trace.append('session enter'); return self
     def __exit__(self,*args): self.trace.append('session exit')
+    def _event(self, operation, evidence): self.trace.append(('event',operation,evidence))
     def load_state(self,state): self.trace.append(('state',state))
     def bind_runtime_memory(self,*args,**kwargs):
         self.trace.append(('bind',args,kwargs))

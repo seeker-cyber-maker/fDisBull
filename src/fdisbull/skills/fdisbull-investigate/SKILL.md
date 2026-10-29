@@ -113,6 +113,16 @@ coordinate or state predicate is better for a repeatable route when that state
 has been independently identified. Compose named routes from verified segments
 instead of presenting one successful timing as a universal path.
 
+For spatial work, store masks in the game's coordinate system with an explicit
+actor footprint, room/version identity and supporting snapshot. Separate unknown
+coverage, obstacles, hazards and object interaction zones. Start with cheap
+source/control-plane or memory checks; spend walking probes on uncertain, useful
+boundaries. Rank probes by expected reward, cost and confidence. A cell that admits
+movement can still trigger a fatal event. Map-aware movement uses
+`move(..., spatial_map=revision, position=..., target=...)`; a route proposal does
+not prove the original engine follows it. Read the spatial section of
+[references/runtime-navigation.md](references/runtime-navigation.md).
+
 Treat direct state placement or teleportation as an authoring, recovery or
 declared projection capability, never as evidence that the ordinary route was
 completed. For visual object checks, choose among a reversible render-only

@@ -95,7 +95,7 @@ def _validate(project, doc, version):
         _text(action['name'], 'Action name')
         if action['name'] in names: raise ValueError('Duplicate action name')
         names.add(action['name'])
-        if action['kind'] not in ('scene','movement','assisted-travel'):
+        if action['kind'] not in ('scene','movement','assisted-travel','spatial'):
             raise ValueError('Unsupported action kind')
         scene = project.debug_scene_info(action['scene_revision'], version=version)
         if scene['id'] != action['scene_revision']:

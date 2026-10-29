@@ -161,6 +161,8 @@ class Player:
         assistance = result.get("assistance")
         if isinstance(assistance, dict) and assistance.get("kind") in ("movement", "assisted-travel"):
             output += f"\nAssistance: {assistance['kind']}."
+        if isinstance(assistance, dict) and assistance.get('kind') == 'spatial' and assistance.get('mode') in ('physical','assisted','story'):
+            output += f"\nSpatial policy: {assistance['mode']}."
         return output
 
 

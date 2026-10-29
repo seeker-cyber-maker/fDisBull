@@ -239,3 +239,15 @@ def test_ambiguous_write_operator_is_rejected_before_effects():
     s=Session();p=plan();p['writes'][0]['set_bits']=4
     with pytest.raises(ValueError):s.assisted_travel(p)
     assert not s.writes
+
+@pytest.mark.parametrize('kind', ['within-room', 'room-jump'])
+def test_fair_play_refuses_before_plan_reads_or_guest_access(kind):
+    s=Session(); s._allow_assisted_travel=False
+    p=plan(); p['kind']=kind
+    # An invalid plan still cannot reach validation or guest interaction.
+    p['writes'] = None
+    before=bytes(s.data)
+    s.scene=lambda *args: pytest.fail('scene read during refusal')
+    result=s.assisted_travel(p)
+    assert result['status']=='refused' and result['policy']=={'assisted_travel':False}
+    assert bytes(s.data)==before and not s.writes and s.events[-1][1]==result

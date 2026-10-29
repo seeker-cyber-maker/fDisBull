@@ -58,7 +58,7 @@ def _validate(project, doc, version):
                 kind = dispatch['kind']
                 if kind == 'scene' and set(dispatch) != {'kind'}: raise ValueError('Invalid scene dispatch')
                 if kind == 'movement':
-                    allowed = {'macro_set','start','stop','observations','until','progress','settle','guest_ms','timeout_ms','slice_ms','cleanup_guest_ms','max_polls','context','scene','position','target','boundary_tolerance'}
+                    allowed = {'macro_set','start','stop','observations','until','progress','settle','guest_ms','timeout_ms','slice_ms','cleanup_guest_ms','max_polls','context','scene','position','target','boundary_tolerance','spatial_map','map_conditions','room_field','target_tolerance'}
                     required = {'macro_set','start','stop','observations','until','progress','settle'}
                     args = dispatch.get('args')
                     if set(dispatch) != {'kind','args'} or not isinstance(args, dict) or not required <= set(args) <= allowed: raise ValueError('Invalid movement dispatch')
@@ -67,6 +67,14 @@ def _validate(project, doc, version):
                     if set(dispatch) != {'kind','plan','timeout_ms'} or type(dispatch['timeout_ms']) is not int or not 1 <= dispatch['timeout_ms'] <= 60000: raise ValueError('Invalid travel dispatch')
                     validate_travel(dispatch['plan'])
                     if dispatch['plan']['scene_revision'] != c['scene_revision']: raise ValueError('Travel scene differs')
+                if kind == 'spatial':
+                    allowed = {'map_revision','definition','room_field','conditions','zone','actor_recipe','travel_plan','timeout_ms'}
+                    args = dispatch.get('args')
+                    if set(dispatch) != {'kind','args'} or not isinstance(args,dict) or not {'map_revision','definition'} <= set(args) <= allowed:
+                        raise ValueError('Invalid spatial action dispatch')
+                    info = project.debug_spatial_map_info(args['map_revision'], version=version)
+                    if info['id'] != args['map_revision'] or args['definition'].get('map_revision') != info['id']:
+                        raise ValueError('Spatial action must pin its map revision')
     return wf
 
 
@@ -149,10 +157,17 @@ class TextProjectionHandle:
         objects = check.get('objects')
         if not isinstance(objects, dict): return None
         public_objects = []; inventory = []; mapping = {}
+        allow_travel = getattr(self.session, '_allow_assisted_travel', True)
+        policy = {'assisted_travel':allow_travel,
+                  'spatial_mode':getattr(self.session,'_spatial_mode','assisted'),
+                  'fair_play':getattr(self.session,'_fair_play',False)}
         for o in c['objects']:
             availability = objects.get(o['scene_object'])
             if not isinstance(availability, dict) or any(availability.get(k) not in (True,False) for k in ('visible','ready','enabled')): return None
             if availability['visible'] is not True: continue
+            bindings = [b for b in o['bindings'] if allow_travel or b['dispatch']['kind'] != 'assisted-travel']
+            if o['bindings'] and not bindings: continue
+            o = dict(o, bindings=bindings)
             oid = self._opaque(['object',c['id'],o['id']]); mapping[oid] = o
             public = {'id':oid,'label':o['label'],'aliases':o['aliases'],'description':o['description'],
                       'verbs':list(dict.fromkeys(b['verb'] for b in o['bindings']))}
@@ -160,10 +175,12 @@ class TextProjectionHandle:
         freshness = {'projection':self.info['id'],'workflow':self.workflow.revision,'context':c['id'],
                      'frame':frames[0], 'run':getattr(self.session,'run_id',None),
                      'epoch':getattr(self.session,'_runtime_epoch',None), 'runtime_load':getattr(self.session,'runtime_load',None),
+                     'policy': policy,
                      'version':self.session.version['id'], 'closed':getattr(self.session,'closed',False), 'objects':objects}
         token = self._opaque(['token',freshness])
         obs = {'complete':True,'context':{'id':self._opaque(['context',c['id']]),'token':token,'title':c['title'],'description':c['description']},
-               'objects':public_objects,'inventory':inventory,'coverage':{'partial':c['partial']}}
+               'objects':public_objects,'inventory':inventory,'coverage':{'partial':c['partial']},
+               'policy': policy}
         return obs, c, mapping, check
 
     def observe(self):
@@ -209,6 +226,7 @@ class TextProjectionHandle:
                     descriptor = binding['dispatch']; kind = descriptor['kind']
                     if kind == 'scene': return scene.act(contract['object_id'])
                     if kind == 'movement': return self.session.move(**deepcopy(descriptor['args']))
+                    if kind == 'spatial': return self.session.spatial_action(**deepcopy(descriptor['args']))
                     return self.session.assisted_travel(deepcopy(descriptor['plan']), timeout_ms=descriptor['timeout_ms'])
                 outcome = self.workflow.execute(binding['action'], dispatch)['result']
                 kind = binding['dispatch']['kind']
@@ -216,6 +234,8 @@ class TextProjectionHandle:
                 response = result('success',True,'Action completed.') if success else result('incomplete',False,'Action outcome incomplete.')
                 if kind in ('movement', 'assisted-travel'):
                     response['assistance'] = {'kind': kind}
+                if kind == 'spatial':
+                    response['assistance'] = {'kind': 'spatial', 'mode':getattr(self.session,'_spatial_mode','assisted')}
                 return response
             except Exception:
                 return result('incomplete',False,'Action unavailable or incomplete.')

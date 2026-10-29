@@ -1,5 +1,38 @@
 # Runtime navigation and observation reference
 
+## Spatial masks and policies in the 0.22 candidate
+
+Persist a source/version-bound room map in game units with known and safe masks,
+an actor footprint, obstacle and hazard exclusions, separate object zones, and
+references to supporting native snapshots. Rectangles, polygons, row runs and
+their union/intersection/subtraction compose the same map. Unknown cells remain
+unknown. A source control plane is evidence of encoded geometry; horizon,
+dynamic objects, runtime blocks and scripted hazards require separate checks.
+Use `debug_spatial_candidates` and bounded `debug_spatial_route` to propose
+anchors/routes. Resolve doubts with ordinary walking from a protected checkpoint
+when the expected information reward justifies the cost and hazard exposure.
+
+`move(..., spatial_map=revision, position={'x':'x','y':'y'}, target=[x,y])`
+checks the destination before input and refreshes room/condition checks while
+moving. It preserves debugger stops and reports a geometry disagreement rather
+than declaring an unobserved route successful. Polling cannot prevent every
+hazard between samples. KQ1 demonstrates that movement into water can succeed
+and still be fatal; keep hazards separate from physical obstacles.
+
+Choose `physical`, `assisted` or `story` explicitly at native DOS launch or with
+`spatial_policy`. Physical actions enforce proximity. Assisted actions qualify
+an object-zone anchor and a limited actor placement recipe before original
+input. Story actions keep the actor in place and temporarily waive a specific
+source-identified spatial condition; room, inventory, modal and puzzle conditions
+remain guest-owned. A general position-free adapter is not inferred from the
+word "story." Define and verify each guard profile. An AGI byte sequence that
+resembles a condition is insufficient without instruction/control-flow evidence.
+
+Fair play locks physical policy across state restores. Policy is voluntary and
+does not turn the analysis API into an anti-tamper environment. Text projections
+keep source addresses and guard definitions private and expose the policy marker.
+The full API and qualified PQ/KQ scope are documented in `SPATIAL_MAPS.md`.
+
 The 0.21 development workflow supports a small qualified action subset while
 unrelated scene research remains incomplete. Pin a progressive workflow and
 resource inventory, then expose only grounded public objects through a text
