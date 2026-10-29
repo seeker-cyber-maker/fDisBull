@@ -9,7 +9,18 @@ import tomllib
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-ROOT_FILES = ("README.md", "AGENTS.md", "pyproject.toml", "MANIFEST.in", "player/pyproject.toml")
+ROOT_FILES = ("README.md", "AGENTS.md", "CLAUDE.md", "pyproject.toml", "MANIFEST.in", "player/pyproject.toml")
+DOC_EXAMPLE_FILES = (
+    "docs/uil-rfcs/0001/README.md",
+    "docs/uil-rfcs/0001/check_examples.py",
+    "docs/uil-rfcs/0001/commit.js",
+    "docs/uil-rfcs/0001/commit.py",
+    "docs/uil-rfcs/0001/commit.rs",
+    "docs/uil-rfcs/0001/native-observation.json",
+    "docs/uil-rfcs/0001/native_probe.py",
+    "docs/uil-rfcs/0001/source-definition-observation.json",
+    "docs/uil-rfcs/0001/vectors.json",
+)
 SOURCE_PATTERNS = (
     ("src/fdisbull", "*.py"),
     ("player/fdisbull_player", "*.py"),
@@ -29,16 +40,24 @@ SOURCE_PATTERNS = (
     ("docs", "*.md"),
     ("docs/evidence/spatial-2026-10-29", "verification.json"),
     ("docs/evidence/zork-2026-10-29", "verification.json"),
+    ("docs/evidence/udc-2026-10-29", "dino.json"),
+    ("docs/evidence/udc-2026-10-29", "zork.json"),
+    ("docs/evidence/udc-2026-10-29", "synthetic.json"),
     ("scripts", "*.py"),
 )
 
 
 def release_files(root: Path) -> list[Path]:
-    """Exclude examples, generated files and experimental backends by construction."""
-    files = [root / name for name in ROOT_FILES]
+    """Select tool sources plus the exact authored RFC fixture allowlist."""
+    files = [root / name for name in (*ROOT_FILES, *DOC_EXAMPLE_FILES)]
     for directory, pattern in SOURCE_PATTERNS:
-        files.extend((root / directory).glob(pattern) if directory == "player/fdisbull_player"
-                     else (root / directory).rglob(pattern))
+        candidates = ((root / directory).glob(pattern) if directory == "player/fdisbull_player"
+                      else (root / directory).rglob(pattern))
+        if directory == "docs":
+            fixture_root = root / "docs/uil-rfcs/0001"
+            files.extend(path for path in candidates if fixture_root not in path.parents)
+        else:
+            files.extend(candidates)
     selected = []
     for path in sorted(set(files)):
         if not path.is_file() or path.is_symlink():

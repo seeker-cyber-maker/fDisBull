@@ -1,13 +1,26 @@
 # Shared interaction blocks
 
+The 0.23 source adds a separate [original-backed DOS UDC](UDC_DOS.md) companion.
+It retains this v1 schema and role behavior, while a bounded source-block
+profile and Z3 checks qualify selection of original native backings. It does
+not make the evaluator below execute native code or host events implicitly.
+
 `fdisbull-il-1` is a small JSON representation for authored and recovered
-interaction programs. UDL (`role: "udl"`) and UIL (`role: "uil"`) use the
+interaction programs. The legacy v1 document roles `"udl"` and `"uil"` use the
 same nodes and evaluator; the role records whether the document is being used
 as an input or an output. `change_role` copies the document and changes only
 that metadata. Separate compiler definitions, recognition rules and libraries
 may be developed later; they are not implicit in the role. A completed target
 need not depend on the original runtime, but this implementation does not yet
 produce a complete game or a target compiler.
+
+[Draft RFC 0001](uil-rfcs/0001-shared-intents-and-compiler-definitions.md)
+uses **UDL** for mapping original code into **UIL**, and **UDC** (User-Defined
+Compiler) for reading UIL and transferring it back into code. It proposes
+original/source UDC definitions over this same representation, including
+unchanged shared-IL pass-through, effect binding and qualified cross-language
+reuse. UDC is not a new v1 role. Its catalog and new capabilities are proposals;
+they do not change the v1 behavior or existing role strings documented here.
 
 ```json
 {
@@ -59,4 +72,4 @@ and `fdisbull il-info PROJECT REVISION`. `recover_v3_attributes` is a bounded
 source-specific helper that lowers selected Z-machine v3 `set_attr` and
 `clear_attr` instructions. Its caller supplies names and an object-variable
 binding; those names and the runtime correspondence remain claims to verify.
-It is not a general decompiler or full UDL compiler.
+It is not a general decompiler, complete UDL mapper or UDC.

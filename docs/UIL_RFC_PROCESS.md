@@ -4,6 +4,10 @@ Design governance, 27 October 2026. This process permits human or agent authors
 to propose amendments to the future Universal Interaction Language (UIL). It
 does not imply that the language or any listed extension is implemented.
 
+Current proposal: [RFC 0001: UDL mappings, UIL intents and UDC definitions](uil-rfcs/0001-shared-intents-and-compiler-definitions.md),
+with [native and source-definition findings](UDL_UIL_EFFECT_ISOLATION_FINDINGS.md).
+It remains draft; linking it here is not adoption.
+
 ## Principle
 
 UIL must be extensible when a real game exposes a semantic gap, but it must not

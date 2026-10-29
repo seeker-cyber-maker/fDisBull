@@ -6,6 +6,12 @@ import sqlite3
 import sys
 from . import __version__
 
+AGENT_SKILL_RESOURCES = (
+    'SKILL.md', 'references/scenes.md', 'references/methodology.md',
+    'references/runtime-navigation.md', 'references/proofs.md',
+    'references/workflows.md', 'references/udl-uil-udc.md',
+)
+
 METHODS = {
     'debug-save-spatial-map':'Save an immutable source-bound room map; name,document,[parent,version,author]',
     'debug-spatial-map-info':'Read a pinned room-map revision; revision,[version]',
@@ -41,7 +47,7 @@ METHODS = {
     'debug-keyboard-down':'Queue make and return an owned physical key lease; run,key',
     'debug-keyboard-up':'Consume an owned lease and queue physical break; run,lease',
     'debug-scene-navigation':'Check an actor footprint in explicit game-space geometry; run,scene,point,[footprint]',
-    'agent-skill':'Read the bundled fDisBull investigation skill and references; no project required',
+    'agent-skill':'Read the bundled investigation skill; [reference] selects one file; no project required',
     'debug-save-scene':'Save a versioned scene manifest with persistent objects and screenshot evidence; name,definition,[parent,version,author]',
     'debug-scenes':'List current scene revisions; [version]',
     'debug-scene-info':'Read a scene manifest, evidence and persistent object identities; scene,[version]',
@@ -197,11 +203,13 @@ def invoke(method, params, debugger=None):
         raise ValueError("params must be an object")
     p = dict(params)
     if method=='agent-skill':
-        if p:raise ValueError('agent-skill takes no parameters')
+        reference=p.pop('reference',None)
+        if p:raise ValueError('agent-skill accepts only reference')
+        if reference is not None and (not isinstance(reference,str) or reference not in AGENT_SKILL_RESOURCES):
+            raise ValueError('unknown bundled skill reference')
         from importlib.resources import files
         root=files('fdisbull').joinpath('skills/fdisbull-investigate')
-        resources=('SKILL.md','references/scenes.md','references/methodology.md',
-                   'references/runtime-navigation.md','references/proofs.md')
+        resources=(reference,) if reference is not None else AGENT_SKILL_RESOURCES
         return {'name':'fdisbull-investigate','files':{n:root.joinpath(n).read_text() for n in resources}}
     if method=='omf-catalog':
         from .omf_catalog import omf_signatures
@@ -426,7 +434,27 @@ def parser():
     c.add_argument('--parent'); c.add_argument('--source'); c.add_argument('--source-name',default='story')
     c=sub.add_parser('il-info',help='Read an immutable IL revision and verify its attached source evidence')
     c.add_argument('project'); c.add_argument('revision'); c.add_argument('--version',type=int)
-    sub.add_parser('agent-skill',help=METHODS['agent-skill'])
+    for name in ('udc-capture','udc-info','udc-programs','udc-compile'):
+        c=sub.add_parser(name,help='Original-backed DOS block definitions and private byte-preserving compilation')
+        c.add_argument('project')
+        c.add_argument('name' if name=='udc-capture' else 'definition')
+        if name=='udc-capture':
+            c.add_argument('--resources');c.add_argument('--blocks');c.add_argument('--version',type=int,default=1)
+            c.add_argument('--parent');c.add_argument('--author',default='agent');c.add_argument('--main-name')
+        elif name=='udc-info':c.add_argument('--full',action='store_true')
+        elif name=='udc-programs':
+            c.add_argument('--role',choices=('udl','uil'),default='uil');c.add_argument('--output',required=True)
+        else:c.add_argument('output');c.add_argument('--programs')
+    for name in ('udl-lift-asm','udl-lift-c'):
+        c=sub.add_parser(name,help='Lift only the declared straight-line u16 register subset')
+        c.add_argument('source');c.add_argument('--bindings',required=True)
+        c.add_argument('--input',action='append',default=[]);c.add_argument('--output-register',action='append',required=True)
+        c.add_argument('--output',required=True)
+    c=sub.add_parser('udl-verify',help='Z3 comparison of a source block and candidate UIL under explicit assumptions')
+    c.add_argument('lift');c.add_argument('program');c.add_argument('--timeout-ms',type=int,default=1000)
+    c.add_argument('--output',help='Save the full proof specifications; stdout stays compact')
+    c=sub.add_parser('agent-skill',help=METHODS['agent-skill'])
+    c.add_argument('--reference',choices=AGENT_SKILL_RESOURCES,help='Read one bundled file instead of the complete skill')
     for name in ('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations',
                  'debug-scene-observation','debug-export-scenes','debug-import-scenes'):
         c=sub.add_parser(name,help=METHODS[name]);c.add_argument('project')
@@ -649,6 +677,70 @@ def parser():
     sub.add_parser("methods",help="describe JSON methods")
     return root
 
+def _udc_command(command,args):
+    """Bounded metadata replies; original binary and lifted source stay in files."""
+    import hashlib
+    from .udc import capture_dos_definition,definition_info,shared_programs,compile_dos,UDCQualificationError
+    def read(path,limit=4*1024*1024):
+        with open(path,'rb') as stream:raw=stream.read(limit+1)
+        if len(raw)>limit:raise ValueError('input exceeds its size budget')
+        return raw
+    def read_json(path):
+        def pairs(values):
+            result={}
+            for key,value in values:
+                if key in result:raise ValueError('duplicate JSON field')
+                result[key]=value
+            return result
+        return json.loads(read(path),object_pairs_hook=pairs)
+    def write_json(path,value):
+        raw=json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False).encode()+b'\n'
+        with open(path,'xb') as stream:stream.write(raw)
+        return {'output':str(Path(path).resolve()),'size':len(raw),'sha256':hashlib.sha256(raw).hexdigest()}
+    def compact_verification(value):
+        return {k:v for k,v in value.items() if k!='outputs'} | {
+            'outputs':{name:{k:v for k,v in result.items() if k!='spec'} for name,result in value.get('outputs',{}).items()}}
+    try:
+        if command.startswith('udl-'):
+            from .udl_blocks import lift_asm_block,lift_c_block,verify_block
+            if command=='udl-verify':
+                result=verify_block(read_json(args['lift']),read_json(args['program']),timeout_ms=args['timeout_ms'])
+                exported=write_json(args['output'],result) if args['output'] else {}
+                emit({**compact_verification(result),**exported});return 0 if result['status']=='equivalent_under_assumptions' else 1
+            bindings=read_json(args['bindings']);raw=read(args['source'],1024)
+            lift=(lift_asm_block if command=='udl-lift-asm' else lift_c_block)(
+                raw if command=='udl-lift-asm' else raw.decode('utf-8'),bindings,
+                inputs=args['input'],outputs=args['output_register'])
+            emit({'status':'lifted','scope':lift['scope'],**write_json(args['output'],lift)})
+            return 0
+        from .project import Project
+        with Project(args['project']) as project:
+            if command=='udc-capture':
+                result=capture_dos_definition(project,args['name'],
+                    resources=read_json(args['resources']) if args['resources'] else None,
+                    semantic_blocks=read_json(args['blocks']) if args['blocks'] else None,
+                    version=args['version'],parent=args['parent'],author=args['author'],main_name=args['main_name'])
+            elif command=='udc-info':result=definition_info(project,args['definition'],include_blocks=args['full'])
+            elif command=='udc-programs':
+                programs=shared_programs(project,args['definition'],role=args['role'])
+                result={'definition':args['definition'],'role':args['role'],'program_count':len(programs),**write_json(args['output'],programs)}
+            else:
+                result=compile_dos(project,args['definition'],args['output'],
+                    programs=read_json(args['programs']) if args['programs'] else None)
+                # Full artifact/proof receipts are saved alongside emitted files.
+                result={k:result[k] for k in ('output','definition','definition_sha256','primary','scope','generated_dos_lowering','native_execution')} | {
+                    'artifact_count':len(result['artifacts']),
+                    'qualification':{k:v for k,v in result['qualification'].items() if k!='proofs'},
+                    'manifest':str(Path(result['output'])/'udc-manifest.json')}
+            if 'artifacts' in result and not args.get('full'):
+                result={k:v for k,v in result.items() if k!='artifacts'} | {'artifact_count':len(result['artifacts'])}
+            emit(result);return 0
+    except UDCQualificationError as error:
+        emit({'complete':False,'status':'refused','error':str(error),'verification':compact_verification(error.verification)});return 1
+    except (ValueError,OSError,KeyError,TypeError,RecursionError,sqlite3.Error) as error:
+        emit({'complete':False,'status':'refused','error':str(error)});return 1
+
+
 def _language_command(command,args):
     """Local language/harness entry points; user stories and states stay external."""
     def read_json(path,limit=65536):
@@ -713,6 +805,7 @@ def _language_command(command,args):
 def main(argv=None):
     args = vars(parser().parse_args(argv))
     command = args.pop("command")
+    if command.startswith(('udc-','udl-')):return _udc_command(command,args)
     if command in ('story-info','zork','zork-recover','il-check','il-run','il-store','il-info'):
         return _language_command(command,args)
     if command == 'text-host':
