@@ -1,4 +1,4 @@
-# Findings for the shared UDL/UIL compiler-definition RFC
+# Findings for the UDL/UIL/UDC compiler-definition RFC
 
 Investigation: 29 October 2026 (America/New_York), Codex. Repository source
 `75bbd7ee65118c0186844f73ef6c79245854eba0`; native probe pinned independently to
@@ -6,13 +6,18 @@ fDisBull 0.21.0 and its installed macOS ARM64 backend. Findings support
 [RFC 0001](uil-rfcs/0001-shared-intents-and-compiler-definitions.md), not an
 already implemented general compiler or scene-independent purchase API.
 
+Terminology: **UDL** maps original code into **UIL**; **UDC** reads UIL and
+transfers it back into code. Compiler definitions below are UDC definitions.
+The observed v1 `udl`/`uil` role strings and sealed experimental receipts keep
+their original identities; the clarification changes no experimental result.
+
 ## 1. Current representation already permits pass-through
 
 Inspected implementation:
 
 - [Shared blocks](INTERACTION_IL.md), `src/fdisbull/interaction_il.py`:
-  `fdisbull-il-1` supports typed fixed-width state and ordered blocks. Both UDL
-  and UIL roles use the same validation/evaluation path; `change_role` copies
+  `fdisbull-il-1` supports typed fixed-width state and ordered blocks. Its legacy
+  `udl` and `uil` roles use the same validation/evaluation path; `change_role` copies
   the program and changes only role metadata.
 - `src/fdisbull/il_recovery.py`: bounded v3 attribute recovery and immutable
   source-checked project revisions. Source evidence is not an execution binding.
@@ -26,7 +31,7 @@ Inspected implementation:
 
 A valid v1 program can already execute without being relabelled UIL. The new
 need is a compiler-definition/binding contract, not a mandatory handoff copy.
-Current v1 **does not** call an original native snippet when labelled UDL.
+Current v1 **does not** call an original native snippet for `role: udl`.
 Input/media blocks return `pending_host`; their proposed state is not committed
 by that evaluator. Required capabilities are checked even in unselected branches.
 
@@ -183,7 +188,7 @@ and explicit time semantics. It also demonstrates an observation requirement:
 private research must not tell a fresh player a hidden purchase outcome.
 The optional native encyclopedia is normal player-discoverable evidence.
 
-## 4. Rust, JavaScript and Python compiler-definition seeds
+## 4. Rust, JavaScript and Python UDC/compiler-definition seeds
 
 The redistributable [source fixture](uil-rfcs/0001/README.md) independently authors
 one tiny backing in each language for an explicit synthetic commit contract.

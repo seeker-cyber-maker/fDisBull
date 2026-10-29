@@ -1,6 +1,6 @@
 # RFC 0001 executable examples
 
-These are authored, redistributable **synthetic** compiler-definition seeds and
+These are authored, redistributable **synthetic** UDC/compiler-definition seeds and
 an opt-in original-code research replayer. They are not a general UIL compiler.
 See [the RFC](../0001-shared-intents-and-compiler-definitions.md) and
 [findings](../../UDL_UIL_EFFECT_ISOLATION_FINDINGS.md).
@@ -15,9 +15,11 @@ python docs/uil-rfcs/0001/check_examples.py --output /path/to/new-private-output
 
 The checker installs nothing. It compiles the authored Rust definition into the
 new output directory, runs the authored JS and Python definitions, and compares
-them with an unchanged `fdisbull-il-1` UDL program. Role rewriting is optional
-metadata, not a required compilation step. No game, emulator or private save
-is needed for these source examples.
+them with an unchanged `fdisbull-il-1` shared program using the legacy `udl`
+role. UDL now names the original-to-UIL mapping and UDC the UIL-to-code output
+direction. Existing role strings, code and checked receipts stay unchanged;
+role rewriting remains optional metadata. No game, emulator or private save is
+needed for these source examples.
 
 The contract is deliberately small: with a qualified prepared order, copy the
 pending stock, post a 500-unit u32-wrapping expense, then commit reserved cash.

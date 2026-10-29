@@ -1,4 +1,4 @@
-# RFC 0001: Shared UDL/UIL intents and learning compiler definitions
+# RFC 0001: UDL mappings, shared UIL intents and learning UDC definitions
 
 - Status: **draft; recommendations, not an accepted language or implementation**
 - Author: Codex, from the user's intent/effect, pass-through and compiler-definition requirements
@@ -10,14 +10,23 @@
 
 ## 1. Decision
 
-Use **one interaction representation** for UDL and UIL. UDL is the source-backed
-recovery use of that representation; UIL is its portable executable use. These
-are uses and qualification states, not two obligatory languages or two copies
-of a program. An existing UDL program can pass directly to a compiler definition
-that understands its original backings. A UDL-to-UIL role conversion is not a
-required execution or compilation step.
+Use **one interaction representation**, with explicit names for its mapping
+and reconstruction directions:
 
-A **compiler definition** maps a typed intent contract to an implementation:
+- **UDL — User-Defined Language:** maps original code and its evidence into UIL.
+- **UIL — Universal Interaction Language:** carries the shared intent and
+  behavior representation.
+- **UDC — User-Defined Compiler:** reads UIL and transfers its semantics back
+  into code through a compiler definition.
+
+The conceptual pipeline is **original code → UDL mapping → UIL → UDC → code**.
+UDL mappings and UIL retain the same block vocabulary and source correspondence;
+this naming clarification adds no mandatory intermediate copy. A UIL program
+with retained original backings can pass through an original-backed UDC without
+rewriting its blocks. Existing v1 documents labelled `role: udl` remain usable
+unchanged; those legacy role labels are distinct from the UDL/UDC directions.
+
+A **UDC/compiler definition** maps a typed UIL intent contract to an implementation:
 original code, an interpreter operation, a source implementation, a precompiled
 fragment, or a composition of these. Original-backed pass-through is one valid
 definition. Rust, JavaScript and Python source-backed definitions are the first
@@ -61,12 +70,16 @@ hypothetical scenarios. In particular:
 
 The smallest missing feature is therefore an explicit, inspectable binding
 between a semantic operation and its executable definition, with context,
-ordering and qualification. Inventing a second meaning for UDL is unnecessary.
+ordering and qualification. UDL names the original-to-UIL mapping; UDC names
+the output compiler definition. This terminology preserves the same behavior.
 
 ## 3. Terms and identities
 
 | Term | Contract |
 | --- | --- |
+| UDL | User-Defined Language: definitions that map original code into UIL, retaining source evidence and unresolved interpretations. |
+| UIL | Universal Interaction Language: the common representation of intent, state and ordered behavior. |
+| UDC | User-Defined Compiler: reads UIL and realizes it as code, including original-backed pass-through or reconstructed source/binary output. |
 | Intent | A named, typed request such as `buy(item, quantity)`; its name alone has no semantics. |
 | Operation | A versioned definition of an intent or reusable part of one, including entry conditions, ordered behavior and outcomes. |
 | Invocation | One submitted operation with argument values, authority/state revision and a unique attempt identity. |
@@ -76,7 +89,7 @@ ordering and qualification. Inventing a second meaning for UDL is unnecessary.
 | Object/entity | A stable identity with state, relationships and zero or more affordances. |
 | Affordance | An object's advertised verb, typed parameters, availability and operation binding. |
 | Scene/context | A semantic interaction context or a presentation view. A native scene field is a source-specific correspondence, not the universal definition. |
-| Compiler definition | A versioned lowering or realization of an operation contract for a target/runtime profile. |
+| Compiler definition / UDC definition | A versioned lowering or realization of a UIL operation contract for a target/runtime profile. |
 | Source map | Evidence connecting nodes to bytes, source, guest instructions or observations. A source map is not permission to execute them. |
 
 A button is an object with an interaction facet, commonly `activate`. A unit,
@@ -95,26 +108,31 @@ undiscovered outcomes, fogged units, hidden cells or future dialogue.
 
 ```mermaid
 flowchart LR
+  O[Original code] --> M[UDL mapping]
+  M --> C[UIL: shared operation contract]
   A[Observed object and affordance] --> B[Typed intent invocation]
-  B --> C[Shared operation contract]
-  C --> D[Definition selection]
-  D --> E[Original-backed UDL pass-through]
-  D --> F[Rust / JS / Python definition]
-  D --> G[Other source or binary target]
-  E --> H[Authoritative effects and events]
-  F --> H
-  G --> H
+  B --> C
+  C --> D[UDC definition selection]
+  D --> E[Original-backed UDC pass-through]
+  D --> F[Rust / JS / Python UDC]
+  D --> G[Other source or binary UDC]
+  E --> K[Original-backed or generated code]
+  F --> K
+  G --> K
+  K --> H[Authoritative effects and events]
   H --> I[Text / graphics / document projection]
   E -. evidence .-> J[Original bytes and traces]
   F -. correspondence .-> J
   G -. correspondence .-> J
 ```
 
-There is no mandatory UDL-to-UIL node in this graph. The same operation and its
-source map can survive every realization. Original-backed execution can remain
-a useful reference and fallback after portable reconstruction is available.
+UDL mapping derives UIL from original code; UDC realizes UIL as code. These
+are directional responsibilities over the same representation, with no required
+role-rewrite step. The same operation and its source map can survive every
+realization. An original-backed UDC can retain existing code and dependencies
+as a pass-through, reference and fallback after portable reconstruction.
 
-Separate two compiler-definition axes:
+Separate two UDC/compiler-definition axes:
 
 - **Authored in:** Rust, JavaScript, Python, the shared IR, or another declared
   language in which the definition itself is written.
@@ -218,8 +236,9 @@ Entities/affordances, reusable calls, scheduled processes, external-effect
 receipts and staged lowering require semantics not present in v1. Provisional
 capabilities are `uil.entities@1-draft`, `uil.invoke@1-draft`,
 `uil.processes@1-draft` and `uil.lowering@1-draft`. They require a separately
-versioned shared core before those nodes execute. **Both roles receive the same
-extensions.** No accepted identifiers or implemented runtime are claimed here.
+versioned shared core before those nodes execute. **UDL mapping and UDC output
+use the same shared extensions.** No accepted identifiers or implemented runtime
+are claimed here.
 
 A definition expressed in the shared IR uses explicit stages: matching a typed
 IR pattern, instantiating a template, emitting a fragment and linking declared
@@ -309,7 +328,7 @@ behavior of v1's pure model evaluator. An invocation ID is an audit handle,
 not proof of exactly-once execution after a crash. Reconcile uncertain effects
 before retrying; use native idempotency only when independently established.
 
-## 8. Propagating Rust, JS and Python definitions
+## 8. Propagating Rust, JS and Python UDC definitions
 
 A definition for one language can seed candidates for others by retaining its
 operation contract, parameter mapping, dependencies and source map. The
@@ -384,7 +403,7 @@ The fixture demonstrates selection using **invented cost units**: a cheaper
 correct candidate wins, while a still-cheaper wrong-order candidate is excluded.
 It is not a benchmark, learned optimizer or automatic promotion system.
 
-## 10. A later generic DOS compiler definition
+## 10. A later generic DOS UDC/compiler definition
 
 An initial DOS target could lower a supported intent subset to x86-16 MZ with
 a declared memory model, runtime services and linker. COM is a different
@@ -443,7 +462,8 @@ Original game data remains in the original guest/owned environment. Office
 macros, external links, file saves and other external effects need their own
 authority and persistence contracts. No universal sandbox is implemented here.
 
-A package can be partly UDL-backed and partly reconstructed, but there is one
+A package can be partly original-backed and partly reconstructed through UDCs,
+with the original correspondences retained by UDL mappings. There is one
 authoritative state and explicit ownership of each operation. Do not dual-write
 an imagined text world and the original world. Changing a realization is a
 state/schema compatibility decision, not merely swapping a function pointer.
@@ -455,6 +475,9 @@ cannot silently increase player knowledge or assistance.
 
 - Keep v1 strict schemas, arithmetic wrapping, role metadata and pending-host
   behavior unchanged. Existing programs need no pass-through role rewrite.
+- Use UDL for original-code-to-UIL mappings and UDC for UIL-to-code compiler
+  definitions. UDC is an output/compiler designation, not a new `role: udc`
+  value. Keep existing format IDs, field names, filenames and receipt identities.
 - Add a companion catalog as a new optional artifact; do not smuggle it into
   v1 `evidence` and execute it.
 - Recovered source snippets begin as candidates with explicit source and entry
@@ -500,7 +523,8 @@ feasible; generic Office-binary reconstruction is not established by API docs.
 The redistributable [fixture](0001/README.md) contains only authored synthetic
 programs, Rust/JS/Python source definitions and literal vectors. It checks:
 
-- unchanged UDL pass-through plus same-result optional role metadata;
+- unchanged shared-IL pass-through (including legacy `role: udl`) plus
+  same-result optional role metadata;
 - prepared-order admission, stock/expense/cash effect order and u32 wrapping;
 - refused/malformed inputs before effects;
 - unsupported native operations and pending host capabilities;
@@ -542,8 +566,9 @@ current office experiment has not passed that complete-intent gate.
 
 ## 14. Alternatives and disposition
 
-**Mandatory UDL→UIL rewriting:** rejected as a default; it duplicates an already
-usable representation. Keep optional export/adoption boundaries for consumers.
+**Mandatory handoff copying or role rewriting:** rejected as a default; UDL's
+mapping and UDC's output direction use an already shared representation. Keep
+optional export/adoption boundaries for consumers.
 
 **Only native execution:** preserves originals but never obtains portable
 reconstruction. Retain it as one equally represented definition/reference.
