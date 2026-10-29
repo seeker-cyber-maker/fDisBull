@@ -128,3 +128,11 @@ of the player; this example makes no claim of AGI or UIL coverage, original-game
 behavior, or qualification against an original.
 
 For automatic checkpoints after model turns and bounded external-agent story play, see [PLAYER_LIVE.md](PLAYER_LIVE.md).
+
+## Z scene content services
+
+The development candidate supports `--backend-command` for a caller-selected
+local JSON-lines content service, with a whole-request `--backend-timeout`.
+[Z shared-IL scenes](Z_SCENES.md) provide one such service without a debugger.
+For `--connect`, that timeout bounds socket inactivity. The standalone player
+keeps no dependency on fDisBull; the selected content service owns execution.

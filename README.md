@@ -28,6 +28,11 @@ with verified packages and the Linux/DOS offline kit with Z3. The
 [publication record](docs/PUBLICATION-0.22.md) documents tag CI, eight-asset
 download readback and the active shared Mac installation at 0.22.0.
 
+Development candidate: [Z scenes over shared IL](docs/Z_SCENES.md) connect reusable
+scene content to the standalone text player without a debugger, with bounded
+local-service requests and output. This is a testing consumer of shared IL, not
+a full UDC compiler, original-game conversion or part of the published 0.22.0.
+
 Version **0.21.0** adds [progressive scene workflows](docs/PROGRESSIVE_SCENES.md),
 a [separate text player](docs/TEXT_PLAYER.md), [automatic live-turn saves and resume](docs/PLAYER_LIVE.md),
 and [qualified travel assistance](docs/ASSISTED_TRAVEL.md). Live mode checkpoints

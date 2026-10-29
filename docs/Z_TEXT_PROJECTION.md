@@ -1,5 +1,11 @@
 > Implementation note: the 0.21.0 development candidate implements the bounded live-original workflow and separate text interpreter described in [UNRELEASED-0.21.md](UNRELEASED-0.21.md). This retained proposal also describes future semantic-recovery work; its acceptance tables are requirements, not a record of passed original-game tests. Source: PRs #13/#14, `87d1079a49dd448dd43e80f84d81896bf1f42bf9`.
 
+> Current consumer candidate: [Z scenes](Z_SCENES.md). Z is shorthand for the
+> Zork-like testing interface over scene content and shared IL. The reusable
+> content service owns effects; the standalone player renders observations and
+> forwards commands. The research requirements below are broader than this
+> implemented state/text slice.
+
 # Draft contract: playable Z text-adventure projection
 
 Status: **draft design and experiment**, 28 October 2026. Author: **Codex**,
