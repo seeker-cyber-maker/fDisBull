@@ -8,6 +8,7 @@ emulator, target executable, game files, saved states or project databases.
 
 | Need | Starting point | Evidence boundary |
 | --- | --- | --- |
+| Unpack an owned local GOG Inno Setup installer | `gog-list`, then `gog-unpack INSTALLER NEW_PRIVATE_DIRECTORY` | Native external innoextract reads payloads without Wine or running the installer; listing and hash manifests do not prove game execution or loader support. See `docs/GOG_UNPACKING.md`. |
 | Identify or analyze an executable | `identify`, `inspect`, `import`, `analyze`, `analysis-status`, `status`, `functions`, `disasm`, `xrefs` | Static decoder facts and stored analysis only; candidates and budget limits stay labeled. |
 | Observe actual program behavior | `debug PROJECT ...` plus the appropriate `Project.debugger()` or JSON methods | Requires a compatible external backend and an authorized target. Verify live source/version binding and real guest effects. |
 | Reuse visible controls or map a route | Versioned scenes, spatial maps and `session.move()` | Authored geometry or observed segments; unknown coverage and target behavior remain separate. |
