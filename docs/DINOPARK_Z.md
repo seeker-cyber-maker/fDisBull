@@ -35,9 +35,12 @@ resource directory. The pinned EXE and VARS.DAT identities are in
 
 The worker translates public Z objects and verbs to the existing native
 handlers. Original game code owns cash, debt, purchases, staff, food, time and
-saved parks. The `TextScene` class retains the imported implementation's exact
-AST hash. Session hooks expose observations, completion events and owned native
-processes without changing those business methods. Recognition profiles and
+saved parks. The imported `TextScene` identity is retained separately from the
+current adapter identity. Continuation changes add catalogue preparation,
+static selection checks, a bounded catalogue-exit macro, unique native save
+titles and explicit quarter-notice continuation. They do not replace original
+financial or purchase effects. Session hooks expose observations, completion
+events and owned native processes. Recognition profiles and
 their source hashes ship under `fdisbull/data/dinopark-e55-*`.
 
 The player receives titles, descriptions, visible actions, opaque freshness
@@ -115,13 +118,18 @@ purchase behavior was not tested in this batch.
 
 ## Saving and stopping
 
-`save park` uses the original native writer, privately under the default name
-`zpark`; `--slot` selects another qualified name. `load park` starts a fresh
+`save park` uses the original native writer and creates a new backup each time:
+`zpark`, `zpark-002`, and so on. `--slot` chooses the base name. Earlier backups
+are preserved. `load park` loads the latest saved or explicitly loaded backup;
+`list saves` and `look` expose named backups, and `load zpark` selects one by
+name. The session exposes up to 64 named backups. A native load starts a fresh
 guest and uses its original OLD GAME loader. To resume from a later Z process,
 add `--load-save /private/previous-work/saves/zpark` to the worker command and
 choose a new work directory. Native save bundles include their resource
 fingerprint and verified field metadata. Original source saves are never
-implicitly imported as compiler resources.
+implicitly imported as compiler resources. The explicitly selected resume
+bundle is verified and copied into the new session's private save library, so
+it can also be loaded by name there.
 
 The backend protocol's `save`/`load` operations are separate, owned live-session
 engine checkpoints used by player live mode. They restore both native state
@@ -143,11 +151,16 @@ it cannot establish a clean shutdown. Each named bank control now resolves its
 point from the saved scene, moves the cursor, executes 150 guest milliseconds,
 checks released/stable input and rechecks the original scene before one press.
 This covers entry, repayment, borrowing and return to the office. It is an
-input adapter; the original business methods are unchanged. See the
+input adapter; the original financial effects remain guest-owned. See the
 [installed merge-readiness record](VERIFICATION-Z-V023-MERGE-READINESS.md) for
 the fresh borrow-timeout finding and retest. The older office-entry failure's
 exact cause remains unproved. A known quarter notice can be exposed as its own
-context with only its acknowledgment action; this native case remains untested.
+context with only its acknowledgment action. A verified quarter pause returns
+`accepted` with partial effects, rather than claiming full completion or an
+unknown effect. Use `acknowledge notice` to continue. During park entry, the
+notice has its own `park-entry.quarter-notice` context; the park destination is
+qualified after dismissal. The continuation acceptance record tracks the
+current native test status.
 
 See [native verification and open friction](VERIFICATION-DINOPARK-Z-2026-10-29.md)
 before treating these bounded scenes as full-game coverage.
