@@ -1,0 +1,196 @@
+{
+  "format": "dinopark-z-native-acceptance-summary-1",
+  "scope": "fresh 0.24 source player acceptance against original DOSBox game; private route and load only",
+  "source": {
+    "version": "0.24.0.dev0",
+    "installed_distribution_version": "0.23.0",
+    "revision": "1351e1ce66f944788731260c125a5bf7d1f7dfa0",
+    "worktree_was_dirty": true,
+    "module_hashes": {
+      "src/fdisbull/__init__.py": "172819d817c57e9c34ec23d0714dc3764f825b98a785ed45bc5bed6badd5ad37",
+      "src/fdisbull/udc.py": "bd43d42d598192f54a7d7c4fe69f22469e089408a47ff75f83bf2213c3f81c6c",
+      "src/fdisbull/dinopark_z.py": "de6896a43764a0b5ee41f88f8b967773ad96c081c44f4a96bb3c5ec5803533da",
+      "src/fdisbull/dinopark_scenes.py": "6e5e55e5ee4e238d49fff698307b61c58b65e2483f706373c556706dee456f98",
+      "player/fdisbull_player/player.py": "1279b110a9c51a47bff54e4261a9ea33f6af462e7be2c4e99e8194a35904a8f4",
+      "player/fdisbull_player/live.py": "f92d10b2ddc07b6e72320d3a07ad3efc2c3fa9d2eb1bbcd794ebe24d3db47afe",
+      "player/fdisbull_player/__main__.py": "69fc55e47dd7336cb80ecc74c5c8c9cf5b610931fe4045ab3101f0e666a8f41d"
+    },
+    "module_hashes_unchanged_during_run": true
+  },
+  "runtime": {
+    "python_version": "3.13.17",
+    "backend": {
+      "sha256": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277",
+      "platform": "macOS ARM64"
+    }
+  },
+  "canonical_game": {
+    "files": 191,
+    "original_save_files": 8,
+    "excluded_from_udc_copy": true,
+    "udc_artifacts": 183,
+    "udc_byte_identity": true,
+    "tree_sha256_before": "2d89495eeefd6f254948cbcb247c96f764489d3f5e1d8123aecda8fb37884a63",
+    "tree_sha256_after": "2d89495eeefd6f254948cbcb247c96f764489d3f5e1d8123aecda8fb37884a63",
+    "unchanged": true,
+    "exe_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+    "vars_sha256": "5e4b32d6e4afd060d72da79bfcac27fdca493905a7e19e299729e31431a1d153"
+  },
+  "commands": {
+    "route_a": [
+      "go bank",
+      "repay loan",
+      "borrow loan",
+      "go street",
+      "buy desert plot",
+      "go dinomart",
+      "buy coelophysis",
+      "go street",
+      "check inventory",
+      "go store",
+      "buy wood fence",
+      "go employment",
+      "hire tour guide",
+      "go diner",
+      "buy 20 small feeders",
+      "open park",
+      "check status",
+      "check inventory",
+      "advance time",
+      "save park",
+      "list saves"
+    ],
+    "route_b_after_native_load": [
+      "check status",
+      "check inventory"
+    ],
+    "initial_observation": "look",
+    "route_a_statuses": [
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success",
+      "success"
+    ],
+    "route_b_statuses": [
+      "success",
+      "success"
+    ]
+  },
+  "results": {
+    "route_a_status": "all_actions_success",
+    "route_a_actions": 21,
+    "route_a_actions_succeeded": 21,
+    "bank_repay": true,
+    "bank_borrow": true,
+    "returned_to_street": true,
+    "land_purchase": true,
+    "dinosaur_purchase": true,
+    "food_purchase_commit_confirmed": true,
+    "park_entry_action_success": true,
+    "park_view_day_advanced": true,
+    "park_open_closed_operating_status": "unknown",
+    "native_save_matches_live_fields": true,
+    "saved_field_count": 20,
+    "saved_fields": [
+      "cash",
+      "day",
+      "food",
+      "hunger",
+      "loan",
+      "month",
+      "pen-1",
+      "pen-10",
+      "pen-2",
+      "pen-3",
+      "pen-4",
+      "pen-5",
+      "pen-6",
+      "pen-7",
+      "pen-8",
+      "pen-9",
+      "species",
+      "staff",
+      "week",
+      "year"
+    ],
+    "saved_fields_expected_sha256": "934b9935635a6c45c56399b21de85831400e87d905b2dc95af9f6aebf1364b22",
+    "saved_fields_observed_sha256": "934b9935635a6c45c56399b21de85831400e87d905b2dc95af9f6aebf1364b22",
+    "fresh_load_route_status": "all_actions_success",
+    "fresh_load_readback_matches": true,
+    "fresh_load_field_count": 20,
+    "fresh_load_fields": [
+      "cash",
+      "day",
+      "food",
+      "hunger",
+      "loan",
+      "month",
+      "pen-1",
+      "pen-10",
+      "pen-2",
+      "pen-3",
+      "pen-4",
+      "pen-5",
+      "pen-6",
+      "pen-7",
+      "pen-8",
+      "pen-9",
+      "species",
+      "staff",
+      "week",
+      "year"
+    ],
+    "fresh_load_expected_sha256": "934b9935635a6c45c56399b21de85831400e87d905b2dc95af9f6aebf1364b22",
+    "fresh_load_observed_sha256": "934b9935635a6c45c56399b21de85831400e87d905b2dc95af9f6aebf1364b22",
+    "fresh_load_status_command_success": true,
+    "fresh_load_inventory_command_success": true
+  },
+  "native_save_bundle": {
+    "format": "dinopark-native-save-1",
+    "files": {
+      "DINOSG.000": {
+        "size": 4153,
+        "sha256": "f2756b4f33253cbc8210ee0701fadc1d8e6c730df0cf53ba54d0ed57360b9d87"
+      },
+      "save.json": {
+        "size": 18349,
+        "sha256": "ba0c9245a8bfb9931799d7780c774ca829ce1a584934b3f77b898c6ce37566ce"
+      }
+    },
+    "save_bundle_matches_native_loader_copy": true
+  },
+  "evidence": {
+    "route_a_events_sha256": "2bb42056c9b11437de081d44334ff977cb5d8e41b9df1a79e9de9d06dc51c3df",
+    "route_a_oracle_trace_sha256": "6532fe4c2f6b9be5c37b3526c1941c290037337f86deef3064336c32e50c2897",
+    "route_a_oracle_screenshots": 23,
+    "route_a_screenshot_manifest_sha256": "dbcc0315d4ca8732e0af276ed111c7a97fe7abc227831e5100271d3605a127d4",
+    "route_b_events_sha256": "28ccc6710f6a0ee9e336bbc2e65a73152e6a3b41a3b6a55ec252a3990b6427ca",
+    "route_b_oracle_trace_sha256": "e916bf6d22277adc65255f62a04dd80ab72b83004bbfb0bf1417b1e649a90f88",
+    "route_b_oracle_screenshots": 3,
+    "route_b_screenshot_manifest_sha256": "928bfd4a40fbf1aa2868a0df5dbeb0e4c07a72fe7045db2d41a138df1e8bfa61",
+    "route_a_session_receipt_sha256": "4abefb8c7fc21ff8079cdbdf954ff9e630127312c80006f1c8ddfd0a2e982506",
+    "route_b_session_receipt_sha256": "2f6d8c3681da621de04c68bf3163384dc913f4848d88d9495d090a00eaf74f4c"
+  },
+  "setup_attempt_note": "Private setup attempt failed before native launch or action; corrected venv launcher. See verification narrative.",
+  "limits": [
+    "The game adapter reports park view and time advancement; it does not establish a separate open/closed operating status.",
+    "The initial provider setup attempt used a resolved base interpreter; no game work directory or action was created. The successful run used the venv launcher."
+  ]
+}

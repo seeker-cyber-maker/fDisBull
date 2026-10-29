@@ -1,0 +1,69 @@
+{
+  "format": "fdisbull-local-test-summary-1",
+  "candidate": "0.24.0.dev0",
+  "platform": "macOS ARM64",
+  "python": "3.13.17",
+  "native_backend_sha256": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277",
+  "full_suite": {
+    "command": "python -m pytest -q --tb=short --basetemp <new-private-directory>",
+    "passed": 1645,
+    "skipped": 21,
+    "failed": 2,
+    "setup_errors": 23,
+    "exit_code": 1,
+    "green": false,
+    "elapsed_seconds": 131.63,
+    "log_sha256": "eea3e5346fd52804a08e422fc20e5503a6c7966d21b21a4c13774618fb5d1a9b",
+    "source_player_tests_start_end_manifest_sha256": "a10292a907642a9ec97f7ba714abf09a8459b517e7de61c888e3234ccbb0370f",
+    "failed_tests": [
+      "tests/test_inspection.py::test_actual_elf_exports_and_unresolved_imports_are_honest",
+      "tests/test_loading.py::test_real_elf_retains_entry_and_named_function"
+    ],
+    "setup_error_tests": [
+      "tests/test_elf_metadata.py::test_got_slots_come_from_actual_relocations_and_keep_module_proof",
+      "tests/test_elf_metadata.py::test_plt_stubs_are_native_validated_not_fixed_stride_guesses",
+      "tests/test_elf_metadata.py::test_function_data_ifunc_tls_and_absolute_exports_have_distinct_identity",
+      "tests/test_elf_metadata.py::test_pie_copy_storage_tls_and_versioned_dependency_are_not_callable_slots",
+      "tests/test_elf_metadata.py::test_fno_plt_uses_glob_dat_without_fabricating_a_stub",
+      "tests/test_elf_metadata.py::test_duplicate_versioned_export_names_remain_separate",
+      "tests/test_elf_metadata.py::test_conflicting_version_requirement_indices_do_not_prove_a_module",
+      "tests/test_elf_metadata.py::test_limits_cap_metadata_and_path_lists_with_warnings",
+      "tests/test_elf_metadata.py::test_rel_encoding_does_not_claim_an_explicit_zero_addend",
+      "tests/test_elf_metadata.py::test_unversioned_copy_storage_keeps_dependency_candidates_without_attribution",
+      "tests/test_elf_metadata.py::test_bad_limits_are_rejected[0]",
+      "tests/test_elf_metadata.py::test_bad_limits_are_rejected[True]",
+      "tests/test_elf_metadata.py::test_bad_limits_are_rejected[100001]",
+      "tests/test_elf_metadata.py::test_bad_limits_are_rejected[2]",
+      "tests/test_platform_calls.py::test_linux_calls_xrefs_and_shared_bulk_effects[plt]",
+      "tests/test_platform_calls.py::test_linux_calls_xrefs_and_shared_bulk_effects[got]",
+      "tests/test_platform_calls.py::test_patched_got_disk_pointer_does_not_become_an_internal_call[plt]",
+      "tests/test_platform_calls.py::test_patched_got_disk_pointer_does_not_become_an_internal_call[got]",
+      "tests/test_platform_calls.py::test_refresh_upgrades_legacy_metadata_preserving_versions_annotations_and_bytes",
+      "tests/test_platform_calls.py::test_stub_patch_retracts_library_identity_and_derived_call_xref_only_in_child",
+      "tests/test_platform_calls.py::test_dependency_name_patch_rebuilds_versioned_modules_without_ghosts",
+      "tests/test_platform_calls.py::test_import_name_patch_replaces_old_symbol_alias_and_contract",
+      "tests/test_platform_calls.py::test_public_linkage_json_methods_and_refresh_return_structured_results"
+    ],
+    "limitation": "Remaining failure/error identities match preceding run and involve Linux ELF/toolchain fixtures on macOS. Hash comparison cannot exclude transient reverted edits."
+  },
+  "focused_selection": {
+    "passed": 75,
+    "failed": 0
+  },
+  "linux_candidate_ci": "not run; candidate not pushed or tagged",
+  "package_checks": {
+    "core_and_player_wheel_payload_files_match_source": {
+      "core": 141,
+      "player": 5
+    },
+    "extracted_source_focused_tests_passed": 133,
+    "installed_skill_resources": 8,
+    "installed_skill_local_links": 15,
+    "tool_only_archives_passed": 4,
+    "runtime_wheel_sha256": {
+      "fdisbull-0.24.0.dev0-py3-none-any.whl": "def573e1145dcf8f89e28a080139aa7a8f8224d1a87df6aad6b0ca07fbfe8801",
+      "fdisbull_player-0.24.0.dev0-py3-none-any.whl": "c4dc3e1b3791afa432a955d9e73477af7e4303b20373ca6d3cc7a6def778ca1e"
+    },
+    "scope": "Local candidate, not exact-commit CI or publication"
+  }
+}

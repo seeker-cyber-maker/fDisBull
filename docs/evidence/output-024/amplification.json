@@ -1,0 +1,25 @@
+{
+  "format": "fdisbull-output-qualification-1",
+  "candidate": "0.24.0.dev0",
+  "python": "3.13.17",
+  "input_bytes": 53583,
+  "input_sha256": "8965a71253024f4ebcf3c3c99c249954289c17ba80413cf313cd9a231c3eabcc",
+  "original_023_stdout_bytes": 13152686,
+  "candidate_reply_bytes": 475,
+  "inline_limit_bytes": 65536,
+  "retained_json_bytes": 13152685,
+  "retained_sha256": "12b831029d9451b3138a1cee618fe7efc3e589ed9c8e5c18620f1df6ec7f623d",
+  "original_json_preserved_exactly_without_wire_newline": true,
+  "execution_complete": true,
+  "inline_delivery_complete": false,
+  "safe_to_retry": false,
+  "fresh_store_readback_verified": true,
+  "oversized_selection_returns_no_partial_value": true,
+  "new_private_export_hash_verified": true,
+  "runtime_source_sha256": {
+    "src/fdisbull/output_artifacts.py": "d4dd11b4b5a62da5ed1146c4f5f3e26ecf19247440be4d0963b65eaa01124a3d",
+    "src/fdisbull/output_limits.py": "359d07b64abd8fab5ffef1973340f24bb1006de18eb511020cde657f10f15884",
+    "src/fdisbull/cli.py": "ef4b613687764578e2ce74935b0e0ac99f0e207f3dfa373dc0aff7bbef5ba233"
+  },
+  "claim_limit": "Synthetic IL output retention only; no claim about the cause or repair of inaccessible ChatGPT conversations."
+}

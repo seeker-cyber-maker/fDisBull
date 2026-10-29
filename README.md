@@ -33,6 +33,13 @@ Agents can start with [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) and the
 also available through `fdisbull agent-skill --reference SKILL.md`. These guides describe the tools
 and their boundaries; they do not turn an inferred result into observed fact.
 
+The 0.24.0 source keeps routine tool replies small. Large results
+remain available through private handles, so an agent can inspect the useful
+part without flooding its conversation or repeating an action. The refreshed
+skill also turns edition-matched research and walkthrough clues into testable
+scene leads, including hidden objects. See [bounded output](docs/OUTPUT_LIMITS.md)
+and the [agent workflow](docs/AGENT_QUICKSTART.md).
+
 ## Install and use
 
 Python **3.12 or later** is required. From a source checkout:
@@ -132,8 +139,9 @@ Z gives agents a small text interface for exercising shared interaction scenes:
 look around, pick up an object, try a guarded action and observe the result.
 The same player consumes a local scene service while the shared IL supplies the
 state and effects. See [Z scene play](docs/Z_SCENES.md) for a working authored
-example, model-driver support and current limits. This is an integration
-candidate on v0.23.0; the published v0.23.0 tag predates this addition.
+example, model-driver support and current limits. This integration is
+included in the 0.24.0 source; the published v0.23.0 tag
+predates this addition.
 
 The [DinoPark Z provider](docs/DINOPARK_Z.md) lets an agent borrow and repay,
 buy supplies, prepare a pen, hire a guide, open the park and save its progress
@@ -180,13 +188,17 @@ and [verification](docs/VERIFICATION-0.23.md).
 
 ## Status, testing and history
 
-The **0.23.0 release source** adds the original-backed DOS UDC, per-layer
-verification and refreshed agent guidance. Ordinary and native Linux CI must
+[Version 0.23.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.23.0) with eight download-verified assets and the Linux offline kit. The [publication record](docs/PUBLICATION-0.23.md) documents tag CI, known limits and the verified [shared Mac installation](docs/SYSTEM_INSTALLATION.md).
+
+The **0.24.0 release source** adds bounded replies and private output handles,
+shared Z scenes, the original-backed DinoPark provider and research-led agent
+guidance. See the [0.24 notes](docs/RELEASE-0.24.0.md) and
+[verification record](docs/VERIFICATION-0.24.md). Ordinary and native Linux CI must
 pass on the exact release commit before tagging. Check [Actions](https://github.com/seeker-cyber-maker/fDisBull/actions)
 for current runs and [Releases](https://github.com/seeker-cyber-maker/fDisBull/releases)
 for published packages. Source finalization, a tag and a published package are
-separate steps; the [0.23 notes](docs/RELEASE-0.23.0.md) and
-[verification record](docs/VERIFICATION-0.23.md) describe the tested scope.
+separate steps. The earlier [0.23 notes](docs/RELEASE-0.23.0.md) and
+[verification record](docs/VERIFICATION-0.23.md) describe the UDC baseline.
 
 For development checks:
 

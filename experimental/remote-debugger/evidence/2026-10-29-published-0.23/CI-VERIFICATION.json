@@ -1,0 +1,261 @@
+{
+  "format": "fdisbull-release-verification-1",
+  "version": "0.23.0",
+  "tag": "v0.23.0",
+  "tag_identity": {
+    "name": "v0.23.0",
+    "object_sha": "7b153779f9d8e3fea23d807bd9c7307d02e558ec",
+    "object_type": "annotated tag",
+    "peeled_commit": "ed89abca061964385b176537bc9fd275dd02afa5",
+    "tag_message": "fDisBull 0.23.0\n\nOriginal-backed DOS UDC, bounded ASM/C-to-UIL qualification and native verification evidence.\nHuman-facing README, portable agent guides and progressive investigation skill.\n\nSource: ed89abca061964385b176537bc9fd275dd02afa5\nOrdinary Linux CI: https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40929751801\nNative Linux CI: https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40929751794\nRequired native acceptance: 353 stable DOS, 664 layers DOS, 16 PE64 and 13 DOS/boot; zero skips or failures.\n\nGame files, saved states and project databases are excluded.\n"
+  },
+  "source_commit": "ed89abca061964385b176537bc9fd275dd02afa5",
+  "runs": {
+    "ordinary": {
+      "run_id": 40937203880,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40937203880",
+      "event": "push",
+      "head_branch": "v0.23.0",
+      "head_sha": "ed89abca061964385b176537bc9fd275dd02afa5",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 12924323756,
+      "artifact_name": "fdisbull-tool-packages",
+      "artifact_sha256": "4b0a15ac95383c3be1574ff156a8b8a197fe26cb38089353783216fd4baac4c2"
+    },
+    "native": {
+      "run_id": 40937203834,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40937203834",
+      "event": "push",
+      "head_branch": "v0.23.0",
+      "head_sha": "ed89abca061964385b176537bc9fd275dd02afa5",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Native debugger (stable-backend)",
+          "artifact_name": "native-debugger-stable-backend",
+          "artifact_id": 12925378587,
+          "artifact_digest": "sha256:46e5ed51164a7f898d2692989dc3e0eaf922a29eef0611b578d71cb056eef32a",
+          "tests": 353,
+          "passed": 353,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 58.265
+        },
+        {
+          "name": "Native debugger (layers-backend)",
+          "artifact_name": "native-debugger-layers-backend",
+          "artifact_id": 12926136453,
+          "artifact_digest": "sha256:eb944dc588542ccd813c04f6d861150201050c554492520e559f519125f9af88",
+          "tests": 664,
+          "passed": 664,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 74.052
+        },
+        {
+          "name": "Unified DOS/boot tests",
+          "artifact_name": "native-debugger-unified",
+          "artifact_id": 12927093827,
+          "artifact_digest": "sha256:7c166625169d500c044c3feddbdd8c546cbf7ed8dacab65486a0d3c99de6e9f2",
+          "tests": 13,
+          "passed": 13,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 259.589
+        },
+        {
+          "name": "Unified DOS, boot and PE64 (installed wheel)",
+          "artifact_name": "native-debugger-pe64",
+          "artifact_id": 12928825491,
+          "artifact_digest": "sha256:0bc76bcb8b4415cb8db3f9c3fcccd4e33aeb0215268a71524e14bba5ede1c2f9",
+          "tests": 16,
+          "passed": 16,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 1413.477
+        }
+      ]
+    }
+  },
+  "counts": {
+    "ordinary_passed": 1493,
+    "ordinary_skipped": 103,
+    "stable": 353,
+    "layers": 664,
+    "unified": 13,
+    "pe64": 16
+  },
+  "tag_package_audit": {
+    "scripts_check_dist_all_four": "passed",
+    "archive_excluded_or_unsafe_matches": 0,
+    "python_markdown_files_compared_to_tag": {
+      "core_wheel": 120,
+      "player_wheel": 5,
+      "source_distribution": 401,
+      "tool_source_zip": 401
+    },
+    "source_byte_comparison": "all packaged Python and Markdown bytes match tracked files at the peeled tag commit",
+    "pr17_fixture_files": 9,
+    "udc_receipts": 3,
+    "all_fixture_and_receipt_bytes_match_tag": true,
+    "required_release_docs_and_both_skill_refs_present_and_exact": true,
+    "packages": [
+      {
+        "name": "fdisbull-0.23.0-py3-none-any.whl",
+        "sha256": "69d365b9d4a22ed2a58e06b29ae8e56323477f03724c8ec2a8db0fd31a56e83c",
+        "size_bytes": 505577,
+        "check_dist_entries": 134
+      },
+      {
+        "name": "fdisbull-0.23.0.tar.gz",
+        "sha256": "7d07befbf71f93b1333859800bcb0b13cb48fa467bb93e6ddcddbe0e4af2a3d2",
+        "size_bytes": 1134867,
+        "check_dist_entries": 434
+      },
+      {
+        "name": "fdisbull-0.23.0-tool.zip",
+        "sha256": "5f6297a5398a65f1e1fea47521497d2923a40c3a0944c4814be3befa83be28fd",
+        "size_bytes": 1364015,
+        "check_dist_entries": 426
+      },
+      {
+        "name": "fdisbull_player-0.23.0-py3-none-any.whl",
+        "sha256": "ce3e79b36a766d3dadfb98b658d496c31378fd370f4f74863147bd52a2f56f79",
+        "size_bytes": 13203,
+        "check_dist_entries": 10
+      }
+    ],
+    "scope_note": "Distribution checks cover tool-only archive paths and configured excluded suffixes; all source-comparison paths are bound to the exact tag commit."
+  },
+  "offline_kit": {
+    "artifact_id": 12925163370,
+    "artifact_sha256": "4aa14aa92bbe8c3d64160786836de2495c6e973c0ddee2367d39d6a095fe34b4",
+    "archive_sha256": "a1f6f370617e1a92af894d72fd3343a3556012f87d2a7ffc3d994a1b998ce310",
+    "size_bytes": 102274975,
+    "metadata": {
+      "platform": "linux-x86_64",
+      "python": "3.13.5",
+      "source_commit": "ed89abca061964385b176537bc9fd275dd02afa5",
+      "backend_sha256": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+      "patch_manifest_sha256": "524f72813b665d3e82a5be4310128def6227384ecf6f2108a04afff0aaec6628",
+      "source_companion": "fdisbull-0.23.0-linux-x86_64-source-companion.tar",
+      "source_companion_sha256": "4126942fbd114463aa5ab1c98cf2bee41008cad89f740bc5aedd836758880b4a"
+    },
+    "members": 25,
+    "regular_files": 19,
+    "expanded_bytes": 190973258,
+    "unsafe_paths_or_links": [],
+    "project_saved_state_or_game_suffix_matches": [],
+    "internal_sha256sums_all_match": true,
+    "backend_receipt_matches_layers_identity": true,
+    "all_embedded_wheel_hashes_and_versions_match_manifest": true,
+    "embedded_core_and_player_wheels_match_ordinary_ci_entries": true,
+    "licenses": [
+      "licenses/DOSBox-X-COPYING.txt",
+      "licenses/SDL2_net-copyright.txt"
+    ],
+    "acceptance": {
+      "package_version": "0.23.0",
+      "player_version": "0.23.0",
+      "solver_version": "5.3.2",
+      "python_version": "3.13.5",
+      "platform": "Linux",
+      "machine": "x86_64",
+      "counterexample": "counterexample",
+      "equivalence": "equivalent_under_assumptions",
+      "keyboard": true,
+      "memory": true,
+      "native_restore": true,
+      "player_live_resume": true,
+      "screenshot_sha256": "1c12718a10d90d901a004896bd408ac89ac4f14cc5425281a5aadf83f950f578",
+      "backend_sha256": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+      "project_restart": true
+    }
+  },
+  "source_companion": {
+    "archive_sha256": "4126942fbd114463aa5ab1c98cf2bee41008cad89f740bc5aedd836758880b4a",
+    "size_bytes": 106885120,
+    "members": 5,
+    "internal_sha256sums_all_match": true,
+    "unsafe_paths_or_links": [],
+    "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+    "patch_sha256": "4730751c261729935a165f7cf195c828f91d16f3d414e8247c9cec8af9fd6f49",
+    "source_manifest_sha256": "524f72813b665d3e82a5be4310128def6227384ecf6f2108a04afff0aaec6628",
+    "overlay_files": 29,
+    "overlay_hashes_match_manifest": true,
+    "source_companion_ci_receipt_matches_archive_and_tag": true,
+    "upstream_archive": {
+      "members": 8800,
+      "regular_files": 7829,
+      "expanded_bytes": 360564686,
+      "unsafe_paths_or_links": [],
+      "project_or_saved_state_suffix_matches": [],
+      "upstream_rom_com_exe_counts": {
+        ".rom": 6,
+        ".com": 15,
+        ".exe": 17
+      },
+      "license_present": true
+    },
+    "scope_note": "This companion contains pinned upstream DOSBox-X source/test/build data, including BIOS ROM snapshots, PC-98/test COM fixtures and build/installer executables. These are upstream source inputs, not fDisBull-supplied user game assets. Project/database/save-state suffix scan found no matches."
+  },
+  "pe_tested_wheel": {
+    "sha256": "c58e4063d2c81dc1936f39913e2fa631ba9b81653b5899e3c55166015146d1f4",
+    "size_bytes": 505577,
+    "version": "0.23.0",
+    "source_commit": "ed89abca061964385b176537bc9fd275dd02afa5",
+    "wheel_identity_sha_matches": true,
+    "ordinary_vs_tested_entry_sets_equal": true,
+    "ordinary_vs_tested_all_entry_bytes_equal": true,
+    "whole_archive_hash_equal": false,
+    "pe_acceptance_result": "pass"
+  },
+  "release_payloads": [
+    {
+      "name": "fdisbull-0.23.0-py3-none-any.whl",
+      "sha256": "69d365b9d4a22ed2a58e06b29ae8e56323477f03724c8ec2a8db0fd31a56e83c",
+      "size_bytes": 505577
+    },
+    {
+      "name": "fdisbull-0.23.0.tar.gz",
+      "sha256": "7d07befbf71f93b1333859800bcb0b13cb48fa467bb93e6ddcddbe0e4af2a3d2",
+      "size_bytes": 1134867
+    },
+    {
+      "name": "fdisbull-0.23.0-tool.zip",
+      "sha256": "5f6297a5398a65f1e1fea47521497d2923a40c3a0944c4814be3befa83be28fd",
+      "size_bytes": 1364015
+    },
+    {
+      "name": "fdisbull_player-0.23.0-py3-none-any.whl",
+      "sha256": "ce3e79b36a766d3dadfb98b658d496c31378fd370f4f74863147bd52a2f56f79",
+      "size_bytes": 13203
+    },
+    {
+      "name": "fdisbull-0.23.0-linux-x86_64-offline.tar.gz",
+      "sha256": "a1f6f370617e1a92af894d72fd3343a3556012f87d2a7ffc3d994a1b998ce310",
+      "size_bytes": 102274975
+    },
+    {
+      "name": "fdisbull-0.23.0-linux-x86_64-source-companion.tar",
+      "sha256": "4126942fbd114463aa5ab1c98cf2bee41008cad89f740bc5aedd836758880b4a",
+      "size_bytes": 106885120
+    }
+  ],
+  "scope": {
+    "exclusions": "The four tool distributions and Linux kit contain no fDisBull user game/story assets, user saves/states, or project databases by the bounded archive checks. No raw native CI traces/screenshots are included in the eight staged release assets.",
+    "source_companion": "The source companion retains upstream DOSBox-X source/test/build payloads, including the listed ROM/COM/EXE categories; it is not represented as game-free in a broader semantic sense.",
+    "readback": "This verification covers tag CI and staged payloads. GitHub release upload and post-publication download/readback are separate checks."
+  },
+  "actions_not_performed": [
+    "publish or upload release assets",
+    "install or activate a runtime",
+    "modify source or move the tag"
+  ]
+}

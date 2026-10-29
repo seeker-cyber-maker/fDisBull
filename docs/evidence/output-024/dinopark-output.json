@@ -1,0 +1,16 @@
+{
+  "format": "fdisbull-dinopark-output-qualification-1",
+  "candidate": "0.24.0.dev0",
+  "operation": "files (read-only, offline after native session shutdown)",
+  "original_reply_bytes": 37545,
+  "bounded_reply_bytes": 490,
+  "inline_limit_bytes": 4096,
+  "artifact_sha256": "6b00647f61f98636679125612602105d11eb04ffdfbe9ef1b105ece188b1237c",
+  "fresh_installed_process_selection_complete": true,
+  "selected_pointer": "/result/total",
+  "selected_file_count": 182,
+  "selected_reply_bytes": 304,
+  "original_operation_was_not_repeated_for_retrieval": true,
+  "original_execution_complete": null,
+  "claim_limit": "Static attachment metadata after real DinoPark run; not an additional guest execution or semantic recovery claim."
+}

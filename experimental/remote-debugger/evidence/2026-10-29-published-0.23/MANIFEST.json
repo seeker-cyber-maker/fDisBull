@@ -1,0 +1,11 @@
+{
+  "version": "0.23.0",
+  "source_commit": "ed89abca061964385b176537bc9fd275dd02afa5",
+  "release_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.23.0",
+  "records": {
+    "ASSET-READBACK.json": "9527542814265638d0e7ee3421642d1038b075fb55363ad2a17e9f2ac8c0adbb",
+    "CI-VERIFICATION.json": "246c7995ddc42e800533a1d2f21a7653590bfc6baa200841246f9af0d4af8e54",
+    "SYSTEM-ACCEPTANCE.json": "f54aa3ca493df28500b46e3f8021a71c1ebf0f520d81cbd2fffb9991b5f975f7"
+  },
+  "scope": "Sanitized public CI, asset readback and shared-installation acceptance; no games, checkpoints or project databases"
+}

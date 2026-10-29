@@ -120,6 +120,9 @@ jobs:
         run: |
           set -euo pipefail
           python -m pytest -q --require-native $FDISBULL_NATIVE_TESTS \
+            tests/test_output_artifacts.py tests/test_output_limits.py tests/test_output_cli.py \
+            tests/test_agent_skill_gate.py tests/test_agent_discovery.py \
+            tests/test_il_scenes.py tests/test_z_process_backend.py tests/test_dinopark_z_bridge.py \
             --junitxml=native-evidence/tests.xml 2>&1 | tee native-evidence/tests.log
       - name: Build and verify the offline kit with genuine Z3
         if: matrix.profile == 'layers-backend'
@@ -150,10 +153,14 @@ jobs:
           kit_version=$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
           tar -xzf ".native/offline/output/fdisbull-${kit_version}-linux-x86_64-offline.tar.gz" -C .native/offline/unpacked
           kit_root="$GITHUB_WORKSPACE/.native/offline/unpacked/fdisbull-${kit_version}-linux-x86_64-offline"
-          "$kit_root/install.sh" "$GITHUB_WORKSPACE/.native/offline/installed" \
+          kit_install="$RUNNER_TEMP/fdisbull-offline-installed"
+          "$kit_root/install.sh" "$kit_install" \
             2>&1 | tee native-evidence/offline/install.log
-          .native/offline/installed/bin/python -I scripts/verify_offline_kit.py \
+          "$kit_install/bin/python" -I scripts/verify_offline_kit.py \
             --kit "$kit_root" --output native-evidence/offline/acceptance.json
+          python scripts/check_agent_skill.py --python "$kit_install/bin/python" \
+            --output "$RUNNER_TEMP/fdisbull-native-skill-gate.json"
+          cp "$RUNNER_TEMP/fdisbull-native-skill-gate.json" native-evidence/offline/agent-skill.json
           sha256sum .native/offline/output/* > native-evidence/offline/SHA256SUMS
       - uses: actions/upload-artifact@v4
         if: success() && matrix.profile == 'layers-backend'

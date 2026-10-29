@@ -22,7 +22,9 @@ output, candidate function names and successful placement suggest hypotheses;
 they do not by themselves prove reachable behavior.
 
 Use [references/workflows.md](references/workflows.md) to choose between static
-analysis, native investigation, scenes and text workflows. When behavior may be
+analysis, native investigation, scenes and text workflows. For research-led
+game recovery or normal progression, read
+[references/recovery-research.md](references/recovery-research.md). When behavior may be
 interpreted from a guest script, look for evidence of the interpreter alongside
 native code and other explanations. Read
 [references/methodology.md](references/methodology.md) before claiming a
@@ -61,6 +63,10 @@ unknown, not absent. Map-aware movement proposes and guards routes; it does not
 prove that the original engine follows them. Use the selected physical,
 assisted or story policy explicitly. Fair-play mode is a voluntary physical
 policy, not a restriction on the analysis API.
+
+A partial or artifact-backed response is not evidence that an action was rolled
+back or a proof succeeded. Retrieve the needed saved fields or chunks before
+repeating any side effect.
 
 For supported source mappings, interaction IL or DOS block reconstruction, read
 [references/udl-uil-udc.md](references/udl-uil-udc.md). Keep each model's
