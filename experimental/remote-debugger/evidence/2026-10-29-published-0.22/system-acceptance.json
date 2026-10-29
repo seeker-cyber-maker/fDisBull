@@ -1,0 +1,76 @@
+{
+  "actual_rollback_performed": false,
+  "bytecode_reconciliation": {
+    "old_prefix_or_wrappers_changed": false,
+    "package_paths_made_read_only": 2065,
+    "quarantined_bytecode_files": 7,
+    "quarantined_directories": 3,
+    "state_game_or_database_copied": false
+  },
+  "doctors": {
+    "dos": {
+      "log_sha256": "ad40295e34d07c07a196163bd3e0e89ae5e4f84f2d86a752d4df54723817fe20",
+      "native_state_restored": true,
+      "status": "passed"
+    },
+    "dos_qemu": {
+      "log_sha256": "2eb74353a2611dc9b6fa636abed496d222b23265bacd7db9b5c92ff7631a7201",
+      "native_state_restored": true,
+      "status": "passed"
+    },
+    "wine": {
+      "log_sha256": "3c484177b998870a148af0291eb6ca141c176f90ba17efb98b5929a6cafe73f7",
+      "native_state_restored": true,
+      "status": "passed"
+    }
+  },
+  "external_story_worker": "existing independently selected Jericho3.3.1 environment; no story or interpreter bundled",
+  "format": "fdisbull-system-acceptance-1",
+  "global_core_aliases": 3,
+  "global_dos_doctor": {
+    "native_state_restored": true,
+    "status": "passed"
+  },
+  "global_player_aliases": 3,
+  "global_player_fresh_processes": 6,
+  "installation": "/Users/Shared/fDisBull/releases/0.22.0-75bbd7e",
+  "package_directory_policy": {
+    "paths_changed": 2065,
+    "read_only": true,
+    "state_location": "private user data outside the installation"
+  },
+  "payload_entries": 2459,
+  "payload_manifest_sha256": "f5588192088779c481a4624882c1d7571f89dc61906ee57b4b9737a4b9e47fe7",
+  "qualification": {
+    "errors": 0,
+    "failed": 0,
+    "passed": 672,
+    "skipped": 0,
+    "xml_sha256": "674832b17250d7db2c749bab00200f07a573575d3d024a55939f5e11830c15c9"
+  },
+  "rollback_preflight": {
+    "previous_prefix": "/Users/Shared/fDisBull/releases/0.21.0-a253600",
+    "selector": "releases/0.22.0-75bbd7e",
+    "state_or_project_changes": false,
+    "status": "rollback_ready",
+    "wrappers_preserved": 14
+  },
+  "runtime_image_audits": "passed against installed tag-wheel resources",
+  "scope": "This Mac and tested prefix only. Historical full Mac source suite was not green; interactive dot-mode and whole-game parity remain unqualified.",
+  "selector": "releases/0.22.0-75bbd7e",
+  "source_commit": "75bbd7ee65118c0186844f73ef6c79245854eba0",
+  "status": "active_verified",
+  "user_game_state_database_payloads_copied": false,
+  "version": "0.22.0",
+  "z3": "5.3.2",
+  "zork_cli": {
+    "cli_autosave": true,
+    "fresh_cli_resume": true,
+    "private_checkpoint_outside_installation": true,
+    "private_permissions": true,
+    "repeated_response_equal": true,
+    "scope": "Installed tag-wheel CLI with separately selected existing Jericho worker; two fresh worker/CLI processes, bounded mailbox command only. This does not requalify DOS parity.",
+    "status": "passed",
+    "story_unchanged": true
+  }
+}

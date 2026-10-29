@@ -23,8 +23,10 @@ KQ1's tree and moat probes and PQ1's radio pickup with unchanged actor coordinat
 `fdisbull text-host CONFIG --fair-play` locks physical mode and disables assisted
 teleports, room jumps and story waivers for that session. The
 [release notes](docs/RELEASE-0.22.0.md) and [release verification](docs/VERIFICATION-0.22.md)
-describe the source finalization and exact-commit CI gate. The published packages
-and shared installation remain at 0.21.0 until a separate publication/update.
+describe source finalization and its exact-commit CI gate. [Version 0.22.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.22.0)
+with verified packages and the Linux/DOS offline kit with Z3. The
+[publication record](docs/PUBLICATION-0.22.md) documents tag CI, eight-asset
+download readback and the active shared Mac installation at 0.22.0.
 
 Version **0.21.0** adds [progressive scene workflows](docs/PROGRESSIVE_SCENES.md),
 a [separate text player](docs/TEXT_PLAYER.md), [automatic live-turn saves and resume](docs/PLAYER_LIVE.md),
@@ -45,7 +47,7 @@ retain their original evidence boundaries; the pending-status text in the
 [release notes](docs/RELEASE-0.21.0.md) is identified as a source-finalization
 snapshot by its publication follow-up.
 
-Version **0.20.0** integrates [typed input macros and bounded movement](docs/SEMANTIC_INPUT_MACROS.md), [scene geometry and content readiness](docs/SCENE_NAVIGATION.md), explicit DOS COM support, watch-only dot-mode, a partial AGI inspector, and [bounded Z3 model checks](docs/BOUNDED_PROOFS.md). See the [release notes](docs/RELEASE-0.20.0.md) and [offline kit with Z3](docs/OFFLINE_KIT_0.20.md). [0.20.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.20.0) with verified packages and the Z3 offline kit. The [publication record](docs/PUBLICATION-0.20.md) records its tag CI, asset readback and historical activation. The current [shared Mac installation](docs/SYSTEM_INSTALLATION.md) selects 0.21.0. The [candidate history](docs/UNRELEASED-0.20.md) and [Library reconciliation](docs/RECONCILIATION-0.20.md) preserve earlier identities and limitations.
+Version **0.20.0** integrates [typed input macros and bounded movement](docs/SEMANTIC_INPUT_MACROS.md), [scene geometry and content readiness](docs/SCENE_NAVIGATION.md), explicit DOS COM support, watch-only dot-mode, a partial AGI inspector, and [bounded Z3 model checks](docs/BOUNDED_PROOFS.md). See the [release notes](docs/RELEASE-0.20.0.md) and [offline kit with Z3](docs/OFFLINE_KIT_0.20.md). [0.20.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.20.0) with verified packages and the Z3 offline kit. The [publication record](docs/PUBLICATION-0.20.md) records its tag CI, asset readback and historical activation. The current [shared Mac installation](docs/SYSTEM_INSTALLATION.md) selects 0.22.0. The [candidate history](docs/UNRELEASED-0.20.md) and [Library reconciliation](docs/RECONCILIATION-0.20.md) preserve earlier identities and limitations.
 
 Version **0.19.0** adds guarded DOS filename aliases, persistent screenshot
 hooks, callback-safe DOSBox continuation and expanded investigation-skill
@@ -55,8 +57,8 @@ limits; the [development record](docs/UNRELEASED-0.19.md) retains earlier eviden
 with CI-verified wheel, source distribution and tool ZIP. The
 [publication record](docs/PUBLICATION-0.19.md) records tag CI, asset hashes,
 download readback and the [shared Mac installation](docs/SYSTEM_INSTALLATION.md).
-This records the earlier 0.19.0 publication. Global commands now select 0.21.0;
-retained 0.20.0, 0.19.0 and 0.18.0 prefixes remain available for guarded
+This records the earlier 0.19.0 publication. Global commands now select 0.22.0;
+retained 0.21.0, 0.20.0, 0.19.0 and 0.18.0 prefixes remain available for guarded
 rollback and compatible checkpoints. Existing project environments are preserved. The 0.19.0 publication
 did not produce a new DeepSeek delivery or offline bundle.
 
@@ -100,8 +102,9 @@ feature limits and the ordinary/native Linux checks required before tagging.
 
 | Track | Source and availability | Verification |
 | --- | --- | --- |
-| **Latest published and installed release: 0.21.0** | [Verified packages and Linux/DOS offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.21.0), source `a253600b94f7006f8962ada842eba699279fdbfe` | [Publication and shared installation](docs/PUBLICATION-0.21.md): 1,333 ordinary (100 skipped), 218 stable, 529 layers, 16 PE64 and 13 DOS/boot checks; zero native skips. |
-| **Previous published release: 0.20.0** | [Verified packages and Z3 offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.20.0), source `4f7791b` | [Publication and retained installation](docs/PUBLICATION-0.20.md): 1,236 ordinary, 109 stable DOSBox, 415 layers, 16 PE64 and 13 DOS/boot checks; zero native skips. |
+| **Latest published and installed release: 0.22.0** | [Verified packages and Linux/DOS offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.22.0), source `75bbd7ee65118c0186844f73ef6c79245854eba0` | [Publication and shared installation](docs/PUBLICATION-0.22.md): 1,458 ordinary (101 skipped), 316 stable, 627 layers, 16 PE64 and 13 DOS/boot checks; zero native skips. |
+| **Previous published release: 0.21.0** | [Verified packages and Linux/DOS offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.21.0), source `a253600b94f7006f8962ada842eba699279fdbfe` | [Publication and shared installation](docs/PUBLICATION-0.21.md): 1,333 ordinary (100 skipped), 218 stable, 529 layers, 16 PE64 and 13 DOS/boot checks; zero native skips. |
+| **Earlier published release: 0.20.0** | [Verified packages and Z3 offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.20.0), source `4f7791b` | [Publication and retained installation](docs/PUBLICATION-0.20.md): 1,236 ordinary, 109 stable DOSBox, 415 layers, 16 PE64 and 13 DOS/boot checks; zero native skips. |
 | **Earlier published release: 0.19.0** | [Verified packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.19.0), source `57824bd` | [Publication and shared installation](docs/PUBLICATION-0.19.md): 1,112 ordinary, 66 stable DOSBox, 372 layers, 16 PE64 and 13 DOS/boot checks; zero native skips. |
 | **Earlier published release: 0.18.0** | [Verified packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.18.0), source `416b64d` | [Publication and shared installation](docs/PUBLICATION-0.18.md): 1,089 ordinary, 54 stable DOS, 335 layers, 16 PE64 and 10 DOS/boot checks passed; zero native skips. |
 | **Earlier published release: 0.17.0** | [Packages and updated offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.17.0), source `4f736f2` | [Tag CI and copied-pair verification](docs/DELIVERY-0.17.md): 1,079 ordinary, 38 stable DOS, 318 layers, 16 PE64 and 10 DOS/boot checks passed; zero native skips. |

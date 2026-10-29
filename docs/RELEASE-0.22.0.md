@@ -1,5 +1,10 @@
 # fDisBull 0.22.0
 
+Publication follow-up: [0.22.0 is published and the shared installation is active](PUBLICATION-0.22.md).
+That record contains the completed tag CI, eight-asset download readback and
+local installed-package acceptance. The source-finalization record below and
+the tagged package bytes retain their original scope.
+
 This release adds a bounded Z-machine story harness and source-linked
 interaction blocks, plus native game-space maps and explicit spatial-action
 policies. The original disassembler and debugger remain the authority for

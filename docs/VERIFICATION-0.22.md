@@ -1,5 +1,10 @@
 # 0.22.0 source finalization and verification
 
+Publication follow-up: [0.22.0 is published and the shared installation is active](PUBLICATION-0.22.md).
+That record contains the completed tag CI, eight-asset download readback and
+local installed-package acceptance. The source-finalization record below and
+the tagged package bytes retain their original scope.
+
 This record accompanies the 0.22.0 release source: the qualified Zork harness,
 shared UDL/UIL interaction blocks, spatial masks and policies, and their replay
 and regression evidence. Version metadata is 0.22.0 for both the tool and the

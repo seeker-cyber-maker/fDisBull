@@ -1,0 +1,362 @@
+{
+  "all_native_suites_no_skips": true,
+  "assets": {
+    "fdisbull-0.22.0-linux-x86_64-offline.tar.gz": {
+      "bytes": 102260039,
+      "sha256": "3f1e0f93f510406e9b09d655feed293e3379827de7a47d00bcf5575469a94032",
+      "size": 102260039
+    },
+    "fdisbull-0.22.0-linux-x86_64-source-companion.tar": {
+      "bytes": 106885120,
+      "sha256": "f5f9bea3a5c766d66de941a923ff09bb657ced4a2474d00891c003b58e3c40e3",
+      "size": 106885120
+    },
+    "fdisbull-0.22.0-py3-none-any.whl": {
+      "bytes": 490713,
+      "sha256": "7f73ca157ee1313024d7ab11b299246c387002ca1dc91bdbfbf4fe1ddcfc6b36",
+      "size": 490713
+    },
+    "fdisbull-0.22.0-tool.zip": {
+      "bytes": 1275507,
+      "sha256": "8b662ff250143fb909c360810fa6d60556ee95758b5d1cf3f99f462827d30467",
+      "size": 1275507
+    },
+    "fdisbull-0.22.0.tar.gz": {
+      "bytes": 1062963,
+      "sha256": "b8e3e7945174100789df6d62e41fcb08dd7e8308ed9d4982d856210df1ee2ad9",
+      "size": 1062963
+    },
+    "fdisbull_player-0.22.0-py3-none-any.whl": {
+      "bytes": 13201,
+      "sha256": "4d36f7ec3b23c828177860a3b616dcbe54e894f3fbf4d0a4688e7b129d069ca4",
+      "size": 13201
+    }
+  },
+  "ci": {
+    "main_native": {
+      "conclusion": "success",
+      "run_id": 40888489300
+    },
+    "main_ordinary": {
+      "conclusion": "success",
+      "run_id": 40888488548
+    },
+    "tag_native": {
+      "conclusion": "success",
+      "run_id": 40895109415,
+      "status": "completed",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40895109415"
+    },
+    "tag_ordinary": {
+      "conclusion": "success",
+      "run_id": 40895109575,
+      "status": "completed",
+      "tests": "1458 passed, 101 skipped",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40895109575"
+    }
+  },
+  "counts": {
+    "layers": 627,
+    "ordinary": 1458,
+    "ordinary_skipped": 101,
+    "pe64": 16,
+    "stable": 316,
+    "unified": 13
+  },
+  "format": "fdisbull-release-verification-1",
+  "limits": "Bounded checks only; no licensed user game resources, private user states, or project databases included.",
+  "native_completed_jobs": [
+    {
+      "artifact_id": 12905914122,
+      "artifact_sha256": "01e81b60380539bc0eb55e364ca6c4ce833a7cbbcc0260fdb9fce0713ef88795",
+      "backend_sha256": "7601b339ef88ea7e117484389fc45d3901137b9c7c6fc41e0944228468036e71",
+      "conclusion": "success",
+      "id": 123521964683,
+      "name": "Native debugger (stable-backend)",
+      "pytest": {
+        "errors": 0,
+        "failures": 0,
+        "includes_test_spatial_native": true,
+        "passed": 316,
+        "seconds": 38.412,
+        "skipped": 0,
+        "tests": 316
+      },
+      "source_commit": "75bbd7ee65118c0186844f73ef6c79245854eba0"
+    },
+    {
+      "artifact_id": 12907491520,
+      "artifact_sha256": "455136d2ba9f4eecd6b06a24a42685a614f7ab28402942d5273748679a52fe2b",
+      "backend_sha256": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+      "conclusion": "success",
+      "id": 123521964361,
+      "name": "Native debugger (layers-backend)",
+      "patch_sha256": "4730751c261729935a165f7cf195c828f91d16f3d414e8247c9cec8af9fd6f49",
+      "pytest": {
+        "errors": 0,
+        "failures": 0,
+        "includes_test_spatial_native": true,
+        "passed": 627,
+        "seconds": 77.889,
+        "skipped": 0,
+        "tests": 627
+      },
+      "source_commit": "75bbd7ee65118c0186844f73ef6c79245854eba0"
+    }
+  ],
+  "native_junit": {
+    "native-debugger-layers-backend": {
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "627",
+      "time": "77.889"
+    },
+    "native-debugger-pe64": {
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "16",
+      "time": "1310.321"
+    },
+    "native-debugger-stable-backend": {
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "316",
+      "time": "38.412"
+    },
+    "native-debugger-unified": {
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "13",
+      "time": "229.980"
+    }
+  },
+  "offline_acceptance": {
+    "backend_sha256": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+    "counterexample": "counterexample",
+    "equivalence": "equivalent_under_assumptions",
+    "keyboard": true,
+    "machine": "x86_64",
+    "memory": true,
+    "native_restore": true,
+    "package_version": "0.22.0",
+    "platform": "Linux",
+    "player_live_resume": true,
+    "player_version": "0.22.0",
+    "project_restart": true,
+    "python_version": "3.13.5",
+    "screenshot_sha256": "1c12718a10d90d901a004896bd408ac89ac4f14cc5425281a5aadf83f950f578",
+    "solver_version": "5.3.2"
+  },
+  "offline_kit_audit": {
+    "acceptance": {
+      "counterexample": true,
+      "equivalence": "equivalent_under_assumptions",
+      "keyboard": true,
+      "memory": true,
+      "native_restore": true,
+      "player_live_resume": true,
+      "project_restart": true,
+      "screenshot_sha256": "1c12718a10d90d901a004896bd408ac89ac4f14cc5425281a5aadf83f950f578"
+    },
+    "archive_audit": {
+      "all_embedded_wheel_hashes_and_versions_match_manifest": true,
+      "backend_receipt_matches_ci_layer_identity": true,
+      "backend_receipt_sha256": "0f3c037d29467d30f34eeeeb79da4c09c9e85e42912647e2e5e55812d5ad020e",
+      "expanded_bytes": 190958239,
+      "internal_sha256sums_all_match": true,
+      "license_and_notice_files": [
+        "licenses/DOSBox-X-COPYING.txt",
+        "licenses/SDL2_net-copyright.txt"
+      ],
+      "members": 25,
+      "project_or_saved_state_suffix_matches": [],
+      "readme_excludes_games_saves_and_project_databases": true,
+      "regular_files": 19,
+      "unsafe_paths_or_links": []
+    },
+    "archive_sha256": "3f1e0f93f510406e9b09d655feed293e3379827de7a47d00bcf5575469a94032",
+    "artifact_id": 12906978071,
+    "artifact_name": "linux-dos-offline-kit",
+    "artifact_sha256": "6149862bcc7d3684af06b9ce9d99fa04bfebf4c7db3eef0d8bab6f3a0f1da518",
+    "metadata": {
+      "backend_sha256": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+      "fdisbull": "0.22.0",
+      "patch_manifest_sha256": "524f72813b665d3e82a5be4310128def6227384ecf6f2108a04afff0aaec6628",
+      "platform": "linux-x86_64",
+      "player": "0.22.0",
+      "python": "3.13.5",
+      "source_commit": "75bbd7ee65118c0186844f73ef6c79245854eba0",
+      "z3_solver": "5.3.2"
+    }
+  },
+  "offline_wheel_comparison": {
+    "fdisbull": {
+      "archive_hash_equal": false,
+      "ci_tag_wheel_sha256": "7f73ca157ee1313024d7ab11b299246c387002ca1dc91bdbfbf4fe1ddcfc6b36",
+      "entries": 130,
+      "offline_embedded_wheel_sha256": "b070727483d20f94dcbe392f1e1b2d18fe55fc80e38d326be8b5dcb56184d53d",
+      "zip_entry_names_and_bytes_equal": true
+    },
+    "fdisbull-player": {
+      "archive_hash_equal": false,
+      "ci_tag_wheel_sha256": "4d36f7ec3b23c828177860a3b616dcbe54e894f3fbf4d0a4688e7b129d069ca4",
+      "entries": 10,
+      "offline_embedded_wheel_sha256": "cafc76d86f0a531e0c825537e35b6a503da1abcebd8386fb499c2b840b35c116",
+      "zip_entry_names_and_bytes_equal": true
+    }
+  },
+  "pe_tested_wheel_comparison": {
+    "offline_kit_embedded_wheel_sha256": "b070727483d20f94dcbe392f1e1b2d18fe55fc80e38d326be8b5dcb56184d53d",
+    "ordinary_tag_ci_wheel_sha256": "7f73ca157ee1313024d7ab11b299246c387002ca1dc91bdbfbf4fe1ddcfc6b36",
+    "tested_vs_offline_kit": {
+      "all_entry_bytes_equal": true,
+      "entry_count_each": 130,
+      "entry_sets_equal": true,
+      "whole_archive_sha_equal": false
+    },
+    "tested_vs_ordinary": {
+      "all_entry_bytes_equal": true,
+      "entry_count_each": 130,
+      "entry_sets_equal": true,
+      "whole_archive_sha_equal": false
+    },
+    "tested_wheel_sha256": "f1ea554a7d01d6fe01ab9194b1f73bd1eac45e5b5685128af242c377e493469b"
+  },
+  "pe_tested_wheel_sha256": "f1ea554a7d01d6fe01ab9194b1f73bd1eac45e5b5685128af242c377e493469b",
+  "pe_wheel_entries_match_tag_package": 130,
+  "publication_readback_scope": "This manifest verifies CI identities and staged payloads. Published downloads are checked in a separate post-publication receipt.",
+  "runs": {
+    "native": {
+      "conclusion": "success",
+      "head_branch": "v0.22.0",
+      "head_sha": "75bbd7ee65118c0186844f73ef6c79245854eba0",
+      "id": 40895109415,
+      "jobs": {
+        "Native debugger (layers-backend)": 123521964361,
+        "Native debugger (stable-backend)": 123521964683,
+        "Unified DOS, boot and PE64 (installed wheel)": 123529814429
+      },
+      "status": "completed",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40895109415"
+    },
+    "ordinary": {
+      "conclusion": "success",
+      "head_branch": "v0.22.0",
+      "head_sha": "75bbd7ee65118c0186844f73ef6c79245854eba0",
+      "id": 40895109575,
+      "status": "completed",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40895109575"
+    }
+  },
+  "scope": {
+    "exclusions": "No licensed user game or story assets, user saves, private checkpoints, private project databases, or private traces intended; package checks and the offline audit are bounded to inspected payloads.",
+    "offline_kit": "CI produced and installed a Linux x86_64 Python 3.13.5 kit; offline acceptance evidence includes actual authored guest, keyboard, restore, player restart, and bounded Z3 checks.",
+    "package_audit": "Four tag workflow packages passed scripts/check_dist.py; all packaged Python files compared byte-for-byte with the tag commit.",
+    "source_companion": "Hash matches kit manifest; pinned upstream source plus manifest-hash-checked overlay. File provenance must be considered before classifying upstream source data."
+  },
+  "source_commit": "75bbd7ee65118c0186844f73ef6c79245854eba0",
+  "source_companion_audit": {
+    "baseline_upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+    "internal_sha256sums_all_match": true,
+    "matches_ci_source_companion_receipt_and_kit_manifest": true,
+    "overlay_files": 29,
+    "overlay_source_hashes_match_manifest": true,
+    "patch_sha256": "4730751c261729935a165f7cf195c828f91d16f3d414e8247c9cec8af9fd6f49",
+    "sha256": "f5f9bea3a5c766d66de941a923ff09bb657ced4a2474d00891c003b58e3c40e3",
+    "source_manifest_files": 29,
+    "source_manifest_sha256": "2fc94067098d53ebdff686f0b88923dfca093e018f7df020d004184094f892df",
+    "source_manifest_sha256_matches_acceptance_receipt": true,
+    "upstream_license_present": true,
+    "upstream_tar_audit": {
+      "classification": "upstream DOSBox-X source/test/build data; these entries are not fDisBull user game saves, project databases, or supplied game assets",
+      "expanded_bytes": 360564686,
+      "includes_upstream_source_data": [
+        "BIOS ROMs",
+        "PC-98 test COM files",
+        "build-tool executables"
+      ],
+      "members": 8800,
+      "project_or_saved_state_suffix_matches": [],
+      "regular_files": 7829,
+      "unsafe_paths_or_links": []
+    }
+  },
+  "status": "tag workflows and staged asset audits passed",
+  "tag": "v0.22.0",
+  "tag_identity": {
+    "annotated_tag_object": "20a51f133098595cfc62cc81c388e85ba2a3bb3b",
+    "name": "v0.22.0",
+    "peeled_commit": "75bbd7ee65118c0186844f73ef6c79245854eba0"
+  },
+  "tag_package_audit": {
+    "check_dist_all_four": "passed",
+    "ci_artifact_id": 12905548381,
+    "python_files_equal_commit": {
+      "core_wheel": 111,
+      "player_wheel": 5,
+      "source_archive": 245,
+      "tool_zip": 245
+    },
+    "scope": "Packaged Python source and named required evidence checked against tag commit; distribution checker excludes its listed binary and data suffixes."
+  },
+  "unified_native_job": {
+    "boot_machine_junit": {
+      "errors": 0,
+      "failures": 0,
+      "passed": 7,
+      "seconds": 1.542,
+      "skipped": 0,
+      "tests": 7
+    },
+    "boot_trace": {
+      "complete": true,
+      "context": "machine",
+      "events": 3,
+      "requested": 3
+    },
+    "combined_unified_junit": {
+      "errors": 0,
+      "failures": 0,
+      "passed": 13,
+      "seconds": 229.98,
+      "skipped": 0,
+      "tests": 13
+    },
+    "conclusion": "success",
+    "dos_qemu_junit": {
+      "errors": 0,
+      "failures": 0,
+      "passed": 6,
+      "seconds": 228.233,
+      "skipped": 0,
+      "tests": 6
+    },
+    "dos_trace": {
+      "complete": true,
+      "events": 96,
+      "fdisbull_version": "0.22.0",
+      "requested": 96
+    },
+    "installed_version": "0.22.0",
+    "job_id": 123529814429,
+    "name": "Unified DOS, boot and PE64 (installed wheel)",
+    "pe64_junit": {
+      "errors": 0,
+      "failures": 0,
+      "passed": 16,
+      "seconds": 1310.321,
+      "skipped": 0,
+      "tests": 16
+    },
+    "pe_acceptance_result": "pass",
+    "pe_advanced_verification_result": "pass",
+    "pe_bounded_layer_execution_trace_complete": false,
+    "source_commit": "75bbd7ee65118c0186844f73ef6c79245854eba0",
+    "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40895109415/job/123529814429"
+  },
+  "version": "0.22.0"
+}

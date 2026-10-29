@@ -1,0 +1,22 @@
+{
+  "exclusions": "Only publication, CI and sanitized acceptance metadata. No original game/story bytes, user saves, native states or project databases.",
+  "files": {
+    "asset-readback.json": {
+      "bytes": 3806,
+      "sha256": "5424b4c550cf35c1cf43df49f620aa4d57684b7d719cd02e7d0c77ecd8ef48e0"
+    },
+    "system-acceptance.json": {
+      "bytes": 2836,
+      "sha256": "b1db588c2ac737c38233e05a2962515b08335274035f4dba18ae57350d6a9908"
+    },
+    "tag-ci-and-assets.json": {
+      "bytes": 13033,
+      "sha256": "9883a993377bdfb78293f4291ef90f52da4359af1a0137264e4b007009a8867a"
+    }
+  },
+  "format": "fdisbull-publication-evidence-1",
+  "published_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.22.0",
+  "recorded_at_utc": "2026-10-29T15:45:53.885506+00:00",
+  "release": "v0.22.0",
+  "source_commit": "75bbd7ee65118c0186844f73ef6c79245854eba0"
+}
