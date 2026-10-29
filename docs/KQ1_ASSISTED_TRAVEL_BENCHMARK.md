@@ -37,7 +37,9 @@ The benchmark used release 0.21.0 at source commit
 backend SHA-256
 `45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346`.
 The game ran in fast-forward with audio disabled. Every attempt began at room 1,
-`x=110`, `y=100`, score 0, and ended only after the intended interaction checks.
+`x=110`, `y=100`, score 0. Only successful attempts reached the accepted
+endpoint; the failed attempt is counted in the attempt total and excluded from
+successful-route timing summaries.
 
 ## Route and evidence boundary
 
@@ -84,5 +86,7 @@ they are design requirements, not tests claimed as run by this benchmark.
 - Keep a frozen paired benchmark that reports every attempt, startup-inclusive
   and route-only timing, success criteria, failures and exact runtime identity.
 
-No implementation, native test result, private game asset, screenshot, save,
-project database or raw game code is included in this handoff.
+No implementation, new automated native-suite result for this documentation PR,
+private game asset, screenshot, save, project database or raw game code is
+included in this handoff. The benchmark observations above came from native
+game runs.
