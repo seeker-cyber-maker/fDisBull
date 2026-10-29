@@ -33,6 +33,14 @@ scene content to the standalone text player without a debugger, with bounded
 local-service requests and output. This is a testing consumer of shared IL, not
 a full UDC compiler, original-game conversion or part of the published 0.22.0.
 
+The [DinoPark Z integration](docs/DINOPARK_Z.md) connects the existing native
+scenes to that player after the development original-backed DOS UDC emits the
+game and its resources. Luna's [native acceptance record](docs/VERIFICATION-DINOPARK-Z-2026-10-29.md)
+covers bank transactions, shopping, park opening, operating reports and native
+save/load. This candidate requires the separate v0.23 UDC work; its original
+bytes are preserved, with no recovered semantic game blocks. The earlier bank
+timeout and remaining coverage gaps are recorded alongside the passing runs.
+
 Version **0.21.0** adds [progressive scene workflows](docs/PROGRESSIVE_SCENES.md),
 a [separate text player](docs/TEXT_PLAYER.md), [automatic live-turn saves and resume](docs/PLAYER_LIVE.md),
 and [qualified travel assistance](docs/ASSISTED_TRAVEL.md). Live mode checkpoints
