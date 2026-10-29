@@ -38,6 +38,13 @@ volume. Use qualitative estimates when measurements are unavailable. Prefer
 high information or decision value per cost. Reassess after a failed probe; do
 not repeat settled work without a reason to reopen it.
 
+When a guide, walkthrough, manual or video can cheaply narrow scene discovery,
+use the guide-derived checklist in
+[references/workflows.md](references/workflows.md). Record predicted objects,
+actions and dependencies as hypotheses; compile an evolving investigation guide
+from their source bindings, discrepancies and remaining questions. Keep advance
+knowledge private to the investigator and include its preparation cost.
+
 ## Match evidence to the claim
 
 Use the authorized ordinary interface to establish what was received and what

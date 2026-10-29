@@ -26,6 +26,25 @@ reverse the semantic authority: an outline, description or successful parser
 dispatch is not proof of a game rule. In v1, changing `udl` to `uil` only changes
 role metadata; measure actual source lowering separately from that copy.
 
+## Seed discovery with a guide-derived checklist
+
+Use guides, walkthroughs, manuals, videos or earlier authored scenes to predict
+likely objects, actions, dependencies and exits when that reduces the next
+investigation cost. Compile a small private scene graph and checklist, with
+external claims separate from inferred steps, source bindings and discrepancies.
+The [investigation workflow](../src/fdisbull/skills/fdisbull-investigate/references/workflows.md)
+defines the row fields and bounded procedure. Extend the checklist with source
+branches the guide omitted. Preserve edition differences and contradictory
+evidence; a walkthrough's order is not automatically a prerequisite graph.
+
+This is optional discovery assistance, not an additional acceptance gate. A
+guide can tell us what to look for, while the following source contract decides
+what may execute in the recovered source projection. Record preparation time
+and advance knowledge, keep spoilers
+out of public observations, and distinguish completion of a guided route from
+complete behavioral coverage. No speedup is claimed until cold investigation
+time is compared at equal scope.
+
 ## Minimum code-acceptance gate
 
 For a conditional code claim, require the following evidence and stop when it is

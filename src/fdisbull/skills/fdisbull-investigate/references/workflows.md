@@ -4,6 +4,13 @@ Use this reference to route a task to the smallest relevant fDisBull surface.
 Every command uses caller-selected paths. The Python package does not include an
 emulator, target executable, game files, saved states or project databases.
 
+Contents: [Outcome](#start-from-the-users-outcome),
+[static](#static-analysis), [native](#native-investigation),
+[scenes](#scenes-maps-and-movement),
+[guide checklist](#seed-scene-hypotheses-from-guides),
+[text](#player-and-live-text-workflows),
+[retained knowledge](#retain-knowledge-without-overstating-it).
+
 ## Start from the user's outcome
 
 | Need | Starting point | Evidence boundary |
@@ -64,6 +71,59 @@ waivers are explicit interventions with narrower contracts, not equivalent
 forms of physical traversal. Unknown map cells are not safe; map proposals do
 not guarantee engine movement or survival. A state edit can test a mechanism
 without showing that a player can reach it.
+
+## Seed scene hypotheses from guides
+
+Use an available guide, walkthrough, manual, map or video when it can reduce the
+next discovery cost. Start with the current scene and a small likely frontier;
+do not require a whole-game guide before offering a useful action. Respect any
+task restriction on spoilers or outside information. Record the source URL or
+document/section, video timestamp when relevant, edition/platform/language and
+accessed material. A transcript or summary is not evidence of frames not viewed.
+
+Compile your own concise investigation guide as a scene graph and checklist.
+Extract likely views, objects, exits, actions, inventory dependencies, expected
+effects and transitions. Split compressed instructions into candidate steps:
+"oil the mechanism" may involve selecting an item, opening a closeup, applying
+it to a different target and dismissing a response. Separate what the guide
+actually states from your inferred implementation. Route order alone does not
+establish a necessary prerequisite. An earlier authored adaptation is also a
+hypothesis source, not independent confirmation of its source guides.
+
+Keep one row per useful hypothesis in private project evidence; a Markdown
+table or existing notes suffice. This is not a new runtime scene schema.
+
+| Context/view | Predicted object/action and guard/effect | Origin/version | Source binding/evidence | Runtime evidence, if required | Disposition and next question |
+| --- | --- | --- | --- | --- | --- |
+| Current view or candidate closeup | Preserve the external claim and mark extra inferred steps | Guide section, prior note or video timestamp | Unknown until resource, handler, predicates and relevant effects are bound | Unknown unless observed under a recorded context | Expected, located, contradicted, or conditional claim accepted; retain the unresolved question |
+
+Use this checklist to choose probes:
+
+1. Locate likely labels, objects, views and exits in text/resources and dispatch
+   structures. Guide or video coordinates are candidate cues, not native target
+   geometry. Bind geometry and live transforms separately for harness clicks.
+2. Match the claimed prerequisite and outcome to relevant source conditions,
+   typed state changes and helper dependencies. Reuse accepted primitives and
+   summaries instead of repeating settled verification.
+3. Inspect adjacent source branches for wrong-item, repeat, refusal, optional
+   and alternate-route behavior relevant to the selected claim. Add discoveries
+   absent from the guide; absence from a walkthrough does not mean absence in
+   the game. Do not expand this into exhaustive whole-game testing by default.
+4. Preserve contradictions and version differences. A copied claim in several
+   guides is not several independent witnesses. Do not reshape source evidence
+   to fit a plausible story or silently promote inferred object names.
+5. Mark what is usable and the next cheapest unresolved question. Track
+   conditional code acceptance, ordinary reachability, current readiness and
+   persistence separately. Finishing guide steps establishes only coverage of
+   those steps, not complete scene or game recovery.
+
+Keep the guide hypotheses and their evidence history when writing a corrected
+walkthrough. Player narration may use only appropriate current observations;
+private solutions, future objects and guessed effects must not leak into it.
+Measure guide reading, outline construction and analyst effort separately from
+decoder/runtime time, and stop preparation when it no longer improves the next
+decision. Compare time to the first accepted useful action at equal claim scope
+before claiming this workflow is faster.
 
 ## Player and live text workflows
 
