@@ -24,6 +24,9 @@ did not qualify a tag. The gate now makes the selected launcher path absolute
 without resolving it out of its virtual environment. Two real-venv regressions
 cover explicit relative paths and a relative PATH entry. The corrected source
 requires fresh exact-commit ordinary/native CI before tagging.
+The offline-kit CI installation also uses the runner's private temporary
+directory, keeping its installed module outside the checkout as required by
+the skill gate. The source-import refusal remains enabled.
 
 ## Development acceptance record
 
