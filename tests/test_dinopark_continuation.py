@@ -48,6 +48,7 @@ def test_original_native_bundles_remain_loadable_with_new_recognition(tmp_path, 
 @pytest.mark.parametrize('notice,context,run_outcome,expected', [
     (['quarter_popup'], 'park.quarter-notice', 'guest_time', 'accepted'),
     (['parking_hint'], 'park.quarter-notice', 'guest_time', 'incomplete'),
+    (['parking_hint'], 'park.parking-notice', 'guest_time', 'accepted'),
     (['quarter_popup', 'parking_hint'], 'park.quarter-notice', 'guest_time', 'incomplete'),
     (['quarter_popup'], 'park', 'guest_time', 'incomplete'),
     (['quarter_popup'], 'park.quarter-notice', 'breakpoint', 'incomplete'),
@@ -100,14 +101,16 @@ def test_revision_names_fit_native_contract_and_capacity_keeps_navigation(tmp_pa
     assert bindings['go', 'route-park'] == 'go park'
 
 
-def test_park_entry_quarter_pause_requires_its_own_verified_context(tmp_path):
+@pytest.mark.parametrize('notice,context', [('quarter_popup', 'park-entry.quarter-notice'),
+                                        ('parking_hint', 'park-entry.parking-notice')])
+def test_park_entry_notice_pause_requires_its_own_verified_context(tmp_path, notice, context):
     writer = io.StringIO()
     service = bridge.ZService(tmp_path, io.StringIO(), writer)
     service.text = SimpleNamespace(current='street')
-    service.observe = lambda: {'complete': True, 'context': {'id': 'park-entry.quarter-notice'}}
+    service.observe = lambda: {'complete': True, 'context': {'id': context}}
     service.pending = {'command': 'go park', 'messages': ['Quarter notice interrupted entry.'],
                        'events': [{'phase': 'interrupted', 'command': 'go park',
-                                   'notices': ['quarter_popup'], 'run': {'outcome': 'guest_time'}}]}
+                                   'notices': [notice], 'run': {'outcome': 'guest_time'}}]}
     service.finish()
     result = json.loads(writer.getvalue())
     assert result['status'] == 'accepted' and result['effects'] == 'partial'
@@ -155,7 +158,8 @@ def test_commit_hook_journals_proof_without_nested_native_witness_queries(tmp_pa
     assert json.loads(writer.getvalue())['effects'] == 'applied-confirmed'
 
 
-def test_entry_notice_can_return_to_street_without_replaying_entry(monkeypatch):
+@pytest.mark.parametrize('notice', ['quarter_popup', 'parking_hint'])
+def test_entry_notice_can_return_to_street_without_replaying_entry(monkeypatch, notice):
     from types import SimpleNamespace
     from fdisbull import dinopark_scenes as scenes
     text = scenes.TextScene.__new__(scenes.TextScene)
@@ -169,7 +173,7 @@ def test_entry_notice_can_return_to_street_without_replaying_entry(monkeypatch):
     text.debug = SimpleNamespace(
         keyboard_press=lambda key: (inputs.append(key) or {'accepted': True, 'delivery': 'queued'}),
         scene_assert=lambda scene, **kw: assertions.append((scene, kw)))
-    frames = iter(['quarter_popup', 'quarter_popup', 'shop_street'])
+    frames = iter([notice, notice, 'shop_street'])
     monkeypatch.setattr(scenes, 'take_frame', lambda *args: ({'artifact': 'retained'}, next(frames)))
     monkeypatch.setattr(scenes, 'matches', lambda image, pattern: image == pattern)
     monkeypatch.setattr(scenes, 'run_guest', lambda *args: None)

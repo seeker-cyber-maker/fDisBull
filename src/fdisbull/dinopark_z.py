@@ -285,7 +285,8 @@ class ZService:
                         scenes.matches(image, self.text.patterns['quarter_popup'])):
                     raise ValueError('Unqualified parking advice')
                 modal = 'parking-notice'
-                description = 'Parking advice interrupted the food menu. No food order was submitted. Acknowledge the advice to continue.'
+                description = ('The adviser suggests another parking lot to increase attendance. '
+                               'The food menu was interrupted before an order was submitted. Acknowledge the advice to continue.')
             else:
                 try:
                     description = self.text.describe().split('Commands:')[0].strip()
@@ -297,13 +298,15 @@ class ZService:
                             not self.text.park_opened or self.text.notice_outcome_unknown):
                         raise
                     _,image = scenes.take_frame(self.text.project,self.text.debug,'z-modal-observation')
-                    if (not scenes.matches(image,self.text.patterns['quarter_popup']) or
-                            scenes.matches(image,self.text.patterns['parking_hint'])):
+                    notices = [n for n in ('quarter_popup', 'parking_hint')
+                               if scenes.matches(image, self.text.patterns[n])]
+                    if len(notices) != 1:
                         raise ValueError('Unqualified modal')
-                    modal = 'quarter-notice'
-                    description = 'A recognized quarter notice is visible. Acknowledge it to continue.'
+                    modal = 'quarter-notice' if notices == ['quarter_popup'] else 'parking-notice'
+                    description = ('A recognized quarter notice is visible.' if modal == 'quarter-notice' else
+                                   'The adviser suggests another parking lot to increase attendance.') + ' Acknowledge it to continue.'
             registers = self.text.debug.registers()
-            context = ('park-entry.quarter-notice' if modal == 'quarter-notice' and getattr(self.text, 'pending_park_entry', False)
+            context = ('park-entry.' + modal if modal and getattr(self.text, 'pending_park_entry', False)
                        else self.text.current + ('.' + modal if modal else ''))
             opaque = [self.epoch, self.revision, context, description,
                       registers.get('state_revision'), getattr(self.text.debug, '_runtime_epoch', None)]
@@ -311,7 +314,7 @@ class ZService:
             objects,_ = self.objects()
             if modal: objects = [o for o in objects if o['id'] == 'notice']
             return {'complete':True, 'context':{'id':context, 'token':token,
-                    'title':'Parking advice' if parking else 'Quarter notice' if modal else TITLES[self.text.current], 'description':description},
+                    'title':'Parking advice' if modal == 'parking-notice' else 'Quarter notice' if modal else TITLES[self.text.current], 'description':description},
                     'objects':objects, 'inventory':[], 'coverage':{'partial':True}}
         except Exception:
             return {'complete':False}
@@ -336,15 +339,17 @@ class ZService:
             verified = self.text.current == NAVIGATION.get(pending['command'][3:])
         if pending['command'].startswith('load park '):
             verified = self.restarted and any(e.get('phase') == 'result' and e.get('command') == 'load park' for e in events)
-        quarter_context = {'advance time': 'park.quarter-notice', 'go park': 'park-entry.quarter-notice'}
-        quarter_pause = (not uncertain and pending['command'] in quarter_context and any(
-            e.get('phase') == 'interrupted' and e.get('command') == pending['command'] and
-            e.get('notices') == ['quarter_popup'] and e.get('run', {}).get('outcome') == 'guest_time'
-            for e in events))
-        if quarter_pause:
+        park_context = {'advance time': 'park', 'go park': 'park-entry'}
+        kinds = {'quarter_popup': 'quarter-notice', 'parking_hint': 'parking-notice'}
+        notices = {e['notices'][0] for e in events if e.get('phase') == 'interrupted' and
+                   e.get('command') == pending['command'] and len(e.get('notices', [])) == 1 and
+                   e['notices'][0] in kinds and e.get('run', {}).get('outcome') == 'guest_time'}
+        park_pause = not uncertain and pending['command'] in park_context and len(notices) == 1
+        if park_pause:
             observed = self.observe()
-            quarter_pause = (observed.get('complete') is True and
-                             observed.get('context', {}).get('id') == quarter_context[pending['command']])
+            expected = park_context[pending['command']] + '.' + kinds[next(iter(notices))]
+            park_pause = (observed.get('complete') is True and
+                          observed.get('context', {}).get('id') == expected)
         food_pause = (not uncertain and pending['command'] == 'buy 20 small feeders' and any(
             e.get('phase') == 'interrupted' and e.get('command') == pending['command'] and
             e.get('notices') == ['parking_hint'] and e.get('food_order_submitted') is False and
@@ -353,13 +358,13 @@ class ZService:
             observed = self.observe()
             food_pause = (observed.get('complete') is True and
                           observed.get('context', {}).get('id') == 'dino_diner.parking-notice')
-        if quarter_pause or food_pause:
+        if park_pause or food_pause:
             status = 'accepted'
         elif uncertain or (refusal or text_refusal) and sent or not verified and not (refusal or text_refusal):
             status = 'incomplete'
         else:
             status = 'rejected' if refusal or text_refusal else 'success'
-        effects = ('partial' if quarter_pause or food_pause or (refusal or text_refusal) and sent else
+        effects = ('partial' if park_pause or food_pause or (refusal or text_refusal) and sent else
                    'none-confirmed' if status == 'rejected' or pending['command'] in ('status','list saves') else
                    'unknown' if status == 'incomplete' else 'applied-confirmed')
         self.send({'status':status, 'complete':status != 'incomplete',

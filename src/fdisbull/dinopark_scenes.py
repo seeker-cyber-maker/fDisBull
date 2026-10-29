@@ -833,7 +833,7 @@ class TextScene:
             return 'No uniquely recognized notice is visible. No input was sent.'
         notice = notices[0]
         entering = self.pending_park_entry and self.current == 'street'
-        if notice != 'quarter_popup' or self.current != 'park' and not entering:
+        if notice not in ('quarter_popup', 'parking_hint') or self.current != 'park' and not entering:
             self.event({'phase': 'refused', 'command': 'acknowledge notice', 'input': 'not_sent',
                         'notice': notice, 'reason': 'notice and scene not qualified', 'frame': frame})
             return 'Acknowledging this notice in the current scene is not qualified. No input was sent.'
@@ -872,7 +872,7 @@ class TextScene:
         elif entering:
             selector = {'memory': {'address': '4020:3c5c', 'length': 2,
                                    'hex': self.debug.memory('4020:3c5c', length=2)['hex']}}
-            doc = definition(frame, 'park after quarter notice', pixel_predicate(self.patterns['park_view']),
+            doc = definition(frame, 'park after acknowledged notice', pixel_predicate(self.patterns['park_view']),
                              selector, 'park.back', [173, 187], pixel_predicate(self.patterns['street_view']))
             self.park = self.project.debug_save_scene('park', doc, parent=self.park)['id']
             self.current, self.pending_park_entry = 'park', False
@@ -1556,11 +1556,12 @@ class TextScene:
         frame, image = take_frame(self.project, self.debug, 'park-revisited')
         notices = [n for n in ('quarter_popup', 'parking_hint') if matches(image, self.patterns[n])]
         if notices:
-            if notices == ['quarter_popup']:
+            if len(notices) == 1:
                 self.pending_park_entry = True
                 self.event({'phase': 'interrupted', 'command': 'go park', 'notices': notices,
                             'frame': frame, 'run': entry_run, 'destination': 'not_yet_verified'})
-                return 'A quarter notice interrupted park entry. Use acknowledge notice to continue.'
+                label = 'A quarter notice' if notices == ['quarter_popup'] else 'Parking advice'
+                return label + ' interrupted park entry. Use acknowledge notice to continue.'
             self.event({'phase': 'indeterminate', 'command': 'go park', 'frame': frame,
                         'notices': notices, 'persistence': 'unknown'})
             raise RuntimeError('notice during park entry; outcome unknown')
