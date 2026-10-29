@@ -1,4 +1,4 @@
-include README.md AGENTS.md pyproject.toml MANIFEST.in player/pyproject.toml
+include README.md AGENTS.md CLAUDE.md pyproject.toml MANIFEST.in player/pyproject.toml
 include player/fdisbull_player/*.py
 recursive-include src/fdisbull *.py *.c *.sh
 recursive-include src/fdisbull/data *.json *.txt
@@ -9,8 +9,21 @@ include tests/dosbox_zip_empty_write.cpp
 include tests/ida_rpc_vectors.json
 include src/fdisbull/ida_guest/SDK-LICENSE.txt
 recursive-include docs *.md
+prune docs/uil-rfcs/0001
+include docs/uil-rfcs/0001/README.md
+include docs/uil-rfcs/0001/check_examples.py
+include docs/uil-rfcs/0001/commit.js
+include docs/uil-rfcs/0001/commit.py
+include docs/uil-rfcs/0001/commit.rs
+include docs/uil-rfcs/0001/native-observation.json
+include docs/uil-rfcs/0001/native_probe.py
+include docs/uil-rfcs/0001/source-definition-observation.json
+include docs/uil-rfcs/0001/vectors.json
 include docs/evidence/spatial-2026-10-29/verification.json
 include docs/evidence/zork-2026-10-29/verification.json
+include docs/evidence/udc-2026-10-29/dino.json
+include docs/evidence/udc-2026-10-29/zork.json
+include docs/evidence/udc-2026-10-29/synthetic.json
 recursive-include scripts *.py
 prune examples
 prune history

@@ -1,0 +1,93 @@
+# Choose an investigation workflow
+
+Use this reference to route a task to the smallest relevant fDisBull surface.
+Every command uses caller-selected paths. The Python package does not include an
+emulator, target executable, game files, saved states or project databases.
+
+## Start from the user's outcome
+
+| Need | Starting point | Evidence boundary |
+| --- | --- | --- |
+| Identify or analyze an executable | `identify`, `inspect`, `import`, `analyze`, `analysis-status`, `status`, `functions`, `disasm`, `xrefs` | Static decoder facts and stored analysis only; candidates and budget limits stay labeled. |
+| Observe actual program behavior | `debug PROJECT ...` plus the appropriate `Project.debugger()` or JSON methods | Requires a compatible external backend and an authorized target. Verify live source/version binding and real guest effects. |
+| Reuse visible controls or map a route | Versioned scenes, spatial maps and `session.move()` | Authored geometry or observed segments; unknown coverage and target behavior remain separate. |
+| Expose a small text interface | `fdisbull text-host CONFIG` with a qualified local projection | The projection is not a game parser or full-game reconstruction; action freshness and completion are backend-owned. |
+| Run an authored text slice | `python -m fdisbull_player --package FILE` | The independent player evaluates the declared slice; this does not emulate or recover the source game. |
+| Qualify a supported code-to-semantics block | UDL/UIL/UDC commands and APIs | Only the exact supported source span and declared effect boundary; see [udl-uil-udc.md](udl-uil-udc.md). |
+| Inspect AGI 2.917 logic bytes | `agi-logic LOGDIR VOLUME_DIRECTORY LOGIC --profile 2.917` | Bounded, read-only partial decoding; it does not establish that the logic was loaded or executed. |
+
+For concise command routes, read `docs/AGENT_QUICKSTART.md` in a source checkout.
+The command `fdisbull methods` lists the JSON interface. For detailed static
+behavior, live debugger setup or target-specific contracts, use the relevant
+source documentation rather than guessing flags.
+
+## Static analysis
+
+For an executable file, inspect before importing so you can confirm format and
+architecture. COM images require explicit `--image com`; a filename suffix is
+not format evidence. Start recursive analysis with a reasonable instruction
+budget and inspect `analysis-status` or `status` for remaining work. A bounded
+run does not establish convergence. Use `render` only for stored project state;
+it does not operate a GUI or launch a target.
+
+Static call-flow can screen for a script interpreter, asset reader or dispatch
+table. A data file that resembles code is still not proof of a load or execution
+edge. Read the interpreter section of
+[methodology.md](methodology.md) when the task needs that distinction.
+
+## Native investigation
+
+Launch only with the user's actual executable, game directory, byte version and
+compatible backend. DOS, PE/Wine and machine-level backends have different
+capabilities; check the selected run before using optional features. Live JSON
+operations require a retained server session (`serve` alone or `debug`), not a
+one-shot `request` call. See `docs/DOSBOX_DEBUGGER.md` and the relevant backend
+guide. A debugger capability does not imply target or game support.
+
+Prefer ordinary input with explicit guest-time and wall-time bounds. Check
+parser/readiness and input consumption before interpreting a response. Native
+screenshots and traces are stored in the project and can be exported later;
+exporting an existing artifact is different from claiming a fresh capture.
+Checkpoint restore does not roll back mounted host files or external services.
+
+## Scenes, maps and movement
+
+Use scenes for versioned screen context, recognition masks, readiness and
+guarded input actions. Use spatial maps for game-unit known/safe regions, actor
+footprints, obstacles, hazards and interaction zones. These models answer
+different questions. See [scenes.md](scenes.md) for scene authoring and
+[runtime-navigation.md](runtime-navigation.md) for spatial policies, movement
+and observation choices.
+
+The default route is ordinary movement. Assisted placement and story-mode guard
+waivers are explicit interventions with narrower contracts, not equivalent
+forms of physical traversal. Unknown map cells are not safe; map proposals do
+not guarantee engine movement or survival. A state edit can test a mechanism
+without showing that a player can reach it.
+
+## Player and live text workflows
+
+`fdisbull-player` is a separate, standard-library package. Its `--package` mode
+runs an authored JSON slice; `--connect HOST:PORT` connects to a line-oriented
+backend. `--live` restores and checkpoints turns, but cannot verify a remote
+backend's durability. Optional external agents are trusted processes, not
+sandboxed programs. Read `docs/TEXT_PLAYER.md` and `docs/PLAYER_LIVE.md` before
+choosing this surface.
+
+The debugger-backed `text-host` exposes a deliberately qualified public
+projection over a live session. It needs a private configuration, project,
+backend, game directory, resource root and explicit runtime witnesses. It is
+single-client loopback transport without authentication or encryption; use it
+only in a trusted local environment. The projection is not a secrecy or process
+isolation boundary. `--fair-play` locks the host to physical movement. Otherwise
+choose `--spatial-mode physical|assisted|story` explicitly for a controlled
+experiment. Read `docs/TEXT_PROJECTION.md` and `docs/SPATIAL_MAPS.md`.
+
+## Retain knowledge without overstating it
+
+Promote verified reusable facts into versioned scene objects, named anchors,
+route segments, source mappings or interaction definitions only when doing so
+reduces later probe cost. Preserve the evidence and authority behind the
+shortcut. Revalidate after a source/version, resource, room, backend or runtime
+context change. Keep target-specific addresses, masks and paths in project
+evidence rather than this reusable skill.

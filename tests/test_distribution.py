@@ -1,12 +1,14 @@
 """Check the release guard with hostile additions to an otherwise valid archive."""
 from pathlib import Path
+import re
 import runpy
 import zipfile
 
 import pytest
 
 
-REQUIRED_SOURCE_FILES=('player/pyproject.toml','player/fdisbull_player/__init__.py',
+REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md',
+                       'player/pyproject.toml','player/fdisbull_player/__init__.py',
                        'player/fdisbull_player/__main__.py','player/fdisbull_player/player.py','player/fdisbull_player/runtime.py','player/fdisbull_player/live.py',
                        'src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py',
                        'tests/wine_gui_fixture.c','tests/dosbox_zip_empty_write.cpp','src/fdisbull/wine_guest/agent.c',
@@ -22,7 +24,14 @@ REQUIRED_SOURCE_FILES=('player/pyproject.toml','player/fdisbull_player/__init__.
                        'src/fdisbull/skills/fdisbull-investigate/references/scenes.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/methodology.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/runtime-navigation.md',
-                       'src/fdisbull/skills/fdisbull-investigate/references/proofs.md')
+                       'src/fdisbull/skills/fdisbull-investigate/references/proofs.md',
+                       'src/fdisbull/skills/fdisbull-investigate/references/workflows.md',
+                       'src/fdisbull/skills/fdisbull-investigate/references/udl-uil-udc.md')
+UDC_EVIDENCE_FILES = {
+    'docs/evidence/udc-2026-10-29/dino.json',
+    'docs/evidence/udc-2026-10-29/zork.json',
+    'docs/evidence/udc-2026-10-29/synthetic.json',
+}
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):
@@ -61,3 +70,29 @@ def test_distribution_check_requires_runtime_navigation_reference(tmp_path):
     source_archive(archive,tuple(path for path in REQUIRED_SOURCE_FILES if path!=reference))
     with pytest.raises(ValueError,match='runtime-navigation[.]md'):
         check(archive)
+
+
+@pytest.mark.parametrize('required',[
+    'AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md',
+    'src/fdisbull/skills/fdisbull-investigate/references/workflows.md',
+    'src/fdisbull/skills/fdisbull-investigate/references/udl-uil-udc.md',
+])
+def test_distribution_check_requires_agent_onboarding_resources(tmp_path,required):
+    check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+    archive=tmp_path/'fdisbull-missing-agent-resource.zip'
+    source_archive(archive,tuple(path for path in REQUIRED_SOURCE_FILES if path!=required))
+    with pytest.raises(ValueError,match=re.escape(required)):
+        check(archive)
+
+
+def test_release_allowlists_include_only_the_three_public_udc_receipts():
+    root = Path(__file__).resolve().parents[1]
+    build = runpy.run_path(str(root/'scripts/build_release.py'))
+    selected = {path.relative_to(root).as_posix() for path in build['release_files'](root)}
+    assert {path for path in selected if path.startswith('docs/evidence/udc-2026-10-29/')} == UDC_EVIDENCE_FILES
+
+    manifest_lines = (root/'MANIFEST.in').read_text().splitlines()
+    manifest_receipts = {line.removeprefix('include ') for line in manifest_lines
+                         if line.startswith('include docs/evidence/udc-2026-10-29/')}
+    assert manifest_receipts == UDC_EVIDENCE_FILES
+    assert all((root/path).is_file() for path in UDC_EVIDENCE_FILES)

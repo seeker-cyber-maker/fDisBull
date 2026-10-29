@@ -1,144 +1,39 @@
 # fDisBull
 
-An agent-first disassembler with a persistent SQLite analysis database, explicit evidence, bounded analysis, and headless SVG/PNG exports.
+Give an agent a program to explore—and a place to keep what it learns.
+fDisBull connects disassembly, headless debugging, scene-aware controls and
+persistent evidence. Find the instruction behind a changing value, name a
+control and reuse its verified route, or compare a temporary patch against a
+baseline. Come back next session with the discoveries still in your project.
+
+Use it to investigate DOS and Windows programs, inspect game interpreters,
+build reusable automation or test small recovered interaction models. Watch
+an agent work in dot-mode, drive a qualified scene through named actions, or
+play an authored text projection without opening the debugger yourself.
 
 > **This tool is not currently suitable for malware analysis or security work.**
 >
 > Must bring your own weapons. I have only done this once before. Safety not guaranteed.
 
-Requires Python **3.12 or later**.
+## Choose a starting point
 
-Version **0.22.0** adds [room maps and physical, assisted and story policies](docs/SPATIAL_MAPS.md),
-a [qualified Z-machine story harness](docs/ZORK_HARNESS.md)
-and [shared primitive interaction blocks](docs/INTERACTION_IL.md). UDL and UIL
-use the same representation in input and output roles. The bounded Zork I
-mailbox recovery is linked to story instructions and compared with the original
-DOS interpreter; the parser and turn loop remain outside the extracted slice.
-Room maps use game coordinates, actor footprints, separate obstacle/hazard and
-object-zone layers, immutable source references and supporting snapshots.
-Map-aware movement refuses unknown or hazardous destinations. Story mode uses
-qualified, temporary position-test overrides while sending original game input.
-The [native spatial verification](docs/VERIFICATION-SPATIAL-2026-10-29.md) records
-KQ1's tree and moat probes and PQ1's radio pickup with unchanged actor coordinates.
-`fdisbull text-host CONFIG --fair-play` locks physical mode and disables assisted
-teleports, room jumps and story waivers for that session. The
-[release notes](docs/RELEASE-0.22.0.md) and [release verification](docs/VERIFICATION-0.22.md)
-describe source finalization and its exact-commit CI gate. [Version 0.22.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.22.0)
-with verified packages and the Linux/DOS offline kit with Z3. The
-[publication record](docs/PUBLICATION-0.22.md) documents tag CI, eight-asset
-download readback and the active shared Mac installation at 0.22.0.
+| I want to… | Start here |
+| --- | --- |
+| Understand an executable without running it | [Disassembly and analysis](#disassemble-and-analyze) |
+| Observe a DOS game or a Windows PE64 program | [Debug the original program](#debug-the-original-program) |
+| Compare a hypothesis, a checkpoint or a temporary patch | [Layers, states and experiments](#layers-states-and-experiments) |
+| Give an agent reliable scene context and navigation | [Scenes, maps and interaction policies](#scenes-maps-and-interaction-policies) |
+| Play a supported projection or a user-supplied Zork story | [Text play and interpreter inspection](#text-play-and-interpreter-inspection) |
+| Test a small recovered block against its original DOS backing | [The bounded UDC pipeline](#the-bounded-udc-pipeline) |
 
-Version **0.21.0** adds [progressive scene workflows](docs/PROGRESSIVE_SCENES.md),
-a [separate text player](docs/TEXT_PLAYER.md), [automatic live-turn saves and resume](docs/PLAYER_LIVE.md),
-and [qualified travel assistance](docs/ASSISTED_TRAVEL.md). Live mode checkpoints
-after each model turn without a save command. An external agent can choose
-commands and narrate their observed results in bounded story sessions. Voice
-input/output is planned future work: Qwen TTS is available locally according to
-the user; speech recognition and a complete voice interaction are unqualified.
-[Version 0.21.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.21.0)
-at source `a253600b94f7006f8962ada842eba699279fdbfe`. The exact-source ordinary
-workflow passed 1,333 tests with 100 skips; tag-native Linux CI passed 218 stable
-backend, 529 layers, 16 PE64, and 13 DOS/QEMU/boot tests with no native failures,
-errors, or skips. Eight published assets were downloaded and matched against
-GitHub digests. The [publication record](docs/PUBLICATION-0.21.md) documents the
-asset readback, Linux offline kit, and shared Mac activation at 0.21.0. The
-[candidate scope](docs/UNRELEASED-0.21.md) and [verification record](docs/VERIFICATION-0.21.md)
-retain their original evidence boundaries; the pending-status text in the
-[release notes](docs/RELEASE-0.21.0.md) is identified as a source-finalization
-snapshot by its publication follow-up.
-
-Version **0.20.0** integrates [typed input macros and bounded movement](docs/SEMANTIC_INPUT_MACROS.md), [scene geometry and content readiness](docs/SCENE_NAVIGATION.md), explicit DOS COM support, watch-only dot-mode, a partial AGI inspector, and [bounded Z3 model checks](docs/BOUNDED_PROOFS.md). See the [release notes](docs/RELEASE-0.20.0.md) and [offline kit with Z3](docs/OFFLINE_KIT_0.20.md). [0.20.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.20.0) with verified packages and the Z3 offline kit. The [publication record](docs/PUBLICATION-0.20.md) records its tag CI, asset readback and historical activation. The current [shared Mac installation](docs/SYSTEM_INSTALLATION.md) selects 0.22.0. The [candidate history](docs/UNRELEASED-0.20.md) and [Library reconciliation](docs/RECONCILIATION-0.20.md) preserve earlier identities and limitations.
-
-Version **0.19.0** adds guarded DOS filename aliases, persistent screenshot
-hooks, callback-safe DOSBox continuation and expanded investigation-skill
-references. See the [release notes](docs/RELEASE-0.19.0.md) for behavior and
-limits; the [development record](docs/UNRELEASED-0.19.md) retains earlier evidence.
-[**fDisBull 0.19.0 is published**](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.19.0)
-with CI-verified wheel, source distribution and tool ZIP. The
-[publication record](docs/PUBLICATION-0.19.md) records tag CI, asset hashes,
-download readback and the [shared Mac installation](docs/SYSTEM_INSTALLATION.md).
-This records the earlier 0.19.0 publication. Global commands now select 0.22.0;
-retained 0.21.0, 0.20.0, 0.19.0 and 0.18.0 prefixes remain available for guarded
-rollback and compatible checkpoints. Existing project environments are preserved. The 0.19.0 publication
-did not produce a new DeepSeek delivery or offline bundle.
-
-Persistent scenes share object context, supporting snapshots and composite masks
-between overlays and checked named actions. The updated DOSBox backend provides
-native RGB probes without PNG transfer. The bundled `fdisbull-investigate` skill
-prioritizes expected reward and probe cost alongside confidence.
-
-Version 0.16.0 consolidated [saved experiments and baseline/layer comparisons](docs/DEBUGGER_EXPERIMENTS.md),
-[guest keyboard input](docs/GUEST_KEYBOARD.md), [bounded observation waits](docs/OBSERVATION_WAIT.md),
-[temporal code interpretations](docs/RUNTIME_CODE.md), [observation semantics](docs/DEBUGGER_SEMANTICS.md)
-and the [runtime doctor](docs/RUNTIME_DOCTOR.md). Its
-[standalone DOS knowledge](docs/DOS_KNOWLEDGE.md) supplies 182 provenance-bound
-runtime signatures, 37 DOS/BIOS service descriptions, reusable catalogs and
-richer declared types with near/far Pascal profiles. Comparison captures are
-validated before pairing. Compiler overlay loading and a dedicated SYS loader
-remain outside this implementation; the current source adds the explicit COM
-profile described below, without claiming dynamic overlay coverage.
-
-Version 0.14.0 adds an optional [IDA 9.4 remote-server adapter and matching
-DOSBox endpoint](docs/IDA_REMOTE.md). These use a common binary debugger
-protocol and keep execution breakpoints out of instruction bytes. The new
-adapter's feature and verification limits are separate from the custom Wine
-backend; no vendor IDA executable is included. Bounded PE traces run
-inside the Linux controller in one host request, preserving fresh code reads,
-integer-register snapshots and breakpoint boundaries. See the
-[measured trace comparison](docs/IDA_TRACE_PERFORMANCE.md).
-
-The [shared machine controller](docs/UNIFIED_DEBUGGER.md) also runs
-DOSBox inside Linux/QEMU using the existing DOS project API. DOS and Windows
-sessions expose an explicit outer-machine context, while a raw-image profile
-can stop before boot and capture registers, memory, breakpoints, traces and
-display artifacts. Real DinoPark has been verified locally. DOS state/layer/input
-checks and an authored boot-sector session also passed Linux CI. Typed kernel
-objects and a DTrace provider remain future work.
-
-See the [0.14.0 release notes](docs/RELEASE-0.14.0.md) for runtime compatibility,
-feature limits and the ordinary/native Linux checks required before tagging.
-
-## Release, branches, and native backend status
-
-| Track | Source and availability | Verification |
-| --- | --- | --- |
-| **Latest published and installed release: 0.22.0** | [Verified packages and Linux/DOS offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.22.0), source `75bbd7ee65118c0186844f73ef6c79245854eba0` | [Publication and shared installation](docs/PUBLICATION-0.22.md): 1,458 ordinary (101 skipped), 316 stable, 627 layers, 16 PE64 and 13 DOS/boot checks; zero native skips. |
-| **Previous published release: 0.21.0** | [Verified packages and Linux/DOS offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.21.0), source `a253600b94f7006f8962ada842eba699279fdbfe` | [Publication and shared installation](docs/PUBLICATION-0.21.md): 1,333 ordinary (100 skipped), 218 stable, 529 layers, 16 PE64 and 13 DOS/boot checks; zero native skips. |
-| **Earlier published release: 0.20.0** | [Verified packages and Z3 offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.20.0), source `4f7791b` | [Publication and retained installation](docs/PUBLICATION-0.20.md): 1,236 ordinary, 109 stable DOSBox, 415 layers, 16 PE64 and 13 DOS/boot checks; zero native skips. |
-| **Earlier published release: 0.19.0** | [Verified packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.19.0), source `57824bd` | [Publication and shared installation](docs/PUBLICATION-0.19.md): 1,112 ordinary, 66 stable DOSBox, 372 layers, 16 PE64 and 13 DOS/boot checks; zero native skips. |
-| **Earlier published release: 0.18.0** | [Verified packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.18.0), source `416b64d` | [Publication and shared installation](docs/PUBLICATION-0.18.md): 1,089 ordinary, 54 stable DOS, 335 layers, 16 PE64 and 10 DOS/boot checks passed; zero native skips. |
-| **Earlier published release: 0.17.0** | [Packages and updated offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.17.0), source `4f736f2` | [Tag CI and copied-pair verification](docs/DELIVERY-0.17.md): 1,079 ordinary, 38 stable DOS, 318 layers, 16 PE64 and 10 DOS/boot checks passed; zero native skips. |
-| **Earlier published release: 0.16.0** | [Packages and updated offline kit](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.16.0), source `e1e3fb4` | [Tag CI and copied-pair verification](docs/DELIVERY-0.16.md): 1,077 ordinary, 32 stable DOS, 312 layers, 16 PE64 and 10 DOS/QEMU/boot checks passed; no native skips. |
-| **Historical source candidate: 0.15.0** | [Saved debugger experiments](docs/DEBUGGER_EXPERIMENTS.md) on the existing unified debugger | [Candidate notes](docs/RELEASE-0.15.0.md) and [local verification](docs/VERIFICATION-0.15.md). No 0.15.0 tag/release; exact CI packages are additionally available in the GitHub offline asset. |
-| **Earlier published release: 0.14.0** | [GitHub release and packages](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.14.0), commit `6a0aeb3` | [Tag package CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623197): 817 passed, 45 skipped. [Tag native CI](https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40222623209): 15 stable DOS, 38 layers/endpoint, 14 PE64 and 10 DOS/QEMU/boot checks passed, no native skips. |
-| **Repository branch** | [main](https://github.com/seeker-cyber-maker/fDisBull/tree/main) is the release branch; feature and RFC branches may exist | Release promotion requires both ordinary and native Linux CI. Use version tags for fixed source snapshots. The old experimental checkpoint is preserved under an archive tag. |
-
-The historical [0.15.0 Linux/DOS offline candidate kit](https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.14.0/fdisbull-linux-dos-offline-0.15.0-e91879c-2026-10-26.zip) is now hosted on GitHub, with a [checksum](https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.14.0/fdisbull-linux-dos-offline-0.15.0-e91879c-2026-10-26.zip.sha256). It supplies the exact `e91879c` CI packages, genuine Python dependencies, and the corrected Linux backend with private SDL2_net libraries. Its 0.15.0 contents predate the current 0.16.0 work; its URL uses the existing 0.14.0 release as an asset host.
-
-The Python packages do **not** include an emulator. Source builds use the [stable backend patch](experimental/dosbox-x/README.md); execution layers need the separate [layers backend patch](experimental/dosbox-x/layers/README.md). Both pin an upstream source commit and require an explicit executable path. Coordinate grids work with either backend.
-
-The [release-status record](docs/RELEASE_STATUS.md) distinguishes tagged source, published packages and historical candidate receipts. Ordinary Python CI may skip native tests; [required native acceptance](docs/DOSBOX_DEBUGGER.md#required-native-acceptance) builds or selects the real patched backend and runs the existing tests against it.
-
-The historical [0.17 DeepSeek delivery](docs/DELIVERY-0.17.md) contains the published packages, scene-capable DOSBox, bundled agent skill, tested Mac QEMU/Wine profiles and audited pristine boot filesystems. Its no-network Linux 3.13.5 kit passed 318 checks and 49 save/load archive CRC checks; the actual ZIP separately passed extraction, permission repair, installation and 20 keyboard/scene checks. Both copied bundles passed complete manifest and ZIP readback.
-
-The [delivered DinoPark leaderboard replay](docs/VERIFICATION-DINOPARK-LEADERBOARD.md)
-typed `DeepSeek016`, clicked OK and verified the saved score table through the
-original game in a second emulator and separate project. Its Mac evidence
-includes clean/8px-grid screenshots, bounded writer/reader traces and unchanged
-original-file checks. The [E35 investigation example](examples/dinopark/notes/INVESTIGATION_E35.md)
-adds the latest attributed Library findings and remaining NEW GAME work.
-
-The earlier user-designated [0.14 DeepSeek delivery](docs/DELIVERY-0.14.md) contains the exact published packages, tested Mac ARM64 DOSBox/QEMU backends, Linux DOSBox and matching pristine DOS/Wine/optional-IDA boot runtimes. A smaller Linux/DOS offline kit supplies genuine hash-locked Python wheels and private libraries including SDL2_net. Copied Mac gates and 51 clean-offline checks passed. The additional Linux Python 3.13.5 probe passed installation and 49 native checks, with **2 native-state restore CRC failures**; the external DeepSeek environment remains unverified. See the delivery record for the separate scopes and failed receipts. Earlier deliveries are preserved. Game files, saved states and project databases are excluded.
-
-The direct Linux backend now has a separate [native-state CRC correction and
-offline statefix1 kit](docs/LINUX_STATE_CRC_FIX.md). It fixes the empty VGA buffer
-write that caused the original probe's two restore failures. Python 3.13.5
-acceptance passed 52 clean-build checks, 51 fresh copied-kit checks and 6 repeated
-original-case checks, with no failures/skips. The published 0.14.0 package bytes
-and original full delivery remain unchanged; the original failed results above
-describe that earlier delivery.
+Agents can start with [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) and the
+[agent quickstart](docs/AGENT_QUICKSTART.md). The bundled investigation skill is
+also available through `fdisbull agent-skill --reference SKILL.md`. These guides describe the tools
+and their boundaries; they do not turn an inferred result into observed fact.
 
 ## Install and use
+
+Python **3.12 or later** is required. From a source checkout:
 
 ```bash
 python -m venv .venv
@@ -151,84 +46,132 @@ fdisbull analysis-status analysis.fdb
 fdisbull functions analysis.fdb
 ```
 
-On Windows, activate `.venv\Scripts\Activate.ps1` in PowerShell. Install `.[managed]` for optional .NET metadata and CIL inspection.
+On Windows, activate `.venv\Scripts\Activate.ps1` in PowerShell. Use `--image
+com` when importing a DOS COM file: the filename extension alone is not format
+evidence. Install `.[managed]` for optional .NET metadata and CIL inspection.
+See the [user guide](docs/USER_GUIDE.md), [API](docs/API.md) and
+[platform support](docs/PLATFORMS.md) for more options.
 
-## Capabilities
+## Disassemble and analyze
 
-- x86 16/32/64 and ARM64 decoding; DOS MZ, explicitly selected DOS COM, PE, ELF, Mach-O, universal Mach-O slices, and explicit raw images.
-- Persistent instructions, control flow, references, annotations, types, and immutable byte versions.
-- Explicit PE versus DOS-stub selection and segment-aware DOS instruction identities.
-- Bounded analysis with pending work and unresolved targets kept visible.
-- Attached resource/save files with typed fields, evidenced code references, and bidirectional shared labels.
-- Repairable label links with retained history.
-- Disassembly and control-flow graph images generated from stored state.
+Import x86 16/32/64 or ARM64 programs in supported DOS MZ, COM, PE, ELF,
+Mach-O or explicit raw-image profiles. Native decoders supply instruction
+facts; fDisBull traverses reachable code and stores instructions, control flow,
+references, annotations and versions in SQLite. Analysis is bounded: unfinished
+work and unresolved targets remain visible. Inferred functions are candidates,
+not proof of execution or complete code coverage.
 
-See the [user guide](docs/USER_GUIDE.md), [API](docs/API.md), [architecture](docs/ARCHITECTURE.md), [platform support](docs/PLATFORMS.md), and [external-file workflow](docs/EXTERNAL_FILES.md). The development [processor decoder seam](docs/PROCESSOR_MODULES.md) does not yet support importing or persisting arbitrary VM projects.
+Original bytes and previous versions are preserved. You can attach supporting
+files, record types and links, and export disassembly and control-flow images
+from stored state without operating a GUI. See [architecture](docs/ARCHITECTURE.md)
+and [external files](docs/EXTERNAL_FILES.md).
 
-## DOSBox debugging
+## Debug the original program
 
-Launch an original DOS MZ or explicitly selected COM project with `fdisbull debug PROJECT --executable PATH_TO_PATCHED_DOSBOX --game-dir GAME_DIRECTORY`. Import COM with `fdisbull import GAME.COM PROJECT --image com`; a `.COM` suffix alone is not format evidence. The foreground JSON interface can set byte-checked breakpoints from disassembly addresses, click in guest screenshots, run until a breakpoint with a host timeout, and fast-forward a requested number of guest milliseconds. Screenshots and traces are stored inside the project and remain exportable after restart. See [DOSBox debugger usage and acceptance](docs/DOSBOX_DEBUGGER.md).
+The DOS debugger uses a separately built, compatible patched DOSBox backend.
+For example, after importing your own program:
 
-The current source adds an opt-in dot-mode watch-only window for the **same** native agent-controlled session: append `--dot-mode` (`--window` remains an alias) to the command above. Headless remains the default. This requires a compatible rebuilt backend and an accessible display; see the [window requirements and limitations](docs/DOSBOX_DEBUGGER.md#dot-mode).
+```bash
+fdisbull debug analysis.fdb --executable /path/to/patched/dosbox-x --game-dir /path/to/game
+```
 
-Version 0.21.0 also separates [structural MZ eligibility from DOS guest
-filenames](docs/DOS_INPUT_NAMES.md), supporting extensionless/long host names
-through guarded executable aliases. Published 0.20.0 and its retained system
-prefix keep their recorded filename limitation.
+Catch a memory access with a watchpoint, stop at a verified disassembly address,
+skip an intro with bounded fast-forward, then inspect a short trace or a saved
+frame. Guest keyboard and mouse input let the program perform its own actions.
+Traces and screenshots remain available from the project after restart.
+Headless mode is the default; `--dot-mode` opens a watch-only window on the same
+session when a display and compatible backend are available. See the
+[DOSBox guide](docs/DOSBOX_DEBUGGER.md).
 
-Version 0.21.0 includes persistent [screenshot pre/post hooks](docs/SCREENSHOT_HOOKS.md)
-for temporarily suspending sprite-render layers, bounded preparation, recorded
-capture provenance and automatic restoration of the previous layer stack.
+For x86-64 Windows executables, the [PE64 debugger](docs/WINE_DEBUGGER.md)
+uses a separately prepared Linux/Wine runtime and QEMU. Its watches, layers
+and machine states have their own implementation and limits. Python packages
+include neither emulator nor game files. Headless execution is not a security
+sandbox; restoring a machine checkpoint does not roll back mounted host files.
 
-The real DinoPark path was verified through this interface. A ten-second guest skip completed in about 0.45 host seconds on the tested Mac, with actual elapsed values recorded; this is not a speed guarantee. The separately built DOSBox backend is required and is not bundled with the Python tool.
+## Layers, states and experiments
 
-## Persistent scenes (0.17–0.18)
+Save checkpoints and bounded experiments, compare observations, and explore
+reversible runtime changes while retaining original versions. The DOS layers
+backend supports RAM changes and instruction-fetch overlays; the PE64 backend
+uses different mechanisms. Runtime code observations retain captured bytes
+alongside earlier views, but a capture does not by itself prove those bytes ran.
+See [code layers](docs/CODE_LAYERS.md), [saved experiments](docs/DEBUGGER_EXPERIMENTS.md),
+[debugger scripts](docs/DEBUGGER_SCRIPTS.md) and [runtime code](docs/RUNTIME_CODE.md).
 
-Version **0.18.0** adds per-observation memory-read deduplication,
-opt-in compact replies with retained evidence, portable scene bundles, typed
-relative outcomes and numbered overlays with legends. See the
-[scene improvements guide](docs/SCENE_IMPROVEMENTS.md) and
-[development verification record](docs/VERIFICATION-SCENE-IMPROVEMENTS.md).
-The [content-recovery design](docs/GAME_CONTENT_AND_PLAYER.md) and
-[UIL export boundary](docs/UIL_BOUNDARY.md) describe a future
-agent-authored semantic recovery framework. fDisBull would produce a
-provenance-bound Universal Interaction Language export and stop there. AEC
-cartridges, game runtimes, players and general Python/JavaScript/other language
-generators remain independent downstream projects. No UIL exporter is supplied
-by this release. Human and agent authors may propose evidence-backed language
-amendments through the [UIL RFC process](docs/UIL_RFC_PROCESS.md); acceptance of
-an RFC remains separate from implementation or game qualification.
+## Scenes, maps and interaction policies
 
-The [scene framework](docs/SCENE_FRAMEWORK.md) saves object context, trigger
-provenance, revisions and supporting screenshots in the project database. One
-manifest drives native-pixel overlays and named guest actions, with composite
-rectangle/polygon masks, separate visible/ready/enabled checks, bounded outcome
-verification and saved desynchronization/collision evidence. The updated DOSBox
-patch provides sparse RGB probes without PNG transfer. The shared 0.18.0 system
-installation and historical 0.17.0 offline kit supply the tested backend;
-earlier 0.16.0 binaries do not contain this probe.
+Scenes connect named controls, masks, predicates and supporting screenshots to
+persistent revisions. Sparse native pixel probes can answer qualified questions
+without transferring a full PNG each time. Stored screenshots and map overlays
+can be exported later. Scene identity, readiness and actual action outcomes
+remain distinct; an incomplete observation is not a successful action.
+See [scenes](docs/SCENE_FRAMEWORK.md) and [progressive workflows](docs/PROGRESSIVE_SCENES.md).
 
-The bundled `fdisbull-investigate` agent skill is available with
-`fdisbull agent-skill`. It guides evidence-based reverse engineering and scene
-authoring, prioritizing expected decision value and cost alongside confidence.
-The unreleased skill returns four resources covering the scene API,
-claim-specific evidence, action boundaries, failed-probe triage, matched-run
-preparation and a capability ladder for runtime navigation and actor-free
-observations. The ladder distinguishes current APIs from future resolver and
-target-adapter work; it does not implement those capabilities.
-The scene runtime currently targets DOSBox; PE64 native pixel probing is not
-implemented. [Implementation and limits](docs/SCENE_FRAMEWORK.md).
-The [installed-wheel DinoPark verification](docs/VERIFICATION-SCENES.md) exercises
-named controls, a popup handler, masks, collisions, restart and debugger stops.
-It records the original `0.17.0.dev0` development build. The
-[publication/delivery record](docs/DELIVERY-0.17.md) documents the completed
-ordinary/native tag CI, exact published packages and copied backend checks.
+Room maps describe known and safe areas in game coordinates, actor footprints,
+obstacles, hazards and object interaction zones. A map can suggest candidates
+or a bounded route; it does not itself move the game or prove that every cell
+is safe. Unknown conditions remain unknown. Live use requires a pinned,
+freshly qualified scene context. See [spatial maps](docs/SPATIAL_MAPS.md).
 
-## Tool packages and examples
+Choose a policy for the session:
 
-The wheel, source distribution, and standalone tool ZIP contain the tool, tests, and relevant documentation. **DinoPark is a repository example and is excluded from tool release packages.**
+- **Physical** uses the original game's movement and input, with qualified map checks.
+- **Assisted** can use explicitly qualified travel assistance and reports its use.
+- **Story** can use qualified temporary position-test overrides while original game input still performs actions.
+- **Fair-play** locks a text-host session to physical mode and disables the assisted and story shortcuts. It is a voluntary session policy, not a tamper-proof anti-cheat boundary.
 
-The [DinoPark example](examples/dinopark/README.md) contains layouts, investigation notes, and selected renders. Original game executables, resources, saves, and databases retaining those bytes are local inputs. Authored C fixtures are under `examples/synthetic/`.
+The exact conditions and evidence for these choices are in the
+[spatial guide](docs/SPATIAL_MAPS.md) and [assisted travel guide](docs/ASSISTED_TRAVEL.md).
+
+## Text play and interpreter inspection
+
+The separately installable [text player](docs/TEXT_PLAYER.md) can consume an
+authored projection or connect to a compatible local backend. Its live mode
+can checkpoint after each model turn and resume, subject to successful save and
+identity checks. It is a bounded player and declarative runtime, not an AGI
+interpreter or evidence of whole-game equivalence. Its local protocol has no
+authentication or encryption; use a trusted endpoint. See [live turns](docs/PLAYER_LIVE.md).
+
+An external story agent can choose commands, narrate its choices and continue
+within turn/time limits, with a transcript of the observed results. Voice input
+and output are planned future work; the player currently supplies the text and
+state interface.
+
+The [AGI inspector](docs/AGI_LOGIC.md) reads a limited version-2 logic subset;
+unsupported operations remain unresolved. The [Z-machine harness](docs/ZORK_HARNESS.md)
+can run a user-supplied version-3 story using a separately selected Python and
+Jericho environment. Story inspection and the recovered mailbox slice are
+bounded evidence, not recovery of the parser, turn loop or complete game.
+No original game or story files are distributed.
+
+## The bounded UDC pipeline
+
+The 0.23 source introduces an original-backed DOS compiler definition (UDC):
+explicitly mapped ASM blocks can be lifted to shared UDL/UIL primitives and
+checked with Z3 at a declared register boundary. A limited C statement view
+can be lifted and compared as well; it shares the ASM decoder and is not an
+independent general-purpose decompilation. Unknown, unavailable or failing
+proofs do not qualify a semantic block.
+
+The first target reconstructs original MZ/COM bytes from immutable stored
+backings, including opaque regions and explicitly attached resources. It does
+not generate arbitrary DOS code or claim whole-game semantic recovery. The
+authored COM demonstration and the bounded real-game observations are described
+in [UDC usage](docs/UDC_DOS.md), [testing methodology](docs/UDC_TESTING.md)
+and [verification](docs/VERIFICATION-0.23.md).
+
+## Status, testing and history
+
+The **0.23.0 release source** adds the original-backed DOS UDC, per-layer
+verification and refreshed agent guidance. Ordinary and native Linux CI must
+pass on the exact release commit before tagging. Check [Actions](https://github.com/seeker-cyber-maker/fDisBull/actions)
+for current runs and [Releases](https://github.com/seeker-cyber-maker/fDisBull/releases)
+for published packages. Source finalization, a tag and a published package are
+separate steps; the [0.23 notes](docs/RELEASE-0.23.0.md) and
+[verification record](docs/VERIFICATION-0.23.md) describe the tested scope.
+
+For development checks:
 
 ```bash
 python -m pip install '.[test]' build
@@ -238,28 +181,12 @@ python scripts/check_dist.py
 python scripts/build_release.py
 ```
 
-`MANIFEST.in`, `.gitattributes`, and the standalone ZIP builder exclude repository examples and experimental work from distributable artifacts. Build output goes to `dist/`.
+Ordinary tests can skip native tests. Required native acceptance uses real,
+separately prepared backends; see the [DOSBox acceptance guide](docs/DOSBOX_DEBUGGER.md#required-native-acceptance).
+Consult the verification record for platform-specific results and test limits.
+Repository examples are excluded from tool packages. The previous detailed
+landing page is preserved as a [historical snapshot](docs/PROJECT_HISTORY.md),
+with original release and delivery links.
 
-## History and experimental work
-
-Eight saved releases were reconstructed as successive commits: **0.1.0, 0.2.0, 0.3.0, 0.4.0, 0.5.0, 0.8.0, 0.8.1, and 0.8.2**. These are imported release snapshots, not original development commits. Exact 0.6.0 and 0.7.0 source snapshots were unavailable; their later verification notes remain historical documentation. [Import provenance](history/README.md) records filtering and archive hashes.
-
-The original unfinished DOSBox checkpoint is preserved at tag `archive/dosbox-headless-2026-10-23`; the former experimental and takeover branches have been removed. The continuation contains a complete backend patch and fixture/DinoPark runtime evidence under `experimental/dosbox-x`; the Python integration uses that separately built backend. Neither emulator nor original game assets are included in tool packages.
-
-Version 0.12.0 integrates a [PE64 Wine/QEMU debugger](docs/WINE_DEBUGGER.md): disassembly breakpoints, guarded memory edits, bounded instruction traces, client-window screenshots, 8px grids and mouse clicks, persisted with the project. It requires a separately prepared offline Linux/Wine runtime and QEMU >=9.1. The [earlier Wine/Linux experiment](experimental/wine/README.md) records why full x86-64 CPU emulation is used on this Mac: Apple container/Rosetta failed the debugger gate. The [published-wheel verification](docs/VERIFICATION-0.12.md) covers real input, memory edits, rearmed breakpoints, traces and offline exports in fresh Linux CI and copied Mac delivery sessions. The runtime and emulator are supplied separately from the public Python packages.
-
-Version 0.13.0 adds PE64 `r`, `w` and `rw` watchpoints, reversible RAM layers, guarded relocated execution layers, and editable native QEMU states. PE execution layers use a private 4 KiB guest allocation and host stepping; the DOS backend's zero-additional-RAM fetch overlay does not apply to Wine. Native PE states capture the Linux/Wine machine and retain a hash-bound private sidecar beside the project. See [usage and exact limits](docs/WINE_DEBUGGER.md#pe64-watches-layers-and-native-states-0130).
-
-## Limits and licensing
-
-Static analysis does not establish runtime execution. A drained queue does not establish complete code coverage. Authored labels and links record interpretations, and unresolved segment/pointer state stays explicit. Native macOS debugger acceptance passes; the full suite still has Linux ELF fixture failures on Apple's compiler/linker. Runtime integration launches original unpatched DOS MZ, explicitly selected COM, or x86-64 PE EXE versions; static child patches are never applied silently. COM support is tested on Linux and on this Mac with the qualified Zork I reference. PE support has its own runtime and acceptance gate. The PE watches, layers and states use different mechanisms and formats from DOS; published 0.12.0 packages do not contain those additions.
-
-Runtime code snapshots preserve and decode observed self-modified or layered bytes alongside earlier views. The 0.16.0 candidate adds explicit offline promotion into a preserved temporal interpretation, fresh traversal/xrefs/CFG and byte/context trace comparisons. Captured bytes do not prove execution; inherited bytes remain unobserved, and no patched disk image is reconstructed. A mapped runtime address alone does not verify equality with static instructions. Headless execution is not security isolation, and restoring a machine checkpoint does not roll back mounted host files.
-
-No first-party distribution license has been selected. Public visibility does not grant an open-source license. See [THIRD_PARTY.md](docs/THIRD_PARTY.md) for dependency provenance. The separate DOSBox-X checkpoint retains its upstream GPL notices.
-
-The debugger also supports [native checkpoints, editable state forks, bounded menu scripts, and CPU data-access breakpoints](docs/DEBUGGER_SCRIPTS.md). See the [0.10.0 release notes](docs/RELEASE-0.10.0.md) and [parking-counter experiment](docs/PARKING_COMMIT.md). Explicit DOS analysis seeds are decoded first within the requested budget, so preparing one execution-breakpoint address is no longer blocked by an older analysis queue.
-
-The 0.11.0 [code layers](docs/CODE_LAYERS.md) distinguish RAM-visible patches from instruction-fetch overlays, preserve observed self-modified code separately from static facts, and support guarded layer stacks, branch theories, and breakpoint-triggered virtual caves. They require the separate layers backend; the published 0.10.0 backend and packages remain unchanged. Zero additional guest RAM bytes does not imply zero host overhead or unchanged guest timing.
-
-Screenshots also support an [optional native-coordinate grid](docs/DOSBOX_DEBUGGER.md#optional-screenshot-coordinate-grid-0110) for writing click scripts. Clean frames remain stored unchanged; annotated images retain the same dimensions and video-mode ID and can be regenerated from the project after restart without operating a GUI. `click-frame` captures, labels and queues a chosen click in one client action.
+No first-party distribution license has been selected. Public visibility does
+not grant an open-source license. See [third-party provenance](docs/THIRD_PARTY.md).

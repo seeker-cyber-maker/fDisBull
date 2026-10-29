@@ -1,0 +1,48 @@
+{
+  "format": "fdisbull-udc-native-evidence-1",
+  "source_version": "0.23.0",
+  "game": "zork",
+  "source_hashes": {
+    "udc.py": "bd43d42d598192f54a7d7c4fe69f22469e089408a47ff75f83bf2213c3f81c6c",
+    "udl_blocks.py": "989a114fa3fb1a64878963200744643b55ae511d83d6545cdd301a9d7ca73c8d",
+    "verify_native.py": "0879a979ece42faa4c50a5229d1cc472e92abcaaa88202a0fb887e002509a2ae",
+    "synthetic_game.asm": "f804803ba4275487cc140f49e6501bdc82c73ab54b6aa12c26f5d3abb537dfd0"
+  },
+  "definition_sha256": "60b50a4aff2063f88e289830540759b0ad0a1bce7964b231f81acf43479618c3",
+  "qualification": {
+    "byte_identity": true,
+    "semantic_blocks": 0,
+    "status": "original_bytes_only",
+    "proofs": {}
+  },
+  "compiled_artifact_count": 3,
+  "native": {
+    "format": "fdisbull-udc-native-zork-1",
+    "input_sha256": {
+      "_ZORK1.COM": "2a6f366349be71ef4a164e3fc9c31a4a3d8c24ee6ddac93ed345c993c3562514",
+      "DATA/ZORK1.DAT": "0ae5ac229e79094ff368b6669356444af0f35e21d862a1baaa546989085c15fd",
+      "SETUP.INF": "ab969a238169ed7d62e0eaa7c3b984d0c742578183abe53e2e6d30702733c0b2"
+    },
+    "backend_sha256": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277",
+    "scope": "Fresh independent DOS runs; selected mailbox fields and normalized command responses only",
+    "comparisons": {
+      "before": true,
+      "after": true,
+      "repeated": true,
+      "first_text": true,
+      "second_text": true
+    },
+    "trace_complete": {
+      "original": true,
+      "emitted": true
+    },
+    "screenshot_sha256": {
+      "original": "c004738125ef2511fc527a8c515514d99aabd3bc2f941c9a68624a86f2d8b1f4",
+      "emitted": "c004738125ef2511fc527a8c515514d99aabd3bc2f941c9a68624a86f2d8b1f4"
+    },
+    "inputs_unchanged": true,
+    "stored_screenshot_reopen": true,
+    "elapsed_seconds": 8.043
+  },
+  "scope_note": "Byte-preserving capture and emission with bounded native observations; opaque game blocks are not recovered semantics. No game assets, states, captures or project databases included."
+}

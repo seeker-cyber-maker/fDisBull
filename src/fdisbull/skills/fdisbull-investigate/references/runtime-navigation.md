@@ -1,6 +1,6 @@
 # Runtime navigation and observation reference
 
-## Spatial masks and policies in the 0.22 candidate
+## Spatial masks and policies (0.22–0.23)
 
 Persist a source/version-bound room map in game units with known and safe masks,
 an actor footprint, obstacle and hazard exclusions, separate object zones, and
@@ -32,6 +32,11 @@ Fair play locks physical policy across state restores. Policy is voluntary and
 does not turn the analysis API into an anti-tamper environment. Text projections
 keep source addresses and guard definitions private and expose the policy marker.
 The full API and qualified PQ/KQ scope are documented in `SPATIAL_MAPS.md`.
+The 0.23 AGI proximity-waiver profile is limited to a source-identified,
+byte-bound spatial condition with checked control-flow boundaries. It preserves
+the opcode and object identity and leaves nonspatial tests guest-owned. It is
+not a general position-free interaction adapter, teleport, or permission to
+waive any condition that resembles a proximity check.
 
 The 0.21 development workflow supports a small qualified action subset while
 unrelated scene research remains incomplete. Pin a progressive workflow and

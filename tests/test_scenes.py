@@ -167,11 +167,25 @@ def test_bundled_investigation_skill_is_readable_without_project():
     result=invoke('agent-skill',{})
     assert result['name']=='fdisbull-investigate'
     assert set(result['files'])=={'SKILL.md','references/scenes.md','references/methodology.md',
-                                  'references/runtime-navigation.md','references/proofs.md'}
+                                  'references/runtime-navigation.md','references/proofs.md',
+                                  'references/workflows.md','references/udl-uil-udc.md'}
     local_links={target for target in re.findall(r'\[[^]]+\]\(([^)]+)\)',result['files']['SKILL.md'])
                  if '://' not in target and not target.startswith('#')}
     assert local_links <= set(result['files'])
     assert respond({'method':'agent-skill'},default_project='/nonexistent-project')['ok']
+
+
+def test_bundled_skill_selective_read_and_invalid_paths(capsys):
+    from fdisbull.cli import invoke, main, respond
+    full=invoke('agent-skill',{})
+    for path in full['files']:
+        selected=invoke('agent-skill',{'reference':path})
+        assert selected['files']=={path:full['files'][path]}
+    assert main(['agent-skill','--reference','SKILL.md'])==0
+    assert set(json.loads(capsys.readouterr().out)['result']['files'])=={'SKILL.md'}
+    for path in ('../pyproject.toml','/etc/passwd','references/missing.md',[],True):
+        assert not respond({'method':'agent-skill','params':{'reference':path}})['ok']
+    assert not respond({'method':'agent-skill','params':{'unknown':'field'}})['ok']
 
 
 def test_real_named_keyboard_action_requires_a_new_outcome(keyboard_game,emulator):

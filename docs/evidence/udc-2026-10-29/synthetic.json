@@ -1,0 +1,273 @@
+{
+  "format": "fdisbull-udc-native-synthetic-1",
+  "source_asm_sha256": "f804803ba4275487cc140f49e6501bdc82c73ab54b6aa12c26f5d3abb537dfd0",
+  "assembled_com_sha256": "e6ac99f19b5ea79f34a386a404c520162d1831df573731a87016f545ce015978",
+  "block_hex": "05c80048",
+  "block_offset": 16,
+  "definition_sha256": "6eecf6538e290158ab8c6da9639491bfd9efbd6175cd007ee3d04ca371c32ca3",
+  "qualification": {
+    "byte_identity": true,
+    "semantic_blocks": 1,
+    "status": "equivalent_under_assumptions",
+    "proofs": {
+      "score": {
+        "format": "fdisbull-block-verification-1",
+        "status": "equivalent_under_assumptions",
+        "source_sha256": "02453123dacb4139c285754d05ad4786364034da6764bae73aede8b59e13c11c",
+        "assumptions": [
+          "16-bit x86 real-mode instruction semantics"
+        ],
+        "scope": "16-bit register outputs at straight-line block exit; flags, memory, control flow, ABI, timing, intermediate state and external effects excluded",
+        "outputs": {
+          "ax": {
+            "format": "fdisbull-proof-result-1",
+            "spec_sha256": "cbf35dffc93a2ff7b732d48b56bdfc0d3d20cd3f4cdfb65423c3a541b0185150",
+            "scope": "16-bit register outputs at straight-line block exit; flags, memory, control flow, ABI, timing, intermediate state and external effects excluded",
+            "timeout_ms": 1000,
+            "semantics": "explicit fixed-width modular bit vectors; no implied C/C++ definedness or model fidelity",
+            "solver": "Z3 5.3.2",
+            "status": "equivalent_under_assumptions",
+            "spec": {
+              "format": "fdisbull-proof-1",
+              "scope": "16-bit register outputs at straight-line block exit; flags, memory, control flow, ABI, timing, intermediate state and external effects excluded",
+              "variables": {
+                "ax": 16
+              },
+              "assumptions": [],
+              "left": {
+                "op": "sub",
+                "args": [
+                  {
+                    "op": "add",
+                    "args": [
+                      {
+                        "var": "ax"
+                      },
+                      {
+                        "const": 200,
+                        "width": 16
+                      }
+                    ]
+                  },
+                  {
+                    "const": 1,
+                    "width": 16
+                  }
+                ]
+              },
+              "right": {
+                "op": "sub",
+                "args": [
+                  {
+                    "op": "add",
+                    "args": [
+                      {
+                        "var": "ax"
+                      },
+                      {
+                        "const": 200,
+                        "width": 16
+                      }
+                    ]
+                  },
+                  {
+                    "const": 1,
+                    "width": 16
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "wrong_candidate": "counterexample",
+  "wrong_output_created": false,
+  "c_view": {
+    "sha256": "dff7673af438c63eb4b85f9b477ba9a052a7eec711ad43a5c21600c92e905fa2",
+    "source_sha256": "02453123dacb4139c285754d05ad4786364034da6764bae73aede8b59e13c11c",
+    "proof_status": "equivalent_under_assumptions",
+    "qualification": "equivalent_under_assumptions",
+    "scope": "ASM-derived C view shares decoder; no independent native or C-code generation claim"
+  },
+  "native": {
+    "original": {
+      "input_ax": 10,
+      "output_ax": 209,
+      "stored_u16": 209,
+      "guest_completion": true,
+      "trace_complete": true,
+      "screenshot_sha256": "2b8d436de6a4a7c24b427224f2f82b38653e906a181178ecf4e1eddf48cddaaf",
+      "assisted_boundary_samples": [
+        {
+          "input_ax": 0,
+          "output_ax": 199,
+          "stored_u16": 199,
+          "model_u16": 199,
+          "cpu_mode": "real",
+          "source_hex": "05c80048",
+          "register_edits_verified": true
+        },
+        {
+          "input_ax": 1,
+          "output_ax": 200,
+          "stored_u16": 200,
+          "model_u16": 200,
+          "cpu_mode": "real",
+          "source_hex": "05c80048",
+          "register_edits_verified": true
+        },
+        {
+          "input_ax": 65336,
+          "output_ax": 65535,
+          "stored_u16": 65535,
+          "model_u16": 65535,
+          "cpu_mode": "real",
+          "source_hex": "05c80048",
+          "register_edits_verified": true
+        },
+        {
+          "input_ax": 65337,
+          "output_ax": 0,
+          "stored_u16": 0,
+          "model_u16": 0,
+          "cpu_mode": "real",
+          "source_hex": "05c80048",
+          "register_edits_verified": true
+        },
+        {
+          "input_ax": 65535,
+          "output_ax": 198,
+          "stored_u16": 198,
+          "model_u16": 198,
+          "cpu_mode": "real",
+          "source_hex": "05c80048",
+          "register_edits_verified": true
+        }
+      ]
+    },
+    "emitted": {
+      "input_ax": 10,
+      "output_ax": 209,
+      "stored_u16": 209,
+      "guest_completion": true,
+      "trace_complete": true,
+      "screenshot_sha256": "98a004b77395bc96e26bed129005ced85c21064cd1b9d26169cb7dab39916b3d",
+      "assisted_boundary_samples": [
+        {
+          "input_ax": 0,
+          "output_ax": 199,
+          "stored_u16": 199,
+          "model_u16": 199,
+          "cpu_mode": "real",
+          "source_hex": "05c80048",
+          "register_edits_verified": true
+        },
+        {
+          "input_ax": 1,
+          "output_ax": 200,
+          "stored_u16": 200,
+          "model_u16": 200,
+          "cpu_mode": "real",
+          "source_hex": "05c80048",
+          "register_edits_verified": true
+        },
+        {
+          "input_ax": 65336,
+          "output_ax": 65535,
+          "stored_u16": 65535,
+          "model_u16": 65535,
+          "cpu_mode": "real",
+          "source_hex": "05c80048",
+          "register_edits_verified": true
+        },
+        {
+          "input_ax": 65337,
+          "output_ax": 0,
+          "stored_u16": 0,
+          "model_u16": 0,
+          "cpu_mode": "real",
+          "source_hex": "05c80048",
+          "register_edits_verified": true
+        },
+        {
+          "input_ax": 65535,
+          "output_ax": 198,
+          "stored_u16": 198,
+          "model_u16": 198,
+          "cpu_mode": "real",
+          "source_hex": "05c80048",
+          "register_edits_verified": true
+        }
+      ]
+    },
+    "c_emitted": {
+      "input_ax": 10,
+      "output_ax": 209,
+      "stored_u16": 209,
+      "guest_completion": true,
+      "trace_complete": true,
+      "screenshot_sha256": "e9d520c1dc1ce105b609a0264addb377f873aa4b6d47157cfc3955fa76690ac6",
+      "assisted_boundary_samples": [
+        {
+          "input_ax": 0,
+          "output_ax": 199,
+          "stored_u16": 199,
+          "model_u16": 199,
+          "cpu_mode": "real",
+          "source_hex": "05c80048",
+          "register_edits_verified": true
+        },
+        {
+          "input_ax": 1,
+          "output_ax": 200,
+          "stored_u16": 200,
+          "model_u16": 200,
+          "cpu_mode": "real",
+          "source_hex": "05c80048",
+          "register_edits_verified": true
+        },
+        {
+          "input_ax": 65336,
+          "output_ax": 65535,
+          "stored_u16": 65535,
+          "model_u16": 65535,
+          "cpu_mode": "real",
+          "source_hex": "05c80048",
+          "register_edits_verified": true
+        },
+        {
+          "input_ax": 65337,
+          "output_ax": 0,
+          "stored_u16": 0,
+          "model_u16": 0,
+          "cpu_mode": "real",
+          "source_hex": "05c80048",
+          "register_edits_verified": true
+        },
+        {
+          "input_ax": 65535,
+          "output_ax": 198,
+          "stored_u16": 198,
+          "model_u16": 198,
+          "cpu_mode": "real",
+          "source_hex": "05c80048",
+          "register_edits_verified": true
+        }
+      ]
+    }
+  },
+  "stored_screenshot_reopen": true,
+  "generated_dos_lowering": false,
+  "boundary_sample_scope": "Assisted paused AX and instruction-pointer edits from a post-completion checkpoint; not ordinary gameplay.",
+  "scope": "Authored 16-bit COM; pure AX block and native keypress, memory, text, trace and screenshot; original native bytes retained.",
+  "source_version": "0.23.0",
+  "source_hashes": {
+    "udc.py": "bd43d42d598192f54a7d7c4fe69f22469e089408a47ff75f83bf2213c3f81c6c",
+    "udl_blocks.py": "989a114fa3fb1a64878963200744643b55ae511d83d6545cdd301a9d7ca73c8d",
+    "verify_native.py": "0879a979ece42faa4c50a5229d1cc472e92abcaaa88202a0fb887e002509a2ae",
+    "synthetic_game.asm": "f804803ba4275487cc140f49e6501bdc82c73ab54b6aa12c26f5d3abb537dfd0"
+  },
+  "scope_note": "Authored ASM-derived C view shares the source decoder. Z3 covers only the declared pure u16 AX block; native files preserve original backing bytes, not generated machine code. Boundary input probes use assisted paused-register edits, not ordinary gameplay."
+}
