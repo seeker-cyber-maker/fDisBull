@@ -139,10 +139,14 @@ one-second bound before forced cleanup. On POSIX the player owns a new process
 group, allowing it to stop descendants even if the worker crashed. Native and
 outer receipts start incomplete, are replaced atomically, and distinguish clean
 completion from interruption. A forced kill can leave an unfinished receipt;
-it cannot establish a clean shutdown. Bank entry now moves the cursor, executes
-150 guest milliseconds, checks released/stable input and rechecks the original
-office before a single press. The earlier intermittent failure's cause remains
-unproved. A known quarter notice can be exposed as its own
+it cannot establish a clean shutdown. Each named bank control now resolves its
+point from the saved scene, moves the cursor, executes 150 guest milliseconds,
+checks released/stable input and rechecks the original scene before one press.
+This covers entry, repayment, borrowing and return to the office. It is an
+input adapter; the original business methods are unchanged. See the
+[installed merge-readiness record](VERIFICATION-Z-V023-MERGE-READINESS.md) for
+the fresh borrow-timeout finding and retest. The older office-entry failure's
+exact cause remains unproved. A known quarter notice can be exposed as its own
 context with only its acknowledgment action; this native case remains untested.
 
 See [native verification and open friction](VERIFICATION-DINOPARK-Z-2026-10-29.md)

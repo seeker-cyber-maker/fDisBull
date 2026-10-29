@@ -1,5 +1,12 @@
 # DinoPark Z reliability follow-up, 29 October 2026
 
+Later installed-package follow-up: a fresh direct-original run found a borrow
+timeout after repayment. Preparation has since been extended to every named
+bank control through an input adapter, preserving the original business class.
+See [v0.23 merge-readiness verification](VERIFICATION-Z-V023-MERGE-READINESS.md)
+for that failure, the final installed retest and current branch identities.
+The earlier results and module hashes below remain historical evidence.
+
 This follows the [initial acceptance](VERIFICATION-DINOPARK-Z-2026-10-29.md).
 The changes address normal shutdown receipt loss and add an explicit bank
 input-readiness barrier. The historical intermittent bank failure was not
