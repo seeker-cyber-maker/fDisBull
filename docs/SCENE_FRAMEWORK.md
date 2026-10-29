@@ -167,3 +167,11 @@ private NEW GAME copy and exports only authored evidence. Native state bytes,
 game files and the byte-retaining project database stay outside Git.
 See [the installed-wheel verification](VERIFICATION-SCENES.md) for the original
 game, restart, stop-preservation, pixel-cost and regression evidence.
+
+## Proposed synthetic HUD companion
+
+The [synthetic HUD and state-observation proposal](SYNTHETIC_HUD_PROPOSAL.md)
+describes an auxiliary view of reusable, typed game facts for players and agents.
+It keeps HUD presentation separate from native scene matching and serializes
+observations without treating them as complete game checkpoints. This is a
+design proposal; it does not extend the implemented `fdisbull-scene-1` schema.
