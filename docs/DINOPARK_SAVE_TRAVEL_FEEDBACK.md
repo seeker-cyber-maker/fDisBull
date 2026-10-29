@@ -481,9 +481,9 @@ exit input had not been sent. The failed session was preserved without replay.
 It is excluded from completed-route acceptance, while its earlier successful
 street advances remain individually evidenced.
 
-Current status: unresolved existing shop-navigation gap, outside the requested
-street fix. A separate fresh legacy-load run tests the remaining street,
-Diner, bank, office and saved-park route without that unqualified store exit.
+Historical status at the street delivery: unresolved. The subsequent Store
+correction below resolves this frozen-balance guard in the local adapter;
+the original failure remains preserved and excluded from completed routes.
 
 Next release: keep transaction reservation/delivery checks separate from view
 navigation. Observe current balances after time advances; do not require them
@@ -491,6 +491,48 @@ to stay constant merely to open or leave a catalogue. Independently qualify
 the original page-specific exit controls, preserve one-input outcomes, and
 test a running park with ordinary cash changes and monthly debt settlement.
 Do not weaken a purchase's price or stock checks to fix a navigation guard.
+
+### Store correction and independent acceptance on 0.21.0
+
+`leave_store` now passes no frozen financial expectation to its catalogue and
+street observations. It still checks original views and selectors, dispatches
+each input once, and journals the before/after balances as navigation
+observations. A cash/working-cash gap refuses navigation before any input as an
+unresolved reservation. Purchase paths retain their original strict checks.
+
+Two regression checks failed against the earlier adapter and passed against
+script `2e859a411a5680901e1abe9d5d4226bd0ac09b5d48e7c56de9659c7490211f9f`.
+Independent Luna acceptance used that frozen script and fresh original guests:
+
+| Starting view | Cash/working cash before → after | Loan before → after | Result |
+| --- | ---: | ---: | --- |
+| Front | 4,980 → 6,700 | 5,000 → 5,000 | Street reached |
+| Clicked cover | 5,321 → 7,479 | 5,000 → 4,885 | Street reached across month |
+| Fence tab | 6,076 → 6,416 | 5,000 → 5,000 | Street reached |
+| Selected wood fence | 6,817 → 7,252 | 4,885 → 4,885 | Street reached; no purchase |
+
+An ordinary CLI run also completed two exits. Its first catalogue opening
+changed cash/working cash from 4,791 to 5,169, reproducing the financial-change
+condition that previously stopped navigation. That exit reached street at
+6,228/5,000/6,228; the second finished at 7,007/4,885/7,007. The receipt events
+equal the journal. These net changes are not an independently traced income
+or payroll formula.
+
+The native reservation control staged an unconfirmed chain-link fence through
+original inputs. Cash/loan/working cash were 6,227/5,000/3,727. The command
+refused: guest ticks remained 77,538, click count remained 11, and complete
+mouse state, revision and sampled memory were identical. The live pen was
+unchanged while the pending pen differed. No confirmation or cancellation
+followed. A separate failed private probe had incorrectly expected the
+pre-fence map on a fenced fixture; it is preserved, and its setup alone was
+corrected in a fresh guest. No production pattern or threshold was loosened.
+
+Evidence: `store-exit-luna-research-20261029-01/REPORT.md`, `FRICTION.md`, the
+four `adapter-*` view receipts, `adapter-reservation02/events.jsonl`, and
+`store-exit-luna-acceptance-20261029-01/receipt.json`. The coordinator freshly
+checked all 144 stored/exported screenshot pairs and journal references in
+`store-exit-main-20261029-01/luna-artifacts-independent-audit.json`; no byte or
+hash mismatches. Original game and source-save inventories were preserved.
 
 ## Final street acceptance on 0.21.0
 
@@ -594,3 +636,299 @@ This PR documents observed adapter mitigations and next-release acceptance
 requirements. The framework requests remain implementation work; neither this
 PR nor the finite game tests establish whole-game coverage or indefinite park
 survival.
+
+
+## F15: Store exit takes unnecessary catalogue steps and game time
+
+Independent native controls returned to street from the front, clicked cover,
+fence tab and selected wood fence with one Cancel at (188,187). The corrected
+adapter still takes three catalogue steps of 5,000 requested guest ms each,
+then an 8,000-ms exit observation when starting at the front: 23,000 requested
+ms versus 8,000 for the direct native exit. Actual elapsed intervals are
+recorded separately and may overshoot. This extra simulation can change
+finances, calendar and food. It is a route-efficiency finding, not a speed
+requirement violation or a purchase failure.
+
+Evidence: `store-exit-luna-research-20261029-01/daily02`, `counters03`,
+`FRICTION.md` and the corrected CLI receipt. Next release: expose the already
+observed page-specific Cancel as one guarded navigation action, retaining the
+reservation preflight and fresh street outcome. No purchase checks need to be
+relaxed. The present balance fix does not claim this optimization.
+
+## F16: Parking advice can interrupt the return after a confirmed food order
+
+The original advice reads: “To increase attendance, you may wish to buy another
+parking lot.” It was observed over the park and over the street. In
+`vegasaurus-main-20261029-01/funding-04`, a 20-small-feeder order was already
+proved at the native stock/expense/cash boundaries, but the subsequent street
+wait stopped on this advice. `food-committed-14.png` shows it over the actual
+street; repeated read-only settling did not dismiss it. The retained failure
+correctly says the food purchase is confirmed and must not be repeated.
+
+The current public notice handler qualifies only the recognized quarter
+notice in the park. It does not handle this advice in either context. A
+research-only ordinary hand click at (160,111), after inspecting the actual
+advice, dismissed the park instance in `funding-03`; that is not public-handler
+acceptance. Next release: qualify the actual advice and one dismissal in both
+contexts, preserve the preceding purchase proof, and settle without replaying
+its confirmation or ordering food again.
+
+## F17: The exact quarter guard recognizes winter wording but misses spring
+
+`vegasaurus-main-20261029-01/funding-03/advance-after-119.png` visibly shows
+“End of spring quarter.” The existing `quarter_popup` profile matches 31/32
+samples against a required 32. The failed point belongs to the season wording.
+`advance time` consequently reports no recognized notice and its following
+park assertion rejects the overlay. This is a seasonal text variation, not an
+unknown completed time advance or a justified reason to resend the last input.
+
+The same original spring report interrupted `go street` after a confirmed
+Vegasaurus order in `public-purchase-01`. The purchase proof and printed result
+precede that navigation timeout. The final adapter repeats this late-notice
+case in `public-purchase-03-late-notice` and preserves the known dinosaur-order
+result in its structured failure record (F19).
+
+Next release: acquire all actual seasonal labels, qualify the shared report
+and its one original acknowledgment control, and test exclusion/handling over
+both park and street. Do not globally lower exact-match thresholds. The
+current street acceptance covered actual winter reports; it did not establish
+all seasonal overlays.
+
+## F18: Park recognition overfits the visible desert ground texture
+
+The longer native funding run reached a visibly valid desert park but its
+`park_view` guard failed. Fresh coordinator readback of
+`vegasaurus-luna-funding-20261029-03/park-entry-16.png` scores 14/32 against a
+threshold of 28. Eighteen sampled ground colors differ, including (140,93),
+(110,114), (221,57), (203,141) and (245,18). The captured view has the park's
+calendar/back controls and cash display, without the notice overlay. The
+precise producer of the differing ground texture was not traced.
+
+The finite driver held without sending another game action. Its failed
+receipt remains failed. The tester inspected the original park and continued
+with explicit native inputs in that same private guest, then made a native
+save and independently loaded it in a new guest. This manually completed
+research route is not an automated public full-campaign pass.
+
+Next release: qualify the park from stable controls, original context and
+appropriate geometry/variants instead of sampled ground texture. Acquire
+fresh entries over different native phases before freezing the profile, then
+exercise both positive observations and live no-input refusals for overlays.
+
+## F19: A later failure initially hid a confirmed dinosaur order in its summary
+
+The first public Vegasaurus purchase succeeded, but the later spring report
+caused a navigation timeout. Its journal already contained all four native
+states, `vegasaurus_purchase_confirmed`, the result, a successful `look`, and
+a refused repeat order. The old top-level `failure.json` nevertheless said
+`outcome: unknown`, because only confirmed food purchases had a dedicated
+summary field. That was too broad for an agent choosing whether to retry.
+
+The final adapter adds `confirmed_dinosaur_orders` and the outcome
+`followup_unknown_with_confirmed_dinosaur_orders`. A fresh original-game
+reproduction in `public-purchase-03-late-notice` retains the $25,000 released
+reservation, unchanged committed cash 27,021, unchanged one-dinosaur herd and
+$25,000 expense posting despite the later navigation failure. The earlier
+failed file is preserved unchanged. Next release: offer one shared action
+receipt model that keeps a confirmed result separate from later navigation
+or observation failure; do not discard known effects or replay input.
+
+## Vegasaurus: original entry, ordinary listing and post-action evidence
+
+The player sees an ordinary DinoMart listing at $25,000. The optional
+`read vegasaurus` command pans the original wide catalogue with ordinary
+mouse movement, selects the listing, opens its actual information page and
+returns to the catalogue. Its verified printed fields are Era: Red Velvet;
+Diet: Room Service; Length: 5 ft. 6 in.; Weight: 165 lbs.; Climate:
+Air-Conditioned. The original page includes the green performer in a purple
+suit beside a microphone. The pre-purchase description and help do not
+announce a refund, missing animal or disabled listing. Reading the original
+entry is a player's optional discovery, not advance researcher knowledge.
+
+The separate warm research purchase used the legitimately funded native file
+`94bad1065e7dfc00be6c6e4deb84074b55c9f8b7f0f7f1e6d2aaa083d37b82a9`.
+Starting from the verified running park at cash 6,640, the original game earned
+a net 19,998, bought 40 feeders for 1,000, settled debt through its own calendar,
+and saved at cash 26,638. There were no bank financial actions or cash/save/
+asset edits. Fresh native loading matched all 20 declared saved ranges. The
+funding automation hold, manual continuation and pre-save readback limitations
+remain explicit in `funded-native-final-receipt.json`; that receipt does not
+claim whole-emulator or RNG continuity.
+
+A first stopped-memory trace found the original reservation at `334b:205e`,
+expense posting at `334b:2083`, and release at `334b:18b6`. Working cash went
+27,175 → 2,175 → 27,175 while committed cash stayed 27,175. The special
+animation ran for 8,809 guest ms between the expense and release stops. The
+listing then read NOW EXTINCT; native pens and species remained unchanged.
+The $25,000 expense remained posted. Thus “charged and refunded” is a working
+reservation/release in this observed path, not an observed committed-cash loss.
+
+The public `buy vegasaurus` command (also `buy vegasosaurus`) now observes four
+byte-verified execution boundaries: before `334b:205e`, after the full expense
+update at `334b:208b`, before `334b:18b6`, and after both refund words at
+`334b:18be`. It verifies selection 19, complete balances, all 12 monthly expense
+values, all pen bytes and species counts. Calendar and balance expectations
+apply within the native instruction pairs; F20 corrects their earlier scope
+across the animation. A single BUY is
+sent; its confirmed proof is journaled before later view settling. Native
+analysis budgets remain explicitly incomplete; no global disassembly stability
+claim is made. Insufficient cash, unresolved reservation and an earlier order
+in the same guest withhold purchase input.
+
+First purchase candidate: `68e14b461989c15180399353a5bf1b4f2da5bc41c21ceb16edcc626a5bcd56de`.
+Mart observations: `e5da3e3f68e6cacf1db788b4327eb127b2151a7d0c619d0fb85392985ac39378`.
+The four existing saved-park asset/profile bindings remain unchanged; the
+optional new live Mart observation file is bound separately in run receipts.
+The complete coordinator CLI case `public-purchase-02` read the original
+entry, bought once, observed NOW EXTINCT, refused another purchase and refused
+selecting the now-disabled entry, then quit successfully. Its committed cash
+was 27,021 before and after the order; its herd stayed at one Coelophysis.
+The run took 8.548 host seconds including fresh launch/load; that single-run
+measurement is not a benchmark. Source inventory was unchanged.
+
+One private post-purchase encyclopedia probe incorrectly tried a book Next
+coordinate while still on the catalogue. It triggered the original ordinary
+Tyrannosaurus placement-eligibility refusal, not a completed order; committed
+cash, expenses and herd remained unchanged. It is preserved in
+`purchase-research`, excluded from purchase acceptance, and reinforces F3:
+verify the current page and enabled control before interpreting an icon or
+sending a follow-up input. The public read command verifies its actual entry
+and refuses the NOW EXTINCT listing without clicking it.
+
+Coordinator evidence: `vegasaurus-main-20261029-01/read-entry`,
+`purchase-research`, `public-purchase-01`, `public-purchase-02`,
+`public-purchase-03-late-notice` and `main-artifact-audit.json`. The first audit
+checked 191 stored screenshot hashes/export pairs across six runs, including
+one diagnostic exported directly from its stored bytes; no mismatches.
+The final bank check also reopened its project, exported the stored overlay
+and confirmed patch isolation. The first purchase candidate passed 66 focused DinoPark/Zork checks.
+Its required full implementation-checkout command remained non-green:
+24 failed, 1,168 passed, 102 skipped, 23 errors, with exactly the same 47
+failure/error identities as the preceding Store-only run. The feedback
+checkout's pre-edit baseline is 13 failed, 1,282 passed, 115 skipped and
+23 errors. These bounded native acceptances do not upgrade either full suite.
+
+
+## F20: Buying directly can cross a month during the original animation
+
+The fresh-context Luna player first explored the ordinary listing and its
+optional encyclopedia through the public CLI only. Its recorded expectation
+was that buying a listed dinosaur might add it to the park. Research notes,
+implementation details and the known purchase result were not supplied to
+that player. A new conversation does not control model training knowledge;
+this is a bounded player-interface test, not a controlled human prior-knowledge
+experiment.
+
+That player later bought directly in a new funded guest, without reading the
+entry first in that session. The first candidate stopped with an unknown proof
+result. All four native states were already recorded in
+`dinomart-player-luna-20261029-02/failure.json`:
+
+| Boundary | Committed cash | Working cash | Loan | Month/day/week |
+| --- | ---: | ---: | ---: | --- |
+| Before reserve | 27,029 | 27,029 | 4,411 | 5/29/5 |
+| After reserve/expense | 27,029 | 2,029 | 4,411 | 5/29/5 |
+| Before release | 27,098 | 2,098 | 4,290 | 6/0/6 |
+| After release | 27,098 | 27,098 | 4,290 | 6/0/6 |
+
+The $25,000 expense remained in month 5, and all pen/species bytes stayed
+unchanged. The reservation and release were correct. Ordinary simulation
+changed cash, debt and the calendar between them. The earlier reader-first
+coordinator route had already reached the new month before BUY and did not
+expose this assumption. The player's unknown-result report is preserved;
+it was the correct description of what that failing interface exposed.
+
+A regression using these recorded values failed against the first candidate.
+The correction freezes balances/calendar only within the debit/expense pair
+and within the release pair. Between them it allows observed simulation,
+requires the exact $25,000 outstanding reservation, and checks the exact
+$25,000 release, retained expense array and unchanged ownership. The public
+result gives cash at order, at release and now, plus loan at order and now;
+it does not say that cash must stay constant throughout an animation.
+
+Corrected adapter: `0fd84f33f655f3326e141c1ec939967057d9fc7cc1a9d055ef4fcbbf7fa3c91c`.
+Mart observations remain `e5da3e3f68e6cacf1db788b4327eb127b2151a7d0c619d0fb85392985ac39378`.
+The coordinator's fresh direct-buy route `public-purchase-04-direct` passed
+without reading the entry first. Cash changed 26,792 → 26,704 and loan
+4,411 → 4,290 during the animation; working cash was released by exactly
+25,000, the expense stayed posted and the herd stayed at one. The route also
+completed `look` and a no-input repeat refusal, then quit, with source inventory
+unchanged. It took 7.564 host seconds including fresh launch/load, a single
+observation rather than a performance benchmark. Focused checks now pass
+67 tests, including the month-boundary regression and negative proof cases.
+
+Fresh player and warm independent corrected-build acceptance are recorded
+below. This correction does not resolve the unrelated seasonal-notice and
+ground-texture findings above.
+
+
+## Corrected Store/DinoMart acceptance on 0.21.0
+
+All final cases bind adapter `0fd84f33f655f3326e141c1ec939967057d9fc7cc1a9d055ef4fcbbf7fa3c91c`
+and Mart observations `e5da3e3f68e6cacf1db788b4327eb127b2151a7d0c619d0fb85392985ac39378`.
+The independent warm Luna tester completed three fresh public CLI routes:
+
+| Route | Order cash → release cash | Reserved working cash | Loan | Result |
+| --- | ---: | ---: | ---: | --- |
+| Read entry then BUY | 27,018 → 27,018 | 2,018 | 4,290 | One BUY; release confirmed; herd 1 |
+| Direct BUY | 27,098 → 27,098 | 2,098 | 4,290 | One BUY; release confirmed; herd 1 |
+| Store return | 4,791 → 6,510 | No order | 5,000 | Catalogue opening itself reached 5,357; street and office reached |
+
+The two warm purchase cases did not cross the month. Both recorded the four
+byte-verified boundaries, selection 19, the retained month-6 expense, unchanged
+other expense cells, all 200 pen bytes and all 40 species-count bytes. Their
+native completion frames show NOW EXTINCT. The native encyclopedia frame
+agrees with the returned text; an initial black transition settled without
+replaying the book input. Repeat BUY and disabled-entry READ preserved guest
+ticks, click count, full mouse/keyboard/timing and sampled state. Read-first
+refusals stayed at ticks 65,613/clicks 11; direct refusals at 59,643/clicks 8.
+
+Evidence: `vegasaurus-luna-qa-20261029-02/REPORT.md`, the read-first
+`vegasaurus-luna-acceptance-20261029-02/receipt.json`, direct
+`vegasaurus-luna-direct-20261029-01/receipt.json`, and Store
+`vegasaurus-luna-store-acceptance-20261029-02/receipt.json`. A fresh coordinator
+audit rechecked all 116 stored/exported PNGs and exact receipt/journal equality
+in `vegasaurus-main-20261029-01/independent-luna-final-audit.json`; no mismatch.
+The warm tester also checked 31 retained native profile contexts and the old
+crossing states as a derived regression. That does not reclassify the old
+failed CLI or claim a new live Luna month crossing.
+
+The fresh-context player repeated direct BUY on the corrected build in
+`dinomart-player-luna-20261029-03` with only the public CLI instructions.
+It observed a readable result, unchanged cash 26,941 during that order, the
+released reservation, NOW EXTINCT, herd still one, and the retained expense.
+It completed `look` and quit normally. The report distinguishes the surprising
+native accounting from an inferred interface defect and preserves the earlier
+unknown-result session. A redundant destination command in the earlier case
+received the explicit “already there” response; no duplicate transition was
+sent. Reports: `dinomart-player-luna-notes-20261029-01/pre-purchase-observations.md`,
+`purchase-session-20261029.md` and `direct-purchase-session-20261029-03.md`.
+The coordinator separately checked the native receipt and all four states.
+No private purchase outcome was supplied to that player in advance.
+
+The coordinator's new direct-BUY route independently exercised an actual
+month crossing with decreasing cash (F20). Together these are fresh normal,
+reader-first, public-player and crossing cases, not a full-campaign test.
+The additional coordinator/player audit checks 237 screenshot pairs across
+six runs, including the preserved failed player and late-notice cases;
+`corrected-and-player-artifact-audit.json` has no mismatch. Its six runs and the
+earlier 191-frame audit are disjoint. The final bank run also verified project
+reopening, stored overlay export and patch isolation on the corrected hash.
+
+Final affected checks: 67 passed. Required full implementation suite:
+24 failed, 1,169 passed, 102 skipped, 23 errors; all 47 failure/error identities
+match the earlier Store-only run. The feedback worktree's post-documentation
+command reports 13 failed, 1,282 passed, 115 skipped and 23 errors, matching its
+pre-edit baseline. These failures remain explicit; remote PR checks are a
+separate boundary. Original game inventory remains
+`f90b201dba05079e75c9fb9fc15fa3777f6c91152f840073205aefd5772b1000`
+and the funded native save remains `94bad1065e7dfc00be6c6e4deb84074b55c9f8b7f0f7f1e6d2aaa083d37b82a9`.
+All guests are closed.
+
+The playable changes stay in the occupied local implementation checkout;
+this PR remains documentation only. A reversible implementation patch and
+fresh-copy apply/hash readback are preserved at
+`store-exit-main-20261029-01/implementation.patch` and `patch-readback.json`.
+The latter reproduces the exact final adapter, tests and new Mart profile
+from preserved pre-change files. No private native save, original asset,
+screenshot database or unrelated release change is added to Git.
