@@ -1,5 +1,23 @@
 # Z alongside the 0.23 compiler and proposed 0.24 work
 
+Current continuation: PRs #18 and #19 are merged. The follow-up uses 0.24.0 main
+at `031b53e`, including bounded CLI replies, output artifacts, investigation and
+recovery guides, and the blank-backend-command guard. The compiler, scene engine
+and process-provider APIs used by this DinoPark path are unchanged from the
+reviewed 0.23 integration. Z still owns its public protocol limits; the CLI's
+new output wrapper does not wrap that provider protocol. See the
+[continuation record](VERIFICATION-DINOPARK-Z-CONTINUATION-2026-10-29.md) for
+fresh package and native evidence. The older review below is retained as history.
+
+The remaining integration priorities are explicit input readiness below an
+intent, continuation events that distinguish a dismissed notice from completed
+travel, and observationally neutral native witness collection. Catalogue
+appearance can precede input consumption; enabled buttons, software cursors and
+intermediate scrolling change otherwise convincing pixel samples. A bounded
+input macro and separate native commit proof belong in the backing, while Z
+consumes the resulting action and public scene. The existing readiness and
+output features do not by themselves prove any of these game-specific effects.
+
 Later integration follow-up: the v0.23.0 tag now resolves to the reviewed
 commit. Both Z branches have been updated against it, and the README conflict
 has been resolved while retaining the new human capability chooser. See
