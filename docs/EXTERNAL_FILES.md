@@ -11,6 +11,11 @@ Attached identity is **version + file name + byte offset**. An offset of
 `0x20`. Attaching a file does not map it into native memory, decode it or
 alter the executable's byte hash.
 
+For media-heavy game investigations, see [media-only no-CD rip research](NOCD_RIP_RESEARCH.md).
+It records a bounded way to reduce the media working set while preserving
+executable and gameplay bytecode, including the possible CPU-spin risk of
+one-frame music replacements and the limits of the Lost in Time experiments.
+
 ## Attach and interpret bytes
 
 This example creates a small x86 image and an independent two-record data
