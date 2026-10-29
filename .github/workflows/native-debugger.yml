@@ -231,6 +231,10 @@ jobs:
           python -m pip install --force-reinstall --no-deps .native/pe/packages/*.whl
       - name: Build pinned QEMU with the upstream user-mode IRET fix
         run: |
+          # QEMU 9.2's mkvenv needs distlib when pip/setuptools are already
+          # present; do not rely on pip's private vendored dependencies.
+          python -m pip install distlib==0.4.0
+          python -c 'import distlib.scripts, distlib.version'
           sudo apt-get update
           sudo apt-get install -y build-essential pkg-config libglib2.0-dev libpixman-1-dev ninja-build
           mkdir -p native-evidence/pe

@@ -136,6 +136,15 @@ result. The ordinary and required native Linux workflows are separate release
 gates on the final pushed commit, including both DOSBox profiles, installed-wheel
 unified backend tests and the offline kit with genuine Z3 and the separate player.
 
+The first main-CI attempt at `682da58` passed 1,333 ordinary tests (100 skips),
+218 stable native tests and 529 layers tests, plus Linux Python 3.13.5 offline
+acceptance including automatic player resume. The downstream QEMU configure
+step failed before unified tests: QEMU 9.2.4's `mkvenv` could import neither
+standalone `distlib` nor pip's private vendored copy. That attempt does not
+qualify Wine/QEMU, DOS/QEMU or boot acceptance. The build now explicitly installs
+`distlib==0.4.0` only for QEMU's build environment. Both complete workflows must
+pass on the subsequent final commit; the failed receipt is retained.
+
 ## Packages and evidence
 
 Core and player are separate, matching-version wheels. Source distributions and
