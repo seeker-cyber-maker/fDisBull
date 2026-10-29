@@ -217,28 +217,56 @@ def click(debug, x, y):
     return debug.click(x, y, hold_ms=80)
 
 
-def prepare_bank_pointer(debug, office, event):
+def prepare_bank_pointer(debug, scene, event, *, object_name='office.bank'):
     """Consume cursor movement in the original guest before the bank press.
 
     Frame recognition establishes appearance, not consumption of prior mouse
     callbacks. Do not merge movement and press or repeat a timed-out press.
     """
-    before=debug.scene_assert(office,object='office.bank')
+    commands={'office.bank':'go bank','bank.payoff':'repay',
+              'bank.borrow':'borrow','bank.back':'go office'}
+    if object_name not in commands:
+        raise ValueError('Unqualified bank control')
+    document=debug.project.debug_scene_info(scene,version=debug.version['id'])['definition']
+    targets=[o for o in document['objects'] if o['name']==object_name]
+    if len(targets)!=1 or targets[0]['action']['kind']!='click':
+        raise ValueError('Bank control definition unavailable; press withheld')
+    point=targets[0]['point']
+    before=debug.scene_assert(scene,object=object_name)
     mouse=debug.call('input.mouse.state')['mouse']
     if mouse['buttons'] or mouse['release_pending']:
         raise ValueError('Bank pointer is held or releasing; bank press withheld')
     frame=before['frame']
-    moved=debug.call('input.mouse.move',{'x':51,'y':26,
+    moved=debug.call('input.mouse.move',{'x':point[0],'y':point[1],
         'mode_id':frame['mode_id'],'frame_id':frame['frame_id']})
     run_guest(debug,150)
     after=debug.call('input.mouse.state')['mouse']
     if (after['buttons'] or after['release_pending'] or
             any(after[k]!=moved['mouse'][k] for k in ('x','y'))):
         raise ValueError('Bank pointer did not settle; bank press withheld')
-    checked=debug.scene_assert(office,object='office.bank')
-    event({'phase':'pointer_prepared','command':'go bank','point':[51,26],
+    checked=debug.scene_assert(scene,object=object_name)
+    event({'phase':'pointer_prepared','command':commands[object_name],
+           'object':object_name,'point':point,
            'guest_ms':150,'mouse_before':mouse,'mouse_after':after,
            'observation':checked['observation'],'bank_press':'not_sent'})
+
+
+class BankInputSession:
+    """Realize bank controls with separate movement and press in the native guest.
+
+    The TextScene business methods remain unchanged. Other native operations
+    delegate directly to the owned debugger session.
+    """
+    def __init__(self, native, event):
+        self.native, self.event = native, event
+
+    def __getattr__(self, name):
+        return getattr(self.native,name)
+
+    def scene_click(self, scene, object, **options):
+        if object in ('office.bank','bank.payoff','bank.borrow','bank.back'):
+            prepare_bank_pointer(self.native,scene,self.event,object_name=object)
+        return self.native.scene_click(scene,object,**options)
 
 
 def definition(reference, title, predicate, selector, action, point, outcome):
@@ -1499,6 +1527,7 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                 journal.flush()
                 os.fsync(journal.fileno())
             with project.debugger(args.backend, game, version=1, _on_spawn=on_spawn) as debug:
+                debug = BankInputSession(debug,event)
                 receipt['run'] = debug.run_id
                 # Previously researched NEW GAME setup; all mutations are on a private copy.
                 if loaded:
@@ -1653,8 +1682,6 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                         say('That action is not available in this scene.', flush=True)
                         continue
                     event({'phase': 'intent', 'command': command, 'scene': text.current, 'input': 'not_yet_sent'})
-                    if command == 'go bank' and text.current == 'office':
-                        prepare_bank_pointer(debug,text.office,event)
                     if command == 'go bank' and bank is None:
                         action = debug.scene_click(office['id'], 'office.bank')
                         bank_frame, bank_image = take_frame(project, debug, 'bank-after')
@@ -1781,8 +1808,10 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
         receipt['elapsed_seconds'] = round(time.perf_counter() - start, 3)
         receipt['ok'] = bool(receipt['source_unchanged'] and (not args.verify or
             [(e['phase'], e['command']) for e in receipt['events']] == [
-                ('intent','go bank'), ('pointer_prepared','go bank'), ('result','go bank'), ('intent','repay'), ('modal','repay'), ('result','repay'),
-                ('intent','borrow'), ('modal','borrow'), ('result','borrow'), ('intent','go office'), ('result','go office')]))
+                ('intent','go bank'), ('pointer_prepared','go bank'), ('result','go bank'),
+                ('intent','repay'), ('pointer_prepared','repay'), ('modal','repay'), ('result','repay'),
+                ('intent','borrow'), ('pointer_prepared','borrow'), ('modal','borrow'), ('result','borrow'),
+                ('intent','go office'), ('pointer_prepared','go office'), ('result','go office')]))
         receipt.update(status='completed', complete=receipt['ok'])
         if not receipt['ok']:
             raise RuntimeError('verification did not complete')

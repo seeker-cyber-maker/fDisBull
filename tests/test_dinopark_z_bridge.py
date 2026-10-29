@@ -193,6 +193,9 @@ def test_bank_preparation_runs_move_in_guest_then_rechecks_before_any_press():
     calls=[];events=[]
     mouse={'buttons':0,'release_pending':False,'x':350,'y':140}
     class Mouse:
+        version={'id':1}
+        project=SimpleNamespace(debug_scene_info=lambda *a,**k:{'definition':{'objects':[
+            {'name':'office.bank','point':[51,26],'action':{'kind':'click'}}]}})
         def scene_assert(self,*args,**kwargs):
             calls.append('observe');return {'frame':{'mode_id':5,'frame_id':42},'observation':'fresh'}
         def call(self,method,params=None):
@@ -213,9 +216,39 @@ def test_held_pointer_never_sends_bank_move_or_press():
     from fdisbull import dinopark_scenes as scenes
     calls=[]
     class Held:
+        version={'id':1}
+        project=SimpleNamespace(debug_scene_info=lambda *a,**k:{'definition':{'objects':[
+            {'name':'office.bank','point':[51,26],'action':{'kind':'click'}}]}})
         def scene_assert(self,*args,**kwargs): return {'frame':{'mode_id':5,'frame_id':1}}
         def call(self,method,params=None):
             calls.append(method);return {'mouse':{'buttons':1,'release_pending':True}}
     with pytest.raises(ValueError,match='withheld'):
         scenes.prepare_bank_pointer(Held(),'office',lambda e:None)
     assert calls==['input.mouse.state']
+
+
+def test_bank_adapter_lets_guest_consume_new_control_before_borrow_press():
+    from fdisbull.dinopark_scenes import BankInputSession
+    events=[]
+    class Native:
+        version={'id':1}
+        project=SimpleNamespace(debug_scene_info=lambda *a,**k:{'definition':{'objects':[
+            {'name':'bank.borrow','point':[50,187],'action':{'kind':'click'}}]}})
+        mouse={'buttons':0,'release_pending':False,'x':438,'y':187}
+        consumed='bank.payoff'
+        moved=False
+        def scene_assert(self,*args,**kwargs):
+            return {'frame':{'mode_id':5,'frame_id':42},'observation':'fresh'}
+        def call(self,method,params=None):
+            if method=='input.mouse.move':
+                self.mouse=dict(self.mouse,x=100,y=187);self.moved=True
+            return {'mouse':dict(self.mouse)}
+        def run(self,**kwargs):
+            if self.moved:self.consumed='bank.borrow'
+            return {'outcome':'guest_time'}
+        def scene_click(self,*args,**kwargs):return {'consumed':self.consumed}
+    native=Native()
+    assert native.scene_click('bank','bank.borrow')['consumed']=='bank.payoff'
+    result=BankInputSession(native,events.append).scene_click('bank','bank.borrow')
+    assert result['consumed']=='bank.borrow'
+    assert events[0]['command']=='borrow' and events[0]['point']==[50,187]
