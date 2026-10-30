@@ -219,6 +219,27 @@ data, so they must remain private. See [Zork IR](ZORK_UIL.md) and
 interrupted-effect uncertainty; the CLI preserves the prior successful
 checkpoint. A transcript-write failure is a separate delivery failure.
 
+### Recover named Zork scenes and direct rules
+
+```text
+fdisbull zork-scenes /private/ZORK1.DAT \
+  --intents /private/zork.intents.json.gz \
+  --output /private/zork.scenes.json.gz \
+  --uil /private/zork.scene-rules.json \
+  --dispatch /private/zork.rule-links.json \
+  --udl /private/zork.scene-definitions.json.gz
+fdisbull-player --scenes /private/zork.scenes.json.gz \
+  --checkpoint /private/zork.scene-progress.json
+```
+
+This retains the supplied intent/IR package and adds executable, address-free
+scene rules plus direct named-handler links. Conditions and doors are read live;
+the source's packed target values are resolved during production. The compatibility
+adapter skips admitted selector operations and on-foot relocation instructions.
+Changed or unqualified source dependencies use an explicit residual path.
+The scene checkpoint binds the full new package. See [the scene contract](ZORK_SCENES.md)
+for actual effect boundaries, unresolved handler bodies and source-qualified scope.
+
 ### Inspect interpreted game data
 
 For a checksum-qualified raw Z-machine v3 story, including the supplied Zork I

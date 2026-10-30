@@ -540,6 +540,12 @@ def parser():
     c.add_argument('--ir',help='Preserved word16 IR; compiled from the story when omitted')
     c.add_argument('--uil',help='Optional private address-free game-intent definition')
     c.add_argument('--udl',help='Optional private source bindings, evidence and residual definitions')
+    c=sub.add_parser('zork-scenes',help='Recover named scene rules and direct handler links with explicit residual IR')
+    c.add_argument('story');c.add_argument('--output',required=True,help='New private runnable scene package')
+    c.add_argument('--intents',help='Existing intent/IR package to preserve exactly')
+    c.add_argument('--uil',help='Optional private address-free scene definitions')
+    c.add_argument('--dispatch',help='Optional private named rule links with explicit residual bodies')
+    c.add_argument('--udl',help='Optional private source correspondence and witnesses')
     for name in ('il-check','il-run'):
         c=sub.add_parser(name,help='Validate or evaluate the shared UDL/UIL primitive block representation')
         c.add_argument('program'); c.add_argument('--state'); c.add_argument('--capability',action='append',choices=('graphics','audio','input'),default=[])
@@ -891,6 +897,9 @@ def _language_command(command,args):
         if command=='zork-intents':
             from .zork_intent_export import export_intents
             emit(export_intents(args['story'],output=args['output'],ir=args['ir'],uil=args['uil'],udl=args['udl']));return 0
+        if command=='zork-scenes':
+            from .zork_scene_export import export_scenes
+            emit(export_scenes(args['story'],output=args['output'],intents=args['intents'],uil=args['uil'],udl=args['udl'],dispatch=args['dispatch']));return 0
         if command.startswith('il-'):
             from .interaction_il import execute_il,validate_il
             from .il_recovery import save_il,load_il
@@ -953,7 +962,7 @@ def main(argv=None):
 def _dispatch(args):
     command = args.pop("command")
     if command.startswith(('udc-','udl-')):return _udc_command(command,args)
-    if command in ('story-info','zork','zork-recover','zork-uil','zork-intents','il-check','il-run','il-store','il-info'):
+    if command in ('story-info','zork','zork-recover','zork-uil','zork-intents','zork-scenes','il-check','il-run','il-store','il-info'):
         return _language_command(command,args)
     if command == 'text-host':
         from .text_host import host
