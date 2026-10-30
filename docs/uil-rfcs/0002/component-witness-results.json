@@ -1,0 +1,18 @@
+{
+  "kind": "authored-contract-witness-checks",
+  "tests": 16,
+  "failures": 0,
+  "errors": 0,
+  "passed": true,
+  "python": "3.13.5",
+  "source_sha256": "68ab30a1efa8d3e3fa47c9fddc71afb80ccd545a42db7837706484ac6a5df14e",
+  "scope": "Python-only illustrative counterexamples; not production UDC/provider/dedup tests",
+  "finite_comparison": "u8 scalar candidates only; no general equivalence decision procedure",
+  "not_tested": [
+    "native memory/ABI",
+    "DOS execution",
+    "decompiler swapping",
+    "fDisBull runtime",
+    "generic reversible compiler"
+  ]
+}
