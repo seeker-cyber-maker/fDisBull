@@ -155,7 +155,7 @@ unresolved lowering, pointer/alias, ABI, width, flags or native-dispatch facts.
 
 The current `udl_blocks.asm_to_c` is a restricted rendering of the same supported
 ASM decoder. It is not a general decompiler or an independent oracle. The
-included [authored microbenchmark](../examples/recovery/benchmark_lift_paths.py)
+repository-only [authored microbenchmark](https://github.com/seeker-cyber-maker/fDisBull/blob/main/examples/recovery/benchmark_lift_paths.py)
 separates already-available C parsing from the full ASM -> C -> IL route. Its
 results cannot establish human/agent comprehension speed or whole-game recovery
 speed. [Measured results and limitations](LOST_IN_TIME_FAST_RECOVERY.md).

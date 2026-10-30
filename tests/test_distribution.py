@@ -42,7 +42,11 @@ OUTPUT_EVIDENCE_FILES = {
     'docs/evidence/output-024/dinopark-output.json',
     'docs/evidence/output-024/tests.json',
 }
-REQUIRED_SOURCE_FILES += tuple(sorted(OUTPUT_EVIDENCE_FILES))
+SCENE_RECOVERY_EVIDENCE_FILES = {
+    'docs/evidence/scene-recovery-2026-10-29/representation-paths.json',
+    'docs/evidence/scene-recovery-2026-10-29/scene-pipeline-summary.json',
+}
+REQUIRED_SOURCE_FILES += tuple(sorted(OUTPUT_EVIDENCE_FILES | SCENE_RECOVERY_EVIDENCE_FILES))
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):

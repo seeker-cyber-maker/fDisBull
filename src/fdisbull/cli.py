@@ -14,7 +14,7 @@ AGENT_SKILL_GUIDES = {
     'references/runtime-navigation.md': 'Choose movement, spatial policies, assistance and observation projections',
     'references/proofs.md': 'Build explicit bounded Z3 models and report their assumptions and scope',
     'references/workflows.md': 'Choose static analysis, native debugging, scene or text-player entry points',
-    'references/udl-uil-udc.md': 'Qualify source blocks, shared UDL/UIL primitives and original-backed DOS compilation',
+    'references/udl-uil-udc.md': 'Qualify source blocks, retained Zork IR, recovered intents and original-backed DOS compilation',
     'references/recovery-research.md': 'Qualify research, retain reusable meanings and compare recovery depth and cost',
     'references/semantic-contracts.md': 'Recover complete intent contracts and compare facts, effects, time and projection losses',
     'references/formats-and-media.md': 'Qualify containers, executable mappings, release differences and valid media reduction',

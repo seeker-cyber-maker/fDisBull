@@ -23,6 +23,8 @@ include docs/evidence/spatial-2026-10-29/verification.json
 include docs/evidence/zork-2026-10-29/verification.json
 include docs/evidence/zork-uil-2026-10-29/verification.json
 include docs/evidence/zork-intents-2026-10-29/verification.json
+include docs/evidence/scene-recovery-2026-10-29/representation-paths.json
+include docs/evidence/scene-recovery-2026-10-29/scene-pipeline-summary.json
 include docs/evidence/udc-2026-10-29/dino.json
 include docs/evidence/udc-2026-10-29/zork.json
 include docs/evidence/udc-2026-10-29/synthetic.json

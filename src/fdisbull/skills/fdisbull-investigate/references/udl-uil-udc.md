@@ -9,6 +9,7 @@ general compiler manual.
 - [Keep the terms separate](#keep-the-terms-separate)
 - [Preserve the accepted compiler priority](#preserve-the-accepted-compiler-priority)
 - [Current DOS block boundary](#current-023-dos-block-boundary)
+- [Zork IR and recovered intents](#zork-ir-and-recovered-intents)
 - [Read a proof narrowly](#read-a-proof-narrowly)
 - [Bytecode inspection and runtime qualification](#do-not-conflate-bytecode-inspection-with-runtime-qualification)
 
@@ -99,6 +100,35 @@ paths to files already attached to the project; inputs are not discovered from
 arbitrary host paths. The output directory must be new and outside Git. Use the
 default `udc-info` reply before requesting `--full`; game bytes and block
 catalogs are not printed by default.
+
+## Zork IR and recovered intents
+
+The supported v3 story converter preserves an executable word16 representation
+for an independent player. Its legacy `zork-uil` command names that low-level IR;
+successful play alone does not establish recovered game intent. For the qualified
+Zork I R88 edition, `zork-intents` exports a separate address-free mailbox and
+action-counter definition with source-linked UDL bindings. Parser, scheduler,
+unsupported interactions and unresolved effects remain explicit IR.
+
+```text
+fdisbull zork-uil STORY --output PRIVATE-IR.json.gz --mapping PRIVATE-MAPPING.json.gz
+fdisbull zork-intents STORY --ir PRIVATE-IR.json.gz --output PRIVATE-INTENTS.json.gz
+fdisbull-player --intents PRIVATE-INTENTS.json.gz --checkpoint PRIVATE-CHECKPOINT.json
+```
+
+Use new output paths outside Git: these packages retain story data and checkpoints
+retain game state. Compare complete source-bound observations and ordered effects,
+and establish that the intended primitives actually ran instead of counting a
+fallback-only route as semantic recovery. Source-checkout `docs/ZORK_UIL.md` and
+`docs/ZORK_INTENTS.md` describe the edition, format and verification bounds.
+
+Intent execution can fault after partial effects. Its recovery segment lists
+completed effect calls and marks an interrupted effect unknown; it performs no
+automatic rollback or fallback after mutation. A preflight fault has a separate
+receipt. Retrieve the receipt before another action. The CLI keeps the last
+successful checkpoint on failure; explicitly resume from that checkpoint rather
+than treating a faulted runtime as a fresh attempt. Native host-file effects and
+an independent player's checkpoint have different persistence boundaries.
 
 ## Read a proof narrowly
 
