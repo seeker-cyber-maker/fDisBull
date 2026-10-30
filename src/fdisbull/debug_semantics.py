@@ -10,7 +10,9 @@ def contract(backend):
             'trace_registers_stage':'before-instruction',
             'trace_completion':'fetch-observed; completion unknown' if dos else 'confirmed completed steps',
             'timing':'guest ticks supported' if dos else 'host bounded; stepping has no elapsed-time fidelity',
-            'address_context':'real-mode CS plus linear address' if dos else 'selected process virtual address' if pe else 'selected vCPU; explicit address space'}
+            'address_context':'real-mode CS plus linear address' if dos else 'selected process virtual address' if pe else 'selected vCPU; explicit address space',
+            'guest_exit_reporting':('Requires lifecycle.dos_guest_exit; selected DOS PSP after process cleanup; '
+                                    'distinct from debugger/session shutdown') if dos else 'inspect native exit evidence'}
 
 
 def normalize_stop(backend,native,*,outcome,stopped_pc=None):
@@ -29,10 +31,17 @@ def normalize_stop(backend,native,*,outcome,stopped_pc=None):
     elif trigger=='breakpoint':
         stage='before-instruction';completed=False;cause=native.get('address')
     resume_pc = stopped_pc if dos and access else native.get('address')
-    return {'format':'fdisbull-debug-stop-1','trigger':trigger,'native_kind':native.get('kind'),
+    result = {'format':'fdisbull-debug-stop-1','trigger':trigger,'native_kind':native.get('kind'),
             'causing_instruction':cause,'resume_pc':resume_pc,
             'instruction_completed':completed,'registers_stage':stage,
             'context':'dos-cpu' if dos else 'process' if backend in ('wine-qemu','ida-wine-qemu') else 'machine'}
+    if dos and native.get('kind') in ('guest_exit','guest_tsr') and isinstance(native.get('guest_exit'),dict):
+        # DOS has restored the parent context. It is not a final instruction or
+        # register snapshot of the terminated target, and TSR is not normal exit.
+        result.update(guest_exit=dict(native['guest_exit']),context='dos-process',
+                      registers_stage='after-process-cleanup; target registers unavailable',
+                      causing_instruction=None,resume_pc=None,instruction_completed=None)
+    return result
 
 
 def normalize_trace(backend,events,*,version,delta=0,budget_reached=False):
