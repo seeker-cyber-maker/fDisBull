@@ -7,6 +7,7 @@ import hashlib
 import os
 from pathlib import Path
 import subprocess
+import struct
 import tempfile
 
 from .udl_blocks import lift_asm_block, lift_c_block
@@ -42,8 +43,12 @@ def render_ghidra_asm_c(lift, *, analyze_headless, java_home=None, timeout_s=60)
     script_source = Path(__file__).parent / 'data' / 'FdisbullGhidraAsmC.txt'
     with tempfile.TemporaryDirectory(prefix='fdisbull-ghidra-') as tmp:
         root = Path(tmp)
-        source = root / 'block.bin'
-        source.write_bytes(code + b"\xc3")  # synthetic RET; excluded from source identity
+        source = root / 'block.exe'
+        # DOS MZ header and RET are import scaffolding, not source bytes.
+        size = 32 + len(code) + 1
+        header = struct.pack('<14H', 0x5a4d, size % 512, (size + 511) // 512,
+                             0, 2, 0, 0xffff, 0, 0xfffe, 0, 0, 0, 0x1c, 0) + bytes(4)
+        source.write_bytes(header + code + b'\xc3')
         script = root / 'FdisbullGhidraAsmC.java'
         script.write_bytes(script_source.read_bytes())
         facts = root / 'facts.txt'
@@ -51,7 +56,6 @@ def render_ghidra_asm_c(lift, *, analyze_headless, java_home=None, timeout_s=60)
         if java_home is not None:
             env['JAVA_HOME'] = os.fspath(java_home)
         cmd = [headless_path, str(root), 'project', '-import', str(source),
-               '-loader', 'BinaryLoader', '-processor', 'x86:LE:16:Real Mode',
                '-noanalysis', '-scriptPath', str(root), '-postScript', script.name,
                str(facts), str(len(code))]
         try:
@@ -113,6 +117,7 @@ def render_ghidra_asm_c(lift, *, analyze_headless, java_home=None, timeout_s=60)
             'evidence': evidence, 'ghidra_c': ghidra_c,
             'diagnostics': {'covered_bytes': offset, 'decompile_completed': True,
                 'decompiler_warnings': warnings, 'synthetic_wrapper': {'offset': len(code), 'bytes': 'c3',
-                'purpose': 'RET function terminator; excluded from source digest and coverage'},
+                'header_format': 'DOS MZ', 'header_bytes': header.hex(), 'header_size': len(header),
+                'purpose': 'MZ import header and RET function terminator; excluded from source digest and coverage'},
                 'text_provenance': 'Ghidra decoded instruction facts; not parsed from decompiled C',
                 'scope': '16-bit register outputs only; flags, memory, control flow, ABI and timing excluded'}}

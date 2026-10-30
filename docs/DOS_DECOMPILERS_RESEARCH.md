@@ -11,6 +11,10 @@ listing remains diagnostic evidence distinct from the normalized restricted C
 statements used for UIL comparison.
 The [measured Ghidra comparison](GHIDRA_ASM_C_COMPARISON.md) records this
 integration's authored-block behavior and its observed startup cost.
+The later [cross-decompiler trial](DOS_C_DECOMPILER_COMPARISON.md) compares
+Ghidra, Reko and DCC on the same authored DOS COM/MZ inputs and one upstream
+compiler-generated sample. Its measured scope supersedes the candidate-order
+recommendation below for those exact cases.
 
 ## Hex-Rays and the older Windows tools
 

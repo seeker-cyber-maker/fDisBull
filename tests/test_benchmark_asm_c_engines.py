@@ -31,9 +31,11 @@ def test_report_schema_and_unknown_unconfigured_ghidra(monkeypatch):
     assert [case['instruction_count'] for case in report['cases']] == [2, 16, 2]
     assert all(bytes.fromhex(case['source_hex']).startswith(bytes.fromhex('b86400'))
                for case in report['cases'][:2])
-    assert report['cases'][2]['case_kind'] == 'uninitialized_ax_failure_probe'
+    assert report['cases'][2]['case_kind'] == 'input_dependent_ax_comparison'
     assert bytes.fromhex(report['cases'][2]['source_hex']) == bytes.fromhex('05c80048')
     assert 'game recovery' in report['method']['limitation']
+    assert 'synthetic MZ' in report['method']['setup']
+    assert 'fail closed as unknown' in report['method']['limitation']
     for case in report['cases']:
         assert len(case['source_sha256']) == 64
         assert case['bindings'] == {'ax': '$value'}
@@ -118,3 +120,21 @@ def test_rejects_invalid_repeat_count():
         assert 'repeats' in str(exc)
     else:
         raise AssertionError('invalid repeats must be rejected')
+
+
+def test_timed_output_change_fails_closed(monkeypatch):
+    monkeypatch.setattr(benchmark, '_tool_identity', lambda path, java: {'analyze_headless': path})
+    calls = {}
+
+    def changing(lift, *, engine, analyze_headless=None, java_home=None, timeout_s=120):
+        key = (lift['source'], engine)
+        calls[key] = calls.get(key, 0) + 1
+        return {'text': c_matching_source(lift) if calls[key] == 1 else 'ax = 0;'}
+
+    monkeypatch.setattr(benchmark, 'asm_to_c', changing)
+    report = benchmark.run(repeats=1, analyze_headless='/tool/analyzeHeadless')
+    for case in report['cases']:
+        for engine in ('builtin', 'ghidra'):
+            assert case['engines'][engine]['status'] == 'unknown'
+            assert case['engines'][engine]['reason'] == 'timed invocation changed normalized output'
+        assert case['observed_request_latency_ratio']['status'] == 'unknown'

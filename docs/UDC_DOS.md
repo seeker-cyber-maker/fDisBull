@@ -104,7 +104,8 @@ original native backing. The built-in view shares the ASM decoder.
 An installed Ghidra can be selected explicitly with
 `asm_to_c(lift, engine='ghidra', analyze_headless='/path/to/analyzeHeadless',
 java_home='/path/to/jdk')`. This optional path starts a bounded headless
-project for the exact block bytes plus a recorded synthetic `RET`. It obtains
+project with a synthetic DOS MZ header, the exact block bytes and a recorded
+`RET` terminator. It obtains
 Ghidra instruction facts and a decompiler C listing, then returns normalized
 `text` in the same restricted C grammar. The normalized statements are derived
 from Ghidra's decoded instruction facts, not parsed from its decompiler C.

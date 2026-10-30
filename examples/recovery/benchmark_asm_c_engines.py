@@ -63,12 +63,15 @@ def _env(java_home):
     return env
 
 
-def _measure(call, repeats):
+def _measure(call, repeats, expected_text):
     samples = []
     for _ in range(repeats):
         start = time.perf_counter()
-        call()
+        result = call()
         samples.append(time.perf_counter() - start)
+        # Validate after stopping the timer, including every fresh Ghidra run.
+        if not isinstance(result, dict) or result.get('text') != expected_text:
+            raise ValueError('timed invocation changed normalized output')
     return _summary(samples)
 
 
@@ -83,14 +86,12 @@ def run(*, repeats=3, analyze_headless=None, java_home=None, timeout_s=120):
     cases = [
         (2, 'initialized_ax', bytes.fromhex('b8640040')),
         (16, 'initialized_ax', bytes.fromhex('b86400') + bytes([0x40]) * 15),
-        # Retain the previously observed decoder/decompiler boundary as a
-        # separately labeled diagnostic probe, not as a latency comparison.
-        (2, 'uninitialized_ax_failure_probe', bytes.fromhex('05c80048')),
+        # Compare input-dependent AX behavior using the exact source bytes.
+        (2, 'input_dependent_ax_comparison', bytes.fromhex('05c80048')),
     ]
     for instruction_count, case_kind, raw in cases:
-        # Initialize AX so Ghidra can form a decompiled function value. Inputs
-        # and output bindings remain identical across all engines and cases.
-        # The separately labeled probe intentionally omits initialization.
+        # Inputs and output bindings remain identical across all engines and
+        # cases; the third block intentionally leaves AX input-dependent.
         lift = lift_asm_block(raw, bindings, inputs=inputs, outputs=outputs)
         engines = {}
         for engine in ('builtin', 'ghidra'):
@@ -109,10 +110,10 @@ def run(*, repeats=3, analyze_headless=None, java_home=None, timeout_s=120):
                 if engine == 'builtin':
                     # Builtin has no process boundary to cold-start; report its
                     # steady in-process renderer separately from Ghidra launches.
-                    timings = {'warm_in_process': _measure(render, repeats)}
+                    timings = {'warm_in_process': _measure(render, repeats, sample['text'])}
                 else:
                     # Each invocation launches/analyzes through analyzeHeadless.
-                    timings = {'cold_end_to_end': _measure(render, repeats)}
+                    timings = {'cold_end_to_end': _measure(render, repeats, sample['text'])}
                 c_lift = lift_c_block(sample['text'], bindings, inputs=inputs, outputs=outputs)
                 proof = verify_block(lift, c_lift['uil'])
                 engines[engine] = {'status': 'measured', 'text': sample['text'],
@@ -161,11 +162,11 @@ def run(*, repeats=3, analyze_headless=None, java_home=None, timeout_s=120):
     return {'format': 'fdisbull-asm-c-engine-benchmark-1',
         'environment': {'python': sys.version.split()[0], 'platform': platform.platform(),
                         'ghidra': identity},
-        'method': {'repeats': repeats, 'setup': 'One unmeasured output-validation invocation precedes timing. Every measured call starts with source bytes; Ghidra calls include process startup, project setup, import, disassembly, decompilation, extraction and shutdown.',
+        'method': {'repeats': repeats, 'setup': 'One unmeasured output-validation invocation precedes timing. Every timed call must return the same normalized output as that validation call; the equality check occurs after its timer stops. Every measured call starts with source bytes; Ghidra wraps each block in a synthetic MZ image containing the exact source and a RET terminator, then includes process startup, project setup, import, disassembly, decompilation, extraction and shutdown.',
                    'warmup': 'Builtin warm_in_process is measured after the unmeasured validation call. Ghidra subprocesses are launched for every measured call.',
                    'comparable_stage': 'ASM bytes to parseable normalized C view. The timed Ghidra request also obtains the decompiler C output and diagnostics, retained separately; Ghidra cold_end_to_end includes its full per-call overhead. Builtin warm_in_process is reported separately and is not presented as cold-start equivalent.',
                    'excluded': ['Installation/download time', 'human or agent interpretation time', 'game execution and whole-game recovery'],
-                   'limitation': 'Authored straight-line register blocks only; this does not demonstrate game recovery, native parity, general C decompilation quality, or whole-program performance. The report includes two initialized AX timing cases and one separate uninitialized AX failure probe; a Ghidra decompile failure remains unknown and has no latency ratio.'},
+                   'limitation': 'Authored straight-line register blocks only; this does not demonstrate game recovery, native parity, general C decompilation quality, or whole-program performance. The report includes two initialized AX timing cases and one input-dependent AX comparison. Ghidra import or decompile errors fail closed as unknown, with no latency ratio.'},
         'cases': blocks}
 
 

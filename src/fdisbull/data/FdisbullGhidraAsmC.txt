@@ -1,4 +1,4 @@
-// Extract independent Ghidra instruction facts from an exact raw binary block.
+// Extract independent Ghidra instruction facts from the exact code in a synthetic DOS MZ image.
 import ghidra.app.script.GhidraScript;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Instruction;
@@ -16,6 +16,8 @@ public class FdisbullGhidraAsmC extends GhidraScript {
     public void run() throws Exception {
         String[] args = getScriptArgs();
         int length = Integer.parseInt(args[1]);
+        if (!"Old-style DOS Executable (MZ)".equals(currentProgram.getExecutableFormat()))
+            throw new Exception("expected DOS MZ loader");
         Address start = currentProgram.getMinAddress();
         try (PrintWriter out = new PrintWriter(args[0], "UTF-8")) {
             out.println("VERSION\t" + Application.getApplicationVersion());
