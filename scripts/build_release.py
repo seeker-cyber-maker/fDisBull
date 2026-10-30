@@ -42,6 +42,8 @@ SOURCE_PATTERNS = (
     ("docs/evidence/zork-2026-10-29", "verification.json"),
     ("docs/evidence/zork-uil-2026-10-29", "verification.json"),
     ("docs/evidence/zork-intents-2026-10-29", "verification.json"),
+    ("docs/evidence/scene-recovery-2026-10-29", "representation-paths.json"),
+    ("docs/evidence/scene-recovery-2026-10-29", "scene-pipeline-summary.json"),
     ("docs/evidence/udc-2026-10-29", "dino.json"),
     ("docs/evidence/udc-2026-10-29", "zork.json"),
     ("docs/evidence/udc-2026-10-29", "synthetic.json"),

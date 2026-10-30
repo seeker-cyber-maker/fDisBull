@@ -26,6 +26,8 @@ emulator, target executable, game files, saved states or project databases.
 | Reuse visible controls or map a route | Versioned scenes, spatial maps and `session.move()` | Authored geometry or observed segments; unknown coverage and target behavior remain separate. |
 | Expose a small text interface | `fdisbull text-host CONFIG` with a qualified local projection | The projection is not a game parser or full-game reconstruction; action freshness and completion are backend-owned. |
 | Run an authored text slice | `python -m fdisbull_player --package FILE` | The independent player evaluates the declared slice; this does not emulate or recover the source game. |
+| Preserve supported Z-machine v3 behavior in an independent player | `zork-uil STORY --output PRIVATE_IR`, then `fdisbull-player --uil PRIVATE_IR` | Executable word16 IR preserves low-level operations; semantic recovery is a separate claim. Derived story content stays private. |
+| Exercise the qualified Zork mailbox intent layer | `zork-intents STORY --output PRIVATE_PACKAGE`, then `fdisbull-player --intents PRIVATE_PACKAGE` | A source-bound partial semantic layer with explicit retained IR; inspect fault receipts and restore the last successful checkpoint before resuming. |
 | Qualify a supported code-to-semantics block | UDL/UIL/UDC commands and APIs | Only the exact supported source span and declared effect boundary; see [udl-uil-udc.md](udl-uil-udc.md). |
 | Inspect AGI 2.917 logic bytes | `agi-logic LOGDIR VOLUME_DIRECTORY LOGIC --profile 2.917` | Bounded, read-only partial decoding; it does not establish that the logic was loaded or executed. |
 
