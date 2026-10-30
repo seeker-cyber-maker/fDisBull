@@ -4,6 +4,17 @@ Use this reference to route a task to the smallest relevant fDisBull surface.
 Every command uses caller-selected paths. The Python package does not include an
 emulator, target executable, game files, saved states or project databases.
 
+## Contents
+
+- [Start from the user's outcome](#start-from-the-users-outcome)
+- [Static analysis](#static-analysis)
+- [Native investigation](#native-investigation)
+- [Scenes, maps and movement](#scenes-maps-and-movement)
+- [Player and live text workflows](#player-and-live-text-workflows)
+- [Research-backed progression](#research-backed-progression)
+- [Retain knowledge](#retain-knowledge-without-overstating-it)
+- [Retrieve bounded output](#retrieve-bounded-output)
+
 ## Start from the user's outcome
 
 | Need | Starting point | Evidence boundary |
@@ -29,6 +40,11 @@ not format evidence. Start recursive analysis with a reasonable instruction
 budget and inspect `analysis-status` or `status` for remaining work. A bounded
 run does not establish convergence. Use `render` only for stored project state;
 it does not operate a GUI or launch a target.
+
+For installer extraction, nested images, overlays, edition comparison or media
+reduction, use [formats-and-media.md](formats-and-media.md). Select optional
+commands from the installed method inventory; an open proposal or a successful
+container listing does not provide a missing loader or processor.
 
 Static call-flow can screen for a script interpreter, asset reader or dispatch
 table. A data file that resembles code is still not proof of a load or execution
@@ -108,6 +124,11 @@ When the goal is normal progression or recovery, read
 [recovery-research.md](recovery-research.md) for version-qualified prior work,
 a source-attributed milestone checklist and tests of candidate scene transitions.
 Do not confuse a guide-derived route with a route observed on this target.
+
+For the meaning of an interaction across code, a text view and a proposed
+reconstruction, use [semantic-contracts.md](semantic-contracts.md). Retain the
+working lower-level representation and explicit unknowns as individual intent
+contracts are qualified.
 
 ## Retain knowledge without overstating it
 

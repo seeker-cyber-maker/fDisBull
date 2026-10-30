@@ -26,12 +26,20 @@ fdisbull agent-skill --reference references/scenes.md
 fdisbull agent-skill --reference references/runtime-navigation.md
 fdisbull agent-skill --reference references/udl-uil-udc.md
 fdisbull agent-skill --reference references/recovery-research.md
+fdisbull agent-skill --reference references/semantic-contracts.md
+fdisbull agent-skill --reference references/formats-and-media.md
 ```
 
 With a source checkout, the bundled files are under
 `src/fdisbull/skills/fdisbull-investigate/`. The current JSON protocol has a
 one-shot `request` command and a retained `serve`/`debug` session; a one-shot
 request cannot keep a live emulator attached.
+
+The full skill may exceed the inline response budget and return an output
+artifact reference. Prefer the index and one selected guide for routine work;
+use the output retrieval commands below when a complete export is needed.
+The semantic-contract guide connects intent, effects, time and projection loss;
+the formats/media guide covers input mapping and qualified media reduction.
 
 ## Choose a route
 

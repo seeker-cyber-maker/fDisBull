@@ -10,12 +10,14 @@ from .output_limits import OutputPolicy, current_output_policy, output_policy_co
 AGENT_SKILL_GUIDES = {
     'SKILL.md': 'Start here: investigation technique, cost/reward/confidence and evidence boundaries',
     'references/scenes.md': 'Define scene objects, masks, recognition, readiness and named actions',
-    'references/methodology.md': 'Trace causality, screen for interpreters and resolve conflicting observations',
+    'references/methodology.md': 'Plan evidence, coordinate independent questions, trace causes and screen for interpreters',
     'references/runtime-navigation.md': 'Choose movement, spatial policies, assistance and observation projections',
     'references/proofs.md': 'Build explicit bounded Z3 models and report their assumptions and scope',
     'references/workflows.md': 'Choose static analysis, native debugging, scene or text-player entry points',
     'references/udl-uil-udc.md': 'Qualify source blocks, shared UDL/UIL primitives and original-backed DOS compilation',
-    'references/recovery-research.md': 'Use edition-qualified research and guide leads to recover and check scene behavior',
+    'references/recovery-research.md': 'Qualify research, retain reusable meanings and compare recovery depth and cost',
+    'references/semantic-contracts.md': 'Recover complete intent contracts and compare facts, effects, time and projection losses',
+    'references/formats-and-media.md': 'Qualify containers, executable mappings, release differences and valid media reduction',
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
 

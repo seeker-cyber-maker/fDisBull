@@ -1,6 +1,15 @@
 # Runtime navigation and observation reference
 
-## Spatial masks and policies (0.22–0.23)
+## Contents
+
+- [Spatial masks and policies](#spatial-masks-and-policies)
+- [Movement ladder](#movement-ladder)
+- [Observation ladder](#observation-ladder)
+- [Object-state classification](#object-state-classification)
+- [Checkpoints, replay and evidence](#checkpoints-replay-and-evidence)
+- [Bounded controller](#bounded-controller)
+
+## Spatial masks and policies
 
 Persist a source/version-bound room map in game units with known and safe masks,
 an actor footprint, obstacle and hazard exclusions, separate object zones, and
@@ -31,14 +40,15 @@ resembles a condition is insufficient without instruction/control-flow evidence.
 Fair play locks physical policy across state restores. Policy is voluntary and
 does not turn the analysis API into an anti-tamper environment. Text projections
 keep source addresses and guard definitions private and expose the policy marker.
-The full API and qualified PQ/KQ scope are documented in `SPATIAL_MAPS.md`.
+The full API and qualified PQ/KQ scope are in the source-checkout documentation
+`docs/SPATIAL_MAPS.md`.
 The 0.23 AGI proximity-waiver profile is limited to a source-identified,
 byte-bound spatial condition with checked control-flow boundaries. It preserves
 the opcode and object identity and leaves nonspatial tests guest-owned. It is
 not a general position-free interaction adapter, teleport, or permission to
 waive any condition that resembles a proximity check.
 
-The 0.21 development workflow supports a small qualified action subset while
+Progressive workflows support a small qualified action subset while
 unrelated scene research remains incomplete. Pin a progressive workflow and
 resource inventory, then expose only grounded public objects through a text
 projection. The separate `fdisbull-player` consumes that projection; it does not
@@ -51,8 +61,9 @@ transition input. It must not write the declared room field. Require destination
 position and readiness, not just a changed room byte. Report skipped traversal,
 different guest time and possible changed hazard exposure. Prioritize a reusable
 action when its expected benefit justifies qualification cost and confidence;
-do not recover every room before the first useful action. See the candidate's
-`PROGRESSIVE_SCENES.md`, `TEXT_PROJECTION.md` and `ASSISTED_TRAVEL.md` docs.
+do not recover every room before the first useful action. See source-checkout
+`docs/PROGRESSIVE_SCENES.md`, `docs/TEXT_PROJECTION.md` and
+`docs/ASSISTED_TRAVEL.md`.
 
 Use this reference when an investigation must move an actor through a running
 program, repeatedly reach a state, or inspect scene pixels that the actor can
@@ -103,6 +114,12 @@ invalid route when the coordinate is unchanged for a bounded number of updates,
 the target reports a no-movement condition, the context changes unexpectedly,
 direction changes, or any guest-time/watch-hit budget expires.
 
+Qualify memory arrival, rendered arrival, interaction range, original exit
+effects and stopped input separately when the task depends on them. Animation
+can continue after arrival; use the relevant stable predicates rather than
+whole-frame equality. A positioned cursor and released controls may still
+precede the target's own readiness to consume the next input.
+
 A useful conditional vocabulary is `eq`, `ne`, `lt`, `le`, `gt`, `ge`,
 `in_range`, `changed`, `unchanged_for`, `crossed_up` and `crossed_down`. A result
 should retain the semantic resolver and field, session-resolved address as
@@ -124,6 +141,19 @@ Example design shape, not a currently guaranteed fDisBull API:
 ```
 
 ## Observation ladder
+
+Imported-image layers, session-bound runtime reads and runtime-resource
+transformations have different authority. A witnessed `runtime_memory` binding
+allows supported observations in its session; it does not turn a heap range
+into an imported region or grant persistent layer support.
+
+Before either transformation below, require a supported resolver bound to the
+current resource/source/adapter identity, expected live bytes, a qualified
+guarded transition, and changed-byte refusal on restoration. Re-resolve after
+restore, restart or relocation. Keep imported-image layer guards intact.
+If the selected backend cannot provide this authority, use a qualified neutral
+anchor or the authentic actor-visible view. A direct backend experiment or
+remembered heap address does not establish a reusable transformation.
 
 Use one of these methods, with fallbacks in this order when practical:
 
@@ -177,11 +207,18 @@ files, external services, input queues and host-side clocks may require separate
 controls. After restore, re-resolve runtime objects and resources and recheck
 current scene applicability.
 
+For native persistence, distinguish disk slot, internal save title, public
+backup name and artifact identity; qualify collision and replacement behavior
+before saving. Preserve unknown native bytes and compare defined fields under
+their own contract. A changed whole-file hash can coexist with equal decoded
+fields. Validate a selected save through the target's fresh loader; equal fields
+alone do not establish equal queues, RNG, timing or future behavior.
+
 Preserve both the ordinary route and diagnostic shortcut when both were used.
 Report which one established each claim. Keep target-specific addresses,
 coordinates, anchors and object pixels in project evidence or cartridge data,
 not in this reusable skill.
 
-## 0.20 bounded controller
+## Bounded controller
 
 Select an exact `debug_define_macros` ID for every `macro` or `move` operation. Latched games require a second full same-direction press; held games require a returned owned lease and its key-up. `move` requires explicit observations, destination, progress window and stopped-state predicate. A blocked receipt is failure, even if a separate diagnostic intervention later recovers the session. Capture its immediate authentic frame without screenshot hooks. Re-resolve runtime bindings after checkpoint restore. Navigation masks use a declared game coordinate space and actor footprint; keep their source facts, inferred/derived status, conditional colliders and contradictions. Requested content, displayed content and control readiness are separate conditions. Use [bounded proofs](proofs.md) to test an explicit model without promoting its fidelity to fact.
