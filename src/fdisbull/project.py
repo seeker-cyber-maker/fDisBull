@@ -102,7 +102,7 @@ class Project(ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, Shared
                 self.db.executescript(FACTS_DDL+TYPE_DDL+ADVANCED_DDL+EXTERNAL_FILES_DDL+FILE_REFERENCES_DDL+SHARED_LABELS_DDL)
             self.meta = {k:json.loads(v) for k,v in meta.items() if k not in ("application","schema")}
             self.arch, self.bits = self.meta["arch"], self.meta["bits"]
-            self.context = f"{self.arch}:{self.bits}:little"
+            self.context = f"{self.arch}:{self.bits}:little" + (':ne' if self.meta['format'] == 'NE' else '')
             self.db.executescript(DEBUG_DDL+PROOF_DDL)
             self.db.execute("PRAGMA foreign_keys=ON")
             self.db.execute("PRAGMA busy_timeout=30000")
@@ -171,7 +171,7 @@ class Project(ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, Shared
                     [("application","fdisbull"),("schema",str(SCHEMA))] + [(k,json.dumps(v)) for k,v in meta.items()])
                 db.execute("INSERT INTO versions VALUES (1,NULL,?,?,?,?)",
                     ("original","file import",cls.digest(image.regions),now()))
-                context = f"{image.arch}:{image.bits}:little"
+                context = f"{image.arch}:{image.bits}:little" + (':ne' if image.format == 'NE' else '')
                 for r in image.regions:
                     if r.data:
                         db.execute("INSERT INTO regions VALUES (?,?,?,?,?,?)",(1,r.name,key(r.start),r.data,r.executable,r.writable))
@@ -244,17 +244,25 @@ class Project(ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, Shared
                 dos['segment_candidate_count']=len(dos.pop('segment_candidates',[]))
                 loader['dos']=dos
                 metadata['loader_metadata']=loader
-            elif self.meta['format'] == 'LE':
+            elif self.meta['format'] in ('LE', 'NE'):
                 loader = dict(metadata['loader_metadata'])
-                le = dict(loader['le'])
+                model = self.meta['format'].lower()
+                le = dict(loader[model])
                 le['fixup_count'] = len(le.pop('fixups', []))
                 le['page_count'] = len(le.pop('pages', []))
                 objects = le.pop('objects', [])
                 le['object_count'] = len(objects)
                 le['objects_preview'] = objects[:16]
                 le['objects_truncated'] = len(objects) > 16
+                if model == 'ne':
+                    for field in ('entries', 'resources', 'imports', 'exports', 'name_records', 'sections', 'file_mappings'):
+                        le[field + '_count'] = len(le.pop(field, []))
+                    segments = le.pop('segments', [])
+                    le['segment_count'] = len(segments)
+                    le['segments_preview'] = segments[:16]
+                    le['segments_truncated'] = len(segments) > 16
                 loader['file_mapping_count'] = len(loader.pop('file_mappings', []))
-                loader['le'] = le
+                loader[model] = le
                 metadata['loader_metadata'] = loader
             return {"project":str(self.path),**metadata,"entry":hx(self.meta["entry"]),"context":self.context,
                     "version":v,"counts":counts,"work":work,"regions":regions,"analysis":self.analysis_status(v['id'])}
@@ -294,6 +302,9 @@ class Project(ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, Shared
                         note='Current stored state. A static fixed point does not establish complete code coverage or runtime behavior.')
 
     def _address(self,value):
+        if self.meta['format'] == 'NE':
+            from .ne import parse_address
+            return parse_address(value)
         return self._dos_parse_address(value)[0] if self.meta['format'] in ('MZ', 'COM') else number(value)
 
     def segments(self,version=None):
@@ -343,19 +354,33 @@ class Project(ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, Shared
             return self._dos_xrefs(address,direction,version,limit,cs)
         if direction not in ("to","from"):
             raise ValueError("direction must be to or from")
+        if cs is not None:raise ValueError('CS selection applies only to DOS projects')
+        address = self._address(address)
         limit = integer(limit,"limit",1,10000)
         v = self.version(version)["id"]
         column = "target" if direction == "to" else "source"
         rows = self.db.execute(f"SELECT * FROM xrefs WHERE version=? AND context=? AND {column}=? ORDER BY source,target,kind LIMIT ?",(v,self.context,key(address),limit))
-        return [{"source":hx(int(r["source"],16)),"target":hx(int(r["target"],16)),"kind":r["kind"],"evidence":r["evidence"],"version":v,"source_name":self._label(v,int(r["source"],16)),"target_name":self._label(v,int(r["target"],16)),"target_representation":self._presentation(v,int(r["target"],16))["representation"]} for r in rows]
+        result = [{"source":hx(int(r["source"],16)),"target":hx(int(r["target"],16)),"kind":r["kind"],"evidence":r["evidence"],"version":v,"source_name":self._label(v,int(r["source"],16)),"target_name":self._label(v,int(r["target"],16)),"target_representation":self._presentation(v,int(r["target"],16))["representation"]} for r in rows]
+        if self.meta['format'] == 'NE':
+            from .ne import logical_location
+            for row in result:
+                for side in ('source', 'target'):
+                    row[side + '_logical_location'] = logical_location(int(row[side], 16))
+        return result
 
     def _stored_disassembly(self, address=None, lines=50, version=None,cs=None):
         if self.meta["format"] in ('MZ', 'COM'):
             return self._dos_disassembly(address,lines,version,cs)
         count = integer(lines,"lines",1,500)
+        if cs is not None:raise ValueError('CS selection applies only to DOS projects')
         with self.transaction():
             v = self.version(version)
-            a = self.meta["entry"] if address is None else number(address)
+            a = self.meta["entry"] if address is None else self._address(address)
+            ne_processor = None
+            if self.meta['format'] == 'NE':
+                from .ne_processor import NEProcessor
+                from .processor import Location
+                ne_processor = NEProcessor(self.meta['loader_metadata']['ne'])
             rows = self.db.execute("SELECT i.*,n.text AS name,c.text AS comment,c.author AS comment_author,c.inherited_from AS comment_inherited_from FROM instructions i LEFT JOIN annotations n ON n.version=i.version AND n.context=i.context AND n.address=i.address AND n.kind='name' LEFT JOIN annotations c ON c.version=i.version AND c.context=i.context AND c.address=i.address AND c.kind='comment' WHERE i.version=? AND i.context=? AND i.address>=? ORDER BY i.address LIMIT ?",(v["id"],self.context,key(a),count)).fetchall()
             result = []
             for r in rows:
@@ -370,6 +395,13 @@ class Project(ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, Shared
                     display += ' ; ' + ', '.join(ref['name'] + (f" <{ref['representation']}>" if ref['representation'] else '') for ref in references)
                 display,file_refs,file_refs_summary=self._file_reference_display(v['id'],self.context,int(r['address'],16),display)
                 result.append({"references":references,"file_references":file_refs,"file_reference_summary":file_refs_summary,"display_operands":display,"address":address_hex,"size":r["size"],"bytes":r["bytes"],"mnemonic":r["mnemonic"],"operands":r["operands"],"flow":r["flow"],"target":hx(int(r["target"],16)) if r["target"] else None,"name":self._shared_name(v["id"],("memory","",int(r["address"],16))) or r["name"] or (self._label(v["id"],int(r["address"],16)) if fn or self._signature_name(v["id"],self.context,int(r["address"],16)) else None),"comment":r["comment"],"comment_author":r["comment_author"],"comment_inherited_from":r["comment_inherited_from"],"xrefs":self.xrefs(address_hex,"to",v["id"]),"context":self.context})
+            if ne_processor is not None:
+                from .ne import logical_location
+                for row in result:
+                    row['logical_location'] = logical_location(int(row['address'], 16))
+                    decoded = ne_processor.decode(bytes.fromhex(row['bytes']), Location('ne.segment', int(row['address'], 16)))
+                    row['ne_fixups'] = decoded.facts['ne_fixups'] if decoded else []
+                    row['target_logical_location'] = logical_location(int(row['target'], 16)) if row['target'] else None
             return {"title":self.meta["filename"],"arch":self.arch,"bits":self.bits,"context":self.context,"version":v["id"],"sha256":v["sha256"],"source_sha256":self.meta["source_sha256"],"address":hx(a),"instructions":result,"analysis":self.analysis_status(v['id']),"view":"stored instructions ordered by address; gaps are not decoded implicitly"}
 
     def patch(self, address, data, label="patch", origin="agent supplied bytes", version=None):
@@ -405,13 +437,14 @@ class Project(ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, Shared
             info=self.db.execute('SELECT document,source_bytes FROM binary_info WHERE version=?',(parent,)).fetchone()
             if info and self.meta["format"] in ('MZ', 'COM'):
                 self._dos_patch_document(parent,v,bytes(info[1]),patched)
-            elif info and self.meta['format'] == 'LE':
+            elif info and self.meta['format'] in ('LE', 'NE'):
                 # Internal LE fixups can overwrite encoded file bytes during
                 # loading. A patch to relocated memory is not a reversible
                 # file edit without rewriting those fixup records as well.
                 # Retain the exact original container for each memory version.
                 document = json.loads(info[0])
-                note = 'LE mapped-memory patch only; retained source bytes and file metadata remain inherited. No inverse fixup or LE executable rewrite is performed.'
+                kind = self.meta['format']
+                note = f'{kind} mapped-memory patch only; retained source bytes and file metadata remain inherited. No inverse fixup or {kind} executable rewrite is performed.'
                 if note not in document.setdefault('warnings', []):
                     document['warnings'].append(note)
                 self.db.execute('INSERT INTO binary_info VALUES (?,?,?)',

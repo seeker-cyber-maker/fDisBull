@@ -325,6 +325,14 @@ class TypeSystemMixin:
                     if t['kind']=='pointer':
                         target=(int.from_bytes(raw[2:],'little')*16+int.from_bytes(raw[:2],'little') if t['address_space']=='far16' else t['segment']*16+value if t['address_space']=='near' and t['segment'] is not None else value if t['address_space']=='flat' else None)
                         item.update(target=hex(target) if target is not None else None,target_type=t['target'],target_mapped=bool(target is not None and self._mapping(v,target)),target_name=self._label(v,target) if target is not None else None,assumption='retained snapshot pointer value; not runtime memory')
+                        if self.meta['format'] == 'NE':
+                            # Win16 selectors/near offsets are not DOS paragraph
+                            # bases or packed logical segment-index keys.
+                            item.update(target=None, target_mapped=False, target_name=None,
+                                        assumption='encoded NE pointer value only; runtime selector/segment binding is unknown')
+                            if t['address_space'] == 'far16':
+                                item.update(encoded_offset=int.from_bytes(raw[:2], 'little'),
+                                            encoded_selector=int.from_bytes(raw[2:], 'little'))
                         target_type=type_layout(t['target'],self._type_registry(v))
                         while target_type['kind']=='typedef':target_type=target_type['target']
                         if target_type['kind']=='function':item['prototype']=target_type

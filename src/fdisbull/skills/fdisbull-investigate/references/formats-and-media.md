@@ -63,6 +63,20 @@ measure reachable coverage, semantic recovery or comparative speed. Do not
 repeat an identical exhausted pass without a new seed, mapping or question.
 Use [methodology.md](methodology.md) for native-to-resource or interpreter links.
 
+## Win16 NE static view
+
+Supported Windows16 NE images can be imported directly with automatic selection
+or `--image ne`. Use explicit logical addresses such as `ne:4:0x547c`; a segment
+index is neither a live selector nor a DOS paragraph. Source bytes and raw
+operands stay intact while validated fixups supply symbolic logical targets.
+Keep declared zero fill, initialized file data and runtime-initialized state
+separate. Query stored native facts/CFGs; selector-aware advanced IR and native
+Win16 execution remain unsupported. In a source checkout, `docs/NE_LOADING.md`
+details the bounded profile and `docs/COLONIZATION_FOOD_EQUIVALENCIES.md` records
+a paired source-model comparison with explicit ABI limits. Cross-edition snippet
+links and selectable UDL backings remain a proposal in RFC0003; current UDC
+acceptance is unchanged.
+
 ## Compare releases at the right boundary
 
 Match the actual editions and resources before treating files as counterparts.

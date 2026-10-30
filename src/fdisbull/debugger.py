@@ -65,12 +65,16 @@ DEBUG_DDL += MACRO_DDL
 
 class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, ProgressiveSceneProjectMixin, MacroProjectMixin, ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
     def machine(self, executable, *, boot_image, version=None, boot_timeout_ms=30000):
+        if self.meta['format'] == 'NE':
+            raise ValueError('NE static projects cannot launch through the raw machine backend')
         from .qemu_machine import MachineDebugSession
         return MachineDebugSession(self,executable,boot_image=boot_image,version=version,boot_timeout_ms=boot_timeout_ms)
 
     def debugger(self, executable, game_dir, *, version=None, backend=None, kernel=None,
                  initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None, window=False,_on_spawn=None,
                  spatial_mode=None, fair_play=False):
+        if self.meta['format'] == 'NE':
+            raise ValueError('NE currently supports static analysis only; DOS and PE64 launch backends cannot execute Win16 NE projects')
         if spatial_mode is None: spatial_mode = 'physical' if fair_play else 'assisted'
         validate_mode(spatial_mode, fair_play)
         if (spatial_mode != 'assisted' or fair_play) and (backend not in (None, 'dosbox') or self.meta['format'] == 'PE'):
