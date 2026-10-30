@@ -2,9 +2,11 @@
 from __future__ import annotations
 import json
 import re
+from .type_catalog import TypeCatalogMixin
 
 TYPE_DDL = """
 CREATE TABLE IF NOT EXISTS type_definitions(version INTEGER NOT NULL,name TEXT NOT NULL,document TEXT NOT NULL,author TEXT NOT NULL,revision INTEGER NOT NULL DEFAULT 1,PRIMARY KEY(version,name));
+CREATE TABLE IF NOT EXISTS type_catalog_origins(version INTEGER NOT NULL,name TEXT NOT NULL,definition_sha256 TEXT NOT NULL,author TEXT NOT NULL,document TEXT NOT NULL,PRIMARY KEY(version,name));
 CREATE TABLE IF NOT EXISTS type_bindings(version INTEGER NOT NULL,address TEXT NOT NULL,name TEXT NOT NULL,type_name TEXT NOT NULL,size INTEGER NOT NULL,author TEXT NOT NULL,PRIMARY KEY(version,address));
 """
 _BUILTINS = {f'{prefix}{bits}':dict(kind='scalar',size=bits//8,signed=prefix=='i') for prefix in ('u','i') for bits in (8,16,32,64)}
@@ -170,7 +172,7 @@ def _field_at(layout,offset,path=''):
     return dict(path=path+(f'+0x{offset:x}' if offset else ''),byte_offset=offset,type_name=layout['name'],kind=layout['kind'],size=layout['size'])
 
 
-class TypeSystemMixin:
+class TypeSystemMixin(TypeCatalogMixin):
     def _type_registry(self,v):
         return {r['name']:json.loads(r['document']) for r in self.db.execute('SELECT name,document FROM type_definitions WHERE version=?',(v,))}
 
@@ -192,6 +194,7 @@ class TypeSystemMixin:
                 if address<previous_end:raise ValueError('updated type bindings would overlap')
                 previous_end=address+size
             if hasattr(self,'_validate_file_types'):self._validate_file_types(v,registry)
+            self._forget_type_origin(v,name,definition,author)
             self.db.execute('INSERT INTO type_definitions VALUES (?,?,?,?,1) ON CONFLICT(version,name) DO UPDATE SET document=excluded.document,author=excluded.author,revision=revision+1',(v,name,json.dumps(definition,sort_keys=True),author))
             if hasattr(self,'_update_file_type_sizes'):self._update_file_type_sizes(v,registry)
             invalidated=[]

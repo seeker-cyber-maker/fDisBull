@@ -66,7 +66,7 @@ class IncrementalMixin:
             self.db.execute(f'DELETE FROM {table} WHERE version=?',(v,))
 
     def _copy_interpretations(self,parent,child):
-        for table,columns in [('type_definitions','name,document,author,revision'),('type_bindings','address,name,type_name,size,author'),('function_summaries','context,address,document,author'),('library_signatures','name,document')]:
+        for table,columns in [('type_catalog_origins','name,definition_sha256,author,document'),('type_definitions','name,document,author,revision'),('type_bindings','address,name,type_name,size,author'),('function_summaries','context,address,document,author'),('library_signatures','name,document')]:
             predicate=" AND COALESCE(json_extract(document,'$.source.kind'),'')!='exact_signature'" if table=='function_summaries' else ''
             self.db.execute(f'INSERT INTO {table} SELECT ?,{columns} FROM {table} WHERE version=?'+predicate,(child,parent))
         for table,columns in [('external_files','name,filename,kind,sha256,data,author'),('file_type_bindings','file,offset,name,type_name,size,author'),('file_references','context,source,file,file_offset,width,count,stride,access,instruction_bytes,evidence,author'),('label_links','id,left_space,left_file,left_offset,left_last,right_space,right_file,right_offset,right_last,size,evidence,author'),('shared_label_names','space,file,offset,name,author,created'),('label_link_removals','link_id,reason,author,created')]:

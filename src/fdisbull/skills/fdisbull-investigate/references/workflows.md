@@ -182,3 +182,13 @@ a storage or serialization failure, with no artifact; it does not undo execution
 output references differ from project debug artifact IDs. The default private
 store is user-data `fdisbull/output-artifacts`; `FDISBULL_OUTPUT_ARTIFACT_DIR`
 may select a location outside Git. Artifacts have no automatic deletion.
+
+## Compare related programs
+
+Use explicit `export-types` / `import-types` to share unbound structural
+interpretations after checking each target's own layout evidence. Keep byte
+identity signatures separate from semantic correspondences: equivalent arithmetic
+can have different code, pointer widths and calling conventions. Catalog origin
+is a declared source claim, not native evidence. Apply a received type only at a
+locally qualified memory/file location; fixed pointer segments cannot be
+transferred. Record accepted, rejected and still-candidate correspondences.
