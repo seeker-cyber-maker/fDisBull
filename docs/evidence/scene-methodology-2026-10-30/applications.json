@@ -1,0 +1,1130 @@
+{
+  "format": "fdisbull-scene-methodology-applications-1",
+  "scope": "Two fresh-context applications of the same revised guide to five newly authored cases; manual assessment, not executed game equivalence or a matched speed benchmark.",
+  "case_sha256": "d712890c972ab2795dcf64f34cf5d96fe389cabae22688a10aee061dc0e2e9b9",
+  "application_a": {
+    "source": {
+      "guide": "references/scene-recovery.md at the guide hash in verification.json",
+      "evidence_file": "authored-cases.json",
+      "evidence_scope": "The case file is the complete available source evidence. Evidence IDs below resolve to JSON Pointers in that file; generated handler labels are opaque source-linked identities, not recovered source-language names."
+    },
+    "method_pass": {
+      "executed": [
+        "Read the two permitted files once",
+        "Check supplied record structure and typed references",
+        "Derive rules from the supplied consumers and bounded stack/data dependencies",
+        "Solve the small labelled graph correspondences",
+        "Separate definitions, observations, residual semantics and compatibility obligations",
+        "Obtain an independent reasoning review of B and D using the same already-read evidence"
+      ],
+      "ordering": "Cases A-E, source record order, and stable obligation IDs; graph solutions canonicalized by ascending object ID and symbol name.",
+      "validation_limit": "Static reasoning over supplied evidence only. No runtime, game execution, fresh observation, external source, independent consumer implementation or whole-source writer analysis was available or performed.",
+      "cost": {
+        "source_files_read": 2,
+        "read_commands": 1,
+        "write_commands": 1,
+        "runtime_probes": 0,
+        "subagent_reviews": 1,
+        "source_bytes_and_analysis_time": "not measured"
+      },
+      "stop_reason": "Every requested element has a supported, contradicted, explicitly unresolved or outside-scope disposition. Proposed next investigations were not executed.",
+      "reopen_when": "Relevant source/profile/layout, live-binding assumptions, writer sets, resource dependencies, call conventions or checkpoint contracts change. Historical observations do not establish current live values."
+    },
+    "cases": [
+      {
+        "id": "A",
+        "status": "Four exit definitions and their local selector behavior supported; complete travel, handler and turn semantics unresolved.",
+        "evidence": {
+          "A.profile": "/cases/0/qualified_profile",
+          "A.north": "/cases/0/raw_properties/0",
+          "A.east": "/cases/0/raw_properties/1",
+          "A.west": "/cases/0/raw_properties/2",
+          "A.south": "/cases/0/raw_properties/3",
+          "A.header": "/cases/0/routine_header",
+          "A.before": "/cases/0/state_observations/0",
+          "A.after": "/cases/0/state_observations/1",
+          "A.missing": "/cases/0/qualified_consumer/0",
+          "A.direct": "/cases/0/qualified_consumer/2",
+          "A.routine": "/cases/0/qualified_consumer/4",
+          "A.conditional": "/cases/0/qualified_consumer/5",
+          "A.door": "/cases/0/qualified_consumer/6",
+          "A.omissions": "/cases/0/qualified_consumer/7"
+        },
+        "supported": [
+          {
+            "id": "A.identity",
+            "kind": "definition",
+            "value": {
+              "source_binding": "fixture-A-r1",
+              "version": 3,
+              "scene": {
+                "object": 4,
+                "symbol": "atrium"
+              },
+              "destination": {
+                "object": 9,
+                "symbol": "terrace"
+              },
+              "door": {
+                "object": 3,
+                "symbol": "glass_door"
+              }
+            },
+            "evidence": [
+              "A.profile"
+            ]
+          },
+          {
+            "id": "A.bounds",
+            "kind": "structure",
+            "rule": "The four supplied extents have lengths 1, 4, 5 and 3 respectively, within the declared 4096 bytes. The five-byte and three-byte records end in the required zero. Interpretations are qualified only for the supplied profile and spans.",
+            "evidence": [
+              "A.profile",
+              "A.north",
+              "A.east",
+              "A.west",
+              "A.south",
+              "A.routine",
+              "A.door"
+            ]
+          },
+          {
+            "id": "A.exit.north",
+            "kind": "semantic rule",
+            "rule": "At atrium, north requests travel to terrace and returns travel's result. This selector does not itself establish committed relocation.",
+            "evidence": [
+              "A.profile",
+              "A.north",
+              "A.direct"
+            ]
+          },
+          {
+            "id": "A.exit.east",
+            "kind": "semantic rule",
+            "rule": "Read live global 33, bridge_ready. If nonzero, invoke travel(terrace). Otherwise emit resource blocked, then newline, then return 2. Payload 09210000 selects the default refusal because its packed-text word is zero.",
+            "evidence": [
+              "A.profile",
+              "A.east",
+              "A.conditional"
+            ]
+          },
+          {
+            "id": "A.exit.west",
+            "kind": "semantic rule",
+            "rule": "Test live attribute 11 of glass_door. If set, invoke travel(terrace). If clear, emit prefix, the door's display name, suffix and newline in that order; then set discourse.object to glass_door and discourse.scene to current_room; then return 2. The record's text word is zero, so this is the default branch. These discourse writes cannot be inferred for a custom-text refusal.",
+            "evidence": [
+              "A.profile",
+              "A.west",
+              "A.door"
+            ]
+          },
+          {
+            "id": "A.exit.south",
+            "kind": "semantic rule",
+            "rule": "Invoke opaque residual handler residual.A.south_0180 and pass its result to residual continuation R. No destination or handler effects are established.",
+            "evidence": [
+              "A.south",
+              "A.routine"
+            ]
+          },
+          {
+            "id": "A.handler.entry",
+            "kind": "definition",
+            "value": {
+              "handler": "residual.A.south_0180",
+              "packed_routine": 384,
+              "routine_header_address": 768,
+              "local_count": 2,
+              "initial_local_words": [
+                11,
+                7
+              ],
+              "instruction_entry": 773,
+              "first_decoded_instruction_extent": [
+                773,
+                777
+              ],
+              "first_operation": "conditional_branch",
+              "branch_targets": [
+                790,
+                820
+              ]
+            },
+            "rule": "The v3 packed routine reference is doubled; skip the one-byte local count and two initial-local words. The header is not an instruction. The qualified consumer shows no explicit actual arguments and routes the result to R.",
+            "evidence": [
+              "A.profile",
+              "A.south",
+              "A.header",
+              "A.routine"
+            ]
+          }
+        ],
+        "observations": [
+          {
+            "id": "A.live_mutation",
+            "claim": "Across an unrelated action, global 33 changed 0 to 2 and door attribute 11 changed 0 to 1, while location stayed 4 and turns changed 7 to 8. These are live conditions, and nonzero includes 2. Neither snapshot exercises an exit or proves that an exit costs one turn.",
+            "evidence": [
+              "A.before",
+              "A.after"
+            ]
+          }
+        ],
+        "compatibility_state": [
+          "Retain live current_room, global 33 and door attribute 11 reads at their source-defined points; initial values are not guards.",
+          "Before using cached records, retain qualified source/profile and live binding checks, or prove the relevant record bytes immutable. Checked initial spans alone do not prove immunity to later property mutation.",
+          "Preserve ordered output, the default-door discourse writes, refusal result 2 and the actual continuation consuming each result.",
+          "For the south residual call, preserve native frame/default-local initialization, actual argument convention, return value and continuation R. For travel, preserve the original admission, relocation, arrival and action-completion path until qualified."
+        ],
+        "residuals": [
+          {
+            "id": "A.handler.meaning",
+            "status": "unresolved",
+            "missing": "South handler branch predicate, destinations, effects and return behavior; continuation R's interpretation.",
+            "evidence": [
+              "A.header",
+              "A.routine"
+            ],
+            "next": "Start at the already-resolved instruction entry 773; inspect the conditional predicate and the smallest slices to effects/returns, then the return consumer R. Do not rediscover dispatch.",
+            "stop_when": "Relevant branches have supported effects and result/continuation contracts, or a named unresolved frontier."
+          },
+          {
+            "id": "A.travel",
+            "status": "unresolved",
+            "missing": "Admission, actual actor containment/current-scene writes, arrival callbacks, failure and travel result behavior.",
+            "evidence": [
+              "A.omissions"
+            ],
+            "next": "Inspect travel's admission and ordered relocation effect sinks, following only dependencies that can alter those effects or its return.",
+            "stop_when": "Destination selection is distinguished from committed movement and all required travel branches are qualified."
+          },
+          {
+            "id": "A.turn",
+            "status": "unresolved",
+            "missing": "Turn consumption, scheduler and RNG behavior for successful, refused and residual exits.",
+            "evidence": [
+              "A.omissions",
+              "A.before",
+              "A.after"
+            ],
+            "next": "Inspect command completion and the return consumers for travel, refusal result 2 and continuation R; follow their scheduler/time/RNG boundary.",
+            "stop_when": "Each relevant result path has a supported completion contract; do not assign a generic one-turn cost."
+          },
+          {
+            "id": "A.presentation",
+            "status": "unresolved beyond resource-level effects",
+            "missing": "Actual blocked/prefix/suffix/door-name text and any output-stream side effects are not supplied.",
+            "evidence": [
+              "A.conditional",
+              "A.door"
+            ],
+            "next": "Resolve only these resources and their decoder/output dependencies if exact text or replacement of emission is required.",
+            "stop_when": "Resource bytes, dependencies and emission effects are qualified, or the original emitter remains residual."
+          }
+        ],
+        "outside_scope": [
+          "Missing-direction path M is not one of the four present records and is not replaced by an explicit blocked exit.",
+          "Player reachability and gameplay execution coverage were not requested or established."
+        ]
+      },
+      {
+        "id": "B",
+        "status": "B1 and B3 transport/stack rules supported; B2's named target remains unresolved.",
+        "evidence": {
+          "B.rules": "/cases/1/machine_rules",
+          "B.bindings": "/cases/1/bindings",
+          "B1.stack": "/cases/1/sites/0/entry_stack_bottom_to_top",
+          "b10": "/cases/1/sites/0/code/0",
+          "b11": "/cases/1/sites/0/code/1",
+          "B2.stack": "/cases/1/sites/1/entry_stack_bottom_to_top",
+          "B2.table": "/cases/1/sites/1/callback_table",
+          "b20": "/cases/1/sites/1/code/0",
+          "b21": "/cases/1/sites/1/code/1",
+          "b22": "/cases/1/sites/1/code/2",
+          "B3.stack": "/cases/1/sites/2/entry_stack_bottom_to_top",
+          "b30": "/cases/1/sites/2/code/0"
+        },
+        "sites": [
+          {
+            "id": "B1",
+            "status": "supported",
+            "rule": "At b10, sample live action_index: 0 selects residual.inspect (packed 384), and 1 selects residual.turn_handle (packed 448). Invoke the selected residual handler with arguments (tool_object, target_object). The immutable-table address calculation, lookup and synthetic target push/pop can be eliminated.",
+            "stack_contract": "Entry [target_object, tool_object]; b10 pushes the target; b11 pops target first, tool_object second as argument 1, and target_object third as argument 2. The supplied caller-stack segment is empty after operand evaluation. Store the return value in local2 and resume b12.",
+            "live_inputs": [
+              "action_index at b10, domain {0,1}",
+              "tool_object and target_object from the incoming stack"
+            ],
+            "compatibility_state": [
+              "Preserve both real argument pops and their order",
+              "Preserve native residual frame/default-local semantics, local2 result placement and b12 continuation",
+              "Keep action-index/target selection correlated and check the qualified immutable table and target identities"
+            ],
+            "residual": "Callee bodies and their detailed frame initialization remain native residual behavior; their recovery is not required merely to remove target transport.",
+            "next": "No further target investigation is needed under these bindings. Inspect the selected routine header/body only if its frame construction or effects are also to be replaced.",
+            "evidence": [
+              "B.rules",
+              "B.bindings",
+              "B1.stack",
+              "b10",
+              "b11"
+            ]
+          },
+          {
+            "id": "B2",
+            "status": "named target unresolved; operand contract supported",
+            "rule": "Execute unknown_helper at b20 and preserve its effects and result in local4. Read callback_table[0] live at b21 after that call. The initial value 384 does not justify an unconditional residual.inspect call or a closed finite target set.",
+            "stack_contract": "Entry [target_object]; b21 pushes the freshly read target. At b22 pop that target, then pop target_object as the sole argument; the supplied caller-stack segment is then empty. Preserve local2 result placement and continuation b23, including the general null-call rule if the live target is zero.",
+            "transport_decision": "A mechanical target push/pop could be removed while retaining the same live read and dynamic residual invocation. The evidence does not authorize replacing the unresolved selector by a fixed or guard-selected named handler.",
+            "compatibility_state": [
+              "Keep helper invocation, unknown effects and local4 store",
+              "Keep helper-before-read ordering and the mutable table dependency",
+              "Preserve the argument pop, dynamic call/null-call behavior, native frame semantics, local2 and b23"
+            ],
+            "residual": "The smallest unresolved dependency is callback_table[0] at the post-helper read. Neither the incoming mutable value nor the helper's direct/aliased writes are qualified.",
+            "next": "Inspect the helper's may-write/alias summary for this slot and the live-entry invariant at b21. A general constant or finite-target rule needs the relevant writers and incoming-state proof; a post-b20 observation settles only that invocation.",
+            "stop_when": "A qualified live selector contract or guarded target mapping is established; otherwise retain the dynamic residual boundary.",
+            "evidence": [
+              "B.rules",
+              "B.bindings",
+              "B2.stack",
+              "B2.table",
+              "b20",
+              "b21",
+              "b22"
+            ]
+          },
+          {
+            "id": "B3",
+            "status": "supported",
+            "rule": "Literal packed target zero invokes no routine. Evaluate the target, pop tool_object as the ordinary argument, then push result zero and continue at b31.",
+            "stack_contract": "[tool_object] becomes [0]. This is neither a no-op nor a call to a routine at address zero.",
+            "live_inputs": [
+              "The incoming stack item must still be consumed"
+            ],
+            "compatibility_state": [
+              "Preserve the pop-before-result-push order and b31 continuation; no callee frame is created"
+            ],
+            "residual": "None for the requested local target/stack contract.",
+            "next": "None within the requested scope.",
+            "evidence": [
+              "B.rules",
+              "B3.stack",
+              "b30"
+            ]
+          }
+        ],
+        "observations": "No execution observations supplied; these are static stack and binding deductions.",
+        "outside_scope": [
+          "No action-turn, scheduler or callee-effect rule follows from the dispatch rewrite alone."
+        ]
+      },
+      {
+        "id": "C",
+        "status": "First correspondence unique; second correspondence explicitly ambiguous.",
+        "evidence": {
+          "C.title": "/cases/2/title_for_every_record",
+          "C.first": "/cases/2/first_graph",
+          "C.second": "/cases/2/second_graph"
+        },
+        "supported": [
+          {
+            "id": "C.first.mapping",
+            "kind": "definition",
+            "value": {
+              "object_7": "entry_gallery",
+              "object_8": "end_gallery",
+              "solution_count": 1
+            },
+            "rule": "Object 7's east/direct edge to 8 matches entry_gallery's east/direct edge to end_gallery; object 8's west/direct edge fixes the reverse relation. The reversed numeric hints do not override this unique labelled graph correspondence.",
+            "evidence": [
+              "C.first",
+              "C.title"
+            ]
+          },
+          {
+            "id": "C.second.alternatives",
+            "kind": "definition with unresolved naming",
+            "value": {
+              "opaque_identities": [
+                "C.second.object_21",
+                "C.second.object_22"
+              ],
+              "candidate_mappings": [
+                {
+                  "object_21": "lower_loop",
+                  "object_22": "upper_loop"
+                },
+                {
+                  "object_21": "upper_loop",
+                  "object_22": "lower_loop"
+                }
+              ],
+              "solution_count": 2
+            },
+            "rule": "Each object has both north/direct and south/direct edges to the other, so exchanging the two objects preserves every supplied constraint. Both mappings remain possible. Equal titles and numeric hints do not break the symmetry.",
+            "evidence": [
+              "C.second",
+              "C.title"
+            ]
+          },
+          {
+            "id": "C.reordering",
+            "kind": "reproducibility rule",
+            "rule": "Match labelled graphs independently of enumeration order; sort source-linked object identities and canonical solution representations. Record reordering must preserve the first graph's unique mapping and the second graph's same two candidates. Never accept the first candidate or turn an array position into identity.",
+            "evidence": [
+              "C.first",
+              "C.second"
+            ]
+          }
+        ],
+        "compatibility_state": [
+          "Persist distinct source-linked identities for objects 21 and 22 and both candidate associations. If a profile requires unique source-language names, reject that association until disambiguated.",
+          "No runtime or continuation state is implicated by this naming-only request."
+        ],
+        "residuals": [
+          {
+            "id": "C.second.naming",
+            "status": "unresolved",
+            "missing": "One qualified symmetry-breaking association.",
+            "next": "Inspect one independently bound entry reference or distinguishing source feature that connects upper_loop or lower_loop to object 21 or 22. One such anchor resolves the other by bijection.",
+            "stop_when": "Exactly one mapping satisfies all qualified constraints; otherwise retain the two candidates.",
+            "evidence": [
+              "C.second"
+            ]
+          }
+        ],
+        "observations": "No gameplay or execution observation establishes additional identity or reachability."
+      },
+      {
+        "id": "D",
+        "status": "Presentation skeleton supported; current suspension compatibility contradicted; full transition, callback and completion semantics unresolved.",
+        "evidence": {
+          "D.bindings": "/cases/3/bindings",
+          "d1": "/cases/3/source_order/0",
+          "d2": "/cases/3/source_order/1",
+          "d3": "/cases/3/source_order/2",
+          "d4": "/cases/3/source_order/3",
+          "d5": "/cases/3/source_order/4",
+          "D.observation": "/cases/3/observations",
+          "D.fault": "/cases/3/fault_observation"
+        },
+        "supported": [
+          {
+            "id": "D.presentation",
+            "kind": "semantic skeleton",
+            "rule": "Invoke residual.gallery_event with mode describe. Emit resource.gallery only if the callback does not report handled. Then assign the caller compatibility locals, invoke residual arrival, and complete the action only after arrival returns. A qualified callback name does not recover its body or authorize unconditional fallback narration.",
+            "evidence": [
+              "D.bindings",
+              "d1",
+              "d2",
+              "d3",
+              "d4",
+              "d5"
+            ]
+          },
+          {
+            "id": "D.replaceable",
+            "kind": "replacement boundary",
+            "rule": "Express the qualified callback/resource binding and conditional fallback directly, while retaining the callback and source emission behavior as residual unless their effects are separately qualified. Pure selector transport can stay eliminated only if its required values are materialized at the residual join. No complete successful movement or scheduler primitive is established by these records.",
+            "evidence": [
+              "D.bindings",
+              "d1",
+              "d2",
+              "d3",
+              "d4",
+              "d5",
+              "D.fault"
+            ]
+          },
+          {
+            "id": "D.suspension",
+            "kind": "observation and counterexample",
+            "status": "candidate compatibility contradicted",
+            "rule": "Narrative, world memory and pending-input booleans agree, but the reference caller locals [1640,4,0] differ from candidate [0,0,0]. Checkpoints contain these locals, so the candidate fails the required suspended-state equivalence boundary. These concrete values describe this observed path, not every invocation.",
+            "evidence": [
+              "D.observation",
+              "d3",
+              "d4"
+            ]
+          },
+          {
+            "id": "D.partial_effect",
+            "kind": "observed failure boundary",
+            "rule": "Actor insertion is committed. The current_scene write outcome is unknown and report delivery failed; successful completion or rollback is not established. Preserve the committed insertion and mark the uncertain write/delivery effects accordingly. Do not replay the original transition after mutation. A residual fallback choice is valid only before any effect, with that preflight choice recorded.",
+            "evidence": [
+              "D.fault"
+            ]
+          }
+        ],
+        "compatibility_state": [
+          "Before d4, materialize caller local1 = the source property_address and local2 = its property_length; on the observed path these are 1640 and 4. Preserve local3 and the rest of the frame rather than hardcoding only the differing fields.",
+          "Preserve caller stack, actual arguments, return/result conventions, pending input, suspended frame and resume continuation through d4 to d5, plus all previously committed world/output effects and checkpoint-visible state.",
+          "Carry source-compatible property address/length as adapter values without rerunning eliminated selection. Remove them only when residual readers and checkpoint contracts are replaced or explicitly migrated.",
+          "Preserve native time/RNG and completion behavior pending a qualified scheduler contract; do not equate an input suspension with completed action."
+        ],
+        "residuals": [
+          {
+            "id": "D.callback",
+            "status": "unresolved",
+            "missing": "Callback handled-result convention, side effects, exceptional/suspending behavior and output effects.",
+            "next": "Inspect the already-bound callback's describe-mode effect/return slice and the fallback emitter contract only as needed for the proposed replacement.",
+            "stop_when": "Suppression, ordered effects and return/resume behavior are qualified or remain explicitly residual.",
+            "evidence": [
+              "D.bindings",
+              "d1",
+              "d2"
+            ]
+          },
+          {
+            "id": "D.resume",
+            "status": "unresolved with observed incompatibility",
+            "missing": "Complete arrival live-out/resume contract and general property-address/length derivation.",
+            "next": "Inspect d3's source definitions and the d4 suspension/checkpoint seam to enumerate the exact values saved or read; add the compatibility assignments before arrival.",
+            "stop_when": "Required live state can be materialized for each admitted path and the matched suspended/resumed checkpoints agree.",
+            "evidence": [
+              "d3",
+              "d4",
+              "D.observation"
+            ]
+          },
+          {
+            "id": "D.completion",
+            "status": "unresolved",
+            "missing": "Scheduler, turn and time/RNG effects and traces.",
+            "next": "Inspect d5's completion/scheduler contract and then obtain one matching completion trace, including resumed arrival.",
+            "stop_when": "Ordered completion, turns and time/RNG behavior are qualified at the same boundary.",
+            "evidence": [
+              "d5",
+              "D.observation"
+            ]
+          },
+          {
+            "id": "D.fault_state",
+            "status": "unresolved",
+            "missing": "Actual current_scene state and any partial delivery at the failure boundary.",
+            "next": "Read the affected containment/current_scene and delivery state or authoritative effect receipts at that boundary before doing any further mutation.",
+            "stop_when": "Committed effects and uncertain effects are distinguished without replaying them.",
+            "evidence": [
+              "D.fault"
+            ]
+          }
+        ],
+        "required_verification": [
+          "Compare reference and candidate before residual arrival, at nested-input suspension and after resumption, including full required checkpoint state and caller locals; do not weaken snapshot comparison.",
+          "Compare ordered output/effects, world state, input continuation, return behavior, turns and RNG/time at matching boundaries. Present equality of prose/world memory alone is insufficient.",
+          "For an executable substitution, collect a witness that the semantic path actually ran and the removed selector did not; a fallback-only pass proves no substitution. This task performed no such runtime check."
+        ]
+      },
+      {
+        "id": "E",
+        "status": "E1-E3 fail supplied record qualifications; E4 has only a scoped observation; E5 retains an edition-specific contradiction.",
+        "evidence": {
+          "E1": "/cases/4/records/0",
+          "E2": "/cases/4/records/1",
+          "E3": "/cases/4/records/2",
+          "E4": "/cases/4/records/3",
+          "E5": "/cases/4/contradictory_source"
+        },
+        "records": [
+          {
+            "id": "E1",
+            "status": "contradicted profile invariant; semantics unqualified",
+            "structure": "Five payload bytes are present, but 0903000001 ends in 01, contradicting the required final zero.",
+            "acceptance": "Do not admit the five-byte door rule by matching its prefix or size. Existing R88-style conventions do not authorize this record.",
+            "next": "Check the final source byte and exact selected-source consumer/profile for this record to distinguish corruption from a different encoding.",
+            "stop_when": "The full record satisfies a qualified layout or remains rejected with explicit residual semantics.",
+            "evidence": [
+              "E1"
+            ]
+          },
+          {
+            "id": "E2",
+            "status": "incomplete record; semantics unresolved",
+            "structure": "Declared size is four, but 092100 contains only three bytes. The two-byte text field is incomplete.",
+            "acceptance": "Do not zero-pad, read past the supplied bound, or infer a default refusal from the partial text word. Existing conventions cannot supply the missing byte.",
+            "next": "Obtain the fourth byte together with the owning record's validated extent, or correct the declaration from qualified source evidence.",
+            "stop_when": "A complete bounded record is available and its consumer interpretation is qualified.",
+            "evidence": [
+              "E2"
+            ]
+          },
+          {
+            "id": "E3",
+            "status": "typed-reference/profile violation; semantics unqualified",
+            "structure": "The two bytes form packed-text value zero, but this profile requires a nonzero explicit blocked resource.",
+            "acceptance": "Do not convert it into a default resource, a null routine call, or an assumed valid text at address zero. Packed-text and packed-routine roles are distinct.",
+            "next": "Verify the packed word and the exact consumer's zero-text behavior against the selected profile.",
+            "stop_when": "A valid resource reference or an explicitly qualified alternative convention is established; otherwise retain rejection.",
+            "evidence": [
+              "E3"
+            ]
+          },
+          {
+            "id": "E4",
+            "status": "absence supported; missing-path rule unresolved",
+            "structure": "The property is absent. This is a distinct consumer path, not an explicit two-byte blocked record and not an implicit property default.",
+            "observation": "One invocation in a lit room with seed 12 emitted 'The way is unavailable.' and had turn_delta 1. It establishes only that path and context; it does not establish all output, effects, guard branches or a universal turn cost.",
+            "acceptance": "The observation does not close the general missing-direction rule, and R88 conventions cannot fill the omitted body.",
+            "next": "Inspect the missing-property branch and its guard/effect slice, then the result's completion consumer. Use a targeted alternate-condition observation only to discriminate a remaining specific alternative.",
+            "stop_when": "Relevant missing-path branches and completion effects are qualified or explicitly residual; additional isolated observations retain their path scope.",
+            "evidence": [
+              "E4"
+            ]
+          },
+          {
+            "id": "E5",
+            "status": "contradicted metadata; target-edition applicability unresolved",
+            "structure": "Four bytes 09210000 have a familiar conditional-record shape, but the sibling edition is unqualified.",
+            "supported_semantics": "For the supplied sibling consumer, zero permits travel and nonzero refuses. This directly conflicts with the metadata claim that nonzero permits travel. Retain both claims and the contradiction; do not override the consumer with R88 polarity or import A's object/global symbol bindings into this edition.",
+            "acceptance": "No target-edition rule is admitted solely from record shape, metadata, sibling evidence or existing R88 conventions. No observation is supplied that could resolve applicability.",
+            "next": "Bind the record layout and selector to the exact selected edition, inspect its branch predicate, and reconcile or invalidate the conflicting metadata claim.",
+            "stop_when": "Exact-edition evidence determines both interpretation and polarity, or the contradiction remains explicit and blocks acceptance.",
+            "evidence": [
+              "E5"
+            ]
+          }
+        ],
+        "compatibility_state": [
+          "Keep malformed, truncated, absent, zero-valued and contradicted records as distinct dispositions. Preserve their raw identity and residual path; do not synthesize replacement execution from them.",
+          "For any E4 replay or comparison, qualify source/run identity, live state, lighting, RNG state and completion boundary. Seed 12 and one historical observation do not certify current readiness or other paths.",
+          "No qualified replacement in E1-E5 permits dropping the original caller state, return consumer or completion effects. Further runtime state requirements depend on the still-unresolved exact consumer."
+        ]
+      }
+    ]
+  },
+  "application_b": {
+    "title": "Source-bounded scene recovery — analysis B",
+    "source": "authored-cases.json",
+    "method": {
+      "guide": "scene-recovery-guide.md",
+      "executed": "One read command read only the two permitted files. Applied qualified records and consumers, local typed operand reasoning, graph constraints, and supplied observation comparison. No runtime, external sources, or new observations were used.",
+      "scope": "Each requested obligation is supported, contradicted, or explicitly unresolved below. Resolved identities do not imply recovered bodies or player reachability.",
+      "evidence_ids": "Per-case evidence maps use selectors into authored-cases.json. Bracketed numerical consumer indexes are zero-based; named/object/property selectors identify the original source records. Analysis labels are not runtime fields.",
+      "qualification": "Use supplied qualifications only. A is bound to fixture-A-r1; no full-file digest or wider mutation proof is supplied. Other cases retain their own stated rules and domains rather than inheriting A's edition conventions.",
+      "stopping_condition": "All requested cases have supported answers or explicit unresolved results; further investigation is proposed only, not performed.",
+      "execution_cost": {
+        "source_read_commands": 1,
+        "failed_prewrite_commands": 1,
+        "successful_write_commands": 1,
+        "runtime_probes": 0,
+        "retry_authorization": "Parent explicitly authorized one corrective write after a pre-write NameError; the failed attempt performed no file mutation."
+      }
+    },
+    "cases": [
+      {
+        "id": "A",
+        "evidence": {
+          "A-profile": "cases[id=A].qualified_profile",
+          "A-north": "cases[id=A].raw_properties[owner=4,property=31]",
+          "A-east": "cases[id=A].raw_properties[owner=4,property=30]",
+          "A-west": "cases[id=A].raw_properties[owner=4,property=29]",
+          "A-south": "cases[id=A].raw_properties[owner=4,property=28]",
+          "A-header": "cases[id=A].routine_header",
+          "A-consumer": "cases[id=A].qualified_consumer",
+          "A-before": "cases[id=A].state_observations[id=before]",
+          "A-after": "cases[id=A].state_observations[id=after_unrelated_action]"
+        },
+        "ledger": [
+          {
+            "id": "A.structure",
+            "status": "supported",
+            "value": "Room object 4 is atrium; object 9 is terrace; object 3 is glass_door. The four supplied payload extents have lengths 1, 4, 5, 3 and lie within 4096 declared bytes. Both applicable trailing-zero fields are zero. These definitions are qualified for fixture-A-r1.",
+            "evidence": [
+              "A-profile",
+              "A-north",
+              "A-east",
+              "A-west",
+              "A-south"
+            ]
+          },
+          {
+            "id": "A.north",
+            "status": "supported",
+            "rule": "Selecting atrium north invokes travel(terrace) and returns travel's result. No independent narration, relocation, or turn cost is established at this selector boundary.",
+            "evidence": [
+              "A-north",
+              "A-profile",
+              "A-consumer"
+            ]
+          },
+          {
+            "id": "A.east",
+            "status": "supported",
+            "rule": "Read live global 33, bridge_ready. If nonzero, invoke travel(terrace). If zero, emit resource blocked, then newline, then return 2. The packed text field is zero, selecting this default refusal. The supplied refusal branch specifies no discourse writes.",
+            "evidence": [
+              "A-east",
+              "A-profile",
+              "A-consumer"
+            ]
+          },
+          {
+            "id": "A.west",
+            "status": "supported",
+            "rule": "Read live attribute 11 of glass_door. If set, invoke travel(terrace). If clear, emit prefix, door name, suffix, newline in that order; then set discourse.object = glass_door and discourse.scene = atrium; then return 2. The zero text field selects this default branch. These discourse writes must not be generalized to a hypothetical custom-text branch.",
+            "evidence": [
+              "A-west",
+              "A-profile",
+              "A-consumer"
+            ]
+          },
+          {
+            "id": "A.south",
+            "status": "supported_link_residual_body",
+            "value": {
+              "packed_routine": 384,
+              "routine_header_address": 768,
+              "local_count": 2,
+              "initial_local_words": [
+                11,
+                7
+              ],
+              "instruction_entry": 773,
+              "entry_extent": [
+                773,
+                777
+              ],
+              "decoded_entry": "conditional_branch to 790 or 820; predicate omitted",
+              "analysis_identity": "fixture-A-r1:residual-routine-at-768",
+              "source_language_name": "not supplied"
+            },
+            "rule": "Invoke the resolved residual routine with no explicit arguments in the supplied consumer. Preserve its initial locals and pass its result into omitted continuation R. The header is not an instruction and the branch destinations are code locations, not recovered scene destinations.",
+            "evidence": [
+              "A-south",
+              "A-profile",
+              "A-header",
+              "A-consumer"
+            ]
+          },
+          {
+            "id": "A.live_observations",
+            "status": "supported_path_specific",
+            "value": "Before: bridge_ready = 0 and door attribute = 0. After an unrelated action: bridge_ready = 2 and door attribute = 1. This supports treating both as live; nonzero includes 2. The observed turn change 7 to 8 and unchanged location 4 concern the unrelated action, not any recovered exit's turn or relocation behavior.",
+            "evidence": [
+              "A-before",
+              "A-after",
+              "A-consumer"
+            ]
+          }
+        ],
+        "residuals": [
+          {
+            "id": "A.handler_meaning",
+            "unknown": "South's guard, destinations, ordered output/state effects, return value and continuation R behavior.",
+            "next": "Inspect the already-resolved instruction entry 773 and only the branch predicates/effect slices reachable through 790 and 820, followed by R's result consumer. Do not rediscover its packed target.",
+            "stop_when": "Each relevant branch and return is qualified or its first unknown effect/dependency is recorded.",
+            "evidence": [
+              "A-header",
+              "A-consumer"
+            ]
+          },
+          {
+            "id": "A.travel_completion",
+            "unknown": "Admission, committed relocation, arrival, and command completion including turns/events/RNG; successful east/west result handling beyond the shown invocation is not specified.",
+            "next": "Inspect the omitted travel admission and relocation contracts, then the command-completion consumer needed for the requested turn boundary. A travel request alone cannot establish actor containment/current-scene updates or one turn.",
+            "stop_when": "Travel selection, committed relocation, arrival, return behavior and action completion have separately bounded contracts.",
+            "evidence": [
+              "A-consumer",
+              "A-before",
+              "A-after"
+            ]
+          },
+          {
+            "id": "A.resources_and_binding",
+            "unknown": "Literal default refusal resources/door-name bytes, output-stream alias behavior, and future mutation of the property payloads are not supplied. The stated emission order is supported without inventing prose.",
+            "next": "Only if literal narration or executable replacement is required, qualify the referenced resources/output operation and validate the live record dependencies at that boundary; preserve a live read where immutability is unproven.",
+            "stop_when": "The consumer's required resource and live-binding dependencies are covered.",
+            "evidence": [
+              "A-profile",
+              "A-consumer"
+            ]
+          }
+        ],
+        "compatibility": [
+          {
+            "required": "Retain current room/direction, live global 33 and object-3 attribute 11 at selection; bind destination object 9 by the qualified profile. Keep the west refusal's ordered discourse writes and each refusal's return value 2.",
+            "evidence": [
+              "A-profile",
+              "A-consumer"
+            ]
+          },
+          {
+            "required": "At the south residual join, create the proper routine frame with defaults [11,7], preserve actual argument/result conventions, and resume through R. Keep travel and action-completion residual state until their contracts are recovered.",
+            "evidence": [
+              "A-header",
+              "A-consumer"
+            ]
+          }
+        ],
+        "outside_scope": "No missing direction is among these four records. If queried later, omitted missing-address path M is residual and is not an explicit blocked exit. No ordinary player reachability claim is made."
+      },
+      {
+        "id": "B",
+        "evidence": {
+          "B-rules": "cases[id=B].machine_rules",
+          "B-bindings": "cases[id=B].bindings",
+          "B1-stack": "cases[id=B].sites[id=B1].entry_stack_bottom_to_top",
+          "b10": "cases[id=B].sites[id=B1].code[id=b10]",
+          "b11": "cases[id=B].sites[id=B1].code[id=b11]",
+          "B2-stack": "cases[id=B].sites[id=B2].entry_stack_bottom_to_top",
+          "B2-table": "cases[id=B].sites[id=B2].callback_table",
+          "b20": "cases[id=B].sites[id=B2].code[id=b20]",
+          "b21": "cases[id=B].sites[id=B2].code[id=b21]",
+          "b22": "cases[id=B].sites[id=B2].code[id=b22]",
+          "B3-stack": "cases[id=B].sites[id=B3].entry_stack_bottom_to_top",
+          "b30": "cases[id=B].sites[id=B3].code[id=b30]"
+        },
+        "ledger": [
+          {
+            "id": "B1.transport",
+            "status": "supported",
+            "can_eliminate_named_target_transport": true,
+            "rule": "Read live action_index at the original b10 boundary. Index 0 selects residual.inspect; index 1 selects residual.turn_handle. Preserve this guarded choice; the immutable table does not make the index constant.",
+            "stack_contract": "Starting bottom-to-top [target_object, tool_object], b10 pushes the selected packed target. b11 evaluates left-to-right: pop target, pop tool_object as argument 1, pop target_object as argument 2. The caller operand stack is empty after consumption. Invoke the selected residual handler(tool_object, target_object), store its result in local2, and resume at b12. Eliminating target push/pop must still consume both real arguments in that order.",
+            "evidence": [
+              "B-rules",
+              "B-bindings",
+              "B1-stack",
+              "b10",
+              "b11"
+            ]
+          },
+          {
+            "id": "B2.transport",
+            "status": "explicitly_unresolved",
+            "can_eliminate_named_target_transport": false,
+            "rule": "Execute unknown_helper once at b20 and preserve its result in local4. Only then read the live callback_table[0] at b21. Its initial value 384 identifies residual.inspect only in the initial table; the unknown call can invalidate that value. Neither a permanent inspect target nor a complete guarded finite alternative set is established.",
+            "stack_contract": "At b21 let the returned caller stack be S followed by a and let r be the live table word. b21 pushes r; b22 pops r as target and then a as its sole argument, leaving S, stores the call result in local2, and resumes b23. With the stated entry stack preserved by the call frame, a is target_object and S is empty. Do not assume unsupported effects of unknown_helper have been removed. If the live target is packed zero, its argument is still consumed and local2 receives zero without invoking a routine.",
+            "evidence": [
+              "B-rules",
+              "B-bindings",
+              "B2-stack",
+              "B2-table",
+              "b20",
+              "b21",
+              "b22"
+            ]
+          },
+          {
+            "id": "B3.null_call",
+            "status": "supported",
+            "can_eliminate_call": true,
+            "rule": "Evaluate constant target 0, pop tool_object as the ordinary argument, invoke no routine, then push return value 0 and resume b31. Stack [tool_object] becomes [0]. Do not retain tool_object or treat zero as a routine address.",
+            "evidence": [
+              "B-rules",
+              "B3-stack",
+              "b30"
+            ]
+          }
+        ],
+        "residuals": [
+          {
+            "id": "B2.writer",
+            "unknown": "The post-b20 value of callback_table[0], its possible writes/aliases, and any additional relevant effects of unknown_helper.",
+            "next": "Obtain the smallest sound summary or writer slice of unknown_helper that covers callback_table[0] and aliases. If it proves no relevant write, the known table value can be reused only with its other binding assumptions checked; if it proves guarded alternatives, retain their guards. A live observation immediately after b20 settles only that execution.",
+            "stop_when": "A current qualified target expression and complete relevant dependencies are established, otherwise preserve b20 and live dynamic dispatch as residual.",
+            "evidence": [
+              "B2-table",
+              "b20",
+              "b21"
+            ]
+          },
+          {
+            "id": "B.residual_bodies",
+            "unknown": "Handler bodies, routine-header defaults, effects, and complete residual frame/save contracts are not supplied. B1 nevertheless establishes named selection and the exact shown caller operand/result behavior.",
+            "next": "If replacing the residual bodies becomes required, begin at residual.inspect or residual.turn_handle and inspect their header/call contracts and requested effects only.",
+            "stop_when": "The specific residual boundary is qualified; whole-handler meaning is outside this transport-only recovery.",
+            "evidence": [
+              "B-bindings",
+              "b11",
+              "b22"
+            ]
+          }
+        ],
+        "compatibility": [
+          {
+            "required": "Retain live selection time, left-to-right operand consumption, caller stack remainder, actual argument ordering, result stores local2/local4 or sp, and continuations b12/b23/b31. Keep residual frames/default locals and any checkpoint-visible state through the existing adapter; no supplied evidence authorizes reconstructing them arbitrarily.",
+            "evidence": [
+              "B-rules",
+              "b10",
+              "b11",
+              "b20",
+              "b21",
+              "b22",
+              "b30"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "C",
+        "evidence": {
+          "C-label": "cases[id=C].title_for_every_record",
+          "C-first": "cases[id=C].first_graph",
+          "C-second": "cases[id=C].second_graph"
+        },
+        "ledger": [
+          {
+            "id": "C.first_identity",
+            "status": "supported_unique",
+            "mapping": {
+              "7": "entry_gallery",
+              "8": "end_gallery"
+            },
+            "reason": "Object 7 has east/direct to 8, matching entry_gallery's east/direct to end_gallery; object 8 has west/direct to 7, matching the converse. The swapped assignment fails the directional constraints. Identical display titles and reversed numeric hints do not override this unique graph solution.",
+            "evidence": [
+              "C-label",
+              "C-first"
+            ]
+          },
+          {
+            "id": "C.second_identity",
+            "status": "explicitly_unresolved_two_solutions",
+            "stable_opaque_identities": {
+              "21": "C:second_graph:object21",
+              "22": "C:second_graph:object22"
+            },
+            "candidate_bijections": [
+              {
+                "21": "upper_loop",
+                "22": "lower_loop"
+              },
+              {
+                "21": "lower_loop",
+                "22": "upper_loop"
+              }
+            ],
+            "reason": "Both objects have north/direct and south/direct edges to the other, and both symbol records have the same symmetric structure. Both bijections satisfy all supplied constraints. Preserve the alternatives as complete correlated bijections, not independent symbol sets or a first-match choice.",
+            "evidence": [
+              "C-label",
+              "C-second"
+            ]
+          },
+          {
+            "id": "C.reordering",
+            "status": "supported_procedure",
+            "rule": "Identify records by source object/symbol, sort object IDs numerically and symbol names lexically, compare direction/kind/destination constraints, and enumerate compatible bijections in that stable order. Reordering either input array leaves the first mapping and second two-solution set unchanged. Canonical ordering must not select one of the ambiguous solutions.",
+            "evidence": [
+              "C-first",
+              "C-second"
+            ]
+          }
+        ],
+        "residuals": [
+          {
+            "id": "C.anchor",
+            "unknown": "Which second-graph object is upper_loop versus lower_loop.",
+            "next": "Supply one independently source-qualified entry/object anchor or distinguishing property linking either symbol to one object. One such anchor breaks the two-way symmetry; the unqualified numeric hints and common title cannot do so.",
+            "stop_when": "Exactly one bijection remains; otherwise keep opaque identities or reject a profile that requires unique symbol assignments.",
+            "evidence": [
+              "C-label",
+              "C-second"
+            ]
+          }
+        ],
+        "compatibility": [
+          {
+            "required": "Keep distinct source-linked object identities and labelled graph edges independent of display text. Preserve both correlated second-graph associations and invalidate naming only when their actual source/graph dependencies change.",
+            "evidence": [
+              "C-first",
+              "C-second"
+            ]
+          }
+        ],
+        "outside_scope": "These are structural graph associations, not evidence of admission effects, narration, turn costs, or ordinary player reachability."
+      },
+      {
+        "id": "D",
+        "evidence": {
+          "D-bindings": "cases[id=D].bindings",
+          "d1": "cases[id=D].source_order[id=d1]",
+          "d2": "cases[id=D].source_order[id=d2]",
+          "d3": "cases[id=D].source_order[id=d3]",
+          "d4": "cases[id=D].source_order[id=d4]",
+          "d5": "cases[id=D].source_order[id=d5]",
+          "D-observation": "cases[id=D].observations",
+          "D-fault": "cases[id=D].fault_observation"
+        },
+        "ledger": [
+          {
+            "id": "D.presentation",
+            "status": "supported_link_and_control_residual_body",
+            "rule": "Invoke residual.gallery_event with mode describe; emit resource.gallery only if the callback does not handle presentation. Continue to d3 after either branch. The qualified target can be named without rediscovering transport, but its body, effects and handled outcome remain residual. The resource binding supports a conditional emit, not unconditional or cached narration with an invented output contract.",
+            "evidence": [
+              "D-bindings",
+              "d1",
+              "d2",
+              "d3"
+            ]
+          },
+          {
+            "id": "D.rejoin",
+            "status": "supported_requirement_candidate_contradicted",
+            "rule": "Before residual arrival at d4, materialize caller local1 = the selected property_address and local2 = property_length; preserve other locals. In the supplied suspended state this means caller locals [1640,4,0], not [0,0,0]. These are compatibility values derived from the resolved selection; the old selector need not be rerun. The observed values are not constants for other selections.",
+            "reason": "Arrival can suspend for nested input and checkpoints include caller locals. Equal prose, world memory and pending-input booleans therefore do not establish equivalent suspended state; the candidate already fails the supplied frame comparison.",
+            "evidence": [
+              "d3",
+              "d4",
+              "D-observation"
+            ]
+          },
+          {
+            "id": "D.completion",
+            "status": "supported_order_residual_contract",
+            "rule": "d5 action completion follows the return from residual arrival. A suspension inside d4 must retain the continuation toward d5; no turn/RNG result or scheduler behavior can be inferred from the supplied narrative/world-memory equality.",
+            "evidence": [
+              "d4",
+              "d5",
+              "D-observation"
+            ]
+          },
+          {
+            "id": "D.partial_effects",
+            "status": "supported_partial_unknown_second_effect",
+            "rule": "Actor insertion is committed. The current_scene write outcome is unknown. Report delivery failed. Preserve the completed insertion, record the second effect as unknown, and do not replay the original transition or restart a residual fallback after these mutations. Report failure does not imply rollback. A residual choice could be made safely at an earlier preflight boundary only before any effect.",
+            "evidence": [
+              "D-fault"
+            ]
+          }
+        ],
+        "residuals": [
+          {
+            "id": "D.callback_effects",
+            "unknown": "Description callback body, handled predicate, ordered effects, and any output-stream/state/time/RNG dependencies.",
+            "next": "Inspect the mode-describe slice of the already-bound residual.gallery_event, including the handled result and output/effect operations; leave unrelated modes alone.",
+            "stop_when": "That slice's relevant branches and effects are bounded or explicitly residual.",
+            "evidence": [
+              "D-bindings",
+              "d1",
+              "d2"
+            ]
+          },
+          {
+            "id": "D.suspension_completion",
+            "unknown": "Full arrival suspension/resume frame and pending-input payload, action-completion scheduler contract, and time/RNG trace.",
+            "next": "Inspect d4's nested-input live state and return boundary and d5's completion contract. Then compare one matched reference/candidate suspension, save/reload, and resumed interaction, including locals, stack, continuation, pending work, ordered output/state effects, turns and RNG. Require evidence that the proposed semantic replacement actually ran. This verification is proposed, not executed.",
+            "stop_when": "Required state matches at suspension and resume and the relevant time/RNG/effect boundaries are qualified; prose-only equality is insufficient.",
+            "evidence": [
+              "d3",
+              "d4",
+              "d5",
+              "D-observation"
+            ]
+          },
+          {
+            "id": "D.interrupted_write",
+            "unknown": "Whether current_scene changed before the failed report.",
+            "next": "Read the post-fault current_scene or a durable mutation/checkpoint record at the existing fault boundary, without rerunning insertion. Verify an interrupted realization preserves prior effects and never duplicates them.",
+            "stop_when": "The write outcome is established or explicitly remains unknown in the partial-effect result.",
+            "evidence": [
+              "D-fault"
+            ]
+          }
+        ],
+        "compatibility": [
+          {
+            "required": "Retain callback mode/handled result and output order; caller locals, actual arguments and stack; suspended callee/caller frames and return destination/value; pending input and work; object links/current scene and all checkpoint-visible state. Only the observed caller-local vector and pending booleans are supplied, so preserve the remaining residual state rather than inventing values.",
+            "evidence": [
+              "d1",
+              "d2",
+              "d3",
+              "d4",
+              "d5",
+              "D-observation",
+              "D-fault"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "E",
+        "evidence": {
+          "E1": "cases[id=E].records[id=E1]",
+          "E2": "cases[id=E].records[id=E2]",
+          "E3": "cases[id=E].records[id=E3]",
+          "E4": "cases[id=E].records[id=E4]",
+          "E5": "cases[id=E].contradictory_source[id=E5]"
+        },
+        "ledger": [
+          {
+            "id": "E1.padding",
+            "status": "contradicted_profile",
+            "value": "The payload really has five bytes and superficially gives destination 9, door 3, text 0, but its required final byte is 1 rather than 0. The supplied final-zero convention does not authorize accepting this as a qualified door exit.",
+            "next_if_acceptance_required": "Verify this final source byte and its exact edition's consuming convention; acceptance requires corrected evidence or a separately qualified interpretation, not ignoring the byte.",
+            "observation_closes_rule": "No observation is supplied; ordinary behavior would not by itself qualify the conflicting encoding.",
+            "evidence": [
+              "E1"
+            ]
+          },
+          {
+            "id": "E2.extent",
+            "status": "incomplete_record",
+            "value": "Declared size 4 conflicts with the three supplied bytes 09 21 00. Candidate destination 9 and selector 33 are present, but the packed text word is incomplete. Do not synthesize the missing byte as zero or accept a complete conditional record.",
+            "next": "Obtain the fourth payload byte with its validated source extent and edition binding; then qualify the complete record.",
+            "observation_closes_rule": "No observation is supplied; one taken travel branch could still leave the truncated refusal field unqualified.",
+            "evidence": [
+              "E2"
+            ]
+          },
+          {
+            "id": "E3.resource",
+            "status": "contradicted_reference_constraint",
+            "value": "The two-byte length is complete, but packed text value 0 violates the explicit nonzero blocked-resource constraint. This is not a default refusal, an absent property, or the packed-zero call rule, which applies to a different reference role.",
+            "next_if_acceptance_required": "Verify the typed resource field or supply an exact-source consumer contract that separately admits zero; the stated profile already rejects this record.",
+            "observation_closes_rule": "No observation is supplied; the current definition remains unqualified.",
+            "evidence": [
+              "E3"
+            ]
+          },
+          {
+            "id": "E4.missing",
+            "status": "supported_absence_residual_behavior",
+            "value": "The property is absent. Its missing-property path is omitted and cannot be replaced with the explicit two-byte blocked-record rule. One lit-room, seed-12 observation emitted 'The way is unavailable.' with turn delta 1; that is evidence for that execution only.",
+            "unknown": "The general missing-path predicate, output, state effects, return behavior, dark-context behavior, repetition, turns and RNG.",
+            "next": "Inspect the small missing-address consumer path and its relevant guard/effect dependencies. If unavailable, a qualified contrasting darkness observation could discriminate one hypothesis, but would not establish the entire general rule.",
+            "stop_when": "The requested missing-path branches are qualified or explicitly remain residual.",
+            "observation_closes_rule": false,
+            "evidence": [
+              "E4"
+            ]
+          },
+          {
+            "id": "E5.polarity",
+            "status": "contradiction_retained_edition_unqualified",
+            "value": "The four-byte record 09 21 00 00 is structurally compatible with the candidate conditional layout. Metadata says nonzero permits travel, whereas the supplied sibling consumer says zero permits travel and nonzero refuses. The latter statement is evidence about that supplied consumer, not authorization to import its rule into R88 or fixture A. Do not resolve the conflict merely by prioritizing metadata, a familiar layout, or another edition.",
+            "alternatives": [
+              "Metadata interpretation: live selector nonzero permits travel.",
+              "Supplied sibling-consumer interpretation: live selector zero permits travel, nonzero refuses."
+            ],
+            "unknown": "A single qualified source/profile/consumer binding that reconciles or explicitly rejects the metadata claim, including the live field interpretation and refusal effects.",
+            "next": "Bind the record and actual consumer to one exact edition, qualify its field layout and polarity, then correct or retain the conflicting metadata. Inspecting that selector is the smallest decisive source investigation.",
+            "stop_when": "Selected-source consumer and record qualification agree, or the conflict remains an explicit rejection.",
+            "observation_closes_rule": "No observation is supplied; a lone runtime branch would be path-specific and would not supply edition/layout qualification.",
+            "evidence": [
+              "E5"
+            ]
+          }
+        ],
+        "compatibility": [
+          {
+            "required": "Keep invalid/incomplete encodings, absent properties and contradictory editions distinct. Do not silently pad, reinterpret packed text zero, adopt R88 polarity across editions, or discard the missing-path continuation. Preserve residual execution and its state only through an already-qualified boundary; no new executable substitution is authorized by these records.",
+            "evidence": [
+              "E1",
+              "E2",
+              "E3",
+              "E4",
+              "E5"
+            ]
+          }
+        ],
+        "remaining_material_obligations": [
+          "E2 missing byte/extent",
+          "E4 missing-path semantics",
+          "E5 selected-source qualification and polarity conflict"
+        ],
+        "closed_rejections": [
+          "E1 violates final-zero profile",
+          "E3 violates nonzero resource constraint"
+        ]
+      }
+    ]
+  }
+}

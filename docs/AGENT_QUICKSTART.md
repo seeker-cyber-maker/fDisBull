@@ -35,6 +35,7 @@ fdisbull agent-skill --reference references/runtime-navigation.md
 fdisbull agent-skill --reference references/udl-uil-udc.md
 fdisbull agent-skill --reference references/recovery-research.md
 fdisbull agent-skill --reference references/semantic-contracts.md
+fdisbull agent-skill --reference references/scene-recovery.md
 fdisbull agent-skill --reference references/formats-and-media.md
 fdisbull agent-skill --skill write-gamefaqs-guide --reference references/evidence-and-provenance.md
 ```
@@ -55,7 +56,9 @@ The full skill may exceed the inline response budget and return an output
 artifact reference. Prefer the index and one selected guide for routine work;
 use the output retrieval commands below when a complete export is needed.
 The semantic-contract guide connects intent, effects, time and projection loss;
-the formats/media guide covers input mapping and qualified media reduction.
+the scene-recovery guide starts UIL extraction from required scene elements and
+bounded source dependencies. The formats/media guide covers input mapping and
+qualified media reduction.
 
 Use `write-gamefaqs-guide` to turn established investigation results into a
 human-readable review, route or mechanics reference. It preserves release
