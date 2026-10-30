@@ -8,7 +8,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 CHECK = runpy.run_path(str(ROOT/'scripts/check_dist.py'))['check_archive']
 RELEASE_FILES = runpy.run_path(str(ROOT/'scripts/build_release.py'))['release_files']
-MODULES = ('__init__.py','__main__.py','player.py','runtime.py','live.py')
+MODULES = ('__init__.py','__main__.py','player.py','runtime.py','live.py','batch.py')
 
 
 def player_wheel(path, *, omit=None, extra=None, metadata_name='fdisbull-player'):
@@ -23,8 +23,9 @@ def test_player_wheel_has_distinct_metadata_and_complete_modules(tmp_path):
     wheel=tmp_path/'fdisbull_player-1.0-py3-none-any.whl'
     player_wheel(wheel)
     assert CHECK(wheel)==len(MODULES)+1
-    player_wheel(wheel,omit='runtime.py')
-    with pytest.raises(ValueError,match='runtime[.]py'): CHECK(wheel)
+    for missing in ('runtime.py', 'batch.py'):
+        player_wheel(wheel,omit=missing)
+        with pytest.raises(ValueError,match=missing.replace('.', '[.]')): CHECK(wheel)
     player_wheel(wheel,metadata_name='fdisbull')
     with pytest.raises(ValueError,match='wrong Name'): CHECK(wheel)
 

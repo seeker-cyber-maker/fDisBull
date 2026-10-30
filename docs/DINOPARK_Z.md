@@ -8,6 +8,9 @@ documents catalogue, operating-notice and repeated-resumption checks. The earlie
 [reliability follow-up](VERIFICATION-DINOPARK-Z-RELIABILITY-2026-10-29.md)
 uses the committed 0.23 compiler source. See also the
 [0.23 integration review and proposed 0.24 priorities](Z_PLAYER_INTEGRATION_0.23_0.24.md).
+The [batch recovery interface](Z_BATCH_RECOVERY.md) adds per-step journals,
+declared action continuations and live checkpoint scene requalification.
+It keeps uncertain effects blocked until an explicit verified recovery.
 
 UDL maps original code to UIL; a UDC realizes UIL as code. Z consumes the public
 scene view. This integration exercises the first, original-backed DOS compiler:
