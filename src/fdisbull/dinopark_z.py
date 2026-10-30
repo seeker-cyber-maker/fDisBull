@@ -103,6 +103,7 @@ class ZService:
     def __init__(self, work, reader, writer, *, slot='zpark', oracle=False):
         self.work, self.reader, self.writer, self.slot = work, reader, writer, slot
         self.text = None
+        self.terminal = None
         self.epoch = secrets.token_hex(32)
         self.session_token = secrets.token_hex(32)
         self.checkpoint_failed = False
@@ -117,16 +118,20 @@ class ZService:
         self.restarted = False
         self.oracle_enabled, self.oracle_count = oracle, 0
         self.stop_reason = None
+        from .z_replies import ZReplyJournal
+        self.replies = ZReplyJournal(work)
 
     def receipt(self, status, *, complete=False):
         from fdisbull.dinopark_scenes import atomic_json
         processes=[{'pid':p.pid,'returncode':p.poll()} for p in self.processes]
+        delivery_pending = self.reply_pending
         atomic_json(self.work/'z-session.json',{
-            'status':status, 'complete':complete, 'stop_reason':self.stop_reason,
+            'status':status, 'complete':complete and not delivery_pending, 'stop_reason':self.stop_reason,
             'history':self.history, 'pending_command':self.pending['command'] if self.pending else None,
             'latest_native_save':self.latest_native_save,
             'checkpoint_recovery':'unqualified' if self.checkpoint_failed or self.recovery_required else 'qualified',
             'recovery_required':self.recovery_required, 'action_failures':self.failures,
+            'reply_delivery_pending':delivery_pending,
             'pending_effects':('applied-confirmed' if self.pending and any(e.get('phase') in
                 ('food_purchase_committed','vegasaurus_purchase_confirmed') for e in self.pending['events'])
                 else 'unknown' if self.pending else 'none-pending'),
@@ -147,6 +152,7 @@ class ZService:
 
     def ready(self, text):
         self.text = text
+        self.terminal = None
         self.session_token = secrets.token_hex(32)
         self.checkpoint_failed = False
         self.recovery_required = False
@@ -169,13 +175,67 @@ class ZService:
         if self.pending is not None and not message.startswith('Travel:'):
             self.pending['messages'].append(message)
 
+    @property
+    def reply_pending(self):
+        return self.replies.blocked
+
+    def reply_witness(self):
+        # session.status observes the existing stopped native session. No scene
+        # readback, run, input, checkpoint restore or new guest is permitted here.
+        try:
+            debug = self.text.debug
+            native = debug.call('session.status')
+            stop = native.get('last_stop', native.get('stop_reason'))
+            if (not isinstance(stop, dict) or not isinstance(stop.get('kind'), str)
+                    or not stop['kind'] or len(stop['kind']) > 64
+                    or not isinstance(native.get('session_id'), str)
+                    or native.get('state') not in ('stopped', 'exited')
+                    or type(native.get('state_revision')) is not int or native['state_revision'] < 0):
+                return None
+            witness = {'epoch': self.epoch, 'session_token': self.session_token,
+                       'run': debug.run_id,
+                       'native': {**{k: native.get(k) for k in
+                                      ('session_id', 'state', 'state_revision')},
+                                  'stop_reason': stop}}
+            from .z_replies import encoded
+            return witness if len(encoded(witness)) <= 8192 else None
+        except Exception:
+            return None
+
+    def reply_command(self, request):
+        op = request.get('op')
+        if op == 'reply_status' and set(request) == {'op'}:
+            return self.replies.status()
+        if op == 'read_reply' and {'op', 'reply_id'} <= set(request) <= {'op', 'reply_id', 'offset', 'length'}:
+            return self.replies.read(request['reply_id'], request.get('offset', 0), request.get('length', 8192))
+        if op == 'select_reply' and {'op', 'reply_id'} <= set(request) <= {'op', 'reply_id', 'pointer'}:
+            return self.replies.select(request['reply_id'], request.get('pointer', ''))
+        if op == 'accept_reply' and set(request) == {'op', 'reply_id', 'sha256'}:
+            return self.replies.accept(request['reply_id'], request['sha256'], self.reply_witness())
+        raise ValueError('Invalid reply request')
+
     def send(self, result):
-        data = json.dumps(result, ensure_ascii=False, separators=(',', ':'))+'\n'
-        if len(data.encode()) > LIMIT:
-            data = '{"complete":false,"status":"incomplete","message":"Response exceeds the Z budget; inspect private evidence."}\n'
-        with (self.work/'z-protocol.jsonl').open('a',encoding='utf-8') as journal:
-            journal.write(data)
-        self.writer.write(data); self.writer.flush()
+        from .z_replies import encoded
+        data = encoded(result) + b'\n'
+        if len(data) > LIMIT:
+            try:
+                status = result.get('status')
+                execution = {'returned': True,
+                             'complete': result.get('complete') if type(result.get('complete')) is bool else None,
+                             'status': status if isinstance(status, str) and len(status) <= 48 else None}
+                result = self.replies.retain(data[:-1], self.reply_witness(), execution)
+            except Exception:
+                self.replies.unavailable()
+                result = {
+                    'complete': False, 'status': 'reply-unavailable', 'delivery_pending': True,
+                    'retry_safe': False, 'message': 'Reply retention failed; do not replay the action.'}
+            data = encoded(result) + b'\n'
+        if len(data) > LIMIT:
+            raise ValueError('Z reply exceeds delivery budget')
+        text = data.decode('utf-8')
+        with (self.work/'z-protocol.jsonl').open('a', encoding='utf-8') as journal:
+            journal.write(text)
+        self.writer.write(text); self.writer.flush()
 
     def public_message(self, text):
         # Legacy saved-park responses include local evidence paths. Keep them private.
@@ -218,6 +278,8 @@ class ZService:
         return None
 
     def objects(self):
+        if self.terminal is not None and self.terminal.phase != 'live':
+            return self.terminal.objects()
         view = self.text.current
         objects = []
         bindings = {}
@@ -255,6 +317,8 @@ class ZService:
         if view in ('street','park'):
             add('time','time',[], 'Advance one bounded original-game interval.', {'advance':'advance time'})
             add('notice','notice',[], 'Acknowledge a currently recognized notice.', {'acknowledge':'acknowledge notice'})
+        if view == 'office':
+            add('terminal-menu', 'game menu', ['menu'], 'Open the original menu to resume or leave this park.', {'open':'terminal:open'})
         add('saves','saves',[], 'List named native saves in this private session library.', {'list':'list saves'})
         for name in self.native_save_names():
             add('save-'+name, 'saved park '+name, [name],
@@ -288,6 +352,15 @@ class ZService:
         try:
             if (self.checkpoint_failed or self.recovery_required) and not recovering:
                 raise ValueError('Checkpoint recovery is unqualified')
+            if self.terminal is not None and self.terminal.phase != 'live':
+                (title, description), revision = self.terminal.view()
+                context = 'terminal.' + self.terminal.phase
+                token = hashlib.sha256(json.dumps([self.epoch, self.session_token, self.revision,
+                    context, revision, getattr(self.text.debug, '_runtime_epoch', None)]).encode()).hexdigest()
+                objects, _ = self.objects()
+                return {'complete':True,'session_token':self.session_token,
+                        'context':{'id':context,'token':token,'title':title,'description':description},
+                        'objects':objects,'inventory':[],'coverage':{'partial':True}}
             modal = False
             parking = getattr(self.text, 'pending_food_notice', False) and self.text.current == 'dino_diner'
             if parking:
@@ -426,6 +499,8 @@ class ZService:
             return {'complete':False,'status':'incomplete'}
         try:
             if op == 'save':
+                if self.terminal is not None and self.terminal.phase != 'live':
+                    raise ValueError('Live checkpoints require a qualified park scene')
                 if self.checkpoint_failed or self.recovery_required:
                     raise ValueError('Prior checkpoint restore incomplete')
                 if len(self.snapshots) >= 64 and name not in self.snapshots:
@@ -451,6 +526,8 @@ class ZService:
                 self.checkpoint_failed = True
                 self.revision += 1
                 self.text.debug.load_state(snapshot['artifact'])
+                if self.terminal is not None:
+                    self.terminal.reset_after_restore()
                 for key,value in snapshot['text'].items(): setattr(self.text,key,deepcopy(value))
                 self.latest_native_save = snapshot['latest_native_save']
                 restored_fields = load_scenes().live_saved_fields(self.text.debug)
@@ -492,7 +569,7 @@ class ZService:
             return {'complete':False,'status':'incomplete','message':'Checkpoint unavailable; inspect private evidence.'}
 
     def command(self):
-        if self.pending is not None:
+        if self.pending is not None and not self.reply_pending:
             self.finish()
         while True:
             line = self.reader.readline(65537)
@@ -503,6 +580,18 @@ class ZService:
                 request = json.loads(line)
                 if not isinstance(request,dict): raise ValueError('Expected request')
                 op = request.get('op')
+                if op in ('reply_status', 'read_reply', 'select_reply', 'accept_reply'):
+                    try:
+                        self.send(self.reply_command(request))
+                    except (OSError, ValueError, KeyError):
+                        self.send({'complete': False, 'status': 'unresolved', 'delivery_pending': self.reply_pending,
+                                   'retry_safe': False, 'message': 'Reply unavailable or invalid; no input sent.'})
+                    continue
+                if self.reply_pending:
+                    try: self.send(self.replies.status())
+                    except (OSError, ValueError, KeyError):
+                        self.send({'complete': False, 'status': 'reply-unavailable', 'delivery_pending': True, 'retry_safe': False})
+                    continue
                 if op == 'observe' and set(request) == {'op'}:
                     self.send(self.observe()); continue
                 if op in ('save','load') and set(request) <= {'op','slot' if op == 'save' else 'checkpoint'}:
@@ -530,9 +619,45 @@ class ZService:
                 self.pending = {'command':command,'messages':[],'events':[], 'session_token':self.session_token}
                 self.restarted = False
                 self.receipt('acting')
+                if command.startswith('terminal:'):
+                    self.terminal_command(command.removeprefix('terminal:'))
+                    continue
                 return command
             except (ValueError,TypeError,KeyError):
                 self.send({'complete':False,'status':'incomplete','message':'Invalid Z request; no input sent.'})
+
+    def terminal_command(self, action):
+        from .dinopark_terminal import TerminalScenes
+        try:
+            if self.terminal is None:
+                self.terminal = TerminalScenes(self.text)
+            result = self.terminal.perform(action)
+            self.revision += 1
+            if result.get('complete'):
+                observed = self.observe()
+                witness = self.witness(observed)
+                if witness is None:
+                    raise RuntimeError('Terminal result observation incomplete; outcome unknown')
+                result['witness'] = witness
+            if self.terminal.phase in ('live','menu','confirm','save'):
+                self.oracle('terminal-complete')
+            self.pending = None
+            self.receipt('terminal-' + self.terminal.phase)
+            self.send(result)
+        except Exception as error:
+            # Delivery failures after pending was cleared must never rerun the
+            # input or be turned into a second producer result.
+            if self.pending is None:
+                raise
+            if not self.action_error(error):
+                command = self.pending['command']
+                self.pending = None
+                self.recovery_required = True
+                self.failures.append({'command':command,'effects':'unknown',
+                                      'diagnostic':'terminal action failure','restored_by':None})
+                self.receipt('recovery-required')
+                self.send({'complete':False,'status':'incomplete','effects':'unknown',
+                           'recovery_required':True,'message':'Terminal outcome unknown; no input will be replayed.'})
 
     def action_error(self, error):
         """Keep only a reachable, paused native guest for explicit recovery."""
@@ -628,7 +753,7 @@ def main(argv=None):
                         on_ready=service.ready,on_event=service.event,on_spawn=service.spawned,
                         on_action_error=service.action_error,
                         recovery_required=lambda:service.recovery_required or service.checkpoint_failed)
-        status='recovery-required' if service.recovery_required or service.checkpoint_failed else 'completed'
+        status='recovery-required' if service.recovery_required or service.checkpoint_failed or service.reply_pending else 'completed'
         return 0 if status == 'completed' else 1
     except scenes.SceneInterrupted:
         status='interrupted'

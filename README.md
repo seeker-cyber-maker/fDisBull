@@ -181,11 +181,17 @@ in the published 0.24.0 packages.
 
 The [DinoPark Z provider](docs/DINOPARK_Z.md) lets an agent borrow and repay,
 buy supplies, prepare a pen, hire a guide, open the park and save its progress
-through a bounded text interface. The original-backed compiler reconstructs
+through a bounded text interface. [Named menu and quit actions](docs/DINOPARK_Z_TERMINAL_ACTIONS.md)
+let an agent review the original prompts, cancel a quit request, leave a park
+and return to DOS. The original-backed compiler reconstructs
 your own qualified game files before play, and the original engine performs
 the actions. Bring the game and a compatible native backend. See the
 [native verification and coverage limits](docs/VERIFICATION-DINOPARK-Z-RELIABILITY-2026-10-29.md)
 and [v0.23 merge-readiness checks](docs/VERIFICATION-Z-V023-MERGE-READINESS.md).
+
+A separate [static-analysis study](docs/DINOPARK_STATIC_ANALYSIS_FRICTION.md)
+records whole-binary discovery limits and proposed tool improvements. Its code
+and resource candidates remain unconfirmed; it does not extend playable coverage.
 
 [Recoverable Z batches](docs/Z_BATCH_RECOVERY.md) retain per-step effects,
 resume explicitly declared notice continuations and rewind only after a
@@ -197,6 +203,10 @@ certify that the original intent is complete. Such batch steps remain paused
 for reconciliation, and aliases cannot be used to resend the original action.
 If a result read fails, read-only reconciliation can verify a saved reply in the
 same guest before the batch continues.
+The DinoPark bridge also [retains oversized replies](docs/Z_REPLY_RECOVERY.md)
+before transmission, with read-only retrieval and a delivery hold that prevents
+further actions until the caller acknowledges the retained result against the
+same native session.
 
 The [funded26k recovery path](docs/DINOPARK_FUNDED_RECOVERY.md) preserves a confirmed
 food purchase across its quarter notice and keeps a paused provider available
