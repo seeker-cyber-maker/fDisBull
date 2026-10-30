@@ -103,6 +103,7 @@ class ZService:
     def __init__(self, work, reader, writer, *, slot='zpark', oracle=False):
         self.work, self.reader, self.writer, self.slot = work, reader, writer, slot
         self.text = None
+        self.terminal = None
         self.epoch = secrets.token_hex(32)
         self.session_token = secrets.token_hex(32)
         self.checkpoint_failed = False
@@ -151,6 +152,7 @@ class ZService:
 
     def ready(self, text):
         self.text = text
+        self.terminal = None
         self.session_token = secrets.token_hex(32)
         self.checkpoint_failed = False
         self.recovery_required = False
@@ -276,6 +278,8 @@ class ZService:
         return None
 
     def objects(self):
+        if self.terminal is not None and self.terminal.phase != 'live':
+            return self.terminal.objects()
         view = self.text.current
         objects = []
         bindings = {}
@@ -313,6 +317,8 @@ class ZService:
         if view in ('street','park'):
             add('time','time',[], 'Advance one bounded original-game interval.', {'advance':'advance time'})
             add('notice','notice',[], 'Acknowledge a currently recognized notice.', {'acknowledge':'acknowledge notice'})
+        if view == 'office':
+            add('terminal-menu', 'game menu', ['menu'], 'Open the original menu to resume or leave this park.', {'open':'terminal:open'})
         add('saves','saves',[], 'List named native saves in this private session library.', {'list':'list saves'})
         for name in self.native_save_names():
             add('save-'+name, 'saved park '+name, [name],
@@ -346,6 +352,15 @@ class ZService:
         try:
             if (self.checkpoint_failed or self.recovery_required) and not recovering:
                 raise ValueError('Checkpoint recovery is unqualified')
+            if self.terminal is not None and self.terminal.phase != 'live':
+                (title, description), revision = self.terminal.view()
+                context = 'terminal.' + self.terminal.phase
+                token = hashlib.sha256(json.dumps([self.epoch, self.session_token, self.revision,
+                    context, revision, getattr(self.text.debug, '_runtime_epoch', None)]).encode()).hexdigest()
+                objects, _ = self.objects()
+                return {'complete':True,'session_token':self.session_token,
+                        'context':{'id':context,'token':token,'title':title,'description':description},
+                        'objects':objects,'inventory':[],'coverage':{'partial':True}}
             modal = False
             parking = getattr(self.text, 'pending_food_notice', False) and self.text.current == 'dino_diner'
             if parking:
@@ -484,6 +499,8 @@ class ZService:
             return {'complete':False,'status':'incomplete'}
         try:
             if op == 'save':
+                if self.terminal is not None and self.terminal.phase != 'live':
+                    raise ValueError('Live checkpoints require a qualified park scene')
                 if self.checkpoint_failed or self.recovery_required:
                     raise ValueError('Prior checkpoint restore incomplete')
                 if len(self.snapshots) >= 64 and name not in self.snapshots:
@@ -509,6 +526,8 @@ class ZService:
                 self.checkpoint_failed = True
                 self.revision += 1
                 self.text.debug.load_state(snapshot['artifact'])
+                if self.terminal is not None:
+                    self.terminal.reset_after_restore()
                 for key,value in snapshot['text'].items(): setattr(self.text,key,deepcopy(value))
                 self.latest_native_save = snapshot['latest_native_save']
                 restored_fields = load_scenes().live_saved_fields(self.text.debug)
@@ -600,9 +619,45 @@ class ZService:
                 self.pending = {'command':command,'messages':[],'events':[], 'session_token':self.session_token}
                 self.restarted = False
                 self.receipt('acting')
+                if command.startswith('terminal:'):
+                    self.terminal_command(command.removeprefix('terminal:'))
+                    continue
                 return command
             except (ValueError,TypeError,KeyError):
                 self.send({'complete':False,'status':'incomplete','message':'Invalid Z request; no input sent.'})
+
+    def terminal_command(self, action):
+        from .dinopark_terminal import TerminalScenes
+        try:
+            if self.terminal is None:
+                self.terminal = TerminalScenes(self.text)
+            result = self.terminal.perform(action)
+            self.revision += 1
+            if result.get('complete'):
+                observed = self.observe()
+                witness = self.witness(observed)
+                if witness is None:
+                    raise RuntimeError('Terminal result observation incomplete; outcome unknown')
+                result['witness'] = witness
+            if self.terminal.phase in ('live','menu','confirm','save'):
+                self.oracle('terminal-complete')
+            self.pending = None
+            self.receipt('terminal-' + self.terminal.phase)
+            self.send(result)
+        except Exception as error:
+            # Delivery failures after pending was cleared must never rerun the
+            # input or be turned into a second producer result.
+            if self.pending is None:
+                raise
+            if not self.action_error(error):
+                command = self.pending['command']
+                self.pending = None
+                self.recovery_required = True
+                self.failures.append({'command':command,'effects':'unknown',
+                                      'diagnostic':'terminal action failure','restored_by':None})
+                self.receipt('recovery-required')
+                self.send({'complete':False,'status':'incomplete','effects':'unknown',
+                           'recovery_required':True,'message':'Terminal outcome unknown; no input will be replayed.'})
 
     def action_error(self, error):
         """Keep only a reachable, paused native guest for explicit recovery."""
