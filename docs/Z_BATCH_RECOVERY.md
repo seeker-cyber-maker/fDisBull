@@ -35,12 +35,15 @@ and executes only pending steps in the same provider session. Changing the plan
 or attaching a different native guest is refused. A verified public native-load
 handoff can change the session token; prior live checkpoints then cease to apply.
 
-`resume()` never resends a paused step's original command. It observes the fresh
+`resume()` never implicitly resends a paused step's original command. It observes the fresh
 public context and may execute only the continuation explicitly declared for
 that context. Each declared continuation command can run once per step. Its
 result remains a separate attempt. `expect_context` is a goal: acknowledging a
 notice on the street does not complete a goal requiring arrival in the park.
 The plan must explicitly authorize any additional travel as a new intent.
+The per-call resume budget permits one declared continuation followed by up to
+`max_steps` pending plan steps. Count all command attempts, including discarded
+branches and continuations, when applying an external benchmark action budget.
 Pause reasons distinguish `continuation-required` from `destination-mismatch`;
 the latter can retain a confirmed effect even though the requested scene goal
 was not met. An interrupted dispatch is `unknown`, never a pending notice.
@@ -96,6 +99,8 @@ already caller-selected. Batch mode is separate from model-turn `--live` mode.
   alone cannot resurrect a dead DOSBox process or reverse external effects.
   Native `save park`/named `load` remain the durable park-resumption mechanism.
   New native guests require a new batch or a verified native-load handoff.
+- Serialize batches that share one provider. The filesystem lock protects one
+  journal; it does not make a shared backend connection safe for concurrent use.
 - Limits: 128 plan steps, 16 attempts per step, eight declared context handlers
   per step, 32 checkpoints, 128 recovery-history entries, four MiB journal.
 
