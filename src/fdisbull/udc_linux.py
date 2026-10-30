@@ -133,7 +133,7 @@ def build_linux_shell(plan,modules,destination,*,service_adapters=None,capture_s
     image=bytes(header)+text+bytes(rdata)+data
     manifest={'format':'fdisbull-native-shell-build-1','profile':PROFILE,'plan_sha256':_sha(_json(plan)),'modules_sha256':_sha(_json(modules)),
       'c_modules':c_modules,'target':{'format':'ELF64','arch':'x86-64','image_base':hex(BASE),'load_profile':'static ET_EXEC; Linux syscalls; no unwind profile','original_binary_wrapped':False},
-      'output':{'path':'program','sha256':_sha(image),'size':len(image)},
+      'output':{'path':'program','absolute_path':str(destination/'program'),'sha256':_sha(image),'size':len(image)},
       'abi':{'private_arena':'RCX','private_result':'EAX','private_status':'EDX','public_adapter':'SysV RDI=arena, RAX=(status<<32)|u16-result','adapter_rva':0x1800},
       'state':{n:{'rva':symbols['state']+offsets[n],'carrier_bits':16,**plan['state'][n]} for n in cells},
       'slots':{c.prefix:{'rva':c.base,'file_offset':c.base,'size':SLOT,'sha256':_sha(text[c.base-0x1000:c.base-0x1000+SLOT]),'used_bytes':len(c.data),'source_map':c.maps} for c in codes},
