@@ -4,19 +4,48 @@ Read this reference only when the task is to relate source operations to a
 shared interaction representation or test a bounded source block. It is not a
 general compiler manual.
 
+## Contents
+
+- [Keep the terms separate](#keep-the-terms-separate)
+- [Preserve the accepted compiler priority](#preserve-the-accepted-compiler-priority)
+- [Current DOS block boundary](#current-023-dos-block-boundary)
+- [Read a proof narrowly](#read-a-proof-narrowly)
+- [Bytecode inspection and runtime qualification](#do-not-conflate-bytecode-inspection-with-runtime-qualification)
+
 ## Keep the terms separate
 
 - **UDL** is the source-to-shared-IL mapping role.
 - **UIL** is the candidate shared-IL program.
-- **UDC** is the DOS original-backed compiler definition that checks a UIL
-  candidate and can select its retained original backing.
+- **UDC** is a target compiler definition that reads UIL and binds its declared
+  behavior to an implementation. The currently qualified fDisBull target checks
+  a candidate and can select retained original DOS block backings.
 
 For v1 `fdisbull-il-1`, UDL and UIL are role metadata over the same primitive
 nodes and evaluator; changing role does not perform a translation. The separate
 interaction evaluator validates an authored program and may return
 `pending_host` for graphic, sound or input effects. It does not perform those
 side effects or establish correspondence with a game's behavior. See
-`INTERACTION_IL.md` for the complete schema and limits.
+source-checkout `docs/INTERACTION_IL.md` for the complete schema and limits.
+
+## Preserve the accepted compiler priority
+
+Start with the supported original-backed DOS path: capture unchanged native
+blocks and source identities, retain opaque dependencies and explicit resources,
+then qualify bounded ASM-to-UIL mappings at the declared source/effect boundary
+before selecting a backing on a semantic-equivalence claim. An unmapped
+byte-preserving baseline remains `original_bytes_only`; unsupported edits
+remain refused.
+
+The supported reduced-C route retains its derivation from the ASM lift and its
+shared decoder lineage. Generated DOS lowering, richer process/object models,
+automatic cross-language propagation and compiler learning remain future work.
+Separately authored Rust/JavaScript/Python examples are conformance seeds, not
+existing general translators or the first implementation target.
+
+Qualification precedes optimization: compare candidates with compatible
+semantic, input-domain, capability and assurance contracts, then measure cost
+on comparable inputs and conditions. Retain unsupported effects and the
+original-backed fallback; an unmeasured candidate is not free.
 
 ## Current 0.23 DOS block boundary
 
@@ -45,6 +74,15 @@ Every path, binding, register interface and source extent is caller-supplied.
 Check the source offset against the exact original bytes before mapping a real
 program. A small supported sequence in one file does not establish a function,
 reachable path, calling convention or complete game rule.
+
+A qualified block can explain part of an operation without establishing its
+complete intent. Use [semantic-contracts.md](semantic-contracts.md) to retain
+guards, intermediate effects, interface/event evidence, time and persistence.
+For a source claim, inspect the relevant control, read/write and helper
+dependencies under a satisfiable domain. Unresolved relevant helpers block a
+complete-handler claim; an independently supported narrower output claim may
+still be useful. Label manually authored models as such and keep unsupported
+operations explicit. This reasoning does not expand the installed lift profile.
 
 Persisting and using an original-backed DOS definition is intentionally more
 explicit:
@@ -79,8 +117,8 @@ The bounded C-like route is a view from the supported ASM lift. It shares the
 ASM decoder and uses a separate restricted statement reader; it is not a general
 C/C++ decompiler or an independent source oracle. Retain the derivation and
 numeric assumptions when comparing C and ASM models. More details and test
-receipts live in the source documentation `UDC_DOS.md`, `UDC_TESTING.md`,
-`BOUNDED_PROOFS.md` and `VERIFICATION-0.23.md`.
+receipts live in source-checkout `docs/UDC_DOS.md`, `docs/UDC_TESTING.md`,
+`docs/BOUNDED_PROOFS.md` and `docs/VERIFICATION-0.23.md`.
 
 ## Do not conflate bytecode inspection with runtime qualification
 
@@ -91,4 +129,4 @@ claim, qualify the file-to-memory or interpreter-fetch link and trace the
 relevant branch and effect. A byte sequence that resembles a proximity guard is
 not enough to authorize a semantic mapping or guard waiver. See the interpreter
 and cross-file sections in [methodology.md](methodology.md) and the AGI source
-documentation `AGI_LOGIC.md`.
+documentation `docs/AGI_LOGIC.md`.

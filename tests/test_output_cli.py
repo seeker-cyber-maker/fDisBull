@@ -72,6 +72,56 @@ def test_server_bounds_each_line_and_continues_with_a_selective_query(tmp_path):
     assert small['id']=='small' and small['result']['format']=='fdisbull-skill-index-1'
 
 
+def test_full_skill_export_round_trips_through_output_artifact(tmp_path):
+    root = Path(__file__).resolve().parents[1]
+    skill_root = root / 'src/fdisbull/skills/fdisbull-investigate'
+    expected_files = {
+        path.relative_to(skill_root).as_posix(): path.read_text(encoding='utf-8')
+        for path in skill_root.rglob('*.md')
+    }
+    environment = dict(
+        os.environ, PYTHONPATH=str(root / 'src'), PYTHONDONTWRITEBYTECODE='1',
+        FDISBULL_OUTPUT_ARTIFACT_DIR=str(tmp_path / 'outputs'),
+    )
+    command = [sys.executable, '-m', 'fdisbull']
+
+    # Exercise the actual bundle through the bounded public interface.
+    emitted = subprocess.run(
+        [*command, '--max-output-bytes', '4096', 'agent-skill'],
+        text=True, capture_output=True, env=environment, cwd=tmp_path, timeout=10,
+    )
+    assert emitted.returncode == 0, emitted.stderr
+    assert len(emitted.stdout.encode()) <= 4096
+    reference = json.loads(emitted.stdout)['result']
+    assert reference['format'] == 'fdisbull-output-ref-1'
+    assert reference['status'] == 'artifact_required'
+    artifact = reference['artifact']['id']
+
+    # Recovery must work in a new process and preserve every byte of each guide.
+    destination = tmp_path / 'complete-skill.json'
+    exported = subprocess.run(
+        [*command, 'output-export', artifact, str(destination)],
+        text=True, capture_output=True, env=environment, cwd=tmp_path, timeout=10,
+    )
+    assert exported.returncode == 0, exported.stderr
+    recovered = json.loads(destination.read_text(encoding='utf-8'))
+    assert recovered['ok'] is True
+    assert recovered['result'] == {
+        'name': 'fdisbull-investigate', 'files': expected_files,
+    }
+
+    # JSON Pointer escaping lets a consumer retrieve just one newly added guide.
+    selected = subprocess.run(
+        [*command, 'output-select', artifact,
+         '/result/files/references~1semantic-contracts.md', '--max-bytes', '16384'],
+        text=True, capture_output=True, env=environment, cwd=tmp_path, timeout=10,
+    )
+    assert selected.returncode == 0, selected.stderr
+    selection = json.loads(selected.stdout)['result']
+    assert selection['complete'] is True
+    assert selection['value'] == expected_files['references/semantic-contracts.md']
+
+
 def test_invalid_configuration_refuses_before_a_mutation(tmp_path,monkeypatch,capsys):
     from fdisbull.project import Project
     binary=tmp_path/'GAME.COM';binary.write_bytes(bytes.fromhex('b8004ccd21'))

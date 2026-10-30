@@ -27,6 +27,8 @@ REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scrip
                        'src/fdisbull/skills/fdisbull-investigate/references/proofs.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/workflows.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/recovery-research.md',
+                       'src/fdisbull/skills/fdisbull-investigate/references/semantic-contracts.md',
+                       'src/fdisbull/skills/fdisbull-investigate/references/formats-and-media.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/udl-uil-udc.md')
 UDC_EVIDENCE_FILES = {
     'docs/evidence/udc-2026-10-29/dino.json',
@@ -84,6 +86,8 @@ def test_distribution_check_requires_runtime_navigation_reference(tmp_path):
     'AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md',
     'src/fdisbull/skills/fdisbull-investigate/references/workflows.md',
     'src/fdisbull/skills/fdisbull-investigate/references/udl-uil-udc.md',
+    'src/fdisbull/skills/fdisbull-investigate/references/semantic-contracts.md',
+    'src/fdisbull/skills/fdisbull-investigate/references/formats-and-media.md',
 ])
 def test_distribution_check_requires_agent_onboarding_resources(tmp_path,required):
     check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
