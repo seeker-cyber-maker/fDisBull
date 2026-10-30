@@ -1,0 +1,150 @@
+{
+  "baseline_main": "f159252761150ca2dd95eb12e16e515ce33f74fd",
+  "checks": {
+    "authored_native_backend": {
+      "passed": 13,
+      "scope": "exit/watch/state/layer; overlaps other selection"
+    },
+    "focused_required_native": {
+      "junit_sha256": "2a595ee3808ef7ff294ea4d087cd106867f06f2dc3688f4e97bcdee9bc317f3c",
+      "passed": 208,
+      "skipped": 0
+    },
+    "independent_source": {
+      "passed": 98,
+      "scope": "bounded portable review"
+    },
+    "runtime_packages": {
+      "both_installed_skills_passed": true,
+      "core_payload_files": 161,
+      "core_sha256": "5fbe019d883fd80470c119f484ddb9752dc41a7b31a0153ab60602cf4dc1aa9b",
+      "player_payload_files": 9,
+      "player_sha256": "f60b98fd71aeaf26a9c38914619f01ce3f992eab03727f3e67d221888bbe08f1",
+      "source_zip_files": 568
+    }
+  },
+  "dinopark": {
+    "behaviors": {
+      "continuation": "one ACK input completed pending return; purchase not repeated",
+      "incomplete_reply": "unknown/unresolved; no repeated BUY",
+      "lost_reply": "unknown/unresolved; no repeated BUY",
+      "purchase_read_failure": "server returned accepted/applied-confirmed purchase; journal result unknown after injected client follow-up read error",
+      "purchase_reconciliation": "one observe-only reconciliation; effect preserved; no repeated BUY",
+      "restore_after_client_read_failure": "durable complete/replay-safe certificate retained; native20 proof passed; exactly one LOAD in CLI branch; follow-up reconciliation verified without another LOAD"
+    },
+    "certified_native_restores": 3,
+    "distinct_confirmed_purchases": {
+      "cash_delta_each": -500,
+      "confirmations_each": 1,
+      "count": 4,
+      "small_food_delta_each": 20,
+      "source": "native original-game operation records; explicit restores separate branches"
+    },
+    "driver_adaptation_sha256": "83e71c1ab017b4e8a71eec712f465ae89968ba4af9431b19f6940bad8c6e35c8",
+    "elapsed_seconds": 88.97,
+    "explicit_cleanup": true,
+    "final_audit_checks": {
+      "actual_worker_imports_match": true,
+      "all_branch_action_count": true,
+      "all_required_phases_completed": true,
+      "cleanup_complete": true,
+      "exactly_one_response_per_request": true,
+      "installed_payloads_unchanged": true,
+      "native_completed": true,
+      "native_exit_zero": true,
+      "no_owned_survivors": true,
+      "no_unsolicited_EOF_response": true,
+      "nonobserve_budget": true,
+      "one_native_guest": true,
+      "original_game_unchanged": true,
+      "original_seed_unchanged": true,
+      "provider_request_budget": true,
+      "quiet_actual_launches_logs": true,
+      "service_completed": true,
+      "wall_budget": true,
+      "worker_exit_zero": true
+    },
+    "independent_purchase_audit_sha256": "b415c42f8f44f8ecc22c1001077efcb7ec7d988b659ba865428e8434865375e5",
+    "independent_raw_audit_sha256": "ee0f2ee51d45aca6455f685f1ec06ba5560326a7a7f8f3c1c7020b863e47e301",
+    "input_sha256": {
+      "funded26k_seed_sha256": "94bad1065e7dfc00be6c6e4deb84074b55c9f8b7f0f7f1e6d2aaa083d37b82a9",
+      "private_game_executable_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+      "seed_metadata_sha256": "ab5ec10821c6a77bc20620019bc1f10d238fa46f8a24e89b14a6262066d4d037"
+    },
+    "native_guests": 1,
+    "native_witness_invariants": [
+      "captured_ticks_equal",
+      "frame_id_equal",
+      "native20_equal",
+      "native_pid_equal",
+      "native_run_equal",
+      "native_state_revision_equal",
+      "provider_session_equal",
+      "worker_pid_equal"
+    ],
+    "natural_game_exit_tested": false,
+    "normal_original_orders": 4,
+    "original_input_inventory_unchanged": {
+      "game_files": 192,
+      "passed": true,
+      "seed_files": 2
+    },
+    "player_commands_including_superseded": 8,
+    "provider_operations": {
+      "act": 8,
+      "load": 3,
+      "observe": 65,
+      "save": 1
+    },
+    "provider_requests": 77,
+    "raw_final_audit_sha256": "e8cd4a7632f09fd6656748b88ac1ffec2dddb41eff5f04caa518923bdccee4f1",
+    "raw_receipt_sha256": "680d9c595e54c4cf6192994ffd7e3d49ad65341d3de3001d163ba3e66b323c00",
+    "reconcile_intervals": 10,
+    "stale_earlier_restore_result": {
+      "fresh_restore_equivalence_claimed": false,
+      "new_checkpoint_load_requested": false,
+      "requested_operation": "reconcile journal after intervening action",
+      "result": "not-needed/no-unresolved-readback"
+    },
+    "status": "all_driver_phases_and_final_audit_passed"
+  },
+  "exclusions": [
+    "original game/story files",
+    "saved machine states",
+    "byte-retaining project databases",
+    "raw private transcripts and deliveries"
+  ],
+  "format": "fdisbull-integration-verification-1",
+  "initial_environment_failure": {
+    "actual_native_guests": 0,
+    "cause": "Pillow absent from package-audit environment; worker import failed before native launch",
+    "player_action_attempts": 0,
+    "repair": "separate complete isolated runtime from same candidate and genuine local wheels",
+    "unanswered_observe_attempts": 1,
+    "unknown_journal_preserved": true
+  },
+  "intake": {
+    "PR33": "8655d1c30a318323e5e1de8488bd92899e3ef96c",
+    "PR34": "9e36da70ffd59dd3484a391b8132b809ef9bf87c",
+    "PR35": "ff4f08a6d4b337070b6e23ba403391366fb1e3e9"
+  },
+  "limits": [
+    "One bounded assisted original-game recovery experiment, not a new-game campaign or whole-game equivalence.",
+    "Faults were declared verifier injections outside actual JSON transport.",
+    "Cleanup exit is separate from selected DOS target termination.",
+    "Package/portable/native test selections overlap and must not be summed.",
+    "Exact final source/package/ordinary and full native Linux CI are subsequent gates; annotation and Actions record their readback."
+  ],
+  "native_backend": {
+    "binary_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+    "build_log_sha256": "47b86a14213f6fb1a31dd4e41ab58723ec1c482f2c1d30b9a952220b85bf675b",
+    "host_architecture": "arm64",
+    "layers_manifest_sha256": "15d6d3bb7155ff1dc3f325dee938e9a7223b686d1b0342aa13281ec54e6b6c2e",
+    "layers_patch_sha256": "2e46d11ede99724459628c6568d5e7b2de2d1cba21d80fd0cc150db3a564b363",
+    "manifest_source_files": 33,
+    "manifest_source_files_verified": true,
+    "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969"
+  },
+  "runtime_cut": "85ea5264f658db15ee75af8c279212e36fd0880c",
+  "version": "0.26.1"
+}

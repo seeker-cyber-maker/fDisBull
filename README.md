@@ -1,6 +1,6 @@
 # fDisBull
 
-This checkout contains the **0.26.1 source candidate**: read-only recovery
+This checkout contains the **0.26.1 release source**: read-only recovery
 reconciliation, selected DOS program-exit reporting and broader game-guide
 workflows. See the [0.26.1 notes](docs/RELEASE-0.26.1.md) for scope and gates.
 The published and shared installation is
