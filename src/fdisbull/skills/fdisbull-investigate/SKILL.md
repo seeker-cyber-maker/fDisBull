@@ -30,6 +30,8 @@ supported; unrelated exhaustive decoding is not a substitute. Check the installe
 methods and backend capabilities before using guidance from a newer proposal.
 For archives, executable mappings or media reduction, read
 [references/formats-and-media.md](references/formats-and-media.md).
+For source or cross-edition concept searches, read
+[references/source-and-concepts.md](references/source-and-concepts.md).
 
 Use [references/workflows.md](references/workflows.md) to choose between static
 analysis, native investigation, scenes and text workflows. For research-led

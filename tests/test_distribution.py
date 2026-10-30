@@ -62,6 +62,8 @@ REQUIRED_SOURCE_FILES += tuple(sorted(INTEGRATION_EVIDENCE_FILES))
 REQUIRED_SOURCE_FILES += ('docs/uil-rfcs/0002/vectors.json',
                           'docs/uil-rfcs/0002/replay-summary.json')
 REQUIRED_SOURCE_FILES += ('docs/evidence/integration-026/verification.json',)
+REQUIRED_SOURCE_FILES += ('docs/evidence/source-search-pilot/verification.json',
+                          'src/fdisbull/skills/fdisbull-investigate/references/source-and-concepts.md')
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):

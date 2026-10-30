@@ -99,6 +99,11 @@ files, record types and links, and export disassembly and control-flow images
 from stored state without operating a GUI. See [architecture](docs/ARCHITECTURE.md)
 and [external files](docs/EXTERNAL_FILES.md).
 
+The [source catalog](docs/SOURCE_CONCEPT_SEARCH.md) adds private source snapshots,
+concept relationships and combined text/vector retrieval across editions.
+Its CivD pilot measures source-assisted search while preserving edition identity
+and keeping native equivalence separately qualified.
+
 The [DOS/4GW LE module](docs/dos4gw-le.md) adds bounded loading of
 supported 32-bit LE objects and internal fixups for the existing x86 analyzer.
 The [Win16 NE view](docs/NE_LOADING.md) loads supported Windows16 segments with

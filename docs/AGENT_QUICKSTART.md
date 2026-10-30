@@ -90,6 +90,12 @@ The bundled `references/formats-and-media.md` carries the portable summary.
 
 ### Inspect an executable without running it
 
+When source is available, use the separate [source catalog](SOURCE_CONCEPT_SEARCH.md)
+and `source-*` JSON methods to retain revisions and search across editions.
+The bundled `references/source-and-concepts.md` gives the portable workflow.
+Source names, spelling occurrences and similarity do not automatically become
+native symbols, resolved variables or equivalent code.
+
 ```text
 fdisbull identify /path/to/program
 fdisbull inspect /path/to/program

@@ -18,6 +18,7 @@ REQUIRED_TEST_HELPERS = {"tests/fixtures_formats.py", "tests/fixtures_macho.py",
 REQUIRED_TEST_HELPERS.add("tests/fixtures_z_scenes.py")
 REQUIRED_SOURCE_EVIDENCE = {"docs/evidence/output-024/" + name for name in
                             ("amplification.json", "dinopark-native.json", "dinopark-output.json", "tests.json")}
+REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/source-search-pilot/verification.json")
 REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/scene-recovery-2026-10-29/" + name for name in
                            ("representation-paths.json", "scene-pipeline-summary.json")}
 REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/integration-025/" + name for name in
