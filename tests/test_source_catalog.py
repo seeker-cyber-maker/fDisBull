@@ -142,6 +142,8 @@ def test_concepts_are_exact_authored_links_and_not_search_training_text(tmp_path
         _import(catalog, inputs, 'two')
         cards = catalog.info()['counts']['cards']
         concept = catalog.register_concept('city.food.stock', 'Accumulated food', unit='food units')
+        assert catalog.concepts(key='city.food.stock')['items'] == [concept]
+        assert catalog.concepts(key='unknown')['total'] == 0
         assert catalog.register_concept('city.food.stock', 'Accumulated food', unit='food units') == concept
         with pytest.raises(ValueError, match='immutable'):
             catalog.register_concept('city.food.stock', 'Food production per turn')
@@ -168,6 +170,8 @@ def test_vector_rank_scope_coverage_and_immutability(tmp_path, inputs):
         _import(catalog, inputs, 'new')
         model = catalog.register_model('test-geometry', 'immutable-rev', 2, 'test-only vectors')['id']
         other = catalog.register_model('test-geometry', 'different-rev', 3, 'test-only vectors')['id']
+        assert catalog.models(limit=1)['has_more']
+        assert {r['id'] for r in catalog.models()['items']} == {model, other}
         harvest = catalog.entities(snapshot=old, name='harvest')['items'][0]
         famine = catalog.entities(snapshot=old, name='famine')['items'][0]
         rows = list(catalog.db.execute('SELECT * FROM entity_cards WHERE entity IN (?,?)',

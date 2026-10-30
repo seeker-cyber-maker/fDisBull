@@ -93,6 +93,8 @@ small-collection prototype, not an ANN service or a whole-database scaling claim
 model. Fetch pending batches at offset zero after each import, since that set
 shrinks. `source-embed` imports card/vector pairs. A changed vector for an existing
 model/card is rejected; changed encoding requires a new model/profile identity.
+Discover saved model profiles with `source-models` and logical meanings with
+`source-concepts`, optionally filtered by a concept key.
 The tool does not download/run encoders or contact embedding services.
 Query vectors must use the corresponding encoder/profile.
 

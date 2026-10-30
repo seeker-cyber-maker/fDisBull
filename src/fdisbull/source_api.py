@@ -11,9 +11,11 @@ METHODS = {
     'source-occurrences': 'Exact spelling occurrences, without binding resolution; catalog,name,[snapshot,offset,limit]',
     'source-cards': 'Export bounded retrieval cards, optionally only missing vectors; catalog,[model,offset,limit]',
     'source-model': 'Register an immutable embedding model/preprocessing identity; catalog,name,revision,dimensions,preprocessing',
+    'source-models': 'Discover saved embedding model identities/profiles; catalog,[offset,limit]',
     'source-embed': 'Import explicit card embeddings; catalog,model,items',
     'source-search': 'Rank source candidates; catalog,query,[mode,model,vector,snapshots,kind,limit]',
     'source-concept': 'Register an immutable logical concept; catalog,key,description,[unit,author]',
+    'source-concepts': 'Discover saved concepts by optional logical key; catalog,[key,offset,limit]',
     'source-link': 'Record an authored concept/entity relationship; catalog,concept,entity,relation,evidence,[assurance,author]',
     'source-bindings': 'Enumerate recorded concept relationships exactly; catalog,concept,[offset,limit]',
 }
@@ -21,9 +23,9 @@ METHODS = {
 OPERATIONS = {
     'source-info': 'info', 'source-import': 'import_tree', 'source-snapshots': 'snapshots', 'source-files': 'files',
     'source-entities': 'entities', 'source-text': 'source_text', 'source-occurrences': 'occurrences',
-    'source-cards': 'cards', 'source-model': 'register_model', 'source-embed': 'embed_cards',
+    'source-cards': 'cards', 'source-model': 'register_model', 'source-models': 'models', 'source-embed': 'embed_cards',
     'source-search': 'search', 'source-concept': 'register_concept', 'source-link': 'link_concept',
-    'source-bindings': 'concept_bindings',
+    'source-bindings': 'concept_bindings', 'source-concepts': 'concepts',
 }
 
 

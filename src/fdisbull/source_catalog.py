@@ -404,6 +404,14 @@ class SourceCatalog:
             raise ValueError('unknown embedding model')
         return row
 
+    def models(self, offset=0, limit=100):
+        _integer(offset, 'offset', 0, 1 << 31)
+        _integer(limit, 'limit', 1, 1000)
+        total = self.db.execute('SELECT count(*) FROM models').fetchone()[0]
+        rows = self.db.execute('SELECT id,document FROM models ORDER BY id LIMIT ? OFFSET ?', (limit, offset)).fetchall()
+        return dict(items=[dict(id=r['id'], document=json.loads(r['document'])) for r in rows],
+                    total=total, has_more=offset + len(rows) < total)
+
     def embed_cards(self, model, items):
         dimensions = self._model(model)['dimensions']
         if not isinstance(items, list) or not 1 <= len(items) <= 512:
@@ -501,6 +509,16 @@ class SourceCatalog:
         with self.db:
             self.db.execute('INSERT OR IGNORE INTO concepts VALUES(?,?,?)', (identity, key, _json(document)))
         return dict(id=identity, document=document)
+
+    def concepts(self, key=None, offset=0, limit=100):
+        _integer(offset, 'offset', 0, 1 << 31)
+        _integer(limit, 'limit', 1, 1000)
+        where, args = (' WHERE key=?', [key]) if key is not None else ('', [])
+        total = self.db.execute('SELECT count(*) FROM concepts' + where, args).fetchone()[0]
+        rows = self.db.execute('SELECT id,document FROM concepts' + where + ' ORDER BY key,id LIMIT ? OFFSET ?',
+                              (*args, limit, offset)).fetchall()
+        return dict(items=[dict(id=r['id'], document=json.loads(r['document'])) for r in rows],
+                    total=total, has_more=offset + len(rows) < total)
 
     def link_concept(self, concept, entity, relation, evidence, assurance='candidate', author='agent'):
         if not self.db.execute('SELECT 1 FROM concepts WHERE id=?', (concept,)).fetchone():

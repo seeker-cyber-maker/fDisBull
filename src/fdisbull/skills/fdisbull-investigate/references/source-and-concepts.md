@@ -24,6 +24,8 @@ mappings, disassembly seeds, binary names/types or UDL admission.
    `source-link`. Keep units/roles distinct. These authored claims are excluded
    from retrieval cards. `source-bindings` enumerates recorded claims exactly.
 
+Use `source-models` and `source-concepts` to discover saved IDs after reopening.
+
 Keep source-assisted/oracle inputs separate from blind investigations. Scope
 queries with explicit snapshot IDs. Ranking is not confidence, abstention,
 exhaustive semantic coverage or source/native equivalence.
