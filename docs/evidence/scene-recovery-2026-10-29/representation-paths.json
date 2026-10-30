@@ -1,0 +1,167 @@
+{
+  "format": "fdisbull-representation-path-benchmark-1",
+  "python": "3.13.5",
+  "platform": "Linux x86_64",
+  "cases": [
+    {
+      "instructions": 2,
+      "source_bytes": 4,
+      "c_characters": 19,
+      "authored_source_hex": "05c80048",
+      "derived_c": "ax += 200;\nax -= 1;",
+      "semantic_cases": [
+        {
+          "input": 0,
+          "expected": 199,
+          "passed": true
+        },
+        {
+          "input": 1,
+          "expected": 200,
+          "passed": true
+        },
+        {
+          "input": 65535,
+          "expected": 198,
+          "passed": true
+        },
+        {
+          "input": 65337,
+          "expected": 0,
+          "passed": true
+        }
+      ],
+      "asm_bytes_to_il": {
+        "unit": "ms_per_call",
+        "iterations_per_batch": 100,
+        "batches": 5,
+        "median": 0.12722032,
+        "minimum": 0.12041447,
+        "maximum": 0.12851752,
+        "batch_means": [
+          0.1249785,
+          0.12041447,
+          0.12722032,
+          0.12851752,
+          0.12726526
+        ]
+      },
+      "already_available_c_to_il": {
+        "unit": "ms_per_call",
+        "iterations_per_batch": 100,
+        "batches": 5,
+        "median": 0.02145371,
+        "minimum": 0.01950591,
+        "maximum": 0.03994844,
+        "batch_means": [
+          0.03994844,
+          0.02347221,
+          0.01950591,
+          0.02145371,
+          0.02142868
+        ]
+      },
+      "asm_bytes_through_c_to_il": {
+        "unit": "ms_per_call",
+        "iterations_per_batch": 100,
+        "batches": 5,
+        "median": 0.41426415,
+        "minimum": 0.3816988,
+        "maximum": 0.4221032,
+        "batch_means": [
+          0.4221032,
+          0.42019795,
+          0.3816988,
+          0.41426415,
+          0.39528793
+        ]
+      },
+      "proof_status": "equivalent_under_assumptions",
+      "altered_candidate_status": "counterexample"
+    },
+    {
+      "instructions": 16,
+      "source_bytes": 32,
+      "c_characters": 159,
+      "authored_source_hex": "05c8004805c8004805c8004805c8004805c8004805c8004805c8004805c80048",
+      "derived_c": "ax += 200;\nax -= 1;\nax += 200;\nax -= 1;\nax += 200;\nax -= 1;\nax += 200;\nax -= 1;\nax += 200;\nax -= 1;\nax += 200;\nax -= 1;\nax += 200;\nax -= 1;\nax += 200;\nax -= 1;",
+      "semantic_cases": [
+        {
+          "input": 0,
+          "expected": 1592,
+          "passed": true
+        },
+        {
+          "input": 1,
+          "expected": 1593,
+          "passed": true
+        },
+        {
+          "input": 65535,
+          "expected": 1591,
+          "passed": true
+        },
+        {
+          "input": 63944,
+          "expected": 0,
+          "passed": true
+        }
+      ],
+      "asm_bytes_to_il": {
+        "unit": "ms_per_call",
+        "iterations_per_batch": 100,
+        "batches": 5,
+        "median": 0.34508819,
+        "minimum": 0.3434797,
+        "maximum": 0.37144548,
+        "batch_means": [
+          0.3434797,
+          0.36145937,
+          0.34449101,
+          0.34508819,
+          0.37144548
+        ]
+      },
+      "already_available_c_to_il": {
+        "unit": "ms_per_call",
+        "iterations_per_batch": 100,
+        "batches": 5,
+        "median": 0.07456431,
+        "minimum": 0.073047,
+        "maximum": 0.08106457,
+        "batch_means": [
+          0.08106457,
+          0.07456431,
+          0.073047,
+          0.07524717,
+          0.07445765
+        ]
+      },
+      "asm_bytes_through_c_to_il": {
+        "unit": "ms_per_call",
+        "iterations_per_batch": 100,
+        "batches": 5,
+        "median": 1.06989197,
+        "minimum": 1.04444553,
+        "maximum": 1.20060687,
+        "batch_means": [
+          1.06989197,
+          1.0668543899999998,
+          1.04444553,
+          1.20060687,
+          1.10931568
+        ]
+      },
+      "proof_status": "equivalent_under_assumptions",
+      "altered_candidate_status": "counterexample"
+    }
+  ],
+  "scope": "Existing straight-line uint16 register subset; authored examples only",
+  "limits": [
+    "Warm in-process batch means; not end-to-end scene recovery",
+    "Already available C excludes decompilation",
+    "Derived C shares the ASM decoder; no independent source proof",
+    "No memory, branch, flags, ABI, timing, host effects or native execution",
+    "No measured human/agent interpretation speed or general C-decompiler comparison"
+  ]
+}

@@ -62,7 +62,12 @@ contradictory alternatives and unknowns. Track the source-qualified guide claim,
 our inferred steps, code binding, runtime readiness and persistence separately.
 For each useful lead, record context, exact claim and origin, inferred steps,
 resource/handler and effect binding, required runtime evidence, disposition
-and cheapest next question. A practical table in private project notes suffices.
+and cheapest next question. A practical table in private project notes suffices;
+it adds no runtime schema:
+
+| Context or view | Predicted action and effect | Origin and version | Source binding | Runtime readiness and persistence | Disposition and next probe |
+| --- | --- | --- | --- | --- | --- |
+| Current scene or candidate closeup | Preserve the source claim and mark inferred steps | Guide section or viewed timestamp | Unknown until handler, resources and conditions are bound | Unknown until observed at the required boundary | Expected, contradicted or conditionally accepted; retain the open question |
 Guide order does not prove a prerequisite; a compressed step can hide closeups
 and intermediate interactions. Inspect relevant wrong-item, repeat, refusal and
 alternate branches omitted by a successful route. Prioritize the next discriminating

@@ -10,6 +10,7 @@ emulator, target executable, game files, saved states or project databases.
 - [Static analysis](#static-analysis)
 - [Native investigation](#native-investigation)
 - [Scenes, maps and movement](#scenes-maps-and-movement)
+- [Seed scene hypotheses from guides](#seed-scene-hypotheses-from-guides)
 - [Player and live text workflows](#player-and-live-text-workflows)
 - [Research-backed progression](#research-backed-progression)
 - [Retain knowledge](#retain-knowledge-without-overstating-it)
@@ -81,6 +82,16 @@ waivers are explicit interventions with narrower contracts, not equivalent
 forms of physical traversal. Unknown map cells are not safe; map proposals do
 not guarantee engine movement or survival. A state edit can test a mechanism
 without showing that a player can reach it.
+
+## Seed scene hypotheses from guides
+
+Start with the current scene and a small likely frontier. A guide's labels,
+objects, exits and prerequisites are hypotheses until bound to the selected
+source and, where required, observed at runtime. A transcript supports its text;
+visual claims need viewed frames or other direct evidence. Retain inferred
+intermediate steps and discrepancies in the private scene ledger described in
+[Research-backed progression](#research-backed-progression). Keep future
+discoveries out of player narration and include research preparation in cost.
 
 ## Player and live text workflows
 
