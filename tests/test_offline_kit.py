@@ -20,7 +20,7 @@ def wheel(path, name, version):
                 z.writestr('fdisbull/'+item, '')
         if name == 'fdisbull-player':
             for module in ('__init__.py','__main__.py','player.py','runtime.py','live.py','word16.py',
-                           'game_intents.py','intent_runtime.py'):
+                           'game_intents.py','intent_runtime.py','batch.py'):
                 z.writestr('fdisbull_player/'+module, '')
 
 

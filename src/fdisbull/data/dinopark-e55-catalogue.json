@@ -1,0 +1,1127 @@
+{
+  "format": "dinopark-catalogue-observations-1",
+  "provenance": "Exact fixed capital-label and catalogue shelf samples shared across retained first, intermediate, selected, closed-encyclopedia and extinct catalogue views. Toolbar buttons, their enabled/disabled bevels, software cursor footprints, cash digits and animated artwork are excluded. Panning separately requires an already-qualified catalogue, unchanged pending scene-request word and no recognized modal. Final species/page/price guards remain separate; this is not universal room recognition.",
+  "qualified_frame_count": 170,
+  "reference_frames": [
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-29.png",
+      "sha256": "3fcd4f883aaa00ebedd1aec3b835501f81203b1f5d118c060edb59042f371a79"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/funded/work/native/vegasaurus-completed.png",
+      "sha256": "1811ce9669e8ebd0b23e2aa69d3a2321fbbb23fc3a2321a39fa44750ab86b20b"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/probe-native-02/after-price.png",
+      "sha256": "db1556419632f374133b2f56648320ba700fc63955b980353c347ef1991ea9d8"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-10.png",
+      "sha256": "dea88bb8d4e915ac5815dc424a11d34c5c6e03bd4688f61111229a0b47ddce37"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-11.png",
+      "sha256": "c82c24df141eeaeca045113f4facdaa5837c004a32ef8ae363b896358f94093a"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-12.png",
+      "sha256": "756ad62cd32890005cace1bd0251f02ca08f5be3630072745bef80f58154e2fd"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-13.png",
+      "sha256": "4c85b169444de6a30f6785ace812e5d419372391ddc024326ac2ee2e7ed232a6"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-14.png",
+      "sha256": "d31d4402f6807f714fc736e203f12b9b826687d198daea521fe29fe3de2fd881"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-15.png",
+      "sha256": "7373ef9746e054f83cf4f6d11ee9eb07caf516bb452a859d0b8480829fa06b6e"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-16.png",
+      "sha256": "8b2e79396b931a0d3183a32b17076a4534c5543efac9369f220475abaa134c6c"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-17.png",
+      "sha256": "f7d2af15cf74f21bd18d5d796b08b5672689a1cd68e0e6ab687014317ac401db"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-18.png",
+      "sha256": "3d6f3d202873085282f3b7839361f1eef079f068446003582df2b606c8b5df60"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-19.png",
+      "sha256": "06a54455c9091daf9279f481dd255d5c12a35d43179102f8a3645c8f70b241e8"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-2.png",
+      "sha256": "b62ebaf3bf4fa11edd8f0519bd1c08b20adbfce38eaf0c68054f7378857b479e"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-20.png",
+      "sha256": "7893abfb2f2b1dcbef12641a4cffa4d473ebf6f262c675bc54ad4682bc68a02d"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-21.png",
+      "sha256": "ceb2cfb1dd3529b089f459041c3c7bf909081468a87632f0d8929138a1efc033"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-22.png",
+      "sha256": "7581a5559b86cb98f784ba41b2684e8b3165f45ef44325aae84d332594fe36e3"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-23.png",
+      "sha256": "cfad2da601458f7cbde22a32c49acb76f9515b4a4a7ff2cff8ac409b7b6a8d7e"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-24.png",
+      "sha256": "2415ecc71f47763d48cf90a28941295b9e46bc597466f34e91ccf6076252544a"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-25.png",
+      "sha256": "cfac991717e0d9ef8f1aa28ca24588a3bb12f3b2b64f8bd108d68ff2c204fb0d"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-26.png",
+      "sha256": "5ead131ba7ebbceb64e95a15eac0b0012fa5ac45898c02143eb0c6b539bc09c3"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-27.png",
+      "sha256": "aa9231ec93faed7fb8c1a47fbd1f1df203f5e69cd38636a16452f9e0c319b66e"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-28.png",
+      "sha256": "fed4a36a35e385db57ec668191ef7de2e0e1b2a8ec37eeeac0370e77517b41b5"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-29.png",
+      "sha256": "046882f78f20e2bdd58ff6d3d7430468e7a66ae5746cf940c673da942bb7828c"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-3.png",
+      "sha256": "d07c39efa223690ef5b72b1b53a01c3db46e09fd9fc96bf39421b7fb630c90d1"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-30.png",
+      "sha256": "a554b7329bc4e8693f60f30569aad2eed2fe16d29a63d727447ce8e33c7da3dd"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-2.png",
+      "sha256": "c231c138c189202587ec364bcf11a90c71fabcca502b084448ebdbf51602470a"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-32.png",
+      "sha256": "fe63340ceaaaf99e27f396032424a55840f631b5fa16f210fedcd52d11fc7c76"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-4.png",
+      "sha256": "ef52add58b9e9c09fbd035631acc0736c20ad3ecf0f8033289e164731ce8faab"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-5.png",
+      "sha256": "8d6539cfdb9761fcb7b9d59d45e29e0de4a3e8ef5b98a600ef3ab01202f1f5be"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-6.png",
+      "sha256": "aaa92d4eb152dc474e3c292f5aa3ab8d311a43a5d282263b811ca9d98a240ecf"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-7.png",
+      "sha256": "e72c55b3fee85a7e7a15bfdfc9e118cfbe9fc63c6428c5967700a703d0eef86b"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-8.png",
+      "sha256": "5454f266124c5a3c08c640215f1264cc371ccad1b21493f96b44fcff08d89392"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page-9.png",
+      "sha256": "d88ec4e7db4f349f41f03510dcbb0ed748fac913ec09dd611bdabacee679bd03"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-first-page.png",
+      "sha256": "adec6abbe930033de6ac3fbc6036059f358b180edcf8072e8c54ac4dfa12e987"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-10.png",
+      "sha256": "41940347bab0ed1a163fd7e5acf659234c9758db358371af86be4040d789fd46"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-11.png",
+      "sha256": "dd1c4159d4889a3a2407030fc172b9db82ad025313fc2a0c5d06cf8ca7974d29"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-12.png",
+      "sha256": "19ba7d986dc8c0ed5cc42044ea6a3b13a2882e4ac21b689d58093f1baecff823"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-13.png",
+      "sha256": "ede5b0ce62e722dad4511b1ca2019925ef5f29b553b3f5e3259a3a72d5a23095"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-14.png",
+      "sha256": "d7a4c732da0a3672020ec504499bdcf55f329c8694a7bfdb6707956d494d8011"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-15.png",
+      "sha256": "da6e8a484aac8bbff10d52e7548aecafb676a79f68c676009045b4c5b0a65b55"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-16.png",
+      "sha256": "f55fd128ab043b2fb8a038f4e44e6f153fa3aef50a5b43c80d8a781884a33b73"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-17.png",
+      "sha256": "6078e0ab2d576e4803ff39029a8070c0e095cf02ce56a0da7e1a7de6e60a813b"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-18.png",
+      "sha256": "1c20f648e36651ff427c6664018a9981835755a4e6a71beda1d8915e04d6863a"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-19.png",
+      "sha256": "02841d3243c55c61ad1e75b1f554603cabfbf0cf568d479232d25c92e0cc2736"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-20.png",
+      "sha256": "db7f0eed46acc3bd2e70428ea9a138adcec48aade65e02470f5cf16ed15278cc"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-21.png",
+      "sha256": "988a7aed1ff5f0c098ba815df7503c6b20d69cd6d00c8d6b29d8a48cd6800aa6"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-22.png",
+      "sha256": "d57cc95a7b095db0b10b37c69e92b58664a3b50cbe201602424252a57cf17cd2"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-23.png",
+      "sha256": "b5b76fae69948451c26505846f12d8d9a193a3ca35d5b3eac57173b37b52e9c0"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-24.png",
+      "sha256": "b9b3bcc4945342db8b2148b26be4d192c24f38438d4f8bf483d44f35ac9e4280"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-25.png",
+      "sha256": "85bedf453fb817093993904040dae78ba91f036873f25677a2e78f2af6acec7b"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-26.png",
+      "sha256": "d612642385611854c0188a5a16dc4c39b259d42e1cbf38b4fdcdc564745487ae"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-27.png",
+      "sha256": "b847e0e36170c5121e1cea88ef0f1927e5d4462d78172beeb631f553e8059e8d"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-3.png",
+      "sha256": "9eb9f81adae60bdc4fc4e1bad4d9c3351d5e43e10c69a2fc5717ae698d9a6ed9"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-4.png",
+      "sha256": "9a2b1fa227fb1ea186d6d56e41d89e8575da9243ba7e9c23e1667dd4f080fa5e"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-5.png",
+      "sha256": "f5731327df0f13069bf1f4907c27ad7cad1d6cab6c33a1dd2d7de98f827f510f"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-6.png",
+      "sha256": "61e2da948de10f434a38faba3a0ee8f6287877d6a6040b8684bcb7b69e44e84d"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-7.png",
+      "sha256": "b009bd9179eb1f08c9e46544d7e49b96667230e12a7993d7a280a1cba92be44d"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-8.png",
+      "sha256": "4439c0ff527d5c11d760c0f8f5214294d602496e3401f582cd81f5ff6ed15902"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan-9.png",
+      "sha256": "7ff29d66a9eeaded8b030ba7cfb33affe86d8387c68547dd2792d1276a0aefb8"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-cold-01/work/native/mart-pan.png",
+      "sha256": "bfda0b090dc8b04e1fcb7c94547415b240045470d382ab03c7908b804045e63b"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-01/work/native/mart-pan-10.png",
+      "sha256": "5647cdb7d5c37a63e53970cb9390d1321d7e4ecbcd84a4723012e855e3c3314e"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-01/work/native/mart-pan-11.png",
+      "sha256": "ccbd9c0188e30db1109439675a1ef2345083233909628ee58ac0b46652f35bfe"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-01/work/native/mart-pan-12.png",
+      "sha256": "1211f60feffa5e8829570840c80d6f6ff09914804f5799564ef445d80c2046a8"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-01/work/native/mart-pan-13.png",
+      "sha256": "f1a1e54d413f263d024c78c4803016b235c2ea145c77ff8089f58bfc3045199d"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-02/work/native/mart-pan-2.png",
+      "sha256": "0999c296d2d0abf56bd4502babd69daf7c3197ee767a2b45e6cf4e015da72a80"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-02/work/native/mart-pan-3.png",
+      "sha256": "742efa66a37059613a5c2116dc7eebe9da8ece881f8ba3b8b604a0f752cc40bf"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-01/work/native/mart-pan-4.png",
+      "sha256": "dae4ce3e826ce78d84980ebbfaced66d24e6dd16a9caeb73f8d71902ddb488aa"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-01/work/native/mart-pan-5.png",
+      "sha256": "cedef9e6aefb767035b3540fa7a26c71413e39060773f2a62161e976d5752578"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-01/work/native/mart-pan-6.png",
+      "sha256": "65208f5c66837052a87adfccb78480a2a9f0ce56d79e6fda2f5d988f82e5785d"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-01/work/native/mart-pan-7.png",
+      "sha256": "16f3ffbcd86e708b84b446eb5d9691e4beaa3a0f34d0ad94a1c08886bb7d0b68"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-01/work/native/mart-pan-8.png",
+      "sha256": "83106f7cf98c93249a26b23b7b9af361632565b65d0246573aefbd9c7570687d"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-01/work/native/mart-pan-9.png",
+      "sha256": "015f31621f3cbbaff5802ef8a7dd1dc878bb5cf791fbc82106a7169c77e7f14d"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-02/work/native/mart-pan.png",
+      "sha256": "2ccec42282eca36433181e16e58cfc7b258b86f6f7684c7b74ca186447f7159b"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-02/work/native/mart-pan-10.png",
+      "sha256": "b992873329409986d25f801e92d32073975fcd4d90fb6040c5ac22d79ab5f258"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-02/work/native/mart-pan-11.png",
+      "sha256": "780c79a728937643c585904ccc2d10a16ce6a74c80d0f8f346a2322ba5e52d6f"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-02/work/native/mart-pan-12.png",
+      "sha256": "29dda0b065bc76ac765e549c59679b6ffe07e6e4dc2a2b2fd5d29143dd6e9e76"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-02/work/native/mart-pan-13.png",
+      "sha256": "2669a507f7ad4420334540a0033ed477aef098953bd52c0aa916668a31e646c9"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-02/work/native/mart-pan-14.png",
+      "sha256": "e49df0a0c313d662c9370b126715ca0f38fc00192bdc1e53e7a7e9da8504f846"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-02/work/native/mart-pan-4.png",
+      "sha256": "52d39ada5b5947f8cbb3778888bcfc2a18ea0032289f4635eb05c3ab05306939"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-02/work/native/mart-pan-5.png",
+      "sha256": "148c90a1a306cf8f4772723f2895ee2c811700f8ffc8f8249aeb955de7d6a193"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-02/work/native/mart-pan-6.png",
+      "sha256": "e2492e07d51ce91663cbbeabe8afca0cc46dcdbd2bba32bda5a3f0fb6612db15"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-02/work/native/mart-pan-7.png",
+      "sha256": "6e9702c988cb82f06b1505a601de6e04faaf3e4efa58a86a1cb37e2277d60ffc"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-02/work/native/mart-pan-8.png",
+      "sha256": "7ba37f038fb5b7dc90a8c20022f7eb6077a5d173516e602b6af5ccae7f906108"
+    },
+    {
+      "name": "dinopark-z-continuation-20261029-01/source-funded-02/work/native/mart-pan-9.png",
+      "sha256": "d286ad48f93a53cb4f8bd70ebd13bb389bafc7d2c4f0f24bf68b0c2973fb21ca"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-10.png",
+      "sha256": "8c6f12989e815bb4efd26b33816c549be5d1455357d31c71e408290e1db14ace"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-11.png",
+      "sha256": "15cf550e7527c23334fa4892938a59f29b277a52933099e3a6e6e16ead28a399"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-12.png",
+      "sha256": "f4d90e10729633dc48b371eb89fb3019aeebc7f118695c6066b8a1b5987d5e83"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-13.png",
+      "sha256": "63f3d47d2977ed887d483a30026471b76035e828c823fbc940f4701ac069e8c4"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-14.png",
+      "sha256": "0394494f9d4c1ccc82d729b2929ede9278169283cc3b83b184770e107ef75410"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-15.png",
+      "sha256": "cd55412d48235559cb79e39880d573b89d3fc2a64f33140c30fc7ce56402d4a4"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-16.png",
+      "sha256": "44e73f126fabd371a163747b9b7e204d1614162118d8311ed0133c4a1a9ee50a"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-17.png",
+      "sha256": "cbdd8e0eab2520c2ba626cee99d1febdaf58d99794f660f67f8846ccd3b45ac6"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-18.png",
+      "sha256": "54176d4842ac35ddb1265f666b691c35fa8103036f390db40c2e9defb56a5237"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-19.png",
+      "sha256": "f7464607e8307396eabdd65e5c4c63b647f7096198a1f874c161a5b803963936"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-2.png",
+      "sha256": "01e32742df8b47c34ab7dfb2b124787a264ed333794cb9bffb04c09ffb4839ff"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-20.png",
+      "sha256": "5e67f9f66bff03c27dfe13ff66f448535a83b9146c131ecbb8eedd96e718177a"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-21.png",
+      "sha256": "25112e586230ccb6e22d7cd7bfa92db4d01174bfc53b3d0717b70b9b2d29875f"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-22.png",
+      "sha256": "71be2134c140004f61dbbb0e115f4128956ac247fbbe33f0c4e72eebc5f0c2d2"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-23.png",
+      "sha256": "60641c915c1a68ccd4f564d8a0e9c8109b570c9a5fd691a49264b273f7c1270e"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-24.png",
+      "sha256": "87166cc46373c8e4f474f7dddb204f3d7f7247dba7771d2d9b30b59fd14331f9"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-25.png",
+      "sha256": "b9ee9cd1d07026dc887c17c3ab2436e624096866bb4caa06b5fd91d9000e8e70"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-26.png",
+      "sha256": "6aeaddd97740604327cdc99de5310f4ede0242e1f15420f848e6b933c635b531"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-27.png",
+      "sha256": "4c6a1c8b997397facf210347969fd553ec5168a1258a8baf3a0351fbe7a8bcdd"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-28.png",
+      "sha256": "4b11b7947429db0f9d2ad8dd0e50151fd1b1e5845662bc3a0e828771499d7aef"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-3.png",
+      "sha256": "27ec27145f4d198ec75963539e606d6b6ab5276382115b92fcb23a5d0066bdb5"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-4.png",
+      "sha256": "85d1cfb1f4f082f9cfef8626babb0808176ba6f906e61e03aef83f707ac3e12c"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-5.png",
+      "sha256": "0bebc33ad9e7775104abb114a72d1576f7da08a150a5b5efb1b40af9ac9bc9e7"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-6.png",
+      "sha256": "b2ff81414a30d6851a1ccedfff90213c29431581d18849044d0d759913b528a9"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-7.png",
+      "sha256": "400da895c15e9e3903a1386160ef8dd641de39735211e77e9c59d1d0255617a3"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-8.png",
+      "sha256": "026b2e7b487b3dfad63cf842061992f7f50cc2b2122cb4b45ea492407445b32e"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-first-page-9.png",
+      "sha256": "bcb42b79fb642e9db5a6fd857c8b528f08a34648058aabc662d07e0b0a481d2c"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-first-page.png",
+      "sha256": "d45270507d425930292aa7991ef13d04a6d5151e7ea6e75e7e409ad7043d71c1"
+    },
+    {
+      "name": "luna-z-candidate3-20261029-01/contexts/primary/work/native/mart-pan-10.png",
+      "sha256": "6ac72f4f01c5e5dd5c79c30fc59c638e8c9c49edf71397ec8db5f20334ceca30"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-11.png",
+      "sha256": "2ec3267382c2c5f5b76edee228165512f30a1b642d5e091f05714ed3e7377941"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-pan-12.png",
+      "sha256": "53001999d28e7dd7130373e3b9e8c7a6f04cb7e52568252cdd540b90a7ecf28b"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-pan-13.png",
+      "sha256": "383da9b5def1f2f6cdc7b3ca3b933fa8b78d0b4885a9b32a178d9d32e6786394"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-14.png",
+      "sha256": "adbcd0213a532c366312d7de609fdee16333bfdf052a5f1ed727f6b181d3de83"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-pan-15.png",
+      "sha256": "501e1f81f40e026690b8b21038150a2eaf654fb1d646937b59de68240ea96cb5"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-pan-16.png",
+      "sha256": "0f8e748ac9e54c4e49c387b3bf655b6598f8b3dbfced99b4b5219d01447d8fa5"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-18.png",
+      "sha256": "6ee19c7f5f44fbeab0a77a47b3accd5ad5b9011a1f09bdfab84ab65936c2d700"
+    },
+    {
+      "name": "luna-z-candidate3-20261029-01/contexts/primary/work/native/mart-pan-19.png",
+      "sha256": "5d4a2f182b76546e75fa9606319232b1bbbd3cc4e34ca4614b1d052d91534336"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-pan-19.png",
+      "sha256": "744ec3ba9a03b51d396ef6caa7c5af179a86d470c7cc71968219144d83fbf49d"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-2.png",
+      "sha256": "878caeb720ea2abe2038fe7915718d9ca14ad444e807875f5ac8c4e51ef669d9"
+    },
+    {
+      "name": "luna-z-candidate3-20261029-01/contexts/primary/work/native/mart-pan-20.png",
+      "sha256": "0db3e1679b9a65169e3bd453bc30073a3d58d63a090e8b84c0a23ad0139187e4"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-pan-21.png",
+      "sha256": "08a92522b852d4e91f16dfea9e1d8d3f491ee4c0834757ca24924a84a910be03"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-22.png",
+      "sha256": "25f148aad0a46f197398a57779cae27882c9cf25611d2d81e3b79547fb97f71a"
+    },
+    {
+      "name": "luna-z-candidate3-20261029-01/contexts/primary/work/native/mart-pan-23.png",
+      "sha256": "bcc9e62fda67398c20f93d7c32fb496b6635eab78c7f28fac868c8a583c7ff4b"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-pan-24.png",
+      "sha256": "874a93bea7976bf0d8760a126e0aff307151e03c95dc307796672de20985c74b"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-pan-25.png",
+      "sha256": "00dd0e7cd23a24a5f5bb0000b38b2354faa69be68d020583147d0278ba3a390b"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-26.png",
+      "sha256": "aa9b8881d50347827f0c1835fe4d4d3f950d03eaff32000efc53e4e001fa939e"
+    },
+    {
+      "name": "luna-z-candidate3-20261029-01/contexts/primary/work/native/mart-pan-27.png",
+      "sha256": "d8e3b12feb14663e97a76ecbd35495e476c11faece14855909804255699ed356"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-pan-3.png",
+      "sha256": "d7e5c38e7af9ee9db19762877a06f08683bd1bfbd88e69089fe676697f835575"
+    },
+    {
+      "name": "luna-z-candidate3-20261029-01/contexts/primary/work/native/mart-pan-4.png",
+      "sha256": "8b77823c65db1b10eacc966d027e799031d0d74cc0039ca99b1ff80e051d1a35"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-5.png",
+      "sha256": "0c56c67d7ded392c47358eb575e686884f6f9f7f3fe3971d05afae52884ba0ec"
+    },
+    {
+      "name": "luna-z-candidate3-20261029-01/contexts/primary/work/native/mart-pan-6.png",
+      "sha256": "155f0b7056dbf48a65c6585f216614f22d88f6c6baec6e2b87586052f4ee9ca5"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-7.png",
+      "sha256": "3ca475b5371f4af2ee7299cf3d89c9c6e78c392303467fbcd611126422595531"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-pan-8.png",
+      "sha256": "b40b1866f8f4209db37ac0ae330baae9e00cd14fb8e4a4f265a641fd2c83344c"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-10.png",
+      "sha256": "4032eab8de753f8a4b343dcbc0f013bfe5b2da7b673fd187b4f95e9df5df3e6c"
+    },
+    {
+      "name": "luna-z-candidate2-20261029-01/contexts/primary/work/native/mart-pan.png",
+      "sha256": "e98b7ad7f2aa3cf6ef7dcb27a1527903ada07163cf92006779e5c394f50e9c9d"
+    },
+    {
+      "name": "luna-z-candidate3-20261029-01/contexts/primary/work/native/mart-first-page.png",
+      "sha256": "2a9b263ca10bbc31e22444a3e46cc785595405f6ea551e4e9c9f606ea10c98ef"
+    },
+    {
+      "name": "luna-z-candidate3-20261029-01/contexts/primary/work/native/mart-pan-12.png",
+      "sha256": "3095ed0b729f14221aef3f427bac5ddb8bbe1d087914efd1c5d63090671bc00a"
+    },
+    {
+      "name": "luna-z-candidate3-20261029-01/contexts/primary/work/native/mart-pan-13.png",
+      "sha256": "8ce93627bbd7b1ecb7f2b107efcfe4769eaa88ebd4995e534e86743bd1ff2312"
+    },
+    {
+      "name": "luna-z-candidate3-20261029-01/contexts/primary/work/native/mart-pan-15.png",
+      "sha256": "f131b8524dfaf96248d35b55c7151c77842abddbea34855e002c0883b01006b4"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-16.png",
+      "sha256": "fffdd426d779d8ee845aa288a48829e9295270816e25b48856768d50e3c8d711"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-17.png",
+      "sha256": "a6235910c38752e323cb36206c1bfc3853c5938888f14df2ed8e041d5c1a8b1f"
+    },
+    {
+      "name": "luna-z-candidate3-20261029-01/contexts/primary/work/native/mart-pan-2.png",
+      "sha256": "48f66a10a0ddd267222b81fab6820d90cc09f3e71d50cc650464dfdb151684b6"
+    },
+    {
+      "name": "luna-z-candidate3-20261029-01/contexts/primary/work/native/mart-pan-21.png",
+      "sha256": "1b019f006e1572155c39394b0780e900dc8e47caaa4af204a3d14b169e5b667d"
+    },
+    {
+      "name": "luna-z-candidate3-20261029-01/contexts/primary/work/native/mart-pan-22.png",
+      "sha256": "91808911975bd6a4c3c59b30d7558f31a1501ee92a41649ddc97c25a56c92a42"
+    },
+    {
+      "name": "luna-z-candidate3-20261029-01/contexts/primary/work/native/mart-pan-24.png",
+      "sha256": "129dd19dd1f6bb543da835d198103114ac204b346431077a210f456eddea07e0"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-25.png",
+      "sha256": "f98010269f1b7dceaf712554744c9895d8d3766b745f17ab5078724679e90d5f"
+    },
+    {
+      "name": "luna-z-candidate3-20261029-01/contexts/primary/work/native/mart-pan-3.png",
+      "sha256": "c0f7fa6a14c83ffcb52067c63ff86fe79c0001aa714101362cd1ab4aba16a486"
+    },
+    {
+      "name": "luna-z-candidate3-20261029-01/contexts/primary/work/native/mart-pan-7.png",
+      "sha256": "3ade851918c93e16a758fbb1fd9e5315961e4c206feb09cc5c6062d0fc85fad1"
+    },
+    {
+      "name": "luna-z-candidate3-20261029-01/contexts/primary/work/native/mart-pan-8.png",
+      "sha256": "a30e984c9d47543f54b3544460786e96fe8b4fc82f2d3b76be6875d4ee972d1c"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan.png",
+      "sha256": "b10e728d5cf39cc183a92fb5f8bf09705c3f6aecaceff8927553cc3489e26c76"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-12.png",
+      "sha256": "da1b74618bf65fec7908bf5e8f634dfc3c1d9c245fa4282f51b615b1c7a701fb"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-13.png",
+      "sha256": "f88cfa5257771e37b7eb7cef99af245eeeb7e3b254fa23a56a41e88cb8edd046"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-15.png",
+      "sha256": "25b39e2a7ddf85180897fd3bfca50c885558f9bf55c3a3f0b7288261eeb7e799"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-19.png",
+      "sha256": "a040593cca98a9b13490e55d578abd10d6d5d1a1d1cec294fba19228f7793c26"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-20.png",
+      "sha256": "65975e1147f074770f9a29c2c4fbc97963101413d999a01a9d02805a74929145"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-21.png",
+      "sha256": "f2e537fc9344a8b69c62354547b2ecc7b4fcabae5259dd0ef4b403d4cbd274e0"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-23.png",
+      "sha256": "98ee74c5c8781516201e4d6e95f9606000f9c32077feb444931b4174d3402964"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-24.png",
+      "sha256": "d933c8af6997678f72ddd0bf555e623e474cb2a5133a6ba1103db9c85c0b87ed"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-27.png",
+      "sha256": "c5ec79e6f92d4cce9a7a5f8046db9381f4df9cc2a328b480fd289a653de8b6d8"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-28.png",
+      "sha256": "af3d0c416a6a6c85cd9336314475af842946baf264b26e03ee1b9819f8ec8214"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-3.png",
+      "sha256": "ae1a23d966e8f01205394ee5ae10956f42a47688b1ba0e58566422f85f7483b3"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-4.png",
+      "sha256": "7ca29773e4af21b086275ebbb35546e474f7e93b70fa9b7a1704bd9d18dda1a3"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-6.png",
+      "sha256": "2cfad32bfbb799d30c88d1f736cb13d12997bce97390a5605943709770d7aab4"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-8.png",
+      "sha256": "6bc35dedef4531496841a80256cb8dcd552b02f7e7cd32fcff40022633a2c7fd"
+    },
+    {
+      "name": "luna-z-candidate4-20261029-01/contexts/primary/work/native/mart-pan-9.png",
+      "sha256": "cc94d891930bb55b46e93d6266db3b2ada7e396e2514911bbc9e31f892351530"
+    }
+  ],
+  "scenes": {
+    "mart_surface": {
+      "samples": [
+        {
+          "x": 187,
+          "y": 7,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 228,
+          "y": 7,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 200,
+          "y": 8,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 225,
+          "y": 8,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 203,
+          "y": 9,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 221,
+          "y": 9,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 199,
+          "y": 10,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 220,
+          "y": 10,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 197,
+          "y": 11,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 220,
+          "y": 11,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 199,
+          "y": 12,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 224,
+          "y": 12,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 207,
+          "y": 13,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 198,
+          "y": 15,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 227,
+          "y": 15,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 210,
+          "y": 16,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 189,
+          "y": 17,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 219,
+          "y": 17,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 199,
+          "y": 18,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 226,
+          "y": 18,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 200,
+          "y": 19,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 223,
+          "y": 19,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 202,
+          "y": 20,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 189,
+          "y": 21,
+          "rgb": [
+            235,
+            231,
+            231
+          ]
+        },
+        {
+          "x": 5,
+          "y": 51,
+          "rgb": [
+            219,
+            190,
+            178
+          ]
+        },
+        {
+          "x": 82,
+          "y": 51,
+          "rgb": [
+            219,
+            190,
+            178
+          ]
+        },
+        {
+          "x": 282,
+          "y": 51,
+          "rgb": [
+            219,
+            190,
+            178
+          ]
+        },
+        {
+          "x": 56,
+          "y": 52,
+          "rgb": [
+            56,
+            56,
+            56
+          ]
+        },
+        {
+          "x": 106,
+          "y": 52,
+          "rgb": [
+            56,
+            56,
+            56
+          ]
+        },
+        {
+          "x": 156,
+          "y": 52,
+          "rgb": [
+            56,
+            56,
+            56
+          ]
+        },
+        {
+          "x": 207,
+          "y": 52,
+          "rgb": [
+            56,
+            56,
+            56
+          ]
+        },
+        {
+          "x": 257,
+          "y": 52,
+          "rgb": [
+            56,
+            56,
+            56
+          ]
+        },
+        {
+          "x": 0,
+          "y": 108,
+          "rgb": [
+            231,
+            231,
+            243
+          ]
+        },
+        {
+          "x": 77,
+          "y": 108,
+          "rgb": [
+            231,
+            231,
+            243
+          ]
+        },
+        {
+          "x": 154,
+          "y": 108,
+          "rgb": [
+            231,
+            231,
+            243
+          ]
+        },
+        {
+          "x": 243,
+          "y": 108,
+          "rgb": [
+            231,
+            231,
+            243
+          ]
+        },
+        {
+          "x": 0,
+          "y": 109,
+          "rgb": [
+            56,
+            56,
+            56
+          ]
+        },
+        {
+          "x": 77,
+          "y": 109,
+          "rgb": [
+            56,
+            56,
+            56
+          ]
+        },
+        {
+          "x": 155,
+          "y": 109,
+          "rgb": [
+            56,
+            56,
+            56
+          ]
+        },
+        {
+          "x": 242,
+          "y": 109,
+          "rgb": [
+            56,
+            56,
+            56
+          ]
+        },
+        {
+          "x": 0,
+          "y": 163,
+          "rgb": [
+            231,
+            231,
+            243
+          ]
+        },
+        {
+          "x": 72,
+          "y": 163,
+          "rgb": [
+            231,
+            231,
+            243
+          ]
+        },
+        {
+          "x": 144,
+          "y": 163,
+          "rgb": [
+            231,
+            231,
+            243
+          ]
+        },
+        {
+          "x": 216,
+          "y": 163,
+          "rgb": [
+            231,
+            231,
+            243
+          ]
+        },
+        {
+          "x": 6,
+          "y": 164,
+          "rgb": [
+            56,
+            56,
+            56
+          ]
+        },
+        {
+          "x": 78,
+          "y": 164,
+          "rgb": [
+            56,
+            56,
+            56
+          ]
+        },
+        {
+          "x": 150,
+          "y": 164,
+          "rgb": [
+            56,
+            56,
+            56
+          ]
+        },
+        {
+          "x": 222,
+          "y": 164,
+          "rgb": [
+            56,
+            56,
+            56
+          ]
+        }
+      ],
+      "min_matches": 48,
+      "tolerance": 0
+    }
+  }
+}

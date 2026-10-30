@@ -25,7 +25,9 @@ TITLES = {'office': 'Park office', 'bank': 'Bank', 'street': 'Park street', 'din
 SNAPSHOT_FIELDS = ('office', 'bank', 'street', 'mart', 'park', 'locations', 'current',
                    'land_bought', 'dinosaur_bought', 'fence_bought', 'guide_hired',
                    'food_bought', 'park_opened', 'notice_outcome_unknown', 'transaction_count',
-                   'vegasaurus_attempted', 'vegasaurus_proof', 'vegasaurus_extinct', 'last_action')
+                   'pending_park_entry', 'pending_food_notice',
+                   'vegasaurus_attempted', 'vegasaurus_proof', 'vegasaurus_extinct', 'last_action',
+                   'last_continuation')
 
 
 def sha(path):
@@ -101,9 +103,12 @@ class ZService:
         self.work, self.reader, self.writer, self.slot = work, reader, writer, slot
         self.text = None
         self.epoch = secrets.token_hex(32)
+        self.session_token = secrets.token_hex(32)
+        self.checkpoint_failed = False
         self.revision = 0
         self.pending = None
         self.snapshots = {}
+        self.latest_native_save = None
         self.processes = []
         self.history = []
         self.restarted = False
@@ -116,6 +121,8 @@ class ZService:
         atomic_json(self.work/'z-session.json',{
             'status':status, 'complete':complete, 'stop_reason':self.stop_reason,
             'history':self.history, 'pending_command':self.pending['command'] if self.pending else None,
+            'latest_native_save':self.latest_native_save,
+            'checkpoint_recovery':'unqualified' if self.checkpoint_failed else 'qualified',
             'pending_effects':('applied-confirmed' if self.pending and any(e.get('phase') in
                 ('food_purchase_committed','vegasaurus_purchase_confirmed') for e in self.pending['events'])
                 else 'unknown' if self.pending else 'none-pending'),
@@ -124,14 +131,24 @@ class ZService:
 
     def event(self, item):
         self.history.append(deepcopy(item))
+        if item.get('phase') == 'result' and item.get('command', '').startswith('save park '):
+            self.latest_native_save = item['command'].removeprefix('save park ')
         if self.pending is not None:
             self.pending['events'].append(deepcopy(item))
         if item.get('phase') in ('food_purchase_committed','vegasaurus_purchase_confirmed'):
             self.receipt('acting')
-            self.oracle(item['phase'])
+            # The handler has already captured its native commit proof. Do
+            # not insert optional native RPCs while it is paused at an
+            # instruction boundary; witness readback runs at command end.
 
     def ready(self, text):
         self.text = text
+        self.session_token = secrets.token_hex(32)
+        self.checkpoint_failed = False
+        if (self.pending and self.pending['command'].startswith('load park ') and any(
+                e.get('phase') == 'result' and e.get('command') == 'load park'
+                for e in self.pending['events'])):
+            self.latest_native_save = self.pending['command'].removeprefix('load park ')
         self.revision += 1
         self.restarted = True
         self.snapshots.clear()
@@ -160,9 +177,40 @@ class ZService:
         import re
         text = re.sub(r'Commands:[^\n]*', '', text)
         text = re.sub(r'/(?:Users|Volumes|private|var|tmp|home|workspace)/\S+', '[private evidence]', text)
+        text = re.sub(r' Resume folder: [^\n]*| Evidence: [^\n]*', '', text)
+        text = re.sub(r'Use load park ([a-z0-9][a-z0-9_-]{0,31}), or --load-save with that folder in a later session\.',
+                      r'Use load \1 to restore this backup, or load park for the latest backup.', text)
         if len(text.encode('utf-8')) > 24000:
             return 'The command produced an oversized response; inspect private evidence before continuing.'
         return text
+
+    def native_save_names(self):
+        library = getattr(self.text, 'save_library', None)
+        if library is None:
+            return []
+        names = []
+        for path in sorted(library.glob('*/save.json')):
+            name = path.parent.name
+            try:
+                load_scenes().save_name(name)
+            except ValueError:
+                continue
+            names.append(name)
+            if len(names) == 64:
+                break
+        return names
+
+    def next_native_save_name(self):
+        library = getattr(self.text, 'save_library', None)
+        if library is None:
+            return self.slot
+        if len(self.native_save_names()) >= 64:
+            return None
+        for number in range(1, 1000):
+            name = self.slot if number == 1 else f'{self.slot[:28]}-{number:03d}'
+            if not (library / name).exists():
+                return name
+        return None
 
     def objects(self):
         view = self.text.current
@@ -176,7 +224,10 @@ class ZService:
         for name, target in NAVIGATION.items():
             actions = {'go': 'go '+name}
             if name == 'park':
-                actions.update(save='save park '+self.slot, load='load park '+self.slot)
+                next_save = self.next_native_save_name()
+                if next_save is not None:
+                    actions['save'] = 'save park '+next_save
+                actions['load'] = 'load park '+(self.latest_native_save or self.slot)
                 if view == 'street': actions['open'] = 'open park'
             if target == view and name != 'park': continue
             add('route-'+name, name, [], 'Known route to '+TITLES[target]+'.', actions)
@@ -200,6 +251,10 @@ class ZService:
             add('time','time',[], 'Advance one bounded original-game interval.', {'advance':'advance time'})
             add('notice','notice',[], 'Acknowledge a currently recognized notice.', {'acknowledge':'acknowledge notice'})
         add('saves','saves',[], 'List named native saves in this private session library.', {'list':'list saves'})
+        for name in self.native_save_names():
+            add('save-'+name, 'saved park '+name, [name],
+                'A named native park save. Load it in a fresh original-game session.',
+                {'load': 'load park '+name})
         return objects, bindings
 
     def oracle(self, phase):
@@ -224,35 +279,53 @@ class ZService:
         with (self.work/'oracle.jsonl').open('a',encoding='utf-8') as journal:
             journal.write(json.dumps(item,sort_keys=True)+'\n')
 
-    def observe(self):
+    def observe(self, *, recovering=False):
         try:
+            if self.checkpoint_failed and not recovering:
+                raise ValueError('Checkpoint recovery is unqualified')
             modal = False
-            try:
-                description = self.text.describe().split('Commands:')[0].strip()
-            except Exception:
-                # A known modal is itself an observable context. Do not require
-                # the obscured background scene before offering its handler.
+            parking = getattr(self.text, 'pending_food_notice', False) and self.text.current == 'dino_diner'
+            if parking:
                 scenes = load_scenes()
-                if self.text.current != 'park' or not self.text.park_opened or self.text.notice_outcome_unknown:
-                    raise
-                _,image = scenes.take_frame(self.text.project,self.text.debug,'z-modal-observation')
-                if (not scenes.matches(image,self.text.patterns['quarter_popup']) or
-                        scenes.matches(image,self.text.patterns['parking_hint'])):
-                    raise ValueError('Unqualified modal')
-                modal = True
-                description = 'A recognized quarter notice is visible. Acknowledge it to continue.'
+                _, image = scenes.take_frame(self.text.project, self.text.debug, 'z-parking-observation')
+                if (self.text.notice_outcome_unknown or
+                        not scenes.matches(image, self.text.patterns['parking_hint']) or
+                        scenes.matches(image, self.text.patterns['quarter_popup'])):
+                    raise ValueError('Unqualified parking advice')
+                modal = 'parking-notice'
+                description = ('The adviser suggests another parking lot to increase attendance. '
+                               'The food menu was interrupted before an order was submitted. Acknowledge the advice to continue.')
+            else:
+                try:
+                    description = self.text.describe().split('Commands:')[0].strip()
+                except Exception:
+                    # Qualify the modal independently of its obscured parent.
+                    scenes = load_scenes()
+                    entering = getattr(self.text, 'pending_park_entry', False) and self.text.current == 'street'
+                    if (self.text.current != 'park' and not entering or
+                            not self.text.park_opened or self.text.notice_outcome_unknown):
+                        raise
+                    _,image = scenes.take_frame(self.text.project,self.text.debug,'z-modal-observation')
+                    notices = [n for n in ('quarter_popup', 'parking_hint')
+                               if scenes.matches(image, self.text.patterns[n])]
+                    if len(notices) != 1:
+                        raise ValueError('Unqualified modal')
+                    modal = 'quarter-notice' if notices == ['quarter_popup'] else 'parking-notice'
+                    description = ('A recognized quarter notice is visible.' if modal == 'quarter-notice' else
+                                   'The adviser suggests another parking lot to increase attendance.') + ' Acknowledge it to continue.'
             registers = self.text.debug.registers()
-            context = self.text.current + ('.quarter-notice' if modal else '')
+            context = ('park-entry.' + modal if modal and getattr(self.text, 'pending_park_entry', False)
+                       else self.text.current + ('.' + modal if modal else ''))
             opaque = [self.epoch, self.revision, context, description,
                       registers.get('state_revision'), getattr(self.text.debug, '_runtime_epoch', None)]
             token = hashlib.sha256(json.dumps(opaque, sort_keys=True).encode()).hexdigest()
             objects,_ = self.objects()
             if modal: objects = [o for o in objects if o['id'] == 'notice']
-            return {'complete':True, 'context':{'id':context, 'token':token,
-                    'title':'Quarter notice' if modal else TITLES[self.text.current], 'description':description},
+            return {'complete':True, 'session_token':self.session_token, 'context':{'id':context, 'token':token,
+                    'title':'Parking advice' if modal == 'parking-notice' else 'Quarter notice' if modal else TITLES[self.text.current], 'description':description},
                     'objects':objects, 'inventory':[], 'coverage':{'partial':True}}
         except Exception:
-            return {'complete':False}
+            return {'complete':False, 'session_token':self.session_token}
 
     def finish(self):
         self.oracle('command-complete')
@@ -274,16 +347,44 @@ class ZService:
             verified = self.text.current == NAVIGATION.get(pending['command'][3:])
         if pending['command'].startswith('load park '):
             verified = self.restarted and any(e.get('phase') == 'result' and e.get('command') == 'load park' for e in events)
-        if uncertain or (refusal or text_refusal) and sent or not verified and not (refusal or text_refusal):
+        park_context = {'advance time': 'park', 'go park': 'park-entry'}
+        kinds = {'quarter_popup': 'quarter-notice', 'parking_hint': 'parking-notice'}
+        notices = {e['notices'][0] for e in events if e.get('phase') == 'interrupted' and
+                   e.get('command') == pending['command'] and len(e.get('notices', [])) == 1 and
+                   e['notices'][0] in kinds and e.get('run', {}).get('outcome') == 'guest_time'}
+        park_pause = not uncertain and pending['command'] in park_context and len(notices) == 1
+        if park_pause:
+            observed = self.observe()
+            expected = park_context[pending['command']] + '.' + kinds[next(iter(notices))]
+            park_pause = (observed.get('complete') is True and
+                          observed.get('context', {}).get('id') == expected)
+        food_pause = (not uncertain and pending['command'] == 'buy 20 small feeders' and any(
+            e.get('phase') == 'interrupted' and e.get('command') == pending['command'] and
+            e.get('notices') == ['parking_hint'] and e.get('food_order_submitted') is False and
+            e.get('run', {}).get('outcome') == 'guest_time' for e in events))
+        if food_pause:
+            observed = self.observe()
+            food_pause = (observed.get('complete') is True and
+                          observed.get('context', {}).get('id') == 'dino_diner.parking-notice')
+        if park_pause or food_pause:
+            status = 'accepted'
+        elif uncertain or (refusal or text_refusal) and sent or not verified and not (refusal or text_refusal):
             status = 'incomplete'
         else:
             status = 'rejected' if refusal or text_refusal else 'success'
-        effects = ('partial' if (refusal or text_refusal) and sent else
+        effects = ('partial' if park_pause or food_pause or (refusal or text_refusal) and sent else
                    'none-confirmed' if status == 'rejected' or pending['command'] in ('status','list saves') else
                    'unknown' if status == 'incomplete' else 'applied-confirmed')
+        extra = {}
+        if park_pause or food_pause:
+            extra['continuation'] = {'context': observed['context']['id'], 'command': 'acknowledge notice',
+                                     'original_intent': pending['command']}
+        previous_session = pending.get('session_token', self.session_token)
+        if previous_session != self.session_token and status == 'success' and pending['command'].startswith('load park '):
+            extra['session_transition'] = {'from': previous_session, 'to': self.session_token, 'reason': 'native-load'}
         self.send({'status':status, 'complete':status != 'incomplete',
                    'message':self.public_message(messages or 'No verified completion was recorded.'),
-                   'effects':effects})
+                   'effects':effects, **extra})
 
     def checkpoint(self, request):
         op = request['op']; name = request.get('slot' if op == 'save' else 'checkpoint', 'live')
@@ -291,21 +392,56 @@ class ZService:
             return {'complete':False,'status':'incomplete'}
         try:
             if op == 'save':
+                if self.checkpoint_failed:
+                    raise ValueError('Prior checkpoint restore incomplete')
                 if len(self.snapshots) >= 64 and name not in self.snapshots:
                     raise ValueError('Snapshot slot budget')
+                observation = self.observe()
+                if observation.get('complete') is not True:
+                    raise ValueError('Checkpoint requires a qualified scene')
+                fields = load_scenes().live_saved_fields(self.text.debug)
                 state = self.text.debug.save_state('z-'+secrets.token_hex(8)+'.sav')
                 self.snapshots[name] = {'artifact':state['artifact'],
-                    'text':{k:deepcopy(getattr(self.text,k)) for k in SNAPSHOT_FIELDS}}
+                    'text':{k:deepcopy(getattr(self.text,k)) for k in SNAPSHOT_FIELDS},
+                    'fields':fields, 'context':observation['context']['id'], 'session_token':self.session_token,
+                    'latest_native_save':self.latest_native_save}
                 result = 'saved'
             elif name not in self.snapshots:
                 result = 'missing'
             else:
                 snapshot = self.snapshots[name]
+                if snapshot['session_token'] != self.session_token:
+                    raise ValueError('Checkpoint belongs to another original guest')
+                self.checkpoint_failed = True
+                self.revision += 1
                 self.text.debug.load_state(snapshot['artifact'])
                 for key,value in snapshot['text'].items(): setattr(self.text,key,deepcopy(value))
-                self.revision += 1; result = 'restored'
-            return {'complete':True,'status':result,'checkpoint':name,'persistence':'owned live-session snapshot; not a native park disk save'}
-        except Exception:
+                self.latest_native_save = snapshot['latest_native_save']
+                restored_fields = load_scenes().live_saved_fields(self.text.debug)
+                if restored_fields != snapshot['fields']:
+                    raise ValueError('Restored native fields differ before presentation preparation')
+                # state.load deliberately invalidates the framebuffer. Advance
+                # original execution without mouse/keyboard input, then qualify
+                # a completed frame and the restored public scene.
+                prepared_ms = 0
+                for _ in range(12):
+                    load_scenes().run_guest(self.text.debug, 100)
+                    prepared_ms += 100
+                    observation = self.observe(recovering=True)
+                    if observation.get('complete') is True and observation['context']['id'] == snapshot['context']:
+                        break
+                else:
+                    raise ValueError('Restored scene did not requalify')
+                self.checkpoint_failed = False
+                self.event({'phase':'checkpoint_restored', 'checkpoint':name, 'native_fields_equal':True,
+                            'saved_fields':snapshot['fields'], 'restored_fields':restored_fields,
+                            'field_count':len(snapshot['fields']), 'preparation_guest_ms':prepared_ms,
+                            'context':observation['context']['id'], 'following_input':'not_sent'})
+                result = 'restored'
+            return {'complete':True,'status':result,'checkpoint':name,'replay_safe':result in ('saved', 'restored'),
+                    'persistence':'owned live-session snapshot; mounted files must remain unchanged; not a native park disk save'}
+        except Exception as error:
+            self.event({'phase':'checkpoint_incomplete', 'operation':op, 'error_type':type(error).__name__, 'error':str(error)})
             return {'complete':False,'status':'incomplete','message':'Checkpoint unavailable; inspect private evidence.'}
 
     def command(self):
@@ -340,7 +476,7 @@ class ZService:
                 command = bindings.get((action['verb'],action['target'])) if action['target'] in visible else None
                 if command is None:
                     self.send({'complete':True,'status':'rejected','message':'Action unavailable; no input sent.'});continue
-                self.pending = {'command':command,'messages':[],'events':[]}
+                self.pending = {'command':command,'messages':[],'events':[], 'session_token':self.session_token}
                 self.restarted = False
                 self.receipt('acting')
                 return command
@@ -394,9 +530,25 @@ def main(argv=None):
     service.receipt('starting')
     try:
         game = build_game(source,work)
+        # Import only the selected native bundle into this owned library. Keep
+        # the original bundle unchanged and make later public loads usable.
+        selected_save = None
+        if args.load_save:
+            original = args.load_save.resolve(strict=True)
+            scenes.read_save_bundle(original, scenes.inventory(game))
+            try:
+                selected_name = scenes.save_name(original.name)
+            except ValueError:
+                selected_name = args.slot
+            selected_save = work/'saves'/selected_name
+            selected_save.mkdir(parents=True)
+            for name in ('save.json', 'DINOSG.000'):
+                shutil.copyfile(original/name, selected_save/name)
+            scenes.read_save_bundle(selected_save, scenes.inventory(game))
+            service.latest_native_save = selected_name
         next_args = ['--game-dir',str(game),'--backend',str(args.backend.resolve()),
                      '--work-dir',str(work/'native'),'--save-library',str(work/'saves')]
-        if args.load_save: next_args += ['--load-save',str(args.load_save.resolve(strict=True))]
+        if selected_save: next_args += ['--load-save',str(selected_save)]
         while next_args is not None:
             next_args = scenes.run_session(next_args,command_reader=service.command,output=service.output,
                         on_ready=service.ready,on_event=service.event,on_spawn=service.spawned)

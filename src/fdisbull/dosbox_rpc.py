@@ -61,6 +61,11 @@ class DOSBoxRPC:
                          '-set', 'render doublescan=false', '-set', 'cpu core=normal', '--agent-config', str(config)]
             if window:
                 arguments.append('-agent-window')
+            else:
+                # MIDI can bypass SDL's audio driver on macOS. Disable both
+                # host output paths while retaining the emulated sound devices.
+                environment['SDL_AUDIODRIVER'] = 'dummy'
+                arguments.extend(['-set', 'mixer nosound=true', '-set', 'midi mididevice=none'])
             with (directory / 'emulator.log').open('wb') as log:
                 self.process = subprocess.Popen(
                     arguments,

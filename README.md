@@ -155,6 +155,12 @@ the actions. Bring the game and a compatible native backend. See the
 [native verification and coverage limits](docs/VERIFICATION-DINOPARK-Z-RELIABILITY-2026-10-29.md)
 and [v0.23 merge-readiness checks](docs/VERIFICATION-Z-V023-MERGE-READINESS.md).
 
+[Recoverable Z batches](docs/Z_BATCH_RECOVERY.md) retain per-step effects,
+resume explicitly declared notice continuations and rewind only after a
+certified live checkpoint restore. DinoPark restores recheck native values and
+the original scene before more input. Live checkpoints require the surviving
+guest and unchanged mounted files; native park saves provide durable resumption.
+
 The separately installable [text player](docs/TEXT_PLAYER.md) can consume an
 authored projection or connect to a compatible local backend. Its live mode
 can checkpoint after each model turn and resume, subject to successful save and

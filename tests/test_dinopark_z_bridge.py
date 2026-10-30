@@ -114,7 +114,7 @@ def test_known_modal_exposes_handler_without_background_or_hidden_routes(tmp_pat
     assert backend.command()=='acknowledge notice'
 
 
-def test_promoted_profiles_and_native_business_methods_keep_provenance():
+def test_promoted_profiles_and_adapter_edits_keep_provenance():
     import ast,hashlib
     from fdisbull import dinopark_scenes
     data=Path(dinopark_scenes.__file__).parent/'data'
@@ -126,9 +126,11 @@ def test_promoted_profiles_and_native_business_methods_keep_provenance():
     source=Path(dinopark_scenes.__file__).read_text()
     node=next(n for n in ast.parse(source).body if isinstance(n,ast.ClassDef) and n.name=='TextScene')
     # ast.dump changes its empty-field formatting between Python 3.12 and 3.13.
-    # The exact unchanged class source provides a version-independent identity.
+    # Preserve the imported identity separately from explicitly recorded edits.
     original_class=ast.get_source_segment(source,node)
-    assert hashlib.sha256(original_class.encode()).hexdigest()==provenance['native_text_scene_class_source_sha256']
+    expected=provenance.get('adapted_text_scene_class_source_sha256',
+                            provenance['native_text_scene_class_source_sha256'])
+    assert hashlib.sha256(original_class.encode()).hexdigest()==expected
 
 
 def test_no_udc_means_no_game_copy_or_implicit_legacy_fallback(tmp_path,monkeypatch):
@@ -227,13 +229,16 @@ def test_held_pointer_never_sends_bank_move_or_press():
     assert calls==['input.mouse.state']
 
 
-def test_bank_adapter_lets_guest_consume_new_control_before_borrow_press():
+@pytest.mark.parametrize('control,point,command', [
+    ('bank.borrow', [50, 187], 'borrow'), ('mart.back', [216, 187], 'go street'),
+    ('park.back', [173, 187], 'go street')])
+def test_named_adapter_lets_guest_consume_new_control_before_press(control,point,command):
     from fdisbull.dinopark_scenes import BankInputSession
     events=[]
     class Native:
         version={'id':1}
         project=SimpleNamespace(debug_scene_info=lambda *a,**k:{'definition':{'objects':[
-            {'name':'bank.borrow','point':[50,187],'action':{'kind':'click'}}]}})
+            {'name':control,'point':point,'action':{'kind':'click'}}]}})
         mouse={'buttons':0,'release_pending':False,'x':438,'y':187}
         consumed='bank.payoff'
         moved=False
@@ -241,14 +246,14 @@ def test_bank_adapter_lets_guest_consume_new_control_before_borrow_press():
             return {'frame':{'mode_id':5,'frame_id':42},'observation':'fresh'}
         def call(self,method,params=None):
             if method=='input.mouse.move':
-                self.mouse=dict(self.mouse,x=100,y=187);self.moved=True
+                self.mouse=dict(self.mouse,x=params['x']*2,y=params['y']);self.moved=True
             return {'mouse':dict(self.mouse)}
         def run(self,**kwargs):
-            if self.moved:self.consumed='bank.borrow'
+            if self.moved:self.consumed=control
             return {'outcome':'guest_time'}
         def scene_click(self,*args,**kwargs):return {'consumed':self.consumed}
     native=Native()
     assert native.scene_click('bank','bank.borrow')['consumed']=='bank.payoff'
-    result=BankInputSession(native,events.append).scene_click('bank','bank.borrow')
-    assert result['consumed']=='bank.borrow'
-    assert events[0]['command']=='borrow' and events[0]['point']==[50,187]
+    result=BankInputSession(native,events.append).scene_click('bank',control)
+    assert result['consumed']==control
+    assert events[0]['command']==command and events[0]['point']==point

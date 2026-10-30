@@ -36,15 +36,19 @@ with os.fdopen(int(source), 'r') as reader, os.fdopen(int(sink), 'w') as writer:
     return executable, report
 
 
-def test_default_is_headless_and_does_not_change_inherited_sdl_environment(transport, tmp_path, monkeypatch):
+def test_default_is_headless_and_silences_host_audio(transport, tmp_path, monkeypatch):
     executable, report = transport
     monkeypatch.setenv('SDL_VIDEODRIVER', 'dummy')
+    monkeypatch.setenv('SDL_AUDIODRIVER', 'coreaudio')
     monkeypatch.setenv('DOSBOX_SECRET', 'discard')
     rpc = DOSBoxRPC(executable, tmp_path)
     try:
         result = json.loads(report.read_text())
         assert '-agent-window' not in result['args'] and '--agent-window' not in result['args']
         assert result['env']['SDL_VIDEODRIVER'] == 'dummy'
+        assert result['env']['SDL_AUDIODRIVER'] == 'dummy'
+        assert 'mixer nosound=true' in result['args']
+        assert 'midi mididevice=none' in result['args']
         assert 'DOSBOX_SECRET' not in result['env']
         assert rpc.capabilities['video']['headless'] is True
     finally:

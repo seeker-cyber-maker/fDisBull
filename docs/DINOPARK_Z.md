@@ -1,12 +1,16 @@
 # DinoPark scenes through the original-backed UDC
 
-Integration candidate on v0.23.0, 29 October 2026. This connects the existing
-DinoPark native scenes to the Z player from PR #18. The v0.23.0 tag supplies
-the required original-backed DOS UDC APIs; the Z additions come from these PRs.
-The later
+Continuation candidate on v0.24.0, 29 October 2026. PRs #18 and #19 are merged.
+This connects the DinoPark native scenes to the installed Z player through the
+original-backed DOS UDC. The current
+[shared-context acceptance record](VERIFICATION-DINOPARK-Z-CONTINUATION-2026-10-29.md)
+documents catalogue, operating-notice and repeated-resumption checks. The earlier
 [reliability follow-up](VERIFICATION-DINOPARK-Z-RELIABILITY-2026-10-29.md)
 uses the committed 0.23 compiler source. See also the
 [0.23 integration review and proposed 0.24 priorities](Z_PLAYER_INTEGRATION_0.23_0.24.md).
+The [batch recovery interface](Z_BATCH_RECOVERY.md) adds per-step journals,
+declared action continuations and live checkpoint scene requalification.
+It keeps uncertain effects blocked until an explicit verified recovery.
 
 UDL maps original code to UIL; a UDC realizes UIL as code. Z consumes the public
 scene view. This integration exercises the first, original-backed DOS compiler:
@@ -35,9 +39,12 @@ resource directory. The pinned EXE and VARS.DAT identities are in
 
 The worker translates public Z objects and verbs to the existing native
 handlers. Original game code owns cash, debt, purchases, staff, food, time and
-saved parks. The `TextScene` class retains the imported implementation's exact
-AST hash. Session hooks expose observations, completion events and owned native
-processes without changing those business methods. Recognition profiles and
+saved parks. The imported `TextScene` identity is retained separately from the
+current adapter identity. Continuation changes add catalogue preparation,
+static selection checks, a bounded catalogue-exit macro, unique native save
+titles and explicit quarter-notice continuation. They do not replace original
+financial or purchase effects. Session hooks expose observations, completion
+events and owned native processes. Recognition profiles and
 their source hashes ship under `fdisbull/data/dinopark-e55-*`.
 
 The player receives titles, descriptions, visible actions, opaque freshness
@@ -49,7 +56,7 @@ of hidden hints for the player.
 
 ## Run Z
 
-Use a Python environment containing the v0.23 core, this integration,
+Use a Python environment containing the v0.24 core, this continuation,
 the standalone player and normal fDisBull dependencies. Select the genuine
 patched DOSBox-X backend explicitly. From a combined source checkout:
 
@@ -64,6 +71,10 @@ separate from the original game. It is created with private permissions.
 Quoted paths within `--backend-command` are parsed without a shell. Use a new
 work directory for each fresh process. Missing UDC support fails before game
 copying or launch.
+
+Headless native sessions explicitly disable SDL audio, mixer output and host
+MIDI output. The visible debugger's opt-in window mode retains its existing
+audio behavior. Z uses the silent headless mode.
 
 One tested opening sequence is:
 
@@ -110,18 +121,27 @@ Unrecorded inventory must not be interpreted as absent inventory.
 
 At DinoMart, `buy vegasaurus` and `read vegasaurus` are mapped to the existing
 catalogue and encyclopedia handlers. The cold listing describes its visible
-price and entry without revealing an unobserved result. Sufficient-funds
-purchase behavior was not tested in this batch.
+price and entry without revealing an unobserved result. The continuation tests
+use a legitimately earned native save to exercise the $25,000 order. Its native
+commit proof records the released reservation, retained purchase expense and
+unchanged herd. Reading the encyclopedia and then buying Coelophysis also
+restores the first catalogue page and checks the original species and price
+before BUY; the last inspected page cannot silently change the intended order.
 
 ## Saving and stopping
 
-`save park` uses the original native writer, privately under the default name
-`zpark`; `--slot` selects another qualified name. `load park` starts a fresh
+`save park` uses the original native writer and creates a new backup each time:
+`zpark`, `zpark-002`, and so on. `--slot` chooses the base name. Earlier backups
+are preserved. `load park` loads the latest saved or explicitly loaded backup;
+`list saves` and `look` expose named backups, and `load zpark` selects one by
+name. The session exposes up to 64 named backups. A native load starts a fresh
 guest and uses its original OLD GAME loader. To resume from a later Z process,
 add `--load-save /private/previous-work/saves/zpark` to the worker command and
 choose a new work directory. Native save bundles include their resource
 fingerprint and verified field metadata. Original source saves are never
-implicitly imported as compiler resources.
+implicitly imported as compiler resources. The explicitly selected resume
+bundle is verified and copied into the new session's private save library, so
+it can also be loaded by name there.
 
 The backend protocol's `save`/`load` operations are separate, owned live-session
 engine checkpoints used by player live mode. They restore both native state
@@ -143,11 +163,26 @@ it cannot establish a clean shutdown. Each named bank control now resolves its
 point from the saved scene, moves the cursor, executes 150 guest milliseconds,
 checks released/stable input and rechecks the original scene before one press.
 This covers entry, repayment, borrowing and return to the office. It is an
-input adapter; the original business methods are unchanged. See the
+input adapter; the original financial effects remain guest-owned. See the
 [installed merge-readiness record](VERIFICATION-Z-V023-MERGE-READINESS.md) for
 the fresh borrow-timeout finding and retest. The older office-entry failure's
 exact cause remains unproved. A known quarter notice can be exposed as its own
-context with only its acknowledgment action; this native case remains untested.
+context with only its acknowledgment action. A verified quarter pause returns
+`accepted` with partial effects, rather than claiming full completion or an
+unknown effect. Quarter notices and recognized parking advice have explicit
+acknowledgment contexts. During food-menu interruption, Z reports that no order was submitted;
+after acknowledgment a new purchase intent may continue. Use `acknowledge notice`
+to continue. During park entry, a notice has its own
+`park-entry.quarter-notice` or `park-entry.parking-notice` context. After one
+acknowledgment input, the adapter waits for a uniquely qualified destination;
+a transitional frame or an exhausted budget never establishes completion. The original may return to the street before entry
+has happened. Z then clears the notice, reports the confirmed street context
+and offers a fresh `go park` action; it does not replay the interrupted click.
+DinoMart exit consumes 1,000 guest milliseconds of released pointer movement,
+then sends one 80 ms click and observes the original destination after a
+continuous 2,000 ms interval. These tested input bounds do not establish a
+universal control-readiness detector. Park exit uses the same 1,000 ms
+released-pointer preparation before its single original scene click.
 
-See [native verification and open friction](VERIFICATION-DINOPARK-Z-2026-10-29.md)
+See [current native verification and open friction](VERIFICATION-DINOPARK-Z-CONTINUATION-2026-10-29.md)
 before treating these bounded scenes as full-game coverage.
