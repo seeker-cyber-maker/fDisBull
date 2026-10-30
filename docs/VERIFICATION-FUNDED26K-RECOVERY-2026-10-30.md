@@ -1,7 +1,8 @@
 # funded26k return and provider recovery: original-game verification
 
-Accepted runtime `668ea794577f4fb0fa10acae28e4cbb38975c44d`, private core/player
-0.24.0 packages. The [interface contract](DINOPARK_FUNDED_RECOVERY.md) explains
+Initial accepted runtime `668ea794577f4fb0fa10acae28e4cbb38975c44d`, private
+core/player 0.24.0 packages. The final 0.25 integration and repeated native
+acceptance are recorded below. The [interface contract](DINOPARK_FUNDED_RECOVERY.md) explains
 the confirmed-purchase continuation and recovery-only state. This resolves the
 exercised funded26k failure preserved in the [earlier record](VERIFICATION-Z-BATCH-RECOVERY-2026-10-29.md);
 the earlier failed run remains unchanged evidence.
@@ -93,6 +94,69 @@ Private acceptance and seals are under
 `Conversions/DinoParkTycoon/luna-z-funded-recovery-20261030-01`; package/source
 receipts are under `Conversions/DinoParkTycoon/dinopark-z-funded-recovery-20261030-01`.
 No original assets, saves, full images or databases are included in this PR.
+
+## Final 0.25 integration and repeated native acceptance
+
+The branch integrates published main `85503c0e895842424faa7db62f020b879d08568a`.
+README/batch-guide conflicts were resolved while retaining main's provider-and-
+plan continuation authorization, canonical action identity and alias replay
+refusal. Partial/unknown original effects still cannot be upgraded by a successful
+acknowledgment. This food case starts with an original protected, confirmed
+purchase, so its separately authorized acknowledgment can complete the return.
+
+Luna repeated the bounded installed original-game test on runtime
+`b074aef2e9e65ce38dc200d4f9bb02ed786d41ea`, with fresh core/player 0.25.0
+packages and a separate private environment. All **165** source, wheel, installed,
+source-tar and tool-ZIP runtime payloads agree. Actual canonical action recording
+and provider/plan authorization were checked in the native batch journals.
+
+| 0.25 artifact | SHA-256 |
+|---|---|
+| Core wheel | `367d03bcb64f4b6fd4853e29bb102965a193f78b98684ccdbce4119d0d4d64bb` |
+| Player wheel | `e086d0088a2749eccdf0e7bb4f247623a29caa352efeeace8a0f2c428d6668ea` |
+
+The exact funded26k seed and retained native backend are the same identities as
+above. The natural quarter return, no-repeat run/resume, one-shot provider-side
+error, durable recovery-only response, refused ordinary input/new checkpoint,
+same-process explicit restore and final order/save/load all passed again. Worker
+12666 and native 12668 survived the failure and checkpoint recovery; native 12774
+was used only for the final named disk load. Each restore matched all 20 native
+ranges before 100 ms input-free preparation and requalified Dino Diner. The
+provider failure and its confirmed effect were present in immediate on-disk
+receipt/diagnostic snapshots before another operation.
+
+The three protected commits each had cash **26,864 -> 26,364**, feeders
+**10 -> 30**, and exactly one purchase confirmation. The natural and faulted
+branches were explicitly rewound and retained in history; only the last order
+remained in the saved park. The dynamic native name was `zpark`, SHA
+`fb6aa90340e192e4608e93ca9008f5be5ffbee1f71105dc99c408b6d7aa00385`.
+Save/readback/fresh-load matched all 20 fields. Loaded cash was **26,233**, loan
+**4,290**, food **29**, one guide, one Coelophysis and hunger zero. Absolute
+balances are observations from this run; the initial 0.24 run above is retained
+separately, without a deterministic replay claim.
+
+Accounting remained **11 Player commands** (eight current, three superseded),
+**three rejected raw probes**, **13 provider act requests** and **92 total
+provider requests** including observations/checkpoint controls. All 13 final
+checks passed: native/worker exit zero, completed native/service cleanup receipts,
+no owned survivors, silent actual launches/logs and unchanged originals/seed.
+The initial 0.24 acceptance environment and sealed evidence were preserved.
+Parent readback independently verified all 165 installed payloads, both restore
+witnesses, native save/load equality and four 184-resource closures against the
+original game (UDC output, compiled game and both native working directories).
+
+The 0.25 focused checks passed **176**, both from the checkout and extracted
+source tarball. Required `python -m pytest -q`: **1,876 passed, 118 skipped,
+13 failed, 23 errors**. A fresh main-85503c0 run in the same environment had
+**1,868 passed, 118 skipped, 13 failed, 23 errors**. All 36 failing/error test
+identities agree; none were added or removed. The local whole suite remains
+red. Core/player wheels, source tar and tool ZIP pass the tool-only archive guard.
+
+Repeated native evidence and its seals are under
+`Conversions/DinoParkTycoon/luna-z-funded-recovery-v025-20261030-01`;
+parent package/test/closure readbacks are under
+`Conversions/DinoParkTycoon/dinopark-z-funded-recovery-20261030-01/v025`.
+The native scope exclusions below continue to apply.
 
 ## Friction and remaining boundaries
 
