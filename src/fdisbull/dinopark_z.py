@@ -123,13 +123,14 @@ class ZService:
     def receipt(self, status, *, complete=False):
         from fdisbull.dinopark_scenes import atomic_json
         processes=[{'pid':p.pid,'returncode':p.poll()} for p in self.processes]
+        delivery_pending = self.reply_pending
         atomic_json(self.work/'z-session.json',{
-            'status':status, 'complete':complete, 'stop_reason':self.stop_reason,
+            'status':status, 'complete':complete and not delivery_pending, 'stop_reason':self.stop_reason,
             'history':self.history, 'pending_command':self.pending['command'] if self.pending else None,
             'latest_native_save':self.latest_native_save,
             'checkpoint_recovery':'unqualified' if self.checkpoint_failed or self.recovery_required else 'qualified',
             'recovery_required':self.recovery_required, 'action_failures':self.failures,
-            'reply_delivery_pending':self.reply_pending,
+            'reply_delivery_pending':delivery_pending,
             'pending_effects':('applied-confirmed' if self.pending and any(e.get('phase') in
                 ('food_purchase_committed','vegasaurus_purchase_confirmed') for e in self.pending['events'])
                 else 'unknown' if self.pending else 'none-pending'),

@@ -68,7 +68,9 @@ class ZReplyJournal:
             return {}
         try: state = self._read('state.json')
         except FileNotFoundError: return {'unavailable': True}
-        if (not isinstance(state, dict) or not set(state) <= {'pending', 'accepted', 'unavailable'}
+        if (not isinstance(state, dict) or not state
+                or not set(state) <= {'pending', 'accepted', 'unavailable'}
+                or not (state.get('pending') or state.get('accepted') or state.get('unavailable'))
                 or any(not isinstance(state[k], str) or not re.fullmatch(r'reply-[0-9a-f]{32}', state[k])
                        for k in ('pending', 'accepted') if k in state)
                 or 'unavailable' in state and type(state['unavailable']) is not bool):
@@ -98,7 +100,13 @@ class ZReplyJournal:
         if not self.root.exists():
             raise ArtifactError('reply_not_found')
         record = self._read(ident + '.json')
-        if record.get('id') != ident:
+        if (not isinstance(record, dict)
+                or set(record) != {'format', 'id', 'artifact', 'binding', 'execution'}
+                or record.get('format') != 'fdisbull-z-retained-reply-1'
+                or record.get('id') != ident
+                or not isinstance(record.get('artifact'), dict)
+                or not isinstance(record['artifact'].get('id'), str)
+                or not isinstance(record.get('execution'), dict)):
             raise ArtifactError('invalid_receipt')
         metadata = self.storage().info(record['artifact']['id'])
         if metadata != record['artifact']:

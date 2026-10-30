@@ -151,11 +151,15 @@ def test_retention_failure_preserves_unknown_and_blocks_input(tmp_path, monkeypa
     from fdisbull.z_replies import ZReplyJournal
 
     backend, _ = service(tmp_path)
-    store = backend.replies.storage()
-    def unavailable(chunks): raise ArtifactError('quota_exceeded')
-    monkeypatch.setattr(store, 'put_stream', unavailable)
+    from fdisbull.output_artifacts import OutputArtifactStore
+    calls = []
+    def unavailable(store, chunks):
+        calls.append(True)
+        raise ArtifactError('quota_exceeded')
+    monkeypatch.setattr(OutputArtifactStore, 'put_stream', unavailable)
     backend.send(large_result())
     assert json.loads(backend.writer.getvalue())['status'] == 'reply-unavailable'
+    assert calls == [True]
     assert backend.reply_pending and ZReplyJournal(tmp_path).blocked
     assert request(backend, {'op': 'act', 'action': {}})['status'] == 'reply-unavailable'
 
@@ -193,3 +197,45 @@ def test_repeated_old_ack_cannot_clear_a_new_hold(tmp_path):
     assert second['id'] != ref['id']
     assert request(backend, accept)['status'] == 'unresolved'
     assert backend.reply_pending
+
+
+@pytest.mark.parametrize('invalid', [[], {}, {'pending': True}, {'unavailable': 'false'}])
+def test_corrupt_journal_state_fails_closed_without_crashing(tmp_path, invalid):
+    backend, _ = service(tmp_path)
+    retained(backend)
+    (backend.replies.root / 'state.json').write_text(json.dumps(invalid))
+    assert backend.reply_pending
+    assert request(backend, {'op': 'reply_status'})['status'] in ('unresolved', 'reply-unavailable')
+    assert request(backend, {'op': 'act', 'action': {}})['status'] == 'reply-unavailable'
+
+
+@pytest.mark.parametrize('invalid', [[], {}, {'artifact': []}])
+def test_corrupt_receipt_fails_closed_without_crashing(tmp_path, invalid):
+    backend, _ = service(tmp_path)
+    ref = retained(backend)
+    (backend.replies.root / (ref['id'] + '.json')).write_text(json.dumps(invalid))
+    assert request(backend, {'op': 'read_reply', 'reply_id': ref['id']})['status'] == 'unresolved'
+    assert backend.reply_pending
+    assert request(backend, {'op': 'act', 'action': {}})['status'] == 'reply-unavailable'
+
+
+def test_inline_boundary_is_unchanged_and_overflow_is_measured_in_bytes(tmp_path):
+    backend, native = service(tmp_path)
+    payload = {'text': 'x' * (LIMIT - len(b'{"text":""}\n'))}
+    backend.send(payload)
+    assert len(backend.writer.getvalue().encode()) == LIMIT
+    assert json.loads(backend.writer.getvalue()) == payload
+    assert not backend.reply_pending and not native.calls
+    assert not backend.replies.root.exists()
+    payload['text'] += 'x'
+    assert retained(backend, payload)['bytes'] == LIMIT
+    assert backend.reply_pending
+
+
+def test_pending_delivery_cannot_be_recorded_as_clean_completion(tmp_path):
+    backend, _ = service(tmp_path)
+    retained(backend)
+    backend.receipt('recovery-required', complete=True)
+    receipt = json.loads((tmp_path / 'z-session.json').read_text())
+    assert receipt['complete'] is False and receipt['reply_delivery_pending'] is True
+    assert receipt['cleanup_complete'] is True  # host cleanup is independent
