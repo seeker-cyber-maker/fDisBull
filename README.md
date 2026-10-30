@@ -178,6 +178,10 @@ the actions. Bring the game and a compatible native backend. See the
 [native verification and coverage limits](docs/VERIFICATION-DINOPARK-Z-RELIABILITY-2026-10-29.md)
 and [v0.23 merge-readiness checks](docs/VERIFICATION-Z-V023-MERGE-READINESS.md).
 
+A separate [static-analysis study](docs/DINOPARK_STATIC_ANALYSIS_FRICTION.md)
+records whole-binary discovery limits and proposed tool improvements. Its code
+and resource candidates remain unconfirmed; it does not extend playable coverage.
+
 [Recoverable Z batches](docs/Z_BATCH_RECOVERY.md) retain per-step effects,
 resume explicitly declared notice continuations and rewind only after a
 certified live checkpoint restore. DinoPark restores recheck native values and
