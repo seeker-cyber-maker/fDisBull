@@ -82,3 +82,7 @@ legacy funded26k save, SHA
 The [installed original-game acceptance](VERIFICATION-FUNDED26K-RECOVERY-2026-10-30.md)
 records the natural quarter return, same-process provider recovery, exact native
 state checks, save/load and preserved claim boundaries.
+
+The [lifecycle acceptance](VERIFICATION-DINOPARK-RECOVERY-LIFECYCLE-2026-10-30.md)
+separately verifies incomplete unresolved-recovery EOF with completed cleanup,
+and two failures/restores in one native guest with independent diagnostics.
