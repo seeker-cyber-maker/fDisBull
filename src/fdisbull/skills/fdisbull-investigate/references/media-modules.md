@@ -46,7 +46,7 @@ Discover installed capabilities without a project or target execution:
 ```text
 fdisbull media-modules
 fdisbull media-inspect /private/program --adapter mz-envelope
-fdisbull media-extract /private/program /private/new-tail --adapter mz-envelope --member tail --max-output-bytes 1048576
+fdisbull media-extract /private/program /private/new-tail --adapter mz-envelope --member tail --max-payload-bytes 1048576
 fdisbull media-inspect /private/PICDIR --adapter agi-v2 --volume-root /private/game --number 0
 fdisbull media-extract /private/PICDIR /private/new-resource --adapter agi-v2 --volume-root /private/game --number 0 --member resource
 ```
@@ -76,6 +76,9 @@ external-target storage boundary or grant permission to bind/import bytes.
 
 Both adapters cap each source volume/container at 64 MiB. `max_output_bytes`
 limits the selected payload to 1..64 MiB before creating output (default 64 MiB).
+The CLI uses `--max-payload-bytes` for this limit. The global
+`--max-output-bytes` before the command controls the JSON reply budget instead;
+it never changes the extracted payload limit.
 These adapters perform no decompression and have fixed/small member counts.
 Filesystem operations assume the caller controls the private parent; this is
 not a sandbox against a hostile concurrent process running as the same user.

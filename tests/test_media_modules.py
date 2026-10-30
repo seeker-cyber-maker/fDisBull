@@ -184,3 +184,54 @@ def test_agi_directory_home_expansion(tmp_path, monkeypatch):
     result = inspect_media('~/PICDIR', adapter='agi-v2', volume_root=tmp_path, number=0)
     assert result['members'][0]['size'] == 1
     assert result['members'][0]['sha256'] == hashlib.sha256(b'Q').hexdigest()
+
+
+@pytest.mark.parametrize('limit,global_limit,member,expected_ok', [
+    (None, None, 'module', True),
+    (4, 4096, 'module', True),
+    (3, 4096, 'module', False),
+    (1048576, 4096, 'tail', False),
+    (0, None, 'module', False),
+    (67108865, None, 'module', False),
+])
+def test_fresh_cli_extraction_payload_budget(tmp_path, limit, global_limit, member, expected_ok):
+    import os
+    import subprocess
+    import sys
+    source = tmp_path / 'authored'
+    source.write_bytes(mz()[:36] + bytes(1048577))
+    output = tmp_path / 'extracted'
+    command = [sys.executable, '-m', 'fdisbull']
+    if global_limit is not None:
+        command += ['--max-output-bytes', str(global_limit)]
+    command += ['media-extract', str(source), str(output), '--adapter', 'mz-envelope', '--member', member]
+    if limit is not None:
+        command += ['--max-payload-bytes', str(limit)]
+    environment = dict(os.environ, PYTHONPATH=str(Path(__file__).resolve().parents[1] / 'src'))
+    result = subprocess.run(command, cwd=tmp_path, env=environment, capture_output=True, text=True, timeout=10)
+    response = json.loads(result.stdout)
+    assert response.get('ok') is expected_ok, (result.returncode, response, result.stderr)
+    assert result.returncode == (0 if expected_ok else 1)
+    if global_limit is not None:
+        assert len(result.stdout.encode()) <= global_limit
+    if expected_ok:
+        assert (output / 'payload.bin').read_bytes() == b'CODE'
+    else:
+        assert not output.exists()
+        assert 'output budget' in response['error']['message'] or 'max_output_bytes' in response['error']['message']
+
+
+def test_fresh_cli_global_reply_budget_stays_independent(tmp_path):
+    import os
+    import subprocess
+    import sys
+    source = tmp_path / 'authored'; source.write_bytes(mz())
+    output = tmp_path / 'out'
+    command = [sys.executable, '-m', 'fdisbull', '--max-output-bytes', '3',
+               'media-extract', str(source), str(output), '--adapter', 'mz-envelope',
+               '--member', 'module', '--max-payload-bytes', '4']
+    environment = dict(os.environ, PYTHONPATH=str(Path(__file__).resolve().parents[1] / 'src'))
+    result = subprocess.run(command, cwd=tmp_path, env=environment, capture_output=True, text=True, timeout=10)
+    assert result.returncode == 1
+    assert 'inline output budget' in json.loads(result.stdout)['error']
+    assert not output.exists()

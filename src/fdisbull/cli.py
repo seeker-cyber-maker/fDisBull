@@ -675,7 +675,8 @@ def parser():
         if name=='media-extract':
             c.add_argument('output')
             c.add_argument('--member',required=True)
-            c.add_argument('--max-output-bytes',type=int,default=64*1024*1024)
+            c.add_argument('--max-payload-bytes',dest='media_max_output_bytes',type=int,default=64*1024*1024,
+                           help='Extracted member byte limit (1..67108864); separate from global JSON reply budget')
     for name in ('gog-list','gog-unpack'):
         c=sub.add_parser(name,help=METHODS[name])
         c.add_argument('path',help='local GOG Inno Setup offline installer')
@@ -1024,6 +1025,8 @@ def main(argv=None):
 
 def _dispatch(args):
     command = args.pop("command")
+    if command == 'media-extract':
+        args['max_output_bytes'] = args.pop('media_max_output_bytes')
     if command.startswith(('udc-','udl-')) and not command.startswith('udc-native-'):
         return _udc_command(command,args)
     if command in ('story-info','zork','zork-recover','zork-uil','zork-intents','il-check','il-run','il-store','il-info'):
