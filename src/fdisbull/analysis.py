@@ -96,15 +96,24 @@ class AnalysisMixin:
             v = self.version(version)['id']
             doc = self._document(v)
             if topic == 'summary':
-                return {'version':v,'header':doc['header'],**{key:doc[key] for key in ('selected_image','image_views','container_header','selected_slice') if key in doc},'counts':{x:len(doc.get(x,[])) for x in ('sections','imports','exports','strings','libraries','relocations')},'warnings':doc.get('warnings',[])}
+                counts = {x:len(doc.get(x,[])) for x in ('sections','imports','exports','strings','libraries','relocations')}
+                if self.meta['format'] == 'LE':
+                    counts['relocations'] = len(self.meta['loader_metadata']['le']['fixups'])
+                return {'version':v,'header':doc['header'],**{key:doc[key] for key in ('selected_image','image_views','container_header','selected_slice') if key in doc},'counts':counts,'warnings':doc.get('warnings',[])}
             if topic == 'linkage':
                 return dict(version=v,linkage=doc.get('linkage',{}),metadata_revision=doc.get('metadata_revision',0),warnings=doc.get('warnings',[]))
             if topic == 'header':
                 return {'version':v,'header':doc['header'],**{key:doc[key] for key in ('selected_image','image_views','container_header','selected_slice') if key in doc},'warnings':doc.get('warnings',[])}
             if topic not in ('sections','imports','exports','strings','libraries','relocations'):
                 raise ValueError('unknown information topic')
+            records = doc.get(topic, [])
+            if self.meta['format'] == 'LE' and topic == 'relocations':
+                # Standalone inspection has a bounded preview; the importer
+                # retains every applied LE record. Page that retained list
+                # here without duplicating it into ordinary status replies.
+                records = self.meta['loader_metadata']['le']['fixups']
             items=[]
-            for original in doc.get(topic,[])[offset:offset+limit]:
+            for original in records[offset:offset+limit]:
                 item=dict(original)
                 if item.get('address') is not None:
                     if 'name' in item:
@@ -117,7 +126,7 @@ class AnalysisMixin:
                     if item.get(field) is not None:
                         item[field]=h(item[field])
                 items.append(item)
-            result={'version':v,'items':items,'total':len(doc.get(topic,[])),'offset':offset,'has_more':offset+len(items)<len(doc.get(topic,[])),'warnings':doc.get('warnings',[])}
+            result={'version':v,'items':items,'total':len(records),'offset':offset,'has_more':offset+len(items)<len(records),'warnings':doc.get('warnings',[])}
             if topic=='imports':
                 row=self.db.execute('SELECT document FROM recoveries WHERE version=?',(v,)).fetchone()
                 result['recovery']=json.loads(row[0]) if row else None

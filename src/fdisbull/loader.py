@@ -51,7 +51,7 @@ def _is_executable(address: int, regions: list[Region]) -> bool:
 def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = None,
                base: int = 0, entry: int | None = None, load_segment: int = 0x1000,
                module: bool = False, slice_arch: str | None = None, image: str | None = None) -> Image:
-    """Load classic MZ, ELF, PE, thin Mach-O, explicitly selected COM or raw code.
+    """Load classic MZ, DOS/4GW LE, ELF, PE, Mach-O, declared COM or raw code.
 
     Native file mappings use their preferred image addresses (PIE load bias is
     not applied). Raw mode requires ``arch`` and defaults to 64 bits. DLLs
@@ -59,7 +59,7 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
     Module mode also permits an absent entry for other explicitly chosen libraries.
     """
     if image=='auto':image=None
-    if image not in (None,'pe','mz','com'):raise ValueError('image must be auto, pe, mz or com')
+    if image not in (None,'pe','le','mz','com'):raise ValueError('image must be auto, pe, le, mz or com')
     path = Path(path)
     if not isinstance(module,bool):
         raise ValueError('module must be a boolean')
@@ -107,13 +107,18 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
         if bits is not None or base:raise ValueError('DOS MZ uses load_segment; bits/base require raw mode')
         from .dos import load_mz
         return load_mz(data,load_segment=load_segment,entry=entry,allow_secondary=True)
+    from .image_views import secondary_header
+    secondary = secondary_header(data)
+    if image == 'le' or (image is None and (data.startswith(b'LE') or secondary and secondary['format'] == 'LE')):
+        if slice_arch is not None:
+            raise ValueError('slice_arch selects Mach-O CPUs and cannot select an LE image')
+        if bits is not None or base or load_segment != 0x1000:
+            raise ValueError('LE uses its preferred flat object addresses; bits/base/load_segment overrides are not supported')
+        from .le import load_le
+        return load_le(data, entry=entry)
     if image=='pe':
-        from .image_views import secondary_header
-        secondary=secondary_header(data)
         if not secondary or secondary['format']!='PE':raise ValueError('requested PE image is not present')
     if data[:2]==b'MZ':
-        from .image_views import secondary_header
-        secondary=secondary_header(data)
         if not secondary or secondary['format']!='PE':
             if slice_arch is not None:raise ValueError('slice_arch applies only to Mach-O containers')
             if bits is not None or base:
