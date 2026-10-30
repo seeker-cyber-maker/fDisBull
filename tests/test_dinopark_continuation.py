@@ -275,3 +275,18 @@ def test_pending_parking_advice_exposes_only_its_verified_action(tmp_path, monke
     if not ambiguous:
         assert observed['context']['id'] == 'dino_diner.parking-notice'
         assert observed['objects'] == [{'id': 'notice'}]
+
+
+def test_original_roaming_dinosaur_probe_does_not_hide_the_park():
+    from copy import deepcopy
+    from fdisbull import dinopark_scenes as scenes
+    from fixtures_dinopark_scene_probes import PARK_COEL_OVERLAP
+    pattern = json.loads(scenes.OPERATING_PATTERNS.read_text())['scenes']['park_view']
+    unchanged = deepcopy(pattern)
+    colors = {(s['x'], s['y']): s['rgb'] for s in PARK_COEL_OVERLAP['samples']}
+    class Probe:
+        # Missing observations raise; they are never invented as black pixels.
+        def getpixel(self, point): return colors[point]
+    assert not scenes.matches(Probe(), pattern)
+    assert scenes.matches(Probe(), scenes.park_static_pattern(pattern))
+    assert pattern == unchanged

@@ -201,6 +201,19 @@ def matches(image, pattern):
             not any(matches(image, other) for other in pattern.get('reject', [])))
 
 
+def park_static_pattern(pattern):
+    """Project the retained profile outside the occupied first pen contents.
+
+    The original 40-anchor profile remains immutable for native-save identity.
+    Every retained anchor still requires its exact color; this excludes an
+    entire actor region rather than permitting an arbitrary missed sample.
+    """
+    samples = [s for s in pattern['samples'] if not (s['x'] < 90 and 115 <= s['y'] < 175)]
+    if len(pattern['samples']) != 40 or len(samples) != 32:
+        raise ValueError('Unexpected park observation profile; qualify its actor regions explicitly')
+    return {**pattern, 'samples': samples, 'min_matches': len(samples)}
+
+
 def wait_for_office(project, debug, patterns):
     # A slow or blank frame is not readiness. Wait without replaying any input.
     for attempt in range(13):
@@ -1685,6 +1698,7 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                      for key, value in shop_patterns.items()})
     patterns.update(json.loads(SAVE_PATTERNS.read_text())['scenes'])
     patterns.update(json.loads(OPERATING_PATTERNS.read_text())['scenes'])
+    patterns['park_view'] = park_static_pattern(patterns['park_view'])
     patterns.update(json.loads(CATALOGUE_PATTERNS.read_text())['scenes'])
     street_guard = json.loads(STREET_PATTERNS.read_text())['scenes']['street']
     street_guard['reject'] = [patterns[name] for name in
@@ -1705,6 +1719,8 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                'street_patterns_sha256': digest(STREET_PATTERNS),
                'mart_patterns_sha256': digest(MART_PATTERNS),
                'operating_patterns_sha256': digest(OPERATING_PATTERNS),
+               'park_observation_variant': 'occupied-first-pen-excluded-1',
+               'park_observation_sha256': document_hash(patterns['park_view']),
                'catalogue_patterns_sha256': digest(CATALOGUE_PATTERNS),
                'script_sha256': digest(Path(__file__)), 'fdisbull_version': fdisbull.__version__,
                'e55_handoff_sha256': 'e6f9da13a3ab1d1de485a496f5d807121bcd929ba67bd87256b449870aa718ea',
