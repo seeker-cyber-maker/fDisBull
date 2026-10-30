@@ -98,6 +98,26 @@ def test_unknown_confirmed_effect_is_preserved_and_not_retried(tmp_path):
     assert len(backend.inputs) == 1
 
 
+def test_confirmed_reply_survives_failed_following_observation(tmp_path):
+    class FollowingReadFails(CountedBackend):
+        fail_read = False
+        def observe(self):
+            if self.fail_read:
+                self.fail_read = False
+                raise EOFError('lost following observation after confirmed reply')
+            return super().observe()
+        def act(self, request):
+            result = super().act(request)
+            self.fail_read = True
+            return result
+    backend = FollowingReadFails()
+    batch = BatchSession(Player(backend), tmp_path / 'batch.json', PLAN)
+    assert batch.run()['status'] == 'unknown'
+    attempt = json.loads(batch.path.read_text())['steps'][0]['attempts'][0]
+    assert attempt['result']['effects'] == 'applied-confirmed'
+    assert batch.resume()['status'] == 'unknown' and len(backend.inputs) == 1
+
+
 def test_crashed_dispatch_and_foreign_session_never_dispatch_on_reopen(tmp_path):
     backend = CountedBackend()
     batch = BatchSession(Player(backend), tmp_path / 'batch.json', PLAN)

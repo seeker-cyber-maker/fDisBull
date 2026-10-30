@@ -17,7 +17,7 @@ plan = [
          "park-entry.parking-notice": "acknowledge notice",
          "park-entry.quarter-notice": "acknowledge notice"
      }},
-    {"id": "finances", "command": "status park"},
+    {"id": "finances", "command": "check status"},
     {"id": "inventory", "command": "inventory"}
 ]
 batch = BatchSession(Player(backend), "/private/existing-folder/batch.json", plan)

@@ -161,6 +161,11 @@ class BatchSession:
         try:
             original = step['attempts'][0].get('result', {}) if kind == 'continuation' else {}
             result = self.player.execute_result(command, blocked_action=original.get('action'))
+            # Preserve the returned effect before a follow-up observation or
+            # driver failure. The step remains running/unknown until its goal
+            # is qualified, but a confirmed commit must not disappear with it.
+            attempt.update(state='returned', result=result)
+            self._write()
             raw = self.player.backend.observe()
             transition = result.get('session_transition', {})
             if raw.get('session_token') != self.doc['session_token']:
