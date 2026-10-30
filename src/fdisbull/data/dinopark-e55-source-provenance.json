@@ -11,7 +11,7 @@
   "native_text_scene_class_ast_sha256": "e44f3ebee8431f93822434e7d264fcd59e680aa96f604a6b7c1ef1a5cfa5fbe2",
   "native_text_scene_class_ast_python": "3.13",
   "native_text_scene_class_source_sha256": "05a4b1d350fa033e2e178870a0a9b33b0b056d51963de405ed6537190f87436d",
-  "adapted_text_scene_class_source_sha256": "7e0e8b4836c0d3896056ad254d9ddbe3c0a0853ad53c818f51fb7af543b42338",
+  "adapted_text_scene_class_source_sha256": "a7e1faa9a1698688b48df7b472fad611c13d490e2059ee107692b9a847d3a3cf",
   "adapter_edits": [
     "Native save titles are allocated independently from renumbered disk slots.",
     "Coelophysis selection uses qualified catalogue navigation, static markers and original species/price fields.",
@@ -24,6 +24,7 @@
     "Expose recognized parking advice before food-order submission; acknowledge with original Enter and qualify the resumed diner/menu/street before a new purchase intent.",
     "Treat a uniquely recognized parking advice during park entry or time advancement as an explicit continuable modal, preserving its actual destination and partial travel status.",
     "Derive a 32-exact-anchor park view excluding the occupied first-pen actor region; retain the raw 40-anchor operating profile for native-save identity and record the applied variant digest.",
-    "Prepare the saved park-exit target with released movement and 1000 guest milliseconds before its single original click, as with the qualified catalogue exit."
+    "Prepare the saved park-exit target with released movement and 1000 guest milliseconds before its single original click, as with the qualified catalogue exit.",
+    "Use the original parking-advice thumb with qualified released movement. During a food draft, dismiss one positively recognized advisory and reconcile cash reservation plus pending/live food before deciding whether its increment applied; never repeat an unknown increment. UI qualification allows unrelated loan progression; protected commit proof is retained."
   ]
 }

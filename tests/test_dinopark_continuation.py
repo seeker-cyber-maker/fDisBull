@@ -178,8 +178,10 @@ def test_entry_notice_can_return_to_street_without_replaying_entry(monkeypatch, 
     monkeypatch.setattr(scenes, 'matches', lambda image, pattern: image == pattern)
     monkeypatch.setattr(scenes, 'run_guest', lambda *args: None)
     monkeypatch.setattr(scenes, 'park_snapshot', lambda debug: {})
+    monkeypatch.setattr(scenes, 'parking_notice_input',
+                        lambda text: (inputs.append('parking-thumb') or {'accepted': True, 'delivery': 'queued'}))
     result = text.acknowledge_notice()
-    assert inputs == ['enter']
+    assert inputs == (['parking-thumb'] if notice == 'parking_hint' else ['enter'])
     assert text.current == 'street' and not text.pending_park_entry and not text.notice_outcome_unknown
     assert assertions == [('verified-street', {'object': 'street.office'})]
     assert events[-1]['park_entry_outcome'] == 'not_completed'
@@ -245,8 +247,10 @@ def test_parking_acknowledgment_never_submits_or_replays_food_order(monkeypatch,
     monkeypatch.setattr(scenes, 'take_frame', lambda *a: ({'artifact': 'retained'}, next(frames)))
     monkeypatch.setattr(scenes, 'matches', lambda image, pattern: image == pattern)
     monkeypatch.setattr(scenes, 'run_guest', lambda *a: None)
+    monkeypatch.setattr(scenes, 'parking_notice_input',
+                        lambda text: (inputs.append('parking-thumb') or {'accepted': True, 'delivery': 'queued'}))
     result = text.acknowledge_notice()
-    assert inputs == ['enter']
+    assert inputs == ['parking-thumb']
     assert text.pending_food_notice is (not qualified)
     assert text.notice_outcome_unknown is (not qualified)
     if qualified:
@@ -290,3 +294,19 @@ def test_original_roaming_dinosaur_probe_does_not_hide_the_park():
     assert not scenes.matches(Probe(), pattern)
     assert scenes.matches(Probe(), scenes.park_static_pattern(pattern))
     assert pattern == unchanged
+
+
+@pytest.mark.parametrize('cash,working,live,pending,count', [
+    (27535, 27260, 8, 19, 11), (27535, 27235, 8, 20, 12),
+    (27535, 27260, 8, 20, None), (27535, 27259, 8, 19, None)])
+def test_food_draft_resolves_applied_effect_without_guessing(monkeypatch, cash, working, live, pending, count):
+    from fdisbull import dinopark_scenes as scenes
+    monkeypatch.setattr(scenes, 'balances', lambda debug: {'cash': cash, 'working_cash': working, 'loan': 4290})
+    monkeypatch.setattr(scenes, 'park_resources', lambda debug: {'guides': 1, 'small_feeders': live})
+    monkeypatch.setattr(scenes, 'pending_small_feeders', lambda debug: pending)
+    if count is None:
+        with pytest.raises(RuntimeError, match='counters disagree'):
+            scenes.food_draft_state(object())
+    else:
+        actual, evidence = scenes.food_draft_state(object())
+        assert actual == count and evidence['pending_small_feeders'] == pending

@@ -214,6 +214,41 @@ def park_static_pattern(pattern):
     return {**pattern, 'samples': samples, 'min_matches': len(samples)}
 
 
+def parking_notice_input(text):
+    """Press the original advice window's visible thumb, never a purchase."""
+    frame, image = take_frame(text.project, text.debug, 'parking-input-before')
+    if (not matches(image, text.patterns['parking_hint']) or
+            matches(image, text.patterns['quarter_popup'])):
+        raise RuntimeError('Parking advice is not uniquely qualified; acknowledgment withheld')
+    mouse = text.debug.call('input.mouse.state')['mouse']
+    if mouse['buttons'] or mouse['release_pending']:
+        raise RuntimeError('Parking pointer is held; acknowledgment withheld')
+    moved = text.debug.call('input.mouse.move', {'x': 160, 'y': 111,
+        'mode_id': frame['metadata']['mode_id'], 'frame_id': frame['metadata']['frame_id']})
+    if moved.get('accepted') is not True:
+        raise RuntimeError('Parking pointer movement unavailable; acknowledgment withheld')
+    run_guest(text.debug, 1000)
+    frame, image = take_frame(text.project, text.debug, 'parking-input-prepared')
+    if (not matches(image, text.patterns['parking_hint']) or
+            matches(image, text.patterns['quarter_popup'])):
+        raise RuntimeError('Parking view changed; acknowledgment withheld')
+    text.event({'phase': 'parking_pointer_prepared', 'point': [160, 111],
+                'frame': frame, 'acknowledgment_input': 'not_sent'})
+    return text.debug.click(160, 111, hold_ms=150,
+                            mode_id=frame['metadata']['mode_id'], frame_id=frame['metadata']['frame_id'])
+
+
+def food_draft_state(debug):
+    cash = balances(debug)
+    resources = park_resources(debug)
+    pending = pending_small_feeders(debug)
+    reserved = cash['cash'] - cash['working_cash']
+    quantity = pending - resources['small_feeders']
+    if resources['guides'] != 1 or not 0 <= quantity <= 20 or reserved != 25 * quantity:
+        raise RuntimeError('Food draft counters disagree; outcome unknown')
+    return quantity, {'balances': cash, 'resources': resources, 'pending_small_feeders': pending}
+
+
 def wait_for_office(project, debug, patterns):
     # A slow or blank frame is not readiness. Wait without replaying any input.
     for attempt in range(13):
@@ -860,7 +895,8 @@ class TextScene:
                         'reason': 'notice changed during settling', 'frame': frame, 'input': 'not_sent'})
             return 'The notice changed before acknowledgment. No input was sent; inspect the session.'
         self.notice_outcome_unknown = True
-        result = self.debug.keyboard_press('enter')
+        result = (parking_notice_input(self) if notice == 'parking_hint' else
+                  self.debug.keyboard_press('enter'))
         self.event({'phase': 'notice_input', 'command': 'acknowledge notice', 'result': result,
                     'notice': notice, 'persistence': 'unknown'})
         if result.get('accepted') is not True or result.get('delivery') != 'queued':
@@ -917,7 +953,7 @@ class TextScene:
                 matches(image, self.patterns['quarter_popup'])):
             return 'The advice changed before acknowledgment. No input was sent; inspect the session.'
         self.notice_outcome_unknown = True
-        result = self.debug.keyboard_press('enter')
+        result = parking_notice_input(self)
         self.event({'phase': 'notice_input', 'command': 'acknowledge notice',
                     'notice': 'parking_hint', 'result': result, 'purchase_input': 'not_sent'})
         if result.get('accepted') is not True or result.get('delivery') != 'queued':
@@ -1430,6 +1466,30 @@ class TextScene:
             for identifier in armed:
                 self.debug.delete_breakpoint(identifier)
 
+    def food_order_view(self, label):
+        """Dismiss one known advisory, then verify the order view and counters."""
+        try:
+            self.shop_observe('food_selected', {}, label, wait_slices=6, interrupts=('parking_hint',))
+            return False
+        except KnownSceneNotice as notice:
+            self.event({'phase': 'food_advice', 'frame': notice.frame,
+                        'order_committed': False, 'stage': label, 'acknowledgment_input': 'not_sent'})
+            result = parking_notice_input(self)
+            self.event({'phase': 'notice_input', 'command': 'buy 20 small feeders',
+                        'notice': 'parking_hint', 'result': result, 'order_committed': False})
+            if result.get('accepted') is not True or result.get('delivery') != 'queued':
+                raise RuntimeError('Food advisory acknowledgment outcome unknown; do not retry')
+            run_guest(self.debug, 1200)
+            frame, image = take_frame(self.project, self.debug, label + '-resumed')
+            if (label == 'food-selected' and matches(image, self.patterns['food_menu']) and
+                    not matches(image, self.patterns['food_selected'])):
+                self.event({'phase': 'food_selection_not_applied', 'frame': frame,
+                            'selection_input': 'not_yet_sent', 'order_committed': False})
+                self.shop_click((44, 101), 600, 'select feeders after verified unselected menu', hold_ms=80)
+            self.shop_observe('food_selected', {}, label + '-after-advice', wait_slices=6)
+            self.food_advice_count += 1
+            return True
+
     def buy_food(self):
         if self.current != 'dino_diner':
             return 'That action is not available in this scene.'
@@ -1456,11 +1516,12 @@ class TextScene:
             self.event({'phase': 'refused', 'command': 'buy 20 small feeders', 'input': 'not_sent',
                         'reason': 'unqualified food menu selection'})
             return 'The current food menu is not qualified for a new order. No input was sent.'
+        self.food_advice_count = 0
         self.event({'phase': 'intent', 'command': 'buy 20 small feeders', 'input': 'not_yet_sent', 'before': before})
         if not menu_open:
             opened = self.shop_click((133, 54), 4000, 'open meat menu')
             try:
-                self.shop_observe('food_menu', {'loan': before['loan']}, 'food-menu',
+                self.shop_observe('food_menu', {}, 'food-menu',
                                   wait_slices=12, interrupts=('parking_hint',))
             except KnownSceneNotice as notice:
                 self.pending_food_notice = True
@@ -1470,7 +1531,7 @@ class TextScene:
                 return ('Parking advice interrupted the food menu before an order was submitted. '
                         'Use acknowledge notice, then inspect the available actions.')
         self.shop_click((44, 101), 600, 'select small feeders', hold_ms=80)
-        self.shop_observe('food_selected', {'loan': before['loan']}, 'food-selected', wait_slices=12)
+        self.food_order_view('food-selected')
         selected_balances = balances(self.debug)
         if selected_balances['cash'] != selected_balances['working_cash']:
             raise RuntimeError('unexpected pending balance before food order; outcome unknown')
@@ -1479,7 +1540,18 @@ class TextScene:
             raise RuntimeError('food draft not synchronized before order; outcome unknown')
         for quantity in range(1, 21):
             self.shop_click((133, 108), 220, f'add small feeder {quantity}', hold_ms=80)
-            self.shop_observe('food_selected', {'loan': before['loan']}, f'food-staged-{quantity:02d}', wait_slices=6)
+            advised = self.food_order_view(f'food-staged-{quantity:02d}')
+            if advised:
+                actual, draft = food_draft_state(self.debug)
+                self.event({'phase': 'food_draft_reconciled', 'requested_quantity': quantity,
+                            'actual_quantity': actual, 'draft': draft, 'order_committed': False})
+                if actual == quantity - 1:
+                    # The known draft proves this increment was not applied.
+                    # Send one newly qualified increment; never repeat an unknown one.
+                    self.shop_click((133, 108), 220, f'complete verified small feeder {quantity}', hold_ms=80)
+                    self.food_order_view(f'food-reconciled-{quantity:02d}')
+                elif actual != quantity:
+                    raise RuntimeError('Unexpected food draft after advice; outcome unknown')
             staged = balances(self.debug)
             self.event({'phase': 'food_reservation', 'quantity': quantity, 'balances': staged,
                         'persistence': 'unknown'})
@@ -1511,7 +1583,9 @@ class TextScene:
                     'small_feeders': final_resources['small_feeders'], 'commit': proof,
                     'stock_change_after_commit': change, 'purchase_outcome': 'confirmed',
                     'guides_now': final_resources['guides'], 'persistence': 'live game commit; disk save separate'})
-        return (f"Bought 20 small feeders for $500. Stock at confirmation: {proof['stock_at_commit']}. "
+        advice = ('The adviser suggested another parking lot; its message was acknowledged during preparation. '
+                  if self.food_advice_count else '')
+        return (advice + f"Bought 20 small feeders for $500. Stock at confirmation: {proof['stock_at_commit']}. "
                 f"Stock now: {final_resources['small_feeders']} (change while returning: {change:+d}). "
                 f"Cash: ${committed['cash']:,}. Guides: {final_resources['guides']}. You are on the street.")
 
