@@ -23,36 +23,64 @@ def project_at(tmp_path):
 
 def vectors():
     result = [
-        {"shield_box": 0, "shields": 0, "needed": 0, "clear": 0},
-        {"shield_box": 0, "shields": 0, "needed": 0, "clear": 1},
+        {"shield_box": -1, "shields": 10, "needed": 10, "clear": 0},
+        {"shield_box": 1000, "shields": 10, "needed": 10, "clear": 0},
+        {"shield_box": 999, "shields": -1000, "needed": 0, "clear": 0},
         {"shield_box": 5, "shields": 10, "needed": 10, "clear": 0},
         {"shield_box": 5, "shields": 10, "needed": 10, "clear": 1},
         {"shield_box": 100, "shields": 50, "needed": 150, "clear": 0},
         {"shield_box": 100, "shields": 50, "needed": 150, "clear": 1},
-        {"shield_box": 100, "shields": 0, "needed": 99, "clear": 0},
-        {"shield_box": 100, "shields": 0, "needed": 100, "clear": 1},
-        {"shield_box": 32767, "shields": 0, "needed": 32767, "clear": 0},
-        {"shield_box": 0, "shields": 32767, "needed": 32767, "clear": 1},
+        {"shield_box": 32767, "shields": -32768, "needed": 0, "clear": 0},
+        {"shield_box": -32768, "shields": 32767, "needed": 32767, "clear": 1},
     ]
     rng = random.Random(0xC1D)
     for _ in range(250):
         result.append(
             {
-                "shield_box": rng.randrange(civ.MAX_BOUNDED + 1),
-                "shields": rng.randrange(civ.MAX_BOUNDED + 1),
-                "needed": rng.randrange(civ.MAX_BOUNDED + 1),
+                "shield_box": rng.randint(civ.I16_MIN, civ.I16_MAX),
+                "shields": rng.randint(civ.I16_MIN, civ.I16_MAX),
+                "needed": rng.randint(0, civ.I16_MAX),
                 "clear": rng.randrange(2),
             }
         )
     return result
 
 
-def test_shared_uil_matches_civd_arithmetic():
+def test_shared_uil_matches_independent_civd_oracle():
     for inputs in vectors():
         assert civ.model(inputs)["outputs"] == civ.oracle(inputs)
 
 
-def test_persisted_uil_layer_matches_civd_arithmetic(tmp_path):
+def test_il_admission_guards_refuse_outside_source_limits():
+    from fdisbull.interaction_il import execute_il
+
+    state = {
+        name: declaration["initial"]
+        for name, declaration in civ.program()["variables"].items()
+    }
+    state["$needed"] = -1
+    refused_needed = execute_il(civ.program(), state=state)
+    assert refused_needed["status"] == "refused"
+    state["$needed"] = 0
+    state["$clear"] = 2
+    refused_clear = execute_il(civ.program(), state=state)
+    assert refused_clear["status"] == "refused"
+
+
+def test_independent_oracle_comparison_is_a_release_precondition():
+    pytest.importorskip("z3")
+    result = civ.qualification()
+    assert result["status"] == "equivalent_under_contract"
+    assert result["release_ready"] is True
+    assert result["independent_oracle"]["status"] == "matched_independent_oracle"
+    assert result["independent_oracle"]["vector_count"] == len(civ.oracle_vectors())
+    assert (
+        result["programs"]["reference_sha256"]
+        != result["programs"]["implementation_sha256"]
+    )
+
+
+def test_persisted_uil_layer_matches_independent_oracle(tmp_path):
     with project_at(tmp_path) as project:
         registration = civ.register(project)
         selection = civ.select(project, registration, backend="uil")
@@ -72,16 +100,6 @@ def test_generated_c_executes_and_matches_shared_uil():
         observed = civ.run_host(compiled, inputs)
         assert observed["status"] == 0
         assert observed["outputs"] == civ.oracle(inputs)
-
-
-def test_uil_qualification_is_contract_equivalent():
-    pytest.importorskip("z3")
-    result = civ.qualification()
-    assert result["status"] == "equivalent_under_contract"
-    assert (
-        result["programs"]["reference_sha256"]
-        == result["programs"]["implementation_sha256"]
-    )
 
 
 def test_uil_export_is_cli_validated_and_deterministic(tmp_path):

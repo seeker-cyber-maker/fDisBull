@@ -12,12 +12,16 @@ The DOS semantic source is the `sjmelia/civd` 474.05 reconstruction. Its
 the pinned DOS target and the executable identified in the Civ64 intake.
 Relevant source is `src/CITYMGT.C`:
 
-- line 639: add the turn's shields to `shield_box`;
-- lines 642-645: compare unit cost times `cost_scale`, subtract the required
+- `CIV.H` lines 38-39 declare `shield_box` as a signed DOS `int`, represented
+  as signed 16-bit storage in this slice;
+- lines 227-229 reset `shield_box` to zero when it is negative or greater than
+  999 before production is added;
+- line 639 adds the signed turn balance to the reset storage value;
+- lines 642-645 compare unit cost times `cost_scale`, subtract the required
   shields, and enter the unit-completion path;
-- line 714: the human unit path clears `shield_box`;
-- lines 728-752: improvement completion and shield subtraction;
-- line 768: the human improvement path clears `shield_box`.
+- line 714 clears the human unit-completion path;
+- lines 728-752 perform improvement completion and shield subtraction;
+- line 768 clears the human improvement-completion path.
 
 The civd technical book gives the same rule in
 `book/src/city/production.md`, under **Shields and completion**. The module's
@@ -34,36 +38,51 @@ The intake hashes the authority files as `CITYMGT.C` =
 
 The logical contract is `civ.city.shield-completion`:
 
-| Port | Type | Meaning |
-| --- | --- | --- |
-| `shield_box` | `u16` | Stored shields before this turn |
-| `shields` | `u16` | This turn's shield yield |
-| `needed` | `u16` | Required shields after the caller's cost scaling |
-| `clear` | `u8` | `1` for the human completion path, otherwise `0` |
-| `new_box` | `u16` | Stored shields after completion handling |
-| `complete` | `u8` | `1` when the scaled requirement was met |
+| Port | Type | Admitted values | Meaning |
+| --- | --- | --- | --- |
+| `shield_box` | `i16` | `-32768..32767` | Signed stored shields before this turn; values outside `0..999` reset to zero |
+| `shields` | `i16` | `-32768..32767` | Signed turn balance added after the reset |
+| `needed` | `i16` | `0..32767` | Required shields after the caller's cost scaling |
+| `clear` | `u8` | `0` or `1` | `1` for the human completion path, otherwise `0` |
+| `new_box` | `i16` | signed 16-bit | Stored shields after completion handling |
+| `complete` | `u8` | `0` or `1` | Whether the scaled requirement was met |
 
-The UIL program computes:
+The source-shaped reference UIL and implementation UIL both compute:
 
-1. `new_box = shield_box + shields` with `u16` wrap semantics;
-2. `diff = new_box - needed` with `u16` wrap semantics;
-3. the wrapped subtraction's bit 15 selects incomplete versus complete;
-4. incomplete keeps the accumulated box; complete either clears it (`clear=1`)
-   or retains the excess (`clear=0`).
+1. normalize `shield_box` to zero when it is negative or greater than `999`;
+2. add signed `shields` using signed 16-bit storage semantics;
+3. compare the resulting signed box with non-negative `needed`;
+4. leave the signed accumulated box when incomplete;
+5. on completion, clear it for `clear=1` or retain the signed excess for
+   `clear=0`.
 
-The admitted arithmetic envelope is `0..32767` for each of
-`shield_box`, `shields`, and `needed`, with `clear` equal to `0` or `1`.
-Within that envelope, the sign-bit test is equivalent to the original
-unsigned comparison. The current contract has no compiled admission guard;
-callers must enforce the envelope. Values outside it are not claimed to match
-civd.
+The previous unsigned `u16`/sign-bit-only model was removed. It admitted an
+incorrect arithmetic envelope and omitted the source reset. The current
+program has IL `require` guards for the `needed` and `clear` limits, while the
+module API validates every input against the same `_input_limits()` receipt. The
+generic native-shell contract-domain field remains empty because that fDisBull
+profile cannot yet carry a separate domain object; this module does not treat
+that omission as an admission of arbitrary inputs.
 
 The example registers both layers:
 
 - `uil`: the shared `fdisbull-il-1` evaluator, used for model replay;
-- `c-uil`: the generated-C implementation used by the native shell.
+- `c-uil`: the generated-C implementation used for the native shell.
 
 The implementation is in `examples/udc/civ_production.py`.
+
+## Independent comparison and release gate
+
+The contract's reference program and selected implementation are structurally
+different UIL documents. Z3 qualifies their typed behavior. Separately,
+`compare_oracle()` evaluates 896 deterministic signed/extreme/wrap vectors
+against a direct Python oracle that uses the civd reset, signed comparison, and
+signed 16-bit storage rules without reusing the UIL bit-test implementation.
+
+`qualification()` reports both results. `build_native()` refuses native
+emission unless shared-UIL qualification and the independent oracle both report
+success. This keeps the slice out of release while either the limits,
+comparison, or oracle disagrees.
 
 ## Original-backed DOS baseline
 
@@ -78,19 +97,23 @@ matching the input. This proves byte-preserving reconstruction only; it does
 not provide a semantic UIL for the packed overlays. The `uil`/`c-uil` city
 module above is the first semantic layer added beside that baseline.
 
+
 ## Executable proof
 
 The generated C is compiled only from the typed UIL AST. The test
 `tests/test_udc_civ_production.py`:
 
-- compares the shared UIL evaluator with a direct civd arithmetic oracle over
-  boundary and deterministic pseudo-random vectors;
+- compares the implementation UIL with the independent civd oracle over signed
+  boundary, reset, negative-balance, overflow, and deterministic vectors;
+- verifies IL admission guards refuse negative `needed` and non-binary `clear`;
 - persists and replays the `uil` layer through a fDisBull project;
-- compiles the generated C with clang, loads the resulting host shared library,
-  and compares every output to both the UIL evaluator and the oracle;
-- qualifies the implementation with the installed Z3-backed contract checker;
-- emits a Linux x86-64 ELF selected shell and verifies its ELF header and
-  selection capsule.
+- compiles the generated C with clang, decodes signed output words, and
+  compares every output to both the UIL evaluator and the oracle;
+- requires distinct source-reference and implementation UIL hashes;
+- qualifies the implementation with the installed Z3-backed contract checker
+  and the explicit release gate;
+- emits a Linux x86-64 ELF selected shell only after that gate, then verifies
+  its ELF header and selection capsule.
 
 The macOS host replay is actual native execution of the generated C shared
 library. The Linux shell is emitted as a cross-target artifact; the test does
