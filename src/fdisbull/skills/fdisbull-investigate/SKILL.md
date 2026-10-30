@@ -33,8 +33,13 @@ For archives, executable mappings or media reduction, read
 
 Use [references/workflows.md](references/workflows.md) to choose between static
 analysis, native investigation, scenes and text workflows. For research-led
-game recovery or normal progression, read
-[references/recovery-research.md](references/recovery-research.md). When behavior may be
+game recovery, source-reconstruction reuse or normal progression, read
+[references/recovery-research.md](references/recovery-research.md). Before costly
+rediscovery, look for matching reconstructed source and build recipes unless the
+task explicitly requires an independent recovery arm. Pin the edition and source
+revision, distinguish notes from executable results, and reuse qualified work
+without treating inferred names or a successful build as recovered meaning.
+When behavior may be
 interpreted from a guest script, look for evidence of the interpreter alongside
 native code and other explanations. Read
 [references/methodology.md](references/methodology.md) before claiming a
