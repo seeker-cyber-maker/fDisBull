@@ -1,0 +1,270 @@
+{
+  "format": "zork-uil-sanitized-independent-verification-1",
+  "date": "2026-10-29",
+  "source": {
+    "version": 3,
+    "release": 88,
+    "serial": "840726",
+    "sha256": "0ae5ac229e79094ff368b6669356444af0f35e21d862a1baaa546989085c15fd",
+    "file_bytes": 92160,
+    "declared_bytes": 84876
+  },
+  "artifact_bindings": {
+    "runtime_source_sha256": "f5ca20999a1dea38b03df9386337a43600b54235fe4caffcbfb63a94dabc4168",
+    "uil_gzip_sha256": "f29a6ed0ad1e4db1bcf01b5f5a39b80c8ecd6524f8cca17ee10c8bf5a07c4607",
+    "verifier_source_sha256": "45161cf22032b45493928c65c13a4801b7ea69502c04367f3722920742cdcd67",
+    "route_json_sha256": "31b809f79bf961d642366b4c996f586de717b956202f35cae6b34ecf1c4be009",
+    "full_comparison_sha256": "bfeec96eb5b1a9ad86b0061e49272faa37b8e5bb5503f6d8ab625838a0107ace",
+    "parser_comparison_sha256": "29acd7a2fb10702fdd6f5ecc8f4224cc12258c12ee30b3cd20089b7c243bdbd4",
+    "udl_gzip_sha256": "b933d8fb4cf7f739f4c0fe9c0c1c61b306ea0dd64224fd408b41d5f6d4e3bd05",
+    "world_json_sha256": "dda5f3e2d8e895111b309454fa84cd0aa430b69598fc7cd5cde81c8006b057bc",
+    "parser_commands_json_sha256": "4278d58607fc05126ecdaf355490e61c414f34426c49f8a87709ca1be5afc6ae",
+    "standalone_comparison_sha256": "0559d2dcfeedf9e51540015495c84d0a2779fe628f34574ea935baf3cdc16d9c",
+    "standalone_verifier_sha256": "ca7ff1c72991cb83e23a7eb15e5955c76cb4b974a5a9a611cf062c679a51c92a",
+    "mapper_source_sha256": "a4b3a9d07ca5479e6e8ccdf92c5013ea0c95432e6b7d2f8635029f5244c4077a",
+    "z_view_sha256": "dda5f3e2d8e895111b309454fa84cd0aa430b69598fc7cd5cde81c8006b057bc",
+    "public_verifier_source_sha256": "e9265b3ed6c2bdf135f843a3eb1b255ff011e2d5e5f6c04fe9f4aee42aeaec1a",
+    "public_verifier_comparison_sha256": "9033160cd21b94d6bf2d34531a7f3a9c1bf85a23f3f58556e3832bee37509cff",
+    "public_verifier_output_boundary_sha256": "6d229f803deb6ddea4f625f7f897c2704e383fc9f60a49379a2c1fec57f141bc"
+  },
+  "reference": {
+    "name": "unmodified dfrotz 2.44",
+    "source_commit": "fe66e2ef738354f5e2fe37c7c01b1781ef659acd",
+    "source_url": "https://github.com/DavidGriffith/frotz/tree/fe66e2ef738354f5e2fe37c7c01b1781ef659acd",
+    "executable_sha256": "350a783fc5468e2239a27fa61a5d4cca26353c209980631baf43b285fdd524f2",
+    "modified_source": false,
+    "build_options": [
+      "-O2",
+      "-std=c99",
+      "-D_POSIX_C_SOURCE=200809L",
+      "-fcommon"
+    ],
+    "seed": 12,
+    "route": {
+      "format": "zork-uil-route-provenance-1",
+      "repository": "https://github.com/microsoft/jericho",
+      "commit": "752ba6720d522909a4a2a495b5a03dd535f9adf1",
+      "route_url": "https://github.com/microsoft/jericho/blob/752ba6720d522909a4a2a495b5a03dd535f9adf1/jericho/game_info.py",
+      "story_identity_url": "https://github.com/microsoft/jericho/blob/752ba6720d522909a4a2a495b5a03dd535f9adf1/jericho/defines.py",
+      "story_md5": "b732a93a6244ddd92a9b9a3e3a46c687",
+      "route": "zork1.walkthrough",
+      "seed": 12,
+      "commands": 396,
+      "maximum_command_characters": 29,
+      "local_commands_match_pinned_route": true,
+      "route_file": "jericho-zork1-candidate-commands.json",
+      "note": "Source route is a test hypothesis. The independently built unmodified dfrotz 2.44 execution establishes this exact story reaches full score with it."
+    }
+  },
+  "full_game": {
+    "commands": 396,
+    "matching_initial_narrative": true,
+    "matching_command_narratives": 396,
+    "matching_score_and_moves": 396,
+    "final_score": 350,
+    "maximum_score": 350,
+    "final_moves": 394,
+    "final_location_object": 178,
+    "final_location_name": "Inside the Barrow",
+    "final_status": "halted",
+    "distinct_executed_blocks": 2498,
+    "rng_calls": 74,
+    "all_equal": true
+  },
+  "original_dos": {
+    "commands": 33,
+    "snapshots": 34,
+    "compared_dynamic_bytes_per_snapshot": 11795,
+    "header_excluded_inclusive": [
+      0,
+      63
+    ],
+    "all_compared_bytes_equal": true,
+    "all_input_boundaries_equal": true,
+    "random_tape_events": 7,
+    "all_random_range_value_pairs_equal": true,
+    "identity": {
+      "story_sha256": "0ae5ac229e79094ff368b6669356444af0f35e21d862a1baaa546989085c15fd",
+      "interpreter_sha256": "2a6f366349be71ef4a164e3fc9c31a4a3d8c24ee6ddac93ed345c993c3562514",
+      "dosbox_elf_sha256": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+      "rng_coupling": "observe original output; never replace native PRNG"
+    }
+  },
+  "parser_alternatives": {
+    "commands": 25,
+    "matching_initial_narrative": true,
+    "matching_command_narratives": 25,
+    "matching_score_and_moves": 25,
+    "all_equal": true,
+    "covered": [
+      "empty input",
+      "ASCII case folding",
+      "missing-noun clarification across input turns",
+      "pronoun references",
+      "dictionary abbreviation",
+      "dot/comma/quote punctuation",
+      "unknown-word rejection",
+      "unavailable-object rejection",
+      "unresolved multi-object reference"
+    ]
+  },
+  "text_comparison": "Remove generated status lines and terminal prompt; collapse whitespace; retain every other character.",
+  "limitations": [
+    "This verifies one complete winning route and stated alternate inputs, not all game paths.",
+    "Status lines and whitespace are normalized; pixel layout and line wrapping are not asserted.",
+    "Frotz seed 12 profile is distinct from original DOS RNG; native comparison consumes original observed range/value tape.",
+    "dfrotz 2.44 dumb_input.c ignores os_read_line max argument. The winning route maximum command length is 29; overlong-line behavior is outside this oracle domain.",
+    "Native RAM comparisons exclude only the 64-byte interpreter header; all remaining dynamic bytes are compared."
+  ],
+  "primary_references": {
+    "standard_memory": "https://inform-fiction.org/zmachine/standards/z1point1/sect01.html",
+    "standard_text": "https://inform-fiction.org/zmachine/standards/z1point1/sect03.html",
+    "standard_execution": "https://inform-fiction.org/zmachine/standards/z1point1/sect06.html",
+    "standard_dictionary": "https://inform-fiction.org/zmachine/standards/z1point1/sect13.html",
+    "frotz_rng": "https://github.com/DavidGriffith/frotz/blob/fe66e2ef738354f5e2fe37c7c01b1781ef659acd/src/common/random.c",
+    "frotz_input_limit": "https://github.com/DavidGriffith/frotz/blob/fe66e2ef738354f5e2fe37c7c01b1781ef659acd/src/dumb/dumb_input.c"
+  },
+  "standalone_and_persistence": {
+    "all_passed": true,
+    "checks": {
+      "checkpoint100_restored_exactly": true,
+      "all296_future_results_equal": true,
+      "final_complete_snapshot_equal": true,
+      "final_winning_score": true,
+      "final_moves394": true,
+      "final_game_halted": true,
+      "game_save_restore_exact_state": true,
+      "game_save_restore_identical_future": true,
+      "restart_initial_game_state": true,
+      "restart_retains_saved_game": true,
+      "restore_after_restart_exact_saved_state": true,
+      "checkpoint_retains_game_save_slot": true,
+      "fresh_process_game_restore_exact_state": true,
+      "fresh_process_game_restore_identical_future": true
+    },
+    "fresh_isolated_processes": 4,
+    "initial_directory_files": [
+      "consumer.py",
+      "story.uil.json.gz"
+    ],
+    "commands_before_checkpoint": 100,
+    "commands_after_checkpoint": 296,
+    "final_rng_events": 74,
+    "controls": [
+      "Python -I isolates the consumer from project import paths.",
+      "An audit hook denies workspace file reads, subprocess launches, and network connections.",
+      "No fdisbull, jericho, or frotz module is imported.",
+      "Only the copied standalone consumer and compiled UIL are present initially.",
+      "All remaining results and complete final machine snapshots match after fresh-process resume."
+    ]
+  },
+  "repository_tests": {
+    "format": "fdisbull-zork-final-suite-1",
+    "created_utc": "2026-10-29T23:07:01.955468+00:00",
+    "upstream_commit": "031b53eb953bfdc1d0e23c0ed49441031bad6e06",
+    "runtime_sha256": "f5ca20999a1dea38b03df9386337a43600b54235fe4caffcbfb63a94dabc4168",
+    "runtime_unchanged_during_suite": true,
+    "counts": {
+      "passed": 1605,
+      "failed": 48,
+      "skipped": 109
+    },
+    "total_tests": 1762,
+    "warnings": 3,
+    "duration_seconds": 62.51,
+    "baseline_replay_counts": {
+      "failed": 48,
+      "passed": 1
+    },
+    "baseline_failure_category_counts": {
+      "existing_git_directory_output_guard": 28,
+      "sandbox_socket_restriction": 10,
+      "managed_dependencies_missing": 10
+    },
+    "failure_node_set_equals_unchanged_baseline": true,
+    "introduced_failure_ids": [],
+    "resolved_initial_failure_ids": [
+      "tests/test_text_distribution.py::test_tool_zip_selection_includes_only_player_python_and_manifest"
+    ],
+    "failure_ids": [
+      "tests/test_advanced_cli.py::test_summary_and_signature_files_are_qualified_and_persistent",
+      "tests/test_dinopark_z_bridge.py::test_native_launch_failure_or_interrupt_always_finalizes_receipt[False]",
+      "tests/test_dinopark_z_bridge.py::test_native_launch_failure_or_interrupt_always_finalizes_receipt[True]",
+      "tests/test_dosbox_window.py::test_dos_endpoint_passes_window_only_for_native_backend",
+      "tests/test_ida_wire.py::test_fragmented_frame_and_packet_budget",
+      "tests/test_ida_wire.py::test_mismatched_interface_never_sends_a_debug_request",
+      "tests/test_ida_wire.py::test_request_handles_interleaved_server_message_and_does_not_replay",
+      "tests/test_managed.py::test_bad_switch_and_truncated_instruction_are_bounded_errors",
+      "tests/test_managed.py::test_cil_decoder_resolves_call_string_and_method_local_branch",
+      "tests/test_managed.py::test_cil_instruction_budget_reports_partial_without_claiming_complete",
+      "tests/test_managed.py::test_fat_cil_header_and_switch_targets_are_decoded_with_eh_left_explicit",
+      "tests/test_managed.py::test_invalid_metadata_token_stays_unresolved_while_cil_bytes_decode",
+      "tests/test_managed.py::test_managed_metadata_names_tokens_and_rvas_are_real_cli_fields",
+      "tests/test_managed.py::test_metadata_row_budget_is_checked_before_external_parser_and_output_is_capped",
+      "tests/test_managed.py::test_wrong_or_missing_method_tokens_and_native_method_are_explicit",
+      "tests/test_managed_api.py::test_managed_path_api_and_method_token_resolution",
+      "tests/test_managed_api.py::test_project_retains_managed_source_and_refuses_native_il_analysis",
+      "tests/test_output_artifacts.py::test_concurrent_dedup",
+      "tests/test_output_artifacts.py::test_corruption_and_no_clobber_export",
+      "tests/test_output_artifacts.py::test_empty_chunk_stream_is_bounded",
+      "tests/test_output_artifacts.py::test_generator_failure_removes_partial_without_error_content",
+      "tests/test_output_artifacts.py::test_paths_privacy_id_validation_and_git",
+      "tests/test_output_artifacts.py::test_quotas_errors_and_stale_files",
+      "tests/test_output_artifacts.py::test_read_ranges_and_invalid_json_are_refused",
+      "tests/test_output_artifacts.py::test_replaced_store_directory_is_refused",
+      "tests/test_output_artifacts.py::test_roundtrip_restart_unicode_range_and_pointer",
+      "tests/test_output_cli.py::test_bounded_selection_and_projectless_retrieval",
+      "tests/test_output_cli.py::test_cli_spills_then_fresh_process_selects_without_execution",
+      "tests/test_output_cli.py::test_server_bounds_each_line_and_continues_with_a_selective_query",
+      "tests/test_output_limits.py::test_large_failed_rpc_retains_error_without_promoting_it",
+      "tests/test_output_limits.py::test_large_result_retains_the_complete_original_with_execution_scope",
+      "tests/test_output_limits.py::test_small_values_and_exact_wire_byte_boundary_are_unchanged",
+      "tests/test_output_limits.py::test_unknown_execution_fields_are_not_invented_or_partially_labeled",
+      "tests/test_pr17_examples.py::test_native_probe_rejects_wrong_executable_hash_under_python_optimized",
+      "tests/test_qemu_machine.py::test_gdb_packet_checksum_failure_is_not_retried",
+      "tests/test_qemu_machine.py::test_gdb_run_length_and_escaped_bytes_are_decoded_from_wire",
+      "tests/test_text_host.py::test_explicit_preparation_runs_after_bindings_before_listening",
+      "tests/test_text_host.py::test_real_loopback_roundtrip_and_cleanup",
+      "tests/test_udc.py::test_asm_udl_uil_original_backing_roundtrip_and_negative",
+      "tests/test_udc.py::test_competing_directory_is_never_replaced",
+      "tests/test_udc.py::test_immutable_parent_and_patch_isolation",
+      "tests/test_udc.py::test_mz_fixups_and_overlay_are_preserved_but_not_misproved",
+      "tests/test_udc.py::test_reconstruct_from_blocks_after_restart_without_source_file",
+      "tests/test_udc.py::test_tampered_backing_missing_block_and_metadata_refused",
+      "tests/test_udc.py::test_unavailable_proof_never_becomes_parity",
+      "tests/test_udc_cli.py::test_private_compilation_and_compact_replies",
+      "tests/test_wine_advanced.py::test_qmp_handles_fragmented_replies_and_async_stop_event",
+      "tests/test_z_process_backend.py::test_socket_peer_without_response_obeys_cli_timeout"
+    ],
+    "junit_sha256": "014021721bcd8bd2b9f4e6707b58d2b9bd2c6e36135ffe4ffb288abf27ec9a25",
+    "log_sha256": "a87cc7a7ecec8fc0d2be42e192087bde7bca66bcc56d8acd841b90b5dca7e993",
+    "baseline_junit_sha256": "8679392f6ab5ebd4253e06c9c33d012e1b83d8b7d610146615545bb7eed829e4",
+    "limitations": "The full repository suite is not green in this sandbox. The 48 failures reproduce on the unchanged upstream source snapshot in the same environment. This classification does not repair or waive those existing failures."
+  },
+  "build_verification": {
+    "core_wheel_conversion_byte_identical": true,
+    "compared_outputs": [
+      "uil",
+      "udl",
+      "z"
+    ],
+    "python": "3.12.14",
+    "public_checker": "scripts/verify_zork_uil.py",
+    "public_checker_full_route_and_native_all_equal": true,
+    "candidate_instruction_starts": 55891,
+    "candidate_routine_headers": 7680,
+    "initial_objects": 250,
+    "initial_globals": 240,
+    "archive_gate_entries": {
+      "core_wheel": 147,
+      "player_wheel": 11,
+      "source_archive": 482
+    },
+    "wheels": {
+      "fdisbull-0.24.0-py3-none-any.whl": "669bdc0234a47a355fb58e685098be2477ca819abbab47d08081dcf794641055",
+      "fdisbull_player-0.24.0-py3-none-any.whl": "2d35ca3bd471fffde7003815168109bd43940c5bc316a24a4c91d80aa2633931"
+    },
+    "public_checker_output_boundary_checks_passed": 7,
+    "isolated_player_wheel_opening_commands_passed": 2
+  }
+}

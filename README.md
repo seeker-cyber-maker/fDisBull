@@ -25,6 +25,7 @@ play an authored text projection without opening the debugger yourself.
 | Compare a hypothesis, a checkpoint or a temporary patch | [Layers, states and experiments](#layers-states-and-experiments) |
 | Give an agent reliable scene context and navigation | [Scenes, maps and interaction policies](#scenes-maps-and-interaction-policies) |
 | Play a supported projection or a user-supplied Zork story | [Text play and interpreter inspection](#text-play-and-interpreter-inspection) |
+| Convert Zork I to executable IR and recover bounded game-intent UIL | [Executable IR](docs/ZORK_UIL.md) · [Game-intent UIL](docs/ZORK_INTENTS.md) |
 | Try shared interaction scenes through Z | [Z scene play](docs/Z_SCENES.md) |
 | Run a qualified DinoPark park through the original game | [DinoPark in Z](docs/DINOPARK_Z.md) |
 | Test a small recovered block against its original DOS backing | [The bounded UDC pipeline](#the-bounded-udc-pipeline) |
@@ -172,6 +173,20 @@ can run a user-supplied version-3 story using a separately selected Python and
 Jericho environment. Story inspection and the recovered mailbox slice are
 bounded evidence, not recovery of the parser, turn loop or complete game.
 No original game or story files are distributed.
+
+The [standalone Zork converter](docs/ZORK_UIL.md) lowers a complete v3 story into
+executable word16 **IR**: arithmetic, memory, control and object operations. Its
+legacy `zork-uil` command and wire format remain compatible, but that layer does
+not recover game intent. Its independent player runs without an original
+interpreter.
+
+The separate [game-intent UIL](docs/ZORK_INTENTS.md) recovers a bounded mailbox
+interaction: opening conditions, state change, ordered narration, pronoun
+reference and action counting. UDL definitions connect each primitive to the
+original operations. The consumer executes those domain rules and retains the
+parser, background callbacks, uncertain flag effects and unsupported cases as
+explicit low-level IR. Recovery is partial; the verification report distinguishes
+successful play from evidence that the higher-level rules actually executed.
 
 ## The bounded UDC pipeline
 

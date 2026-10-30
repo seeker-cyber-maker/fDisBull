@@ -496,6 +496,15 @@ def parser():
     c.add_argument('story')
     c=sub.add_parser('zork-recover',help='Recover the qualified R88 mailbox action into shared source-backed IL')
     c.add_argument('story')
+    c=sub.add_parser('zork-uil',help='Convert a complete v3 story to executable word16 IR (legacy command name)')
+    c.add_argument('story');c.add_argument('--output',required=True)
+    c.add_argument('--mapping',help='Optional private UDL source mapping (.json or .json.gz)')
+    c.add_argument('--world',help='Optional private initial Z object/state projection')
+    c=sub.add_parser('zork-intents',help='Recover bounded game-intent UIL with UDL definitions and retained low-level IR')
+    c.add_argument('story');c.add_argument('--output',required=True,help='New private runnable intent/IR package')
+    c.add_argument('--ir',help='Preserved word16 IR; compiled from the story when omitted')
+    c.add_argument('--uil',help='Optional private address-free game-intent definition')
+    c.add_argument('--udl',help='Optional private source bindings, evidence and residual definitions')
     for name in ('il-check','il-run'):
         c=sub.add_parser(name,help='Validate or evaluate the shared UDL/UIL primitive block representation')
         c.add_argument('program'); c.add_argument('--state'); c.add_argument('--capability',action='append',choices=('graphics','audio','input'),default=[])
@@ -833,6 +842,12 @@ def _language_command(command,args):
         if command=='zork-recover':
             from .zork_recovery import recover_mailbox
             emit(recover_mailbox(args['story']));return 0
+        if command=='zork-uil':
+            from .zork_uil import convert_story
+            emit(convert_story(args['story'],output=args['output'],mapping=args['mapping'],world=args['world']));return 0
+        if command=='zork-intents':
+            from .zork_intent_export import export_intents
+            emit(export_intents(args['story'],output=args['output'],ir=args['ir'],uil=args['uil'],udl=args['udl']));return 0
         if command.startswith('il-'):
             from .interaction_il import execute_il,validate_il
             from .il_recovery import save_il,load_il
@@ -895,7 +910,7 @@ def main(argv=None):
 def _dispatch(args):
     command = args.pop("command")
     if command.startswith(('udc-','udl-')):return _udc_command(command,args)
-    if command in ('story-info','zork','zork-recover','il-check','il-run','il-store','il-info'):
+    if command in ('story-info','zork','zork-recover','zork-uil','zork-intents','il-check','il-run','il-store','il-info'):
         return _language_command(command,args)
     if command == 'text-host':
         from .text_host import host
