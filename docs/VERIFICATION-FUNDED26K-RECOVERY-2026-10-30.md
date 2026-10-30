@@ -1,5 +1,9 @@
 # funded26k return and provider recovery: original-game verification
 
+The [lifecycle follow-up](VERIFICATION-DINOPARK-RECOVERY-LIFECYCLE-2026-10-30.md)
+adds native unresolved-recovery EOF and repeated-failure acceptance. The original
+run records and their then-untested boundaries below remain historical evidence.
+
 Initial accepted runtime `668ea794577f4fb0fa10acae28e4cbb38975c44d`, private
 core/player 0.24.0 packages. The final 0.25 integration and repeated native
 acceptance are recorded below. The [interface contract](DINOPARK_FUNDED_RECOVERY.md) explains
