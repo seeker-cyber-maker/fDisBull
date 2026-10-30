@@ -247,6 +247,11 @@ authored COM demonstration and the bounded real-game observations are described
 in [UDC usage](docs/UDC_DOS.md), [testing methodology](docs/UDC_TESTING.md)
 and [verification](docs/VERIFICATION-0.23.md).
 
+The [selectable block-layer prototype](docs/UDL_BLOCK_LAYERS.md) keeps one
+logical operation while choosing an explicitly bound implementation. It retains
+source relationships and immutable selections, with separate checks for modeled
+behavior, isolated original instructions and new native output.
+
 ## Status, testing and history
 
 The **0.25.0 source integration** is described in the

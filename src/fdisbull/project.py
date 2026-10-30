@@ -76,9 +76,10 @@ from .advanced import AdvancedMixin
 from .membership_view import MembershipMixin
 from .debugger import DebugProjectMixin, DEBUG_DDL
 from .proofs import ProofProjectMixin, PROOF_DDL
+from .snippet_links import SnippetLinksMixin, SNIPPET_DDL
 
 
-class Project(ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
+class Project(SnippetLinksMixin, ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
     def __init__(self, path):
         self.path = Path(path).resolve()
         if not self.path.is_file():
@@ -103,7 +104,7 @@ class Project(ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, Shared
             self.meta = {k:json.loads(v) for k,v in meta.items() if k not in ("application","schema")}
             self.arch, self.bits = self.meta["arch"], self.meta["bits"]
             self.context = f"{self.arch}:{self.bits}:little" + (':ne' if self.meta['format'] == 'NE' else '')
-            self.db.executescript(DEBUG_DDL+PROOF_DDL)
+            self.db.executescript(DEBUG_DDL+PROOF_DDL+SNIPPET_DDL)
             self.db.execute("PRAGMA foreign_keys=ON")
             self.db.execute("PRAGMA busy_timeout=30000")
         except Exception:
@@ -162,7 +163,7 @@ class Project(ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, Shared
         try:
             db = sqlite3.connect(target)
             try:
-                db.executescript(DDL + EXTENSION_DDL + DOS_DDL + FACTS_DDL + TYPE_DDL + ADVANCED_DDL + EXTERNAL_FILES_DDL + FILE_REFERENCES_DDL + SHARED_LABELS_DDL)
+                db.executescript(DDL + EXTENSION_DDL + DOS_DDL + FACTS_DDL + TYPE_DDL + ADVANCED_DDL + EXTERNAL_FILES_DDL + FILE_REFERENCES_DDL + SHARED_LABELS_DDL + SNIPPET_DDL)
                 db.execute("PRAGMA journal_mode=WAL")
                 meta = {"arch":image.arch,"bits":image.bits,"format":image.format,"entry":image.entry,
                         "filename":filename,"source_sha256":image.metadata["source_sha256"],

@@ -230,6 +230,9 @@ METHODS = {
     "help": "List methods; all project operations require project path",
 }
 
+from .udc_api import METHODS as BLOCK_METHODS
+METHODS.update(BLOCK_METHODS)
+
 def invoke(method, params, debugger=None):
     if method not in METHODS:
         raise ValueError(f"unknown method: {method}")
@@ -435,6 +438,9 @@ def invoke(method, params, debugger=None):
             if not snapshot["instructions"]:
                 raise ValueError("no stored instructions at this address; run analyze first")
             return render_snapshot(snapshot,destination,fmt)
+        if method in BLOCK_METHODS:
+            from .udc_api import invoke as invoke_block
+            return invoke_block(db,method,p)
         return getattr(db,method)(**p)
 
 def public_addresses(value, field=None):
@@ -460,9 +466,13 @@ def respond(request, default_project=None, debugger=None):
         standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
-        value={"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
+        result=invoke(request["method"],params,debugger)
+        if request["method"] not in BLOCK_METHODS:result=public_addresses(result)
+        value={"id":request_id,"ok":True,"result":result}
     except (ValueError,TypeError,KeyError,OSError,sqlite3.Error,OverflowError,AttributeError,RecursionError) as e:
         value={"id":request_id,"ok":False,"error":{"type":type(e).__name__,"message":str(e)}}
+        from .udc_layers import LayerQualificationError
+        if isinstance(e,LayerQualificationError):value["error"]["qualification"]=e.receipt
     return (policy or OutputPolicy()).bound(value)
 
 def load_request(value):

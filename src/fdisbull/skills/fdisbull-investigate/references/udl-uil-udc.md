@@ -9,6 +9,7 @@ general compiler manual.
 - [Keep the terms separate](#keep-the-terms-separate)
 - [Preserve the accepted compiler priority](#preserve-the-accepted-compiler-priority)
 - [Current DOS block boundary](#current-023-dos-block-boundary)
+- [Persistent snippets and selectable block layers](#persistent-snippets-and-selectable-block-layers)
 - [Zork IR and recovered intents](#zork-ir-and-recovered-intents)
 - [Read a proof narrowly](#read-a-proof-narrowly)
 - [Bytecode inspection and runtime qualification](#do-not-conflate-bytecode-inspection-with-runtime-qualification)
@@ -18,8 +19,9 @@ general compiler manual.
 - **UDL** is the source-to-shared-IL mapping role.
 - **UIL** is the candidate shared-IL program.
 - **UDC** is a target compiler definition that reads UIL and binds its declared
-  behavior to an implementation. The currently qualified fDisBull target checks
-  a candidate and can select retained original DOS block backings.
+  behavior to an implementation. The original DOS profile can select retained
+  block backings. The selectable-layer prototype adds immutable contracts,
+  isolated CPU providers and separately admitted native output profiles.
 
 For v1 `fdisbull-il-1`, UDL and UIL are role metadata over the same primitive
 nodes and evaluator; changing role does not perform a translation. The separate
@@ -38,7 +40,7 @@ byte-preserving baseline remains `original_bytes_only`; unsupported edits
 remain refused.
 
 The supported reduced-C route retains its derivation from the ASM lift and its
-shared decoder lineage. Generated DOS lowering, richer process/object models,
+shared decoder lineage. General generated DOS lowering, richer process/object models,
 automatic cross-language propagation and compiler learning remain future work.
 Separately authored Rust/JavaScript/Python examples are conformance seeds, not
 existing general translators or the first implementation target.
@@ -100,6 +102,72 @@ paths to files already attached to the project; inputs are not discovered from
 arbitrary host paths. The output directory must be new and outside Git. Use the
 default `udc-info` reply before requesting `--full`; game bytes and block
 catalogs are not printed by default.
+
+## Persistent snippets and selectable block layers
+
+The block-layer prototype persists source captures, authored cross-project
+relations, typed contracts, UDL implementations and explicit selections.
+`capture-snippet` accepts ordered `{address,size}` spans from an immutable mapped
+version or `{file,offset,size}` spans from retained files. `file:"source"`
+means the original source in version 1. Endpoint identities retain source,
+byte-version, architecture/view, context and span hashes. NE indices remain
+logical segment identities; a DOS CS context is separate from a physical address.
+
+Read `snippet-info` and record lists with compact defaults. `full:true` returns
+metadata documents; native payloads require the explicit `include_bytes:true`
+request. Projects, byte-bearing exports, compiler capsules and original game
+files remain outside Git. Copied metadata endpoints are external declarations,
+not silently locally verified source. A relation needs its admitted domain,
+evidence, assurance and unknowns; graph connectivity does not establish
+equivalence or grant execution authority.
+
+Use `store-block-contract`, `store-udl-layer` and `select-udl-layers` to register
+supported profiles and pin exact contract/layer IDs. Python execution helpers
+are in `fdisbull.udc_layers`: `register_contract`, `register_layer`,
+`select_layers`, `run_layer` and `run_selection`. Persistence's `store_*` methods
+validate structure and references; the execution helpers also admit behavioral
+and backend profiles. A candidate's stored assurance is an authored declaration.
+
+Keep exact behavior separate from deliberate variation. A shared-IL behavior
+contract fixes its declared results and event plans. A bounded RNG policy may
+explicitly permit different seed algorithms/sequences, but matching a u16 range
+does not prove fairness, period, determinism or original sequence compatibility.
+ADD and ADC are interchangeable for a sum only when their carry dependency is
+discharged or included in the contract. An invocation that happens to match is
+finite evidence. Unobserved flags do not become proved equivalent.
+
+`fdisbull-module-uil-1` adds contract-bound `invoke` and unsigned `remainder`
+through `run-module-uil` / `fdisbull.udc_blueprint.execute_module_uil`. It is a
+separate profile; `fdisbull-il-1` primitives are unchanged. It validates exact
+selected contracts and typed ports in untaken branches, bounds execution, and
+retains modeled refusal state. It does not undo an effect in an external process.
+
+The native x86-16 provider executes selected bytes in an isolated CPU through
+explicit register/memory/segment/scratch adapters; it requires the optional
+`udc` dependency. This is not a running DOS or Win16 process. Recovered source
+data/pointer/caller assumptions still need evidence. Pure scalar Z3 admission
+qualifies supplied IL completion/output models only; unknown, unsupported or
+counterexample results do not become native equivalence.
+
+`compile-udc-splice` emits a new hash-bound COM artifact through an explicit
+placement/data recipe. Keep reusable math separate from target offsets,
+seed loads/stores, ABI adapters and continuations. The first profile is limited
+to a 65280-byte COM image and is not a general DOS linker. `build-udc-shell`
+emits a new PE64 shell from supported selected UIL and notification modules.
+The first selected PE bridge admits canonical port maps and rejects nonempty
+extra contract/layer domains until native guards exist. Its notification service
+is ui.notify, not a file/media service. Generated bytes, imported PE structure,
+native execution and visible provider effects are distinct evidence gates.
+
+Logical services such as future read_file ports can connect DOS or Windows
+source provenance through explicit handle/buffer/status adapters. Current notify
+providers do not implement that service. This is not an automatic BIOS sweep.
+Different providers may have separate state arenas if their ports and adapters
+declare authority, transfer and failure semantics. Never retry another provider
+after unknown or partial effects as though no action occurred.
+
+Source-checkout `docs/UDL_BLOCK_LAYERS.md` supplies concrete API examples,
+formats, policy distinctions, first-profile limits and verification boundaries.
 
 ## Zork IR and recovered intents
 
