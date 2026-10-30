@@ -20,6 +20,8 @@ DOC_EXAMPLE_FILES = (
     "docs/uil-rfcs/0001/native_probe.py",
     "docs/uil-rfcs/0001/source-definition-observation.json",
     "docs/uil-rfcs/0001/vectors.json",
+    "docs/uil-rfcs/0002/vectors.json",
+    "docs/uil-rfcs/0002/replay-summary.json",
 )
 SOURCE_PATTERNS = (
     ("src/fdisbull", "*.py"),
@@ -57,6 +59,7 @@ SOURCE_PATTERNS = (
     ("docs/evidence/integration-025", "dinopark.json"),
     ("docs/evidence/integration-025", "tests.json"),
     ("docs/evidence/integration-025", "packages.json"),
+    ("docs/evidence/integration-026", "verification.json"),
     ("scripts", "*.py"),
 )
 

@@ -1,5 +1,10 @@
 # DinoPark Z continuation on v0.24.0
 
+This record pins the earlier continuation candidates. The later
+[batch-recovery acceptance record](VERIFICATION-Z-BATCH-RECOVERY-2026-10-29.md)
+covers shared action continuations and native live-checkpoint scene recovery;
+it does not alter the earlier unknowns preserved below.
+
 The core opening, operating and native-resumption routes are usable through Z.
 This follow-up starts from main `031b53e`; PRs #18 and #19 are merged and left
 unchanged. Current runtime is `f07d219da52239e4009070148b74ff98e61a8364`.

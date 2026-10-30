@@ -33,8 +33,9 @@ states are private inputs and are excluded from Git and generic distributions.
 | Story | Zork I, Z-machine v3, release 88, serial `840726` |
 | Full story SHA-256 | `0ae5ac229e79094ff368b6669356444af0f35e21d862a1baaa546989085c15fd` |
 | File / declared extent | 92,160 / 84,876 bytes; the edition identity includes padding |
-| Integrated upstream | Main commit `85503c0e895842424faa7db62f020b879d08568a`, version 0.25 |
-| Pending processor work retained | [PR #28](https://github.com/seeker-cyber-maker/fDisBull/pull/28), head `bfcdfe8eb5a030cb6f0e917067690fe2f7e4d03c` |
+| Original verification baseline | Main commit `85503c0e895842424faa7db62f020b879d08568a`, version 0.25, with the processor work integrated |
+| Published integration baseline | Main commit `8ba24d62b5010d3a6a5d604524aad72e2e047b77`, version 0.26.0 |
+| Processor work retained | [PR #28](https://github.com/seeker-cyber-maker/fDisBull/pull/28), head `bfcdfe8eb5a030cb6f0e917067690fe2f7e4d03c`; its implementation is now included upstream |
 | Preserved intent document digest | `d4e1f586a39b6fe59987c4b2e25bd17d9e0a009c3bb5208b0a8d4f5122f11d01` |
 | Final generated package SHA-256 | `405d7398b5190b428ec11b089b11064e366060484026531a8694f6618d5e65db` |
 | Semantic scene document digest | `dab825eac678c6b1fdc51414d6771799cdf147afa2d3031babd44140585a6e05` |
@@ -179,7 +180,7 @@ fault. A partial commit is never retried through residual code.
 
 ## Authored tests and distribution checks
 
-The final combined focused gate passed **494 tests**, with **5 skips**:
+The original combined focused gate passed **494 tests**, with **5 skips**:
 228 new scene tests and 266 preserved processor/conversion/intent tests.
 
 | New test area | Passed |
@@ -198,7 +199,7 @@ interpretation, exact narrative, discourse effects, routine entry/default
 locals and unchanged selection inputs. This establishes static correspondence
 and evaluator behavior; it does not assert every alternative is reachable.
 
-The initial full repository run reported 2,163 passes, 109 skips and 66
+The initial full repository run on the 0.25 integration reported 2,163 passes, 109 skips and 66
 failures. Running exactly those 66 failed test IDs on the unchanged integrated
 baseline reproduced 50 failures: 30 existing Git/output-boundary cases,
 10 missing optional managed-decoder dependency cases and 10 socket/transport
@@ -222,6 +223,31 @@ complete saved states matched the validated reference. Repository/source
 reads, network and child processes were refused. Player phases also refused
 original-story and prior-conversion file reads. All project imports came from
 the selected wheel, and no isolation violations occurred.
+
+### Integration with the concurrent 0.26 update
+
+Main advanced to 0.26.0 during publication. Its exact source tree
+`656f1a0a4e3b7fb229fe5a34a78690b08192caa6` was reconstructed and integrated
+without reverting its processor, recovery, documentation or packaging changes.
+The four merge conflicts were additive scene links/evidence entries in the
+README, processor guide, manifest and source-archive allowlist.
+
+All six executing consumer modules and all 17 protected baseline files remain
+byte-identical. The scene producer, scene evaluator, binding validator and
+generated game artifacts are unchanged. The complete reference comparison
+therefore remains bound to the same executing code and package. The subsequent
+0.26 gate passed **535 tests, with 5 skips**: the same 18 focused test files
+plus all three packaging test files. No test or implementation correction was
+needed after integration. The CLI and distribution checks are recorded
+separately in the evidence receipt, preserving the earlier executed results
+and artifact identities.
+
+Both 0.26 wheels passed their contents gates with every packaged source file
+matching the integrated candidate. Fresh isolated console processes reproduced
+the same scene package byte-for-byte and repeated the complete checkpointed
+house case with exact results and saved states. The six consumer hashes remain
+the same as in the original full reference run. These checks establish the
+integrated package paths without claiming a second full game-reference run.
 
 ## Reproduction
 
@@ -267,10 +293,11 @@ not authorize deleting an unexamined handler.
 This is an executable source-specific UIL/UDL companion profile. It does not
 claim conformance to a future universal shared-block catalog, semantic/backing
 revision registry, UDC selection registry or generic interface/readiness
-contract. The documentation proposals in open
+contract. The documentation proposals in
 [PR #29](https://github.com/seeker-cyber-maker/fDisBull/pull/29) and
-[PR #30](https://github.com/seeker-cyber-maker/fDisBull/pull/30) were reviewed as
-proposals, not silently adopted as implemented contracts. The bound UDL and
+[PR #30](https://github.com/seeker-cyber-maker/fDisBull/pull/30) were reviewed at
+their pinned heads and subsequently retained in 0.26 as design proposals,
+not silently adopted as implemented contracts. The bound UDL and
 retained source backing remain part of the package's meaning and validation.
 
 The recovered scene rules now provide the direct place to express and test
