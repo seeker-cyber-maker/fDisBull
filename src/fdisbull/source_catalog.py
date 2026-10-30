@@ -151,7 +151,10 @@ def _extract(parser, data):
     return entities, errors
 
 
-class SourceCatalog:
+from .source_builds import SourceBuildsMixin
+
+
+class SourceCatalog(SourceBuildsMixin):
     """A collection can contain many source editions and native target identities."""
 
     def __init__(self, path):

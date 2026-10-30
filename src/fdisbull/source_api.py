@@ -18,6 +18,12 @@ METHODS = {
     'source-concepts': 'Discover saved concepts by optional logical key; catalog,[key,offset,limit]',
     'source-link': 'Record an authored concept/entity relationship; catalog,concept,entity,relation,evidence,[assurance,author]',
     'source-bindings': 'Enumerate recorded concept relationships exactly; catalog,concept,[offset,limit]',
+    'source-build': 'Check pinned build artifacts and original identity; catalog,snapshot,directory,original_path',
+    'source-builds': 'Discover checked build witnesses; catalog,[snapshot,offset,limit]',
+    'source-map-native': 'Map a C function or emitted line to original resident bytes; catalog,entity,build,directory,original_path,[source_line,project]',
+    'source-native-maps': 'Enumerate source/native map witnesses; catalog,[entity,build,offset,limit]',
+    'source-propagate-map': 'Locate a version candidate and independently check its build/map; catalog,mapping,target_snapshot,directory,original_path,[project]',
+    'source-map-transfers': 'Discover qualified map transfers and byte/source differences; catalog,[mapping,offset,limit]',
 }
 
 OPERATIONS = {
@@ -26,6 +32,9 @@ OPERATIONS = {
     'source-cards': 'cards', 'source-model': 'register_model', 'source-models': 'models', 'source-embed': 'embed_cards',
     'source-search': 'search', 'source-concept': 'register_concept', 'source-link': 'link_concept',
     'source-bindings': 'concept_bindings', 'source-concepts': 'concepts',
+    'source-build': 'register_build', 'source-builds': 'builds',
+    'source-map-native': 'map_native', 'source-native-maps': 'native_maps',
+    'source-propagate-map': 'propagate_native_map', 'source-map-transfers': 'map_transfers',
 }
 
 

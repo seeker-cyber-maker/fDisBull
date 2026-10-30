@@ -9,6 +9,10 @@ This is source-assisted investigation. CivD has inferred names, comments and som
 types. Retrieval and matching upstream output checksums do not verify a build,
 source-to-machine mapping, or interchangeable UDL implementations.
 
+A later [verified-build stage](CIVD_VERIFIED_SOURCE_MAPS.md) now qualifies
+selected resident source/native correspondences across the three editions.
+The search measurements below remain the earlier source-assisted experiment.
+
 ## Implemented boundary
 
 The new SQLite catalog is separate from native `.fdb` projects. Source snapshots

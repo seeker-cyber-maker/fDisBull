@@ -26,6 +26,18 @@ mappings, disassembly seeds, binary names/types or UDL admission.
 
 Use `source-models` and `source-concepts` to discover saved IDs after reopening.
 
+For the CivD period-toolchain profile, `source-build` rechecks source/artifact
+hashes and the output/original association in an external build receipt.
+`source-map-native` maps emitted functions/lines through compiler listings,
+linker placement and a bounded EXEPACK resident view. Its optional `project`
+captures a version-1 snippet from that exact derived image; it does not relabel
+the packed original as an unpacked file.
+`source-propagate-map` locates a candidate in another snapshot and checks that
+edition's own build and map. It never inherits an address or semantic proof.
+Discover witnesses with `source-builds`, `source-native-maps` and
+`source-map-transfers`. Original-file spans, decoded addresses and loaded
+addresses remain separate. Overlays and native gameplay are unqualified.
+
 Keep source-assisted/oracle inputs separate from blind investigations. Scope
 queries with explicit snapshot IDs. Ranking is not confidence, abstention,
 exhaustive semantic coverage or source/native equivalence.
