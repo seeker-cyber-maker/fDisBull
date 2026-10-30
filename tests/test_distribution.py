@@ -12,6 +12,7 @@ REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scrip
                        'player/fdisbull_player/__main__.py','player/fdisbull_player/player.py','player/fdisbull_player/runtime.py','player/fdisbull_player/live.py','player/fdisbull_player/word16.py',
                        'player/fdisbull_player/game_intents.py','player/fdisbull_player/intent_runtime.py','player/fdisbull_player/batch.py',
                        'player/fdisbull_player/scene_intents.py','player/fdisbull_player/scene_bindings.py','player/fdisbull_player/scene_runtime.py',
+                       'player/fdisbull_player/door_intents.py','player/fdisbull_player/door_bindings.py',
                        'src/fdisbull/__init__.py','pyproject.toml','tests/fixtures_formats.py','tests/fixtures_macho.py','tests/fixtures_z_scenes.py',
                        'tests/wine_gui_fixture.c','tests/dosbox_zip_empty_write.cpp','src/fdisbull/wine_guest/agent.c',
                        'src/fdisbull/wine_guest/init.sh','src/fdisbull/wine_guest/broker.py','src/fdisbull/wine_guest/selftest.c',
@@ -36,6 +37,8 @@ REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scrip
 GAMEFAQS_SKILL_FILES = tuple('src/fdisbull/skills/write-gamefaqs-guide/'+name for name in (
     'SKILL.md', 'references/evidence-and-provenance.md', 'references/guide-structure.md',
     'references/technical-mechanics.md', 'references/source-examples.md',
+    'references/routes-and-discoveries.md', 'references/formats-and-engine-reuse.md',
+    'references/engine-source-examples.md',
 ))
 REQUIRED_SOURCE_FILES += GAMEFAQS_SKILL_FILES
 UDC_EVIDENCE_FILES = {
@@ -64,6 +67,7 @@ REQUIRED_SOURCE_FILES += tuple(sorted(INTEGRATION_EVIDENCE_FILES))
 REQUIRED_SOURCE_FILES += ('docs/uil-rfcs/0002/vectors.json',
                           'docs/uil-rfcs/0002/replay-summary.json')
 REQUIRED_SOURCE_FILES += ('docs/evidence/integration-026/verification.json',)
+REQUIRED_SOURCE_FILES += ('docs/evidence/integration-0261/verification.json',)
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):

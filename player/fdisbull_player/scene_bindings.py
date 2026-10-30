@@ -16,7 +16,9 @@ from .word16 import Word16Error, Word16Runtime, _canonical, _integer
 
 
 FORMAT = "fdisbull-zork-scene-package-1"
+FORMAT_V2 = "fdisbull-zork-scene-package-2"
 UDL_FORMAT = "fdisbull-zork-scene-udl-1"
+UDL_FORMAT_V2 = "fdisbull-zork-scene-udl-2"
 DISPATCH_FORMAT = "fdisbull-game-dispatch-uil-1"
 _ID = re.compile(r"[a-zA-Z0-9][a-zA-Z0-9_.-]{0,191}\Z")
 _PROPERTY_ROLES = {17: "action", 2: "container_action", 9: "description"}
@@ -733,13 +735,19 @@ def validate_package(package):
     intent or equivalence outside executed reference cases.
     """
     try:
-        _need(isinstance(package, dict) and set(package) == {"format", "base_intents", "uil", "dispatch_uil", "udl"}
-              and package["format"] == FORMAT, "Unsupported scene package")
+        _need(isinstance(package, dict) and package.get("format") in (FORMAT, FORMAT_V2),
+              "Unsupported scene package")
+        version_two = package["format"] == FORMAT_V2
+        fields = {"format", "base_intents", "uil", "dispatch_uil", "udl"}
+        if version_two:
+            fields.add("interaction_uil")
+        _need(set(package) == fields, "Scene package has missing or unknown members")
         base, uil, udl = package["base_intents"], package["uil"], package["udl"]
         validate_intents(base)
         scene_intents.validate_uil(uil)
         source = SourceReader(base["low_level_ir"])
-        _need(udl["format"] == UDL_FORMAT and udl["source"] == base["low_level_ir"]["source"]
+        _need(udl["format"] == (UDL_FORMAT_V2 if version_two else UDL_FORMAT)
+              and udl["source"] == base["low_level_ir"]["source"]
               and udl["base_intents_sha256"] == _digest(base) and udl["uil_sha256"] == _digest(uil)
               and udl["dispatch_uil_sha256"] == _digest(package["dispatch_uil"])
               and udl["initial_image_sha256"] == hashlib.sha256(source.memory).hexdigest(),
@@ -748,6 +756,12 @@ def validate_package(package):
         scene_numbers = _scene_bindings(source, uil, udl, guards)
         _primitive_bindings(source, uil, udl, guards)
         _dispatch_bindings(source, package["dispatch_uil"], udl["dispatch"], scene_numbers)
+        if version_two:
+            from .door_bindings import validate_binding
+            _need(udl["interaction_uil_sha256"] == _digest(package["interaction_uil"]),
+                  "Scene package is not bound to its door interaction")
+            validate_binding(source, package["interaction_uil"], udl["interaction"],
+                             uil, udl, package["dispatch_uil"], udl["dispatch"])
         _need(udl["movement"]["qualified_actor"] in {
                   row["number"] for row in udl["dispatch"]["objects"].values()}
               and udl["dispatch"]["perform"]["actor_global"] == udl["movement"]["actor_global"]

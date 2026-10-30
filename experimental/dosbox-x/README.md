@@ -29,9 +29,14 @@ Upstream: https://github.com/joncampbell123/dosbox-x
 
 Baseline: `029bd65c5dcc7cdc7f2e14e35278620d9707d969`.
 
+The candidate complete patch reports the selected DOS process's exit after
+kernel cleanup, with separate resident-program and debugger-shutdown outcomes.
+See [DOS termination verification](../../docs/VERIFICATION-DOS-TERMINATION.md)
+for the tested source, cloud rerun, and compatibility limits. A rebuild is required.
+
 - `recovered-work.patch`: original unfinished archive checkpoint, preserved unchanged.
 - `headless-agent.patch`: complete current patch against the baseline, including recovered cloud changes and local fixes. Apply this patch alone to the clean baseline.
-- `source-manifest.json`: hashes for the complete patch and all 28 resulting source files; see [spectator verification](../../docs/VERIFICATION-SPECTATOR-CLOUD.md) for the bounded build and test evidence.
+- `source-manifest.json`: hashes for the complete patch and all 32 resulting source files; see [spectator verification](../../docs/VERIFICATION-SPECTATOR-CLOUD.md) for the earlier bounded build and test evidence.
 - `evidence/2026-10-23/`: real guest acceptance JSON and screenshots, client/transport test log, and a separate command-line launcher result.
 
 The restored changes include the pipe client/tests, package exports, SDL header placement, launcher diagnostics, and guest acceptance runner. Earlier passing-test statements were independently rechecked locally.

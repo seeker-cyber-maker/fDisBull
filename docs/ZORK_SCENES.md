@@ -7,6 +7,11 @@ identities. The scene evaluator chooses named destinations and effects directly.
 It does not unpack a property record, compute a packed code address or use the
 Z-machine operand stack to decide which scene a rule means.
 
+The current package also recovers the kitchen-window open/close interaction:
+its live door condition, initial-hint dismissal, ordered narration and state
+change, and shared shuffled feedback when the requested state already holds.
+These rules execute from a separate address-free interaction document.
+
 This is a further semantic layer over the preserved playable conversion. It
 does not claim that every room callback, puzzle, parser rule or background
 event has been understood. Unrecovered behavior remains explicitly identified
@@ -34,6 +39,8 @@ The optional inspection files are the exact documents embedded in the runnable
 package. Supplying `--intents` retains that entire package unchanged, including its
 original IR and earlier mailbox/turn intent definitions. Omitting it builds the
 existing intent conversion before adding the scene layer.
+The additional door-interaction document is embedded as `interaction_uil`;
+its source correspondence is included in the exported UDL's `interaction` member.
 
 Resume with:
 
@@ -63,12 +70,15 @@ owned story or a generated game package.
 | Preserved base package | `fdisbull-zork-intent-package-1` | Retain the original executable IR and previously recovered mailbox and counter behavior. |
 | Scene UIL | `fdisbull-scene-intent-uil-1` | Describe named scenes, directional rules, live predicates, ordered refusal effects and explicit residual requests. |
 | Dispatch UIL | `fdisbull-game-dispatch-uil-1` | Name actions, rule precedence and selectable residual handlers independently of packed addresses. |
-| Scene UDL | `fdisbull-zork-scene-udl-1` | Connect semantic fields and effects to original objects, properties, source operations, routine entries and live guards. Its `dispatch` member carries the dispatch source definitions. |
-| Runnable scene package | `fdisbull-zork-scene-package-1` | Bind the preserved package, both UIL documents and UDL together. |
+| Door-interaction UIL | `fdisbull-door-interaction-uil-1` | Describe named open/close effects, initial-hint dismissal and a finite shuffled-response bag. |
+| Scene UDL | `fdisbull-zork-scene-udl-2` | Connect semantic fields and effects to original objects, properties, source operations, routine entries and live guards. Its `dispatch` member carries dispatch definitions; `interaction` carries `fdisbull-zork-door-udl-1`. |
+| Runnable scene package | `fdisbull-zork-scene-package-2` | Bind the preserved package, three UIL documents and UDL together. |
 
-The package has five top-level fields: `format`, `base_intents`, `uil`,
-`dispatch_uil` and `udl`. Canonical digests bind the preserved package and
-both semantic documents. The full package identity also binds its UDL.
+The current package has six top-level fields: `format`, `base_intents`, `uil`,
+`dispatch_uil`, `interaction_uil` and `udl`. Canonical digests bind the preserved
+package and all three semantic documents. The full package identity also binds
+its UDL. The scene and dispatch UIL formats have not changed. Loading the earlier
+five-field scene package version 1 with scene UDL version 1 remains supported.
 
 `src/fdisbull/zork_scenes.py` produces the scene model and source
 correspondence. `src/fdisbull/zork_scene_dispatch.py` resolves finite rule
@@ -77,6 +87,13 @@ the independent, address-free scene evaluator. The player-side
 `scene_bindings.py` validates source correspondence without importing the
 producer or the Z-machine decoder. `scene_runtime.py` realizes admitted
 semantic effects and resumes the declared residual behavior.
+
+`src/fdisbull/zork_window.py` follows the already-resolved window callback to its
+small open/close and shuffled-response helpers. The independent
+`player/fdisbull_player/door_intents.py` evaluates the named interaction, while
+`door_bindings.py` checks its fields, selected operations and control flow against
+the retained IR. This is a bounded source-specific recognizer, not a general
+decompiler.
 
 The older `zork-uil` command and `fdisbull-uil-word16-1` format remain
 compatible names for the low-level executable representation. They do not
@@ -253,6 +270,89 @@ It requires a known actor, known origin, consistent actor location and known
 destination. Its ordered effects move the actor and then establish the current
 scene. It does not infer arrival scoring, description policy or a turn count.
 
+## Kitchen-window interaction
+
+The interaction document names `kitchen_window`, the presentation fact
+`initial_ajar_hint_dismissed`, open/close resources and the
+`already_requested_state` response bag. Object numbers, source flags, routine
+coordinates, text packing and bag-table cells appear only in UDL. The source
+door binding is shared with the existing scene exits, so a successful open or
+close changes subsequent traversal eligibility without redefining those exits.
+
+The hint fact has a distinct meaning from the open bit. Its writer runs on any
+open/close attempt, including repeats. The adjacent examination consumer uses
+the fact to suppress the initial hint after such an attempt. Both writer and
+consumer qualify the name; the producer does not guess the flag's meaning from
+its initial value. The examination action itself remains residual.
+
+### Ordered effects
+
+Every admitted open/close invocation first dismisses the initial hint. The
+remaining effects depend on live state:
+
+| Action and live door state | Remaining ordered effects |
+| --- | --- |
+| Open a closed window | Emit the opening resource; set the open state; emit a newline. |
+| Close an open window | Emit the closing resource; clear the open state; emit a newline. |
+| Open an open window | Select and emit shuffled feedback; emit a newline; leave the door state unchanged. |
+| Close a closed window | Select and emit shuffled feedback; emit a newline; leave the door state unchanged. |
+
+The semantic primitives are `presentation.dismiss_initial_hint`, `door.open`,
+`door.close`, `narration.emit` and `narration.choose_shuffled_response`.
+Presentation precedes the door-state write. If output fails, the adapter must
+retain the effects that actually completed rather than assuming the requested
+door transition happened.
+
+Repeat feedback draws from a **shared live bag of three named resources**.
+For a bag of size `n` with `c` responses already used, it consumes one random
+draw in `1..n-c`, exchanges the selected item with the first unused item, and
+advances the cursor, wrapping immediately at the end of the cycle. It then emits
+the selected resource. A draw with range one still consumes RNG state. The
+adapter retains both source assignments even when the exchange uses the same
+slot, followed by the cursor write and output.
+
+Each resource is selected once per cycle; the last response of one cycle may
+also be the first response of the next. Other residual handlers can use the same
+bag. The adapter therefore projects its current order and cursor before a repeat
+and writes the result back to the shared state. It does not keep a private bag
+initialized from the export. On a repeat, unqualified pointers, items, counts or
+cursors remain residual instead of being normalized into valid state.
+
+### Evaluation and residual boundary
+
+```python
+from fdisbull_player.door_intents import evaluate_interaction, select_response
+
+plan = evaluate_interaction(interaction_document, live_state, "open")
+if any(effect["type"] == "shuffled_response" for effect in plan["effects"]):
+    # The adapter supplies draw after consuming the requested RNG operation.
+    choice = select_response(interaction_document, live_state["response_bag"], draw)
+```
+
+The exact input fields are `door_open`, `hint_dismissed` and `response_bag`.
+Unknown values use `None`. The pure evaluator neither draws randomness nor
+changes its inputs. Unknown door state, unsupported actions, or an unknown bag
+needed by a repeat produce no effects. A missing bag does not block a state
+change, and the prior hint value need not be known for an unconditional dismissal.
+Malformed state is rejected. The result's `next_state` describes planned hint
+and door changes; `select_response` supplies the bag change for the actual draw.
+
+The runtime replaces the qualified open/close callback path and its helpers,
+then returns the source's handled result through the existing caller. Parser
+scope, stage precedence, other window verbs, command bookkeeping, scheduler
+admission and background events remain residual. The existing bounded turn-count
+primitive is retained; the door evaluator does not add a second turn cost.
+Unsupported output streams and changed dependencies fall back before effects.
+Failures after an RNG draw, table write, output or door change retain the partial
+result and never replay the original helper.
+
+The replaced callback prefix and two helpers contain **39 instructions across
+157 bytes including their routine headers**. That is the additional replacement
+slice, not the total investigation: hint-consumer evidence, tables, text and
+abbreviation dependencies are also checked. The work reuses qualified story,
+object, action, dispatch and IR definitions. These counts establish neither a
+cold-recovery cost nor a speedup.
+
 ## Executing the higher-level representation
 
 The compatibility consumer executes the semantic plan and connects it to
@@ -262,6 +362,7 @@ explicit residual phases:
 |---|---|
 | Input and parsing | Retained IR handles language recognition, scope, pronouns and action formation. |
 | Rule selection | Resolved named links replace qualified source table/property loads and computed routine calls. |
+| Qualified window open/close | Named hint, door-state and shuffled-feedback effects replace the selected callback path and helpers. Other window actions remain residual. |
 | Directional decision | `scene.select_exit` executes the UIL's live condition and refusal rules. |
 | Movement admission | Original GOTO behavior retains vehicle, destination and other pre-move checks. |
 | On-foot relocation | At the qualified effect boundary, `scene.move_actor` replaces the actor insertion and current-scene assignment. |
@@ -303,7 +404,9 @@ Lexical aliases and grammar associations provide evidence for action naming.
 They do not replace the original parser or claim that every syntax filter has
 been recovered. Exported handler bodies remain marked as low-level IR. The
 existing mailbox semantic replacement can still execute when a resolved OPEN
-handler reaches its independently qualified mailbox binding.
+handler reaches its independently qualified mailbox binding. Likewise, a resolved
+window callback reaches the separately qualified interaction binding; the
+dispatch document does not promote the callback's remaining branches to UIL.
 
 Source arguments and original frames may still be needed to call an
 unrecovered body. That transport is confined to the compatibility adapter.
@@ -331,6 +434,8 @@ The source definitions bind several distinct things:
 - Source operations and their lowered IR counterparts.
 - Routine headers, initial locals, return conventions and continuations.
 - Mutable global facts, door attributes and object links.
+- The window hint writer and consumer, typed narration references, and the
+  shuffled-feedback helper's RNG, table-update and return contract.
 
 Initial mutable values are evidence, not permanent runtime assumptions. The
 runtime projects facts and door states from the current world. It checks
@@ -368,16 +473,17 @@ next_result = runtime.command("north")
 live_facts = runtime.scene_state()
 ```
 
-The optional constructor switches `enable_scenes=False` and
-`enable_intents=False` support comparisons through the same package while
-disabling the corresponding semantic replacement.
+The optional constructor switches `enable_scenes=False`, `enable_intents=False`
+and `enable_interactions=False` support comparisons through the same package.
+Disabling scenes also disables its interaction replacement; the interaction
+switch can disable only the new window path while retaining scene execution.
 
 Results retain the existing `recovery` data and add `scene_recovery`.
 The latter reports:
 
 - Resolved dispatch sites and selected named handlers.
 - Selected exit outcomes.
-- Executed scene primitive counts.
+- Executed scene and door-interaction primitive counts.
 - Invoked residual handlers.
 - Fallback reasons.
 - Replaced source-block counts where recorded.
@@ -390,9 +496,13 @@ handler invocation is not counted as recovered game intent.
 ## Checkpoints and compatibility
 
 Scene checkpoints bind the complete scene package, including the preserved
-base package, both UIL documents and UDL. Editing a rule or correspondence
+base package, every UIL document and UDL. Editing a rule or correspondence
 creates a different identity; an old checkpoint cannot silently resume under
 it. Nested original-game save slots use the same bound package identity.
+
+The current consumer still loads version 1 scene packages and their matching
+checkpoints. Producing a version 2 package adds an interaction and changes its
+identity; it does not migrate an earlier checkpoint to that new package.
 
 The old IR and mailbox-intent packages retain their own consumers and
 checkpoint identities. Adding the scene layer does not rewrite them or claim
@@ -406,10 +516,13 @@ not a runtime dependency of the generated package.
 ## Verification boundary and remaining work
 
 Authored tests exercise the pure evaluator, each source exit convention, graph
-association, resolved calls, source bindings and rejection paths. The
-[executed verification report](VERIFICATION-ZORK-SCENES-2026-10-30.md) records
-the actual-story comparisons, exact package/source identities, inputs and
-observed boundaries.
+association, resolved calls, source bindings and rejection paths. Door tests
+add all state/action cases, bag permutations and admissible draws, cycle
+boundaries, unknown state and ordered effects. The
+[earlier scene verification report](VERIFICATION-ZORK-SCENES-2026-10-30.md)
+records the scene/dispatch comparisons before the window addition. Its results
+do not establish the newer interaction's execution coverage; that requires the
+matching package and current verification receipt.
 
 The appropriate claims are distinct:
 
@@ -418,7 +531,8 @@ The appropriate claims are distinct:
 - **Reference resolution:** qualified table/property links have named targets
   or an explicit residual classification.
 - **Effect recovery:** supported exit decisions/refusals and the bounded
-  on-foot relocation execute as game-intent primitives.
+  on-foot relocation execute as game-intent primitives, together with qualified
+  kitchen-window open/close, hint dismissal and shuffled repeat feedback.
 - **Behavioral equivalence:** limited to the cases and state/effect boundaries
   recorded by executed checks.
 - **Whole-game intent:** remains incomplete.

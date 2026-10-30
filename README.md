@@ -1,9 +1,11 @@
 # fDisBull
 
-This checkout contains the **0.26.0 release source**. Its recovery,
-Z-machine inspection and observation work is described in the
-[0.26 notes](docs/RELEASE-0.26.0.md). The published and shared installation
-remains [0.25.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.25.0).
+This checkout contains the **0.26.1 release source**: read-only recovery
+reconciliation, selected DOS program-exit reporting and broader game-guide
+workflows. See the [0.26.1 notes](docs/RELEASE-0.26.1.md) for scope and gates.
+The published and shared installation is
+[0.26.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.26.0)
+at this source cut; publication and installation are separate steps.
 
 Give an agent a program to explore—and a place to keep what it learns.
 fDisBull connects disassembly, headless debugging, scene-aware controls and
@@ -185,6 +187,8 @@ guest and unchanged mounted files; native park saves provide durable resumption.
 An acknowledgement can advance a partial action, but current providers do not
 certify that the original intent is complete. Such batch steps remain paused
 for reconciliation, and aliases cannot be used to resend the original action.
+If a result read fails, read-only reconciliation can verify a saved reply in the
+same guest before the batch continues.
 
 The [funded26k recovery path](docs/DINOPARK_FUNDED_RECOVERY.md) preserves a confirmed
 food purchase across its quarter notice and keeps a paused provider available

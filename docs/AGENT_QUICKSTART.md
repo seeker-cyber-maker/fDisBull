@@ -38,6 +38,8 @@ fdisbull agent-skill --reference references/semantic-contracts.md
 fdisbull agent-skill --reference references/scene-recovery.md
 fdisbull agent-skill --reference references/formats-and-media.md
 fdisbull agent-skill --skill write-gamefaqs-guide --reference references/evidence-and-provenance.md
+fdisbull agent-skill --skill write-gamefaqs-guide --reference references/routes-and-discoveries.md
+fdisbull agent-skill --skill write-gamefaqs-guide --reference references/formats-and-engine-reuse.md
 ```
 
 With a source checkout, the bundled files are under
@@ -61,9 +63,12 @@ bounded source dependencies. The formats/media guide covers input mapping and
 qualified media reduction.
 
 Use `write-gamefaqs-guide` to turn established investigation results into a
-human-readable review, route or mechanics reference. It preserves release
-boundaries, attributes external sources, and separates supported knowledge from
-unknowns. Its templates and research guidance do not implement a game-guide
+human-readable review, route or mechanics reference. Cover recovered unused code,
+bugs, cheats, easter eggs, event probabilities, alternate paths, speedrun rules
+and completion goals. Include recovered file/media specifications and qualified
+engine/interpreter reuse across related games. It preserves release boundaries,
+attributes external sources, and separates supported knowledge from unknowns.
+Its templates and research guidance do not implement a game-guide
 generator, play through a game, or submit anything to GameFAQs. Return to the
 investigation skill for unresolved behavior that materially affects the review.
 

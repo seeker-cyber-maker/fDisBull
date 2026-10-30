@@ -16,7 +16,7 @@ import gzip
 import sys
 from pathlib import Path
 
-from . import scene_intents
+from . import door_intents, scene_intents
 from .intent_runtime import IntentRuntime, _digest
 from .scene_bindings import validate_package
 from .word16 import (
@@ -51,12 +51,16 @@ class SceneRuntime(IntentRuntime):
     """
 
     def __init__(self, package, seed=12, random_tape=None, enable_scenes=True,
-                 enable_intents=True):
+                 enable_intents=True, enable_interactions=True):
         validate_package(package)
         self.scene_uil = copy.deepcopy(package["uil"])
         self.scene_udl = copy.deepcopy(package["udl"])
         self.dispatch_uil = copy.deepcopy(package["dispatch_uil"])
         self.enable_scenes = bool(enable_scenes)
+        self.enable_interactions = bool(enable_interactions)
+        self.interaction_uil = copy.deepcopy(package.get("interaction_uil"))
+        self.interaction_udl = (copy.deepcopy(package["udl"]["interaction"])
+                                if self.interaction_uil is not None else None)
         self.scene_stats = _stats()
         self.last_scene_recovery = {**_stats(), "segments": []}
         self._scene_segments = []
@@ -75,6 +79,8 @@ class SceneRuntime(IntentRuntime):
         self._actions = {item["id"]: item for item in self.dispatch_uil["actions"]}
         self._callback_bindings = {(item["object"], item["property"]): item
                                    for item in self._dispatch_udl["properties"]}
+        self._interaction_witnesses = (self._compile_witnesses(self.interaction_udl)
+                                       if self.interaction_udl is not None else {})
 
     @staticmethod
     def _compile_witnesses(document):
@@ -391,9 +397,121 @@ class SceneRuntime(IntentRuntime):
             self.scene_stats["replaced_source_blocks"] += 2
         return self._committed(record, commit)
 
+    def _door_interaction(self):
+        """Realize a named operation; no source helper or packed call runs here.
+
+        The old shared response table stays the state owner while residual
+        handlers still use it. Its current permutation is projected afresh;
+        maintaining a private semantic bag would break that shared behavior.
+        """
+        binding, document = self.interaction_udl, self.interaction_uil
+        action_number = self._read_var(binding["action_global"])
+        action = next((name for name, value in binding["actions"].items()
+                       if value == action_number), None)
+        if action is None:
+            return self._fallback("door_action_remains_residual")
+        if len(self.frames) < 2 or self.frames[-1]["locals"] != binding["callback"]["locals"]:
+            return self._fallback("door_callback_frame_not_qualified")
+        if self.host["memory_streams"]:
+            return self._fallback("door_memory_output_stream_unqualified")
+        for name in binding["runtime_guards"]:
+            start, end, expected = self._interaction_witnesses[name]
+            if self.memory[start:end] != expected:
+                return self._fallback("door_source_dependency_changed:" + name)
+        door, history, repeat = (binding[key] for key in ("door", "history", "repeat"))
+        is_open = bool(self._read(door["address"]) & door["mask"])
+        bag = None
+        if is_open == document["actions"][action]["is_open"]:
+            # The domain guarantees positive RNG ranges and no Word16 wrap.
+            # An unknown pointer/item/count/cursor retains the old IR behavior.
+            if (self._read(repeat["pointer_address"], 16) != repeat["table_address"]
+                    or self._read(repeat["table_address"], 16) != repeat["count_word"]):
+                return self._fallback("door_response_table_changed")
+            cursor = self._read(repeat["cursor_address"], 16)
+            by_packed = {packed: name for name, packed in repeat["resources"].items()}
+            order = [by_packed.get(self._read(repeat["items_address"] + index * 2, 16))
+                     for index in range(repeat["count"])]
+            if (not 0 <= cursor < repeat["count"] or None in order
+                    or len(set(order)) != repeat["count"]):
+                return self._fallback("door_response_bag_outside_qualified_domain")
+            bag = {"order": order, "cursor": cursor}
+        state = {"door_open": is_open,
+                 "hint_dismissed": self._read(history["address"], 16) != 0,
+                 "response_bag": bag}
+        plan = door_intents.evaluate_interaction(document, state, action)
+        if plan["status"] != "handled":
+            return self._fallback("door_" + plan["reason"])
+        frame, caller = self.frames[-1], self.frames[-2]
+        store, base = frame["store"], frame["base"]
+        if (type(store) is not int or not 0 <= store <= 255
+                or type(base) is not int or not caller["base"] <= base <= len(self.stack)
+                or type(frame["resume"]) is not int or frame["resume"] not in self.blocks
+                or 0 < store < 16 and store > len(caller["locals"])
+                or store == 0 and base >= MAX_STACK):
+            return self._fallback("door_return_contract_unqualified")
+        # Removing a helper must not silently remove the old consumer's
+        # resource-budget refusal. Its temporary stack depth is at most one.
+        if len(self.frames) + (2 if bag is not None else 1) > MAX_FRAMES or len(self.stack) >= MAX_STACK:
+            return self._fallback("door_source_call_budget_unqualified")
+        if store >= 16:
+            self._bounds(self.layout["globals"] + 2 * (store - 16), 2, True)
+        record = {"mode": "game_intent_uil", "binding": document["id"],
+                  "action": action, "outcome": plan["outcome"],
+                  "effects": copy.deepcopy(plan["effects"])}
+        if plan["outcome"] in ("opened", "closed"):
+            replaced = 10 if plan["outcome"] == "opened" else 12
+        else:
+            # Four callback operations, seven helper operations and the bag
+            # helper; its reset assignment runs only at a cycle boundary.
+            replaced = 11 + len(binding["selection"]["source_pcs"]) - int(
+                bag["cursor"] + 1 < repeat["count"])
+        record["replaced_source_blocks"] = replaced
+
+        def commit(event):
+            for effect in plan["effects"]:
+                kind = effect["type"]
+                if kind == "hint_dismissed":
+                    self._write_var(history["global"], history["value"])
+                elif kind == "narrate":
+                    self._emit(effect["text"])
+                elif kind == "door_state_changed":
+                    self._library("attribute.set" if effect["is_open"] else "attribute.clear",
+                                  [door["object"], door["attribute"]])
+                elif kind == "shuffled_response":
+                    remaining = repeat["count"] - bag["cursor"]
+                    draw = self._random(remaining)
+                    event["completed_realizations"].append({"type": "random_draw", "range": remaining, "value": draw})
+                    choice = door_intents.select_response(document, bag, draw)
+                    chosen, cursor = choice["chosen_position"], choice["cursor_position"]
+                    slots = ((chosen, bag["order"][cursor]), (cursor, choice["resource"]))
+                    # Both original assignments are observable, even for a
+                    # same-slot choice. They occur before the cursor and text.
+                    for position, resource in slots:
+                        self._write(repeat["items_address"] + position * 2, 16,
+                                    repeat["resources"][resource])
+                        event["completed_realizations"].append({"type": "response_slot_changed",
+                            "position": position, "resource": resource})
+                    self._write(repeat["cursor_address"], 16, choice["next_bag"]["cursor"])
+                    event["completed_realizations"].append({"type": "response_cursor_changed",
+                                                            "cursor": choice["next_bag"]["cursor"]})
+                    self._emit(choice["text"])
+                    event["completed_realizations"].append({"type": "narrate", "resource": choice["resource"]})
+                else:
+                    raise Word16Error("Unsupported door interaction effect")
+                event["completed_effects"].append(copy.deepcopy(effect))
+            self._return(binding["return_value"])
+            self.scene_stats["replaced_source_blocks"] += replaced
+            for primitive in plan["executed_intents"]:
+                self._increment(self.scene_stats["primitive_hits"], primitive)
+        return self._committed(record, commit)
+
     def _nodes(self, nodes, temps):
         block = self.blocks.get(self.pc)
         if self.enable_scenes and block is not None and nodes is block["nodes"]:
+            if (getattr(self, "enable_interactions", False) and self.interaction_udl is not None
+                    and self.pc == self.interaction_udl["callback"]["entry"]
+                    and self._door_interaction()):
+                return True
             site = self._dispatch_sites.get(self.pc)
             if site is not None and self._dispatch(site):
                 return True

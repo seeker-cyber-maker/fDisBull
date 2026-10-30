@@ -1,6 +1,7 @@
 # Why the game-guide skill has these requirements
 
-Research date: **2026-10-29**. The implemented companion skill is
+Initial research: **2026-10-29**; scope extension: **2026-10-30**.
+The implemented companion skill is
 [`write-gamefaqs-guide`](../src/fdisbull/skills/write-gamefaqs-guide/SKILL.md).
 Its purpose is a human-readable review of established game knowledge, including
 partial walkthroughs and technical mechanics where the evidence supports them.
@@ -16,8 +17,9 @@ automatic solution extractor or validate a shipped game's completion route.
 
 The packaged [source examples](../src/fdisbull/skills/write-gamefaqs-guide/references/source-examples.md)
 contain ten annotated exemplars, with authors, revisions, links, access modes,
-scope limits and requirement IDs R01-R08. They distinguish official material,
-historical guidance, observed practice and our design decisions.
+scope limits and requirement IDs R01-R08. The extension adds source group S11
+(five annotated engine/format sources) and requirements R09-R12. They distinguish
+official material, historical guidance, observed practice and our design decisions.
 
 | Source or observation | Decision in the skill | Implemented location |
 | --- | --- | --- |
@@ -129,10 +131,60 @@ rediscovery or absence of model prior knowledge.
 This requirement preserves the meaning of the user's original experiment while
 still allowing useful research in ordinary guide-writing work.
 
+## Extension: a review of the recovered game
+
+The 2026-10-30 request expands the writing contract to include discoveries beyond
+intended progression, speedrunner and completionist goals, and the technical
+formats/runtime knowledge recovered during analysis. This follows merged PR #27
+without replacing its evidence or experiment boundaries. The implementation is
+based on accepted main `85503c0e895842424faa7db62f020b879d08568a`.
+
+| Requested area | Concrete writing requirement | Location |
+| --- | --- | --- |
+| Recovered but unused code | Track presence, decoded meaning, observed use, conditional/debug access and reachability separately; retain recovered-only discoveries. No direct xrefs is not proof of dead code. | `routes-and-discoveries.md`; evidence ledger |
+| Bugs and potential exploits | Document trigger, version, mechanism, committed and delayed effects, repetition limits, hazards and route eligibility. Keep useful unconfirmed techniques as candidates. | `routes-and-discoveries.md` |
+| Ignored stats and negative hiring/purchases | Scope the missing stat use to an actual calculation; trace signed input, validation, width, arithmetic and inventory/economy effects before promising an advantage. | Bug investigation guidance |
+| Cheats and easter eggs | Distinguish intentional features, disabled developer facilities, accidental behavior and unresolved intent; preserve exact supported activation and persistence. | Discovery catalogue |
+| Random-event probabilities | Name the opportunity and conditioning, exact draw mapping, dependence, estimates versus derivations and route-level retry costs; use geometric formulas only under their assumptions. | `technical-mechanics.md` |
+| Minimal legal routes and shortcuts | Name objective, category/rules, date, clock, execution platform and allowed assistance; preserve branch entry/exit state and downstream obligations. Feasibility, eligibility and optimality are separate claims. | `routes-and-discoveries.md` |
+| Completionist coverage | Define the inventory/goal denominator, missables, exclusions, multiple runs or save branches, and separate obtainable/debug/recovered-only totals. | Route reference; guide outline |
+| File formats, especially media | Publish known byte fields and offset bases, widths/encoding, relationships, constraints, transforms, unknown regions and validation scope. Separate container, codec and original playback semantics. | `formats-and-engine-reuse.md` |
+| Embedded frameworks/interpreters | Identify the original runtime's native/script/resource boundaries and linked versus separately supplied components; an external reader is a separate evidence lineage. | Format/engine reference |
+| Transfer between related games | Identify exact editions and reusable layers, differences, compatibility evidence and remaining checks; resource compatibility does not imply common routes, saves, probabilities or exploits. | Transfer matrix and sources E01-E05 |
+
+The user's FF4/ignored-intelligence recollection and negative-quantity examples
+are investigation prompts, not newly verified shipped-game claims. The skill
+does not assume a remembered defect applies to every version or every use of a
+stat. It preserves useful partial findings without requiring a complete new
+playthrough or silently importing facts from an outside guide.
+
+The source examples for this extension were read from official ScummVM
+documentation and source at
+`7a21ad63f8c5c0456474d007d25dae230eafd905`. The pinned AGI v2/v3 readers expose
+different directory/header handling and mixed-layout cases; the detection
+sources distinguish selected DOS AGI editions from SCI remakes and distinguish
+historical version comments from compatibility profiles. Those observations
+motivate precise profiles and partial reuse. Their exact links and qualification
+are recorded in the [external engine examples](../src/fdisbull/skills/write-gamefaqs-guide/references/engine-source-examples.md#primary-source-examples).
+They do not demonstrate correspondence to any newly supplied original binary.
+
+The media guidance preserves the accepted no-CD research boundary: a shortened
+file's structural validity does not establish the selected player instance's
+EOF, looping, timing or progression behavior. Repeated restarts and increased CPU
+load from tiny music replacements remain a risk unless observed. Unknown music
+duration/loop behavior is preserved while reporting the useful recovered spec.
+
+The two focused methodology references keep detailed rules selectable. Concrete
+external engine/layout examples live in a third, separate reference with an
+information-policy warning before access. A files-only writer can use the
+general methodology without encountering those external game facts. The entrypoint,
+outline, source rationale, CLI index and distribution requirements expose the
+new scope; existing default skill selection and output envelopes remain intact.
+
 ## Delivery and compatibility
 
-The companion consists of five independently retrievable Markdown resources:
-the entrypoint and four references. It uses the repository's existing packaged
+The companion now consists of eight independently retrievable Markdown resources:
+the entrypoint and seven references. It uses the repository's existing packaged
 skill layout. Discovery supports:
 
 ```text
@@ -152,7 +204,7 @@ accepts a selected skill, and both ordinary package CI and the existing native
 offline-kit workflow now check both skills. Original investigation guidance is
 retained; proposed game/runtime capabilities remain at their prior status.
 
-## Verification record
+## Initial verification record (PR #27)
 
 Verification checks the skill's delivery and behavior on authored scenarios.
 It does not independently validate the mechanics in the sampled external guides,
@@ -205,3 +257,50 @@ native behavior or all possible future guide requests. Independent diff review
 found a wording ambiguity that classified command transcripts as implementation
 listings; it was corrected before publication. No material integration or
 accepted-content conflict remained in that review.
+
+## Extension verification (2026-10-30)
+
+The same focused command above passed **93 tests in 1.95 seconds** after the
+extension. It includes the three new distribution-required resources, selected
+reads and complete export/retrieval through the bounded output-artifact API.
+The original default investigation skill and response envelopes are preserved.
+
+The rebuilt wheel's isolated installed gates passed for both skills: the guide
+has **8 resources / 13 local Markdown links**, and investigation has **10 / 27**.
+The guide totals **93,358 UTF-8 bytes**; the largest resource is **15,298 bytes**.
+The full bundle uses the existing artifact mechanism when it exceeds the inline
+budget. Selective access remains available without loading all references.
+Frontmatter validation, local contents anchors, the probability illustration
+and `git diff --check` passed. The distribution checks also cover the source
+archive and tool ZIP.
+
+Two fresh-context agents received authored evidence packets and the skill, with
+no expected-answer brief. The integration owner inspected both complete outputs:
+
+- **Route/discovery review:** explained one negative-hiring credit without
+  claiming unlimited repetition; separated a stat's attack omission from its
+  training use; derived `30/256` per eligible random-event call without assuming
+  cadence or independence; preserved unresolved crown reachability and diagnostic
+  developer access. It distinguished a faster local finish from fewer inputs,
+  withheld a complete fresh-game route with missing prerequisites/inputs, and
+  separated exclusive badge branches, ambiguous observation provenance and
+  archival discoveries from an ordinary single-run collection.
+- **Format/engine appendix:** supplied an explicit byte-layout table and checked
+  an authored 20-byte header example while preserving the missing payload codec
+  and clock basis. It located a partial interpreter inside the original target,
+  kept an external implementation separate, qualified related-title reuse and
+  identified missing music-instance callback/loop behavior. It did not claim
+  playable one-frame media, CPU savings or original-game execution.
+
+Independent review identified one meaningful issue: concrete external AGI/SCI
+facts originally sat inside the general format-writing reference, exposing a
+files-only writer before a separate comparison phase. Those facts and their
+sources were moved to `engine-source-examples.md`, with information-policy
+warnings before either factual source-example reference. The reviewer inspected
+the revised separation and confirmed the issue resolved; no other material
+finding was reported.
+
+These are checks of delivery and authored-scenario writing behavior, not native
+game acceptance, confirmation of the user's remembered bugs, proof of a fastest
+route, or a measured investigation-speed improvement. The earlier PR #27 results
+above remain historical evidence rather than fresh validation of this extension.

@@ -28,6 +28,17 @@ HOUSE_CASE = [
     "southwest", "east", "north", "east", "in", "open window", "in", "out",
     "south", "west", "open mailbox",
 ]
+WINDOW_CASE = [
+    "north", "east", "examine window", "in",
+    "close window", "close window", "close window", "close window",
+    "examine window", "open window", "open window", "in",
+    "close window", "out", "close window", "close window",
+    "open window", "out", "open window", "close window", "open it",
+    "examine window", "look through window", "in", "close window",
+    "open window", "out",
+]
+CONSUMER_MODULES = ("word16", "game_intents", "intent_runtime", "scene_intents",
+                    "scene_bindings", "scene_runtime", "door_intents", "door_bindings")
 
 
 def game_result(result):
@@ -73,7 +84,7 @@ def fresh_resume(package_path, checkpoint_path, commands, expected, player_root)
         modules = root / "fdisbull_player"
         modules.mkdir()
         (modules / "__init__.py").write_text("")
-        for name in ("word16", "game_intents", "intent_runtime", "scene_intents", "scene_bindings", "scene_runtime"):
+        for name in CONSUMER_MODULES:
             shutil.copyfile(player_root / "fdisbull_player" / (name + ".py"), modules / (name + ".py"))
         import gzip
         raw = package_path.read_bytes()
@@ -93,7 +104,7 @@ def fresh_resume(package_path, checkpoint_path, commands, expected, player_root)
                 "complete_snapshot_equal": actual["snapshot"] == expected["snapshot"],
                 "commands": len(commands), "scene_stats": actual["scene_stats"],
                 "source_modules_loaded": actual["source_modules_loaded"],
-                "isolation": "fresh Python -I; only six copied consumer modules, package, checkpoint and commands; external reads, source imports, network and subprocesses refused"}
+                "isolation": "fresh Python -I; only declared consumer modules, package, checkpoint and commands; external reads, source imports, network and subprocesses refused"}
 
 
 def run_case(package, commands, *, name, output, story, frotz, seed, max_steps,
@@ -104,6 +115,10 @@ def run_case(package, commands, *, name, output, story, frotz, seed, max_steps,
     (directory / "reference.json").write_text(json.dumps(reference, indent=2) + "\n")
     old = old_class(package["base_intents"]["low_level_ir"], seed=seed)
     new = new_class(package, seed=seed)
+    window_blocks = set()
+    if name == "window_interactions":
+        window_blocks = {pc for key in ("callback", "helper", "selection")
+                         for pc in package["udl"]["interaction"][key]["source_pcs"]}
     if name == "house_progression":
         # These are the removed selector mechanisms, not simply the called
         # opening body. A fallback executing any one of them fails this case.
@@ -111,9 +126,17 @@ def run_case(package, commands, *, name, output, story, frotz, seed, max_steps,
         new.forbidden_ir.update(package["udl"]["selection"]["source_operations"].values())
         new.forbidden_ir.update(package["udl"]["movement"]["source_operations"])
     rows, tail_results = [], []
+    trapped_blocks = set(new.forbidden_ir)
     total_old_effects = total_new_effects = total_old_steps = total_new_steps = 0
     checkpoint = directory / "checkpoint.json"
     for seq, command in enumerate([None, *commands]):
+        if window_blocks:
+            # Other actions on this same callback are deliberately residual.
+            # Trap its body only while the route invokes a recovered action.
+            new.forbidden_ir.difference_update(window_blocks)
+            if command and command.startswith(("open ", "close ")):
+                new.forbidden_ir.update(window_blocks)
+                trapped_blocks.update(window_blocks)
         before = old.snapshot() if name == "house_progression" else None
         baseline = old.run(max_steps) if command is None else old.command(command, max_steps)
         candidate = new.run(max_steps) if command is None else new.command(command, max_steps)
@@ -160,7 +183,7 @@ def run_case(package, commands, *, name, output, story, frotz, seed, max_steps,
     path.write_text(json.dumps(rows, indent=2) + "\n")
     summary = {"commands": len(commands), "boundaries": len(rows),
                "all_equal": len(rows) == len(commands) + 1 and all(r["all_equal"] for r in rows),
-               "forbidden_original_blocks": len(new.forbidden_ir),
+               "forbidden_original_blocks": len(trapped_blocks),
                "scene_stats": new.scene_stats, "intent_stats": new.recovery_stats,
                "baseline_effects": total_old_effects, "candidate_effects": total_new_effects,
                "baseline_steps": total_old_steps, "candidate_steps": total_new_steps,
@@ -195,11 +218,13 @@ def main():
         raise ValueError("Scene package is for another source")
     sources = {str(args.player_root / "fdisbull_player" / (name + ".py")):
                digest(args.player_root / "fdisbull_player" / (name + ".py"))
-               for name in ("word16", "game_intents", "intent_runtime", "scene_intents", "scene_bindings", "scene_runtime")}
+               for name in CONSUMER_MODULES}
     old_class = type("TracedOriginalIR", (EffectTrace, Word16Runtime), {})
     new_class = type("TracedSceneUIL", (EffectTrace, SceneRuntime), {})
     full_commands = read_commands(args.commands)
     cases = {"house_progression": HOUSE_CASE, "full_route": full_commands, **INTERACTION_CASES}
+    if "interaction_uil" in package:
+        cases["window_interactions"] = WINDOW_CASE
     if args.parser_commands:
         cases["parser_alternatives"] = read_commands(args.parser_commands)
     report = {"format": "fdisbull-zork-scenes-verification-1", "source_sha256": STORY_SHA256,
@@ -217,7 +242,8 @@ def main():
         summary, checkpoint, expected = run_case(package, commands, name=name, output=output,
             story=args.story, frotz=args.frotz, seed=args.seed, max_steps=args.max_steps,
             old_class=old_class, new_class=new_class,
-            checkpoint_after=checkpoint_after if name == "full_route" else None)
+            checkpoint_after=checkpoint_after if name == "full_route"
+            else 8 if name == "window_interactions" else None)
         report["cases"][name] = summary
         print(json.dumps({"case": name, "all_equal": summary["all_equal"], "boundaries": summary["boundaries"],
                           "final": summary["final"], "primitive_hits": summary["scene_stats"]["primitive_hits"]}), flush=True)
@@ -226,6 +252,9 @@ def main():
         if name == "full_route":
             report["fresh_process_resume"] = fresh_resume(args.package, checkpoint,
                 commands[checkpoint_after:], expected, args.player_root.resolve())
+        elif name == "window_interactions":
+            report["window_fresh_process_resume"] = fresh_resume(args.package, checkpoint,
+                commands[8:], expected, args.player_root.resolve())
     if args.native_receipt:
         report["native"] = check_native(SimpleNamespace(Word16Runtime=SceneRuntime), package,
                                          args.native_receipt, args.max_steps)
@@ -240,6 +269,15 @@ def main():
         and report.get("fresh_process_resume", {}).get("all_equal", False)
         and report["source_files_unchanged"]
         and (native is None or all(native[key] for key in ("all_game_memory_equal", "all_input_boundaries_equal", "rng_events_equal"))))
+    if "interaction_uil" in package:
+        window = report["cases"].get("window_interactions", {})
+        hits = window.get("scene_stats", {}).get("primitive_hits", {})
+        report["all_equal"] = (report["all_equal"]
+            and all(hits.get(name, 0) > 0 for name in (
+                "door.open", "door.close", "presentation.dismiss_initial_hint",
+                "narration.choose_shuffled_response"))
+            and window.get("forbidden_original_blocks") == 39
+            and report.get("window_fresh_process_resume", {}).get("all_equal", False))
     (output / "verification.json").write_text(json.dumps(report, indent=2) + "\n")
     return 0 if report["all_equal"] else 1
 

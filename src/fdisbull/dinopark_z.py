@@ -337,6 +337,15 @@ class ZService:
             return {'complete':False, 'session_token':self.session_token,
                     'recovery_required':self.recovery_required or self.checkpoint_failed}
 
+    def witness(self, observation):
+        context = observation.get('context', {})
+        if (observation.get('complete') is True and isinstance(context, dict)
+                and all(isinstance(context.get(k), str) and 1 <= len(context[k]) <= 128
+                        for k in ('id', 'token'))):
+            return {'session_token': self.session_token,
+                    'context_id': context['id'], 'context_token': context['token']}
+        return None
+
     def finish(self):
         self.oracle('command-complete')
         pending, self.pending = self.pending, None
@@ -402,6 +411,11 @@ class ZService:
         previous_session = pending.get('session_token', self.session_token)
         if previous_session != self.session_token and status == 'success' and pending['command'].startswith('load park '):
             extra['session_transition'] = {'from': previous_session, 'to': self.session_token, 'reason': 'native-load'}
+        if status != 'incomplete':
+            observed = self.observe()
+            witness = self.witness(observed)
+            if witness is not None:
+                extra['witness'] = witness
         self.send({'status':status, 'complete':status != 'incomplete',
                    'message':self.public_message(messages or 'No verified completion was recorded.'),
                    'effects':effects, **extra})
@@ -465,8 +479,13 @@ class ZService:
                             'context':observation['context']['id'], 'following_input':'not_sent'})
                 result = 'restored'
             self.receipt('checkpoint-' + result)
-            return {'complete':True,'status':result,'checkpoint':name,'replay_safe':result in ('saved', 'restored'),
-                    'persistence':'owned live-session snapshot; mounted files must remain unchanged; not a native park disk save'}
+            reply = {'complete':True,'status':result,'checkpoint':name,'replay_safe':result in ('saved', 'restored'),
+                     'persistence':'owned live-session snapshot; mounted files must remain unchanged; not a native park disk save'}
+            if result == 'restored':
+                witness = self.witness(observation)
+                if witness is not None:
+                    reply['witness'] = witness
+            return reply
         except Exception as error:
             self.event({'phase':'checkpoint_incomplete', 'operation':op, 'error_type':type(error).__name__, 'error':str(error)})
             self.receipt('checkpoint-incomplete')

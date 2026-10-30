@@ -79,6 +79,13 @@ can yield with the same PC and a nonzero remaining count; inspect raw registers
 and memory before claiming completion of the copy or the enclosing transaction.
 Do not use older unconditional completion labels as that evidence.
 
+For a rebuilt DOS backend advertising `lifecycle.dos_guest_exit`, a
+`guest_exit` run result retains the selected PSP's completed DOS cleanup in
+`session.stop_reason.guest_exit`; `guest_tsr` separately reports remaining
+resident. Record target registers before exit because DOS has restored the
+parent context at this boundary. A legacy `program_exit` on debugger closure,
+a pause outside the image, or an exit interrupt alone is not this evidence.
+
 ## Scenes, maps and movement
 
 Use scenes for versioned screen context, recognition masks, readiness and

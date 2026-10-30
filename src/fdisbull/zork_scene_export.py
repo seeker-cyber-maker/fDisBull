@@ -34,5 +34,8 @@ def export_scenes(story, *, output, intents=None, uil=None, udl=None, dispatch=N
     for key, destination in (("uil", uil), ("udl", udl), ("dispatch_uil", dispatch)):
         if destination:
             outputs[key] = write_document(destination, package[key])
-    return {"source": package["udl"]["source"], "bindings": receipt,
-            "qualification": package["udl"]["qualification"], "outputs": outputs}
+    result = {"source": package["udl"]["source"], "bindings": receipt,
+              "qualification": package["udl"]["qualification"], "outputs": outputs}
+    if "interaction_uil" in package:
+        result["interaction_qualification"] = package["udl"]["interaction"]["qualification"]
+    return result

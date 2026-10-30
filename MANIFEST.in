@@ -22,6 +22,7 @@ include docs/uil-rfcs/0001/vectors.json
 include docs/uil-rfcs/0002/vectors.json
 include docs/uil-rfcs/0002/replay-summary.json
 include docs/evidence/integration-026/verification.json
+include docs/evidence/integration-0261/verification.json
 include docs/evidence/spatial-2026-10-29/verification.json
 include docs/evidence/zork-2026-10-29/verification.json
 include docs/evidence/zork-uil-2026-10-29/verification.json
@@ -33,6 +34,7 @@ include docs/evidence/zork-scenes-2026-10-30/verification.json
 include docs/evidence/scene-methodology-2026-10-30/authored-cases.json
 include docs/evidence/scene-methodology-2026-10-30/applications.json
 include docs/evidence/scene-methodology-2026-10-30/verification.json
+include docs/evidence/zork-window-2026-10-30/verification.json
 include docs/evidence/udc-2026-10-29/dino.json
 include docs/evidence/udc-2026-10-29/zork.json
 include docs/evidence/udc-2026-10-29/synthetic.json

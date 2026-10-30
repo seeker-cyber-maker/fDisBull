@@ -51,6 +51,7 @@ SOURCE_PATTERNS = (
     ("docs/evidence/scene-methodology-2026-10-30", "authored-cases.json"),
     ("docs/evidence/scene-methodology-2026-10-30", "applications.json"),
     ("docs/evidence/scene-methodology-2026-10-30", "verification.json"),
+    ("docs/evidence/zork-window-2026-10-30", "verification.json"),
     ("docs/evidence/udc-2026-10-29", "dino.json"),
     ("docs/evidence/udc-2026-10-29", "zork.json"),
     ("docs/evidence/udc-2026-10-29", "synthetic.json"),
@@ -63,6 +64,7 @@ SOURCE_PATTERNS = (
     ("docs/evidence/integration-025", "tests.json"),
     ("docs/evidence/integration-025", "packages.json"),
     ("docs/evidence/integration-026", "verification.json"),
+    ("docs/evidence/integration-0261", "verification.json"),
     ("scripts", "*.py"),
 )
 

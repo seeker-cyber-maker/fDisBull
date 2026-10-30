@@ -80,6 +80,13 @@ completion. Work backward through the control and data dependencies that can
 change those effects. Keep an unknown relevant helper in the obligation; a short
 slice that omits it is not an accurate slice.
 
+To name an unfamiliar state write, inspect its smallest relevant consumer as
+well as its writer. In the kitchen-window follow-up, an unconditional flag write
+alone did not establish intent. The nearby examination branch showed that the
+flag dismisses an initial hint, separately from the door's open state. Recover
+that bounded meaning; keep the rest of the examination action residual. If no
+consumer establishes meaning, retain the write as an explicit low-level effect.
+
 ## Apply the qualified Zork recipe
 
 Check `fdisbull --help` and `fdisbull zork-scenes --help` for CLI commands and
@@ -140,6 +147,9 @@ defined no-call/zero-result case, not a routine at address zero. A packed text
 reference has a different role: resolve and decode it as text, including its
 abbreviation dependencies. The same integer type does not make the two roles
 interchangeable.
+In the window case, a packed text value numerically coincided with an instruction
+address. Its consuming operation established the text role. Membership in a code
+address index cannot decide how a value is interpreted.
 
 The applicable VM rules are specified in the Z-machine standard's
 [memory map](https://inform-fiction.org/zmachine/standards/z1point1/sect01.html),
@@ -177,6 +187,8 @@ Use these source seams without re-discovering the dispatcher:
 | Grammar, callback alternatives and target transport | `zork_scene_dispatch._grammar`, `_pseudo_definitions`, `_dispatch_sites`, `recover_dispatch` |
 | Address-free exit selection and relocation plan | `player/fdisbull_player/scene_intents.py` |
 | Independent binding checks and residual compatibility | `scene_bindings.py`, `scene_runtime.py` in the same player package |
+| Window open/close effects from the resolved callback and small helpers | `zork_window.recover_window` |
+| Address-free door effects and independently checked source correspondence | `door_intents.py`, `door_bindings.py` in the player package |
 
 Consult source-checkout `docs/ZORK_SCENES.md` for the executable formats and
 `docs/VERIFICATION-ZORK-SCENES-2026-10-30.md` for prior evidence and its limits.
@@ -236,6 +248,9 @@ none exists. Retain a live read or a residual boundary when that proof is absent
 
 Preserve correlations: if a guard selects both a target and its argument, keep
 them together. Do not form an arbitrary cross-product of finite value sets.
+Check value types as part of source correspondence. Host-language equality can
+equate a Boolean with an integer even when the executable operation accepts only
+the integer. A type-erasing comparison is not an equivalence check.
 Use fixed worklist order, bounded alternatives and explicit widening to unknown
 for loops; record the unresolved frontier. Never turn a timeout or an unseen
 path into a constant result.
@@ -267,6 +282,16 @@ closed-door refusal also changes discourse referents; its custom-text branch
 does not imply the same writes. Text output may target memory and alias
 resources, so cached prose alone cannot authorize replacing every print path.
 Record effect order and retain unsupported output-stream behavior as residual.
+
+Presentation can also own RNG and shared mutable state. Window repeat feedback
+uses a live shuffled bag: preserve the draw even when its range is one, both
+swap writes even when they address the same slot, immediate cursor wrap, and
+then output. Sampling without replacement applies within a cycle; it does not
+exclude equal responses across the cycle boundary. If residual callers share
+the bag, project and update that shared state rather than copying its initial
+order into private state. The same interaction emits its success message before
+changing the door state and its newline afterwards. A familiar helper name or
+plausible final transcript does not establish these effects.
 
 At a mixed semantic/IR join, compute the required live-out state: real arguments,
 return destination/value, frame locals, object links, pending work and any
@@ -320,6 +345,12 @@ field once its evidence obligation is met. If blocked, retain the smallest
 unresolved dependency and its next discriminator. Closing every requested row
 as supported, contradicted, outside scope or explicitly unresolved is a complete
 method pass; unresolved material rows still prevent a complete recovery claim.
+
+Keep the cost denominator explicit. The window replacement covers 39 instructions
+across 157 bytes including routine headers, reusing prior scene, dispatch and IR
+definitions. Its hint consumer and resource/table dependencies require additional
+checks. This is a bounded additional slice, not a whole-game analysis budget,
+cold-discovery measurement or demonstrated speedup.
 
 ## Validate accuracy before comparing cost
 

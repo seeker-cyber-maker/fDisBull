@@ -22,8 +22,10 @@ from .zork_intents import (
 )
 
 FORMAT = "fdisbull-zork-scene-package-1"
+FORMAT_V2 = "fdisbull-zork-scene-package-2"
 UIL_FORMAT = "fdisbull-scene-intent-uil-1"
 UDL_FORMAT = "fdisbull-zork-scene-udl-1"
+UDL_FORMAT_V2 = "fdisbull-zork-scene-udl-2"
 
 DIRECTIONS = dict(zip(range(31, 18, -1), (
     "north", "east", "west", "south", "northeast", "northwest", "southeast",
@@ -597,11 +599,19 @@ def recover_scenes(story, base_intents=None):
     from .zork_scene_dispatch import recover_dispatch
     dispatch = recover_dispatch(raw, object_ids=object_ids)
     udl["dispatch"] = dispatch["udl"]
+    # This follows a previously resolved callback and qualifies its complete
+    # OPEN/CLOSE slice. Other callback actions remain explicitly residual.
+    from .zork_window import recover_window
+    interaction = recover_window(data, program, uil, udl, dispatch)
+    udl["format"] = UDL_FORMAT_V2
+    udl["interaction"] = interaction["udl"]
+    udl["interaction_uil_sha256"] = canonical_digest(interaction["uil"])
     udl["base_intents_sha256"] = canonical_digest(base)
     udl["uil_sha256"] = canonical_digest(uil)
     udl["dispatch_uil_sha256"] = canonical_digest(dispatch["uil"])
-    package = {"format": FORMAT, "base_intents": copy.deepcopy(base),
-               "uil": uil, "dispatch_uil": dispatch["uil"], "udl": udl}
+    package = {"format": FORMAT_V2, "base_intents": copy.deepcopy(base),
+               "uil": uil, "dispatch_uil": dispatch["uil"], "udl": udl,
+               "interaction_uil": interaction["uil"]}
     verify_bindings(package)
     return package
 
@@ -613,12 +623,18 @@ def verify_bindings(package):
     The independent player additionally checks descriptor semantics and live
     guards before replacing an original operation.
     """
-    if not isinstance(package, dict) or package.get("format") != FORMAT:
+    if not isinstance(package, dict) or package.get("format") not in (FORMAT, FORMAT_V2):
         raise ValueError("Invalid Zork scene package format")
     try:
         base, uil, udl, dispatch = (package[k] for k in ("base_intents", "uil", "udl", "dispatch_uil"))
         verify_intent_bindings(base)
-        if uil["format"] != UIL_FORMAT or udl["format"] != UDL_FORMAT:
+        version_two = package["format"] == FORMAT_V2
+        expected_keys = {"format", "base_intents", "uil", "dispatch_uil", "udl"}
+        if version_two:
+            expected_keys.add("interaction_uil")
+        if set(package) != expected_keys:
+            raise ValueError("Scene package has missing or unknown members")
+        if uil["format"] != UIL_FORMAT or udl["format"] != (UDL_FORMAT_V2 if version_two else UDL_FORMAT):
             raise ValueError("Invalid scene UIL or UDL format")
         if (canonical_digest(base) != udl["base_intents_sha256"]
                 or canonical_digest(uil) != udl["uil_sha256"]
@@ -637,11 +653,21 @@ def verify_bindings(package):
         for address in (*udl["selection"]["source_operations"].values(),
                         *udl["movement"]["source_operations"]):
             verify_mapped_instruction(data, base["low_level_ir"], address)
+        if version_two:
+            from .zork_window import verify_window
+            if canonical_digest(package["interaction_uil"]) != udl["interaction_uil_sha256"]:
+                raise ValueError("Door interaction binding digest changed")
+            verify_window(data, base["low_level_ir"], package["interaction_uil"], udl["interaction"])
     except (KeyError, TypeError, AttributeError) as exc:
         raise ValueError("Incomplete scene package bindings") from exc
-    return {"source_sha256": udl["source"]["sha256"],
+    receipt = {"source_sha256": udl["source"]["sha256"],
             "base_intents_sha256": udl["base_intents_sha256"], "uil_sha256": udl["uil_sha256"],
             "dispatch_uil_sha256": udl["dispatch_uil_sha256"],
             "scenes": len(uil["scenes"]), "exits": len(udl["exits"]),
             "witnesses": len(udl["witnesses"]),
             "all_game_intent_recovered": False}
+    if version_two:
+        receipt["interaction_uil_sha256"] = udl["interaction_uil_sha256"]
+        receipt["interaction"] = package["interaction_uil"]["id"]
+        receipt["interaction_source_instructions"] = udl["interaction"]["qualification"]["replaced_instruction_count"]
+    return receipt
