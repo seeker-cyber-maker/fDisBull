@@ -32,6 +32,11 @@
   },
   "exclusions": "No user game/story bytes, native states, retaining packages or project databases included. Original runtime inputs and full evidence stay private.",
   "format": "fdisbull-development-verification-1",
+  "later_pr26_report": {
+    "delta": "Three documentation files only; production source unchanged.",
+    "head": "b5ff17329a2aaf85726f1ed1f7adfd6052f2103d",
+    "scope": "Additional EOF/repeated-failure native testimony at its separately pinned runtime; not substituted for combined native verification."
+  },
   "packages_at_source_cut": {
     "artifacts": {
       "fdisbull-0.26.0.dev0-py3-none-any.whl": {
@@ -79,7 +84,8 @@
     "target": "authored REP MOVSW fixture"
   },
   "reviewed_intake": {
-    "26": "17bc7197b5416d87604ac8b91fc0abb0f8d4d93f",
+    "26": "b5ff17329a2aaf85726f1ed1f7adfd6052f2103d",
+    "26_code": "17bc7197b5416d87604ac8b91fc0abb0f8d4d93f",
     "28": "bfcdfe8eb5a030cb6f0e917067690fe2f7e4d03c",
     "29": "366c89a0da3f840bc55f759606fff2672456675d",
     "30": "263998798d3d4d526e26a9130341c92613846d34"
