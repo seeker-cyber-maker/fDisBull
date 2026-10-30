@@ -251,6 +251,9 @@ The [selectable block-layer prototype](docs/UDL_BLOCK_LAYERS.md) keeps one
 logical operation while choosing an explicitly bound implementation. It retains
 source relationships and immutable selections, with separate checks for modeled
 behavior, isolated original instructions and new native output.
+The [shared-UIL milestone](docs/milestones/2026-10-30-shared-uil-native-shells.md)
+records the demonstrated results and the next step: reusing the same semantic
+modules across different program shells.
 
 ## Status, testing and history
 
