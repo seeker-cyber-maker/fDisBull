@@ -22,7 +22,7 @@ plan = [
 ]
 batch = BatchSession(Player(backend), "/private/existing-folder/batch.json", plan)
 result = batch.run()          # Stops at an accepted partial action or uncertainty.
-result = batch.resume()       # A declared continuation, then remaining steps.
+result = batch.resume()       # Only a provider-authorized declared continuation.
 batch.checkpoint("operating") # Only at a verified boundary.
 # After further testing, explicitly return to that boundary:
 batch.recover("operating")
@@ -35,12 +35,23 @@ and executes only pending steps in the same provider session. Changing the plan
 or attaching a different native guest is refused. A verified public native-load
 handoff can change the session token; prior live checkpoints then cease to apply.
 
-`resume()` never resends a paused step's original command. It observes the fresh
-public context and may execute only the continuation explicitly declared for
-that context. Each declared continuation command can run once per step. Its
-result remains a separate attempt. `expect_context` is a goal: acknowledging a
-notice on the street does not complete a goal requiring arrival in the park.
-The plan must explicitly authorize any additional travel as a new intent.
+`resume()` observes the fresh public context and may execute a continuation only
+when the original provider result and the plan both name that context and exact
+command. A plan alone does not certify that an action is safe. The player also
+compares the resolved verb and stable target/item IDs against the original action
+immediately before dispatch, refusing the same action even through an alias.
+If the original action identity or provider authorization is unavailable, the
+batch remains paused and sends no continuation. Each declared continuation
+command can run once per step; its result remains a separate attempt.
+
+A successful continuation or matching `expect_context` does not certify an
+original action whose effects were partial or unknown. Such a step remains
+paused or unknown, preserving its original result and preventing later batch
+steps. The current providers do not issue an original-intent completion
+certificate, so this batch interface cannot upgrade those partial outcomes;
+inspect and reconcile them through the provider's qualified evidence. A
+previously confirmed effect with a destination mismatch remains a separate
+case. The plan must explicitly authorize any additional travel as a new intent.
 Pause reasons distinguish `continuation-required` from `destination-mismatch`;
 the latter can retain a confirmed effect even though the requested scene goal
 was not met. An interrupted dispatch is `unknown`, never a pending notice.

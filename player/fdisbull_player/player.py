@@ -71,9 +71,13 @@ class Player:
         message = self.execute(command)
         return {"outcome": message, "status": self.last_status}
 
-    def execute_result(self, command):
+    def execute_result(self, command, *, blocked_action=None):
         """Public effect details for recovery; legacy structured output is unchanged."""
-        message = self.execute(command)
+        self._blocked_action = blocked_action
+        try:
+            message = self.execute(command)
+        finally:
+            self._blocked_action = None
         if self.last_status == 'incomplete':
             self.last_result.update(status='incomplete', complete=False)
         return {'outcome': message, **deepcopy(self.last_result)}
@@ -174,8 +178,12 @@ class Player:
             target = next(o for o in fresh["objects"] + fresh["inventory"] if o["id"] == ids["target"])
             if verb not in [v.casefold() for v in target["verbs"]]:
                 return "Action is no longer supported; no action sent."
+        action = {"verb": verb, **ids}
+        if action == getattr(self, '_blocked_action', None):
+            self.last_result.update(action=action, blocked_original_action=True)
+            return "Original action cannot be repeated as a continuation; no action sent."
         self.last_result = {'status': 'incomplete', 'complete': False,
-                            'effects': 'unknown', 'action_sent': True}
+                            'effects': 'unknown', 'action_sent': True, 'action': action}
         result = self.backend.act({"verb": verb, **ids, "context_token": fresh["context"]["token"]})
         if not isinstance(result, dict) or result.get("status") not in ("success", "rejected", "incomplete", "accepted") or not isinstance(result.get("complete"), bool):
             self.last_status = "incomplete"
