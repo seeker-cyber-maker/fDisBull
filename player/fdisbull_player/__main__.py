@@ -112,8 +112,10 @@ def run_mode(backend, args):
                 result = getattr(batch, op)(max_steps=request.get('max_steps', 128))
             elif op in ('checkpoint', 'recover') and set(request) == {'op', 'name'}:
                 result = getattr(batch, op)(request['name'])
-            elif op == 'inspect' and set(request) == {'op'}:
-                result = batch.inspect()
+            elif op == 'inspect' and set(request) <= {'op', 'include_history'}:
+                result = batch.inspect(include_history=request.get('include_history', False))
+            elif op == 'reconcile' and set(request) == {'op'}:
+                result = batch.reconcile()
             else:
                 raise ValueError('Invalid batch operation')
             print(json.dumps({k:v for k,v in result.items() if k not in ('steps', 'batch')}, ensure_ascii=False), flush=True)

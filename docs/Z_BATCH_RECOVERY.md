@@ -67,6 +67,57 @@ details. A confirmed purchase with a failed follow-up retains
 `effects: applied-confirmed` while the batch step remains unknown. A passive
 read is distinguished from an unsupported command that sent no input.
 
+## Read-only reconciliation after a readback error
+
+`batch.reconcile()` reads the durable journal and one fresh provider observation.
+It sends no action, checkpoint save/load, notice acknowledgment or execution-time
+request. It can update local journal bookkeeping; "read-only" refers to the
+original guest. It never executes later plan steps. Use a separate explicit
+`run` or `resume` after inspecting the result.
+
+Reconciliation requires an already durable, complete provider reply with a
+`witness` containing exactly `session_token`, `context_id` and `context_token`.
+The fresh qualified observation must match all three. DinoPark and the typed-IL
+provider issue this witness after qualifying the resulting public context.
+The state token prevents accepting an old reply after an intervening action,
+even when the scene name is unchanged. Older providers/journals without a
+witness remain conservatively unresolved.
+
+- An action whose complete reply survived but whose following read failed can
+  be classified from that reply. Its original effect and readback exception
+  remain recorded. An accepted purchase with a pending notice becomes paused;
+  an explicit authorized continuation is still required. Partial/unknown
+  original effects cannot be promoted to confirmed completion.
+- `recover` persists its returned provider certificate before the following
+  observation. If only that read fails, reconciliation can finish the local
+  rewind using the bound certificate, actual checkpoint handle and fresh
+  qualified context. It does not load the checkpoint again. Superseded attempts
+  and the original receipt are retained together in history.
+- A completed restore can be verified again without adding history or loading
+  again. This supports a caller whose own result reader failed after `recover`
+  had already finished. `inspect(include_history=True)` exposes detached copies
+  of history and the current recovery record; default inspection stays compact.
+- A missing/lost reply, incomplete effect, unbound/stale witness, foreign guest
+  or uncertified restore remains unresolved. Matching a destination alone is
+  insufficient. A dead transport cannot be reconnected by this operation.
+
+The return keeps the ordinary batch summary and adds `reconciliation`:
+
+| Status | Meaning |
+|---|---|
+| `reconciled` | A bound durable reply repaired local action/restore bookkeeping. |
+| `verified` | The already recorded restore still matches the current witness. |
+| `unresolved` | Evidence is missing, incomplete, stale or unqualified; no repair. |
+| `not-needed` | No eligible unresolved readback or current restore witness. |
+
+`operation`, `reason`, and the applicable step/checkpoint identify the decision.
+`not-needed` does not certify a caller-defined phase. Check `verified` for a
+previous restore, or inspect the specific recorded attempt. Repeated calls do
+not replay actions or duplicate restore history. The caller must serialize all
+users of the same provider, including between reconciliation and later input.
+Checkpoint-save failures and native-load session-handoff readbacks are not
+reconciled; these retain their existing conservative recovery behavior.
+
 ## Command-line interface
 
 Supply the normal provider selection together with `--batch-plan plan.json`
@@ -77,15 +128,19 @@ and `--batch-journal /private/existing-folder/batch.json`. Send JSON lines:
 {"op":"resume"}
 {"op":"checkpoint","name":"operating"}
 {"op":"inspect"}
+{"op":"inspect","include_history":true}
 {"op":"recover","name":"operating"}
+{"op":"reconcile"}
 {"op":"run"}
 ```
 
 The control replies are small; detailed attempts remain in the private journal.
 EOF closes the provider normally. A completed process/cleanup receipt is separate
 from a completed batch or confirmed action. Use `inspect` to retrieve step status
-through Python; CLI inspection returns only the summary and journal location is
-already caller-selected. Batch mode is separate from model-turn `--live` mode.
+through Python; CLI inspection returns only the summary by default. Explicit
+`include_history` can return private history/recovery data, bounded by the journal
+size limit. The journal location is caller-selected. Batch mode is separate from
+model-turn `--live` mode.
 
 ## Recovery guarantees and limits
 
@@ -104,7 +159,8 @@ already caller-selected. Batch mode is separate from model-turn `--live` mode.
   are refused. Restored native values must match all 20 saved ranges before
   presentation preparation. The provider then runs input-free 100 ms intervals,
   at most twelve, until the original frame and expected public scene qualify.
-  Failed recovery blocks observation/action until a new native session is opened.
+  An uncertified native recovery blocks observation/action. A successfully
+  certified restore with only a failed client read can be reconciled as above.
 - Preparation consumes simulation time. The field-equality proof is recorded
   before preparation; subsequent calendar/food/income changes are original game
   behavior. Recovery does not imply time or presentation equivalence.
