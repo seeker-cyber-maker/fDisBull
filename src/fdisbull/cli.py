@@ -15,6 +15,7 @@ AGENT_SKILL_GUIDES = {
     'references/proofs.md': 'Build explicit bounded Z3 models and report their assumptions and scope',
     'references/workflows.md': 'Choose static analysis, native debugging, scene or text-player entry points',
     'references/udl-uil-udc.md': 'Qualify source blocks, retained Zork IR, recovered intents and original-backed DOS compilation',
+    'references/block-orchestration.md': 'Compose program blocks across languages: ABI contracts, adapters, placement and typed fixups',
     'references/recovery-research.md': 'Qualify research, retain reusable meanings and compare recovery depth and cost',
     'references/semantic-contracts.md': 'Recover complete intent contracts and compare facts, effects, time and projection losses',
     'references/formats-and-media.md': 'Qualify containers, executable mappings, release differences and valid media reduction',
@@ -199,6 +200,11 @@ METHODS = {
     "udc-native-capture": "Persist native UDL blocks for direct UDC pass-through; name,entries,[version,cs,max_instructions,split_at,parent,author]",
     "udc-native-info": "Read an immutable native UDC definition; definition,[include_blocks]",
     "udc-native-compile": "Exact original-layout pass-through or explicit raw relayout; definition,[mode,assumptions,base,order,block_order,entry_references]",
+    "udc-dos-define": "Define a bounded DOS COM compiler from native blocks and fixed data; name,native_definition,[data,references,parent,author]",
+    "udc-dos-info": "Read a standard DOS compiler definition; definition,[include_blocks]",
+    "udc-dos-implementation": "Register an immutable straight-line replacement; definition,block,code,expected_block_revision,[purpose,projection,references,parent,author]",
+    "udc-dos-implementation-info": "Inspect a pinned DOS block implementation; implementation",
+    "udc-dos-compile": "Generate a DOS COM with selected blocks and checked reference fixups; definition,[implementations,entry,block_order,assumptions,code_base]",
     "render-cfg": "Export reachable basic-block CFG as SVG; address,output,[version,cs,max_instructions,highlights]",
     "memory-accesses": "Read/write/overlap and unresolved memory evidence; address,[size,version,access,limit,offset,include_unresolved]",
     "refresh-facts": "Backfill persisted fallthrough and memory-access facts from stored instructions; [version]",
@@ -385,8 +391,11 @@ def invoke(method, params, debugger=None):
             return db.status()
     with Project(project) as db:
         if method in ('code-backings', 'code-blocks', 'code-layout',
-                      'udc-native-capture', 'udc-native-info', 'udc-native-compile'):
-            for field in ('assumptions', 'order', 'block_order', 'entry_references'):
+                      'udc-native-capture', 'udc-native-info', 'udc-native-compile',
+                      'udc-dos-define', 'udc-dos-info', 'udc-dos-implementation',
+                      'udc-dos-implementation-info', 'udc-dos-compile'):
+            for field in ('assumptions', 'order', 'block_order', 'entry_references',
+                          'data', 'references', 'projection', 'implementations'):
                 filename = p.pop(field + '_file', None)
                 if filename is not None:
                     path = Path(filename)
@@ -730,6 +739,31 @@ def parser():
                 c.add_argument('--order', dest='order_file')
                 c.add_argument('--block-order', dest='block_order_file')
                 c.add_argument('--entry-references', dest='entry_references_file')
+    for name in ('udc-dos-define', 'udc-dos-info', 'udc-dos-implementation',
+                 'udc-dos-implementation-info', 'udc-dos-compile'):
+        c = sub.add_parser(name, help=METHODS[name]); c.add_argument('project')
+        if name == 'udc-dos-define':
+            c.add_argument('name'); c.add_argument('native_definition')
+            c.add_argument('--data', dest='data_file'); c.add_argument('--references', dest='references_file')
+            c.add_argument('--parent'); c.add_argument('--author', default='agent')
+        elif name == 'udc-dos-implementation-info':
+            c.add_argument('implementation')
+        else:
+            c.add_argument('definition')
+            if name == 'udc-dos-info':
+                c.add_argument('--full', dest='include_blocks', action='store_true')
+            elif name == 'udc-dos-implementation':
+                c.add_argument('block'); c.add_argument('code')
+                c.add_argument('--expected-block-revision', required=True)
+                c.add_argument('--purpose', choices=('experiment', 'register-equivalence'), default='experiment')
+                c.add_argument('--projection', dest='projection_file')
+                c.add_argument('--references', dest='references_file')
+                c.add_argument('--parent'); c.add_argument('--author', default='agent')
+            else:
+                c.add_argument('--implementations', dest='implementations_file')
+                c.add_argument('--entry'); c.add_argument('--block-order', dest='block_order_file')
+                c.add_argument('--assumptions', dest='assumptions_file')
+                c.add_argument('--code-base', type=lambda s:int(s,0))
     for name in ["status","analyze","functions","disasm","xrefs","rename","comment","versions","patch","issues","render","info","header","sections","imports","exports","strings","items","queue","represent","recover-imports","segments","code-regions","locate","function-patterns","analysis-status","calls","cfg","render-cfg","memory-accesses","refresh-facts","libraries","relocations","linkage","refresh-metadata","refresh-dos-state"]:
         c = sub.add_parser(name,help=METHODS[name])
         c.add_argument("project")
@@ -1002,7 +1036,7 @@ def main(argv=None):
 
 def _dispatch(args):
     command = args.pop("command")
-    if command.startswith(('udc-','udl-')) and not command.startswith('udc-native-'):
+    if command.startswith(('udc-','udl-')) and not command.startswith(('udc-native-', 'udc-dos-')):
         return _udc_command(command,args)
     if command in ('story-info','zork','zork-recover','zork-uil','zork-intents','il-check','il-run','il-store','il-info'):
         return _language_command(command,args)

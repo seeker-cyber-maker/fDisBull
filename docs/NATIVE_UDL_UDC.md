@@ -130,8 +130,11 @@ The relayout result is raw code labeled `structural_only`. Original file offsets
 are not preserved or used as new output identities. Known direct near branches
 and explicitly supplied entry references are remapped; unknown computed
 references, unsupported transfers and observable code-alias dependencies are
-refused. A full regenerated executable with all references repaired belongs to
-the forthcoming standard DOS UDC, not this bounded raw-code emitter.
+refused. Executable generation requires a target-specific compiler beyond this
+bounded raw-code emitter.
+The first [standard COM16/i386 target](STANDARD_DOS_UDC.md) now generates a
+separate executable image with selected straight-line replacements and typed
+near reference repairs. Its scope remains narrower than a general DOS compiler.
 
 Replacing an implementation will require preserving its admitted behavior and
 state/effect interface, binding its entry/exit ports, choosing placement and
@@ -139,6 +142,10 @@ repairing all affected references. An unchanged logical behavior does not
 require unchanged native offsets or code size. Arbitrary replacement is not
 implemented by declaring a new digest or treating one offset as one output
 address. UIL needs no instruction-overlap operation for any of this.
+
+The standard COM target provides this first bounded selection seam. Conditional
+replacement bodies, call/far adapters, MZ generation and broader reference
+discovery still require later compiler work.
 
 ## Layer-by-layer testing
 

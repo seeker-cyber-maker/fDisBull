@@ -30,7 +30,8 @@ REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scrip
                        'src/fdisbull/skills/fdisbull-investigate/references/recovery-research.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/semantic-contracts.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/formats-and-media.md',
-                       'src/fdisbull/skills/fdisbull-investigate/references/udl-uil-udc.md')
+                       'src/fdisbull/skills/fdisbull-investigate/references/udl-uil-udc.md',
+                       'src/fdisbull/skills/fdisbull-investigate/references/block-orchestration.md')
 GAMEFAQS_SKILL_FILES = tuple('src/fdisbull/skills/write-gamefaqs-guide/'+name for name in (
     'SKILL.md', 'references/evidence-and-provenance.md', 'references/guide-structure.md',
     'references/technical-mechanics.md', 'references/source-examples.md',
@@ -109,6 +110,7 @@ def test_distribution_check_requires_runtime_navigation_reference(tmp_path):
     'AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md',
     'src/fdisbull/skills/fdisbull-investigate/references/workflows.md',
     'src/fdisbull/skills/fdisbull-investigate/references/udl-uil-udc.md',
+    'src/fdisbull/skills/fdisbull-investigate/references/block-orchestration.md',
     'src/fdisbull/skills/fdisbull-investigate/references/semantic-contracts.md',
     'src/fdisbull/skills/fdisbull-investigate/references/formats-and-media.md',
 ])

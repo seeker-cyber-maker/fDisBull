@@ -1,6 +1,6 @@
 ---
 name: fdisbull-investigate
-description: Investigate programs with fDisBull using stored disassembly, bounded native execution, scenes, spatial maps, and qualified source or semantic checks. Use for evidence-based program or game investigation, not ordinary gameplay.
+description: Investigate programs with fDisBull using stored disassembly, bounded native execution, scenes, spatial maps, native block reconstruction and qualified semantic checks. Use for evidence-based program or game investigation and reconstruction, not ordinary gameplay.
 ---
 
 # Investigate with fDisBull
@@ -89,6 +89,14 @@ For supported source mappings, interaction IL or DOS block reconstruction, read
 assumptions and observation boundary with the result. A bounded Z3 proof applies
 to the supplied model, not automatically to the source program; see
 [references/proofs.md](references/proofs.md).
+
+When composing implementations or replacing blocks from different languages,
+read [references/block-orchestration.md](references/block-orchestration.md).
+Qualify program interfaces before layout: inline blocks and callable functions
+have different obligations. Plan only the required ABI/architecture adapters,
+then resolve references after their sizes are known. General adapter generation
+is a methodology boundary beyond the current COM target, not an installed
+capability implied by this reference.
 
 When recovering game intent or comparing representations, use
 [references/semantic-contracts.md](references/semantic-contracts.md) to connect

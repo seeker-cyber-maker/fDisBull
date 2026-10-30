@@ -10,6 +10,8 @@ general compiler manual.
 - [Preserve the accepted compiler priority](#preserve-the-accepted-compiler-priority)
 - [Current DOS block boundary](#current-023-dos-block-boundary)
 - [Overlapping instruction backings](#overlapping-instruction-backings)
+- [Standard DOS COM target](#standard-dos-com-target)
+- [Compose implementations across boundaries](#compose-implementations-across-boundaries)
 - [Zork IR and recovered intents](#zork-ir-and-recovered-intents)
 - [Read a proof narrowly](#read-a-proof-narrowly)
 - [Bytecode inspection and runtime qualification](#do-not-conflate-bytecode-inspection-with-runtime-qualification)
@@ -39,8 +41,10 @@ byte-preserving baseline remains `original_bytes_only`; unsupported edits
 remain refused.
 
 The supported reduced-C route retains its derivation from the ASM lift and its
-shared decoder lineage. Generated DOS lowering, richer process/object models,
-automatic cross-language propagation and compiler learning remain future work.
+shared decoder lineage. A separate bounded COM target now places retained and
+selected native blocks with declared reference repairs. General DOS/UIL
+lowering, richer process/object models, automatic cross-language propagation
+and compiler learning remain future work.
 Separately authored Rust/JavaScript/Python examples are conformance seeds, not
 existing general translators or the first implementation target.
 
@@ -124,8 +128,10 @@ placement experiment. `--block-order FILE` places logical groups; `--order FILE`
 is the separate instruction-order seam. They cannot be combined. Output entry
 maps, source occurrences and fixups replace source-offset arithmetic. Arbitrary
 implementation replacement and complete DOS executable generation remain
-future compiler work. Source-checkout `docs/NATIVE_UDL_UDC.md` documents the
-pass-through, splitting and layer-by-layer testing contract.
+outside this raw-code path; the standard COM target below provides a bounded
+replacement and executable-generation seam. Source-checkout
+`docs/NATIVE_UDL_UDC.md` documents the pass-through, splitting and layer-by-layer
+testing contract.
 
 Use `code-backings PROJECT --entry ADDRESS` (repeat entries as needed), or
 `Project.code_backings(entries)`, to capture exact stored x86 16/32-bit
@@ -155,6 +161,47 @@ incomplete and qualify native behavior separately. Source-checkout
 `docs/CODE_BACKINGS.md` gives the schema, CLI examples and bounds. Keep private
 byte-retaining capsules and emitted code outside Git. No physical-overlap
 operation was added to UIL; unsupported effects remain native residuals.
+
+## Standard DOS COM target
+
+Use `udc-dos-define` to pin a complete version-1 COM native definition, explicitly
+declared fixed data and typed references. `udc-dos-implementation` registers a
+separate immutable straight-line candidate for a single-successor logical
+block. `udc-dos-compile` generates a COM16/i386 image with selected implementations,
+new logical port locations, near branch widening and checked pointer repairs.
+The exact-original baseline remains `udc-native-compile` without relayout.
+
+Choose a small data/entry scope by expected reward, cost and confidence. Retain
+whole-source hash equality first, then change one implementation and check
+explicit output observations. Known incoming callers outside the captured
+graph, undeclared absolute memory, missing stored-pointer fixups, stale
+reference facts, unsupported control flow or collisions refuse compilation.
+No unknown pointer is repaired by guessing. File offset is COM IP minus 0x100;
+data remains fixed and code moves to its own bank. Segments stay equal to CS.
+
+An `experiment` may intentionally alter behavior and remains unverified. A
+`register-equivalence` projection requires genuine Z3 success, rechecked at
+readback and compile, for the named u16 outputs only. Flags, memory, control,
+ABI, timing and partial effects remain outside that model. References that
+would rewrite source/candidate immediate values are refused in this proof
+profile. Generated artifacts remain `structural_only`; native execution is a
+separate receipt. Use ready-memory predicates, bounded breakpoints/traces and
+independent data readback to check the actual program, including negative
+controls. Source-checkout `docs/STANDARD_DOS_UDC.md` has schemas, examples and
+limits. Keep generated binaries, game inputs, states and databases private.
+
+## Compose implementations across boundaries
+
+Use [block orchestration](block-orchestration.md) when selected implementations
+have different languages, calling conventions, state layouts or machine modes.
+Keep an explicit graph of behavior bindings, implementations, adapters and
+entry/exit ports. First qualify those interfaces, then choose the minimal
+required transitions, place them and repair typed references. Compiler-generated
+frames already belong to their functions; a basic block does not automatically
+need another prologue. Pairwise correctness and a register projection do not
+establish correct composition. The reference describes the adapter methodology;
+general cross-language adapters, call bridges and architecture transitions are
+not implemented by the current COM compiler.
 
 ## Zork IR and recovered intents
 
