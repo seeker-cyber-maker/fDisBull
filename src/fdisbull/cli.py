@@ -17,6 +17,7 @@ AGENT_SKILL_GUIDES = {
     'references/udl-uil-udc.md': 'Qualify source blocks, retained Zork IR, recovered intents and original-backed DOS compilation',
     'references/recovery-research.md': 'Qualify research, retain reusable meanings and compare recovery depth and cost',
     'references/semantic-contracts.md': 'Recover complete intent contracts and compare facts, effects, time and projection losses',
+    'references/media-modules.md': 'Reuse shipped parser APIs, recover missing tooling, and extend bounded format specifications',
     'references/formats-and-media.md': 'Qualify containers, executable mappings, release differences and valid media reduction',
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
@@ -42,6 +43,9 @@ AGENT_SKILLS = {
 }
 
 METHODS = {
+    'media-modules':'Discover shipped media adapters, APIs, dependencies and limits; no project required',
+    'media-inspect':'Inventory bounded source members without execution; path,adapter,[volume_root,number]',
+    'media-extract':'Copy one member to a new private directory outside Git; path,output,adapter,member,[volume_root,number,max_output_bytes]',
     'gog-list':'List local GOG Inno Setup payloads without Wine; path,[include,timeout]; no project required',
     'gog-unpack':'Unpack local GOG Inno Setup payloads into a new private directory; path,output,[include,timeout]; no project required',
     'output-info':'Inspect an immutable private output artifact; artifact',
@@ -306,6 +310,13 @@ def invoke(method, params, debugger=None):
         root=files('fdisbull').joinpath('skills',skill)
         resources=(reference,) if reference is not None else tuple(guides)
         return {'name':skill,'files':{n:root.joinpath(n).read_text(encoding='utf-8') for n in resources}}
+    if method=='media-modules':
+        from .media import media_modules
+        if p:raise ValueError('media-modules takes no parameters')
+        return media_modules()
+    if method in ('media-inspect','media-extract'):
+        from .media import inspect_media, extract_media
+        return (inspect_media if method=='media-inspect' else extract_media)(**p)
     if method in ('gog-list','gog-unpack'):
         from .gog_unpack import list_gog, unpack_gog
         return (list_gog if method=='gog-list' else unpack_gog)(**p)
@@ -516,7 +527,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('media-modules','media-inspect','media-extract','agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         result=invoke(request["method"],params,debugger)
@@ -698,6 +709,18 @@ def parser():
             if name=='debug-artifacts':c.add_argument('--run')
             if name=='debug-save-script':
                 c.add_argument('name');c.add_argument('script',type=json.loads,help='JSON script object')
+    sub.add_parser('media-modules',help=METHODS['media-modules'])
+    for name in ('media-inspect','media-extract'):
+        c=sub.add_parser(name,help=METHODS[name])
+        c.add_argument('path')
+        c.add_argument('--adapter',required=True,choices=('mz-envelope','agi-v2'))
+        c.add_argument('--volume-root')
+        c.add_argument('--number',type=int)
+        if name=='media-extract':
+            c.add_argument('output')
+            c.add_argument('--member',required=True)
+            c.add_argument('--max-payload-bytes',dest='media_max_output_bytes',type=int,default=64*1024*1024,
+                           help='Extracted member byte limit (1..67108864); separate from global JSON reply budget')
     for name in ('gog-list','gog-unpack'):
         c=sub.add_parser(name,help=METHODS[name])
         c.add_argument('path',help='local GOG Inno Setup offline installer')
@@ -1059,6 +1082,8 @@ def main(argv=None):
 
 def _dispatch(args):
     command = args.pop("command")
+    if command == 'media-extract':
+        args['max_output_bytes'] = args.pop('media_max_output_bytes')
     if command.startswith(('udc-','udl-')) and not command.startswith('udc-native-'):
         return _udc_command(command,args)
     if command in ('story-info','zork','zork-recover','zork-uil','zork-intents','il-check','il-run','il-store','il-info'):

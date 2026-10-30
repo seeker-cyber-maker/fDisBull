@@ -4,6 +4,9 @@ Use this reference to qualify an input, diagnose a loading boundary, compare
 editions or reduce media under an authorized task. These are investigation
 procedures, not a promise that the installed tool supports every format.
 
+Discover `media-modules` before building another reader. For missing-tool recovery,
+shipped APIs and reusable format contracts, read [media-modules.md](media-modules.md).
+
 ## Contents
 
 - [Keep each layer's identity](#keep-each-layers-identity)
