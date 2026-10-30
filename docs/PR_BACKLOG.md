@@ -1,7 +1,8 @@
 # PR delivery and remaining work
 
-This is a requirements audit for the 0.25.0 integration, using current source
-and the GitHub PR/comment snapshot taken on 2026-10-30 UTC. A PR's lifecycle and
+The 0.25.0 requirements audit is retained with candidate updates called out
+explicitly. The 0.26 development intake was pinned on 2026-10-30 UTC; it is not
+a published release or a main-branch merge. A PR's lifecycle and
 its technical requirements are separate: a closed documentation proposal may
 be incorporated while some of its proposed capabilities remain future work.
 Historical game reports establish what their authors observed, not a fresh
@@ -11,11 +12,24 @@ The [definitions and contract roadmap](DEFINITIONS_AND_ROADMAP.md) links the
 retained proposal texts and historical acceptance ledgers, including #29.
 Those documents are proposals or scoped reports, not implementation evidence.
 
+## 0.26 development intake
+
+| Work | Candidate status | Remaining gate / scope |
+| --- | --- | --- |
+| #26 amendment, `17bc719` | Reviewed production changes and four later lifecycle tests are integrated locally. Confirmed food commits survive pending notice returns; a reachable stopped provider can remain available for explicit checkpoint recovery. | Fresh combined qualification and exact-commit Linux/native CI before promotion. Running/unreachable guests retain the fatal path; generic resurrection and original-intent completion certificates are not added. |
+| #28, `bfcdfe8` | Reviewed bounded Z-machine v3 processor/analyzer integrated with current output and GOG methods. Static decoder, legacy IR and intent tests pass. | Separate source inspection only: no guest `.fdb` persistence, native/guest mapping, VM execution or additional game-intent recovery. |
+| #15 F9 | A fresh authored native probe reproduced a partial REP with nonzero count while 0.25 reported completed. Candidate normalization reports `after-access` and unknown whole-instruction completion; partial and complete authored copies are tested. | Require both native Linux profiles on the final candidate. Raw stop records remain unchanged; callers qualify their own completion claims. |
+| #29 via consolidated #30 | One definitions/roadmap reconciles language, interface, readiness and proof proposals and links feedback ledgers. | Documentation/design fixtures only. R01–R18 and other prospective cases are not implemented by inclusion. Original PRs remain intact. |
+
+See [0.26 scope](RELEASE-0.26.0.md) and
+[verification](VERIFICATION-0.26.md). The published/installed version remains
+0.25.0. A candidate result is not a release or system update.
+
 ## Highest-value remaining seams
 
 | Priority | Requirement | What exists | What remains |
 | --- | --- | --- | --- |
-| High | REP watchpoint completion, [#15](https://github.com/seeker-cyber-maker/fDisBull/pull/15) F9 | DOS watchpoints and raw register/stop records. | The generic normalization currently labels a watch as after-instruction/completed. A historical multiword REP report contradicts that blanket interpretation. Add authored partial/full-repeat native cases and conservative partial/unknown metadata. This audit corroborates the source mismatch; it is not a fresh native reproduction. |
+| High gate | REP watchpoint completion, [#15](https://github.com/seeker-cyber-maker/fDisBull/pull/15) F9 | The 0.25 mismatch is freshly reproduced; the 0.26 candidate preserves unknown completion after an access, with partial/full native fixtures. | Final exact-commit Linux/native acceptance before promotion. The original 0.25 audit was static corroboration; the newer native reproduction and fix are separately recorded above. |
 | High | Persistent runtime-resource authority, [#6](https://github.com/seeker-cyber-maker/fDisBull/pull/6) | Runtime observations and the retained PQ1 finding. | Hash-bound resource transformations, resolver-backed identities, dependency invalidation and restoration across runs. A bounded memory read is not this resource layer. |
 | High | Conditional semantic observation, [#8](https://github.com/seeker-cyber-maker/fDisBull/pull/8) | Bounded observations, conditions, navigation helpers and retained finding. | A reusable resolver-backed semantic watch and its native qualification. |
 | High | Complete intent/projection acceptance, [#13](https://github.com/seeker-cyber-maker/fDisBull/pull/13), [#14](https://github.com/seeker-cyber-maker/fDisBull/pull/14), [#17](https://github.com/seeker-cyber-maker/fDisBull/pull/17) | Original-backed UDC, authored Z scenes, retained Zork IR and a bounded recovered intent. | General event/queue ordering, partial cancellation, persistence domains, resource closure, independent-consumer and matched graphics/text acceptance, revision requalification and general translators. |
@@ -24,9 +38,9 @@ Those documents are proposals or scoped reports, not implementation evidence.
 | Medium | Scene recovery acceptance/cache, [#20](https://github.com/seeker-cyber-maker/fDisBull/pull/20) | Incorporated minimum-proof guidance, authored representation benchmark and safe aggregate receipts. | General resource adapters, source-effect slicing, helper summaries, dependency-qualified acceptance reuse and scene-streaming acceptance. The benchmark is not an automatic recovery engine. |
 | Medium | KQ1 assisted travel qualification, [#16](https://github.com/seeker-cyber-maker/fDisBull/pull/16) | Geometry, physical/assisted/story policies and prior limited trials. | Edition-bound footprints, safe landings, separate memory/render/exit/range witnesses, neutral input, failed-attempt captures and a frozen paired benchmark. The historical small sample is not full acceptance. |
 
-The first item is an interpretation risk when a watch stops during a repeated
-instruction. Inspect the raw stop, registers and remaining repeat count; do not
-infer that the whole repeated instruction completed from the normalized label.
+The first item records an interpretation risk in older completion labels.
+Inspect the raw stop, registers and remaining repeat count; do not infer that
+the whole repeated instruction completed merely because an access occurred.
 
 ## Target-specific continuation requirements
 
@@ -90,13 +104,13 @@ an unexplained loss. Do not reopen them simply to recreate merge history.
 | #26 | Bounded DinoPark continuation, scene/provenance improvements, journaled batches and shared action continuations. Integration rejects canonical action repeats and false completion of partial intents. | Current providers lack a bound original-intent completion certificate; partial batch steps remain paused. See fresh native scope and individual #15 requirements above. |
 | #27 | Expanded, reconciled investigation skill, a separate guide-writing skill, selective routing and installed-package gates. | Guidance about a capability does not implement that capability. External guide descriptions remain attributed where direct retrieval is unavailable. |
 
-## New work outside this intake
+## Historical 0.25 intake boundary
 
 [Draft PR #28](https://github.com/seeker-cyber-maker/fDisBull/pull/28), head
-`bfcdfe8eb5a030cb6f0e917067690fe2f7e4d03c`, appeared during integration. It is
+`bfcdfe8eb5a030cb6f0e917067690fe2f7e4d03c`, appeared during 0.25 integration. It was
 stacked on #24 and proposes a bounded static Z-machine v3 processor/analyzer.
-It is pending a separate review and combined qualification; it is not included
-in 0.25. Its analyzer work must remain distinct from higher-level game-intent
+It was not included in 0.25 and is now reviewed for the local 0.26 candidate
+above. Its analyzer work remains distinct from higher-level game-intent
 recovery. Later amendments to the selected PRs also require fresh review rather
 than silently changing a frozen verification target.
 

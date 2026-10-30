@@ -1,0 +1,236 @@
+{
+  "dinopark_combined_native": {
+    "audit_failure": "Inherited final audit writer used fdisbull/ paths instead of src/fdisbull/ and failed after backend cleanup; existing data was revalidated offline, without rerunning the game.",
+    "backend_sha256": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277",
+    "candidate_source_payloads_checked": 135,
+    "checkpoint_range_count": 20,
+    "checkpoint_ranges_equal_before_preparation": true,
+    "cleanup_complete": true,
+    "context_requalified": true,
+    "exactly_one_incomplete_confirmed_effect_reply": true,
+    "following_input_withheld": true,
+    "fresh_token_issued": true,
+    "loaded_tool_modules_checked": 65,
+    "native_exit_code": 0,
+    "original_game_unchanged": true,
+    "original_seed_unchanged": true,
+    "owned_survivors": false,
+    "preparation_guest_ms": 100,
+    "real_run_session_recovery_events": 1,
+    "recovery_only_cleared": true,
+    "recovery_refusals_sent_no_native_input": true,
+    "runner_native_complete": false,
+    "same_worker_and_guest_survived_failure": true,
+    "scope_limit": "One private injected post-action failure and explicit checkpoint restore. Does not establish general DinoPark parity, arbitrary recovery, or native fatal/unreachable behavior.",
+    "seed_sha256": "94bad1065e7dfc00be6c6e4deb84074b55c9f8b7f0f7f1e6d2aaa083d37b82a9",
+    "service_status": "completed",
+    "source_commit": "ee8339c43344218241bbd0698d552a8ced59073a",
+    "stale_token_rejected_without_input": true,
+    "status": "functional_path_confirmed_with_post_cleanup_audit_failure",
+    "whole_run_pass": false,
+    "worker_exit_code": null
+  },
+  "exclusions": "No user game/story bytes, native states, retaining packages or project databases included. Original runtime inputs and full evidence stay private.",
+  "format": "fdisbull-development-verification-1",
+  "packages_at_source_cut": {
+    "artifacts": {
+      "fdisbull-0.26.0.dev0-py3-none-any.whl": {
+        "sha256": "32d815e8dd653237fb29135eb1b852af0f127b9c4cf8b2f9802ea408732f678b",
+        "size": 668502
+      },
+      "fdisbull-0.26.0.dev0-tool.zip": {
+        "sha256": "359c01af8b1c16e4784ad7faa1a26feb07a44ca0abe0ce62073f364477813b51",
+        "size": 1948336
+      },
+      "fdisbull-0.26.0.dev0.tar.gz": {
+        "sha256": "41a16cc1690757a18d60bce7759040f24e3ae87191bf129be8b9b2cc61883be7",
+        "size": 1623857
+      },
+      "fdisbull_player-0.26.0.dev0-py3-none-any.whl": {
+        "sha256": "7da4488e594dd38ea2133f3ba4c27f77b3e529feb68d3642fd359141a2c4c9f6",
+        "size": 49737
+      }
+    },
+    "both_installed_skill_gates": "passed",
+    "installed_core_files_equal_source": 158,
+    "installed_player_files_equal_source": 9,
+    "private_installation": "No dependencies installed; skill/byte checks only. Genuine dependencies used for source/native checks.",
+    "source_zip_entries_equal_git": 554
+  },
+  "promotion": {
+    "combined_linux_ci": "pending",
+    "published": false,
+    "system_updated": false,
+    "tagged": false
+  },
+  "rep_regression": {
+    "after_fix": {
+      "completed_and_partial_native_cases_passed": true,
+      "instruction_completed": null,
+      "registers_stage": "after-access"
+    },
+    "backend_sha256": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277",
+    "before_fix": {
+      "causing_and_resume_pc_equal": true,
+      "initial_count": 8192,
+      "remaining_count": 8188,
+      "reported_completed": true
+    },
+    "target": "authored REP MOVSW fixture"
+  },
+  "reviewed_intake": {
+    "26": "17bc7197b5416d87604ac8b91fc0abb0f8d4d93f",
+    "28": "bfcdfe8eb5a030cb6f0e917067690fe2f7e4d03c",
+    "29": "366c89a0da3f840bc55f759606fff2672456675d",
+    "30": "263998798d3d4d526e26a9130341c92613846d34"
+  },
+  "source_cut": "ee8339c43344218241bbd0698d552a8ced59073a",
+  "tests": {
+    "candidate_gates": {
+      "passed": 196
+    },
+    "combined_focused": {
+      "passed": 183
+    },
+    "full_mac_source": {
+      "errors": 23,
+      "failures": 2,
+      "passed": 1993,
+      "same_unsuccessful_ids_as_025_source_check": true,
+      "skipped": 108,
+      "status": "not_green",
+      "unsuccessful": [
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_elf_metadata::test_got_slots_come_from_actual_relocations_and_keep_module_proof"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_elf_metadata::test_plt_stubs_are_native_validated_not_fixed_stride_guesses"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_elf_metadata::test_function_data_ifunc_tls_and_absolute_exports_have_distinct_identity"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_elf_metadata::test_pie_copy_storage_tls_and_versioned_dependency_are_not_callable_slots"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_elf_metadata::test_fno_plt_uses_glob_dat_without_fabricating_a_stub"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_elf_metadata::test_duplicate_versioned_export_names_remain_separate"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_elf_metadata::test_conflicting_version_requirement_indices_do_not_prove_a_module"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_elf_metadata::test_limits_cap_metadata_and_path_lists_with_warnings"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_elf_metadata::test_rel_encoding_does_not_claim_an_explicit_zero_addend"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_elf_metadata::test_unversioned_copy_storage_keeps_dependency_candidates_without_attribution"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_elf_metadata::test_bad_limits_are_rejected[0]"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_elf_metadata::test_bad_limits_are_rejected[True]"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_elf_metadata::test_bad_limits_are_rejected[100001]"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_elf_metadata::test_bad_limits_are_rejected[2]"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "failure",
+          "test": "tests.test_inspection::test_actual_elf_exports_and_unresolved_imports_are_honest"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "failure",
+          "test": "tests.test_loading::test_real_elf_retains_entry_and_named_function"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_platform_calls::test_linux_calls_xrefs_and_shared_bulk_effects[plt]"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_platform_calls::test_linux_calls_xrefs_and_shared_bulk_effects[got]"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_platform_calls::test_patched_got_disk_pointer_does_not_become_an_internal_call[plt]"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_platform_calls::test_patched_got_disk_pointer_does_not_become_an_internal_call[got]"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_platform_calls::test_refresh_upgrades_legacy_metadata_preserving_versions_annotations_and_bytes"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_platform_calls::test_stub_patch_retracts_library_identity_and_derived_call_xref_only_in_child"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_platform_calls::test_dependency_name_patch_rebuilds_versioned_modules_without_ghosts"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_platform_calls::test_import_name_patch_replaces_old_symbol_alias_and_contract"
+        },
+        {
+          "classification": "Apple compiler/linker does not produce the required Linux ELF fixture",
+          "outcome": "error",
+          "test": "tests.test_platform_calls::test_public_linkage_json_methods_and_refresh_return_structured_results"
+        }
+      ]
+    },
+    "required_native_watch_doctor_debugger": {
+      "passed": 30,
+      "skips": 0
+    }
+  },
+  "version": "0.26.0.dev0"
+}

@@ -1,5 +1,10 @@
 # fDisBull
 
+This checkout is the **0.26.0.dev0 development candidate**. Its recovery,
+Z-machine inspection and observation work is described in the
+[0.26 scope](docs/RELEASE-0.26.0.md). The published and shared installation
+remains [0.25.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.25.0).
+
 Give an agent a program to explore—and a place to keep what it learns.
 fDisBull connects disassembly, headless debugging, scene-aware controls and
 persistent evidence. Find the instruction behind a changing value, name a
@@ -35,6 +40,10 @@ Agents can start with [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) and the
 [agent quickstart](docs/AGENT_QUICKSTART.md). The bundled investigation skill is
 also available through `fdisbull agent-skill --reference SKILL.md`. These guides describe the tools
 and their boundaries; they do not turn an inferred result into observed fact.
+
+The [definitions and contract roadmap](docs/DEFINITIONS_AND_ROADMAP.md) brings
+the language, interface, scene and proof proposals together and shows which
+parts are working, partial or still proposed.
 
 The 0.25.0 source lets you preserve a qualified Zork story as executable IR,
 recover a small action as game-level rules, and keep playing through the
