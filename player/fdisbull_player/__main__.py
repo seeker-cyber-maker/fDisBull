@@ -101,6 +101,18 @@ def run_mode(backend, args):
         if len(plan.encode()) > 65536:
             raise ValueError('Batch plan exceeds 65536 bytes')
         batch = BatchSession(Player(backend), args.batch_journal, json.loads(plan))
+
+        def batch_operation(method, *values, **options):
+            try:
+                return getattr(batch, method)(*values, **options)
+            except (OSError, ValueError, EOFError) as error:
+                # A latched operation stays available for explicit inspection
+                # or reconciliation; never retry the provider call here.
+                if batch.inspect(include_history=True)['recovery'] is None:
+                    raise
+                return {'status': 'recovery-incomplete', 'complete': False,
+                        'reason': 'recovery-required', 'error_type': type(error).__name__}
+
         for line in sys.stdin:
             if len(line.encode()) > 4096:
                 raise ValueError('Batch operation exceeds 4096 bytes')
@@ -109,13 +121,13 @@ def run_mode(backend, args):
                 raise ValueError('Invalid batch operation')
             op = request.get('op')
             if op in ('run', 'resume') and set(request) <= {'op', 'max_steps'}:
-                result = getattr(batch, op)(max_steps=request.get('max_steps', 128))
+                result = batch_operation(op, max_steps=request.get('max_steps', 128))
             elif op in ('checkpoint', 'recover') and set(request) == {'op', 'name'}:
-                result = getattr(batch, op)(request['name'])
+                result = batch_operation(op, request['name'])
             elif op == 'inspect' and set(request) <= {'op', 'include_history'}:
                 result = batch.inspect(include_history=request.get('include_history', False))
             elif op == 'reconcile' and set(request) == {'op'}:
-                result = batch.reconcile()
+                result = batch_operation(op)
             else:
                 raise ValueError('Invalid batch operation')
             print(json.dumps({k:v for k,v in result.items() if k not in ('steps', 'batch')}, ensure_ascii=False), flush=True)

@@ -220,3 +220,26 @@ def test_reconciliation_and_history_have_public_batch_cli_operations(tmp_path):
     assert len(replies[3]['history']) == 1 and replies[3]['recovery'] is None
     assert replies[4]['reconciliation']['status'] == 'verified'
     assert 'history' not in replies[5] and 'steps' not in replies[5]
+
+
+def test_cli_keeps_batch_available_after_restore_readback_error(tmp_path, monkeypatch):
+    import io
+    from types import SimpleNamespace
+    from fdisbull_player import __main__ as cli
+    backend = ReadbackBackend(); backend.after_load = True
+    plan = tmp_path / 'plan.json'; plan.write_text(json.dumps(PLAN))
+    operations = [{'op': 'checkpoint', 'name': 'start'}, {'op': 'run', 'max_steps': 1},
+                  {'op': 'recover', 'name': 'start'}, {'op': 'run'}, {'op': 'resume'},
+                  {'op': 'checkpoint', 'name': 'unsafe'}, {'op': 'reconcile'},
+                  {'op': 'inspect', 'include_history': True}]
+    writer = io.StringIO()
+    monkeypatch.setattr(cli.sys, 'stdin', io.StringIO(''.join(json.dumps(x) + '\n' for x in operations)))
+    monkeypatch.setattr(cli.sys, 'stdout', writer)
+    assert cli.run_mode(backend, SimpleNamespace(batch_plan=str(plan),
+                        batch_journal=str(tmp_path / 'cli-batch.json'))) == 0
+    replies = [json.loads(line) for line in writer.getvalue().splitlines()]
+    assert replies[2]['status'] == 'recovery-incomplete' and replies[2]['complete'] is False
+    assert all(r['status'] == 'recovery-incomplete' and r['complete'] is False for r in replies[3:6])
+    assert replies[6]['reconciliation']['status'] == 'reconciled'
+    assert len(replies[7]['history']) == 1 and replies[7]['recovery'] is None
+    assert backend.mutations() == ['save', 'act', 'load']

@@ -141,6 +141,11 @@ through Python; CLI inspection returns only the summary by default. Explicit
 `include_history` can return private history/recovery data, bounded by the journal
 size limit. The journal location is caller-selected. Batch mode is separate from
 model-turn `--live` mode.
+A supported operation that raises after leaving a durable recovery latch returns
+`recovery-incomplete` through the CLI and keeps the operation loop available.
+Blocked run/resume/checkpoint requests do not close that connection; inspect or
+reconcile remains explicit. Invalid requests without a recovery latch retain the
+existing error path. The Python `recover` method still exposes its read error.
 
 ## Recovery guarantees and limits
 
