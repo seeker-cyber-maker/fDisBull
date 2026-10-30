@@ -177,6 +177,8 @@ METHODS = {
     "function-patterns": "Candidate prologue/epilogue evidence; [version,limit,offset,scan_unexplored]",
     "managed": "Inspect .NET metadata or disassemble one CIL method; path or project,[token,max_instructions,version]",
     "agi-logic": "Read-only partial AGI 2.917 logic decoding; logdir, volume_dir, logic, profile, [max_instructions]",
+    "zmachine-disasm": "Read-only Z-machine v3 instruction slice; path,[address,max_instructions]",
+    "zmachine-analyze": "Bounded recursive Z-machine v3 processor analysis; path,[entry_points,max_instructions]",
     "decoder-check": "Compare x86 iced/Capstone proposals without execution; data,[bits,address,scan_offsets,max_candidates]",
     "import": "Create a new project from binary; params: project, path, [arch,bits,base,entry,load_segment,slice_arch,image]",
     "segments": "DOS inferred segment inventory; [version]",
@@ -266,6 +268,10 @@ def invoke(method, params, debugger=None):
     if method=='doctor':
         from .doctor import doctor
         return doctor(**p)
+    if method in ('zmachine-disasm','zmachine-analyze'):
+        from .zmachine_analysis import analyze_story,disassemble_story
+        operation=disassemble_story if method=='zmachine-disasm' else analyze_story
+        return operation(**p)
     from .project import Project, number
     for field in ("base", "entry"):
         if field in p and p[field] is not None:
@@ -415,7 +421,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','agi-logic','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         value={"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
@@ -620,6 +626,12 @@ def parser():
     c=sub.add_parser('agi-logic',help=METHODS['agi-logic'])
     c.add_argument('logdir');c.add_argument('volume_dir');c.add_argument('logic',type=int)
     c.add_argument('--profile',required=True,choices=['2.917']);c.add_argument('--max-instructions',type=int,default=1000)
+    c=sub.add_parser('zmachine-disasm',help=METHODS['zmachine-disasm'])
+    c.add_argument('path');c.add_argument('--address',type=lambda s:int(s,0))
+    c.add_argument('--max-instructions',type=int,default=40)
+    c=sub.add_parser('zmachine-analyze',help=METHODS['zmachine-analyze'])
+    c.add_argument('path');c.add_argument('--entry',dest='entry_points',action='append',type=lambda s:int(s,0))
+    c.add_argument('--max-instructions',type=int,default=10000)
     c=sub.add_parser('decoder-check',help=METHODS['decoder-check'])
     c.add_argument('data');c.add_argument('--bits',type=int,choices=[16,32,64],default=64)
     c.add_argument('--address',type=lambda s:int(s,0),default=0)

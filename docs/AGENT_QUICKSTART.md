@@ -156,6 +156,24 @@ partial coverage and remaining untested cases.
 
 ### Inspect interpreted game data
 
+For a checksum-qualified raw Z-machine v3 story, including the supplied Zork I
+edition, use the source-bound processor without a native project or emulator:
+
+```text
+fdisbull story-info /path/to/ZORK1.DAT
+fdisbull zmachine-disasm /path/to/ZORK1.DAT --max-instructions 40
+fdisbull zmachine-analyze /path/to/ZORK1.DAT --max-instructions 10000
+```
+
+The first query lists a source-order instruction slice; the second follows
+candidate direct control-flow edges from the initial PC. Use `--address` for a
+different listing start or repeat `--entry` for explicit graph roots. Read the
+returned `complete_scope`, unresolved transfers, issues and budget frontier.
+Even a drained static worklist does not establish runtime reachability or game
+intent. Story offsets never become native interpreter addresses or `.fdb`
+instruction rows. See [Z-machine processor](ZMACHINE_PROCESSOR.md) for the Python
+interface and the distinction from executable IR and game-intent UIL.
+
 For one AGI 2.917 logic resource in an uncompressed version-2 LOGDIR/VOL set:
 
 ```text

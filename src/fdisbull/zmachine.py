@@ -14,6 +14,17 @@ def inspect_story(path):
     """Recognize a raw v3 image by its structure, independent of its filename."""
     with Path(path).open('rb') as stream:
         data = stream.read(MAX_STORY_FILE + 1)
+    return inspect_story_bytes(data)
+
+
+def inspect_story_bytes(data):
+    """Inspect one immutable v3 source snapshot without reopening its file.
+
+    The path-based entry point delegates here so a processor can qualify and
+    decode the same bytes, even if the original path later changes.
+    """
+    if not isinstance(data, bytes):
+        raise ValueError('Expected immutable raw Z-machine v3 story bytes')
     if not 64 <= len(data) <= MAX_STORY_FILE or data[0] != 3:
         raise ValueError('Expected a raw Z-machine v3 story of 64..524288 bytes')
     word = lambda n: int.from_bytes(data[n:n + 2], 'big')

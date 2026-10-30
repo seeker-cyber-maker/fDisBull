@@ -25,6 +25,7 @@ play an authored text projection without opening the debugger yourself.
 | Give an agent reliable scene context and navigation | [Scenes, maps and interaction policies](#scenes-maps-and-interaction-policies) |
 | Play a supported projection or a user-supplied Zork story | [Text play and interpreter inspection](#text-play-and-interpreter-inspection) |
 | Convert Zork I to executable IR and recover bounded game-intent UIL | [Executable IR](docs/ZORK_UIL.md) · [Game-intent UIL](docs/ZORK_INTENTS.md) |
+| Disassemble Zork's v3 bytecode and follow static calls and branches | [Z-machine processor](docs/ZMACHINE_PROCESSOR.md) |
 | Try shared interaction scenes through Z | [Z scene play](docs/Z_SCENES.md) |
 | Run a qualified DinoPark park through the original game | [DinoPark in Z](docs/DINOPARK_Z.md) |
 | Test a small recovered block against its original DOS backing | [The bounded UDC pipeline](#the-bounded-udc-pipeline) |
@@ -170,6 +171,12 @@ can run a user-supplied version-3 story using a separately selected Python and
 Jericho environment. Story inspection and the recovered mailbox slice are
 bounded evidence, not recovery of the parser, turn loop or complete game.
 No original game or story files are distributed.
+
+The [Z-machine processor](docs/ZMACHINE_PROCESSOR.md) adds direct v3 bytecode
+inspection through fDisBull's processor interface. It reports operands, calls,
+branches and source identity, and can follow a bounded graph from a selected
+entry. Dynamic targets and incomplete analysis remain explicit. This is the
+instruction layer; it does not assign gameplay meanings to those operations.
 
 The [standalone Zork converter](docs/ZORK_UIL.md) lowers a complete v3 story into
 executable word16 **IR**: arithmetic, memory, control and object operations. Its
