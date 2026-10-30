@@ -25,7 +25,7 @@ class PauseRace:
         if method=='execution.wait':
             if len([c for c in self.calls if c[0]=='execution.wait'])==1:return dict(running=True)
             if self.uncertain:return dict(running=True)
-            state='exited' if self.kind=='exited' else 'failed' if self.kind=='error' else 'stopped'
+            state='exited' if self.kind in ('exited','guest_exit','guest_tsr') else 'failed' if self.kind=='error' else 'stopped'
             return dict(running=False,state=state,stop_reason=dict(kind=self.kind,breakpoint_id='owned-hook'))
         raise AssertionError(method)
 
@@ -35,7 +35,7 @@ class PauseRace:
 
 
 @pytest.mark.parametrize('rejected',[False,True])
-@pytest.mark.parametrize('kind',['breakpoint','error','exited'])
+@pytest.mark.parametrize('kind',['breakpoint','error','exited','guest_exit','guest_tsr'])
 def test_terminal_stop_wins_race_with_bounded_pause_without_resume(rejected,kind):
     target=PauseRace(rejected,kind)
     result=target.run(guest_ms=10,timeout_ms=1000,fast_forward=True,stop_on_hook=True)

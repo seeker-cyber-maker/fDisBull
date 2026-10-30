@@ -37,6 +37,11 @@ This optional backend adds guarded instruction-fetch overlays for the fDisBull 0
 
 `headless-agent.patch` is a **complete patch** against DOSBox-X baseline `029bd65c5dcc7cdc7f2e14e35278620d9707d969`. Apply it to a pristine checkout of that commit. Do not apply the parent 0.10.0 patch first. The source manifest records every resulting changed file and the tested local binary hash; selected pristine baseline files were replayed independently and all resulting hashes compared.
 
+The candidate patch also reports selected DOS process completion after kernel
+cleanup. Its 33 resulting source-file hashes were replayed independently; see
+[DOS termination verification](../../../docs/VERIFICATION-DOS-TERMINATION.md)
+for the cloud rerun and the distinct resident-program and session-cleanup cases.
+
 ```bash
 git checkout 029bd65c5dcc7cdc7f2e14e35278620d9707d969
 git apply /absolute/path/to/layers/headless-agent.patch
