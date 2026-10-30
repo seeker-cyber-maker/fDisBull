@@ -226,7 +226,8 @@ class ILSceneBackend:
             if slot not in self.checkpoints and len(self.checkpoints) >= 64:
                 return {'complete': False, 'status': 'incomplete'}
             self.checkpoints[slot] = deepcopy(self.state)
-            return {'complete': True, 'status': 'saved', 'checkpoint': slot, 'replay_safe': True}
+            return {'complete': True, 'status': 'saved', 'checkpoint': slot, 'replay_safe': True,
+                    'witness': self._witness()}
 
     def load(self, checkpoint='live'):
         with self.lock:

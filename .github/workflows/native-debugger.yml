@@ -124,6 +124,7 @@ jobs:
             tests/test_agent_skill_gate.py tests/test_agent_discovery.py \
             tests/test_il_scenes.py tests/test_z_process_backend.py tests/test_dinopark_z_bridge.py \
             tests/test_dinopark_continuation.py tests/test_z_batch.py tests/test_action_continuations.py \
+            tests/test_z_reconciliation.py tests/test_z_checkpoint_reconciliation.py \
             tests/test_dinopark_recovery_mode.py tests/test_dinopark_recovery_lifecycle.py \
             tests/test_zork_intent_runtime.py tests/test_zork_uil.py tests/test_zork_uil_cli.py \
             tests/test_zork_intents_mapper.py tests/test_zork_intents_cli.py tests/test_game_intents.py \

@@ -481,8 +481,8 @@ class ZService:
             self.receipt('checkpoint-' + result)
             reply = {'complete':True,'status':result,'checkpoint':name,'replay_safe':result in ('saved', 'restored'),
                      'persistence':'owned live-session snapshot; mounted files must remain unchanged; not a native park disk save'}
-            if result == 'restored':
-                witness = self.witness(observation)
+            if result in ('saved', 'restored'):
+                witness = self.witness(self.observe() if result == 'saved' else observation)
                 if witness is not None:
                     reply['witness'] = witness
             return reply
