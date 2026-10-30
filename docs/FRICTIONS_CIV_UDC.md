@@ -17,3 +17,9 @@
 3. Interpreter identity.
    - System Python vs pinned venv resolved different `fdisbull` versions, so commands should report/verify interpreter identity.
    - No code change made here; document/reporting follow-up.
+4. macOS full-suite Linux fixture portability.
+   - The complete suite on Darwin reached 2,183 passed and 149 skipped, but
+     23 Linux-ELF fixture setup errors and 2 ELF assertions remained because
+     `/usr/bin/gcc` emitted Mach-O or rejected Linux-only linker flags.
+   - No unrelated test or toolchain workaround was added; the follow-up is an
+     explicit Linux-container/runner or cross-compiler fixture policy.
