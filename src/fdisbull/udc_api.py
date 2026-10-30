@@ -18,7 +18,7 @@ METHODS={
  'run-module-uil':'Execute a typed symbolic UIL composition; program,selection,[state,max_steps]',
  'run-udl-layer':'Explicitly execute and compare a bounded backing; layer,inputs,[caller_registers,max_steps]',
  'run-udl-selection':'Execute one selected logical binding; selection,binding,inputs,[caller_registers,max_steps]',
- 'build-udc-shell':'Emit native PE64 from selected supported modules; selection,plan,destination',
+ 'build-udc-shell':'Emit native PE64/ELF64 from selected modules; selection,plan,destination,[target,service_adapters,capture_state,c_compiler]',
  'compile-udc-splice':'Emit source-bound binary substitutions; selection,recipe,destination,[output_name]',
 }
 

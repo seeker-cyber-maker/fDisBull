@@ -106,7 +106,7 @@ def _validate_layer(project,document):
     impl=document.get('implementation')
     if type(impl) is not dict:raise ValueError('layer needs an implementation')
     backend=impl.get('backend')
-    if backend=='uil':
+    if backend in ('uil','c-uil'):
         if set(impl)-{'backend','program','inputs','outputs','return','notification_binding'}:raise ValueError('unknown UIL implementation fields')
         _validate_program_ports(impl,contract)
     elif backend=='x86-16':
@@ -168,7 +168,7 @@ def run_layer(project,layer,inputs,*,caller_registers=None,max_steps=10000):
     elif impl['backend']=='x86-16':
         from .udc_native16 import execute_native16
         observed=execute_native16(_native_code(project,document),impl,document['adapter'],inputs,contract['inputs'],contract['outputs'],max_steps=max_steps,caller_registers=caller_registers)
-    else:raise ValueError('notification providers execute only in an explicit native shell, not a CPU/model call')
+    else:raise ValueError('compiled C and notification providers execute only in an explicit native shell, not a CPU/model call')
     if set(observed['outputs'])!=set(contract['outputs']) or any(not _typed(observed['outputs'][p],typ) for p,typ in contract['outputs'].items()):raise ValueError('implementation output violates typed contract')
     behavior=contract['behavior'];expected=None
     if behavior['kind']=='uil':
@@ -192,7 +192,7 @@ def run_selection(project,selection,binding,inputs,**options):
     return {**result,'selection':selection,'binding':binding}
 
 
-def build_selection_shell(project,selection,plan,destination):
+def build_selection_shell(project,selection,plan,destination,*,target="windows-x64",service_adapters=None,capture_state=False,c_compiler=None):
     """Build qualified canonical-port functions and admitted notifications.
 
     Noncanonical port maps and nonempty domains require adapters/admission
@@ -205,6 +205,8 @@ def build_selection_shell(project,selection,plan,destination):
     from pathlib import Path
     from .udc_shell import build_windows_shell, _remove_owned_output
     from .udc_qualify import qualify_uil
+    if target not in ("windows-x64","linux-x64"):raise ValueError("unsupported native shell target")
+    if target=="windows-x64" and (service_adapters is not None or capture_state):raise ValueError("Linux shell adapters/observation cannot be ignored by a Windows target")
     plan=deepcopy(plan)
     selected_info=project.udl_selection_info(selection,full=True)
     selected=selected_info['document'];modules={};proofs={};layers={};contracts={};adapters={}
@@ -218,7 +220,7 @@ def build_selection_shell(project,selection,plan,destination):
             raise ValueError('additional declared contract effects need an explicit native profile')
         impl=deepcopy(layer['implementation'])
         if impl['backend']=='x86-16':raise ValueError('native PE64 output cannot silently embed an emulated16-bit backing')
-        if impl['backend']=='uil':
+        if impl['backend'] in ('uil','c-uil'):
             for descriptor in (contract['behavior'],impl):
                 for side in ('inputs','outputs'):
                     canonical={name:'$'+name for name in contract[side]}
@@ -229,7 +231,7 @@ def build_selection_shell(project,selection,plan,destination):
                 raise ValueError('native shell return must be a declared output, not an unqualified local')
             if len(output_variables)!=1 and impl.get('return') is not None:
                 raise ValueError('native scalar return mapping requires exactly one declared output')
-            proof=qualify_uil(contract,impl)
+            proof=qualify_uil(contract,{**impl,'backend':'uil'})
             if proof['status']!='equivalent_under_contract':raise LayerQualificationError('native shell backing lacks contract qualification',proof)
             proofs[binding]=proof
             impl.pop('inputs',None);impl.pop('outputs',None)
@@ -241,6 +243,7 @@ def build_selection_shell(project,selection,plan,destination):
             adapters[binding]=deepcopy(impl['state_adapter'])
         else:
             behavior=contract['behavior']
+            if behavior.get('profile'):raise ValueError('native notification profile obligations are unsupported')
             if (behavior.get('kind')!='service' or behavior.get('service') not in ('ui.notify','notification','notify')
                     or contract['outputs'] or len(contract['inputs'])>1
                     or any(typ!='u16' for typ in contract['inputs'].values())):
@@ -260,10 +263,13 @@ def build_selection_shell(project,selection,plan,destination):
     # Validate all retained registry/qualification content before emitting any
     # native artifact. The only later substitution is another 64-byte digest.
     _json(capsule)
-    result=build_windows_shell(plan,modules,destination)
+    if target=='linux-x64':
+        from .udc_linux import build_linux_shell
+        result=build_linux_shell(plan,modules,destination,service_adapters=service_adapters,capture_state=capture_state,c_compiler=c_compiler)
+    else:result=build_windows_shell(plan,modules,destination,c_compiler=c_compiler)
     directory=Path(result['directory']);owned=directory.stat();path=directory/'selection-capsule.json'
     owned_files={}
-    for name in ('program.exe','capsule.json'):
+    for name in (result['output']['path'],'capsule.json'):
         stat=(directory/name).lstat();owned_files[name]=(stat.st_dev,stat.st_ino)
     try:
         capsule['native_build_capsule_sha256']=hashlib.sha256(Path(result['capsule']).read_bytes()).hexdigest()

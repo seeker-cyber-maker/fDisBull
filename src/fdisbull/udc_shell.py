@@ -2,8 +2,8 @@
 
 This is an authored PE32+ target, not a DOS/Win16 wrapper. Selected IL
 modules lower to native instructions. The plan owns state, calls, bounded loops
-and notification bindings. No compiler, imported module or generated program is
-executed by this builder. It does not qualify source-to-UIL correspondence.
+and notification bindings. An explicitly selected C backend invokes a compiler; generated programs are
+never executed by this builder. It does not qualify source-to-UIL correspondence.
 """
 from __future__ import annotations
 
@@ -288,7 +288,7 @@ def _validate(plan, modules):
                 if 'function' in item:
                     _check(item['function'] in calls, 'unknown native function'); calls[owner].add(item['function'])
                 else:
-                    _check(item.get('binding') in modules and modules[item['binding']].get('backend') == 'uil',
+                    _check(item.get('binding') in modules and modules[item['binding']].get('backend') in ('uil','c-uil'),
                            'native call requires an IL binding')
             elif op == 'notify':
                 _check(item.get('binding') in modules and modules[item['binding']].get('backend') in ('message-box-a', 'debug-string-a'),
@@ -305,7 +305,7 @@ def _validate(plan, modules):
     for name in calls: visit(name, set())
     for name, module in modules.items():
         _ident(name); _check(isinstance(module, dict), 'invalid native module')
-        if module.get('backend') == 'uil':
+        if module.get('backend') in ('uil','c-uil'):
             _fields(module, ('backend', 'program'), ('return', 'notification_binding', 'state_adapter', 'id', 'evidence'))
             validate_il(module['program'])
             adapter = module.get('state_adapter')
@@ -462,7 +462,7 @@ def _exports(rva, symbols):
     return blob
 
 
-def build_windows_shell(plan, modules, destination):
+def build_windows_shell(plan, modules, destination, *, c_compiler=None):
     """Emit a new private native PE32+ and a content-bound build capsule.
 
     ``modules`` maps stable logical binding names to selected implementations.
@@ -486,13 +486,15 @@ def build_windows_shell(plan, modules, destination):
     _check(not destination.exists(), 'native shell destination must be new')
     _check(not any((parent / '.git').exists() for parent in (destination, *destination.parents)),
            'native shell output must remain outside Git')
+    from .udc_c import compile_c
+    c_modules={name:compile_c(module,c_compiler) for name,module in modules.items() if module['backend']=='c-uil'}
     functions, bindings, resources = sorted(plan['functions']), sorted(modules), sorted(plan['resources'])
     cells = sorted(plan['state']); offsets = {name: 2 * index for index, name in enumerate(cells)}
     symbols = {'entry': 0x1000}
     slot_names = ['entry'] + ['fn:' + name for name in functions] + ['module:' + name for name in bindings]
     symbols.update({name: 0x1000 + index * SLOT for index, name in enumerate(slot_names)})
     symbols.update({'module:' + name + ':text': symbols['module:' + name] + SLOT // 2
-                    for name in bindings if modules[name]['backend'] != 'uil'})
+                    for name in bindings if modules[name]['backend'] not in ('uil','c-uil')})
     text_size = len(slot_names) * SLOT
     rdata_rva = 0x1000 + text_size
     rdata_size = (2 + len(resources) + len(bindings)) * SLOT
@@ -528,7 +530,11 @@ def build_windows_shell(plan, modules, destination):
         codes.append(code)
     for name in bindings:
         code = _Code(symbols['module:' + name], 'module:' + name)
-        _module(code, modules[name], plan['state'], offsets); codes.append(code)
+        if name in c_modules:
+            from .udc_c import lower_c_module
+            lower_c_module(code,modules[name],plan['state'],offsets,c_modules[name])
+        else:_module(code, modules[name], plan['state'], offsets)
+        codes.append(code)
     text = b''.join(code.resolve(symbols) for code in codes)
     state = b''.join(struct.pack('<H', int(plan['state'][name]['initial']) & 65535) for name in cells)
     data = state + bytes(max(512, _align(len(state), 512)) - len(state))
@@ -553,7 +559,7 @@ def build_windows_shell(plan, modules, destination):
         struct.pack_into('<I', header, at + 36, flags); file_offset += len(payload)
     image = bytes(header) + text + bytes(rdata) + data
     manifest = {'format': 'fdisbull-native-shell-build-1', 'profile': PROFILE,
-                'plan_sha256': _sha(_json(plan)), 'modules_sha256': _sha(_json(modules)),
+                'plan_sha256': _sha(_json(plan)), 'modules_sha256': _sha(_json(modules)), 'c_modules': c_modules,
                 'target': {'format': 'PE32+', 'arch': 'x86-64', 'image_base': hex(BASE),
                            'load_profile': 'fixed preferred base; no exception-unwind profile',
                            'original_binary_wrapped': False},
@@ -570,7 +576,7 @@ def build_windows_shell(plan, modules, destination):
                 'provider_data': {name: {'rva': symbols['title:' + name], 'size': SLOT} for name in bindings},
                 'bindings': {name: {'backend': modules[name]['backend'], 'entry_rva': symbols['module:' + name],
                                     **({'text_entry_rva': symbols['module:' + name + ':text']}
-                                       if modules[name]['backend'] != 'uil' else {})}
+                                       if modules[name]['backend'] not in ('uil','c-uil') else {})}
                              for name in bindings},
                 'exports': exports, 'imports': ['KERNEL32.dll!ExitProcess', 'KERNEL32.dll!OutputDebugStringA', 'USER32.dll!MessageBoxA'],
                 'qualification': {'native_execution': False, 'source_to_uil': False,
