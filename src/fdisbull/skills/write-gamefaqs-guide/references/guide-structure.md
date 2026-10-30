@@ -24,6 +24,13 @@ tables, calculation order, status interactions and encounter exceptions. Include
 those topics only when supported and relevant. Do not mandate a speedrun, sequel
 history, copy-protection patch or a particular emulator for every game.
 
+For a reversing-first review, include the material implementation discoveries
+even when they do not advance the ordinary route. Unused handlers, defective
+calculations, debug features and partially decoded media may be central findings.
+Map known coverage and gaps across these areas instead of filling empty chapters
+with guesses. Put actionable implications near the relevant player section and
+link the detailed evidence/specification in the technical appendix.
+
 ## Build the reader's route through the document
 
 Use this as an adaptable outline, not a required chapter count:
@@ -35,8 +42,13 @@ Use this as an adaptable outline, not a required chapter count:
 | Orientation and controls | How do I interpret locations, interaction verbs and important warnings? |
 | Progression or strategy | What can I do next, under what conditions, and how will I recognize success? |
 | Mechanics | Why does the behavior occur, and when do its rules change? |
+| Random events | What is the chance of a named outcome, conditional on what state, and how can choices affect it? |
 | Reference tables | Where can I look up a supported value, item, command or relationship? |
-| Quirks, alternate paths and unused material | Which findings are optional, version-specific, debug-only or not shown reachable? |
+| Bugs, cheats, easter eggs and unused code | What was recovered, how can it be triggered, what happens, and which reachability or intent claims remain unresolved? |
+| Alternate routes and speedrun techniques | What can be skipped or reordered, what state must be preserved, and which rules permit each technique? |
+| Completion checklist | What can be obtained or experienced, what is missable or exclusive, and how many runs are needed under the stated goals? |
+| File/media specifications | How are recovered bytes organized and interpreted, and what remains unknown about decoding or playback? |
+| Engine/interpreter and related games | Which execution layer supplies the behavior, and which parts of the analysis transfer to a specified edition of another game? |
 | Open questions | What remains uncertain, and which advice does that affect? |
 | Sources, evidence and revision history | What supports this account, and what changed? |
 
@@ -119,6 +131,15 @@ State what a catalogue contains and what is omitted. A selection of parser words
 is a useful reference when named as a selection. A reported total from an earlier
 guide does not make the displayed selection complete or freshly extracted.
 Keep evidence coverage and presentation coverage separate.
+
+Use linked inventories for discoveries and completion goals. A score total, all
+endings, every collectible, all dialogue branches and all recovered resources
+measure different things. Identify exclusive alternatives and inaccessible
+entries before presenting a single-run checklist. A short route should name
+what it skips and link to the optional content it bypasses. Use
+[Routes and discoveries](routes-and-discoveries.md) for the coverage and route
+contracts, and [Formats and engine reuse](formats-and-engine-reuse.md) for
+implementable layout tables and qualified cross-game comparisons.
 
 For maps or dependency diagrams, label known connections, directionality,
 conditions and uncertain edges. A coordinate catalogue or screen adjacency graph

@@ -1,9 +1,16 @@
 # Source examples and requirement rationale
 
-Research date: **2026-10-29**. These examples motivate the guide-writing
+Research dates: **2026-10-29**; engine/format extension **2026-10-30**.
+These examples motivate the guide-writing
 requirements; they are not a new analysis of the games or a promise of acceptance
 by GameFAQs. Use the references for structure and explicitly attributed context,
 not as text to reproduce or as evidence that this project recovered a fact.
+
+**External game facts: check the information policy before reading further.**
+This catalogue mixes presentation lessons with game-specific comparisons. In a
+files-only recovery pass, use the general writing references and supplied target
+evidence; leave this file for a permitted later comparison. Attribution after
+reading does not restore a blind experiment boundary.
 
 ## Contents
 
@@ -26,6 +33,10 @@ These are this skill's design decisions, not purported GameFAQs rules.
 | R06 | Preserve numerical meaning: variables, units, order, rounding, bounds, randomness, comparisons and exceptions. | Small arithmetic or precedence differences can change advice. |
 | R07 | Qualify completeness and maintain corrections, conflicts and unanswered questions. | Detailed presentation does not establish exhaustive or correct knowledge. |
 | R08 | Reuse useful prior work and generate consistent views without inheriting unsupported claims or boilerplate. | Formatting, research and verification have separate evidence requirements. |
+| R09 | Retain unused code, bugs, exploits, cheats and easter eggs with trigger, effects and scoped reachability. | The requested review includes discoveries beyond intended progress; S04 shows separate secrets/debug sections. |
+| R10 | Separate route feasibility, category legality, optimization and completion across exclusive paths. | The user's speedrunner/completionist goals differ; S05's bounded route is not an all-content catalogue. |
+| R11 | State random-event opportunities, conditioning, draw mapping, dependence and retry costs. | S06-S08 motivate exact algorithms; a threshold or sampled frequency alone is not an exact probability. |
+| R12 | Publish partial byte specifications and qualify shared engine/VM layers by exact edition. | The requested technical appendix and S11 show why file headers, consumers and version mappings must be separate claims. |
 
 ## Source catalogue
 
@@ -183,6 +194,22 @@ does not prove copying; disagreement does not prove independent analysis or
 identify which target is correct. Require specific source locators and target
 correspondence before attributing a claim to recovered original-game behavior
 (**R02, R03, R06, R07**).
+
+### S11. Engine and file-format examples
+
+The 2026-10-30 extension examines official ScummVM documentation and its AGI/SCI
+reader and detection code at revision
+`7a21ad63f8c5c0456474d007d25dae230eafd905`. The five annotated primary examples
+E01-E05 in [Engine source examples](engine-source-examples.md) include exact
+URLs, the inspected layer and the limits of each inference. They motivate
+implementable partial layouts, separate engine/data/VM identities, edition-aware
+SQ1/PQ1/KQ1 comparisons and explicit external-source lineage (**R02, R03, R12**).
+They are evidence about an external implementation, not new recovery of original
+game binaries. No player route or original-game bug is validated by these reads.
+
+The user's ignored-stat and negative employees/items examples motivate **R09**
+as investigation questions. This skill update does not assign those defects to
+particular releases or treat remembered examples as already verified findings.
 
 ## Scope and access limits
 
