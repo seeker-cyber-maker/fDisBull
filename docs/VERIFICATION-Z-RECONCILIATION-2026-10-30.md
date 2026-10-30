@@ -134,6 +134,12 @@ Native evidence and seals are under
 trial in `trial-02`. Parent package/test/readback receipts are under
 `Conversions/DinoParkTycoon/dinopark-z-reconciliation-20261030-01`.
 
+The final offline audit also found that grouping native calls only by provider
+request ID could include later EOF cleanup carrying the last request ID. The
+reader now uses the recorded native sequence start/end boundaries. This was an
+evidence-reader correction; no native action was repeated and no read guard was
+broadened. Future receipts should expose bounded operation spans explicitly.
+
 ## Limits
 
 Reconciliation does not reconnect a dead transport or resurrect a dead guest.
@@ -144,3 +150,9 @@ Witnesses bind public observations; they are not original-intent completion
 certificates or general game-equivalence proofs. Original-backed UDC qualification
 remains `original_bytes_only`, with zero recovered semantic blocks. Private game
 files, saves, databases and screenshots remain outside Git and tool packages.
+
+Main advanced to 0.26 while this work ran. The original-game verdict remains
+pinned to the exact 0.25 candidate above; current-main merge CI is a separate
+gate. Same-scene stale/foreign-witness negatives are portable checks here; the
+native cohort did not repeat a full standalone CLI child-process lifecycle or
+qualify original-game behavior under newer main.
