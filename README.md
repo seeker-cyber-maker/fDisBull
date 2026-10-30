@@ -112,6 +112,9 @@ and [external files](docs/EXTERNAL_FILES.md).
 
 The [DOS/4GW LE module](docs/dos4gw-le.md) adds bounded loading of
 supported 32-bit LE objects and internal fixups for the existing x86 analyzer.
+The [Win16 NE view](docs/NE_LOADING.md) loads supported Windows16 segments with
+logical addresses and symbolic fixups. The [Colonization comparison](docs/COLONIZATION_FOOD_EQUIVALENCIES.md)
+shows how related DOS and Windows code can guide an investigation.
 
 ## Debug the original program
 

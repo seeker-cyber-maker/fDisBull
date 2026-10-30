@@ -89,8 +89,8 @@ def test_other_secondary_headers_require_explicit_opt_in(signature):
         load_mz(bytes(data))
     assert load_mz(bytes(data),allow_secondary=True).metadata['secondary_format']==signature.decode()
     views = image_views(bytes(data))
-    assert [v['image'] for v in views] == (['mz', 'le'] if signature == b'LE' else ['mz'])
-    if signature == b'LE':
+    assert [v['image'] for v in views] == (['mz', signature.decode().lower()] if signature in (b'LE', b'NE') else ['mz'])
+    if signature in (b'LE', b'NE'):
         assert not views[1]['available'] and views[1]['error']
 
 

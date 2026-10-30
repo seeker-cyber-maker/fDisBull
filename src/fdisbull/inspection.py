@@ -254,7 +254,7 @@ def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | N
     data = _input(data)
     header = identify_header(data)
     if image=='auto':image=None
-    if image not in (None,'pe','le','mz','com'):raise ValueError('image must be auto, pe, le, mz or com')
+    if image not in (None,'pe','le','ne','mz','com'):raise ValueError('image must be auto, pe, le, ne, mz or com')
     container_header=None
     if image=='com':
         if slice_arch is not None:raise ValueError('slice_arch cannot select a COM image')
@@ -275,6 +275,7 @@ def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | N
                     declared_file_size=selected.metadata['dos']['declared_file_size'])
     elif image=='pe' and header['family']!='PE':raise ValueError('requested PE image is not present')
     elif image=='le' and header['format']!='LE':raise ValueError('requested LE image is not present')
+    elif image=='ne' and header['format']!='NE':raise ValueError('requested NE image is not present')
 
     if header['format']=='Mach-O fat':
         from .macho_slices import macho_slices,select_macho_slice
@@ -307,9 +308,30 @@ def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | N
         from .image_views import image_views
         result['image_views']=image_views(data)
     if container_header is not None:result['container_header']=container_header
-    result['selected_image']=image or ('pe' if header['family']=='PE' else 'le' if header['format']=='LE' else 'mz' if header['format']=='DOS MZ' else None)
+    result['selected_image']=image or ('pe' if header['family']=='PE' else 'le' if header['format']=='LE' else 'ne' if header['format']=='NE' else 'mz' if header['format']=='DOS MZ' else None)
     warnings = result["warnings"]
     mappings = []
+    if header['format'] == 'NE':
+        from .ne import inspect_ne
+        # A recognized but malformed NE image cannot silently become the DOS
+        # stub or an apparently valid, unmapped native program.
+        metadata = inspect_ne(data)
+        header.update(family='Windows', arch='x86', bits=16, valid=True,
+                      entrypoint=metadata['entrypoint'], load_model=metadata['load_model'],
+                      segment_count=len(metadata['segments']), relocation_count=metadata['fixup_count'])
+        result['ne'] = {key: value for key, value in metadata.items()
+                        if key not in ('fixups', 'sections', 'file_mappings', 'entries', 'exports', 'imports', 'resources', 'name_records')}
+        result['ne'].update(entry_count=len(metadata['entries']), resource_count=len(metadata['resources']), name_count=len(metadata['name_records']))
+        for key in ('sections', 'imports', 'exports', 'libraries'):
+            result[key] = metadata[key][:MAX_ITEMS]
+        result['file_mappings'] = metadata['file_mappings']
+        result['relocations'] = metadata['fixups'][:MAX_ITEMS]
+        warnings.extend(metadata['warnings'])
+        if metadata['fixup_count'] > MAX_ITEMS:
+            warnings.append(f"Standalone NE inspection lists {MAX_ITEMS} of {metadata['fixup_count']} symbolic fixup records; imported projects retain every record for the paginated relocations query.")
+        mappings = [(item['file_offset'], item['file_size'], item['virtual_address']) for item in metadata['file_mappings']]
+        result['strings'] = _strings(data, mappings, warnings)
+        return result
     if header['format'] == 'LE':
         try:
             from .le import inspect_le

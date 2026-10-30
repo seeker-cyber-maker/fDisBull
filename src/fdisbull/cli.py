@@ -709,7 +709,7 @@ def parser():
         c.add_argument('path')
         if name=='inspect':
             c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'])
-            c.add_argument('--image',choices=['auto','pe','le','mz','com'])
+            c.add_argument('--image',choices=['auto','pe','le','ne','mz','com'])
     for name in ('storage-info','migrate-external','source-info','source-candidate','bind-source','new-source-analysis'):
         c = sub.add_parser(name, help=METHODS[name]); c.add_argument('project')
         if name in ('source-candidate','bind-source','new-source-analysis'):
@@ -728,12 +728,12 @@ def parser():
     c.add_argument("--base",default=0,type=lambda s:int(s,0))
     c.add_argument("--entry",type=lambda s:int(s,0))
     c.add_argument("--load-segment",type=lambda s:int(s,0),default=0x1000)
-    c.add_argument('--image',choices=['auto','pe','le','mz','com'],help='select PE, DOS/4GW LE, MZ or explicitly declared DOS COM')
+    c.add_argument('--image',choices=['auto','pe','le','ne','mz','com'],help='select PE, DOS/4GW LE, Win16 NE, MZ or explicitly declared DOS COM')
     c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'],help='select a thin/universal Mach-O CPU slice')
     c.add_argument('--module',action='store_true',help='allow a library without an executable entry')
     c=sub.add_parser('analyze-module',help=METHODS['analyze-module'])
     c.add_argument('path');c.add_argument('project')
-    c.add_argument('--image',choices=['auto','pe','le','mz'])
+    c.add_argument('--image',choices=['auto','pe','le','ne','mz'])
     c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'])
     c.add_argument('--export');c.add_argument('--entry',type=lambda s:int(s,0))
     c.add_argument('--max-instructions',type=int,default=10000)
