@@ -117,6 +117,8 @@ class ZService:
         self.restarted = False
         self.oracle_enabled, self.oracle_count = oracle, 0
         self.stop_reason = None
+        from .z_replies import ZReplyJournal
+        self.replies = ZReplyJournal(work)
 
     def receipt(self, status, *, complete=False):
         from fdisbull.dinopark_scenes import atomic_json
@@ -127,6 +129,7 @@ class ZService:
             'latest_native_save':self.latest_native_save,
             'checkpoint_recovery':'unqualified' if self.checkpoint_failed or self.recovery_required else 'qualified',
             'recovery_required':self.recovery_required, 'action_failures':self.failures,
+            'reply_delivery_pending':self.reply_pending,
             'pending_effects':('applied-confirmed' if self.pending and any(e.get('phase') in
                 ('food_purchase_committed','vegasaurus_purchase_confirmed') for e in self.pending['events'])
                 else 'unknown' if self.pending else 'none-pending'),
@@ -169,13 +172,63 @@ class ZService:
         if self.pending is not None and not message.startswith('Travel:'):
             self.pending['messages'].append(message)
 
+    @property
+    def reply_pending(self):
+        return self.replies.blocked
+
+    def reply_witness(self):
+        # session.status observes the existing stopped native session. No scene
+        # readback, run, input, checkpoint restore or new guest is permitted here.
+        try:
+            debug = self.text.debug
+            native = debug.call('session.status')
+            if (not isinstance(native.get('session_id'), str)
+                    or native.get('state') not in ('stopped', 'exited')
+                    or type(native.get('state_revision')) is not int):
+                return None
+            witness = {'epoch': self.epoch, 'session_token': self.session_token,
+                       'run': debug.run_id,
+                       'native': {k: native.get(k) for k in
+                                  ('session_id', 'state', 'state_revision', 'stop_reason')}}
+            from .z_replies import encoded
+            return witness if len(encoded(witness)) <= 8192 else None
+        except Exception:
+            return None
+
+    def reply_command(self, request):
+        op = request.get('op')
+        if op == 'reply_status' and set(request) == {'op'}:
+            return self.replies.status()
+        if op == 'read_reply' and {'op', 'reply_id'} <= set(request) <= {'op', 'reply_id', 'offset', 'length'}:
+            return self.replies.read(request['reply_id'], request.get('offset', 0), request.get('length', 8192))
+        if op == 'select_reply' and {'op', 'reply_id'} <= set(request) <= {'op', 'reply_id', 'pointer'}:
+            return self.replies.select(request['reply_id'], request.get('pointer', ''))
+        if op == 'accept_reply' and set(request) == {'op', 'reply_id', 'sha256'}:
+            return self.replies.accept(request['reply_id'], request['sha256'], self.reply_witness())
+        raise ValueError('Invalid reply request')
+
     def send(self, result):
-        data = json.dumps(result, ensure_ascii=False, separators=(',', ':'))+'\n'
-        if len(data.encode()) > LIMIT:
-            data = '{"complete":false,"status":"incomplete","message":"Response exceeds the Z budget; inspect private evidence."}\n'
-        with (self.work/'z-protocol.jsonl').open('a',encoding='utf-8') as journal:
-            journal.write(data)
-        self.writer.write(data); self.writer.flush()
+        from .z_replies import encoded
+        data = encoded(result) + b'\n'
+        if len(data) > LIMIT:
+            try:
+                status = result.get('status')
+                execution = {'returned': True,
+                             'complete': result.get('complete') if type(result.get('complete')) is bool else None,
+                             'status': status if isinstance(status, str) and len(status) <= 48 else None}
+                result = self.replies.retain(data[:-1], self.reply_witness(), execution)
+            except Exception:
+                self.replies.unavailable()
+                result = {
+                    'complete': False, 'status': 'reply-unavailable', 'delivery_pending': True,
+                    'retry_safe': False, 'message': 'Reply retention failed; do not replay the action.'}
+            data = encoded(result) + b'\n'
+        if len(data) > LIMIT:
+            raise ValueError('Z reply exceeds delivery budget')
+        text = data.decode('utf-8')
+        with (self.work/'z-protocol.jsonl').open('a', encoding='utf-8') as journal:
+            journal.write(text)
+        self.writer.write(text); self.writer.flush()
 
     def public_message(self, text):
         # Legacy saved-park responses include local evidence paths. Keep them private.
@@ -492,7 +545,7 @@ class ZService:
             return {'complete':False,'status':'incomplete','message':'Checkpoint unavailable; inspect private evidence.'}
 
     def command(self):
-        if self.pending is not None:
+        if self.pending is not None and not self.reply_pending:
             self.finish()
         while True:
             line = self.reader.readline(65537)
@@ -503,6 +556,18 @@ class ZService:
                 request = json.loads(line)
                 if not isinstance(request,dict): raise ValueError('Expected request')
                 op = request.get('op')
+                if op in ('reply_status', 'read_reply', 'select_reply', 'accept_reply'):
+                    try:
+                        self.send(self.reply_command(request))
+                    except (OSError, ValueError, KeyError):
+                        self.send({'complete': False, 'status': 'unresolved', 'delivery_pending': self.reply_pending,
+                                   'retry_safe': False, 'message': 'Reply unavailable or invalid; no input sent.'})
+                    continue
+                if self.reply_pending:
+                    try: self.send(self.replies.status())
+                    except (OSError, ValueError, KeyError):
+                        self.send({'complete': False, 'status': 'reply-unavailable', 'delivery_pending': True, 'retry_safe': False})
+                    continue
                 if op == 'observe' and set(request) == {'op'}:
                     self.send(self.observe()); continue
                 if op in ('save','load') and set(request) <= {'op','slot' if op == 'save' else 'checkpoint'}:
@@ -628,7 +693,7 @@ def main(argv=None):
                         on_ready=service.ready,on_event=service.event,on_spawn=service.spawned,
                         on_action_error=service.action_error,
                         recovery_required=lambda:service.recovery_required or service.checkpoint_failed)
-        status='recovery-required' if service.recovery_required or service.checkpoint_failed else 'completed'
+        status='recovery-required' if service.recovery_required or service.checkpoint_failed or service.reply_pending else 'completed'
         return 0 if status == 'completed' else 1
     except scenes.SceneInterrupted:
         status='interrupted'
