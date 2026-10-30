@@ -1,5 +1,9 @@
 # Z read-only reconciliation: verification
 
+The [0.26 integration acceptance](VERIFICATION-Z-RECONCILIATION-V026-2026-10-30.md)
+adds a fresh installed original-game run on the combined 0.26 candidate. The
+0.25 results and their then-unverified newer-main boundary below remain historical.
+
 PR #26 was merged at `83d74494fec2e8267111762cde04915c4bb2c5ce` after fresh
 readback of its clean merge status and passing checks. This follow-up starts
 from that merge. Candidate runtime:

@@ -201,3 +201,7 @@ of animations and elapsed simulation time.
 The [installed original-DinoPark reconciliation acceptance](VERIFICATION-Z-RECONCILIATION-2026-10-30.md)
 records same-guest purchase/restore/history repair, strict negative gates,
 unchanged guest clock/input and preserved verifier friction.
+
+The [0.26 original-game acceptance](VERIFICATION-Z-RECONCILIATION-V026-2026-10-30.md)
+retests the combined release candidate, including conservative stop semantics,
+same-guest reconciliation and the installed CLI operation loop.
