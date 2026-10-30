@@ -188,6 +188,8 @@ class Player:
         if effects not in ('applied-confirmed', 'partial', 'none-confirmed', 'unknown'):
             effects = 'unknown'
         self.last_result.update(status=self.last_status, complete=result['complete'], effects=effects)
+        if type(result.get('recovery_required')) is bool:
+            self.last_result['recovery_required'] = result['recovery_required']
         for key in ('continuation', 'session_transition'):
             value = result.get(key)
             if isinstance(value, dict) and len(json.dumps(value, allow_nan=False).encode()) <= 2048:

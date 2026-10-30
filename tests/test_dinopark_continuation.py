@@ -33,6 +33,7 @@ def test_checkpoint_reply_has_durable_native_witness_and_requires_requalificatio
     assert service.checkpoint({'op':'save','slot':'before'})['status'] == 'saved'
     saved = json.loads((tmp_path/'z-session.json').read_text())
     assert saved['status'] == 'checkpoint-saved' and saved['complete'] is False
+    service.recovery_required = True
     result = service.checkpoint({'op':'load','checkpoint':'before'})
     receipt = json.loads((tmp_path/'z-session.json').read_text())
     if mismatch:
@@ -40,6 +41,7 @@ def test_checkpoint_reply_has_durable_native_witness_and_requires_requalificatio
         assert advances == [] and receipt['status'] == 'checkpoint-incomplete'
     else:
         assert result['status'] == 'restored' and result['replay_safe'] is True
+        assert service.recovery_required is False
         assert advances == [100] and service.checkpoint_failed is False
         witness = next(e for e in receipt['history'] if e['phase']=='checkpoint_restored')
         assert witness['field_count'] == 20 and witness['saved_fields'] == witness['restored_fields'] == values

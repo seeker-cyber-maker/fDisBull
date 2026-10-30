@@ -547,6 +547,7 @@ class TextScene:
         self.notice_outcome_unknown = False
         self.pending_park_entry = False
         self.pending_food_notice = False
+        self.pending_food_return = False
         self.project, self.patterns, self.event = project, patterns, event
         self.current = 'office'
         self.last_action = None
@@ -794,7 +795,8 @@ class TextScene:
                 raise RuntimeError('shop balances not qualified: ' + view + '; outcome unknown')
             if matched and not notices:
                 return frame
-            if not matched and len(notices) == 1 and not matches(image, self.patterns['quarter_popup']):
+            if (not matched and len(notices) == 1 and
+                    (not matches(image, self.patterns['quarter_popup']) or notices == ['quarter_popup'])):
                 raise KnownSceneNotice(notices[0], frame)
             if attempt < wait_slices:
                 run_guest(self.debug, 500)
@@ -901,7 +903,8 @@ class TextScene:
             return 'No uniquely recognized notice is visible. No input was sent.'
         notice = notices[0]
         entering = self.pending_park_entry and self.current == 'street'
-        if notice not in ('quarter_popup', 'parking_hint') or self.current != 'park' and not entering:
+        food_return = getattr(self, 'pending_food_return', False) and self.current == 'street'
+        if notice not in ('quarter_popup', 'parking_hint') or self.current != 'park' and not entering and not food_return:
             self.event({'phase': 'refused', 'command': 'acknowledge notice', 'input': 'not_sent',
                         'notice': notice, 'reason': 'notice and scene not qualified', 'frame': frame})
             return 'Acknowledging this notice in the current scene is not qualified. No input was sent.'
@@ -953,13 +956,17 @@ class TextScene:
         self.debug.scene_assert(selected, object=obj)
         after = park_snapshot(self.debug)
         self.notice_outcome_unknown = False
+        self.pending_food_return = False
         self.last_continuation = continuation.confirm_effect()
         self.event({'phase': 'result', 'command': 'acknowledge notice', 'notice': notice,
                     'after': after, 'frame': frame, 'persistence': 'unknown',
                     'park_entry_outcome': ('not_completed' if returned_to_street else
-                                           'completed' if entering else 'not_applicable')})
+                                           'completed' if entering else 'not_applicable'),
+                    'food_return_outcome': 'completed' if food_return else 'not_applicable'})
         continuation = (' You are on the street; park entry has not completed. Use go park to enter.'
                         if returned_to_street else '')
+        if food_return:
+            continuation += ' The food purchase was already confirmed; its return to the street is complete.'
         return 'Notice acknowledged.' + continuation + '\n' + self.format_status(after)
 
     def acknowledge_food_notice(self):
@@ -1594,12 +1601,27 @@ class TextScene:
             if pending_food - staged_resources['small_feeders'] != quantity:
                 raise RuntimeError('unexpected food stock reservation; outcome unknown')
         proof = self.confirm_food_order()
+        return self.finish_food_return(proof, before, start_food)
+
+    def finish_food_return(self, proof, before, start_food):
+        """Keep a proven purchase separate from its modal-obscured destination."""
         try:
             run_guest(self.debug, 6000)
-            self.shop_observe('shop_street', {}, 'food-committed', wait_slices=12)
+            self.shop_observe('shop_street', {}, 'food-committed', wait_slices=12,
+                              interrupts=('quarter_popup', 'parking_hint'))
             committed = balances(self.debug)
             final_resources = self.observe_resources({}, 'food committed')
             self.debug.scene_assert(self.street, object='street.office')
+        except KnownSceneNotice as notice:
+            # The original commit is already proven. A known modal can obscure
+            # its street destination; expose a continuation, never another BUY.
+            self.current, self.pending_food_return = 'street', True
+            self.event({'phase':'food_return_interrupted', 'command':'buy 20 small feeders',
+                        'notices':[notice.notice], 'frame':notice.frame, 'commit':proof,
+                        'purchase_outcome':'confirmed', 'purchase_input':'already_sent',
+                        'following_input':'not_sent'})
+            return ('The 20-feeder purchase is confirmed for $500. A recognized notice interrupted '
+                    'the return to the street. Acknowledge the notice to finish; do not repeat the purchase.')
         except Exception as exc:
             self.event({'phase': 'food_followup_failed', 'purchase_outcome': 'confirmed',
                         'commit': proof, 'error': str(exc), 'do_not_repeat_purchase': True})
@@ -1762,7 +1784,8 @@ class TextScene:
         return self.describe()
 
 
-def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, on_event=None, on_spawn=None):
+def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, on_event=None, on_spawn=None,
+                on_action_error=None, recovery_required=None):
     say = print if output is None else output
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--game-dir', type=Path, required=True)
@@ -1896,218 +1919,227 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                 travel = deque()
                 expected_hop = None
                 while True:
-                    if expected_hop == 'park' and text.pending_park_entry:
-                        event({'phase': 'travel_paused', 'expected_scene': 'park',
-                               'reason': 'qualified quarter notice', 'following_input': 'not_sent'})
+                    command = None
+                    try:
+                        if expected_hop == 'park' and text.pending_park_entry:
+                            event({'phase': 'travel_paused', 'expected_scene': 'park',
+                                   'reason': 'qualified quarter notice', 'following_input': 'not_sent'})
+                            travel.clear()
+                            expected_hop = None
+                        if expected_hop is not None and text.current != expected_hop:
+                            event({'phase': 'travel_stopped', 'expected_scene': expected_hop,
+                                   'actual_scene': text.current, 'following_input': 'not_sent'})
+                            travel.clear()
+                            say('Travel stopped before the next step. The last destination was not reached.', flush=True)
+                        expected_hop = None
+                        try:
+                            if travel:
+                                command, expected_hop = travel.popleft()
+                            else:
+                                command = (next(commands) if commands is not None else
+                                           command_reader() if command_reader is not None else input('> ').strip().lower())
+                                if command_reader is not None:
+                                    bank = project.debug_scene_info(text.bank) if text.bank else None
+                                    street = project.debug_scene_info(text.street) if text.street else None
+                                if command.startswith('save park '):
+                                    refusal = text.save_preflight(command.removeprefix('save park '))
+                                    if refusal:
+                                        event({'phase': 'refused', 'command': command, 'input': 'not_sent', 'reason': refusal})
+                                        say(refusal, flush=True)
+                                        continue
+                                if command in ('go dinomart', 'go store', 'go employment', 'go diner') and not text.land_bought:
+                                    event({'phase': 'refused', 'command': command, 'input': 'not_sent', 'reason': 'business closed before land'})
+                                    say('That business is closed until you buy land. No input was sent.', flush=True)
+                                    continue
+                                route_command = 'go office' if command.startswith('save park ') else command
+                                route = navigation_route(text.current, route_command, park_opened=text.park_opened)
+                                if route == [] and command.startswith('go '):
+                                    say('You are already there.', flush=True)
+                                    continue
+                                if route and (len(route) > 1 or command.startswith('save park ')):
+                                    event({'phase': 'travel_intent', 'command': command, 'hops': route,
+                                           'mechanism': 'original menu inputs; no memory writes'})
+                                    travel.extend(route)
+                                    if command.startswith('save park '):
+                                        travel.append((command, 'office'))
+                                    command, expected_hop = travel.popleft()
+                        except EOFError:
+                            break
+                        if command == 'quit':
+                            break
+                        if (text.notice_outcome_unknown and command != 'status' or
+                                text.pending_food_notice and command not in ('status', 'acknowledge notice')):
+                            say(text.act(command), flush=True)
+                            continue
+                        if command == 'list saves':
+                            say('Saved parks: ' + (', '.join(p.parent.name for p in sorted(library.glob('*/save.json'))) or 'none'), flush=True)
+                            continue
+                        if command == 'help':
+                            say('Use go followed by a destination; connected scenes are crossed automatically.\n'
+                                  'save park NAME saves a prepared running park, returning to the office if needed.\n'
+                                  'list saves lists this session’s named parks. load park NAME resumes one in a fresh game session.\n'
+                                  'To resume later, start with --load-save and the printed saved-park folder.\n'
+                                  'Use status in the office, street or park, advance time in the street or park, and look for local actions.', flush=True)
+                            continue
+                        if command.startswith('load park '):
+                            try:
+                                bundle = library / save_name(command.removeprefix('load park '))
+                                read_save_bundle(bundle, before)
+                            except (OSError, ValueError, KeyError, TypeError) as exc:
+                                event({'phase': 'refused', 'command': command, 'input': 'not_sent', 'reason': str(exc)})
+                                say('Cannot load park: ' + str(exc) + ' No input was sent.', flush=True)
+                                continue
+                            number = 1
+                            while (work / f'resume-{number:03d}').exists():
+                                number += 1
+                            resumed_work = work / f'resume-{number:03d}'
+                            restart = ['--game-dir', str(source), '--backend', str(args.backend.resolve()),
+                                       '--work-dir', str(resumed_work), '--load-save', str(bundle),
+                                       '--save-library', str(library)]
+                            event({'phase': 'restart_requested', 'command': command, 'bundle': str(bundle),
+                                   'next_work_dir': str(resumed_work), 'mechanism': 'fresh guest; original OLD GAME loader'})
+                            say('Loading saved park in a fresh game session. Evidence: ' + str(resumed_work), flush=True)
+                            break
+                        if command.startswith('save park '):
+                            say(text.save_park(command.removeprefix('save park ')), flush=True)
+                            continue
+                        if command == 'look':
+                            rendered = text.describe()
+                            observed = {'phase': 'observation', 'command': 'look', 'scene': text.current,
+                                        'persistence': 'unknown'}
+                            if text.current == 'bank':
+                                observed['observed_balances'] = balances(debug)
+                            event(observed)
+                            say(rendered, flush=True)
+                            continue
+                        if command in ('borrow', 'repay', 'buy desert plot', 'buy coelophysis', 'buy vegasaurus', 'buy vegasosaurus', 'read vegasaurus', 'buy wood fence', 'hire tour guide', 'buy 20 small feeders', 'open park', 'go park', 'check inventory', 'status', 'advance time', 'acknowledge notice'):
+                            say(text.act(command), flush=True)
+                            continue
+                        if text.current == 'general_store' and command == 'go street':
+                            say(text.act(command), flush=True)
+                            continue
+                        if text.current == 'street' and command in ('go dinomart', 'go store', 'go employment', 'go diner') and not text.land_bought:
+                            say(text.act(command), flush=True)
+                            continue
+                        valid = (text.current, command) in {('office', 'go bank'), ('bank', 'go office'),
+                                                           ('office', 'go street'), ('street', 'go office'),
+                                                           ('street', 'go dinomart'), ('dinomart', 'go street'),
+                                                           ('street', 'go employment'), ('employment', 'go street'),
+                                                           ('street', 'go diner'), ('dino_diner', 'go street'),
+                                                           ('street', 'go store'), ('general_store', 'go street'),
+                                                           ('park', 'go street')}
+                        if not valid:
+                            say('That action is not available in this scene.', flush=True)
+                            continue
+                        event({'phase': 'intent', 'command': command, 'scene': text.current, 'input': 'not_yet_sent'})
+                        if command == 'go bank' and bank is None:
+                            action = debug.scene_click(office['id'], 'office.bank')
+                            bank_frame, bank_image = take_frame(project, debug, 'bank-after')
+                            if not matches(bank_image, patterns['bank']) or matches(bank_image, patterns['office']):
+                                raise RuntimeError('bank not uniquely recognized after input')
+                            bank_selector = {'memory': {'address': '4020:3c5c', 'length': 2,
+                                                        'hex': debug.memory('4020:3c5c', length=2)['hex']}}
+                            bank_doc = definition(bank_frame, 'bank', bank_pred, bank_selector,
+                                                  'bank.back', [173, 187], office_pred)
+                            for object_name, point, popup in (('bank.payoff', [219, 187], 'paid_popup'),
+                                                              ('bank.borrow', [50, 187], 'borrow_popup')):
+                                item = definition(bank_frame, 'bank', bank_pred, bank_selector,
+                                                  object_name, point, pixel_predicate(patterns[popup]))['objects'][0]
+                                bank_doc['objects'].append(item)
+                            bank = project.debug_save_scene('bank', bank_doc)
+                            text.bank, text.current = bank['id'], 'bank'
+                            rendered = text.describe()
+                            receipt['bank_after'] = bank_frame
+                        elif command == 'go street' and street is None:
+                            action = debug.scene_click(office['id'], 'office.street')
+                            street_frame, street_image = take_frame(project, debug, 'street-after')
+                            if not matches(street_image, street_pattern) or matches(street_image, patterns['office']):
+                                raise RuntimeError('street not uniquely recognized after input')
+                            street_selector = {'memory': {'address': '4020:3c5c', 'length': 2,
+                                                          'hex': debug.memory('4020:3c5c', length=2)['hex']}}
+                            street_doc = definition(street_frame, 'street', street_pred, street_selector,
+                                                    'street.office', [175, 140], office_pred)
+                            street_doc['objects'].append(definition(street_frame, 'street', street_pred, street_selector,
+                                'street.mart', [160, 66], {'any': [pixel_predicate(patterns['mart']),
+                                                                  pixel_predicate(patterns['after'])]})['objects'][0])
+                            for obj, point, view in [('street.employment', [270, 66], 'employment'),
+                                                     ('street.diner', [55, 65], 'dino_diner'),
+                                                     ('street.store', [270, 140], 'general_store')]:
+                                outcome = pixel_predicate(patterns[view])
+                                if view == 'general_store':
+                                    outcome = {'any': [outcome, pixel_predicate(patterns['fence_tab']),
+                                                       pixel_predicate(patterns['fence_selected'])]}
+                                elif view == 'dino_diner':
+                                    outcome = {'any': [outcome, pixel_predicate(patterns['food_menu']),
+                                                       pixel_predicate(patterns['food_selected'])]}
+                                street_doc['objects'].append(definition(street_frame, 'street', street_pred, street_selector,
+                                    obj, point, outcome)['objects'][0])
+                            street = project.debug_save_scene('street', street_doc)
+                            text.street, text.current = street['id'], 'street'
+                            event({'phase': 'street_guard_live_qualified', 'frame': street_frame,
+                                   'scene_revision': street['id'], 'selector': street_selector,
+                                   'profile_sha256': digest(STREET_PATTERNS)})
+                            rendered = text.describe()
+                            receipt['street_after'] = street_frame
+                        elif command == 'go dinomart':
+                            action = debug.scene_click(street['id'], 'street.mart')
+                            mart_frame, mart_image = take_frame(project, debug, 'dinomart-before')
+                            view = 'mart' if matches(mart_image, patterns['mart']) else 'after'
+                            if not matches(mart_image, patterns[view]):
+                                raise RuntimeError('DinoMart catalogue not recognized after input')
+                            mart_selector = {'memory': {'address': '4020:3c5c', 'length': 2,
+                                                        'hex': debug.memory('4020:3c5c', length=2)['hex']}}
+                            mart_doc = definition(mart_frame, 'dinomart', pixel_predicate(patterns[view]),
+                                                  mart_selector, 'mart.back', [216, 187], street_pred)
+                            mart = project.debug_save_scene('dinomart', mart_doc, parent=text.mart)
+                            text.mart, text.current = mart['id'], 'dinomart'
+                            text.vegasaurus_extinct = False
+                            rendered = text.describe()
+                            receipt['dinomart_before'] = mart_frame
+                        elif command in ('go employment', 'go diner', 'go store'):
+                            view, obj = {'go employment': ('employment', 'street.employment'),
+                                         'go diner': ('dino_diner', 'street.diner'),
+                                         'go store': ('general_store', 'street.store')}[command]
+                            action = debug.scene_click(street['id'], obj)
+                            location_frame, location_image = take_frame(project, debug, view + '-entry')
+                            if view == 'general_store':
+                                views = [view, 'fence_tab', 'fence_selected']
+                            elif view == 'dino_diner':
+                                views = [view, 'food_menu', 'food_selected']
+                            else:
+                                views = [view]
+                            if not any(matches(location_image, patterns[v]) for v in views):
+                                raise RuntimeError('location not recognized: ' + view)
+                            location_selector = {'memory': {'address': '4020:3c5c', 'length': 2,
+                                'hex': debug.memory('4020:3c5c', length=2)['hex']}}
+                            target, point = (view + '.catalogue', [205, 105]) if view == 'general_store' else (view + '.back', [173, 187])
+                            view_predicate = {'any': [pixel_predicate(patterns[v]) for v in views]} if len(views) > 1 else pixel_predicate(patterns[view])
+                            doc = definition(location_frame, view, view_predicate,
+                                             location_selector, target, point, street_pred)
+                            saved = project.debug_save_scene(view, doc, parent=text.locations.get(view))
+                            text.locations[view], text.current = saved['id'], view
+                            rendered = text.describe()
+                        else:
+                            rendered = text.act(command)
+                            action = text.last_action
+                        result_event = {'phase': 'result', 'command': command, 'scene': text.current, 'result': action,
+                                        'persistence': 'unknown', 'semantic_financial_effect': 'not assessed'}
+                        if command in ('go bank', 'go office', 'repay', 'borrow'):
+                            result_event['observed_balances'] = balances(debug)
+                        event(result_event)
+                        say(rendered, flush=True)
+                        if args.verify and command == 'go office':
+                            after, image = take_frame(project, debug, 'office-after')
+                            if not matches(image, patterns['office']) or matches(image, patterns['bank']):
+                                raise RuntimeError('office return not independently recognized')
+                            receipt['office_after'] = after
+                    except Exception as error:
+                        if on_action_error is None or not on_action_error(error):
+                            raise
                         travel.clear()
                         expected_hop = None
-                    if expected_hop is not None and text.current != expected_hop:
-                        event({'phase': 'travel_stopped', 'expected_scene': expected_hop,
-                               'actual_scene': text.current, 'following_input': 'not_sent'})
-                        travel.clear()
-                        say('Travel stopped before the next step. The last destination was not reached.', flush=True)
-                    expected_hop = None
-                    try:
-                        if travel:
-                            command, expected_hop = travel.popleft()
-                        else:
-                            command = (next(commands) if commands is not None else
-                                       command_reader() if command_reader is not None else input('> ').strip().lower())
-                            if command_reader is not None:
-                                bank = project.debug_scene_info(text.bank) if text.bank else None
-                                street = project.debug_scene_info(text.street) if text.street else None
-                            if command.startswith('save park '):
-                                refusal = text.save_preflight(command.removeprefix('save park '))
-                                if refusal:
-                                    event({'phase': 'refused', 'command': command, 'input': 'not_sent', 'reason': refusal})
-                                    say(refusal, flush=True)
-                                    continue
-                            if command in ('go dinomart', 'go store', 'go employment', 'go diner') and not text.land_bought:
-                                event({'phase': 'refused', 'command': command, 'input': 'not_sent', 'reason': 'business closed before land'})
-                                say('That business is closed until you buy land. No input was sent.', flush=True)
-                                continue
-                            route_command = 'go office' if command.startswith('save park ') else command
-                            route = navigation_route(text.current, route_command, park_opened=text.park_opened)
-                            if route == [] and command.startswith('go '):
-                                say('You are already there.', flush=True)
-                                continue
-                            if route and (len(route) > 1 or command.startswith('save park ')):
-                                event({'phase': 'travel_intent', 'command': command, 'hops': route,
-                                       'mechanism': 'original menu inputs; no memory writes'})
-                                travel.extend(route)
-                                if command.startswith('save park '):
-                                    travel.append((command, 'office'))
-                                command, expected_hop = travel.popleft()
-                    except EOFError:
-                        break
-                    if command == 'quit':
-                        break
-                    if (text.notice_outcome_unknown and command != 'status' or
-                            text.pending_food_notice and command not in ('status', 'acknowledge notice')):
-                        say(text.act(command), flush=True)
-                        continue
-                    if command == 'list saves':
-                        say('Saved parks: ' + (', '.join(p.parent.name for p in sorted(library.glob('*/save.json'))) or 'none'), flush=True)
-                        continue
-                    if command == 'help':
-                        say('Use go followed by a destination; connected scenes are crossed automatically.\n'
-                              'save park NAME saves a prepared running park, returning to the office if needed.\n'
-                              'list saves lists this session’s named parks. load park NAME resumes one in a fresh game session.\n'
-                              'To resume later, start with --load-save and the printed saved-park folder.\n'
-                              'Use status in the office, street or park, advance time in the street or park, and look for local actions.', flush=True)
-                        continue
-                    if command.startswith('load park '):
-                        try:
-                            bundle = library / save_name(command.removeprefix('load park '))
-                            read_save_bundle(bundle, before)
-                        except (OSError, ValueError, KeyError, TypeError) as exc:
-                            event({'phase': 'refused', 'command': command, 'input': 'not_sent', 'reason': str(exc)})
-                            say('Cannot load park: ' + str(exc) + ' No input was sent.', flush=True)
-                            continue
-                        number = 1
-                        while (work / f'resume-{number:03d}').exists():
-                            number += 1
-                        resumed_work = work / f'resume-{number:03d}'
-                        restart = ['--game-dir', str(source), '--backend', str(args.backend.resolve()),
-                                   '--work-dir', str(resumed_work), '--load-save', str(bundle),
-                                   '--save-library', str(library)]
-                        event({'phase': 'restart_requested', 'command': command, 'bundle': str(bundle),
-                               'next_work_dir': str(resumed_work), 'mechanism': 'fresh guest; original OLD GAME loader'})
-                        say('Loading saved park in a fresh game session. Evidence: ' + str(resumed_work), flush=True)
-                        break
-                    if command.startswith('save park '):
-                        say(text.save_park(command.removeprefix('save park ')), flush=True)
-                        continue
-                    if command == 'look':
-                        rendered = text.describe()
-                        observed = {'phase': 'observation', 'command': 'look', 'scene': text.current,
-                                    'persistence': 'unknown'}
-                        if text.current == 'bank':
-                            observed['observed_balances'] = balances(debug)
-                        event(observed)
-                        say(rendered, flush=True)
-                        continue
-                    if command in ('borrow', 'repay', 'buy desert plot', 'buy coelophysis', 'buy vegasaurus', 'buy vegasosaurus', 'read vegasaurus', 'buy wood fence', 'hire tour guide', 'buy 20 small feeders', 'open park', 'go park', 'check inventory', 'status', 'advance time', 'acknowledge notice'):
-                        say(text.act(command), flush=True)
-                        continue
-                    if text.current == 'general_store' and command == 'go street':
-                        say(text.act(command), flush=True)
-                        continue
-                    if text.current == 'street' and command in ('go dinomart', 'go store', 'go employment', 'go diner') and not text.land_bought:
-                        say(text.act(command), flush=True)
-                        continue
-                    valid = (text.current, command) in {('office', 'go bank'), ('bank', 'go office'),
-                                                       ('office', 'go street'), ('street', 'go office'),
-                                                       ('street', 'go dinomart'), ('dinomart', 'go street'),
-                                                       ('street', 'go employment'), ('employment', 'go street'),
-                                                       ('street', 'go diner'), ('dino_diner', 'go street'),
-                                                       ('street', 'go store'), ('general_store', 'go street'),
-                                                       ('park', 'go street')}
-                    if not valid:
-                        say('That action is not available in this scene.', flush=True)
-                        continue
-                    event({'phase': 'intent', 'command': command, 'scene': text.current, 'input': 'not_yet_sent'})
-                    if command == 'go bank' and bank is None:
-                        action = debug.scene_click(office['id'], 'office.bank')
-                        bank_frame, bank_image = take_frame(project, debug, 'bank-after')
-                        if not matches(bank_image, patterns['bank']) or matches(bank_image, patterns['office']):
-                            raise RuntimeError('bank not uniquely recognized after input')
-                        bank_selector = {'memory': {'address': '4020:3c5c', 'length': 2,
-                                                    'hex': debug.memory('4020:3c5c', length=2)['hex']}}
-                        bank_doc = definition(bank_frame, 'bank', bank_pred, bank_selector,
-                                              'bank.back', [173, 187], office_pred)
-                        for object_name, point, popup in (('bank.payoff', [219, 187], 'paid_popup'),
-                                                          ('bank.borrow', [50, 187], 'borrow_popup')):
-                            item = definition(bank_frame, 'bank', bank_pred, bank_selector,
-                                              object_name, point, pixel_predicate(patterns[popup]))['objects'][0]
-                            bank_doc['objects'].append(item)
-                        bank = project.debug_save_scene('bank', bank_doc)
-                        text.bank, text.current = bank['id'], 'bank'
-                        rendered = text.describe()
-                        receipt['bank_after'] = bank_frame
-                    elif command == 'go street' and street is None:
-                        action = debug.scene_click(office['id'], 'office.street')
-                        street_frame, street_image = take_frame(project, debug, 'street-after')
-                        if not matches(street_image, street_pattern) or matches(street_image, patterns['office']):
-                            raise RuntimeError('street not uniquely recognized after input')
-                        street_selector = {'memory': {'address': '4020:3c5c', 'length': 2,
-                                                      'hex': debug.memory('4020:3c5c', length=2)['hex']}}
-                        street_doc = definition(street_frame, 'street', street_pred, street_selector,
-                                                'street.office', [175, 140], office_pred)
-                        street_doc['objects'].append(definition(street_frame, 'street', street_pred, street_selector,
-                            'street.mart', [160, 66], {'any': [pixel_predicate(patterns['mart']),
-                                                              pixel_predicate(patterns['after'])]})['objects'][0])
-                        for obj, point, view in [('street.employment', [270, 66], 'employment'),
-                                                 ('street.diner', [55, 65], 'dino_diner'),
-                                                 ('street.store', [270, 140], 'general_store')]:
-                            outcome = pixel_predicate(patterns[view])
-                            if view == 'general_store':
-                                outcome = {'any': [outcome, pixel_predicate(patterns['fence_tab']),
-                                                   pixel_predicate(patterns['fence_selected'])]}
-                            elif view == 'dino_diner':
-                                outcome = {'any': [outcome, pixel_predicate(patterns['food_menu']),
-                                                   pixel_predicate(patterns['food_selected'])]}
-                            street_doc['objects'].append(definition(street_frame, 'street', street_pred, street_selector,
-                                obj, point, outcome)['objects'][0])
-                        street = project.debug_save_scene('street', street_doc)
-                        text.street, text.current = street['id'], 'street'
-                        event({'phase': 'street_guard_live_qualified', 'frame': street_frame,
-                               'scene_revision': street['id'], 'selector': street_selector,
-                               'profile_sha256': digest(STREET_PATTERNS)})
-                        rendered = text.describe()
-                        receipt['street_after'] = street_frame
-                    elif command == 'go dinomart':
-                        action = debug.scene_click(street['id'], 'street.mart')
-                        mart_frame, mart_image = take_frame(project, debug, 'dinomart-before')
-                        view = 'mart' if matches(mart_image, patterns['mart']) else 'after'
-                        if not matches(mart_image, patterns[view]):
-                            raise RuntimeError('DinoMart catalogue not recognized after input')
-                        mart_selector = {'memory': {'address': '4020:3c5c', 'length': 2,
-                                                    'hex': debug.memory('4020:3c5c', length=2)['hex']}}
-                        mart_doc = definition(mart_frame, 'dinomart', pixel_predicate(patterns[view]),
-                                              mart_selector, 'mart.back', [216, 187], street_pred)
-                        mart = project.debug_save_scene('dinomart', mart_doc, parent=text.mart)
-                        text.mart, text.current = mart['id'], 'dinomart'
-                        text.vegasaurus_extinct = False
-                        rendered = text.describe()
-                        receipt['dinomart_before'] = mart_frame
-                    elif command in ('go employment', 'go diner', 'go store'):
-                        view, obj = {'go employment': ('employment', 'street.employment'),
-                                     'go diner': ('dino_diner', 'street.diner'),
-                                     'go store': ('general_store', 'street.store')}[command]
-                        action = debug.scene_click(street['id'], obj)
-                        location_frame, location_image = take_frame(project, debug, view + '-entry')
-                        if view == 'general_store':
-                            views = [view, 'fence_tab', 'fence_selected']
-                        elif view == 'dino_diner':
-                            views = [view, 'food_menu', 'food_selected']
-                        else:
-                            views = [view]
-                        if not any(matches(location_image, patterns[v]) for v in views):
-                            raise RuntimeError('location not recognized: ' + view)
-                        location_selector = {'memory': {'address': '4020:3c5c', 'length': 2,
-                            'hex': debug.memory('4020:3c5c', length=2)['hex']}}
-                        target, point = (view + '.catalogue', [205, 105]) if view == 'general_store' else (view + '.back', [173, 187])
-                        view_predicate = {'any': [pixel_predicate(patterns[v]) for v in views]} if len(views) > 1 else pixel_predicate(patterns[view])
-                        doc = definition(location_frame, view, view_predicate,
-                                         location_selector, target, point, street_pred)
-                        saved = project.debug_save_scene(view, doc, parent=text.locations.get(view))
-                        text.locations[view], text.current = saved['id'], view
-                        rendered = text.describe()
-                    else:
-                        rendered = text.act(command)
-                        action = text.last_action
-                    result_event = {'phase': 'result', 'command': command, 'scene': text.current, 'result': action,
-                                    'persistence': 'unknown', 'semantic_financial_effect': 'not assessed'}
-                    if command in ('go bank', 'go office', 'repay', 'borrow'):
-                        result_event['observed_balances'] = balances(debug)
-                    event(result_event)
-                    say(rendered, flush=True)
-                    if args.verify and command == 'go office':
-                        after, image = take_frame(project, debug, 'office-after')
-                        if not matches(image, patterns['office']) or matches(image, patterns['bank']):
-                            raise RuntimeError('office return not independently recognized')
-                        receipt['office_after'] = after
+                        event({'phase':'action_recovery_required', 'command':command,
+                               'error_type':type(error).__name__, 'following_input':'not_sent'})
                 receipt['office_before'] = office_frame
                 receipt['bank_revision'] = bank['id'] if bank else None
         if args.verify:
@@ -2131,14 +2163,16 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                 receipt['patched_child_version'] = child['version']
         receipt['source_unchanged'] = inventory(source) == before
         receipt['elapsed_seconds'] = round(time.perf_counter() - start, 3)
-        receipt['ok'] = bool(receipt['source_unchanged'] and (not args.verify or
+        unresolved = bool(recovery_required and recovery_required())
+        receipt['unresolved_recovery'] = unresolved
+        receipt['ok'] = bool(not unresolved and receipt['source_unchanged'] and (not args.verify or
             [(e['phase'], e['command']) for e in receipt['events']] == [
                 ('intent','go bank'), ('pointer_prepared','go bank'), ('result','go bank'),
                 ('intent','repay'), ('pointer_prepared','repay'), ('modal','repay'), ('result','repay'),
                 ('intent','borrow'), ('pointer_prepared','borrow'), ('modal','borrow'), ('result','borrow'),
                 ('intent','go office'), ('pointer_prepared','go office'), ('result','go office')]))
-        receipt.update(status='completed', complete=receipt['ok'])
-        if not receipt['ok']:
+        receipt.update(status='recovery-required' if unresolved else 'completed', complete=receipt['ok'])
+        if not receipt['ok'] and not unresolved:
             raise RuntimeError('verification did not complete')
         return restart
     except BaseException as exc:

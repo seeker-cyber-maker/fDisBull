@@ -26,6 +26,7 @@ SNAPSHOT_FIELDS = ('office', 'bank', 'street', 'mart', 'park', 'locations', 'cur
                    'land_bought', 'dinosaur_bought', 'fence_bought', 'guide_hired',
                    'food_bought', 'park_opened', 'notice_outcome_unknown', 'transaction_count',
                    'pending_park_entry', 'pending_food_notice',
+                   'pending_food_return',
                    'vegasaurus_attempted', 'vegasaurus_proof', 'vegasaurus_extinct', 'last_action',
                    'last_continuation')
 
@@ -105,6 +106,8 @@ class ZService:
         self.epoch = secrets.token_hex(32)
         self.session_token = secrets.token_hex(32)
         self.checkpoint_failed = False
+        self.recovery_required = False
+        self.failures = []
         self.revision = 0
         self.pending = None
         self.snapshots = {}
@@ -122,7 +125,8 @@ class ZService:
             'status':status, 'complete':complete, 'stop_reason':self.stop_reason,
             'history':self.history, 'pending_command':self.pending['command'] if self.pending else None,
             'latest_native_save':self.latest_native_save,
-            'checkpoint_recovery':'unqualified' if self.checkpoint_failed else 'qualified',
+            'checkpoint_recovery':'unqualified' if self.checkpoint_failed or self.recovery_required else 'qualified',
+            'recovery_required':self.recovery_required, 'action_failures':self.failures,
             'pending_effects':('applied-confirmed' if self.pending and any(e.get('phase') in
                 ('food_purchase_committed','vegasaurus_purchase_confirmed') for e in self.pending['events'])
                 else 'unknown' if self.pending else 'none-pending'),
@@ -145,6 +149,7 @@ class ZService:
         self.text = text
         self.session_token = secrets.token_hex(32)
         self.checkpoint_failed = False
+        self.recovery_required = False
         if (self.pending and self.pending['command'].startswith('load park ') and any(
                 e.get('phase') == 'result' and e.get('command') == 'load park'
                 for e in self.pending['events'])):
@@ -281,7 +286,7 @@ class ZService:
 
     def observe(self, *, recovering=False):
         try:
-            if self.checkpoint_failed and not recovering:
+            if (self.checkpoint_failed or self.recovery_required) and not recovering:
                 raise ValueError('Checkpoint recovery is unqualified')
             modal = False
             parking = getattr(self.text, 'pending_food_notice', False) and self.text.current == 'dino_diner'
@@ -302,7 +307,8 @@ class ZService:
                     # Qualify the modal independently of its obscured parent.
                     scenes = load_scenes()
                     entering = getattr(self.text, 'pending_park_entry', False) and self.text.current == 'street'
-                    if (self.text.current != 'park' and not entering or
+                    returning = getattr(self.text, 'pending_food_return', False) and self.text.current == 'street'
+                    if (self.text.current != 'park' and not entering and not returning or
                             not self.text.park_opened or self.text.notice_outcome_unknown):
                         raise
                     _,image = scenes.take_frame(self.text.project,self.text.debug,'z-modal-observation')
@@ -313,8 +319,11 @@ class ZService:
                     modal = 'quarter-notice' if notices == ['quarter_popup'] else 'parking-notice'
                     description = ('A recognized quarter notice is visible.' if modal == 'quarter-notice' else
                                    'The adviser suggests another parking lot to increase attendance.') + ' Acknowledge it to continue.'
+                    if returning:
+                        description = 'The food purchase is already confirmed. ' + description
             registers = self.text.debug.registers()
-            context = ('park-entry.' + modal if modal and getattr(self.text, 'pending_park_entry', False)
+            context = ('food-return.' + modal if modal and getattr(self.text, 'pending_food_return', False) else
+                       'park-entry.' + modal if modal and getattr(self.text, 'pending_park_entry', False)
                        else self.text.current + ('.' + modal if modal else ''))
             opaque = [self.epoch, self.revision, context, description,
                       registers.get('state_revision'), getattr(self.text.debug, '_runtime_epoch', None)]
@@ -325,7 +334,8 @@ class ZService:
                     'title':'Parking advice' if modal == 'parking-notice' else 'Quarter notice' if modal else TITLES[self.text.current], 'description':description},
                     'objects':objects, 'inventory':[], 'coverage':{'partial':True}}
         except Exception:
-            return {'complete':False, 'session_token':self.session_token}
+            return {'complete':False, 'session_token':self.session_token,
+                    'recovery_required':self.recovery_required or self.checkpoint_failed}
 
     def finish(self):
         self.oracle('command-complete')
@@ -366,17 +376,27 @@ class ZService:
             observed = self.observe()
             food_pause = (observed.get('complete') is True and
                           observed.get('context', {}).get('id') == 'dino_diner.parking-notice')
-        if park_pause or food_pause:
+        food_return = (not uncertain and pending['command'] == 'buy 20 small feeders' and
+                       any(e.get('phase') == 'food_return_interrupted' and
+                           e.get('purchase_outcome') == 'confirmed' for e in events))
+        if food_return:
+            observed = self.observe()
+            food_return = (observed.get('complete') is True and observed.get('context', {}).get('id') in
+                           ('food-return.quarter-notice', 'food-return.parking-notice'))
+        if park_pause or food_pause or food_return:
             status = 'accepted'
         elif uncertain or (refusal or text_refusal) and sent or not verified and not (refusal or text_refusal):
             status = 'incomplete'
         else:
             status = 'rejected' if refusal or text_refusal else 'success'
-        effects = ('partial' if park_pause or food_pause or (refusal or text_refusal) and sent else
+        effects = ('applied-confirmed' if food_return else
+                   'partial' if park_pause or food_pause or (refusal or text_refusal) and sent else
                    'none-confirmed' if status == 'rejected' or pending['command'] in ('status','list saves') else
                    'unknown' if status == 'incomplete' else 'applied-confirmed')
         extra = {}
-        if park_pause or food_pause:
+        if food_return:
+            extra['followup'] = 'pending'
+        if park_pause or food_pause or food_return:
             extra['continuation'] = {'context': observed['context']['id'], 'command': 'acknowledge notice',
                                      'original_intent': pending['command']}
         previous_session = pending.get('session_token', self.session_token)
@@ -392,7 +412,7 @@ class ZService:
             return {'complete':False,'status':'incomplete'}
         try:
             if op == 'save':
-                if self.checkpoint_failed:
+                if self.checkpoint_failed or self.recovery_required:
                     raise ValueError('Prior checkpoint restore incomplete')
                 if len(self.snapshots) >= 64 and name not in self.snapshots:
                     raise ValueError('Snapshot slot budget')
@@ -435,6 +455,10 @@ class ZService:
                 else:
                     raise ValueError('Restored scene did not requalify')
                 self.checkpoint_failed = False
+                self.recovery_required = False
+                for failure in self.failures:
+                    if failure.get('restored_by') is None:
+                        failure['restored_by'] = name
                 self.event({'phase':'checkpoint_restored', 'checkpoint':name, 'native_fields_equal':True,
                             'saved_fields':snapshot['fields'], 'restored_fields':restored_fields,
                             'field_count':len(snapshot['fields']), 'preparation_guest_ms':prepared_ms,
@@ -466,6 +490,10 @@ class ZService:
                     self.send(self.checkpoint(request)); continue
                 if op != 'act' or set(request) != {'op','action'}:
                     raise ValueError('Unsupported request')
+                if self.recovery_required or self.checkpoint_failed:
+                    self.send({'complete':True,'status':'rejected','effects':'none-confirmed',
+                               'recovery_required':True,
+                               'message':'Checkpoint recovery is required; no action input was sent.'});continue
                 action = request['action']
                 if (not isinstance(action,dict) or set(action) != {'verb','target','item','context_token'}
                         or not all(isinstance(action[k],str) for k in ('verb','target','context_token')) or action['item'] is not None):
@@ -487,7 +515,21 @@ class ZService:
             except (ValueError,TypeError,KeyError):
                 self.send({'complete':False,'status':'incomplete','message':'Invalid Z request; no input sent.'})
 
-    def failure(self, error):
+    def action_error(self, error):
+        """Keep only a reachable, paused native guest for explicit recovery."""
+        if self.pending is None:
+            return False
+        try:
+            if self.text.debug.call('session.status').get('state') != 'stopped':
+                return False
+        except Exception:
+            return False
+        self.recovery_required = True
+        self.revision += 1
+        self.failure(error, recoverable=True)
+        return True
+
+    def failure(self, error, *, recoverable=False):
         if self.pending is None:
             self.send({'complete':False,'status':'stopped','message':'Original-backed service stopped; inspect private evidence.'})
             return
@@ -495,10 +537,19 @@ class ZService:
                      ('food_purchase_committed','vegasaurus_purchase_confirmed')]
         message = ('The purchase is confirmed; its follow-up failed. Do not repeat the purchase.' if confirmed else
                    'The original action did not reach a verified outcome. Do not retry blindly.')
+        if recoverable:
+            message += ' Restore an existing live checkpoint to recover; further action input is blocked.'
+        effects = 'applied-confirmed' if confirmed else 'unknown'
+        path = self.work/('z-failure.json' if not self.failures else f'z-failure-{len(self.failures)+1:03d}.json')
+        load_scenes().atomic_json(path, {'error_type':type(error).__name__, 'error':str(error),
+            'pending':self.pending,'confirmed_effects':confirmed,'recovery_required':recoverable})
+        self.failures.append({'command':self.pending['command'],'effects':effects,
+                              'diagnostic':path.name,'restored_by':None})
+        if recoverable:
+            self.pending = None  # Exactly one reply; the next read must not finish it again.
+            self.receipt('recovery-required')
         self.send({'complete':False,'status':'incomplete','message':message,
-                   'effects':'applied-confirmed' if confirmed else 'unknown','followup':'failed'})
-        (self.work/'z-failure.json').write_text(json.dumps({'error_type':type(error).__name__,
-            'error':str(error),'pending':self.pending,'confirmed_effects':confirmed},indent=2,default=str)+'\n')
+                   'effects':effects,'followup':'failed','recovery_required':recoverable})
 
     def stop(self, signum, _frame=None):
         self.stop_reason=signal.Signals(signum).name
@@ -555,9 +606,11 @@ def main(argv=None):
         if selected_save: next_args += ['--load-save',str(selected_save)]
         while next_args is not None:
             next_args = scenes.run_session(next_args,command_reader=service.command,output=service.output,
-                        on_ready=service.ready,on_event=service.event,on_spawn=service.spawned)
-        status='completed'
-        return 0
+                        on_ready=service.ready,on_event=service.event,on_spawn=service.spawned,
+                        on_action_error=service.action_error,
+                        recovery_required=lambda:service.recovery_required or service.checkpoint_failed)
+        status='recovery-required' if service.recovery_required or service.checkpoint_failed else 'completed'
+        return 0 if status == 'completed' else 1
     except scenes.SceneInterrupted:
         status='interrupted'
         return 130 if service.stop_reason=='SIGINT' else 143
