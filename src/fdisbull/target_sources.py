@@ -14,14 +14,30 @@ CREATE TABLE IF NOT EXISTS target_sources(
 
 
 class TargetSourcesMixin:
-    def _instruction_hex(self, value):
+    def _external_text(self, value):
         return self.db.store.put(value) if hasattr(self.db, 'store') else value
+
+    def _instruction_hex(self, value):
+        return self._external_text(value)
 
     def source_sha256(self, version=None):
         """Identity of this version's container, distinct from the base import."""
         v = self.version(version)['id']
         row = self.db.execute('SELECT document FROM target_sources WHERE version=?', (v,)).fetchone()
         return json.loads(row[0])['identity']['sha256'] if row else self.meta['source_sha256']
+
+    def source_binding_sha256(self, version=None):
+        """Preserve the import-identity contract of migrated proof/macro records.
+
+        Old records used the original import hash plus the selected mapped hash,
+        even for patched versions. Forensic source_info still reports the exact
+        per-version container; newly approved source layers use that identity.
+        """
+        v = self.version(version)['id']
+        row = self.db.execute('SELECT document FROM target_sources WHERE version=?', (v,)).fetchone()
+        if row and json.loads(row[0]).get('migration'):
+            return self.meta['source_sha256']
+        return self.source_sha256(v)
 
     def _record_derived_source(self, parent, version):
         row = self.db.execute('SELECT document FROM target_sources WHERE version=?',(parent,)).fetchone()
@@ -112,9 +128,12 @@ class TargetSourcesMixin:
             child = cur.lastrowid
             for r in image.regions:
                 self.db.execute('INSERT INTO regions VALUES (?,?,?,?,?,?)', (child, r.name, key(r.start), r.data, r.executable, r.writable))
+            self._seed_image(self.db, image, child, self.context)
             self._init_information(image, child)
+            from . import __version__
             record = {'identity': candidate, 'format': image.format, 'arch': image.arch, 'bits': image.bits,
-                      'loader_options': document['loader_options'], 'loader': document['loader'],
+                      'loader_options': document['loader_options'],
+                      'loader': {'name':'fdisbull.load_image','version':__version__},
                       'schema': 9, 'approval': expected, 'base_version': v['id']}
             self.db.execute('INSERT INTO target_sources VALUES (?,?)', (child, json.dumps(record)))
             return {'version': child, 'parent': v['id'], 'identity': candidate, 'attached': True, 'layer': True, 'executed': False}
@@ -160,6 +179,9 @@ class TargetSourcesMixin:
                             values = list(row)
                             if table == 'instructions':
                                 pos = columns.index('bytes')
+                                values[pos] = new.store.put(values[pos])
+                            if table == 'debug_events':
+                                pos = columns.index('evidence')
                                 values[pos] = new.store.put(values[pos])
                             new.execute(f'INSERT INTO {quoted} VALUES ({",".join("?" for _ in values)})', values)
                     for name, sql in old.execute("SELECT name,sql FROM sqlite_master WHERE type='index' AND sql IS NOT NULL"):

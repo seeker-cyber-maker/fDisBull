@@ -23,8 +23,11 @@ addressed store. This includes the original container, mapped regions, per
 instruction hex, attached files, debugger artifacts and UDC block BLOBs.
 The Project connection externalizes binary parameters before SQLite receives
 them, so those payloads do not first enter a database page, journal or WAL.
-Known nested raw caches in JSON are stored externally as complete records,
+Known nested raw caches and structured `*_hex`, `*_base64` and byte-valued
+`*_bytes` fields (including breakpoint `runtime_bytes`) are stored externally as complete records,
 preserving their original certificate/digest instead of deleting a field.
+Debugger event evidence is always externalized as a complete record, including
+unknown future payload fields, rather than relying only on recognized byte keys.
 
 The default store is `$XDG_DATA_HOME/fdisbull/target-objects` (or
 `~/.local/share/fdisbull/target-objects`). `FDISBULL_TARGET_STORE` selects another
@@ -117,7 +120,11 @@ identities/provenance are retained if present. For older retained source bytes,
 the derivative records their measured size/hash, reconstructed loader options
 and an explicitly unknown original loader version; exact mapped-byte verification
 is still required before binding. Projects without retained source bytes need
-a fresh explicit import to obtain the source-binding workflow. The store
+a fresh explicit import to obtain the source-binding workflow.
+Historical proof/macro records retain their original import-hash binding plus
+mapped-version hash; migration does not rewrite or invalidate their certificates.
+`source-info` separately reports the measured per-version container identity.
+New approved source layers bind new records to the new source identity. The store
 is a separate dependency and must be retained privately for full restart.
 
 ## Limits and integration requirements

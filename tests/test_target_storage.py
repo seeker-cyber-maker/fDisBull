@@ -93,7 +93,9 @@ def test_divergence_needs_exact_base_candidate_approval_and_preserves_base(targe
         assert db.regions(child)[0].data == changed.read_bytes()
         assert db.source_info(child)['approval'] == candidate['approval']
         assert db.source_info(1)['identity'] == identity(CODE)
-        assert db.analyze(version=child)['version'] == child
+        analysis = db.analyze(version=child)
+        assert analysis['version'] == child and analysis['decoded'] == 3
+        assert db.disassembly(version=child)['instructions'][0]['bytes'] == 'b807000000'
         assert db.disassembly(version=child)['source_sha256'] == identity(changed.read_bytes())['sha256']
         assert db.disassembly(version=1)['source_sha256'] == identity(CODE)['sha256']
         # Approval from one base must not authorize the next version.
@@ -144,6 +146,15 @@ def test_json_raw_cache_is_external_and_legacy_derivative_preserves_original(tar
     # Deliberate authored schema-8 fixture. Decode the current references into
     # a separate fixture to represent historical persisted raw bytes.
     with Project(project) as db, sqlite3.connect(legacy) as old:
+        child = db.patch(0x1001, '02')['version']
+        # Pre-schema-9 evidence bound source_sha256 to the base import even
+        # when the selected mapped version had a patched file counterpart.
+        db.source_sha256 = lambda version=None: db.meta['source_sha256']
+        model = {'format':'fdisbull-proof-1','scope':'authored model', 'variables':{'x':8},
+                 'assumptions':[], 'left':{'var':'x'}, 'right':{'var':'x'}}
+        saved_proof = db.proof_check(model, version=child)
+        saved_macro = db.debug_define_macros({'format':'fdisbull-macro-set-1','name':'authored',
+                          'macros':{'observe':{'steps':[{'op':'status'}]}}}, version=child)
         for (sql,) in db.db.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"):
             old.execute(sql)
         for (table,) in db.db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"):
@@ -167,8 +178,10 @@ def test_json_raw_cache_is_external_and_legacy_derivative_preserves_original(tar
         assert migrated.regions(1)[0].data == CODE
         assert migrated.source_info(1)['loader']['version'] == 'unknown legacy import'
         assert migrated.source_info(1)['identity'] == identity(CODE)
+        assert migrated.proof_info(saved_proof['id'], version=child) == saved_proof
+        assert migrated.debug_macro_info(saved_macro['id'], version=child) == saved_macro
         assert migrated.bind_source(source, version=1)['attached']
-        assert migrated.disassembly()['instructions'][0]['mnemonic'] == 'mov'
+        assert migrated.disassembly(version=1)['instructions'][0]['mnemonic'] == 'mov'
         assert json.loads(migrated.db.execute('SELECT document FROM authored_cache').fetchone()[0])['low_level_ir']['memory']['initial'] == list(CODE)
     with sqlite3.connect(derivative) as raw:
         assert reference(raw.execute('SELECT document FROM authored_cache').fetchone()[0])
@@ -243,3 +256,48 @@ def test_com_stored_research_is_readable_without_external_objects(tmp_path, monk
         assert row['comment'] == 'Authored COM research'
         with pytest.raises(ValueError, match='external target object missing'):
             db.analyze()
+
+
+@pytest.mark.parametrize('field',['runtime_bytes','before_hex','after_hex','ram_hex','runtime_hex','project_hex','source_hex','future_payload_base64','arbitrary_evidence'])
+def test_debug_event_byte_encodings_are_external_before_sqlite(target, field):
+    from types import SimpleNamespace
+    from fdisbull.debugger import DebugSession
+    project, source = target
+    import base64
+    value = base64.b64encode(CODE).decode() if field.endswith('_base64') else CODE.hex()
+    evidence = {'kind':'authored-breakpoint', 'source':{'kind':'fixture'}, field: value}
+    with Project(project) as db:
+        with db.transaction(True):
+            db.db.execute('INSERT INTO debug_runs VALUES (?,?,?,?,?,?)', ('authored-run',1,'now',None,'stopped','{}'))
+        DebugSession._event(SimpleNamespace(project=db,run_id='authored-run'), 'breakpoint', evidence)
+        assert db.debug_events('authored-run')['events'][0]['evidence'] == evidence
+        with sqlite3.connect(project) as raw:
+            stored = raw.execute("SELECT evidence FROM debug_events WHERE operation='breakpoint'").fetchone()[0]
+            assert reference(stored) is not None
+            assert value not in stored
+            assert raw.execute("SELECT json_extract(evidence,'$.kind') FROM debug_events").fetchone()[0] == 'authored-breakpoint'
+            assert raw.execute("SELECT json_extract(evidence,'$.source.kind') FROM debug_events").fetchone()[0] == 'fixture'
+        assert db.storage_info()['embedded_payload_columns'] == []
+
+
+def test_native_dos_breakpoint_event_keeps_runtime_bytes_out_of_fdb(tmp_path, monkeypatch):
+    import os
+    backend = os.environ.get('FDISBULL_DOSBOX')
+    if not backend:
+        pytest.skip('Set FDISBULL_DOSBOX for authored native breakpoint acceptance')
+    monkeypatch.setenv('FDISBULL_TARGET_STORE', str(tmp_path / 'native-private-objects'))
+    source = tmp_path / 'AUTHORED.COM'
+    source.write_bytes(bytes.fromhex('b83412ebfe'))
+    path = tmp_path / 'native.fdb'
+    with Project.create(path, source, image='com') as db:
+        db.analyze()
+        with db.debugger(backend, tmp_path) as debug:
+            result = debug.breakpoint('1000:0100')
+            assert result['runtime_bytes'] == 'b83412'
+            run = debug.run_id
+        events = db.debug_events(run)['events']
+        assert next(e for e in events if e['operation']=='breakpoint')['evidence'] == result
+        with sqlite3.connect(path) as raw:
+            stored = raw.execute("SELECT evidence FROM debug_events WHERE operation='breakpoint'").fetchone()[0]
+            assert reference(stored) and 'b83412' not in stored
+        assert db.storage_info()['embedded_payload_columns'] == []

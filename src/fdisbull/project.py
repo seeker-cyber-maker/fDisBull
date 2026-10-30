@@ -183,13 +183,7 @@ class Project(TargetSourcesMixin, ProofProjectMixin, DebugProjectMixin, DOSState
                 for r in image.regions:
                     if r.data:
                         db.execute("INSERT INTO regions VALUES (?,?,?,?,?,?)",(1,r.name,key(r.start),r.data,r.executable,r.writable))
-                for seed in image.seeds:
-                    address = key(seed.address)
-                    db.execute("INSERT OR IGNORE INTO functions(version,context,address,name,source) VALUES (1,?,?,?,?)",
-                        (context,address,seed.name,seed.source))
-                    if seed.address == image.entry:
-                        db.execute("INSERT OR IGNORE INTO work(version,context,address,reason) VALUES (1,?,?,?)",
-                            (context,address,seed.source))
+                cls._seed_image(db, image, 1, context)
                 db.commit()
                 db.execute("PRAGMA wal_checkpoint(TRUNCATE)")
             finally:
@@ -221,6 +215,17 @@ class Project(TargetSourcesMixin, ProofProjectMixin, DebugProjectMixin, DOSState
             Path(str(target)+"-wal").unlink(missing_ok=True)
             Path(str(target)+"-shm").unlink(missing_ok=True)
             raise
+
+    @staticmethod
+    def _seed_image(db, image, version, context):
+        """Use identical initial roots for imports and approved source layers."""
+        for seed in image.seeds:
+            address = key(seed.address)
+            db.execute("INSERT OR IGNORE INTO functions(version,context,address,name,source) VALUES (?,?,?,?,?)",
+                       (version, context, address, seed.name, seed.source))
+            if seed.address == image.entry:
+                db.execute("INSERT OR IGNORE INTO work(version,context,address,reason) VALUES (?,?,?,?)",
+                           (version, context, address, seed.source))
 
     @staticmethod
     def digest(regions):

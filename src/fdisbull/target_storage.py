@@ -119,7 +119,8 @@ RAW_KEYS = {'bytes', 'bytes_hex', 'data_hex', 'expected_hex', 'witness_hex', 'da
 
 def contains_raw(value):
     if isinstance(value, dict):
-        return any(k in RAW_KEYS or contains_raw(v) for k, v in value.items())
+        return any(k in RAW_KEYS or (k.endswith(('_hex', '_base64', '_bytes')) and isinstance(v, (str, list, dict)))
+                   or contains_raw(v) for k, v in value.items())
     if isinstance(value, list):
         return any(contains_raw(v) for v in value)
     return False
@@ -219,7 +220,8 @@ def storage_report(path):
             for col in db.execute(f'PRAGMA table_info({quoted})'):
                 field = '"' + col[1].replace('"', '""') + '"'
                 byte_column = col[2].upper() == 'BLOB' or (table == 'instructions' and col[1] == 'bytes')
-                if byte_column or col[2].upper() == 'TEXT':
+                record_column = table == 'debug_events' and col[1] == 'evidence'
+                if byte_column or record_column or col[2].upper() == 'TEXT':
                     for (value,) in db.execute(f'SELECT {field} FROM {quoted} WHERE {field} IS NOT NULL'):
                         if value in ('', b'') or reference(value) is not None:
                             continue
@@ -229,7 +231,7 @@ def storage_report(path):
                                 raw_json = contains_raw(json.loads(value))
                             except (ValueError,RecursionError):
                                 pass
-                        if byte_column or raw_json:
+                        if byte_column or record_column or raw_json:
                             payloads.append({'table': table, 'column': col[1]})
                             break
         return {'schema': int(metadata['schema']), 'storage': STORAGE if external else 'legacy-embedded',

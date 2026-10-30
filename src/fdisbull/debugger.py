@@ -225,7 +225,7 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
             self.db.execute('INSERT INTO debug_artifacts VALUES (?,?,?,?,?,?,?)',
                 (identifier,run,name,kind,digest,data,json.dumps(metadata)))
             self.db.execute('INSERT INTO debug_events(run,created,operation,evidence) VALUES (?,?,?,?)',
-                            (run,stamp(),'artifact',json.dumps(result)))
+                            (run,stamp(),'artifact',self._external_text(json.dumps(result))))
         return result
 
     def debug_grid(self, artifact, *, name='coordinate-grid.png', step=32, target=None):
@@ -392,7 +392,7 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
     def _event(self, operation, evidence):
         with self.project.transaction(True):
             self.project.db.execute('INSERT INTO debug_events(run,created,operation,evidence) VALUES (?,?,?,?)',
-                                    (self.run_id,stamp(),operation,json.dumps(evidence)))
+                                    (self.run_id,stamp(),operation,self.project._external_text(json.dumps(evidence))))
             state = evidence.get('state') or evidence.get('session',{}).get('state')
             if state:
                 self.project.db.execute('UPDATE debug_runs SET state=? WHERE id=?',(state,self.run_id))
