@@ -89,6 +89,7 @@ Regression tests exercise the former overflow failure, exact UTF-8 accounting,
 paging and selections, read-only retrieval, held action/checkpoint dispatch,
 lost references, journal reopen, stale/foreign/corrupt receipts, retention failure
 and repeated acknowledgement. Native acceptance against the original DinoPark
-is recorded with the [PR #41 findings](DINOPARK_STATIC_ANALYSIS_FRICTION.md).
+is recorded in the [30 October acceptance report](VERIFICATION-DINOPARK-Z-REPLY-RECOVERY-2026-10-30.md)
+and [PR #41 findings](DINOPARK_STATIC_ANALYSIS_FRICTION.md).
 The change is source-only; packaging, publication and installation belong to the
 release workflow.

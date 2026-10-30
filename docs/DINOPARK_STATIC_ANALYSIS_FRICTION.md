@@ -241,6 +241,10 @@ advances credits; any input-free continuation must be requested separately.
 No original action is reconstructed from its request, and host cleanup cannot
 certify game termination.
 
+The [30 October verification record](VERIFICATION-DINOPARK-Z-REPLY-RECOVERY-2026-10-30.md)
+keeps independent native cohorts, strict readback witnesses, controller limitations
+and selected-program exit evidence separate.
+
 ### Expose terminal scenes through named actions
 
 The main Z routes are available, but Sell Park and the quit/credits controls
