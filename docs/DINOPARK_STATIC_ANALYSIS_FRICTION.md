@@ -1,9 +1,11 @@
-# Whole-binary discovery friction: DinoPark static study
+# DinoPark analysis friction and retained Z terminal replies
 
 This records observed analysis limits and proposed follow-ups from a private
-DinoPark MZ investigation on 2026-10-30. It changes documentation only. It does
-not implement the proposals or certify that any original routine or resource
-is unused.
+DinoPark MZ investigation on 2026-10-30, followed by bounded native asset tracing.
+The PR now also implements [oversized Z reply recovery](Z_REPLY_RECOVERY.md):
+the original result is retained before transmission and can be retrieved without
+repeating an input. The static-analysis and remaining observer/menu proposals
+stay prospective. No original routine or resource is certified unused.
 
 The investigation used source version **0.26.1**, pinned at
 `43d24a73d744516653d53d3bc8828787c499d299`, with the source import path set
@@ -222,12 +224,22 @@ reply with an incomplete response after the final quit-related input. The
 client held rather than repeating the input; final selected-program exit was
 not certified. This is not an observed game crash.
 
-Proposed follow-up: return a compact completion receipt and artifact locator,
-persisting the result before transport. Let an explicit read-only reconciliation
-qualify a retained result after reply loss or truncation, with the same source,
-session, context and state witness requirements as other recovery paths.
-Do not reconstruct a receipt from the requested action or infer completion
-from host cleanup.
+Implemented follow-up: `ZService.send` retains the full original JSON in the
+existing private output-artifact store and atomically records its delivery hold
+before sending a compact reference. `reply_status`, `read_reply` and
+`select_reply` retrieve the pending result without a native RPC.
+`accept_reply` verifies the artifact and unchanged worker/provider/native-session
+witness using read-only native status; it clears only the delivery hold.
+Ordinary observation, actions and checkpoints remain withheld while delivery is
+pending. A lost reference can be recovered in the surviving worker, and storage,
+corruption or stale-witness failures cannot authorize an action replay.
+
+The [protocol and limits](Z_REPLY_RECOVERY.md) keep delivery completeness,
+producer interval completion and selected DOS termination separate. A confirmed
+quit still needs native exit evidence. Reading or acknowledging a receipt never
+advances credits; any input-free continuation must be requested separately.
+No original action is reconstructed from its request, and host cleanup cannot
+certify game termination.
 
 ### Expose terminal scenes through named actions
 

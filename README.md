@@ -192,6 +192,10 @@ certify that the original intent is complete. Such batch steps remain paused
 for reconciliation, and aliases cannot be used to resend the original action.
 If a result read fails, read-only reconciliation can verify a saved reply in the
 same guest before the batch continues.
+The DinoPark bridge also [retains oversized replies](docs/Z_REPLY_RECOVERY.md)
+before transmission, with read-only retrieval and a delivery hold that prevents
+further actions until the caller acknowledges the retained result against the
+same native session.
 
 The [funded26k recovery path](docs/DINOPARK_FUNDED_RECOVERY.md) preserves a confirmed
 food purchase across its quarter notice and keeps a paused provider available
