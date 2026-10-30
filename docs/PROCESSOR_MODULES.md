@@ -18,6 +18,22 @@ not change the managed command, execute CIL, model stacks or exception handlers,
 or resolve dynamic calls. Both wrappers identify their adapter contract as
 version `1`; this is not a claim that the underlying ISA is version 1.
 
+The [Z-machine v3 module](ZMACHINE_PROCESSOR.md),
+`fdisbull.zmachine_processor.ZMachineV3Processor`, also implements this seam.
+It binds a complete immutable source snapshot to its SHA-256 address space,
+then uses the existing raw v3 decoder within the declared story length.
+Operands and original encoding facts remain available alongside static
+successors. Packed routine headers, instruction entries, return branches,
+dynamic calls and saved continuations have distinct representations. Its
+adapter contract is version `1`, and its supported virtual ISA is version `3`.
+
+`zmachine-disasm` and `zmachine-analyze` actually dispatch through this module.
+Their standalone queries provide bounded listings and recursive static
+analysis, with pending work, unresolved edges and conflicting byte ownership
+reported. They do not extend the native project database. The original Zork
+converter and executable IR remain unchanged; this adapter supplies source
+instruction facts and does not itself recover the separate game-intent UIL.
+
 **Not yet generic persisted VM analysis:** the flat project loader admits only
 its supported native architectures. It cannot accept an arbitrary processor
 object, and an instruction-indexed or multi-space guest is not silently stored
@@ -30,6 +46,6 @@ not persistence, execution, or compatibility with a real game.
 Processor facts do not establish a host-to-guest/file mapping: retain that as
 separate, evidence-bearing provenance. Concurrent node scheduling and blocking,
 device I/O, game UI, goals and grading belong to separate machine or task layers.
-No AGI, Z-machine, QP2A, TIS-100 or Comet-64 processor is supplied by this seam.
+No AGI, QP2A, TIS-100 or Comet-64 processor is supplied by this seam.
 A real module needs an authoritative encoding/semantics and its own tests;
 QP2A acceptance remains with its native verifier, not this decoder seam.

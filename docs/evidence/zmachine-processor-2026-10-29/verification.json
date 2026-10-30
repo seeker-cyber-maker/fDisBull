@@ -1,0 +1,569 @@
+{
+  "broader_selected_regressions": {
+    "baseline_failure_ids": [
+      "tests/test_output_limits.py::test_large_result_retains_the_complete_original_with_execution_scope",
+      "tests/test_output_limits.py::test_small_values_and_exact_wire_byte_boundary_are_unchanged",
+      "tests/test_output_limits.py::test_large_failed_rpc_retains_error_without_promoting_it",
+      "tests/test_output_limits.py::test_unknown_execution_fields_are_not_invented_or_partially_labeled",
+      "tests/test_output_cli.py::test_cli_spills_then_fresh_process_selects_without_execution",
+      "tests/test_output_cli.py::test_bounded_selection_and_projectless_retrieval",
+      "tests/test_output_cli.py::test_server_bounds_each_line_and_continues_with_a_selective_query",
+      "tests/test_output_artifacts.py::test_roundtrip_restart_unicode_range_and_pointer",
+      "tests/test_output_artifacts.py::test_quotas_errors_and_stale_files",
+      "tests/test_output_artifacts.py::test_corruption_and_no_clobber_export",
+      "tests/test_output_artifacts.py::test_paths_privacy_id_validation_and_git",
+      "tests/test_output_artifacts.py::test_concurrent_dedup",
+      "tests/test_output_artifacts.py::test_generator_failure_removes_partial_without_error_content",
+      "tests/test_output_artifacts.py::test_replaced_store_directory_is_refused",
+      "tests/test_output_artifacts.py::test_empty_chunk_stream_is_bounded",
+      "tests/test_output_artifacts.py::test_read_ranges_and_invalid_json_are_refused"
+    ],
+    "classification": "All sixteen failures match unchanged-upstream baseline IDs: existing inside_git output-artifact refusal and downstream assertions.",
+    "counts": {
+      "failed": 16,
+      "passed": 251,
+      "skipped": 5,
+      "total": 272
+    },
+    "junit_sha256": "8c6097b1f00923952143358912f28368cea7e8d9ea775f77073b7c07262873b9",
+    "log_sha256": "a971a6b423462f8613feb191185c9c8d52fd4aa98888afb9a8825817119b0e50",
+    "new_failure_ids": []
+  },
+  "claim_limits": [
+    "Static instruction facts and bounded source traversal; no new game-intent recovery.",
+    "No generic guest .fdb persistence, debugger integration, live VM state or native-to-guest mapping.",
+    "The original executable IR, partial intent definitions, runtimes and tests are retained.",
+    "Recursive completeness excludes caller-dependent return targets and never proves runtime reachability.",
+    "Exact R88 checks and two observed command sequences are not an all-path or all-edition proof.",
+    "Runtime checks compare full machine snapshots and game-result fields, excluding implementation steps/recovery audit.",
+    "Frotz narrative checks remove prompt/status decoration and normalize whitespace; score/moves checked separately.",
+    "Original DOS captures, checkpoint restart, native backends and macOS were not rerun for this static addition.",
+    "Raw game bytes, memory snapshots and narrative transcripts remain outside Git and generic tool packages."
+  ],
+  "environment": {
+    "macos_run": false,
+    "platform": "Linux",
+    "python": "3.12.14"
+  },
+  "format": "fdisbull-zmachine-processor-verification-1",
+  "implementation_sha256": {
+    "src/fdisbull/cli.py": "cf5233790b30dad57c3eb3565b4f7e927352c72e1e220d95e4d436c27b010522",
+    "src/fdisbull/zmachine.py": "015e9116cb1e42b4000e22450b81aeb1282b3e28099ce5fd0ba6a4a8e896a1b5",
+    "src/fdisbull/zmachine_analysis.py": "e7586a4ebcf421183260d1364fa0956730562e8bee171d6d43f9f77d214d98a8",
+    "src/fdisbull/zmachine_processor.py": "1099e998869ff73f6dee9b208262cebfdc4a87b1ea550c55569978b2ae37df22",
+    "tests/test_zmachine_analysis.py": "14dcc44201b334deb982c63a4355b4fce83faacd085f86ee477fe93013d9435d",
+    "tests/test_zmachine_processor.py": "53a0db775b7fd385e3343c53b554af196d5da534664c9aab5543f9f4efca5d0a",
+    "tests/test_zmachine_processor_acceptance.py": "4bd77fcbbde589580e12ab99c7fefc8948a35dbf9fca0ec14402dd9bb6b231cb"
+  },
+  "independent_review": {
+    "contract_clarifications": [
+      "Invalid truncated routine headers retain calculated invalid offsets in evidence, but entry is None and successor is unresolved.",
+      "Caller-dependent return edges are excluded explicitly from static worklist completeness; this is not runtime reachability or complete game control flow."
+    ],
+    "demonstrated": [
+      "Signed branch/jump displacement and branch polarity; offset0/1 returns.",
+      "Packed calls skip v3 local defaults; null calls have no call edge; variable calls remain unresolved.",
+      "Invalid headers and targets remain unresolved; malformed/truncated/wrong-version encodings fail explicitly.",
+      "Routine code may be below high memory; initial PC is an instruction address.",
+      "Inline text spans, return boundaries, save outcomes, restore saved continuation, restart original PC.",
+      "Complete-file source identity includes padding; padding is never instruction data; foreign source/space rejected.",
+      "Returned fact mutations cannot contaminate later decodes or original bytes.",
+      "Conflicting instruction/header interpretations are reported.",
+      "Byte/instruction budget exhaustion retains frontier and does not claim completeness; exact-budget closed loops are distinguished.",
+      "Public CLI and JSON operations run independently of native project state."
+    ],
+    "findings": [],
+    "format": "fdisbull-zmachine-processor-review-1",
+    "limitations": [
+      "Tests use authored stories, not a fresh independent interpreter execution.",
+      "No new game intent, native-to-guest mapping, mutable VM execution state, or persisted generic guest project is claimed.",
+      "Reviewed Linux environment only; no macOS execution in this review."
+    ],
+    "primary_specification": [
+      "https://inform-fiction.org/zmachine/standards/z1point1/sect04.html",
+      "https://inform-fiction.org/zmachine/standards/z1point1/sect05.html",
+      "https://inform-fiction.org/zmachine/standards/z1point1/sect06.html",
+      "https://inform-fiction.org/zmachine/standards/z1point1/sect14.html",
+      "https://inform-fiction.org/zmachine/standards/z1point1/sect15.html"
+    ],
+    "recorded_at": "2026-10-29T21:59:18.873123-04:00",
+    "reviewer": "zork_processor_validation",
+    "scope": "Independent specification-derived processor acceptance and read-only analyzer/CLI review",
+    "source_sha256": {
+      "src/fdisbull/cli.py": "cf5233790b30dad57c3eb3565b4f7e927352c72e1e220d95e4d436c27b010522",
+      "src/fdisbull/zmachine.py": "015e9116cb1e42b4000e22450b81aeb1282b3e28099ce5fd0ba6a4a8e896a1b5",
+      "src/fdisbull/zmachine_analysis.py": "e7586a4ebcf421183260d1364fa0956730562e8bee171d6d43f9f77d214d98a8",
+      "src/fdisbull/zmachine_processor.py": "1099e998869ff73f6dee9b208262cebfdc4a87b1ea550c55569978b2ae37df22",
+      "tests/test_zmachine_analysis.py": "14dcc44201b334deb982c63a4355b4fce83faacd085f86ee477fe93013d9435d",
+      "tests/test_zmachine_processor_acceptance.py": "4bd77fcbbde589580e12ab99c7fefc8948a35dbf9fca0ec14402dd9bb6b231cb"
+    },
+    "verification": {
+      "acceptance_tests": 49,
+      "command": "PYTHONPATH=src:player ../.venv/bin/python -m pytest -q tests/test_zmachine_processor_acceptance.py tests/test_zmachine_analysis.py",
+      "duration_seconds": 0.27,
+      "existing_root_analysis_tests": 22,
+      "exit_status": 0,
+      "failed": 0,
+      "passed": 71
+    }
+  },
+  "integrated_tests": {
+    "existing_decoder_tests_passed": 14,
+    "existing_processor_tests_passed": 4,
+    "exit_code": 0,
+    "failed": 0,
+    "junit_sha256": "e277c5cac40562ddbc6739055027427ea1bc78cc5861bd9e26e48e2b9db59c60",
+    "log_sha256": "116f2c90a1046faeecd57a743ec4053c782529b63f143532f9c0b10bdc431b51",
+    "new_tests_passed": 89,
+    "passed": 261,
+    "preserved_conversion_tests_passed": 69,
+    "preserved_intent_tests_passed": 85,
+    "skipped": 5,
+    "skipped_reason": "Optional managed CIL dependencies unavailable",
+    "total": 266
+  },
+  "observed_execution_checks": {
+    "analysis_sha256": "e7586a4ebcf421183260d1364fa0956730562e8bee171d6d43f9f77d214d98a8",
+    "cases": [
+      {
+        "all_known_successors_consistent": true,
+        "all_raw_facts_equal": true,
+        "all_results_equal": true,
+        "all_snapshots_equal": true,
+        "case": "full_route",
+        "commands": 396,
+        "final": {
+          "location": 178,
+          "moves": 394,
+          "pc": 28167,
+          "score": 350,
+          "status": "halted"
+        },
+        "final_snapshot_sha256": "20b6f2231a332f1deefd5927471dc275aabe7944e497664d7e9b44d555ac28fa",
+        "fresh_frotz_narratives_equal": true,
+        "fresh_frotz_score_moves_equal": true,
+        "instruction_executions": 386619,
+        "matching_boundaries": 397,
+        "recovery_stats": {
+          "binding_hits": {
+            "turn_counter": 392
+          },
+          "low_level_blocks": 386227,
+          "outcomes": {
+            "turn_counted": 392
+          },
+          "primitive_hits": {
+            "turn.count_player_action": 392
+          },
+          "residual_bindings": {},
+          "residual_reasons": {
+            "opening_target_not_qualified": 4,
+            "turn_frame_not_qualified": 2
+          }
+        },
+        "reference_executable_sha256": "350a783fc5468e2239a27fa61a5d4cca26353c209980631baf43b285fdd524f2",
+        "transition_counts": {
+          "matched_known_successor": 358928,
+          "retained_runtime_dependent_call": 2111,
+          "retained_runtime_dependent_return": 25579
+        },
+        "unique_instruction_starts": 2498,
+        "unique_transitions": 3369
+      },
+      {
+        "all_known_successors_consistent": true,
+        "all_raw_facts_equal": true,
+        "all_results_equal": true,
+        "all_snapshots_equal": true,
+        "case": "mailbox",
+        "commands": 5,
+        "final": {
+          "location": 180,
+          "moves": 5,
+          "pc": 22800,
+          "score": 0,
+          "status": "input"
+        },
+        "final_snapshot_sha256": "e644fa4148e06d068378c0f0e93220e74126441d2a3d1bd5edd7bb594ffe09e8",
+        "fresh_frotz_narratives_equal": true,
+        "fresh_frotz_score_moves_equal": true,
+        "instruction_executions": 4082,
+        "matching_boundaries": 6,
+        "recovery_stats": {
+          "binding_hits": {
+            "mailbox_open": 3,
+            "turn_counter": 5
+          },
+          "low_level_blocks": 4028,
+          "outcomes": {
+            "already_open": 1,
+            "opened_empty": 1,
+            "opened_with_contents": 1,
+            "turn_counted": 5
+          },
+          "primitive_hits": {
+            "container.open": 2,
+            "discourse.remember_mentioned_object": 1,
+            "narration.emit": 9,
+            "narration.name": 2,
+            "turn.count_player_action": 5
+          },
+          "residual_bindings": {
+            "post_open_source_flag": 2
+          },
+          "residual_reasons": {}
+        },
+        "reference_executable_sha256": "350a783fc5468e2239a27fa61a5d4cca26353c209980631baf43b285fdd524f2",
+        "transition_counts": {
+          "matched_known_successor": 3773,
+          "retained_runtime_dependent_call": 31,
+          "retained_runtime_dependent_return": 277
+        },
+        "unique_instruction_starts": 756,
+        "unique_transitions": 819
+      }
+    ],
+    "checks_passed": true,
+    "commands_sha256": "31b809f79bf961d642366b4c996f586de717b956202f35cae6b34ecf1c4be009",
+    "format": "fdisbull-zmachine-processor-runtime-paths-1",
+    "limits": [
+      "Processor validates source facts; execution is by unchanged IR and intent runtimes.",
+      "Only the supplied R88 edition and two routes were executed.",
+      "Narrative comparison normalizes whitespace and interpreter status/prompt decoration.",
+      "Unknown call/jump/return targets are not inferred from this observation or promoted into static facts.",
+      "Native DOS captures and process restart were not rerun for this static processor addition."
+    ],
+    "mapping_sha256": "b933d8fb4cf7f739f4c0fe9c0c1c61b306ea0dd64224fd408b41d5f6d4e3bd05",
+    "package_sha256": "9d68e08f4bcb3da6bf16e40b1697fd2e2a2ab119b1891e9b51ead0f45f42c3b5",
+    "processor_sha256": "1099e998869ff73f6dee9b208262cebfdc4a87b1ea550c55569978b2ae37df22",
+    "recorded_at_utc": "2026-10-30T02:00:21.400258+00:00",
+    "source_sha256": "0ae5ac229e79094ff368b6669356444af0f35e21d862a1baaa546989085c15fd",
+    "static_analyses": {
+      "bounded_entry": {
+        "complete": false,
+        "decode_attempts": 1,
+        "decoded_bytes": 9,
+        "frontier_count": 2,
+        "instruction_count": 1,
+        "issues": 0,
+        "routine_candidates": 1,
+        "status": "instruction_budget",
+        "unresolved_transfers": 0,
+        "worklist_drained": false
+      },
+      "entry": {
+        "complete": false,
+        "decode_attempts": 1788,
+        "decoded_bytes": 7572,
+        "frontier_count": 0,
+        "instruction_count": 1788,
+        "issues": 0,
+        "observed_starts_found_statically": 972,
+        "observed_starts_not_discovered_statically": 1539,
+        "routine_candidates": 60,
+        "status": "partial",
+        "unresolved_transfers": 13,
+        "worklist_drained": true
+      },
+      "mailbox": {
+        "complete": true,
+        "decode_attempts": 64,
+        "decoded_bytes": 249,
+        "frontier_count": 0,
+        "instruction_count": 64,
+        "issues": 0,
+        "routine_candidates": 2,
+        "status": "static_worklist_drained",
+        "unresolved_transfers": 0,
+        "worklist_drained": true
+      }
+    },
+    "total_boundaries": 403,
+    "total_commands": 401,
+    "unique_known_transitions": 2571,
+    "unique_observed_instruction_starts": 2511,
+    "unique_retained_runtime_dependent_transitions": 816
+  },
+  "parent_remote_commit": "14617b73c59b0000d6e92750e21b52762b4f3240",
+  "preserved_files": [
+    {
+      "path": "src/fdisbull/zork_uil.py",
+      "sha256": "a4b3a9d07ca5479e6e8ccdf92c5013ea0c95432e6b7d2f8635029f5244c4077a",
+      "unchanged": true
+    },
+    {
+      "path": "src/fdisbull/zork_intents.py",
+      "sha256": "2988a0d8d68d3b10480ff3dbf8f631ae45f57f912518ffc558c07e41edd63cbc",
+      "unchanged": true
+    },
+    {
+      "path": "src/fdisbull/zork_intent_export.py",
+      "sha256": "90028d1074104775a5974fca275c0611f2b79b2317b3466438c23030bb4dd2c5",
+      "unchanged": true
+    },
+    {
+      "path": "player/fdisbull_player/word16.py",
+      "sha256": "f5ca20999a1dea38b03df9386337a43600b54235fe4caffcbfb63a94dabc4168",
+      "unchanged": true
+    },
+    {
+      "path": "player/fdisbull_player/game_intents.py",
+      "sha256": "aab1714faedd38488a0e918e8409cde514815ec1e23df3f663b226fec534675f",
+      "unchanged": true
+    },
+    {
+      "path": "player/fdisbull_player/intent_runtime.py",
+      "sha256": "969c71f221a5013c045d32b12b0ffa2b9c198a6b8ebfb58bbf038e89cadefbeb",
+      "unchanged": true
+    },
+    {
+      "path": "scripts/verify_zork_uil.py",
+      "sha256": "e9265b3ed6c2bdf135f843a3eb1b255ff011e2d5e5f6c04fe9f4aee42aeaec1a",
+      "unchanged": true
+    },
+    {
+      "path": "scripts/verify_zork_intents.py",
+      "sha256": "c55d732a1b2f3bd4ada8f9b040340a1f8933faf4bad2d5f60c4180d849a1d4d6",
+      "unchanged": true
+    },
+    {
+      "path": "tests/test_uil_word16_runtime.py",
+      "sha256": "59a2e87e840a06d643725deddf4e3469f1a93960c56ad5e151804fd7841660c0",
+      "unchanged": true
+    },
+    {
+      "path": "tests/test_zork_uil.py",
+      "sha256": "75a058df42633ea718884580ea90b88f126e20561b572a5ac56e900b922044d3",
+      "unchanged": true
+    },
+    {
+      "path": "tests/test_zork_uil_cli.py",
+      "sha256": "9ed8242d3a9b48dd067f57e3f45c33360b6e801a3ba7b88c9d876d188bb4c19a",
+      "unchanged": true
+    },
+    {
+      "path": "tests/test_game_intents.py",
+      "sha256": "22bf971349a869142d71ccd46310d0838ffcafc3872b69c4be32dae17606979d",
+      "unchanged": true
+    },
+    {
+      "path": "tests/test_zork_intents_mapper.py",
+      "sha256": "d48b9399990f2adb3c261430adc2f020a1397bbca6e56935142ae543118cfd63",
+      "unchanged": true
+    },
+    {
+      "path": "tests/test_zork_intent_runtime.py",
+      "sha256": "61a2e78863b8b27054effd15ddf978210c0f69e59b27e21a274be86af6f18e74",
+      "unchanged": true
+    },
+    {
+      "path": "tests/test_zork_intents_cli.py",
+      "sha256": "a4c3e6a50853d10882f919d98e9553ba0d72850a53f6df4f0670623af30b8b87",
+      "unchanged": true
+    }
+  ],
+  "private_evidence_hashes": {
+    "regressions.json": "35c97d6052d7aa125ddcafb2e1f356cbc7092ea621efc60b736a962515855097",
+    "runtime-paths/verification.json": "e2d7f6d966cba02c6d03f457834544c7b2a20cb990dcb9eea036f25ec1215b00",
+    "source-mapping-check.json": "67db115283d42dc4a0f6a0a3b5fe1da91d1700c9e233159085337d62506b50c2",
+    "verify_runtime_paths.py": "67e0754738a0787570ff880703414f2cf41f9c7bf971f1c983fe466513a1c6b0",
+    "wheel-verification.json": "26ae9501bf707561bd5ac2f0a8fa1b2a451ea16eef4d665fc27697eb20a813ad"
+  },
+  "recorded_at_utc": "2026-10-30T02:04:16.831732+00:00",
+  "result": "feature_checks_passed_with_preexisting_environment_failures",
+  "source_candidate_comparison": {
+    "accepted_exact_raw_fact_count": 55132,
+    "accepted_flow_counts": {
+      "call": 741,
+      "conditional": 24165,
+      "halt": 67,
+      "indirect_call": 39,
+      "indirect_jump": 41,
+      "jump": 603,
+      "next": 27808,
+      "restart": 96,
+      "restore": 22,
+      "return": 1550
+    },
+    "all_rejections_are_stricter_invalid_indirect_variable_references": true,
+    "checks_passed": true,
+    "format": "fdisbull-zmachine-processor-source-mapping-check-1",
+    "inspector_module_sha256": "015e9116cb1e42b4000e22450b81aeb1282b3e28099ce5fd0ba6a4a8e896a1b5",
+    "listing_direct_call": {
+      "call": {
+        "entry": 36453,
+        "initial_locals": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "local_count": 6,
+        "packed_address": 18220,
+        "routine_header": 36440,
+        "status": "routine_candidate"
+      },
+      "candidate_matches_preserved_function": true,
+      "offset": 33006
+    },
+    "literal_mailbox_open_call_count": 0,
+    "literal_mailbox_open_call_hypothesis_supported": false,
+    "literal_mailbox_open_calls": [],
+    "mailbox_dispatch": {
+      "call": {
+        "entry": null,
+        "initial_locals": null,
+        "local_count": null,
+        "packed_address": null,
+        "routine_header": null,
+        "status": "unresolved_variable"
+      },
+      "continuation": 22641,
+      "interpretation": "call takes its packed routine address from the evaluation stack; current stack is not available to static decoding.",
+      "offset": 22637,
+      "operands": [
+        {
+          "kind": "variable",
+          "value": 0
+        }
+      ],
+      "operation": "call",
+      "store": 4,
+      "unresolved_call_preserved": true
+    },
+    "mailbox_header_entry_default_locals_match": true,
+    "mailbox_routine_header": {
+      "entry": 32905,
+      "entry_operation": "test_attr",
+      "initial_locals": [
+        0,
+        0
+      ],
+      "local_count": 2,
+      "routine_header": 32900,
+      "validation": "Independent source header parse matches preserved function candidate. This is not static resolution of the dynamic dispatcher."
+    },
+    "mapping_candidate_count": 55891,
+    "mapping_file_sha256": "b933d8fb4cf7f739f4c0fe9c0c1c61b306ea0dd64224fd408b41d5f6d4e3bd05",
+    "preserved_converter_modified": false,
+    "processor_module_sha256": "1099e998869ff73f6dee9b208262cebfdc4a87b1ea550c55569978b2ae37df22",
+    "raw_fact_mismatch_count": 0,
+    "rejected_candidate_count": 759,
+    "rejection_operation_counts": {
+      "dec": 479,
+      "inc": 131,
+      "inc_chk": 2,
+      "load": 147
+    },
+    "rejection_reasons": {
+      "Invalid indirect variable number": 759
+    },
+    "scope": "Static source candidate decoding parity with preserved IR mapping; does not prove candidate reachability, execution, function discovery, or new game-intent recovery.",
+    "source": {
+      "abbreviations": 496,
+      "checksum": 41257,
+      "checksum_status": "matched",
+      "declared_bytes": 84876,
+      "dictionary": 15137,
+      "file_bytes": 92160,
+      "format": "z-machine",
+      "globals": 8817,
+      "high_memory": 20023,
+      "initial_pc": 20229,
+      "objects": 688,
+      "release": 88,
+      "scope": "raw v3 with length/checksum; early v3 without these fields and other versions unsupported",
+      "serial": "383430373236",
+      "serial_text": "840726",
+      "sha256": "0ae5ac229e79094ff368b6669356444af0f35e21d862a1baaa546989085c15fd",
+      "static_memory": 11859,
+      "trailing_bytes": 7284,
+      "version": 3
+    },
+    "source_candidate_parity_passed": true
+  },
+  "source_inspection_parity": {
+    "all_equal": true,
+    "cases": 12,
+    "original_decode_v3_and_decode_ztext_unchanged": true,
+    "receipt_sha256": "75916d3fb552d1d55dfceb13dde48c507f85c08e50ffdb732ab6803582e5fcb1"
+  },
+  "user_date": "2026-10-29",
+  "user_timezone": "America/New_York",
+  "wheel": {
+    "archive_entry_count": 151,
+    "bytes": 590941,
+    "entry_points": "[console_scripts]\nfdisbull = fdisbull.cli:main\n",
+    "sha256": "a09cae3cd86c4d4627014088a1f9365a2e0381b78040b8b4e1c8356bd3a85a7e"
+  },
+  "wheel_checks": {
+    "build_method": "Installed setuptools.build_meta, no downloads or system installation",
+    "cases": {
+      "authored-analyze": {
+        "entry_point": "fdisbull.cli:main",
+        "every_fdisbull_import_from_exact_wheel": true,
+        "exit_code": 0,
+        "instruction_count": 3,
+        "isolated_mode": true,
+        "source_read_probe_denied": true,
+        "status": "static_worklist_drained",
+        "unexpected_denied_events": 0
+      },
+      "authored-budget": {
+        "entry_point": "fdisbull.cli:main",
+        "every_fdisbull_import_from_exact_wheel": true,
+        "exit_code": 0,
+        "instruction_count": 1,
+        "isolated_mode": true,
+        "source_read_probe_denied": true,
+        "status": "instruction_budget",
+        "unexpected_denied_events": 0
+      },
+      "authored-disasm": {
+        "entry_point": "fdisbull.cli:main",
+        "every_fdisbull_import_from_exact_wheel": true,
+        "exit_code": 0,
+        "instruction_count": 2,
+        "isolated_mode": true,
+        "source_read_probe_denied": true,
+        "status": "control_flow_boundary",
+        "unexpected_denied_events": 0
+      },
+      "direct-processor": {
+        "entry_point": "fdisbull.cli:main",
+        "every_fdisbull_import_from_exact_wheel": true,
+        "exit_code": 0,
+        "isolated_mode": true,
+        "source_read_probe_denied": true,
+        "unexpected_denied_events": 0
+      },
+      "zork-analyze": {
+        "entry_point": "fdisbull.cli:main",
+        "every_fdisbull_import_from_exact_wheel": true,
+        "exit_code": 0,
+        "instruction_count": 1,
+        "isolated_mode": true,
+        "source_read_probe_denied": true,
+        "status": "instruction_budget",
+        "unexpected_denied_events": 0
+      },
+      "zork-disasm": {
+        "entry_point": "fdisbull.cli:main",
+        "every_fdisbull_import_from_exact_wheel": true,
+        "exit_code": 0,
+        "instruction_count": 1,
+        "isolated_mode": true,
+        "source_read_probe_denied": true,
+        "status": "instruction_budget",
+        "unexpected_denied_events": 0
+      }
+    },
+    "distribution_gate_exit_code": 0,
+    "fresh_process_count": 6,
+    "receipt_sha256": "26ae9501bf707561bd5ac2f0a8fa1b2a451ea16eef4d665fc27697eb20a813ad",
+    "result": "passed",
+    "source_unchanged_during_check": true
+  }
+}
