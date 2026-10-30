@@ -228,3 +228,22 @@ relevant branch and effect. A byte sequence that resembles a proximity guard is
 not enough to authorize a semantic mapping or guard waiver. See the interpreter
 and cross-file sections in [methodology.md](methodology.md) and the AGI source
 documentation `docs/AGI_LOGIC.md`.
+
+## Linux and generated C realization
+
+`build-udc-shell` additionally accepts `target:"linux-x64"`, explicit
+`service_adapters`, optional Linux `capture_state` and `c_compiler`. The default
+remains Windows PE64. The Linux output uses the shared private math ABI inside a
+static ELF64 shell; its public System V entry and Linux services are adapters.
+A notification needs the explicit linux-stdout/no-acknowledgment profile. A UI
+provider change is not automatically effect-equivalent.
+
+`implementation.backend:"c-uil"` realizes supported pure word-scalar UIL as
+generator-owned freestanding C through an explicit Clang executable. It retains
+source, compiler, object and native text identities. This is not a general C
+parser or an independent source oracle. Native object relocations, unsupported
+effects/types and unimplemented contract profiles refuse. Model qualification,
+source preservation, compiler output and native execution remain separate.
+Capture descriptor3 observations only in the explicit analysis profile, validate
+complete frames and bind the executable/process identity before making claims.
+Source-checkout docs/UDC_LINUX_AND_C.md records the actual pilot and limits.

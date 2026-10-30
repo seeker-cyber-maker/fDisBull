@@ -223,16 +223,21 @@ def selected_addition(project, order):
 
 
 @pytest.mark.parametrize('order', ['left-first', 'right-first'])
-def test_real_selected_database_qualifier_adapter_pe_and_native_notification(tmp_path, order):
+@pytest.mark.parametrize('backend', ['uil', 'c-uil'])
+def test_real_selected_database_qualifier_adapter_pe_and_native_notification(tmp_path, order,backend):
     names = ('FDISBULL_PE_QEMU', 'FDISBULL_PE_KERNEL', 'FDISBULL_PE_INITRAMFS')
     if any(not os.environ.get(name) for name in names):
         if os.environ.get('FDISBULL_REQUIRE_PE') == '1': pytest.fail('Supply real PE runtime inputs')
         pytest.skip('Supply real PE runtime inputs for selected-shell acceptance')
     with create(tmp_path) as project:
         selected, plan = selected_addition(project, order)
+        if backend=='c-uil':
+            layer=deepcopy(project.udl_layer_info(selected['document']['bindings']['math'],full=True)['document'])
+            layer['implementation']['backend']='c-uil';replacement=register_layer(project,layer)
+            selected=select_layers(project,order+'.C',{**selected['document']['bindings'],'math':replacement['id']},program=selected['document']['program'])
         source_hash = project.meta['source_sha256']
     with Project(tmp_path / 'authored.fdb') as project:
-        built = build_selection_shell(project, selected['id'], plan, tmp_path / 'native')
+        built = build_selection_shell(project, selected['id'], plan, tmp_path / 'native',c_compiler=__import__('shutil').which('clang'))
         assert built['qualification']['math']['status'] == 'equivalent_under_contract'
         assert built['qualification']['math']['method'] == 'bounded-scalar-z3'
         assert project.meta['source_sha256'] == source_hash
@@ -257,3 +262,28 @@ def test_real_selected_database_qualifier_adapter_pe_and_native_notification(tmp
             exited = debug.run(timeout_ms=60000)
             assert exited['outcome'] == 'exited' and exited['session']['exit_code'] == 0
         assert debug.rpc.process.poll() is not None
+
+
+def test_linux_bridge_preserves_pinned_definitions_and_requires_service_profile(tmp_path):
+ from fdisbull.cli import respond
+ with create(tmp_path) as p:
+  s,plan,cid,lid=setup(p)
+ r=respond({'method':'build-udc-shell','params':{'project':str(tmp_path/'authored.fdb'),'selection':s['id'],'plan':plan,'destination':str(tmp_path/'linux'),'target':'linux-x64','service_adapters':{'present':{'backend':'linux-stdout','acknowledgment':'none'}},'capture_state':True}})
+ assert r['ok'],r
+ assert r['result']['target']['format']=='ELF64' and r['result']['layer_ids']['math']==lid
+ capsule=json.loads((tmp_path/'linux/selection-capsule.json').read_text());assert capsule['selection']==s['id']
+ with Project(tmp_path/'authored.fdb') as p:
+  doc=deepcopy(p.contract_info(cid,full=True)['document'])
+  with pytest.raises(ValueError,match='unsupported native shell target'):build_selection_shell(p,s['id'],plan,tmp_path/'bad',target='unknown')
+  with pytest.raises(ValueError,match='cannot be ignored'):build_selection_shell(p,s['id'],plan,tmp_path/'bad',capture_state=True)
+
+
+def test_native_service_cannot_silently_drop_contract_profile_obligations(tmp_path):
+ with create(tmp_path) as p:
+  s,plan,cid,lid=setup(p);service=p.udl_layer_info(s['document']['bindings']['present'],full=True)['document']
+  c=p.contract_info(service['contract'],full=True)['document'];c['behavior']['profile']={'acknowledgment':'required'}
+  new=register_contract(p,c);service['contract']=new['id'];layer=register_layer(p,service)
+  chosen=select_layers(p,'profile',{'math':lid,'present':layer['id']})
+  with pytest.raises(ValueError,match='profile obligations'):
+   build_selection_shell(p,chosen['id'],plan,tmp_path/'bad',target='linux-x64',service_adapters={'present':{'backend':'linux-stdout','acknowledgment':'none'}})
+ assert not (tmp_path/'bad').exists()

@@ -254,6 +254,8 @@ behavior, isolated original instructions and new native output.
 The [shared-UIL milestone](docs/milestones/2026-10-30-shared-uil-native-shells.md)
 records the demonstrated results and the next step: reusing the same semantic
 modules across different program shells.
+The [Linux and C pilot](docs/UDC_LINUX_AND_C.md) demonstrates shared native module
+bytes across Windows and Linux, plus C regeneration of supported scalar logic.
 
 ## Status, testing and history
 

@@ -369,3 +369,12 @@ comparisons, native/provider boundaries and emitted artifacts. Runtime tests
 can skip when their separately prepared dependency or native backend is
 unavailable; a skipped test establishes no native result. Game inputs,
 byte-retaining projects, compiler capsules and native traces remain outside Git.
+
+## Linux scaffolds and compiled C backings
+
+The [Linux/C follow-up](UDC_LINUX_AND_C.md) adds `target="linux-x64"` and
+an optional `c-uil` scalar realization with an explicit `c_compiler`. Shared UIL
+and private module ABI remain fixed; the shell, public ABI and service bindings
+are target-specific. Linux stdout requires a declared no-acknowledgment adapter.
+Generated C, compiler/object identities and actual native observations are
+separate qualification edges. The builder never executes its emitted program.
