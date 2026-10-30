@@ -61,7 +61,7 @@ class Native:
 
     def click(self,x,y,**kw):
         self.inputs.append(('click',x,y))
-        choices={('menu',189,138):'confirm',('confirm',148,106):'menu',
+        choices={('menu',160,170):'live',('menu',189,138):'confirm',('confirm',148,106):'menu',
                  ('confirm',175,106):'save',('save',148,115):'title',('title',221,160):'exited'}
         self.destination=choices[(self.view,x,y)]
         self.remaining=self.exit_delay if self.destination=='exited' else 1

@@ -205,10 +205,10 @@ class TerminalScenes:
         expected = {'open':('menu',), 'resume':('live',), 'quit':('confirm',),
                     'cancel':('menu','live'), 'confirm':('save','title'),
                     'decline':('title',), 'exit':('exited',)}[action]
-        if action in ('open','resume'):
+        if action == 'open':
             control = ('key','escape')
         else:
-            point = {'quit':(189,138),'cancel':(148,106),'confirm':(175,106),
+            point = {'resume':(160,170),'quit':(189,138),'cancel':(148,106),'confirm':(175,106),
                      'decline':(148,115),'exit':(221,160)}[action]
             moved = self.text.debug.call('input.mouse.move',{'x':point[0],'y':point[1]})
             if moved.get('accepted') is not True:
