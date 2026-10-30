@@ -23,6 +23,7 @@
     "Recognize an original quarter acknowledgment returning to the street without claiming park entry or automatically replaying its earlier click.",
     "Expose recognized parking advice before food-order submission; acknowledge with original Enter and qualify the resumed diner/menu/street before a new purchase intent.",
     "Treat a uniquely recognized parking advice during park entry or time advancement as an explicit continuable modal, preserving its actual destination and partial travel status.",
-    "Derive a 32-exact-anchor park view excluding the occupied first-pen actor region; retain the raw 40-anchor operating profile for native-save identity and record the applied variant digest."
+    "Derive a 32-exact-anchor park view excluding the occupied first-pen actor region; retain the raw 40-anchor operating profile for native-save identity and record the applied variant digest.",
+    "Prepare the saved park-exit target with released movement and 1000 guest milliseconds before its single original click, as with the qualified catalogue exit."
   ]
 }

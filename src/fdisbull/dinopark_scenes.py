@@ -256,7 +256,8 @@ def prepare_scene_pointer(debug, scene, event, *, object_name='office.bank'):
     callbacks. Do not merge movement and press or repeat a timed-out press.
     """
     commands={'office.bank':'go bank','bank.payoff':'repay',
-              'bank.borrow':'borrow','bank.back':'go office','mart.back':'go street'}
+              'bank.borrow':'borrow','bank.back':'go office','mart.back':'go street',
+              'park.back':'go street'}
     if object_name not in commands:
         raise ValueError('Unqualified named control')
     document=debug.project.debug_scene_info(scene,version=debug.version['id'])['definition']
@@ -271,7 +272,7 @@ def prepare_scene_pointer(debug, scene, event, *, object_name='office.bank'):
     frame=before['frame']
     moved=debug.call('input.mouse.move',{'x':point[0],'y':point[1],
         'mode_id':frame['mode_id'],'frame_id':frame['frame_id']})
-    settle_ms = 1000 if object_name == 'mart.back' else 150
+    settle_ms = 1000 if object_name in ('mart.back', 'park.back') else 150
     run_guest(debug,settle_ms)
     after=debug.call('input.mouse.state')['mouse']
     if (after['buttons'] or after['release_pending'] or
@@ -314,7 +315,7 @@ def catalogue_pan_valid(text, frame, image, selector):
 
 
 class BankInputSession:
-    """Prepare bank controls and catalogue exit; delegate other native calls."""
+    """Prepare bank controls and catalogue/park exits; delegate other native calls."""
     def __init__(self, native, event):
         self.native, self.event = native, event
 
@@ -322,7 +323,7 @@ class BankInputSession:
         return getattr(self.native,name)
 
     def scene_click(self, scene, object, **options):
-        if object in ('office.bank','bank.payoff','bank.borrow','bank.back','mart.back'):
+        if object in ('office.bank','bank.payoff','bank.borrow','bank.back','mart.back','park.back'):
             prepare_scene_pointer(self.native,scene,self.event,object_name=object)
         return self.native.scene_click(scene,object,**options)
 

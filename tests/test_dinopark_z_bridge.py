@@ -230,7 +230,8 @@ def test_held_pointer_never_sends_bank_move_or_press():
 
 
 @pytest.mark.parametrize('control,point,command', [
-    ('bank.borrow', [50, 187], 'borrow'), ('mart.back', [216, 187], 'go street')])
+    ('bank.borrow', [50, 187], 'borrow'), ('mart.back', [216, 187], 'go street'),
+    ('park.back', [173, 187], 'go street')])
 def test_named_adapter_lets_guest_consume_new_control_before_press(control,point,command):
     from fdisbull.dinopark_scenes import BankInputSession
     events=[]
