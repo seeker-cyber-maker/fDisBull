@@ -334,7 +334,7 @@ class DOSMixin(DOSViewsMixin):
                         if ins is None or any(a<int(b[0],16)+b[1] and a+(ins['size'] if ins else 1)>int(b[0],16) for b in blocked):
                             self.db.execute("UPDATE work SET state='invalid',detail='invalid bytes, CS boundary or explicit data definition' WHERE version=? AND context=? AND address=?",(v,context,key(a)))
                             continue
-                        inserted=self.db.execute('INSERT OR IGNORE INTO instructions VALUES (?,?,?,?,?,?,?,?,?)',(v,context,key(a),ins['size'],ins['bytes'],ins['mnemonic'],ins['operands'],ins['flow'],key(ins['target']) if ins['target'] is not None and ins['target']<0x100000 else None))
+                        inserted=self.db.execute('INSERT OR IGNORE INTO instructions VALUES (?,?,?,?,?,?,?,?,?)',(v,context,key(a),ins['size'],self._instruction_hex(ins['bytes']),ins['mnemonic'],ins['operands'],ins['flow'],key(ins['target']) if ins['target'] is not None and ins['target']<0x100000 else None))
                         decoded+=inserted.rowcount
                         self._memory_facts(v,context,a,bytes.fromhex(ins['bytes']),selector,state)
                         self._dos_note_segment(v,selector,'code',{'kind':'recursive instruction decode'})

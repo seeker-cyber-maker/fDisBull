@@ -22,6 +22,15 @@ play an authored text projection without opening the debugger yourself.
 >
 > Must bring your own weapons. I have only done this once before. Safety not guaranteed.
 
+**Do not upload game binaries or game files.** Keep originals, modified binaries,
+assets, story images, saves and byte-containing databases/archives private.
+New FDBs reference private external payloads by size and SHA-256. A divergent
+source requires explicit approval for its exact identity and base before it
+can become a separate analysis layer. Semantic UIL/game representations remain
+allowed pending sanitation; embedded original files are excluded. See
+[external targets and publication policy](docs/EXTERNAL_TARGETS.md) for scope,
+legacy migration and remaining export limits.
+
 ## Choose a starting point
 
 | I want to… | Start here |

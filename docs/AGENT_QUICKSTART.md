@@ -4,6 +4,15 @@ Use this page to find the right fDisBull interface for a task. Replace every
 example path with a path selected by the user. The Python distribution does not
 include a native emulator, game files, saved states or project databases.
 
+Do not upload original or modified game binaries/assets, story files, saves,
+emulator states or raw game-containing databases/archives. New FDBs store
+external payload references with exact size/SHA-256 and loader provenance;
+the private object store is never a publication artifact. See
+[external targets](EXTERNAL_TARGETS.md) for explicit divergent-source approval,
+separate analysis, legacy migration and remaining export limits. Semantic
+UIL/game representations are permitted pending sanitation, without embedded
+original files. Hash equality is byte identity, not publisher authenticity.
+
 ## Discover commands and bundled skills
 
 ```text

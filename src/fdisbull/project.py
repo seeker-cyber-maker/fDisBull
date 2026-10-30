@@ -1,6 +1,6 @@
 """Versioned SQLite store and bounded recursive control-flow traversal."""
 from collections import deque
-from contextlib import contextmanager
+from contextlib import contextmanager, closing
 import hashlib
 import json
 from pathlib import Path
@@ -8,9 +8,12 @@ import sqlite3
 from datetime import datetime, timezone
 
 from .model import Region
+from .target_storage import STORAGE, connect, identity
+from .target_sources import TargetSourcesMixin, SOURCES_DDL
+import uuid
 
 MAX_ADDRESS = (1 << 64) - 1
-SCHEMA = 8
+SCHEMA = 9
 
 def number(value):
     if isinstance(value, bool) or not isinstance(value, (int, str)):
@@ -79,17 +82,20 @@ from .debugger import DebugProjectMixin, DEBUG_DDL
 from .proofs import ProofProjectMixin, PROOF_DDL
 
 
-class Project(CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
+class Project(TargetSourcesMixin, CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
+
     def __init__(self, path):
         self.path = Path(path).resolve()
         if not self.path.is_file():
             raise ValueError(f"project does not exist: {self.path}")
-        self.db = sqlite3.connect(self.path, timeout=30)
+        # Detect the storage contract before any legacy additive migration.
+        with closing(sqlite3.connect(self.path, timeout=30)) as probe:
+            external = dict(probe.execute('SELECT key,value FROM metadata')).get('storage') == json.dumps(STORAGE)
+        self.db = connect(self.path, external=external)
         self._live_debuggers = []
-        self.db.row_factory = sqlite3.Row
         try:
             meta = dict(self.db.execute("SELECT key,value FROM metadata"))
-            if meta.get("application") != "fdisbull" or int(meta.get("schema", -1)) not in (1,2,3,4,5,6,7,SCHEMA):
+            if meta.get("application") != "fdisbull" or int(meta.get("schema", -1)) not in (1,2,3,4,5,6,7,8,SCHEMA):
                 raise ValueError("unsupported project schema")
             if int(meta["schema"]) == 1:
                 self.db.executescript("BEGIN IMMEDIATE;" + EXTENSION_DDL + "INSERT OR IGNORE INTO analysis_state SELECT id,0,0 FROM versions; UPDATE work SET state='pending',detail=NULL; UPDATE metadata SET value='2' WHERE key='schema'; COMMIT;")
@@ -104,7 +110,10 @@ class Project(CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateR
             self.meta = {k:json.loads(v) for k,v in meta.items() if k not in ("application","schema")}
             self.arch, self.bits = self.meta["arch"], self.meta["bits"]
             self.context = f"{self.arch}:{self.bits}:little"
-            self.db.executescript(DEBUG_DDL+PROOF_DDL)
+            self.db.executescript(DEBUG_DDL+PROOF_DDL+SOURCES_DDL)
+            if external and int(meta["schema"]) != SCHEMA:
+                self.db.execute("UPDATE metadata SET value=? WHERE key='schema'", (str(SCHEMA),))
+                self.db.commit()
             self.db.execute("PRAGMA foreign_keys=ON")
             self.db.execute("PRAGMA busy_timeout=30000")
         except Exception:
@@ -139,10 +148,10 @@ class Project(CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateR
         from .loader import load_image
         source = Path(binary)
         image = load_image(source, **options)
-        return cls._create_image(path,source.name,image)
+        return cls._create_image(path,source.name,image,loader_options=options)
 
     @classmethod
-    def _create_image(cls,path,filename,image):
+    def _create_image(cls,path,filename,image,loader_options=None):
         """Persist the exact validated immutable image without rereading its file."""
         # Validate our stable mapping independently of individual loader formats.
         ordered = sorted(image.regions, key=lambda r:r.start)
@@ -161,13 +170,13 @@ class Project(CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateR
         with target.open("xb"):
             pass
         try:
-            db = sqlite3.connect(target)
+            db = connect(target, external=True)
             try:
                 db.executescript(DDL + EXTENSION_DDL + DOS_DDL + FACTS_DDL + TYPE_DDL + ADVANCED_DDL + EXTERNAL_FILES_DDL + FILE_REFERENCES_DDL + SHARED_LABELS_DDL)
                 db.execute("PRAGMA journal_mode=WAL")
                 meta = {"arch":image.arch,"bits":image.bits,"format":image.format,"entry":image.entry,
                         "filename":filename,"source_sha256":image.metadata["source_sha256"],
-                        "loader_metadata":image.metadata}
+                        "loader_metadata":image.metadata,"storage":STORAGE,"project_id":uuid.uuid4().hex}
                 db.executemany("INSERT INTO metadata VALUES (?,?)",
                     [("application","fdisbull"),("schema",str(SCHEMA))] + [(k,json.dumps(v)) for k,v in meta.items()])
                 db.execute("INSERT INTO versions VALUES (1,NULL,?,?,?,?)",
@@ -176,13 +185,7 @@ class Project(CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateR
                 for r in image.regions:
                     if r.data:
                         db.execute("INSERT INTO regions VALUES (?,?,?,?,?,?)",(1,r.name,key(r.start),r.data,r.executable,r.writable))
-                for seed in image.seeds:
-                    address = key(seed.address)
-                    db.execute("INSERT OR IGNORE INTO functions(version,context,address,name,source) VALUES (1,?,?,?,?)",
-                        (context,address,seed.name,seed.source))
-                    if seed.address == image.entry:
-                        db.execute("INSERT OR IGNORE INTO work(version,context,address,reason) VALUES (1,?,?,?)",
-                            (context,address,seed.source))
+                cls._seed_image(db, image, 1, context)
                 db.commit()
                 db.execute("PRAGMA wal_checkpoint(TRUNCATE)")
             finally:
@@ -191,6 +194,20 @@ class Project(CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateR
             try:
                 with project.transaction(True):
                     project._init_information(image)
+                    from . import __version__
+                    if loader_options is None:
+                        # Existing internal module imports have a known selected image.
+                        loader_options = {'module': True, 'entry': image.entry}
+                        if image.format == 'raw':
+                            loader_options.update(arch=image.arch, bits=image.bits, base=image.regions[0].start)
+                        elif image.format == 'COM':
+                            loader_options.update(image='com', load_segment=image.metadata['dos']['load_segment'])
+                        if image.metadata.get('slice_arch'):
+                            loader_options['slice_arch'] = image.metadata['slice_arch']
+                    source_record = {'identity':identity(image.source_bytes),'format':image.format,
+                                     'arch':image.arch,'bits':image.bits,'loader_options':loader_options,
+                                     'loader':{'name':'fdisbull.load_image','version':__version__},'schema':SCHEMA}
+                    project.db.execute('INSERT INTO target_sources VALUES (?,?)', (1,json.dumps(source_record)))
                 return project
             except BaseException:
                 project.db.close()
@@ -200,6 +217,17 @@ class Project(CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateR
             Path(str(target)+"-wal").unlink(missing_ok=True)
             Path(str(target)+"-shm").unlink(missing_ok=True)
             raise
+
+    @staticmethod
+    def _seed_image(db, image, version, context):
+        """Use identical initial roots for imports and approved source layers."""
+        for seed in image.seeds:
+            address = key(seed.address)
+            db.execute("INSERT OR IGNORE INTO functions(version,context,address,name,source) VALUES (?,?,?,?,?)",
+                       (version, context, address, seed.name, seed.source))
+            if seed.address == image.entry:
+                db.execute("INSERT OR IGNORE INTO work(version,context,address,reason) VALUES (?,?,?,?)",
+                           (version, context, address, seed.source))
 
     @staticmethod
     def digest(regions):
@@ -236,7 +264,8 @@ class Project(CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateR
             counts = {table:self.db.execute(f"SELECT count(*) FROM {table} WHERE version=?",(v["id"],)).fetchone()[0]
                       for table in ("instructions","functions","xrefs","annotations")}
             work = dict(self.db.execute("SELECT state,count(*) FROM work WHERE version=? GROUP BY state",(v["id"],)))
-            regions = [{"name":r.name,"start":hx(r.start),"size":len(r.data),"executable":r.executable,"writable":r.writable} for r in self.regions(v["id"])]
+            regions = [{"name":r['name'],"start":hx(int(r['start'],16)),"size":r['size'],"executable":bool(r['executable']),"writable":bool(r['writable'])}
+                       for r in self.db.execute('SELECT name,start,fdb_length(data) AS size,executable,writable FROM regions WHERE version=? ORDER BY start',(v['id'],))]
             metadata=dict(self.meta)
             if self.meta['format'] in ('MZ', 'COM'):
                 loader=dict(metadata['loader_metadata'])
@@ -258,7 +287,7 @@ class Project(CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateR
                 loader['le'] = le
                 metadata['loader_metadata'] = loader
             return {"project":str(self.path),**metadata,"entry":hx(self.meta["entry"]),"context":self.context,
-                    "version":v,"counts":counts,"work":work,"regions":regions,"analysis":self.analysis_status(v['id'])}
+                    "storage":self.meta.get("storage","legacy-embedded"),"selected_source_sha256":self.source_sha256(v["id"]),"version":v,"counts":counts,"work":work,"regions":regions,"analysis":self.analysis_status(v['id'])}
 
     def _stored_analysis_status(self,version=None):
         """Current persisted queue state, independent of historical run receipts."""
@@ -371,7 +400,7 @@ class Project(CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateR
                     display += ' ; ' + ', '.join(ref['name'] + (f" <{ref['representation']}>" if ref['representation'] else '') for ref in references)
                 display,file_refs,file_refs_summary=self._file_reference_display(v['id'],self.context,int(r['address'],16),display)
                 result.append({"references":references,"file_references":file_refs,"file_reference_summary":file_refs_summary,"display_operands":display,"address":address_hex,"size":r["size"],"bytes":r["bytes"],"mnemonic":r["mnemonic"],"operands":r["operands"],"flow":r["flow"],"target":hx(int(r["target"],16)) if r["target"] else None,"name":self._shared_name(v["id"],("memory","",int(r["address"],16))) or r["name"] or (self._label(v["id"],int(r["address"],16)) if fn or self._signature_name(v["id"],self.context,int(r["address"],16)) else None),"comment":r["comment"],"comment_author":r["comment_author"],"comment_inherited_from":r["comment_inherited_from"],"xrefs":self.xrefs(address_hex,"to",v["id"]),"context":self.context})
-            return {"title":self.meta["filename"],"arch":self.arch,"bits":self.bits,"context":self.context,"version":v["id"],"sha256":v["sha256"],"source_sha256":self.meta["source_sha256"],"address":hx(a),"instructions":result,"analysis":self.analysis_status(v['id']),"view":"stored instructions ordered by address; gaps are not decoded implicitly"}
+            return {"title":self.meta["filename"],"arch":self.arch,"bits":self.bits,"context":self.context,"version":v["id"],"sha256":v["sha256"],"source_sha256":self.source_sha256(v["id"]),"address":hx(a),"instructions":result,"byte_cache_available":all(bool(row["bytes"]) for row in result),"analysis":self.analysis_status(v['id']),"view":"stored instructions ordered by address; gaps are not decoded implicitly"}
 
     def patch(self, address, data, label="patch", origin="agent supplied bytes", version=None):
         a = self._address(address)
@@ -447,6 +476,7 @@ class Project(CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateR
                 self._index_symbols(v,document)
             self._copy_interpretations(parent,v)
             self._reset_analysis(v)
+            self._record_derived_source(parent, v)
             return {"version":v,"parent":parent,"address":hx(a),"bytes":replacement.hex(),"sha256":self.version(v)["sha256"],"annotations":"inherited; semantic validity requires review","analysis":"fresh work queue; previous analysis preserved in parent"}
 
     def issues(self, version=None, limit=200):

@@ -212,7 +212,7 @@ class MacroProjectMixin:
         if not isinstance(author,str) or not 1<=len(author)<=256:raise ValueError('Invalid macro author')
         v=self.version(version)
         if parent is not None:self.debug_macro_info(parent,version=v['id'])
-        doc={'definition':definition,'binding':{'version':v['id'],'version_sha256':v['sha256'],'source_sha256':self.meta['source_sha256']},'author':author,'parent':parent}
+        doc={'definition':definition,'binding':{'version':v['id'],'version_sha256':v['sha256'],'source_sha256':self.source_binding_sha256(v['id'])},'author':author,'parent':parent}
         text=encode(doc);sha=hashlib.sha256(text.encode()).hexdigest()
         from .project import now
         with self.transaction(True):
@@ -226,7 +226,7 @@ class MacroProjectMixin:
         if hashlib.sha256(encode(doc).encode()).hexdigest()!=row['sha256'] or row['id']!=row['sha256']:raise ValueError('Macro manifest hash mismatch')
         if not isinstance(doc,dict) or set(doc)!={'definition','binding','author','parent'} or row['author']!=doc['author'] or row['parent']!=doc['parent']:
             raise ValueError('Macro record metadata mismatch')
-        if doc['binding']!={'version':v['id'],'version_sha256':v['sha256'],'source_sha256':self.meta['source_sha256']}:raise ValueError('Macro source binding mismatch')
+        if doc['binding']!={'version':v['id'],'version_sha256':v['sha256'],'source_sha256':self.source_binding_sha256(v['id'])}:raise ValueError('Macro source binding mismatch')
         validate_macro_set(doc['definition'])
         return {k:row[k] for k in ('id','version','parent','author','sha256','created')}|doc
 
@@ -251,7 +251,7 @@ class MacroProjectMixin:
         if len(encoded.encode())>1024*1024 or not isinstance(envelope['sha256'],str) or hashlib.sha256(encoded.encode()).hexdigest()!=envelope['sha256']:
             raise ValueError('Macro export hash mismatch or excessive size')
         v=self.version(version)
-        if envelope['binding']!={'version_sha256':v['sha256'],'source_sha256':self.meta['source_sha256']}:
+        if envelope['binding']!={'version_sha256':v['sha256'],'source_sha256':self.source_binding_sha256(v['id'])}:
             raise ValueError('Macro export source or version mismatch')
         _portable(envelope['definition'])
         return self.debug_define_macros(envelope['definition'],version=v['id'],author=author)

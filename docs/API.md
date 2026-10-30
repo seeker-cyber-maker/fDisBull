@@ -582,3 +582,10 @@ Native macOS Apple Silicon debugger acceptance is documented in [DOSBOX_DEBUGGER
 ```
 
 See [ADVANCED_ANALYSIS.md](ADVANCED_ANALYSIS.md) for the decoder-neutral expressions, solver contracts and current CPU coverage.
+
+
+Source identities, external payload storage, exact divergent-source approval
+receipts and explicit legacy derivatives are documented in
+[External targets](EXTERNAL_TARGETS.md). The JSON methods are `storage-info`,
+`migrate-external`, `source-info`, `source-candidate`, `bind-source` and
+`new-source-analysis`. Source binding is static and does not run the candidate.

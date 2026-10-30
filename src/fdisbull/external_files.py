@@ -61,7 +61,7 @@ class ExternalFilesMixin:
         """Return metadata without fetching the possibly large snapshot BLOB."""
         name = _file_name(name)
         row = self.db.execute(
-            'SELECT version,name,filename,kind,sha256,length(data) AS size,author '
+            'SELECT version,name,filename,kind,sha256,fdb_length(data) AS size,author '
             'FROM external_files WHERE version=? AND name=?', (v, name)).fetchone()
         if row is None:
             raise ValueError(f'unknown external file: {name}')
@@ -97,7 +97,7 @@ class ExternalFilesMixin:
                     raise ValueError('external file name already has different immutable bytes in this version')
                 return dict(self._external_file(v, name), created=False, idempotent=True)
             total = self.db.execute(
-                'SELECT coalesce(sum(length(data)),0) FROM external_files WHERE version=?', (v,)).fetchone()[0]
+                'SELECT coalesce(sum(fdb_length(data)),0) FROM external_files WHERE version=?', (v,)).fetchone()[0]
             if total + len(data) > MAX_EXTERNAL_BYTES_PER_VERSION:
                 raise ValueError('external files exceed the 64 MiB aggregate limit for this version')
             self.db.execute('INSERT INTO external_files VALUES (?,?,?,?,?,?,?)',
@@ -110,9 +110,9 @@ class ExternalFilesMixin:
         with self.transaction():
             v = self.version(version)['id']
             total, total_bytes = self.db.execute(
-                'SELECT count(*),coalesce(sum(length(data)),0) FROM external_files WHERE version=?', (v,)).fetchone()
+                'SELECT count(*),coalesce(sum(fdb_length(data)),0) FROM external_files WHERE version=?', (v,)).fetchone()
             rows = self.db.execute(
-                'SELECT e.version,e.name,e.filename,e.kind,e.sha256,length(e.data) AS size,e.author,'
+                'SELECT e.version,e.name,e.filename,e.kind,e.sha256,fdb_length(e.data) AS size,e.author,'
                 '(SELECT count(*) FROM file_type_bindings b WHERE b.version=e.version AND b.file=e.name) AS binding_count '
                 'FROM external_files e WHERE e.version=? ORDER BY e.name LIMIT ? OFFSET ?',
                 (v, limit, offset)).fetchall()
@@ -128,7 +128,7 @@ class ExternalFilesMixin:
             if offset > row['size']:
                 raise ValueError('file offset exceeds the external file size')
             raw = bytes(self.db.execute(
-                'SELECT substr(data,?,?) FROM external_files WHERE version=? AND name=?',
+                'SELECT fdb_substr(data,?,?) FROM external_files WHERE version=? AND name=?',
                 (offset + 1, size, v, row['name'])).fetchone()[0])
             return dict(version=v, file=row['name'], offset=offset, file_size=row['size'],
                         requested_size=size, size=len(raw), bytes=raw.hex(),
@@ -162,7 +162,7 @@ class ExternalFilesMixin:
         """Check all dependent bindings against a proposed type registry."""
         previous_file, previous_end, sizes = None, 0, []
         for row in self.db.execute(
-                'SELECT b.*,length(e.data) AS file_size FROM file_type_bindings b '
+                'SELECT b.*,fdb_length(e.data) AS file_size FROM file_type_bindings b '
                 'LEFT JOIN external_files e ON e.version=b.version AND e.name=b.file '
                 'WHERE b.version=? ORDER BY b.file,b.offset', (v,)):
             size = type_layout(row['type_name'], registry)['size']
@@ -215,7 +215,7 @@ class ExternalFilesMixin:
             if offset + layout['size'] > metadata['size']:
                 raise ValueError('file type binding exceeds its external file')
             data = bytes(self.db.execute(
-                'SELECT substr(data,?,?) FROM external_files WHERE version=? AND name=?',
+                'SELECT fdb_substr(data,?,?) FROM external_files WHERE version=? AND name=?',
                 (offset + 1, layout['size'], v, file)).fetchone()[0])
             items, truncated, work = [], False, 0
             work_limit = max_items * 32 + 1024

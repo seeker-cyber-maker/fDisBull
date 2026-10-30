@@ -115,7 +115,7 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
 
     def debug_artifacts(self, version=None, run=None):
         v = self.version(version)['id']
-        rows = self.db.execute('''SELECT a.id,a.run,a.name,a.kind,a.sha256,length(a.data) AS size,a.metadata
+        rows = self.db.execute('''SELECT a.id,a.run,a.name,a.kind,a.sha256,fdb_length(a.data) AS size,a.metadata
             FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run
             WHERE r.version=? AND (? IS NULL OR r.id=?) ORDER BY a.rowid''',(v,run,run))
         return {'version':v,'artifacts':[{**dict(r),'metadata':json.loads(r['metadata'])} for r in rows]}
@@ -219,13 +219,13 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
         result = dict(artifact=identifier,run=run,version=row['version'],name=name,kind=kind,
                       sha256=digest,size=len(data),metadata=metadata)
         with self.transaction(True):
-            used = self.db.execute('SELECT coalesce(sum(length(data)),0) FROM debug_artifacts').fetchone()[0]
+            used = self.db.execute('SELECT coalesce(sum(fdb_length(data)),0) FROM debug_artifacts').fetchone()[0]
             if used+len(data) > 256*1024*1024:
                 raise ValueError('Project runtime artifact budget exceeds 256 MiB')
             self.db.execute('INSERT INTO debug_artifacts VALUES (?,?,?,?,?,?,?)',
                 (identifier,run,name,kind,digest,data,json.dumps(metadata)))
             self.db.execute('INSERT INTO debug_events(run,created,operation,evidence) VALUES (?,?,?,?)',
-                            (run,stamp(),'artifact',json.dumps(result)))
+                            (run,stamp(),'artifact',self._external_text(json.dumps(result))))
         return result
 
     def debug_grid(self, artifact, *, name='coordinate-grid.png', step=32, target=None):
@@ -392,7 +392,7 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
     def _event(self, operation, evidence):
         with self.project.transaction(True):
             self.project.db.execute('INSERT INTO debug_events(run,created,operation,evidence) VALUES (?,?,?,?)',
-                                    (self.run_id,stamp(),operation,json.dumps(evidence)))
+                                    (self.run_id,stamp(),operation,self.project._external_text(json.dumps(evidence))))
             state = evidence.get('state') or evidence.get('session',{}).get('state')
             if state:
                 self.project.db.execute('UPDATE debug_runs SET state=? WHERE id=?',(state,self.run_id))
