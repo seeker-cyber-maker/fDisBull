@@ -32,3 +32,22 @@ def test_fetch_trace_is_not_upgraded_to_completed_instructions():
 def test_unknown_machine_stop_does_not_guess_watchpoint_timing():
     result=normalize_stop('qemu-machine',{'kind':'watchpoint','address':'0x1000'},outcome='watchpoint')
     assert result['instruction_completed'] is None and result['registers_stage']=='stopped; stage unknown'
+
+
+def test_dos_guest_exit_retains_process_evidence_without_inventing_final_registers():
+    exit_info={'psp':'0x0814','parent_psp':'0x071B','requested_exit_code':37,
+               'resident':False,'source':'DOS_Terminate','stage':'after-process-cleanup'}
+    for kind in ('guest_exit','guest_tsr'):
+        native={'kind':kind,'guest_exit':{**exit_info,'resident':kind=='guest_tsr'}}
+        result=normalize_stop('dosbox',native,outcome=kind)
+        assert result['guest_exit']==native['guest_exit']
+        assert result['context']=='dos-process' and result['trigger']==kind
+        assert result['causing_instruction'] is None and result['resume_pc'] is None
+        assert result['instruction_completed'] is None
+        assert result['registers_stage']=='after-process-cleanup; target registers unavailable'
+
+
+def test_session_shutdown_does_not_acquire_guest_exit_evidence():
+    result=normalize_stop('dosbox',{'kind':'program_exit'},outcome='program_exit')
+    assert 'guest_exit' not in result
+    assert result['context']=='dos-cpu'

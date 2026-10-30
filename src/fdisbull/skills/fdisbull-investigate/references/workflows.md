@@ -70,6 +70,13 @@ screenshots and traces are stored in the project and can be exported later;
 exporting an existing artifact is different from claiming a fresh capture.
 Checkpoint restore does not roll back mounted host files or external services.
 
+For a rebuilt DOS backend advertising `lifecycle.dos_guest_exit`, a
+`guest_exit` run result retains the selected PSP's completed DOS cleanup in
+`session.stop_reason.guest_exit`; `guest_tsr` separately reports remaining
+resident. Record target registers before exit because DOS has restored the
+parent context at this boundary. A legacy `program_exit` on debugger closure,
+a pause outside the image, or an exit interrupt alone is not this evidence.
+
 ## Scenes, maps and movement
 
 Use scenes for versioned screen context, recognition masks, readiness and

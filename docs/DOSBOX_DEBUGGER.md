@@ -85,9 +85,51 @@ Inspect `outcome`, not just whether the request succeeded:
 - `breakpoint`: an actual native breakpoint fired; `session.stop_reason` identifies it and includes its mapped project address.
 - `guest_time`: the requested guest duration was reached.
 - `timeout`, with `timed_out:true`: no earlier stop satisfied the call; the target was paused. A timeout is never converted to a breakpoint hit.
-- Other native stop reasons, such as program exit or a trace's bounded pause, remain distinguishable. Trace completeness is reported independently.
+- `guest_exit`: a backend advertising `lifecycle.dos_guest_exit` observed the selected DOS process complete its termination cleanup. See the process evidence below.
+- `guest_tsr`: the selected DOS process returned to its parent while remaining resident; this is distinct from normal exit.
+- Other native stop reasons, including a trace's bounded pause, remain distinguishable. Trace completeness is reported independently.
 
 The host budget covers the running interval. Pausing, restoring speed, and orderly cleanup add bounded RPC latency, so it is not a hard real-time return deadline. A real DinoPark replay advanced 10,295 guest ms in 445.378 host ms; throughput depends on the game, emulated CPU, and host. The complete title intro is longer than ten seconds; ten guest seconds skips that interval rather than promising the title menu is already ready.
+
+### DOS process completion and debugger cleanup
+
+The rebuilt native backend binds the selected program's actual DOS PSP at its
+entry stop. It reports `guest_exit` only after the built-in DOS kernel has
+cleaned up that PSP and restored its parent. A child process exiting does not
+complete the parent's run. Merely reaching an `INT 20h` or `INT 21h` instruction,
+pausing outside the mapped program, closing a debugger context, or reaping the
+emulator does not establish this event.
+
+The result has `session.state: "exited"` for the selected program and retains
+process evidence in `session.stop_reason.guest_exit` and `stop.guest_exit`:
+
+```json
+{"kind":"guest_exit","guest_exit":{"psp":"0x0814","parent_psp":"0x071B","requested_exit_code":37,"resident":false,"source":"DOS_Terminate","stage":"after-process-cleanup"}}
+```
+
+`requested_exit_code` is the argument received by `DOS_Terminate`. DOSBox can
+subsequently override the status returned to the parent, so this field is not a
+claim about that later status. `guest_tsr` has `resident: true`; its retained
+resident code and memory are not a normally terminated process.
+
+The parent CPU context has already been restored at this boundary. The event
+does not invent a final instruction address or register snapshot for the exited
+target. Inspect any required target registers or memory at an earlier verified
+breakpoint, then resume to observe completion. The event is retained in the
+project's run evidence after the debugger and project close.
+
+A native state saved by the same live session retains the selected PSP binding
+when its exact saved bytes are restored. An unrecognized or foreign-session
+state disables this exit tracking rather than guessing which restored process
+is the target. Cross-session checkpoint restoration can still support its
+existing debugger operations; it does not establish this new completion event.
+
+`program_exit` from legacy `session.stop` remains a debugger/session cleanup
+event and has no `guest_exit` process evidence. Stopping an already completed
+target preserves the observed guest event and does not terminate its DOS parent.
+Older backend binaries must be rebuilt; a Python-package update alone cannot
+add the kernel notification. This reporting covers the built-in DOS kernel,
+not a separately booted operating system or arbitrary protected-mode lifecycle.
 
 ## Breakpoints and input
 
