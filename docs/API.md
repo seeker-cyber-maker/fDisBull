@@ -589,3 +589,14 @@ receipts and explicit legacy derivatives are documented in
 [External targets](EXTERNAL_TARGETS.md). The JSON methods are `storage-info`,
 `migrate-external`, `source-info`, `source-candidate`, `bind-source` and
 `new-source-analysis`. Source binding is static and does not run the candidate.
+## Portable structural interpretations
+
+`export-types` returns the metadata-only `fdisbull-types-1` catalog; optional
+`names` selects types and their dependency closure, and `output` writes it to a
+new JSON file. `import-types` accepts `catalog` and
+optional `version` / `author`. CLI import also accepts a catalog filename.
+Definitions retain original authorship and declared source origin, with no
+automatic native/file bindings, labels, attachments or runtime confidence.
+Conflicts fail atomically; identical definitions keep destination authorship.
+See [type catalogs](TYPE_CATALOGS.md) for schema, budgets, fixed-pointer
+restrictions, provenance drift and restart/version behavior.

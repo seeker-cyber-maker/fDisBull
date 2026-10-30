@@ -36,6 +36,7 @@ legacy migration and remaining export limits.
 | I want to… | Start here |
 | --- | --- |
 | Extract a GOG DOS installer on macOS or Linux without Wine | [Native GOG unpacking](docs/GOG_UNPACKING.md) |
+| Reuse a reviewed structure in another analysis project | [Portable type catalogs](docs/TYPE_CATALOGS.md) |
 | Understand an executable without running it | [Disassembly and analysis](#disassemble-and-analyze) |
 | Observe a DOS game or a Windows PE64 program | [Debug the original program](#debug-the-original-program) |
 | Compare a hypothesis, a checkpoint or a temporary patch | [Layers, states and experiments](#layers-states-and-experiments) |
