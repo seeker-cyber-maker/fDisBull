@@ -66,6 +66,7 @@ from .calls import CallViewsMixin
 from .facts import FactsMixin, FACTS_DDL
 from .memory import MemoryMixin
 from .cfg import CFGMixin
+from .code_backings import CodeBackingsMixin
 from .typesystem import TypeSystemMixin, TYPE_DDL
 from .external_files import ExternalFilesMixin, EXTERNAL_FILES_DDL
 from .file_references import FileReferencesMixin, FILE_REFERENCES_DDL
@@ -78,7 +79,7 @@ from .debugger import DebugProjectMixin, DEBUG_DDL
 from .proofs import ProofProjectMixin, PROOF_DDL
 
 
-class Project(ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
+class Project(CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
     def __init__(self, path):
         self.path = Path(path).resolve()
         if not self.path.is_file():

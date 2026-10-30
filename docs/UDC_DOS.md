@@ -5,6 +5,14 @@ block backings. UDL mappings and UIL keep the same `fdisbull-il-1` primitives.
 The compiler consumes UIL and uses the corresponding UDL/native backing as its
 first executable definition. It does not regenerate arbitrary DOS code.
 
+The separate [entry-qualified code backing engine](CODE_BACKINGS.md) captures
+overlapping stored instruction interpretations and emits a bounded raw x86
+layout with explicit continuations. Its structural-only output is not this
+compiler's byte-identical file reconstruction or a regenerated MZ/LE container.
+The [native UDL pass-through definition](NATIVE_UDL_UDC.md) also offers a
+version-pinned exact-source baseline without requiring any UIL lift; its
+logical block split leaves original physical storage unchanged.
+
 The current profile accepts original static **version 1**, x86-16 MZ or COM.
 MZ headers, relocations, data and opaque regions retain their original bytes
 and layout. Explicit attached resources are captured with the executable.

@@ -406,8 +406,9 @@ class AnalysisMixin:
                 raise ValueError('definition must fit in one mapped region')
             if representation in ('ascii','utf-16le'):
                 r.data[a-r.start:a-r.start+size].decode('ascii' if representation=='ascii' else 'utf-16le')
-            overlap=self.db.execute('SELECT address,size FROM definitions WHERE version=? AND context=? AND address!=?',(v,self.context,k(a))).fetchall()
-            if any(a<int(row[0],16)+row[1] and a+size>int(row[0],16) for row in overlap):
+            overlap=self.db.execute('SELECT address,size,representation FROM definitions WHERE version=? AND context=? AND address!=?',(v,self.context,k(a))).fetchall()
+            if any(a<int(row[0],16)+row[1] and a+size>int(row[0],16)
+                   and (representation!='code' or row[2]!='code') for row in overlap):
                 raise ValueError('definition overlaps another explicit definition')
             self.db.execute('INSERT INTO definitions VALUES (?,?,?,?,?,?) ON CONFLICT(version,context,address) DO UPDATE SET representation=excluded.representation,size=excluded.size,author=excluded.author',(v,self.context,k(a),representation,size,author))
             invalidation=self._incremental_representation(v,a,size)

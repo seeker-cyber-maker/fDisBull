@@ -193,6 +193,12 @@ METHODS = {
     "analyze-module": "Offline DLL/shared-library analysis; path,project,[export,entry,max_instructions,slice_arch,image]",
     "analysis-status": "Current persisted queues, seed states and fixed-point status; [version]",
     "cfg": "Reachable stored CFG from exact entry; address,[version,cs,max_instructions,highlights]",
+    "code-backings": "Complete entry-qualified x86 encodings and many-to-many source occurrences; entries,[version,cs,max_instructions]",
+    "code-blocks": "Logical entry-qualified code blocks without source layout changes; entries,[version,cs,max_instructions,split_at]",
+    "code-layout": "Bounded raw x86 layout with explicit jumps and caller assumptions; entries,assumptions,[version,cs,max_instructions,order,base,entry_references]",
+    "udc-native-capture": "Persist native UDL blocks for direct UDC pass-through; name,entries,[version,cs,max_instructions,split_at,parent,author]",
+    "udc-native-info": "Read an immutable native UDC definition; definition,[include_blocks]",
+    "udc-native-compile": "Exact original-layout pass-through or explicit raw relayout; definition,[mode,assumptions,base,order,block_order,entry_references]",
     "render-cfg": "Export reachable basic-block CFG as SVG; address,output,[version,cs,max_instructions,highlights]",
     "memory-accesses": "Read/write/overlap and unresolved memory evidence; address,[size,version,access,limit,offset,include_unresolved]",
     "refresh-facts": "Backfill persisted fallthrough and memory-access facts from stored instructions; [version]",
@@ -378,6 +384,16 @@ def invoke(method, params, debugger=None):
         with Project.create(project,binary,**p) as db:
             return db.status()
     with Project(project) as db:
+        if method in ('code-backings', 'code-blocks', 'code-layout',
+                      'udc-native-capture', 'udc-native-info', 'udc-native-compile'):
+            for field in ('assumptions', 'order', 'block_order', 'entry_references'):
+                filename = p.pop(field + '_file', None)
+                if filename is not None:
+                    path = Path(filename)
+                    if field in p or not path.is_file() or path.stat().st_size > 4*1024*1024:
+                        raise ValueError('expected one JSON argument file at most 4 MiB')
+                    p[field] = json.loads(path.read_text())
+            return getattr(db, method.replace('-', '_'))(**p)
         if method in ('proof-check','proofs','proof-info'):
             return getattr(db,method.replace('-','_'))(**p)
         if method in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-layer','debug-layer-info','debug-layers','debug-events','debug-experiments','debug-experiment-info','debug-promote-code','debug-trace-view','runtime-version-info'):
@@ -683,6 +699,37 @@ def parser():
     c.add_argument('data');c.add_argument('--bits',type=int,choices=[16,32,64],default=64)
     c.add_argument('--address',type=lambda s:int(s,0),default=0)
     c.add_argument('--scan-offsets',action='store_true');c.add_argument('--max-candidates',type=int,default=16)
+    for name in ('code-backings', 'code-blocks', 'code-layout'):
+        c = sub.add_parser(name, help=METHODS[name]); c.add_argument('project')
+        c.add_argument('--entry', dest='entries', action='append', required=True)
+        c.add_argument('--version', type=int); c.add_argument('--cs', type=lambda s:int(s,0))
+        c.add_argument('--max-instructions', type=int, default=10000)
+        if name == 'code-blocks':
+            c.add_argument('--split-at', dest='split_at', action='append')
+        if name == 'code-layout':
+            c.add_argument('--assumptions', dest='assumptions_file', required=True)
+            c.add_argument('--order', dest='order_file')
+            c.add_argument('--entry-references', dest='entry_references_file')
+            c.add_argument('--base', type=lambda s:int(s,0), default=0)
+    for name in ('udc-native-capture', 'udc-native-info', 'udc-native-compile'):
+        c = sub.add_parser(name, help=METHODS[name]); c.add_argument('project')
+        if name == 'udc-native-capture':
+            c.add_argument('name'); c.add_argument('--entry', dest='entries', action='append', required=True)
+            c.add_argument('--version', type=int); c.add_argument('--cs', type=lambda s:int(s,0))
+            c.add_argument('--max-instructions', type=int, default=10000)
+            c.add_argument('--split-at', dest='split_at', action='append')
+            c.add_argument('--parent'); c.add_argument('--author', default='agent')
+        else:
+            c.add_argument('definition')
+            if name == 'udc-native-info':
+                c.add_argument('--full', dest='include_blocks', action='store_true')
+            else:
+                c.add_argument('--mode', choices=('original-layout', 'relayout'), default='original-layout')
+                c.add_argument('--assumptions', dest='assumptions_file')
+                c.add_argument('--base', type=lambda s:int(s,0), default=0)
+                c.add_argument('--order', dest='order_file')
+                c.add_argument('--block-order', dest='block_order_file')
+                c.add_argument('--entry-references', dest='entry_references_file')
     for name in ["status","analyze","functions","disasm","xrefs","rename","comment","versions","patch","issues","render","info","header","sections","imports","exports","strings","items","queue","represent","recover-imports","segments","code-regions","locate","function-patterns","analysis-status","calls","cfg","render-cfg","memory-accesses","refresh-facts","libraries","relocations","linkage","refresh-metadata","refresh-dos-state"]:
         c = sub.add_parser(name,help=METHODS[name])
         c.add_argument("project")
@@ -955,7 +1002,8 @@ def main(argv=None):
 
 def _dispatch(args):
     command = args.pop("command")
-    if command.startswith(('udc-','udl-')):return _udc_command(command,args)
+    if command.startswith(('udc-','udl-')) and not command.startswith('udc-native-'):
+        return _udc_command(command,args)
     if command in ('story-info','zork','zork-recover','zork-uil','zork-intents','il-check','il-run','il-store','il-info'):
         return _language_command(command,args)
     if command == 'text-host':
