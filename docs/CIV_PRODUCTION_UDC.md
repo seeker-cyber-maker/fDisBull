@@ -97,6 +97,16 @@ matching the input. This proves byte-preserving reconstruction only; it does
 not provide a semantic UIL for the packed overlays. The `uil`/`c-uil` city
 module above is the first semantic layer added beside that baseline.
 
+`CIV_UNP.EXE` is not a prerequisite for this semantic slice. The Civ64 DOS
+documentation describes it as the unpacked root used to make the
+disassembly/listing path convenient; its `gen/dos/dosexe.py` EXEPACK decoder
+can derive that root from a supplied packed `CIV.EXE` and checks the optional
+unpacked copy byte-for-byte. The city rule here is independently source-backed
+by civd and has its own signed limits, comparison, and oracle gate. A future
+overlay reconstruction can implement or reuse an EXEPACK decoder when a
+packed DOS image is supplied, but this module must not wait for or invent a
+`CIV_UNP.EXE` artifact.
+
 
 ## Executable proof
 
