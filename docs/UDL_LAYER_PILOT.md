@@ -20,6 +20,14 @@ this report or the tool distribution.
 | Tic-tac-toe rule variant | Explicit misère handler values changed the awarded player on the same terminal board | Intentional rule change with a changed UIL definition. It is not an equivalent replacement under the original winner contract. DB-selected artifacts match separately tested native variants. |
 | Generated Windows shell | Real PE32+ emission with bounded functions/loops, per-activation staging and native notification providers | Native Win/Lose, typed values, atomic failures and text events exercised through the existing headless Windows runtime. This is a new authored shell, not a wrapped DOS game. |
 
+Two persisted addition backings also completed the full DB → scalar qualifier
+→ activation adapter → PE64 → MessageBoxA → acknowledgment → exit0 path. Both
+used the same contract and orchestration plan, with opposite addition orders.
+For inputs 65535 and 2, each returned 1; deliberate callee input/local mutations
+did not escape to caller state. Every PE byte outside the selected math slot
+was identical between the two outputs. This qualifies that authored shell under
+Wine/QEMU, without establishing original Win16-process behavior.
+
 The fixture source/oracle material was available during investigation. These
 are engineering integration experiments, not blind recovery or clean-room
 reconstruction results. Native observations, scalar-model proofs and original

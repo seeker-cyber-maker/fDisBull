@@ -93,6 +93,36 @@ def test_unknown_service_meaning_cannot_be_realized_as_a_notification(tmp_path):
         assert not (tmp_path / 'rejected').exists()
 
 
+def test_scalar_return_is_derived_from_the_fixed_contract(tmp_path):
+    with create(tmp_path) as project:
+        selected, plan, _, lid = setup(project)
+        layer = deepcopy(project.udl_layer_info(lid, full=True)['document'])
+        layer['name'] = 'no-optional-return'; layer['implementation'].pop('return')
+        replacement = register_layer(project, layer)
+        bindings = deepcopy(project.udl_selection_info(selected['id'], full=True)['document']['bindings'])
+        bindings['math'] = replacement['id']; selected = select_layers(project, 'derived-return', bindings)
+        build_selection_shell(project, selected['id'], plan, tmp_path / 'native')
+    capsule = json.loads((tmp_path / 'native/capsule.json').read_text())
+    assert capsule['modules']['math']['return'] == '$sum'
+
+
+def test_ambiguous_multioutput_scalar_return_refuses_before_output(tmp_path):
+    with create(tmp_path) as project:
+        selected, plan, cid, lid = setup(project)
+        contract = deepcopy(project.contract_info(cid, full=True)['document'])
+        contract['name'] = 'multiple.outputs'; contract['outputs']['right'] = 'u16'
+        c = register_contract(project, contract)
+        layer = deepcopy(project.udl_layer_info(lid, full=True)['document'])
+        layer['name'] = 'ambiguous.return'; layer['contract'] = c['id']
+        layer['implementation']['outputs']['right'] = '$right'
+        replacement = register_layer(project, layer)
+        bindings = deepcopy(project.udl_selection_info(selected['id'], full=True)['document']['bindings'])
+        bindings['math'] = replacement['id']; selected = select_layers(project, 'ambiguous-return', bindings)
+        with pytest.raises(ValueError, match='exactly one'):
+            build_selection_shell(project, selected['id'], plan, tmp_path / 'rejected')
+        assert not (tmp_path / 'rejected').exists()
+
+
 def test_selected_capsule_prevalidates_before_native_emission(tmp_path, monkeypatch):
     original = udc_layers._json
     def reject_capsule(document):
