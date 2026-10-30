@@ -150,5 +150,11 @@
       "tests/test_uil_word16_runtime.py"
     ],
     "result": "byte-identical"
+  },
+  "final_intake_affected": {
+    "candidate_commit": "c92047a32f76b9a4a8c45cad96d12be844661d99",
+    "passed": 261,
+    "seconds": 8.04,
+    "junit_sha256": "0db945fcd205c076029db3cbbfa55688ba5aca0ce14396a1ea068787c8c4192e"
   }
 }

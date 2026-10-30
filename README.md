@@ -49,6 +49,10 @@ See the [0.25 notes](docs/RELEASE-0.25.0.md),
 [bounded output](docs/OUTPUT_LIMITS.md) and
 [agent workflow](docs/AGENT_QUICKSTART.md).
 
+Turn the findings into something people can play from: a separate guide-writing
+skill helps assemble verified routes, maps, secrets and mechanics into a
+walkthrough, with sources and unresolved gaps kept visible.
+
 ## Install and use
 
 Python **3.12 or later** is required. From a source checkout:

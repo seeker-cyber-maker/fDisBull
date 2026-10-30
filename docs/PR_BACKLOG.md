@@ -84,7 +84,17 @@ an unexplained loss. Do not reopen them simply to recreate merge history.
 | #24 | Qualified Zork IR, independent consumer, bounded semantic intent and explicit partial-effect fault reporting. | Parser, scheduler, autonomous actors and unhandled game actions remain retained IR. Other editions require new qualification. |
 | #25 | Static LE object mapping and supported internal fixups. | LX, imports, unsupported fixups, protected-mode runtime selector translation and RTLink/NB02 recovery remain out of scope. |
 | #26 | Bounded DinoPark continuation, scene/provenance improvements, journaled batches and shared action continuations. Integration rejects canonical action repeats and false completion of partial intents. | Current providers lack a bound original-intent completion certificate; partial batch steps remain paused. See fresh native scope and individual #15 requirements above. |
-| #27 | Expanded, reconciled agent skill and reference routing. | Guidance about a capability does not implement that capability. |
+| #27 | Expanded, reconciled investigation skill, a separate guide-writing skill, selective routing and installed-package gates. | Guidance about a capability does not implement that capability. External guide descriptions remain attributed where direct retrieval is unavailable. |
+
+## New work outside this intake
+
+[Draft PR #28](https://github.com/seeker-cyber-maker/fDisBull/pull/28), head
+`bfcdfe8eb5a030cb6f0e917067690fe2f7e4d03c`, appeared during integration. It is
+stacked on #24 and proposes a bounded static Z-machine v3 processor/analyzer.
+It is pending a separate review and combined qualification; it is not included
+in 0.25. Its analyzer work must remain distinct from higher-level game-intent
+recovery. Later amendments to the selected PRs also require fresh review rather
+than silently changing a frozen verification target.
 
 This document records technical disposition, not an instruction to close open
 PRs or a claim that a future release has been published. Read the current GitHub

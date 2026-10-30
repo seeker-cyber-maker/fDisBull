@@ -41,6 +41,10 @@ See [DinoPark in Z](DINOPARK_Z.md).
   reward and confidence. The duplicate skill links from #20 are reconciled
   with #27's existing reference structure. Its authored ASM/C microbenchmark
   remains a bounded representation experiment, not a native recovery speedup.
+  PR #27's later amendment also adds a separate guide-writing skill, selected
+  with `agent-skill --skill write-gamefaqs-guide`, with its own installed-package
+  gate. It helps turn evidenced findings into a walkthrough; it does not
+  supply unobserved game facts or publish a guide automatically.
 - **PRs #21 and #22:** retained research and design documents for NoCD music
   boundaries and synthetic HUDs. These are documentation contributions;
   their proposed runtime features are not advertised as implemented.

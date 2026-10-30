@@ -1,4 +1,107 @@
 {
   "format": "fdisbull-025-package-gate-1",
-  "status": "pending local installed-wheel and archive gates"
+  "code_candidate_commit": "c92047a32f76b9a4a8c45cad96d12be844661d99",
+  "runtime": "CPython 3.13.17 macOS arm64",
+  "status": "passed",
+  "wheels": {
+    "fdisbull-0.25.0-py3-none-any.whl": {
+      "sha256": "8eb930cac67451bde8b147f5be65dbb4ad81acb7aaa788acbf3fd7604c0df8d2",
+      "size": 657911,
+      "package_entries_compared_to_source": 156,
+      "byte_mismatches": 0
+    },
+    "fdisbull_player-0.25.0-py3-none-any.whl": {
+      "sha256": "926143084ca1906037ef8f29335d2176b6a4f9c77b6ccf3bb825e7c44fb96e2b",
+      "size": 49649,
+      "package_entries_compared_to_source": 9,
+      "byte_mismatches": 0
+    }
+  },
+  "skills": {
+    "fdisbull-investigate": {
+      "status": "passed",
+      "references": 10,
+      "local_links": 27,
+      "private_receipt_sha256": "f0a584750e04572349c41c0d8c251e1ee9f25f37564144c823c84879e198a4cf"
+    },
+    "write-gamefaqs-guide": {
+      "status": "passed",
+      "references": 5,
+      "local_links": 4,
+      "private_receipt_sha256": "2df3b4d01312a6ad3bba5ce0e3559d32a58b4b97eb283d82f8761d118873da5c"
+    }
+  },
+  "exclusions": "No games/stories, native states/saves, project databases, native executables or raw private deliveries; exact curated JSON receipts in source archives only",
+  "archive_guard_entry_counts": {
+    "fdisbull-0.25.0-py3-none-any.whl": 161,
+    "fdisbull-0.25.0-tool.zip": 529,
+    "fdisbull-0.25.0.tar.gz": 537,
+    "fdisbull_player-0.25.0-py3-none-any.whl": 14
+  },
+  "installed_zork_public_cli": {
+    "format": "fdisbull-025-installed-zork-smoke-1",
+    "created_utc": "2026-10-30T02:49:05.302817+00:00",
+    "isolated_mode": 1,
+    "modules": {
+      "core": "fdisbull/__init__.py",
+      "player": "fdisbull_player/__init__.py",
+      "intent_runtime": "fdisbull_player/intent_runtime.py"
+    },
+    "versions": {
+      "core": "0.25.0",
+      "player": "0.25.0"
+    },
+    "wheels": {
+      "core_sha256": "8eb930cac67451bde8b147f5be65dbb4ad81acb7aaa788acbf3fd7604c0df8d2",
+      "player_sha256": "926143084ca1906037ef8f29335d2176b6a4f9c77b6ccf3bb825e7c44fb96e2b"
+    },
+    "story_sha256": "0ae5ac229e79094ff368b6669356444af0f35e21d862a1baaa546989085c15fd",
+    "installed_package_sha256": "df0464f95943bfc606d8104219ceb8cd20fda2d811db83b27f5c7a60f9de0102",
+    "source_package_sha256": "df0464f95943bfc606d8104219ceb8cd20fda2d811db83b27f5c7a60f9de0102",
+    "initial_fields_match_source": {
+      "text": true,
+      "score": true,
+      "moves": true,
+      "location": true,
+      "status": true
+    },
+    "first_fields_match_source": {
+      "text": true,
+      "score": true,
+      "moves": true,
+      "location": true,
+      "status": true
+    },
+    "fresh_resume_fields_match_source": {
+      "text": true,
+      "score": true,
+      "moves": true,
+      "location": true,
+      "status": true
+    },
+    "first_outcomes": {
+      "opened_with_contents": 1,
+      "turn_counted": 1
+    },
+    "fresh_resume_outcomes": {
+      "already_open": 1,
+      "turn_counted": 1
+    },
+    "first_bindings": {
+      "mailbox_open": 1,
+      "turn_counter": 1
+    },
+    "fresh_resume_bindings": {
+      "mailbox_open": 1,
+      "turn_counter": 1
+    },
+    "first_checkpoint_equals_source": true,
+    "final_checkpoint_equals_source": true,
+    "limits": [
+      "Fresh-process resume is after first mailbox open; source comparison is the previous qualified frozen source run.",
+      "No live DOS or Frotz replay in this installed-wheel smoke.",
+      "No full-game equivalence or system installation claim."
+    ],
+    "private_receipt_sha256": "cdf83e7dca51900002618e57e8e4ac8b40deebef7baefecd811dfa0324235088"
+  }
 }
