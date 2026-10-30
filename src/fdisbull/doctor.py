@@ -42,7 +42,9 @@ def _dos_test(project,debug,step):
     watch=debug.breakpoint('1000:0100',access='w',length=2)
     click=step('click with coordinate frame',lambda:debug.click_frame(80,80,name='click.png',grid_step=8,hold_ms=30))
     stopped=step('data watch',lambda:debug.run(timeout_ms=10000,fast_forward=True))
-    _require(stopped['stop']['trigger']=='watchpoint' and stopped['stop']['instruction_completed'] is True,'Expected a post-access DOS watch')
+    _require(stopped['stop']['trigger']=='watchpoint' and
+             stopped['stop']['registers_stage']=='after-access' and
+             stopped['stop']['instruction_completed'] is None,'Expected a post-access DOS watch with completion unreported')
     _require(int.from_bytes(bytes.fromhex(debug.memory('1000:0100',length=2)['hex']),'little')>0x1111,'Click did not increment counter')
     for item in watch['breakpoints']:debug.delete_breakpoint(item['breakpoint_id'])
     trace=step('bounded instruction trace',lambda:debug.trace('trace.json',count=96,timeout_ms=10000))

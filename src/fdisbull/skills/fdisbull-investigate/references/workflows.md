@@ -22,6 +22,7 @@ emulator, target executable, game files, saved states or project databases.
 | --- | --- | --- |
 | Unpack an owned local GOG Inno Setup installer | `gog-list`, then `gog-unpack INSTALLER NEW_PRIVATE_DIRECTORY` | Native external innoextract reads payloads without Wine or running the installer; listing and hash manifests do not prove game execution or loader support. See `docs/GOG_UNPACKING.md`. |
 | Identify or analyze an executable | `identify`, `inspect`, `import`, `analyze`, `analysis-status`, `status`, `functions`, `disasm`, `xrefs` | Static decoder facts and stored analysis only; candidates and budget limits stay labeled. |
+| Inspect a qualified raw Z-machine v3 story | `zmachine-disasm STORY`, `zmachine-analyze STORY` | Bounded source instruction facts, separate from the generic Z scene interface. Retain unresolved calls, overlaps and worklist frontiers; a drained graph is not whole-game coverage. No native-to-guest mapping or guest project persistence is implied. |
 | Observe actual program behavior | `debug PROJECT ...` plus the appropriate `Project.debugger()` or JSON methods | Requires a compatible external backend and an authorized target. Verify live source/version binding and real guest effects. |
 | Reuse visible controls or map a route | Versioned scenes, spatial maps and `session.move()` | Authored geometry or observed segments; unknown coverage and target behavior remain separate. |
 | Expose a small text interface | `fdisbull text-host CONFIG` with a qualified local projection | The projection is not a game parser or full-game reconstruction; action freshness and completion are backend-owned. |
@@ -69,6 +70,13 @@ parser/readiness and input consumption before interpreting a response. Native
 screenshots and traces are stored in the project and can be exported later;
 exporting an existing artifact is different from claiming a fresh capture.
 Checkpoint restore does not roll back mounted host files or external services.
+
+A DOS data watch confirms the observed access boundary, not whole-instruction
+completion. In the 0.26 candidate, normalized DOS watch stops report
+`instruction_completed=null` and `registers_stage="after-access"`. A REP copy
+can yield with the same PC and a nonzero remaining count; inspect raw registers
+and memory before claiming completion of the copy or the enclosing transaction.
+Do not use older unconditional completion labels as that evidence.
 
 ## Scenes, maps and movement
 

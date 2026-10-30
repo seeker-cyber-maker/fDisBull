@@ -6,7 +6,7 @@ def contract(backend):
     pe=backend in ('wine-qemu','ida-wine-qemu')
     return {'format':'fdisbull-debug-semantics-1','backend':backend,
             'execution_breakpoint_stage':'before-instruction',
-            'watchpoint_stage':'after-instruction' if dos else 'before-access' if backend=='wine-qemu' else 'unsupported' if backend=='ida-wine-qemu' else 'unknown; inspect native reply',
+            'watchpoint_stage':'after-access; instruction completion unknown' if dos else 'before-access' if backend=='wine-qemu' else 'unsupported' if backend=='ida-wine-qemu' else 'unknown; inspect native reply',
             'trace_registers_stage':'before-instruction',
             'trace_completion':'fetch-observed; completion unknown' if dos else 'confirmed completed steps',
             'timing':'guest ticks supported' if dos else 'host bounded; stepping has no elapsed-time fidelity',
@@ -20,7 +20,10 @@ def normalize_stop(backend,native,*,outcome,stopped_pc=None):
     trigger='watchpoint' if watch else outcome
     stage='stopped; stage unknown';completed=None;cause=None
     if dos and access:
-        stage='after-instruction';completed=True;cause=access.get('instruction')
+        # The pending access is consumed at the next normal-core check. REP
+        # can yield there with work remaining; an interrupt can also change PC.
+        # Neither an access record nor a different PC certifies completion.
+        stage='after-access';cause=access.get('instruction')
     elif backend=='wine-qemu' and watch and native.get('before_access'):
         stage='before-instruction';completed=False;cause=native.get('address')
     elif trigger=='breakpoint':
