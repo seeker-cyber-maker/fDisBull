@@ -80,7 +80,7 @@ Reconciliation requires an already durable, complete provider reply with a
 The witness binds an observation; it is not an original-intent completion
 certificate. The fresh qualified observation must match all three. DinoPark and
 the typed-IL
-provider issue this witness after qualifying the resulting public context.
+provider issue this witness for actions, saves and restores after qualifying the resulting public context.
 The state token prevents accepting an old reply after an intervening action,
 even when the scene name is unchanged. Older providers/journals without a
 witness remain conservatively unresolved.
@@ -90,15 +90,24 @@ witness remain conservatively unresolved.
   remain recorded. An accepted purchase with a pending notice becomes paused;
   an explicit authorized continuation is still required. Partial/unknown
   original effects cannot be promoted to confirmed completion.
+- `checkpoint` persists its save request boundary (logical name, requested slot,
+  provider session, context and plan cursor) before dispatch, then the exact
+  returned certificate before a following observation. If that read fails,
+  reconciliation can install the provider's original opaque handle locally;
+  it never saves or loads again. The receipt must certify complete, replay-safe
+  `saved` status and match the fresh witness. Invalid replies retain the hold.
+  A new checkpoint cannot overwrite an existing logical name or bypass the
+  32-checkpoint budget. The saved cursor and completed plan prefix are preserved.
 - `recover` persists its returned provider certificate before the following
   observation. If only that read fails, reconciliation can finish the local
   rewind using the bound certificate, actual checkpoint handle and fresh
   qualified context. It does not load the checkpoint again. Superseded attempts
   and the original receipt are retained together in history.
-- A completed restore can be verified again without adding history or loading
+- A completed save or restore can be verified again without adding history or loading
   again. This supports a caller whose own result reader failed after `recover`
   had already finished. `inspect(include_history=True)` exposes detached copies
-  of history and the current recovery record; default inspection stays compact.
+  of history, the current recovery record and `checkpoint_details` (handles,
+  boundaries and original receipts); default inspection stays compact.
 - A missing/lost reply, incomplete effect, unbound/stale witness, foreign guest
   or uncertified restore remains unresolved. Matching a destination alone is
   insufficient. A dead transport cannot be reconnected by this operation.
@@ -107,18 +116,24 @@ The return keeps the ordinary batch summary and adds `reconciliation`:
 
 | Status | Meaning |
 |---|---|
-| `reconciled` | A bound durable reply repaired local action/restore bookkeeping. |
-| `verified` | The already recorded restore still matches the current witness. |
+| `reconciled` | A bound durable reply repaired local action/save/restore bookkeeping. |
+| `verified` | The already recorded save/restore still matches the current witness. |
 | `unresolved` | Evidence is missing, incomplete, stale or unqualified; no repair. |
-| `not-needed` | No eligible unresolved readback or current restore witness. |
+| `not-needed` | No eligible unresolved readback or current save/restore witness. |
 
 `operation`, `reason`, and the applicable step/checkpoint identify the decision.
 `not-needed` does not certify a caller-defined phase. Check `verified` for a
-previous restore, or inspect the specific recorded attempt. Repeated calls do
+previous save/restore, or inspect the specific recorded attempt. Repeated calls do
 not replay actions or duplicate restore history. The caller must serialize all
 users of the same provider, including between reconciliation and later input.
-Checkpoint-save failures and native-load session-handoff readbacks are not
-reconciled; these retain their existing conservative recovery behavior.
+Save reconciliation requires the newly recorded request metadata and durable
+reply. Older save latches containing only an operation/name cannot be repaired.
+A legacy provider without a save witness can still complete an ordinary save
+when its following read qualifies, but cannot reconcile a failed read. Requested
+slots and returned handles are distinct: the provider-issued handle is retained
+verbatim, not reconstructed from the slot. Saving an owned live checkpoint does
+not establish durable native park disk-save persistence or fresh-guest recovery.
+Native-load session-handoff readbacks remain unsupported.
 
 ## Command-line interface
 
@@ -140,7 +155,7 @@ The control replies are small; detailed attempts remain in the private journal.
 EOF closes the provider normally. A completed process/cleanup receipt is separate
 from a completed batch or confirmed action. Use `inspect` to retrieve step status
 through Python; CLI inspection returns only the summary by default. Explicit
-`include_history` can return private history/recovery data, bounded by the journal
+`include_history` can return private history/recovery/checkpoint data, bounded by the journal
 size limit. The journal location is caller-selected. Batch mode is separate from
 model-turn `--live` mode.
 A supported operation that raises after leaving a durable recovery latch returns

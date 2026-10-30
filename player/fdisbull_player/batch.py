@@ -147,7 +147,8 @@ class BatchSession:
             self._read(allow_recovery=True)
             result = self._summary()
             if include_history:
-                result.update(history=deepcopy(self.doc['history']), recovery=deepcopy(self.doc['recovery']))
+                result.update(history=deepcopy(self.doc['history']), recovery=deepcopy(self.doc['recovery']),
+                              checkpoint_details=deepcopy(self.doc['checkpoints']))
             return result
 
     def _classify(self, index, attempt, observation):
@@ -197,15 +198,23 @@ class BatchSession:
                 return result
 
             recovery = self.doc['recovery']
+            operation = recovery.get('operation', 'unknown') if recovery else 'action'
             index = next((i for i, s in enumerate(self.doc['steps']) if s['state'] != 'completed'), None)
             try:
                 observation = self._observe()
             except (OSError, ValueError, EOFError):
-                return report('unresolved', 'observation-failed', 'load' if recovery else 'action')
+                return report('unresolved', 'observation-failed', operation)
             if observation is None:
-                return report('unresolved', 'unqualified-observation', 'load' if recovery else 'action')
+                return report('unresolved', 'unqualified-observation', operation)
             if recovery:
                 name = recovery.get('name')
+                if operation == 'save':
+                    result = recovery.get('result')
+                    if (not self._save_qualified(recovery, result, observation)
+                            or not self._bound_witness(result, observation)):
+                        return report('unresolved', 'unbound-save-reply', 'save')
+                    self._finish_save(recovery, result, reconciled=True)
+                    return report('reconciled', 'durable-save-reply', 'save', checkpoint=name)
                 checkpoint = self.doc['checkpoints'].get(name)
                 result = recovery.get('result')
                 if (recovery.get('operation') != 'load' or not self._bound_witness(result, observation)
@@ -233,6 +242,15 @@ class BatchSession:
                 result = last.get('receipt')
                 if self._bound_witness(result, observation) and self._restore_qualified(checkpoint, result, observation):
                     return report('verified', 'recorded-restore-reply', 'load', checkpoint=last['checkpoint'])
+            for name, checkpoint in self.doc['checkpoints'].items():
+                receipt = checkpoint.get('receipt')
+                if (isinstance(receipt, dict) and receipt.get('complete') is True
+                        and receipt.get('status') == 'saved' and receipt.get('replay_safe') is True
+                        and receipt.get('checkpoint') == checkpoint.get('handle')
+                        and checkpoint.get('session_token') == self.doc['session_token']
+                        and checkpoint.get('context') == observation['context']['id']
+                        and self._bound_witness(receipt, observation)):
+                    return report('verified', 'recorded-save-reply', 'save', checkpoint=name)
             return report('not-needed', 'no-unresolved-readback', 'journal')
 
     def _attempt(self, index, command, kind):
@@ -327,18 +345,44 @@ class BatchSession:
             observation = self._observe()
             if observation is None:
                 raise ValueError('Checkpoint scene is unqualified')
-            self.doc['recovery'] = {'operation': 'save', 'name': name}
-            self._write()
-            result = self.player.backend.save('batch-' + uuid.uuid4().hex)
-            self.doc['recovery'] = None
-            if not isinstance(result, dict) or result.get('complete') is not True or result.get('status') != 'saved' or result.get('replay_safe') is not True:
-                self._write()
-                raise ValueError('Provider did not certify a replay-safe checkpoint')
-            self.doc['checkpoints'][name] = {'handle': result['checkpoint'], 'context': observation['context']['id'],
+            self.doc['recovery'] = {'operation': 'save', 'name': name,
+                'slot': 'batch-' + uuid.uuid4().hex, 'context': observation['context']['id'],
                 'session_token': self.doc['session_token'],
                 'cursor': next((i for i, s in enumerate(self.doc['steps']) if s['state'] != 'completed'), len(self.plan))}
             self._write()
+            result = self.player.backend.save(self.doc['recovery']['slot'])
+            self.doc['recovery']['result'] = deepcopy(result)
+            self._write()
+            observation = self._observe()
+            if (not self._save_qualified(self.doc['recovery'], result, observation)
+                    or ('witness' in result and not self._bound_witness(result, observation))):
+                raise ValueError('Provider did not certify a replay-safe checkpoint')
+            self._finish_save(self.doc['recovery'], result)
             return {'status': 'saved', 'complete': True, 'checkpoint': name}
+
+    def _save_qualified(self, recovery, result, observation):
+        cursor = next((i for i, s in enumerate(self.doc['steps']) if s['state'] != 'completed'), len(self.plan))
+        return bool(isinstance(recovery, dict) and recovery.get('operation') == 'save'
+                    and isinstance(recovery.get('name'), str)
+                    and re.fullmatch(r'[A-Za-z][A-Za-z0-9_-]{0,63}', recovery['name'])
+                    and recovery['name'] not in self.doc['checkpoints']
+                    and len(self.doc['checkpoints']) < 32 and isinstance(recovery.get('slot'), str)
+                    and 1 <= len(recovery['slot']) <= 64
+                    and recovery.get('session_token') == self.doc['session_token']
+                    and type(recovery.get('cursor')) is int and recovery['cursor'] == cursor
+                    and all(s['state'] in ('pending', 'completed') for s in self.doc['steps'])
+                    and isinstance(result, dict) and result.get('complete') is True
+                    and result.get('status') == 'saved' and result.get('replay_safe') is True
+                    and isinstance(result.get('checkpoint'), str) and 1 <= len(result['checkpoint']) <= 4096
+                    and observation is not None and observation['context']['id'] == recovery.get('context'))
+
+    def _finish_save(self, recovery, result, *, reconciled=False):
+        self.doc['checkpoints'][recovery['name']] = {
+            'handle': result['checkpoint'], 'context': recovery['context'],
+            'session_token': recovery['session_token'], 'cursor': recovery['cursor'],
+            'receipt': deepcopy(result), 'reconciled': reconciled}
+        self.doc['recovery'] = None
+        self._write()
 
     def recover(self, name):
         _name(name)
