@@ -2,6 +2,22 @@
 
 **REVISION IN PROGRESS. Shared for discussion, not merge approval.**
 
+## Latest discussion: interchangeable components and reversible realization
+
+- [Labels, deduplication, UDC orchestration and round trips](LABELS_ORCHESTRATION_AND_ROUNDTRIPS.md) defines symbolic references, compatible component replacement, implementation freedom and its observable limits. It adds prospective D01-D20 cases without changing the production schema.
+- [Authored witness checks](check_component_witnesses.py) and their [result receipt](component-witness-results.json): 16 Python-only tests passed. They exhibit selected identity, deduplication, activation-state and inverse-ambiguity cases; they are not tests of a production UDC or decompiler adapter.
+- [Selected concept illustrations](ILLUSTRATION_NOTES.md): both original PNGs are preserved in the separate full-resolution Git asset patch. Their binary transfer to this branch remains pending; captions correct the first image's PR-number error and distinguish art from schemas or verification.
+
+Run the new illustrative checks from a checkout:
+
+```sh
+python docs/uil-rfcs/0002/check_component_witnesses.py
+```
+
+No native game, real-mode DOS memory model, provider tournament or general
+reversible compiler was executed for this increment. Earlier receipts below
+retain their original scope and were not rerun for this revision.
+
 New discussion material, 30 October 2026:
 
 - [Agent-first UIL, providers, language-neutral values/functions and target scaffolds](AGENT_FIRST_TOPOLOGY.md).
