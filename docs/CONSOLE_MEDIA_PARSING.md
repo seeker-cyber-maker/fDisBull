@@ -71,6 +71,9 @@ does not fit the supplied data track. The report therefore has
 `descriptor_valid=true` and `valid=false`. This independently reproduces the
 prior intake discrepancy. It does not establish that a particular file is
 incomplete or that the game cannot boot. The audio track was not interpreted.
+The archive's audio track is 1,764,000 bytes, or 750 raw sectors: exactly the
+difference between these counts. That suggests a mixed-track mastering
+explanation, but confirming it requires the CUE/track reader listed below.
 No original media, extracted executable, raw prefix or game bytes are committed.
 The private CLI report SHA-256 is
 `cb19495a68aee6737fd4b28067628c385ee3c6a04381399bde65305f04d3eb49`.
