@@ -281,6 +281,26 @@ Nested game-save slots use the same hybrid identity. The existing standalone
 IR checkpoints and tests remain associated with their original format and
 consumer; no compatibility is inferred between those identities.
 
+Semantic effect plans are ordered, not transactional. A preflight fault occurs
+before any semantic effects execute; a later fault preserves effects already
+performed, including any partial effect whose completion is unknown. The
+consumer does not roll back, delegate, or retry that faulted action. A failed
+run raises `Word16Error` and exposes its current `last_recovery` receipt: a
+`preflight_fault` has no completed effects, while a `commit_fault` lists
+completed effects and identifies any interrupted effect as unknown. A fault
+after all effects, during return or continuation, has no interrupted effect.
+Completed effect entries establish that their calls returned, not a complete
+trace of individual writes within a residual block.
+
+When `--transcript` is supplied, a fault adds a private fault receipt before
+the error is returned. The CLI writes checkpoints only after successful runs;
+on a fault the last checkpoint remains at the preceding successful boundary,
+not at the partial state. Resuming it in a fresh process starts from that
+boundary and does not resume or replay the failed action automatically. Fault
+receipts are not stored in checkpoints, and programmatic callers must retain
+the receipt separately if needed. Original interpreter partial-failure parity
+is not established by these synthetic tests.
+
 The independent verifier checks the higher-level runtime against the preserved
 consumer and existing original-game reference harness. Full state and ordered
 effects matter in addition to narrative, score and moves. Synthetic fixtures

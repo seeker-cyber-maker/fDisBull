@@ -24,7 +24,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from fdisbull_player.intent_runtime import (
     FORMAT, UDL_FORMAT, IntentRuntime, load_package, validate_package,
 )
-from fdisbull_player.word16 import FORMAT as IR_FORMAT, Word16Error, Word16Runtime
+from fdisbull_player.word16 import FORMAT as IR_FORMAT, MAX_TEXT, Word16Error, Word16Runtime
 from verify_zork_intents import (
     EffectTrace, compared_result, differential, fresh_process_resume,
     positive_recovery, value_digest,
@@ -339,6 +339,72 @@ def test_out_of_range_counter_does_not_claim_modulo_semantics():
     assert result["recovery"]["residual_reasons"] == {"turn_counter_outside_qualified_domain": 1}
     assert "turn_counter" not in result["recovery"]["binding_hits"]
     assert "turn.count_player_action" not in result["recovery"]["primitive_hits"]
+
+
+def test_commit_fault_reports_completed_effects_without_rollback_or_fallback():
+    package = authored_package()
+    package["low_level_ir"]["blocks"]["1601"]["nodes"].insert(
+        0, {"op": "emit", "value": "x" * MAX_TEXT})
+    package["udl"]["low_level_ir_sha256"] = value_digest(package["low_level_ir"])
+    runtime = IntentRuntime(package)
+    runtime.run()
+    with pytest.raises(Word16Error, match="output budget"):
+        runtime.command("open chest")
+    assert runtime.memory[CHEST + 1] & 16
+    assert runtime.memory[CHEST] & 16
+    receipt = runtime.last_recovery["segments"][-1]
+    assert receipt["status"] == "commit_fault"
+    assert [effect["type"] for effect in receipt["completed_effects"]] == [
+        "container_opened", "residual_ir"]
+    assert receipt["interrupted_effect"]["type"] == "narrate"
+    assert receipt["interrupted_effect_status"] == "unknown"
+    assert runtime.recovery_stats["binding_hits"] == {}
+    with pytest.raises(Word16Error, match="faulted"):
+        runtime.run()
+    assert runtime.last_recovery["segments"][-1] == receipt
+
+
+def test_preflight_fault_reports_no_semantic_effects():
+    runtime = IntentRuntime(authored_package())
+    runtime.run()
+    runtime._guards[UNRESOLVED_EFFECT] = b"\0"  # injected failure after live admission
+    with pytest.raises(Word16Error, match="original bytes changed"):
+        runtime.command("open chest")
+    assert not runtime.memory[CHEST + 1] & 16
+    assert not runtime.memory[CHEST] & 16
+    receipt = runtime.last_recovery["segments"][-1]
+    assert receipt["status"] == "preflight_fault"
+    assert receipt["completed_effects"] == []
+    assert receipt["interrupted_effect"] is None
+
+
+def test_cli_fault_transcript_preserves_last_successful_checkpoint_for_fresh_resume(tmp_path):
+    document = authored_package()
+    document["low_level_ir"]["blocks"]["1601"]["nodes"].insert(
+        0, {"op": "emit", "value": "x" * MAX_TEXT})
+    document["udl"]["low_level_ir_sha256"] = value_digest(document["low_level_ir"])
+    package, commands = tmp_path / "package.json", tmp_path / "commands.json"
+    checkpoint, transcript = tmp_path / "checkpoint.json", tmp_path / "transcript.json"
+    package.write_text(json.dumps(document))
+    commands.write_text('["open chest"]')
+    script = ("import sys;sys.path.insert(0,sys.argv.pop(1));"
+              "from fdisbull_player.__main__ import main;raise SystemExit(main())")
+    def invoke(*options):
+        return subprocess.run([sys.executable, "-I", "-B", "-c", script,
+                               str(ROOT / "player"), "--intents", str(package), *options],
+                              cwd=tmp_path, text=True, capture_output=True, timeout=15)
+    failed = invoke("--commands", str(commands), "--checkpoint", str(checkpoint),
+                    "--transcript", str(transcript))
+    assert failed.returncode != 0
+    fault = json.loads(transcript.read_text())[-1]
+    assert fault["status"] == "fault"
+    assert fault["recovery"]["segments"][-1]["status"] == "commit_fault"
+    saved = json.loads(checkpoint.read_text())
+    assert saved["fault"] is None and saved["pending_input"] is not None
+    assert not bytes.fromhex(saved["memory"])[CHEST + 1] & 16
+    commands.write_text("[]")
+    resumed = invoke("--commands", str(commands), "--resume", str(checkpoint))
+    assert resumed.returncode == 0, resumed.stderr
 
 
 @pytest.mark.parametrize("change,reason", [
