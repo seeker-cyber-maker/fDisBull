@@ -25,6 +25,7 @@ REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/integration-025/" + name for name in
 REQUIRED_SOURCE_EVIDENCE |= {"docs/uil-rfcs/0002/" + name for name in
                            ("vectors.json", "replay-summary.json")}
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-026/verification.json")
+REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-0261/verification.json")
 REQUIRED_PE_RESOURCES = {"wine_guest/agent.c", "wine_guest/init.sh", "wine_guest/broker.py", "wine_guest/selftest.c"}
 REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/broker.py", "ida_guest/SDK-LICENSE.txt", "ida_wire.py", "ida_remote.py", "ida_trace.py"}
 REQUIRED_PE_RESOURCES |= {"dos_guest/__init__.py", "dos_guest/init.sh", "dos_guest/broker.py", "dos_qemu.py", "dos_runtime.py", "qemu_machine.py", "gdb_rpc.py", "guest_assets.py"}
@@ -43,6 +44,9 @@ REQUIRED_KNOWLEDGE_RESOURCES |= {
     "skills/write-gamefaqs-guide/references/evidence-and-provenance.md",
     "skills/write-gamefaqs-guide/references/guide-structure.md",
     "skills/write-gamefaqs-guide/references/technical-mechanics.md",
+    "skills/write-gamefaqs-guide/references/routes-and-discoveries.md",
+    "skills/write-gamefaqs-guide/references/formats-and-engine-reuse.md",
+    "skills/write-gamefaqs-guide/references/engine-source-examples.md",
     "skills/write-gamefaqs-guide/references/source-examples.md",
 }
 

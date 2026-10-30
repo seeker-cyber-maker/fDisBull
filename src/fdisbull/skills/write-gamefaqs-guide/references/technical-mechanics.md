@@ -5,6 +5,7 @@
 - [Explain the decision first](#explain-the-decision-first)
 - [Specify an exact calculation](#specify-an-exact-calculation)
 - [Describe randomness and timing](#describe-randomness-and-timing)
+- [Make event probabilities useful for routes](#make-event-probabilities-useful-for-routes)
 - [Label code and models](#label-code-and-models)
 - [Check examples and boundaries](#check-examples-and-boundaries)
 - [Compare builds and interfaces](#compare-builds-and-interfaces)
@@ -92,6 +93,41 @@ state commit, later events and persistence. A failed command can consume time or
 resources. Preserve order-sensitive effects and cancellation rather than
 rewriting them as one atomic function. Route advice depending on these details
 must retain their qualification.
+
+## Make event probabilities useful for routes
+
+For each material random event, name the outcome and the opportunity being
+counted: per eligible step, per attack, per encounter, per loot roll, per visit
+or per complete attempt. Specify eligibility guards, competing events, cooldowns,
+state changes and the order of draws. A conditional rate after an encounter has
+begun is not the probability of finding that encounter on the next step. A
+table's weight is not a percentage until the active total and selection rule are
+known; zero-weight, rejection and reroll branches can change the denominator.
+
+Keep exact enumeration, analytic derivation and observed estimates distinct.
+For example, in an **authored illustration**, a uniform byte `u` from 0 through
+255 with condition `u % 100 < 10` succeeds for 30 of 256 inputs, or 15/128. It is
+not a ten-percent event. This calculation assumes the stated uniform byte and
+mapping; a real game's RNG may require a different seed/state distribution.
+An observed frequency should state successes, opportunities, initial conditions,
+sampling method and meaningful uncertainty. Preserve failed trials and selection
+bias; repeated restores of one RNG state do not supply independent samples.
+
+When the evidence warrants it, explain route-level consequences:
+
+| Question | Required assumptions and qualification |
+| --- | --- |
+| Chance of at least one success in `n` attempts | `1 - (1 - p)^n` requires independent attempts with the same success probability `p`; otherwise use the supported stateful/conditional model or leave the total unresolved. |
+| Expected attempts until success | `1 / p` requires the corresponding constant-probability geometric model with `p > 0` and unrestricted retries; guarantees, caps, resource exhaustion and absorbing failures change it. |
+| Fastest expected route | Include successful time, failed-attempt cost, setup, resets/recovery and risk tolerance; fastest single lucky run and shortest input sequence can differ. |
+| Manipulation or reproducibility | Record seed source, RNG advances, input/frame timing, menu effects and save/load behavior where established. A deterministic sequence can be a useful technique without proving that a runner may use it in a named category. |
+
+Identify pity counters, without-replacement pools, shared streams and conditional
+draws when found. Do not multiply marginal rates to combine dependent events.
+Distinguish an inaccessible random branch from an event whose probability is
+zero under a stated reachable state. If the distribution or cadence is unknown,
+publish the recovered decision rule and the specific missing term; do not hide a
+useful mechanism because a final percentage cannot yet be justified.
 
 ## Label code and models
 

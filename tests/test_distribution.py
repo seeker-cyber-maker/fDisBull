@@ -34,6 +34,8 @@ REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scrip
 GAMEFAQS_SKILL_FILES = tuple('src/fdisbull/skills/write-gamefaqs-guide/'+name for name in (
     'SKILL.md', 'references/evidence-and-provenance.md', 'references/guide-structure.md',
     'references/technical-mechanics.md', 'references/source-examples.md',
+    'references/routes-and-discoveries.md', 'references/formats-and-engine-reuse.md',
+    'references/engine-source-examples.md',
 ))
 REQUIRED_SOURCE_FILES += GAMEFAQS_SKILL_FILES
 UDC_EVIDENCE_FILES = {
@@ -62,6 +64,7 @@ REQUIRED_SOURCE_FILES += tuple(sorted(INTEGRATION_EVIDENCE_FILES))
 REQUIRED_SOURCE_FILES += ('docs/uil-rfcs/0002/vectors.json',
                           'docs/uil-rfcs/0002/replay-summary.json')
 REQUIRED_SOURCE_FILES += ('docs/evidence/integration-026/verification.json',)
+REQUIRED_SOURCE_FILES += ('docs/evidence/integration-0261/verification.json',)
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):

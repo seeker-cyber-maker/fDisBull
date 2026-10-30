@@ -59,6 +59,7 @@ SOURCE_PATTERNS = (
     ("docs/evidence/integration-025", "tests.json"),
     ("docs/evidence/integration-025", "packages.json"),
     ("docs/evidence/integration-026", "verification.json"),
+    ("docs/evidence/integration-0261", "verification.json"),
     ("scripts", "*.py"),
 )
 
