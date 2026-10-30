@@ -35,6 +35,13 @@ REQUIRED_KNOWLEDGE_RESOURCES |= {"skills/fdisbull-investigate/SKILL.md", "skills
                                  "skills/fdisbull-investigate/references/semantic-contracts.md",
                                  "skills/fdisbull-investigate/references/formats-and-media.md",
                                  "skills/fdisbull-investigate/references/udl-uil-udc.md"}
+REQUIRED_KNOWLEDGE_RESOURCES |= {
+    "skills/write-gamefaqs-guide/SKILL.md",
+    "skills/write-gamefaqs-guide/references/evidence-and-provenance.md",
+    "skills/write-gamefaqs-guide/references/guide-structure.md",
+    "skills/write-gamefaqs-guide/references/technical-mechanics.md",
+    "skills/write-gamefaqs-guide/references/source-examples.md",
+}
 
 
 def archive_names(path: Path) -> list[str]:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify the installed investigation-skill index and its selective Markdown resources."""
+"""Verify a selected installed skill index and its selective Markdown resources."""
 
 from __future__ import annotations
 
@@ -25,6 +25,7 @@ from urllib.parse import unquote, urlsplit
 
 FORMAT = "fdisbull-skill-index-1"
 SKILL_NAME = "fdisbull-investigate"
+SKILL_NAMES = (SKILL_NAME, "write-gamefaqs-guide")
 ENTRYPOINT = "SKILL.md"
 MAX_INDEX_GUIDES = 32
 MAX_RESOURCE_BYTES = 64 * 1024
@@ -137,15 +138,17 @@ def _local_markdown_targets(source: str, text: str) -> list[str]:
     return targets
 
 
-def verify_index(index: object, read_resource) -> dict:
+def verify_index(index: object, read_resource, *, expected_name: str = SKILL_NAME) -> dict:
     """Validate an index and each selectively fetched file without matching prose."""
+    if not isinstance(expected_name, str) or expected_name not in SKILL_NAMES:
+        raise GateError("expected skill name is not supported")
     if not isinstance(index, dict) or set(index) != {"name", "format", "entrypoint", "guides"}:
         raise GateError("skill index has an invalid envelope")
     name = index["name"]
     if not isinstance(name, str) or not SLUG_RE.fullmatch(name):
         raise GateError("skill index name is invalid")
-    if name != SKILL_NAME:
-        raise GateError(f"skill index name must be {SKILL_NAME}")
+    if name != expected_name:
+        raise GateError(f"skill index name must be {expected_name}")
     if index["format"] != FORMAT:
         raise GateError("skill index format is unsupported")
     entrypoint = _safe_reference(index["entrypoint"], label="entrypoint")
@@ -337,8 +340,10 @@ def _interpreter_executable(python: str) -> str:
     return os.path.abspath(shutil.which(expanded) or expanded)
 
 
-def check_installed(python: str, *, command_timeout: float = 5.0,
+def check_installed(python: str, *, skill: str = SKILL_NAME, command_timeout: float = 5.0,
                     total_timeout: float = 30.0) -> dict:
+    if not isinstance(skill, str) or skill not in SKILL_NAMES:
+        raise GateError("expected skill name is not supported")
     if not 0 < command_timeout <= 30 or not 0 < total_timeout <= 120:
         raise GateError("timeouts must be positive and within the supported bounds")
     checkout = Path(__file__).resolve().parents[1]
@@ -385,12 +390,14 @@ def check_installed(python: str, *, command_timeout: float = 5.0,
     if module_path.is_relative_to(checkout):
         raise GateError("interpreter imported fDisBull from the checkout instead of an installed package")
 
-    index = invoke(["agent-skill", "--index"], "skill index")
+    # Keep the default command compatible with packages predating selection.
+    skill_args = ["agent-skill"] + ([] if skill == SKILL_NAME else ["--skill", skill])
+    index = invoke([*skill_args, "--index"], "skill index")
     if not isinstance(index, dict):
         raise GateError("installed CLI skill index is not an object")
 
     def read_resource(reference: str) -> str:
-        result = invoke(["agent-skill", "--reference", reference], f"reference {reference}")
+        result = invoke([*skill_args, "--reference", reference], f"reference {reference}")
         if result.get("name") != index.get("name") or not isinstance(result.get("files"), dict):
             raise GateError(f"selective read returned an invalid envelope: {reference}")
         files = result["files"]
@@ -398,7 +405,7 @@ def check_installed(python: str, *, command_timeout: float = 5.0,
             raise GateError(f"selective read did not return exactly the requested file: {reference}")
         return files[reference]
 
-    result = verify_index(index, read_resource)
+    result = verify_index(index, read_resource, expected_name=skill)
     result.update({
         "status": "passed",
         "checked_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -431,6 +438,8 @@ def _write_receipt(path: Path, receipt: dict) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--skill", choices=SKILL_NAMES, default=SKILL_NAME,
+                        help="bundled skill to validate (default: fdisbull-investigate)")
     parser.add_argument("--python", default=sys.executable,
                         help="installed Python interpreter used for isolated fdisbull CLI queries")
     parser.add_argument("--output", required=True, type=Path,
@@ -441,7 +450,7 @@ def main(argv: list[str] | None = None) -> int:
                         help="maximum seconds for the full gate")
     args = parser.parse_args(argv)
     try:
-        receipt = check_installed(args.python, command_timeout=args.command_timeout,
+        receipt = check_installed(args.python, skill=args.skill, command_timeout=args.command_timeout,
                                   total_timeout=args.total_timeout)
         _write_receipt(args.output, receipt)
     except (GateError, OSError, ValueError) as exc:

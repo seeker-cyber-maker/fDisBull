@@ -81,6 +81,31 @@ def test_index_reads_only_indexed_resources_and_checks_local_links():
     assert all("text" not in row for row in result["files"])
 
 
+@pytest.mark.parametrize("skill", ["fdisbull-investigate", "write-gamefaqs-guide"])
+def test_gate_validates_each_public_skill_and_rejects_name_substitution(skill):
+    from fdisbull.cli import invoke
+    index = invoke("agent-skill", {"skill": skill, "index": True})
+
+    def read(reference):
+        return invoke("agent-skill", {"skill": skill, "reference": reference})["files"][reference]
+
+    result = gate.verify_index(index, read, expected_name=skill)
+    assert result["skill_name"] == skill
+    assert result["reference_count"] == len(index["guides"])
+    other = "write-gamefaqs-guide" if skill == "fdisbull-investigate" else "fdisbull-investigate"
+    with pytest.raises(gate.GateError, match=f"must be {other}"):
+        gate.verify_index(index, read, expected_name=other)
+
+
+@pytest.mark.parametrize("skill", [None, True, [], "../fdisbull-investigate", "unknown"])
+def test_gate_rejects_unsupported_skill_selection_before_reading(skill):
+    index, documents = good_bundle()
+    with pytest.raises(gate.GateError, match="expected skill name is not supported"):
+        gate.verify_index(index, documents.__getitem__, expected_name=skill)
+    with pytest.raises(gate.GateError, match="expected skill name is not supported"):
+        gate.check_installed("/nonexistent/python", skill=skill)
+
+
 def test_missing_index_reference_for_local_link_is_rejected():
     index, documents = good_bundle()
     index["guides"] = index["guides"][:1]

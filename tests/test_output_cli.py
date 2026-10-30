@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import pytest
 
 from fdisbull.cli import main, respond
 from fdisbull.output_limits import OutputPolicy, output_policy_context
@@ -72,9 +73,13 @@ def test_server_bounds_each_line_and_continues_with_a_selective_query(tmp_path):
     assert small['id']=='small' and small['result']['format']=='fdisbull-skill-index-1'
 
 
-def test_full_skill_export_round_trips_through_output_artifact(tmp_path):
+@pytest.mark.parametrize('skill,selected_reference', [
+    ('fdisbull-investigate', 'references/semantic-contracts.md'),
+    ('write-gamefaqs-guide', 'references/technical-mechanics.md'),
+])
+def test_full_skill_export_round_trips_through_output_artifact(tmp_path,skill,selected_reference):
     root = Path(__file__).resolve().parents[1]
-    skill_root = root / 'src/fdisbull/skills/fdisbull-investigate'
+    skill_root = root / 'src/fdisbull/skills' / skill
     expected_files = {
         path.relative_to(skill_root).as_posix(): path.read_text(encoding='utf-8')
         for path in skill_root.rglob('*.md')
@@ -87,7 +92,7 @@ def test_full_skill_export_round_trips_through_output_artifact(tmp_path):
 
     # Exercise the actual bundle through the bounded public interface.
     emitted = subprocess.run(
-        [*command, '--max-output-bytes', '4096', 'agent-skill'],
+        [*command, '--max-output-bytes', '4096', 'agent-skill', '--skill', skill],
         text=True, capture_output=True, env=environment, cwd=tmp_path, timeout=10,
     )
     assert emitted.returncode == 0, emitted.stderr
@@ -107,19 +112,20 @@ def test_full_skill_export_round_trips_through_output_artifact(tmp_path):
     recovered = json.loads(destination.read_text(encoding='utf-8'))
     assert recovered['ok'] is True
     assert recovered['result'] == {
-        'name': 'fdisbull-investigate', 'files': expected_files,
+        'name': skill, 'files': expected_files,
     }
 
     # JSON Pointer escaping lets a consumer retrieve just one newly added guide.
     selected = subprocess.run(
         [*command, 'output-select', artifact,
-         '/result/files/references~1semantic-contracts.md', '--max-bytes', '16384'],
+         '/result/files/' + selected_reference.replace('~', '~0').replace('/', '~1'),
+         '--max-bytes', '16384'],
         text=True, capture_output=True, env=environment, cwd=tmp_path, timeout=10,
     )
     assert selected.returncode == 0, selected.stderr
     selection = json.loads(selected.stdout)['result']
     assert selection['complete'] is True
-    assert selection['value'] == expected_files['references/semantic-contracts.md']
+    assert selection['value'] == expected_files[selected_reference]
 
 
 def test_invalid_configuration_refuses_before_a_mutation(tmp_path,monkeypatch,capsys):
