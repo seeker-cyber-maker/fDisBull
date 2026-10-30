@@ -162,6 +162,33 @@ ownership and resource-identity contract. Keep game files and evidence private.
 See [DinoPark Z](DINOPARK_Z.md) for the tested opening route, native requirements,
 partial coverage and remaining untested cases.
 
+For ordered scene commands, the separate player's `--batch-plan` and
+`--batch-journal` flags retain progress before dispatch. Use a qualified
+session-bound provider and the JSON operations in [batch recovery](Z_BATCH_RECOVERY.md).
+Resuming a partial action requires both the plan and provider to authorize the
+continuation. A successful acknowledgement is not proof that the original
+intent completed: current partial steps remain paused. Never replay the
+original action to repair missing evidence.
+
+### Preserve Zork IR or recover a qualified action
+
+```text
+fdisbull zork-uil /private/ZORK1.DAT --output /private/zork.ir.json.gz
+fdisbull zork-intents /private/ZORK1.DAT --ir /private/zork.ir.json.gz \
+  --output /private/zork.intents.json.gz
+fdisbull-player --intents /private/zork.intents.json.gz \
+  --checkpoint /private/zork.progress.json
+```
+
+The executable Word16 format retains interpreter operations; its legacy `uil`
+name does not make it recovered game intent. The qualified intent producer
+binds one edition's source operations to semantic rules and keeps everything
+unhandled as explicit IR. Generated packages and checkpoints retain story
+data, so they must remain private. See [Zork IR](ZORK_UIL.md) and
+[intent recovery](ZORK_INTENTS.md). On a fault, inspect completed effects and
+interrupted-effect uncertainty; the CLI preserves the prior successful
+checkpoint. A transcript-write failure is a separate delivery failure.
+
 ### Inspect interpreted game data
 
 For one AGI 2.917 logic resource in an uncompressed version-2 LOGDIR/VOL set:
@@ -194,6 +221,10 @@ surfaces. Report which one supports each conclusion, with source/version and
 context. Keep missing or unsupported behavior unknown. Keep game assets,
 checkpoints and byte-retaining project databases private; export only the
 requested authored scripts, selected evidence and receipts.
+
+Before promising a capability mentioned in a proposal, check the
+[PR requirements backlog](PR_BACKLOG.md) and the final source. Incorporated
+documentation, authored tests and fresh native acceptance have different scope.
 
 ## Research a progression or recovery task
 

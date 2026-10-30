@@ -114,6 +114,17 @@ exchange stops the connection; inspect unknown effects before any retry.
 installed runtime resources; provide your own authored or qualified scene input.
 Read `docs/Z_SCENES.md` for the envelope and exact limits.
 
+For an ordered route, `--batch-plan` and `--batch-journal` journal each dispatch
+before it crosses the provider boundary. A continuation needs both the plan's
+permission and the original provider response's matching context/command.
+Canonical action identity blocks aliases from resending the original action.
+An acknowledged notice or successful `look` cannot complete an original
+partial effect. Current providers supply no bound original-intent completion
+certificate, so such steps remain paused. Inspect the original result and use
+only a certified checkpoint rewind when its live-session/resource contract
+holds. See `docs/Z_BATCH_RECOVERY.md`; do not combine this protocol with the
+separate Word16/intent command loop.
+
 For the original-backed DinoPark provider, run
 `python -m fdisbull.dinopark_z` as the selected service with explicit original
 game, compatible backend and a new private work directory. It uses the v0.23

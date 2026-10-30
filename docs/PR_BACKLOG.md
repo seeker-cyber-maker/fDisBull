@@ -83,7 +83,7 @@ an unexplained loss. Do not reopen them simply to recreate merge history.
 | #23 | Native Inno Setup extraction command, API, safeguards and tests. | Requires `innoextract`; it is not an arbitrary GOG format reader or installer runner. |
 | #24 | Qualified Zork IR, independent consumer, bounded semantic intent and explicit partial-effect fault reporting. | Parser, scheduler, autonomous actors and unhandled game actions remain retained IR. Other editions require new qualification. |
 | #25 | Static LE object mapping and supported internal fixups. | LX, imports, unsupported fixups, protected-mode runtime selector translation and RTLink/NB02 recovery remain out of scope. |
-| #26 | Bounded DinoPark continuation, scene/provenance improvements and tests. | See fresh native scope and the individual #15 requirements above. |
+| #26 | Bounded DinoPark continuation, scene/provenance improvements, journaled batches and shared action continuations. Integration rejects canonical action repeats and false completion of partial intents. | Current providers lack a bound original-intent completion certificate; partial batch steps remain paused. See fresh native scope and individual #15 requirements above. |
 | #27 | Expanded, reconciled agent skill and reference routing. | Guidance about a capability does not implement that capability. |
 
 This document records technical disposition, not an instruction to close open

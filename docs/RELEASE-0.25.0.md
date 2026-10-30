@@ -24,7 +24,11 @@ See [DinoPark in Z](DINOPARK_Z.md).
   [recovered intents](ZORK_INTENTS.md).
 - **PR #26:** original-backed DinoPark continuation, scene recognition and
   provenance improvements, with bounded tests for notice return and draft
-  reconciliation. This is a qualified provider, not a recovered economic model.
+  reconciliation, plus journaled Z batches and shared original-action
+  continuations. The integration blocks original actions even through aliases
+  and requires provider authorization before continuing. Partial original
+  effects remain paused because current providers do not certify their final
+  completion. This is a qualified provider, not a recovered economic model.
 - **PR #23:** native GOG Inno Setup extraction through an installed
   `innoextract`, with explicit destination checks and a file manifest. The
   operation extracts a supported installer; it does not execute it or supply

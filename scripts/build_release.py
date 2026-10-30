@@ -51,6 +51,10 @@ SOURCE_PATTERNS = (
     ("docs/evidence/output-024", "dinopark-native.json"),
     ("docs/evidence/output-024", "dinopark-output.json"),
     ("docs/evidence/output-024", "tests.json"),
+    ("docs/evidence/integration-025", "zork.json"),
+    ("docs/evidence/integration-025", "dinopark.json"),
+    ("docs/evidence/integration-025", "tests.json"),
+    ("docs/evidence/integration-025", "packages.json"),
     ("scripts", "*.py"),
 )
 

@@ -35,12 +35,19 @@ Agents can start with [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) and the
 also available through `fdisbull agent-skill --reference SKILL.md`. These guides describe the tools
 and their boundaries; they do not turn an inferred result into observed fact.
 
-The 0.24.0 release keeps routine tool replies small. Large results
-remain available through private handles, so an agent can inspect the useful
-part without flooding its conversation or repeating an action. The refreshed
-skill also turns edition-matched research and walkthrough clues into testable
-scene leads, including hidden objects. See [bounded output](docs/OUTPUT_LIMITS.md)
-and the [agent workflow](docs/AGENT_QUICKSTART.md).
+The 0.25.0 source lets you preserve a qualified Zork story as executable IR,
+recover a small action as game-level rules, and keep playing through the
+unrecovered parts. DinoPark's original-backed provider adds bounded
+continuation through catalogue, notice and save boundaries. Effects already
+performed remain visible when a later step fails; the tool does not quietly
+repeat the action to make a reply look successful.
+
+Routine replies stay small, with larger evidence retained through private
+handles. The unified investigation skill helps agents choose a useful probe,
+research an edition and turn walkthrough clues into testable scene leads.
+See the [0.25 notes](docs/RELEASE-0.25.0.md),
+[bounded output](docs/OUTPUT_LIMITS.md) and
+[agent workflow](docs/AGENT_QUICKSTART.md).
 
 ## Install and use
 
@@ -77,7 +84,7 @@ files, record types and links, and export disassembly and control-flow images
 from stored state without operating a GUI. See [architecture](docs/ARCHITECTURE.md)
 and [external files](docs/EXTERNAL_FILES.md).
 
-The unreleased [DOS/4GW LE module](docs/dos4gw-le.md) adds bounded loading of
+The [DOS/4GW LE module](docs/dos4gw-le.md) adds bounded loading of
 supported 32-bit LE objects and internal fixups for the existing x86 analyzer.
 
 ## Debug the original program
@@ -160,6 +167,9 @@ resume explicitly declared notice continuations and rewind only after a
 certified live checkpoint restore. DinoPark restores recheck native values and
 the original scene before more input. Live checkpoints require the surviving
 guest and unchanged mounted files; native park saves provide durable resumption.
+An acknowledgement can advance a partial action, but current providers do not
+certify that the original intent is complete. Such batch steps remain paused
+for reconciliation, and aliases cannot be used to resend the original action.
 
 The separately installable [text player](docs/TEXT_PLAYER.md) can consume an
 authored projection or connect to a compatible local backend. Its live mode
@@ -211,6 +221,13 @@ in [UDC usage](docs/UDC_DOS.md), [testing methodology](docs/UDC_TESTING.md)
 and [verification](docs/VERIFICATION-0.23.md).
 
 ## Status, testing and history
+
+The **0.25.0 source integration** is described in the
+[release notes](docs/RELEASE-0.25.0.md) and
+[verification record](docs/VERIFICATION-0.25.md). The
+[PR backlog](docs/PR_BACKLOG.md) distinguishes incorporated contributions from
+requirements that remain partial or proposed. A source integration does not
+change the published release or system installation.
 
 [Version 0.24.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.24.0) with eight download-verified assets and the updated Linux offline kit. The [publication record](docs/PUBLICATION-0.24.md) documents exact-tag CI, public asset readback, known limits and the verified [shared Mac installation](docs/SYSTEM_INSTALLATION.md).
 

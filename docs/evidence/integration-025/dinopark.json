@@ -1,0 +1,102 @@
+{
+  "backend_sha256": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277",
+  "c10_continuation": {
+    "catalogue_read": "read vegasaurus incomplete/unknown after action sent; no retry or later action was sent",
+    "initial_inventory": "one Coelophysis; no purchase attempted in this run",
+    "initial_loaded_scene": "office",
+    "journaled_native_save_load": "save zpark-002 and load zpark-002 both completed/applied-confirmed; native session transition recorded",
+    "notice_continuation": "not reached; no batch park-entry journal exists",
+    "partial_action_batch_acknowledgement": "not exercised; no completion claim",
+    "session_cleanup_complete": true,
+    "session_complete": false,
+    "session_status": "failed",
+    "owned_child_exit_codes": [
+      0,
+      0
+    ],
+    "catalogue_stop": "parking_hint modal recognized during pan; catalogue surface not matched, selector unchanged ffff, purchase input not sent; prior read remains unknown"
+  },
+  "candidate_head": "db337d21f10a2c75c1e65d26ddd954cddc384e4c",
+  "candidate_version": "0.25.0",
+  "claim_limits": [
+    "Bounded native DinoPark route only; not broad game parity.",
+    "The C10 catalogue action remains unknown and was not retried.",
+    "No C10 park-notice acknowledgement result is available.",
+    "No generic watchpoint completion claim."
+  ],
+  "evidence_files": {
+    "c10_native_batch_journal": {
+      "sha256": "622296ca1aeb31b8e0a3efceadee904a193392d8502f81fa03569c2691da0704",
+      "size": 1425
+    },
+    "c10_native_events": {
+      "sha256": "04ad771af2deb0cd685650cf895cfaa500010118ddcbd6e65dd29931f82a108d",
+      "size": 23247
+    },
+    "c10_oracle": {
+      "sha256": "a9bac227429379ca42c1bc351330d0068700a6bf8e9dab6c8acb01307f87b76e",
+      "size": 13549
+    },
+    "c10_responses": {
+      "sha256": "4bf4fa19dc7ca55b197b1fc0bd69c23b8415b2037f681ff45df73e30fafb11bf",
+      "size": 4068
+    },
+    "c10_session": {
+      "sha256": "76e555949117cde7ab74fa4d0dfbc9a931b428785e0ca1c185b400c84c872387",
+      "size": 512253
+    },
+    "fresh_catalogue_frame": {
+      "sha256": "ac1107a71d4ab3270d97094ff9d0aa7fc464e1465ca6f0cfaba3e3a1e97b48d4",
+      "size": 12196
+    },
+    "fresh_native_events": {
+      "sha256": "2cb990ab35b750e41b5946e3611215b6137c9ae5ed2a175e8fbb73ba29e828fa",
+      "size": 837905
+    },
+    "fresh_oracle": {
+      "sha256": "4c6d619a9b56b7da0d51d19bb19bde240cd0b068d553aed3859f30a8a1fa516c",
+      "size": 50396
+    },
+    "fresh_responses": {
+      "sha256": "db8e343237395acae0af62af548797ea4ad32b01adbbea365997a533a05035ed",
+      "size": 9615
+    },
+    "fresh_save_load_resume_receipt": {
+      "sha256": "25e785356da710002563b38dd63add3b3af733522215e67a953a4d9c51678b5f",
+      "size": 12435
+    },
+    "fresh_session": {
+      "sha256": "02f50a1eded2db3cfc20f0f55e310b876018b9f9cf2c58f9d87a5b630d95696a",
+      "size": 3270505
+    }
+  },
+  "format": "fdisbull-025-bounded-dinopark-replay-1",
+  "fresh_opening": {
+    "all_complete_success_or_read": true,
+    "catalogue_read_vegasaurus": "success/applied-confirmed",
+    "coelophysis_purchase": "success/applied-confirmed; native result reported $1,250",
+    "native_save_and_load": "save park -> list saves -> load park -> check status all complete; loaded session status read succeeded",
+    "park_entry": "open park returned success; time-advance and status were observed; no broader open/closed persistence claim",
+    "response_count": 25,
+    "session_cleanup_complete": true,
+    "subsequent_inventory": "success; one Coelophysis and one pen",
+    "owned_child_exit_codes": [
+      0,
+      0
+    ]
+  },
+  "input_integrity": {
+    "c10_canonical_and_stage_unchanged": true,
+    "c10_game_inventory_sha256": "88990fbd3c279c4ddefa1dc43ad54d345943121bfaffe4f9e6a6ba27824453d4",
+    "c10_stage_files": 192,
+    "opening_canonical_and_stage_unchanged": true,
+    "opening_canonical_manifest_files": 192,
+    "opening_game_inventory_sha256": "88990fbd3c279c4ddefa1dc43ad54d345943121bfaffe4f9e6a6ba27824453d4",
+    "original_c10_bundle_unchanged": true,
+    "original_c10_native_sha256": "f661ecac96ae84803af19901def0669d8032ecb8b2b12814ca4832dcf78f576e",
+    "original_c10_qualified_resource_count": 184,
+    "original_c10_saved_field_count": 20
+  },
+  "runtime": "Source 0.25.0, CPython 3.13.17 macOS arm64; compatible separately verified 0.24 Mac DOSBox",
+  "private_receipt_sha256": "7f809d020e93ce65cc45175c329808ddeeafbafe63d8c9dd2d3c8482f73a923d"
+}

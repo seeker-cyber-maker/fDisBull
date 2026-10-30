@@ -47,6 +47,13 @@ SCENE_RECOVERY_EVIDENCE_FILES = {
     'docs/evidence/scene-recovery-2026-10-29/scene-pipeline-summary.json',
 }
 REQUIRED_SOURCE_FILES += tuple(sorted(OUTPUT_EVIDENCE_FILES | SCENE_RECOVERY_EVIDENCE_FILES))
+INTEGRATION_EVIDENCE_FILES = {
+    'docs/evidence/integration-025/zork.json',
+    'docs/evidence/integration-025/dinopark.json',
+    'docs/evidence/integration-025/tests.json',
+    'docs/evidence/integration-025/packages.json',
+}
+REQUIRED_SOURCE_FILES += tuple(sorted(INTEGRATION_EVIDENCE_FILES))
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):

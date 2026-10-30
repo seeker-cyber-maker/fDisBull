@@ -32,6 +32,10 @@ include docs/evidence/output-024/amplification.json
 include docs/evidence/output-024/dinopark-native.json
 include docs/evidence/output-024/dinopark-output.json
 include docs/evidence/output-024/tests.json
+include docs/evidence/integration-025/zork.json
+include docs/evidence/integration-025/dinopark.json
+include docs/evidence/integration-025/tests.json
+include docs/evidence/integration-025/packages.json
 recursive-include scripts *.py
 prune examples
 prune history

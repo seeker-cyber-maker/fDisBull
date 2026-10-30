@@ -1,0 +1,91 @@
+{
+  "format": "fdisbull-025-bounded-zork-replay-1",
+  "created_utc": "2026-10-30T02:25:30.747324+00:00",
+  "candidate_commit_supplied": "db337d21f10a2c75c1e65d26ddd954cddc384e4c",
+  "module_origins": {
+    "core": "src/fdisbull/__init__.py",
+    "player": "player/fdisbull_player/__init__.py",
+    "intent_runtime": "player/fdisbull_player/intent_runtime.py"
+  },
+  "source_version": "0.25.0",
+  "source_hashes": {
+    "src/fdisbull/zork_intents.py": "2988a0d8d68d3b10480ff3dbf8f631ae45f57f912518ffc558c07e41edd63cbc",
+    "src/fdisbull/zork_uil.py": "a4b3a9d07ca5479e6e8ccdf92c5013ea0c95432e6b7d2f8635029f5244c4077a",
+    "player/fdisbull_player/word16.py": "f5ca20999a1dea38b03df9386337a43600b54235fe4caffcbfb63a94dabc4168",
+    "player/fdisbull_player/intent_runtime.py": "1b0982a5655399e04b6ad1e3e717baf1aa1c9fa8e75931972d279fcc8062fc1c",
+    "player/fdisbull_player/game_intents.py": "aab1714faedd38488a0e918e8409cde514815ec1e23df3f663b226fec534675f",
+    "scripts/verify_zork_intents.py": "c55d732a1b2f3bd4ada8f9b040340a1f8933faf4bad2d5f60c4180d849a1d4d6",
+    "tests/test_zork_intent_runtime.py": "00b2c1b546585a5984beede0b45c4a9a1f33342458fb6e4e5a254432d3409cd2"
+  },
+  "inputs": {
+    "story_sha256": "0ae5ac229e79094ff368b6669356444af0f35e21d862a1baaa546989085c15fd",
+    "interpreter_sha256": "2a6f366349be71ef4a164e3fc9c31a4a3d8c24ee6ddac93ed345c993c3562514",
+    "setup_sha256": "ab969a238169ed7d62e0eaa7c3b984d0c742578183abe53e2e6d30702733c0b2",
+    "dosbox_sha256": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277",
+    "frotz_source_commit": "fe66e2ef738354f5e2fe37c7c01b1781ef659acd",
+    "frotz_sha256": "b857bd4cab99b218d7df530d98291e13132d26e32a3dd678dc640de1a2951662",
+    "intent_package_sha256": "df0464f95943bfc606d8104219ceb8cd20fda2d811db83b27f5c7a60f9de0102",
+    "commands_sha256": "a9434027709970cdfdfc4589c9dcb0b1cd840dc112226a2a3b026aa86b4d1440"
+  },
+  "focused_tests": "......                                                                   [100%]\n6 passed, 28 deselected in 1.91s",
+  "frotz": {
+    "all_equal": true,
+    "cases": 10,
+    "commands": 30,
+    "matching_boundaries": 40,
+    "all_ordered_effects_and_results_match": true,
+    "first_repeat_empty_body_trap": true,
+    "fresh_process": {
+      "checkpoint_after_commands": 1,
+      "resumed_commands": 1,
+      "all_results_equal": true,
+      "complete_final_snapshot_equal": true,
+      "original_modules_loaded": false,
+      "recovery_stats": {
+        "binding_hits": {
+          "mailbox_open": 1,
+          "turn_counter": 1
+        },
+        "primitive_hits": {
+          "narration.emit": 2,
+          "turn.count_player_action": 1
+        },
+        "outcomes": {
+          "already_open": 1,
+          "turn_counted": 1
+        },
+        "low_level_blocks": 717,
+        "residual_bindings": {},
+        "residual_reasons": {}
+      },
+      "isolation": "Fresh Python -I process; only copied package/consumer/checkpoint/tail inputs; workspace reads, network and subprocesses refused.",
+      "all_equal": true
+    },
+    "report_sha256": "5206b73f74613aac8e56e6595121bab19c30a279fb1a3e84fbe2cafd37da8dfd"
+  },
+  "dos": {
+    "first_text_equal": true,
+    "repeated_text_equal": true,
+    "same_session_restore_equal": true,
+    "warm_fresh_session_restore_equal": true,
+    "comparison": "remove mixed-player trailing prompt and fold whitespace",
+    "private_observation_sha256": "e37018ae5403d04c323fdcdfc8cfe7e730f92b99547475cf023b8ea718f31d61"
+  },
+  "replay_scripts": {
+    "commands_sha256": "7c9a73b8ce05b88ba1ca3f9f2326f2366a39d3e51f9f22287c5ab26d4f91730e",
+    "dos_script_sha256": "c12460ff942a1d4aadeee4df177c91b61231c6c22666fa91e6a29a451ee372e1"
+  },
+  "limitations": [
+    "The verifier case named full_route used two mailbox commands, not a winning route.",
+    "Original DOS checks compare visible responses and checkpoint replay, not RAM, input PC, RNG, or cold restore.",
+    "No whole-game, all-path, or original native fault parity is claimed."
+  ],
+  "runtime": "Source 0.25.0, CPython 3.13.17 arm64; genuine read-only dependencies from verified 0.24 installation",
+  "private_receipt_sha256": "803cead7f53f6313458e71837793396d40d944a31ea595427e4090815c1acd5d",
+  "source_export_verification": {
+    "commit": "db337d21f10a2c75c1e65d26ddd954cddc384e4c",
+    "tree": "c206e15a7448f95463f38e5f31e1beeface4624f",
+    "tracked_blobs": 1672,
+    "mismatched_or_missing": 0
+  }
+}
