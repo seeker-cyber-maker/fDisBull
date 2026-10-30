@@ -230,6 +230,12 @@ METHODS = {
     "patch": "Create a new snapshot, preserve parent; address,data,[version,label,origin]",
     "issues": "Pending/rejected/unresolved work; [version,limit]",
     "render": "Export stored rows as SVG/PNG; output,[version,address,lines,format,cs]",
+    'storage-info': 'Read-only storage inventory; project',
+    'migrate-external': 'Explicitly create an external-storage derivative; project,destination',
+    'source-info': 'Recorded target size/SHA-256, loader provenance and current availability; [version]',
+    'source-candidate': 'Inspect candidate identity without attaching; path,[version]',
+    'bind-source': 'Bind exact source or explicitly approved divergent layer; path,[version,approval]',
+    'new-source-analysis': 'Explicitly create a separate analysis without changing this one; path,destination,[version]',
     "help": "List methods; all project operations require project path",
 }
 
@@ -355,6 +361,11 @@ def invoke(method, params, debugger=None):
     project = p.pop("project",None)
     if not project:
         raise ValueError("project path is required")
+    if method == 'storage-info':
+        from .target_storage import storage_report
+        return storage_report(project)
+    if method == 'migrate-external':
+        return Project.migrate_external(project, p['destination'])
     scene_offline=('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations',
                    'debug-scene-observation','debug-export-scenes','debug-import-scenes',
                    'debug-save-workflow','debug-workflow-info','debug-workflow-receipts','debug-save-text-projection','debug-text-projection-info',
@@ -378,6 +389,11 @@ def invoke(method, params, debugger=None):
         with Project.create(project,binary,**p) as db:
             return db.status()
     with Project(project) as db:
+        if method in ('source-info','source-candidate','bind-source'):
+            return getattr(db, method.replace('-', '_'))(**p)
+        if method == 'new-source-analysis':
+            p['project'] = p.pop('destination')
+            return db.new_source_analysis(**p)
         if method in ('proof-check','proofs','proof-info'):
             return getattr(db,method.replace('-','_'))(**p)
         if method in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-layer','debug-layer-info','debug-layers','debug-events','debug-experiments','debug-experiment-info','debug-promote-code','debug-trace-view','runtime-version-info'):
@@ -650,6 +666,16 @@ def parser():
         if name=='inspect':
             c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'])
             c.add_argument('--image',choices=['auto','pe','le','mz','com'])
+    for name in ('storage-info','migrate-external','source-info','source-candidate','bind-source','new-source-analysis'):
+        c = sub.add_parser(name, help=METHODS[name]); c.add_argument('project')
+        if name in ('source-candidate','bind-source','new-source-analysis'):
+            c.add_argument('path')
+        if name in ('migrate-external','new-source-analysis'):
+            c.add_argument('destination')
+        if name not in ('storage-info','migrate-external'):
+            c.add_argument('--version', type=int)
+        if name == 'bind-source':
+            c.add_argument('--approval', type=json.loads, help='Exact source-candidate receipt, only after user approval of this base and candidate')
     c = sub.add_parser("import",help="create project from executable or explicit raw code")
     c.add_argument("path")
     c.add_argument("project")

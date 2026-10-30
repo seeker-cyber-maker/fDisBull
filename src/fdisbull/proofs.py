@@ -215,11 +215,11 @@ class ProofProjectMixin:
         with self.transaction(True):
             v = self.version(version)
             record = {'id':identifier, 'version':v['id'], 'version_sha256':v['sha256'],
-                      'source_sha256':self.meta['source_sha256'], 'created':now(), 'author':author,
+                      'source_sha256':self.source_sha256(v['id']), 'created':now(), 'author':author,
                       'evidence':evidence, 'spec':spec, 'result':result}
             digest = _digest(_json(record))
             self.db.execute('INSERT INTO bounded_proofs VALUES (?,?,?,?,?,?,?,?,?,?)',
-                            (identifier, v['id'], v['sha256'], self.meta['source_sha256'], record['created'],
+                            (identifier, v['id'], v['sha256'], self.source_sha256(v['id']), record['created'],
                              author, _json(evidence), _json(spec), _json(result), digest))
         return {**record, 'sha256':digest}
 
@@ -231,7 +231,7 @@ class ProofProjectMixin:
         for field in ('evidence', 'spec', 'result'):
             try: record[field] = json.loads(record[field])
             except (ValueError, TypeError) as error: raise ValueError('Corrupt proof record') from error
-        if _digest(_json(record)) != digest or record['version_sha256'] != v['sha256'] or record['source_sha256'] != self.meta['source_sha256']:
+        if _digest(_json(record)) != digest or record['version_sha256'] != v['sha256'] or record['source_sha256'] != self.source_sha256(v['id']):
             raise ValueError('Proof record or version hash mismatch')
         return {**record, 'sha256':digest}
 

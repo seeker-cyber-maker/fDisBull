@@ -298,7 +298,7 @@ class AnalysisMixin:
                         self.db.execute('UPDATE work SET state=?,detail=? WHERE version=? AND context=? AND address=?',(state,'user data definition' if state=='blocked' else 'invalid or outside executable mapping',v,self.context,k(a)))
                         continue
                     flow,target=ins['flow'],ins['target']
-                    inserted=self.db.execute('INSERT OR IGNORE INTO instructions VALUES (?,?,?,?,?,?,?,?,?)',(v,self.context,k(a),ins['size'],ins['bytes'],ins['mnemonic'],ins['operands'],flow,k(target) if target is not None else None))
+                    inserted=self.db.execute('INSERT OR IGNORE INTO instructions VALUES (?,?,?,?,?,?,?,?,?)',(v,self.context,k(a),ins['size'],self._instruction_hex(ins['bytes']),ins['mnemonic'],ins['operands'],flow,k(target) if target is not None else None))
                     self.db.execute("UPDATE work SET state='decoded',detail=? WHERE version=? AND context=? AND address=?",('unresolved indirect control flow' if flow.startswith('indirect') else None,v,self.context,k(a)))
                     decoded+=inserted.rowcount
                     self._clear_memory_facts(v,self.context,a)
