@@ -153,8 +153,10 @@ interpreter for every scene. C-like pseudocode helps inspection when it preserve
 guard structure, typed operations, spans and unresolved calls. Consult ASM for
 unresolved lowering, pointer/alias, ABI, width, flags or native-dispatch facts.
 
-The current `udl_blocks.asm_to_c` is a restricted rendering of the same supported
-ASM decoder. It is not a general decompiler or an independent oracle. The
+The default `udl_blocks.asm_to_c` engine is a restricted rendering of the same
+supported ASM decoder. The optional Ghidra engine adds an independently
+decoded comparison within that same narrow contract. Neither is a general
+decompiler or an independent source oracle. The
 repository-only [authored microbenchmark](https://github.com/seeker-cyber-maker/fDisBull/blob/main/examples/recovery/benchmark_lift_paths.py)
 separates already-available C parsing from the full ASM -> C -> IL route. Its
 results cannot establish human/agent comprehension speed or whole-game recovery

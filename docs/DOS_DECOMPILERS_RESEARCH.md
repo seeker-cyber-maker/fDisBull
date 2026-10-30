@@ -1,11 +1,16 @@
 # DOS decompiler investigation — 2026-10-26
 
-Initial recommendation: evaluate **Reko first** for 16-bit DOS, use **Ghidra as
-an independent comparison**, and treat **DCC as a historical baseline**. These
-are candidates for an optional, evidence-bound C-like view. No decompiler has
-been integrated into fDisBull or qualified against the private game yet.
-This investigation follows the fixed 0.17.0 source tag; it does not alter its
-packages or introduce a decompiler dependency into that release.
+The initial recommendation was to evaluate **Reko first** for 16-bit DOS, use
+**Ghidra as an independent comparison**, and treat **DCC as a historical
+baseline**. That was a candidate review against the fixed 0.17.0 source tag;
+it did not alter that release or qualify a decompiler against a private game.
+The current [bounded C route](UDC_DOS.md#c-route) adds an optional Ghidra-backed
+renderer for the existing straight-line register profile. It does not provide
+general function decompilation, source recovery or native parity. Its Ghidra C
+listing remains diagnostic evidence distinct from the normalized restricted C
+statements used for UIL comparison.
+The [measured Ghidra comparison](GHIDRA_ASM_C_COMPARISON.md) records this
+integration's authored-block behavior and its observed startup cost.
 
 ## Hex-Rays and the older Windows tools
 

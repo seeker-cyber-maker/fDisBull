@@ -96,17 +96,56 @@ new DOS lowering rules have not been implemented.
 ## C route
 
 `asm_to_c(lift)` produces a bounded C-like statement view of the supported ASM
-block. `lift_c_block` parses a restricted unsigned-16 assignment/add/subtract
-statement sequence into the same UIL. `verify_block` can then compare that UIL
-with the original ASM model, and UDC can select the original native backing.
+block using the built-in renderer. `lift_c_block` parses its restricted
+unsigned-16 assignment/add/subtract statements into UIL. `verify_block` can
+then compare that UIL with the original ASM model, and UDC can select the
+original native backing. The built-in view shares the ASM decoder.
 
-The view shares the ASM decoder. It is an additional abstraction edge to test,
-not independent source evidence or a general C/C++ decompiler. The C profile
-declares uint16_t operands and an int width of at least 32 bits. Signed
-undefined behavior, arbitrary expressions, aliasing and function recovery are
-outside this reader. `udl-lift-asm`, `udl-lift-c` and `udl-verify` expose the
-same bounded source, model and refusal behavior through the CLI. `udl-verify`
-prints a compact verdict; `--output FILE` retains complete proof specifications.
+An installed Ghidra can be selected explicitly with
+`asm_to_c(lift, engine='ghidra', analyze_headless='/path/to/analyzeHeadless',
+java_home='/path/to/jdk')`. This optional path starts a bounded headless
+project for the exact block bytes plus a recorded synthetic `RET`. It obtains
+Ghidra instruction facts and a decompiler C listing, then returns normalized
+`text` in the same restricted C grammar. The normalized statements are derived
+from Ghidra's decoded instruction facts, not parsed from its decompiler C.
+The native `ghidra_c` listing and diagnostics are separate evidence; arbitrary
+Ghidra C is not accepted by `lift_c_block`. A failed or unavailable Ghidra run
+does not fall back to the built-in renderer. The caller must pin the tool path,
+Java runtime and input hash when comparing results.
+
+For an admitted block, use the selected view in the existing proof path:
+
+```python
+view = asm_to_c(lift, engine='ghidra',
+                analyze_headless='/path/to/analyzeHeadless',
+                java_home='/path/to/jdk')
+candidate = lift_c_block(view['text'], lift['bindings'],
+                         inputs=lift['inputs'], outputs=lift['outputs'])
+proof = verify_block(lift, candidate['uil'])
+```
+
+Only an established `equivalent_under_assumptions` result qualifies the
+candidate for this bounded interface.
+
+Both views retain the same register-only contract. Flags, memory, control
+flow, ABI, timing, signed undefined behavior, pointer aliasing and general
+function recovery remain outside it. Neither renderer is independent source
+evidence or a native parity check. The C profile declares uint16_t operands
+and an int width of at least 32 bits. `udl-lift-asm`, `udl-lift-c` and
+`udl-verify` expose the original bounded readers through the CLI; `udl-verify`
+prints a compact verdict, while `--output FILE` retains complete proof
+specifications.
+
+Run the checkout-only [engine comparison](../examples/recovery/benchmark_asm_c_engines.py)
+on authored blocks with an explicit Ghidra path. It records the C outputs,
+qualification result and per-call wall times. A fresh Ghidra process is timed
+against an in-process built-in call; the observed request latency ratio is
+useful for that deployment choice, not a pure algorithm speed ratio. The
+benchmark does not measure game reconstruction quality or analyst time.
+Ghidra's real-mode decompiler may fail on an admitted block; such runs are
+reported as unknown comparisons rather than replaced with built-in output.
+The [measured methodology and result](GHIDRA_ASM_C_COMPARISON.md) document the
+current local comparison.
 
 See [the layer-by-layer protocol](UDC_TESTING.md) and
 [0.23 verification](VERIFICATION-0.23.md) for the observed scope.

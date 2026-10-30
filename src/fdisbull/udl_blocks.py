@@ -128,12 +128,21 @@ def lift_c_block(source, bindings, *, inputs, outputs, flags='unobserved', point
     return _lift('c_u16_subset', source, bindings, inputs, outputs, flags, pointer_assumptions)
 
 
-def asm_to_c(lift):
-    """Render a restricted C statement view from a validated ASM lift.
+def asm_to_c(lift, *, engine='builtin', analyze_headless=None, java_home=None,
+             timeout_s=60):
+    """Render the supported ASM block as C statements with a selected engine.
 
-    The view shares the ASM byte decoder; it is not an independent
-    decompilation, compiler validation, or proof of native parity.
+    The default renderer shares the ASM byte decoder. The optional Ghidra
+    engine extracts independent instruction facts but has the same narrow
+    register/flag/memory contract; neither view proves native behavior.
     """
+    if engine == 'ghidra':
+        from .ghidra_asm_c import render_ghidra_asm_c
+        return render_ghidra_asm_c(
+            lift, analyze_headless=analyze_headless, java_home=java_home,
+            timeout_s=timeout_s)
+    if engine != 'builtin':
+        raise ValueError('unknown ASM-to-C engine')
     if not isinstance(lift, dict) or lift.get('source_kind') != 'asm16':
         raise ValueError('ASM lift required')
     try:
