@@ -1,0 +1,1027 @@
+{
+  "format": "fdisbull-zork-partial-intent-verification-1",
+  "created_utc": "2026-10-30T00:37:24.688886+00:00",
+  "scope": "One complete bounded mailbox interaction and qualified player-action counter, composed with explicit residual IR.",
+  "all_game_intent_recovered": false,
+  "source": {
+    "checksum": 41257,
+    "declared_bytes": 84876,
+    "file_bytes": 92160,
+    "release": 88,
+    "serial": "840726",
+    "sha256": "0ae5ac229e79094ff368b6669356444af0f35e21d862a1baaa546989085c15fd",
+    "trailing_bytes": 7284,
+    "trailing_sha256": "1f37b7288d7dfc293e157924c3f00e56e1629f73fd4911e7722fb9727edd94d5",
+    "version": 3
+  },
+  "previous_pr_head": "20f9d79052dcb8977e2bd52b218a42851eb26916",
+  "upstream_baseline": "031b53eb953bfdc1d0e23c0ed49441031bad6e06",
+  "environment": {
+    "platform": "Linux",
+    "python": "3.12.14",
+    "other_host_platforms_verified": false
+  },
+  "identities": {
+    "qualified_package_file_sha256": "9d68e08f4bcb3da6bf16e40b1697fd2e2a2ab119b1891e9b51ead0f45f42c3b5",
+    "canonical_package_sha256": "d4e1f586a39b6fe59987c4b2e25bd17d9e0a009c3bb5208b0a8d4f5122f11d01",
+    "canonical_ir_sha256": "7ce71ee09f973a713a68e7246771010dd2a96d6ecd4c1e11cf91bdd51d19ee33",
+    "canonical_uil_sha256": "2bcaf44a91d5d328b8e37da7f50ec3316a32d3251ed1e7bc5ef9684b997fae69",
+    "canonical_udl_sha256": "5da1ebe631ef312d136efbe4264283d6f6a0299046a06eba0724e0ddd600cf78",
+    "source_files": {
+      "src/fdisbull/zork_intents.py": "2988a0d8d68d3b10480ff3dbf8f631ae45f57f912518ffc558c07e41edd63cbc",
+      "src/fdisbull/zork_intent_export.py": "90028d1074104775a5974fca275c0611f2b79b2317b3466438c23030bb4dd2c5",
+      "player/fdisbull_player/game_intents.py": "aab1714faedd38488a0e918e8409cde514815ec1e23df3f663b226fec534675f",
+      "player/fdisbull_player/intent_runtime.py": "969c71f221a5013c045d32b12b0ffa2b9c198a6b8ebfb58bbf038e89cadefbeb",
+      "scripts/verify_zork_intents.py": "c55d732a1b2f3bd4ada8f9b040340a1f8933faf4bad2d5f60c4180d849a1d4d6",
+      "tests/test_game_intents.py": "22bf971349a869142d71ccd46310d0838ffcafc3872b69c4be32dae17606979d",
+      "tests/test_zork_intents_mapper.py": "d48b9399990f2adb3c261430adc2f020a1397bbca6e56935142ae543118cfd63",
+      "tests/test_zork_intent_runtime.py": "61a2e78863b8b27054effd15ddf978210c0f69e59b27e21a274be86af6f18e74",
+      "tests/test_zork_intents_cli.py": "a4c3e6a50853d10882f919d98e9553ba0d72850a53f6df4f0670623af30b8b87"
+    }
+  },
+  "preservation": {
+    "protected_eight_hashes_unchanged": {
+      "player/fdisbull_player/word16.py": "f5ca20999a1dea38b03df9386337a43600b54235fe4caffcbfb63a94dabc4168",
+      "src/fdisbull/zork_uil.py": "a4b3a9d07ca5479e6e8ccdf92c5013ea0c95432e6b7d2f8635029f5244c4077a",
+      "tests/test_uil_word16_runtime.py": "59a2e87e840a06d643725deddf4e3469f1a93960c56ad5e151804fd7841660c0",
+      "tests/test_zork_uil.py": "75a058df42633ea718884580ea90b88f126e20561b572a5ac56e900b922044d3",
+      "tests/test_zork_uil_cli.py": "9ed8242d3a9b48dd067f57e3f45c33360b6e801a3ba7b88c9d876d188bb4c19a",
+      "../private/zork1.uil.json.gz": "f29a6ed0ad1e4db1bcf01b5f5a39b80c8ecd6524f8cca17ee10c8bf5a07c4607",
+      "../private/zork1.udl.json.gz": "b933d8fb4cf7f739f4c0fe9c0c1c61b306ea0dd64224fd408b41d5f6d4e3bd05",
+      "../private/zork1.z.json": "dda5f3e2d8e895111b309454fa84cd0aa430b69598fc7cd5cde81c8006b057bc"
+    },
+    "original_verifier_matches_previous_head": {
+      "path": "scripts/verify_zork_uil.py",
+      "sha256": "e9265b3ed6c2bdf135f843a3eb1b255ff011e2d5e5f6c04fe9f4aee42aeaec1a"
+    },
+    "files_sha256": {
+      "player/fdisbull_player/word16.py": "f5ca20999a1dea38b03df9386337a43600b54235fe4caffcbfb63a94dabc4168",
+      "src/fdisbull/zork_uil.py": "a4b3a9d07ca5479e6e8ccdf92c5013ea0c95432e6b7d2f8635029f5244c4077a",
+      "tests/test_uil_word16_runtime.py": "59a2e87e840a06d643725deddf4e3469f1a93960c56ad5e151804fd7841660c0",
+      "tests/test_zork_uil.py": "75a058df42633ea718884580ea90b88f126e20561b572a5ac56e900b922044d3",
+      "tests/test_zork_uil_cli.py": "9ed8242d3a9b48dd067f57e3f45c33360b6e801a3ba7b88c9d876d188bb4c19a",
+      "private-artifact/zork1.uil.json.gz": "f29a6ed0ad1e4db1bcf01b5f5a39b80c8ecd6524f8cca17ee10c8bf5a07c4607",
+      "private-artifact/zork1.udl.json.gz": "b933d8fb4cf7f739f4c0fe9c0c1c61b306ea0dd64224fd408b41d5f6d4e3bd05",
+      "private-artifact/zork1.z.json": "dda5f3e2d8e895111b309454fa84cd0aa430b69598fc7cd5cde81c8006b057bc",
+      "scripts/verify_zork_uil.py": "e9265b3ed6c2bdf135f843a3eb1b255ff011e2d5e5f6c04fe9f4aee42aeaec1a"
+    },
+    "legacy_focused_tests_passed": 69
+  },
+  "udl": {
+    "source_witnesses": 123,
+    "live_guards": 56,
+    "structural_binding_validation": true,
+    "all_path_semantic_proof": false
+  },
+  "first_complete_interaction": {
+    "case": "first_repeat_empty",
+    "boundary_sequence": 1,
+    "result_equal": true,
+    "snapshot_equal": true,
+    "ordered_effects_equal": true,
+    "effect_counts": {
+      "memory_write": 109,
+      "text_fragment": 9
+    },
+    "changed_final_memory_bytes": 55,
+    "retained_ir_dispatches": 717,
+    "mixed_runtime_dispatches": 680,
+    "audit": {
+      "binding_hits": {
+        "mailbox_open": 1,
+        "turn_counter": 1
+      },
+      "primitive_hits": {
+        "container.open": 1,
+        "narration.emit": 5,
+        "narration.name": 2,
+        "discourse.remember_mentioned_object": 1,
+        "turn.count_player_action": 1
+      },
+      "outcomes": {
+        "opened_with_contents": 1,
+        "turn_counted": 1
+      },
+      "low_level_blocks": 679,
+      "residual_bindings": {
+        "post_open_source_flag": 1
+      },
+      "residual_reasons": {},
+      "mode": "mixed_intent_and_ir"
+    },
+    "phases": [
+      {
+        "mode": "low_level_ir",
+        "phase": "unrecovered_parser_and_object_resolution",
+        "blocks": 441,
+        "first_pc": 22800,
+        "last_pc": 22637
+      },
+      {
+        "mode": "game_intent_uil",
+        "binding": "mailbox_open",
+        "outcome": "opened_with_contents"
+      },
+      {
+        "mode": "low_level_ir",
+        "phase": "unrecovered_action_bookkeeping",
+        "blocks": 25,
+        "first_pc": 22641,
+        "last_pc": 22378
+      },
+      {
+        "mode": "low_level_ir",
+        "phase": "unrecovered_background_scheduler_and_callbacks",
+        "blocks": 145,
+        "first_pc": 22388,
+        "last_pc": 21736
+      },
+      {
+        "mode": "game_intent_uil",
+        "binding": "turn_counter",
+        "outcome": "turn_counted"
+      },
+      {
+        "mode": "low_level_ir",
+        "phase": "unrecovered_return_and_input_preparation",
+        "blocks": 67,
+        "first_pc": 21749,
+        "last_pc": 22796
+      }
+    ],
+    "state_and_effect_hashes": {
+      "baseline_snapshot_sha256": "4c8f0675895e388539409f7246d143358c71b4703c703e708470eda4048c6997",
+      "mixed_snapshot_sha256": "4c8f0675895e388539409f7246d143358c71b4703c703e708470eda4048c6997",
+      "baseline_effects_sha256": "c2514f722103ce493f4267ca6379cf9f62c87ca18cbe5ccafbc40450564087a7",
+      "mixed_effects_sha256": "c2514f722103ce493f4267ca6379cf9f62c87ca18cbe5ccafbc40450564087a7"
+    },
+    "complete_private_case_sha256": "dea2d4d62186ff7948528baadcaa00025993d1831981bd9f1fb944daea4850d2",
+    "replaced_handler_formatter_referent_counter_trap_passed": true
+  },
+  "differential": {
+    "all_equal": true,
+    "commands_compared": 449,
+    "boundaries_compared": 460,
+    "cases": {
+      "full_route": {
+        "summary": {
+          "commands_expected": 396,
+          "commands_compared": 396,
+          "matching_snapshots": 397,
+          "matching_ordered_effects": 397,
+          "matching_results": 397,
+          "matching_reference_narratives": 397,
+          "matching_reference_score_moves": 397,
+          "recovery_stats": {
+            "binding_hits": {
+              "turn_counter": 392
+            },
+            "primitive_hits": {
+              "turn.count_player_action": 392
+            },
+            "outcomes": {
+              "turn_counted": 392
+            },
+            "low_level_blocks": 386227,
+            "residual_bindings": {},
+            "residual_reasons": {
+              "opening_target_not_qualified": 4,
+              "turn_frame_not_qualified": 2
+            }
+          },
+          "binding_counts": {
+            "mailbox_open": 0,
+            "turn_counter": 392
+          },
+          "primitive_counts": {
+            "container.open": 0,
+            "turn.count_player_action": 392
+          },
+          "required_recovery": {
+            "bindings": [
+              "turn_counter"
+            ],
+            "primitives": [
+              "turn.count_player_action"
+            ]
+          },
+          "positive_recovery": true,
+          "first_open_replaced_body_trap": false,
+          "error": null,
+          "final": {
+            "status": "halted",
+            "score": 350,
+            "moves": 394,
+            "location": 178,
+            "pc": 28167
+          },
+          "all_equal": true
+        },
+        "reference_sha256": "c05e6993170ea3239bc4e398d00bb5d6d762d04351145d8d3f2e03f53e32c7da",
+        "comparison_sha256": "b51ad56ebdf6bc4e67fc05d94194c27c4bece3825ec19a928470de3aa393b6d3"
+      },
+      "first_repeat_empty": {
+        "summary": {
+          "commands_expected": 5,
+          "commands_compared": 5,
+          "matching_snapshots": 6,
+          "matching_ordered_effects": 6,
+          "matching_results": 6,
+          "matching_reference_narratives": 6,
+          "matching_reference_score_moves": 6,
+          "recovery_stats": {
+            "binding_hits": {
+              "mailbox_open": 3,
+              "turn_counter": 5
+            },
+            "primitive_hits": {
+              "container.open": 2,
+              "narration.emit": 9,
+              "narration.name": 2,
+              "discourse.remember_mentioned_object": 1,
+              "turn.count_player_action": 5
+            },
+            "outcomes": {
+              "opened_with_contents": 1,
+              "turn_counted": 5,
+              "already_open": 1,
+              "opened_empty": 1
+            },
+            "low_level_blocks": 4028,
+            "residual_bindings": {
+              "post_open_source_flag": 2
+            },
+            "residual_reasons": {}
+          },
+          "binding_counts": {
+            "mailbox_open": 3,
+            "turn_counter": 5
+          },
+          "primitive_counts": {
+            "container.open": 2,
+            "turn.count_player_action": 5
+          },
+          "required_recovery": {
+            "bindings": [
+              "mailbox_open",
+              "turn_counter"
+            ],
+            "primitives": [
+              "container.open",
+              "turn.count_player_action"
+            ]
+          },
+          "positive_recovery": true,
+          "first_open_replaced_body_trap": true,
+          "error": null,
+          "final": {
+            "status": "input",
+            "score": 0,
+            "moves": 5,
+            "location": 180,
+            "pc": 22800
+          },
+          "all_equal": true
+        },
+        "reference_sha256": "29337e9edbcea78bf2068b32f67231e647ba0f87f39d79be72a721986539699a",
+        "comparison_sha256": "dea2d4d62186ff7948528baadcaa00025993d1831981bd9f1fb944daea4850d2"
+      },
+      "unavailable_target": {
+        "summary": {
+          "commands_expected": 2,
+          "commands_compared": 2,
+          "matching_snapshots": 3,
+          "matching_ordered_effects": 3,
+          "matching_results": 3,
+          "matching_reference_narratives": 3,
+          "matching_reference_score_moves": 3,
+          "recovery_stats": {
+            "binding_hits": {
+              "turn_counter": 2
+            },
+            "primitive_hits": {
+              "turn.count_player_action": 2
+            },
+            "outcomes": {
+              "turn_counted": 2
+            },
+            "low_level_blocks": 2015,
+            "residual_bindings": {},
+            "residual_reasons": {}
+          },
+          "binding_counts": {
+            "mailbox_open": 0,
+            "turn_counter": 2
+          },
+          "primitive_counts": {
+            "container.open": 0,
+            "turn.count_player_action": 2
+          },
+          "required_recovery": {
+            "bindings": [
+              "mailbox_open",
+              "turn_counter"
+            ],
+            "primitives": [
+              "container.open",
+              "turn.count_player_action"
+            ]
+          },
+          "positive_recovery": false,
+          "first_open_replaced_body_trap": false,
+          "error": null,
+          "final": {
+            "status": "input",
+            "score": 0,
+            "moves": 2,
+            "location": 81,
+            "pc": 22800
+          },
+          "all_equal": true
+        },
+        "reference_sha256": "7eda81b5717bd159efc48d561ac63ac649b1e4e2763308692e7b172b410074b9",
+        "comparison_sha256": "d9e24973d36604d822f04a843bfdefb934711bfde4e95e33bafd950cd1ccc14e"
+      },
+      "unknown_and_meta": {
+        "summary": {
+          "commands_expected": 2,
+          "commands_compared": 2,
+          "matching_snapshots": 3,
+          "matching_ordered_effects": 3,
+          "matching_results": 3,
+          "matching_reference_narratives": 3,
+          "matching_reference_score_moves": 3,
+          "recovery_stats": {
+            "binding_hits": {},
+            "primitive_hits": {},
+            "outcomes": {},
+            "low_level_blocks": 805,
+            "residual_bindings": {},
+            "residual_reasons": {}
+          },
+          "binding_counts": {
+            "mailbox_open": 0,
+            "turn_counter": 0
+          },
+          "primitive_counts": {
+            "container.open": 0,
+            "turn.count_player_action": 0
+          },
+          "required_recovery": {
+            "bindings": [
+              "mailbox_open",
+              "turn_counter"
+            ],
+            "primitives": [
+              "container.open",
+              "turn.count_player_action"
+            ]
+          },
+          "positive_recovery": false,
+          "first_open_replaced_body_trap": false,
+          "error": null,
+          "final": {
+            "status": "input",
+            "score": 0,
+            "moves": 0,
+            "location": 180,
+            "pc": 22800
+          },
+          "all_equal": true
+        },
+        "reference_sha256": "6fee6a6579ea617549423c03b8cd375d15789eefcd655d92c54461111b5dcd0c",
+        "comparison_sha256": "9bc283201c20bd5ff1d83bacb48c99b59aa5d7ea8c040823c76b985b7fc707ed"
+      },
+      "wait_turns": {
+        "summary": {
+          "commands_expected": 2,
+          "commands_compared": 2,
+          "matching_snapshots": 3,
+          "matching_ordered_effects": 3,
+          "matching_results": 3,
+          "matching_reference_narratives": 3,
+          "matching_reference_score_moves": 3,
+          "recovery_stats": {
+            "binding_hits": {},
+            "primitive_hits": {},
+            "outcomes": {},
+            "low_level_blocks": 1321,
+            "residual_bindings": {},
+            "residual_reasons": {
+              "turn_frame_not_qualified": 3
+            }
+          },
+          "binding_counts": {
+            "mailbox_open": 0,
+            "turn_counter": 0
+          },
+          "primitive_counts": {
+            "container.open": 0,
+            "turn.count_player_action": 0
+          },
+          "required_recovery": {
+            "bindings": [
+              "mailbox_open",
+              "turn_counter"
+            ],
+            "primitives": [
+              "container.open",
+              "turn.count_player_action"
+            ]
+          },
+          "positive_recovery": false,
+          "first_open_replaced_body_trap": false,
+          "error": null,
+          "final": {
+            "status": "input",
+            "score": 0,
+            "moves": 3,
+            "location": 180,
+            "pc": 22800
+          },
+          "all_equal": true
+        },
+        "reference_sha256": "92b4d74888396fa067ba1721de5f448cf1843784055b8848b4443e9718678eee",
+        "comparison_sha256": "996c865c38fb7b6fcfe3bfbc37ddfac674569cc674d95598242d5829e654404c"
+      },
+      "pronoun_read": {
+        "summary": {
+          "commands_expected": 2,
+          "commands_compared": 2,
+          "matching_snapshots": 3,
+          "matching_ordered_effects": 3,
+          "matching_results": 3,
+          "matching_reference_narratives": 3,
+          "matching_reference_score_moves": 3,
+          "recovery_stats": {
+            "binding_hits": {
+              "mailbox_open": 1,
+              "turn_counter": 2
+            },
+            "primitive_hits": {
+              "container.open": 1,
+              "narration.emit": 5,
+              "narration.name": 2,
+              "discourse.remember_mentioned_object": 1,
+              "turn.count_player_action": 2
+            },
+            "outcomes": {
+              "opened_with_contents": 1,
+              "turn_counted": 2
+            },
+            "low_level_blocks": 2374,
+            "residual_bindings": {
+              "post_open_source_flag": 1
+            },
+            "residual_reasons": {}
+          },
+          "binding_counts": {
+            "mailbox_open": 1,
+            "turn_counter": 2
+          },
+          "primitive_counts": {
+            "container.open": 1,
+            "turn.count_player_action": 2
+          },
+          "required_recovery": {
+            "bindings": [
+              "mailbox_open",
+              "turn_counter"
+            ],
+            "primitives": [
+              "container.open",
+              "turn.count_player_action"
+            ]
+          },
+          "positive_recovery": true,
+          "first_open_replaced_body_trap": false,
+          "error": null,
+          "final": {
+            "status": "input",
+            "score": 0,
+            "moves": 2,
+            "location": 180,
+            "pc": 22800
+          },
+          "all_equal": true
+        },
+        "reference_sha256": "e5ce4fb45be75e25b3d05e089b8a42bee75bb0c7bdd5ad011515ffccac7f36c0",
+        "comparison_sha256": "60edd0c377deffd1a7dbca28757069627a423fcf7f56584f7e1fee6ad177086a"
+      },
+      "pronoun_take": {
+        "summary": {
+          "commands_expected": 3,
+          "commands_compared": 3,
+          "matching_snapshots": 4,
+          "matching_ordered_effects": 4,
+          "matching_results": 4,
+          "matching_reference_narratives": 4,
+          "matching_reference_score_moves": 4,
+          "recovery_stats": {
+            "binding_hits": {
+              "mailbox_open": 1,
+              "turn_counter": 3
+            },
+            "primitive_hits": {
+              "container.open": 1,
+              "narration.emit": 5,
+              "narration.name": 2,
+              "discourse.remember_mentioned_object": 1,
+              "turn.count_player_action": 3
+            },
+            "outcomes": {
+              "opened_with_contents": 1,
+              "turn_counted": 3
+            },
+            "low_level_blocks": 2831,
+            "residual_bindings": {
+              "post_open_source_flag": 1
+            },
+            "residual_reasons": {}
+          },
+          "binding_counts": {
+            "mailbox_open": 1,
+            "turn_counter": 3
+          },
+          "primitive_counts": {
+            "container.open": 1,
+            "turn.count_player_action": 3
+          },
+          "required_recovery": {
+            "bindings": [
+              "mailbox_open",
+              "turn_counter"
+            ],
+            "primitives": [
+              "container.open",
+              "turn.count_player_action"
+            ]
+          },
+          "positive_recovery": true,
+          "first_open_replaced_body_trap": false,
+          "error": null,
+          "final": {
+            "status": "input",
+            "score": 0,
+            "moves": 3,
+            "location": 180,
+            "pc": 22800
+          },
+          "all_equal": true
+        },
+        "reference_sha256": "b660d225384c6160e6e968820da964173be7df1002907af644597e01aee95474",
+        "comparison_sha256": "f55b8769a068ec0dacab03562d7280c158991dcc34d78f05711e2bf4e1ca5fb9"
+      },
+      "pronoun_close_reopen": {
+        "summary": {
+          "commands_expected": 3,
+          "commands_compared": 3,
+          "matching_snapshots": 4,
+          "matching_ordered_effects": 4,
+          "matching_results": 4,
+          "matching_reference_narratives": 4,
+          "matching_reference_score_moves": 4,
+          "recovery_stats": {
+            "binding_hits": {
+              "mailbox_open": 2,
+              "turn_counter": 3
+            },
+            "primitive_hits": {
+              "container.open": 2,
+              "narration.emit": 10,
+              "narration.name": 4,
+              "discourse.remember_mentioned_object": 2,
+              "turn.count_player_action": 3
+            },
+            "outcomes": {
+              "opened_with_contents": 2,
+              "turn_counted": 3
+            },
+            "low_level_blocks": 2962,
+            "residual_bindings": {
+              "post_open_source_flag": 2
+            },
+            "residual_reasons": {}
+          },
+          "binding_counts": {
+            "mailbox_open": 2,
+            "turn_counter": 3
+          },
+          "primitive_counts": {
+            "container.open": 2,
+            "turn.count_player_action": 3
+          },
+          "required_recovery": {
+            "bindings": [
+              "mailbox_open",
+              "turn_counter"
+            ],
+            "primitives": [
+              "container.open",
+              "turn.count_player_action"
+            ]
+          },
+          "positive_recovery": true,
+          "first_open_replaced_body_trap": false,
+          "error": null,
+          "final": {
+            "status": "input",
+            "score": 0,
+            "moves": 3,
+            "location": 180,
+            "pc": 22800
+          },
+          "all_equal": true
+        },
+        "reference_sha256": "642bd428a5f93637bfb0c539da22da461b29ae40346204ccaac6b92eb182a206",
+        "comparison_sha256": "7aa169a6efe4d2268b2191cd1845d4bc53f8fb798978f3594f7d880a7e3699ab"
+      },
+      "pronoun_drop": {
+        "summary": {
+          "commands_expected": 4,
+          "commands_compared": 4,
+          "matching_snapshots": 5,
+          "matching_ordered_effects": 5,
+          "matching_results": 5,
+          "matching_reference_narratives": 5,
+          "matching_reference_score_moves": 5,
+          "recovery_stats": {
+            "binding_hits": {
+              "mailbox_open": 1,
+              "turn_counter": 4
+            },
+            "primitive_hits": {
+              "container.open": 1,
+              "narration.emit": 5,
+              "narration.name": 2,
+              "discourse.remember_mentioned_object": 1,
+              "turn.count_player_action": 4
+            },
+            "outcomes": {
+              "opened_with_contents": 1,
+              "turn_counted": 4
+            },
+            "low_level_blocks": 3833,
+            "residual_bindings": {
+              "post_open_source_flag": 1
+            },
+            "residual_reasons": {}
+          },
+          "binding_counts": {
+            "mailbox_open": 1,
+            "turn_counter": 4
+          },
+          "primitive_counts": {
+            "container.open": 1,
+            "turn.count_player_action": 4
+          },
+          "required_recovery": {
+            "bindings": [
+              "mailbox_open",
+              "turn_counter"
+            ],
+            "primitives": [
+              "container.open",
+              "turn.count_player_action"
+            ]
+          },
+          "positive_recovery": true,
+          "first_open_replaced_body_trap": false,
+          "error": null,
+          "final": {
+            "status": "input",
+            "score": 0,
+            "moves": 4,
+            "location": 180,
+            "pc": 22800
+          },
+          "all_equal": true
+        },
+        "reference_sha256": "b7511309312849e9de82e11c4ddc434f5620b82675239abb5bda209b3080ae20",
+        "comparison_sha256": "53ca144a86cfc1cbe165b27614bc08c6605d35192696f9d729a086bdc8c715d4"
+      },
+      "pronoun_put": {
+        "summary": {
+          "commands_expected": 5,
+          "commands_compared": 5,
+          "matching_snapshots": 6,
+          "matching_ordered_effects": 6,
+          "matching_results": 6,
+          "matching_reference_narratives": 6,
+          "matching_reference_score_moves": 6,
+          "recovery_stats": {
+            "binding_hits": {
+              "mailbox_open": 2,
+              "turn_counter": 5
+            },
+            "primitive_hits": {
+              "container.open": 2,
+              "narration.emit": 10,
+              "narration.name": 4,
+              "discourse.remember_mentioned_object": 2,
+              "turn.count_player_action": 5
+            },
+            "outcomes": {
+              "opened_with_contents": 2,
+              "turn_counted": 5
+            },
+            "low_level_blocks": 4893,
+            "residual_bindings": {
+              "post_open_source_flag": 2
+            },
+            "residual_reasons": {}
+          },
+          "binding_counts": {
+            "mailbox_open": 2,
+            "turn_counter": 5
+          },
+          "primitive_counts": {
+            "container.open": 2,
+            "turn.count_player_action": 5
+          },
+          "required_recovery": {
+            "bindings": [
+              "mailbox_open",
+              "turn_counter"
+            ],
+            "primitives": [
+              "container.open",
+              "turn.count_player_action"
+            ]
+          },
+          "positive_recovery": true,
+          "first_open_replaced_body_trap": false,
+          "error": null,
+          "final": {
+            "status": "input",
+            "score": 0,
+            "moves": 5,
+            "location": 180,
+            "pc": 22800
+          },
+          "all_equal": true
+        },
+        "reference_sha256": "60fc6c9b25ee219986260e0faf29afa17093a282f3671202b6cd829e4a9c0f9a",
+        "comparison_sha256": "4dd3f8affbcb702c55937d11c0e28d701aee166d6283bcd947658d8993f8a0f1"
+      },
+      "parser_alternatives": {
+        "summary": {
+          "commands_expected": 25,
+          "commands_compared": 25,
+          "matching_snapshots": 26,
+          "matching_ordered_effects": 26,
+          "matching_results": 26,
+          "matching_reference_narratives": 26,
+          "matching_reference_score_moves": 26,
+          "recovery_stats": {
+            "binding_hits": {
+              "turn_counter": 21,
+              "mailbox_open": 1
+            },
+            "primitive_hits": {
+              "turn.count_player_action": 21,
+              "container.open": 1,
+              "narration.emit": 5,
+              "narration.name": 2,
+              "discourse.remember_mentioned_object": 1
+            },
+            "outcomes": {
+              "turn_counted": 21,
+              "opened_with_contents": 1
+            },
+            "low_level_blocks": 18743,
+            "residual_bindings": {
+              "post_open_source_flag": 1
+            },
+            "residual_reasons": {}
+          },
+          "binding_counts": {
+            "mailbox_open": 1,
+            "turn_counter": 21
+          },
+          "primitive_counts": {
+            "container.open": 1,
+            "turn.count_player_action": 21
+          },
+          "required_recovery": {
+            "bindings": [
+              "mailbox_open",
+              "turn_counter"
+            ],
+            "primitives": [
+              "container.open",
+              "turn.count_player_action"
+            ]
+          },
+          "positive_recovery": true,
+          "first_open_replaced_body_trap": false,
+          "error": null,
+          "final": {
+            "status": "input",
+            "score": 0,
+            "moves": 21,
+            "location": 78,
+            "pc": 22800
+          },
+          "all_equal": true
+        },
+        "reference_sha256": "29e1189dd5250191588998d9e3d0365f3e5ee071eed8f865aea6f6eab9301bb7",
+        "comparison_sha256": "fa8cbb5f08e752bf04390d5f586eafc325284454eabfd0302ba5aa208d9ea70a"
+      }
+    },
+    "comparison_contract": {
+      "snapshot": "Every field compared; only recursive package identity normalized to retained-IR identity.",
+      "effects": "Every physical memory assignment, output fragment and random range/result in order.",
+      "result": "Every field except implementation steps and intent audit.",
+      "reference_text": "Existing checker normalization: remove status decoration/prompt and collapse whitespace."
+    },
+    "checker_sha256": "c55d732a1b2f3bd4ada8f9b040340a1f8933faf4bad2d5f60c4180d849a1d4d6",
+    "source_files_unchanged": true,
+    "private_report_sha256": "c93046879f04e12b769fef26a5c6a6859a3f7faed8d7d6bef5943120c7122a8d",
+    "route_command_sha256": "31b809f79bf961d642366b4c996f586de717b956202f35cae6b34ecf1c4be009",
+    "winning_route_opens_mailbox": false
+  },
+  "native_reference": {
+    "snapshots": 34,
+    "compared_dynamic_bytes_per_snapshot": [
+      11795
+    ],
+    "excluded_header_bytes_inclusive": [
+      0,
+      63
+    ],
+    "all_game_memory_equal": true,
+    "all_input_boundaries_equal": true,
+    "random_events": 7,
+    "random_events_equal": true,
+    "identities": {
+      "story_sha256": "0ae5ac229e79094ff368b6669356444af0f35e21d862a1baaa546989085c15fd",
+      "interpreter_sha256": "2a6f366349be71ef4a164e3fc9c31a4a3d8c24ee6ddac93ed345c993c3562514",
+      "dosbox_elf_sha256": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+      "rng_coupling": "observe original output; never replace native PRNG"
+    },
+    "receipt_sha256": "bb450dc5419a69205f5cb8b41145d40baf75de7c604f77c1037d9ab8eae72e6b"
+  },
+  "fresh_process_resume": {
+    "checkpoint_after_commands": 100,
+    "resumed_commands": 296,
+    "all_results_equal": true,
+    "complete_final_snapshot_equal": true,
+    "original_modules_loaded": false,
+    "recovery_stats": {
+      "binding_hits": {
+        "turn_counter": 293
+      },
+      "primitive_hits": {
+        "turn.count_player_action": 293
+      },
+      "outcomes": {
+        "turn_counted": 293
+      },
+      "low_level_blocks": 299453,
+      "residual_bindings": {},
+      "residual_reasons": {
+        "turn_frame_not_qualified": 2,
+        "opening_target_not_qualified": 1
+      }
+    },
+    "isolation": "Fresh Python -I process; only copied package/consumer/checkpoint/tail inputs; workspace reads, network and subprocesses refused.",
+    "all_equal": true
+  },
+  "reference_interpreter": {
+    "source_commit": "fe66e2ef738354f5e2fe37c7c01b1781ef659acd",
+    "binary_sha256": "350a783fc5468e2239a27fa61a5d4cca26353c209980631baf43b285fdd524f2",
+    "unmodified": true
+  },
+  "tests": {
+    "focused": {
+      "collected": 188,
+      "passed": 188,
+      "failed": 0,
+      "skipped": 0,
+      "failure_ids": [],
+      "junit_sha256": "ab2aa8c1c66c0c95430bffc01d1ca323a8b1e5498de7c2603d7ae78d5c374396"
+    },
+    "full_repository": {
+      "collected": 1847,
+      "passed": 1690,
+      "failed": 48,
+      "skipped": 109,
+      "failure_ids": [
+        "tests/test_advanced_cli.py::test_summary_and_signature_files_are_qualified_and_persistent",
+        "tests/test_dinopark_z_bridge.py::test_native_launch_failure_or_interrupt_always_finalizes_receipt[False]",
+        "tests/test_dinopark_z_bridge.py::test_native_launch_failure_or_interrupt_always_finalizes_receipt[True]",
+        "tests/test_dosbox_window.py::test_dos_endpoint_passes_window_only_for_native_backend",
+        "tests/test_ida_wire.py::test_fragmented_frame_and_packet_budget",
+        "tests/test_ida_wire.py::test_mismatched_interface_never_sends_a_debug_request",
+        "tests/test_ida_wire.py::test_request_handles_interleaved_server_message_and_does_not_replay",
+        "tests/test_managed.py::test_bad_switch_and_truncated_instruction_are_bounded_errors",
+        "tests/test_managed.py::test_cil_decoder_resolves_call_string_and_method_local_branch",
+        "tests/test_managed.py::test_cil_instruction_budget_reports_partial_without_claiming_complete",
+        "tests/test_managed.py::test_fat_cil_header_and_switch_targets_are_decoded_with_eh_left_explicit",
+        "tests/test_managed.py::test_invalid_metadata_token_stays_unresolved_while_cil_bytes_decode",
+        "tests/test_managed.py::test_managed_metadata_names_tokens_and_rvas_are_real_cli_fields",
+        "tests/test_managed.py::test_metadata_row_budget_is_checked_before_external_parser_and_output_is_capped",
+        "tests/test_managed.py::test_wrong_or_missing_method_tokens_and_native_method_are_explicit",
+        "tests/test_managed_api.py::test_managed_path_api_and_method_token_resolution",
+        "tests/test_managed_api.py::test_project_retains_managed_source_and_refuses_native_il_analysis",
+        "tests/test_output_artifacts.py::test_concurrent_dedup",
+        "tests/test_output_artifacts.py::test_corruption_and_no_clobber_export",
+        "tests/test_output_artifacts.py::test_empty_chunk_stream_is_bounded",
+        "tests/test_output_artifacts.py::test_generator_failure_removes_partial_without_error_content",
+        "tests/test_output_artifacts.py::test_paths_privacy_id_validation_and_git",
+        "tests/test_output_artifacts.py::test_quotas_errors_and_stale_files",
+        "tests/test_output_artifacts.py::test_read_ranges_and_invalid_json_are_refused",
+        "tests/test_output_artifacts.py::test_replaced_store_directory_is_refused",
+        "tests/test_output_artifacts.py::test_roundtrip_restart_unicode_range_and_pointer",
+        "tests/test_output_cli.py::test_bounded_selection_and_projectless_retrieval",
+        "tests/test_output_cli.py::test_cli_spills_then_fresh_process_selects_without_execution",
+        "tests/test_output_cli.py::test_server_bounds_each_line_and_continues_with_a_selective_query",
+        "tests/test_output_limits.py::test_large_failed_rpc_retains_error_without_promoting_it",
+        "tests/test_output_limits.py::test_large_result_retains_the_complete_original_with_execution_scope",
+        "tests/test_output_limits.py::test_small_values_and_exact_wire_byte_boundary_are_unchanged",
+        "tests/test_output_limits.py::test_unknown_execution_fields_are_not_invented_or_partially_labeled",
+        "tests/test_pr17_examples.py::test_native_probe_rejects_wrong_executable_hash_under_python_optimized",
+        "tests/test_qemu_machine.py::test_gdb_packet_checksum_failure_is_not_retried",
+        "tests/test_qemu_machine.py::test_gdb_run_length_and_escaped_bytes_are_decoded_from_wire",
+        "tests/test_text_host.py::test_explicit_preparation_runs_after_bindings_before_listening",
+        "tests/test_text_host.py::test_real_loopback_roundtrip_and_cleanup",
+        "tests/test_udc.py::test_asm_udl_uil_original_backing_roundtrip_and_negative",
+        "tests/test_udc.py::test_competing_directory_is_never_replaced",
+        "tests/test_udc.py::test_immutable_parent_and_patch_isolation",
+        "tests/test_udc.py::test_mz_fixups_and_overlay_are_preserved_but_not_misproved",
+        "tests/test_udc.py::test_reconstruct_from_blocks_after_restart_without_source_file",
+        "tests/test_udc.py::test_tampered_backing_missing_block_and_metadata_refused",
+        "tests/test_udc.py::test_unavailable_proof_never_becomes_parity",
+        "tests/test_udc_cli.py::test_private_compilation_and_compact_replies",
+        "tests/test_wine_advanced.py::test_qmp_handles_fragmented_replies_and_async_stop_event",
+        "tests/test_z_process_backend.py::test_socket_peer_without_response_obeys_cli_timeout"
+      ],
+      "junit_sha256": "bd0e5abdaed979c34ea02355fc5898af8bf5b5edade0195992a911a7230734f1",
+      "failure_ids_equal_previously_reproduced_unchanged_baseline": true,
+      "introduced_failure_ids": [],
+      "baseline_comparison_sha256": "005f04eae3ed1b3ece190add9c92a2a35b0b17083b78180a1c6f14e18efec741",
+      "baseline_failure_categories": {
+        "existing_git_directory_output_guard": 28,
+        "sandbox_socket_restriction": 10,
+        "managed_dependencies_missing": 10
+      },
+      "stdout_sha256": "24882fe1329414e64f2027a723925f0755f95d8a368cea46c0c5f04fa3599d84"
+    },
+    "new_intent_tests": 85,
+    "preserved_tests": 69,
+    "packaging_tests": 34
+  },
+  "independent_review": {
+    "verdict": "ready_for_qualified_bounded_scope",
+    "receipt_sha256": "b8cf5e99872d6db47b73265a8ce1ffb850fc332b4788e050ccfd551f80845b2b",
+    "findings_fixed": 7,
+    "reviewer_ran_other_agents_tests": 49,
+    "semantic_all_path_proof": false
+  },
+  "built_wheels": {
+    "result": "passed",
+    "sha256": {
+      "fdisbull-0.24.0-py3-none-any.whl": "8e2b33dee9b87a24dde7f2a5a24fa999561ed5f8917685d764c18d8fef2d1396",
+      "fdisbull_player-0.24.0-py3-none-any.whl": "032338b5df1359b971219e85f92f3e7241392517f3c653b7b68828c11a521819"
+    },
+    "receipt_sha256": "4376ee2aba8820f855c175e033957cbe85f4b43cecdae098e9eee803db33b26d",
+    "exact_wheel_entry_points_executed": true,
+    "repo_imports_used": false,
+    "core_export_parsed_equal_to_qualified_package": true,
+    "separate_views_equal": true,
+    "first_repeat_score_moves": [
+      0,
+      1,
+      2,
+      2
+    ],
+    "fresh_resume_close_reopen_moves": [
+      3,
+      4
+    ],
+    "fresh_resume_matches_continuous_complete_state": true,
+    "tool_only_archive_gate": {
+      "exit_code": 0,
+      "stdout": "OK fdisbull-0.24.0-py3-none-any.whl: 149 tool-only entries\nOK fdisbull_player-0.24.0-py3-none-any.whl: 13 tool-only entries\n",
+      "checker_sha256": "4bcf972411be7f6a030c5aacd3d586c216928f1d29782024ca75b3fadc300ddc"
+    }
+  },
+  "residual_scope": [
+    "original parser and object/accessibility resolution",
+    "mailbox attribute 3 single original block",
+    "post-action bookkeeping",
+    "background scheduler, callbacks, timers and actors",
+    "return and input preparation",
+    "all unsupported actions and unqualified contexts"
+  ],
+  "limits": [
+    "Exact R88 edition only; no all-path equivalence proof.",
+    "Winning route exercises counter recovery but never mailbox opening.",
+    "WAIT and other unqualified scheduler callers retain IR and their original turn effects.",
+    "Narrative equality normalizes status decoration, prompt and whitespace.",
+    "Hybrid snapshots normalize only package identity for retained-IR comparison.",
+    "Original DOS save-file interoperability and other host platforms are unverified.",
+    "This receipt does not substitute for GitHub CI on the final PR commit."
+  ]
+}

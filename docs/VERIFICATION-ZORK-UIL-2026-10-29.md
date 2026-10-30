@@ -1,14 +1,20 @@
-# Zork I executable UIL verification
+# Zork I executable IR verification (legacy UIL profile name)
+
+**Terminology correction:** this historical receipt qualifies the low-level
+word16 executable IR. It does not establish recovery of the intended game-intent
+UIL. The original runtime, converter, outputs and tests remain unchanged. See
+[partial intent recovery](ZORK_INTENTS.md) and its
+[separate verification](VERIFICATION-ZORK-INTENTS-2026-10-29.md) for the new layer.
 
 The exact Zork I release 88, serial `840726`, supplied for this investigation was
-converted to `fdisbull-uil-word16-1` and completed as a standalone UIL program.
+converted to `fdisbull-uil-word16-1` and completed as a standalone IR program.
 The initial narrative and all 396 responses on the full-score route agree with
 an independently built, unmodified reference interpreter. The game finishes
 with **350/350 points in 394 counted moves**.
 
 This is a complete low-level executable conversion, with behavioral evidence
 for the route and additional cases below. It is not an all-path equivalence
-proof or a recovery of English names for every game rule.
+proof or recovery of game-intent primitives.
 
 ## Source and implementation identities
 

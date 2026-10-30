@@ -1,14 +1,19 @@
-# Zork I as a standalone UIL program
+# Zork I as standalone executable IR
 
-The `zork-uil` converter maps the complete, checksum-qualified v3 story into a
-new executable profile, `fdisbull-uil-word16-1`. The independent Python consumer
+The legacy `zork-uil` converter maps the complete, checksum-qualified v3 story
+into the low-level executable IR profile `fdisbull-uil-word16-1`. The command and
+wire-format names are preserved for compatibility. This profile is **not the
+intended game-intent UIL**. That separate, partially recovered layer is described
+in [Game-intent UIL and its UDL definitions](ZORK_INTENTS.md).
+
+The independent Python consumer
 executes that program with no DOSBox, Frotz, Jericho, original COM/DAT file,
 project database, source decoder, or core `fdisbull` installation.
 
 The original parser, command dispatch, puzzles, object mutations, turn loop and
 autonomous processes are retained as lowered control and data operations. This
-is a low-level semantic translation. It does not claim to infer a useful English
-name for every rule or to prove all game paths equivalent. The existing
+is a low-level semantic translation. Named memory or tree operations do not
+establish game-intent recovery or prove all game paths equivalent. The existing
 `fdisbull-il-1` interaction blocks and mailbox recovery remain unchanged.
 
 ## Convert and play
@@ -27,14 +32,14 @@ fdisbull-player --uil /private/zork1.uil.json.gz --seed 12 \
 
 The optional UDL document records every source mapping and the source identity.
 The optional Z document inventories the initial object records and globals;
-subsequent authoritative state belongs to the UIL runtime. All three outputs
+subsequent authoritative state belongs to the IR runtime. All three outputs
 contain game-derived content and remain private. They are not shipped in the
 generic tool distributions or committed to this repository.
 
 The direct module form is also available:
 `python -m fdisbull_player.word16 /private/zork1.uil.json.gz --seed 12`.
 
-Only the UIL file and the standalone consumer are required for play. The
+Only the IR file and the standalone consumer are required for play. The
 consumer's `--commands` option accepts a JSON array of command strings for
 reproducible runs; `--transcript` records their actual responses. A checkpoint
 captures the execution continuation and random state, and can be reopened by a
@@ -69,11 +74,11 @@ The profile supplies these contracts:
 | Input | The text buffer and dictionary-token buffer are populated; the lowered original parser then processes them. |
 | Randomness | An explicit reproducible Frotz-compatible generator or a declared range/result tape; different interpreter generators are not assumed identical. |
 | Host effects | Explicit text, status/window, stream and sound events; unsupported host behavior raises an error. |
-| Persistence | Full evaluator continuations bound to the UIL package; game SAVE/RESTORE distinct from external checkpoints. |
+| Persistence | Full evaluator continuations bound to the IR package; game SAVE/RESTORE distinct from external checkpoints. |
 
 The memory image retains original data, including bytes that may also be code,
 because a source program can read its own image as data. Execution comes from
-the expanded UIL nodes. Each reached block and routine header has a byte guard;
+the expanded IR nodes. Each reached block and routine header has a byte guard;
 modified executable bytes cause an explicit refusal. A missing target likewise
 fails instead of falling back to interpretation.
 
@@ -119,6 +124,9 @@ report for fresh commands, results, hashes and measured coverage:
 - [Opcode definitions](https://inform-fiction.org/zmachine/standards/z1point1/sect15.html)
 - [Existing shared IL](INTERACTION_IL.md) and [recovery contracts](INTENT_PIPELINE_RECOVERY_CASES.md)
 
-This implementation follows the source-bound UDL → UIL → consumer separation
-in PRs #3, #10, #11, #13, #14, #17 and #20. The independent consumer realizes the
-profile's operations in Python; it is not the existing byte-preserving DOS UDC.
+The reviewed PRs #3, #10, #11, #13, #14, #17 and #20 motivate source-bound UDL
+definitions and game-intent UIL. This word16 implementation supplies a preserved
+execution substrate and reference checks for that work. Its mapper records
+instruction correspondence, while the new intent UDL separately records domain
+correspondence and unresolved behavior. The independent word16 consumer remains
+unchanged; it is not the existing byte-preserving DOS UDC.
