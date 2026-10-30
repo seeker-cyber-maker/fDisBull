@@ -73,6 +73,21 @@ python scripts/check_agent_skill.py --python /path/to/installed/python --skill w
 
 ## Choose a route
 
+### Intake a collection or a single addition
+
+Use [collection intake](TARGET_COLLECTION_INTAKE.md) for the common per-artifact
+workflow, source/member identities, unsupported formats and version decisions.
+Inventory the batch before choosing programs, preserve learner/oracle separation,
+and compare extracted hashes with the current private roster. An exact repeat
+adds provenance rather than another program copy. A different release gets its
+own original artifact before any snippet/layer relationship is proposed.
+
+Identification, extraction, image loading, bounded analysis and native execution
+are separate observations. Use a qualified archive/filesystem reader outside the
+tool where needed; inspect the installed commands before assuming support.
+Unknown formats remain catalogued inputs with an explicit capability gap.
+The bundled `references/formats-and-media.md` carries the portable summary.
+
 ### Inspect an executable without running it
 
 ```text
