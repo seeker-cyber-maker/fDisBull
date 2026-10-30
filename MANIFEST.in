@@ -19,6 +19,8 @@ include docs/uil-rfcs/0001/native-observation.json
 include docs/uil-rfcs/0001/native_probe.py
 include docs/uil-rfcs/0001/source-definition-observation.json
 include docs/uil-rfcs/0001/vectors.json
+include docs/uil-rfcs/0002/vectors.json
+include docs/uil-rfcs/0002/replay-summary.json
 include docs/evidence/spatial-2026-10-29/verification.json
 include docs/evidence/zork-2026-10-29/verification.json
 include docs/evidence/zork-uil-2026-10-29/verification.json

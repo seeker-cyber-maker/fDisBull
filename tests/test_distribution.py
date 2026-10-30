@@ -59,6 +59,8 @@ INTEGRATION_EVIDENCE_FILES = {
     'docs/evidence/integration-025/packages.json',
 }
 REQUIRED_SOURCE_FILES += tuple(sorted(INTEGRATION_EVIDENCE_FILES))
+REQUIRED_SOURCE_FILES += ('docs/uil-rfcs/0002/vectors.json',
+                          'docs/uil-rfcs/0002/replay-summary.json')
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):

@@ -20,6 +20,8 @@ DOC_EXAMPLE_FILES = (
     "docs/uil-rfcs/0001/native_probe.py",
     "docs/uil-rfcs/0001/source-definition-observation.json",
     "docs/uil-rfcs/0001/vectors.json",
+    "docs/uil-rfcs/0002/vectors.json",
+    "docs/uil-rfcs/0002/replay-summary.json",
 )
 SOURCE_PATTERNS = (
     ("src/fdisbull", "*.py"),

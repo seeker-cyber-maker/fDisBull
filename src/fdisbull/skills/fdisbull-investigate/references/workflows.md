@@ -142,6 +142,15 @@ repeat an action solely because its follow-up view failed. `save park` uses the
 original disk writer and a fresh loader; a live snapshot is a separate facility.
 The qualified scene surface is partial. See `docs/DINOPARK_Z.md`.
 
+The 0.26 candidate can retain that provider after an action error only when
+the same native guest is still reachable and freshly confirmed stopped.
+`recovery_required` is not success: new actions and new checkpoints are refused;
+only an explicitly requested, previously qualified checkpoint restore can clear
+the gate after native fields match and the saved scene qualifies again. Preserve
+confirmed effects separately from unknown effects, including when EOF closes the
+session. A running, unreachable or terminated guest is not recoverable through
+this path. Checkpoint rewind does not undo mounted-file writes.
+
 The debugger-backed `text-host` exposes a deliberately qualified public
 projection over a live session. It needs a private configuration, project,
 backend, game directory, resource root and explicit runtime witnesses. It is
