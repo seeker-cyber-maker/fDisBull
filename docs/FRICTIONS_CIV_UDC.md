@@ -30,3 +30,13 @@
      `/usr/bin/gcc` emitted Mach-O or rejected Linux-only linker flags.
    - No unrelated test or toolchain workaround was added; the follow-up is an
      explicit Linux-container/runner or cross-compiler fixture policy.
+
+6. Active-version selector versus convenience-path drift.
+   - The active installation record and `RUNTIME.json` resolve to fDisBull
+     `0.26.1` at `/Users/Shared/fDisBull/releases/0.26.1-f783f2a/venv`.
+   - `/Users/Shared/fDisBull/current/venv` imported `0.26.0` during this
+     investigation even though the active selector reported `0.26.1`.
+   - The workflow now treats `RUNTIME.json` and its versioned interpreter as
+     authoritative, asserts the imported version before analysis, and records
+     the source commit. This avoids silently attributing stale-agent results to
+     the current fDisBull release.
