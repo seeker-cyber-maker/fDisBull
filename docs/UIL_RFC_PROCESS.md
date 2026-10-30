@@ -8,6 +8,16 @@ Current proposal: [RFC 0001: UDL mappings, UIL intents and UDC definitions](uil-
 with [native and source-definition findings](UDL_UIL_EFFECT_ISOLATION_FINDINGS.md).
 It remains draft; linking it here is not adoption.
 
+Additional proposal: [RFC 0002: executable Rosetta contracts, patch propagation and polyglot UDC](uil-rfcs/0002-executable-rosetta-contracts.md).
+It formalizes executable backings, shared contracts and qualified composition;
+its evidence companion distinguishes prototype results from future requirements.
+It also remains draft and changes no current schema or runtime.
+
+The [definitions and roadmap](DEFINITIONS_AND_ROADMAP.md) maps these drafts
+and the [historical #7 interface proposal](uil-rfcs/0001-interface-description.md).
+The latter independently used the RFC 0001 label; it is a distinct unadopted
+proposal, not the shared-intents RFC above.
+
 ## Principle
 
 UIL must be extensible when a real game exposes a semantic gap, but it must not

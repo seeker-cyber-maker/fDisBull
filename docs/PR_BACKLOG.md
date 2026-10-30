@@ -7,6 +7,10 @@ be incorporated while some of its proposed capabilities remain future work.
 Historical game reports establish what their authors observed, not a fresh
 qualification of the current build.
 
+The [definitions and contract roadmap](DEFINITIONS_AND_ROADMAP.md) links the
+retained proposal texts and historical acceptance ledgers, including #29.
+Those documents are proposals or scoped reports, not implementation evidence.
+
 ## Highest-value remaining seams
 
 | Priority | Requirement | What exists | What remains |
@@ -95,6 +99,13 @@ It is pending a separate review and combined qualification; it is not included
 in 0.25. Its analyzer work must remain distinct from higher-level game-intent
 recovery. Later amendments to the selected PRs also require fresh review rather
 than silently changing a frozen verification target.
+
+[PR #29](https://github.com/seeker-cyber-maker/fDisBull/pull/29) contributes
+its draft executable Rosetta contract and sanitized authored-prototype receipts
+in the documentation consolidation. Its **R01–R18** cases remain prospective;
+neither that evidence nor this documentation implements a generic compiler,
+polyglot runtime or visual editor. See the [roadmap](DEFINITIONS_AND_ROADMAP.md)
+for the proposed 0.26 sequencing and retained evidence boundaries.
 
 This document records technical disposition, not an instruction to close open
 PRs or a claim that a future release has been published. Read the current GitHub

@@ -1,0 +1,131 @@
+{
+  "kind": "rosetta-rfc-experiment-evidence",
+  "date": "2026-10-30",
+  "status": "fresh local replays of previously authored experiments; not production feature conformance",
+  "repository_review_base": "70eb4e38bf4bf8d47e52e38b8fab6a6cd718f15e",
+  "input_archives": [
+    {
+      "name": "UDL_UIL_UDC_Patch_Lab.zip",
+      "sha256": "ed704fbabf665a8fa316036f78917c7b742955513ee949751f6f5ebfe963cb27",
+      "zip_integrity": "passed"
+    },
+    {
+      "name": "Polyglot_U8_Handoff.zip",
+      "sha256": "c562aa4f8ed64f3d09784ef3dc72b3c76f315353b27b01fe4e327899b540aad5",
+      "zip_integrity": "passed"
+    }
+  ],
+  "patch_roundtrip": {
+    "source_runner_sha256": "1b689230c6f25cbfc616056d1d33f8f2396c8dc5280ed27257efb51631475e94",
+    "source_assembly_sha256": {
+      "pre.S": "3fa2fe102697ecb54d70980e64462ad2ed5838e40e88f3d0fbb0a9246858c35e",
+      "post.S": "5005781afdec1790388f039654c5e0065ef1f0f78b59e64292f1eeeee7b01a64"
+    },
+    "external_evaluator_wheel_sha256": "b070727483d20f94dcbe392f1e1b2d18fe55fc80e38d326be8b5dcb56184d53d",
+    "fresh_run_exit": 0,
+    "reference_code_bytes": 512,
+    "pre_sha256": "7f278b753606622c96420d6e3a6639a191c38e2c66de7f801bad2d7b0706e982",
+    "post_sha256": "d05571bc894b61272d1d0cbf99368392fca288c819d64d4ce0290b670d60507d",
+    "exact_native_roundtrips": {
+      "post": true,
+      "pre": true
+    },
+    "guarded_patch_matches_post": true,
+    "semantic_delta_matches_post_uil": true,
+    "full_input_state_cases": 4096,
+    "tests": {
+      "post": {
+        "cases": 2048,
+        "counter_edge_contexts": 8,
+        "distinct_control_inputs": 256,
+        "executable_udl_composition": true,
+        "fdisbull_uil_evaluator": true,
+        "javascript_udc": true,
+        "javascript_visited_order_matches_uil": true,
+        "native_udc": true,
+        "original_native": true
+      },
+      "pre": {
+        "cases": 2048,
+        "counter_edge_contexts": 8,
+        "distinct_control_inputs": 256,
+        "executable_udl_composition": true,
+        "fdisbull_uil_evaluator": true,
+        "javascript_udc": true,
+        "javascript_visited_order_matches_uil": true,
+        "native_udc": true,
+        "original_native": true
+      }
+    },
+    "per_block_comparisons": 6656,
+    "negative_controls": 16,
+    "negative_controls_passed": true,
+    "changed_blocks": [
+      "decision",
+      "equal"
+    ],
+    "unchanged_blocks": [
+      "entry",
+      "before",
+      "calculate",
+      "lower",
+      "higher",
+      "after"
+    ],
+    "changed_byte_positions": 27,
+    "same_semantic_results_as_prior_receipt": true,
+    "tools": {
+      "gcc": "gcc (Debian 14.2.0-19) 14.2.0",
+      "machine": "x86_64",
+      "node": "v22.16.0",
+      "python": "3.13.5"
+    },
+    "limits": [
+      "fixed layout, x86-64 SysV, trusted authored code only",
+      "u8/u16 selected state; CPU registers/flags/cycles and external effects excluded",
+      "256 control inputs exhausted; full Cartesian product of all state fields not exhausted",
+      "exact equality of 512-byte .text payloads; ELF loader metadata not compared",
+      "hand-authored source/semantic mapping; not a general automatic lifter",
+      "experimental adapters over the real shared-IL evaluator, not a merged fDisBull feature"
+    ]
+  },
+  "polyglot": {
+    "pipeline": "native C produce -> JS Uint8Array/add_wrap_u8 -> native C finish",
+    "mechanism": "compiled Node-API addon loaded in the same Node process",
+    "valid_cases": 65536,
+    "valid_cases_passed": true,
+    "invalid_or_arity_rejections": 52,
+    "missing_wrap_detected": true,
+    "output_sha256": "43e70a028ab257067711d2d7e97b96d58d1d94dfcf63336e69a42c600b0a416b",
+    "runtime": {
+      "node": "v22.16.0",
+      "platform": "linux",
+      "arch": "x64"
+    },
+    "compiler": "cc (Debian 14.2.0-19) 14.2.0",
+    "source_sha256": {
+      "native.c": "1160589a1008a9f3bfb0eb0739c24fc88d76ea390974050438e4b7f1eb697e84",
+      "pipeline.cjs": "e7e4c925385eb4a157ee88de79329a6ad7dabc0fdad32c3021fa7ca1d6aa8b49",
+      "test.cjs": "a5ea298b4d9b55c4356a8e276064e6de9e8ff2441979ccefc786623e72ede9ff",
+      "run.py": "deea8795f2030ec7e29fba03502cbd0e41349dd76e58520f8a1fbab76cbdb17d"
+    },
+    "limits": [
+      "Authored plumbing demonstration, not automatic recovery or a new fDisBull UDC.",
+      "No Rust executed and no performance comparison claimed.",
+      "Scalar boundary values are copied through JS Number; a scalar is not stored as a JS u8 type.",
+      "The vector is private to synchronous JavaScript; no pointer, buffer ownership or shared-memory crossing is tested.",
+      "Exhaustive for these two u8 inputs and declared pure output only; not a universal compiler proof."
+    ],
+    "fresh_run_exit": 0,
+    "same_semantic_results_as_prior_receipt": true
+  },
+  "not_run": [
+    "full repository test suite",
+    "new game recovery",
+    "Rust interoperability",
+    "general incremental semantic invalidation",
+    "visual editor",
+    "automatic abstraction learning"
+  ],
+  "publication_scope": "Sanitized documentation and receipts only; authored prototype source archives remain separate deliveries. No game bytes, native modules, private host paths or checkpoints."
+}
