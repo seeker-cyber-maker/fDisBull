@@ -405,6 +405,8 @@ class ZService:
                     'text':{k:deepcopy(getattr(self.text,k)) for k in SNAPSHOT_FIELDS},
                     'fields':fields, 'context':observation['context']['id'], 'session_token':self.session_token,
                     'latest_native_save':self.latest_native_save}
+                self.event({'phase':'checkpoint_saved', 'checkpoint':name,
+                            'context':observation['context']['id'], 'field_count':len(fields)})
                 result = 'saved'
             elif name not in self.snapshots:
                 result = 'missing'
@@ -438,10 +440,12 @@ class ZService:
                             'field_count':len(snapshot['fields']), 'preparation_guest_ms':prepared_ms,
                             'context':observation['context']['id'], 'following_input':'not_sent'})
                 result = 'restored'
+            self.receipt('checkpoint-' + result)
             return {'complete':True,'status':result,'checkpoint':name,'replay_safe':result in ('saved', 'restored'),
                     'persistence':'owned live-session snapshot; mounted files must remain unchanged; not a native park disk save'}
         except Exception as error:
             self.event({'phase':'checkpoint_incomplete', 'operation':op, 'error_type':type(error).__name__, 'error':str(error)})
+            self.receipt('checkpoint-incomplete')
             return {'complete':False,'status':'incomplete','message':'Checkpoint unavailable; inspect private evidence.'}
 
     def command(self):

@@ -8,6 +8,44 @@ import pytest
 from fdisbull import dinopark_scenes as scenes, dinopark_z as bridge
 
 
+@pytest.mark.parametrize('mismatch', [False, True])
+def test_checkpoint_reply_has_durable_native_witness_and_requires_requalification(tmp_path, monkeypatch, mismatch):
+    """Orchestration at the native-debug boundary; original-game proof is separate."""
+    service = bridge.ZService(tmp_path, io.StringIO(), io.StringIO())
+    advances = []
+    class NativeBoundary:
+        loaded = False
+        framed = True
+        def save_state(self, name): return {'artifact':'owned-native-state'}
+        def load_state(self, artifact):
+            self.loaded, self.framed = True, False
+    native = NativeBoundary()
+    values = {name: '00' * length for name, _, _, length in scenes.SAVE_RANGES}
+    def fields(debug):
+        return {**values, 'cash':'01000000'} if mismatch and debug.loaded else dict(values)
+    monkeypatch.setattr(scenes, 'live_saved_fields', fields)
+    def advance(debug, ms):
+        advances.append(ms); debug.framed = True
+    monkeypatch.setattr(scenes, 'run_guest', advance)
+    service.text = SimpleNamespace(**dict.fromkeys(bridge.SNAPSHOT_FIELDS))
+    service.text.debug = native
+    service.observe = lambda **kw: {'complete':native.framed, 'context':{'id':'office'}}
+    assert service.checkpoint({'op':'save','slot':'before'})['status'] == 'saved'
+    saved = json.loads((tmp_path/'z-session.json').read_text())
+    assert saved['status'] == 'checkpoint-saved' and saved['complete'] is False
+    result = service.checkpoint({'op':'load','checkpoint':'before'})
+    receipt = json.loads((tmp_path/'z-session.json').read_text())
+    if mismatch:
+        assert result['complete'] is False and service.checkpoint_failed is True
+        assert advances == [] and receipt['status'] == 'checkpoint-incomplete'
+    else:
+        assert result['status'] == 'restored' and result['replay_safe'] is True
+        assert advances == [100] and service.checkpoint_failed is False
+        witness = next(e for e in receipt['history'] if e['phase']=='checkpoint_restored')
+        assert witness['field_count'] == 20 and witness['saved_fields'] == witness['restored_fields'] == values
+        assert witness['context'] == 'office' and receipt['complete'] is False
+
+
 def native_save(title):
     data = bytearray(4153)
     data[:6] = b'DINOSG'
