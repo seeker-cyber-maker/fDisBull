@@ -26,7 +26,8 @@ SNAPSHOT_FIELDS = ('office', 'bank', 'street', 'mart', 'park', 'locations', 'cur
                    'land_bought', 'dinosaur_bought', 'fence_bought', 'guide_hired',
                    'food_bought', 'park_opened', 'notice_outcome_unknown', 'transaction_count',
                    'pending_park_entry', 'pending_food_notice',
-                   'vegasaurus_attempted', 'vegasaurus_proof', 'vegasaurus_extinct', 'last_action')
+                   'vegasaurus_attempted', 'vegasaurus_proof', 'vegasaurus_extinct', 'last_action',
+                   'last_continuation')
 
 
 def sha(path):
@@ -102,6 +103,8 @@ class ZService:
         self.work, self.reader, self.writer, self.slot = work, reader, writer, slot
         self.text = None
         self.epoch = secrets.token_hex(32)
+        self.session_token = secrets.token_hex(32)
+        self.checkpoint_failed = False
         self.revision = 0
         self.pending = None
         self.snapshots = {}
@@ -119,6 +122,7 @@ class ZService:
             'status':status, 'complete':complete, 'stop_reason':self.stop_reason,
             'history':self.history, 'pending_command':self.pending['command'] if self.pending else None,
             'latest_native_save':self.latest_native_save,
+            'checkpoint_recovery':'unqualified' if self.checkpoint_failed else 'qualified',
             'pending_effects':('applied-confirmed' if self.pending and any(e.get('phase') in
                 ('food_purchase_committed','vegasaurus_purchase_confirmed') for e in self.pending['events'])
                 else 'unknown' if self.pending else 'none-pending'),
@@ -139,6 +143,8 @@ class ZService:
 
     def ready(self, text):
         self.text = text
+        self.session_token = secrets.token_hex(32)
+        self.checkpoint_failed = False
         if (self.pending and self.pending['command'].startswith('load park ') and any(
                 e.get('phase') == 'result' and e.get('command') == 'load park'
                 for e in self.pending['events'])):
@@ -273,8 +279,10 @@ class ZService:
         with (self.work/'oracle.jsonl').open('a',encoding='utf-8') as journal:
             journal.write(json.dumps(item,sort_keys=True)+'\n')
 
-    def observe(self):
+    def observe(self, *, recovering=False):
         try:
+            if self.checkpoint_failed and not recovering:
+                raise ValueError('Checkpoint recovery is unqualified')
             modal = False
             parking = getattr(self.text, 'pending_food_notice', False) and self.text.current == 'dino_diner'
             if parking:
@@ -313,11 +321,11 @@ class ZService:
             token = hashlib.sha256(json.dumps(opaque, sort_keys=True).encode()).hexdigest()
             objects,_ = self.objects()
             if modal: objects = [o for o in objects if o['id'] == 'notice']
-            return {'complete':True, 'context':{'id':context, 'token':token,
+            return {'complete':True, 'session_token':self.session_token, 'context':{'id':context, 'token':token,
                     'title':'Parking advice' if modal == 'parking-notice' else 'Quarter notice' if modal else TITLES[self.text.current], 'description':description},
                     'objects':objects, 'inventory':[], 'coverage':{'partial':True}}
         except Exception:
-            return {'complete':False}
+            return {'complete':False, 'session_token':self.session_token}
 
     def finish(self):
         self.oracle('command-complete')
@@ -367,9 +375,16 @@ class ZService:
         effects = ('partial' if park_pause or food_pause or (refusal or text_refusal) and sent else
                    'none-confirmed' if status == 'rejected' or pending['command'] in ('status','list saves') else
                    'unknown' if status == 'incomplete' else 'applied-confirmed')
+        extra = {}
+        if park_pause or food_pause:
+            extra['continuation'] = {'context': observed['context']['id'], 'command': 'acknowledge notice',
+                                     'original_intent': pending['command']}
+        previous_session = pending.get('session_token', self.session_token)
+        if previous_session != self.session_token and status == 'success' and pending['command'].startswith('load park '):
+            extra['session_transition'] = {'from': previous_session, 'to': self.session_token, 'reason': 'native-load'}
         self.send({'status':status, 'complete':status != 'incomplete',
                    'message':self.public_message(messages or 'No verified completion was recorded.'),
-                   'effects':effects})
+                   'effects':effects, **extra})
 
     def checkpoint(self, request):
         op = request['op']; name = request.get('slot' if op == 'save' else 'checkpoint', 'live')
@@ -377,21 +392,56 @@ class ZService:
             return {'complete':False,'status':'incomplete'}
         try:
             if op == 'save':
+                if self.checkpoint_failed:
+                    raise ValueError('Prior checkpoint restore incomplete')
                 if len(self.snapshots) >= 64 and name not in self.snapshots:
                     raise ValueError('Snapshot slot budget')
+                observation = self.observe()
+                if observation.get('complete') is not True:
+                    raise ValueError('Checkpoint requires a qualified scene')
+                fields = load_scenes().live_saved_fields(self.text.debug)
                 state = self.text.debug.save_state('z-'+secrets.token_hex(8)+'.sav')
                 self.snapshots[name] = {'artifact':state['artifact'],
-                    'text':{k:deepcopy(getattr(self.text,k)) for k in SNAPSHOT_FIELDS}}
+                    'text':{k:deepcopy(getattr(self.text,k)) for k in SNAPSHOT_FIELDS},
+                    'fields':fields, 'context':observation['context']['id'], 'session_token':self.session_token,
+                    'latest_native_save':self.latest_native_save}
                 result = 'saved'
             elif name not in self.snapshots:
                 result = 'missing'
             else:
                 snapshot = self.snapshots[name]
+                if snapshot['session_token'] != self.session_token:
+                    raise ValueError('Checkpoint belongs to another original guest')
+                self.checkpoint_failed = True
+                self.revision += 1
                 self.text.debug.load_state(snapshot['artifact'])
                 for key,value in snapshot['text'].items(): setattr(self.text,key,deepcopy(value))
-                self.revision += 1; result = 'restored'
-            return {'complete':True,'status':result,'checkpoint':name,'persistence':'owned live-session snapshot; not a native park disk save'}
-        except Exception:
+                self.latest_native_save = snapshot['latest_native_save']
+                restored_fields = load_scenes().live_saved_fields(self.text.debug)
+                if restored_fields != snapshot['fields']:
+                    raise ValueError('Restored native fields differ before presentation preparation')
+                # state.load deliberately invalidates the framebuffer. Advance
+                # original execution without mouse/keyboard input, then qualify
+                # a completed frame and the restored public scene.
+                prepared_ms = 0
+                for _ in range(12):
+                    load_scenes().run_guest(self.text.debug, 100)
+                    prepared_ms += 100
+                    observation = self.observe(recovering=True)
+                    if observation.get('complete') is True and observation['context']['id'] == snapshot['context']:
+                        break
+                else:
+                    raise ValueError('Restored scene did not requalify')
+                self.checkpoint_failed = False
+                self.event({'phase':'checkpoint_restored', 'checkpoint':name, 'native_fields_equal':True,
+                            'saved_fields':snapshot['fields'], 'restored_fields':restored_fields,
+                            'field_count':len(snapshot['fields']), 'preparation_guest_ms':prepared_ms,
+                            'context':observation['context']['id'], 'following_input':'not_sent'})
+                result = 'restored'
+            return {'complete':True,'status':result,'checkpoint':name,'replay_safe':result in ('saved', 'restored'),
+                    'persistence':'owned live-session snapshot; mounted files must remain unchanged; not a native park disk save'}
+        except Exception as error:
+            self.event({'phase':'checkpoint_incomplete', 'operation':op, 'error_type':type(error).__name__, 'error':str(error)})
             return {'complete':False,'status':'incomplete','message':'Checkpoint unavailable; inspect private evidence.'}
 
     def command(self):
@@ -426,7 +476,7 @@ class ZService:
                 command = bindings.get((action['verb'],action['target'])) if action['target'] in visible else None
                 if command is None:
                     self.send({'complete':True,'status':'rejected','message':'Action unavailable; no input sent.'});continue
-                self.pending = {'command':command,'messages':[],'events':[]}
+                self.pending = {'command':command,'messages':[],'events':[], 'session_token':self.session_token}
                 self.restarted = False
                 self.receipt('acting')
                 return command

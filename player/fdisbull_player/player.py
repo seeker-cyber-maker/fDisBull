@@ -2,6 +2,7 @@
 import json
 import math
 import re
+from copy import deepcopy
 
 _DIRECTIONS = dict(n='north', ne='northeast', e='east', se='southeast',
                    s='south', sw='southwest', w='west', nw='northwest',
@@ -25,6 +26,8 @@ def public_observation(raw):
         return None
     result = {"context": {k: _text(c.get(k)) for k in ("id", "token", "title", "description")},
               "coverage": {"partial": coverage["partial"]}}
+    if isinstance(raw.get('session_token'), str) and 1 <= len(raw['session_token']) <= 128:
+        result['session_token'] = raw['session_token']
     seen = set()
     for group in ("objects", "inventory"):
         values = raw.get(group)
@@ -52,6 +55,7 @@ class Player:
         self.backend = backend
         self.pending = None
         self.last_status = "complete"
+        self.last_result = {}
 
     def _observe(self):
         return public_observation(self.backend.observe())
@@ -67,8 +71,17 @@ class Player:
         message = self.execute(command)
         return {"outcome": message, "status": self.last_status}
 
+    def execute_result(self, command):
+        """Public effect details for recovery; legacy structured output is unchanged."""
+        message = self.execute(command)
+        if self.last_status == 'incomplete':
+            self.last_result.update(status='incomplete', complete=False)
+        return {'outcome': message, **deepcopy(self.last_result)}
+
     def execute(self, command):
         self.last_status = "complete"
+        self.last_result = {'status': 'rejected', 'complete': True,
+                            'effects': 'none-confirmed', 'action_sent': False}
         command = command.strip()
         if not command:
             return "Enter a command."
@@ -76,6 +89,7 @@ class Player:
         if obs is None:
             self.pending = None
             self.last_status = "incomplete"
+            self.last_result.update(status='incomplete', complete=False)
             return "Observation incomplete; no action sent."
         if self.pending:
             pending = self.pending
@@ -93,6 +107,8 @@ class Player:
             return self._resolve(obs, pending["verb"], pending["target"], pending["item"],
                                  pending["slot"], target, pending["resolved"])
         lower = command.casefold()
+        if lower in ('look', 'l', 'inventory', 'i', 'help', '?') or re.fullmatch(r'(?:examine|x)\s+(.+)', command, re.I):
+            self.last_result['status'] = 'read'
         if lower in ("look", "l"):
             c = obs["context"]
             lines = [c["title"], c["description"]]
@@ -158,6 +174,8 @@ class Player:
             target = next(o for o in fresh["objects"] + fresh["inventory"] if o["id"] == ids["target"])
             if verb not in [v.casefold() for v in target["verbs"]]:
                 return "Action is no longer supported; no action sent."
+        self.last_result = {'status': 'incomplete', 'complete': False,
+                            'effects': 'unknown', 'action_sent': True}
         result = self.backend.act({"verb": verb, **ids, "context_token": fresh["context"]["token"]})
         if not isinstance(result, dict) or result.get("status") not in ("success", "rejected", "incomplete", "accepted") or not isinstance(result.get("complete"), bool):
             self.last_status = "incomplete"
@@ -165,6 +183,15 @@ class Player:
         message = _text(result.get("message"))
         status = 'incomplete' if result['status']=='success' and not result['complete'] else result['status']
         self.last_status = status if result['complete'] else 'incomplete'
+        effects = result.get('effects', 'applied-confirmed' if status == 'success' and result['complete'] else
+                             'partial' if status == 'accepted' else 'none-confirmed' if status == 'rejected' else 'unknown')
+        if effects not in ('applied-confirmed', 'partial', 'none-confirmed', 'unknown'):
+            effects = 'unknown'
+        self.last_result.update(status=self.last_status, complete=result['complete'], effects=effects)
+        for key in ('continuation', 'session_transition'):
+            value = result.get(key)
+            if isinstance(value, dict) and len(json.dumps(value, allow_nan=False).encode()) <= 2048:
+                self.last_result[key] = deepcopy(value)
         output = f"{status.capitalize()}{' (incomplete)' if not result['complete'] and status!='incomplete' else ''}: {message}".rstrip()
         assistance = result.get("assistance")
         if isinstance(assistance, dict) and assistance.get("kind") in ("movement", "assisted-travel"):

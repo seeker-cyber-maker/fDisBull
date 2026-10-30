@@ -8,7 +8,7 @@ import shlex
 import socket
 import sys
 
-from . import JsonLineBackend, LiveSession, LocalRuntime, Player, ProcessBackend, self_play
+from . import BatchSession, JsonLineBackend, LiveSession, LocalRuntime, Player, ProcessBackend, self_play
 
 
 def main():
@@ -28,7 +28,13 @@ def main():
     parser.add_argument("--agent-timeout", type=float, default=10)
     parser.add_argument("--transcript", help="write private structured self-play transcript")
     parser.add_argument("--quiet", action="store_true", help="print only session status; requires an agent and transcript")
+    parser.add_argument('--batch-plan', help='JSON ordered command plan; read batch operations as JSON lines')
+    parser.add_argument('--batch-journal', help='private durable journal for --batch-plan')
     args = parser.parse_args()
+    if bool(args.batch_plan) != bool(args.batch_journal):
+        parser.error('--batch-plan and --batch-journal are required together')
+    if args.batch_plan and (args.live or args.agent_command or args.transcript or args.quiet):
+        parser.error('--batch-plan uses its own JSON operation protocol')
     if args.backend_command is not None and not args.backend_command.strip():
         parser.error('--backend-command must not be blank')
     if not math.isfinite(args.backend_timeout) or not 0 < args.backend_timeout <= 60:
@@ -65,6 +71,29 @@ def main():
 
 
 def run_mode(backend, args):
+    if args.batch_plan:
+        with open(args.batch_plan, encoding='utf-8') as source:
+            plan = source.read(65537)
+        if len(plan.encode()) > 65536:
+            raise ValueError('Batch plan exceeds 65536 bytes')
+        batch = BatchSession(Player(backend), args.batch_journal, json.loads(plan))
+        for line in sys.stdin:
+            if len(line.encode()) > 4096:
+                raise ValueError('Batch operation exceeds 4096 bytes')
+            request = json.loads(line)
+            if not isinstance(request, dict):
+                raise ValueError('Invalid batch operation')
+            op = request.get('op')
+            if op in ('run', 'resume') and set(request) <= {'op', 'max_steps'}:
+                result = getattr(batch, op)(max_steps=request.get('max_steps', 128))
+            elif op in ('checkpoint', 'recover') and set(request) == {'op', 'name'}:
+                result = getattr(batch, op)(request['name'])
+            elif op == 'inspect' and set(request) == {'op'}:
+                result = batch.inspect()
+            else:
+                raise ValueError('Invalid batch operation')
+            print(json.dumps({k:v for k,v in result.items() if k not in ('steps', 'batch')}, ensure_ascii=False), flush=True)
+        return 0
     if not args.live:
         run(Player(backend))
         return 0

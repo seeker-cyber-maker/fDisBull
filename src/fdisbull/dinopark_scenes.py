@@ -13,6 +13,7 @@ from collections import deque
 
 from PIL import Image
 import fdisbull
+from fdisbull.action_continuations import ActionContinuation
 from fdisbull.project import Project
 
 EXPECTED_EXE = '2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c'
@@ -249,19 +250,21 @@ def food_draft_state(debug):
     return quantity, {'balances': cash, 'resources': resources, 'pending_small_feeders': pending}
 
 
-def notice_return_frame(text, label, views):
+def notice_return_frame(text, label, views, *, continuation=None):
     """Observe a completed destination without replaying the notice input."""
-    for attempt in range(13):
+    continuation = continuation or ActionContinuation(label, event=text.event)
+    latest = []
+    def observe():
         frame, image = take_frame(text.project, text.debug, label)
+        latest[:] = [frame, image]
         found = [view for view in views if matches(image, text.patterns[view])]
         notices = [n for n in ('parking_hint', 'quarter_popup') if matches(image, text.patterns[n])]
         text.event({'phase': 'notice_return_observation', 'frame': frame,
                     'matched_views': found, 'remaining_notices': notices, 'following_input': 'not_sent'})
-        if len(found) == 1 and not notices:
-            return frame, image
-        if attempt < 12:
-            run_guest(text.debug, 500)
-    return frame, image
+        return {'destinations': found, 'interruptions': notices, 'evidence': frame}
+    continuation.wait(observe, lambda ms: run_guest(text.debug, ms))
+    text.last_continuation = dict(continuation.record)
+    return tuple(latest)
 
 
 def wait_for_office(project, debug, patterns):
@@ -551,6 +554,7 @@ class TextScene:
         self.vegasaurus_attempted = False
         self.vegasaurus_proof = None
         self.vegasaurus_extinct = False
+        self.last_continuation = None
 
     def save_preflight(self, name):
         try:
@@ -910,8 +914,9 @@ class TextScene:
                         'reason': 'notice changed during settling', 'frame': frame, 'input': 'not_sent'})
             return 'The notice changed before acknowledgment. No input was sent; inspect the session.'
         self.notice_outcome_unknown = True
-        result = (parking_notice_input(self) if notice == 'parking_hint' else
-                  self.debug.keyboard_press('enter'))
+        continuation = ActionContinuation('acknowledge notice', event=self.event)
+        result = continuation.send_once(lambda: parking_notice_input(self) if notice == 'parking_hint' else
+                                         self.debug.keyboard_press('enter'))
         self.event({'phase': 'notice_input', 'command': 'acknowledge notice', 'result': result,
                     'notice': notice, 'persistence': 'unknown'})
         if result.get('accepted') is not True or result.get('delivery') != 'queued':
@@ -919,7 +924,9 @@ class TextScene:
         run_guest(self.debug, 1200)
         view = 'park_view' if self.current == 'park' or entering else 'street_view'
         views = (view, 'shop_street') if entering else (view,)
-        frame, image = notice_return_frame(self, 'notice-after', views)
+        frame, image = notice_return_frame(self, 'notice-after', views, continuation=continuation)
+        if continuation.record['arrival'] != 'qualified':
+            return 'The resulting view is not uniquely recognized; the outcome is unknown. Do not retry automatically.'
         remaining = [n for n in ('quarter_popup', 'parking_hint') if matches(image, self.patterns[n])]
         if remaining:
             self.event({'phase': 'indeterminate', 'command': 'acknowledge notice',
@@ -946,6 +953,7 @@ class TextScene:
         self.debug.scene_assert(selected, object=obj)
         after = park_snapshot(self.debug)
         self.notice_outcome_unknown = False
+        self.last_continuation = continuation.confirm_effect()
         self.event({'phase': 'result', 'command': 'acknowledge notice', 'notice': notice,
                     'after': after, 'frame': frame, 'persistence': 'unknown',
                     'park_entry_outcome': ('not_completed' if returned_to_street else
@@ -969,13 +977,17 @@ class TextScene:
                 matches(image, self.patterns['quarter_popup'])):
             return 'The advice changed before acknowledgment. No input was sent; inspect the session.'
         self.notice_outcome_unknown = True
-        result = parking_notice_input(self)
+        continuation = ActionContinuation('acknowledge food notice', event=self.event)
+        result = continuation.send_once(lambda: parking_notice_input(self))
         self.event({'phase': 'notice_input', 'command': 'acknowledge notice',
                     'notice': 'parking_hint', 'result': result, 'purchase_input': 'not_sent'})
         if result.get('accepted') is not True or result.get('delivery') != 'queued':
             return 'Notice input outcome unknown. Do not retry automatically.'
         run_guest(self.debug, 1200)
-        frame, image = notice_return_frame(self, 'food-notice-after', ('dino_diner', 'food_menu', 'shop_street'))
+        frame, image = notice_return_frame(self, 'food-notice-after', ('dino_diner', 'food_menu', 'shop_street'),
+                                          continuation=continuation)
+        if continuation.record['arrival'] != 'qualified':
+            return 'The resulting view is not uniquely recognized; outcome unknown. Do not retry automatically.'
         views = [n for n in ('dino_diner', 'food_menu', 'shop_street')
                  if matches(image, self.patterns[n])]
         if (len(views) != 1 or any(matches(image, self.patterns[n]) for n in
@@ -988,6 +1000,7 @@ class TextScene:
                       (self.locations['dino_diner'], 'dino_diner.back'))
         self.debug.scene_assert(scene, object=obj)
         self.pending_food_notice = self.notice_outcome_unknown = False
+        self.last_continuation = continuation.confirm_effect()
         self.event({'phase': 'result', 'command': 'acknowledge notice',
                     'notice': 'parking_hint', 'frame': frame, 'purchase_input': 'not_sent',
                     'food_order_submitted': False, 'scene': self.current})
