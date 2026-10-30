@@ -1,3 +1,15 @@
+# Release status checked on 2026-10-30 (America/New_York)
+
+## Published 0.25.0 and active shared installation
+
+[0.25.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.25.0) at annotated tag `v0.25.0`, source `70eb4e38bf4bf8d47e52e38b8fab6a6cd718f15e`. Both main workflows passed before tagging. Tag ordinary CI passed 1,919 tests (103 skipped); complete tag native CI passed 779 stable-DOS, 1,090 layers-DOS, 16 PE64 and 13 DOS/boot tests without native failures, errors or skips. The genuine-Z3 offline kit and both installed skills passed. All eight public assets passed unauthenticated download/hash readback.
+
+The shared selector now selects `releases/0.25.0-70eb4e3`. Its installed gate passed 1,107 tests, the three native runtime doctors passed with restore, and all 3,040 sealed payload entries passed. Global aliases/player persistence and the qualified Zork continuation were checked after activation. The 0.24 prefix and wrappers remain available for guarded rollback. Game files, native states and project databases stayed outside Git and delivery.
+
+See [publication evidence](PUBLICATION-0.25.md), [installation commands](SYSTEM_INSTALLATION.md), [source verification and limits](VERIFICATION-0.25.md), and the [remaining PR requirements](PR_BACKLOG.md). The following older status entries are historical; their pending or current-version statements describe their respective source cuts.
+
+---
+
 # Release status checked on 2026-10-28 (America/New_York)
 
 ## Published 0.21.0 and activated shared Mac installation

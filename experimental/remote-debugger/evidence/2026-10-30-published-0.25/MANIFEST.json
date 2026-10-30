@@ -1,0 +1,293 @@
+{
+  "assets": {
+    "SHA256SUMS": {
+      "asset_id": 691811496,
+      "sha256": "9893f0b4a08efd2d56c0cd3253330e10011f94a6b88d56cb327dece17b561817",
+      "size": 702,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.25.0/SHA256SUMS"
+    },
+    "VERIFICATION-0.25.0.json": {
+      "asset_id": 691811493,
+      "sha256": "3a055953ac7cce03e344875c7f65c504dea05b1dfa9bcd78d14604775e452cdb",
+      "size": 8213,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.25.0/VERIFICATION-0.25.0.json"
+    },
+    "fdisbull-0.25.0-linux-x86_64-offline.tar.gz": {
+      "asset_id": 691811495,
+      "sha256": "efc51b07ef0299d207c7e910840750ca2f97dfaaea86286e407387c5eff15aad",
+      "size": 102460974,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.25.0/fdisbull-0.25.0-linux-x86_64-offline.tar.gz"
+    },
+    "fdisbull-0.25.0-linux-x86_64-source-companion.tar": {
+      "asset_id": 691811497,
+      "sha256": "af8db1df6f6109fa769233a979803bcb2b201f4827a8f6b80e04b46d8133d582",
+      "size": 106885120,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.25.0/fdisbull-0.25.0-linux-x86_64-source-companion.tar"
+    },
+    "fdisbull-0.25.0-py3-none-any.whl": {
+      "asset_id": 691811492,
+      "sha256": "08d6369b24ec6b89aa991f46813d161f5b5529e8768cc8d64ef707bebcb11a50",
+      "size": 657911,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.25.0/fdisbull-0.25.0-py3-none-any.whl"
+    },
+    "fdisbull-0.25.0-tool.zip": {
+      "asset_id": 691811538,
+      "sha256": "3867fcb023cf30315cc0b6eb0480c58c516daadcd3874bd472f74fc7e77e3bf6",
+      "size": 1836295,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.25.0/fdisbull-0.25.0-tool.zip"
+    },
+    "fdisbull-0.25.0.tar.gz": {
+      "asset_id": 691811541,
+      "sha256": "215cf1beec56185e420f9e3376d65c87a30d453949e26f290ddf282797fa9fbb",
+      "size": 1537904,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.25.0/fdisbull-0.25.0.tar.gz"
+    },
+    "fdisbull_player-0.25.0-py3-none-any.whl": {
+      "asset_id": 691811540,
+      "sha256": "81b9da936e2064f1f485fc1a992d28da7b754ecdecf773f3083062750b7d75fc",
+      "size": 49649,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.25.0/fdisbull_player-0.25.0-py3-none-any.whl"
+    }
+  },
+  "exclusions": "User game/story files, emulator checkpoints, project databases and generated retaining packages were kept outside Git, release assets and the managed prefix. Runtime images contain OS support files; source companion contains declared upstream ROM/test fixtures.",
+  "format": "fdisbull-published-installation-evidence-1",
+  "installed": {
+    "core_aliases": 3,
+    "deselections": [
+      "tests/test_doctor.py::test_doctor_cli_starts_without_decoding_dependencies",
+      "tests/test_dosbox_window.py::test_window_requires_display_on_linux_when_no_driver_is_selected"
+    ],
+    "doctors": {
+      "dos": {
+        "backend": "dosbox",
+        "input_sha256": {
+          "executable": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277"
+        },
+        "native_state_restored": true,
+        "status": "passed"
+      },
+      "dos_qemu": {
+        "backend": "dosbox-qemu",
+        "input_sha256": {
+          "executable": "10bed8dc7571b0fc6c51ea484711b3802d2fb2dc00ba5d9af4d610cb2e2142cb",
+          "initramfs": "994f04e487596484b4f4bf197c41a176d77abbd1d87e7170769040050cc62815",
+          "kernel": "d8808aa4ca188560da1e6d749dcb930c87a5fd8b11ebff1f3fa6d728af35203d"
+        },
+        "native_state_restored": true,
+        "status": "passed"
+      },
+      "wine": {
+        "backend": "wine-qemu",
+        "input_sha256": {
+          "executable": "10bed8dc7571b0fc6c51ea484711b3802d2fb2dc00ba5d9af4d610cb2e2142cb",
+          "initramfs": "7408e7c26cc9401406bfd82bd5372957f4790ffa98370e1cc69aa5a84617d6ed",
+          "kernel": "d8808aa4ca188560da1e6d749dcb930c87a5fd8b11ebff1f3fa6d728af35203d"
+        },
+        "native_state_restored": true,
+        "status": "passed"
+      }
+    },
+    "fresh_player_processes": 6,
+    "global_zork": {
+      "complete_checkpoints_match": true,
+      "first_and_fresh_resume_results_match": true,
+      "original_story_unchanged": true,
+      "producer_package_matches_qualified_source": true,
+      "scope": "Two mailbox boundaries, compared with the previous qualified installed/source path. No fresh native DOS or Frotz replay and no whole-game equivalence claim."
+    },
+    "initial_harness_attempt": {
+      "cause": "Isolated fixture snapshot omitted two skills expected-resource trees and two consumer-copy module links. Exact-tag/installed fixtures were added; source and tag unchanged.",
+      "errors": 0,
+      "failures": 3,
+      "passed": 1104,
+      "skips": 0
+    },
+    "payload_entries": 3040,
+    "player_aliases": 3,
+    "prefix": "/Users/Shared/fDisBull/releases/0.25.0-70eb4e3",
+    "python": "3.13.17",
+    "qualification": {
+      "errors": 0,
+      "failures": 0,
+      "skips": 0,
+      "tests": 1107
+    },
+    "rollback": {
+      "selector": "releases/0.25.0-70eb4e3",
+      "status": "rollback_ready",
+      "wrappers_preserved": 14
+    },
+    "runtime_audits": {
+      "dos": {
+        "candidate_version": "0.25.0",
+        "excluded_payloads_found": 0,
+        "expanded_member_bytes": 1999453027,
+        "known_static_os_support": {
+          "usr/lib/gcc/x86_64-w64-mingw32/13-win32/plugin/gtype.state": {
+            "sha256": "bf9f98cd7f8f5e78ade351c65b369850d860a5489235f1d21e1e5d0e39b8cb0d",
+            "size": 1371523
+          },
+          "var/lib/shells.state": {
+            "sha256": "76d76e1be9b95bf126b60928151bc4c9e11b8a4f66697be0e02aa03d076d348a",
+            "size": 84
+          }
+        },
+        "member_count": 21305,
+        "profile": "dos",
+        "published_kit_sha256": "efc51b07ef0299d207c7e910840750ca2f97dfaaea86286e407387c5eff15aad",
+        "resources": {
+          "init": "a46aeacc5b34ed94a33d8b7d44eac2a20e8724088655aef046c9621bf3dd0383",
+          "opt/fdisbull/agent.c": "7f790582fc115fc3036f33c7a78bb11401619b4ce5adf0d624ca81d51c33d34a",
+          "opt/fdisbull/broker.py": "7e6263017345bd1b6c8132f39aaab3c7181516c4210ca8aef8cf6e70ef2eae21",
+          "opt/fdisbull/dos_broker.py": "8054f409edcf75b78c3218ced24a839162ea1ef874fec9715db906d62826c93c",
+          "opt/fdisbull/dosbox-x": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+          "opt/fdisbull/remote/__init__.py": "037ab42b952c74c8964c3e13f336081398f6a3753688a25dded72a8a03af2c35",
+          "opt/fdisbull/remote/dosbox_rpc.py": "3c747d6492e688acabe1f85c231b0772fa046cd4025f9dfcc11223cd16aaf489",
+          "opt/fdisbull/selftest.c": "70b5e3f4b443154f8346ba45103324fd95cc27ac24c508fc1f59c2542b6fa104"
+        },
+        "result": "pass",
+        "scope": "Streamed path and resource-hash audit; no runtime execution or exhaustive content classification claim.",
+        "sha256": "994f04e487596484b4f4bf197c41a176d77abbd1d87e7170769040050cc62815",
+        "size": 684159683,
+        "source_commit": "70eb4e38bf4bf8d47e52e38b8fab6a6cd718f15e",
+        "tag_wheel_sha256": "08d6369b24ec6b89aa991f46813d161f5b5529e8768cc8d64ef707bebcb11a50"
+      },
+      "wine": {
+        "candidate_version": "0.25.0",
+        "excluded_payloads_found": 0,
+        "expanded_member_bytes": 1859827167,
+        "known_static_os_support": {
+          "usr/lib/gcc/x86_64-w64-mingw32/13-win32/plugin/gtype.state": {
+            "sha256": "bf9f98cd7f8f5e78ade351c65b369850d860a5489235f1d21e1e5d0e39b8cb0d",
+            "size": 1371523
+          },
+          "var/lib/shells.state": {
+            "sha256": "76d76e1be9b95bf126b60928151bc4c9e11b8a4f66697be0e02aa03d076d348a",
+            "size": 84
+          }
+        },
+        "member_count": 21298,
+        "profile": "wine",
+        "published_kit_sha256": "efc51b07ef0299d207c7e910840750ca2f97dfaaea86286e407387c5eff15aad",
+        "resources": {
+          "init": "1d88753c741ff775444e95b3469a77aaeccaba5c5889d53ed2b63e9ae0d5ad43",
+          "opt/fdisbull/agent.c": "7f790582fc115fc3036f33c7a78bb11401619b4ce5adf0d624ca81d51c33d34a",
+          "opt/fdisbull/broker.py": "7e6263017345bd1b6c8132f39aaab3c7181516c4210ca8aef8cf6e70ef2eae21",
+          "opt/fdisbull/selftest.c": "70b5e3f4b443154f8346ba45103324fd95cc27ac24c508fc1f59c2542b6fa104"
+        },
+        "result": "pass",
+        "scope": "Streamed path and resource-hash audit; no runtime execution or exhaustive content classification claim.",
+        "sha256": "7408e7c26cc9401406bfd82bd5372957f4790ffa98370e1cc69aa5a84617d6ed",
+        "size": 632883341,
+        "source_commit": "70eb4e38bf4bf8d47e52e38b8fab6a6cd718f15e",
+        "tag_wheel_sha256": "08d6369b24ec6b89aa991f46813d161f5b5529e8768cc8d64ef707bebcb11a50"
+      }
+    },
+    "status": "active_verified",
+    "version": "0.25.0",
+    "wheel_resources": {
+      "fdisbull-0.25.0-py3-none-any.whl": 156,
+      "fdisbull_player-0.25.0-py3-none-any.whl": 9
+    },
+    "z3": "5.3.2"
+  },
+  "limits": [
+    "Installed selection is not the full Mac source suite or a whole-game qualification.",
+    "No fresh native DinoPark or Frotz replay in this publication turn; source-cut original-game qualification remains separately documented.",
+    "Mac binaries retain earlier build provenance and were freshly requalified, not rebuilt.",
+    "The global Zork smoke covers two mailbox boundaries and full checkpoint comparisons with the prior qualified path."
+  ],
+  "main_ci": {
+    "native": {
+      "conclusion": "success",
+      "head_branch": "main",
+      "head_sha": "70eb4e38bf4bf8d47e52e38b8fab6a6cd718f15e",
+      "run_id": 40997981108,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40997981108"
+    },
+    "ordinary": {
+      "conclusion": "success",
+      "head_branch": "main",
+      "head_sha": "70eb4e38bf4bf8d47e52e38b8fab6a6cd718f15e",
+      "run_id": 40997981267,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40997981267"
+    }
+  },
+  "native_tests": {
+    "native-debugger-layers-backend": [
+      {
+        "errors": "0",
+        "failures": "0",
+        "name": "pytest",
+        "skipped": "0",
+        "tests": "1090",
+        "time": "97.874",
+        "timestamp": "2026-10-30T10:26:18.759862+00:00"
+      }
+    ],
+    "native-debugger-pe64": [
+      {
+        "errors": "0",
+        "failures": "0",
+        "name": "pytest",
+        "skipped": "0",
+        "tests": "16",
+        "time": "804.575",
+        "timestamp": "2026-10-30T10:36:16.776966+00:00"
+      }
+    ],
+    "native-debugger-stable-backend": [
+      {
+        "errors": "0",
+        "failures": "0",
+        "name": "pytest",
+        "skipped": "0",
+        "tests": "779",
+        "time": "58.924",
+        "timestamp": "2026-10-30T10:24:12.147340+00:00"
+      }
+    ],
+    "native-debugger-unified": [
+      {
+        "errors": "0",
+        "failures": "0",
+        "name": "pytest",
+        "skipped": "0",
+        "tests": "13",
+        "time": "134.350",
+        "timestamp": "2026-10-30T10:49:41.664472+00:00"
+      }
+    ]
+  },
+  "observed_at_utc": "2026-10-30T10:55:46.899104+00:00",
+  "ordinary_tests": {
+    "errors": 0,
+    "failures": 0,
+    "passed": 1919,
+    "skipped": 103
+  },
+  "release_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.25.0",
+  "source_commit": "70eb4e38bf4bf8d47e52e38b8fab6a6cd718f15e",
+  "tag": "v0.25.0",
+  "tag_ci": {
+    "native": {
+      "conclusion": "success",
+      "head_branch": "v0.25.0",
+      "head_sha": "70eb4e38bf4bf8d47e52e38b8fab6a6cd718f15e",
+      "run_id": 41039693576,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/41039693576"
+    },
+    "ordinary": {
+      "conclusion": "success",
+      "head_branch": "v0.25.0",
+      "head_sha": "70eb4e38bf4bf8d47e52e38b8fab6a6cd718f15e",
+      "run_id": 41039693542,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/41039693542"
+    }
+  },
+  "tag_object": "143c0ece41c432cb8f4f98f62dcb3166fe92376a",
+  "tag_signature": {
+    "reason": "unsigned",
+    "verified": false
+  }
+}
