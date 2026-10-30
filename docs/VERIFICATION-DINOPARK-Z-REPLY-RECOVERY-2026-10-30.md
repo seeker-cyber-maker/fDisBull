@@ -15,8 +15,10 @@ be recorded as clean completion merely because the worker shuts down.
 
 The implementation reuses the existing private output-artifact store. It does
 not alter original game bytes, decode new game semantics or add public terminal
-scene verbs. Native verification uses the declared investigator terminal adapter
-with fresh stored-frame preconditions and the ordinary original-backed UDC.
+scene verbs. This earlier native verification used the declared investigator terminal
+adapter with fresh stored-frame preconditions and the ordinary original-backed
+UDC. The subsequent [named-action follow-up](DINOPARK_Z_TERMINAL_ACTIONS.md)
+adds public Z terminal verbs in later PR #41 commits.
 
 ## Source and native identity
 

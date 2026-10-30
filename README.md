@@ -172,7 +172,9 @@ in the published 0.24.0 packages.
 
 The [DinoPark Z provider](docs/DINOPARK_Z.md) lets an agent borrow and repay,
 buy supplies, prepare a pen, hire a guide, open the park and save its progress
-through a bounded text interface. The original-backed compiler reconstructs
+through a bounded text interface. [Named menu and quit actions](docs/DINOPARK_Z_TERMINAL_ACTIONS.md)
+let an agent review the original prompts, cancel a quit request, leave a park
+and return to DOS. The original-backed compiler reconstructs
 your own qualified game files before play, and the original engine performs
 the actions. Bring the game and a compatible native backend. See the
 [native verification and coverage limits](docs/VERIFICATION-DINOPARK-Z-RELIABILITY-2026-10-29.md)

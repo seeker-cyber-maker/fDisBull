@@ -14,6 +14,9 @@ It keeps uncertain effects blocked until an explicit verified recovery.
 [Oversized reply recovery](Z_REPLY_RECOVERY.md) retains a returned native result
 before sending its bounded reference. Read-only paging and witness-bound delivery
 acknowledgement avoid repeating the original input after a lost or truncated reply.
+The [named terminal scenes](DINOPARK_Z_TERMINAL_ACTIONS.md) expose the original
+menu, cancellation, quit/save prompts, title menu and DOS exit through the same
+public Z action protocol, including bounded input-free continuations.
 The [funded26k return/recovery follow-up](DINOPARK_FUNDED_RECOVERY.md) handles
 quarter notices after confirmed food commits and retains a reachable paused
 provider for explicit checkpoint recovery after an action error.

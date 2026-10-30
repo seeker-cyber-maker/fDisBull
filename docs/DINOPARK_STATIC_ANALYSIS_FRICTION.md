@@ -245,14 +245,17 @@ The [30 October verification record](VERIFICATION-DINOPARK-Z-REPLY-RECOVERY-2026
 keeps independent native cohorts, strict readback witnesses, controller limitations
 and selected-program exit evidence separate.
 
-### Expose terminal scenes through named actions
+### Named terminal scenes and remaining menu coverage
 
-The main Z routes are available, but Sell Park and the quit/credits controls
-required explicitly declared investigator input with a fresh frame-hash
-precondition. Ordinary Z bindings were withheld after native terminal input.
+The follow-up implements [named Z terminal actions](DINOPARK_Z_TERMINAL_ACTIONS.md)
+for the office menu, resume, park quit, cancellation, confirmation, explicit
+save decline, title-menu Exit to DOS and bounded input-free continuation.
+These use the ordinary public observe/act protocol and qualify original
+frames or native selected-process termination. Unknown transitions retain
+recovery holds and never replay their triggering input.
 
-Proposed follow-up: qualified named actions for the remaining original menus,
-prompts and terminal scenes, with commitment/continuation/exit receipts.
-Keep visible prompts, native inputs, committed effects and selected DOS program
-exit separate. The investigator adapter is test infrastructure, not a newly
-implemented public Z feature or a complete-playthrough certificate.
+The earlier investigator-only cohort remains historical evidence. Sell Park,
+About, starting/loading through title-menu controls and the affirmative
+save-first path still need separate qualified mappings. Visible prompts,
+native input, committed effects and selected DOS exit retain independent
+postconditions; the additional actions do not certify a complete playthrough.
