@@ -131,6 +131,10 @@ jobs:
             tests/test_uil_word16_runtime.py tests/test_gog_unpack.py tests/test_le_loader.py tests/test_le_workflow.py \
             tests/test_zmachine_processor.py tests/test_zmachine_analysis.py tests/test_zmachine_processor_acceptance.py \
             tests/test_watchpoint_completion.py \
+            tests/test_target_storage.py tests/test_external_native_udc.py \
+            tests/test_ne_loader.py tests/test_ne_workflow.py tests/test_type_catalog.py tests/test_type_catalog_cli.py \
+            tests/test_media_modules.py tests/test_source_reconstruction_skill.py \
+            tests/test_dinopark_terminal.py tests/test_dinopark_z_replies.py \
             --junitxml=native-evidence/tests.xml 2>&1 | tee native-evidence/tests.log
       - name: Build and verify the offline kit with genuine Z3
         if: matrix.profile == 'layers-backend'

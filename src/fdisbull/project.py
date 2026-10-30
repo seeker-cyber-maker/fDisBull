@@ -425,6 +425,13 @@ class Project(TargetSourcesMixin, CodeBackingsMixin, ProofProjectMixin, DebugPro
                     display += ' ; ' + ', '.join(ref['name'] + (f" <{ref['representation']}>" if ref['representation'] else '') for ref in references)
                 display,file_refs,file_refs_summary=self._file_reference_display(v['id'],self.context,int(r['address'],16),display)
                 result.append({"references":references,"file_references":file_refs,"file_reference_summary":file_refs_summary,"display_operands":display,"address":address_hex,"size":r["size"],"bytes":r["bytes"],"mnemonic":r["mnemonic"],"operands":r["operands"],"flow":r["flow"],"target":hx(int(r["target"],16)) if r["target"] else None,"name":self._shared_name(v["id"],("memory","",int(r["address"],16))) or r["name"] or (self._label(v["id"],int(r["address"],16)) if fn or self._signature_name(v["id"],self.context,int(r["address"],16)) else None),"comment":r["comment"],"comment_author":r["comment_author"],"comment_inherited_from":r["comment_inherited_from"],"xrefs":self.xrefs(address_hex,"to",v["id"]),"context":self.context})
+            if ne_processor is not None:
+                from .ne import logical_location
+                for row in result:
+                    row['logical_location'] = logical_location(int(row['address'], 16))
+                    decoded = ne_processor.decode(bytes.fromhex(row['bytes']), Location('ne.segment', int(row['address'], 16))) if row['bytes'] else None
+                    row['ne_fixups'] = decoded.facts['ne_fixups'] if decoded else []
+                    row['target_logical_location'] = logical_location(int(row['target'], 16)) if row['target'] else None
             return {"title":self.meta["filename"],"arch":self.arch,"bits":self.bits,"context":self.context,"version":v["id"],"sha256":v["sha256"],"source_sha256":self.source_sha256(v["id"]),"address":hx(a),"instructions":result,"byte_cache_available":all(bool(row["bytes"]) for row in result),"analysis":self.analysis_status(v['id']),"view":"stored instructions ordered by address; gaps are not decoded implicitly"}
 
     def patch(self, address, data, label="patch", origin="agent supplied bytes", version=None):

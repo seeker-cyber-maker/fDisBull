@@ -1,11 +1,12 @@
 # fDisBull
 
-This checkout contains the **0.26.1 release source**: read-only recovery
-reconciliation, selected DOS program-exit reporting and broader game-guide
-workflows. See the [0.26.1 notes](docs/RELEASE-0.26.1.md) for scope and gates.
-The published and shared installation is
-[0.26.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.26.0)
-at this source cut; publication and installation are separate steps.
+This checkout contains the **0.27.0 cloud release candidate**: private external
+target storage, recovery reconciliation, reusable media adapters, structural
+type sharing and bounded Win16 NE analysis. See the
+[candidate notes](docs/RELEASE-0.27.0.md) for scope and gates. The latest
+published release at this cut is
+[0.26.1](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.26.1).
+Publication, environment promotion and installation are separate steps.
 
 Give an agent a program to explore—and a place to keep what it learns.
 fDisBull connects disassembly, headless debugging, scene-aware controls and
