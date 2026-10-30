@@ -16,12 +16,13 @@ class NativeBoundary:
     def __init__(self):
         self.calls = []
         self.revision = 7
+        self.stop = {'kind': 'pause'}
 
     def call(self, method):
         self.calls.append(method)
         assert method == 'session.status', 'reply recovery attempted guest execution/input'
         return {'session_id': 'native-session', 'state': 'stopped',
-                'state_revision': self.revision, 'stop_reason': {'kind': 'pause'}}
+                'state_revision': self.revision, 'last_stop': dict(self.stop)}
 
 
 def service(tmp_path, writer=None):
@@ -102,13 +103,16 @@ def test_actions_checkpoints_and_observation_are_held_until_delivery_accepted(tm
     assert all(call == 'session.status' for call in native.calls)
 
 
-@pytest.mark.parametrize('change', ['revision', 'session', 'digest', 'missing-witness'])
+@pytest.mark.parametrize('change', ['revision', 'session', 'digest', 'missing-witness', 'stop', 'missing-stop', 'invalid-revision'])
 def test_stale_foreign_or_unverifiable_receipt_cannot_release_hold(tmp_path, change):
     backend, native = service(tmp_path)
     ref = retained(backend)
     if change == 'revision': native.revision += 1
     elif change == 'session': backend.session_token = 'new-session'
     elif change == 'digest': ref['sha256'] = '0' * 64
+    elif change == 'stop': native.stop = {'kind': 'breakpoint'}
+    elif change == 'missing-stop': native.stop = {}
+    elif change == 'invalid-revision': native.revision = -1
     else: backend.text = None
     reply = request(backend, {'op': 'accept_reply', 'reply_id': ref['id'], 'sha256': ref['sha256']})
     assert reply['status'] == 'unresolved'

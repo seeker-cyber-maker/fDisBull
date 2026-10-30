@@ -183,14 +183,18 @@ class ZService:
         try:
             debug = self.text.debug
             native = debug.call('session.status')
-            if (not isinstance(native.get('session_id'), str)
+            stop = native.get('last_stop', native.get('stop_reason'))
+            if (not isinstance(stop, dict) or not isinstance(stop.get('kind'), str)
+                    or not stop['kind'] or len(stop['kind']) > 64
+                    or not isinstance(native.get('session_id'), str)
                     or native.get('state') not in ('stopped', 'exited')
-                    or type(native.get('state_revision')) is not int):
+                    or type(native.get('state_revision')) is not int or native['state_revision'] < 0):
                 return None
             witness = {'epoch': self.epoch, 'session_token': self.session_token,
                        'run': debug.run_id,
-                       'native': {k: native.get(k) for k in
-                                  ('session_id', 'state', 'state_revision', 'stop_reason')}}
+                       'native': {**{k: native.get(k) for k in
+                                      ('session_id', 'state', 'state_revision')},
+                                  'stop_reason': stop}}
             from .z_replies import encoded
             return witness if len(encoded(witness)) <= 8192 else None
         except Exception:
