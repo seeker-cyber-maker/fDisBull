@@ -52,6 +52,11 @@ certificate, so this batch interface cannot upgrade those partial outcomes;
 inspect and reconcile them through the provider's qualified evidence. A
 previously confirmed effect with a destination mismatch remains a separate
 case. The plan must explicitly authorize any additional travel as a new intent.
+
+Count continuations and superseded branches when applying an external benchmark
+action budget. Serialize batches sharing a provider; a journal lock does not
+make a shared backend connection safe for concurrent use.
+
 Pause reasons distinguish `continuation-required` from `destination-mismatch`;
 the latter can retain a confirmed effect even though the requested scene goal
 was not met. An interrupted dispatch is `unknown`, never a pending notice.
