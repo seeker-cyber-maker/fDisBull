@@ -79,4 +79,6 @@ It proves quarter recognition and clear-street rejection without distributing a
 full game image or inventing missing pixels. Native acceptance uses the exact
 legacy funded26k save, SHA
 `94bad1065e7dfc00be6c6e4deb84074b55c9f8b7f0f7f1e6d2aaa083d37b82a9`.
-The final native findings are recorded separately after installed-candidate tests.
+The [installed original-game acceptance](VERIFICATION-FUNDED26K-RECOVERY-2026-10-30.md)
+records the natural quarter return, same-process provider recovery, exact native
+state checks, save/load and preserved claim boundaries.

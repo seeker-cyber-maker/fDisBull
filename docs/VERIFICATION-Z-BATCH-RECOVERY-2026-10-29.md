@@ -1,5 +1,9 @@
 # Z batch recovery and action continuation verification
 
+The later [funded26k/native-provider recovery acceptance](VERIFICATION-FUNDED26K-RECOVERY-2026-10-30.md)
+resolves the exercised older-seed return and tests a recovery-only provider.
+The earlier outcomes below remain preserved under their original runtime.
+
 Runtime candidate: `381fb93e1dd24b73357aebaf4f566ae4d2c2716e`, core/player
 0.24.0 private branch packages. See [the public interface and recovery limits](Z_BATCH_RECOVERY.md).
 This follows the [earlier DinoPark continuation record](VERIFICATION-DINOPARK-Z-CONTINUATION-2026-10-29.md);

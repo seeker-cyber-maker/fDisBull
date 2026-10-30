@@ -156,6 +156,9 @@ resume explicitly declared notice continuations and rewind only after a
 certified live checkpoint restore. DinoPark restores recheck native values and
 the original scene before more input. Live checkpoints require the surviving
 guest and unchanged mounted files; native park saves provide durable resumption.
+The [funded26k recovery path](docs/DINOPARK_FUNDED_RECOVERY.md) preserves a confirmed
+food purchase across its quarter notice and keeps a paused provider available
+for explicit checkpoint recovery after a failed action.
 
 The separately installable [text player](docs/TEXT_PLAYER.md) can consume an
 authored projection or connect to a compatible local backend. Its live mode
