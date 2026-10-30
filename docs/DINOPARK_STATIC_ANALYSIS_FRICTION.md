@@ -136,3 +136,106 @@ scene recovery is covered by [the scene framework](SCENE_FRAMEWORK.md).
 No original game bytes, disassembly dump, asset, database, save, executable,
 checkpoint or runtime capture is included in this change. No sound was played,
 no release was published and no system installation was changed.
+
+
+## Original-game asset trace follow-up (2026-10-30)
+
+A subsequent private investigation observed the original game and its setup
+program through the DOS file service, with an additional actor-loader probe.
+It paired file requests with native return registers, distinguishing an open
+attempt, successful open, positive returned read count and actor entry. Host
+sound output stayed disabled while emulated sound loading remained active.
+
+The principal original-game cohort completed all eight main locations,
+purchases/setup, opening and bounded time progression: 37 public provider
+actions. It read 66 distinct shipped filenames. The separate default Sound
+Blaster Pro setup tests read the sound sample, music test and selected driver;
+67 distinct shipped filenames were read across the retained study intervals.
+The 13 static candidates were not observed as inputs in those intervals.
+This is bounded use evidence, not proof that they are globally unused or that
+every sprite in a read file was displayed.
+
+Two earlier observer-qualification cohorts stopped at the scene boundary and
+remain partial. The corrected observer then completed the public route.
+Native investigation also reached the Sell Park prompt and the quit/credits
+path; final quit completion remained unresolved after an oversized diagnostic
+reply. No incomplete intent was replayed in its held provider. Private raw
+traces and original assets remain outside Git.
+
+### Distinguish passive observers from control hooks
+
+The current public hook actions in `code_layers.py` change layers, registers or
+control flow. Scene waits in `scenes.py` and `debug_wait.py` deliberately stop
+when `hook_hits` is nonempty. A private read-only logger initially reused that
+control-hook channel. Its actor-loader stop interrupted navigation; merely
+composing the elapsed guest-time outcome did not fix the second cohort,
+because the guard also checks the hit list.
+
+Those were observer-adapter failures, not evidence of a bank regression.
+The corrected private adapter retains raw native stops and logging events in
+a separate observer channel, while preserving non-observer control hooks.
+It uses the existing native execution and read primitives and changes no guest
+code, data or registers.
+
+Proposed follow-up: support an explicit read-only observer kind, with permitted
+register/memory/string captures, bounded hits/bytes, scoped identity and
+transparent continuation. Keep mutation/control hooks distinct. Acceptance
+must show that a scene wait can consume passive observations while stopping on
+an unrelated control hook, exception, stale binding or unknown native stop.
+An observer must not mint action completion or erase an unresolved boundary.
+
+### Filter file events before repeated host stops
+
+The private adapter needed a raw DOS interrupt-service breakpoint, return
+breakpoints and bounded far-string reads because no supported file-use event
+stream was available at this boundary. The setup tests incurred **47,212**
+interrupt stops for **50 tracked open/read/close requests**. Recorded run calls
+took about **137.8 host seconds** for **15.225 observed guest seconds**. Human
+inspection time is excluded; there is no uninstrumented performance baseline
+or claimed speedup.
+
+Proposed follow-up: native filtered DOS file events or breakpoint predicates
+for the relevant function values, with request/return identity, filename,
+handle, native success/error and actual read count. Preserve unsupported calls,
+process/handle ownership, truncation, vector changes, event loss and caps as
+explicit coverage qualifications. A successful open alone must not become
+proof of input consumption or rendering.
+
+### Account for time at observer boundaries
+
+In the setup music test, a 4,000 ms guest-time request returned after **5,135 ms**
+with dense observer hits. The existing loop checks its time condition on the
+running-wait path; the hook-continuation path can postpone that check.
+
+Proposed follow-up: check the guest clock after observer dispatch as well,
+document whether the requested interval is a target or a hard bound, and
+retain the actual native stop and elapsed time. The private game adapter used
+composed stop-on-hook runs and a declared host-time allowance for observer
+overhead. This does not establish timing parity with an uninstrumented game.
+
+### Keep diagnostics out of the action-response budget
+
+The investigator-only terminal adapter included detailed run/observer evidence
+in its reply. The existing Z response budget correctly replaced an oversized
+reply with an incomplete response after the final quit-related input. The
+client held rather than repeating the input; final selected-program exit was
+not certified. This is not an observed game crash.
+
+Proposed follow-up: return a compact completion receipt and artifact locator,
+persisting the result before transport. Let an explicit read-only reconciliation
+qualify a retained result after reply loss or truncation, with the same source,
+session, context and state witness requirements as other recovery paths.
+Do not reconstruct a receipt from the requested action or infer completion
+from host cleanup.
+
+### Expose terminal scenes through named actions
+
+The main Z routes are available, but Sell Park and the quit/credits controls
+required explicitly declared investigator input with a fresh frame-hash
+precondition. Ordinary Z bindings were withheld after native terminal input.
+
+Proposed follow-up: qualified named actions for the remaining original menus,
+prompts and terminal scenes, with commitment/continuation/exit receipts.
+Keep visible prompts, native inputs, committed effects and selected DOS program
+exit separate. The investigator adapter is test infrastructure, not a newly
+implemented public Z feature or a complete-playthrough certificate.
