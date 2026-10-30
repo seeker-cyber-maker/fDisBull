@@ -72,7 +72,7 @@ exporting an existing artifact is different from claiming a fresh capture.
 Checkpoint restore does not roll back mounted host files or external services.
 
 A DOS data watch confirms the observed access boundary, not whole-instruction
-completion. In the 0.26 candidate, normalized DOS watch stops report
+completion. Starting with 0.26, normalized DOS watch stops report
 `instruction_completed=null` and `registers_stage="after-access"`. A REP copy
 can yield with the same PC and a nonzero remaining count; inspect raw registers
 and memory before claiming completion of the copy or the enclosing transaction.
@@ -112,7 +112,7 @@ backend's durability. Optional external agents are trusted processes, not
 sandboxed programs. Read `docs/TEXT_PLAYER.md` and `docs/PLAYER_LIVE.md` before
 choosing this surface.
 
-The integration candidate also supplies Z scene consumption through
+Z scene consumption is available through
 `--backend-command`: select a trusted local content service and a finite
 `--backend-timeout`. `python -m fdisbull.il_scenes /private/scene.json` consumes
 shared IL without starting a debugger. The player supports public object verbs,
@@ -142,7 +142,7 @@ repeat an action solely because its follow-up view failed. `save park` uses the
 original disk writer and a fresh loader; a live snapshot is a separate facility.
 The qualified scene surface is partial. See `docs/DINOPARK_Z.md`.
 
-The 0.26 candidate can retain that provider after an action error only when
+Starting with 0.26, an action error can leave that provider available only when
 the same native guest is still reachable and freshly confirmed stopped.
 `recovery_required` is not success: new actions and new checkpoints are refused;
 only an explicitly requested, previously qualified checkpoint restore can clear

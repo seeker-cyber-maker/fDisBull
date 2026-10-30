@@ -1,12 +1,14 @@
-# 0.26 development verification
+# 0.26.0 source verification
 
-The runtime/source cut for these checks is local commit
+The earlier development runtime/source cut for the checks below is commit
 `ee8339c43344218241bbd0698d552a8ced59073a`, version `0.26.0.dev0`.
-Later documentation/evidence additions do not replace that identity. This is
-candidate verification, not release acceptance. Ordinary and complete
-required-native Linux CI are still required on the final combined SHA before
-main promotion or tagging. Neither publication nor a shared-system update is
-part of this development turn.
+Later documentation/evidence additions and the final 0.26.0 version metadata
+do not replace that identity. The finalization preserves the functional
+implementation and its recorded limits. These development checks are separate
+from release acceptance: ordinary and complete required-native Linux CI must
+pass on the exact final main SHA before tagging. GitHub Actions and the annotated
+tag record that readback after the commit exists. Publication and a shared-system
+update are outside this source-finalization scope.
 
 ## Reviewed intake
 

@@ -1,8 +1,11 @@
-# fDisBull 0.26 development scope
+# fDisBull 0.26.0
 
-The local `0.26.0.dev0` candidate concentrates on recovery and trustworthy
-observation. It is not tagged, published, installed globally or merged to main.
-The published and shared installation remains 0.25.0.
+The 0.26.0 release source concentrates on recovery and trustworthy observation.
+It includes the reviewed recovery and processor work plus PR #30's definitions
+and contract roadmap. Ordinary and complete required-native Linux CI must pass
+on this exact source commit before tagging. GitHub publication and changing the
+shared installation are separate actions; the published and installed version
+remains 0.25.0 at this source-finalization cut.
 
 - **Original-backed recovery:** PR #26's reviewed `17bc719` amendment retains a
   reachable stopped DinoPark provider after an action failure, records confirmed

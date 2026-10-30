@@ -68,6 +68,13 @@
     "system_updated": false,
     "tagged": false
   },
+  "release_finalization": {
+    "ci_gate": "Ordinary and complete required-native Linux CI on exact final main SHA before tagging.",
+    "publication": "Not part of this finalization.",
+    "scope": "Final version metadata and packaged guidance; functional implementation retains the recorded source-cut evidence.",
+    "system_update": "Not part of this finalization.",
+    "version": "0.26.0"
+  },
   "rep_regression": {
     "after_fix": {
       "completed_and_partial_native_cases_passed": true,

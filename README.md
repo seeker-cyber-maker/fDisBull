@@ -1,8 +1,8 @@
 # fDisBull
 
-This checkout is the **0.26.0.dev0 development candidate**. Its recovery,
+This checkout contains the **0.26.0 release source**. Its recovery,
 Z-machine inspection and observation work is described in the
-[0.26 scope](docs/RELEASE-0.26.0.md). The published and shared installation
+[0.26 notes](docs/RELEASE-0.26.0.md). The published and shared installation
 remains [0.25.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.25.0).
 
 Give an agent a program to explore—and a place to keep what it learns.

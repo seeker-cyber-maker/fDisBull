@@ -1,2 +1,2 @@
 """fDisBull: decoding engines provide facts; agents direct analysis."""
-__version__ = "0.26.0.dev0"
+__version__ = "0.26.0"
