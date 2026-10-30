@@ -293,7 +293,11 @@ Completed effect entries establish that their calls returned, not a complete
 trace of individual writes within a residual block.
 
 When `--transcript` is supplied, a fault adds a private fault receipt before
-the error is returned. The CLI writes checkpoints only after successful runs;
+the error is returned. Every execution fault also emits a bounded stderr summary
+of the error, completed semantic effect-call count, any interrupted effect's
+unknown completion, and whether the last checkpoint's bytes are retained. If
+the receipt cannot be written, stderr reports that failure separately. Neither
+the summary nor the receipt triggers a retry. The CLI writes checkpoints only after successful runs;
 on a fault the last checkpoint remains at the preceding successful boundary,
 not at the partial state. Resuming it in a fresh process starts from that
 boundary and does not resume or replay the failed action automatically. Fault

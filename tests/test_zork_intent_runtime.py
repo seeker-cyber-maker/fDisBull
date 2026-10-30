@@ -407,6 +407,48 @@ def test_cli_fault_transcript_preserves_last_successful_checkpoint_for_fresh_res
     assert resumed.returncode == 0, resumed.stderr
 
 
+@pytest.mark.parametrize("receipt_failure", [False, True])
+def test_cli_fault_summary_without_receipt_or_with_receipt_delivery_failure(tmp_path, receipt_failure):
+    document = authored_package()
+    document["low_level_ir"]["blocks"]["1601"]["nodes"].insert(
+        0, {"op": "emit", "value": "x" * MAX_TEXT})
+    document["udl"]["low_level_ir_sha256"] = value_digest(document["low_level_ir"])
+    package, commands = tmp_path / "package.json", tmp_path / "commands.json"
+    checkpoint, transcript = tmp_path / "checkpoint.json", tmp_path / "transcript.json"
+    package.write_text(json.dumps(document))
+    commands.write_text('["open chest"]')
+    script = '''import sys
+sys.path.insert(0, sys.argv.pop(1))
+import fdisbull_player.intent_runtime as module
+if sys.argv.pop(1) == "yes":
+    original = module._atomic_json
+    def fail_fault_receipt(path, value):
+        if isinstance(value, list) and value and value[-1].get("status") == "fault":
+            raise OSError("injected receipt delivery failure")
+        return original(path, value)
+    module._atomic_json = fail_fault_receipt
+from fdisbull_player.__main__ import main
+raise SystemExit(main())
+'''
+    argv = [sys.executable, "-I", "-B", "-c", script, str(ROOT / "player"),
+            "yes" if receipt_failure else "no", "--intents", str(package),
+            "--commands", str(commands), "--checkpoint", str(checkpoint)]
+    if receipt_failure:
+        argv += ["--transcript", str(transcript)]
+    result = subprocess.run(argv, cwd=tmp_path, text=True, capture_output=True, timeout=15)
+    assert result.returncode != 0
+    assert "Traceback" not in result.stderr
+    assert "Per-run output budget exceeded" in result.stderr
+    assert "completed effect calls: 2" in result.stderr
+    assert "interrupted effect completion: unknown" in result.stderr
+    assert "checkpoint retained: yes" in result.stderr
+    assert ("receipt delivery failed" in result.stderr) is receipt_failure
+    assert len(result.stderr) < 2048 and "x" * 50 not in result.stderr
+    saved = json.loads(checkpoint.read_text())
+    assert saved["fault"] is None and saved["pending_input"] is not None
+    assert not bytes.fromhex(saved["memory"])[CHEST + 1] & 16
+
+
 @pytest.mark.parametrize("change,reason", [
     (lambda runtime: runtime._write_var(20, 2), "opening_target_not_qualified"),
     (lambda runtime: runtime._write_var(21, 44), "opening_action_not_qualified"),

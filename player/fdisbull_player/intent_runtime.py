@@ -682,13 +682,27 @@ def main(argv=None):
     runtime = IntentRuntime(load_package(args.package), seed=args.seed)
     if args.resume:
         runtime.load_checkpoint(args.resume)
+    def checkpoint_digest(path):
+        try:
+            digest = hashlib.sha256()
+            with Path(path).open("rb") as stream:
+                for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                    digest.update(chunk)
+            return digest.hexdigest()
+        except OSError:
+            return None
+    checkpoint_path = args.resume
+    checkpoint_hash = checkpoint_digest(checkpoint_path) if checkpoint_path else None
     transcript = []
     def record(result, command=None):
+        nonlocal checkpoint_path, checkpoint_hash
         transcript.append({"command": command, **result})
         if result["text"]:
             print(result["text"], end="", flush=True)
         if args.checkpoint:
             runtime.save_checkpoint(args.checkpoint)
+            checkpoint_path = args.checkpoint
+            checkpoint_hash = checkpoint_digest(checkpoint_path)
         if args.transcript:
             _atomic_json(args.transcript, transcript)
         return result
@@ -696,18 +710,41 @@ def main(argv=None):
         try:
             result = runtime.run() if command is None else runtime.command(command)
         except Word16Error as exc:
+            segments = [s for s in runtime.last_recovery["segments"]
+                        if s["mode"] == "game_intent_uil"]
+            completed = sum(len(s.get("completed_effects", s["effects"])) for s in segments)
+            interrupted = any(s.get("interrupted_effect_status") == "unknown" for s in segments)
+            if checkpoint_path is None:
+                retained = "no prior checkpoint"
+            elif checkpoint_hash is None:
+                retained = "unknown"
+            else:
+                current = checkpoint_digest(checkpoint_path)
+                retained = "unknown" if current is None else "yes" if current == checkpoint_hash else "no"
+            error = " ".join(str(exc).split())[:512]
+            print(f"Execution fault: {error}; completed effect calls: {completed}; "
+                  f"interrupted effect completion: {'unknown' if interrupted else 'none reported'}; "
+                  f"checkpoint retained: {retained}", file=sys.stderr)
             if args.transcript:
                 transcript.append({"command": command, "status": "fault", "error": str(exc),
                                    "recovery": copy.deepcopy(runtime.last_recovery)})
-                _atomic_json(args.transcript, transcript)
-            raise
+                try:
+                    _atomic_json(args.transcript, transcript)
+                except (OSError, Word16Error) as receipt_error:
+                    message = " ".join(str(receipt_error).split())[:256]
+                    print(f"Fault receipt delivery failed: {message}", file=sys.stderr)
+            return None
         return record(result, command)
     result = execute()
+    if result is None:
+        return 1
     if commands is not None:
         for command in commands:
             if result["status"] != "input":
                 break
             result = execute(command)
+            if result is None:
+                return 1
     else:
         while result["status"] == "input":
             try:
@@ -715,6 +752,8 @@ def main(argv=None):
             except EOFError:
                 break
             result = execute(command)
+            if result is None:
+                return 1
     if result["status"] == "budget_exhausted":
         print("Dispatch budget exhausted; state remains resumable.", file=sys.stderr)
         return 2
