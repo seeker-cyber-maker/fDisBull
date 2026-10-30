@@ -76,6 +76,18 @@ the investigation skill:
 python scripts/check_agent_skill.py --python /path/to/installed/python --skill write-gamefaqs-guide --output /private/guide-skill-receipt.json
 ```
 
+## Reuse media readers
+
+Run `fdisbull media-modules` to discover shipped parser APIs, dependencies and
+limits. `media-inspect` inventories classic MZ header/module/opaque-tail ranges
+or a selected AGI v2 resource; `media-extract` copies one member to a new private
+directory outside Git. Both return source/member hashes without inline target
+bytes and never execute inputs. Existing `gog-list/gog-unpack` and AGI picture
+APIs remain available through the catalog. Read the packaged specification with
+`fdisbull agent-skill --reference references/media-modules.md` before recovering
+missing tooling or extending an adapter. This does not unpack compressed DOS
+executables or establish the purpose of their trailing bytes.
+
 ## Choose a route
 
 ### Inspect an executable without running it

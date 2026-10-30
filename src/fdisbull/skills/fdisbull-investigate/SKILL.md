@@ -40,6 +40,16 @@ native code and other explanations. Read
 [references/methodology.md](references/methodology.md) before claiming a
 cross-file or native-to-guest execution link.
 
+Before calling an obstacle an input blocker, distinguish an absent original or
+permission from missing tooling, unfinished recovery and host-only verification.
+Discover `media-modules` first. When evidence and authorization permit, build the
+smallest useful missing reader/unpacker and preserve its specification and authored
+tests for reuse. Follow [references/media-modules.md](references/media-modules.md)
+for the decision procedure, shipped APIs, format contracts and extension checks.
+Keep independent binary, notes/source-assisted and documented-results-derived UDP
+lanes explicit; generated code is not recovered source. Report bounded partial,
+unsupported, unknown and refused outcomes honestly.
+
 ## Choose a useful probe
 
 For a genuine fork, record one active question, target/context, hypothesis,
