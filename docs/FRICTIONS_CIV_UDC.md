@@ -17,7 +17,14 @@
 3. Interpreter identity.
    - System Python vs pinned venv resolved different `fdisbull` versions, so commands should report/verify interpreter identity.
    - No code change made here; document/reporting follow-up.
-4. macOS full-suite Linux fixture portability.
+4. Native shell domain admission is not represented in the generic profile.
+   - `build_selection_shell` refuses a nonempty contract/layer domain because
+     the emitted shell has no generic compiled admission adapter.
+   - The corrected Civ module therefore keeps signed limits in typed IL
+     `require` guards and its module-level release gate instead of silently
+     dropping them. A future profile should carry and qualify concrete native
+     input-domain guards explicitly.
+5. macOS full-suite Linux fixture portability.
    - The complete suite on Darwin reached 2,183 passed and 149 skipped, but
      23 Linux-ELF fixture setup errors and 2 ELF assertions remained because
      `/usr/bin/gcc` emitted Mach-O or rejected Linux-only linker flags.
