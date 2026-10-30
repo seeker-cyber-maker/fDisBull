@@ -36,6 +36,18 @@ def _identify_header(data: bytes) -> dict:
             return False
         return True
 
+    from .ail import ail_signature, inspect_ail
+    if ail_signature(data):
+        h.update(format='AIL', family='DOS', bits=16, arch='x86', endian='little',
+                 entrypoint=None, address_space='module-relative')
+        try:
+            metadata=inspect_ail(data)
+            h.update(valid=True, directory_offset=metadata['directory_offset'],
+                     export_count=len(metadata['exports']))
+        except ValueError as exc:
+            h['warnings'].append(str(exc))
+        return h
+
     if data.startswith(b'LE'):
         h.update(format='LE', family='DOS', bits=32, arch='x86', endian='little')
         h['valid'] = need(196, 'truncated LE header')
@@ -254,7 +266,8 @@ def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | N
     data = _input(data)
     header = identify_header(data)
     if image=='auto':image=None
-    if image not in (None,'pe','le','mz','com'):raise ValueError('image must be auto, pe, le, mz or com')
+    if image not in (None,'pe','le','mz','com','ail'):raise ValueError('image must be auto, pe, le, mz, com or ail')
+    if image=='ail' and header['format']!='AIL':raise ValueError('requested AIL image is not present')
     container_header=None
     if image=='com':
         if slice_arch is not None:raise ValueError('slice_arch cannot select a COM image')
@@ -307,9 +320,24 @@ def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | N
         from .image_views import image_views
         result['image_views']=image_views(data)
     if container_header is not None:result['container_header']=container_header
-    result['selected_image']=image or ('pe' if header['family']=='PE' else 'le' if header['format']=='LE' else 'mz' if header['format']=='DOS MZ' else None)
+    result['selected_image']=image or ('ail' if header['format']=='AIL' else 'pe' if header['family']=='PE' else 'le' if header['format']=='LE' else 'mz' if header['format']=='DOS MZ' else None)
     warnings = result["warnings"]
     mappings = []
+    if header['format']=='AIL':
+        from .ail import inspect_ail
+        try:
+            metadata=inspect_ail(data)
+            result['ail']=metadata
+            result['exports']=metadata['exports']
+            result['sections']=[dict(name='ail_module',virtual_address=0,
+                virtual_size=len(data),file_offset=0,file_size=len(data),permissions='rwx')]
+            result['file_mappings']=[dict(virtual_address=0,file_offset=0,file_size=len(data))]
+            mappings=[(0,len(data),0)]
+            warnings.extend(metadata['warnings'])
+        except ValueError as exc:
+            warnings.append(str(exc))
+        result['strings']=_strings(data,mappings,warnings)
+        return result
     if header['format'] == 'LE':
         try:
             from .le import inspect_le

@@ -59,7 +59,7 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
     Module mode also permits an absent entry for other explicitly chosen libraries.
     """
     if image=='auto':image=None
-    if image not in (None,'pe','le','mz','com'):raise ValueError('image must be auto, pe, le, mz or com')
+    if image not in (None,'pe','le','mz','com','ail'):raise ValueError('image must be auto, pe, le, mz, com or ail')
     path = Path(path)
     if not isinstance(module,bool):
         raise ValueError('module must be a boolean')
@@ -97,6 +97,11 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
             raise ValueError("arm64 entry point must be 4-byte aligned")
         return Image("raw", arch, bits, entry, regions, [Seed(entry, "entry", "entry")],
                      {"mapping": "flat", "filename": path.name, "source_sha256": hashlib.sha256(data).hexdigest(), "file_mappings":[dict(virtual_address=base,file_offset=0,file_size=len(data))]}, source_bytes=data)
+    from .ail import ail_signature, load_ail
+    if image=='ail' or image is None and ail_signature(data):
+        if bits is not None or base or load_segment != 0x1000 or slice_arch is not None:
+            raise ValueError('AIL uses module-relative offsets; bits/base/load_segment/slice overrides are not supported')
+        return load_ail(data, entry=entry)
     if image=='com':
         if slice_arch is not None or bits is not None or base or module:
             raise ValueError('COM uses load_segment and cannot use raw, module or slice options')

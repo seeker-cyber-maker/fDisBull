@@ -101,7 +101,7 @@ METHODS = {
     'import-signatures': 'Atomically import an explicit signature catalog; catalog,[version]',
     'export-signatures': 'Export registered project identities as a reusable JSON catalog; [version]',
     'omf-catalog': 'Extract fixup-free DOS16 public routines from an OMF library; path,[abi]',
-    'dos-services': 'List the authored DOS/BIOS interrupt contract catalog',
+    'dos-services': 'List DOS/BIOS/audio contracts or describe a vector with pre-call registers',
     'debug-wait': 'Poll explicit observations with separate guest/host budgets; run,observations,until,guest_ms,[slice_ms,timeout_ms,fast_forward,max_polls,timeout_screenshot]',
     'debug-trace-view': 'Compare stored trace instruction bytes/context against a temporal interpretation; artifact,version',
     'doctor': 'Run disposable authored debugger acceptance; backend,executable,[kernel,initramfs,output,boot_timeout_ms]',
@@ -301,9 +301,19 @@ def invoke(method, params, debugger=None):
         if not path.is_file() or path.stat().st_size>16*1024*1024:raise ValueError('OMF library must be at most 16 MiB')
         return omf_signatures(path.read_bytes(),source=str(path),**p)
     if method=='dos-services':
-        from .dos_services import service_catalog
-        if p:raise ValueError('dos-services takes no parameters')
-        return service_catalog()
+        from .dos_services import service_catalog, describe_interrupt
+        vector=p.pop('vector',None);registers=p.pop('registers',{});ax=p.pop('ax',None)
+        if p or not isinstance(registers,dict):raise ValueError('dos-services expects vector, registers and optional ax')
+        if vector is None:
+            if registers or ax is not None:raise ValueError('registers/ax require a vector')
+            return service_catalog()
+        from .project import integer
+        vector=integer(vector,'vector',0,255)
+        if ax is not None:
+            ax=integer(ax,'ax',0,65535)
+            if 'ax' in registers and registers['ax']!=ax:raise ValueError('conflicting AX selectors')
+            registers={**registers,'ax':ax}
+        return describe_interrupt(vector,registers)
     if method=='doctor':
         from .doctor import doctor
         return doctor(**p)
@@ -594,7 +604,9 @@ def parser():
         elif name=='debug-export-scenes':
             c.add_argument('output');c.add_argument('scenes',nargs='+')
         elif name=='debug-import-scenes':c.add_argument('bundle')
-    sub.add_parser('dos-services',help=METHODS['dos-services'])
+    c=sub.add_parser('dos-services',help=METHODS['dos-services'])
+    c.add_argument('--vector',type=lambda s:int(s,0))
+    c.add_argument('--ax',type=lambda s:int(s,0))
     c=sub.add_parser('omf-catalog',help=METHODS['omf-catalog'])
     c.add_argument('path');c.add_argument('--abi',default='x86_16_cdecl_near')
     c=sub.add_parser('doctor',help=METHODS['doctor'])
@@ -649,7 +661,7 @@ def parser():
         c.add_argument('path')
         if name=='inspect':
             c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'])
-            c.add_argument('--image',choices=['auto','pe','le','mz','com'])
+            c.add_argument('--image',choices=['auto','pe','le','mz','com','ail'])
     c = sub.add_parser("import",help="create project from executable or explicit raw code")
     c.add_argument("path")
     c.add_argument("project")
@@ -658,12 +670,12 @@ def parser():
     c.add_argument("--base",default=0,type=lambda s:int(s,0))
     c.add_argument("--entry",type=lambda s:int(s,0))
     c.add_argument("--load-segment",type=lambda s:int(s,0),default=0x1000)
-    c.add_argument('--image',choices=['auto','pe','le','mz','com'],help='select PE, DOS/4GW LE, MZ or explicitly declared DOS COM')
+    c.add_argument('--image',choices=['auto','pe','le','mz','com','ail'],help='select a container, declared DOS COM or AIL driver')
     c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'],help='select a thin/universal Mach-O CPU slice')
     c.add_argument('--module',action='store_true',help='allow a library without an executable entry')
     c=sub.add_parser('analyze-module',help=METHODS['analyze-module'])
     c.add_argument('path');c.add_argument('project')
-    c.add_argument('--image',choices=['auto','pe','le','mz'])
+    c.add_argument('--image',choices=['auto','pe','le','mz','ail'])
     c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'])
     c.add_argument('--export');c.add_argument('--entry',type=lambda s:int(s,0))
     c.add_argument('--max-instructions',type=int,default=10000)

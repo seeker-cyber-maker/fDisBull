@@ -256,7 +256,7 @@ class Project(ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, Shared
                 loader['file_mapping_count'] = len(loader.pop('file_mappings', []))
                 loader['le'] = le
                 metadata['loader_metadata'] = loader
-            return {"project":str(self.path),**metadata,"entry":hx(self.meta["entry"]),"context":self.context,
+            return {"project":str(self.path),**metadata,"entry":hx(self.meta["entry"]) if self.meta["entry"] is not None else None,"context":self.context,
                     "version":v,"counts":counts,"work":work,"regions":regions,"analysis":self.analysis_status(v['id'])}
 
     def _stored_analysis_status(self,version=None):
@@ -356,6 +356,8 @@ class Project(ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, Shared
         with self.transaction():
             v = self.version(version)
             a = self.meta["entry"] if address is None else number(address)
+            if a is None:
+                a = min(r.start for r in self.regions(v["id"]))
             rows = self.db.execute("SELECT i.*,n.text AS name,c.text AS comment,c.author AS comment_author,c.inherited_from AS comment_inherited_from FROM instructions i LEFT JOIN annotations n ON n.version=i.version AND n.context=i.context AND n.address=i.address AND n.kind='name' LEFT JOIN annotations c ON c.version=i.version AND c.context=i.context AND c.address=i.address AND c.kind='comment' WHERE i.version=? AND i.context=? AND i.address>=? ORDER BY i.address LIMIT ?",(v["id"],self.context,key(a),count)).fetchall()
             result = []
             for r in rows:
