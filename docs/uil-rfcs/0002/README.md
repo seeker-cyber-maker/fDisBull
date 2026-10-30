@@ -1,5 +1,16 @@
 # RFC 0002: evidence and literal vectors
 
+**REVISION IN PROGRESS. Shared for discussion, not merge approval.**
+
+New discussion material, 30 October 2026:
+
+- [Agent-first UIL, providers, language-neutral values/functions and target scaffolds](AGENT_FIRST_TOPOLOGY.md).
+- [Branching/rejoining route map](PIPELINE_MAP.md), with [editable Mermaid source](pipeline-map.mmd).
+- [Dataflow, execution history and H-Houdini-inspired verification](RESEARCH_AND_VERIFICATION.md), including prospective Q01-Q12 cases.
+
+These additions are documentation research. They do not rerun the earlier
+experiments below, implement the proposed integrations, or fix a final schema.
+
 This companion supports the [executable Rosetta principles](../0002-executable-rosetta-contracts.md).
 It separates executed prototype evidence from proposed production requirements.
 It adds no runtime implementation or new UIL encoding.
