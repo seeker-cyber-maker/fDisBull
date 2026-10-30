@@ -12,6 +12,7 @@ import iced_x86 as ix
 
 
 FORMAT = 'fdisbull-code-backings-1'
+_MAX_STORED_INCOMING = 100000
 
 
 def digest(document):
@@ -27,6 +28,51 @@ def _union(spans):
         else:
             merged.append([start, end])
     return merged
+
+
+def _stored_incoming(project, version, blocks, incoming, problems):
+    """Inventory reverse control references for every captured instruction.
+
+    Batch exact address/context lookups. A capped inventory stays incomplete;
+    a known caller of an interior node is as relevant as a caller of a root.
+    """
+    contexts = {}
+    for block in blocks.values():
+        contexts.setdefault(block['context'], {})[f'{int(block["address"], 16):016x}'] = block['id']
+    examined = 0
+    dos = project.meta['format'] in ('MZ', 'COM')
+    kinds = "kind IN ('branch','resolved_branch','fallthrough','call','resolved_call')"
+    for context, targets in sorted(contexts.items()):
+        addresses = sorted(targets)
+        for start in range(0, len(addresses), 400):
+            batch = addresses[start:start+400]
+            placeholders = ','.join('?' for _ in batch)
+            remaining = _MAX_STORED_INCOMING-examined
+            if dos:
+                query = ("SELECT source,source_context,target,target_context,kind,evidence FROM dos_edges "
+                         "WHERE version=? AND (target_context=? OR target_context='' OR target_context IS NULL) "
+                         f"AND target IN ({placeholders}) AND {kinds} ORDER BY target,source,kind LIMIT ?")
+            else:
+                query = ("SELECT source,context AS source_context,target,context AS target_context,kind,evidence FROM xrefs "
+                         f"WHERE version=? AND context=? AND target IN ({placeholders}) AND {kinds} "
+                         "ORDER BY target,source,kind LIMIT ?")
+            rows = project.db.execute(query, (version, context, *batch, remaining+1)).fetchall()
+            overflow = len(rows) > remaining
+            for row in rows[:remaining]:
+                target_id = targets[row['target']]
+                source_id = f'{row["source_context"]}@{hex(int(row["source"], 16))}'
+                edge = {'source': source_id, 'target': target_id, 'kind': row['kind'],
+                        'evidence': row['evidence'], 'provenance': 'stored'}
+                if not row['target_context']:
+                    edge['context_resolution'] = 'unresolved_physical_target'
+                    problems.append({'kind': 'incoming_context_unresolved',
+                                     'source': source_id, 'target': target_id})
+                incoming.setdefault(target_id, {}).setdefault((source_id, row['kind']), edge)
+            examined += min(len(rows), remaining)
+            if overflow:
+                problems.append({'kind': 'incoming_budget', 'limit': _MAX_STORED_INCOMING})
+                return {'limit': _MAX_STORED_INCOMING, 'examined': examined, 'complete': False}
+    return {'limit': _MAX_STORED_INCOMING, 'examined': examined, 'complete': True}
 
 
 def materialize_code_backing(backing):
@@ -84,12 +130,20 @@ def validate_source(project, document, *, version=None):
         budget = document.get('budget', {}).get('limit')
         fresh = project.code_backings(requests, version=selected['id'], max_instructions=budget)
 
+        def references(block):
+            # Labels are presentation, but a newly discovered pointer is a
+            # new relocation obligation even when bytes and CFG stay the same.
+            values = [(r.get('operand_index'), r.get('role'), r.get('target'), r.get('width'))
+                      for r in block.get('references', [])]
+            return sorted(values, key=lambda row: json.dumps(row, separators=(',', ':')))
+
         def facts(capsule):
             return {'entries': capsule['entries'], 'complete': capsule['complete'],
                     'visits': capsule['budget']['visits'],
                     'blocks': sorted((b['id'], b['context'], b['address'], b['bytes'], b['flow'],
                                       sorted((e['kind'], e['target']) for e in b['exits']),
-                                      sorted((e['source'], e['kind'], e['target']) for e in b['incoming']))
+                                      sorted((e['source'], e['kind'], e['target']) for e in b['incoming']),
+                                      references(b))
                                      for b in capsule['blocks'])}
         if facts(fresh) != facts(document):
             raise ValueError('capture graph differs from selected project facts')
@@ -145,26 +199,6 @@ class CodeBackingsMixin:
                 roots.append(graph['entry'])
                 root_evidence.append({'entry': graph['entry'], 'source': 'caller_selected_exact_entry',
                                       'graph_closed': graph['graph_closed'], 'runtime_observed': False})
-                # Preserve stored incoming evidence even when its source is
-                # outside this selected reachable slice. Selection is not a
-                # substitute for evidence that another path targets an operand.
-                if graph['context'] is not None:
-                    target_key = f'{int(graph["address"], 16):016x}'
-                    if self.meta['format'] in ('MZ', 'COM'):
-                        incoming_rows = self.db.execute(
-                            "SELECT source,source_context,kind,evidence FROM dos_edges WHERE version=? AND target_context=? AND target=? AND kind IN ('branch','resolved_branch','fallthrough','call','resolved_call') LIMIT 1025",
-                            (v, graph['context'], target_key)).fetchall()
-                    else:
-                        incoming_rows = self.db.execute(
-                            "SELECT source,context AS source_context,kind,evidence FROM xrefs WHERE version=? AND context=? AND target=? AND kind IN ('branch','resolved_branch','fallthrough','call','resolved_call') LIMIT 1025",
-                            (v, graph['context'], target_key)).fetchall()
-                    if len(incoming_rows) > 1024:
-                        problems.append({'kind': 'incoming_budget', 'entry_index': index})
-                    for row in incoming_rows[:1024]:
-                        source_id = f'{row["source_context"]}@{hex(int(row["source"], 16))}'
-                        incoming.setdefault(graph['entry'], {})[(source_id, row['kind'])] = {
-                            'source': source_id, 'target': graph['entry'], 'kind': row['kind'],
-                            'evidence': row['evidence'], 'provenance': 'stored'}
                 for field in ('gaps', 'unresolved', 'frontier', 'calls'):
                     for detail in graph[field]:
                         problems.append({'kind': field, 'entry_index': index, 'detail': deepcopy(detail)})
@@ -211,6 +245,7 @@ class CodeBackingsMixin:
                                        'byte_roles': roles},
                         'effects': {'status': 'native_backing_residual',
                                     'scope': 'Complete original native instruction, with its architectural effects retained; no UIL meaning inferred.'}}
+            inventory = _stored_incoming(self, v, blocks, incoming, problems)
             for block in blocks.values():
                 block['incoming'] = list(incoming.get(block['id'], {}).values())
                 block['exits'].sort(key=lambda edge: (edge['kind'], edge['target']))
@@ -231,6 +266,7 @@ class CodeBackingsMixin:
                              'shared_occurrence_bytes': occurrences-physical,
                              'physical_ranges': [{'start': hex(start), 'end': hex(end)} for start, end in spans]},
                 'budget': {'limit': budget, 'visits': used},
+                'incoming_inventory': inventory,
                 'qualification': 'native_backings_only',
                 'scope': 'Entry-qualified stored encodings and explicit edges; no recovered intent, reachability or equivalence claim.'}
             document['sha256'] = digest(document)
