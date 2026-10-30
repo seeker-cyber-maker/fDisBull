@@ -157,9 +157,10 @@ every sprite in a read file was displayed.
 
 Two earlier observer-qualification cohorts stopped at the scene boundary and
 remain partial. The corrected observer then completed the public route.
-Native investigation also reached the Sell Park prompt and the quit/credits
-path; final quit completion remained unresolved after an oversized diagnostic
-reply. No incomplete intent was replayed in its held provider. Private raw
+Native investigation also reached the Sell Park confirmation and quit/save
+prompts. A credits-picture read occurred after declining save, but completed
+credits display and selected DOS exit remain unverified after an oversized
+diagnostic reply. No incomplete intent was replayed in its held provider. Private raw
 traces and original assets remain outside Git.
 
 ### Distinguish passive observers from control hooks
