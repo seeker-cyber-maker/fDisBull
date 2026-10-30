@@ -1,0 +1,297 @@
+{
+  "backend_sha256": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277",
+  "c10_continuation": {
+    "catalogue_read": "read vegasaurus incomplete/unknown after action sent; no retry or later action was sent",
+    "initial_inventory": "one Coelophysis; no purchase attempted in this run",
+    "initial_loaded_scene": "office",
+    "journaled_native_save_load": "save zpark-002 and load zpark-002 both completed/applied-confirmed; native session transition recorded",
+    "notice_continuation": "not reached; no batch park-entry journal exists",
+    "partial_action_batch_acknowledgement": "not exercised; no completion claim",
+    "session_cleanup_complete": true,
+    "session_complete": false,
+    "session_status": "failed",
+    "owned_child_exit_codes": [
+      0,
+      0
+    ],
+    "catalogue_stop": "parking_hint modal recognized during pan; catalogue surface not matched, selector unchanged ffff, purchase input not sent; prior read remains unknown"
+  },
+  "candidate_head": "db337d21f10a2c75c1e65d26ddd954cddc384e4c",
+  "candidate_version": "0.25.0",
+  "claim_limits": [
+    "Bounded native routes only; not broad game parity.",
+    "Preserved C10 catalogue read remained unknown and was not retried.",
+    "No park-entry notice appeared on the separate route; acknowledgement remains unqualified.",
+    "Live recovery covers 20 saved fields before 100 guest ms presentation preparation, not deterministic replay or full-state equality.",
+    "No generic watchpoint completion claim."
+  ],
+  "evidence_files": {
+    "c10_native_batch_journal": {
+      "sha256": "622296ca1aeb31b8e0a3efceadee904a193392d8502f81fa03569c2691da0704",
+      "size": 1425
+    },
+    "c10_native_events": {
+      "sha256": "04ad771af2deb0cd685650cf895cfaa500010118ddcbd6e65dd29931f82a108d",
+      "size": 23247
+    },
+    "c10_oracle": {
+      "sha256": "a9bac227429379ca42c1bc351330d0068700a6bf8e9dab6c8acb01307f87b76e",
+      "size": 13549
+    },
+    "c10_responses": {
+      "sha256": "4bf4fa19dc7ca55b197b1fc0bd69c23b8415b2037f681ff45df73e30fafb11bf",
+      "size": 4068
+    },
+    "c10_session": {
+      "sha256": "76e555949117cde7ab74fa4d0dfbc9a931b428785e0ca1c185b400c84c872387",
+      "size": 512253
+    },
+    "fresh_catalogue_frame": {
+      "sha256": "ac1107a71d4ab3270d97094ff9d0aa7fc464e1465ca6f0cfaba3e3a1e97b48d4",
+      "size": 12196
+    },
+    "fresh_native_events": {
+      "sha256": "2cb990ab35b750e41b5946e3611215b6137c9ae5ed2a175e8fbb73ba29e828fa",
+      "size": 837905
+    },
+    "fresh_oracle": {
+      "sha256": "4c6d619a9b56b7da0d51d19bb19bde240cd0b068d553aed3859f30a8a1fa516c",
+      "size": 50396
+    },
+    "fresh_responses": {
+      "sha256": "db8e343237395acae0af62af548797ea4ad32b01adbbea365997a533a05035ed",
+      "size": 9615
+    },
+    "fresh_save_load_resume_receipt": {
+      "sha256": "25e785356da710002563b38dd63add3b3af733522215e67a953a4d9c51678b5f",
+      "size": 12435
+    },
+    "fresh_session": {
+      "sha256": "02f50a1eded2db3cfc20f0f55e310b876018b9f9cf2c58f9d87a5b630d95696a",
+      "size": 3270505
+    }
+  },
+  "format": "fdisbull-025-bounded-dinopark-replay-1",
+  "fresh_opening": {
+    "all_complete_success_or_read": true,
+    "catalogue_read_vegasaurus": "success/applied-confirmed",
+    "coelophysis_purchase": "success/applied-confirmed; native result reported $1,250",
+    "native_save_and_load": "save park -> list saves -> load park -> check status all complete; loaded session status read succeeded",
+    "park_entry": "open park returned success; time-advance and status were observed; no broader open/closed persistence claim",
+    "response_count": 25,
+    "session_cleanup_complete": true,
+    "subsequent_inventory": "success; one Coelophysis and one pen",
+    "owned_child_exit_codes": [
+      0,
+      0
+    ]
+  },
+  "input_integrity": {
+    "c10_canonical_and_stage_unchanged": true,
+    "c10_game_inventory_sha256": "88990fbd3c279c4ddefa1dc43ad54d345943121bfaffe4f9e6a6ba27824453d4",
+    "c10_stage_files": 192,
+    "opening_canonical_and_stage_unchanged": true,
+    "opening_canonical_manifest_files": 192,
+    "opening_game_inventory_sha256": "88990fbd3c279c4ddefa1dc43ad54d345943121bfaffe4f9e6a6ba27824453d4",
+    "original_c10_bundle_unchanged": true,
+    "original_c10_native_sha256": "f661ecac96ae84803af19901def0669d8032ecb8b2b12814ca4832dcf78f576e",
+    "original_c10_qualified_resource_count": 184,
+    "original_c10_saved_field_count": 20
+  },
+  "runtime": "Source 0.25.0, CPython 3.13.17 macOS arm64; compatible separately verified 0.24 Mac DOSBox",
+  "private_receipt_sha256": "7f809d020e93ce65cc45175c329808ddeeafbafe63d8c9dd2d3c8482f73a923d",
+  "separate_park_entry": {
+    "actions": [
+      {
+        "command": "look",
+        "result": "read/complete; initial context office"
+      },
+      {
+        "command": "go street",
+        "result": "success/applied-confirmed"
+      },
+      {
+        "command": "go park",
+        "native_before_after": {
+          "after": {
+            "cash": 28434,
+            "day_counter": 2,
+            "dinosaurs": 1,
+            "guides": 1,
+            "loan": 4167,
+            "month_index": 7,
+            "small_feeders": 19
+          },
+          "before": {
+            "cash": 28265,
+            "day_counter": 28,
+            "dinosaurs": 1,
+            "guides": 1,
+            "loan": 4290,
+            "month_index": 6,
+            "small_feeders": 26
+          },
+          "source": "go park native result event only; game time advanced during entry"
+        },
+        "result": "success/applied-confirmed; final context park; response reported day counter 2 and cash $28,434; response explicitly said time advanced during entry and did not establish separate open/closed status"
+      }
+    ],
+    "backend_sha256": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277",
+    "candidate_head": "db337d21f10a2c75c1e65d26ddd954cddc384e4c",
+    "candidate_version": "0.25.0",
+    "claim_limits": [
+      "No notice was present on this C10 park-entry route; acknowledgment was not exercised.",
+      "No catalogue action or purchase occurred in this trial.",
+      "Park status/open-closed state is not established by the entry result.",
+      "This is a bounded route result, not broad game parity."
+    ],
+    "evidence": {
+      "batch_journal": {
+        "sha256": "d84d48859b37ead361e7d2ee0eaeb4728aa11843acecb7895e8ea5c80f58e855"
+      },
+      "native_events": {
+        "sha256": "0930ec5a9dc72444da8c1b2d6eb41d5bafb633e10218847069e98221bc07a124"
+      },
+      "oracle": {
+        "sha256": "2af12fe74b77bd4b583fcfba40ade023e628ff4fd2fa1e5be956063c0fc3fd8f"
+      },
+      "responses": {
+        "sha256": "fbc2e1e77a93c267f45e8294426d6be915e46ec8c5c043abca6f1f65fa716c21"
+      },
+      "run_final": {
+        "sha256": "a8b4adc9c1d329c2e28f05da1ec8c464373ac8e699e0479c42ba28d0f0070a03"
+      },
+      "session": {
+        "sha256": "89594bd003d1fb6d09b978e3ecae5ef69bf09c8423015216d9badc5f006dec52"
+      }
+    },
+    "format": "private-fdisbull-025-c10-park-notice-trial-summary-v1",
+    "harness_note": "The trial script records street-observation.complete=false by checking a field absent from Player._observe() normalized output. Source public_observation() strips raw complete after validation. The context and route-park object were present; BatchSession independently performed a valid provider observation before dispatch and completed the route.",
+    "last_scene": {
+      "native_result_event": "result",
+      "oracle_frame_name": "z-oracle-0003.png",
+      "oracle_frame_sha256": "b259dad60ac3eac16157ba5a06652d4a05e7e5c5569031d3c860921be3072819",
+      "public_context": "park"
+    },
+    "lifecycle": {
+      "cleanup_complete": true,
+      "session_complete": true,
+      "session_status": "completed",
+      "owned_child_exit_codes": [
+        0
+      ]
+    },
+    "notice_boundary": {
+      "acknowledge_notice_dispatched": false,
+      "batch_state": "completed because original go park action itself returned complete success; no partial action was upgraded",
+      "limitation": "This unchanged C10 seed did not expose a park-entry notice on this route; acknowledgement behavior remains unqualified for this input. No time-advance or other trigger was added.",
+      "park_entry_notice_observed": false,
+      "provider_continuation_returned": false
+    },
+    "scenario": "New private copy of unchanged C10 seed; catalogue omitted.",
+    "source_integrity": {
+      "c10_seed_native_sha256": "f661ecac96ae84803af19901def0669d8032ecb8b2b12814ca4832dcf78f576e",
+      "original_c10_bundle_unchanged": true,
+      "private_game_copy_192_files_unchanged": true,
+      "private_game_inventory_sha256": "88990fbd3c279c4ddefa1dc43ad54d345943121bfaffe4f9e6a6ba27824453d4"
+    },
+    "private_receipt_sha256": "5d0eece26908c8a587cdd7329b4321e0b3708f670b467ad0d4b69b098c02e3ab"
+  },
+  "final_live_checkpoint": {
+    "checkpoint_receipt": {
+      "restored_event": {
+        "context": "office",
+        "field_count": 20,
+        "following_input": "not_sent",
+        "native_fields_equal": true,
+        "phase": "checkpoint_restored",
+        "preparation_guest_ms": 100,
+        "restored_field_count": 20,
+        "saved_field_count": 20
+      },
+      "saved_event": {
+        "context": "office",
+        "field_count": 20,
+        "phase": "checkpoint_saved"
+      },
+      "scope": "Equality covers the 20 saved ranges recorded by this provider and the qualified office context. It is not full runtime-state equality or deterministic replay."
+    },
+    "claim_limits": [
+      "Live provider checkpoint/recovery only; not a durable native park save.",
+      "No deterministic replay or full-state equality claim.",
+      "No catalogue action, purchase, park notice, or acknowledgement was attempted in this session."
+    ],
+    "evidence_files": {
+      "batch_journal": {
+        "sha256": "9879013caabd9f8e3c553021e49c242198d81443f2b136f9ada5dca9b4899551",
+        "size": 595
+      },
+      "native_events": {
+        "sha256": "97eed9752a7797b367cb968c6e0be55dbe0666d03179d5c66ce819e101c012c3",
+        "size": 32857
+      },
+      "native_receipt": {
+        "sha256": "8c5b6c285e99b60d16617176c5c27215e77c9111bc5295dc7b09890d3d8f807a",
+        "size": 126556
+      },
+      "oracle": {
+        "sha256": "295286149f7bddcc69c7f3cd338fdbd1d782cff37ed80e2f37aef9962557d751",
+        "size": 3852
+      },
+      "run": {
+        "sha256": "a72400d87645e96b7c20128eb4beb81b3c38d65b31cf25a8eece1167c24a13b6",
+        "size": 920
+      },
+      "run_final": {
+        "sha256": "549eeee949b5a9296efc4e4e28e90438f597f813c17764f009e8939fd1cd2bdb",
+        "size": 782
+      },
+      "session_receipt": {
+        "sha256": "f7060aa431f28722ead56b2ad50d021a362e5e7fa0be019987145f0457a5d482",
+        "size": 125668
+      }
+    },
+    "format": "private-fdisbull-025-final-c10-checkpoint-recovery-summary-v1",
+    "input": {
+      "C10_native_save_sha256": "f661ecac96ae84803af19901def0669d8032ecb8b2b12814ca4832dcf78f576e",
+      "C10_staging_seed_unchanged": true,
+      "original_C10_bundle_unchanged": true,
+      "private_game_copy_unchanged": true,
+      "seed_files": 192,
+      "seed_inventory_sha256": "88990fbd3c279c4ddefa1dc43ad54d345943121bfaffe4f9e6a6ba27824453d4",
+      "seed_kind": "original C10 native save resumed into a new private game copy"
+    },
+    "lifecycle": {
+      "cleanup_complete": true,
+      "session_complete": true,
+      "session_status": "completed",
+      "owned_child_exit_codes": [
+        0
+      ]
+    },
+    "sequence": [
+      {
+        "result": "read complete; office",
+        "step": "passive office look"
+      },
+      {
+        "result": "saved complete; provider-certified replay-safe live checkpoint",
+        "step": "BatchSession.checkpoint(office)"
+      },
+      {
+        "result": "success applied-confirmed",
+        "step": "go street"
+      },
+      {
+        "result": "restored complete; session context returned to office",
+        "step": "BatchSession.recover(office)"
+      },
+      {
+        "result": "passive observation qualified office; planned batch step left pending and was not resent",
+        "step": "after recovery"
+      }
+    ],
+    "private_receipt_sha256": "e09e7592ba6cbeedef96a5e9e9210563feab360d6824e9cffdd24454b10f9b14",
+    "candidate_commit": "c92047a32f76b9a4a8c45cad96d12be844661d99"
+  }
+}

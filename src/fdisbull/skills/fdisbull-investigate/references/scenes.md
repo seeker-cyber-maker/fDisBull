@@ -1,5 +1,15 @@
 # fDisBull scene investigation reference
 
+## Contents
+
+- [Observe and reuse scenes](#observe-and-reuse-scenes)
+- [Define objects and predicates](#define-objects-and-predicates)
+- [Calibrate content and readiness](#calibrate-content-and-readiness)
+- [Retain action and failure evidence](#retain-action-and-failure-evidence)
+- [Adaptation provenance](#adaptation-provenance)
+
+## Observe and reuse scenes
+
 Version 0.18 supports `compact=True` on scene checks/actions/waits and
 saved-script operations. Full evidence stays in the database; retrieve it with
 `project.debug_scene_observation(result["observation"])`. Prefer compact replies
@@ -38,6 +48,8 @@ scene.object("office.bank").exists()  # Visible only; not a readiness assertion.
 scene.click("office.bank")        # All prerequisites + bounded postcondition.
 ```
 
+## Define objects and predicates
+
 Author `format: fdisbull-scene-1`, native `width`, `height`, `mode_id`, a clean
 `reference` screenshot artifact, `context` with `state` and nonempty `triggers`,
 the scene `match` predicate and `objects`. Each object has `name`, `context`,
@@ -52,7 +64,9 @@ Action areas use `{"rect":[left,top,right,bottom]}` with half-open bounds,
 bounding box can still be outside the actual mask. SVG/expression evaluation is
 not implemented. The stored raster hash binds the rendered and clickable area.
 
-Predicates are `constant`, `pixels`, `memory`, `all`, `any` or `not`. Example:
+Predicates include `constant`, `pixels`, `memory`, `runtime_memory`, `compare`,
+`all`, `any` and `not`. Runtime-memory observations require a qualified
+session binding; they do not create persistent patch authority. Example:
 
 ```json
 {"pixels":{"samples":[{"x":51,"y":26,"rgb":[20,30,40]}],"tolerance":0,"min_matches":1}}
@@ -76,6 +90,53 @@ Saved script operations are `frame-probe`, `scene-check`, `scene-assert`,
 the diagnostic observation and available snapshot/overlay. Check operations do
 not execute popup handlers. A click may use explicitly authored handlers only
 when `handle_popups=true`; unknown or conflicting matches remain exceptions.
+
+## Calibrate content and readiness
+
+Keep screen-family recognition separate from the requested content, the
+displayed variant and usable controls. Stable chrome can match while an old page
+is still visible. An optional scene `content` object requires all three authored
+predicates: `requested`, `displayed` and `ready`. All three, the scene match and
+the selected object's availability must qualify before input. A selector or
+rendered title alone cannot establish the other boundaries.
+
+Calibrate sparse samples on legitimate animation phases and similar-looking
+negative pages. Exclude cursors, changing counters and animated portraits from
+a stable family detector when appropriate, while retaining variant-specific
+recognition and semantic preflight. Recheck the selected object, identity,
+quantity or price before a consequential action when those govern its meaning.
+Broaden the evidence before relaxing a failing threshold; do not require
+whole-frame stillness in an animated interface.
+
+Include the relevant calibration cases: valid animation versus a near miss;
+selector changing before display; display changing before controls; coherent
+acceptance with observation identities; wrong/unknown/occluded content;
+interrupted or exhausted waits; and restored or revised context. This is an
+authoring checklist, not a claim that a new target has passed these cases.
+
+Author destination evidence explicitly in the action's `outcome`. Current
+content gates qualify admission in the starting scene; the outcome may describe
+another scene and is evaluated independently of the old scene's match. The
+optional `outcome_phase` value (`state`, `interface`, `persistence` or
+`unspecified`) labels the intended boundary and adds no checks by itself.
+A dependent action requires fresh qualification of its own context.
+
+## Retain action and failure evidence
+
+Name captures by their actual boundary: pre-input, post-dispatch, post-state,
+post-interface or post-persistence. Take the final pre-input observation after
+any preparation that advanced the guest, dismissed a popup or rematched context.
+Keep an immediate post-state frame even when it still shows the old interface;
+obtain a later interface observation through an explicit bounded readiness wait.
+Screenshot hooks do not automatically establish these application phases.
+
+Preserve debugger stops during waits. On failure, retain the actual frame when
+available, individual failed predicates, input/stop status, before/after
+observations, source/run/revision identities and any existing checkpoint
+reference before changing the scene. Do not run repair hooks or repeat input to
+produce a cleaner failure image. Record the order of memory/pixel reads and
+coherence limits; separate captures are not automatically atomic. A failed
+capture can coexist with a completed action.
 
 Track an investigation decision alongside the object's context, for example:
 

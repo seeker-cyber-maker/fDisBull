@@ -4,21 +4,29 @@ Use this page to find the right fDisBull interface for a task. Replace every
 example path with a path selected by the user. The Python distribution does not
 include a native emulator, game files, saved states or project databases.
 
-## Discover commands and the bundled skill
+## Discover commands and bundled skills
 
 ```text
 fdisbull --version
 fdisbull methods
+fdisbull agent-skill --list
 fdisbull agent-skill --index
 fdisbull agent-skill --reference SKILL.md
+fdisbull agent-skill --skill write-gamefaqs-guide --index
+fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md
 ```
 
 `methods` prints the JSON method names and their parameter summaries.
-`agent-skill --index` lists each guide's purpose without transferring its text.
-Choose the relevant guide, then use `--reference` to retrieve it.
-`agent-skill` returns the packaged investigation instructions and references as
-JSON; it reads no project and does not register or install a skill into an
-agent's own discovery directory. Fetch a single resource when needed:
+`agent-skill --list` returns the small skill catalogue. Use `--skill` to select
+one, then `--index` to list its references and their purposes without fetching
+their text. Choose a reference and retrieve it with `--reference`.
+Omitting `--skill` preserves the `fdisbull-investigate` selection and its
+existing response format. `--list` cannot be combined with `--skill`, `--index`
+or `--reference`; `--index` and `--reference` are mutually exclusive.
+
+`agent-skill` returns the selected packaged instructions and references as JSON.
+It reads no project and does not register or install a skill into an agent's
+own discovery directory. Fetch a single resource when needed:
 
 ```text
 fdisbull agent-skill --reference references/workflows.md
@@ -26,12 +34,42 @@ fdisbull agent-skill --reference references/scenes.md
 fdisbull agent-skill --reference references/runtime-navigation.md
 fdisbull agent-skill --reference references/udl-uil-udc.md
 fdisbull agent-skill --reference references/recovery-research.md
+fdisbull agent-skill --reference references/semantic-contracts.md
+fdisbull agent-skill --reference references/formats-and-media.md
+fdisbull agent-skill --skill write-gamefaqs-guide --reference references/evidence-and-provenance.md
 ```
 
 With a source checkout, the bundled files are under
-`src/fdisbull/skills/fdisbull-investigate/`. The current JSON protocol has a
+`src/fdisbull/skills/fdisbull-investigate/` and
+`src/fdisbull/skills/write-gamefaqs-guide/`. The same projectless JSON method
+accepts `{"method":"agent-skill","params":{"list":true}}` or
+`{"method":"agent-skill","params":{"skill":"write-gamefaqs-guide","reference":"SKILL.md"}}`.
+Skill names and reference paths are restricted to the published catalogue and
+the selected skill's index.
+
+The current JSON protocol has a
 one-shot `request` command and a retained `serve`/`debug` session; a one-shot
 request cannot keep a live emulator attached.
+
+The full skill may exceed the inline response budget and return an output
+artifact reference. Prefer the index and one selected guide for routine work;
+use the output retrieval commands below when a complete export is needed.
+The semantic-contract guide connects intent, effects, time and projection loss;
+the formats/media guide covers input mapping and qualified media reduction.
+
+Use `write-gamefaqs-guide` to turn established investigation results into a
+human-readable review, route or mechanics reference. It preserves release
+boundaries, attributes external sources, and separates supported knowledge from
+unknowns. Its templates and research guidance do not implement a game-guide
+generator, play through a game, or submit anything to GameFAQs. Return to the
+investigation skill for unresolved behavior that materially affects the review.
+
+The installed-package gate supports the same selection. Its default remains
+the investigation skill:
+
+```text
+python scripts/check_agent_skill.py --python /path/to/installed/python --skill write-gamefaqs-guide --output /private/guide-skill-receipt.json
+```
 
 ## Choose a route
 
@@ -154,6 +192,33 @@ ownership and resource-identity contract. Keep game files and evidence private.
 See [DinoPark Z](DINOPARK_Z.md) for the tested opening route, native requirements,
 partial coverage and remaining untested cases.
 
+For ordered scene commands, the separate player's `--batch-plan` and
+`--batch-journal` flags retain progress before dispatch. Use a qualified
+session-bound provider and the JSON operations in [batch recovery](Z_BATCH_RECOVERY.md).
+Resuming a partial action requires both the plan and provider to authorize the
+continuation. A successful acknowledgement is not proof that the original
+intent completed: current partial steps remain paused. Never replay the
+original action to repair missing evidence.
+
+### Preserve Zork IR or recover a qualified action
+
+```text
+fdisbull zork-uil /private/ZORK1.DAT --output /private/zork.ir.json.gz
+fdisbull zork-intents /private/ZORK1.DAT --ir /private/zork.ir.json.gz \
+  --output /private/zork.intents.json.gz
+fdisbull-player --intents /private/zork.intents.json.gz \
+  --checkpoint /private/zork.progress.json
+```
+
+The executable Word16 format retains interpreter operations; its legacy `uil`
+name does not make it recovered game intent. The qualified intent producer
+binds one edition's source operations to semantic rules and keeps everything
+unhandled as explicit IR. Generated packages and checkpoints retain story
+data, so they must remain private. See [Zork IR](ZORK_UIL.md) and
+[intent recovery](ZORK_INTENTS.md). On a fault, inspect completed effects and
+interrupted-effect uncertainty; the CLI preserves the prior successful
+checkpoint. A transcript-write failure is a separate delivery failure.
+
 ### Inspect interpreted game data
 
 For one AGI 2.917 logic resource in an uncompressed version-2 LOGDIR/VOL set:
@@ -186,6 +251,10 @@ surfaces. Report which one supports each conclusion, with source/version and
 context. Keep missing or unsupported behavior unknown. Keep game assets,
 checkpoints and byte-retaining project databases private; export only the
 requested authored scripts, selected evidence and receipts.
+
+Before promising a capability mentioned in a proposal, check the
+[PR requirements backlog](PR_BACKLOG.md) and the final source. Incorporated
+documentation, authored tests and fresh native acceptance have different scope.
 
 ## Research a progression or recovery task
 

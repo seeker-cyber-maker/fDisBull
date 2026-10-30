@@ -4,15 +4,30 @@ Use this reference to route a task to the smallest relevant fDisBull surface.
 Every command uses caller-selected paths. The Python package does not include an
 emulator, target executable, game files, saved states or project databases.
 
+## Contents
+
+- [Start from the user's outcome](#start-from-the-users-outcome)
+- [Static analysis](#static-analysis)
+- [Native investigation](#native-investigation)
+- [Scenes, maps and movement](#scenes-maps-and-movement)
+- [Seed scene hypotheses from guides](#seed-scene-hypotheses-from-guides)
+- [Player and live text workflows](#player-and-live-text-workflows)
+- [Research-backed progression](#research-backed-progression)
+- [Retain knowledge](#retain-knowledge-without-overstating-it)
+- [Retrieve bounded output](#retrieve-bounded-output)
+
 ## Start from the user's outcome
 
 | Need | Starting point | Evidence boundary |
 | --- | --- | --- |
+| Unpack an owned local GOG Inno Setup installer | `gog-list`, then `gog-unpack INSTALLER NEW_PRIVATE_DIRECTORY` | Native external innoextract reads payloads without Wine or running the installer; listing and hash manifests do not prove game execution or loader support. See `docs/GOG_UNPACKING.md`. |
 | Identify or analyze an executable | `identify`, `inspect`, `import`, `analyze`, `analysis-status`, `status`, `functions`, `disasm`, `xrefs` | Static decoder facts and stored analysis only; candidates and budget limits stay labeled. |
 | Observe actual program behavior | `debug PROJECT ...` plus the appropriate `Project.debugger()` or JSON methods | Requires a compatible external backend and an authorized target. Verify live source/version binding and real guest effects. |
 | Reuse visible controls or map a route | Versioned scenes, spatial maps and `session.move()` | Authored geometry or observed segments; unknown coverage and target behavior remain separate. |
 | Expose a small text interface | `fdisbull text-host CONFIG` with a qualified local projection | The projection is not a game parser or full-game reconstruction; action freshness and completion are backend-owned. |
 | Run an authored text slice | `python -m fdisbull_player --package FILE` | The independent player evaluates the declared slice; this does not emulate or recover the source game. |
+| Preserve supported Z-machine v3 behavior in an independent player | `zork-uil STORY --output PRIVATE_IR`, then `fdisbull-player --uil PRIVATE_IR` | Executable word16 IR preserves low-level operations; semantic recovery is a separate claim. Derived story content stays private. |
+| Exercise the qualified Zork mailbox intent layer | `zork-intents STORY --output PRIVATE_PACKAGE`, then `fdisbull-player --intents PRIVATE_PACKAGE` | A source-bound partial semantic layer with explicit retained IR; inspect fault receipts and restore the last successful checkpoint before resuming. |
 | Qualify a supported code-to-semantics block | UDL/UIL/UDC commands and APIs | Only the exact supported source span and declared effect boundary; see [udl-uil-udc.md](udl-uil-udc.md). |
 | Inspect AGI 2.917 logic bytes | `agi-logic LOGDIR VOLUME_DIRECTORY LOGIC --profile 2.917` | Bounded, read-only partial decoding; it does not establish that the logic was loaded or executed. |
 
@@ -29,6 +44,11 @@ not format evidence. Start recursive analysis with a reasonable instruction
 budget and inspect `analysis-status` or `status` for remaining work. A bounded
 run does not establish convergence. Use `render` only for stored project state;
 it does not operate a GUI or launch a target.
+
+For installer extraction, nested images, overlays, edition comparison or media
+reduction, use [formats-and-media.md](formats-and-media.md). Select optional
+commands from the installed method inventory; an open proposal or a successful
+container listing does not provide a missing loader or processor.
 
 Static call-flow can screen for a script interpreter, asset reader or dispatch
 table. A data file that resembles code is still not proof of a load or execution
@@ -65,6 +85,16 @@ forms of physical traversal. Unknown map cells are not safe; map proposals do
 not guarantee engine movement or survival. A state edit can test a mechanism
 without showing that a player can reach it.
 
+## Seed scene hypotheses from guides
+
+Start with the current scene and a small likely frontier. A guide's labels,
+objects, exits and prerequisites are hypotheses until bound to the selected
+source and, where required, observed at runtime. A transcript supports its text;
+visual claims need viewed frames or other direct evidence. Retain inferred
+intermediate steps and discrepancies in the private scene ledger described in
+[Research-backed progression](#research-backed-progression). Keep future
+discoveries out of player narration and include research preparation in cost.
+
 ## Player and live text workflows
 
 `fdisbull-player` is a separate, standard-library package. Its `--package` mode
@@ -83,6 +113,17 @@ exchange stops the connection; inspect unknown effects before any retry.
 `--quiet` keeps external-driver transcripts private. Checkout examples are not
 installed runtime resources; provide your own authored or qualified scene input.
 Read `docs/Z_SCENES.md` for the envelope and exact limits.
+
+For an ordered route, `--batch-plan` and `--batch-journal` journal each dispatch
+before it crosses the provider boundary. A continuation needs both the plan's
+permission and the original provider response's matching context/command.
+Canonical action identity blocks aliases from resending the original action.
+An acknowledged notice or successful `look` cannot complete an original
+partial effect. Current providers supply no bound original-intent completion
+certificate, so such steps remain paused. Inspect the original result and use
+only a certified checkpoint rewind when its live-session/resource contract
+holds. See `docs/Z_BATCH_RECOVERY.md`; do not combine this protocol with the
+separate Word16/intent command loop.
 
 For the original-backed DinoPark provider, run
 `python -m fdisbull.dinopark_z` as the selected service with explicit original
@@ -108,6 +149,11 @@ When the goal is normal progression or recovery, read
 [recovery-research.md](recovery-research.md) for version-qualified prior work,
 a source-attributed milestone checklist and tests of candidate scene transitions.
 Do not confuse a guide-derived route with a route observed on this target.
+
+For the meaning of an interaction across code, a text view and a proposed
+reconstruction, use [semantic-contracts.md](semantic-contracts.md). Retain the
+working lower-level representation and explicit unknowns as individual intent
+contracts are qualified.
 
 ## Retain knowledge without overstating it
 

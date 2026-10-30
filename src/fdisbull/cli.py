@@ -10,16 +10,37 @@ from .output_limits import OutputPolicy, current_output_policy, output_policy_co
 AGENT_SKILL_GUIDES = {
     'SKILL.md': 'Start here: investigation technique, cost/reward/confidence and evidence boundaries',
     'references/scenes.md': 'Define scene objects, masks, recognition, readiness and named actions',
-    'references/methodology.md': 'Trace causality, screen for interpreters and resolve conflicting observations',
+    'references/methodology.md': 'Plan evidence, coordinate independent questions, trace causes and screen for interpreters',
     'references/runtime-navigation.md': 'Choose movement, spatial policies, assistance and observation projections',
     'references/proofs.md': 'Build explicit bounded Z3 models and report their assumptions and scope',
     'references/workflows.md': 'Choose static analysis, native debugging, scene or text-player entry points',
-    'references/udl-uil-udc.md': 'Qualify source blocks, shared UDL/UIL primitives and original-backed DOS compilation',
-    'references/recovery-research.md': 'Use edition-qualified research and guide leads to recover and check scene behavior',
+    'references/udl-uil-udc.md': 'Qualify source blocks, retained Zork IR, recovered intents and original-backed DOS compilation',
+    'references/recovery-research.md': 'Qualify research, retain reusable meanings and compare recovery depth and cost',
+    'references/semantic-contracts.md': 'Recover complete intent contracts and compare facts, effects, time and projection losses',
+    'references/formats-and-media.md': 'Qualify containers, executable mappings, release differences and valid media reduction',
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
+DEFAULT_AGENT_SKILL = 'fdisbull-investigate'
+AGENT_SKILLS = {
+    DEFAULT_AGENT_SKILL: {
+        'purpose': 'Investigate programs, qualify evidence and recover game behavior',
+        'guides': AGENT_SKILL_GUIDES,
+    },
+    'write-gamefaqs-guide': {
+        'purpose': 'Write a human-readable game knowledge review with qualified walkthrough and mechanics claims',
+        'guides': {
+            'SKILL.md': 'Start here: scope, evidence and workflow for a readable game guide',
+            'references/evidence-and-provenance.md': 'Distinguish recovered facts, observations, external sources and unknowns',
+            'references/guide-structure.md': 'Organize routes, reference sections, navigation, spoilers and text exports',
+            'references/technical-mechanics.md': 'Explain algorithms, numeric semantics and worked examples with evidence',
+            'references/source-examples.md': 'Inspect the guide examples and source limitations motivating these requirements',
+        },
+    },
+}
 
 METHODS = {
+    'gog-list':'List local GOG Inno Setup payloads without Wine; path,[include,timeout]; no project required',
+    'gog-unpack':'Unpack local GOG Inno Setup payloads into a new private directory; path,output,[include,timeout]; no project required',
     'output-info':'Inspect an immutable private output artifact; artifact',
     'output-read':'Read a bounded base64 byte range without executing the original operation; artifact,[offset,length]',
     'output-select':'Read a complete small JSON Pointer selection or an explicit incomplete descriptor; artifact,[pointer,max_bytes]',
@@ -58,7 +79,7 @@ METHODS = {
     'debug-keyboard-down':'Queue make and return an owned physical key lease; run,key',
     'debug-keyboard-up':'Consume an owned lease and queue physical break; run,lease',
     'debug-scene-navigation':'Check an actor footprint in explicit game-space geometry; run,scene,point,[footprint]',
-    'agent-skill':'Discover or read the bundled investigation skill; [index,reference]; no project required',
+    'agent-skill':'Discover or read bundled skills; [skill,list,index,reference]; no project required',
     'debug-save-scene':'Save a versioned scene manifest with persistent objects and screenshot evidence; name,definition,[parent,version,author]',
     'debug-scenes':'List current scene revisions; [version]',
     'debug-scene-info':'Read a scene manifest, evidence and persistent object identities; scene,[version]',
@@ -240,20 +261,35 @@ def invoke(method, params, debugger=None):
         if p:raise ValueError('unknown output-export parameter')
         return store.export(artifact,output)
     if method=='agent-skill':
+        skill_supplied='skill' in p
+        skill=p.pop('skill',DEFAULT_AGENT_SKILL)
+        listing=p.pop('list',False)
         reference=p.pop('reference',None)
         index=p.pop('index',False)
-        if p:raise ValueError('agent-skill accepts only index or reference')
+        if p:raise ValueError('agent-skill accepts only skill, list, index or reference')
+        if not isinstance(skill,str) or skill not in AGENT_SKILLS:raise ValueError('unknown bundled skill name')
+        if type(listing) is not bool:raise ValueError('list must be boolean')
         if type(index) is not bool:raise ValueError('index must be boolean')
+        if listing and (skill_supplied or index or reference is not None):
+            raise ValueError('list cannot be combined with skill, index or reference')
         if index and reference is not None:raise ValueError('index and reference are mutually exclusive')
+        if listing:
+            return {'format':'fdisbull-skill-catalog-1','default_skill':DEFAULT_AGENT_SKILL,
+                    'skills':[{'name':name,'purpose':item['purpose'],'entrypoint':'SKILL.md'}
+                              for name,item in AGENT_SKILLS.items()]}
+        guides=AGENT_SKILLS[skill]['guides']
         if index:
-            return {'name':'fdisbull-investigate','format':'fdisbull-skill-index-1','entrypoint':'SKILL.md',
-                    'guides':[{'reference':name,'purpose':purpose} for name,purpose in AGENT_SKILL_GUIDES.items()]}
-        if reference is not None and (not isinstance(reference,str) or reference not in AGENT_SKILL_RESOURCES):
+            return {'name':skill,'format':'fdisbull-skill-index-1','entrypoint':'SKILL.md',
+                    'guides':[{'reference':name,'purpose':purpose} for name,purpose in guides.items()]}
+        if reference is not None and (not isinstance(reference,str) or reference not in guides):
             raise ValueError('unknown bundled skill reference')
         from importlib.resources import files
-        root=files('fdisbull').joinpath('skills/fdisbull-investigate')
-        resources=(reference,) if reference is not None else AGENT_SKILL_RESOURCES
-        return {'name':'fdisbull-investigate','files':{n:root.joinpath(n).read_text() for n in resources}}
+        root=files('fdisbull').joinpath('skills',skill)
+        resources=(reference,) if reference is not None else tuple(guides)
+        return {'name':skill,'files':{n:root.joinpath(n).read_text(encoding='utf-8') for n in resources}}
+    if method in ('gog-list','gog-unpack'):
+        from .gog_unpack import list_gog, unpack_gog
+        return (list_gog if method=='gog-list' else unpack_gog)(**p)
     if method=='omf-catalog':
         from .omf_catalog import omf_signatures
         path=Path(p.pop('path'))
@@ -415,7 +451,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','agi-logic','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         value={"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
@@ -489,6 +525,15 @@ def parser():
     c.add_argument('story')
     c=sub.add_parser('zork-recover',help='Recover the qualified R88 mailbox action into shared source-backed IL')
     c.add_argument('story')
+    c=sub.add_parser('zork-uil',help='Convert a complete v3 story to executable word16 IR (legacy command name)')
+    c.add_argument('story');c.add_argument('--output',required=True)
+    c.add_argument('--mapping',help='Optional private UDL source mapping (.json or .json.gz)')
+    c.add_argument('--world',help='Optional private initial Z object/state projection')
+    c=sub.add_parser('zork-intents',help='Recover bounded game-intent UIL with UDL definitions and retained low-level IR')
+    c.add_argument('story');c.add_argument('--output',required=True,help='New private runnable intent/IR package')
+    c.add_argument('--ir',help='Preserved word16 IR; compiled from the story when omitted')
+    c.add_argument('--uil',help='Optional private address-free game-intent definition')
+    c.add_argument('--udl',help='Optional private source bindings, evidence and residual definitions')
     for name in ('il-check','il-run'):
         c=sub.add_parser(name,help='Validate or evaluate the shared UDL/UIL primitive block representation')
         c.add_argument('program'); c.add_argument('--state'); c.add_argument('--capability',action='append',choices=('graphics','audio','input'),default=[])
@@ -517,9 +562,11 @@ def parser():
     c.add_argument('lift');c.add_argument('program');c.add_argument('--timeout-ms',type=int,default=1000)
     c.add_argument('--output',help='Save the full proof specifications; stdout stays compact')
     c=sub.add_parser('agent-skill',help=METHODS['agent-skill'])
+    c.add_argument('--skill',choices=tuple(AGENT_SKILLS),help='Select a bundled skill (default: fdisbull-investigate)')
     g=c.add_mutually_exclusive_group()
-    g.add_argument('--reference',choices=AGENT_SKILL_RESOURCES,help='Read one bundled file instead of the complete skill')
+    g.add_argument('--reference',help='Read one allowlisted file from the selected skill; use --index for paths')
     g.add_argument('--index',action='store_true',help='List guide purposes without fetching any guide contents')
+    g.add_argument('--list',action='store_true',help='List bundled skills without fetching their contents')
     for name in ('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations',
                  'debug-scene-observation','debug-export-scenes','debug-import-scenes'):
         c=sub.add_parser(name,help=METHODS[name]);c.add_argument('project')
@@ -582,12 +629,18 @@ def parser():
             if name=='debug-artifacts':c.add_argument('--run')
             if name=='debug-save-script':
                 c.add_argument('name');c.add_argument('script',type=json.loads,help='JSON script object')
+    for name in ('gog-list','gog-unpack'):
+        c=sub.add_parser(name,help=METHODS[name])
+        c.add_argument('path',help='local GOG Inno Setup offline installer')
+        if name=='gog-unpack':c.add_argument('output',help='new private directory outside the checkout')
+        c.add_argument('--include',action='append',help='repeatable native innoextract path filter; list first')
+        c.add_argument('--timeout',type=int,default=300,help='per-extractor-process timeout in seconds (1..3600)')
     for name in ('identify','inspect'):
         c=sub.add_parser(name,help=METHODS[name])
         c.add_argument('path')
         if name=='inspect':
             c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'])
-            c.add_argument('--image',choices=['auto','pe','mz','com'])
+            c.add_argument('--image',choices=['auto','pe','le','mz','com'])
     c = sub.add_parser("import",help="create project from executable or explicit raw code")
     c.add_argument("path")
     c.add_argument("project")
@@ -596,12 +649,12 @@ def parser():
     c.add_argument("--base",default=0,type=lambda s:int(s,0))
     c.add_argument("--entry",type=lambda s:int(s,0))
     c.add_argument("--load-segment",type=lambda s:int(s,0),default=0x1000)
-    c.add_argument('--image',choices=['auto','pe','mz','com'],help='select a PE, MZ or explicitly declared DOS COM image')
+    c.add_argument('--image',choices=['auto','pe','le','mz','com'],help='select PE, DOS/4GW LE, MZ or explicitly declared DOS COM')
     c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'],help='select a thin/universal Mach-O CPU slice')
     c.add_argument('--module',action='store_true',help='allow a library without an executable entry')
     c=sub.add_parser('analyze-module',help=METHODS['analyze-module'])
     c.add_argument('path');c.add_argument('project')
-    c.add_argument('--image',choices=['auto','pe','mz'])
+    c.add_argument('--image',choices=['auto','pe','le','mz'])
     c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'])
     c.add_argument('--export');c.add_argument('--entry',type=lambda s:int(s,0))
     c.add_argument('--max-instructions',type=int,default=10000)
@@ -820,6 +873,12 @@ def _language_command(command,args):
         if command=='zork-recover':
             from .zork_recovery import recover_mailbox
             emit(recover_mailbox(args['story']));return 0
+        if command=='zork-uil':
+            from .zork_uil import convert_story
+            emit(convert_story(args['story'],output=args['output'],mapping=args['mapping'],world=args['world']));return 0
+        if command=='zork-intents':
+            from .zork_intent_export import export_intents
+            emit(export_intents(args['story'],output=args['output'],ir=args['ir'],uil=args['uil'],udl=args['udl']));return 0
         if command.startswith('il-'):
             from .interaction_il import execute_il,validate_il
             from .il_recovery import save_il,load_il
@@ -882,7 +941,7 @@ def main(argv=None):
 def _dispatch(args):
     command = args.pop("command")
     if command.startswith(('udc-','udl-')):return _udc_command(command,args)
-    if command in ('story-info','zork','zork-recover','il-check','il-run','il-store','il-info'):
+    if command in ('story-info','zork','zork-recover','zork-uil','zork-intents','il-check','il-run','il-store','il-info'):
         return _language_command(command,args)
     if command == 'text-host':
         from .text_host import host

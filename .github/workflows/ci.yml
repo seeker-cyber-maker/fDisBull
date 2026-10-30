@@ -26,11 +26,12 @@ jobs:
         run: python -m build
       - name: Build standalone player wheel
         run: python -m build --wheel ./player --outdir dist
-      - name: Gate the investigation skill from the built wheel
+      - name: Gate both bundled skills from the built wheel
         run: |
           python -m venv --system-site-packages "$RUNNER_TEMP/fdisbull-skill-gate"
           "$RUNNER_TEMP/fdisbull-skill-gate/bin/python" -m pip install --no-index --no-deps --force-reinstall dist/fdisbull-*.whl
           python scripts/check_agent_skill.py --python "$RUNNER_TEMP/fdisbull-skill-gate/bin/python" --output "$RUNNER_TEMP/fdisbull-skill-gate-receipt.json"
+          python scripts/check_agent_skill.py --python "$RUNNER_TEMP/fdisbull-skill-gate/bin/python" --skill write-gamefaqs-guide --output "$RUNNER_TEMP/fdisbull-guide-skill-gate-receipt.json"
       - name: Smoke test standalone player in an isolated environment
         run: |
           python -m venv "$RUNNER_TEMP/fdisbull-player-smoke"
@@ -46,7 +47,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: fdisbull-agent-skill-acceptance
-          path: ${{ runner.temp }}/fdisbull-skill-gate-receipt.json
+          path: |
+            ${{ runner.temp }}/fdisbull-skill-gate-receipt.json
+            ${{ runner.temp }}/fdisbull-guide-skill-gate-receipt.json
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:

@@ -1,0 +1,90 @@
+{
+  "format": "fdisbull-private-scene-experiment-summary-1",
+  "date": "2026-10-29",
+  "repository_base_commit": "ed89abca061964385b176537bc9fd275dd02afa5",
+  "shared_il_distribution": "0.22.0",
+  "candidate_z_commit": "c107d1576d46d7dc353c8043cb81be5005e8926b",
+  "timing_scope": "Warm rebuild from retained source evidence and previously authored lowerings; no cold recovery or analyst wall-time claim.",
+  "analyst_wall_time": null,
+  "total_pipeline_ms": 162.73633499804419,
+  "pipeline_timings_ms": {
+    "source_read_hash_ms": 7.360733001405606,
+    "broad_investigator_projection_ms": 5.234476997429738,
+    "broad_rule_typing_ms": 1.9076259995927103,
+    "lowering_input_closure_and_import_ms": 3.1755429990880657,
+    "warm_bilge_ast_to_udl_ms": 2.8324630002316553,
+    "fresh_poster_ast_to_udl_ms": 0.8109580012387596,
+    "udl_to_uil_metadata_copy_ms": 1.4319750007416587,
+    "candidate_z_envelope_ms": 0.6963120031286962,
+    "fresh_poster_z_envelope_ms": 0.003641001967480406,
+    "minimal_schema_semantics_ms": 5.342504002328496,
+    "fresh_poster_256_counter_and_guard_checks_ms": 44.45229500197456,
+    "artifact_write_ms": 7.141461999708554,
+    "candidate_z_validation_play_subprocess_ms": 71.74295500226435
+  },
+  "coverage": {
+    "source_actions_described": 51,
+    "source_targets": 23,
+    "source_views": 12,
+    "typed_udl_descriptions": 51,
+    "executable_branch_models": 7,
+    "warm_bilge_models": 6,
+    "fresh_poster_models": 1,
+    "source_action_ids_linked_to_models": 11,
+    "complete_selected_response_models": 5,
+    "retained_effect_projection_models": 2,
+    "z_contexts": 7,
+    "z_objects": 9,
+    "z_partial": true
+  },
+  "poster_checks": {
+    "fresh_slice": "hold.poster.inspect",
+    "counter_cases": 256,
+    "guard_refusals": 2,
+    "all_passed": true,
+    "expected_rule": "text31 if c=0, text32 if c=1, text33 otherwise; c'=((c+1+128)%256)-128",
+    "coverage": "All typed i8 branch inputs, not all reachable original-game states."
+  },
+  "candidate_z_checks": {
+    "schema_valid": true,
+    "all_passed": true,
+    "removed_poster_not_exposed": true,
+    "native_execution": false
+  },
+  "source_timings_ms": {
+    "one_archive_directory_six_member_extraction_and_cached_byte_comparison": 16.67576800173265,
+    "three_primary_bounded_ASTs_plus_dispatch_and_hotspot_records": 2.50142799995956,
+    "explicit_parser_gap_confirmation": 0.03380499765626155,
+    "source_packet_build_and_structural_validation": 47.47490600129822
+  },
+  "degob_invocations": 6,
+  "degob_summed_wall_ms": 18.569250001746695,
+  "script_inventory": {
+    "validated_containers": 7,
+    "members": 634,
+    "tot_scripts": 61,
+    "code_name_scanned": 59,
+    "explicit_reference_candidates": 272,
+    "locally_parsed_script_assignments": 171,
+    "unparsed_ltk_sidecars": 6,
+    "accepted_scenes_from_inventory": 0
+  },
+  "implementation_hashes": {
+    "fast_pipeline/compile.py": "c0fcaceb88b64599c5d74c41a81d241bc00f26a29fd6069c3bfa2204abe3a8fb",
+    "fast_pipeline/poster.py": "67b256d48eace4dd5889eeb934f6caa3dd44e5d00e86972adeaa399f6e8ae8b2",
+    "fast_pipeline/check_z.py": "03cef430f11068a10624b61b7dbb740e619ebeae23272aa592f9d1faf89f11e8",
+    "native_progress/fast_source/build_hold_packet.py": "d71e69195544f7400cb4535874fbfc06c605a1ea7ef27f38cb13a8ec2a4cfb04"
+  },
+  "synthetic_benchmark_sha256": "414a30c6943059a3f27e43b3d81e444f22e54208eee4db8de6f10ee823f09daa",
+  "limitations": [
+    "UDL to UIL is metadata copy, not a semantic compiler or an optimization result.",
+    "The candidate Z package provides disconnected branch entry states, not movement or a complete bilge puzzle.",
+    "Shared callback, animation, inventory and source-string operations remain typed opaque obligations where not lowered.",
+    "Broad source-rule coverage is larger than executable coverage; all unresolved action contracts refuse execution.",
+    "Investigator test interface. Player-knowledge parity is unqualified; private model state can be inferred from public context IDs in the bilge package.",
+    "Conditional reviewed source-profile agreement; no formal Gob-to-UIL proof.",
+    "No new native execution or original-DOS all-values overflow observation.",
+    "Private source resources, derived game text, screenshots, saves and model contents are omitted from this PR.",
+    "The script inventory does not establish rooms or reachable transitions."
+  ]
+}

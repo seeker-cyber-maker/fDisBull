@@ -1,0 +1,39 @@
+{
+  "format": "fdisbull-publication-evidence-1",
+  "version": "0.24.0",
+  "source_commit": "031b53eb953bfdc1d0e23c0ed49441031bad6e06",
+  "tag": "v0.24.0",
+  "tag_object": "18afd1cdedba9861725dc9cd4f1ea946d24dc52f",
+  "release": "https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.24.0",
+  "created_at_utc": "2026-10-30T00:56:24.067903+00:00",
+  "files": {
+    "assets.json": {
+      "sha256": "ebd0332f637d15ba43965eb4e83b67586acee686cc4fe4110948ef90b0359113",
+      "bytes": 3457
+    },
+    "ci.json": {
+      "sha256": "3f59795a21604f5b75fbbde64311b609144d6b0edbbb9750abc49d39e4a368bb",
+      "bytes": 1869
+    },
+    "doctors.json": {
+      "sha256": "4752b0a6d6f9eb7839e06801cd77078cb21c5d665dc95a502fceabb7ae1f9d88",
+      "bytes": 21825
+    },
+    "installation.json": {
+      "sha256": "b0db07dd14c349f9e7b854e7f21ed62ee4395d354a901a021d4e2927583a0043",
+      "bytes": 3647
+    },
+    "runtime-audits.json": {
+      "sha256": "d1140d60203e86fd3615a109bcc97a937517fbba99f4384e08001fdc4f4ea40c",
+      "bytes": 3811
+    }
+  },
+  "exclusions": [
+    "user game/story files",
+    "native saved states",
+    "project databases",
+    "raw private deliveries"
+  ],
+  "source_companion_scope": "Pinned upstream source/test/build inputs include ROM snapshots, IBM ROM BASIC and COM/EXE fixtures. Their presence is distinguished from user game inputs; no independent per-file license audit is claimed.",
+  "path_policy": "User-home prefixes normalized to ~; shared installation paths remain literal."
+}

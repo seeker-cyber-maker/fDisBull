@@ -11,12 +11,17 @@ import zipfile
 
 EXCLUDED_DIRECTORIES = {"examples", "history", "experimental", "build", "dist", ".git", "__pycache__"}
 EXCLUDED_SUFFIXES = {".fdb", ".db", ".sqlite", ".sqlite3", ".sav", ".state", ".exe", ".com", ".dll", ".bin", ".dat", ".so", ".dylib", ".o", ".pyc"}
-PLAYER_MODULES = {"__init__.py", "__main__.py", "player.py", "runtime.py", "live.py", "batch.py"}
+PLAYER_MODULES = {"__init__.py", "__main__.py", "player.py", "runtime.py", "live.py", "word16.py",
+                  "game_intents.py", "intent_runtime.py", "batch.py"}
 REQUIRED_PLAYER_SOURCE = {"player/pyproject.toml"} | {"player/fdisbull_player/" + name for name in PLAYER_MODULES}
 REQUIRED_TEST_HELPERS = {"tests/fixtures_formats.py", "tests/fixtures_macho.py", "tests/ida_rpc_vectors.json", "tests/dosbox_zip_empty_write.cpp"}
 REQUIRED_TEST_HELPERS.add("tests/fixtures_z_scenes.py")
 REQUIRED_SOURCE_EVIDENCE = {"docs/evidence/output-024/" + name for name in
                             ("amplification.json", "dinopark-native.json", "dinopark-output.json", "tests.json")}
+REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/scene-recovery-2026-10-29/" + name for name in
+                           ("representation-paths.json", "scene-pipeline-summary.json")}
+REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/integration-025/" + name for name in
+                           ("zork.json", "dinopark.json", "tests.json", "packages.json")}
 REQUIRED_PE_RESOURCES = {"wine_guest/agent.c", "wine_guest/init.sh", "wine_guest/broker.py", "wine_guest/selftest.c"}
 REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/broker.py", "ida_guest/SDK-LICENSE.txt", "ida_wire.py", "ida_remote.py", "ida_trace.py"}
 REQUIRED_PE_RESOURCES |= {"dos_guest/__init__.py", "dos_guest/init.sh", "dos_guest/broker.py", "dos_qemu.py", "dos_runtime.py", "qemu_machine.py", "gdb_rpc.py", "guest_assets.py"}
@@ -27,7 +32,16 @@ REQUIRED_KNOWLEDGE_RESOURCES |= {"skills/fdisbull-investigate/SKILL.md", "skills
                                  "skills/fdisbull-investigate/references/proofs.md",
                                  "skills/fdisbull-investigate/references/workflows.md",
                                  "skills/fdisbull-investigate/references/recovery-research.md",
+                                 "skills/fdisbull-investigate/references/semantic-contracts.md",
+                                 "skills/fdisbull-investigate/references/formats-and-media.md",
                                  "skills/fdisbull-investigate/references/udl-uil-udc.md"}
+REQUIRED_KNOWLEDGE_RESOURCES |= {
+    "skills/write-gamefaqs-guide/SKILL.md",
+    "skills/write-gamefaqs-guide/references/evidence-and-provenance.md",
+    "skills/write-gamefaqs-guide/references/guide-structure.md",
+    "skills/write-gamefaqs-guide/references/technical-mechanics.md",
+    "skills/write-gamefaqs-guide/references/source-examples.md",
+}
 
 
 def archive_names(path: Path) -> list[str]:

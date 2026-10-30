@@ -36,6 +36,10 @@ def _identify_header(data: bytes) -> dict:
             return False
         return True
 
+    if data.startswith(b'LE'):
+        h.update(format='LE', family='DOS', bits=32, arch='x86', endian='little')
+        h['valid'] = need(196, 'truncated LE header')
+        return h
     if data.startswith(b"MZ"):
         h.update(format="DOS MZ", family="DOS", bits=16, arch="x86", endian="little")
         if not need(28, "truncated DOS MZ header"):
@@ -210,7 +214,7 @@ def _identify_header(data: bytes) -> dict:
 def identify_header(data: bytes) -> dict:
     """Identify the container and expose selectable embedded image views."""
     header=_identify_header(data)
-    if data.startswith(b'MZ'):
+    if data.startswith((b'MZ', b'LE')):
         from .image_views import image_views
         header['image_views']=image_views(data)
     if header['format']=='Mach-O fat' and header['valid']:
@@ -250,7 +254,7 @@ def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | N
     data = _input(data)
     header = identify_header(data)
     if image=='auto':image=None
-    if image not in (None,'pe','mz','com'):raise ValueError('image must be auto, pe, mz or com')
+    if image not in (None,'pe','le','mz','com'):raise ValueError('image must be auto, pe, le, mz or com')
     container_header=None
     if image=='com':
         if slice_arch is not None:raise ValueError('slice_arch cannot select a COM image')
@@ -270,6 +274,7 @@ def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | N
                     header_size=selected.metadata['dos']['header_size'],
                     declared_file_size=selected.metadata['dos']['declared_file_size'])
     elif image=='pe' and header['family']!='PE':raise ValueError('requested PE image is not present')
+    elif image=='le' and header['format']!='LE':raise ValueError('requested LE image is not present')
 
     if header['format']=='Mach-O fat':
         from .macho_slices import macho_slices,select_macho_slice
@@ -298,13 +303,39 @@ def inspect_binary(data: bytes, *, slice_arch: str | None = None, image: str | N
 
     result = {"header": header, "sections": [], "imports": [], "exports": [],
               "strings": [], "warnings": list(header["warnings"])}
-    if data.startswith(b'MZ'):
+    if data.startswith((b'MZ', b'LE')):
         from .image_views import image_views
         result['image_views']=image_views(data)
     if container_header is not None:result['container_header']=container_header
-    result['selected_image']=image or ('pe' if header['family']=='PE' else 'mz' if header['format']=='DOS MZ' else None)
+    result['selected_image']=image or ('pe' if header['family']=='PE' else 'le' if header['format']=='LE' else 'mz' if header['format']=='DOS MZ' else None)
     warnings = result["warnings"]
     mappings = []
+    if header['format'] == 'LE':
+        try:
+            from .le import inspect_le
+            metadata = inspect_le(data)
+            header.update(arch=metadata['arch'], bits=metadata['bits'],
+                          entrypoint=metadata['entrypoint'],
+                          load_model=metadata['load_model'],
+                          object_count=len(metadata['objects']),
+                          page_count=len(metadata['pages']),
+                          relocation_count=metadata['fixup_count'])
+            # Keep large fixup details in the bounded, paginatable relocation
+            # list rather than copying them into every header/info response.
+            result['le'] = {key: value for key, value in metadata.items()
+                            if key not in ('fixups', 'pages', 'sections', 'file_mappings')}
+            result['file_mappings'] = metadata['file_mappings']
+            result['sections'] = metadata['sections']
+            result['relocations'] = metadata['fixups'][:MAX_ITEMS]
+            if metadata['fixup_count'] > MAX_ITEMS:
+                warnings.append(f"Standalone LE inspection lists {MAX_ITEMS} of {metadata['fixup_count']} relocation records; imported projects retain every supported record for the paginated relocations query.")
+            warnings.extend(metadata['warnings'])
+            mappings = [(item['file_offset'], item['file_size'], item['virtual_address'])
+                        for item in metadata['file_mappings']]
+        except ValueError as exc:
+            warnings.append(f'LE memory mapping unavailable: {exc}')
+        result['strings'] = _strings(data, mappings, warnings)
+        return result
     if header['format'] == 'DOS COM':
         from .dos import load_com
         selected = load_com(data,_allow_child_signature=_com_child)

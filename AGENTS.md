@@ -13,6 +13,10 @@ saved run history does not reconnect it after exit.
 - Read `fdisbull agent-skill --reference SKILL.md`, then retrieve only the
   reference needed for the next question. The bundled skill is available even
   from an installed wheel, without opening a project.
+- For a human-readable review of established game knowledge, read
+  `fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md`.
+  Use `agent-skill --list` to discover both bundled skills. Keep attributed
+  external findings distinct from recovered and observed game behavior.
 - Use `fdisbull --help` for commands, `fdisbull methods` for JSON methods and
   `fdisbull doctor --help` to choose environment checks. Verify capabilities in
   the actual backend before planning a native operation.

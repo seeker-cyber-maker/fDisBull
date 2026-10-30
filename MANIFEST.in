@@ -21,6 +21,10 @@ include docs/uil-rfcs/0001/source-definition-observation.json
 include docs/uil-rfcs/0001/vectors.json
 include docs/evidence/spatial-2026-10-29/verification.json
 include docs/evidence/zork-2026-10-29/verification.json
+include docs/evidence/zork-uil-2026-10-29/verification.json
+include docs/evidence/zork-intents-2026-10-29/verification.json
+include docs/evidence/scene-recovery-2026-10-29/representation-paths.json
+include docs/evidence/scene-recovery-2026-10-29/scene-pipeline-summary.json
 include docs/evidence/udc-2026-10-29/dino.json
 include docs/evidence/udc-2026-10-29/zork.json
 include docs/evidence/udc-2026-10-29/synthetic.json
@@ -28,6 +32,10 @@ include docs/evidence/output-024/amplification.json
 include docs/evidence/output-024/dinopark-native.json
 include docs/evidence/output-024/dinopark-output.json
 include docs/evidence/output-024/tests.json
+include docs/evidence/integration-025/zork.json
+include docs/evidence/integration-025/dinopark.json
+include docs/evidence/integration-025/tests.json
+include docs/evidence/integration-025/packages.json
 recursive-include scripts *.py
 prune examples
 prune history

@@ -1,0 +1,70 @@
+{
+  "dos": {
+    "candidate_module": "/Users/Shared/fDisBull/releases/0.24.0-031b53e/venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+    "candidate_version": "0.24.0",
+    "excluded_payloads_found": 0,
+    "expanded_member_bytes": 1999412715,
+    "image": "/Users/Shared/fDisBull/releases/0.24.0-031b53e/backend/runtime/fdisbull-dos-runtime.cpio.gz",
+    "known_static_os_support": {
+      "usr/lib/gcc/x86_64-w64-mingw32/13-win32/plugin/gtype.state": {
+        "sha256": "bf9f98cd7f8f5e78ade351c65b369850d860a5489235f1d21e1e5d0e39b8cb0d",
+        "size": 1371523
+      },
+      "var/lib/shells.state": {
+        "sha256": "76d76e1be9b95bf126b60928151bc4c9e11b8a4f66697be0e02aa03d076d348a",
+        "size": 84
+      }
+    },
+    "member_count": 21300,
+    "profile": "dos",
+    "published_kit_sha256": "a924fdbf4f34c22c79afa0d2481fa347a99a51be375e3d026191871bef5bd4fe",
+    "resources": {
+      "init": "a46aeacc5b34ed94a33d8b7d44eac2a20e8724088655aef046c9621bf3dd0383",
+      "opt/fdisbull/agent.c": "7f790582fc115fc3036f33c7a78bb11401619b4ce5adf0d624ca81d51c33d34a",
+      "opt/fdisbull/broker.py": "7e6263017345bd1b6c8132f39aaab3c7181516c4210ca8aef8cf6e70ef2eae21",
+      "opt/fdisbull/dos_broker.py": "8054f409edcf75b78c3218ced24a839162ea1ef874fec9715db906d62826c93c",
+      "opt/fdisbull/dosbox-x": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+      "opt/fdisbull/remote/__init__.py": "037ab42b952c74c8964c3e13f336081398f6a3753688a25dded72a8a03af2c35",
+      "opt/fdisbull/remote/dosbox_rpc.py": "a4c2b21ac20c64b18dc99ca1e496a5e7745311613445537ab36d020d6c56bba7",
+      "opt/fdisbull/selftest.c": "70b5e3f4b443154f8346ba45103324fd95cc27ac24c508fc1f59c2542b6fa104"
+    },
+    "result": "pass",
+    "scope": "Streamed path and resource-hash audit; no runtime execution or exhaustive content classification claim.",
+    "sha256": "7919982c922c530a7d699ea5a7ecefda5769750146a8dc48b40adeec50652781",
+    "size": 684145584,
+    "source_commit": "031b53eb953bfdc1d0e23c0ed49441031bad6e06",
+    "tag_wheel_sha256": "ad7d98e0ae60015a2a05168661c2ca33f7f0c71137d076e64aed60328377cd22"
+  },
+  "wine": {
+    "candidate_module": "/Users/Shared/fDisBull/releases/0.24.0-031b53e/venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+    "candidate_version": "0.24.0",
+    "excluded_payloads_found": 0,
+    "expanded_member_bytes": 1859787183,
+    "image": "/Users/Shared/fDisBull/releases/0.24.0-031b53e/backend/runtime/fdisbull-wine-runtime.cpio.gz",
+    "known_static_os_support": {
+      "usr/lib/gcc/x86_64-w64-mingw32/13-win32/plugin/gtype.state": {
+        "sha256": "bf9f98cd7f8f5e78ade351c65b369850d860a5489235f1d21e1e5d0e39b8cb0d",
+        "size": 1371523
+      },
+      "var/lib/shells.state": {
+        "sha256": "76d76e1be9b95bf126b60928151bc4c9e11b8a4f66697be0e02aa03d076d348a",
+        "size": 84
+      }
+    },
+    "member_count": 21293,
+    "profile": "wine",
+    "published_kit_sha256": "a924fdbf4f34c22c79afa0d2481fa347a99a51be375e3d026191871bef5bd4fe",
+    "resources": {
+      "init": "1d88753c741ff775444e95b3469a77aaeccaba5c5889d53ed2b63e9ae0d5ad43",
+      "opt/fdisbull/agent.c": "7f790582fc115fc3036f33c7a78bb11401619b4ce5adf0d624ca81d51c33d34a",
+      "opt/fdisbull/broker.py": "7e6263017345bd1b6c8132f39aaab3c7181516c4210ca8aef8cf6e70ef2eae21",
+      "opt/fdisbull/selftest.c": "70b5e3f4b443154f8346ba45103324fd95cc27ac24c508fc1f59c2542b6fa104"
+    },
+    "result": "pass",
+    "scope": "Streamed path and resource-hash audit; no runtime execution or exhaustive content classification claim.",
+    "sha256": "91fd618bbeeae33287b17323d939615b7bd94682ec16cb0bbe0eb2ee66a07b5c",
+    "size": 632869264,
+    "source_commit": "031b53eb953bfdc1d0e23c0ed49441031bad6e06",
+    "tag_wheel_sha256": "ad7d98e0ae60015a2a05168661c2ca33f7f0c71137d076e64aed60328377cd22"
+  }
+}

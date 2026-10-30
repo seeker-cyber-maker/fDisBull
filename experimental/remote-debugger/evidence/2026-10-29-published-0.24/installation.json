@@ -1,0 +1,99 @@
+{
+  "version": "0.24.0",
+  "source_commit": "031b53eb953bfdc1d0e23c0ed49441031bad6e06",
+  "installation": "/Users/Shared/fDisBull/releases/0.24.0-031b53e",
+  "status": "active_verified",
+  "activated_at_utc": "2026-10-30T00:42:10.012572+00:00",
+  "payload_manifest_sha256": "ad85db468bf50c6ce0106ee33fc23fc952b1d7493f7211b99dba8976c1fa5b8a",
+  "qualification": {
+    "tests": 700,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "source_only_deselected": 1
+  },
+  "postflight": {
+    "core_aliases": {
+      "~/.local/bin/fdisbull": "0.24.0",
+      "/opt/homebrew/bin/fdisbull": "0.24.0",
+      "/usr/local/bin/fdisbull": "0.24.0"
+    },
+    "player_aliases": {
+      "~/.local/bin/fdisbull-player": {
+        "processes": 2,
+        "restore": "restored",
+        "checkpoint": "saved",
+        "outcomes": [
+          "Success: You enter the hall.",
+          "Carrying: brass key."
+        ]
+      },
+      "/opt/homebrew/bin/fdisbull-player": {
+        "processes": 2,
+        "restore": "restored",
+        "checkpoint": "saved",
+        "outcomes": [
+          "Success: You enter the hall.",
+          "Carrying: brass key."
+        ]
+      },
+      "/usr/local/bin/fdisbull-player": {
+        "processes": 2,
+        "restore": "restored",
+        "checkpoint": "saved",
+        "outcomes": [
+          "Success: You enter the hall.",
+          "Carrying: brass key."
+        ]
+      }
+    },
+    "payload": {
+      "active_default": true,
+      "core_module": "/Users/Shared/fDisBull/releases/0.24.0-031b53e/venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+      "payload_entries": 2968,
+      "player_module": "/Users/Shared/fDisBull/releases/0.24.0-031b53e/venv/lib/python3.13/site-packages/fdisbull_player/__init__.py",
+      "python": "3.13.17",
+      "python_executable": "/Users/Shared/fDisBull/releases/0.24.0-031b53e/venv/bin/python",
+      "source_commit": "031b53eb953bfdc1d0e23c0ed49441031bad6e06",
+      "status": "passed",
+      "version": "0.24.0",
+      "wheel_resources": {
+        "fdisbull-0.24.0-py3-none-any.whl": 141,
+        "fdisbull_player-0.24.0-py3-none-any.whl": 5
+      },
+      "z3": "5.3.2"
+    },
+    "runtime_profile": "passed",
+    "global_dos_doctor": {
+      "status": "passed",
+      "native_state_restored": true,
+      "input_sha256": {
+        "executable": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277"
+      }
+    },
+    "rollback_preflight": {
+      "status": "rollback_ready",
+      "selector": "releases/0.24.0-031b53e",
+      "wrappers_preserved": 14
+    },
+    "old_payload": {
+      "status": "passed",
+      "version": "0.23.0",
+      "source_commit": "ed89abca061964385b176537bc9fd275dd02afa5",
+      "payload_entries": 2464,
+      "active_default": false,
+      "core_module": "/Users/Shared/fDisBull/releases/0.23.0-ed89abc/venv/lib/python3.13/site-packages/fdisbull/__init__.py",
+      "player_module": "/Users/Shared/fDisBull/releases/0.23.0-ed89abc/venv/lib/python3.13/site-packages/fdisbull_player/__init__.py",
+      "z3": "5.3.2"
+    }
+  },
+  "previous_selector": "releases/0.23.0-ed89abc",
+  "wrappers_preserved": 14,
+  "backup": "/Users/Shared/fDisBull/backups/0.23-to-0.24-20261030T004154Z",
+  "runtime_cleanup": {
+    "omitted_entries": 242,
+    "omitted_expanded_bytes": 17100034,
+    "scope": "Removed stale build/cache/profile entries from a new base; original 0.23 images remain intact."
+  },
+  "scope": "Selected installed-package/native checks on Mac ARM64 Python 3.13.17. Authored native targets, not a fresh original-game replay or full Mac source suite. Game/story inputs, native checkpoints and project databases are excluded."
+}

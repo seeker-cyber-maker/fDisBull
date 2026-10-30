@@ -123,6 +123,10 @@ jobs:
             tests/test_output_artifacts.py tests/test_output_limits.py tests/test_output_cli.py \
             tests/test_agent_skill_gate.py tests/test_agent_discovery.py \
             tests/test_il_scenes.py tests/test_z_process_backend.py tests/test_dinopark_z_bridge.py \
+            tests/test_dinopark_continuation.py tests/test_z_batch.py tests/test_action_continuations.py \
+            tests/test_zork_intent_runtime.py tests/test_zork_uil.py tests/test_zork_uil_cli.py \
+            tests/test_zork_intents_mapper.py tests/test_zork_intents_cli.py tests/test_game_intents.py \
+            tests/test_uil_word16_runtime.py tests/test_gog_unpack.py tests/test_le_loader.py tests/test_le_workflow.py \
             --junitxml=native-evidence/tests.xml 2>&1 | tee native-evidence/tests.log
       - name: Build and verify the offline kit with genuine Z3
         if: matrix.profile == 'layers-backend'
@@ -161,6 +165,9 @@ jobs:
           python scripts/check_agent_skill.py --python "$kit_install/bin/python" \
             --output "$RUNNER_TEMP/fdisbull-native-skill-gate.json"
           cp "$RUNNER_TEMP/fdisbull-native-skill-gate.json" native-evidence/offline/agent-skill.json
+          python scripts/check_agent_skill.py --python "$kit_install/bin/python" --skill write-gamefaqs-guide \
+            --output "$RUNNER_TEMP/fdisbull-native-guide-skill-gate.json"
+          cp "$RUNNER_TEMP/fdisbull-native-guide-skill-gate.json" native-evidence/offline/guide-skill.json
           sha256sum .native/offline/output/* > native-evidence/offline/SHA256SUMS
       - uses: actions/upload-artifact@v4
         if: success() && matrix.profile == 'layers-backend'

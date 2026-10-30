@@ -1,4 +1,4 @@
-"""Identify independently selectable DOS and PE views of retained file bytes.
+"""Identify independently selectable DOS, PE and LE views of retained bytes.
 
 A secondary header does not replace the preceding DOS image. View discovery is
 read-only and never executes or extracts a guessed stub. A DOS view is loadable
@@ -84,16 +84,37 @@ def _pe_view(data,offset):
     return view
 
 
+def _le_view(data: bytes, offset: int) -> dict:
+    """A compact inventory of the supported static LE loading profile."""
+    view = dict(image='le', format='LE', header_offset=offset, arch='x86', bits=32,
+                endian='little', available=False, loadable=False, valid=False,
+                error=None, validation_scope='bounded DOS/4GW flat object, page and internal fixup validation')
+    try:
+        from .le import inspect_le
+        metadata = inspect_le(data)
+        view.update(available=True, loadable=True, valid=True,
+                    entrypoint=metadata['entrypoint'],
+                    object_count=len(metadata['objects']),
+                    page_count=len(metadata['pages']),
+                    fixup_count=metadata['fixup_count'],
+                    load_model=metadata['load_model'])
+    except ValueError as error:
+        view['error'] = str(error)
+    return view
+
+
 def image_views(data:bytes)->list[dict]:
-    """Return recognized DOS/PE selectors without replacing or executing bytes.
+    """Return recognized DOS/PE/LE selectors without replacing or executing bytes.
 
     MZ loadability is checked at the ordinary default load segment 0x1000. An
     invalid classic stub is retained as an unavailable DOS view alongside a
-    structurally valid PE view. NE/LE/LX remain recognized secondary metadata,
-    not supported native image selectors. Other container inventories belong
-    to their own format adapters.
+    structurally valid PE or supported LE view. NE/LX remain recognized
+    secondary metadata, not supported native image selectors. Other container
+    inventories belong to their own format adapters.
     """
     data=_source(data)
+    if data.startswith(b'LE'):
+        return [_le_view(data, 0)]
     if not data.startswith(b'MZ'):return []
     secondary=secondary_header(data)
     mz=dict(image='mz',format='MZ',header_offset=0,arch='x86',bits=16,endian='little',
@@ -114,4 +135,5 @@ def image_views(data:bytes)->list[dict]:
         mz['error']=str(error)
     views=[mz]
     if secondary and secondary['format']=='PE':views.append(_pe_view(data,secondary['header_offset']))
+    if secondary and secondary['format']=='LE':views.append(_le_view(data,secondary['header_offset']))
     return views

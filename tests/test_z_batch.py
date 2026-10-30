@@ -66,7 +66,8 @@ def test_declared_continuation_sends_a_new_action_once_and_never_repeats_origina
         def act(self, request):
             result = super().act(request)
             if request['verb'] == 'take':
-                result.update(status='accepted', effects='partial')
+                result.update(status='accepted', effects='partial',
+                              continuation={'context':'courtyard','command':'use key on gate'})
             return result
     backend = Interrupted()
     plan = [{'id': 'setup', 'command': 'take key', 'expect_context': 'courtyard',
@@ -76,8 +77,9 @@ def test_declared_continuation_sends_a_new_action_once_and_never_repeats_origina
     assert batch.inspect()['reason'] == 'continuation-required'
     assert batch.run()['status'] == 'paused'
     assert len(backend.inputs) == 1
-    assert batch.resume()['complete'] is True
-    assert [x['verb'] for x in backend.inputs] == ['take', 'use', 'go']
+    resumed = batch.resume()
+    assert resumed['status'] == 'paused' and resumed['reason'] == 'original-intent-unconfirmed'
+    assert [x['verb'] for x in backend.inputs] == ['take', 'use']
     assert batch.inspect()['steps'][0]['attempts'][1]['kind'] == 'continuation'
 
 
@@ -175,7 +177,8 @@ def test_repeated_partial_continuation_and_invalid_resume_budget_send_no_extra_i
     class StillInterrupted(CountedBackend):
         def act(self, request):
             result = super().act(request)
-            result.update(status='accepted', effects='partial')
+            result.update(status='accepted', effects='partial',
+                          continuation={'context':'courtyard','command':'use key on gate'})
             return result
     backend = StillInterrupted()
     plan = [{'id': 'setup', 'command': 'take key',
@@ -206,3 +209,94 @@ def test_batch_cli_uses_the_installed_public_operation_shape(tmp_path):
     replies = [json.loads(line) for line in result.stdout.splitlines()]
     assert [x['status'] for x in replies] == ['saved', 'pending', 'completed', 'restored', 'completed', 'completed']
     assert len(result.stdout) < 2048
+
+@pytest.mark.parametrize('continuation', ['take key', 'take brass key'])
+def test_partial_action_cannot_be_repeated_through_original_or_alias(tmp_path, continuation):
+    class Partial(CountedBackend):
+        def observe(self):
+            result = super().observe()
+            for obj in result.get('objects', []) + result.get('inventory', []):
+                if obj['label'].casefold() == 'key':
+                    obj['aliases'].append('brass key')
+            return result
+        def act(self, request):
+            result = super().act(request)
+            if request['verb'] == 'take':
+                result.update(status='accepted', effects='partial',
+                              continuation={'context':'courtyard','command':continuation})
+            return result
+    backend = Partial()
+    plan = [{'id':'take', 'command':'take key', 'continuations':{'courtyard':continuation}}]
+    batch = BatchSession(Player(backend), tmp_path/'batch.json', plan)
+    assert batch.run()['status'] == 'paused'
+    result = batch.resume()
+    assert len(backend.inputs) == 1
+    assert result['status'] == 'paused'
+    assert result['steps'][0]['attempts'][0]['result']['effects'] == 'partial'
+
+
+def test_passive_or_unrelated_continuation_does_not_certify_partial_intent(tmp_path):
+    class Partial(CountedBackend):
+        def act(self, request):
+            result = super().act(request)
+            if request['verb'] == 'take':
+                result.update(status='accepted',effects='partial',
+                              continuation={'context':'courtyard','command':'look'})
+            return result
+    backend=Partial()
+    plan=[{'id':'take','command':'take key','continuations':{'courtyard':'look'}}]
+    batch=BatchSession(Player(backend),tmp_path/'batch.json',plan)
+    assert batch.run()['status']=='paused'
+    result=batch.resume()
+    assert result['status']=='paused' and not result['complete']
+    assert result['steps'][0]['attempts'][0]['result']['effects']=='partial'
+    assert len(backend.inputs)==1
+
+
+def test_plan_alone_does_not_authorize_continuation(tmp_path):
+    class Partial(CountedBackend):
+        def act(self, request):
+            result=super().act(request)
+            if request['verb']=='take': result.update(status='accepted',effects='partial')
+            return result
+    backend=Partial()
+    plan=[{'id':'take','command':'take key','continuations':{'courtyard':'use key on gate'}}]
+    batch=BatchSession(Player(backend),tmp_path/'batch.json',plan)
+    assert batch.run()['status']=='paused'
+    assert batch.resume()['status']=='paused'
+    assert len(backend.inputs)==1
+
+
+def test_confirmed_effect_can_finish_after_authorized_destination_change(tmp_path):
+    class Confirmed(CountedBackend):
+        def act(self, request):
+            result = super().act(request)
+            if request['verb'] == 'take':
+                result['continuation'] = {'context':'courtyard','command':'n'}
+            return result
+    backend = Confirmed()
+    backend.state['$unlocked'] = True
+    plan = [{'id':'take','command':'take key','expect_context':'garden',
+             'continuations':{'courtyard':'n'}}]
+    batch = BatchSession(Player(backend),tmp_path/'batch.json',plan)
+    assert batch.run()['reason'] == 'destination-mismatch'
+    result = batch.resume()
+    assert result['complete'] and result['status'] == 'completed'
+    assert result['steps'][0]['attempts'][0]['result']['effects'] == 'applied-confirmed'
+    assert [item['verb'] for item in backend.inputs] == ['take','go']
+
+
+def test_provider_authorization_must_match_current_context_and_command(tmp_path):
+    class Partial(CountedBackend):
+        def act(self, request):
+            result = super().act(request)
+            if request['verb'] == 'take':
+                result.update(status='accepted',effects='partial',
+                              continuation={'context':'elsewhere','command':'use key on gate'})
+            return result
+    backend = Partial()
+    plan = [{'id':'take','command':'take key','continuations':{'courtyard':'use key on gate'}}]
+    batch = BatchSession(Player(backend),tmp_path/'batch.json',plan)
+    assert batch.run()['status'] == 'paused'
+    assert batch.resume()['status'] == 'paused'
+    assert len(backend.inputs) == 1

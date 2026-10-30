@@ -1,38 +1,19 @@
-# fDisBull 0.23.0 — shared Mac installation
+# fDisBull 0.25.0 — shared Mac installation
 
-The active selector `/Users/Shared/fDisBull/current` points to
-`/Users/Shared/fDisBull/releases/0.23.0-ed89abc`, source
-`ed89abca061964385b176537bc9fd275dd02afa5`, tag `v0.23.0`.
-`INSTALLATION.json` records `active_verified` and all 2,464 managed entries
-passed the postflight payload check.
+The active selector `/Users/Shared/fDisBull/current` points to `/Users/Shared/fDisBull/releases/0.25.0-70eb4e3`, source `70eb4e38bf4bf8d47e52e38b8fab6a6cd718f15e`, tag `v0.25.0`. `INSTALLATION.json` records `active_verified`; all 3,040 managed entries passed postflight. Core/player 0.25.0 run in Python 3.13.17 ARM64 with genuine decoding and managed-analysis dependencies and Z3 5.3.2.
 
-The installed package passed 709 required-native tests with no failures or
-skips. DOSBox, DOS-in-QEMU and Wine/QEMU doctors restored native state; both
-runtime-image audits passed. Post-activation checked three global core aliases,
-three player aliases with six fresh save/resume processes, and the global DOS
-restore doctor. Z3 5.3.2 is present. The shipped UDC reconstructs original-backed
-DOS bytes and qualifies only its declared small register-block profile.
+The selected installed-package gate passed **1,107 tests with no failures, errors or skips**. Two checks were explicitly deselected because they require a source-only no-decoder launch or Linux display behavior. Source/build archive suites and the full Mac source suite are outside this selection. Both installed skills, blank-command rejection and native ZIP/UDC/boot checks passed. The [publication record](PUBLICATION-0.25.md) retains the initial fixture failures and corrected rerun.
 
-The [public release](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.23.0)
-contains eight assets, all downloaded and matched against staged bytes and
-GitHub digests. See [the publication record](PUBLICATION-0.23.md) for exact
-identities, source-companion scope and retained test failures.
+Direct DOSBox, DOS-in-QEMU and Wine/QEMU doctors passed native restore, layers, breakpoints/watchpoints, memory, screenshots, clicks and traces on authored targets. Both new runtime images passed streamed exclusion/resource audits. Mac executables retain their original build provenance and were freshly requalified, not rebuilt. The Linux ELF matches the published kit. Historical backend receipts are labelled separately.
 
-The previous 0.22.0 prefix and all 14 wrappers remain intact. The guarded
-`/Users/Shared/fDisBull/current/share/rollback-to-0.22.py` checks by default and
-requires `--apply` to switch. Its preflight returned `rollback_ready`; no rollback
-was applied. Existing projects and user checkpoint directories are not migrated.
+Global core/player aliases, automatic turn save/resume through six processes, a further global DOS doctor and the runtime profile passed. The global source-linked Zork CLI also passed first/repeated mailbox result and checkpoint comparisons against the prior qualified path. No complete native-game replay or arbitrary-host portability is claimed.
 
-Commands are `fdisbull`, `fdisbull-player`, `fdisbull-python`,
-`fdisbull-dosbox`, `fdisbull-qemu` and `fdisbull-runtime`. `RUNTIME.json`
-records the backend profiles. Managed Python package directories are read-only.
-Run `fdisbull-python -I /Users/Shared/fDisBull/current/share/verify-system.py`
-for the payload check. Keep game data, checkpoints and projects outside the
-managed prefix.
+The previous 0.24 prefix and all 14 wrappers remain intact. The guarded `current/share/rollback-to-0.24.py` checks by default and requires `--apply` to switch; preflight returned `rollback_ready`. Existing projects and user checkpoints were not migrated.
 
-Qualification covers this Mac and tested paths. Two initial DOSBox startup
-aborts occurred in a long-path harness run; the outside-Git shorter-path rerun
-passed, but their cause remains unresolved. Interactive dot-mode is unqualified.
-General `il-run` output amplification also remains; see the measured known limit
-in the publication record. The local `agent-skill --index` follow-up is not
-installed; 0.23.0 supports selective `agent-skill --reference FILE` retrieval.
+Commands are `fdisbull`, `fdisbull-player`, `fdisbull-python`, `fdisbull-dosbox`, `fdisbull-qemu` and `fdisbull-runtime`. `RUNTIME.json` records backend paths. Managed package files are read-only. Verify the sealed payload with:
+
+```bash
+fdisbull-python -B -I /Users/Shared/fDisBull/current/share/verify-system.py verify
+```
+
+Discover both skills with `fdisbull agent-skill --list`; retrieve only the needed reference. Optional GOG extraction uses the separately available genuine host `innoextract`; its version was checked, but no original installer extraction was qualified in this publication turn. Keep games, story inputs, saved native states and project databases outside the managed prefix. Earlier long-path DOSBox startup aborts remain unresolved. Interactive dot-mode and the full Mac source suite remain outside this qualification.

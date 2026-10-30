@@ -1,0 +1,160 @@
+{
+  "format": "fdisbull-025-local-tests-1",
+  "candidate_commit": "db337d21f10a2c75c1e65d26ddd954cddc384e4c",
+  "runtime": "CPython 3.13.17 macOS arm64",
+  "source": "Combined candidate, genuine dependencies and compatible native Mac DOSBox",
+  "full_suite": {
+    "passed": 1936,
+    "skipped": 20,
+    "failed": 2,
+    "errors": 23,
+    "seconds": 108.79,
+    "verdict": "not_green",
+    "classified_limit": "Existing Linux ELF/compiler fixture assumptions under the Apple toolchain; authoritative Linux CI required",
+    "unsuccessful_tests": [
+      {
+        "test": "tests.test_elf_metadata::test_got_slots_come_from_actual_relocations_and_keep_module_proof",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_elf_metadata::test_plt_stubs_are_native_validated_not_fixed_stride_guesses",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_elf_metadata::test_function_data_ifunc_tls_and_absolute_exports_have_distinct_identity",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_elf_metadata::test_pie_copy_storage_tls_and_versioned_dependency_are_not_callable_slots",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_elf_metadata::test_fno_plt_uses_glob_dat_without_fabricating_a_stub",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_elf_metadata::test_duplicate_versioned_export_names_remain_separate",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_elf_metadata::test_conflicting_version_requirement_indices_do_not_prove_a_module",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_elf_metadata::test_limits_cap_metadata_and_path_lists_with_warnings",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_elf_metadata::test_rel_encoding_does_not_claim_an_explicit_zero_addend",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_elf_metadata::test_unversioned_copy_storage_keeps_dependency_candidates_without_attribution",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_elf_metadata::test_bad_limits_are_rejected[0]",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_elf_metadata::test_bad_limits_are_rejected[True]",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_elf_metadata::test_bad_limits_are_rejected[100001]",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_elf_metadata::test_bad_limits_are_rejected[2]",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_inspection::test_actual_elf_exports_and_unresolved_imports_are_honest",
+        "status": "failure",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_loading::test_real_elf_retains_entry_and_named_function",
+        "status": "failure",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_platform_calls::test_linux_calls_xrefs_and_shared_bulk_effects[plt]",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_platform_calls::test_linux_calls_xrefs_and_shared_bulk_effects[got]",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_platform_calls::test_patched_got_disk_pointer_does_not_become_an_internal_call[plt]",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_platform_calls::test_patched_got_disk_pointer_does_not_become_an_internal_call[got]",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_platform_calls::test_refresh_upgrades_legacy_metadata_preserving_versions_annotations_and_bytes",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_platform_calls::test_stub_patch_retracts_library_identity_and_derived_call_xref_only_in_child",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_platform_calls::test_dependency_name_patch_rebuilds_versioned_modules_without_ghosts",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_platform_calls::test_import_name_patch_replaces_old_symbol_alias_and_contract",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      },
+      {
+        "test": "tests.test_platform_calls::test_public_linkage_json_methods_and_refresh_return_structured_results",
+        "status": "error",
+        "classification": "Linux ELF fixture compiled/linked by the Apple toolchain"
+      }
+    ],
+    "junit_sha256": "9fe505c824642e78defd93fb1b492f8099159d7253b16b25fb2e1e4cd031c38f"
+  },
+  "protected_legacy_files": {
+    "comparison": "git diff PR24 head14617 against candidate",
+    "paths": [
+      "player/fdisbull_player/word16.py",
+      "src/fdisbull/zork_uil.py",
+      "tests/test_zork_uil.py",
+      "tests/test_zork_uil_cli.py",
+      "tests/test_uil_word16_runtime.py"
+    ],
+    "result": "byte-identical"
+  },
+  "final_intake_affected": {
+    "candidate_commit": "c92047a32f76b9a4a8c45cad96d12be844661d99",
+    "passed": 261,
+    "seconds": 8.04,
+    "junit_sha256": "0db945fcd205c076029db3cbbfa55688ba5aca0ce14396a1ea068787c8c4192e"
+  }
+}

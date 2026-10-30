@@ -159,7 +159,8 @@ class BatchSession:
         step['attempts'].append(attempt)
         self._write()
         try:
-            result = self.player.execute_result(command)
+            original = step['attempts'][0].get('result', {}) if kind == 'continuation' else {}
+            result = self.player.execute_result(command, blocked_action=original.get('action'))
             # Preserve the returned effect before a follow-up observation or
             # driver failure. The step remains running/unknown until its goal
             # is qualified, but a confirmed commit must not disappear with it.
@@ -176,7 +177,10 @@ class BatchSession:
             observation = public_observation(raw)
             context = observation['context']['id'] if observation else None
             attempt.update(state='returned', result=result, context=context)
-            if result['complete'] is not True or result['effects'] == 'unknown' or observation is None:
+            if result.get('blocked_original_action'):
+                step['state'] = 'paused'
+                step['reason'] = 'original-action-refused'
+            elif result['complete'] is not True or result['effects'] == 'unknown' or observation is None:
                 step['state'] = 'unknown'
                 step['reason'] = 'unverified-result'
             elif result['status'] == 'rejected':
@@ -185,6 +189,11 @@ class BatchSession:
             elif result['status'] == 'accepted' or result['effects'] == 'partial':
                 step['state'] = 'paused'
                 step['reason'] = 'continuation-required'
+            elif kind == 'continuation' and original.get('effects') in ('partial', 'unknown'):
+                # The continuation's success does not certify the original intent.
+                # No current provider supplies a bound completion certificate.
+                step['state'] = 'paused'
+                step['reason'] = 'original-intent-unconfirmed'
             elif self.plan[index].get('expect_context', context) != context:
                 step['state'] = 'paused'
                 step['reason'] = 'destination-mismatch'
@@ -223,6 +232,16 @@ class BatchSession:
                 observation = self._observe()
                 if observation is not None:
                     command = self.plan[index].get('continuations', {}).get(observation['context']['id'])
+                    original = self.doc['steps'][index]['attempts'][0].get('result', {})
+                    authorization = original.get('continuation')
+                    action = original.get('action')
+                    if (not isinstance(action, dict) or set(action) != {'verb', 'target', 'item'}
+                            or not isinstance(action['verb'], str) or not action['verb']
+                            or any(value is not None and not isinstance(value, str) for value in (action['target'], action['item']))
+                            or not isinstance(authorization, dict)
+                            or authorization.get('context') != observation['context']['id']
+                            or authorization.get('command') != command):
+                        command = None
                     already_sent = any(a['kind'] == 'continuation' and a['command'] == command
                                        for a in self.doc['steps'][index]['attempts'])
                     if command is not None and not already_sent:

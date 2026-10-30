@@ -359,11 +359,23 @@ host architecture is never a selection rule. `arch` remains the separate raw
 mode override and cannot be combined with a container selector.
 
 `image: "auto"` is the default. A PE-bearing MZ file selects PE; `image: "pe"`
-requires that native view. `image: "mz"` explicitly selects its declared DOS
+requires that native view. The unreleased LE loader selects a supported bare or
+MZ-wrapped LE image automatically, or explicitly with `image: "le"`. It maps
+preferred x86-32 objects and supported internal offset32 fixups; unsupported
+profiles fail without falling back to the DOS stub. See the
+[DOS/4GW LE guide](dos4gw-le.md) for the exact subset and limits.
+`image: "mz"` explicitly selects its declared DOS
 load image, subject to the complete ordinary MZ extent, relocation and entry
 checks. Inspection includes `image_views` with availability and validation
-errors. PE and DOS views belong to separate projects/decode contexts. The
+errors. PE, LE and DOS views belong to separate projects/decode contexts. The
 loader does not guess a DOS stub length from `e_lfanew`.
+
+LE standalone inspection caps its fixup preview at 10,000 records with an
+explicit total/cap warning. Imported LE projects retain every applied fixup
+and expose them through the existing paginated `relocations` query. LE patches
+create mapped-memory child versions with the exact original container and
+inherited file metadata retained; no LE executable rewrite or inverse fixup
+is implemented. `refresh-metadata` remains unsupported for LE.
 
 ```json
 {"id":50,"method":"inspect","params":{"path":"UniversalBinary","slice_arch":"arm64"}}
