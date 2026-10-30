@@ -77,7 +77,9 @@ original guest. It never executes later plan steps. Use a separate explicit
 
 Reconciliation requires an already durable, complete provider reply with a
 `witness` containing exactly `session_token`, `context_id` and `context_token`.
-The fresh qualified observation must match all three. DinoPark and the typed-IL
+The witness binds an observation; it is not an original-intent completion
+certificate. The fresh qualified observation must match all three. DinoPark and
+the typed-IL
 provider issue this witness after qualifying the resulting public context.
 The state token prevents accepting an old reply after an intervening action,
 even when the scene name is unchanged. Older providers/journals without a
@@ -195,3 +197,7 @@ context; it does not implement game finances, feeding or travel effects.
 This is a reusable execution seam for UDL backings. It does not establish
 recovered semantic blocks, general game equivalence or automatic optimization
 of animations and elapsed simulation time.
+
+The [installed original-DinoPark reconciliation acceptance](VERIFICATION-Z-RECONCILIATION-2026-10-30.md)
+records same-guest purchase/restore/history repair, strict negative gates,
+unchanged guest clock/input and preserved verifier friction.
