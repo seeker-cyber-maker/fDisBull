@@ -28,6 +28,7 @@ play an authored text projection without opening the debugger yourself.
 | --- | --- |
 | Extract a GOG DOS installer on macOS or Linux without Wine | [Native GOG unpacking](docs/GOG_UNPACKING.md) |
 | Understand an executable without running it | [Disassembly and analysis](#disassemble-and-analyze) |
+| Identify NES, SNES or Sega cartridges and inspect a Sega data-track header | [Console media parsing](docs/CONSOLE_MEDIA_PARSING.md) |
 | Observe a DOS game or a Windows PE64 program | [Debug the original program](#debug-the-original-program) |
 | Compare a hypothesis, a checkpoint or a temporary patch | [Layers, states and experiments](#layers-states-and-experiments) |
 | Give an agent reliable scene context and navigation | [Scenes, maps and interaction policies](#scenes-maps-and-interaction-policies) |

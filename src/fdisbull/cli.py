@@ -215,6 +215,7 @@ METHODS = {
     "code-regions": "DOS decoded instruction runs by CS; [version]",
     "identify": "Identify file header from bytes; path; no project required",
     "inspect": "Parse file metadata; path; no project required",
+    "rom-inspect": "Parse console cartridge or Sega data-track descriptor; path; no project required",
     "info": "Parsed container summary; [version]",
     "header": "Parsed header fields; [version]",
     "sections": "Disk and virtual section layout; [version,limit,offset]",
@@ -348,6 +349,11 @@ def invoke(method, params, debugger=None):
     if method=='agi-logic':
         from .agi import inspect_logic
         return inspect_logic(**p)
+    if method=='rom-inspect':
+        from .roms import inspect_rom_path
+        path=p.pop('path')
+        if p:raise ValueError('rom-inspect accepts only path')
+        return inspect_rom_path(path)
     if method in ('identify','inspect'):
         from .inspection import identify_header, inspect_binary
         path=Path(p.pop('path'))
@@ -476,7 +482,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('agent-skill','identify','inspect','rom-inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         value={"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
@@ -660,7 +666,7 @@ def parser():
         if name=='gog-unpack':c.add_argument('output',help='new private directory outside the checkout')
         c.add_argument('--include',action='append',help='repeatable native innoextract path filter; list first')
         c.add_argument('--timeout',type=int,default=300,help='per-extractor-process timeout in seconds (1..3600)')
-    for name in ('identify','inspect'):
+    for name in ('identify','inspect','rom-inspect'):
         c=sub.add_parser(name,help=METHODS[name])
         c.add_argument('path')
         if name=='inspect':
