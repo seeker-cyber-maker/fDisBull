@@ -1,0 +1,681 @@
+{
+  "dos": {
+    "format": "fdisbull-doctor-1",
+    "version": "0.24.0",
+    "backend": "dosbox",
+    "status": "passed",
+    "python": "3.13.17",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "checks": [
+      {
+        "name": "genuine dependencies and native decoding",
+        "status": "passed"
+      },
+      {
+        "name": "backend inputs",
+        "status": "passed"
+      },
+      {
+        "name": "launch authored target",
+        "status": "passed"
+      },
+      {
+        "name": "execution breakpoint",
+        "status": "passed"
+      },
+      {
+        "name": "execution overlay",
+        "status": "passed"
+      },
+      {
+        "name": "native save",
+        "status": "passed"
+      },
+      {
+        "name": "screenshot",
+        "status": "passed"
+      },
+      {
+        "name": "click with coordinate frame",
+        "status": "passed"
+      },
+      {
+        "name": "data watch",
+        "status": "passed"
+      },
+      {
+        "name": "bounded instruction trace",
+        "status": "passed"
+      },
+      {
+        "name": "native restore",
+        "status": "passed"
+      },
+      {
+        "name": "offline temporal interpretation",
+        "status": "passed"
+      },
+      {
+        "name": "restart and export stored evidence",
+        "status": "passed"
+      }
+    ],
+    "native_state_restored": true,
+    "artifacts": {
+      "frame.png": {
+        "sha256": "235add48bc0ecb23d08eed87926af09b4ad8b52cc3be4e86b6614f62daae41f0",
+        "bytes": 4142
+      },
+      "click.png": {
+        "sha256": "a48d1e72c477828382d7b771f2ef9ed9ec55cb454a5edad070812fd3bbe3edb3",
+        "bytes": 4578
+      },
+      "trace.json": {
+        "sha256": "2662c406070d339471e728aa7748db1bc349c52ba0cc31f39b93ee2a289f0666",
+        "bytes": 106388
+      }
+    },
+    "scope": "Authored disposable target; finite debugger acceptance; no game compatibility or timing parity claim",
+    "dependencies": {
+      "capstone": {
+        "status": "available",
+        "version": "5.0.7"
+      },
+      "iced_x86": {
+        "status": "available",
+        "version": null
+      },
+      "lief": {
+        "status": "available",
+        "version": "1.0.0-d05b3499b"
+      },
+      "PIL": {
+        "status": "available",
+        "version": "12.3.0"
+      }
+    },
+    "input_sha256": {
+      "executable": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277"
+    },
+    "authored_target_sha256": "2b1c3760c9c83ddbc477f9a41575803faceb9e43b8425c894503b090c6573546",
+    "capabilities": {
+      "address_spaces": [
+        "segmented",
+        "linear",
+        "physical"
+      ],
+      "breakpoints": {
+        "data_access": "normal_core_real_mode_byte_addresses",
+        "memory_change": true,
+        "memory_change_address_spaces": [
+          "segmented",
+          "linear"
+        ]
+      },
+      "code_layers": "normal_core_real_mode_guarded_fetch_v1",
+      "debugger": true,
+      "input": {
+        "absolute_mouse": true,
+        "click_timing": "guest_emulated_milliseconds",
+        "coordinate_space": "guest_frame_pixels",
+        "driver": "builtin_dos_int33_only",
+        "keyboard": "ibm_pc_controller_us_ascii_v1",
+        "keyboard_held_leases": true
+      },
+      "limits": {
+        "max_memory_read_bytes": 65536,
+        "max_message_bytes": 8388608,
+        "max_trace_events": 10000
+      },
+      "protocol_version": "1.0",
+      "register_edit": true,
+      "save_states": true,
+      "timing": {
+        "fast_forward": true,
+        "guest_clock": "PIC_Ticks_milliseconds"
+      },
+      "trace": {
+        "cpu": true
+      },
+      "video": {
+        "controlled_window": true,
+        "format": "png",
+        "headless": true,
+        "pixel_probe": true,
+        "screenshot": true,
+        "source": "last_completed_guest_frame"
+      }
+    },
+    "observation_contract": {
+      "format": "fdisbull-debug-semantics-1",
+      "backend": "dosbox",
+      "execution_breakpoint_stage": "before-instruction",
+      "watchpoint_stage": "after-instruction",
+      "trace_registers_stage": "before-instruction",
+      "trace_completion": "fetch-observed; completion unknown",
+      "timing": "guest ticks supported",
+      "address_context": "real-mode CS plus linear address"
+    },
+    "temporal_promotion": {
+      "version": 2,
+      "parent": 1,
+      "artifact": "1dfbb347c4ae42be90cd50f983e83760",
+      "sha256": "2ff997651ccd2b09565c3cbfcc50bc21629448e04a093a38aa36371414899be3",
+      "analysis": {
+        "version": 2,
+        "decoded": 16,
+        "attempted": 19,
+        "data_processed": 2,
+        "new_facts": 41,
+        "pending": 0,
+        "pending_code": 0,
+        "pending_data": 0,
+        "pending_seeds": 0,
+        "pending_segment_scans": 0,
+        "entry_complete": true,
+        "stable": true,
+        "budget_exhausted": false,
+        "assumptions": [
+          "Static minimum allocation; no PSP memory fabricated.",
+          "Call fallthrough preserves DS/SS/BP/SP by conventional DOS C calling convention; general registers and ES are unknown.",
+          "Deferred relocation candidates may assume startup DS (or the unique observed DS); candidate provenance is retained.",
+          "Stability covers implemented static rules; unresolved indirect/dynamic code remains explicit."
+        ]
+      },
+      "temporal": {
+        "version": 2,
+        "temporal": true,
+        "active_layers": [
+          "e9e222146cc7416b860d636d63a8fa71"
+        ],
+        "address": 65554,
+        "artifact": "1dfbb347c4ae42be90cd50f983e83760",
+        "artifact_sha256": "c6e0e1effd784f48a6b72e3167c6ec89708ebf64a88dd1f31f26dd5ba591d030",
+        "edits": [],
+        "execution_proven": false,
+        "generation": 2,
+        "identity": {
+          "arch": "x86",
+          "backend": "dosbox",
+          "backend_sha256": "1b0ec91f8a97fb34f336f898c3e9e02bf4559f314b2e4f92f3597f0c52c92277",
+          "bits": 16,
+          "captured_at": "2026-10-30T00:31:20.741654+00:00",
+          "cpu_mode": "real",
+          "delta": -32192,
+          "layer_hashes": {
+            "e9e222146cc7416b860d636d63a8fa71": "782c5b7362553af78799c64bff7f5449e9c13b22fc05640de2fc0d49da11d156"
+          },
+          "project_base": "0x10000",
+          "project_cs": 4096,
+          "run": "68fa542ca3b844dfbdb7798766059615",
+          "runtime_base": "0x8240",
+          "runtime_cs": 2084,
+          "runtime_inputs": {},
+          "source_sha256": "2b1c3760c9c83ddbc477f9a41575803faceb9e43b8425c894503b090c6573546",
+          "source_version": 1,
+          "source_version_sha256": "1ac1bb4ada2c5f37bbc933e1a1654e52c33a87ea1e9de3c844d25ab598adc71d"
+        },
+        "kind": "runtime-capture",
+        "normalized_sha256": "26a15c863949ed6b968a7152e91bcb62e3c5b1d8d2e7e0f2a80e5b331ad5f4fe",
+        "parent": 1,
+        "project_cs": 4096,
+        "raw_sha256": "26a15c863949ed6b968a7152e91bcb62e3c5b1d8d2e7e0f2a80e5b331ad5f4fe",
+        "relocations": [],
+        "run": "68fa542ca3b844dfbdb7798766059615",
+        "scope": "Captured span normalized into project space; all other bytes inherited and unobserved",
+        "size": 4,
+        "source_version": 1,
+        "source_version_sha256": "1ac1bb4ada2c5f37bbc933e1a1654e52c33a87ea1e9de3c844d25ab598adc71d",
+        "view": "execute"
+      }
+    }
+  },
+  "dos_qemu": {
+    "format": "fdisbull-doctor-1",
+    "version": "0.24.0",
+    "backend": "dosbox-qemu",
+    "status": "passed",
+    "python": "3.13.17",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "checks": [
+      {
+        "name": "genuine dependencies and native decoding",
+        "status": "passed"
+      },
+      {
+        "name": "backend inputs",
+        "status": "passed"
+      },
+      {
+        "name": "launch authored target",
+        "status": "passed"
+      },
+      {
+        "name": "execution breakpoint",
+        "status": "passed"
+      },
+      {
+        "name": "execution overlay",
+        "status": "passed"
+      },
+      {
+        "name": "native save",
+        "status": "passed"
+      },
+      {
+        "name": "screenshot",
+        "status": "passed"
+      },
+      {
+        "name": "click with coordinate frame",
+        "status": "passed"
+      },
+      {
+        "name": "data watch",
+        "status": "passed"
+      },
+      {
+        "name": "bounded instruction trace",
+        "status": "passed"
+      },
+      {
+        "name": "native restore",
+        "status": "passed"
+      },
+      {
+        "name": "offline temporal interpretation",
+        "status": "passed"
+      },
+      {
+        "name": "restart and export stored evidence",
+        "status": "passed"
+      }
+    ],
+    "native_state_restored": true,
+    "artifacts": {
+      "frame.png": {
+        "sha256": "235add48bc0ecb23d08eed87926af09b4ad8b52cc3be4e86b6614f62daae41f0",
+        "bytes": 4142
+      },
+      "click.png": {
+        "sha256": "a48d1e72c477828382d7b771f2ef9ed9ec55cb454a5edad070812fd3bbe3edb3",
+        "bytes": 4578
+      },
+      "trace.json": {
+        "sha256": "47d7a58f94eb88c4dce9947ba15ee9d95c99445909b57f887026b1aee39c7b92",
+        "bytes": 107601
+      }
+    },
+    "scope": "Authored disposable target; finite debugger acceptance; no game compatibility or timing parity claim",
+    "dependencies": {
+      "capstone": {
+        "status": "available",
+        "version": "5.0.7"
+      },
+      "iced_x86": {
+        "status": "available",
+        "version": null
+      },
+      "lief": {
+        "status": "available",
+        "version": "1.0.0-d05b3499b"
+      },
+      "PIL": {
+        "status": "available",
+        "version": "12.3.0"
+      }
+    },
+    "input_sha256": {
+      "executable": "10bed8dc7571b0fc6c51ea484711b3802d2fb2dc00ba5d9af4d610cb2e2142cb",
+      "kernel": "d8808aa4ca188560da1e6d749dcb930c87a5fd8b11ebff1f3fa6d728af35203d",
+      "initramfs": "7919982c922c530a7d699ea5a7ecefda5769750146a8dc48b40adeec50652781"
+    },
+    "authored_target_sha256": "2b1c3760c9c83ddbc477f9a41575803faceb9e43b8425c894503b090c6573546",
+    "capabilities": {
+      "address_spaces": [
+        "segmented",
+        "linear",
+        "physical"
+      ],
+      "breakpoints": {
+        "data_access": "normal_core_real_mode_byte_addresses",
+        "memory_change": true,
+        "memory_change_address_spaces": [
+          "segmented",
+          "linear"
+        ]
+      },
+      "code_layers": "normal_core_real_mode_guarded_fetch_v1",
+      "debugger": true,
+      "input": {
+        "absolute_mouse": true,
+        "click_timing": "guest_emulated_milliseconds",
+        "coordinate_space": "guest_frame_pixels",
+        "driver": "builtin_dos_int33_only",
+        "keyboard": "ibm_pc_controller_us_ascii_v1",
+        "keyboard_held_leases": true
+      },
+      "limits": {
+        "max_memory_read_bytes": 65536,
+        "max_message_bytes": 8388608,
+        "max_trace_events": 10000
+      },
+      "protocol_version": "1.0",
+      "register_edit": true,
+      "save_states": true,
+      "timing": {
+        "fast_forward": true,
+        "guest_clock": "PIC_Ticks_milliseconds"
+      },
+      "trace": {
+        "cpu": true
+      },
+      "video": {
+        "controlled_window": true,
+        "format": "png",
+        "headless": true,
+        "pixel_probe": true,
+        "screenshot": true,
+        "source": "last_completed_guest_frame"
+      }
+    },
+    "observation_contract": {
+      "format": "fdisbull-debug-semantics-1",
+      "backend": "dosbox-qemu",
+      "execution_breakpoint_stage": "before-instruction",
+      "watchpoint_stage": "after-instruction",
+      "trace_registers_stage": "before-instruction",
+      "trace_completion": "fetch-observed; completion unknown",
+      "timing": "guest ticks supported",
+      "address_context": "real-mode CS plus linear address"
+    },
+    "temporal_promotion": {
+      "version": 2,
+      "parent": 1,
+      "artifact": "36dd832cfa6c4706af4e5d55c511fa85",
+      "sha256": "2ff997651ccd2b09565c3cbfcc50bc21629448e04a093a38aa36371414899be3",
+      "analysis": {
+        "version": 2,
+        "decoded": 16,
+        "attempted": 19,
+        "data_processed": 2,
+        "new_facts": 41,
+        "pending": 0,
+        "pending_code": 0,
+        "pending_data": 0,
+        "pending_seeds": 0,
+        "pending_segment_scans": 0,
+        "entry_complete": true,
+        "stable": true,
+        "budget_exhausted": false,
+        "assumptions": [
+          "Static minimum allocation; no PSP memory fabricated.",
+          "Call fallthrough preserves DS/SS/BP/SP by conventional DOS C calling convention; general registers and ES are unknown.",
+          "Deferred relocation candidates may assume startup DS (or the unique observed DS); candidate provenance is retained.",
+          "Stability covers implemented static rules; unresolved indirect/dynamic code remains explicit."
+        ]
+      },
+      "temporal": {
+        "version": 2,
+        "temporal": true,
+        "active_layers": [
+          "aaf59b4aea8a47dfa999d589275ee904"
+        ],
+        "address": 65554,
+        "artifact": "36dd832cfa6c4706af4e5d55c511fa85",
+        "artifact_sha256": "a1aca3fc870e5139aaa4082ce4c4327e5661af86be04323bf3ad176e0d0ae0e5",
+        "edits": [],
+        "execution_proven": false,
+        "generation": 2,
+        "identity": {
+          "arch": "x86",
+          "backend": "dosbox-qemu",
+          "backend_sha256": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+          "bits": 16,
+          "captured_at": "2026-10-30T00:32:14.130866+00:00",
+          "cpu_mode": "real",
+          "delta": -32192,
+          "layer_hashes": {
+            "aaf59b4aea8a47dfa999d589275ee904": "782c5b7362553af78799c64bff7f5449e9c13b22fc05640de2fc0d49da11d156"
+          },
+          "project_base": "0x10000",
+          "project_cs": 4096,
+          "run": "fc1295e94595440598476b744a9ad57d",
+          "runtime_base": "0x8240",
+          "runtime_cs": 2084,
+          "runtime_inputs": {
+            "initramfs": "7919982c922c530a7d699ea5a7ecefda5769750146a8dc48b40adeec50652781",
+            "kernel": "d8808aa4ca188560da1e6d749dcb930c87a5fd8b11ebff1f3fa6d728af35203d",
+            "qemu": "10bed8dc7571b0fc6c51ea484711b3802d2fb2dc00ba5d9af4d610cb2e2142cb"
+          },
+          "source_sha256": "2b1c3760c9c83ddbc477f9a41575803faceb9e43b8425c894503b090c6573546",
+          "source_version": 1,
+          "source_version_sha256": "1ac1bb4ada2c5f37bbc933e1a1654e52c33a87ea1e9de3c844d25ab598adc71d"
+        },
+        "kind": "runtime-capture",
+        "normalized_sha256": "26a15c863949ed6b968a7152e91bcb62e3c5b1d8d2e7e0f2a80e5b331ad5f4fe",
+        "parent": 1,
+        "project_cs": 4096,
+        "raw_sha256": "26a15c863949ed6b968a7152e91bcb62e3c5b1d8d2e7e0f2a80e5b331ad5f4fe",
+        "relocations": [],
+        "run": "fc1295e94595440598476b744a9ad57d",
+        "scope": "Captured span normalized into project space; all other bytes inherited and unobserved",
+        "size": 4,
+        "source_version": 1,
+        "source_version_sha256": "1ac1bb4ada2c5f37bbc933e1a1654e52c33a87ea1e9de3c844d25ab598adc71d",
+        "view": "execute"
+      }
+    }
+  },
+  "wine": {
+    "format": "fdisbull-doctor-1",
+    "version": "0.24.0",
+    "backend": "wine-qemu",
+    "status": "passed",
+    "python": "3.13.17",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "checks": [
+      {
+        "name": "genuine dependencies and native decoding",
+        "status": "passed"
+      },
+      {
+        "name": "backend inputs",
+        "status": "passed"
+      },
+      {
+        "name": "compile and retrieve fixed authored source",
+        "status": "passed"
+      },
+      {
+        "name": "launch authored target",
+        "status": "passed"
+      },
+      {
+        "name": "execution breakpoint",
+        "status": "passed"
+      },
+      {
+        "name": "native save",
+        "status": "passed"
+      },
+      {
+        "name": "screenshot",
+        "status": "passed"
+      },
+      {
+        "name": "click with coordinate frame",
+        "status": "passed"
+      },
+      {
+        "name": "data watch",
+        "status": "passed"
+      },
+      {
+        "name": "bounded instruction trace",
+        "status": "passed"
+      },
+      {
+        "name": "guarded memory editing",
+        "status": "passed"
+      },
+      {
+        "name": "native restore",
+        "status": "passed"
+      },
+      {
+        "name": "offline temporal interpretation",
+        "status": "passed"
+      },
+      {
+        "name": "restart and export stored evidence",
+        "status": "passed"
+      }
+    ],
+    "native_state_restored": true,
+    "artifacts": {
+      "frame.png": {
+        "sha256": "98407f6e4f260134c5dd33f758a0e44e7e15445ed7df950f92e034f2160df86f",
+        "bytes": 7753
+      },
+      "click.png": {
+        "sha256": "938985ae758291fd3de27e26f6af1a9bb3b3e9ec2095a4a38bb38068e70ea01c",
+        "bytes": 8209
+      },
+      "trace.json": {
+        "sha256": "15f54275f0bd5ece5c4264d33572af44376126ca2bea34f2fb8b2f6317f7a3d5",
+        "bytes": 9748
+      }
+    },
+    "scope": "Authored disposable target; finite debugger acceptance; no game compatibility or timing parity claim",
+    "dependencies": {
+      "capstone": {
+        "status": "available",
+        "version": "5.0.7"
+      },
+      "iced_x86": {
+        "status": "available",
+        "version": null
+      },
+      "lief": {
+        "status": "available",
+        "version": "1.0.0-d05b3499b"
+      },
+      "PIL": {
+        "status": "available",
+        "version": "12.3.0"
+      }
+    },
+    "input_sha256": {
+      "executable": "10bed8dc7571b0fc6c51ea484711b3802d2fb2dc00ba5d9af4d610cb2e2142cb",
+      "kernel": "d8808aa4ca188560da1e6d749dcb930c87a5fd8b11ebff1f3fa6d728af35203d",
+      "initramfs": "91fd618bbeeae33287b17323d939615b7bd94682ec16cb0bbe0eb2ee66a07b5c"
+    },
+    "authored_target_sha256": "2b17b4662f121592670416bbfb95a3a3e8a335446c877606ac00102a81988790",
+    "capabilities": {
+      "backend": "wine-qemu",
+      "architecture": "x86-64",
+      "execution_breakpoints": true,
+      "memory_read": true,
+      "memory_write": true,
+      "instruction_trace": true,
+      "screenshots": true,
+      "mouse": true,
+      "save_states": true,
+      "code_layers": true,
+      "data_watchpoints": true,
+      "register_edit": true,
+      "fast_forward": false,
+      "watchpoint_access": [
+        "r",
+        "w",
+        "rw"
+      ],
+      "watchpoint_mechanism": "Win32 guard pages with single-step rearming",
+      "execution_layer_mechanism": "guarded relocated instructions; 4 KiB target buffer; host overhead",
+      "native_state_format": "QEMU whole-VM migration; private project sidecar"
+    },
+    "observation_contract": {
+      "format": "fdisbull-debug-semantics-1",
+      "backend": "wine-qemu",
+      "execution_breakpoint_stage": "before-instruction",
+      "watchpoint_stage": "before-access",
+      "trace_registers_stage": "before-instruction",
+      "trace_completion": "confirmed completed steps",
+      "timing": "host bounded; stepping has no elapsed-time fidelity",
+      "address_context": "selected process virtual address"
+    },
+    "temporal_promotion": {
+      "version": 2,
+      "parent": 1,
+      "artifact": "4c57b3c4ec5a4c32ab0bd3c1a285bba3",
+      "sha256": "2f8192540672ec7619d5ccca359564537b779c815dbe412d608085245f38952d",
+      "analysis": {
+        "version": 2,
+        "decoded": 32,
+        "attempted": 32,
+        "data_processed": 0,
+        "new_facts": 74,
+        "pending": 6,
+        "pending_code": 2,
+        "pending_data": 3,
+        "entry_complete": false,
+        "pending_seed_phase": true,
+        "passes": 0,
+        "stable": false,
+        "budget_exhausted": true
+      },
+      "temporal": {
+        "version": 2,
+        "temporal": true,
+        "active_layers": [
+          "557e4418bbc747ccb3fce52d0a994dc0"
+        ],
+        "address": 5368721408,
+        "artifact": "4c57b3c4ec5a4c32ab0bd3c1a285bba3",
+        "artifact_sha256": "e01ac2ef6b008287ea2b677027da321706cb70f49d0057cea81a5d112163a4ef",
+        "edits": [],
+        "execution_proven": false,
+        "generation": 1,
+        "identity": {
+          "arch": "x86",
+          "backend": "wine-qemu",
+          "backend_sha256": null,
+          "bits": 64,
+          "captured_at": "2026-10-30T00:35:45.735976+00:00",
+          "cpu_mode": "long64",
+          "delta": 0,
+          "layer_hashes": {
+            "557e4418bbc747ccb3fce52d0a994dc0": "e49f197075e968fe166f60e40adef0e8a998aa679e4ce62a21238494c9655844"
+          },
+          "project_base": "0x140000000",
+          "run": "5f96178a8211494da82db476dc119714",
+          "runtime_base": "0x140000000",
+          "runtime_inputs": {
+            "initramfs": "91fd618bbeeae33287b17323d939615b7bd94682ec16cb0bbe0eb2ee66a07b5c",
+            "kernel": "d8808aa4ca188560da1e6d749dcb930c87a5fd8b11ebff1f3fa6d728af35203d",
+            "qemu": "10bed8dc7571b0fc6c51ea484711b3802d2fb2dc00ba5d9af4d610cb2e2142cb"
+          },
+          "source_sha256": "2b17b4662f121592670416bbfb95a3a3e8a335446c877606ac00102a81988790",
+          "source_version": 1,
+          "source_version_sha256": "6ae774550cf84011e748ede3bd7af509a272cf629cee496a5ab530eea12887cd"
+        },
+        "kind": "runtime-capture",
+        "normalized_sha256": "7adb2a5467d3718ab3b55c6851599af573d4fbeadcd90dd961cfd69d4f94cc9f",
+        "parent": 1,
+        "project_cs": null,
+        "raw_sha256": "7adb2a5467d3718ab3b55c6851599af573d4fbeadcd90dd961cfd69d4f94cc9f",
+        "relocations": [],
+        "run": "5f96178a8211494da82db476dc119714",
+        "scope": "Captured span normalized into project space; all other bytes inherited and unobserved",
+        "size": 6,
+        "source_version": 1,
+        "source_version_sha256": "6ae774550cf84011e748ede3bd7af509a272cf629cee496a5ab530eea12887cd",
+        "view": "execute"
+      }
+    }
+  }
+}

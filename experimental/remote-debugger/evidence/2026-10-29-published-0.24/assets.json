@@ -1,0 +1,62 @@
+{
+  "tag": "v0.24.0",
+  "source_commit": "031b53eb953bfdc1d0e23c0ed49441031bad6e06",
+  "tag_object": "18afd1cdedba9861725dc9cd4f1ea946d24dc52f",
+  "release_id": 428518086,
+  "release_url": "https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.24.0",
+  "published_at": "2026-10-30T00:10:57Z",
+  "readback_at_utc": "2026-10-30T00:11:52.087749+00:00",
+  "published_asset_readback": "passed",
+  "download_authentication": "none",
+  "checksum_entries": 7,
+  "assets": {
+    "fdisbull-0.24.0-linux-x86_64-offline.tar.gz": {
+      "sha256": "a924fdbf4f34c22c79afa0d2481fa347a99a51be375e3d026191871bef5bd4fe",
+      "bytes": 102337700,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.24.0/fdisbull-0.24.0-linux-x86_64-offline.tar.gz",
+      "github_digest": "sha256:a924fdbf4f34c22c79afa0d2481fa347a99a51be375e3d026191871bef5bd4fe"
+    },
+    "fdisbull-0.24.0-linux-x86_64-source-companion.tar": {
+      "sha256": "433db874b67c8fafb5d4b213a2b9eee52b8519f951758a9da996060bd20c9998",
+      "bytes": 106885120,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.24.0/fdisbull-0.24.0-linux-x86_64-source-companion.tar",
+      "github_digest": "sha256:433db874b67c8fafb5d4b213a2b9eee52b8519f951758a9da996060bd20c9998"
+    },
+    "fdisbull-0.24.0-py3-none-any.whl": {
+      "sha256": "ad7d98e0ae60015a2a05168661c2ca33f7f0c71137d076e64aed60328377cd22",
+      "bytes": 567754,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.24.0/fdisbull-0.24.0-py3-none-any.whl",
+      "github_digest": "sha256:ad7d98e0ae60015a2a05168661c2ca33f7f0c71137d076e64aed60328377cd22"
+    },
+    "fdisbull-0.24.0-tool.zip": {
+      "sha256": "2345847af0c2b3bf55e89717cc73f0c904bcaddb2fe7ff0fe1eda0cae06cdbf7",
+      "bytes": 1502474,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.24.0/fdisbull-0.24.0-tool.zip",
+      "github_digest": "sha256:2345847af0c2b3bf55e89717cc73f0c904bcaddb2fe7ff0fe1eda0cae06cdbf7"
+    },
+    "fdisbull-0.24.0.tar.gz": {
+      "sha256": "b6646366af5ecebeef25475b134fa7a6845c31f20c63ac96fe40990c7f5d454b",
+      "bytes": 1251820,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.24.0/fdisbull-0.24.0.tar.gz",
+      "github_digest": "sha256:b6646366af5ecebeef25475b134fa7a6845c31f20c63ac96fe40990c7f5d454b"
+    },
+    "fdisbull_player-0.24.0-py3-none-any.whl": {
+      "sha256": "364f80cb26f2c1a119e5e733b757549a1e40612e38654151253effca5205c718",
+      "bytes": 14496,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.24.0/fdisbull_player-0.24.0-py3-none-any.whl",
+      "github_digest": "sha256:364f80cb26f2c1a119e5e733b757549a1e40612e38654151253effca5205c718"
+    },
+    "SHA256SUMS": {
+      "sha256": "dea51f8381984ed53e5ba95a427989d86f61adc071cb82956c404768af39e38b",
+      "bytes": 702,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.24.0/SHA256SUMS",
+      "github_digest": "sha256:dea51f8381984ed53e5ba95a427989d86f61adc071cb82956c404768af39e38b"
+    },
+    "VERIFICATION-0.24.0.json": {
+      "sha256": "4c793d5c85fac3092aa14e0559c456aba8ae01472ac07765027d257aa7b5572f",
+      "bytes": 26587,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/releases/download/v0.24.0/VERIFICATION-0.24.0.json",
+      "github_digest": "sha256:4c793d5c85fac3092aa14e0559c456aba8ae01472ac07765027d257aa7b5572f"
+    }
+  }
+}
