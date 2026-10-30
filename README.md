@@ -184,6 +184,8 @@ guest and unchanged mounted files; native park saves provide durable resumption.
 An acknowledgement can advance a partial action, but current providers do not
 certify that the original intent is complete. Such batch steps remain paused
 for reconciliation, and aliases cannot be used to resend the original action.
+If a result read fails, read-only reconciliation can verify a saved reply in the
+same guest before the batch continues.
 
 The [funded26k recovery path](docs/DINOPARK_FUNDED_RECOVERY.md) preserves a confirmed
 food purchase across its quarter notice and keeps a paused provider available

@@ -140,10 +140,100 @@ class BatchSession:
                 'next_step': pending['id'] if pending else None, 'steps': deepcopy(self.doc['steps']),
                 'checkpoints': list(self.doc['checkpoints'])}
 
-    def inspect(self):
+    def inspect(self, *, include_history=False):
+        if type(include_history) is not bool:
+            raise ValueError('Invalid batch history selection')
         with self._locked():
             self._read(allow_recovery=True)
-            return self._summary()
+            result = self._summary()
+            if include_history:
+                result.update(history=deepcopy(self.doc['history']), recovery=deepcopy(self.doc['recovery']))
+            return result
+
+    def _classify(self, index, attempt, observation):
+        result = attempt['result']
+        original = self.doc['steps'][index]['attempts'][0].get('result', {})
+        context = observation['context']['id'] if observation else None
+        if result.get('blocked_original_action'):
+            return 'paused', 'original-action-refused'
+        if result['complete'] is not True or result['effects'] == 'unknown' or observation is None:
+            return 'unknown', 'unverified-result'
+        if result['status'] == 'rejected':
+            return 'rejected', 'action-rejected'
+        if result['status'] == 'accepted' or result['effects'] == 'partial':
+            return 'paused', 'continuation-required'
+        if attempt['kind'] == 'continuation' and original.get('effects') in ('partial', 'unknown'):
+            return 'paused', 'original-intent-unconfirmed'
+        if self.plan[index].get('expect_context', context) != context:
+            return 'paused', 'destination-mismatch'
+        return 'completed', None
+
+    def _set_state(self, index, attempt, observation):
+        step = self.doc['steps'][index]
+        step['state'], reason = self._classify(index, attempt, observation)
+        if reason is None:
+            step.pop('reason', None)
+        else:
+            step['reason'] = reason
+
+    def _bound_witness(self, result, observation):
+        witness = result.get('witness') if isinstance(result, dict) else None
+        return bool(observation is not None and isinstance(witness, dict)
+                    and set(witness) == {'session_token', 'context_id', 'context_token'}
+                    and all(isinstance(v, str) and 1 <= len(v) <= 128 for v in witness.values())
+                    and witness['session_token'] == self.doc['session_token'] == observation.get('session_token')
+                    and witness['context_id'] == observation['context']['id']
+                    and witness['context_token'] == observation['context']['token'])
+
+    def reconcile(self):
+        """Read the guest only; repair bookkeeping only from a bound durable reply."""
+        with self._locked():
+            self._read(allow_recovery=True)
+
+            def report(status, reason, operation, **details):
+                result = self._summary()
+                result['reconciliation'] = {'status': status, 'reason': reason,
+                                             'operation': operation, **details}
+                return result
+
+            recovery = self.doc['recovery']
+            index = next((i for i, s in enumerate(self.doc['steps']) if s['state'] != 'completed'), None)
+            try:
+                observation = self._observe()
+            except (OSError, ValueError, EOFError):
+                return report('unresolved', 'observation-failed', 'load' if recovery else 'action')
+            if observation is None:
+                return report('unresolved', 'unqualified-observation', 'load' if recovery else 'action')
+            if recovery:
+                name = recovery.get('name')
+                checkpoint = self.doc['checkpoints'].get(name)
+                result = recovery.get('result')
+                if (recovery.get('operation') != 'load' or not self._bound_witness(result, observation)
+                        or not self._restore_qualified(checkpoint, result, observation)):
+                    return report('unresolved', 'unbound-restore-reply', 'load')
+                self._finish_restore(name, result, reconciled=True)
+                return report('reconciled', 'durable-restore-reply', 'load', checkpoint=name)
+            if index is not None and self.doc['steps'][index]['state'] == 'unknown':
+                step = self.doc['steps'][index]
+                attempt = step['attempts'][-1] if step['attempts'] else {}
+                result = attempt.get('result')
+                if (not isinstance(result, dict) or result.get('complete') is not True
+                        or result.get('status') not in ('success', 'accepted', 'rejected', 'read')
+                        or result.get('effects') not in ('applied-confirmed', 'partial', 'none-confirmed')
+                        or not self._bound_witness(result, observation)):
+                    return report('unresolved', 'unbound-action-reply', 'action', step=step['id'])
+                attempt['reconciliation'] = {'state_before': step['state'], 'reason_before': step.get('reason'),
+                                              'witness': deepcopy(result['witness'])}
+                self._set_state(index, attempt, observation)
+                self._write()
+                return report('reconciled', 'durable-action-reply', 'action', step=step['id'])
+            if self.doc['history']:
+                last = self.doc['history'][-1]
+                checkpoint = self.doc['checkpoints'].get(last['checkpoint'])
+                result = last.get('receipt')
+                if self._bound_witness(result, observation) and self._restore_qualified(checkpoint, result, observation):
+                    return report('verified', 'recorded-restore-reply', 'load', checkpoint=last['checkpoint'])
+            return report('not-needed', 'no-unresolved-readback', 'journal')
 
     def _attempt(self, index, command, kind):
         step = self.doc['steps'][index]
@@ -177,29 +267,7 @@ class BatchSession:
             observation = public_observation(raw)
             context = observation['context']['id'] if observation else None
             attempt.update(state='returned', result=result, context=context)
-            if result.get('blocked_original_action'):
-                step['state'] = 'paused'
-                step['reason'] = 'original-action-refused'
-            elif result['complete'] is not True or result['effects'] == 'unknown' or observation is None:
-                step['state'] = 'unknown'
-                step['reason'] = 'unverified-result'
-            elif result['status'] == 'rejected':
-                step['state'] = 'rejected'
-                step['reason'] = 'action-rejected'
-            elif result['status'] == 'accepted' or result['effects'] == 'partial':
-                step['state'] = 'paused'
-                step['reason'] = 'continuation-required'
-            elif kind == 'continuation' and original.get('effects') in ('partial', 'unknown'):
-                # The continuation's success does not certify the original intent.
-                # No current provider supplies a bound completion certificate.
-                step['state'] = 'paused'
-                step['reason'] = 'original-intent-unconfirmed'
-            elif self.plan[index].get('expect_context', context) != context:
-                step['state'] = 'paused'
-                step['reason'] = 'destination-mismatch'
-            else:
-                step['state'] = 'completed'
-                step.pop('reason', None)
+            self._set_state(index, attempt, observation)
         except Exception as error:
             step['state'] = 'unknown'
             step['reason'] = 'dispatch-interrupted'
@@ -285,19 +353,35 @@ class BatchSession:
             self.doc['recovery'] = {'operation': 'load', 'name': name}
             self._write()
             result = self.player.backend.load(checkpoint['handle'])
+            # The provider's receipt must survive a failed following read.
+            self.doc['recovery']['result'] = deepcopy(result)
+            self._write()
             observation = self._observe()
-            if (not isinstance(result, dict) or result.get('complete') is not True or result.get('status') != 'restored'
-                    or result.get('replay_safe') is not True or observation is None
-                    or observation['context']['id'] != checkpoint['context']):
+            if not self._restore_qualified(checkpoint, result, observation):
                 # Keep the interrupted-recovery latch; a transport/native restore
                 # failure must never authorize subsequent dispatch.
                 self._write()
                 return {'status': 'recovery-incomplete', 'complete': False}
-            self.doc['history'].append({'checkpoint': name, 'superseded': deepcopy(self.doc['steps'][checkpoint['cursor']:])})
-            for step in self.doc['steps'][checkpoint['cursor']:]:
-                step.update(state='pending', attempts=[])
-                step.pop('reason', None)
-            self.player.pending = None
-            self.doc['recovery'] = None
-            self._write()
+            self._finish_restore(name, result)
             return {'status': 'restored', 'complete': True, 'checkpoint': name, 'batch': self._summary()}
+
+    def _restore_qualified(self, checkpoint, result, observation):
+        return bool(isinstance(checkpoint, dict) and checkpoint.get('session_token') == self.doc['session_token']
+                    and type(checkpoint.get('cursor')) is int and 0 <= checkpoint['cursor'] <= len(self.plan)
+                    and isinstance(result, dict) and result.get('complete') is True
+                    and result.get('status') == 'restored' and result.get('replay_safe') is True
+                    and result.get('checkpoint') == checkpoint.get('handle')
+                    and observation is not None and observation['context']['id'] == checkpoint.get('context'))
+
+    def _finish_restore(self, name, result, *, reconciled=False):
+        if len(self.doc['history']) >= 128:
+            raise ValueError('Recovery history budget exhausted')
+        checkpoint = self.doc['checkpoints'][name]
+        self.doc['history'].append({'checkpoint': name, 'superseded': deepcopy(self.doc['steps'][checkpoint['cursor']:]),
+                                    'receipt': deepcopy(result), 'reconciled': reconciled})
+        for step in self.doc['steps'][checkpoint['cursor']:]:
+            step.update(state='pending', attempts=[])
+            step.pop('reason', None)
+        self.player.pending = None
+        self.doc['recovery'] = None
+        self._write()
