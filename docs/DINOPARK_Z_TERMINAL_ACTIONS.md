@@ -90,3 +90,7 @@ The text actions are implemented in `dinopark_terminal.py` and connected to the
 ordinary `ZService` action protocol. No investigator input or caller coordinates
 are required. Recognition profiles and source helpers belong in the PR; the
 original game, screenshots, native states and raw test evidence remain private.
+
+The [original-game batch acceptance](VERIFICATION-DINOPARK-Z-NAMED-TERMINAL-2026-10-30.md)
+records the single-guest menu/cancellation/bank/quit/exit sequence and remaining
+coverage limits.

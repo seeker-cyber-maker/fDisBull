@@ -259,3 +259,8 @@ About, starting/loading through title-menu controls and the affirmative
 save-first path still need separate qualified mappings. Visible prompts,
 native input, committed effects and selected DOS exit retain independent
 postconditions; the additional actions do not certify a complete playthrough.
+
+The [named-action native batch](VERIFICATION-DINOPARK-Z-NAMED-TERMINAL-2026-10-30.md)
+passed through the public Player in one guest. It also records the existing
+pre-entry operating-report refusal and unsupported modal checkpoint creation
+as concrete follow-ups, without upgrading either to unknown game effects.
