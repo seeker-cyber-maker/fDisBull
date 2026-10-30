@@ -101,6 +101,11 @@ unsigned-16 assignment/add/subtract statements into UIL. `verify_block` can
 then compare that UIL with the original ASM model, and UDC can select the
 original native backing. The built-in view shares the ASM decoder.
 
+The [interchangeable engine contract](ASM_C_ENGINE_CONTRACT.md) also supports
+optional Reko and DCC renderers for the same bounded block input and output.
+The native C from each tool remains diagnostic; the normalized statement view
+must pass the declared register proof before use.
+
 An installed Ghidra can be selected explicitly with
 `asm_to_c(lift, engine='ghidra', analyze_headless='/path/to/analyzeHeadless',
 java_home='/path/to/jdk')`. This optional path starts a bounded headless
@@ -128,25 +133,25 @@ proof = verify_block(lift, candidate['uil'])
 Only an established `equivalent_under_assumptions` result qualifies the
 candidate for this bounded interface.
 
-Both views retain the same register-only contract. Flags, memory, control
+All views retain the same register-only contract. Flags, memory, control
 flow, ABI, timing, signed undefined behavior, pointer aliasing and general
-function recovery remain outside it. Neither renderer is independent source
+function recovery remain outside it. No renderer is independent source
 evidence or a native parity check. The C profile declares uint16_t operands
 and an int width of at least 32 bits. `udl-lift-asm`, `udl-lift-c` and
 `udl-verify` expose the original bounded readers through the CLI; `udl-verify`
 prints a compact verdict, while `--output FILE` retains complete proof
 specifications.
 
-Run the checkout-only [engine comparison](../examples/recovery/benchmark_asm_c_engines.py)
-on authored blocks with an explicit Ghidra path. It records the C outputs,
-qualification result and per-call wall times. A fresh Ghidra process is timed
-against an in-process built-in call; the observed request latency ratio is
-useful for that deployment choice, not a pure algorithm speed ratio. The
-benchmark does not measure game reconstruction quality or analyst time.
-Ghidra's real-mode decompiler may fail on an admitted block; such runs are
-reported as unknown comparisons rather than replaced with built-in output.
-The [measured methodology and result](GHIDRA_ASM_C_COMPARISON.md) document the
-current local comparison.
+Run the checkout-only [four-engine comparison](../examples/recovery/benchmark_all_asm_c_engines.py)
+on authored blocks with explicit paths for installed external tools. It
+records qualification and per-call wall times only for normalized views that
+pass the same bounded proof. Each external request starts a fresh process;
+the built-in renderer runs in the warm Python process. These are deployment
+request times, not pure algorithm speed or game reconstruction quality.
+Unavailable, failed or unqualified outputs receive no accepted timing and
+never fall back to another engine. The [engine contract and measured result](ASM_C_ENGINE_CONTRACT.md)
+give the current four-engine scope; the earlier [Ghidra-only method](GHIDRA_ASM_C_COMPARISON.md)
+retains its separate run receipt.
 
 See [the layer-by-layer protocol](UDC_TESTING.md) and
 [0.23 verification](VERIFICATION-0.23.md) for the observed scope.

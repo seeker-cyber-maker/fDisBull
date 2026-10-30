@@ -1,5 +1,7 @@
 # Optional Ghidra ASM-to-C comparison — 2026-10-30
 
+This is the earlier two-engine trial; the later
+[four-engine contract and run](ASM_C_ENGINE_CONTRACT.md) add Reko and DCC.
 The built-in `asm_to_c` renderer and the optional `engine='ghidra'` renderer
 accept the same bounded x86-16 register block lift. The Ghidra path imports the
 source bytes inside a recorded synthetic DOS MZ header with a `RET` terminator,

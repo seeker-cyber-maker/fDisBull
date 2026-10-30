@@ -4,11 +4,12 @@ The initial recommendation was to evaluate **Reko first** for 16-bit DOS, use
 **Ghidra as an independent comparison**, and treat **DCC as a historical
 baseline**. That was a candidate review against the fixed 0.17.0 source tag;
 it did not alter that release or qualify a decompiler against a private game.
-The current [bounded C route](UDC_DOS.md#c-route) adds an optional Ghidra-backed
-renderer for the existing straight-line register profile. It does not provide
-general function decompilation, source recovery or native parity. Its Ghidra C
-listing remains diagnostic evidence distinct from the normalized restricted C
-statements used for UIL comparison.
+The current [bounded C route](UDC_DOS.md#c-route) has interchangeable
+Ghidra, Reko and DCC adapters alongside the built-in renderer for the
+straight-line register profile. Their [common contract](ASM_C_ENGINE_CONTRACT.md)
+does not provide general function decompilation, source recovery or native
+parity. Native C listings remain diagnostic evidence distinct from the
+normalized restricted statements used for UIL comparison.
 The [measured Ghidra comparison](GHIDRA_ASM_C_COMPARISON.md) records this
 integration's authored-block behavior and its observed startup cost.
 The later [cross-decompiler trial](DOS_C_DECOMPILER_COMPARISON.md) compares
