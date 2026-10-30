@@ -30,6 +30,11 @@ REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scrip
                        'src/fdisbull/skills/fdisbull-investigate/references/semantic-contracts.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/formats-and-media.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/udl-uil-udc.md')
+GAMEFAQS_SKILL_FILES = tuple('src/fdisbull/skills/write-gamefaqs-guide/'+name for name in (
+    'SKILL.md', 'references/evidence-and-provenance.md', 'references/guide-structure.md',
+    'references/technical-mechanics.md', 'references/source-examples.md',
+))
+REQUIRED_SOURCE_FILES += GAMEFAQS_SKILL_FILES
 UDC_EVIDENCE_FILES = {
     'docs/evidence/udc-2026-10-29/dino.json',
     'docs/evidence/udc-2026-10-29/zork.json',
@@ -92,6 +97,15 @@ def test_distribution_check_requires_runtime_navigation_reference(tmp_path):
 def test_distribution_check_requires_agent_onboarding_resources(tmp_path,required):
     check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
     archive=tmp_path/'fdisbull-missing-agent-resource.zip'
+    source_archive(archive,tuple(path for path in REQUIRED_SOURCE_FILES if path!=required))
+    with pytest.raises(ValueError,match=re.escape(required)):
+        check(archive)
+
+
+@pytest.mark.parametrize('required',GAMEFAQS_SKILL_FILES)
+def test_distribution_check_requires_complete_gamefaqs_skill(tmp_path,required):
+    check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+    archive=tmp_path/'fdisbull-missing-gamefaqs-resource.zip'
     source_archive(archive,tuple(path for path in REQUIRED_SOURCE_FILES if path!=required))
     with pytest.raises(ValueError,match=re.escape(required)):
         check(archive)

@@ -20,6 +20,23 @@ AGENT_SKILL_GUIDES = {
     'references/formats-and-media.md': 'Qualify containers, executable mappings, release differences and valid media reduction',
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
+DEFAULT_AGENT_SKILL = 'fdisbull-investigate'
+AGENT_SKILLS = {
+    DEFAULT_AGENT_SKILL: {
+        'purpose': 'Investigate programs, qualify evidence and recover game behavior',
+        'guides': AGENT_SKILL_GUIDES,
+    },
+    'write-gamefaqs-guide': {
+        'purpose': 'Write a human-readable game knowledge review with qualified walkthrough and mechanics claims',
+        'guides': {
+            'SKILL.md': 'Start here: scope, evidence and workflow for a readable game guide',
+            'references/evidence-and-provenance.md': 'Distinguish recovered facts, observations, external sources and unknowns',
+            'references/guide-structure.md': 'Organize routes, reference sections, navigation, spoilers and text exports',
+            'references/technical-mechanics.md': 'Explain algorithms, numeric semantics and worked examples with evidence',
+            'references/source-examples.md': 'Inspect the guide examples and source limitations motivating these requirements',
+        },
+    },
+}
 
 METHODS = {
     'output-info':'Inspect an immutable private output artifact; artifact',
@@ -60,7 +77,7 @@ METHODS = {
     'debug-keyboard-down':'Queue make and return an owned physical key lease; run,key',
     'debug-keyboard-up':'Consume an owned lease and queue physical break; run,lease',
     'debug-scene-navigation':'Check an actor footprint in explicit game-space geometry; run,scene,point,[footprint]',
-    'agent-skill':'Discover or read the bundled investigation skill; [index,reference]; no project required',
+    'agent-skill':'Discover or read bundled skills; [skill,list,index,reference]; no project required',
     'debug-save-scene':'Save a versioned scene manifest with persistent objects and screenshot evidence; name,definition,[parent,version,author]',
     'debug-scenes':'List current scene revisions; [version]',
     'debug-scene-info':'Read a scene manifest, evidence and persistent object identities; scene,[version]',
@@ -242,20 +259,32 @@ def invoke(method, params, debugger=None):
         if p:raise ValueError('unknown output-export parameter')
         return store.export(artifact,output)
     if method=='agent-skill':
+        skill_supplied='skill' in p
+        skill=p.pop('skill',DEFAULT_AGENT_SKILL)
+        listing=p.pop('list',False)
         reference=p.pop('reference',None)
         index=p.pop('index',False)
-        if p:raise ValueError('agent-skill accepts only index or reference')
+        if p:raise ValueError('agent-skill accepts only skill, list, index or reference')
+        if not isinstance(skill,str) or skill not in AGENT_SKILLS:raise ValueError('unknown bundled skill name')
+        if type(listing) is not bool:raise ValueError('list must be boolean')
         if type(index) is not bool:raise ValueError('index must be boolean')
+        if listing and (skill_supplied or index or reference is not None):
+            raise ValueError('list cannot be combined with skill, index or reference')
         if index and reference is not None:raise ValueError('index and reference are mutually exclusive')
+        if listing:
+            return {'format':'fdisbull-skill-catalog-1','default_skill':DEFAULT_AGENT_SKILL,
+                    'skills':[{'name':name,'purpose':item['purpose'],'entrypoint':'SKILL.md'}
+                              for name,item in AGENT_SKILLS.items()]}
+        guides=AGENT_SKILLS[skill]['guides']
         if index:
-            return {'name':'fdisbull-investigate','format':'fdisbull-skill-index-1','entrypoint':'SKILL.md',
-                    'guides':[{'reference':name,'purpose':purpose} for name,purpose in AGENT_SKILL_GUIDES.items()]}
-        if reference is not None and (not isinstance(reference,str) or reference not in AGENT_SKILL_RESOURCES):
+            return {'name':skill,'format':'fdisbull-skill-index-1','entrypoint':'SKILL.md',
+                    'guides':[{'reference':name,'purpose':purpose} for name,purpose in guides.items()]}
+        if reference is not None and (not isinstance(reference,str) or reference not in guides):
             raise ValueError('unknown bundled skill reference')
         from importlib.resources import files
-        root=files('fdisbull').joinpath('skills/fdisbull-investigate')
-        resources=(reference,) if reference is not None else AGENT_SKILL_RESOURCES
-        return {'name':'fdisbull-investigate','files':{n:root.joinpath(n).read_text() for n in resources}}
+        root=files('fdisbull').joinpath('skills',skill)
+        resources=(reference,) if reference is not None else tuple(guides)
+        return {'name':skill,'files':{n:root.joinpath(n).read_text(encoding='utf-8') for n in resources}}
     if method=='omf-catalog':
         from .omf_catalog import omf_signatures
         path=Path(p.pop('path'))
@@ -519,9 +548,11 @@ def parser():
     c.add_argument('lift');c.add_argument('program');c.add_argument('--timeout-ms',type=int,default=1000)
     c.add_argument('--output',help='Save the full proof specifications; stdout stays compact')
     c=sub.add_parser('agent-skill',help=METHODS['agent-skill'])
+    c.add_argument('--skill',choices=tuple(AGENT_SKILLS),help='Select a bundled skill (default: fdisbull-investigate)')
     g=c.add_mutually_exclusive_group()
-    g.add_argument('--reference',choices=AGENT_SKILL_RESOURCES,help='Read one bundled file instead of the complete skill')
+    g.add_argument('--reference',help='Read one allowlisted file from the selected skill; use --index for paths')
     g.add_argument('--index',action='store_true',help='List guide purposes without fetching any guide contents')
+    g.add_argument('--list',action='store_true',help='List bundled skills without fetching their contents')
     for name in ('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations',
                  'debug-scene-observation','debug-export-scenes','debug-import-scenes'):
         c=sub.add_parser(name,help=METHODS[name]);c.add_argument('project')

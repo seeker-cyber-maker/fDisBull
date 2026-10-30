@@ -161,6 +161,9 @@ jobs:
           python scripts/check_agent_skill.py --python "$kit_install/bin/python" \
             --output "$RUNNER_TEMP/fdisbull-native-skill-gate.json"
           cp "$RUNNER_TEMP/fdisbull-native-skill-gate.json" native-evidence/offline/agent-skill.json
+          python scripts/check_agent_skill.py --python "$kit_install/bin/python" --skill write-gamefaqs-guide \
+            --output "$RUNNER_TEMP/fdisbull-native-guide-skill-gate.json"
+          cp "$RUNNER_TEMP/fdisbull-native-guide-skill-gate.json" native-evidence/offline/guide-skill.json
           sha256sum .native/offline/output/* > native-evidence/offline/SHA256SUMS
       - uses: actions/upload-artifact@v4
         if: success() && matrix.profile == 'layers-backend'

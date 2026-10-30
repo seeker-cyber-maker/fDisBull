@@ -4,21 +4,29 @@ Use this page to find the right fDisBull interface for a task. Replace every
 example path with a path selected by the user. The Python distribution does not
 include a native emulator, game files, saved states or project databases.
 
-## Discover commands and the bundled skill
+## Discover commands and bundled skills
 
 ```text
 fdisbull --version
 fdisbull methods
+fdisbull agent-skill --list
 fdisbull agent-skill --index
 fdisbull agent-skill --reference SKILL.md
+fdisbull agent-skill --skill write-gamefaqs-guide --index
+fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md
 ```
 
 `methods` prints the JSON method names and their parameter summaries.
-`agent-skill --index` lists each guide's purpose without transferring its text.
-Choose the relevant guide, then use `--reference` to retrieve it.
-`agent-skill` returns the packaged investigation instructions and references as
-JSON; it reads no project and does not register or install a skill into an
-agent's own discovery directory. Fetch a single resource when needed:
+`agent-skill --list` returns the small skill catalogue. Use `--skill` to select
+one, then `--index` to list its references and their purposes without fetching
+their text. Choose a reference and retrieve it with `--reference`.
+Omitting `--skill` preserves the `fdisbull-investigate` selection and its
+existing response format. `--list` cannot be combined with `--skill`, `--index`
+or `--reference`; `--index` and `--reference` are mutually exclusive.
+
+`agent-skill` returns the selected packaged instructions and references as JSON.
+It reads no project and does not register or install a skill into an agent's
+own discovery directory. Fetch a single resource when needed:
 
 ```text
 fdisbull agent-skill --reference references/workflows.md
@@ -28,10 +36,18 @@ fdisbull agent-skill --reference references/udl-uil-udc.md
 fdisbull agent-skill --reference references/recovery-research.md
 fdisbull agent-skill --reference references/semantic-contracts.md
 fdisbull agent-skill --reference references/formats-and-media.md
+fdisbull agent-skill --skill write-gamefaqs-guide --reference references/evidence-and-provenance.md
 ```
 
 With a source checkout, the bundled files are under
-`src/fdisbull/skills/fdisbull-investigate/`. The current JSON protocol has a
+`src/fdisbull/skills/fdisbull-investigate/` and
+`src/fdisbull/skills/write-gamefaqs-guide/`. The same projectless JSON method
+accepts `{"method":"agent-skill","params":{"list":true}}` or
+`{"method":"agent-skill","params":{"skill":"write-gamefaqs-guide","reference":"SKILL.md"}}`.
+Skill names and reference paths are restricted to the published catalogue and
+the selected skill's index.
+
+The current JSON protocol has a
 one-shot `request` command and a retained `serve`/`debug` session; a one-shot
 request cannot keep a live emulator attached.
 
@@ -40,6 +56,20 @@ artifact reference. Prefer the index and one selected guide for routine work;
 use the output retrieval commands below when a complete export is needed.
 The semantic-contract guide connects intent, effects, time and projection loss;
 the formats/media guide covers input mapping and qualified media reduction.
+
+Use `write-gamefaqs-guide` to turn established investigation results into a
+human-readable review, route or mechanics reference. It preserves release
+boundaries, attributes external sources, and separates supported knowledge from
+unknowns. Its templates and research guidance do not implement a game-guide
+generator, play through a game, or submit anything to GameFAQs. Return to the
+investigation skill for unresolved behavior that materially affects the review.
+
+The installed-package gate supports the same selection. Its default remains
+the investigation skill:
+
+```text
+python scripts/check_agent_skill.py --python /path/to/installed/python --skill write-gamefaqs-guide --output /private/guide-skill-receipt.json
+```
 
 ## Choose a route
 
