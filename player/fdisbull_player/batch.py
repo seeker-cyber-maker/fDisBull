@@ -100,6 +100,7 @@ class BatchSession:
         for step in self.doc['steps']:
             if step['state'] == 'running':
                 step['state'] = 'unknown'
+                step['reason'] = 'dispatch-interrupted'
                 interrupted = True
                 if step['attempts']:
                     step['attempts'][-1].update(state='unknown', error_type='InterruptedDispatch')
@@ -135,6 +136,7 @@ class BatchSession:
         pending = next((s for s in self.doc['steps'] if s['state'] != 'completed'), None)
         return {'status': 'recovery-incomplete' if self.doc['recovery'] else pending['state'] if pending else 'completed',
                 'complete': pending is None and not self.doc['recovery'],
+                'reason': pending.get('reason') if pending else None,
                 'next_step': pending['id'] if pending else None, 'steps': deepcopy(self.doc['steps']),
                 'checkpoints': list(self.doc['checkpoints'])}
 
@@ -152,6 +154,7 @@ class BatchSession:
         if self._observe() is None:
             raise ValueError('Batch scene is unqualified; no command was sent')
         step['state'] = 'running'
+        step.pop('reason', None)
         attempt = {'command': command, 'kind': kind, 'state': 'dispatching'}
         step['attempts'].append(attempt)
         self._write()
@@ -170,16 +173,22 @@ class BatchSession:
             attempt.update(state='returned', result=result, context=context)
             if result['complete'] is not True or result['effects'] == 'unknown' or observation is None:
                 step['state'] = 'unknown'
+                step['reason'] = 'unverified-result'
             elif result['status'] == 'rejected':
                 step['state'] = 'rejected'
+                step['reason'] = 'action-rejected'
             elif result['status'] == 'accepted' or result['effects'] == 'partial':
                 step['state'] = 'paused'
+                step['reason'] = 'continuation-required'
             elif self.plan[index].get('expect_context', context) != context:
                 step['state'] = 'paused'
+                step['reason'] = 'destination-mismatch'
             else:
                 step['state'] = 'completed'
+                step.pop('reason', None)
         except Exception as error:
             step['state'] = 'unknown'
+            step['reason'] = 'dispatch-interrupted'
             attempt.update(state='unknown', error_type=type(error).__name__)
         self._write()
 
@@ -263,6 +272,7 @@ class BatchSession:
             self.doc['history'].append({'checkpoint': name, 'superseded': deepcopy(self.doc['steps'][checkpoint['cursor']:])})
             for step in self.doc['steps'][checkpoint['cursor']:]:
                 step.update(state='pending', attempts=[])
+                step.pop('reason', None)
             self.player.pending = None
             self.doc['recovery'] = None
             self._write()

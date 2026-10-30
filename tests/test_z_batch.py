@@ -73,6 +73,7 @@ def test_declared_continuation_sends_a_new_action_once_and_never_repeats_origina
              'continuations': {'courtyard': 'use key on gate'}}, PLAN[2]]
     batch = BatchSession(Player(backend), tmp_path / 'batch.json', plan)
     assert batch.run()['status'] == 'paused'
+    assert batch.inspect()['reason'] == 'continuation-required'
     assert batch.run()['status'] == 'paused'
     assert len(backend.inputs) == 1
     assert batch.resume()['complete'] is True
@@ -137,6 +138,17 @@ def test_bad_command_is_a_rejection_and_never_skipped_as_a_successful_read(tmp_p
     batch = BatchSession(Player(backend), tmp_path / 'batch.json', [{'id': 'bad', 'command': 'buy nonexistent'}])
     assert batch.run()['status'] == 'rejected'
     assert backend.inputs == []
+
+
+def test_committed_effect_with_unmet_destination_has_distinct_pause_reason(tmp_path):
+    backend = CountedBackend()
+    batch = BatchSession(Player(backend), tmp_path / 'batch.json',
+                         [{'id':'take','command':'take key','expect_context':'garden'}])
+    result = batch.run()
+    assert result['status'] == 'paused' and result['reason'] == 'destination-mismatch'
+    assert result['steps'][0]['attempts'][0]['result']['effects'] == 'applied-confirmed'
+    assert batch.resume()['reason'] == 'destination-mismatch'
+    assert len(backend.inputs) == 1
 
 
 def test_repeated_partial_continuation_and_invalid_resume_budget_send_no_extra_input(tmp_path):

@@ -19,7 +19,7 @@ def wheel(path, name, version):
             for item in {'__init__.py'} | guard.REQUIRED_PE_RESOURCES | guard.REQUIRED_KNOWLEDGE_RESOURCES:
                 z.writestr('fdisbull/'+item, '')
         if name == 'fdisbull-player':
-            for module in ('__init__.py','__main__.py','player.py','runtime.py','live.py'):
+            for module in ('__init__.py','__main__.py','player.py','runtime.py','live.py','batch.py'):
                 z.writestr('fdisbull_player/'+module, '')
 
 

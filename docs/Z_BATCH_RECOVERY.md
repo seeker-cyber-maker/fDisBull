@@ -41,6 +41,9 @@ that context. Each declared continuation command can run once per step. Its
 result remains a separate attempt. `expect_context` is a goal: acknowledging a
 notice on the street does not complete a goal requiring arrival in the park.
 The plan must explicitly authorize any additional travel as a new intent.
+Pause reasons distinguish `continuation-required` from `destination-mismatch`;
+the latter can retain a confirmed effect even though the requested scene goal
+was not met. An interrupted dispatch is `unknown`, never a pending notice.
 
 `Player.execute_result(command)` exposes `status`, `complete`, `effects`,
 `action_sent`, public text and optional provider continuation/session-handoff
