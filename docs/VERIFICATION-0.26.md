@@ -15,7 +15,10 @@ part of this development turn.
   106 checks with one optional native skip. Service/main lifecycle tests use a
   simulated native boundary; they do not by themselves qualify the actual
   `run_session` recovery callback. Its separately reported installed-game
-  acceptance remains bound to its original runtime.
+  acceptance remains bound to its original runtime. The later `b5ff173`
+  follow-up changes only three documents and reports additional EOF and
+  repeated-failure cohorts on its separately pinned runtime. It is retained as
+  attributed evidence, not fresh combined acceptance.
 - PR #28: `bfcdfe8eb5a030cb6f0e917067690fe2f7e4d03c`. Three integration
   conflicts were resolved by retaining both evidence additions and both the GOG
   and Z-machine standalone CLI methods. Independent private review passed 318
