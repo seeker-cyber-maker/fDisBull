@@ -27,13 +27,16 @@ AGENT_SKILLS = {
         'guides': AGENT_SKILL_GUIDES,
     },
     'write-gamefaqs-guide': {
-        'purpose': 'Write a human-readable game knowledge review with qualified walkthrough and mechanics claims',
+        'purpose': 'Write a reversing-first game review covering mechanics, discoveries, routes, formats and engine reuse',
         'guides': {
             'SKILL.md': 'Start here: scope, evidence and workflow for a readable game guide',
             'references/evidence-and-provenance.md': 'Distinguish recovered facts, observations, external sources and unknowns',
             'references/guide-structure.md': 'Organize routes, reference sections, navigation, spoilers and text exports',
             'references/technical-mechanics.md': 'Explain algorithms, numeric semantics and worked examples with evidence',
-            'references/source-examples.md': 'Inspect the guide examples and source limitations motivating these requirements',
+            'references/routes-and-discoveries.md': 'Cover unused code, bugs, cheats, alternate routes, speedrun rules and completion goals',
+            'references/formats-and-engine-reuse.md': 'Specify recovered files and media; qualify interpreters and cross-game reuse',
+            'references/engine-source-examples.md': 'External engine/layout examples: read only when the information policy permits game facts',
+            'references/source-examples.md': 'External guide examples and rationale: check the information policy before reading',
         },
     },
 }

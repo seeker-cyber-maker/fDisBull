@@ -40,6 +40,9 @@ REQUIRED_KNOWLEDGE_RESOURCES |= {
     "skills/write-gamefaqs-guide/references/evidence-and-provenance.md",
     "skills/write-gamefaqs-guide/references/guide-structure.md",
     "skills/write-gamefaqs-guide/references/technical-mechanics.md",
+    "skills/write-gamefaqs-guide/references/routes-and-discoveries.md",
+    "skills/write-gamefaqs-guide/references/formats-and-engine-reuse.md",
+    "skills/write-gamefaqs-guide/references/engine-source-examples.md",
     "skills/write-gamefaqs-guide/references/source-examples.md",
 }
 

@@ -83,10 +83,15 @@ delayed, partial and persistent outcomes. Distinguish native game saves from
 emulator checkpoints and authored model states. Record assistance, altered
 memory, debug features and information unavailable to an ordinary player.
 
-An unused or unreachable resource belongs in a qualified technical appendix,
-not an instruction to collect an item. Absence from a bounded analysis is not
-proof of absence from the game. A shared decoder, table or source port remains
-one lineage even when several tools or agents repeat it.
+Keep recovered but unused or not-yet-reachable code and resources in a qualified
+discovery catalogue or technical appendix; do not omit them from the review.
+Distinguish present bytes, understood behavior, conditional reachability and
+observed use. A no-xref result or absence from a bounded traversal does not prove
+dead code, especially with indirect dispatch or unexamined scripts. Debug-only,
+modified-state and ordinary-input witnesses have different scopes. Only promise
+an obtainable item or actionable secret when its relevant access conditions are
+supported. A shared decoder, table or source port remains one lineage even when
+several tools or agents repeat it.
 
 ## Routes and coverage
 
@@ -100,6 +105,10 @@ Define what a heading promises before calling it complete:
 | Supported completion route | Start state, target release/settings, connected progression, relevant guards/resources, terminal success and how the route was qualified. |
 | Full-score/no-damage route | Additional score, optional-action or damage obligations and evidence for them. |
 | Optimal/shortest route | Objective, allowed actions, search domain and evidence of optimality, not only one successful short sequence. |
+| Category-legal speedrun route | Named category and dated rules, relevant release/platform/settings and each technique's eligibility; unresolved rules stay unresolved. |
+| Completionist review | Defined goals and obtainable inventory, missables and exclusive branches, single-run versus multi-run coverage, and separately labelled archival or inaccessible material. |
+| Recovered format specification | Applicable file/resource variants, layout and invariants, decoding/consumer evidence and unknown fields; structural validity is separate from game acceptance. |
+| Cross-game reuse claim | Specific source/target releases and reusable layer, checked correspondence, version differences and game-specific facts still requiring examination. |
 | Complete catalogue | Named inventory and denominator, inclusion criteria and accounted-for omissions. |
 
 Execution is one way to qualify a route, not a prerequisite for writing a static
@@ -122,6 +131,10 @@ input, observed result, score/resource delta, save/checkpoint reference,
 timing/settings and divergence. Separate failed attempts from successful ones.
 Keep the ordinary player path distinct from a shortcut used to inspect later
 content.
+
+For route, bug and archival-content distinctions, use
+[Routes and discoveries](routes-and-discoveries.md). For format coverage and
+engine correspondence, use [Formats and engine reuse](formats-and-engine-reuse.md).
 
 ## Earlier generated guides and source ports
 
