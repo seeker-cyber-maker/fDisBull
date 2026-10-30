@@ -249,6 +249,21 @@ def food_draft_state(debug):
     return quantity, {'balances': cash, 'resources': resources, 'pending_small_feeders': pending}
 
 
+def notice_return_frame(text, label, views):
+    """Observe a completed destination without replaying the notice input."""
+    for attempt in range(13):
+        frame, image = take_frame(text.project, text.debug, label)
+        found = [view for view in views if matches(image, text.patterns[view])]
+        notices = [n for n in ('parking_hint', 'quarter_popup') if matches(image, text.patterns[n])]
+        text.event({'phase': 'notice_return_observation', 'frame': frame,
+                    'matched_views': found, 'remaining_notices': notices, 'following_input': 'not_sent'})
+        if len(found) == 1 and not notices:
+            return frame, image
+        if attempt < 12:
+            run_guest(text.debug, 500)
+    return frame, image
+
+
 def wait_for_office(project, debug, patterns):
     # A slow or blank frame is not readiness. Wait without replaying any input.
     for attempt in range(13):
@@ -902,13 +917,14 @@ class TextScene:
         if result.get('accepted') is not True or result.get('delivery') != 'queued':
             return 'Notice input was not confirmed; the outcome is unknown. Do not retry automatically.'
         run_guest(self.debug, 1200)
-        frame, image = take_frame(self.project, self.debug, 'notice-after')
+        view = 'park_view' if self.current == 'park' or entering else 'street_view'
+        views = (view, 'shop_street') if entering else (view,)
+        frame, image = notice_return_frame(self, 'notice-after', views)
         remaining = [n for n in ('quarter_popup', 'parking_hint') if matches(image, self.patterns[n])]
         if remaining:
             self.event({'phase': 'indeterminate', 'command': 'acknowledge notice',
                         'remaining_notices': remaining, 'frame': frame, 'persistence': 'unknown'})
             return 'A notice remains after input; the outcome is unknown. Do not retry automatically.'
-        view = 'park_view' if self.current == 'park' or entering else 'street_view'
         returned_to_street = entering and matches(image, self.patterns['shop_street'])
         if not matches(image, self.patterns[view]) and not returned_to_street:
             self.event({'phase': 'indeterminate', 'command': 'acknowledge notice',
@@ -959,7 +975,7 @@ class TextScene:
         if result.get('accepted') is not True or result.get('delivery') != 'queued':
             return 'Notice input outcome unknown. Do not retry automatically.'
         run_guest(self.debug, 1200)
-        frame, image = take_frame(self.project, self.debug, 'food-notice-after')
+        frame, image = notice_return_frame(self, 'food-notice-after', ('dino_diner', 'food_menu', 'shop_street'))
         views = [n for n in ('dino_diner', 'food_menu', 'shop_street')
                  if matches(image, self.patterns[n])]
         if (len(views) != 1 or any(matches(image, self.patterns[n]) for n in

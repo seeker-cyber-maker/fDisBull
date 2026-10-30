@@ -243,7 +243,8 @@ def test_parking_acknowledgment_never_submits_or_replays_food_order(monkeypatch,
     text.debug = SimpleNamespace(
         keyboard_press=lambda key: (inputs.append(key) or {'accepted': True, 'delivery': 'queued'}),
         scene_assert=lambda scene, **kw: assertions.append((scene, kw)))
-    frames = iter(['parking_hint', 'parking_hint', after])
+    from itertools import chain, repeat
+    frames = chain(['parking_hint', 'parking_hint'], repeat(after))
     monkeypatch.setattr(scenes, 'take_frame', lambda *a: ({'artifact': 'retained'}, next(frames)))
     monkeypatch.setattr(scenes, 'matches', lambda image, pattern: image == pattern)
     monkeypatch.setattr(scenes, 'run_guest', lambda *a: None)
@@ -310,3 +311,17 @@ def test_food_draft_resolves_applied_effect_without_guessing(monkeypatch, cash, 
     else:
         actual, evidence = scenes.food_draft_state(object())
         assert actual == count and evidence['pending_small_feeders'] == pending
+
+
+def test_notice_return_waits_for_the_scene_without_sending_another_input(monkeypatch):
+    from types import SimpleNamespace
+    from fdisbull import dinopark_scenes as scenes
+    text = SimpleNamespace(project=object(), debug=object(), event=lambda event: None,
+                           patterns={n: n for n in ('park_view', 'shop_street', 'parking_hint', 'quarter_popup')})
+    images = iter(['unqualified-transition'] * 4 + ['park_view'])
+    elapsed = []
+    monkeypatch.setattr(scenes, 'take_frame', lambda *a: ({'artifact': 'original-frame'}, next(images)))
+    monkeypatch.setattr(scenes, 'matches', lambda image, pattern: image == pattern)
+    monkeypatch.setattr(scenes, 'run_guest', lambda debug, ms: elapsed.append(ms))
+    frame, image = scenes.notice_return_frame(text, 'return', ('park_view', 'shop_street'))
+    assert image == 'park_view' and elapsed == [500, 500, 500, 500]
