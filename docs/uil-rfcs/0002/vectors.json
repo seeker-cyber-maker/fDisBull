@@ -1,0 +1,128 @@
+{
+  "purpose": "authored literal design vectors, not a UIL grammar or executed conformance of the proposed system",
+  "roman_value_codec": {
+    "domain": [
+      "III",
+      "IV"
+    ],
+    "pairs": [
+      {
+        "encoded": "III",
+        "value": 3
+      },
+      {
+        "encoded": "IV",
+        "value": 4
+      }
+    ]
+  },
+  "dispatch": {
+    "input_domain": "u8",
+    "number_rule": "(3*x + 7) mod 256",
+    "counter_rules": {
+      "before": "(before + 7) mod 65536",
+      "after": "(after + 11) mod 65536",
+      "calls": "(calls + 1) mod 65536"
+    },
+    "cases": [
+      {
+        "id": "lower",
+        "x": 40,
+        "number": 127,
+        "pre": 10,
+        "post": 10
+      },
+      {
+        "id": "equal",
+        "x": 211,
+        "number": 128,
+        "pre": 20,
+        "post": 30
+      },
+      {
+        "id": "higher",
+        "x": 126,
+        "number": 129,
+        "pre": 20,
+        "post": 20
+      }
+    ],
+    "semantic_edit": {
+      "post_equal_outcome": 31,
+      "fixed_native_definitions": "reject unsupported backing",
+      "generic_js": "emit 31",
+      "equivalent_to_original_post": false
+    }
+  },
+  "polyglot": {
+    "input_domain": "u8 x u8",
+    "rule": "((((3*x + 7) mod 256) + k) mod 256) XOR 165",
+    "cases": [
+      {
+        "x": 0,
+        "k": 0,
+        "fromC": 7,
+        "vector": [
+          7,
+          0
+        ],
+        "exportedByte": 7,
+        "result": 162
+      },
+      {
+        "x": 40,
+        "k": 1,
+        "fromC": 127,
+        "vector": [
+          127,
+          1
+        ],
+        "exportedByte": 128,
+        "result": 37
+      },
+      {
+        "x": 211,
+        "k": 128,
+        "fromC": 128,
+        "vector": [
+          128,
+          128
+        ],
+        "exportedByte": 0,
+        "result": 165
+      },
+      {
+        "x": 82,
+        "k": 5,
+        "fromC": 253,
+        "vector": [
+          253,
+          5
+        ],
+        "exportedByte": 2,
+        "result": 167
+      },
+      {
+        "x": 255,
+        "k": 255,
+        "fromC": 4,
+        "vector": [
+          4,
+          255
+        ],
+        "exportedByte": 3,
+        "result": 166
+      }
+    ],
+    "invalid_inputs": [
+      -1,
+      256,
+      1.5,
+      true,
+      "4",
+      null
+    ],
+    "invalid_policy": "reject before coercion or effects"
+  },
+  "scope": "finite example values; broader acceptance cases R01-R18 require their own implementation and evidence"
+}
