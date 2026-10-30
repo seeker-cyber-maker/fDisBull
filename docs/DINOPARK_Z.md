@@ -166,15 +166,20 @@ the fresh borrow-timeout finding and retest. The older office-entry failure's
 exact cause remains unproved. A known quarter notice can be exposed as its own
 context with only its acknowledgment action. A verified quarter pause returns
 `accepted` with partial effects, rather than claiming full completion or an
-unknown effect. Use `acknowledge notice` to continue. During park entry, the
-notice has its own `park-entry.quarter-notice` context; the park destination is
-qualified after dismissal. The original may return to the street before entry
+unknown effect. Quarter notices and recognized parking advice have explicit
+acknowledgment contexts. During food-menu interruption, Z reports that no order was submitted;
+after acknowledgment a new purchase intent may continue. Use `acknowledge notice`
+to continue. During park entry, a notice has its own
+`park-entry.quarter-notice` or `park-entry.parking-notice` context. After one
+acknowledgment input, the adapter waits for a uniquely qualified destination;
+a transitional frame or an exhausted budget never establishes completion. The original may return to the street before entry
 has happened. Z then clears the notice, reports the confirmed street context
 and offers a fresh `go park` action; it does not replay the interrupted click.
 DinoMart exit consumes 1,000 guest milliseconds of released pointer movement,
 then sends one 80 ms click and observes the original destination after a
 continuous 2,000 ms interval. These tested input bounds do not establish a
-universal control-readiness detector.
+universal control-readiness detector. Park exit uses the same 1,000 ms
+released-pointer preparation before its single original scene click.
 
-See [native verification and open friction](VERIFICATION-DINOPARK-Z-2026-10-29.md)
+See [current native verification and open friction](VERIFICATION-DINOPARK-Z-CONTINUATION-2026-10-29.md)
 before treating these bounded scenes as full-game coverage.
