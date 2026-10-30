@@ -50,7 +50,8 @@ claim of implemented incremental dependency tracking.
 | Intent | A named goal may span multiple actions, effects or processes. Qualification must identify its completion condition and what evidence covers it. |
 | Interface | Context, object, event, focus, modality and completion links describe how an action is exposed; a semantic-only export need not pretend to have interactive fidelity. |
 | Scene and spatial | Scene family, requested content, displayed content, readiness and action completion are separate. Geometry must distinguish coordinate spaces, footprints, walkability, colliders, portals and qualified anchors. |
-| Z and text | The Z machine/IR, semantic intents and text player/projection are distinct layers. A recovered bounded intent does not establish a full parser, scheduler or complete game recovery. |
+| Z-machine bytecode | A target virtual-machine instruction format. Its v3 processor, retained executable IR and qualified intent recovery inspect or preserve that target; they do not define the generic Z interface. |
+| Z and the separate player | The shared scene/action/text interface can project an authored slice or an original-backed game provider. It is not the Z-machine instruction set. A recovered bounded intent does not establish a full parser, scheduler or complete game recovery. |
 
 Persistence is also scoped: a native save, project database, checkpoint and live
 process can retain different state. State the actual receipt and restoration
