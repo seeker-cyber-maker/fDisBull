@@ -594,7 +594,7 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
                 self.delete_breakpoint(result['breakpoint_id'])
             raise
         evidence = {'run':self.run_id,'access':access,'length':length,'breakpoints':results,
-                    'stop_semantics':'after_data_access_before_next_instruction'}
+                    'stop_semantics':'after_data_access_at_core_check_completion_unknown'}
         self._event('data-breakpoint',evidence)
         return evidence
 

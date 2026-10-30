@@ -1,5 +1,10 @@
 # fDisBull
 
+This checkout contains the **0.26.0 release source**. Its recovery,
+Z-machine inspection and observation work is described in the
+[0.26 notes](docs/RELEASE-0.26.0.md). The published and shared installation
+remains [0.25.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.25.0).
+
 Give an agent a program to explore—and a place to keep what it learns.
 fDisBull connects disassembly, headless debugging, scene-aware controls and
 persistent evidence. Find the instruction behind a changing value, name a
@@ -26,6 +31,7 @@ play an authored text projection without opening the debugger yourself.
 | Give an agent reliable scene context and navigation | [Scenes, maps and interaction policies](#scenes-maps-and-interaction-policies) |
 | Play a supported projection or a user-supplied Zork story | [Text play and interpreter inspection](#text-play-and-interpreter-inspection) |
 | Convert Zork I to executable IR and recover bounded game-intent UIL | [Executable IR](docs/ZORK_UIL.md) · [Game-intent UIL](docs/ZORK_INTENTS.md) |
+| Disassemble Zork's v3 bytecode and follow static calls and branches | [Z-machine processor](docs/ZMACHINE_PROCESSOR.md) |
 | Try shared interaction scenes through Z | [Z scene play](docs/Z_SCENES.md) |
 | Run a qualified DinoPark park through the original game | [DinoPark in Z](docs/DINOPARK_Z.md) |
 | Test a small recovered block against its original DOS backing | [The bounded UDC pipeline](#the-bounded-udc-pipeline) |
@@ -34,6 +40,10 @@ Agents can start with [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) and the
 [agent quickstart](docs/AGENT_QUICKSTART.md). The bundled investigation skill is
 also available through `fdisbull agent-skill --reference SKILL.md`. These guides describe the tools
 and their boundaries; they do not turn an inferred result into observed fact.
+
+The [definitions and contract roadmap](docs/DEFINITIONS_AND_ROADMAP.md) brings
+the language, interface, scene and proof proposals together and shows which
+parts are working, partial or still proposed.
 
 The 0.25.0 source lets you preserve a qualified Zork story as executable IR,
 recover a small action as game-level rules, and keep playing through the
@@ -199,6 +209,12 @@ can run a user-supplied version-3 story using a separately selected Python and
 Jericho environment. Story inspection and the recovered mailbox slice are
 bounded evidence, not recovery of the parser, turn loop or complete game.
 No original game or story files are distributed.
+
+The [Z-machine processor](docs/ZMACHINE_PROCESSOR.md) adds direct v3 bytecode
+inspection through fDisBull's processor interface. It reports operands, calls,
+branches and source identity, and can follow a bounded graph from a selected
+entry. Dynamic targets and incomplete analysis remain explicit. This is the
+instruction layer; it does not assign gameplay meanings to those operations.
 
 The [standalone Zork converter](docs/ZORK_UIL.md) lowers a complete v3 story into
 executable word16 **IR**: arithmetic, memory, control and object operations. Its

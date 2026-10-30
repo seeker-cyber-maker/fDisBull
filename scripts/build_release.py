@@ -20,6 +20,8 @@ DOC_EXAMPLE_FILES = (
     "docs/uil-rfcs/0001/native_probe.py",
     "docs/uil-rfcs/0001/source-definition-observation.json",
     "docs/uil-rfcs/0001/vectors.json",
+    "docs/uil-rfcs/0002/vectors.json",
+    "docs/uil-rfcs/0002/replay-summary.json",
 )
 SOURCE_PATTERNS = (
     ("src/fdisbull", "*.py"),
@@ -44,6 +46,7 @@ SOURCE_PATTERNS = (
     ("docs/evidence/zork-intents-2026-10-29", "verification.json"),
     ("docs/evidence/scene-recovery-2026-10-29", "representation-paths.json"),
     ("docs/evidence/scene-recovery-2026-10-29", "scene-pipeline-summary.json"),
+    ("docs/evidence/zmachine-processor-2026-10-29", "verification.json"),
     ("docs/evidence/udc-2026-10-29", "dino.json"),
     ("docs/evidence/udc-2026-10-29", "zork.json"),
     ("docs/evidence/udc-2026-10-29", "synthetic.json"),
@@ -55,6 +58,7 @@ SOURCE_PATTERNS = (
     ("docs/evidence/integration-025", "dinopark.json"),
     ("docs/evidence/integration-025", "tests.json"),
     ("docs/evidence/integration-025", "packages.json"),
+    ("docs/evidence/integration-026", "verification.json"),
     ("scripts", "*.py"),
 )
 

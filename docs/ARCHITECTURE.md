@@ -20,6 +20,8 @@ The local engine separates decoding, recoverable facts, shared address interpret
 | `dos_state_refresh.py` | Legacy DOS fact guards and explicit bounded state rebuilding. |
 | `decoder.py` | Flat x86/ARM64 decode and structured operand references. |
 | `processor.py` | Explicit in-process decoder seam; native and method-local CIL adapters (not a generic persisted VM project). |
+| `zmachine_processor.py` | Source-bound v3 adapter through the same processor seam; raw instruction facts, routine-header evidence and explicit unknown successors. |
+| `zmachine_analysis.py` | Read-only Z-machine listings and bounded recursive traversal; separate story address spaces, budget frontiers and overlap evidence. |
 | `dos.py` | Classic MZ validation, relocated real-mode image and minimum allocation. |
 | `dos_decoder.py` | CS-relative iced16 decoding and conservative register transfer. |
 | `dos_analysis.py` | CS-keyed DOS states/edges, segment evidence and recursive candidate discovery. |
