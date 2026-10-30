@@ -4,8 +4,8 @@ The word16 consumer is preserved unchanged. This adapter replaces qualified
 source regions with the independent, address-free game-intent evaluator. UDL
 definitions project source state, guard the source/ABI, and realize ordered
 domain effects. Everything else continues through the retained IR and is counted
-as residual execution. A failed semantic plan never commits partial effects or
-silently delegates after mutation.
+as residual execution. Faults retain already executed effects and are reported;
+they never silently delegate or retry after mutation.
 """
 
 from __future__ import annotations
@@ -302,8 +302,8 @@ def _empty_stats():
 class IntentRuntime(Word16Runtime):
     """A mixed consumer: recovered game intent plus explicit residual IR.
 
-    Semantic operations are atomic at their qualified source boundaries. A step
-    budget counts dispatches, not the number of displaced source instructions.
+    Semantic operations can fault after partial effects. A step budget counts
+    dispatches, not the number of displaced source instructions.
     The original word16 consumer retains its own instruction-level pause behavior.
     """
 
@@ -545,20 +545,39 @@ class IntentRuntime(Word16Runtime):
                 raise Word16Error("Opening return destination is outside the caller frame")
 
     def _dispatch_intent(self, binding, plan):
-        self._preflight_effects(binding, plan["effects"])
         segment = {"mode": "game_intent_uil", "binding": binding,
                    "outcome": plan["outcome"], "effects": copy.deepcopy(plan["effects"])}
+        try:
+            self._preflight_effects(binding, plan["effects"])
+        except (Word16Error, IndexError, KeyError, TypeError, OverflowError) as exc:
+            segment.update(status="preflight_fault", completed_effects=[],
+                           interrupted_effect=None, error=str(exc))
+            self._segments.append(segment)
+            raise
+        completed = []
+        interrupted = None
         self._active_intent = True
         try:
-            self._commit_effects(plan["effects"])
+            for effect in plan["effects"]:
+                interrupted = effect
+                self._commit_effects([effect])
+                completed.append(copy.deepcopy(effect))
+                interrupted = None
+            if binding == "mailbox_open":
+                self._return(self.udl["opening"]["return_value"])
+                self._phase = "unrecovered_action_bookkeeping"
+            else:
+                self._goto(self.udl["turn"]["continue"])
+                self._phase = "unrecovered_return_and_input_preparation"
+        except (Word16Error, IndexError, KeyError, TypeError, OverflowError) as exc:
+            segment.update(status="commit_fault", completed_effects=completed,
+                           interrupted_effect=copy.deepcopy(interrupted),
+                           interrupted_effect_status="unknown" if interrupted is not None else None,
+                           error=str(exc))
+            self._segments.append(segment)
+            raise
         finally:
             self._active_intent = False
-        if binding == "mailbox_open":
-            self._return(self.udl["opening"]["return_value"])
-            self._phase = "unrecovered_action_bookkeeping"
-        else:
-            self._goto(self.udl["turn"]["continue"])
-            self._phase = "unrecovered_return_and_input_preparation"
         self._increment(self.recovery_stats["binding_hits"], binding)
         self._increment(self.recovery_stats["outcomes"], plan["outcome"])
         for name in plan["executed_intents"]:
@@ -600,26 +619,35 @@ class IntentRuntime(Word16Runtime):
         return Word16Runtime._nodes(self, nodes, temps)
 
     def run(self, max_steps=2_000_000):
+        if self.fault is not None:
+            raise Word16Error("Execution is faulted; restore a qualified checkpoint")
         before = copy.deepcopy(self.recovery_stats)
         self._segments = []
         if self._next_run_kind == "command":
             self._phase = "unrecovered_parser_and_object_resolution"
         self._next_run_kind = None
-        result = super().run(max_steps=max_steps)
-        delta = _empty_stats()
-        for key, value in self.recovery_stats.items():
-            if isinstance(value, dict):
-                delta[key] = {name: count - before[key].get(name, 0)
-                              for name, count in value.items() if count != before[key].get(name, 0)}
-            else:
-                delta[key] = value - before[key]
-        delta["segments"] = copy.deepcopy(self._segments)
-        delta["mode"] = "mixed_intent_and_ir" if delta["binding_hits"] else "low_level_only"
-        self.last_recovery = delta
+        try:
+            result = super().run(max_steps=max_steps)
+        finally:
+            delta = _empty_stats()
+            for key, value in self.recovery_stats.items():
+                if isinstance(value, dict):
+                    delta[key] = {name: count - before[key].get(name, 0)
+                                  for name, count in value.items() if count != before[key].get(name, 0)}
+                else:
+                    delta[key] = value - before[key]
+            delta["segments"] = copy.deepcopy(self._segments)
+            delta["mode"] = "mixed_intent_and_ir" if any(
+                s["mode"] == "game_intent_uil" for s in delta["segments"]) else "low_level_only"
+            self.last_recovery = delta
         result["recovery"] = copy.deepcopy(delta)
         return result
 
     def command(self, text, max_steps=2_000_000):
+        # Input validation may fail before run() gets a chance to create a
+        # receipt. Never attach the preceding turn's receipt to that failure.
+        if self.fault is None:
+            self.last_recovery = {**_empty_stats(), "segments": [], "mode": "low_level_only"}
         self._next_run_kind = "command"
         return super().command(text, max_steps=max_steps)
 
@@ -664,19 +692,29 @@ def main(argv=None):
         if args.transcript:
             _atomic_json(args.transcript, transcript)
         return result
-    result = record(runtime.run())
+    def execute(command=None):
+        try:
+            result = runtime.run() if command is None else runtime.command(command)
+        except Word16Error as exc:
+            if args.transcript:
+                transcript.append({"command": command, "status": "fault", "error": str(exc),
+                                   "recovery": copy.deepcopy(runtime.last_recovery)})
+                _atomic_json(args.transcript, transcript)
+            raise
+        return record(result, command)
+    result = execute()
     if commands is not None:
         for command in commands:
             if result["status"] != "input":
                 break
-            result = record(runtime.command(command), command)
+            result = execute(command)
     else:
         while result["status"] == "input":
             try:
                 command = input("" if not sys.stdin.isatty() else "> ")
             except EOFError:
                 break
-            result = record(runtime.command(command), command)
+            result = execute(command)
     if result["status"] == "budget_exhausted":
         print("Dispatch budget exhausted; state remains resumable.", file=sys.stderr)
         return 2
