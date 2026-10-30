@@ -22,6 +22,8 @@ AGENT_SKILL_GUIDES = {
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
 
 METHODS = {
+    'gog-list':'List local GOG Inno Setup payloads without Wine; path,[include,timeout]; no project required',
+    'gog-unpack':'Unpack local GOG Inno Setup payloads into a new private directory; path,output,[include,timeout]; no project required',
     'output-info':'Inspect an immutable private output artifact; artifact',
     'output-read':'Read a bounded base64 byte range without executing the original operation; artifact,[offset,length]',
     'output-select':'Read a complete small JSON Pointer selection or an explicit incomplete descriptor; artifact,[pointer,max_bytes]',
@@ -256,6 +258,9 @@ def invoke(method, params, debugger=None):
         root=files('fdisbull').joinpath('skills/fdisbull-investigate')
         resources=(reference,) if reference is not None else AGENT_SKILL_RESOURCES
         return {'name':'fdisbull-investigate','files':{n:root.joinpath(n).read_text() for n in resources}}
+    if method in ('gog-list','gog-unpack'):
+        from .gog_unpack import list_gog, unpack_gog
+        return (list_gog if method=='gog-list' else unpack_gog)(**p)
     if method=='omf-catalog':
         from .omf_catalog import omf_signatures
         path=Path(p.pop('path'))
@@ -417,7 +422,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','agi-logic','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         value={"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
@@ -584,6 +589,12 @@ def parser():
             if name=='debug-artifacts':c.add_argument('--run')
             if name=='debug-save-script':
                 c.add_argument('name');c.add_argument('script',type=json.loads,help='JSON script object')
+    for name in ('gog-list','gog-unpack'):
+        c=sub.add_parser(name,help=METHODS[name])
+        c.add_argument('path',help='local GOG Inno Setup offline installer')
+        if name=='gog-unpack':c.add_argument('output',help='new private directory outside the checkout')
+        c.add_argument('--include',action='append',help='repeatable native innoextract path filter; list first')
+        c.add_argument('--timeout',type=int,default=300,help='per-extractor-process timeout in seconds (1..3600)')
     for name in ('identify','inspect'):
         c=sub.add_parser(name,help=METHODS[name])
         c.add_argument('path')
