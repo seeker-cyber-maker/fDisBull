@@ -11,6 +11,9 @@ uses the committed 0.23 compiler source. See also the
 The [batch recovery interface](Z_BATCH_RECOVERY.md) adds per-step journals,
 declared action continuations and live checkpoint scene requalification.
 It keeps uncertain effects blocked until an explicit verified recovery.
+The [funded26k return/recovery follow-up](DINOPARK_FUNDED_RECOVERY.md) handles
+quarter notices after confirmed food commits and retains a reachable paused
+provider for explicit checkpoint recovery after an action error.
 
 UDL maps original code to UIL; a UDC realizes UIL as code. Z consumes the public
 scene view. This integration exercises the first, original-backed DOS compiler:

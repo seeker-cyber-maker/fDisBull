@@ -176,6 +176,10 @@ An acknowledgement can advance a partial action, but current providers do not
 certify that the original intent is complete. Such batch steps remain paused
 for reconciliation, and aliases cannot be used to resend the original action.
 
+The [funded26k recovery path](docs/DINOPARK_FUNDED_RECOVERY.md) preserves a confirmed
+food purchase across its quarter notice and keeps a paused provider available
+for explicit checkpoint recovery after a failed action.
+
 The separately installable [text player](docs/TEXT_PLAYER.md) can consume an
 authored projection or connect to a compatible local backend. Its live mode
 can checkpoint after each model turn and resume, subject to successful save and
