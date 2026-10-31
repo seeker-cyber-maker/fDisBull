@@ -6,6 +6,7 @@ import struct
 import time
 
 HOST_SECONDS = 40
+NATIVE_PURCHASE_PEN = 10  # Record index used by the qualified original first-plot interaction.
 _clock = time.monotonic
 
 
@@ -73,8 +74,8 @@ def commit_proof(order, after):
             ticket.get('delivery') != 'queued' or order.get('species') != 4 or order.get('price') != 1250 or
             before['balances'] != {'cash': 4500, 'loan': 5000, 'working_cash': 4500} or before['pens'] or
             after['balances'] != {'cash': 3250, 'loan': 5000, 'working_cash': 3250} or
-            after['pens'] != [{'pen': 1, 'species': 4, 'count': 1}] or after['month'] != before['month']):
-        raise ValueError('Coelophysis commit remains unqualified')
+            after['pens'] != [{'pen': NATIVE_PURCHASE_PEN, 'species': 4, 'count': 1}] or after['month'] != before['month']):
+        raise ValueError('Coelophysis commit remains unqualified; observed after=' + repr(after))
     expected = list(before['expenses'])
     expected[before['month']] += 1250
     if after['expenses'] != expected:
@@ -239,7 +240,7 @@ def recovery_view(text):
             {'cash':4500, 'loan':5000, 'working_cash':3250},
             {'cash':3250, 'loan':5000, 'working_cash':3250}):
         raise ValueError('Original order balances changed outside the qualified intent')
-    if state['pens'] not in ([], [{'pen':1, 'species':4, 'count':1}]):
+    if state['pens'] not in ([], [{'pen':NATIVE_PURCHASE_PEN, 'species':4, 'count':1}]):
         raise ValueError('Original order herd is not qualified')
     return state
 

@@ -89,13 +89,33 @@ renewed to accommodate a new observation.
 
 ## Native commit versus presentation
 
+One original trial delivered all five inputs exactly once, reached the final
+view and read cash/loan/working cash as $3,250/$5,000/$3,250, but the new
+certificate incorrectly required native pen record 1. The authored boundary
+fake had repeated that assumption. A retained original oracle, independently
+decoded by both parent and Luna, shows record **10**, species 4, count 1 at
+purchase completion and five following command observations. Both the commit
+and retained-order predicates now require that observed record; a separate
+regression rejects record 1. The first-plot user description is not a native
+array index. No interpretation of the record's geometry prefix is needed for
+this correction.
+
+The affected live provider retains its older checker and remains uncertified;
+its current pen/month/expense values were not exported by that installed
+diagnostic surface. Read-only reconciliation correctly returned incomplete
+with zero execution, input mutation or restore and unchanged diagnostics.
+The corrected checker records its observed after-state on a future broad
+commit mismatch so that this evidence is not discarded. It does not certify
+the earlier held attempt retroactively.
+
 The adapter captures a baseline before original input. A commit certificate
 requires all of the following original observations:
 
 - The qualified species/price are 4 and $1,250, and the final confirmation has
   an accepted, queued original input ticket.
 - Cash changes from $4,500 to $3,250; loan stays $5,000; working cash is $3,250.
-- The previously empty herd contains exactly one species-4 dinosaur in pen 1.
+- The previously empty herd contains exactly one species-4 dinosaur in native
+  pen record 10, the record used by this qualified first-plot interaction.
 - The same original month has a $1,250 purchase-expense increase; the other
   monthly purchase-expense records are unchanged.
 
@@ -139,7 +159,7 @@ The imported scene-class identity and sampled profile hashes remain separate
 from the updated adapter class and new purchase-helper source hashes. No
 original media or executable bytes are added to source or package data.
 
-The final source check ran **200 passed / 19 skipped** across the affected
+The final source check ran **204 passed / 19 skipped** across the affected
 purchase, recovery, Z, Batch and debugger files. Five separately selected real
 native fixture checks passed, covering the shared deadline, paused-provider
 readback with a stored image, speed restoration, input evidence after restart,
@@ -147,7 +167,7 @@ and source/patch isolation. Those authored fixtures are separate from the
 original DinoPark trials below. Independent Luna source review found no further
 material defect in the final deadline/admission change.
 
-The complete suite finished **2,112 passed / 132 skipped / 12 failed /
+The complete suite finished **2,116 passed / 132 skipped / 12 failed /
 23 errors**. The 35 failure/error test IDs exactly match the retained baseline:
 Linux ELF/linker fixtures are unsuitable for the current macOS toolchain, and
 managed-format fixtures report missing parser dependencies. No new failure ID
@@ -225,6 +245,16 @@ this producer trace do not establish runtime use of a filename.
   table and reader path to be linked. A future reusable producer report should
   expose those edges and the legal-domain assumptions; literal scans and a
   no-hit trace remain supporting evidence with explicit limits.
+- A deferred-observer trial qualified land in 2.57 seconds and installed all
+  221 guarded sites with zero execution/input/restore calls, but navigation
+  then stopped at an observer-owned breakpoint after only two guest
+  milliseconds. The private harness had attached its callback and trace
+  attributes to `BankInputSession`; internal scene execution used the native
+  session underneath it. The zero-mutation installation check did not test
+  actual native callback delivery. This is a harness attribution failure,
+  separate from a game navigation timeout. A useful tool API would install
+  instrumentation through an explicit native owner, with a wrapper-aware
+  qualification check, instead of relying on instance attribute assignment.
 
 The earlier eight evidence packets were rechecked read-only: **16,133 members,
 zero size or hash mismatches**. Current live contexts remain outside that
