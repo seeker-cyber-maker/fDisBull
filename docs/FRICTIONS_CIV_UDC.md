@@ -40,3 +40,13 @@
      authoritative, asserts the imported version before analysis, and records
      the source commit. This avoids silently attributing stale-agent results to
      the current fDisBull release.
+
+7. NE seed spelling differs between documentation and CLI.
+   - The NE guide uses logical addresses such as `ne:20:0x547c`, while
+     `fdisbull analyze --start ne:20:0x0` rejected with
+     `invalid literal for int() with base 0`.
+   - The equivalent packed numeric identity `--start 0x140000` was accepted
+     and produced a bounded traversal.
+   - The workflow records the numeric fallback for now. The CLI should either
+     accept the documented logical form or state the numeric-only boundary
+     explicitly, with a regression test before changing parsing.
