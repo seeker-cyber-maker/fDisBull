@@ -122,7 +122,10 @@ def lower_c_module(code,module,state,offsets,compiled):
     for i,n in enumerate(outputs):
         code.emit('0fb78424');code.emit(struct.pack('<I',32+2*len(inputs)+2*i))
         code.emit('6641898424');code.emit(struct.pack('<I',offsets[n]))
-    code.mark(end);code.emit('4489c025ffff00004881c4');code.emit(struct.pack('<I',frame));code.emit('5e5f415cc3')
+    code.mark(end)
+    signed = module.get('return') is not None and module['program']['variables'][module['return']]['type'] == 'i16'
+    code.emit('490fbfc0' if signed else '410fb7c0')
+    code.emit('4881c4');code.emit(struct.pack('<I',frame));code.emit('5e5f415cc3')
     _check(len(code.data)<=SLOT//2,'C port adapter exceeds its 2048-byte slot')
     code.emit(b'\xcc'*(SLOT//2-len(code.data)));code.mark(body);code.emit(bytes.fromhex(compiled['code_hex']))
     code.maps.append({'path':'module.C','op':'compiled-C','address':code.base+SLOT//2,'size':compiled['code_size'],'source_sha256':compiled['source_sha256'],'scope':'whole compiled function; no instruction-level source recovery claim'})

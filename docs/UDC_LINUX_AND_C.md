@@ -81,7 +81,11 @@ qualification.
 
 ## Calling conventions and state
 
-The shared private ABI is RCX=arena, EAX=raw u16 result, EDX=status. Linux's
+The shared private ABI is RCX=arena and EDX=status. UIL module returns use
+RAX with the declared scalar type: i16 values are sign-extended to 64 bits;
+unsigned and boolean values remain nonnegative. This allows checked caller
+stores to preserve negative i16 results. Program function results retain their
+raw u16 carrier in EAX. Linux's
 public function adapter takes the arena in RDI and returns
 `(status << 32) | u16_result` in RAX. It establishes the stack alignment/shadow
 space expected by the existing private functions. Function locals initialize

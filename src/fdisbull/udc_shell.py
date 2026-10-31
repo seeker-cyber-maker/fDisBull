@@ -398,7 +398,8 @@ def _module(code, module, state, offsets):
             code.emit('85d2'); code.relative('0f85', fail + ':status')
             code.emit('ff8424'); code.emit(struct.pack('<I', event_index)); code.relative('e9', again); code.mark(done)
         lower.value({'var': module['return']} if module.get('return') else 0)
-        code.emit('0fb7c031d2'); code.relative('e9', end)
+        # value() already extends according to the declared scalar type.
+        code.emit('31d2'); code.relative('e9', end)
         code.mark(fail); code.emit('31c0ba01000000')
         code.mark(fail + ':status')
         code.mark(end); code.emit('4881c4'); code.emit(struct.pack('<I', frame)); code.emit('415d415cc3')
@@ -476,7 +477,7 @@ def build_windows_shell(plan, modules, destination, *, c_compiler=None):
     IL text events are queued privately,
     then flushed after qualification; graphics/audio/input events refuse.
     Services are message-box-a or debug-string-a providers.
-    Native ABI: RCX=arena, EAX=raw u16 result, EDX=status0/1/2/3. The arena uses
+    Native ABI: RCX=arena, RAX=typed scalar result, EDX=status0/1/2/3. The arena uses
     word carriers for u8/u16/i16/bool; IL work copies make require/set failures
     atomic. Calls are acyclic, loops bounded, notification services synchronous.
     This profile has no exception unwinding, callbacks, recursion or file/media
@@ -567,7 +568,7 @@ def build_windows_shell(plan, modules, destination, *, c_compiler=None):
                            'load_profile': 'fixed preferred base; no exception-unwind profile',
                            'original_binary_wrapped': False},
                 'output': {'path': 'program.exe', 'sha256': _sha(image), 'size': len(image)},
-                'abi': {'arena': 'RCX', 'result_u16': 'EAX', 'status': 'EDX',
+                'abi': {'arena': 'RCX', 'result_u16': 'EAX', 'module_result': 'RAX: declared scalar type, i16 sign-extended', 'status': 'EDX',
                         'statuses': {'0': 'success', '1': 'qualification-or-range-failure', '2': 'loop-budget-exhausted',
                                      '3': 'notification-failed-after-state-commit'},
                         'calls': 'Win64 nonvolatile preservation and 32-byte shadow space'},

@@ -43,3 +43,36 @@ def test_incompatible_selection_and_bad_inputs_fail_without_mutation(tmp_path):
   with pytest.raises(ValueError):run_selection(p,s['id'],'math',{'left':1,'right':2,'carry':3})
   with pytest.raises(ValueError):run_selection(p,s['id'],'missing',{'left':1,'right':2,'carry':0})
   assert p.version()['id']==1
+
+
+@pytest.mark.parametrize('change', ['metadata', 'text', 'order', 'resource-data'])
+def test_event_contract_compares_behavior_and_retains_provenance(tmp_path, change):
+ from fdisbull.udc_qualify import qualify_uil
+ from fdisbull.udc_layers import run_layer
+ reference=contract()
+ program=reference['behavior']['program']
+ program['resources']={'first':{'kind':'text','text':'First'},'second':{'kind':'text','text':'Second'}}
+ program['evidence']={'reference':{'description':'authored reference'}}
+ program['body'] += [{'id':'original-first','op':'text','resource':'first','evidence':['reference']},
+                     {'id':'original-second','op':'text','resource':'second'}]
+ replacement=copy.deepcopy(program)
+ replacement['evidence']={'implementation':{'description':'authored replacement'}}
+ replacement['body'][-2].update(id='replacement-first',evidence=['implementation'])
+ replacement['body'][-1]['id']='replacement-second'
+ if change=='text':replacement['body'][-2]['resource']='second'
+ if change=='order':replacement['body'][-2:]=reversed(replacement['body'][-2:])
+ if change=='resource-data':replacement['resources']['first']['text']='Changed'
+ implementation={'backend':'uil','program':replacement}
+ with project(tmp_path,'event') as p:
+  c=register_contract(p,reference)
+  l=register_layer(p,{'format':'fdisbull-udl-layer-1','name':'event-replacement','contract':c['id'],'implementation':implementation})
+  if change=='metadata':
+   assert qualify_uil(reference,implementation)['status']=='equivalent_under_contract'
+   receipt=run_layer(p,l['id'],{'left':1,'right':2,'carry':0})
+   assert receipt['events'][0]['block_id']=='replacement-first'
+   assert receipt['events'][0]['evidence']==['implementation']
+   assert receipt['expected']['events'][0]['block_id']=='original-first'
+   s=select_layers(p,'event-selection',{'math':l['id']})
+   assert run_selection(p,s['id'],'math',{'left':1,'right':2,'carry':0})['comparison']=='matched_reference_uil'
+  else:
+   with pytest.raises(LayerQualificationError):run_layer(p,l['id'],{'left':1,'right':2,'carry':0})
