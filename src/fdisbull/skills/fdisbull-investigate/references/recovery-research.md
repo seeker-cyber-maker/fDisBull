@@ -10,6 +10,7 @@ prior work. A coordinator may research references separately from blind workers.
 
 ## Contents
 
+- [Initial documentation pass](#initial-documentation-pass-after-target-triage)
 - [Qualify prior work](#qualify-prior-work)
 - [Reuse reconstructed source](#reuse-reconstructed-source)
 - [Guide-derived Z blueprints](#collate-guides-into-provisional-z-blueprints)
@@ -18,13 +19,89 @@ prior work. A coordinator may research references separately from blind workers.
 - [From code to semantics](#from-code-to-semantics)
 - [Compare depth and cost fairly](#compare-depth-and-cost-fairly)
 
+## Initial documentation pass after target triage
+
+For ordinary investigation and recovery, use this order:
+
+```text
+Initial target analysis
+    -> initial documentation pass
+    -> hypothesis ledger / preliminary Z blueprint where useful
+    -> focused code and runtime checks
+    -> revised knowledge and the next useful probe
+```
+
+First establish the readily available target facts: executable/container format,
+ISA and mode, platform, visible version/region/language markers, resources,
+recognizable runtime or interpreter signatures, suspected modifications and
+input identity. Keep known facts separate from tentative identifications. Do not
+wait for complete disassembly, an exact build number or recovered function
+semantics before searching. An unknown version narrows what can be concluded,
+not whether useful prior work can be consulted.
+
+Next perform a bounded initial documentation pass. Retrieve relevant guides,
+solutions, walkthroughs, manuals, playthroughs, third-party reversing work,
+format/engine documentation, reconstructed source and build/verification notes.
+Use the initial fingerprints to choose searches, including localized titles and
+terminology. Documentation is a normal first-phase deliverable, not an optional
+rescue after decompilation stalls. Later findings can refine the identification
+and trigger a targeted follow-up search; do not repeat a settled broad survey.
+
+Prefer exact-edition materials when available, then widen to related versions,
+platforms, localizations, ports or engine families. Exact matching is a preference,
+not an admission prerequisite for a hypothesis. A version or document-language
+mismatch does not make an idea useless. It may still identify a likely object,
+rule, subsystem, file format, puzzle structure or discriminating test. Related
+work supplies candidate meaning; it does not transfer qualified addresses,
+object IDs, binary layouts, timing or input sequences automatically.
+
+Record the document's language separately from the game edition/region it
+actually describes; an English guide need not describe the US game. Keep
+original names and useful translated aliases without treating lexical matches
+as object identity. Translate just enough to understand the claim and preserve
+ambiguous terms. A translated/reposted guide retains its upstream lineage, not
+an additional independent vote. Unknown source edition or translation quality
+stays unknown, but useful hypotheses may still be recorded.
+
+Record applicability per claim, not as a single trusted/untrusted guide flag:
+source and section, stated or inferred source edition, relation to this target,
+proposed transferable idea, known differences, evidence and next discriminator.
+A mismatch can challenge the affected claim and its dependents without deleting
+unrelated leads. Conversely, an exact-match cover/title does not certify every
+claim. Leave mutually exclusive version-specific alternatives in the blueprint
+until the target distinguishes them.
+
+The output is a compact documentation packet: target fingerprint and unknowns,
+source/applicability ledger, prioritized hypotheses and an initial scene/action
+blueprint where appropriate. Start with the requested scope and next frontier,
+not an exhaustive internet bibliography. Stop gathering when the next useful
+probe is defined or the agreed research budget is reached. Record inaccessible
+sources or unproductive searches and proceed with the best supported route;
+absence of documentation must not block all analysis. Count retrieval,
+translation, collation and correction costs in assisted-method benchmarks.
+
+Testing a supplied hypothesis is often cheaper than inventing one from scratch;
+use that as a probe-selection heuristic, not a guaranteed speedup or permission
+to confirm only the favored explanation. State what would contradict it and
+choose the smallest useful source or runtime check. Initial documentation
+predicts where to look; qualification determines what the target actually does.
+Preserve unsupported or contradicted predictions rather than rewriting history.
+
+Exceptions are explicit: a user-requested blind/independent recovery arm, a
+no-external-research instruction, spoiler/access constraints, or a small question
+already settled by available evidence. Keep target-specific answers outside
+blind workers; a coordinator may prepare packets separately. Record the reason
+when the documentation pass is omitted. This guidance authorizes neither
+running downloaded code nor obtaining unprovided game assets.
+
 ## Qualify prior work
 
 1. Record target hashes, edition, platform, language, executable and resource
    identities, interpreter version and known modifications. Search for prior
    reverse engineering, reconstructed source, matching-build projects, format
-   and interpreter projects for the exact
-   target first; then qualified close variants. Record URL, revision/date,
+   and interpreter projects for the exact target first, alongside applicable
+   behavioral documentation. Include related-version and other-language leads
+   with explicit applicability gaps. Record URL, revision/date,
    provenance, license constraints and what version each source actually covers.
 2. Read primary implementation/source and format evidence where available.
    Check claimed byte ranges, resource hashes and version mappings against the
@@ -32,7 +109,8 @@ prior work. A coordinator may research references separately from blind workers.
    is not proof that this binary was built from it or behaves identically.
 3. For scene recovery and normal progression, collate guides, solutions,
    walkthroughs, manuals, playthroughs and analyses as behavioral blueprints.
-   Check source lineage rather than assuming the reports are independent. Synthesize an original, task-scoped checklist covering
+   Check source lineage rather than assuming the reports are independent.
+   Synthesize an original, task-scoped checklist covering
    known normal milestones and prerequisite alternatives through the requested
    end condition. Mark missing sections, version conflicts, uncertainty and
    spoilers; do not reproduce a copyrighted guide. If the sources cannot support
@@ -63,8 +141,9 @@ requested claim, and keep the unrecovered remainder explicit.
 
 ### Discover and classify
 
-For ordinary recovery, perform bounded prior-work reconnaissance before expensive
-decompilation: search the exact title/edition, executable identity and engine for
+During the initial documentation pass, perform bounded prior-work reconnaissance
+before expensive decompilation: use the identified title/edition, executable
+identity and engine, including applicable variants and languages, to search for
 source reconstruction, matching decompilation, disassembly, source ports and
 build or verification notes. Follow the author's primary repository and relevant
 release branch rather than trusting a search summary or default branch.
@@ -122,7 +201,8 @@ UIL contract, then qualify a suitable UDC implementation or original-backed
 selection. Do not decompile an already available reconstruction merely to obey
 an ASM -> C -> Z diagram. A direct source/results -> UDL/UIL route is legitimate;
 Z is not a compulsory compiler stage, but retain a provisional Z comparison
-blueprint where scenes/actions help the investigation. Check installed methods first: the bounded `udl-lift-c` reader is
+blueprint where scenes/actions help the investigation. Check installed methods
+first: the bounded `udl-lift-c` reader is
 not a general importer for arbitrary reconstructed C. Keep an unsupported adapter
 as an attributed experimental artifact, not an invented CLI or adopted format.
 
@@ -215,6 +295,45 @@ An agent's synthesized guide and tests derived from it keep the same lineage:
 neither is new independent corroboration. Repeated agreement does not promote
 hypotheses to accepted UDL/UIL semantics. The goal is a better starting prior,
 not a vote-certified game model.
+
+### Case study seed: an English FF7 guide and regional clock instructions
+
+TiGa reports remembering an English Final Fantasy VII PS1 guide that apparently
+used the original Japanese release without clearly identifying that basis, with
+clock-puzzle instructions that differed from the simplified US version. Treat
+this as a user-reported case-study seed, not independently verified publication
+history: the guide title, publisher, printing/page and compared game releases
+have not been established here. Do not guess a particular guide or silently
+upgrade the recollection into a confirmed version matrix.
+
+A separate [first-hand screenshot playthrough](https://lparchive.org/Final-Fantasy-VII/Update%2051/)
+shows the Temple of the Ancients clock interaction in an English-language game.
+It is a candidate observation source for that scene, not evidence of the guide's
+Japanese provenance or a complete JP/US comparison. Neither game was executed
+for this skill update, and no guide-page comparison was completed.
+
+The useful investigation design does not depend on accepting the history first:
+
+| Candidate claim | How to retain and check it |
+| --- | --- |
+| The described area contains a clock-based traversal interaction | Keep as a scene/search lead; bind the scene and exits against the selected target. |
+| A particular sequence controls the clock hands | Mark edition-sensitive; preserve competing procedures and inspect the target's menu/script/input transitions. |
+| Neighboring locations, objects or route relationships described elsewhere | Retain as separate hypotheses with their own evidence; a clock mismatch neither disproves nor validates them. |
+| The English guide was based on the Japanese release | Keep attributed and unconfirmed until the exact publication and comparison evidence are identified. |
+
+Draft shared scene structure with version-qualified alternatives for the clock
+procedure. A common description can survive while one branch is replaced or
+left unresolved. A mismatch localizes investigation; it is not a reason to throw
+away the rest of the guide or declare the rest correct. Avoid forcing either
+version to fit a single flattened walkthrough. Search by meaning and scene
+relationships when names differ after localization.
+
+A future completed case study should identify the publication and game builds,
+compare the relevant passage with each version's code or recorded interaction,
+and preserve both the initially inferred applicability and the corrected result.
+It would measure how much useful scene structure was retained and how much
+version-specific correction was required, rather than score the entire guide
+as simply right or wrong.
 
 ### Draft Z early without pretending it is tested
 
