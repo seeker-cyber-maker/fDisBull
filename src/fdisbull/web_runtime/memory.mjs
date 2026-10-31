@@ -40,6 +40,14 @@ async function verify(build, target, name, bytes) {
     Number.isInteger(build.abi.max_steps) && build.abi.max_steps >= 1 && build.abi.max_steps <= 4000000 &&
     build.abi.status?.complete === 0 && build.abi.status?.refused === 1,
     'Invalid bounded-memory ABI');
+  check(!Object.hasOwn(build.abi, 'report_steps') || typeof build.abi.report_steps === 'boolean',
+    'Invalid execution-step reporting flag');
+  if (Object.hasOwn(build.abi, 'capture_locals')) {
+    const names = build.abi.capture_locals;
+    check(Array.isArray(names) && names.length <= 256 &&
+      names.every((name, i) => typeof name === 'string' && /^\$[A-Za-z_][A-Za-z0-9_]*$/.test(name) &&
+        (i === 0 || names[i - 1] < name)), 'Invalid local capture names');
+  }
   check(/^[0-9a-f]{64}$/.test(build.module_uil_sha256) &&
     typeof build.function === 'string' && /^[A-Za-z_][A-Za-z0-9_]*$/.test(build.function),
     'Unbound bounded-memory identity');
@@ -54,15 +62,32 @@ export async function createWasmMemoryProvider(build, bytes) {
   await verify(pinned, 'wasm32-memory-1', 'block.wasm', bytes);
   const {module, instance} = await WebAssembly.instantiate(bytes, {});
   const exports = WebAssembly.Module.exports(module);
-  check(WebAssembly.Module.imports(module).length === 0 && exports.length === 2 &&
+  const reportSteps = pinned.abi.report_steps === true;
+  const captures = pinned.abi.capture_locals || [];
+  check(WebAssembly.Module.imports(module).length === 0 && exports.length === 2 + Number(reportSteps) + captures.length &&
     exports.some(x => x.name === 'block' && x.kind === 'function') &&
-    exports.some(x => x.name === 'memory' && x.kind === 'memory') && instance.exports.block.length === 0,
+    exports.some(x => x.name === 'memory' && x.kind === 'memory') && instance.exports.block.length === 0 &&
+    (!reportSteps || (exports.some(x => x.name === 'remaining' && x.kind === 'global') &&
+      instance.exports.remaining instanceof WebAssembly.Global)) &&
+    captures.every((_, i) => exports.some(x => x.name === 'capture_' + i && x.kind === 'global') &&
+      instance.exports['capture_' + i] instanceof WebAssembly.Global),
     'Unexpected bounded-memory Wasm interface');
   const count = pinned.abi.memory_words;
   const maximumBytes = Math.ceil(count * 4 / 65536) * 65536;
   check(instance.exports.memory.buffer.byteLength === maximumBytes, 'Unexpected Wasm memory size');
   let closed = false, epoch = 0;
   let tail = Promise.resolve();
+  function metrics() {
+    if (!reportSteps) return {};
+    const remaining = instance.exports.remaining.value;
+    check(Number.isInteger(remaining) && remaining >= 0 && remaining <= pinned.abi.max_steps,
+      'Invalid Wasm execution-step count');
+    return {steps: pinned.abi.max_steps - remaining};
+  }
+  function locals() {
+    return captures.length ? {locals: Object.fromEntries(captures.map((name, i) =>
+      [name, instance.exports['capture_' + i].value >>> 0]))} : {};
+  }
   return Object.freeze({
     describe: () => structuredClone(pinned),
     get epoch() { return epoch; }, get closed() { return closed; }, get lost() { return false; },
@@ -78,13 +103,13 @@ export async function createWasmMemoryProvider(build, bytes) {
         try { status = instance.exports.block(); }
         catch (error) {
           if (!(error instanceof WebAssembly.RuntimeError)) throw error;
-          return {status: 'refused', words: input.slice()};
+          return {status: 'refused', words: input.slice(), ...metrics()};
         }
         check(status === 0 || status === 1, 'Invalid Wasm completion status');
-        if (status === 1) return {status: 'refused', words: input.slice()};
+        if (status === 1) return {status: 'refused', words: input.slice(), ...metrics()};
         const result = new Uint32Array(count);
         for (let i = 0; i < count; i++) result[i] = view.getUint32(i * 4, true);
-        return {status: 'complete', words: result};
+        return {status: 'complete', words: result, ...metrics(), ...locals()};
       });
       tail = job.catch(() => {});
       return job;
@@ -105,12 +130,16 @@ export async function createGPUMemoryProvider(build, source, {device, ownsDevice
   device.lost.then(() => { const live = weak.deref(); if (live) { live.lost = true; live.epoch++; } });
   let pipeline, tail = Promise.resolve(), destroyed = false;
   const count = pinned.abi?.memory_words;
+  const reportSteps = pinned.abi?.report_steps === true;
+  const captures = pinned.abi?.capture_locals || [];
+  const outputWords = count + (reportSteps ? 4 : 3) + captures.length;
+  const canaryOffset = count + (reportSteps ? 2 : 1) + captures.length;
   function active() { check(!state.closed && !state.lost, 'GPU provider closed or device lost'); }
   function destroyOwned() { if (ownsDevice && !destroyed) { destroyed = true; device.destroy(); } }
   try {
     await verify(pinned, 'webgpu-wgsl-memory-1', 'block.wgsl', new TextEncoder().encode(source));
-    check(Math.max(count * 4, (count + 3) * 4) <= device.limits.maxStorageBufferBindingSize &&
-      (count + 3) * 4 <= device.limits.maxBufferSize, 'Arena exceeds GPU storage limits');
+    check(Math.max(count * 4, outputWords * 4) <= device.limits.maxStorageBufferBindingSize &&
+      outputWords * 4 <= device.limits.maxBufferSize, 'Arena exceeds GPU storage limits');
     await enqueue(device, async () => {
       active(); device.pushErrorScope('validation');
       let popped = false;
@@ -139,36 +168,40 @@ export async function createGPUMemoryProvider(build, source, {device, ownsDevice
         try {
           device.pushErrorScope('validation'); scoped = true;
           const ib = create({size: count * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST});
-          const ob = create({size: (count + 3) * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST});
-          const rb = create({size: (count + 3) * 4, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST});
+          const ob = create({size: outputWords * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST});
+          const rb = create({size: outputWords * 4, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST});
           // Explicit LE encoding, independent of the host TypedArray byte order.
           const rawInput = new DataView(new ArrayBuffer(count * 4));
           for (let i = 0; i < count; i++) rawInput.setUint32(i * 4, input[i], true);
-          const seed = new DataView(new ArrayBuffer((count + 3) * 4));
-          for (let i = 0; i < count + 3; i++) seed.setUint32(i * 4, CANARY, true);
+          const seed = new DataView(new ArrayBuffer(outputWords * 4));
+          for (let i = 0; i < outputWords; i++) seed.setUint32(i * 4, CANARY, true);
           device.queue.writeBuffer(ib, 0, rawInput.buffer); device.queue.writeBuffer(ob, 0, seed.buffer);
           const bindings = device.createBindGroup({layout: pipeline.getBindGroupLayout(0), entries: [
             {binding: 0, resource: {buffer: ib}}, {binding: 1, resource: {buffer: ob}}]});
           const encoder = device.createCommandEncoder();
           const pass = encoder.beginComputePass(); pass.setPipeline(pipeline); pass.setBindGroup(0, bindings);
           pass.dispatchWorkgroups(1); pass.end();
-          encoder.copyBufferToBuffer(ob, 0, rb, 0, (count + 3) * 4);
+          encoder.copyBufferToBuffer(ob, 0, rb, 0, outputWords * 4);
           device.queue.submit([encoder.finish()]); submitted = true;
           await rb.mapAsync(GPUMapMode.READ);
           const data = new DataView(rb.getMappedRange().slice(0)); rb.unmap();
           const validation = await device.popErrorScope(); popped = true;
           check(!validation, validation?.message); active();
-          check(data.getUint32((count + 1) * 4, true) === CANARY && data.getUint32((count + 2) * 4, true) === CANARY,
+          check(data.getUint32(canaryOffset * 4, true) === CANARY && data.getUint32((canaryOffset + 1) * 4, true) === CANARY,
             'GPU memory canary modified');
           const status = data.getUint32(0, true);
           check(status === 0 || status === 1, 'Invalid GPU completion status');
+          const metrics = reportSteps ? {steps: data.getUint32((count + 1) * 4, true)} : {};
+          if (reportSteps) check(metrics.steps <= pinned.abi.max_steps, 'Invalid GPU execution-step count');
           const output = new Uint32Array(count);
           for (let i = 0; i < count; i++) output[i] = data.getUint32((i + 1) * 4, true);
           if (status === 1) {
             check(output.every((v, i) => v === input[i]), 'GPU refusal changed the arena');
-            return {status: 'refused', words: input.slice()};
+            return {status: 'refused', words: input.slice(), ...metrics};
           }
-          return {status: 'complete', words: output};
+          const locals = captures.length ? {locals: Object.fromEntries(captures.map((name, i) =>
+            [name, data.getUint32((count + 1 + Number(reportSteps) + i) * 4, true)]))} : {};
+          return {status: 'complete', words: output, ...metrics, ...locals};
         } finally {
           // A failed map/pop still retains physical resources until submitted work settles.
           if (submitted) { try { await device.queue.onSubmittedWorkDone(); } catch {} }

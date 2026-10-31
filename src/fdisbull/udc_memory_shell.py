@@ -104,11 +104,15 @@ def validate_plan(plan, program):
     return deepcopy(plan)
 
 
-def build_memory_shell(project, selections, plan, initial, destination):
+def build_memory_shell(project, selections, plan, initial, destination, *, cuts=None):
     from .udc_web_memory import build_memory_block
     if type(selections) is not dict or set(selections) != {'wasm', 'webgpu'}: raise ValueError('select both memory providers')
     first = project.udl_selection_info(selections['wasm'], full=True)['document']
     program = first['program']; normalized = validate_plan(plan, program)
+    lowered = None
+    if cuts is not None:
+        from .udc_memory_cuts import lower_memory_cuts
+        lowered = lower_memory_cuts(program, cuts)
     if type(initial) is not list or len(initial) != program['memory']['words'] or any(type(v) is not int or not 0 <= v <= 0xffffffff for v in initial): raise ValueError('invalid initial word arena')
     validate_arena(normalized,initial)
     destination = Path(destination).expanduser().absolute()
@@ -118,7 +122,7 @@ def build_memory_shell(project, selections, plan, initial, destination):
     artifacts = {name: files('fdisbull').joinpath('web_runtime/' + name).read_bytes() for name in ('memory.mjs','memory-shell.mjs','memory-canvas.mjs','memory-index.html')}
     artifacts['index.html'] = artifacts.pop('memory-index.html')
     artifacts['initial.json'] = (json.dumps(initial,separators=(',',':'))+'\n').encode()
-    variants = {}; endpoints = {}
+    variants = {}; endpoints = {}; cut_variants = {}
     with tempfile.TemporaryDirectory(prefix='fdisbull-memory-shell-') as temp:
         for backend, target in zip(('wasm', 'webgpu'), TARGETS):
             variants[backend] = {}; endpoints[backend] = {}
@@ -128,14 +132,28 @@ def build_memory_shell(project, selections, plan, initial, destination):
                 directory = 'blocks/' + backend + '/' + function
                 output = Path(temp) / backend / function
                 output.parent.mkdir(exist_ok=True)
-                build = build_memory_block(program, function, target, output)
+                build = build_memory_block(program, function, target, output, report_steps=lowered is not None)
                 variants[backend][function] = {'directory':directory, 'build':build}
                 endpoints[backend][function] = identities
                 for file in output.iterdir(): artifacts[directory + '/' + file.name] = file.read_bytes()
+            if lowered is not None:
+                cut_variants[backend] = {}
+                for function, cut in lowered['functions'].items():
+                    cut_variants[backend][function] = {}
+                    for name, phase in cut['phases'].items():
+                        directory = 'phases/' + backend + '/' + function + '/' + name
+                        output = Path(temp) / 'phases' / backend / function / name
+                        output.parent.mkdir(parents=True, exist_ok=True)
+                        build = build_memory_block(phase['program'], function, target, output,
+                            report_steps=True, capture_locals=[cut['token_local']])
+                        cut_variants[backend][function][name] = {'directory':directory, 'build':build}
+                        for file in output.iterdir(): artifacts[directory + '/' + file.name] = file.read_bytes()
     manifest = {'format':FORMAT,'module_uil_sha256':digest(program),'program':program,'plan':normalized,
         'plan_sha256':digest(normalized),'variants':variants,'endpoints':endpoints,
         'artifacts':{name:hashlib.sha256(data).hexdigest() for name,data in artifacts.items()},
         'execution':False,'source_to_uil':False,'scope':'owned word arena; ordered input events; staged logic/render; guarded atomic commit'}
+    if lowered is not None:
+        manifest.update(cuts=lowered, cuts_sha256=digest(lowered), cut_variants=cut_variants)
     destination.mkdir(parents=True,mode=0o700,exist_ok=False)
     for name,data in artifacts.items():
         path=destination/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(data)

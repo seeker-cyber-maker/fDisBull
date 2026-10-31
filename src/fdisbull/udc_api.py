@@ -1,6 +1,6 @@
 """Agent JSON surface for persistent snippet and implementation records."""
 METHODS={
- 'build-memory-web-shell':'Emit an owned canvas and input shell with exact memory selections; selections,plan,initial,destination; build only',
+ 'build-memory-web-shell':'Emit an owned canvas and input shell with exact memory selections; selections,plan,initial,destination,[cuts]; build only',
  'store-memory-block-contract':'Register a pure bounded word-arena UIL contract; document,[author]',
  'store-memory-udl-layer':'Register an exact memory-UIL backing and web target; document,[author]',
  'select-memory-udl-layers':'Pin every memory function to an exact layer; name,bindings,program,target,[author]',

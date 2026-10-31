@@ -109,6 +109,62 @@ drains all providers and only then destroys that owned device. A borrowed device
 survives direct shell disposal. Unrelated users of a shared device must coordinate
 validation scopes themselves. Provider failure never selects a fallback backend.
 
+## Selectable blocks inside a function
+
+An inline copy of a function does not automatically call its selected backing.
+To establish that boundary without rewriting the accepted UIL, pass an optional
+`cuts` document to `build-memory-web-shell` or Python `build_memory_shell`:
+
+```json
+{
+  "format": "fdisbull-memory-cuts-1",
+  "module_uil_sha256": "<canonical program digest>",
+  "cuts": [{"caller": "owner", "entry": "owner.node-id", "callee": "math"}]
+}
+```
+
+The entry identifies the first statement of a contiguous region equal to the
+entire named callee body. Equality removes only statement IDs and evidence; it
+does not infer semantic equivalence. The original program, its hash and its
+persisted selections remain unchanged. `lower_memory_cuts` produces a separate
+`fdisbull-memory-cut-lowering-1` derivation and exact phase programs. Both target
+compilers consume those ordinary UIL programs; neither knows game rules.
+
+This first profile refuses overlapping cuts, ambiguous IDs, recursive calls,
+more than 16 active function frames, loop ancestors, returns inside a cut,
+callee local live-ins and continuation local live-ins. It does not serialize a
+general native stack. A continuation executes its remaining lexical tails once,
+without reevaluating the branch condition that selected the cut. Static bounds
+must establish that every phase fits the backend budget, including its two
+adapter statements. A callee budget that could add a refusal to the original
+inline caller is also refused at build time.
+
+The caller yields through a private captured local. This does not add an
+application word: indexed loads and stores retain the original arena bound.
+Optional `build_memory_block(report_steps=True, capture_locals=[...])` receipts
+expose exact statement/loop-condition charges and owned captured-local values.
+Default compiler artifacts and receipts retain their previous bytes. Wasm uses
+private exported globals; GPU readback metadata follows the application arena
+and precedes the canaries.
+
+The shell captures every binding for the whole transaction. A yielded caller
+invokes that captured callee selection and resumes on its captured caller
+backend. All phases, nested blocks and rendering remain private until the
+existing final commit check. Each complete logical function must respect its
+declared output footprint. Application state guards run at the public logical
+function boundary, not between private phases. One source caller budget covers
+its prefix, child and continuation, subtracting only the two introduced adapter
+charges. A phase may complete bounded pure computation before aggregate budget
+exhaustion is detected; the public result is discarded atomically. Identical
+failure timing and instruction scheduling are not claimed.
+
+Cut-enabled transaction receipts include the actual invoked functions,
+backends, phases, statuses and charges. Verify these as well as output equality:
+matching results alone do not prove a selected nested backing ran. Phase
+wrappers share the shell's ownership, availability, epoch and disposal rules.
+Changing a binding while a child is pending invalidates the entire result;
+there is no mixed-epoch resume, fallback or retry.
+
 ## Browser services
 
 The canvas host implements service adapters only: keyboard events to declared
@@ -161,6 +217,21 @@ paths. Compile outside Git, including outside a private guard repository.
 Chrome profile and actual Node/Chrome GPU qualification. It does not serve the
 original executable, project database or a source directory. The delivered
 browser bundle is separate from its qualification payload and profiles.
+
+`snake_browser.py --nested-step` identifies the two exact recovered inline step
+regions in `action`, calls the selected `step` backing, then executes the source
+continuation. This is a separate build; the earlier frozen baseline stays
+intact. The replay adds owner/step backings selected independently in both
+directions, and an alternating arm where step uses the opposite backend. The
+canonical recovered UDL/UIL and original executable remain the same.
+
+The [nested-step qualification](evidence/snake-nested-step/verification.json)
+records 342 original-derived step cases per backend in each of Node and Chrome,
+plus ten carried-play combinations per host. Each arm compares 69 observations
+over 79 input events, with 38 actual nested step invocations and 117 caller
+phase invocations. Two additional production-canvas arms retain trusted game
+keyboard/mouse events. Original DOS observations are reused from the frozen,
+identity-checked corpus; this continuation does not claim a fresh DOS session.
 
 See the [sanitized qualification receipt](evidence/snake-browser/verification.json)
 for actual case counts, backend identities, failures detected, equality boundary

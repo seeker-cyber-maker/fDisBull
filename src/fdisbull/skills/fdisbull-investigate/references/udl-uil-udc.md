@@ -13,6 +13,17 @@ source-assisted versus blind recovery, diagnostic RAM interventions, cursor/font
 projection and clock-adapter limits. See `docs/UDC_MEMORY_BROWSER.md` in a source
 checkout for the bounded contract, ownership rules and Snake reproduction.
 
+An inline region does not dynamically consult another function's selected
+backing. For that experiment, `build-memory-web-shell` accepts a separately
+hash-bound `fdisbull-memory-cuts-1` document. It requires exact contiguous
+callee-body equality after removing only IDs/evidence, no loop ancestor or
+local live-ins, and separately bounded continuation phases. Preserve the
+canonical UIL hash. Qualify the derivation, source budget and memory domain,
+then check actual nested invocation receipts under independent bindings and
+compare carried original state/frames. Output equality by itself does not show
+that routing occurred. Unsupported cuts must refuse rather than guess a stack
+or silently reuse the inline implementation.
+
 The `build-web-block` JSON method emits one canonical, pure selected UIL
 invocation for `wasm32-scalar-1` or `webgpu-wgsl-scalar-1`. Inspect the actual
 tool's `methods` first. Selection target metadata alone does not add a backend.

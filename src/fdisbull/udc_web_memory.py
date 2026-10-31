@@ -233,7 +233,7 @@ def _section(number, data):
     return bytes([number]) + _leb(len(data)) + data
 
 
-def _wasm(program, function):
+def _wasm(program, function, report_steps=False, capture_locals=()):
     """Direct Wasm encoding; no external compiler or target-specific formula."""
     variables = sorted(program['variables'])
     indices = {name: n for n, name in enumerate(variables)}
@@ -250,11 +250,18 @@ def _wasm(program, function):
     def const(v): return b'\x41' + _leb(v if v < 0x80000000 else v - 0x100000000, True)
     def get(i): return b'\x20' + _leb(i)
     def put(i): return b'\x21' + _leb(i)
+    # The opt-in global survives a trap so the owner can charge refused work.
+    # The ordinary profile keeps its original local and byte encoding.
+    def get_steps(): return b'\x23\x00' if report_steps else get(steps)
+    def put_steps(): return b'\x24\x00' if report_steps else put(steps)
+    def capture():
+        return b''.join(get(indices[name]) + b'\x24' + _leb(i + int(report_steps))
+                        for i, name in enumerate(capture_locals))
     def when(condition, yes, no=None):
         return condition + b'\x04\x40' + yes + (b'\x05' + no if no is not None else b'') + b'\x0b'
     refuse = const(1) + b'\x0f'
     def charge():
-        return when(get(steps) + b'\x45', refuse) + get(steps) + const(1) + b'\x6b' + put(steps)
+        return when(get_steps() + b'\x45', refuse) + get_steps() + const(1) + b'\x6b' + put_steps()
     opcode = {'add': 0x6a, 'sub': 0x6b, 'mul': 0x6c, 'and': 0x71, 'or': 0x72,
               'xor': 0x73, 'shl': 0x74, 'shr': 0x76, 'div': 0x6e, 'mod': 0x70,
               'eq': 0x46, 'ne': 0x47, 'lt': 0x49, 'le': 0x4d, 'gt': 0x4b, 'ge': 0x4f}
@@ -270,7 +277,7 @@ def _wasm(program, function):
             op = n['op']
             if op == 'set': out += expr(n['value']) + put(indices[n['var']])
             elif op == 'store': out += expr(n['index']) + expr(n['value']) + b'\x10\x02'
-            elif op == 'return': out += const(0) + b'\x0f'
+            elif op == 'return': out += capture() + const(0) + b'\x0f'
             elif op == 'if': out += when(expr(n['condition']), body(n['then']), body(n['else']))
             else:
                 counter = loops[id(n)]
@@ -283,7 +290,7 @@ def _wasm(program, function):
     local_count = len(variables) + 1 + len(loops)
     code = _leb(1) + _leb(local_count) + b'\x7f'
     for name in variables: code += const(program['variables'][name]['initial']) + put(indices[name])
-    code += const(spec['max_steps']) + put(steps) + body(spec['body']) + const(0) + b'\x0b'
+    code += const(spec['max_steps']) + put_steps() + body(spec['body']) + capture() + const(0) + b'\x0b'
     words = program['memory']['words']
     load = b'\x00' + when(get(0) + const(words) + b'\x4f', b'\x00') + get(0) + const(2) + b'\x74\x28\x02\x00\x0b'
     store = b'\x00' + when(get(0) + const(words) + b'\x4f', b'\x00') + get(0) + const(2) + b'\x74' + get(1) + b'\x36\x02\x00\x0b'
@@ -292,14 +299,21 @@ def _wasm(program, function):
                   b'\x60' + _vec([b'\x7f', b'\x7f']) + _vec([])]
     pages = (words * 4 + 65535) // 65536
     exports = [_leb(5) + b'block\x00\x00', _leb(6) + b'memory\x02\x00']
+    if report_steps:
+        exports.append(_leb(9) + b'remaining\x03\x00')
+    for i, name in enumerate(capture_locals):
+        exported = ('capture_' + str(i)).encode()
+        exports.append(_leb(len(exported)) + exported + b'\x03' + _leb(i + int(report_steps)))
+    globals_ = [b'\x7f\x01\x41\x00\x0b'] * (int(report_steps) + len(capture_locals))
     return (b'\0asm\x01\0\0\0' + _section(1, _vec(signatures))
             + _section(3, _vec([b'\x00', b'\x01', b'\x02']))
             + _section(5, _vec([b'\x01' + _leb(pages) + _leb(pages)]))
+            + (_section(6, _vec(globals_)) if globals_ else b'')
             + _section(7, _vec(exports))
             + _section(10, _vec([_leb(len(c)) + c for c in (code, load, store)])))
 
 
-def _wgsl(program, function):
+def _wgsl(program, function, report_steps=False, capture_locals=()):
     words = program['memory']['words']
     names = {n: 'v' + str(i) for i, n in enumerate(sorted(program['variables']))}
     spec = program['functions'][function]
@@ -318,6 +332,9 @@ def _wgsl(program, function):
         value = '(' + a + ' ' + operators[op] + ' ' + b + ')'
         return 'select(0u,1u,' + value + ')' if op in ('eq', 'ne', 'lt', 'le', 'gt', 'ge') else value
     counters = [0]
+    def capture(indent='  '):
+        return [indent + 'captured_' + str(i) + ' = ' + names[name] + ';'
+                for i, name in enumerate(capture_locals)]
     def body(nodes, indent='  '):
         lines = []
         for n in nodes:
@@ -326,7 +343,7 @@ def _wgsl(program, function):
             if op == 'set': lines.append(indent + names[n['var']] + ' = ' + expr(n['value']) + ';')
             elif op == 'store': lines.append(indent + 'put_word(' + expr(n['index']) + ',' + expr(n['value']) + ');')
             elif op == 'return':
-                lines.append(indent + 'return;')
+                lines += capture(indent) + [indent + 'return;']
                 continue
             elif op == 'if':
                 # Evaluate once, then reject expression faults before taking a branch.
@@ -360,19 +377,31 @@ def _wgsl(program, function):
              'fn word_mul(a:u32,b:u32)->u32 { return a*b; }',
              'fn word_shl(a:u32,b:u32)->u32 { return a << (b & 31u); }',
              'fn word_shr(a:u32,b:u32)->u32 { return a >> (b & 31u); }',
+             *['var<private> captured_' + str(i) + ':u32 = 0u;' for i in range(len(capture_locals))],
              'fn run() {']
     lines += ['  var ' + names[n] + ':u32 = ' + str(d['initial']) + 'u;' for n, d in sorted(program['variables'].items())]
-    lines += body(spec['body']) + ['}', '@compute @workgroup_size(1) fn main() {',
+    fallthrough_capture = capture() if not spec['body'] or spec['body'][-1]['op'] != 'return' else []
+    lines += body(spec['body']) + fallthrough_capture + ['}', '@compute @workgroup_size(1) fn main() {',
               '  for (var i=0u;i<' + str(words) + 'u;i+=1u) { out_words[i+1u]=in_words[i]; }',
               '  run();', '  if (failed) {',
               '    for (var i=0u;i<' + str(words) + 'u;i+=1u) { out_words[i+1u]=in_words[i]; }',
-              '    out_words[0]=1u;', '  } else { out_words[0]=0u; }', '}']
+              '    out_words[0]=1u;', '  } else { out_words[0]=0u; }']
+    if report_steps:
+        lines.append('  out_words[' + str(words + 1) + 'u]=' + str(spec['max_steps']) + 'u-remaining;')
+    for i, name in enumerate(capture_locals):
+        lines.append('  out_words[' + str(words + 1 + int(report_steps) + i) + 'u]=captured_' + str(i) + ';')
+    lines.append('}')
     return '\n'.join(lines) + '\n'
 
 
-def build_memory_block(program, function, target, destination):
+def build_memory_block(program, function, target, destination, *, report_steps=False, capture_locals=()):
     """Build one named function; generated artifacts must remain outside Git."""
     program = validate_memory_uil(program)
+    if type(report_steps) is not bool:
+        raise ValueError('execution-step reporting requires a boolean')
+    if type(capture_locals) not in (list, tuple) or any(type(name) is not str or name not in program['variables'] for name in capture_locals) or len(set(capture_locals)) != len(capture_locals):
+        raise ValueError('local capture requires distinct declared local names')
+    capture_locals = sorted(capture_locals)
     if not isinstance(function, str) or function not in program['functions'] or target not in TARGETS:
         raise ValueError('unsupported bounded-memory function/target')
     destination = Path(destination).expanduser().absolute()
@@ -382,7 +411,7 @@ def build_memory_block(program, function, target, destination):
     if any((p / '.git').exists() for p in (destination, *destination.parents)):
         raise ValueError('bounded-memory output must be new and outside Git')
     artifact = 'block.wasm' if target == TARGETS[0] else 'block.wgsl'
-    data = _wasm(program, function) if target == TARGETS[0] else _wgsl(program, function).encode()
+    data = _wasm(program, function, report_steps, capture_locals) if target == TARGETS[0] else _wgsl(program, function, report_steps, capture_locals).encode()
     receipt = {'format': BUILD, 'target': target, 'function': function,
                'module_uil_sha256': digest(program), 'execution': False, 'source_to_uil': False,
                'abi': {'format': 'fdisbull-web-memory-abi-1', 'memory_words': program['memory']['words'],
@@ -390,6 +419,10 @@ def build_memory_block(program, function, target, destination):
                        'status': {'complete': 0, 'refused': 1}},
                'artifacts': {artifact: hashlib.sha256(data).hexdigest()},
                'scope': 'one bounded-memory function; no services; atomic public arena result; original fidelity checked separately'}
+    if report_steps:
+        receipt['abi']['report_steps'] = True
+    if capture_locals:
+        receipt['abi']['capture_locals'] = capture_locals
     destination.mkdir(parents=True, mode=0o700, exist_ok=False)
     (destination / artifact).write_bytes(data)
     (destination / 'build.json').write_text(json.dumps(receipt, indent=2) + '\n')

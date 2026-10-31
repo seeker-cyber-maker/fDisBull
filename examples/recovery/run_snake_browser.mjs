@@ -30,7 +30,7 @@ async function nodeRun(){
  const require=createRequire(path.join(npmRoot,'package.json'));
  const{create,globals}=await import(pathToFileURL(require.resolve('webgpu')));Object.assign(globalThis,globals);
  let gpu=create(['backend='+(process.env.FDISBULL_GPU_BACKEND||'metal')]),device,shell;
- const providers={wasm:{},webgpu:{}};
+ const providers={wasm:{},webgpu:{}},phases={wasm:{},webgpu:{}};
  try{
   const adapter=await gpu.requestAdapter();check(adapter&&adapter.info.isFallbackAdapter===false,'Real Node adapter required');device=await adapter.requestDevice();
   const{MemoryShell}=await import(pathToFileURL(path.join(root,'memory-shell.mjs')));
@@ -39,11 +39,19 @@ async function nodeRun(){
    providers[kind][fn]=kind==='wasm'?await createWasmMemoryProvider(v.build,verified.get(v.directory+'/block.wasm')):
     await createGPUMemoryProvider(v.build,verified.get(v.directory+'/block.wgsl').toString(),{device});
   }
-  shell=new MemoryShell(manifest,providers,initial);
+  for(const[kind,functions]of Object.entries(manifest.cut_variants||{}))for(const[fn,entries]of Object.entries(functions)){
+   phases[kind][fn]={};
+   for(const[name,v]of Object.entries(entries))phases[kind][fn][name]=kind==='wasm'?
+    await createWasmMemoryProvider(v.build,verified.get(v.directory+'/block.wasm')):
+    await createGPUMemoryProvider(v.build,verified.get(v.directory+'/block.wgsl').toString(),{device});
+  }
+  shell=new MemoryShell(manifest,providers,initial,phases);
   const result=await timed(exerciseSnake(shell,manifest,study,initial),150000,'Node original study');
   result.host='node';result.runtime=process.version;result.adapter={vendor:adapter.info.vendor,architecture:adapter.info.architecture,isFallbackAdapter:adapter.info.isFallbackAdapter};result.identities=identities;
   await fs.writeFile(path.join(output,'node-result.json'),JSON.stringify(result,null,2)+'\n',{flag:'wx'});return result;
- }finally{if(shell)await shell.dispose();else await Promise.allSettled(Object.values(providers).flatMap(x=>Object.values(x)).map(p=>p.dispose()));device?.destroy();gpu=null;}
+ }finally{if(shell)await shell.dispose();else await Promise.allSettled([
+  ...Object.values(providers).flatMap(x=>Object.values(x)),
+  ...Object.values(phases).flatMap(x=>Object.values(x).flatMap(y=>Object.values(y)))].map(p=>p.dispose()));device?.destroy();gpu=null;}
 }
 
 async function connect(profile){

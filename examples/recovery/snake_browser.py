@@ -46,7 +46,7 @@ def plan(program,palette):
         'keymap':{k:{'ascii':a,'scan':s} for k,(a,s) in keymap.items()},'logic_functions':['action','step','reset']}
 
 
-def prepare(original_root,model_root,output,executable):
+def prepare(original_root,model_root,output,executable,*,nested_step=False):
     original_root,model_root,output=(Path(p).resolve() for p in (original_root,model_root,output))
     if output.exists() or any((p/'.git').exists() for p in (output,*output.parents)):
         raise ValueError('choose a new private study root outside Git')
@@ -94,7 +94,11 @@ def prepare(original_root,model_root,output,executable):
                     'evidence':{'original_sha256':source_sha,'uil_sha256':digest(program)}}
                 layers[backend][function]=register_layer(project,doc)['id']
             selections[backend]=select_layers(project,'snake-'+backend,layers[backend],program=program,target=target_profile)['id']
-        manifest=build_memory_shell(project,selections,plan(program,palette),initial,output/'browser')
+        cuts=None
+        if nested_step:
+            cuts={'format':'fdisbull-memory-cuts-1','module_uil_sha256':digest(program),
+                'cuts':[{'caller':'action','entry':entry,'callee':'step'} for entry in ('action.87','action.153')]}
+        manifest=build_memory_shell(project,selections,plan(program,palette),initial,output/'browser',cuts=cuts)
     with Project(database) as project:
         assert project.db.execute('PRAGMA integrity_check').fetchone()[0]=='ok'
         for backend,selection in selections.items():
@@ -105,6 +109,7 @@ def prepare(original_root,model_root,output,executable):
         'browser':str(output/'browser'),'manifest_sha256':hashlib.sha256((output/'browser/memory-shell.json').read_bytes()).hexdigest(),
         'artifacts':manifest['artifacts'],'original_root':str(original_root),'model_root':str(model_root),
         'execution':False,'scope':'source-assisted recovered model and build identities; execution receipt separate'}
+    if nested_step:receipt['cut_plan_sha256']=manifest['cuts']['cut_plan_sha256']
     (output/'build.json').write_text(json.dumps(receipt,indent=2)+'\n')
     return receipt
 
@@ -113,4 +118,5 @@ if __name__=='__main__':
     import argparse
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('original',type=Path);p.add_argument('model',type=Path);p.add_argument('output',type=Path)
     p.add_argument('--executable',type=Path,required=True)
-    a=p.parse_args();print(json.dumps(prepare(a.original,a.model,a.output,a.executable)))
+    p.add_argument('--nested-step',action='store_true',help='Route exact recovered action step regions through the selected step backing')
+    a=p.parse_args();print(json.dumps(prepare(a.original,a.model,a.output,a.executable,nested_step=a.nested_step)))

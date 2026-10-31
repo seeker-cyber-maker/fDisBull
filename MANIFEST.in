@@ -77,4 +77,7 @@ include examples/recovery/snake_browser.py
 include examples/recovery/run_snake_browser.mjs
 include examples/recovery/snake_browser_study.mjs
 include tests/memory_shell_checks.mjs
+include tests/metrics_checks.mjs
+include tests/memory_cut_shell_checks.mjs
 include docs/evidence/snake-browser/verification.json
+include docs/evidence/snake-nested-step/verification.json

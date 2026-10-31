@@ -41,11 +41,15 @@ export async function exerciseSnake(shell,manifest,study,initial){
   }
   result.cpu[backend]={cases:observed.length,mismatches:0,projection_sha256:await sha(new TextEncoder().encode(JSON.stringify(observed)))};
  }
- for(const mode of [['wasm','wasm'],['wasm','webgpu'],['webgpu','wasm'],['webgpu','webgpu'],['alternating','alternating']]){
+ const modes=[['wasm','wasm'],['wasm','webgpu'],['webgpu','wasm'],['webgpu','webgpu'],['alternating','alternating']];
+ if(manifest.cuts)modes.push(['wasm','wasm','webgpu'],['wasm','webgpu','webgpu'],['webgpu','wasm','wasm'],['webgpu','webgpu','wasm'],['alternating','alternating','opposite']);
+ for(const mode of modes){
   const arm={logic:mode[0],render:mode[1],observations:[],events:0,interventions:0};
+  if(manifest.cuts)Object.assign(arm,{step:mode[2]||mode[0],step_invocations:0,phase_invocations:0});
   shell.selectBackend('wasm');shell.replace(sourceInitial(initial,study));
   shell.selectBackend(mode[0]==='alternating'?'wasm':mode[0],manifest.plan.logic_functions);
   shell.selectBackend(mode[1]==='alternating'?'webgpu':mode[1],[manifest.plan.render.function]);
+  if(mode[2])shell.selectBackend(mode[2]==='opposite'?'webgpu':mode[2],['step']);
   let receipt=await shell.dispatch(manifest.plan.initialize,{[manifest.plan.events.clock]:study.initial_services.last_tick});
   check(receipt.committed,'Initial source reset failed');
   for(const observation of study.observations){
@@ -57,14 +61,26 @@ export async function exerciseSnake(shell,manifest,study,initial){
     if(mode[0]==='alternating'){
      shell.selectBackend(arm.events%2?'webgpu':'wasm',manifest.plan.logic_functions);
      shell.selectBackend(arm.events%2?'wasm':'webgpu',[manifest.plan.render.function]);
+     if(mode[2]==='opposite')shell.selectBackend(arm.events%2?'wasm':'webgpu',['step']);
     }
     receipt=await shell.dispatch(manifest.plan.events.function,eventPatch(event,manifest.plan));
-    check(receipt.committed,observation.id+' '+mode+' event failed: '+receipt.reason);arm.events++;
+    check(receipt.committed,observation.id+' '+mode+' event failed: '+receipt.reason);
+    if(manifest.cuts){
+     const expected=mode[2]==='opposite'?(arm.events%2?'wasm':'webgpu'):(mode[2]|| (mode[0]==='alternating'?(arm.events%2?'webgpu':'wasm'):mode[0]));
+     const calls=receipt.execution.filter(x=>x.function==='step');
+     check(calls.length<=1&&calls.every(x=>x.kind==='block'&&x.backend===expected),'Selected nested step did not run');
+     const phases=receipt.execution.filter(x=>x.function==='action');
+     check(phases.length===1+calls.length&&phases.every(x=>x.kind==='phase'),'Action did not use exact cut phases');
+     arm.step_invocations+=calls.length;arm.phase_invocations+=phases.length;
+    }
+    arm.events++;
    }
    arm.observations.push({id:observation.id,...await compareObservation(shell.snapshot().words,observation,manifest,study)});
   }
   result.arms.push(arm);
+  if(manifest.cuts)check(arm.step_invocations>0,'No nested step exercised');
  }
  result.checks.push('all-original-step-cases-both-backends','all-native-sequences-four-logic-render-combinations','alternating-carried-state-without-answer-resets','exact-full-indexed-frames');
+ if(manifest.cuts)result.checks.push('independently-selected-nested-step-both-directions','actual-phase-and-child-invocation-receipts','opposite-step-backing-carried-between-events');
  return result;
 }

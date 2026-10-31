@@ -7,22 +7,45 @@ const u32=x=>Number.isInteger(x)&&x>=0&&x<=0xffffffff;
 const inc=x=>{check(Number.isSafeInteger(x+1),'Epoch exhausted');return x+1;};
 const providerOwners=new WeakMap();
 
+function checkCutLinks(manifest){
+  const lowered=manifest.cuts,document=lowered.document,grouped=Object.create(null);
+  check(document?.format==='fdisbull-memory-cuts-1'&&document.module_uil_sha256===manifest.module_uil_sha256&&Array.isArray(document.cuts)&&document.cuts.length>0&&document.cuts.length<=32,'Invalid cut document');
+  for(const cut of document.cuts){
+    check(Object.hasOwn(manifest.program.functions,cut.caller)&&Object.hasOwn(manifest.program.functions,cut.callee),'Unknown cut endpoint');
+    (grouped[cut.caller]??=[]).push(cut);
+  }
+  check(canonical(Object.keys(grouped).sort())===canonical(Object.keys(lowered.functions).sort()),'Cut owners differ from document');
+  for(const [fn,entries] of Object.entries(grouped)){
+    const owner=lowered.functions[fn],numbers=entries.map((_,i)=>String(i+1));
+    check(canonical(Object.keys(owner.yields).sort())===canonical(numbers.slice().sort())&&canonical(Object.keys(owner.phases).sort())===canonical(['entry',...numbers.map(n=>'resume_'+n)].sort()),'Cut phase set differs from document');
+    entries.forEach((cut,i)=>check(canonical(owner.yields[String(i+1)])===canonical({callee:cut.callee,resume:'resume_'+(i+1),adapter_steps:2}),'Cut callee or continuation differs from document'));
+  }
+}
+
 export class MemoryShell {
-  #manifest;#providers;#words;#bindings;#revision=0;#epoch=0;#generation=0;
+  #manifest;#providers;#phases;#words;#bindings;#revision=0;#epoch=0;#generation=0;
   #session=crypto.randomUUID();#closed=false;#disposing=null;#tail=Promise.resolve();#pending=0;#tickets=new Map();#sequence=0;
-  constructor(manifest,providers,initial) {
+  constructor(manifest,providers,initial,phases={}) {
     this.#manifest=clone(manifest);this.#providers=Object.fromEntries(Object.entries(providers).map(([kind,functions])=>[kind,{...functions}]));
+    this.#phases=Object.fromEntries(Object.entries(phases).map(([kind,functions])=>[kind,Object.fromEntries(Object.entries(functions).map(([fn,entries])=>[fn,{...entries}]))]));
     const {plan,program}=this.#manifest;
     check(plan?.format==='fdisbull-memory-orchestration-1'&&program?.format==='fdisbull-memory-uil-1','Unsupported memory shell');
     check(plan.concurrency==='ordered-events'&&Number.isInteger(program.memory.words),'Unsupported event policy');
     this.#words=this.#arena(initial);this.#bindings=clone(plan.bindings);
+    if(manifest.cuts){
+      check(manifest.cuts.format==='fdisbull-memory-cut-lowering-1'&&manifest.cuts.module_uil_sha256===manifest.module_uil_sha256,'Cut source identity differs');
+      checkCutLinks(this.#manifest);
+      for(const [fn,cut] of Object.entries(manifest.cuts.functions))
+        check(Object.hasOwn(program.functions,fn)&&cut.max_steps===program.functions[fn].max_steps&&Object.hasOwn(cut.phases,'entry'),'Invalid cut owner');
+    }
     for(const [fn,backend] of Object.entries(this.#bindings))this.#provider(fn,backend);
     this.#validate(this.#words);
-    const handles=[...new Set(Object.values(this.#providers).flatMap(x=>Object.values(x)))];
+    const handles=this.#handles();
     for(const p of handles)check(!providerOwners.has(p),'Provider wrapper already belongs to a shell');
     for(const p of handles)providerOwners.set(p,this);
   }
   #open(){check(!this.#closed,'Shell disposed');}
+  #handles(){return [...new Set([...Object.values(this.#providers).flatMap(x=>Object.values(x)),...Object.values(this.#phases).flatMap(x=>Object.values(x).flatMap(y=>Object.values(y)))])];}
   #arena(values){
     check((Array.isArray(values)||ArrayBuffer.isView(values))&&values.length===this.#manifest.program.memory.words,'Invalid arena length');
     check(Array.from(values).every(u32),'Invalid arena word');return Uint32Array.from(values);
@@ -30,6 +53,18 @@ export class MemoryShell {
   #provider(fn,backend=this.#bindings[fn]) {
     const p=this.#providers[backend]?.[fn];check(p&&!p.closed&&!p.lost,'Provider unavailable');
     const b=p.describe();check(b.target===({wasm:'wasm32-memory-1',webgpu:'webgpu-wgsl-memory-1'})[backend]&&b.function===fn&&b.module_uil_sha256===this.#manifest.module_uil_sha256&&b.abi.memory_words===this.#words.length,'Provider identity differs');
+    if(this.#manifest.cuts){
+      check(b.abi.report_steps===true,'Cut execution requires step receipts');
+      const cut=Object.hasOwn(this.#manifest.cuts.functions,fn)?this.#manifest.cuts.functions[fn]:null;
+      if(cut)for(const phase of Object.keys(cut.phases))this.#phase(fn,backend,phase);
+    }
+    return p;
+  }
+  #phase(fn,backend,name){
+    const cut=this.#manifest.cuts.functions[fn],spec=cut.phases[name],p=this.#phases[backend]?.[fn]?.[name];
+    check(spec&&p&&!p.closed&&!p.lost,'Cut phase unavailable');
+    const b=p.describe(),expected=this.#manifest.cut_variants?.[backend]?.[fn]?.[name]?.build;
+    check(expected&&canonical(b)===canonical(expected)&&b.target===({wasm:'wasm32-memory-1',webgpu:'webgpu-wgsl-memory-1'})[backend]&&b.function===fn&&b.abi.memory_words===this.#words.length&&b.abi.report_steps===true&&canonical(b.abi.capture_locals)===canonical([cut.token_local]),'Cut phase identity differs');
     return p;
   }
   #validate(words){
@@ -50,7 +85,7 @@ export class MemoryShell {
   }
   describe(){this.#open();return clone(this.#manifest);}
   snapshot(){this.#open();return {session:this.#session,generation:this.#generation,revision:this.#revision,words:this.#words.slice(),bindings:clone(this.#bindings)};}
-  capabilities(){return {closed:this.#closed,bindings:clone(this.#bindings),backends:Object.fromEntries(Object.entries(this.#providers).map(([kind,functions])=>[kind,Object.keys(this.#bindings).every(fn=>Object.hasOwn(functions,fn)&&!functions[fn].closed&&!functions[fn].lost)]))};}
+  capabilities(){return {closed:this.#closed,bindings:clone(this.#bindings),backends:Object.fromEntries(Object.keys(this.#providers).map(kind=>[kind,!this.#closed&&Object.keys(this.#bindings).every(fn=>{try{this.#provider(fn,kind);return true;}catch{return false;}})]))};}
   selectBackend(backend,functions=Object.keys(this.#bindings)){
     this.#open();check(Array.isArray(functions)&&functions.length>0,'Select named functions');
     for(const fn of functions){check(Object.hasOwn(this.#bindings,fn),'Unknown binding');this.#provider(fn,backend);}
@@ -71,29 +106,65 @@ export class MemoryShell {
     for(const [key,value] of Object.entries(input))snapshot[Number(key)]=value;
     const operation=++this.#sequence,id=this.#session+':'+operation;
     const token={epoch:this.#epoch,generation:this.#generation,revision:this.#revision,session:this.#session};
-    const bindings=clone(this.#bindings),leases=[];
-    const call=async(name,words)=>{
-      const provider=this.#provider(name,bindings[name]);leases.push([provider,provider.epoch]);
+    const bindings=clone(this.#bindings),leases=[],execution=[];
+    const invoke=async(provider,name,words,detail)=>{
+      leases.push([provider,provider.epoch]);
       const result=await provider.invoke(words);
+      if(this.#manifest.cuts){
+        check(Number.isInteger(result.steps)&&result.steps>=0&&result.steps<=provider.describe().abi.max_steps,'Invalid step receipt');
+        execution.push({function:name,backend:bindings[name],...detail,status:result.status,steps:result.steps});
+      }
       check(result.status==='complete','Memory block refused');const output=this.#arena(result.words);
-      const ranges=this.#manifest.plan.outputs[name];
-      for(let n=0;n<words.length;n++)if(!ranges.some(([start,count])=>n>=start&&n<start+count))check(output[n]===words[n],'Kernel wrote outside declared output');
-      this.#validate(output);return output;
+      return {...result,words:output};
+    };
+    const execute=async(name,words,depth)=>{
+      check(depth<16,'Cut call depth exceeded');
+      const provider=this.#provider(name,bindings[name]),owners=this.#manifest.cuts?.functions;
+      const cut=owners&&Object.hasOwn(owners,name)?owners[name]:null;
+      if(!cut)return invoke(provider,name,words,{kind:'block'});
+      let phase='entry',total=0,staged=words;
+      // Cuts cannot have loop ancestors. Every continuation moves forward in
+      // its lexical function, so an admitted owner can yield at most once per cut.
+      for(let n=0;n<=Object.keys(cut.yields).length;n++){
+        const result=await invoke(this.#phase(name,bindings[name],phase),name,staged,{kind:'phase',phase});
+        const value=result.locals?.[cut.token_local];
+        check(u32(value),'Invalid continuation token');
+        if(value===0){
+          total+=result.steps;check(total<=cut.max_steps,'Canonical caller budget exhausted');
+          return {status:'complete',words:result.words,steps:total};
+        }
+        const next=cut.yields[String(value)];
+        check(next&&next.adapter_steps===2&&result.steps>=next.adapter_steps,'Unknown continuation token');
+        total+=result.steps-next.adapter_steps;
+        check(total<=cut.max_steps,'Canonical caller budget exhausted');
+        const child=await call(next.callee,result.words,depth+1);
+        total+=child.steps;check(total<=cut.max_steps,'Canonical caller budget exhausted');
+        staged=child.words;phase=next.resume;
+      }
+      throw Error('Cut continuation limit exceeded');
+    };
+    const call=async(name,words,depth=0)=>{
+      const result=await execute(name,words,depth),ranges=this.#manifest.plan.outputs[name];
+      for(let n=0;n<words.length;n++)if(!ranges.some(([start,count])=>n>=start&&n<start+count))check(result.words[n]===words[n],'Kernel wrote outside declared output');
+      // A cut is not an application observation point. Intermediate phases and
+      // nested callees may temporarily violate invariants restored by the owner.
+      if(depth===0)this.#validate(result.words);
+      return result;
     };
     const ticket={id,token,canceled:false,finishing:false,result:null,ready:null};this.#tickets.set(id,ticket);
     ticket.ready=Promise.resolve().then(async()=>{
-      let words=await call(fn,snapshot);
+      let {words}=await call(fn,snapshot);
       if(options.render&&fn!==this.#manifest.plan.render.function&&words[this.#manifest.plan.render.when_nonzero]!==0)
-        words=await call(this.#manifest.plan.render.function,words);
-      ticket.result={words,leases};
-    }).catch(error=>{ticket.result={error:String(error?.message||error),leases};});
+        ({words}=await call(this.#manifest.plan.render.function,words));
+      ticket.result={words,leases,execution};
+    }).catch(error=>{ticket.result={error:String(error?.message||error),leases,execution};});
     return Object.freeze({id,ready:ticket.ready.then(()=>({status:ticket.result.error?'failed':'complete'}))});
   }
   cancel(id){this.#open();const ticket=this.#tickets.get(id);check(ticket,'Unknown operation');ticket.canceled=true;return {status:'canceled',physical_cancellation:false};}
   async finish(id){
     const t=this.#tickets.get(id);check(t&&!t.finishing,'Unknown or consumed operation');t.finishing=true;
     try {
-      await t.ready;const result={operation:id,committed:false};
+      await t.ready;const result={operation:id,committed:false,...(this.#manifest.cuts?{execution:clone(t.result.execution)}:{})};
       if(this.#closed||t.canceled||t.token.session!==this.#session||t.token.epoch!==this.#epoch||t.token.generation!==this.#generation||t.token.revision!==this.#revision||t.result.leases.some(([p,e])=>p.closed||p.lost||p.epoch!==e))
         return {...result,status:'discarded',reason:'stale-or-canceled'};
       if(t.result.error)return {...result,status:'failed',reason:t.result.error};
@@ -124,7 +195,7 @@ export class MemoryShell {
   dispose(){
     if(this.#disposing)return this.#disposing;
     this.#closed=true;this.#epoch=inc(this.#epoch);this.#words.fill(0);
-    const providers=[...new Set(Object.values(this.#providers).flatMap(x=>Object.values(x)))];
+    const providers=this.#handles();
     this.#disposing=Promise.allSettled([...this.#tickets.values()].map(t=>t.ready).concat(providers.map(p=>p.dispose()),[this.#tail])).then(()=>{this.#tickets.clear();return {settled:true};});
     return this.#disposing;
   }
@@ -144,6 +215,15 @@ export async function loadMemoryShell(url='memory-shell.json'){
   const encode=x=>new TextEncoder().encode(canonical(x));
   check(await sha(encode(manifest.program))===manifest.module_uil_sha256,'UIL identity differs');
   check(await sha(encode(manifest.plan))===manifest.plan_sha256,'Orchestration identity differs');
+  if(manifest.cuts){
+    checkCutLinks(manifest);
+    check(await sha(encode(manifest.cuts))===manifest.cuts_sha256,'Cut lowering identity differs');
+    check(manifest.cuts.module_uil_sha256===manifest.module_uil_sha256&&await sha(encode(manifest.cuts.document))===manifest.cuts.cut_plan_sha256,'Cut plan identity differs');
+    for(const [fn,cut] of Object.entries(manifest.cuts.functions))for(const [name,phase] of Object.entries(cut.phases)){
+      const identity=await sha(encode(phase.program));
+      for(const backend of ['wasm','webgpu'])check(manifest.cut_variants?.[backend]?.[fn]?.[name]?.build?.module_uil_sha256===identity,'Cut phase UIL identity differs');
+    }
+  }
   const assets=new Map();
   await Promise.all(Object.entries(manifest.artifacts).map(async([name,expected])=>{
     check(name.split('/').every(x=>x&&x!=='.'&&x!=='..')&&!/[\\?#:]/.test(name),'Unsafe artifact path');
@@ -151,20 +231,30 @@ export async function loadMemoryShell(url='memory-shell.json'){
     const r=await fetch(path);check(r.ok,'Shell asset unavailable: '+name);const bytes=await r.arrayBuffer();
     check(await sha(bytes)===expected,'Shell asset hash differs: '+name);assets.set(name,bytes);
   }));
-  const providers={wasm:Object.create(null),webgpu:Object.create(null)};let device=null,shell=null;
+  const providers={wasm:Object.create(null),webgpu:Object.create(null)},phases={wasm:Object.create(null),webgpu:Object.create(null)};let device=null,shell=null;
+  const loadPhases=async backend=>{
+    for(const [fn,entries] of Object.entries(manifest.cut_variants?.[backend]||{})){
+      phases[backend][fn]=Object.create(null);
+      for(const [name,v] of Object.entries(entries))phases[backend][fn][name]=backend==='wasm'?
+        await createWasmMemoryProvider(v.build,assets.get(v.directory+'/block.wasm')):
+        await createGPUMemoryProvider(v.build,new TextDecoder().decode(assets.get(v.directory+'/block.wgsl')),{device,ownsDevice:false});
+    }
+  };
   try {
     for(const [fn,v] of Object.entries(manifest.variants.wasm))
       providers.wasm[fn]=await createWasmMemoryProvider(v.build,assets.get(v.directory+'/block.wasm'));
+    await loadPhases('wasm');
     if(navigator.gpu){
       const adapter=await navigator.gpu.requestAdapter();
       if(adapter){device=await adapter.requestDevice();
         for(const [fn,v] of Object.entries(manifest.variants.webgpu))
           providers.webgpu[fn]=await createGPUMemoryProvider(v.build,new TextDecoder().decode(assets.get(v.directory+'/block.wgsl')),{device,ownsDevice:false});
+        await loadPhases('webgpu');
       }
     }
     if(!Object.keys(providers.webgpu).length)delete providers.webgpu;
     const initial=JSON.parse(new TextDecoder().decode(assets.get('initial.json')));
-    shell=new MemoryShell(manifest,providers,initial);
+    shell=new MemoryShell(manifest,providers,initial,phases);
     const owner=shell,ownedDevice=device;let disposed=null;
     // Device creation is a loader responsibility. Every function wrapper borrows
     // it; only this owner destroys it, after all physical jobs have drained.
@@ -176,7 +266,9 @@ export async function loadMemoryShell(url='memory-shell.json'){
       dispose(){return disposed??=(async()=>{await owner.dispose();ownedDevice?.destroy();return {settled:true};})();}
     });
   } catch(error){
-    if(shell)await shell.dispose();else await Promise.allSettled(Object.values(providers).flatMap(x=>Object.values(x)).map(p=>p.dispose()));
+    if(shell)await shell.dispose();else await Promise.allSettled([
+      ...Object.values(providers).flatMap(x=>Object.values(x)),
+      ...Object.values(phases).flatMap(x=>Object.values(x).flatMap(y=>Object.values(y)))].map(p=>p.dispose()));
     device?.destroy();throw error;
   }
 }
