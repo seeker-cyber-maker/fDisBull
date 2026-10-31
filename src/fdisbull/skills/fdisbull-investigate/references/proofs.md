@@ -1,5 +1,9 @@
 # Bounded model checks
 
+For first use and source-to-model acceptance, follow the
+[repeatable reconstruction recipe](reconstruction.md).
+
+
 Use the optional genuine `z3-solver` extra when a small explicit model can
 disprove a decompiler hypothesis or test a recovered rule. Compare finite-width
 arithmetic, readiness implications or guarded semantic transitions through

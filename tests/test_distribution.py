@@ -24,6 +24,7 @@ REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scrip
                        'src/fdisbull/skills/fdisbull-investigate/SKILL.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/scenes.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/methodology.md',
+                       'src/fdisbull/skills/fdisbull-investigate/references/reconstruction.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/runtime-navigation.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/proofs.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/workflows.md',
@@ -36,6 +37,7 @@ GAMEFAQS_SKILL_FILES = tuple('src/fdisbull/skills/write-gamefaqs-guide/'+name fo
     'references/technical-mechanics.md', 'references/source-examples.md',
 ))
 REQUIRED_SOURCE_FILES += GAMEFAQS_SKILL_FILES
+REQUIRED_SOURCE_FILES += ("docs/evidence/civ-original-corrections/verification.json",)
 UDC_EVIDENCE_FILES = {
     'docs/evidence/udc-2026-10-29/dino.json',
     'docs/evidence/udc-2026-10-29/zork.json',

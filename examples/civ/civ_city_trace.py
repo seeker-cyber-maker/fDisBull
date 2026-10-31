@@ -9,6 +9,7 @@ reachability at runtime.
 from __future__ import annotations
 
 import hashlib
+import re
 import struct
 
 import capstone
@@ -29,7 +30,7 @@ FIELD_NAMES = {
     0x10: "workers",
 }
 SHIELD_RESET_LINEAR = 0xD244
-SHIELD_RESET_SIZE = 0x30
+SHIELD_RESET_SIZE = 0x2B
 
 
 def identity(root: bytes) -> dict:
@@ -37,6 +38,8 @@ def identity(root: bytes) -> dict:
 
 
 def _header(root: bytes) -> dict:
+    if len(root) < 28:
+        raise ValueError("truncated MZ header")
     (
         magic,
         cblp,
@@ -56,14 +59,22 @@ def _header(root: bytes) -> dict:
     if magic != 0x5A4D:
         raise ValueError("expected an MZ root module")
     header_size = cparhdr * 16
-    module = cp * 512 - (512 - cblp if cblp else 0)
+    declared = cp * 512 - (512 - cblp if cblp else 0)
+    if (not cp or cblp > 511 or not 28 <= header_size <= declared <= len(root)
+            or lfarlc < 28 or lfarlc + 4 * crlc > header_size):
+        raise ValueError("invalid MZ root/relocation boundaries")
+    module = declared - header_size
     relocations = {struct.unpack_from("<HH", root, lfarlc + 4 * i) for i in range(crlc)}
+    normalized = {segment * 16 + offset for offset, segment in relocations}
+    if any(offset + 2 > module for offset in normalized):
+        raise ValueError("MZ relocation exceeds the load module")
     return {
         "header_size": header_size,
         "module": module,
         "relocations": relocations,
-        "relocation_offsets": {offset for offset, _segment in relocations},
-        "overlays": len(root) - header_size - module,
+        "relocation_offsets": normalized,
+        "declared_file_end": declared,
+        "overlays": len(root) - declared,
     }
 
 
@@ -131,6 +142,22 @@ def _pushes_before(root: bytes, header_size: int, site_linear: int) -> dict:
         }
         for i in md.disasm(text, start)
     ]
+    decode_basis = "candidate-prologue linear decoding"
+    # This resident function contains INT 3F overlay dispatch descriptors;
+    # decoding their inline data as x86 can stop before the actual call. Admit
+    # only this complete, reviewed MSC tail, not an arbitrary guessed boundary.
+    tail = root[header_size + max(0, site_linear-9):header_size + site_linear]
+    if (not decoded or decoded[-1]["address"]+decoded[-1]["size"]!=site_linear) and re.fullmatch(
+            rb"\xb8..\x99\x52\x50\xff\x76.", tail, re.S):
+        start_tail = site_linear-len(tail)
+        native_tail = list(md.disasm(tail,start_tail))
+        decoded = [dict(address=i.address,mnemonic=i.mnemonic,operands=i.op_str,
+                        bytes=i.bytes.hex(),size=i.size) for i in native_tail]
+        text = tail
+        native_start = start_tail
+        decode_basis = "reviewed MOV AX,imm16; CWD; PUSH DX; PUSH AX; PUSH [BP+disp8] call tail"
+    else:
+        native_start = start
     pushes: list[dict] = []
     cursor = site_linear
     for item in reversed(decoded):
@@ -141,12 +168,42 @@ def _pushes_before(root: bytes, header_size: int, site_linear: int) -> dict:
         pushes.append(item)
         cursor = item["address"]
     pushes.reverse()
+    # Local constant propagation on a straight-line suffix. Crossing a control
+    # transfer discards values; this is not an all-path reaching-definition proof.
+    known, push_values = {}, {}
+    native_decoded = list(md.disasm(text, native_start))
+    for ins in native_decoded:
+        if ins.mnemonic.startswith(("j", "loop", "call", "lcall", "ret")):
+            known.clear()
+            continue
+        operands = ins.operands
+        if ins.mnemonic == "push":
+            operand = operands[0]
+            value = (operand.imm & 0xffff) if operand.type == capstone.x86.X86_OP_IMM else (
+                known.get(ins.reg_name(operand.reg)) if operand.type == capstone.x86.X86_OP_REG else None)
+            push_values[ins.address] = value
+            continue
+        assigned = {}
+        if ins.mnemonic == "mov" and operands[0].type == capstone.x86.X86_OP_REG:
+            assigned[ins.reg_name(operands[0].reg)] = (
+                operands[1].imm & 0xffff if operands[1].type == capstone.x86.X86_OP_IMM else None)
+        elif ins.mnemonic in ("xor", "sub") and all(o.type == capstone.x86.X86_OP_REG for o in operands) and operands[0].reg == operands[1].reg:
+            assigned[ins.reg_name(operands[0].reg)] = 0
+        elif ins.mnemonic == "cwd" and known.get("ax") is not None:
+            assigned["dx"] = 0xffff if known["ax"] & 0x8000 else 0
+        _, writes = ins.regs_access()
+        for reg in writes:
+            name = ins.reg_name(reg)
+            known.pop(name, None)
+            if name in ("ax","ah","al"): known.pop("ax", None)
+            if name in ("dx","dh","dl"): known.pop("dx", None)
+        known.update({k:v for k,v in assigned.items() if v is not None})
     values, regs = [], []
     for item in pushes:
         try:
             values.append(int(item["operands"], 0))
         except ValueError:
-            values.append(None)
+            values.append(push_values.get(item["address"]))
             regs.append(item["operands"])
     preceding = decoded[-9 : -len(pushes) - 1] if len(decoded) > len(pushes) else []
     return {
@@ -163,6 +220,9 @@ def _pushes_before(root: bytes, header_size: int, site_linear: int) -> dict:
             for item in preceding
         ],
         "function_start": start,
+        "decode_basis": decode_basis,
+        "mode_word": (None if len(values)<2 or values[-2] is None else
+                      values[-2] - 65536 if values[-2] >= 32768 else values[-2]),
     }
 
 
@@ -187,17 +247,22 @@ def callers(root: bytes) -> list[dict]:
         if in_root and not relocated:
             coincidental += 1
             continue
-        site = _pushes_before(root, header_size, linear)
+        site = (_pushes_before(root, header_size, linear) if in_root else
+                dict(function_start=None, values=[], register_arguments=[], preceding=[], mode_word=None))
         found.append(
             {
                 "file_offset": index,
-                "linear": linear,
-                "runtime_linear": 0x10000 + linear,
+                "linear": linear if in_root else None,
+                "runtime_linear": 0x10000 + linear if in_root else None,
+                "overlay_tail_offset": None if in_root else index - header["declared_file_end"],
                 "segment_offset": f"{segment:04X}:{offset:04X}",
                 "in_root_module": in_root,
                 "segment_word_relocated": relocated,
                 "caller_function": site["function_start"],
                 "mode_push": site["values"][0] if site["values"] else None,
+                "mode_word": site.get("mode_word"),
+                "mode_evidence": "local constant slice at the callee BP+8 word; not all-path proof" if in_root else "overlay mapping unresolved",
+                "argument_decode_basis": site.get("decode_basis"),
                 "arguments": site["values"],
                 "register_arguments": site["register_arguments"],
                 "preceding": site["preceding"],
@@ -260,9 +325,12 @@ def shield_reset(root: bytes) -> dict:
         ].hex(),
         "instructions": instructions,
         "rule": "if (shield_box > 999 || shield_box < 0) shield_box = 0;",
-        "matches_rule": any("cmp word ptr [bx + 0x70fa], 0x3e7" in s for s in shape)
-        and any("cmp word ptr [bx + 0x70fa], 0" in s for s in shape)
-        and any("mov word ptr [bx + 0x70fa], 0" in s for s in shape),
+        "matches_rule": shape == [
+            "cmp word ptr [bx + 0x70fa], 0x3e7", "jle 0xd24f", "jmp 0xd261",
+            "mov ax, 0x1c", "imul word ptr [bp + 6]", "mov bx, ax",
+            "cmp word ptr [bx + 0x70fa], 0", "jl 0xd261", "jmp 0xd26f",
+            "mov ax, 0x1c", "imul word ptr [bp + 6]", "mov bx, ax",
+            "mov word ptr [bx + 0x70fa], 0"],
     }
 
 
