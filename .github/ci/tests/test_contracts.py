@@ -184,7 +184,11 @@ class BootSmokeContracts(unittest.TestCase):
         def runner(command, **options):
             self.assertNotIn('-L', command)
             self.assertEqual(command[command.index('-accel') + 1], 'tcg')
-            self.assertEqual((options['cwd'] / 'authored-boot.raw').read_bytes(), boot.SECTOR)
+            disk = options['cwd'] / 'authored-boot.raw'
+            self.assertEqual(disk.stat().st_size, 1024 * 1024)
+            with disk.open('rb') as stream:
+                self.assertEqual(stream.read(512), boot.SECTOR)
+                self.assertEqual(stream.read(), bytes(1024 * 1024 - 512))
             self.assertLessEqual(options['timeout'], 30)
             machines.append(command[command.index('-machine') + 1])
             return SimpleNamespace(returncode=85, stdout='')

@@ -13,6 +13,7 @@ import tempfile
 
 SECTOR = bytes.fromhex('b02ae6f4faf4ebfe').ljust(510, b'\0') + b'\x55\xaa'
 EXIT_CODE = (0x2a << 1) | 1
+DISK_BYTES = 1024 * 1024
 
 
 def smoke(executable, runner=None):
@@ -22,7 +23,11 @@ def smoke(executable, runner=None):
     with tempfile.TemporaryDirectory(prefix='fdisbull-ci-boot-') as temporary:
         root = Path(temporary)
         disk = root / 'authored-boot.raw'
-        disk.write_bytes(SECTOR)
+        # The single-sector fixture timed out with q35/AHCI in boot checks.
+        # Keep the authored sector, but give the drive ordinary disk geometry.
+        with disk.open('wb') as stream:
+            stream.write(SECTOR)
+            stream.truncate(DISK_BYTES)
         for machine in ('pc', 'q35'):
             command = [executable, '-accel', 'tcg', '-machine', machine,
                        '-cpu', 'max', '-smp', '1', '-m', '64M', '-nic', 'none',
@@ -40,7 +45,7 @@ def smoke(executable, runner=None):
                                    f'(expected {EXIT_CODE}, got {result.returncode}):\n{result.stdout}')
             results.append({'machine': machine, 'exit_code': result.returncode})
     return {'status': 'passed', 'boot_sector_sha256': hashlib.sha256(SECTOR).hexdigest(),
-            'default_firmware_lookup': True, 'machines': results}
+            'boot_disk_bytes': DISK_BYTES, 'default_firmware_lookup': True, 'machines': results}
 
 
 def relocated_smoke(executable, runner=None):

@@ -52,7 +52,8 @@ QEMU uses a relocatable prefix with `bin/qemu-system-x86_64` and
 [Meson configuration](https://github.com/qemu/qemu/blob/v9.2.4/meson.build#L32)
 appends `qemu_suffix` (`qemu`) to `--datadir=share`; treating datadir as the final
 firmware directory was incorrect. A flat layout is rejected. A real authored
-boot-sector smoke runs through both PC and q35 without a `-L` override and must
+boot-sector smoke uses a padded 1 MiB raw disk (the single-sector fixture timed out
+with q35/AHCI), runs through both PC and q35 without a `-L` override, and must
 reach the guest's debug-exit instruction, not merely print a version. Before
 cache saving, the producer copies the bundle to an unrelated directory and hides
 the original during this smoke, then restores it even on failure. The consumer
