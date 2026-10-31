@@ -1,0 +1,1229 @@
+(z-world "zork1-zil"
+  (source "https://github.com/historicalsource/zork1" "97b7b3d68c075dd9af7da499c3e9690ada3471fd" "MIT")
+  (source-file "1dungeon.zil" "8e223dc75ce64cff8542266101742ea73774533787c5257e8df4a262e4f02766")
+  (source-file "gglobals.zil" "5945abfeeff71cd2b2088653c7572d3c72bf14d5af65c41b4425d945a6bb6e0a")
+  (entry WEST-OF-HOUSE)
+  (directions NORTH EAST WEST SOUTH NE NW SE SW UP DOWN IN OUT LAND)
+  (room ARAGAIN-FALLS
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (NORTH (to SHORE))
+    (WEST (to ON-RAINBOW (if RAINBOW-FLAG)))
+    (UP (to ON-RAINBOW (if RAINBOW-FLAG)))
+    (DOWN (blocked))
+  )
+  (room ATLANTIS-ROOM
+    (flags RLANDBIT)
+    (SOUTH (to RESERVOIR-NORTH))
+    (UP (to SMALL-CAVE))
+  )
+  (room ATTIC
+    (flags RLANDBIT SACREDBIT)
+    (DOWN (to KITCHEN))
+  )
+  (room BAT-ROOM
+    (flags RLANDBIT SACREDBIT)
+    (EAST (to SHAFT-ROOM))
+    (SOUTH (to SQUEEKY-ROOM))
+  )
+  (room CANYON-BOTTOM
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (NORTH (to END-OF-RAINBOW))
+    (UP (to CLIFF-MIDDLE))
+  )
+  (room CANYON-VIEW
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (EAST (to CLIFF-MIDDLE))
+    (WEST (to FOREST-3))
+    (SOUTH (blocked))
+    (NW (to CLEARING))
+    (DOWN (to CLIFF-MIDDLE))
+  )
+  (room CELLAR
+    (flags RLANDBIT)
+    (NORTH (to TROLL-ROOM))
+    (WEST (blocked))
+    (SOUTH (to EAST-OF-CHASM))
+    (UP (to LIVING-ROOM (if TRAP-DOOR IS OPEN)))
+  )
+  (room CHASM-ROOM
+    (flags RLANDBIT)
+    (SOUTH (to NS-PASSAGE))
+    (NE (to RESERVOIR-SOUTH))
+    (SW (to EW-PASSAGE))
+    (UP (to EW-PASSAGE))
+    (DOWN (blocked))
+  )
+  (room CLEARING
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (NORTH (to FOREST-2))
+    (EAST (to CANYON-VIEW))
+    (WEST (to EAST-OF-HOUSE))
+    (SOUTH (to FOREST-3))
+    (UP (blocked))
+  )
+  (room CLIFF-MIDDLE
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (UP (to CANYON-VIEW))
+    (DOWN (to CANYON-BOTTOM))
+  )
+  (room COLD-PASSAGE
+    (flags RLANDBIT)
+    (WEST (to SLIDE-ROOM))
+    (SOUTH (to MIRROR-ROOM-1))
+  )
+  (room CYCLOPS-ROOM
+    (flags RLANDBIT)
+    (EAST (to STRANGE-PASSAGE (if MAGIC-FLAG) (else (blocked))))
+    (NW (to MAZE-15))
+    (UP (to TREASURE-ROOM (if CYCLOPS-FLAG) (else (blocked))))
+  )
+  (room DAM-BASE
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (NORTH (to DAM-ROOM))
+    (UP (to DAM-ROOM))
+  )
+  (room DAM-LOBBY
+    (flags ONBIT RLANDBIT)
+    (NORTH (to MAINTENANCE-ROOM))
+    (EAST (to MAINTENANCE-ROOM))
+    (SOUTH (to DAM-ROOM))
+  )
+  (room DAM-ROOM
+    (flags ONBIT RLANDBIT)
+    (NORTH (to DAM-LOBBY))
+    (EAST (to DAM-BASE))
+    (WEST (to RESERVOIR-SOUTH))
+    (SOUTH (to DEEP-CANYON))
+    (DOWN (to DAM-BASE))
+  )
+  (room DAMP-CAVE
+    (flags RLANDBIT)
+    (EAST (to WHITE-CLIFFS-NORTH))
+    (WEST (to LOUD-ROOM))
+    (SOUTH (blocked))
+  )
+  (room DEAD-END-1
+    (flags MAZEBIT RLANDBIT)
+    (SOUTH (to MAZE-4))
+  )
+  (room DEAD-END-2
+    (flags MAZEBIT RLANDBIT)
+    (WEST (to MAZE-5))
+  )
+  (room DEAD-END-3
+    (flags MAZEBIT RLANDBIT)
+    (NORTH (to MAZE-8))
+  )
+  (room DEAD-END-4
+    (flags MAZEBIT RLANDBIT)
+    (SOUTH (to MAZE-12))
+  )
+  (room DEAD-END-5
+    (flags RLANDBIT)
+    (NORTH (to LADDER-BOTTOM))
+  )
+  (room DEEP-CANYON
+    (flags RLANDBIT)
+    (EAST (to DAM-ROOM))
+    (NW (to RESERVOIR-SOUTH))
+    (SW (to NS-PASSAGE))
+    (DOWN (to LOUD-ROOM))
+  )
+  (room DOME-ROOM
+    (flags RLANDBIT)
+    (WEST (to ENGRAVINGS-CAVE))
+    (DOWN (to TORCH-ROOM (if DOME-FLAG) (else (blocked))))
+  )
+  (room EAST-OF-CHASM
+    (flags RLANDBIT)
+    (NORTH (to CELLAR))
+    (EAST (to GALLERY))
+    (DOWN (blocked))
+  )
+  (room EAST-OF-HOUSE
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (NORTH (to NORTH-OF-HOUSE))
+    (EAST (to CLEARING))
+    (WEST (to KITCHEN (if KITCHEN-WINDOW IS OPEN)))
+    (SOUTH (to SOUTH-OF-HOUSE))
+    (NW (to NORTH-OF-HOUSE))
+    (SW (to SOUTH-OF-HOUSE))
+    (IN (to KITCHEN (if KITCHEN-WINDOW IS OPEN)))
+  )
+  (room EGYPT-ROOM
+    (flags RLANDBIT)
+    (WEST (to NORTH-TEMPLE))
+    (UP (to NORTH-TEMPLE))
+  )
+  (room END-OF-RAINBOW
+    (flags ONBIT RLANDBIT)
+    (EAST (to ON-RAINBOW (if RAINBOW-FLAG)))
+    (NE (to ON-RAINBOW (if RAINBOW-FLAG)))
+    (SW (to CANYON-BOTTOM))
+    (UP (to ON-RAINBOW (if RAINBOW-FLAG)))
+  )
+  (room ENGRAVINGS-CAVE
+    (flags RLANDBIT)
+    (EAST (to DOME-ROOM))
+    (NW (to ROUND-ROOM))
+  )
+  (room ENTRANCE-TO-HADES
+    (flags ONBIT RLANDBIT)
+    (SOUTH (to LAND-OF-LIVING-DEAD (if LLD-FLAG) (else (blocked))))
+    (UP (to TINY-CAVE))
+    (IN (to LAND-OF-LIVING-DEAD (if LLD-FLAG) (else (blocked))))
+  )
+  (room EW-PASSAGE
+    (flags RLANDBIT)
+    (NORTH (to CHASM-ROOM))
+    (EAST (to ROUND-ROOM))
+    (WEST (to TROLL-ROOM))
+    (DOWN (to CHASM-ROOM))
+  )
+  (room FOREST-1
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (NORTH (to GRATING-CLEARING))
+    (EAST (to PATH))
+    (WEST (blocked))
+    (SOUTH (to FOREST-3))
+    (UP (blocked))
+  )
+  (room FOREST-2
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (NORTH (blocked))
+    (EAST (to MOUNTAINS))
+    (WEST (to PATH))
+    (SOUTH (to CLEARING))
+    (UP (blocked))
+  )
+  (room FOREST-3
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (NORTH (to CLEARING))
+    (EAST (blocked))
+    (WEST (to FOREST-1))
+    (SOUTH (blocked))
+    (NW (to SOUTH-OF-HOUSE))
+    (UP (blocked))
+  )
+  (room GALLERY
+    (flags ONBIT RLANDBIT)
+    (NORTH (to STUDIO))
+    (WEST (to EAST-OF-CHASM))
+  )
+  (room GAS-ROOM
+    (flags RLANDBIT SACREDBIT)
+    (EAST (to MINE-1))
+    (UP (to SMELLY-ROOM))
+  )
+  (room GRATING-CLEARING
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (NORTH (blocked))
+    (EAST (to FOREST-2))
+    (WEST (to FOREST-1))
+    (SOUTH (to PATH))
+    (DOWN (per GRATING-EXIT))
+  )
+  (room GRATING-ROOM
+    (flags RLANDBIT)
+    (SW (to MAZE-11))
+    (UP (to GRATING-CLEARING (if GRATE IS OPEN) (else (blocked))))
+  )
+  (room IN-STREAM
+    (flags NONLANDBIT)
+    (EAST (to RESERVOIR))
+    (WEST (blocked))
+    (UP (blocked))
+    (DOWN (to RESERVOIR))
+    (LAND (to STREAM-VIEW))
+  )
+  (room KITCHEN
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (EAST (to EAST-OF-HOUSE (if KITCHEN-WINDOW IS OPEN)))
+    (WEST (to LIVING-ROOM))
+    (UP (to ATTIC))
+    (DOWN (to STUDIO (if FALSE-FLAG) (else (blocked))))
+    (OUT (to EAST-OF-HOUSE (if KITCHEN-WINDOW IS OPEN)))
+  )
+  (room LADDER-BOTTOM
+    (flags RLANDBIT)
+    (WEST (to TIMBER-ROOM))
+    (SOUTH (to DEAD-END-5))
+    (UP (to LADDER-TOP))
+  )
+  (room LADDER-TOP
+    (flags RLANDBIT)
+    (UP (to MINE-4))
+    (DOWN (to LADDER-BOTTOM))
+  )
+  (room LAND-OF-LIVING-DEAD
+    (flags ONBIT RLANDBIT)
+    (NORTH (to ENTRANCE-TO-HADES))
+    (OUT (to ENTRANCE-TO-HADES))
+  )
+  (room LIVING-ROOM
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (EAST (to KITCHEN))
+    (WEST (to STRANGE-PASSAGE (if MAGIC-FLAG) (else (blocked))))
+    (DOWN (per TRAP-DOOR-EXIT))
+  )
+  (room LOUD-ROOM
+    (flags RLANDBIT)
+    (EAST (to DAMP-CAVE))
+    (WEST (to ROUND-ROOM))
+    (UP (to DEEP-CANYON))
+  )
+  (room LOWER-SHAFT
+    (flags RLANDBIT SACREDBIT)
+    (EAST (to TIMBER-ROOM (if EMPTY-HANDED) (else (blocked))))
+    (SOUTH (to MACHINE-ROOM))
+    (OUT (to TIMBER-ROOM (if EMPTY-HANDED) (else (blocked))))
+  )
+  (room MACHINE-ROOM
+    (flags RLANDBIT)
+    (NORTH (to LOWER-SHAFT))
+  )
+  (room MAINTENANCE-ROOM
+    (flags RLANDBIT)
+    (WEST (to DAM-LOBBY))
+    (SOUTH (to DAM-LOBBY))
+  )
+  (room MAZE-1
+    (flags MAZEBIT RLANDBIT)
+    (NORTH (to MAZE-1))
+    (EAST (to TROLL-ROOM))
+    (WEST (to MAZE-4))
+    (SOUTH (to MAZE-2))
+  )
+  (room MAZE-10
+    (flags MAZEBIT RLANDBIT)
+    (EAST (to MAZE-9))
+    (WEST (to MAZE-13))
+    (UP (to MAZE-11))
+  )
+  (room MAZE-11
+    (flags MAZEBIT RLANDBIT)
+    (NE (to GRATING-ROOM))
+    (NW (to MAZE-13))
+    (SW (to MAZE-12))
+    (DOWN (to MAZE-10))
+  )
+  (room MAZE-12
+    (flags MAZEBIT RLANDBIT)
+    (NORTH (to DEAD-END-4))
+    (EAST (to MAZE-13))
+    (SW (to MAZE-11))
+    (UP (to MAZE-9))
+    (DOWN (per MAZE-DIODES))
+  )
+  (room MAZE-13
+    (flags MAZEBIT RLANDBIT)
+    (EAST (to MAZE-9))
+    (WEST (to MAZE-11))
+    (SOUTH (to MAZE-10))
+    (DOWN (to MAZE-12))
+  )
+  (room MAZE-14
+    (flags MAZEBIT RLANDBIT)
+    (WEST (to MAZE-15))
+    (SOUTH (to MAZE-7))
+    (NE (to MAZE-7))
+    (NW (to MAZE-14))
+  )
+  (room MAZE-15
+    (flags MAZEBIT RLANDBIT)
+    (WEST (to MAZE-14))
+    (SOUTH (to MAZE-7))
+    (SE (to CYCLOPS-ROOM))
+  )
+  (room MAZE-2
+    (flags MAZEBIT RLANDBIT)
+    (EAST (to MAZE-3))
+    (SOUTH (to MAZE-1))
+    (DOWN (per MAZE-DIODES))
+  )
+  (room MAZE-3
+    (flags MAZEBIT RLANDBIT)
+    (NORTH (to MAZE-4))
+    (WEST (to MAZE-2))
+    (UP (to MAZE-5))
+  )
+  (room MAZE-4
+    (flags MAZEBIT RLANDBIT)
+    (NORTH (to MAZE-1))
+    (EAST (to DEAD-END-1))
+    (WEST (to MAZE-3))
+  )
+  (room MAZE-5
+    (flags MAZEBIT RLANDBIT)
+    (NORTH (to MAZE-3))
+    (EAST (to DEAD-END-2))
+    (SW (to MAZE-6))
+  )
+  (room MAZE-6
+    (flags MAZEBIT RLANDBIT)
+    (EAST (to MAZE-7))
+    (WEST (to MAZE-6))
+    (UP (to MAZE-9))
+    (DOWN (to MAZE-5))
+  )
+  (room MAZE-7
+    (flags MAZEBIT RLANDBIT)
+    (EAST (to MAZE-8))
+    (WEST (to MAZE-6))
+    (SOUTH (to MAZE-15))
+    (UP (to MAZE-14))
+    (DOWN (per MAZE-DIODES))
+  )
+  (room MAZE-8
+    (flags MAZEBIT RLANDBIT)
+    (WEST (to MAZE-8))
+    (NE (to MAZE-7))
+    (SE (to DEAD-END-3))
+  )
+  (room MAZE-9
+    (flags MAZEBIT RLANDBIT)
+    (NORTH (to MAZE-6))
+    (EAST (to MAZE-10))
+    (WEST (to MAZE-12))
+    (SOUTH (to MAZE-13))
+    (NW (to MAZE-9))
+    (DOWN (per MAZE-DIODES))
+  )
+  (room MINE-1
+    (flags RLANDBIT)
+    (NORTH (to GAS-ROOM))
+    (EAST (to MINE-1))
+    (NE (to MINE-2))
+  )
+  (room MINE-2
+    (flags RLANDBIT)
+    (NORTH (to MINE-2))
+    (SOUTH (to MINE-1))
+    (SE (to MINE-3))
+  )
+  (room MINE-3
+    (flags RLANDBIT)
+    (EAST (to MINE-2))
+    (SOUTH (to MINE-3))
+    (SW (to MINE-4))
+  )
+  (room MINE-4
+    (flags RLANDBIT)
+    (NORTH (to MINE-3))
+    (WEST (to MINE-4))
+    (DOWN (to LADDER-TOP))
+  )
+  (room MINE-ENTRANCE
+    (flags RLANDBIT)
+    (WEST (to SQUEEKY-ROOM))
+    (SOUTH (to SLIDE-ROOM))
+    (IN (to SQUEEKY-ROOM))
+  )
+  (room MIRROR-ROOM-1
+    (flags RLANDBIT)
+    (NORTH (to COLD-PASSAGE))
+    (EAST (to SMALL-CAVE))
+    (WEST (to TWISTING-PASSAGE))
+  )
+  (room MIRROR-ROOM-2
+    (flags ONBIT RLANDBIT)
+    (NORTH (to NARROW-PASSAGE))
+    (EAST (to TINY-CAVE))
+    (WEST (to WINDING-PASSAGE))
+  )
+  (room MOUNTAINS
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (NORTH (to FOREST-2))
+    (EAST (blocked))
+    (WEST (to FOREST-2))
+    (SOUTH (to FOREST-2))
+    (UP (blocked))
+  )
+  (room NARROW-PASSAGE
+    (flags RLANDBIT)
+    (NORTH (to ROUND-ROOM))
+    (SOUTH (to MIRROR-ROOM-2))
+  )
+  (room NORTH-OF-HOUSE
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (NORTH (to PATH))
+    (EAST (to EAST-OF-HOUSE))
+    (WEST (to WEST-OF-HOUSE))
+    (SOUTH (blocked))
+    (SE (to EAST-OF-HOUSE))
+    (SW (to WEST-OF-HOUSE))
+  )
+  (room NORTH-TEMPLE
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (NORTH (to TORCH-ROOM))
+    (EAST (to EGYPT-ROOM))
+    (SOUTH (to SOUTH-TEMPLE))
+    (UP (to TORCH-ROOM))
+    (DOWN (to EGYPT-ROOM))
+    (OUT (to TORCH-ROOM))
+  )
+  (room NS-PASSAGE
+    (flags RLANDBIT)
+    (NORTH (to CHASM-ROOM))
+    (SOUTH (to ROUND-ROOM))
+    (NE (to DEEP-CANYON))
+  )
+  (room ON-RAINBOW
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (EAST (to ARAGAIN-FALLS))
+    (WEST (to END-OF-RAINBOW))
+  )
+  (room PATH
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (NORTH (to GRATING-CLEARING))
+    (EAST (to FOREST-2))
+    (WEST (to FOREST-1))
+    (SOUTH (to NORTH-OF-HOUSE))
+    (UP (to UP-A-TREE))
+  )
+  (room RESERVOIR
+    (flags NONLANDBIT)
+    (NORTH (to RESERVOIR-NORTH))
+    (WEST (to IN-STREAM))
+    (SOUTH (to RESERVOIR-SOUTH))
+    (UP (to IN-STREAM))
+    (DOWN (blocked))
+  )
+  (room RESERVOIR-NORTH
+    (flags RLANDBIT)
+    (NORTH (to ATLANTIS-ROOM))
+    (SOUTH (to RESERVOIR (if LOW-TIDE) (else (blocked))))
+  )
+  (room RESERVOIR-SOUTH
+    (flags RLANDBIT)
+    (NORTH (to RESERVOIR (if LOW-TIDE) (else (blocked))))
+    (EAST (to DAM-ROOM))
+    (WEST (to STREAM-VIEW))
+    (SE (to DEEP-CANYON))
+    (SW (to CHASM-ROOM))
+  )
+  (room RIVER-1
+    (flags NONLANDBIT ONBIT SACREDBIT)
+    (EAST (blocked))
+    (WEST (to DAM-BASE))
+    (UP (blocked))
+    (DOWN (to RIVER-2))
+    (LAND (to DAM-BASE))
+  )
+  (room RIVER-2
+    (flags NONLANDBIT SACREDBIT)
+    (EAST (blocked))
+    (WEST (blocked))
+    (UP (blocked))
+    (DOWN (to RIVER-3))
+    (LAND (blocked))
+  )
+  (room RIVER-3
+    (flags NONLANDBIT SACREDBIT)
+    (WEST (to WHITE-CLIFFS-NORTH))
+    (UP (blocked))
+    (DOWN (to RIVER-4))
+    (LAND (to WHITE-CLIFFS-NORTH))
+  )
+  (room RIVER-4
+    (flags NONLANDBIT SACREDBIT)
+    (EAST (to SANDY-BEACH))
+    (WEST (to WHITE-CLIFFS-SOUTH))
+    (UP (blocked))
+    (DOWN (to RIVER-5))
+    (LAND (blocked))
+  )
+  (room RIVER-5
+    (flags NONLANDBIT ONBIT SACREDBIT)
+    (EAST (to SHORE))
+    (UP (blocked))
+    (LAND (to SHORE))
+  )
+  (room ROUND-ROOM
+    (flags RLANDBIT)
+    (NORTH (to NS-PASSAGE))
+    (EAST (to LOUD-ROOM))
+    (WEST (to EW-PASSAGE))
+    (SOUTH (to NARROW-PASSAGE))
+    (SE (to ENGRAVINGS-CAVE))
+  )
+  (room SANDY-BEACH
+    (flags RLANDBIT SACREDBIT)
+    (SOUTH (to SHORE))
+    (NE (to SANDY-CAVE))
+  )
+  (room SANDY-CAVE
+    (flags RLANDBIT)
+    (SW (to SANDY-BEACH))
+  )
+  (room SHAFT-ROOM
+    (flags RLANDBIT)
+    (NORTH (to SMELLY-ROOM))
+    (WEST (to BAT-ROOM))
+    (DOWN (blocked))
+  )
+  (room SHORE
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (NORTH (to SANDY-BEACH))
+    (SOUTH (to ARAGAIN-FALLS))
+  )
+  (room SLIDE-ROOM
+    (flags RLANDBIT)
+    (NORTH (to MINE-ENTRANCE))
+    (EAST (to COLD-PASSAGE))
+    (DOWN (to CELLAR))
+  )
+  (room SMALL-CAVE
+    (flags RLANDBIT)
+    (NORTH (to MIRROR-ROOM-1))
+    (WEST (to TWISTING-PASSAGE))
+    (SOUTH (to ATLANTIS-ROOM))
+    (DOWN (to ATLANTIS-ROOM))
+  )
+  (room SMELLY-ROOM
+    (flags RLANDBIT)
+    (SOUTH (to SHAFT-ROOM))
+    (DOWN (to GAS-ROOM))
+  )
+  (room SOUTH-OF-HOUSE
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (NORTH (blocked))
+    (EAST (to EAST-OF-HOUSE))
+    (WEST (to WEST-OF-HOUSE))
+    (SOUTH (to FOREST-3))
+    (NE (to EAST-OF-HOUSE))
+    (NW (to WEST-OF-HOUSE))
+  )
+  (room SOUTH-TEMPLE
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (NORTH (to NORTH-TEMPLE))
+    (DOWN (to TINY-CAVE (if COFFIN-CURE) (else (blocked))))
+  )
+  (room SQUEEKY-ROOM
+    (flags RLANDBIT)
+    (NORTH (to BAT-ROOM))
+    (EAST (to MINE-ENTRANCE))
+  )
+  (room STONE-BARROW
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (NE (to WEST-OF-HOUSE))
+  )
+  (room STRANGE-PASSAGE
+    (flags RLANDBIT)
+    (EAST (to LIVING-ROOM))
+    (WEST (to CYCLOPS-ROOM))
+    (IN (to CYCLOPS-ROOM))
+  )
+  (room STREAM-VIEW
+    (flags RLANDBIT)
+    (EAST (to RESERVOIR-SOUTH))
+    (WEST (blocked))
+  )
+  (room STUDIO
+    (flags RLANDBIT)
+    (SOUTH (to GALLERY))
+    (UP (per UP-CHIMNEY-FUNCTION))
+  )
+  (room TIMBER-ROOM
+    (flags RLANDBIT SACREDBIT)
+    (EAST (to LADDER-BOTTOM))
+    (WEST (to LOWER-SHAFT (if EMPTY-HANDED) (else (blocked))))
+  )
+  (room TINY-CAVE
+    (flags RLANDBIT)
+    (NORTH (to MIRROR-ROOM-2))
+    (WEST (to WINDING-PASSAGE))
+    (DOWN (to ENTRANCE-TO-HADES))
+  )
+  (room TORCH-ROOM
+    (flags RLANDBIT)
+    (SOUTH (to NORTH-TEMPLE))
+    (UP (blocked))
+    (DOWN (to NORTH-TEMPLE))
+  )
+  (room TREASURE-ROOM
+    (flags RLANDBIT)
+    (DOWN (to CYCLOPS-ROOM))
+  )
+  (room TROLL-ROOM
+    (flags RLANDBIT)
+    (EAST (to EW-PASSAGE (if TROLL-FLAG) (else (blocked))))
+    (WEST (to MAZE-1 (if TROLL-FLAG) (else (blocked))))
+    (SOUTH (to CELLAR))
+  )
+  (room TWISTING-PASSAGE
+    (flags RLANDBIT)
+    (NORTH (to MIRROR-ROOM-1))
+    (EAST (to SMALL-CAVE))
+  )
+  (room UP-A-TREE
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (UP (blocked))
+    (DOWN (to PATH))
+  )
+  (room WEST-OF-HOUSE
+    (flags ONBIT RLANDBIT SACREDBIT)
+    (NORTH (to NORTH-OF-HOUSE))
+    (EAST (blocked))
+    (WEST (to FOREST-1))
+    (SOUTH (to SOUTH-OF-HOUSE))
+    (NE (to NORTH-OF-HOUSE))
+    (SE (to SOUTH-OF-HOUSE))
+    (SW (to STONE-BARROW (if WON-FLAG)))
+    (IN (to STONE-BARROW (if WON-FLAG)))
+  )
+  (room WHITE-CLIFFS-NORTH
+    (flags RLANDBIT SACREDBIT)
+    (WEST (to DAMP-CAVE (if DEFLATE) (else (blocked))))
+    (SOUTH (to WHITE-CLIFFS-SOUTH (if DEFLATE) (else (blocked))))
+  )
+  (room WHITE-CLIFFS-SOUTH
+    (flags RLANDBIT SACREDBIT)
+    (NORTH (to WHITE-CLIFFS-NORTH (if DEFLATE) (else (blocked))))
+  )
+  (room WINDING-PASSAGE
+    (flags RLANDBIT)
+    (NORTH (to MIRROR-ROOM-2))
+    (EAST (to TINY-CAVE))
+  )
+  (object ADVENTURER
+    (flags ACTORBIT INVISIBLE NDESCBIT SACREDBIT)
+  )
+  (object ADVERTISEMENT
+    (in MAILBOX)
+    (flags BURNBIT READBIT TAKEBIT)
+  )
+  (object ALTAR
+    (in SOUTH-TEMPLE)
+    (flags CONTBIT NDESCBIT OPENBIT SURFACEBIT)
+  )
+  (object ATTIC-TABLE
+    (in ATTIC)
+    (flags CONTBIT NDESCBIT OPENBIT SURFACEBIT)
+  )
+  (object AXE
+    (in TROLL)
+    (flags NDESCBIT TAKEBIT TRYTAKEBIT WEAPONBIT)
+  )
+  (object BAG-OF-COINS
+    (in MAZE-5)
+    (flags TAKEBIT)
+  )
+  (object BAR
+    (in LOUD-ROOM)
+    (flags SACREDBIT TAKEBIT)
+  )
+  (object BARROW
+    (in STONE-BARROW)
+    (flags NDESCBIT)
+  )
+  (object BARROW-DOOR
+    (in STONE-BARROW)
+    (flags DOORBIT NDESCBIT OPENBIT)
+  )
+  (object BAT
+    (in BAT-ROOM)
+    (flags ACTORBIT TRYTAKEBIT)
+  )
+  (object BAUBLE
+    (flags TAKEBIT)
+  )
+  (object BELL
+    (in NORTH-TEMPLE)
+    (flags TAKEBIT)
+  )
+  (object BLESSINGS
+    (in GLOBAL-OBJECTS)
+    (flags NDESCBIT)
+  )
+  (object BLUE-BUTTON
+    (in MAINTENANCE-ROOM)
+    (flags NDESCBIT)
+  )
+  (object BOARD
+    (in LOCAL-GLOBALS)
+    (flags NDESCBIT)
+  )
+  (object BOARDED-WINDOW
+    (in LOCAL-GLOBALS)
+    (flags NDESCBIT)
+  )
+  (object BOAT-LABEL
+    (in INFLATED-BOAT)
+    (flags BURNBIT READBIT TAKEBIT)
+  )
+  (object BODIES
+    (in LOCAL-GLOBALS)
+    (flags NDESCBIT TRYTAKEBIT)
+  )
+  (object BOLT
+    (in DAM-ROOM)
+    (flags NDESCBIT TRYTAKEBIT TURNBIT)
+  )
+  (object BONES
+    (in MAZE-5)
+    (flags NDESCBIT TRYTAKEBIT)
+  )
+  (object BOOK
+    (in ALTAR)
+    (flags BURNBIT CONTBIT READBIT TAKEBIT TURNBIT)
+  )
+  (object BOTTLE
+    (in KITCHEN-TABLE)
+    (flags CONTBIT TAKEBIT TRANSBIT)
+  )
+  (object BRACELET
+    (in GAS-ROOM)
+    (flags TAKEBIT)
+  )
+  (object BROKEN-CANARY
+    (in BROKEN-EGG)
+    (flags TAKEBIT)
+  )
+  (object BROKEN-EGG
+    (flags CONTBIT OPENBIT TAKEBIT)
+  )
+  (object BROKEN-LAMP
+    (flags TAKEBIT)
+  )
+  (object BROWN-BUTTON
+    (in MAINTENANCE-ROOM)
+    (flags NDESCBIT)
+  )
+  (object BUBBLE
+    (in DAM-ROOM)
+    (flags NDESCBIT TRYTAKEBIT)
+  )
+  (object BUOY
+    (in RIVER-4)
+    (flags CONTBIT TAKEBIT)
+  )
+  (object BURNED-OUT-LANTERN
+    (in MAZE-5)
+    (flags TAKEBIT)
+  )
+  (object CANARY
+    (in EGG)
+    (flags SEARCHBIT TAKEBIT)
+  )
+  (object CANDLES
+    (in SOUTH-TEMPLE)
+    (flags FLAMEBIT LIGHTBIT ONBIT TAKEBIT)
+  )
+  (object CHALICE
+    (in TREASURE-ROOM)
+    (flags CONTBIT TAKEBIT TRYTAKEBIT)
+  )
+  (object CHIMNEY
+    (in LOCAL-GLOBALS)
+    (flags CLIMBBIT NDESCBIT)
+  )
+  (object CLIMBABLE-CLIFF
+    (in LOCAL-GLOBALS)
+    (flags CLIMBBIT NDESCBIT)
+  )
+  (object COAL
+    (in DEAD-END-5)
+    (flags BURNBIT TAKEBIT)
+  )
+  (object COFFIN
+    (in EGYPT-ROOM)
+    (flags CONTBIT SACREDBIT SEARCHBIT TAKEBIT)
+  )
+  (object CONTROL-PANEL
+    (in DAM-ROOM)
+    (flags NDESCBIT)
+  )
+  (object CRACK
+    (in LOCAL-GLOBALS)
+    (flags NDESCBIT)
+  )
+  (object CYCLOPS
+    (in CYCLOPS-ROOM)
+    (flags ACTORBIT NDESCBIT TRYTAKEBIT)
+  )
+  (object DAM
+    (in DAM-ROOM)
+    (flags NDESCBIT TRYTAKEBIT)
+  )
+  (object DIAMOND
+    (flags TAKEBIT)
+  )
+  (object EGG
+    (in NEST)
+    (flags CONTBIT SEARCHBIT TAKEBIT)
+  )
+  (object EMERALD
+    (in BUOY)
+    (flags TAKEBIT)
+  )
+  (object ENGRAVINGS
+    (in ENGRAVINGS-CAVE)
+    (flags READBIT SACREDBIT)
+  )
+  (object FOREST
+    (in LOCAL-GLOBALS)
+    (flags NDESCBIT)
+  )
+  (object FRONT-DOOR
+    (in WEST-OF-HOUSE)
+    (flags DOORBIT NDESCBIT)
+  )
+  (object GARLIC
+    (in SANDWICH-BAG)
+    (flags FOODBIT TAKEBIT)
+  )
+  (object GHOSTS
+    (in ENTRANCE-TO-HADES)
+    (flags ACTORBIT NDESCBIT)
+  )
+  (object GLOBAL-OBJECTS
+    (flags FIGHTBIT INVISIBLE ONBIT OPENBIT RLANDBIT RMUNGBIT SEARCHBIT STAGGERED SURFACEBIT TOUCHBIT TRANSBIT TRYTAKEBIT WEARBIT)
+  )
+  (object GLOBAL-WATER
+    (in LOCAL-GLOBALS)
+    (flags DRINKBIT)
+  )
+  (object GRANITE-WALL
+    (in GLOBAL-OBJECTS)
+  )
+  (object GRATE
+    (in LOCAL-GLOBALS)
+    (flags DOORBIT INVISIBLE NDESCBIT)
+  )
+  (object GROUND
+    (in GLOBAL-OBJECTS)
+  )
+  (object GRUE
+    (in GLOBAL-OBJECTS)
+  )
+  (object GUIDE
+    (in DAM-LOBBY)
+    (flags BURNBIT READBIT TAKEBIT)
+  )
+  (object GUNK
+    (flags TAKEBIT TRYTAKEBIT)
+  )
+  (object HANDS
+    (in GLOBAL-OBJECTS)
+    (flags NDESCBIT TOOLBIT)
+  )
+  (object HOT-BELL
+    (flags TRYTAKEBIT)
+  )
+  (object INFLATABLE-BOAT
+    (in DAM-BASE)
+    (flags BURNBIT TAKEBIT)
+  )
+  (object INFLATED-BOAT
+    (flags BURNBIT OPENBIT SEARCHBIT TAKEBIT VEHBIT)
+  )
+  (object INTNUM
+    (in GLOBAL-OBJECTS)
+    (flags TOOLBIT)
+  )
+  (object IT
+    (in GLOBAL-OBJECTS)
+    (flags NDESCBIT TOUCHBIT)
+  )
+  (object JADE
+    (in BAT-ROOM)
+    (flags TAKEBIT)
+  )
+  (object KEYS
+    (in MAZE-5)
+    (flags TAKEBIT TOOLBIT)
+  )
+  (object KITCHEN-TABLE
+    (in KITCHEN)
+    (flags CONTBIT NDESCBIT OPENBIT SURFACEBIT)
+  )
+  (object KITCHEN-WINDOW
+    (in LOCAL-GLOBALS)
+    (flags DOORBIT NDESCBIT)
+  )
+  (object KNIFE
+    (in ATTIC-TABLE)
+    (flags TAKEBIT TRYTAKEBIT WEAPONBIT)
+  )
+  (object LADDER
+    (in LOCAL-GLOBALS)
+    (flags CLIMBBIT NDESCBIT)
+  )
+  (object LAMP
+    (in LIVING-ROOM)
+    (flags LIGHTBIT TAKEBIT)
+  )
+  (object LARGE-BAG
+    (in THIEF)
+    (flags NDESCBIT TRYTAKEBIT)
+  )
+  (object LEAK
+    (in MAINTENANCE-ROOM)
+    (flags INVISIBLE NDESCBIT)
+  )
+  (object LEAVES
+    (in GRATING-CLEARING)
+    (flags BURNBIT TAKEBIT TRYTAKEBIT)
+  )
+  (object LOCAL-GLOBALS
+    (in GLOBAL-OBJECTS)
+  )
+  (object LOWERED-BASKET
+    (in LOWER-SHAFT)
+    (flags TRYTAKEBIT)
+  )
+  (object LUNCH
+    (in SANDWICH-BAG)
+    (flags FOODBIT TAKEBIT)
+  )
+  (object LUNGS
+    (in GLOBAL-OBJECTS)
+    (flags NDESCBIT)
+  )
+  (object MACHINE
+    (in MACHINE-ROOM)
+    (flags CONTBIT NDESCBIT TRYTAKEBIT)
+  )
+  (object MACHINE-SWITCH
+    (in MACHINE-ROOM)
+    (flags NDESCBIT TURNBIT)
+  )
+  (object MAILBOX
+    (in WEST-OF-HOUSE)
+    (flags CONTBIT TRYTAKEBIT)
+  )
+  (object MAP
+    (in TROPHY-CASE)
+    (flags INVISIBLE READBIT TAKEBIT)
+  )
+  (object MATCH
+    (in DAM-LOBBY)
+    (flags READBIT TAKEBIT)
+  )
+  (object ME
+    (in GLOBAL-OBJECTS)
+    (flags ACTORBIT)
+  )
+  (object MIRROR-1
+    (in MIRROR-ROOM-1)
+    (flags NDESCBIT TRYTAKEBIT)
+  )
+  (object MIRROR-2
+    (in MIRROR-ROOM-2)
+    (flags NDESCBIT TRYTAKEBIT)
+  )
+  (object MOUNTAIN-RANGE
+    (in MOUNTAINS)
+    (flags CLIMBBIT NDESCBIT)
+  )
+  (object NEST
+    (in UP-A-TREE)
+    (flags BURNBIT CONTBIT OPENBIT SEARCHBIT TAKEBIT)
+  )
+  (object NOT-HERE-OBJECT
+  )
+  (object OWNERS-MANUAL
+    (in STUDIO)
+    (flags READBIT TAKEBIT)
+  )
+  (object PAINTING
+    (in GALLERY)
+    (flags BURNBIT TAKEBIT)
+  )
+  (object PATHOBJ
+    (in GLOBAL-OBJECTS)
+    (flags NDESCBIT)
+  )
+  (object PEDESTAL
+    (in TORCH-ROOM)
+    (flags CONTBIT NDESCBIT OPENBIT SURFACEBIT)
+  )
+  (object POT-OF-GOLD
+    (in END-OF-RAINBOW)
+    (flags INVISIBLE TAKEBIT)
+  )
+  (object PRAYER
+    (in NORTH-TEMPLE)
+    (flags NDESCBIT READBIT SACREDBIT)
+  )
+  (object PSEUDO-OBJECT
+    (in LOCAL-GLOBALS)
+  )
+  (object PUMP
+    (in RESERVOIR-NORTH)
+    (flags TAKEBIT TOOLBIT)
+  )
+  (object PUNCTURED-BOAT
+    (flags BURNBIT TAKEBIT)
+  )
+  (object PUTTY
+    (in TUBE)
+    (flags TAKEBIT TOOLBIT)
+  )
+  (object RAILING
+    (in DOME-ROOM)
+    (flags NDESCBIT)
+  )
+  (object RAINBOW
+    (in LOCAL-GLOBALS)
+    (flags CLIMBBIT NDESCBIT)
+  )
+  (object RAISED-BASKET
+    (in SHAFT-ROOM)
+    (flags CONTBIT OPENBIT TRANSBIT TRYTAKEBIT)
+  )
+  (object RED-BUTTON
+    (in MAINTENANCE-ROOM)
+    (flags NDESCBIT)
+  )
+  (object RIVER
+    (in LOCAL-GLOBALS)
+    (flags NDESCBIT)
+  )
+  (object ROOMS
+    (in ROOMS)
+  )
+  (object ROPE
+    (in ATTIC)
+    (flags SACREDBIT TAKEBIT TRYTAKEBIT)
+  )
+  (object RUG
+    (in LIVING-ROOM)
+    (flags NDESCBIT TRYTAKEBIT)
+  )
+  (object RUSTY-KNIFE
+    (in MAZE-5)
+    (flags TAKEBIT TOOLBIT TRYTAKEBIT WEAPONBIT)
+  )
+  (object SAILOR
+    (in GLOBAL-OBJECTS)
+    (flags NDESCBIT)
+  )
+  (object SAND
+    (in SANDY-CAVE)
+    (flags NDESCBIT)
+  )
+  (object SANDWICH-BAG
+    (in KITCHEN-TABLE)
+    (flags BURNBIT CONTBIT TAKEBIT)
+  )
+  (object SCARAB
+    (in SANDY-CAVE)
+    (flags INVISIBLE TAKEBIT)
+  )
+  (object SCEPTRE
+    (in COFFIN)
+    (flags TAKEBIT WEAPONBIT)
+  )
+  (object SCREWDRIVER
+    (in MAINTENANCE-ROOM)
+    (flags TAKEBIT TOOLBIT)
+  )
+  (object SHOVEL
+    (in SANDY-BEACH)
+    (flags TAKEBIT TOOLBIT)
+  )
+  (object SKULL
+    (in LAND-OF-LIVING-DEAD)
+    (flags TAKEBIT)
+  )
+  (object SLIDE
+    (in LOCAL-GLOBALS)
+    (flags CLIMBBIT)
+  )
+  (object SONGBIRD
+    (in LOCAL-GLOBALS)
+    (flags NDESCBIT)
+  )
+  (object STAIRS
+    (in LOCAL-GLOBALS)
+    (flags CLIMBBIT NDESCBIT)
+  )
+  (object STILETTO
+    (in THIEF)
+    (flags NDESCBIT TAKEBIT TRYTAKEBIT WEAPONBIT)
+  )
+  (object SWORD
+    (in LIVING-ROOM)
+    (flags TAKEBIT TRYTAKEBIT WEAPONBIT)
+  )
+  (object TEETH
+    (in GLOBAL-OBJECTS)
+    (flags NDESCBIT)
+  )
+  (object THIEF
+    (in ROUND-ROOM)
+    (flags ACTORBIT CONTBIT INVISIBLE OPENBIT TRYTAKEBIT)
+  )
+  (object TIMBERS
+    (in TIMBER-ROOM)
+    (flags TAKEBIT)
+  )
+  (object TOOL-CHEST
+    (in MAINTENANCE-ROOM)
+    (flags CONTBIT OPENBIT SACREDBIT TRYTAKEBIT)
+  )
+  (object TORCH
+    (in PEDESTAL)
+    (flags FLAMEBIT LIGHTBIT ONBIT TAKEBIT)
+  )
+  (object TRAP-DOOR
+    (in LIVING-ROOM)
+    (flags DOORBIT INVISIBLE NDESCBIT)
+  )
+  (object TREE
+    (in LOCAL-GLOBALS)
+    (flags CLIMBBIT NDESCBIT)
+  )
+  (object TRIDENT
+    (in ATLANTIS-ROOM)
+    (flags TAKEBIT)
+  )
+  (object TROLL
+    (in TROLL-ROOM)
+    (flags ACTORBIT OPENBIT TRYTAKEBIT)
+  )
+  (object TROPHY-CASE
+    (in LIVING-ROOM)
+    (flags CONTBIT NDESCBIT SEARCHBIT TRANSBIT TRYTAKEBIT)
+  )
+  (object TRUNK
+    (in RESERVOIR)
+    (flags INVISIBLE TAKEBIT)
+  )
+  (object TUBE
+    (in MAINTENANCE-ROOM)
+    (flags CONTBIT READBIT TAKEBIT)
+  )
+  (object WALL
+    (in GLOBAL-OBJECTS)
+  )
+  (object WATER
+    (in BOTTLE)
+    (flags DRINKBIT TAKEBIT TRYTAKEBIT)
+  )
+  (object WHITE-CLIFF
+    (in LOCAL-GLOBALS)
+    (flags CLIMBBIT NDESCBIT)
+  )
+  (object WHITE-HOUSE
+    (in LOCAL-GLOBALS)
+    (flags NDESCBIT)
+  )
+  (object WOODEN-DOOR
+    (in LIVING-ROOM)
+    (flags DOORBIT NDESCBIT READBIT TRANSBIT)
+  )
+  (object WRENCH
+    (in MAINTENANCE-ROOM)
+    (flags TAKEBIT TOOLBIT)
+  )
+  (object YELLOW-BUTTON
+    (in MAINTENANCE-ROOM)
+    (flags NDESCBIT)
+  )
+  (object ZORKMID
+    (in GLOBAL-OBJECTS)
+  )
+)
