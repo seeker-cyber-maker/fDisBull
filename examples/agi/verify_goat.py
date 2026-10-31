@@ -22,6 +22,9 @@ DIRECTIONS = {1:'up',2:'pageup',3:'right',4:'pagedown',5:'down',6:'end',7:'left'
 
 
 class GoatRun:
+    guest_budget_ms=240000
+    wall_budget_ms=180000
+
     def __init__(self,p,d,report,frame,source,root):
         self.p,self.d,self.report,self.frame,self.source,self.root=p,d,report,frame,source,root
         self.cs=int(report['resolution']['registers']['segments']['cs'],16)
@@ -31,7 +34,7 @@ class GoatRun:
         checkout=Path(__file__).resolve().parents[2]
         report['implementation_sha256']={name:sha256((checkout/name).read_bytes()).hexdigest() for name in
             ('examples/agi/verify_goat.py','src/fdisbull/agi_print.py','src/fdisbull/agi_host.py','src/fdisbull/agi_dos.py','src/fdisbull/agi_resources.py')}
-        self.deadline=time.monotonic()+180;self.guest_elapsed=0;self.bp=None
+        self.deadline=time.monotonic()+self.wall_budget_ms/1000;self.guest_elapsed=0;self.bp=None
         self._arm()
 
     def _arm(self):
@@ -58,9 +61,12 @@ class GoatRun:
             attempt['result']=out;elapsed=out.get('guest_elapsed_ms')
             require(type(elapsed) in (int,float) and elapsed>=0,'Missing guest progress')
             self.guest_elapsed+=elapsed
-            require(self.guest_elapsed<=240000 and time.monotonic()<self.deadline,'Route budget exhausted after native slice')
+            require(self.guest_elapsed<=self.guest_budget_ms and time.monotonic()<self.deadline,'Route budget exhausted after native slice')
             if out['outcome']=='breakpoint':
                 stop=(out.get('session') or {}).get('stop_reason',{})
+                if stop.get('breakpoint_id')!=self.bp or stop.get('data_access'):
+                    self.handle_stop(out)
+                    continue
                 require(stop.get('breakpoint_id')==self.bp and not stop.get('data_access'),'Foreign stop preserved')
                 self.d.call('breakpoints.delete',{'breakpoint_id':self.bp});self.bp=None
                 observer=AGIDOSPrintObserver(self.d,self.resources,cs=self.cs,ds=self.ds//16)
@@ -74,17 +80,21 @@ class GoatRun:
                     msg['frame']={'path':name,'sha256':item['sha256'],'metadata':item['metadata']}
                 self.guest_elapsed+=sum(s.get('guest_elapsed_ms',0) for s in msg['stops'])
                 require(msg['status']=='completed','Original message did not complete: '+str(msg.get('error')))
-                require(self.guest_elapsed<=240000 and time.monotonic()<self.deadline,'Route budget exhausted after message')
+                require(self.guest_elapsed<=self.guest_budget_ms and time.monotonic()<self.deadline,'Route budget exhausted after message')
                 self._arm()
             else:require(out['outcome']=='guest_time','Unexpected native stop preserved')
         return self.state()
+
+    def handle_stop(self,out):
+        """Extensions must qualify their own stop before any further execution."""
+        raise RuntimeError('Foreign stop preserved')
 
     def _idle(self):
         k=self.d.keyboard_state().get('keyboard',{})
         return all(type(k.get(n)) is int and k[n]==0 for n in ('pending_events','owned_keys','queued_guest_ms'))
 
     def remaining_limits(self,guest=100,wall=10000):
-        guest=min(int(guest),int(240000-self.guest_elapsed))
+        guest=min(int(guest),int(self.guest_budget_ms-self.guest_elapsed))
         wall=min(int(wall),int((self.deadline-time.monotonic())*1000))
         require(guest>0 and wall>0,'Route budget exhausted')
         return guest,wall
@@ -107,9 +117,18 @@ class GoatRun:
         self.press('enter',300,hold_ms=30,gap_ms=30)
 
     def neutral(self):
-        state=self.state()
-        if state['ego']['direction']:self.press(DIRECTIONS[state['ego']['direction']])
-        require(self.state()['ego']['direction']==0,'Original movement did not settle')
+        for _ in range(4):
+            state=self.state()
+            if not state['ego']['direction']:return
+            messages=len(self.messages)
+            self.press(DIRECTIONS[state['ego']['direction']])
+            if not self.state()['ego']['direction']:return
+            # A real modal can consume this arrow before it reaches movement.
+            # Its observed completion permits a fresh, state-selected key;
+            # settled delivery alone does not permit replaying an action.
+            require(len(self.messages)>messages,'Original movement did not settle')
+            self.journal.append({'kind':'neutral-interrupted','completed_messages':len(self.messages)-messages})
+        raise RuntimeError('Original movement did not settle after bounded dialogues')
 
     def ready(self):
         for _ in range(30):
@@ -170,7 +189,7 @@ class GoatRun:
                 attempt['result']=stop;elapsed=stop.get('guest_elapsed_ms')
                 require(type(elapsed) in (int,float) and elapsed>=0,'Missing entry-search guest progress')
                 self.guest_elapsed+=elapsed
-                require(self.guest_elapsed<=240000 and time.monotonic()<self.deadline,'Route budget exhausted during entry search')
+                require(self.guest_elapsed<=self.guest_budget_ms and time.monotonic()<self.deadline,'Route budget exhausted during entry search')
                 reason=(stop.get('session') or {}).get('stop_reason',{})
                 require(stop['outcome']=='breakpoint' and reason.get('breakpoint_id')==entry,'Natural entry interrupted')
                 record=int.from_bytes(read(self.d,self.ds+0x979,2),'little');desc=read(self.d,self.ds+record,8)
@@ -179,7 +198,7 @@ class GoatRun:
                     found=code;break
             require(found is not None,'Natural logic103 entry not observed')
         finally:self.d.call('breakpoints.delete',{'breakpoint_id':entry})
-        guest_left=min(10000,int(240000-self.guest_elapsed))
+        guest_left=min(10000,int(self.guest_budget_ms-self.guest_elapsed))
         wall_left=min(60000,int((self.deadline-time.monotonic())*1000))
         require(guest_left>0 and wall_left>0,'Route budget exhausted before natural comparison')
         monitor=AGIDOSMonitor(self.d,self.resources[103],cs=self.cs,ds=self.ds//16,code_offset=found,

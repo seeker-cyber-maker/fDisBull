@@ -1,7 +1,8 @@
 # Source-linked AGI diagnostic Z scene
 
 For a scene exported from ordinary gameplay, use the
-[normal goat encounter replay and exporter](AGI_NATURAL_GOAT.md). The example
+[normal goat encounter replay and exporter](AGI_NATURAL_GOAT.md), with the
+[troll-bridge continuation](AGI_TROLL_BRIDGE.md) as a third guarded action. The example
 below preserves the earlier independent diagnostic probes and their limits.
 
 `examples/agi/build_z_scene.py` creates a private, partial Z scene from the

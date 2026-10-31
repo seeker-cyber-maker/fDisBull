@@ -150,3 +150,213 @@ def test_leave_pen_rejects_unqualified_native_or_state(tmp_path, monkeypatch, fa
     if fault == 'missing': del capture['actions'][1]['native_invocation']
     if fault == 'hash': capture['actions'][1]['native_invocation']['sha256'] = '0' * 64
     with pytest.raises(ValueError): exporter.build(tmp_path, capture, loader)
+
+
+def bridge_fixture(tmp_path, monkeypatch):
+    capture, trial, bind = leave_fixture(tmp_path, monkeypatch)
+    base_loader = bind(trial)
+    goat_code = bytearray(460); goat_code[450:452] = bytes([101, 1])
+    bridge_code = bytearray(460)
+    for offset, number in ((0x14c, 1), (0x16a, 2), (0x19f, 30)):
+        bridge_code[offset:offset+2] = bytes([101, number])
+    bridge_code[0x1b8:0x1bb] = bytes([5, 3, 4])
+    resources = {103: SimpleNamespace(resource_sha256='a' * 64, code=bytes(goat_code)),
+                 25: SimpleNamespace(resource_sha256='b' * 64, code=bytes(bridge_code))}
+    monkeypatch.setattr(exporter, 'load_logic', lambda _directory, _source, number, **kwargs: resources[number])
+    monkeypatch.setattr(exporter, 'logic_messages', lambda r: {r.resource_sha256: {
+        '1': 'Authored first message.', '2': 'Authored second message.', '30': 'Authored final message.'}})
+    capture['source']['resources']['25'] = 'b' * 64
+    for index, observation in enumerate(capture['observations'].values()):
+        observation['state'].update(score=2 if index == 0 else 7,
+                                    carrot_carried=True, troll_removed=False, troll_paid=False)
+    capture['observations']['o2']['state']['room'] = 9
+    final = deepcopy(capture['observations']['o2'])
+    final['state'].update(room=25, score=11, following=False, troll_removed=True)
+    final.update(goat_visible=False, troll_visible=False)
+    final['frame']['metadata']['frame_id'] = 6
+    # A drawn flag is a separate observation and is not used as frame visibility.
+    final['native_state'] = {'goat': {'drawn': False}, 'troll': {'drawn': False}}
+    capture['observations']['o3'] = final
+    messages = []
+    for index, (offset, number) in enumerate(((0x14c, 1), (0x16a, 2), (0x19f, 30))):
+        message = deepcopy(capture['actions'][0]['messages'][0])
+        message.update(logic=25, source_offset=offset, message_id=number)
+        message['frame']['metadata']['frame_id'] = 3 + index
+        messages.append(message)
+    trace = b'authored native trace fixture\n'
+    proof = {'format': 'fdisbull-agi-troll-score-write-1', 'status': 'verified',
+             'complete': True, 'native_execution': True, 'source_logic_sha256': 'b' * 64,
+             'source_offset': 0x1b8, 'before_score': 7, 'after_score': 11,
+             'writer': {'source_offset': 0x72da, 'resume_offset': 0x72de, 'bx': 3, 'al': 4},
+             'trace': {'path': 'score.trace', 'sha256': sha256(trace).hexdigest(), 'count': 32}}
+    action = {'id': 'troll-bridge', 'label': 'lead the goat to the bridge', 'verb': 'use',
+              'before': 'o2', 'after': 'o3', 'complete': True, 'messages_complete': True,
+              'inputs': [deepcopy(capture['actions'][1]['inputs'][0])], 'messages': messages}
+    capture['actions'].append(action)
+    def load(p=proof, t=trace):
+        raw = json.dumps(p).encode()
+        action['native_score_write'] = {'path': 'score.json', 'sha256': sha256(raw).hexdigest()}
+        return lambda path: raw if path == 'score.json' else t if path == 'score.trace' else base_loader(path)
+    return capture, proof, load
+
+
+def test_bridge_player_contiguous_route_and_checkpoint(tmp_path, monkeypatch):
+    capture, proof, load = bridge_fixture(tmp_path, monkeypatch)
+    scene, evidence = exporter.build(tmp_path, capture, load())
+    backend = ILSceneBackend(scene); player = Player(backend)
+    assert 'no action sent' in player.execute('use bridge').lower()
+    assert player.execute('use carrot on goat').startswith('Success:')
+    assert player.execute('use route').startswith('Success:')
+    old = backend.observe()['context']['token']
+    assert backend.save('before-bridge')['status'] == 'saved'
+    assert 'Authored final message.' in player.execute('use bridge')
+    assert backend.state['$phase'] == 3 and backend.state['$room'] == 25
+    assert backend.state['$score'] == 11 and backend.state['$following'] is False
+    assert backend.state['$carrot'] is True and backend.state['$carrot_carried'] is True
+    assert backend.state['$troll_removed'] is True and backend.state['$troll_paid'] is False
+    assert 'bridge cleared' in player.execute('look').lower()
+    assert backend.act({'verb': 'use', 'target': 'bridge', 'item': None, 'context_token': old})['status'] == 'rejected'
+    assert 'no action sent' in player.execute('use bridge').lower()
+    assert backend.load('before-bridge')['status'] == 'restored'
+    assert player.execute('use bridge').startswith('Success:')
+    assert evidence['edges'][2]['native_score_write']['sha256'] == capture['actions'][2]['native_score_write']['sha256']
+    assert evidence['edges'][2]['native_score_write']['trace']['count'] == 32
+    assert 'Authored final message.' not in str(evidence)
+
+
+@pytest.mark.parametrize('count, expected', [
+    (1, '7c1c04d438d4d1979d36b2d1f4e26e0743ac39610800b34513b92460667e9f86'),
+    (2, '3fe7fe5f51efb22e1b9315d00d6b2ff082463cd9c3f799902b3cffeb28d6adba'),
+])
+def test_existing_scene_export_bytes_unchanged(tmp_path, monkeypatch, count, expected):
+    capture, loader = fixture(tmp_path, monkeypatch)
+    capture['actions'] = capture['actions'][:count]
+    scene, _ = exporter.build(tmp_path, capture, loader)
+    raw = (json.dumps(scene, ensure_ascii=False, indent=2) + '\n').encode()
+    assert sha256(raw).hexdigest() == expected
+
+
+@pytest.mark.parametrize('observation', ['o0', 'o1', 'o2', 'o3'])
+@pytest.mark.parametrize('field', ['carrot_carried', 'troll_removed', 'troll_paid'])
+def test_bridge_requires_extended_state_on_every_used_observation(tmp_path, monkeypatch, observation, field):
+    capture, proof, load = bridge_fixture(tmp_path, monkeypatch)
+    del capture['observations'][observation]['state'][field]
+    with pytest.raises(ValueError, match='bridge observed state'):
+        exporter.build(tmp_path, capture, load())
+
+
+@pytest.mark.parametrize('observation, field, value', [
+    ('o2', 'room', 12), ('o2', 'score', 8), ('o2', 'following', False),
+    ('o2', 'carrot', False), ('o2', 'carrot_carried', False),
+    ('o2', 'troll_removed', True), ('o2', 'troll_paid', True),
+    ('o3', 'room', 9), ('o3', 'score', 12), ('o3', 'following', True),
+    ('o3', 'carrot', False), ('o3', 'carrot_carried', False),
+    ('o3', 'troll_removed', False), ('o3', 'troll_paid', True),
+    ('o0', 'carrot_carried', 1),
+])
+def test_bridge_refuses_other_state_outcomes(tmp_path, monkeypatch, observation, field, value):
+    capture, proof, load = bridge_fixture(tmp_path, monkeypatch)
+    capture['observations'][observation]['state'][field] = value
+    with pytest.raises(ValueError): exporter.build(tmp_path, capture, load())
+
+
+@pytest.mark.parametrize('field, value', [('goat_visible', None), ('goat_visible', True),
+                                         ('troll_visible', None), ('troll_visible', True)])
+def test_bridge_drawn_flags_do_not_qualify_frame_absence(tmp_path, monkeypatch, field, value):
+    capture, proof, load = bridge_fixture(tmp_path, monkeypatch)
+    capture['observations']['o3'][field] = value
+    with pytest.raises(ValueError): exporter.build(tmp_path, capture, load())
+
+
+def test_bridge_frame_visibility_is_separate_from_later_actor_flags(tmp_path, monkeypatch):
+    capture, proof, load = bridge_fixture(tmp_path, monkeypatch)
+    capture['observations']['o3']['native_state'] = {'goat': {'drawn': True}, 'troll': {'drawn': True}}
+    scene, _ = exporter.build(tmp_path, capture, load())
+    assert scene['contexts'][-1]['title'] == 'Observed bridge cleared'
+
+
+@pytest.mark.parametrize('fault', ['disconnected', 'second-action', 'third-action', 'missing-logic', 'extra-action',
+                                  'missing-proof', 'proof-hash', 'score-instruction', 'missing-frame'])
+def test_bridge_capture_contract_failures(tmp_path, monkeypatch, fault):
+    capture, proof, load = bridge_fixture(tmp_path, monkeypatch)
+    if fault == 'disconnected': capture['actions'][2]['before'] = 'o1'
+    if fault == 'second-action': capture['actions'][1]['id'] = 'lead-to-water'
+    if fault == 'third-action': capture['actions'][2]['id'] = 'wander-away'
+    if fault == 'missing-logic': del capture['source']['resources']['25']
+    if fault == 'extra-action': capture['actions'].append(deepcopy(capture['actions'][2]))
+    if fault == 'score-instruction':
+        original = exporter.load_logic
+        def changed(*args, **kwargs):
+            resource = original(*args, **kwargs)
+            if args[2] != 25: return resource
+            code = bytearray(resource.code); code[0x1ba] = 5
+            return SimpleNamespace(resource_sha256=resource.resource_sha256, code=bytes(code))
+        monkeypatch.setattr(exporter, 'load_logic', changed)
+    if fault == 'missing-frame': del capture['actions'][2]['messages'][0]['frame']
+    loader = load()
+    if fault == 'missing-proof': del capture['actions'][2]['native_score_write']
+    if fault == 'proof-hash': capture['actions'][2]['native_score_write']['sha256'] = '0' * 64
+    with pytest.raises(ValueError): exporter.build(tmp_path, capture, loader)
+
+
+@pytest.mark.parametrize('field, value', [('format', 'other'), ('status', 'incomplete'), ('complete', False),
+                                        ('native_execution', False), ('source_logic_sha256', 'c' * 64),
+                                        ('source_offset', 0x1b9), ('before_score', 6), ('after_score', 12)])
+def test_bridge_score_write_must_match_source_and_observed_scores(tmp_path, monkeypatch, field, value):
+    capture, proof, load = bridge_fixture(tmp_path, monkeypatch)
+    proof[field] = value
+    with pytest.raises(ValueError, match='score write not qualified'):
+        exporter.build(tmp_path, capture, load())
+
+
+@pytest.mark.parametrize('field, value', [('source_offset', 0x72db), ('resume_offset', 0x72df),
+                                        ('bx', 4), ('al', 5), ('bx', True)])
+def test_bridge_native_score_writer_must_match(tmp_path, monkeypatch, field, value):
+    capture, proof, load = bridge_fixture(tmp_path, monkeypatch)
+    proof['writer'][field] = value
+    with pytest.raises(ValueError, match='native writer differs'):
+        exporter.build(tmp_path, capture, load())
+
+
+@pytest.mark.parametrize('fault', ['missing', 'count', 'hash', 'bytes', 'path'])
+def test_bridge_score_trace_is_bound_to_supplied_bytes(tmp_path, monkeypatch, fault):
+    capture, proof, load = bridge_fixture(tmp_path, monkeypatch)
+    if fault == 'missing': del proof['trace']
+    if fault == 'count': proof['trace']['count'] = 31
+    if fault == 'hash': proof['trace']['sha256'] = '0' * 64
+    if fault == 'path': del proof['trace']['path']
+    loader = load(t=b'changed trace') if fault == 'bytes' else load()
+    with pytest.raises(ValueError, match='trace'): exporter.build(tmp_path, capture, loader)
+
+
+@pytest.mark.parametrize('fault', ['missing', 'duplicate', 'reordered', 'extra', 'incomplete', 'frame'])
+def test_bridge_requires_each_expected_completed_message_once(tmp_path, monkeypatch, fault):
+    capture, proof, load = bridge_fixture(tmp_path, monkeypatch)
+    messages = capture['actions'][2]['messages']
+    if fault == 'missing': messages.pop()
+    if fault == 'duplicate': messages.append(deepcopy(messages[0]))
+    if fault == 'reordered': messages.reverse()
+    if fault == 'extra':
+        original = exporter.load_logic
+        def extra(*args, **kwargs):
+            resource = original(*args, **kwargs)
+            if args[2] != 25: return resource
+            code = bytearray(resource.code); code[0x1a4:0x1a6] = bytes([101, 1])
+            return SimpleNamespace(resource_sha256=resource.resource_sha256, code=bytes(code))
+        monkeypatch.setattr(exporter, 'load_logic', extra)
+        message = deepcopy(messages[0]); message['source_offset'] = 0x1a4; messages.append(message)
+    if fault == 'incomplete': messages[0]['handler_return_observed'] = False
+    if fault == 'frame': messages[0]['frame']['sha256'] = '0' * 64
+    with pytest.raises(ValueError): exporter.build(tmp_path, capture, load())
+
+
+def test_bridge_additional_messages_from_other_logic_keep_normal_binding(tmp_path, monkeypatch):
+    capture, proof, load = bridge_fixture(tmp_path, monkeypatch)
+    message = deepcopy(capture['actions'][0]['messages'][0])
+    capture['actions'][2]['messages'].append(message)
+    scene, evidence = exporter.build(tmp_path, capture, load())
+    assert evidence['edges'][2]['messages'][-1]['logic'] == 103
+    assert scene['partial'] is True
+    message['message_id'] = 2
+    with pytest.raises(ValueError, match='instruction mismatch'):
+        exporter.build(tmp_path, capture, load())

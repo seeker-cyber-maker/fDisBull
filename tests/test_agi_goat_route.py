@@ -64,3 +64,31 @@ def test_natural_entry_transport_loss_records_unknown_attempt():
     run.d=SimpleNamespace(call=call,run=lost)
     with pytest.raises(TimeoutError):run.qualify_follow()
     assert run.journal==[{'kind':'entry-search','attempted':True,'result':None}]
+
+
+def test_neutral_rechecks_after_a_captured_dialogue_consumes_the_arrow():
+    run=object.__new__(GoatRun);run.messages=[];run.journal=[];direction=1;keys=[]
+    run.state=lambda:{'ego':{'direction':direction}}
+    def press(key):
+        nonlocal direction
+        keys.append(key)
+        if len(keys)==1:run.messages.append({'status':'completed'})
+        else:direction=0
+    run.press=press;run.neutral()
+    assert keys==['up','up'] and run.journal==[{'kind':'neutral-interrupted','completed_messages':1}]
+
+
+def test_neutral_does_not_replay_a_key_without_an_observed_dialogue():
+    run=object.__new__(GoatRun);run.messages=[];run.journal=[];keys=[]
+    run.state=lambda:{'ego':{'direction':1}};run.press=keys.append
+    with pytest.raises(RuntimeError,match='did not settle'):run.neutral()
+    assert keys==['up']
+
+
+def test_neutral_dialogue_retries_are_bounded():
+    run=object.__new__(GoatRun);run.messages=[];run.journal=[];keys=[]
+    run.state=lambda:{'ego':{'direction':1}}
+    def press(key):keys.append(key);run.messages.append({'status':'completed'})
+    run.press=press
+    with pytest.raises(RuntimeError,match='bounded dialogues'):run.neutral()
+    assert keys==['up']*4

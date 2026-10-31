@@ -53,11 +53,19 @@ def build(source, capture, artifact_loader):
     observations = capture.get('observations')
     require(isinstance(observations, dict), 'missing observations')
     actions = capture.get('actions')
-    require(isinstance(actions, list) and 1 <= len(actions) <= 2, 'expected one or two observed actions')
+    require(isinstance(actions, list) and 1 <= len(actions) <= 3, 'expected one to three observed actions')
     require(isinstance(actions[0], dict) and actions[0].get('id') == 'show-carrot', 'first action must be show-carrot')
-    if len(actions) == 2:
+    if len(actions) >= 2:
         require(isinstance(actions[1], dict) and actions[1].get('id') in ('lead-to-water', 'wander-away', 'leave-pen') and
                 actions[1].get('before') == actions[0].get('after'), 'actions are not a contiguous observed route')
+    bridge = len(actions) == 3
+    fields = ('room', 'score', 'carrot', 'following', 'gate_open')
+    if bridge:
+        require(actions[1]['id'] == 'leave-pen' and isinstance(actions[2], dict) and
+                actions[2].get('id') == 'troll-bridge' and actions[2].get('before') == actions[1].get('after'),
+                'bridge action requires a contiguous show-carrot and leave-pen route')
+        require(25 in resources, 'missing bridge logic identity')
+        fields += ('carrot_carried', 'troll_removed', 'troll_paid')
     def observation(ident):
         require(isinstance(ident, str) and ident in observations, 'missing observation')
         value = observations[ident]
@@ -65,6 +73,9 @@ def build(source, capture, artifact_loader):
         state = value.get('state')
         require(isinstance(state, dict) and all(type(state.get(k)) is int and 0 <= state[k] <= 255 for k in ('room', 'score')) and
                 all(type(state.get(k)) is bool for k in ('carrot', 'following', 'gate_open')), 'incomplete observed state')
+        if bridge:
+            require(all(type(state.get(k)) is bool for k in ('carrot_carried', 'troll_removed', 'troll_paid')),
+                    'incomplete bridge observed state')
         require(type(value.get('goat_visible')) is bool, 'missing explicit goat visibility observation')
         frame(value.get('frame'))
         return state, value['goat_visible']
@@ -82,6 +93,7 @@ def build(source, capture, artifact_loader):
         if index == 0:
             require(after['following'] and after['score'] == before['score'] + 5, 'unqualified carrot outcome')
         native_binding = None
+        score_binding = None
         if action['id'] == 'leave-pen':
             require(before['room'] in (10, 11) and after['room'] not in (10, 11) and
                     before['carrot'] and after['carrot'] and before['following'] and after['following'] and
@@ -107,6 +119,46 @@ def build(source, capture, artifact_loader):
                     all(type(offset) is int and 0 <= offset < len(code) and code[offset] not in (22, 23) for offset in offsets) and
                     code[offsets[-1]] == 0, 'native invocation has unsupported or incomplete source path')
             native_binding = {'sha256': native['sha256'], 'source_offsets': offsets}
+        if action['id'] == 'troll-bridge':
+            require(before['room'] == 9 and before['score'] == 7 and before['following'] and
+                    before['carrot'] and before['carrot_carried'] and not before['troll_removed'] and not before['troll_paid'] and
+                    after['room'] == 25 and after['score'] == before['score'] + 4 and not after['following'] and
+                    after['carrot'] and after['carrot_carried'] and after['troll_removed'] and not after['troll_paid'],
+                    'unqualified troll-bridge outcome')
+            require(after_visible is False and observations[action['after']].get('troll_visible') is False,
+                    'bridge outcome needs explicit goat and troll absence observations')
+            require(resources[25].code[0x1b8:0x1bb] == bytes((5, 3, 4)), 'bridge score instruction mismatch')
+            native = action.get('native_score_write')
+            require(isinstance(native, dict) and isinstance(native.get('path'), str) and bool(native['path']),
+                    'missing native bridge score write')
+            raw = artifact_loader(native['path'])
+            require(isinstance(raw, bytes) and digest(raw) == native.get('sha256'), 'bridge score write hash mismatch')
+            try:
+                proof = json.loads(raw)
+            except (ValueError, UnicodeDecodeError) as exc:
+                raise ValueError('invalid native bridge score write') from exc
+            require(isinstance(proof, dict) and proof.get('format') == 'fdisbull-agi-troll-score-write-1' and
+                    proof.get('status') == 'verified' and proof.get('complete') is True and proof.get('native_execution') is True and
+                    proof.get('source_logic_sha256') == resources[25].resource_sha256 and
+                    type(proof.get('source_offset')) is int and proof['source_offset'] == 0x1b8 and
+                    type(proof.get('before_score')) is int and proof['before_score'] == before['score'] and
+                    type(proof.get('after_score')) is int and proof['after_score'] == after['score'],
+                    'native bridge score write not qualified')
+            writer = proof.get('writer')
+            require(isinstance(writer, dict) and all(type(writer.get(k)) is int and writer[k] == v for k, v in
+                    (('source_offset', 0x72da), ('resume_offset', 0x72de), ('bx', 3), ('al', 4))),
+                    'bridge native writer differs')
+            trace = proof.get('trace')
+            require(isinstance(trace, dict) and isinstance(trace.get('path'), str) and bool(trace['path']) and
+                    type(trace.get('count')) is int and trace['count'] == 32, 'incomplete bridge score trace')
+            trace_raw = artifact_loader(trace['path'])
+            require(isinstance(trace_raw, bytes) and bool(trace_raw) and digest(trace_raw) == trace.get('sha256'),
+                    'bridge score trace hash mismatch')
+            score_binding = {'sha256': native['sha256'], 'source_logic_sha256': proof['source_logic_sha256'],
+                             'source_offset': proof['source_offset'], 'before_score': proof['before_score'],
+                             'after_score': proof['after_score'],
+                             'writer': {k: writer[k] for k in ('source_offset', 'resume_offset', 'bx', 'al')},
+                             'trace': {'sha256': trace['sha256'], 'count': trace['count']}}
         messages = action.get('messages')
         require(isinstance(messages, list), 'missing message observations')
         texts = []
@@ -127,17 +179,21 @@ def build(source, capture, artifact_loader):
                                for offset in native_binding['source_offsets'] if resources[103].code[offset]==101]
             captured_messages=[(m['logic'],m['source_offset'],m['message_id']) for m in messages if m['logic']==103]
             require(captured_messages==expected_messages,'native message capture count or identity differs')
-        checked.append((action, before, after, after_visible, texts, native_binding))
+        if action['id'] == 'troll-bridge':
+            captured_messages = [(m['logic'], m['source_offset'], m['message_id']) for m in messages if m['logic'] == 25]
+            require(captured_messages == [(25, 0x14c, 1), (25, 0x16a, 2), (25, 0x19f, 30)],
+                    'bridge message capture count or identity differs')
+        checked.append((action, before, after, after_visible, texts, native_binding, score_binding))
     variables = {'$phase': {'type': 'u8', 'initial': 0}}
-    for field in ('room', 'score', 'carrot', 'following', 'gate_open'):
+    for field in fields:
         variables['$' + field] = {'type': 'bool' if type(initial[field]) is bool else 'u8', 'initial': initial[field]}
     programs = {}
-    for i, (action, before, after, _, texts, _) in enumerate(checked):
+    for i, (action, before, after, _, texts, _, _) in enumerate(checked):
         body = [{'id': 'guard-phase', 'op': 'require', 'condition': {'op': 'eq', 'left': {'var': '$phase'}, 'right': i}}]
         for name, value in before.items():
-            if name in ('room', 'score', 'carrot', 'following', 'gate_open'):
+            if name in fields:
                 body.append({'id': 'guard-' + name, 'op': 'require', 'condition': {'op': 'eq', 'left': {'var': '$' + name}, 'right': value}})
-        for name in ('room', 'score', 'carrot', 'following', 'gate_open'):
+        for name in fields:
             if before[name] != after[name]:
                 body.append({'id': 'set-' + name, 'op': 'set', 'var': '$' + name, 'value': after[name]})
         body.append({'id': 'set-phase', 'op': 'set', 'var': '$phase', 'value': i + 1})
@@ -149,16 +205,23 @@ def build(source, capture, artifact_loader):
                  'description': 'A partial reconstruction of a recorded encounter.',
                  'when': {'op': 'eq', 'left': {'var': '$phase'}, 'right': i}}
                 for i in range(len(checked) + 1)]
+    if bridge:
+        contexts[-1]['title'] = 'Observed bridge cleared'
+        contexts[-1]['description'] = 'A partial reconstruction of the supplied bridge outcome.'
     objects = [{'id': 'carrot', 'context': 'phase-0', 'label': 'carrot', 'aliases': [],
                 'description': 'A recorded carried item.', 'bindings': [],
-                'inventory_when': {'op': 'eq', 'left': {'var': '$carrot'}, 'right': True}},
+                'inventory_when': {'op': 'eq', 'left': {'var': '$carrot_carried' if bridge else '$carrot'}, 'right': True}},
                {'id': 'goat', 'context': 'phase-0', 'label': 'goat', 'aliases': [],
                 'description': 'The goat observed in the starting frame.',
                 'bindings': [{'verb': 'use', 'item': 'carrot', 'program': 'show-carrot'}]}]
-    if len(checked) == 2:
+    if len(checked) >= 2:
         objects.append({'id': 'route', 'context': 'phase-1', 'label': 'route', 'aliases': [],
                         'description': 'The next recorded movement.',
                         'bindings': [{'verb': 'use', 'program': checked[1][0]['id']}]})
+    if bridge:
+        objects.append({'id': 'bridge', 'context': 'phase-2', 'label': 'bridge', 'aliases': [],
+                        'description': 'The next recorded bridge encounter.',
+                        'bindings': [{'verb': 'use', 'program': 'troll-bridge'}]})
     scene = {'format': 'fdisbull-il-scene-1', 'programs': programs, 'contexts': contexts,
              'objects': objects, 'partial': True}
     ILSceneBackend(scene)
@@ -166,8 +229,9 @@ def build(source, capture, artifact_loader):
                   'capture_sha256': digest(json.dumps(capture, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()),
                   'frames': frames, 'edges': [{'id': a['id'], 'before': a['before'], 'after': a['after'],
                                                'messages': [{k: m[k] for k in ('logic', 'source_offset', 'message_id')} for m in a['messages']],
-                                               **({'native_invocation': native} if native else {})}
-                                              for a, _, _, _, _, native in checked],
+                                               **({'native_invocation': native} if native else {}),
+                                               **({'native_score_write': score} if score else {})}
+                                              for a, _, _, _, _, native, score in checked],
                   'scope': 'Supplied ordinary-play observations; hashes do not authenticate capture or establish general gameplay behavior. Text commands are authored projections. Partial coverage; no native execution or durable save.'}
     return scene, provenance
 
