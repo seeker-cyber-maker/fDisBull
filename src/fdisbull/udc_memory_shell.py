@@ -104,8 +104,12 @@ def validate_plan(plan, program):
     return deepcopy(plan)
 
 
-def build_memory_shell(project, selections, plan, initial, destination, *, cuts=None, regions=None):
-    from .udc_web_memory import build_memory_block
+def resolve_memory_shell(project, selections, plan, initial, *, cuts=None, regions=None):
+    """Resolve source identities and orchestration independently of a target.
+
+    Stored web selections are source provenance, not native-target receipts.
+    Every consumer emits its own explicitly identified realization.
+    """
     if type(selections) is not dict or set(selections) != {'wasm', 'webgpu'}: raise ValueError('select both memory providers')
     first = project.udl_selection_info(selections['wasm'], full=True)['document']
     program = first['program']; execution_program = program; resolved_regions = None
@@ -133,6 +137,26 @@ def build_memory_shell(project, selections, plan, initial, destination, *, cuts=
                 raise ValueError('region plan output must match its one-word contract')
     if type(initial) is not list or len(initial) != program['memory']['words'] or any(type(v) is not int or not 0 <= v <= 0xffffffff for v in initial): raise ValueError('invalid initial word arena')
     validate_arena(normalized,initial)
+    endpoints = {}
+    for backend, target in zip(('wasm', 'webgpu'), TARGETS):
+        endpoints[backend] = {}
+        for function in sorted(program['functions']):
+            resolved, selected_target, identity = resolve(project, selections[backend], function)
+            if resolved != program or selected_target != target:
+                raise ValueError('memory sources need identical UIL and declared targets')
+            endpoints[backend][function] = identity
+    return {'program':deepcopy(program), 'execution_program':deepcopy(execution_program),
+        'plan':normalized, 'initial':deepcopy(initial), 'cuts':lowered,
+        'regions':resolved_regions, 'source_cut_document':deepcopy(cuts),
+        'endpoints':endpoints, 'source_selections':deepcopy(selections)}
+
+
+def build_memory_shell(project, selections, plan, initial, destination, *, cuts=None, regions=None):
+    from .udc_web_memory import build_memory_block
+    prepared = resolve_memory_shell(project, selections, plan, initial, cuts=cuts, regions=regions)
+    program = prepared['program']; execution_program = prepared['execution_program']
+    normalized = prepared['plan']; initial = prepared['initial']
+    lowered = prepared['cuts']; resolved_regions = prepared['regions']
     destination = Path(destination).expanduser().absolute()
     if os.path.lexists(destination): raise ValueError('choose a new private memory shell output')
     destination = destination.resolve()
@@ -140,19 +164,16 @@ def build_memory_shell(project, selections, plan, initial, destination, *, cuts=
     artifacts = {name: files('fdisbull').joinpath('web_runtime/' + name).read_bytes() for name in ('memory.mjs','memory-shell.mjs','memory-canvas.mjs','memory-index.html')}
     artifacts['index.html'] = artifacts.pop('memory-index.html')
     artifacts['initial.json'] = (json.dumps(initial,separators=(',',':'))+'\n').encode()
-    variants = {}; endpoints = {}; cut_variants = {}; region_variants = {}
+    variants = {}; endpoints = prepared['endpoints']; cut_variants = {}; region_variants = {}
     with tempfile.TemporaryDirectory(prefix='fdisbull-memory-shell-') as temp:
         for backend, target in zip(('wasm', 'webgpu'), TARGETS):
-            variants[backend] = {}; endpoints[backend] = {}
+            variants[backend] = {}
             for function in sorted(program['functions']):
-                resolved, selected_target, identities = resolve(project, selections[backend], function)
-                if resolved != program or selected_target != target: raise ValueError('memory providers need identical UIL and targets')
                 directory = 'blocks/' + backend + '/' + function
                 output = Path(temp) / backend / function
                 output.parent.mkdir(exist_ok=True)
                 build = build_memory_block(program, function, target, output, report_steps=lowered is not None)
                 variants[backend][function] = {'directory':directory, 'build':build}
-                endpoints[backend][function] = identities
                 for file in output.iterdir(): artifacts[directory + '/' + file.name] = file.read_bytes()
             if lowered is not None:
                 cut_variants[backend] = {}

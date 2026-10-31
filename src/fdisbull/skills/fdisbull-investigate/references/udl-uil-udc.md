@@ -36,6 +36,17 @@ and qualify original fidelity separately from the desired changed behavior.
 The current region profile permits one pure store expression, literal reads,
 one guarded output word and one source charge. It is not arbitrary code splicing.
 
+`build-memory-macos-shell` retargets the same bounded-memory source selections,
+cuts and regions to native ARM64 blocks and AppKit adapters. Preserve old layer
+target metadata as source provenance and inspect the new native realization
+hashes. Native compilation is build-only; qualify the actual dylib/application
+against original state and complete raster data. This shell has one synchronous
+main-thread owner, guarded staging and terminal close. Snapshot final quit state
+before teardown. AppKit responder tests with constructed `NSEvent` objects and
+offscreen `drawRect` establish a different edge from physical hardware/window
+hit-testing. See source-checkout `docs/UDC_MEMORY_MACOS.md` for the exact ABI,
+ownership, diagnostic modes and private Snake reproduction.
+
 The `build-web-block` JSON method emits one canonical, pure selected UIL
 invocation for `wasm32-scalar-1` or `webgpu-wgsl-scalar-1`. Inspect the actual
 tool's `methods` first. Selection target metadata alone does not add a backend.

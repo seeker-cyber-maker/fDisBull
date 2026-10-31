@@ -16,6 +16,11 @@ scalar food profile. The Snake study checks original instructions, real input,
 complete rasters and guarded state commits; finite comparisons are scoped in
 its receipt.
 
+For a native macOS ARM64 window over the same memory UIL, see
+[native memory reconstruction](UDC_MEMORY_MACOS.md). The native compiler and
+AppKit adapters have separate execution and input/view qualification gates;
+source selection target metadata remains provenance.
+
 ## Discover commands and bundled skills
 
 ```text

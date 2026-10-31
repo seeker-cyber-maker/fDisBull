@@ -1,5 +1,6 @@
 """Agent JSON surface for persistent snippet and implementation records."""
 METHODS={
+ 'build-memory-macos-shell':'Emit native ARM64 memory blocks and AppKit adapters from exact source selections; selections,plan,initial,destination,[cuts,regions,c_compiler,with_app]; build only',
  'build-memory-web-shell':'Emit an owned canvas and input shell with exact memory selections; selections,plan,initial,destination,[cuts,regions]; build only',
  'store-memory-region-contract':'Register a source-bound pure word-update region; document,[author]',
  'store-memory-region-layer':'Register an exact or explicitly variant region realization; document,[author]',
@@ -37,6 +38,9 @@ METHODS={
 
 def invoke(project,method,params):
  from . import udc_layers
+ if method=='build-memory-macos-shell':
+  from .udc_memory_macos import build_memory_macos_shell
+  return build_memory_macos_shell(project,**params)
  if method=='build-memory-web-shell':
   from .udc_memory_shell import build_memory_shell
   return build_memory_shell(project,**params)
