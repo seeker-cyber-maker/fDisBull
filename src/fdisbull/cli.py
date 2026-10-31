@@ -19,6 +19,7 @@ AGENT_SKILL_GUIDES = {
     'references/semantic-contracts.md': 'Recover complete intent contracts and compare facts, effects, time and projection losses',
     'references/media-modules.md': 'Reuse shipped parser APIs, recover missing tooling, and extend bounded format specifications',
     'references/formats-and-media.md': 'Qualify containers, executable mappings, release differences and valid media reduction',
+    'references/binary-claim-verification.md': 'Prove or falsify stored-value, writer and behavior claims against the decoded original binary',
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
 DEFAULT_AGENT_SKILL = 'fdisbull-investigate'
