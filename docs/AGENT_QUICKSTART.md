@@ -4,6 +4,52 @@ Use this page to find the right fDisBull interface for a task. Replace every
 example path with a path selected by the user. The Python distribution does not
 include a native emulator, game files, saved states or project databases.
 
+## Verify the interpreter and import before analysis
+
+Select the intended interpreter before evaluating capabilities. In a source
+checkout, record the following from the repository root after activating the
+project's existing environment (or the prepared cloud environment's documented
+startup). Use the same interpreter and import selection for subsequent commands:
+
+```bash
+python - <<'PY'
+import importlib.metadata
+import importlib.util
+import pathlib
+import sys
+import tomllib
+
+print("python:", sys.executable)
+try:
+    print("distribution:", importlib.metadata.version("fdisbull"))
+except importlib.metadata.PackageNotFoundError:
+    print("distribution: not installed")
+spec = importlib.util.find_spec("fdisbull")
+print("import:", None if spec is None else spec.origin)
+print("checkout:", tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]["version"])
+PY
+git rev-parse HEAD
+git status --short
+python -m fdisbull --version
+```
+
+Distribution metadata describes the discovered distribution; it does not prove
+that imported source comes from that distribution or the checkout. Inspect the
+import path as well as both versions and the commit/working-tree state. An
+unexpected mismatch must be corrected using the project's existing environment
+or reported before drawing capability conclusions. Do not blindly upgrade an
+installation to hide the mismatch. When deliberately testing checkout source
+with an already prepared interpreter, `PYTHONPATH="$PWD/src" python -m fdisbull`
+selects this repository's source without changing the installation. Repeat the
+probe with that same `PYTHONPATH` and record the distinction; distribution
+metadata may still describe the installed package. For installed-package tests,
+use the selected installed interpreter from outside the checkout instead.
+
+A user supplied an earlier agent report of plain `python` importing installed
+0.8.1 while its checkout declared 0.20.0.dev0. That is an unverified historical
+report illustrating why this check matters, not this environment's version
+inventory. A CLI version alone cannot establish import provenance.
+
 ## Discover commands and bundled skills
 
 ```text

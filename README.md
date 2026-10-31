@@ -3,9 +3,12 @@
 This checkout contains the **0.26.1 release source**: read-only recovery
 reconciliation, selected DOS program-exit reporting and broader game-guide
 workflows. See the [0.26.1 notes](docs/RELEASE-0.26.1.md) for scope and gates.
-The published and shared installation is
-[0.26.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.26.0)
-at this source cut; publication and installation are separate steps.
+The current published release is
+[0.26.1](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.26.1).
+As checked on 2026-10-31, **0.27.0 is an upcoming candidate**, tracked in
+[draft PR #55](https://github.com/seeker-cyber-maker/fDisBull/pull/55), not a
+published release. A checkout, published package and local installation can
+have different versions; see the [provenance check](docs/AGENT_QUICKSTART.md#verify-the-interpreter-and-import-before-analysis).
 
 Give an agent a program to explore—and a place to keep what it learns.
 fDisBull connects disassembly, headless debugging, scene-aware controls and
@@ -247,6 +250,12 @@ not generate arbitrary DOS code or claim whole-game semantic recovery. The
 authored COM demonstration and the bounded real-game observations are described
 in [UDC usage](docs/UDC_DOS.md), [testing methodology](docs/UDC_TESTING.md)
 and [verification](docs/VERIFICATION-0.23.md).
+
+The [per-module UDC layer design](docs/UDC_MODULE_LAYERS.md) separates the
+execution shell, orchestration between blocks and presentation/polish that
+adapts code and memory into the kernel inside that shell. Each UDC module
+defines its own concrete rules. This is design guidance, not a claim of an
+implemented general compiler or mixed-language runtime.
 
 ## Status, testing and history
 

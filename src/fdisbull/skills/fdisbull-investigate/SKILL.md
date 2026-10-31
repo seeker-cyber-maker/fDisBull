@@ -16,6 +16,14 @@ task.
 
 ## Establish the target and claim
 
+Before analysis, record `sys.executable`, discovered fdisbull distribution
+version, actual import location, and checkout version/commit/working-tree state
+when using source. A matching CLI version alone is insufficient. Correct an
+unexpected mismatch through the existing project environment or report it before
+assessing capabilities; do not blindly install or upgrade. Source-checkout
+`docs/AGENT_QUICKSTART.md` gives the provenance probe. Keep deliberate source
+selection separate from installed-package acceptance.
+
 Identify the input and its format before choosing a path. Keep file offsets,
 project addresses, runtime addresses and guest-interpreter offsets distinct.
 Bind observations to the source hash, byte version, backend and run that
