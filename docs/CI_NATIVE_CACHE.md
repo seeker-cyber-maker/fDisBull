@@ -21,7 +21,7 @@ therefore still produce one duplicate initial run. The public read API uses no
 credentials or additional repository permissions. Its anonymous rate limit is a
 remaining deduplication limit; failure favors coverage.
 
-Main, `integration/**` and `release/**` branch pushes always run. Workflow
+Main, `integration/**`, `release/**` and legacy `*-integration` branch pushes always run. Workflow
 concurrency cancels superseded runs only for the same PR number or feature push
 branch, independently for each workflow and event kind. Other PRs never share a
 group. Main/integration/release pushes, tag pushes and manual runs use unique run

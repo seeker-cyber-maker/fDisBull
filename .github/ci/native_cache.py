@@ -143,7 +143,7 @@ def validate(directory, expected):
         return True
     except (OSError, ValueError, KeyError, TypeError) as exc:
         print(f"Native cache rejected: {exc}", file=sys.stderr)
-        if directory.is_symlink():
+        if directory.is_symlink() or (directory.exists() and not directory.is_dir()):
             directory.unlink()
         elif directory.exists():
             shutil.rmtree(directory)
@@ -168,7 +168,7 @@ def main():
     directory = root / ".native-cache" / args.backend
     if args.action == "key":
         if os.environ.get("NATIVE_COLD_CACHE") == "true":
-            if directory.is_symlink():
+            if directory.is_symlink() or (directory.exists() and not directory.is_dir()):
                 directory.unlink()
             elif directory.exists():
                 shutil.rmtree(directory)

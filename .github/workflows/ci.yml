@@ -7,8 +7,8 @@ on:
 
 # Separate workflows/PRs/branches; intentional tag/manual/trusted pushes are unique.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/heads/integration/') && !startsWith(github.ref, 'refs/heads/release/') && github.ref || github.run_id) }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/heads/integration/') && !startsWith(github.ref, 'refs/heads/release/')) }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/heads/integration/') && !startsWith(github.ref, 'refs/heads/release/') && !endsWith(github.ref, '-integration') && github.ref || github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/heads/integration/') && !startsWith(github.ref, 'refs/heads/release/') && !endsWith(github.ref, '-integration')) }}
 
 permissions:
   contents: read

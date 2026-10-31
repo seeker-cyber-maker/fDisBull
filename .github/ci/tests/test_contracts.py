@@ -103,6 +103,17 @@ class CacheContracts(unittest.TestCase):
                 self.assertFalse(self.directory.exists())
         self.assertFalse(cache.validate(self.directory, self.expected))
 
+    def test_corrupt_regular_file_cache_root_is_removed_for_rebuild(self):
+        shutil.rmtree(self.directory)
+        self.directory.write_bytes(b'not a cache directory')
+        self.assertFalse(cache.validate(self.directory, self.expected))
+        self.assertFalse(self.directory.exists())
+        self.directory.mkdir()
+        (self.directory / 'dosbox-x').write_bytes(b'\x7fELFrebuilt')
+        (self.directory / 'dosbox-x').chmod(0o755)
+        cache.seal(self.directory, self.expected)
+        self.assertTrue(cache.validate(self.directory, self.expected))
+
     def test_symlink_is_rejected_without_modifying_target(self):
         outside = self.root / 'outside'
         outside.write_text('untouched')
@@ -171,7 +182,7 @@ class EventContracts(unittest.TestCase):
             self.assertTrue(self.run_push([pull]))
 
     def test_main_integration_release_tags_pr_manual_always_run(self):
-        for ref in ('refs/heads/main', 'refs/heads/integration/test', 'refs/heads/release/test', 'refs/tags/v0.27.0'):
+        for ref in ('refs/heads/main', 'refs/heads/integration/test', 'refs/heads/codex/v025-integration', 'refs/heads/release/test', 'refs/tags/v0.27.0'):
             self.assertTrue(self.run_push([self.pull()], ref))
         for event in ('pull_request', 'workflow_dispatch'):
             self.assertTrue(policy.should_run(event, 'refs/heads/feature', self.repo, [self.pull()], self.sha))
@@ -204,6 +215,7 @@ def expression(text, context):
         if isinstance(item, ast.Call) and isinstance(item.func, ast.Name):
             values = [node(value) for value in item.args]
             if item.func.id == 'startsWith': return values[0].startswith(values[1])
+            if item.func.id == 'endsWith': return values[0].endswith(values[1])
             if item.func.id == 'format': return values[0].format(*values[1:])
         raise AssertionError(ast.dump(item))
     return node(ast.parse(text, mode='eval').body)
@@ -231,7 +243,7 @@ class WorkflowContracts(unittest.TestCase):
                 self.assertTrue(self.value(text, 'cancel-in-progress', a))
             self.assertNotEqual(self.value(text, 'group', self.context(number=56)), self.value(text, 'group', self.context(number=57)))
             self.assertNotEqual(self.value(text, 'group', self.context(workflow='native')), self.value(text, 'group', self.context(workflow='ordinary')))
-            for event, ref in (('push', 'refs/heads/main'), ('push', 'refs/heads/integration/test'), ('push', 'refs/heads/release/test'), ('push', 'refs/tags/v0.27.0'), ('workflow_dispatch', 'refs/heads/feature')):
+            for event, ref in (('push', 'refs/heads/main'), ('push', 'refs/heads/integration/test'), ('push', 'refs/heads/codex/v025-integration'), ('push', 'refs/heads/release/test'), ('push', 'refs/tags/v0.27.0'), ('workflow_dispatch', 'refs/heads/feature')):
                 a = self.context(event, ref, run=1)
                 b = self.context(event, ref, run=2)
                 self.assertNotEqual(self.value(text, 'group', a), self.value(text, 'group', b))

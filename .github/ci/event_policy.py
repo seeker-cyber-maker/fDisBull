@@ -10,7 +10,8 @@ import urllib.request
 
 
 def protected(ref):
-    return ref == "refs/heads/main" or ref.startswith(("refs/heads/integration/", "refs/heads/release/"))
+    return (ref == "refs/heads/main" or ref.startswith(("refs/heads/integration/", "refs/heads/release/"))
+            or ref.startswith("refs/heads/") and ref.endswith("-integration"))
 
 
 def should_run(event, ref, repository, pulls, sha):
