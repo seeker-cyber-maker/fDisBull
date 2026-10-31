@@ -2,20 +2,11 @@ name: Native debugger acceptance
 
 on:
   push:
-    paths:
-      - .github/workflows/native-debugger.yml
-      - experimental/dosbox-x/**
-      - experimental/wine/ci/**
-      - src/fdisbull/**
-      - tests/**
-      - pyproject.toml
-      - player/**
-      - scripts/build_offline_kit.py
-      - scripts/build_dosbox_source_companion.py
-      - scripts/verify_offline_kit.py
+    branches: [main]
+    tags: ['v*']
   pull_request:
     paths:
-      - .github/workflows/native-debugger.yml
+      - .github/workflows/**
       - experimental/dosbox-x/**
       - experimental/wine/ci/**
       - src/fdisbull/**
@@ -26,6 +17,11 @@ on:
       - scripts/build_dosbox_source_companion.py
       - scripts/verify_offline_kit.py
   workflow_dispatch:
+
+# Cancel only superseded PR work; never replace a main/tag/manual SHA's run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
