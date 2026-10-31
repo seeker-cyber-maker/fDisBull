@@ -125,3 +125,12 @@ def test_canonical_notification_map_order_does_not_change_linux_bytes(tmp_path):
  m['present']['messages']={'2':'lose','1':'win'}
  b=build_linux_shell(plan,m,tmp_path/'b',service_adapters=adapters())
  assert a['modules_sha256']==b['modules_sha256'] and a['output']['sha256']==b['output']['sha256']
+
+
+def test_build_output_absolute_path_is_filesystem_path(tmp_path):
+    plan, modules = example()
+    build = build_linux_shell(plan, modules, tmp_path / 'linux', service_adapters=adapters(), capture_state=True)
+    assert build['output']['path'] == 'program'
+    assert build['output']['absolute_path'] == str(tmp_path / 'linux' / 'program')
+    from pathlib import Path
+    assert Path(build['output']['absolute_path']).is_file()

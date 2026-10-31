@@ -563,7 +563,7 @@ def build_windows_shell(plan, modules, destination, *, c_compiler=None):
                 'target': {'format': 'PE32+', 'arch': 'x86-64', 'image_base': hex(BASE),
                            'load_profile': 'fixed preferred base; no exception-unwind profile',
                            'original_binary_wrapped': False},
-                'output': {'path': 'program.exe', 'sha256': _sha(image), 'size': len(image)},
+                'output': {'path': 'program.exe', 'absolute_path': str(destination / 'program.exe'), 'sha256': _sha(image), 'size': len(image)},
                 'abi': {'arena': 'RCX', 'result_u16': 'EAX', 'status': 'EDX',
                         'statuses': {'0': 'success', '1': 'qualification-or-range-failure', '2': 'loop-budget-exhausted',
                                      '3': 'notification-failed-after-state-commit'},
