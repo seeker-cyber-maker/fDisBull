@@ -23,6 +23,11 @@ city-production contract depends on?
 
 All addresses below are in the root load module (`R`), which fDisBull maps at
 runtime segment `0x1000`. `R:0D12:0045` is linear `0xD165`, file offset 63,733.
+Two coordinate kinds appear and are not interchangeable: **module-linear**
+addresses (the city routine: `0xD165`, `0xD244`) and **offsets inside module
+segment `0A99`** for the input-loop key dispatch, which is a separate 64K
+segment (`runtime 1A99`). The dispatch section gives the exact conversion and
+the fDisBull `1D12`-window representation of the same bytes.
 
 ## Entry proof
 
@@ -258,19 +263,85 @@ price and skips the commit when gold is short:
 
 ### Key dispatch
 
-The compare chain after the buy branch resolves the rest of the documented city
-screen input (Civ64 `SCENES-PLAY` 7.1 lists `A, b, c, i, h, m, v, a, s`):
+The input loop reads a word key (`lcall 1D05:0AC9`) into `[bp-0xF0]` and
+compares it against literals in one chain: each site is
+`cmp word [bp-0xF0], imm8` followed by `je <handler>` / `jmp <next compare>`.
+`examples/civ/civ_city_trace.py:key_dispatch` enumerates all fifteen sites from
+the unpacked root and labels each one.
 
-| key | site | action |
-|---|---|---|
-| `b` | `0x737D` | buy prompt, guard and commit (above) |
-| `c` | `0x7626` | `lcall 0ADE:0421(civ, city)` - the production chooser; result stored at `city+0x70F5`, then the loop exits |
-| `v` | `0x7700` | sets view mode `3` at `0x2496`, then `0x7756`: `push -1; push city; int 3F` entry `0x0013` - the city-view overlay call |
-| `i` | `0x76C7` | sets view mode `0` |
-| `h` | `0x76DA` | next compare in the chain (mode 1 per the tab order) |
-| `m` | `0x76ED` | next compare in the chain (mode 2 per the tab order) |
-| `a` | `0x7785` | not traced |
-| `s` | `0x799E` | not traced |
+**Address identity.** The offsets below are offsets inside module segment
+`0A99` (runtime `1A99` with the default `0x1000` load paragraph), so
+`runtime linear = 0x1A990 + offset`. fDisBull's MZ paragraph map attributes the
+same bytes to the `1D12` window; that representation is `offset + 0xA990`
+module linear, `+0x10000` runtime linear. `0A99:7785` is therefore
+`1D12:4FF5`, linear `0x22115`. The city-record routine addresses elsewhere in
+this document (`0xD165`, `0xD244`) are module-linear inside segment `0xD12`;
+do not add `0xA990` to those.
+
+| key | site (`0A99`) | module linear | action | basis |
+|---|---|---|---|---|
+| `A` | `0x724F` | `0x11BDF` | `status ^= 0x10`; when the bit is set, `find_slot` and production replacement | binary-static |
+| (sentinel) | `0x734A` | `0x11CDA` | compare against `-1`; falls through to the non-key path | binary-static |
+| `b` | `0x737D` | `0x11D0D` | buy prompt, price guard and commit (above) | binary-static |
+| `c` | `0x7626` | `0x11FB6` | `lcall 0ADE:0421(city, owner)` - the production chooser; result stored at `city+0x70F5`, then the loop exits | binary-static |
+| `i` | `0x76C7` | `0x12057` | sets view mode `0` (`INFO`) | binary-static |
+| `h` | `0x76DA` | `0x1206A` | sets view mode `1` (`HAPPY`) | binary-static |
+| `m` | `0x76ED` | `0x1207D` | sets view mode `2` (`MAP`) | binary-static |
+| `v` | `0x7700` | `0x12090` | sets view mode `3`, then `0x7756`: `push -1; push city; int 3F` entry `0x0013` - the city-view overlay call | binary-static |
+| `a` | `0x7785` | `0x12115` | unit-list cursor (below) | binary-static |
+| `s` | `0x799E` | `0x1232E` | sell-building cursor (below) | binary-static |
+| `1`..`9` | `0x7ABE`, `0x7AC8` | `0x1244E`, `0x12458` | specialist slot `key - '1'`; requires `size >= 5`, else the specialist warning | binary-static |
+| `p` | `0x7B58` | `0x124E8` | city-radius tile cursor | source-backed (civd `CITYMGT.C` 1569); binary branch not decoded |
+| `M` | `0x7DCF` | `0x1275F` | building-page flag: `flag & 2` gate, then `flag ^= 1` and page base reload | binary-static |
+| `r` | `0x7E01` | `0x12791` | rename-city overlay (`int 3F`) after the button hit test | binary-static |
+
+The `b` branch header, decoded with the same convention:
+
+```text
+737d  83be10ff62      cmp word [bp-0xf0], 0x62    ; 'b'
+7382  7403            je 0x7387
+7384  e98902          jmp 0x7610                   ; next key
+```
+
+#### `a` - unit-list cursor (`0x7785..0x799E`)
+
+The handler walks the city's units and returns the cursor cell:
+
+- `0x778F` seeds `choice = 0`, then advances while
+  `armydata[owner][unit_list[choice]].status & 0xCF` is zero (`0x77AC`);
+  when the scan reaches `unit_count` the index resets to `0` (`0x77D5`);
+- draws the cell at `((choice % 6) * 18 + 100, (choice / 6) * 16 + 116)`
+  (`0x77EC`, `0x7801`) with `1D12:710D` (`0x7818`, tile panel) and
+  `2AEA:0FB3` (`0x7841`, unit sprite), `flip(10)` between passes, and repeats
+  until `3045:2098` (`0x7855`, keyboard status) reports a key, then reads it
+  with `2D05:0AC9` (`0x7862`);
+- arrows move the cursor (`0x78B1`): `0x4D00` +1, `0x4B00` -1, `0x5000` +6,
+  `0x4800` -6; any other key keeps the cell; `2DC4:007C` (`0x78E1`,
+  `ClampInt`) bounds it to `0 .. unit_count-1`;
+- `0x0D` or `0x20` (`0x78ED`) commits the unit: when `status & 9`, `moves`
+  becomes `utypes[type].moves * 3` (`0x7941`); then `status &= 0x30`
+  (`0x7963`) and `goto_x = 0xFF` (-1) (`0x797F`);
+- `0x1B` (Esc, `0x7984`) exits and stores the cursor in `[0x70DC]` (`0x7992`).
+
+civd `CITYMGT.C` 1483-1524 carries the same loop and the same coordinate
+formula, which is the source-backed cross-check for the binary decode.
+
+#### `s` - sell-building cursor (`0x799E..0x7ABE`)
+
+- refused when `townbuf[city].status & 0x80` is set (`0x79B0`);
+- `0x79BA` seeds `choice = 0`, then draws the selected row with two
+  `recolour_rect` calls through `1000:0784`: `(scrbuf, 252,
+  (choice + wonders) * 6 + 3, 56, 7, 9, 1)` and then the same rectangle with
+  `1, 9`, `flip(10)` between passes (`0x7A38` keyboard status, `0x7A45` key
+  read), looping until a key arrives;
+- `0x5000` +1, `0x4800` -1 (`0x7A70`, `0x7A78`); `2DC4:007C` (`0x7A83`)
+  bounds it to `0 .. bld_count-1`;
+- `0x0D` or `0x20` jumps to the sell path at `0A99:7ED0` (runtime linear `0x22860`),
+  which walks the 24-bit `buildings` mask (`[si+0x70EC]`/`[si+0x70EE]`) for
+  the selected slot and performs the sale; `0x1B` returns to the chain.
+
+civd `CITYMGT.C` 1527-1548 and its `label_sell` block match both the guard and
+the 24-slot mask walk.
 
 The mouse CHANGE button reaches the same chooser at `0x727F`
 (`lcall 0ADE:0421`); its result is compared with `0x63` at `0x7294`, which is
@@ -294,6 +365,9 @@ reached from the `b` branch and it masks production status with
   parameter position is claimed. `0xB1CA` reads its city argument at `[bp+8]`;
   whether that is a second parameter or part of a long first argument is
   unresolved.
+- The dispatch chain is complete as a set of compare sites (`key_dispatch`
+  returns all fifteen). Handler interior spans are decoded for `a` and `s`
+  only; `p` is source-backed without a decoded branch.
 - Overlay callers are candidate sites, not resolved functions.
 - The field-reference counts are in-segment literal-offset matches; an indirect
   access through a copied pointer is not counted.
@@ -303,7 +377,10 @@ reached from the `b` branch and it masks production status with
 ## What this changes
 
 `CIV-DOS-CITY-001` moves from `candidate` to **statically proven** for the entry
-identity, the calling sites, and the shield reset block. `CIV-DOS-CITY-BUY-001`
-is statically proven for the guard, price and commit stores. `CIV-UI-001` stays
-`candidate`: scene geometry and controls still need a runtime display/state
-comparison.
+identity, the calling sites, the shield reset block and the fifteen-site key
+dispatch. The `a` and `s` handlers are now decoded with civd source agreement
+for their cursor loop, clamp, commit/exit and sell-path guard.
+`CIV-DOS-CITY-BUY-001` is statically proven for the guard, price and commit
+stores. `CIV-UI-001` stays `candidate`: scene geometry and controls still need
+a runtime display/state comparison.
+

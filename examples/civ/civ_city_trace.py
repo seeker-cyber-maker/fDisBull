@@ -31,6 +31,31 @@ FIELD_NAMES = {
 }
 SHIELD_RESET_LINEAR = 0xD244
 SHIELD_RESET_SIZE = 0x2B
+# The city input loop runs in a segment whose module-relative paragraph is
+# 0x0A99 (runtime 1A99 with the default 0x1000 load paragraph). Every key
+# compare therefore has a segment-relative offset, a module linear address and
+# a runtime linear address; the fDisBull MZ paragraph map may attribute the
+# same bytes to a different 64K window (1D12), so linear identity is canonical.
+DISPATCH_SEGMENT = 0x0A99
+DISPATCH_WINDOW_LINEAR = DISPATCH_SEGMENT * 16
+DISPATCH_SIGNATURE = bytes.fromhex("83be10ff")
+DISPATCH_KEY_ACTIONS = {
+    0x41: ("A", "status ^= 0x10, then auto-build slot lookup and production set", "binary-static"),
+    -1: ("-1", "dispatch sentinel; falls through to the non-key path", "binary-static"),
+    0x62: ("b", "buy prompt, price guard and commit", "binary-static"),
+    0x63: ("c", "production chooser lcall 0ADE:0421", "binary-static"),
+    0x69: ("i", "INFO tab (view mode 0)", "binary-static"),
+    0x68: ("h", "HAPPY tab (view mode 1)", "binary-static"),
+    0x6D: ("m", "MAP tab (view mode 2)", "binary-static"),
+    0x76: ("v", "city-view overlay int 3F entry 0x0013", "binary-static"),
+    0x61: ("a", "unit-list cursor over unit_list_f; arrows move, Enter/Space clears status and goto_x, Esc exits", "binary-static"),
+    0x73: ("s", "sell-building cursor over the 24-bit buildings mask; Enter/Space opens the sell dialog", "binary-static"),
+    0x31: ("1", "specialist slot 0 (key - '1') when size >= 5", "binary-static"),
+    0x39: ("9", "specialist slot 8 (key - '1') when size >= 5", "binary-static"),
+    0x70: ("p", "city-radius tile cursor", "source-backed; binary branch not decoded"),
+    0x4D: ("M", "building-page flag toggle: flag & 2 gate, flag ^= 1", "binary-static"),
+    0x72: ("r", "rename-city overlay int 3F", "binary-static"),
+}
 
 
 def identity(root: bytes) -> dict:
@@ -334,6 +359,61 @@ def shield_reset(root: bytes) -> dict:
     }
 
 
+def key_dispatch(root: bytes) -> dict:
+    """Locate every ``cmp word [bp-0xF0], imm16`` key compare.
+
+    The chain is the city screen's input dispatch: each site compares the key
+    read by the loop against one literal and either branches into that key's
+    handler or jumps to the next compare. Only the compare site is claimed
+    here; the handler spans are documented separately.
+    """
+    header = _header(root)
+    header_size, module = header["header_size"], header["module"]
+    text = root[header_size : header_size + module]
+    sites, cursor = [], text.find(DISPATCH_SIGNATURE)
+    while cursor >= 0:
+        if cursor + 5 <= len(text):
+            # ``cmp word [bp-0xF0], imm8`` sign-extends: 83 /7 ib, five bytes.
+            key = struct.unpack_from("<b", text, cursor + 4)[0]
+            offset = cursor - DISPATCH_WINDOW_LINEAR
+            label, action, basis = DISPATCH_KEY_ACTIONS.get(
+                key, (f"{key & 0xFF:#04x}", "not attributed", "binary-static; action open")
+            )
+            decoded = _disasm(root, header_size, cursor, 5)
+            sites.append(
+                {
+                    "linear": cursor,
+                    "runtime_linear": 0x10000 + cursor,
+                    "segment_offset": (
+                        f"{DISPATCH_SEGMENT:04X}:{offset:04X}"
+                        if 0 <= offset <= 0xFFFF
+                        else None
+                    ),
+                    "key": key,
+                    "key_text": label,
+                    "action": action,
+                    "basis": basis,
+                    "bytes_hex": decoded[0]["bytes"] if decoded else None,
+                    "compare": (
+                        f"{decoded[0]['mnemonic']} {decoded[0]['operands']}"
+                        if decoded
+                        else None
+                    ),
+                }
+            )
+        cursor = text.find(DISPATCH_SIGNATURE, cursor + 1)
+    return {
+        "segment": f"{DISPATCH_SEGMENT:04X}",
+        "window_linear": DISPATCH_WINDOW_LINEAR,
+        "signature": DISPATCH_SIGNATURE.hex(),
+        "sites": sites,
+        "scope": (
+            "Sites are key compares, not handler proofs. Linear addresses are "
+            "canonical because a 64K window choice only changes segment:offset."
+        ),
+    }
+
+
 def analyze(root: bytes) -> dict:
     """One receipt for the static city-route question."""
     sites = callers(root)
@@ -344,6 +424,7 @@ def analyze(root: bytes) -> dict:
         "entry": function_entry(root),
         "fields": townbuf_fields(root),
         "shield_reset": shield_reset(root),
+        "key_dispatch": key_dispatch(root),
         "callers": {
             "total": len(sites["sites"]),
             "in_root_module": len(in_root),
