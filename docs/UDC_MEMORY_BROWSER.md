@@ -165,6 +165,78 @@ wrappers share the shell's ownership, availability, epoch and disposal rules.
 Changing a binding while a child is pending invalidates the entire result;
 there is no mixed-epoch resume, fallback or retry.
 
+## Named regions and deliberate behavior variants
+
+`store-memory-region-contract`, `store-memory-region-layer` and
+`select-memory-region-layers` retain independently selectable source regions in
+the existing immutable database. Their strict `memory-region` consumer is
+separate from the exact `memory-uil` contract. Existing validators still reject
+an implementation that differs from its exact contract.
+
+This first region profile names one source store by function, node ID and
+count 1. Its contract declares literal read indices and one output word with a
+range. A realization is an ordinary one-store UIL expression with no locals or
+effects. Both source and implementation therefore charge exactly one statement;
+arbitrary multi-statement variants require a separately defined charging policy.
+The backend contains no generator or game-specific implementation.
+
+The `fdisbull-memory-regions-1` plan supplies named slots, an exact default and
+labelled variants, each pinned to persisted Wasm/WebGPU selections. A layer must
+declare `exact-source-region` or `intentional-behavior-variant`. Exact layers must
+match the original expression after stripping only IDs/evidence. A differing
+expression requires both the latter assurance and explicit
+`allow_behavior_variants: true`. Every stored endpoint is revalidated on read.
+
+Pass this plan as the optional `regions` parameter of `build-memory-web-shell`,
+along with a `fdisbull-memory-cuts-2` document. That cut document retains the
+canonical source digest and may name virtual region callees; its callers must
+belong to the canonical source. The builder preserves `manifest.program` and
+`module_uil_sha256`, then derives a separately hashed execution view containing
+the original region export. Phase programs and region implementations retain
+their own true UIL digests. No artifact is relabelled with the canonical digest.
+The loader verifies the source/view relationship, topology, policies and hashes.
+
+`selectRegionImplementation(name, variant)` changes the chosen realization;
+`selectBackend(backend, [name])` independently changes its compute backend.
+Snapshots expose owned `implementations` selections. Both maps are captured
+before the operation begins. A choice change, including an original/alternative/
+original cycle, invalidates pending work. A region result must preserve every
+other arena word and satisfy its own output range before the caller resumes.
+All variant wrappers remain subject to normal ownership and disposal rules.
+
+Preserving the source UIL does **not** make a deliberate variant equivalent to
+its precise source expression. It is an explicit override at the declared
+behavior boundary. Qualify exact-mode fidelity and alternative-mode behavior
+separately, and retain the original route as the default.
+
+`snake_browser.py --rng` exposes the seed update as `rng` and composes
+action → selected step → selected RNG → continuation. The original recurrence
+is `(seed * 25173 + 13849) & 65535`. The alternative is a Galois LFSR16 with
+feedback mask `0xB400`; zero maps to `0xACE1`. Both are ordinary UIL expressions.
+The game draws once when it needs new food, then scans forward to a free cell.
+It skips the generator on a full-board win. Browser controls independently
+select the algorithm and backend, preserving the current seed and game state.
+
+`prepare_snake_rng_study.py` derives private comparison data from the frozen
+corpus and a separately recorded numeric/original-CPU probe. Alternative models
+are intentionally changed private references, not replacements for the accepted
+UIL. The replay tests original fidelity, alternative state/raster behavior,
+one-word seed transitions, current-seed switches and a common input route whose
+outcome differs. The modified food positions, snake lengths and collision
+outcome are expected differences; they are not parity failures or statistical
+quality results.
+
+The [RNG qualification receipt](evidence/snake-rng/verification.json) records
+actual Node/Chrome execution on Wasm and Metal GPU. Original mode preserves the
+342 accepted cases; the LFSR intentionally changes 84 of them. Four additional
+alternative carried arms per host compare complete state and rasters, and four
+production-canvas arms exercise both algorithms and backends. A 26-move route
+ends in death with the original generator and survival with the LFSR because
+different meals change body length. A focused production-loader replay switches
+after the first meal without editing the board or seed: food remains 389, then
+the second meal consumes current seed 10589 through the LFSR, producing 41134
+and food 334. See `run_snake_rng_switch.mjs` for that separate finite check.
+
 ## Browser services
 
 The canvas host implements service adapters only: keyboard events to declared

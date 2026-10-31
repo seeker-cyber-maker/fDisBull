@@ -79,5 +79,10 @@ include examples/recovery/snake_browser_study.mjs
 include tests/memory_shell_checks.mjs
 include tests/metrics_checks.mjs
 include tests/memory_cut_shell_checks.mjs
+include tests/memory_region_shell_checks.mjs
+include examples/recovery/prepare_snake_rng_study.py
+include examples/recovery/snake_rng_study.mjs
+include examples/recovery/run_snake_rng_switch.mjs
 include docs/evidence/snake-browser/verification.json
 include docs/evidence/snake-nested-step/verification.json
+include docs/evidence/snake-rng/verification.json

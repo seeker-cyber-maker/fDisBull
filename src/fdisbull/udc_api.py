@@ -1,6 +1,9 @@
 """Agent JSON surface for persistent snippet and implementation records."""
 METHODS={
- 'build-memory-web-shell':'Emit an owned canvas and input shell with exact memory selections; selections,plan,initial,destination,[cuts]; build only',
+ 'build-memory-web-shell':'Emit an owned canvas and input shell with exact memory selections; selections,plan,initial,destination,[cuts,regions]; build only',
+ 'store-memory-region-contract':'Register a source-bound pure word-update region; document,[author]',
+ 'store-memory-region-layer':'Register an exact or explicitly variant region realization; document,[author]',
+ 'select-memory-region-layers':'Pin named region implementations to immutable layers; name,bindings,program,target,[author]',
  'store-memory-block-contract':'Register a pure bounded word-arena UIL contract; document,[author]',
  'store-memory-udl-layer':'Register an exact memory-UIL backing and web target; document,[author]',
  'select-memory-udl-layers':'Pin every memory function to an exact layer; name,bindings,program,target,[author]',
@@ -37,6 +40,11 @@ def invoke(project,method,params):
  if method=='build-memory-web-shell':
   from .udc_memory_shell import build_memory_shell
   return build_memory_shell(project,**params)
+ if method in ('store-memory-region-contract','store-memory-region-layer','select-memory-region-layers'):
+  from . import udc_memory_regions
+  functions={'store-memory-region-contract':udc_memory_regions.register_contract,
+    'store-memory-region-layer':udc_memory_regions.register_layer,'select-memory-region-layers':udc_memory_regions.select_layers}
+  return functions[method](project,**params)
  if method in ('store-memory-block-contract','store-memory-udl-layer','select-memory-udl-layers','run-memory-udl-selection','build-memory-web-block'):
   from . import udc_memory_layers
   functions={'store-memory-block-contract':udc_memory_layers.register_contract,

@@ -6,12 +6,46 @@ const clone=x=>structuredClone(x);
 const u32=x=>Number.isInteger(x)&&x>=0&&x<=0xffffffff;
 const inc=x=>{check(Number.isSafeInteger(x+1),'Epoch exhausted');return x+1;};
 const providerOwners=new WeakMap();
+const own=(object,key)=>object&&Object.hasOwn(object,key);
+const plain=value=>Array.isArray(value)?value.map(plain):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).filter(([key])=>key!=='id'&&key!=='evidence').map(([key,item])=>[key,plain(item)])):value;
+
+function checkRegionLinks(manifest){
+  const resolved=manifest.regions,document=resolved.document,execution=manifest.execution_program;
+  check(resolved.format==='fdisbull-memory-region-resolution-1'&&resolved.module_uil_sha256===manifest.module_uil_sha256&&document?.format==='fdisbull-memory-regions-1'&&document.module_uil_sha256===manifest.module_uil_sha256&&typeof document.allow_behavior_variants==='boolean','Region source identity differs');
+  check(canonical(resolved.execution_program)===canonical(execution)&&resolved.execution_uil_sha256===manifest.execution_uil_sha256,'Region execution view differs');
+  const restored=clone(execution);restored.functions=clone(manifest.program.functions);
+  check(canonical(restored)===canonical(manifest.program),'Region view changed canonical program');
+  const slots=resolved.slots,names=Object.keys(slots);
+  check(names.length>0&&names.length<=16&&canonical(names.sort())===canonical(Object.keys(document.slots).sort())&&canonical(Object.keys(execution.functions).sort())===canonical([...Object.keys(manifest.program.functions),...names].sort()),'Region binding set differs');
+  const walk=function*(nodes){for(const node of nodes){yield node;if(node.op==='if'){yield*walk(node.then);yield*walk(node.else);}else if(node.op==='while')yield*walk(node.body);}};
+  for(const [name,slot] of Object.entries(slots)){
+    const source=slot.region.source,declared=document.slots[name],output=slot.region.output;
+    check(!own(manifest.program.functions,name)&&slot.region.name===name&&source.count===1&&own(manifest.program.functions,source.function),'Invalid region source');
+    const matches=[...walk(manifest.program.functions[source.function].body)].filter(node=>node.id===source.entry);
+    check(matches.length===1&&matches[0].op==='store'&&matches[0].index===output.index&&u32(output.min)&&u32(output.max)&&output.min<=output.max,'Region source boundary differs');
+    check(canonical(execution.functions[name])===canonical({max_steps:1,body:[plain(matches[0])]}),'Virtual region changed source update');
+    check(slot.label===declared.label&&slot.default===declared.default&&own(slot.variants,slot.default)&&slot.variants[slot.default].assurance==='exact-source-region'&&canonical(Object.keys(slot.variants).sort())===canonical(Object.keys(declared.variants).sort()),'Region variants or default differ');
+    for(const [variant,spec] of Object.entries(slot.variants)){
+      const program=spec.program,fn=program.functions[name],policy=spec.assurance,exact=canonical(plain(fn?.body))===canonical([plain(matches[0])]);
+      check(spec.function===name&&spec.label===declared.variants[variant].label&&program.format==='fdisbull-memory-uil-1'&&program.role==='uil'&&canonical(program.memory)===canonical(manifest.program.memory)&&canonical(program.variables)==='{}'&&canonical(Object.keys(program.functions))===canonical([name])&&fn.max_steps===1&&fn.body.length===1&&fn.body[0].op==='store'&&fn.body[0].index===output.index,'Invalid region realization');
+      check((policy==='exact-source-region'&&exact)||(policy==='intentional-behavior-variant'&&!exact&&document.allow_behavior_variants),'Region behavior policy differs');
+      for(const backend of ['wasm','webgpu']){
+        const ids=spec.identities[backend],build=manifest.region_variants?.[backend]?.[name]?.[variant]?.build;
+        check(ids.selection===declared.variants[variant].selections[backend]&&ids.assurance===policy&&ids.module_uil_sha256===manifest.module_uil_sha256&&canonical(ids.region)===canonical(slot.region)&&build?.module_uil_sha256===ids.implementation_uil_sha256,'Region endpoint identity differs');
+      }
+    }
+  }
+  const requested=manifest.source_cut_document;
+  check(requested?.format==='fdisbull-memory-cuts-2'&&requested.module_uil_sha256===manifest.module_uil_sha256&&canonical(manifest.cuts.document)===canonical({...requested,format:'fdisbull-memory-cuts-1',module_uil_sha256:manifest.execution_uil_sha256}),'Region source cut mapping differs');
+  check(requested.cuts.every(cut=>own(manifest.program.functions,cut.caller)),'Region caller must belong to canonical source');
+}
 
 function checkCutLinks(manifest){
   const lowered=manifest.cuts,document=lowered.document,grouped=Object.create(null);
-  check(document?.format==='fdisbull-memory-cuts-1'&&document.module_uil_sha256===manifest.module_uil_sha256&&Array.isArray(document.cuts)&&document.cuts.length>0&&document.cuts.length<=32,'Invalid cut document');
+  const program=manifest.execution_program||manifest.program,identity=manifest.execution_uil_sha256||manifest.module_uil_sha256;
+  check(document?.format==='fdisbull-memory-cuts-1'&&document.module_uil_sha256===identity&&Array.isArray(document.cuts)&&document.cuts.length>0&&document.cuts.length<=32,'Invalid cut document');
   for(const cut of document.cuts){
-    check(Object.hasOwn(manifest.program.functions,cut.caller)&&Object.hasOwn(manifest.program.functions,cut.callee),'Unknown cut endpoint');
+    check(Object.hasOwn(program.functions,cut.caller)&&Object.hasOwn(program.functions,cut.callee),'Unknown cut endpoint');
     (grouped[cut.caller]??=[]).push(cut);
   }
   check(canonical(Object.keys(grouped).sort())===canonical(Object.keys(lowered.functions).sort()),'Cut owners differ from document');
@@ -23,20 +57,23 @@ function checkCutLinks(manifest){
 }
 
 export class MemoryShell {
-  #manifest;#providers;#phases;#words;#bindings;#revision=0;#epoch=0;#generation=0;
+  #manifest;#providers;#phases;#regions;#implementations;#words;#bindings;#revision=0;#epoch=0;#generation=0;
   #session=crypto.randomUUID();#closed=false;#disposing=null;#tail=Promise.resolve();#pending=0;#tickets=new Map();#sequence=0;
-  constructor(manifest,providers,initial,phases={}) {
+  constructor(manifest,providers,initial,phases={},regions={}) {
     this.#manifest=clone(manifest);this.#providers=Object.fromEntries(Object.entries(providers).map(([kind,functions])=>[kind,{...functions}]));
     this.#phases=Object.fromEntries(Object.entries(phases).map(([kind,functions])=>[kind,Object.fromEntries(Object.entries(functions).map(([fn,entries])=>[fn,{...entries}]))]));
+    this.#regions=Object.fromEntries(Object.entries(regions).map(([kind,functions])=>[kind,Object.fromEntries(Object.entries(functions).map(([fn,entries])=>[fn,{...entries}]))]));
     const {plan,program}=this.#manifest;
     check(plan?.format==='fdisbull-memory-orchestration-1'&&program?.format==='fdisbull-memory-uil-1','Unsupported memory shell');
     check(plan.concurrency==='ordered-events'&&Number.isInteger(program.memory.words),'Unsupported event policy');
     this.#words=this.#arena(initial);this.#bindings=clone(plan.bindings);
+    this.#implementations=Object.fromEntries(Object.entries(manifest.regions?.slots||{}).map(([name,slot])=>[name,slot.default]));
+    if(manifest.regions)checkRegionLinks(this.#manifest);
     if(manifest.cuts){
-      check(manifest.cuts.format==='fdisbull-memory-cut-lowering-1'&&manifest.cuts.module_uil_sha256===manifest.module_uil_sha256,'Cut source identity differs');
+      check(manifest.cuts.format==='fdisbull-memory-cut-lowering-1'&&manifest.cuts.module_uil_sha256===(manifest.execution_uil_sha256||manifest.module_uil_sha256),'Cut source identity differs');
       checkCutLinks(this.#manifest);
       for(const [fn,cut] of Object.entries(manifest.cuts.functions))
-        check(Object.hasOwn(program.functions,fn)&&cut.max_steps===program.functions[fn].max_steps&&Object.hasOwn(cut.phases,'entry'),'Invalid cut owner');
+        check(Object.hasOwn((manifest.execution_program||program).functions,fn)&&cut.max_steps===(manifest.execution_program||program).functions[fn].max_steps&&Object.hasOwn(cut.phases,'entry'),'Invalid cut owner');
     }
     for(const [fn,backend] of Object.entries(this.#bindings))this.#provider(fn,backend);
     this.#validate(this.#words);
@@ -45,12 +82,22 @@ export class MemoryShell {
     for(const p of handles)providerOwners.set(p,this);
   }
   #open(){check(!this.#closed,'Shell disposed');}
-  #handles(){return [...new Set([...Object.values(this.#providers).flatMap(x=>Object.values(x)),...Object.values(this.#phases).flatMap(x=>Object.values(x).flatMap(y=>Object.values(y)))])];}
+  #handles(){return [...new Set([...Object.values(this.#providers).flatMap(x=>Object.values(x)),...[this.#phases,this.#regions].flatMap(r=>Object.values(r).flatMap(x=>Object.values(x).flatMap(y=>Object.values(y))))])];}
+  #slot(fn){return own(this.#manifest.regions?.slots,fn)?this.#manifest.regions.slots[fn]:null;}
   #arena(values){
     check((Array.isArray(values)||ArrayBuffer.isView(values))&&values.length===this.#manifest.program.memory.words,'Invalid arena length');
     check(Array.from(values).every(u32),'Invalid arena word');return Uint32Array.from(values);
   }
-  #provider(fn,backend=this.#bindings[fn]) {
+  #provider(fn,backend=this.#bindings[fn],implementation=this.#implementations[fn]) {
+    const slot=this.#slot(fn);
+    if(slot){
+      check(own(slot.variants,implementation),'Unknown region implementation');
+      const p=this.#regions[backend]?.[fn]?.[implementation],expected=this.#manifest.region_variants?.[backend]?.[fn]?.[implementation]?.build;
+      check(p&&!p.closed&&!p.lost,'Region provider unavailable');
+      const b=p.describe();
+      check(expected&&canonical(b)===canonical(expected)&&b.target===({wasm:'wasm32-memory-1',webgpu:'webgpu-wgsl-memory-1'})[backend]&&b.function===fn&&b.module_uil_sha256===slot.variants[implementation].identities[backend].implementation_uil_sha256&&b.abi.memory_words===this.#words.length&&b.abi.max_steps===1&&b.abi.report_steps===true,'Region provider identity differs');
+      return p;
+    }
     const p=this.#providers[backend]?.[fn];check(p&&!p.closed&&!p.lost,'Provider unavailable');
     const b=p.describe();check(b.target===({wasm:'wasm32-memory-1',webgpu:'webgpu-wgsl-memory-1'})[backend]&&b.function===fn&&b.module_uil_sha256===this.#manifest.module_uil_sha256&&b.abi.memory_words===this.#words.length,'Provider identity differs');
     if(this.#manifest.cuts){
@@ -84,13 +131,18 @@ export class MemoryShell {
     for(let n=f.offset;n<f.offset+f.width*f.height;n++)check(words[n]<=255&&Object.hasOwn(f.palette,String(words[n])),'Invalid indexed pixel');
   }
   describe(){this.#open();return clone(this.#manifest);}
-  snapshot(){this.#open();return {session:this.#session,generation:this.#generation,revision:this.#revision,words:this.#words.slice(),bindings:clone(this.#bindings)};}
-  capabilities(){return {closed:this.#closed,bindings:clone(this.#bindings),backends:Object.fromEntries(Object.keys(this.#providers).map(kind=>[kind,!this.#closed&&Object.keys(this.#bindings).every(fn=>{try{this.#provider(fn,kind);return true;}catch{return false;}})]))};}
+  snapshot(){this.#open();return {session:this.#session,generation:this.#generation,revision:this.#revision,words:this.#words.slice(),bindings:clone(this.#bindings),...(this.#manifest.regions?{implementations:clone(this.#implementations)}:{})};}
+  capabilities(){return {closed:this.#closed,bindings:clone(this.#bindings),...(this.#manifest.regions?{implementations:clone(this.#implementations)}:{}),backends:Object.fromEntries(Object.keys(this.#providers).map(kind=>[kind,!this.#closed&&Object.keys(this.#bindings).every(fn=>{try{this.#provider(fn,kind);return true;}catch{return false;}})]))};}
   selectBackend(backend,functions=Object.keys(this.#bindings)){
     this.#open();check(Array.isArray(functions)&&functions.length>0,'Select named functions');
     for(const fn of functions){check(Object.hasOwn(this.#bindings,fn),'Unknown binding');this.#provider(fn,backend);}
     for(const fn of functions)this.#bindings[fn]=backend;
     this.#epoch=inc(this.#epoch);return this.capabilities();
+  }
+  selectRegionImplementation(region,implementation){
+    this.#open();check(this.#slot(region),'Unknown region binding');
+    this.#provider(region,this.#bindings[region],implementation);
+    this.#implementations[region]=implementation;this.#epoch=inc(this.#epoch);return this.capabilities();
   }
   replace(values){
     this.#open();const copy=this.#arena(values);this.#validate(copy);
@@ -106,7 +158,7 @@ export class MemoryShell {
     for(const [key,value] of Object.entries(input))snapshot[Number(key)]=value;
     const operation=++this.#sequence,id=this.#session+':'+operation;
     const token={epoch:this.#epoch,generation:this.#generation,revision:this.#revision,session:this.#session};
-    const bindings=clone(this.#bindings),leases=[],execution=[];
+    const bindings=clone(this.#bindings),implementations=clone(this.#implementations),leases=[],execution=[];
     const invoke=async(provider,name,words,detail)=>{
       leases.push([provider,provider.epoch]);
       const result=await provider.invoke(words);
@@ -119,7 +171,8 @@ export class MemoryShell {
     };
     const execute=async(name,words,depth)=>{
       check(depth<16,'Cut call depth exceeded');
-      const provider=this.#provider(name,bindings[name]),owners=this.#manifest.cuts?.functions;
+      const provider=this.#provider(name,bindings[name],implementations[name]),owners=this.#manifest.cuts?.functions,slot=this.#slot(name);
+      if(slot)return invoke(provider,name,words,{kind:'region',implementation:implementations[name],implementation_uil_sha256:provider.describe().module_uil_sha256,assurance:slot.variants[implementations[name]].assurance});
       const cut=owners&&Object.hasOwn(owners,name)?owners[name]:null;
       if(!cut)return invoke(provider,name,words,{kind:'block'});
       let phase='entry',total=0,staged=words;
@@ -144,8 +197,9 @@ export class MemoryShell {
       throw Error('Cut continuation limit exceeded');
     };
     const call=async(name,words,depth=0)=>{
-      const result=await execute(name,words,depth),ranges=this.#manifest.plan.outputs[name];
+      const result=await execute(name,words,depth),slot=this.#slot(name),ranges=slot?[[slot.region.output.index,1]]:this.#manifest.plan.outputs[name];
       for(let n=0;n<words.length;n++)if(!ranges.some(([start,count])=>n>=start&&n<start+count))check(result.words[n]===words[n],'Kernel wrote outside declared output');
+      if(slot){const output=slot.region.output;check(result.steps===1&&result.words[output.index]>=output.min&&result.words[output.index]<=output.max,'Region output domain refused');}
       // A cut is not an application observation point. Intermediate phases and
       // nested callees may temporarily violate invariants restored by the owner.
       if(depth===0)this.#validate(result.words);
@@ -215,10 +269,19 @@ export async function loadMemoryShell(url='memory-shell.json'){
   const encode=x=>new TextEncoder().encode(canonical(x));
   check(await sha(encode(manifest.program))===manifest.module_uil_sha256,'UIL identity differs');
   check(await sha(encode(manifest.plan))===manifest.plan_sha256,'Orchestration identity differs');
+  if(manifest.regions){
+    checkRegionLinks(manifest);
+    check(await sha(encode(manifest.regions))===manifest.regions_sha256&&await sha(encode(manifest.regions.document))===manifest.regions.region_plan_sha256,'Region plan identity differs');
+    check(await sha(encode(manifest.execution_program))===manifest.execution_uil_sha256&&await sha(encode(manifest.source_cut_document))===manifest.source_cut_plan_sha256,'Region derivation identity differs');
+    for(const [name,slot] of Object.entries(manifest.regions.slots))for(const spec of Object.values(slot.variants)){
+      const hash=await sha(encode(spec.program));
+      for(const backend of ['wasm','webgpu'])check(spec.identities[backend].implementation_uil_sha256===hash,'Region implementation UIL differs');
+    }
+  }
   if(manifest.cuts){
     checkCutLinks(manifest);
     check(await sha(encode(manifest.cuts))===manifest.cuts_sha256,'Cut lowering identity differs');
-    check(manifest.cuts.module_uil_sha256===manifest.module_uil_sha256&&await sha(encode(manifest.cuts.document))===manifest.cuts.cut_plan_sha256,'Cut plan identity differs');
+    check(manifest.cuts.module_uil_sha256===(manifest.execution_uil_sha256||manifest.module_uil_sha256)&&await sha(encode(manifest.cuts.document))===manifest.cuts.cut_plan_sha256,'Cut plan identity differs');
     for(const [fn,cut] of Object.entries(manifest.cuts.functions))for(const [name,phase] of Object.entries(cut.phases)){
       const identity=await sha(encode(phase.program));
       for(const backend of ['wasm','webgpu'])check(manifest.cut_variants?.[backend]?.[fn]?.[name]?.build?.module_uil_sha256===identity,'Cut phase UIL identity differs');
@@ -231,7 +294,7 @@ export async function loadMemoryShell(url='memory-shell.json'){
     const r=await fetch(path);check(r.ok,'Shell asset unavailable: '+name);const bytes=await r.arrayBuffer();
     check(await sha(bytes)===expected,'Shell asset hash differs: '+name);assets.set(name,bytes);
   }));
-  const providers={wasm:Object.create(null),webgpu:Object.create(null)},phases={wasm:Object.create(null),webgpu:Object.create(null)};let device=null,shell=null;
+  const providers={wasm:Object.create(null),webgpu:Object.create(null)},phases={wasm:Object.create(null),webgpu:Object.create(null)},regions={wasm:Object.create(null),webgpu:Object.create(null)};let device=null,shell=null;
   const loadPhases=async backend=>{
     for(const [fn,entries] of Object.entries(manifest.cut_variants?.[backend]||{})){
       phases[backend][fn]=Object.create(null);
@@ -240,27 +303,38 @@ export async function loadMemoryShell(url='memory-shell.json'){
         await createGPUMemoryProvider(v.build,new TextDecoder().decode(assets.get(v.directory+'/block.wgsl')),{device,ownsDevice:false});
     }
   };
+  const loadRegions=async backend=>{
+    for(const [fn,entries] of Object.entries(manifest.region_variants?.[backend]||{})){
+      regions[backend][fn]=Object.create(null);
+      for(const [name,v] of Object.entries(entries))regions[backend][fn][name]=backend==='wasm'?
+        await createWasmMemoryProvider(v.build,assets.get(v.directory+'/block.wasm')):
+        await createGPUMemoryProvider(v.build,new TextDecoder().decode(assets.get(v.directory+'/block.wgsl')),{device,ownsDevice:false});
+    }
+  };
   try {
     for(const [fn,v] of Object.entries(manifest.variants.wasm))
       providers.wasm[fn]=await createWasmMemoryProvider(v.build,assets.get(v.directory+'/block.wasm'));
     await loadPhases('wasm');
+    await loadRegions('wasm');
     if(navigator.gpu){
       const adapter=await navigator.gpu.requestAdapter();
       if(adapter){device=await adapter.requestDevice();
         for(const [fn,v] of Object.entries(manifest.variants.webgpu))
           providers.webgpu[fn]=await createGPUMemoryProvider(v.build,new TextDecoder().decode(assets.get(v.directory+'/block.wgsl')),{device,ownsDevice:false});
         await loadPhases('webgpu');
+        await loadRegions('webgpu');
       }
     }
     if(!Object.keys(providers.webgpu).length)delete providers.webgpu;
     const initial=JSON.parse(new TextDecoder().decode(assets.get('initial.json')));
-    shell=new MemoryShell(manifest,providers,initial,phases);
+    shell=new MemoryShell(manifest,providers,initial,phases,regions);
     const owner=shell,ownedDevice=device;let disposed=null;
     // Device creation is a loader responsibility. Every function wrapper borrows
     // it; only this owner destroys it, after all physical jobs have drained.
     return Object.freeze({
       describe:()=>owner.describe(),snapshot:()=>owner.snapshot(),capabilities:()=>owner.capabilities(),
       selectBackend:(...a)=>owner.selectBackend(...a),replace:(...a)=>owner.replace(...a),
+      selectRegionImplementation:(...a)=>owner.selectRegionImplementation(...a),
       start:(...a)=>owner.start(...a),finish:(...a)=>owner.finish(...a),cancel:(...a)=>owner.cancel(...a),dispatch:(...a)=>owner.dispatch(...a),
       discardPending:()=>owner.discardPending(),
       dispose(){return disposed??=(async()=>{await owner.dispose();ownedDevice?.destroy();return {settled:true};})();}
@@ -268,7 +342,7 @@ export async function loadMemoryShell(url='memory-shell.json'){
   } catch(error){
     if(shell)await shell.dispose();else await Promise.allSettled([
       ...Object.values(providers).flatMap(x=>Object.values(x)),
-      ...Object.values(phases).flatMap(x=>Object.values(x).flatMap(y=>Object.values(y)))].map(p=>p.dispose()));
+      ...[phases,regions].flatMap(r=>Object.values(r).flatMap(x=>Object.values(x).flatMap(y=>Object.values(y))))].map(p=>p.dispose()));
     device?.destroy();throw error;
   }
 }

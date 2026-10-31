@@ -104,15 +104,33 @@ def validate_plan(plan, program):
     return deepcopy(plan)
 
 
-def build_memory_shell(project, selections, plan, initial, destination, *, cuts=None):
+def build_memory_shell(project, selections, plan, initial, destination, *, cuts=None, regions=None):
     from .udc_web_memory import build_memory_block
     if type(selections) is not dict or set(selections) != {'wasm', 'webgpu'}: raise ValueError('select both memory providers')
     first = project.udl_selection_info(selections['wasm'], full=True)['document']
-    program = first['program']; normalized = validate_plan(plan, program)
+    program = first['program']; execution_program = program; resolved_regions = None
+    if regions is not None:
+        from .udc_memory_regions import prepare_regions
+        resolved_regions = prepare_regions(project, program, regions)
+        execution_program = resolved_regions['execution_program']
+    normalized = validate_plan(plan, execution_program)
     lowered = None
     if cuts is not None:
         from .udc_memory_cuts import lower_memory_cuts
-        lowered = lower_memory_cuts(program, cuts)
+        execution_cuts = cuts
+        if resolved_regions is not None:
+            if type(cuts) is not dict or set(cuts) != {'format','module_uil_sha256','cuts'} or cuts['format'] != 'fdisbull-memory-cuts-2' or cuts['module_uil_sha256'] != digest(program):
+                raise ValueError('named regions require canonical-source cut plan version 2')
+            if type(cuts['cuts']) is not list or any(type(cut) is not dict or cut.get('caller') not in program['functions'] for cut in cuts['cuts']):
+                raise ValueError('named-region cuts require canonical source callers')
+            execution_cuts = {**cuts, 'format':'fdisbull-memory-cuts-1', 'module_uil_sha256':digest(execution_program)}
+        lowered = lower_memory_cuts(execution_program, execution_cuts)
+    elif resolved_regions is not None:
+        raise ValueError('named regions require explicit source cut boundaries')
+    if resolved_regions is not None:
+        for name,slot in resolved_regions['slots'].items():
+            if normalized['outputs'][name] != [[slot['region']['output']['index'],1]]:
+                raise ValueError('region plan output must match its one-word contract')
     if type(initial) is not list or len(initial) != program['memory']['words'] or any(type(v) is not int or not 0 <= v <= 0xffffffff for v in initial): raise ValueError('invalid initial word arena')
     validate_arena(normalized,initial)
     destination = Path(destination).expanduser().absolute()
@@ -122,7 +140,7 @@ def build_memory_shell(project, selections, plan, initial, destination, *, cuts=
     artifacts = {name: files('fdisbull').joinpath('web_runtime/' + name).read_bytes() for name in ('memory.mjs','memory-shell.mjs','memory-canvas.mjs','memory-index.html')}
     artifacts['index.html'] = artifacts.pop('memory-index.html')
     artifacts['initial.json'] = (json.dumps(initial,separators=(',',':'))+'\n').encode()
-    variants = {}; endpoints = {}; cut_variants = {}
+    variants = {}; endpoints = {}; cut_variants = {}; region_variants = {}
     with tempfile.TemporaryDirectory(prefix='fdisbull-memory-shell-') as temp:
         for backend, target in zip(('wasm', 'webgpu'), TARGETS):
             variants[backend] = {}; endpoints[backend] = {}
@@ -148,12 +166,27 @@ def build_memory_shell(project, selections, plan, initial, destination, *, cuts=
                             report_steps=True, capture_locals=[cut['token_local']])
                         cut_variants[backend][function][name] = {'directory':directory, 'build':build}
                         for file in output.iterdir(): artifacts[directory + '/' + file.name] = file.read_bytes()
+            if resolved_regions is not None:
+                region_variants[backend] = {}
+                for function, slot in resolved_regions['slots'].items():
+                    region_variants[backend][function] = {}
+                    for name, variant in slot['variants'].items():
+                        directory = 'regions/' + backend + '/' + function + '/' + name
+                        output = Path(temp) / 'regions' / backend / function / name
+                        output.parent.mkdir(parents=True, exist_ok=True)
+                        build = build_memory_block(variant['program'], function, target, output, report_steps=True)
+                        region_variants[backend][function][name] = {'directory':directory, 'build':build}
+                        for file in output.iterdir(): artifacts[directory + '/' + file.name] = file.read_bytes()
     manifest = {'format':FORMAT,'module_uil_sha256':digest(program),'program':program,'plan':normalized,
         'plan_sha256':digest(normalized),'variants':variants,'endpoints':endpoints,
         'artifacts':{name:hashlib.sha256(data).hexdigest() for name,data in artifacts.items()},
         'execution':False,'source_to_uil':False,'scope':'owned word arena; ordered input events; staged logic/render; guarded atomic commit'}
     if lowered is not None:
         manifest.update(cuts=lowered, cuts_sha256=digest(lowered), cut_variants=cut_variants)
+    if resolved_regions is not None:
+        manifest.update(regions=resolved_regions, regions_sha256=digest(resolved_regions),
+            execution_program=execution_program, execution_uil_sha256=digest(execution_program),
+            source_cut_document=deepcopy(cuts), source_cut_plan_sha256=digest(cuts), region_variants=region_variants)
     destination.mkdir(parents=True,mode=0o700,exist_ok=False)
     for name,data in artifacts.items():
         path=destination/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(data)

@@ -67,8 +67,9 @@ export async function exerciseSnake(shell,manifest,study,initial){
     check(receipt.committed,observation.id+' '+mode+' event failed: '+receipt.reason);
     if(manifest.cuts){
      const expected=mode[2]==='opposite'?(arm.events%2?'wasm':'webgpu'):(mode[2]|| (mode[0]==='alternating'?(arm.events%2?'webgpu':'wasm'):mode[0]));
-     const calls=receipt.execution.filter(x=>x.function==='step');
-     check(calls.length<=1&&calls.every(x=>x.kind==='block'&&x.backend===expected),'Selected nested step did not run');
+     const steps=receipt.execution.filter(x=>x.function==='step');
+     const calls=steps.filter(x=>x.kind==='block'||x.kind==='phase'&&x.phase==='entry');
+     check(calls.length<=1&&steps.every(x=>x.backend===expected),'Selected nested step did not run');
      const phases=receipt.execution.filter(x=>x.function==='action');
      check(phases.length===1+calls.length&&phases.every(x=>x.kind==='phase'),'Action did not use exact cut phases');
      arm.step_invocations+=calls.length;arm.phase_invocations+=phases.length;

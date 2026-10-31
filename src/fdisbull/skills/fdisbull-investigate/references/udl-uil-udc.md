@@ -24,6 +24,18 @@ compare carried original state/frames. Output equality by itself does not show
 that routing occurred. Unsupported cuts must refuse rather than guess a stack
 or silently reuse the inline implementation.
 
+For named one-store subregions, use the separate memory-region contract/layer
+methods and `build-memory-web-shell`'s `regions` parameter. Preserve the canonical
+UIL and distinguish its digest from the derived execution view and each actual
+implementation digest. Exact defaults must match the source expression.
+Intentional behavior variants require explicit policy opt-in and their own
+assurance; keeping the source document unchanged does not establish semantic
+equivalence. Test both current-seed/state preservation at selection and the
+subsequent actual invocation, capture algorithm and backend choices together,
+and qualify original fidelity separately from the desired changed behavior.
+The current region profile permits one pure store expression, literal reads,
+one guarded output word and one source charge. It is not arbitrary code splicing.
+
 The `build-web-block` JSON method emits one canonical, pure selected UIL
 invocation for `wasm32-scalar-1` or `webgpu-wgsl-scalar-1`. Inspect the actual
 tool's `methods` first. Selection target metadata alone does not add a backend.

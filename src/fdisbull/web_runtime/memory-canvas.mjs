@@ -4,6 +4,7 @@ const status=document.getElementById('status'),canvas=document.getElementById('g
 const logic=document.getElementById('logic-backend'),render=document.getElementById('render-backend');
 let api,plan,closed=false,timer=null,clockPending=false;
 const listeners=[];
+const regionControls=[];
 const captures=new Set();let pointerState={x:0,y:0,buttons:0};
 let queuedMotion=null,motionTask=null;
 const listen=(object,event,handler)=>{object.addEventListener(event,handler);listeners.push(()=>object.removeEventListener(event,handler));};
@@ -21,7 +22,9 @@ async function stop(){
   if(closed)return;closed=true;queuedMotion=null;clearInterval(timer);for(const remove of listeners)remove();
   for(const id of captures){try{canvas.releasePointerCapture(id);}catch{}}captures.clear();
   canvas.tabIndex=-1;
-  logic.disabled=render.disabled=true;await api?.dispose();
+  logic.disabled=render.disabled=true;
+  for(const control of regionControls)control.disabled=true;
+  await api?.dispose();
 }
 async function dispatch(patch,quiet=false){
   if(closed)return {status:'discarded',committed:false};
@@ -51,6 +54,26 @@ globalThis.fdisbullMemoryReady=(async()=>{
     catch(error){status.textContent=String(error.message);}
   });
   choose(logic,plan.logic_functions);choose(render,[plan.render.function]);
+  for(const [name,slot] of Object.entries(api.describe().regions?.slots||{})){
+    const label=document.createElement('label'),select=document.createElement('select');
+    select.id='region-implementation-'+name;select.setAttribute('aria-label',slot.label);
+    for(const [key,variant] of Object.entries(slot.variants)){
+      const option=document.createElement('option');option.value=key;option.textContent=variant.label;select.append(option);
+    }
+    select.value=slot.default;label.append(slot.label+' ',select);logic.closest('.toolbar').append(label);
+    regionControls.push(select);
+    listen(select,'change',()=>{
+      try{api.selectRegionImplementation(name,select.value);status.textContent='Selection applied · current state retained';releasePointer().catch(error=>status.textContent=error.message);}
+      catch(error){select.value=api.snapshot().implementations[name];status.textContent=String(error.message);}
+    });
+    const backendLabel=document.createElement('label'),backend=document.createElement('select');
+    backend.id='region-backend-'+name;backend.setAttribute('aria-label',slot.label+' backend');
+    for(const [key,text] of [['wasm','Wasm · CPU'],['webgpu','WebGPU · GPU']]){
+      const option=document.createElement('option');option.value=key;option.textContent=text;option.disabled=key==='webgpu'&&!caps.backends.webgpu;backend.append(option);
+    }
+    backendLabel.append(slot.label+' backend ',backend);logic.closest('.toolbar').append(backendLabel);
+    regionControls.push(backend);choose(backend,[name]);
+  }
   listen(canvas,'keydown',event=>{
     if(event.ctrlKey||event.altKey||event.metaKey)return;
     const key=plan.keymap[event.code];if(!key||closed)return;event.preventDefault();

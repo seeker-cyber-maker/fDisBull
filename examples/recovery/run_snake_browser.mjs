@@ -8,6 +8,7 @@ import {spawn} from 'node:child_process';
 import {createRequire} from 'node:module';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {exerciseSnake} from './snake_browser_study.mjs';
+import {exerciseRng} from './snake_rng_study.mjs';
 const check=(ok,m)=>{if(!ok)throw Error(m);};
 const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
 const [bundleArg,studyArg,npmArg,chromeArg,...options]=process.argv.slice(2);
@@ -24,13 +25,13 @@ for(const[name,expected]of Object.entries(manifest.artifacts)){
 const helper=await fs.readFile(fileURLToPath(new URL('./snake_browser_study.mjs',import.meta.url)));
 const initial=JSON.parse(verified.get('initial.json'));
 const identities={module_uil_sha256:manifest.module_uil_sha256,manifest_sha256:sha(manifestBytes),study_sha256:sha(studyBytes),helper_sha256:sha(helper),runner_sha256:sha(await fs.readFile(fileURLToPath(import.meta.url))),artifacts:manifest.artifacts};
-const deadline=Date.now()+180000;
+const deadline=Date.now()+420000;
 const timed=async(p,ms,label,cleanup=false)=>{let t;const wait=cleanup?ms:Math.max(1,Math.min(ms,deadline-Date.now()));try{return await Promise.race([p,new Promise((_,reject)=>t=setTimeout(()=>reject(Error(label+' timeout')),wait))]);}finally{clearTimeout(t);}};
 async function nodeRun(){
  const require=createRequire(path.join(npmRoot,'package.json'));
  const{create,globals}=await import(pathToFileURL(require.resolve('webgpu')));Object.assign(globalThis,globals);
  let gpu=create(['backend='+(process.env.FDISBULL_GPU_BACKEND||'metal')]),device,shell;
- const providers={wasm:{},webgpu:{}},phases={wasm:{},webgpu:{}};
+ const providers={wasm:{},webgpu:{}},phases={wasm:{},webgpu:{}},regions={wasm:{},webgpu:{}};
  try{
   const adapter=await gpu.requestAdapter();check(adapter&&adapter.info.isFallbackAdapter===false,'Real Node adapter required');device=await adapter.requestDevice();
   const{MemoryShell}=await import(pathToFileURL(path.join(root,'memory-shell.mjs')));
@@ -45,13 +46,20 @@ async function nodeRun(){
     await createWasmMemoryProvider(v.build,verified.get(v.directory+'/block.wasm')):
     await createGPUMemoryProvider(v.build,verified.get(v.directory+'/block.wgsl').toString(),{device});
   }
-  shell=new MemoryShell(manifest,providers,initial,phases);
+  for(const[kind,functions]of Object.entries(manifest.region_variants||{}))for(const[fn,entries]of Object.entries(functions)){
+   regions[kind][fn]={};
+   for(const[name,v]of Object.entries(entries))regions[kind][fn][name]=kind==='wasm'?
+    await createWasmMemoryProvider(v.build,verified.get(v.directory+'/block.wasm')):
+    await createGPUMemoryProvider(v.build,verified.get(v.directory+'/block.wgsl').toString(),{device});
+  }
+  shell=new MemoryShell(manifest,providers,initial,phases,regions);
   const result=await timed(exerciseSnake(shell,manifest,study,initial),150000,'Node original study');
+  if(manifest.regions)result.rng=await timed(exerciseRng(shell,manifest,study,initial),180000,'Node RNG study');
   result.host='node';result.runtime=process.version;result.adapter={vendor:adapter.info.vendor,architecture:adapter.info.architecture,isFallbackAdapter:adapter.info.isFallbackAdapter};result.identities=identities;
   await fs.writeFile(path.join(output,'node-result.json'),JSON.stringify(result,null,2)+'\n',{flag:'wx'});return result;
  }finally{if(shell)await shell.dispose();else await Promise.allSettled([
   ...Object.values(providers).flatMap(x=>Object.values(x)),
-  ...Object.values(phases).flatMap(x=>Object.values(x).flatMap(y=>Object.values(y)))].map(p=>p.dispose()));device?.destroy();gpu=null;}
+  ...[phases,regions].flatMap(r=>Object.values(r).flatMap(x=>Object.values(x).flatMap(y=>Object.values(y))))].map(p=>p.dispose()));device?.destroy();gpu=null;}
 }
 
 async function connect(profile){
@@ -69,6 +77,7 @@ async function connect(profile){
 async function chromeRun(){
  const prefix='/'+crypto.randomBytes(20).toString('hex')+'/',allowed=new Map([...verified].map(([n,b])=>[prefix+n,b]));
  allowed.set(prefix+'memory-shell.json',manifestBytes);allowed.set(prefix+'study.json',studyBytes);allowed.set(prefix+'snake_browser_study.mjs',helper);
+ allowed.set(prefix+'snake_rng_study.mjs',await fs.readFile(fileURLToPath(new URL('./snake_rng_study.mjs',import.meta.url))));
  const server=http.createServer((req,res)=>{
   const name=new URL(req.url,'http://127.0.0.1').pathname,body=allowed.get(name);
   if(req.method!=='GET'||!body){res.writeHead(404);res.end();return;}
@@ -86,6 +95,7 @@ async function chromeRun(){
   const loaded=cdp.event('Page.loadEventFired');await cdp.call('Page.navigate',{url});await loaded;
   const result=await cdp.evaluate(`(async()=>{while(!globalThis.fdisbullMemoryReady)await new Promise(r=>setTimeout(r,10));const ctl=await fdisbullMemoryReady;ctl.pauseClock();navigator.gpu.requestAdapter=__snakeNativeAdapter;const manifest=await(await fetch('memory-shell.json')).json(),study=await(await fetch('study.json')).json(),initial=await(await fetch('initial.json')).json();const{exerciseSnake}=await import('./snake_browser_study.mjs');const r=await exerciseSnake(ctl.api,manifest,study,initial);r.host='chrome';r.runtime=navigator.userAgent;r.adapter=__snakeAdapters[0];if(!r.adapter||r.adapter.isFallbackAdapter!==false)throw Error('Real browser adapter required');globalThis.__snakeResult=r;return r;})()`);
   result.identities=identities;result.launch_flags=flags;
+  if(manifest.regions)result.rng=await cdp.evaluate(`(async()=>{const ctl=await fdisbullMemoryReady;const manifest=ctl.api.describe(),study=await(await fetch('study.json')).json(),initial=await(await fetch('initial.json')).json();const{exerciseRng}=await import('./snake_rng_study.mjs');return exerciseRng(ctl.api,manifest,study,initial);})()`);
   result.instrumentation={gpu_observer:'Delegates native requestAdapter and returns original objects; restored after loading',core:'Public production shell API; normalized original input/clock adapters; ordinary state carried between events'};
   // Restore an independent initial scene for the production canvas screenshot.
   await cdp.evaluate(`(async()=>{const ctl=await fdisbullMemoryReady,initial=await(await fetch('initial.json')).json();ctl.api.selectBackend('wasm');ctl.api.replace(initial);await ctl.api.dispatch(ctl.api.describe().plan.initialize,{});ctl.paint();})()`);
@@ -105,7 +115,8 @@ async function chromeRun(){
 
 async function trustedUI(cdp,url){
  const results=[];
- for(const backend of ['wasm','webgpu']){
+ const choices=manifest.regions?['original','lfsr16']:['original'];
+ for(const choice of choices)for(const backend of ['wasm','webgpu']){
   await cdp.evaluate(`fdisbullMemoryReady.then(c=>c.stop())`);
   const loaded=cdp.event('Page.loadEventFired');await cdp.call('Page.navigate',{url});await loaded;
   await cdp.evaluate(`(async()=>{
@@ -123,6 +134,10 @@ async function trustedUI(cdp,url){
   })()`);
   await chooseBackend(cdp,'logic-backend',backend,manifest.plan.logic_functions);
   await chooseBackend(cdp,'render-backend',backend,[manifest.plan.render.function]);
+  if(manifest.regions){
+   await chooseBackend(cdp,'region-backend-rng',backend,['rng']);
+   await cdp.evaluate(`(()=>{const s=document.getElementById('region-implementation-rng');s.value=${JSON.stringify(choice)};s.dispatchEvent(new Event('change',{bubbles:true}));if(__snakeUI.ctl.api.snapshot().implementations.rng!==${JSON.stringify(choice)})throw Error('RNG selector did not change actual implementation');})()`);
+  }
   await cdp.evaluate(`(async()=>{
    const {ctl,study,manifest,helper}=__snakeUI,initial=await(await fetch('initial.json')).json();
    await ctl.api.discardPending();
@@ -131,7 +146,7 @@ async function trustedUI(cdp,url){
    if(!result.committed)throw Error('UI source initialization refused');ctl.paint();document.getElementById('game').focus();
   })()`);
   const rows=[];let buttons=0,events=0;
-  for(const observation of study.observations){
+  for(const observation of choice==='original'?study.observations:study.rng.alternate_observations){
    if(observation.intervention)await cdp.evaluate(`(()=>{const w=__snakeUI.ctl.api.snapshot().words;w.set(${JSON.stringify(observation.intervention.words)},0);__snakeUI.ctl.api.replace(w);})()`);
    for(const event of observation.events){
     const before=await cdp.evaluate(`(__snakeUI.clock=${event.clock},__snakeUI.ctl.api.snapshot().revision)`);
@@ -158,7 +173,7 @@ async function trustedUI(cdp,url){
   check(trust.events.length&&trust.events.every(e=>e.isTrusted),'Synthetic input reached DOM acceptance');
   check(trust.events.some(e=>e.type==='keydown')&&trust.events.some(e=>e.type==='pointerdown'),'Missing keyboard/pointer acceptance');
   check(trust.closed&&trust.status.includes('Exited'),'Esc did not dispose production input shell');
-  results.push({backend,status:'passed',observations:rows,normalized_events:events,trusted_dom_events:trust.events.length,full_canvas_rgb:true,exit_disposed:true,
+  results.push({backend,implementation:choice,status:'passed',observations:rows,normalized_events:events,trusted_dom_events:trust.events.length,full_canvas_rgb:true,exit_disposed:true,
    dom_backend_selectors:'value+change through the production handler; native select-popup keyboard driver is unavailable in this headless Mac profile',instrumentation:'Real CDP trusted game keyboard/mouse; declared frozen clock adapter; explicit DOM change events for backend selectors; read-only after-commit snapshot observer; initialization once and one declared original RAM intervention'});
  }
  return results;

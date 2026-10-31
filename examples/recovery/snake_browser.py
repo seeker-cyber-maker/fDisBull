@@ -46,7 +46,47 @@ def plan(program,palette):
         'keymap':{k:{'ascii':a,'scan':s} for k,(a,s) in keymap.items()},'logic_functions':['action','step','reset']}
 
 
-def prepare(original_root,model_root,output,executable,*,nested_step=False):
+def rng_regions(project,program,snippet):
+    """Declare an unchanged source region and a deliberate alternative policy."""
+    from fdisbull import udc_memory_regions as regions
+    from examples.recovery.snake_model import ex
+    source=[]
+    def find(nodes):
+        for node in nodes:
+            if node.get('id')=='step.44':source.append(node)
+            if node['op']=='if':find(node['then']);find(node['else'])
+            elif node['op']=='while':find(node['body'])
+    find(program['functions']['step']['body']);assert len(source)==1
+    original=deepcopy(source[0]);original.pop('id',None);original.pop('evidence',None)
+    seed={'load':606}
+    alternate={'op':'store','index':606,'value':ex('and',ex('or',
+        ex('xor',ex('shr',seed,1),ex('and',ex('sub',0,ex('and',seed,1)),0xb400)),
+        ex('mul',ex('eq',seed,0),0xace1)),65535)}
+    descriptor={'name':'rng','source':{'function':'step','entry':'step.44','count':1},
+        'reads':[606],'output':{'index':606,'min':0,'max':65535}}
+    arena={'arena':{'type':'u32-array','words':program['memory']['words']}}
+    contract=regions.register_contract(project,{'format':'fdisbull-block-contract-1','name':'snake.rng',
+        'inputs':arena,'outputs':arena,'effects':[],
+        'behavior':{'kind':'memory-region','program':program,'region':descriptor},
+        'evidence':{'source_snippet':snippet,'scope':'source seed update; alternate is an intentional behavior change'}})
+    choices={}
+    for name,body,label,assurance in [('original',original,'Original LCG','exact-source-region'),
+            ('lfsr16',alternate,'LFSR16 · changes food placement','intentional-behavior-variant')]:
+        implementation={'format':'fdisbull-memory-uil-1','role':'uil','memory':deepcopy(program['memory']),
+            'variables':{},'functions':{'rng':{'max_steps':1,'body':[body]}}}
+        selections={}
+        for backend,target in [('wasm','wasm32-memory-1'),('webgpu','webgpu-wgsl-memory-1')]:
+            layer=regions.register_layer(project,{'format':'fdisbull-udl-layer-1','name':'snake.rng.'+name+'.'+backend,
+                'contract':contract['id'],'snippet':snippet,'assurance':assurance,
+                'implementation':{'backend':'memory-region','target':target,'program':implementation,'function':'rng'}})
+            selections[backend]=regions.select_layers(project,'snake.rng.'+name+'.'+backend,{'rng':layer['id']},
+                program=program,target=target)['id']
+        choices[name]={'label':label,'selections':selections}
+    return {'format':'fdisbull-memory-regions-1','module_uil_sha256':digest(program),
+        'allow_behavior_variants':True,'slots':{'rng':{'label':'Random generator','default':'original','variants':choices}}}
+
+
+def prepare(original_root,model_root,output,executable,*,nested_step=False,rng=False):
     original_root,model_root,output=(Path(p).resolve() for p in (original_root,model_root,output))
     if output.exists() or any((p/'.git').exists() for p in (output,*output.parents)):
         raise ValueError('choose a new private study root outside Git')
@@ -95,10 +135,17 @@ def prepare(original_root,model_root,output,executable,*,nested_step=False):
                 layers[backend][function]=register_layer(project,doc)['id']
             selections[backend]=select_layers(project,'snake-'+backend,layers[backend],program=program,target=target_profile)['id']
         cuts=None
-        if nested_step:
+        if nested_step or rng:
             cuts={'format':'fdisbull-memory-cuts-1','module_uil_sha256':digest(program),
                 'cuts':[{'caller':'action','entry':entry,'callee':'step'} for entry in ('action.87','action.153')]}
-        manifest=build_memory_shell(project,selections,plan(program,palette),initial,output/'browser',cuts=cuts)
+        host_plan=plan(program,palette);regions=None
+        if rng:
+            regions=rng_regions(project,program,snippets['step'])
+            cuts['format']='fdisbull-memory-cuts-2'
+            cuts['cuts'].append({'caller':'step','entry':'step.44','callee':'rng'})
+            host_plan['bindings']['rng']='wasm';host_plan['outputs']['rng']=[[606,1]]
+            host_plan['help']+=' The random-generator selector changes future food placements without restarting. Original matches the DOS generator; LFSR16 is experimental.'
+        manifest=build_memory_shell(project,selections,host_plan,initial,output/'browser',cuts=cuts,regions=regions)
     with Project(database) as project:
         assert project.db.execute('PRAGMA integrity_check').fetchone()[0]=='ok'
         for backend,selection in selections.items():
@@ -109,7 +156,10 @@ def prepare(original_root,model_root,output,executable,*,nested_step=False):
         'browser':str(output/'browser'),'manifest_sha256':hashlib.sha256((output/'browser/memory-shell.json').read_bytes()).hexdigest(),
         'artifacts':manifest['artifacts'],'original_root':str(original_root),'model_root':str(model_root),
         'execution':False,'scope':'source-assisted recovered model and build identities; execution receipt separate'}
-    if nested_step:receipt['cut_plan_sha256']=manifest['cuts']['cut_plan_sha256']
+    if nested_step or rng:receipt['cut_plan_sha256']=manifest['cuts']['cut_plan_sha256']
+    if rng:
+        receipt.update(region_plan_sha256=manifest['regions']['region_plan_sha256'],
+            execution_uil_sha256=manifest['execution_uil_sha256'])
     (output/'build.json').write_text(json.dumps(receipt,indent=2)+'\n')
     return receipt
 
@@ -119,4 +169,5 @@ if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('original',type=Path);p.add_argument('model',type=Path);p.add_argument('output',type=Path)
     p.add_argument('--executable',type=Path,required=True)
     p.add_argument('--nested-step',action='store_true',help='Route exact recovered action step regions through the selected step backing')
-    a=p.parse_args();print(json.dumps(prepare(a.original,a.model,a.output,a.executable,nested_step=a.nested_step)))
+    p.add_argument('--rng',action='store_true',help='Add an independently selectable original/LFSR16 region without changing the recovered UIL')
+    a=p.parse_args();print(json.dumps(prepare(a.original,a.model,a.output,a.executable,nested_step=a.nested_step,rng=a.rng)))
