@@ -262,10 +262,10 @@ Do not infer either automatic license inheritance from learning an idea or
 automatic freedom from obligations merely because output code looks different.
 
 For optional external runs or any separately authorized reuse, record licenses
-for the exact files, runtime pieces, test data and emitted support code selected. Do not infer permissions from a repository's
-popularity
-or the presence of source. This table is an inventory of inspected notices, not
-legal clearance for a particular distribution or commercial workflow.
+for the exact files, runtime pieces, test data and emitted support code selected.
+Do not infer permissions from a repository's popularity or the presence of source.
+This table is an inventory of inspected notices, not legal clearance for a
+particular distribution or commercial workflow.
 
 | Component | Notice inspected / implication for this plan |
 | --- | --- |
@@ -306,8 +306,8 @@ independent research lanes after shared observation criteria exist. The first
 slice should be one known supported stateful operation with saved values and
 live carry, followed by a bank-switch case and one device effect. Hold its UIL
 fixed across two supported realizations. Do not reimplement every console first.
-Preserve one controller per
-live guest. Defer PS2/Xbox 360 integration until a target makes its cost worthwhile.
+Preserve one controller per live guest. Defer PS2/Xbox 360 integration until a
+target makes its cost worthwhile.
 
 ## Sources and review limits
 
@@ -333,7 +333,7 @@ hashes. The romdev source review and fDisBull baseline above are already pinned.
 - **S15:** [NES test-ROM collection](https://github.com/christopherpow/nes-test-roms). Individual test provenance/licensing still requires inspection.
 - **L1:** [Nested license](https://github.com/Myself086/Project-Nested/blob/master/License.md).
 - **L2:** [Pinned romdev license/bundle distinction](https://github.com/monteslu/romdev/blob/3bc339e1c381adfb4e53b66138d9284dfcd53a28/LICENSE).
-- **L3:** [NESRecomp license](https://github.com/mstan/nesrecomp/blob/master/LICENSE), [SNESRecomp license](https://github.com/RetroPortingToolKit/snesrecomp/blob/master/LICENSE), [PSXRecomp license](https://github.com/RetroPortingToolKit/psxrecomp/blob/master/LICENSE).
+- **L3:** [NESRecomp license](https://github.com/mstan/nesrecomp/blob/master/LICENSE), [SNESRecomp license](https://github.com/RetroPortingToolKit/snesrecomp/blob/main/LICENSE), [PSXRecomp license](https://github.com/RetroPortingToolKit/psxrecomp/blob/master/LICENSE).
 
 No new game run, emulator benchmark, conversion, hardware test, upstream bug
 submission or dependency installation is included. Proposed modifications and
