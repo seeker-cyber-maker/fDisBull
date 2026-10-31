@@ -56,6 +56,24 @@ Use the repository's test/build commands. A release commit needs ordinary and
 required-native Linux CI on its exact SHA before tagging. Publishing a release
 or changing a system installation is a separate user-authorized action.
 
+## CI coordination
+
+Read [CI triggers and status coordination](docs/CI_COORDINATION.md) before
+starting or observing hosted checks. Name one CI owner for the repository;
+other agents consume that owner's dated receipt. Use `scripts/ci_status.py`
+in cache-only mode by default. Only the named owner uses `--refresh --owner`;
+the helper permits one repository-wide refresh per five minutes, shared across
+local worktrees. Do not run parallel job-status loops, `gh run watch`, automatic
+retry loops, or empty commits to restart CI. Independent cloud clones do not
+share the local cooldown: coordinate one owner across them explicitly.
+
+Feature branches run automatic checks through PR events. Before a PR exists,
+use an explicitly authorized manual qualification when needed. Main and version
+tags retain both workflows. A missing, skipped, stale or cancelled check is not
+qualification. Stop hosted probing when the provider restricts the account;
+resume only after normal access is restored. Do not create background polling
+or monitoring services without a separate user request.
+
 ## Game files and target identity
 
 Do not upload original or modified game binaries, assets, story images, saves,
