@@ -69,6 +69,25 @@ def test_source_unchanged_and_placement_and_pointer_fail_closed(tmp_path):
     assert result['data'][0]['file_offset']==0x80
 
 
+def test_data_receipts_hash_final_pointer_table_bytes(tmp_path):
+    capsule,plan,data=_input(tmp_path)
+    source_data=deepcopy(data)
+    target=_group(plan,0x10d)
+    ref={'kind':'near-code-pointer','data':'vars','offset':2,
+         'target':target['id'],'expected_hex':'0d01'}
+    untouched=compile_dos_com(capsule,plan,data,assumptions=ASSUME)
+    patched=compile_dos_com(capsule,plan,data,references=[ref],assumptions=ASSUME)
+    assert data==source_data
+    for result in (untouched,patched):
+        raw=bytes.fromhex(result['bytes'])
+        for receipt in result['data']:
+            start=receipt['file_offset']
+            emitted=raw[start:start+receipt['size']]
+            assert receipt['sha256']==sha256(emitted).hexdigest()
+    assert untouched['data'][0]['sha256']==source_data[0]['sha256']
+    assert patched['data'][0]['sha256']!=source_data[0]['sha256']
+
+
 def test_memory_assumptions_and_declared_ranges_fail_closed(tmp_path):
     capsule,plan,data=_input(tmp_path)
     bad=deepcopy(data);bad[0]['ip']=0x190
