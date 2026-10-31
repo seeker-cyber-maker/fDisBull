@@ -353,7 +353,7 @@ def _arm(raw, address, state):
 
 
 def _thumb(raw, address):
-    from .thumb import native
+    from .thumb import native, memory_width
     from capstone import arm
     ins = native(raw, address)
     if ins is None:
@@ -363,12 +363,13 @@ def _thumb(raw, address):
     for index, operand in enumerate(ins.operands):
         if operand.type != arm.ARM_OP_MEM:
             continue
-        access = ix.OpAccess.READ if op.startswith('ld') or op in ('tbb','tbh') else ix.OpAccess.COND_WRITE if op.startswith('st') else ix.OpAccess.NONE
-        width = 1 if op in ('ldrb','ldrsb','strb','tbb') else 2 if op in ('ldrh','ldrsh','strh','tbh') else 4 if op in ('ldr','str') else 8 if op in ('ldrd','strd') else None
+        reads = op.startswith('ld') or op in ('tbb','tbh','vldr')
+        access = ix.OpAccess.READ if reads else ix.OpAccess.COND_WRITE if op.startswith('st') or op == 'vstr' else ix.OpAccess.NONE
+        width = memory_width(ins)
         fact = _base_fact(access,width,32)
         fact.update(operand_index=index,implicit=False,decoder='Capstone Thumb/M-class',
                     base_register=ins.reg_name(operand.mem.base),index_register=ins.reg_name(operand.mem.index),
-                    displacement=operand.mem.disp,conditional_read=op.startswith('ld'))
+                    displacement=operand.mem.disp,conditional_read=reads)
         if operand.mem.base == arm.ARM_REG_PC and not operand.mem.index:
             target = (((address+4)&~3)+operand.mem.disp)&0xffffffff
             fact.update(effective_offset=target,ip_relative=True)

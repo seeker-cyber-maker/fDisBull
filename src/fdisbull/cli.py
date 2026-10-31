@@ -669,7 +669,7 @@ def parser():
     c = sub.add_parser("import",help="create project from executable or explicit raw code")
     c.add_argument("path")
     c.add_argument("project")
-    c.add_argument('--profile',choices=['cortex-m'],help='explicit Cortex-M flash/vector profile')
+    c.add_argument('--profile',choices=['cortex-m'],help='explicit Cortex-M flash with Armv7-M vectors (not Armv8-M Security)')
     c.add_argument('--vector-count',type=int,help='declared number of vector words (16..256)')
     c.add_argument("--arch",choices=["x86","arm64","thumb"],help="explicit raw mode (bypasses executable loader)")
     c.add_argument("--bits",type=int,choices=[16,32,64])

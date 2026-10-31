@@ -29,10 +29,12 @@ def vectors(data, base, count):
                             valid=valid, reason='reserved vector' if reserved else 'mapped Thumb target' if valid else 'zero, untagged or outside flash code'))
     if not entries[0]['valid']:
         raise ValueError('Cortex-M reset vector must be a tagged Thumb target within mapped flash code')
-    return dict(initial_sp=sp, vector_count=count, vectors=entries,
+    return dict(initial_sp=sp, vector_count=count, vectors=entries, vector_layout='armv7-m',
                 entry=entries[0]['address'], base=base,
                 memory_model='Only supplied flash bytes are mapped. SRAM, EEPROM, aliases and MMIO bytes are unavailable.',
-                assumptions=['Caller-declared flash base and vector count.', 'SP is a range-validated initial value; device SRAM size is not inferred.'])
+                assumptions=['Caller-declared flash base and vector count.',
+                             'Armv7-M exception-vector layout; Armv8-M Security/SecureFault layouts are not interpreted.',
+                             'SP is a range-validated initial value; device SRAM size is not inferred.'])
 
 
 def load(data, filename, base, count, entry=None):

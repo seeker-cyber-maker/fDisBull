@@ -201,3 +201,59 @@ def test_fresh_process_restart_patch_and_stored_exports(tmp_path):
     with Image.open(tmp_path/'stored.png') as image:
         image.load();assert image.width>=1000 and image.height>100
     assert '<svg' in (tmp_path/'stored.svg').read_text()
+
+
+@pytest.mark.parametrize('raw,width',[
+    ('dfe90101',8),  # LDRD r0,r1,[PC,#4]: two words.
+    ('9fed010a',4),  # VLDR s0,[PC,#4]: one single-precision register.
+    ('9fed010b',8),  # VLDR d0,[PC,#4]: one double-precision register.
+])
+def test_wide_literal_pool_extent_is_held_across_restart(tmp_path,raw,width):
+    source=tmp_path/'wide-pool.bin'
+    source.write_bytes(bytes.fromhex(raw+'00bf00bf01200221032204237047'))
+    database=tmp_path/'wide-pool.fdb'
+    row=decode(source.read_bytes(),0x1002,'thumb',32)
+    assert row['references'][0]['target']==0x1008
+    assert row['references'][0]['width']==width
+    assert row['literals']==[{'address':0x1008,'size':width}]
+    access=instruction_memory_accesses(source.read_bytes(),0x1002,'thumb',32)[0]
+    assert access['concrete_target']==0x1008 and access['width']==width
+    assert access['may_read']
+    with Project.create(database,source,arch='thumb',base=0x1000) as p:
+        assert p.analyze()['stable']
+        assert [r['address'] for r in p.disassembly()['instructions']]==['0x1000','0x1004','0x1006']
+    source.unlink()
+    with Project(database) as p:
+        # Starting at the last halfword of the referenced span must still hold
+        # it as data after restart; explicit representation is the override.
+        last=0x1008+width-2
+        p.analyze(start=last)
+        assert hex(last) not in [r['address'] for r in p.disassembly()['instructions']]
+        p.represent(last,'code',size=2)
+        assert hex(last) in [r['address'] for r in p.disassembly()['instructions']]
+
+
+@pytest.mark.parametrize('raw,address,target',[
+    ('0ff20800',0x1000,0x100c), ('0ff20800',0x1002,0x100c),
+    ('aff20800',0x1000,0xffc), ('aff20800',0x1002,0xffc),
+    ('aff20800',0,0xfffffffc),
+])
+def test_wide_adr_aliases_keep_exact_address_references(raw,address,target):
+    row=decode(bytes.fromhex(raw),address,'thumb',32)
+    assert row['references']==[{'operand_index':2,'role':'address','target':target,'width':4}]
+    assert row['data_refs']==[target] and row['literals']==[]
+    assert row['bytes']==raw and row['flow']=='next'
+
+
+def test_cortex_profile_declares_supported_vector_layout(tmp_path):
+    with create(tmp_path) as p:
+        info=p.information()['cortex_m']
+        assert info['vector_layout']=='armv7-m'
+        assert any('Armv7-M' in a for a in info['assumptions'])
+
+
+@pytest.mark.parametrize('raw,width',[('80ed000a',4),('80ed000b',8)])
+def test_vfp_store_width_keeps_unknown_register_address(raw,width):
+    fact=instruction_memory_accesses(bytes.fromhex(raw),0x1000,'thumb',32)[0]
+    assert fact['width']==width and fact['may_write'] and not fact['may_read']
+    assert fact['concrete_target'] is None and fact['unresolved_reasons']

@@ -15,6 +15,17 @@ def native(data, address):
     return next(decoder().disasm(data[:4], address, count=1), None)
 
 
+def memory_width(ins):
+    """Known transfer width from native operands, without a CPU/state claim."""
+    op = ins.mnemonic.split('.')[0]
+    widths = {'ldrb':1, 'ldrsb':1, 'strb':1, 'tbb':1,
+              'ldrh':2, 'ldrsh':2, 'strh':2, 'tbh':2,
+              'ldr':4, 'str':4, 'ldrd':8, 'strd':8}
+    if op in ('vldr','vstr') and ins.operands and ins.operands[0].type == arm.ARM_OP_REG:
+        return {'s':4, 'd':8}.get(ins.reg_name(ins.operands[0].reg)[:1])
+    return widths.get(op)
+
+
 def decode_thumb(data, address):
     ins = native(data, address)
     if ins is None or address + ins.size > 1 << 32:
@@ -53,12 +64,20 @@ def decode_thumb(data, address):
             immediates.append(dict(operand_index=index, value=operand.imm & 0xffffffff))
         if operand.type == arm.ARM_OP_MEM and operand.mem.base == arm.ARM_REG_PC and not operand.mem.index:
             literal = (((address + 4) & ~3) + operand.mem.disp) & 0xffffffff
-            width = 1 if op in ('ldrb', 'ldrsb') else 2 if op in ('ldrh', 'ldrsh') else 4 if op == 'ldr' else None
+            width = memory_width(ins) if op.startswith('ld') or op == 'vldr' else None
             refs.append(dict(operand_index=index, role='memory', target=literal, width=width))
             if width:
                 literals.append(dict(address=literal, size=width))
         if ins.id == arm.ARM_INS_ADR and operand.type == arm.ARM_OP_IMM:
             value = (((address + 4) & ~3) + operand.imm) & 0xffffffff
+            refs.append(dict(operand_index=index, role='address', target=value, width=4))
+        elif (op in ('addw','subw') and index == 2
+              and operands[1].type == arm.ARM_OP_REG and operands[1].reg == arm.ARM_REG_PC
+              and operand.type == arm.ARM_OP_IMM):
+            # Capstone retains the ADDW/SUBW spelling of the ADR.W alias,
+            # while some engine versions use the ordinary ADD/SUB IDs.
+            delta = -operand.imm if op == 'subw' else operand.imm
+            value = (((address + 4) & ~3) + delta) & 0xffffffff
             refs.append(dict(operand_index=index, role='address', target=value, width=4))
     # IT is decoded alone; later predicates are tracked by the project, not by
     # Capstone's mutable disassembly-stream IT state.

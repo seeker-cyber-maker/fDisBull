@@ -1,6 +1,7 @@
 # Cortex-M static analysis milestone
 
-This work adds explicit little-endian Cortex-M/Thumb static input to fDisBull.
+This work adds explicit little-endian Cortex-M/Thumb static input with the
+Armv7-M exception-vector layout used by the 121GW to fDisBull.
 The native decoder supplies instruction facts; fDisBull owns traversal, stored
 references, candidate functions and immutable byte versions.
 
@@ -46,10 +47,19 @@ SP against the generic SRAM range and validates reset inside supplied flash
 after the declared table. It does not infer a device's exact RAM size. Missing,
 reserved, untagged and out-of-image interrupt vectors remain explicit records.
 
+Selecting `--profile cortex-m` declares the Armv7-M vector layout. Stored
+metadata names that layout explicitly; no device/core detection is implied.
+Armv8-M Security tables, including SecureFault at vector slot 7, are outside
+this profile. Raw `--arch thumb` remains available for a caller-selected code
+slice without imposing a vector-table interpretation.
+
 Only supplied vector and flash bytes are mapped. The vector range is read-only
 data; the remaining flash range is eligible for recursive code discovery.
-Referenced PC-relative literal spans are held as data during native discovery;
-explicit `represent ... code` can retain an overlapping code interpretation.
+Referenced PC-relative literal spans are held as data during native discovery.
+This includes dual-word LDRD and single/double-register VLDR transfers. ADR.W
+aliases retain exact address references without treating the addressed bytes
+as a loaded literal.
+Explicit `represent ... code` can retain an overlapping code interpretation.
 If already stored code overlaps a newly discovered literal, both interpretations
 remain with an issue. No unknown register-derived memory read is replaced by
 zero or by a guessed peripheral value.
@@ -84,6 +94,10 @@ annotations, writes real PNG/SVG/CFG files, tests a NOP child and a distinct
 reset-vector child, and verifies the untouched parent. Vector metadata and
 function seeds are rebuilt from each child's bytes; an invalid reset-vector
 patch cannot silently reuse the parent's entry.
+
+Earlier prerelease projects retain their historical discovery evidence on
+reopen. Use a fresh import to qualify changed native discovery rules;
+`refresh-facts` updates stored access facts without rerunning traversal.
 
 The 121GW count is 73 through `COMP_ACQ_IRQHandler` in ST's
 [STM32L152xD startup definition](https://github.com/STMicroelectronics/cmsis-device-l1/blob/master/Source/Templates/gcc/startup_stm32l152xd.s).
