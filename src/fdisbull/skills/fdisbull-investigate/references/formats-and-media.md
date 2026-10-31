@@ -12,6 +12,7 @@ shipped APIs and reusable format contracts, read [media-modules.md](media-module
 - [Keep each layer's identity](#keep-each-layers-identity)
 - [Establish a bounded format contract](#establish-a-bounded-format-contract)
 - [Investigate Mach-O ARM64](#investigate-mach-o-arm64)
+- [Reversible macOS UI observations](#reversible-macos-ui-observations)
 - [Compare releases](#compare-releases-at-the-right-boundary)
 - [Reduce media](#reduce-media-through-a-valid-consumer-contract)
 
@@ -88,6 +89,28 @@ with the selected image, seeds, budget and tool revision. These counts do not
 measure reachable coverage, semantic recovery or comparative speed. Do not
 repeat an identical exhausted pass without a new seed, mapping or question.
 Use [methodology.md](methodology.md) for native-to-resource or interpreter links.
+
+## Reversible macOS UI observations
+
+When the installed catalog includes `macos-snapshot`, inspect the running app,
+permissions, displays and target accessibility state before choosing an action.
+`macos-session` without `live` observes/captures only. Explicit `live` and a
+selected status index permit a bounded menu action and declared preference
+changes; the session never launches or quits the app. Keep one controller.
+Choose the display ID and CoreGraphics global logical rectangle from the
+snapshot, including negative origins. PNG pixels and image-local coordinates
+are different spaces. Preserve display identity, scale, AX and PNG receipts.
+
+Inspect delivery and observed effects separately: an AX error can follow a
+successful menu opening. Do not replay an uncertain input. Read cleanup and
+the durable journal; use `macos-session-recover` explicitly after interruption.
+Conflicts, stale process identity or unknown menu state remain unresolved.
+Exact key absence restores by deletion; CFPreferences domain coverage does not
+establish sandbox or cached-UI equivalence. Keep private captures/journals out
+of publication. Compare original and replica labels/geometry/effects with
+declared metric drift, preserving binary facts versus source assistance and
+observations. In source, see `docs/MACOS_REVERSIBLE_CAPTURE.md` and the bounded
+`docs/CPUINFO_REPLICATION_COMPARISON.md` experiment.
 
 ## Win16 NE static view
 
