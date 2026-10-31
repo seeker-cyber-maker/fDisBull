@@ -68,6 +68,8 @@ translation.
 
 ### !2 — capabilities and replication boundaries (merged)
 
+Spec: [docs/CAPABILITIES.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/2d6f46039d907ebc6bbe801183b08a8215a535e0/docs/CAPABILITIES.md) and [docs/MACOS_APP_REPLICATION.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/2d6f46039d907ebc6bbe801183b08a8215a535e0/docs/MACOS_APP_REPLICATION.md).
+
 Landed at `2d6f460` (10 files): projectless `capabilities`, 19-entry catalog,
 dependency discovery without execution, and the app-replication case study.
 **Still open:** the documented priorities themselves — reversible sessions,
@@ -76,6 +78,8 @@ persistent C/source maps, preference/resource handling and typed UIL host
 effects. !7 and !9 are the first implementations.
 
 ### !10 — CI coordination (merged)
+
+Spec: [docs/CI_COORDINATION.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/eaaf9ca2dec90e1020fe29ba9d6a802b0d99d288/docs/CI_COORDINATION.md).
 
 Landed at `eaaf9ca` (7 files) and now in `main` via `b21b204`: bounded status
 reads, duplicate-feature-CI avoidance, script/tests/docs. **Still open:** the
@@ -86,6 +90,7 @@ not run for 0.28.
 ### !4 — Preserve PR 56 console modules and full Miniplanets NES port
 
 - Head: `b95c1e8`; target: `main`; diff: 149 files, +36,509/-10.  
+- Specs at head: [docs/CONSOLE_MEDIA_PARSING.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/b95c1e880a63f7c1899b182de90988920189e47c/docs/CONSOLE_MEDIA_PARSING.md), [docs/CONSOLE_UDC.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/b95c1e880a63f7c1899b182de90988920189e47c/docs/CONSOLE_UDC.md), [docs/CUE_ISO_PARSING.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/b95c1e880a63f7c1899b182de90988920189e47c/docs/CUE_ISO_PARSING.md), [docs/GENESIS_ROM_TO_NES.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/b95c1e880a63f7c1899b182de90988920189e47c/docs/GENESIS_ROM_TO_NES.md), [docs/MINIPLANETS_FULL_GAME.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/b95c1e880a63f7c1899b182de90988920189e47c/docs/MINIPLANETS_FULL_GAME.md), [docs/MINIPLANETS_NES_LEVEL.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/b95c1e880a63f7c1899b182de90988920189e47c/docs/MINIPLANETS_NES_LEVEL.md).  
 - Merge state: conflicts in `scripts/check_dist.py`, `src/fdisbull/cli.py`, `tests/test_distribution.py`; 149 files is the largest unmerged stack.  
 - 0.28 gap: console/media parsing, SH-2 ROM-to-ASM and the full Miniplanets game are absent.  
 - 0.29 decision: split console/media modules from the game; rebase the modules first. The full game remains experimental and private-ROM/toolchain-gated.  
@@ -111,6 +116,7 @@ not run for 0.28.
 ### !5 — Remove Miniplanets rendering cap and optimize exact globe reuse
 
 - Head: `b6fc1f1`; target: `!4`; diff: 36 files, +4,351/-276.  
+- Specs at head: [docs/MINIPLANETS_FULL_GAME.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/b6fc1f17cbe1b1dfcf5705fd724ee0446ec7b872/docs/MINIPLANETS_FULL_GAME.md) (uncapped rendering section) and `docs/evidence/miniplanets-full-game-2026-10-31/`.  
 - 0.28 gap: no uncapped rendering, terrain reuse or audio hot-path changes.  
 - 0.29 decision: only after !4; retain the measured 32.24 swaps/s but do not claim 60 Hz or movement parity.  
 
@@ -159,6 +165,7 @@ not run for 0.28.
 ### !6 — Normal KQ1 goat play and reusable Z scene
 
 - Head: `9d2c5cf`; target: `pr/82`; diff: 17 files, +1,908/-3.  
+- Specs at head: [docs/AGI_NATURAL_GOAT.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/9d2c5cff0a76dd7e3e732701c2fdd2e581d5fb82/docs/AGI_NATURAL_GOAT.md), [docs/AGI_DOS_HOST.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/9d2c5cff0a76dd7e3e732701c2fdd2e581d5fb82/docs/AGI_DOS_HOST.md), [docs/AGI_Z_SCENES.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/9d2c5cff0a76dd7e3e732701c2fdd2e581d5fb82/docs/AGI_Z_SCENES.md).  
 - Merge state: stacked on unmerged `pr/82/agi-logic103-qualification` (`33ad1a9`); the parent cannot merge alone.  
 - 0.28 gap: no AGI/KQ1 goat scene, print-occurrence or native-view work.  
 - 0.29 decision: rebase PR #82 first, then the !6/!8 stack; !8 carries the three parent P2 fixes.  
@@ -180,6 +187,7 @@ not run for 0.28.
 ### !7 — Add reversible macOS sessions and display-bound capture
 
 - Head: `e1b6f16`; target: `!2`; diff: 17 files, +1,869/-4.  
+- Specs at head: [docs/MACOS_REVERSIBLE_CAPTURE.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/e1b6f164bdc139262d340395b203246c948d01bd/docs/MACOS_REVERSIBLE_CAPTURE.md).  
 - 0.28 gap: no `macos-snapshot`, `macos-session`, recovery journal, display-bound capture or Swift helper.  
 - 0.29 decision: strongest small candidate. Land with mixed-scale/rotated-display limits explicit; no general GUI recorder.  
 
@@ -268,6 +276,7 @@ not run for 0.28.
 ### !8 — Qualify ordinary KQ1 troll bridge and extend the Z scene
 
 - Head: `08daea5`; target: `!6`; diff: 13 files, +1,751/-28.  
+- Specs at head: [docs/AGI_TROLL_BRIDGE.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/08daea56e9754f38f56f028659e9fce8d0394f4e/docs/AGI_TROLL_BRIDGE.md), [docs/AGI_Z_SCENES.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/08daea56e9754f38f56f028659e9fce8d0394f4e/docs/AGI_Z_SCENES.md).  
 - Merge state: stacked on !6; includes the three review-fix commit `1eb7b09` and troll-route evidence.  
 - 0.28 gap: troll bridge route and the corrected print/budget/entry-search behavior are absent.  
 - 0.29 decision: same stack as !6; no standalone merge.  
@@ -293,6 +302,7 @@ not run for 0.28.
 ### !9 — Add cpuinfo replica and fDisBull native comparison
 
 - Head: `2375c54`; target: `!7`; diff: 23 files, +1,871.  
+- Specs at head: [docs/CPUINFO_REPLICATION_COMPARISON.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/2375c54550a01f48ab1ef2271ccd65eecc4e5a99/docs/CPUINFO_REPLICATION_COMPARISON.md).  
 - Merge state: stacked on !7; experimental app under `experimental/macos/cpuinfo-replica`.  
 - 0.28 gap: no cpuinfo replica or native comparison receipt.  
 - 0.29 decision: after !7 as an experiment; keep the 311 pending code items and unqualified login/localization/restart behavior visible.  
@@ -369,6 +379,7 @@ not run for 0.28.
 ### !11 — Cortex-M/Thumb static firmware analysis (PR #74 continuation)
 
 - Head: `a8a6469`; target: `main`; diff: 17 files, +918/-23.  
+- Specs at head: [docs/CORTEX_M.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/a8a6469e80bef6d448d58b72e98b593c1cb2b952/docs/CORTEX_M.md), [docs/PLATFORMS.md](https://gitlab.com/brewster-jennings-group/fdisbull/-/blob/a8a6469e80bef6d448d58b72e98b593c1cb2b952/docs/PLATFORMS.md).  
 - Merge state: independent of the current release; schema-9 store is compatible with 0.28 (`SCHEMA = 9`); no merge conflicts reported.  
 - 0.28 gap: no Cortex-M/Thumb decoder, vector loader, CFG/annotation path or 121GW acceptance.  
 - 0.29 decision: strong independent candidate; rebase, rerun focused/real-firmware checks, and keep Armv8-M/AAPCS32 out of scope.  
