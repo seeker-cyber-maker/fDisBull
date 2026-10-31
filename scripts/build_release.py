@@ -11,6 +11,9 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 ROOT_FILES = ("README.md", "AGENTS.md", "CLAUDE.md", "pyproject.toml", "MANIFEST.in", "player/pyproject.toml")
 DOC_EXAMPLE_FILES = (
+    'examples/recovery/civd_food_web.py',
+    'examples/recovery/run_web_blocks.mjs',
+    'examples/recovery/run_web_browser.mjs',
     'examples/recovery/civd_food_swap.py',
     'examples/recovery/civd_food_arm64.py',
 
@@ -27,6 +30,8 @@ DOC_EXAMPLE_FILES = (
     "docs/uil-rfcs/0002/replay-summary.json",
 )
 SOURCE_PATTERNS = (
+    ("docs/evidence/civd-food-web", "verification.json"),
+    ("src/fdisbull/web_runtime", "*.mjs"),
     ("docs/evidence/civd-food-arm64", "verification.json"),
     ("src/fdisbull", "*.py"),
     ("player/fdisbull_player", "*.py"),

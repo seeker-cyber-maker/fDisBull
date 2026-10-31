@@ -289,6 +289,11 @@ limits.
 
 ## Keep results within their evidence
 
+For one pure selected byte/word block, `build-web-block` emits guarded Wasm or
+WGSL under the same module UIL. Read [Web UDC profiles](UDC_WEB.md) for target
+names, host ABI and original-backed CivD qualification. Browser/GPU availability
+and application state commits need separate checks.
+
 Static decode, authored scene geometry, diagnostic state edits, text
 projections, bounded proofs and live ordinary input are different evidence
 surfaces. Report which one supports each conclusion, with source/version and

@@ -1,6 +1,7 @@
 include README.md AGENTS.md CLAUDE.md pyproject.toml MANIFEST.in player/pyproject.toml
 include player/fdisbull_player/*.py
 recursive-include src/fdisbull *.py *.c *.sh
+recursive-include src/fdisbull/web_runtime *.mjs
 recursive-include src/fdisbull/data *.json *.txt
 recursive-include src/fdisbull/skills *.md
 recursive-include tests *.py
@@ -59,3 +60,7 @@ include docs/evidence/civd-food-arm64/verification.json
 # Exact authored food recipes; the private target/outputs remain excluded.
 include examples/recovery/civd_food_swap.py
 include examples/recovery/civd_food_arm64.py
+include examples/recovery/civd_food_web.py
+include examples/recovery/run_web_blocks.mjs
+include examples/recovery/run_web_browser.mjs
+include docs/evidence/civd-food-web/verification.json

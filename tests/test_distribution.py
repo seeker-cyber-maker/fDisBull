@@ -41,6 +41,9 @@ GAMEFAQS_SKILL_FILES = tuple('src/fdisbull/skills/write-gamefaqs-guide/'+name fo
 REQUIRED_SOURCE_FILES += GAMEFAQS_SKILL_FILES
 REQUIRED_SOURCE_FILES += ('examples/recovery/civd_food_swap.py', 'examples/recovery/civd_food_arm64.py')
 REQUIRED_SOURCE_FILES += ("docs/evidence/civd-food-arm64/verification.json",)
+REQUIRED_SOURCE_FILES += ('src/fdisbull/web_runtime/block.mjs',
+    'examples/recovery/civd_food_web.py','examples/recovery/run_web_blocks.mjs',
+    'examples/recovery/run_web_browser.mjs','docs/evidence/civd-food-web/verification.json')
 UDC_EVIDENCE_FILES = {
     'docs/evidence/udc-2026-10-29/dino.json',
     'docs/evidence/udc-2026-10-29/zork.json',
@@ -162,4 +165,12 @@ def test_reviewed_recipe_allowlist_rejects_other_examples(tmp_path):
     with zipfile.ZipFile(archive, 'a') as output:
         output.writestr('fdisbull-test/examples/unreviewed.py', 'unreviewed input')
     with pytest.raises(ValueError, match='Excluded directory'):
+        check(archive)
+
+
+def test_distribution_requires_the_portable_host_adapter(tmp_path):
+    check = runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+    archive = tmp_path/'fdisbull-no-web-adapter-tool.zip'
+    source_archive(archive,tuple(p for p in REQUIRED_SOURCE_FILES if p!='src/fdisbull/web_runtime/block.mjs'))
+    with pytest.raises(ValueError,match='missing'):
         check(archive)

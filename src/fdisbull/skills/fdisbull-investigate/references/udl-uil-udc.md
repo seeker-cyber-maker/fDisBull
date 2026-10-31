@@ -1,5 +1,16 @@
 # Source-backed semantics: UDL, UIL and UDC
 
+The `build-web-block` JSON method emits one canonical, pure selected UIL
+invocation for `wasm32-scalar-1` or `webgpu-wgsl-scalar-1`. Inspect the actual
+tool's `methods` first. Selection target metadata alone does not add a backend.
+The build guards byte/word types and contract/layer domains, qualifies the
+selected model and refuses extra effects/adapters. Its status is build-only;
+run the emitted artifact and independently qualify original → UIL → output.
+The JavaScript host returns pure values and never commits a delayed result to
+application state. Services, revision checks and a complete shell remain a
+separate composition gate. See repository `docs/UDC_WEB.md` for the finite
+original-backed food study and its reproducible private recipe.
+
 For first use and source-to-model acceptance, follow the
 [repeatable reconstruction recipe](reconstruction.md).
 

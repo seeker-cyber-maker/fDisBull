@@ -1,5 +1,6 @@
 """Agent JSON surface for persistent snippet and implementation records."""
 METHODS={
+ 'build-web-block':'Emit WebAssembly/WGSL for one qualified fixed UIL invocation; selection,destination; build only',
  'capture-snippet':'Capture immutable mapped/file spans; name,spans,[version,context,boundary,evidence,author]',
  'snippet-info':'Read a snippet; snippet,[full,include_bytes]',
  'snippets':'List snippet metadata; [version,limit,offset,full]',
@@ -26,6 +27,9 @@ METHODS={
 
 def invoke(project,method,params):
  from . import udc_layers
+ if method=='build-web-block':
+  from .udc_web import build_web_block
+  return build_web_block(project,**params)
  if method=='build-macos-block-probe':
   from .udc_macos_probe import build_macos_block_probe
   return build_macos_block_probe(project,**params)
