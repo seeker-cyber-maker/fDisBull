@@ -32,6 +32,8 @@ REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/brok
 REQUIRED_PE_RESOURCES |= {"dos_guest/__init__.py", "dos_guest/init.sh", "dos_guest/broker.py", "dos_qemu.py", "dos_runtime.py", "qemu_machine.py", "gdb_rpc.py", "guest_assets.py"}
 REQUIRED_KNOWLEDGE_RESOURCES = {"media.py", "skills/fdisbull-investigate/references/media-modules.md"}
 REQUIRED_KNOWLEDGE_RESOURCES |= {"data/dos-runtime-signatures.json", "data/MICROSOFT-DOS-LICENSE.txt"}
+REQUIRED_MACOS_RESOURCES = {"ghidra_arm64.py", "macos_lldb.py", "_macos_lldb_driver.py",
+                            "data/FdisbullGhidraArm64.txt"}
 REQUIRED_KNOWLEDGE_RESOURCES |= {"skills/fdisbull-investigate/SKILL.md", "skills/fdisbull-investigate/references/scenes.md",
                                  "skills/fdisbull-investigate/references/methodology.md",
                                  "skills/fdisbull-investigate/references/runtime-navigation.md",
@@ -103,6 +105,8 @@ def check_archive(path: Path) -> int:
                 raise ValueError(f"Wheel is missing PE backend sources: {sorted(missing)}")
             missing={"fdisbull/"+name for name in REQUIRED_KNOWLEDGE_RESOURCES}-set(names)
             if missing:raise ValueError(f"Wheel is missing DOS analysis resources: {sorted(missing)}")
+            missing={"fdisbull/"+name for name in REQUIRED_MACOS_RESOURCES}-set(names)
+            if missing:raise ValueError(f"Wheel is missing macOS analysis resources: {sorted(missing)}")
         else:
             raise ValueError(f"Wheel contains unexpected package or metadata roots: {sorted(roots)}")
     else:
@@ -113,7 +117,8 @@ def check_archive(path: Path) -> int:
         required = REQUIRED_TEST_HELPERS | REQUIRED_PLAYER_SOURCE | {"src/fdisbull/__init__.py", "pyproject.toml", "tests/wine_gui_fixture.c"}
         required |= {"src/fdisbull/" + name for name in REQUIRED_PE_RESOURCES}
         required |= {"src/fdisbull/" + name for name in REQUIRED_KNOWLEDGE_RESOURCES}
-        required |= {"AGENTS.md", "CLAUDE.md", "docs/AGENT_QUICKSTART.md"}
+        required |= {"src/fdisbull/" + name for name in REQUIRED_MACOS_RESOURCES}
+        required |= {"AGENTS.md", "CLAUDE.md", "docs/AGENT_QUICKSTART.md", "docs/MACOS_ARM64_ANALYSIS.md"}
         required |= {"scripts/check_agent_skill.py"}
         required |= REQUIRED_SOURCE_EVIDENCE
         missing = required - relative

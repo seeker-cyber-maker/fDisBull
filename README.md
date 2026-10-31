@@ -1,12 +1,12 @@
 # fDisBull
 
-This checkout contains the **0.27.0 cloud release candidate**: private external
+The published **0.27.0** release includes private external
 target storage, recovery reconciliation, reusable media adapters, structural
 type sharing and bounded Win16 NE analysis. See the
-[candidate notes](docs/RELEASE-0.27.0.md) for scope and gates. The latest
-published release at this cut is
-[0.26.1](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.26.1).
-Publication, environment promotion and installation are separate steps.
+[release notes](docs/RELEASE-0.27.0.md) for scope and gates. This checkout also
+contains unreleased macOS ARM64 investigation support; the latest published
+release at this cut is
+[0.27.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.27.0).
 
 Give an agent a program to explore—and a place to keep what it learns.
 fDisBull connects disassembly, headless debugging, scene-aware controls and
@@ -39,6 +39,7 @@ legacy migration and remaining export limits.
 | Extract a GOG DOS installer on macOS or Linux without Wine | [Native GOG unpacking](docs/GOG_UNPACKING.md) |
 | Reuse a reviewed structure in another analysis project | [Portable type catalogs](docs/TYPE_CATALOGS.md) |
 | Understand an executable without running it | [Disassembly and analysis](#disassemble-and-analyze) |
+| Investigate a macOS ARM64 executable with source-bound Ghidra and LLDB probes | [macOS ARM64 analysis](docs/MACOS_ARM64_ANALYSIS.md) |
 | Observe a DOS game or a Windows PE64 program | [Debug the original program](#debug-the-original-program) |
 | Compare a hypothesis, a checkpoint or a temporary patch | [Layers, states and experiments](#layers-states-and-experiments) |
 | Give an agent reliable scene context and navigation | [Scenes, maps and interaction policies](#scenes-maps-and-interaction-policies) |
@@ -116,6 +117,11 @@ supported 32-bit LE objects and internal fixups for the existing x86 analyzer.
 The [Win16 NE view](docs/NE_LOADING.md) loads supported Windows16 segments with
 logical addresses and symbolic fixups. The [Colonization comparison](docs/COLONIZATION_FOOD_EQUIVALENCIES.md)
 shows how related DOS and Windows code can guide an investigation.
+
+For Mach-O ARM64, `code-backings` retains exact source-file offsets and bytes
+for selected native blocks. Optional Ghidra and one-stop LLDB probes are
+described in [macOS ARM64 analysis](docs/MACOS_ARM64_ANALYSIS.md). Native facts,
+diagnostic C and runtime observations do not constitute a UIL translation.
 
 ## Debug the original program
 
