@@ -1,9 +1,10 @@
 # Miniplanets full-game UIL and native NES profile
 
-The display/upload follow-up at the end is the latest qualified build. It
-improves the previous build's dense fireball stage from 20.00 to 25.87 logic
-updates/s and from 10.76 to 12.95 completed globe swaps/s. Both rates remain
-below 60 Hz. Earlier optimization and R14 receipts remain preserved as history.
+The uncapped-rendering follow-up at the end is the latest qualified build.
+It removes the two-epoch drawing gate, reaching 32.24 completed globe swaps/s
+in the seeded orb-stage benchmark and 26.29 in the dense fireball stage.
+The moving-player test reaches 15.42 swaps/s. These are bounded measurements;
+60 Hz remains an optimization target. Earlier builds and receipts remain history.
 
 This profile expands the source-bound Stage 1-1 experiment into the original
 55-stage game rules: all placed actor types, moving terrain, score, lives,
@@ -724,3 +725,149 @@ readback receipts remain separate from executable qualification.
 The new build remains below 60 Hz. Full-dirty views take four NMIs, source
 hardware behavior is represented through declared adapters, and natural
 all-level completion and physical NES operation remain unqualified.
+
+## Uncapped rendering, exact terrain reuse and audio optimization (2026-10-31)
+
+The previous balanced build, commit
+`f34f6ef06f8a9e708073d095499205345d3950a6`, started drawing only after two
+logical epochs. The new main loop attempts a draw after every completed game
+update whenever the previous upload has finished. There is no software
+30 fps render cap or minimum render-epoch spacing. Game updates still
+synchronize to physical frames, and drawing waits for staging ownership.
+
+The tested cartridge SHA-256 is
+`8da56a19cf65be2aae46a913584d72776df0da6819d9784ec577e3ca75c012e6`.
+Its source cartridge and UIL program are unchanged. Code-bank use is
+7,952 / 5,011 / 6,872 / 5,945 bytes, with the same 55 data banks.
+The sanitized [uncapped-rendering receipt](evidence/miniplanets-full-game-2026-10-31/uncapped-rendering.json)
+binds the cartridge, adapter sources, compiler/runtime and private test receipts.
+Generated cartridges, original assets, instruction traces and state dumps remain
+outside the repository and distributable packages.
+
+### What changed and why the output is preserved
+
+Removing the epoch gate alone leaves rendering, upload planning and audio
+competing for the CPU. The globe renderer now caches exact terrain output
+when the complete world, camera and relevant animation bits match. Conservative
+animation masks are checked against the actual generated terrain atlas:
+21,504 same-mask frame pairs match all tile shapes; an intentionally wrong
+zero mask differs on 13,824 pairs. Cache capture waits for a repeated camera
+position to avoid copying every frame while the player moves.
+
+The cache retains the terrain plane and palette plus world/projection data.
+A hit restores the full plane after a different view or invalidating write.
+When staging already contains that cached terrain, it restores only the first
+row, which the pause overlay may have overwritten. Sprite preparation still
+clears and recomposes OAM. Menus, endings and diagnostic upload command 253
+invalidate the relevant ownership flags. Cache keys never assume an unchanged
+world solely because its pointer is unchanged.
+
+Each nametable has a conservative terrain-valid bit. A terrain miss invalidates
+both bits. Only a certified cache hit with the same pause overlay may bypass
+the terrain/attribute comparison; HUD bytes are always compared. Nonterrain
+views clear the target certificate. There is no wrapping generation counter.
+In the isolated assembled planner benchmark, the unchanged certified path
+falls from approximately 6,072 to 646 CPU cycles per call. This excludes
+interrupts, mapper and PPU work and is not a whole-frame speedup figure.
+
+Audio now avoids envelope work for quiescent and stable phases, specializes
+volume calculations, uses an exact PSG attenuation table and combines channel
+selection scans. The original 512-state audio corpus drops from 6,763.47 to
+6,254.47 mean cycles, a 7.53% reduction. A separate expanded 512-state corpus
+falls from 5,469.58 to 4,871.02 cycles, a 10.94% reduction; these are different
+datasets. All 32,768 PSG level/attenuation pairs match the C state and APU
+snapshots, and the actual cartridge passes a separate ordered-write comparison.
+
+The pending display plan remains immutable. Seven bounded jobs per NMI and
+the existing vblank deadline are preserved. A fully dirty 296-byte plan still
+requires four data-transfer frames, so removing the cap cannot guarantee
+60 completed globe uploads per second.
+
+### Matched performance protocol and results
+
+Both builds run in the same pinned FCEUmm core. Each seeded stage has the same
+valid source-initialized state, invulnerability assistance and neutral input.
+Runs last 3,100 physical frames; after 100 warmup frames, rates use the 2,999
+intervals between remaining samples and the core's 60.0998265 Hz clock.
+Rates describe emulated hardware time, not the host's execution throughput.
+The observer is checked against an uninstrumented replay for unchanged RAM,
+state, audio/video output and controller input. These are deterministic bounded
+workloads, without a statistical confidence interval or all-level FPS claim.
+
+| Stage / workload | Previous game updates/s | New game updates/s | Previous completed swaps/s | New completed swaps/s |
+|---|---:|---:|---:|---:|
+| 0, ordinary terrain | 41.18 | 49.06 | 20.60 | 29.76 |
+| 40, eight maces | 27.60 | 29.02 | 13.79 | 28.40 |
+| 43, orbs | 33.33 | 41.06 | 16.67 | 32.24 |
+| 44, dense fireballs | 25.87 | 28.10 | 12.95 | 26.29 |
+
+The orb workload exceeds the former 30 fps render ceiling. Completed swaps
+mean coherent buffer flips, which can repeat identical pixels. They are
+reported separately from logical game updates and host display refresh.
+Across these four runs, 5,823 flips have zero observed staging, physical-nametable, OAM,
+active-nametable, fault or vblank-write mismatches. The intermediate uncapped
+whole-restore build and earlier cache-only measurements are retained in the
+receipt hashes so the selected partial-restore build can be traced.
+
+A separate 3,000-frame run with varied movement and active audio records
+43.54 game updates/s and 15.42 completed swaps/s, 104,044 PPU data writes and
+744 coherent flips. Its latest observed write is at frame-boundary dot 6,533 against
+the exclusive 7,161-dot deadline; the sampled minimum stack pointer is 0xA5,
+with no observed wrap. Eight synthetic upload cases also pass, including six
+full-dirty 22-job / 296-byte transfers and two OAM-only commits. Those synthetic
+cases pause debug audio; the normal movement and cadence tests cover active
+audio separately. Movement and full-dirty uploads remain material bottlenecks.
+
+Native instruction-hook profiles forward the original hooks and pass byte-neutral
+control replays. Audio still consumes approximately 12,062 CPU cycles per
+physical frame in stage 0 and 13,490 in stage 44, about 40–45% of the budget.
+The renderer consumes approximately 6,894 / 6,859 cycles per frame, while
+upload planning consumes 1,998 / 281. Dynamic profiles describe each observed
+workload, including its changed number of game updates and draws. They are
+not identical-work per-call comparisons; hook categorization can assign a
+small number of deferred branch/DMA cycles to a neighboring category.
+
+### Accuracy, negative controls and outstanding limits
+
+Fresh original Genesis CPU runs retain 2,678 common-function cases / 146,905
+instructions and 1,262 actor cases / 292,870 instructions, including 192
+observed HV samples and both actor implementations. The separate 55-stage,
+479-actor / 6,044-frame reference-flow run is assisted UIL execution. It does
+not establish a natural original-CPU playthrough.
+
+The final cartridge passes all 4,822 native complete-state cases across 79
+fields, 11,599 completed 34-field state/controller checks and 280 replayed
+HV words. Its feedback route reaches the goal at logical epoch 896 / host
+frame 1,194 and the next stage at epoch 1,146 / host frame 1,576. The fixed
+host-frame route still records its DNF. The projection gate passes 33,282
+native coordinate pairs. Terrain comparisons include 40,960 native cases,
+two distinct 65,536-case cache protocols and 2,236 native upload-planner calls.
+A matched-render comparison against the previous cartridge finds 229 shared
+complete 616-byte game states with matching epochs, and no differences in
+plane, palette, attributes, projection cache, OAM count or selected OAM page.
+
+The cartridge's 32 tracks plus mixed workload execute 270,752 audio services
+and 1,161 commands; all 2,579,855 ordered APU writes match the C reference.
+All five strict version-2 normal-cadence windows pass, each covering 3,000
+intervals after 100 warmup frames, 6,000 services and 5,935 source ticks.
+The first timing attempt correctly rejects the faster feedback capture because
+it has only 3,077 rows, below the unchanged 3,101-row requirement. A fresh
+capture appends 24 neutral frames, extending its post-transition tail from
+1,500 to 1,524. All 3,077 original-prefix frames, controls and raw states
+match; no timing rule or tolerance is relaxed. The short rejected observation
+is retained. A separate longer diagnostic capture is not counted again.
+
+Negative controls detect omitted staging invalidation, an ignored target-valid
+bit, incorrect animation masks and the historical mapper race. The final
+mapper test also passes its fixed cases. None of these finite comparisons
+prove whole-game semantic equivalence, Genesis pixel or waveform identity,
+physical NES operation, or general ROM-to-ROM translation.
+
+The full Mac suite records 2,771 passed, 142 skipped, 3 failed and 23 errors.
+The 26 failure/error identifiers match the previous environment's Linux/ELF
+and case-sensitive filesystem fixture problems; the full suite is not green.
+Final affected checks and source-package / installed-cartridge reproduction
+are recorded with the local and GitLab review receipts. The private source
+snapshot includes the new cache/hint checkers and sanitized evidence under
+distribution guards. This is a draft code update, with no integration merge,
+tag, package publication or system installation.

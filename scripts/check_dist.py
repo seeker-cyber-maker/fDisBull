@@ -54,6 +54,8 @@ REQUIRED_TEST_HELPERS |= {"scripts/check_console_udc.py", "scripts/check_minipla
                          "scripts/check_miniplanets_objects_native.py", "scripts/check_miniplanets_upload_plan.py",
                          "scripts/check_miniplanets_upload_stress.py", "scripts/check_miniplanets_nes_display.py",
                          "scripts/miniplanets_display_observer.c",
+                         "scripts/check_miniplanets_terrain_cache.py", "scripts/check_miniplanets_terrain_cache_sequence.py",
+                         "scripts/check_miniplanets_terrain_hints.py",
                          "tests/test_game_il.py", "tests/test_miniplanets_full.py",
                          "tests/test_console_udc_host.py", "tests/test_miniplanets_globe_assets.py",
                          "tests/test_miniplanets_nes_game.py", "tests/test_nes_audio_clock.py",
@@ -70,6 +72,7 @@ REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/miniplanets-full-game-2026-10-31/" +
                              "lowering-exploration.json")}
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/miniplanets-full-game-2026-10-31/optimization.json")
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/miniplanets-full-game-2026-10-31/display-optimization.json")
+REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/miniplanets-full-game-2026-10-31/uncapped-rendering.json")
 REQUIRED_SOURCE_EVIDENCE |= {"docs/MINIPLANETS_FULL_GAME.md",
                             "docs/evidence/miniplanets-full-game-2026-10-31/renderer-fast.json"}
 REQUIRED_CONSOLE_RESOURCES = {"game_il.py", "miniplanets_audio.py", "udl_miniplanets_full.py",

@@ -5,6 +5,7 @@
 #include "game_api.h"
 extern const u8 ending_ids[48];
 extern const u8 tile_palette[35];
+extern u8 upload_terrain_cached,upload_terrain_valid,upload_terrain_overlay;
 const u8 *terrain_pointer(u8 phase);
 u8 projection_bank(u8 phase);
 void select_data(u8 bank);
@@ -37,6 +38,10 @@ u8 globe_rowbase;
 u8 globe_colbase;
 u16 globe_atlas_pointer;
 void globe_clear(void);
+void globe_clear_planes(void);
+void globe_clear_oam(void);
+u8 globe_restore_terrain(void);
+void globe_save_terrain(void);
 void globe_copy_projection(void);
 void globe_paint_terrain(void);
 void globe_hud_attributes(void);
@@ -72,7 +77,12 @@ void draw_terrain(void) {
     globe_atlas_pointer=(u16)terrain_pointer((u8)anim);
     globe_rowbase=player_y & 240;
     globe_colbase=player_x>>4;
+    upload_terrain_cached=globe_restore_terrain();
+    if (upload_terrain_cached) return;
+    upload_terrain_valid=0;
+    globe_clear_planes();
     globe_paint_terrain();
+    globe_save_terrain();
 }
 
 void draw_ending_planet(void) {
@@ -201,9 +211,12 @@ void draw_menu(void) {
 
 void draw_game(void) {
     if (video_ready!=0) return;
+    upload_terrain_cached=0;
+    upload_terrain_overlay=ingame_status & 1;
     render_epoch=*(volatile u16*)0x7D2;
     render_oam_page=render_oam_page==2 ? 3 : 2;
-    globe_clear();
+    globe_clear_oam();
+    if (mode!=1 || ending_phase==3) globe_clear_planes();
     render_oam_index=0;oam_overflow=0;
     if (mode==1) {
         if (ending_phase==3) draw_ending_planet();else draw_terrain();

@@ -10,7 +10,7 @@ typedef unsigned char u8;typedef signed char i8;typedef unsigned int u16;
 u8 display_plane[256],display_palettes[256],projection_cache[256],world[256];
 u8 display_hud[24],display_attributes[16],lives,time_secs,stage_name,keys_left;
 u8 render_oam_page,render_oam_index,oam_overflow,globe_source_hi,globe_rowbase,globe_colbase;
-u16 globe_atlas_pointer,render_epoch;unsigned long score;
+u16 globe_atlas_pointer,render_epoch,anim;unsigned long score;
 const u8 tile_palette[35]={0};
 u8 objects[192],player_x,player_y,player_jump,player_die;
 void draw_objects(void);

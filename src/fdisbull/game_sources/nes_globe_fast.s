@@ -4,13 +4,16 @@
 .setcpu "6502"
 .export _globe_clear, _globe_copy_projection, _globe_paint_terrain, _globe_hud_attributes
 .export _draw_sprite, _draw_objects
+.export _globe_clear_planes, _globe_clear_oam
+.export _globe_restore_terrain, _globe_save_terrain
+.export _terrain_staging_valid
 .import _display_plane, _display_palettes, _projection_cache
 .import _render_oam_page, _render_oam_index, _oam_overflow
 .import _globe_source_hi, _globe_atlas_pointer
 .import _globe_rowbase, _globe_colbase, _world, _tile_palette
 .import _display_hud, _display_attributes, _score, _lives, _time_secs
 .import _stage_name, _keys_left
-.import _render_epoch, _player_x, _player_y, _player_jump, _player_die, _objects
+.import _render_epoch, _player_x, _player_y, _player_jump, _player_die, _objects, _anim
 .import _object_projection_pair, _mace_x, _mace_y, _banked_call
 .import pusha
 .import incsp3
@@ -19,12 +22,29 @@
 .segment "BSS"
 globe_tile_lo: .res 35
 globe_tile_hi: .res 35
+terrain_saved_plane: .res 256
+terrain_saved_palettes: .res 256
+terrain_saved_world: .res 256
+terrain_saved_x: .res 1
+terrain_saved_y: .res 1
+terrain_saved_anim: .res 1
+terrain_anim_mask: .res 1
+_terrain_staging_valid: .res 1
+terrain_saved_valid: .res 1
+terrain_world_match: .res 1
+terrain_previous_valid: .res 1
+terrain_previous_x: .res 1
+terrain_previous_y: .res 1
 
 .segment "RENDERFAST"
 
 ; Clear the two 256-byte staging planes and selected OAM page (2 or 3).
 _globe_clear:
+    jsr _globe_clear_planes
+    jmp _globe_clear_oam
+_globe_clear_planes:
     lda #0
+    sta _terrain_staging_valid
     ldx #0
 @planes:
     .repeat 8, chunk
@@ -34,6 +54,8 @@ _globe_clear:
     inx
     cpx #32
     bne @planes
+    rts
+_globe_clear_oam:
     ; The renderer selects only physical OAM page $02 or $03. Absolute
     ; indexed stores avoid incrementing an indirect pointer for every byte.
     lda #$ff
@@ -537,4 +559,159 @@ _draw_objects:
     beq :+
     jmp @loop
 :
+    rts
+
+; Return one only when the cached terrain is exactly reusable. The comparison
+; includes all 256 world bytes, full coordinates and a conservative mask of
+; every animation bit used by the world's tile classes. Other rendering modes
+; cannot modify the saved planes. BSS validity is invalidated by reset.
+_globe_restore_terrain:
+    lda #0
+    sta terrain_world_match
+    lda terrain_saved_valid
+    beq @miss
+    lda _player_x
+    cmp terrain_saved_x
+    bne @miss
+    lda _player_y
+    cmp terrain_saved_y
+    bne @miss
+    ldx #0
+@compare:
+    .repeat 4, chunk
+        lda _world+chunk*64,x
+        cmp terrain_saved_world+chunk*64,x
+        bne @miss
+    .endrepeat
+    inx
+    cpx #64
+    bne @compare
+    lda #1
+    sta terrain_world_match
+    lda _anim
+    eor terrain_saved_anim
+    and terrain_anim_mask
+    bne @miss
+    lda _player_x
+    sta terrain_previous_x
+    lda _player_y
+    sta terrain_previous_y
+    lda #1
+    sta terrain_previous_valid
+    jmp @restore
+@miss:
+    lda #0
+    rts
+@restore:
+    lda _terrain_staging_valid
+    beq @restore_full
+    ; PAUSED is the only normal terrain-plane overlay. Restore its entire
+    ; first row, including palette bytes, before drawing the next overlay.
+    ldx #0
+@restore_row:
+    lda terrain_saved_plane,x
+    sta _display_plane,x
+    lda terrain_saved_palettes,x
+    sta _display_palettes,x
+    inx
+    cpx #16
+    bne @restore_row
+    lda #1
+    rts
+@restore_full:
+    ldx #0
+@restore_loop:
+    .repeat 8, chunk
+        lda terrain_saved_plane+chunk*32,x
+        sta _display_plane+chunk*32,x
+        lda terrain_saved_palettes+chunk*32,x
+        sta _display_palettes+chunk*32,x
+    .endrepeat
+    inx
+    cpx #32
+    bne @restore_loop
+    lda #1
+    sta _terrain_staging_valid
+    rts
+
+; Save the freshly painted terrain and derive the conservative animation mask.
+; Class >=35 is clamped to 0 by painting and therefore has no animated bits.
+_globe_save_terrain:
+    ; A moving camera normally changes again next frame. Do not spend time
+    ; capturing a view until its coordinates have repeated at least once.
+    lda terrain_previous_valid
+    beq @remember
+    lda _player_x
+    cmp terrain_previous_x
+    bne @remember
+    lda _player_y
+    cmp terrain_previous_y
+    beq @capture
+@remember:
+    lda _player_x
+    sta terrain_previous_x
+    lda _player_y
+    sta terrain_previous_y
+    lda #1
+    sta terrain_previous_valid
+    rts
+@capture:
+    lda _player_x
+    sta terrain_saved_x
+    lda _player_y
+    sta terrain_saved_y
+    lda _anim
+    sta terrain_saved_anim
+    ldx #0
+@save_planes:
+    .repeat 8, chunk
+        lda _display_plane+chunk*32,x
+        sta terrain_saved_plane+chunk*32,x
+        lda _display_palettes+chunk*32,x
+        sta terrain_saved_palettes+chunk*32,x
+    .endrepeat
+    inx
+    cpx #32
+    bne @save_planes
+    lda terrain_world_match
+    bne @saved
+    lda #0
+    sta terrain_anim_mask
+    ldx #0
+@save_world:
+    lda _world,x
+    sta terrain_saved_world,x
+    cmp #3
+    beq @slow
+    cmp #23
+    bcc @other
+    cmp #35
+    bcs @next
+@slow:
+    lda terrain_anim_mask
+    ora #$18
+    sta terrain_anim_mask
+    jmp @next
+@other:
+    cmp #18
+    bne @belt
+    lda terrain_anim_mask
+    ora #$0c
+    sta terrain_anim_mask
+    jmp @next
+@belt:
+    cmp #11
+    bcc @next
+    cmp #15
+    bcs @next
+    lda terrain_anim_mask
+    ora #$07
+    sta terrain_anim_mask
+@next:
+    inx
+    bne @save_world
+@saved:
+    lda #1
+    sta _terrain_staging_valid
+    sta terrain_saved_valid
     rts

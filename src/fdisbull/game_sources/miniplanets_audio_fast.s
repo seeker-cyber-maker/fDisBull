@@ -51,6 +51,78 @@ af_product:
   .endrepeat
 .endrepeat
 af_psg_gain: .byte 15,12,9,8,6,5,4,3,2,2,2,1,1,1,1,0
+af_psg_attenuation:
+.repeat 41, I
+  .byte ((I*3)>>3)
+.endrepeat
+
+.macro af_fm_envelope_tick CHANNEL
+    ; Sustain and stopped slots have no C-side state transition to perform.
+    lda _audio_envelope_phase+CHANNEL
+    beq :+
+    cmp #3
+    beq :+
+    ldx #CHANNEL
+    jsr af_fm_envelope
+:
+.endmacro
+
+.macro af_volume_channel CHANNEL
+    .local no_effect_slot, mute, store
+    ldx #CHANNEL
+    lda _audio_owner+CHANNEL
+    beq no_effect_slot
+    ldx #(CHANNEL+16)
+no_effect_slot:
+    lda _audio_pan,x
+    beq mute
+.if CHANNEL < 8
+    lda _audio_envelope,x
+    beq mute
+    sta af_duration
+    ldy _audio_attenuation,x
+    lda af_gain,y
+    sta af_delta
+    lda af_duration
+    asl a
+    asl a
+    asl a
+    asl a
+    ora af_delta
+    tax
+    lda af_product,x
+.else
+    lda _audio_psg_level,x
+    cmp #16
+    bcc mute
+    lsr a
+    lsr a
+    lsr a
+    lsr a
+    eor #15
+    sta af_delta
+    lda _audio_attenuation,x
+    cmp #41
+    bcc :+
+    lda #40
+:
+    tax
+    lda af_psg_attenuation,x
+    clc
+    adc af_delta
+    cmp #16
+    bcc :+
+    lda #15
+:
+    tax
+    lda af_psg_gain,x
+.endif
+    bne store
+mute:
+    lda #0
+store:
+    sta _audio_current_volume+CHANNEL
+.endmacro
 
 _audio_render_reset:
     lda #255
@@ -78,12 +150,10 @@ _audio_render_tick:
 .endrepeat
 :
 .repeat 3, I
-    ldx #(22-I)
-    jsr af_fm_envelope
+    af_fm_envelope_tick (22-I)
 .endrepeat
 .repeat 3, I
-    ldx #(18-I)
-    jsr af_fm_envelope
+    af_fm_envelope_tick (18-I)
 .endrepeat
     lda _audio_sfx_phase
     bne :+
@@ -93,76 +163,15 @@ _audio_render_tick:
 .endrepeat
 :
 .repeat 3, I
-    ldx #(6-I)
-    jsr af_fm_envelope
+    af_fm_envelope_tick (6-I)
 .endrepeat
 .repeat 3, I
-    ldx #(2-I)
-    jsr af_fm_envelope
+    af_fm_envelope_tick (2-I)
 .endrepeat
 
-    ldy #11
-@volumes:
-    sty af_channel
-    tya
-    ldx _audio_owner,y
-    beq :+
-    ora #16
-:   tax
-    lda _audio_pan,x
-    beq @mute
-    cpy #8
-    bcs @psg_volume
-    lda _audio_envelope,x
-    beq @mute
-    ldy _audio_attenuation,x
-    lda af_gain,y
-    sta af_delta
-    lda _audio_envelope,x
-    asl a
-    asl a
-    asl a
-    asl a
-    ora af_delta
-    tax
-    lda af_product,x
-    jmp @volume_ready
-@psg_volume:
-    lda _audio_psg_level,x
-    cmp #16
-    bcc @mute
-    lsr a
-    lsr a
-    lsr a
-    lsr a
-    eor #15
-    sta af_delta
-    lda _audio_attenuation,x
-    cmp #41
-    bcc :+
-    lda #40
-:   sta af_duration
-    asl a
-    clc
-    adc af_duration
-    lsr a
-    lsr a
-    lsr a
-    clc
-    adc af_delta
-    cmp #16
-    bcc :+
-    lda #15
-:   tax
-    lda af_psg_gain,x
-    jmp @volume_ready
-@mute:
-    lda #0
-@volume_ready:
-    ldy af_channel
-    sta _audio_current_volume,y
-    dey
-    bpl @volumes
+    .repeat 12, CHANNEL
+      af_volume_channel CHANNEL
+    .endrepeat
 
     lda #255
     sta af_lead
@@ -171,28 +180,32 @@ _audio_render_tick:
     ldy #10
 @first_lead:
     lda _audio_current_volume,y
-    beq :+
+    beq @next_lead
     sty af_lead
-:   dey
+    lda _audio_owner,y
+    beq @next_lead
+    sty af_other
+@next_lead:
+    dey
     bpl @first_lead
     lda af_lead
     cmp #255
     bne :+
     jmp @selected
 :
-    ; Lowest numbered audible effect channel has lead priority.
-    ldy #10
-@effect_lead:
-    lda _audio_current_volume,y
+    ; The reverse volume scan kept both lowest-numbered lead candidates.
+    lda af_other
+    cmp #255
     beq :+
-    lda _audio_owner,y
-    beq :+
-    sty af_lead
-:   dey
-    bpl @effect_lead
+    sta af_lead
+:
+    lda #255
+    sta af_other
     lda #255
     sta af_minimum
     sta af_minimum+1
+    lda #0
+    sta af_count
     ldy #0
 @find_bass:
     cpy af_lead
@@ -203,38 +216,42 @@ _audio_render_tick:
     lda _audio_pitch+1,x
     cmp af_minimum+1
     bcc @lower
-    bne @next_bass
+    bne @store_tone
     lda _audio_pitch,x
     cmp af_minimum
-    bcs @next_bass
+    bcs @store_tone
 @lower:
     lda _audio_pitch,x
     sta af_minimum
     lda _audio_pitch+1,x
     sta af_minimum+1
     sty af_bass
-@next_bass:
-    iny
-    cpy #11
-    bcc @find_bass
-    lda #0
-    sta af_count
-    ldy #0
-@find_others:
-    cpy af_lead
-    beq @next_other
-    cpy af_bass
-    beq @next_other
-    lda _audio_current_volume,y
-    beq @next_other
+@store_tone:
     ldx af_count
     tya
     sta af_tones,x
     inc af_count
-@next_other:
+@next_bass:
     iny
     cpy #11
-    bcc @find_others
+    bcc @find_bass
+    ; The tone list was collected with the pitch scan. Compact out the bass
+    ; candidate while preserving ascending channel order for arpeggio picks.
+    ldx #0
+    ldy #0
+@compact_tones:
+    cpy af_count
+    bcs @compact_done
+    lda af_tones,y
+    cmp af_bass
+    beq @skip_bass_tone
+    sta af_tones,x
+    inx
+@skip_bass_tone:
+    iny
+    bne @compact_tones
+@compact_done:
+    stx af_count
     lda af_count
     beq @selected
     ldx _audio_round_robin
@@ -450,7 +467,7 @@ af_pulse:
     rts
 
 af_fm_envelope:
-    lda _audio_envelope_phase,x
+    ; Entry accumulator is the phase value preloaded by the unrolled caller.
     cmp #1
     beq @attack
     cmp #2

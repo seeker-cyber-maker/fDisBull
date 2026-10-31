@@ -19,6 +19,7 @@ PREAMBLE = r'''
 #include <string.h>
 typedef uint8_t u8; typedef uint16_t u16;
 static u8 player_x,player_y,anim,projection_cache[256],display_plane[256],display_palettes[256];
+static u8 upload_terrain_cached,upload_terrain_valid;
 static u8 projection_cache_valid,projection_cache_phase,globe_source_hi,globe_rowbase,globe_colbase,selected;
 static u16 globe_atlas_pointer; static unsigned copies;
 static u8 projection_bank(u8 phase){return phase>>5;}
@@ -28,6 +29,9 @@ static void globe_copy_projection(void){
     unsigned i;u8 phase=(u8)((selected<<5)|(globe_source_hi-0xa0));copies++;
     for(i=0;i<256;i++)projection_cache[i]=(u8)(phase*73u+i*47u+(phase^i));
 }
+static u8 globe_restore_terrain(void){return 0;}
+static void globe_clear_planes(void){memset(display_plane,0,256);memset(display_palettes,0,256);}
+static void globe_save_terrain(void){}
 static void globe_paint_terrain(void){
     unsigned i;for(i=0;i<256;i++){
         display_plane[i]=(u8)(projection_cache[i]+globe_rowbase+globe_colbase+globe_atlas_pointer);
@@ -105,7 +109,7 @@ def main():
     report={'passed':True,'result':run.stdout.strip(),'baseline_sha256':sha(baseline),'candidate_sha256':sha(candidate),
             'harness_sha256':sha(source.encode()),'check_sha256':sha((output/'check').read_bytes()),
             'compared':'projection cache, full plane and palette, data bank, source page, atlas pointer and row/column after each step',
-            'scope':'actual C draw_terrain bodies on host with synthetic immutable data; mode gaps leave cache unchanged; actual NES mapper/IRQ/full cartridge require separate checks'}
+            'scope':'actual C draw_terrain bodies on host with synthetic immutable data and forced terrain-cache misses; mode gaps leave projection cache unchanged; actual NES mapper/IRQ/full cartridge require separate checks'}
     (output/'receipt.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2))
 
 if __name__=='__main__':main()

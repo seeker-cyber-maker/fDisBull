@@ -20,7 +20,7 @@ u8 display_hud[24],display_attributes[16],lives,time_secs,stage_name,keys_left;
 u8 render_oam_page,render_oam_index,oam_overflow,globe_source_hi,globe_rowbase,globe_colbase;
 u16 globe_atlas_pointer;
 u32 score;
-u8 objects[192],player_x,player_y,player_jump,player_die;u16 render_epoch;
+u8 objects[192],player_x,player_y,player_jump,player_die;u16 render_epoch,anim;
 u8 mace_x(u8 slot){return slot;} u8 mace_y(u8 slot){return slot;}
 u16 object_projection_pair(u8 x,u8 y,u8 raft){return x+y+raft;}
 void banked_call(void){}

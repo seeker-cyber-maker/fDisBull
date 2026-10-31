@@ -351,6 +351,7 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
     debug = ['#include "game_api.h"',
              '#pragma wrapped-call(push,banked_call,bank)','void prepare_upload(void);','#pragma wrapped-call(pop)',
              'extern volatile unsigned char video_ready,render_phase;',
+             'extern unsigned char upload_terrain_cached,terrain_staging_valid;',
              'unsigned long debug_arg(unsigned char index);',
              'volatile unsigned long *debug_result=(volatile unsigned long*)0x7F0;',
              'void debug_dispatch(unsigned char id){unsigned int audio_i;switch(id){']
@@ -365,7 +366,7 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
                   'case 250:audio_init();*debug_result=0;break;',
                   'case 251:audio_request((unsigned char)debug_arg(0),(unsigned char)debug_arg(1));*debug_result=0;break;',
                   'case 252:for(audio_i=0;audio_i<(unsigned int)debug_arg(0) && audio_i<256;audio_i++)audio_tick();*debug_result=audio_i;break;',
-                  'case 253:if(video_ready==0){prepare_upload();render_phase=0;video_ready=1;*debug_result=0;}else *debug_result=0xFFFFFFFEUL;break;',
+                  'case 253:if(video_ready==0){upload_terrain_cached=0;terrain_staging_valid=0;prepare_upload();render_phase=0;video_ready=1;*debug_result=0;}else *debug_result=0xFFFFFFFEUL;break;',
                   'default:*debug_result=0xFFFFFFFFUL;break;}}'))
     (work/'debug.c').write_text('\n'.join(debug))
     # The dispatch itself is banked too; it is absent from the ordinary game

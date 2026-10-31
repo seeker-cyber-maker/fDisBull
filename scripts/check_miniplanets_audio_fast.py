@@ -148,11 +148,11 @@ int main(void){
             audio_gate[i]=random8()&1;audio_envelope[i]=random8()&15;audio_pan[i]=192;
             audio_duty[i]=random8()&3;audio_attack_ticks[i]=(random8()&7)+1;
             audio_decay_ticks[i]=(random8()&31)+1;audio_sustain[i]=random8()&15;
-            audio_release_ticks[i]=(random8()&31)+1;audio_envelope_phase[i]=(random8()&3)+1;
+            audio_release_ticks[i]=(random8()&31)+1;audio_envelope_phase[i]=(u8)((test+i*17)%6);
             audio_release_peak[i]=(random8()&15)+1;audio_envelope_counter[i]=random8();
-            audio_psg_level[i]=random8();audio_psg_tl[i]=random8();audio_psg_ar[i]=random8();
+            audio_psg_level[i]=(u8)(test+i*13);audio_psg_tl[i]=random8();audio_psg_ar[i]=random8();
             audio_psg_sl[i]=random8();audio_psg_dr[i]=random8();audio_psg_sr[i]=random8();audio_psg_rr[i]=random8();
-            audio_attenuation[i]=random8()&31;audio_pitch[i]=(u16)random8()*5;
+            audio_attenuation[i]=(u8)((test+i*37)&127);audio_pitch[i]=(u16)random8()*5;
             audio_pulse_period[i]=8+(u16)random8()*7;audio_triangle_period[i]=2+(u16)random8()*7;
             if((i&15)==3 || (i&15)==7 || (i&15)>=12){audio_gate[i]=0;audio_envelope[i]=0;audio_envelope_phase[i]=4;}
         }
