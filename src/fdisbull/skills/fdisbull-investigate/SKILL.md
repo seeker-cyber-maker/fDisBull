@@ -56,10 +56,16 @@ independent questions over pinned evidence; one controller owns a live guest's
 input, execution and restoration. Shared derivation is not independent evidence.
 The methodology reference describes the coverage, retry and handoff procedure.
 
+When normal progression cannot expose the needed code, use the bounded
+[diagnostic-entry and caller-reconstruction procedure](references/methodology.md#recover-behavior-beyond-ordinary-progression). Existing saves, alternate modes,
+constructed routine fixtures and forced entries can reveal mechanisms. Keep
+execution substrate, injected state, observed effects and ordinary reachability
+separate; a new-game run is not the complete behavior inventory.
+
 ## Match evidence to the claim
 
-Use the authorized ordinary interface to establish what was received and what
-the program did. Separate input delivery, consumption, action completion,
+For ordinary-interaction claims, use the authorized ordinary interface to
+establish what was received and what the program did. Separate input delivery, consumption, action completion,
 display and persistence. A visible control is not necessarily ready or enabled;
 a success code or plausible state variable does not prove a committed action.
 Follow the smallest useful causal interval from input and focus through dispatch,

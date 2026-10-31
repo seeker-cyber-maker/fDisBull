@@ -9,6 +9,7 @@ new tool API and does not authorize actions beyond the user's task.
 - [Plan depth and reuse evidence](#plan-depth-and-reuse-evidence)
 - [Parallelize independent questions](#parallelize-independent-questions)
 - [Screen for interpreted control flow](#screen-for-and-map-interpreted-control-flow)
+- [Recover behavior beyond ordinary progression](#recover-behavior-beyond-ordinary-progression)
 - [Select evidence](#select-evidence-for-the-exact-claim)
 - [Trace an action](#trace-a-complete-action-not-just-an-interesting-field)
 - [Triage failure](#triage-a-failed-interaction)
@@ -123,9 +124,11 @@ backend's timing is uncertain. Preserve pending trace-tail instructions and
 unsupported watch paths as unknown.
 
 Prefer execution-led discovery on relevant unresolved indirect targets over
-assuming where code must be stored: observe natural targets first. Where useful
-and authorized, a disposable checkpoint can support a bounded counterfactual
-branch force; declare the changed condition, preconditions and possible side
+assuming where code must be stored. Reuse an available natural target witness
+when it answers the question cheaply; its absence is not a prerequisite failure
+for diagnostic recovery. The bounded procedure below supports isolated entries
+and caller reconstruction. Where useful and authorized, a disposable checkpoint
+can support a counterfactual branch force; declare the changed condition, preconditions and possible side
 effects, and keep forced reachability distinct from ordinary reachability.
 Observed valid CPU execution establishes code use only for those bytes and that
 context; attempted fetch, decoder acceptance or a corrupted forced pointer does
@@ -141,6 +144,142 @@ requested causal claim is supported to its needed scope, when a bounded test
 reasonably favors an alternative, or when cost/capability prevents a useful
 next discriminator; report evidence, limits and the condition for reopening.
 
+## Recover behavior beyond ordinary progression
+
+A new-game route is not the universe of a program's behavior. Existing saves,
+alternate scenarios, multiplayer, progression-dependent features, rare events,
+error/recovery paths, disabled content and dynamically loaded modules can expose
+code absent from that route. Lack of a playable route is a reason to change the
+investigation method, not to stop recovering the mechanism or call it dead code.
+Use the least expensive preparation that answers the current question; do not
+require a full playthrough merely to study an asset decoder or a bounded helper.
+
+### Keep execution and reachability on separate axes
+
+Record these properties separately rather than assigning one vague "verified"
+label:
+
+| Axis | Examples and limits |
+| --- | --- |
+| Implementation exercised | Original CPU instructions; original VM instructions through their interpreter; an external compatible implementation; an authored model. Agreement does not make these interchangeable or independent. |
+| Execution environment | Full original process/guest; stopped original session with interventions; isolated CPU routine with constructed memory; mocked external service. CPU execution on a host does not reproduce DOS, an extender, devices or timing. |
+| Preparation provenance | Ordinary input route; preserved earlier save/scenario; source-derived caller fixture; explicitly hypothetical state; deliberately invalid negative control. A successful forced call remains a forced call. |
+| Observation boundary | Attempted fetch, executed instruction, memory access, return, effect commitment, displayed output, persistent result. Observe the boundary needed for the claim. |
+| Reachability | Recorded ordinary route; conditional source path; diagnostic-only access; candidate; local infeasibility; unresolved. Unvisited is not unreachable, and local infeasibility is not global deadness. |
+
+A diagnostic result can be valuable without ordinary reachability. For example,
+exact original decompression matching actual resource bytes supports that codec
+implementation under the supplied ABI, but does not establish normal file-open,
+audio/video playback, whole-game timing or a legal player shortcut.
+
+### Prepare a bounded diagnostic entry
+
+A "glitch jump" is an explicit intervention, not an instruction to jump blindly.
+Before execution, retain a compact recipe using existing notes/receipts:
+
+1. **Question and discriminator.** State the candidate mechanism, predicted
+   effect, competing explanation, comparison boundary and useful negative control.
+   Choose a routine entry or known instruction boundary. For bytecode, use a
+   supported VM entry and its interpreter context rather than making the CPU
+   execute script bytes.
+2. **Exact source and context.** Pin source/container and mapped-byte version,
+   resource dependencies, ISA/mode, address/segment interpretation, load mapping,
+   backend/harness identity and any external implementation already consulted.
+   A graphics buffer or sound driver may have to be loaded first.
+3. **State manifest.** Record supplied registers and flags, stack layout and
+   return/continuation, arguments, pointer extents and permissions, initialized
+   globals, heap objects, tables, handles and outstanding callbacks. Mark each
+   as inherited from an observed state, recovered from a caller/loader, authored
+   hypothesis, deliberately invalid control, or unavailable. Do not claim that
+   source-derived values were observed in a natural session.
+4. **Isolation and ownership.** One controller mutates each trial. Use a fresh
+   disposable process/fixture or a qualified snapshot plus explicit host-file
+   copies. Preserve originals. A checkpoint does not roll back external writes;
+   keep network, persistence and unsupported services blocked or explicitly
+   modeled. A bare instruction runner is not a general malware sandbox.
+5. **Bounds and stops.** Set instruction/step, wall/CPU, memory/output and retry
+   budgets appropriate to the available substrate. Establish a return sentinel
+   or bounded semantic stop, forbidden calls/I/O, unknown-entry policy and owned
+   process cleanup. Report a limit that cannot be enforced rather than inventing
+   it. Never leave the original guest running after a harness timeout.
+6. **Observation.** Capture the relevant initial/final state, writes and ordered
+   effects, executed entry/exit, first unexpected read/call/fault, stop reason and
+   external-file disposition. Canaries or varied buffer fills can detect extent
+   mistakes. A selected stop before a jump does not prove its target ran.
+
+Do not repair every fault by mapping more zeroed memory or fabricating a
+successful service return. The first failing dependency is evidence of a missing
+precondition, bad pointer, incorrect ABI, wrong generation or environmental
+boundary. Inspect that dependency and return to its writer/caller. An explicitly
+stubbed service has its own declared return/effect contract; it cannot qualify
+behavior hidden behind the stub. Missing result data remains unknown.
+
+### Execute, discriminate, then work backward
+
+Start with the smallest useful preparation, preferring source-supported state
+and marking any hypothesized ABI or inputs explicitly. Compare a baseline and
+one changed condition, then broaden the admitted domain where useful: zero and
+boundary counts, signed/unsigned widths, high register bits, relevant flags,
+aliasing versus disjoint memory, missing registry entries, transparent pixels,
+clip boundaries or truncated input. Repeat each arm from its own clean state;
+do not carry an accidental partial effect into the next test.
+
+Inspect actual executed PCs and side effects before naming the routine. A
+no-op return, partial write, trap, instruction limit and successful return are
+different results. A zero iteration count can underflow a LOOP-style helper;
+a fault in a constructed sprite destination is not automatically a shipping
+game defect. Keep failed preparations and the corrections that made the next
+probe informative. Repeated uninformative attempts trigger a new hypothesis or
+boundary, not a larger unbounded loop.
+
+Then build a backward obligation chain from the demonstrated effect:
+
+- Find callers, branches, indirect-target producers and registered callbacks.
+  Recover argument widths, ranges, masks, mode flags, stack/heap disjointness and
+  relevant live state. A known initial pointer does not prove it is unchanged.
+- Follow the loaders/writers of required tables, buffers and objects. Connect
+  file offset -> decode/copy -> loaded object -> consumer, and identify external
+  executables, overlays, drivers or script resources instead of limiting the
+  search to the initial executable. Preserve the exact offset base at each edge.
+- Construct the next larger caller fixture or splice only into a qualified
+  paused state. Reuse established setup and test the newly added obligation;
+  do not repeatedly rerun the whole game. Record every artificial intervention.
+- Seek a legitimate preparation from scenario selection, an existing save,
+  alternate mode, ordinary event or recoverable input sequence when that claim
+  matters. A candidate route remains a hypothesis until exercised or supported
+  by the stated source-path proof. Diagnostic access is not automatically an
+  in-game cheat, speedrun-legal route or evidence of intended design.
+
+Source checks and diagnostic counterexamples can refine contracts without
+normal play. If a comparison uses an old loaded value but a possible aliasing
+store changes the subsequent reload, retain the alias obligation. Disjoint
+synthetic buffers demonstrate one admitted case; they do not prove all real
+callers are disjoint. Seek the actual allocation and caller constraints.
+
+### Turn discoveries into reusable coverage
+
+Track physical bytes, candidate decodes, decoded edges, actual executed paths,
+conditional routine effects, resource formats and player-visible behavior as
+separate coverage sets. Queue newly supported case targets as candidates, not
+proved edges or functions merely because they decode. Keep overlapping entries
+and source generations. A drained queue does not cover unseen dynamic modules.
+
+For assets, separate outer compression, inner container and original consumer.
+Check actual sizes/offsets and available integrity fields; compare an external
+format proposal against the selected edition. Shared extensions do not guarantee
+shared encoding. A temporary normalization adapter must state every changed
+header, supplied timing and excluded payload. Decoder success does not authorize
+removing a frame, loop or audio duration from the playable game.
+
+Publish a reusable recipe with its valid domain, intervention/state manifest,
+expected effects, counterexamples, unresolved caller/environment obligations,
+source dependencies and next discriminator. Use small summaries linked to
+private traces; exclude original assets, source-containing databases and memory
+images from public examples. Skill guidance does not imply that an installed
+backend already supports arbitrary register mutation, protected-mode launch or
+isolated execution. Check its actual capability, use an explicitly qualified
+research harness when appropriate, and disclose that substitution.
+
 ## Select evidence for the exact claim
 
 | Claim | Evidence needed |
@@ -150,7 +289,7 @@ next discriminator; report evidence, limits and the condition for reopening.
 | An action committed | The relevant state transition or acknowledged output; pending state alone is insufficient |
 | A value is displayed | An authentic current capture; do not infer it from a raw field or assume a frame refreshed |
 | A result persists | The actual write and a fresh read through the target when claiming target reload behavior |
-| A formula governs a reachable operation | The mechanism, its call conditions and a qualifying authorized ordinary-interface route |
+| A formula governs an ordinary player-reachable operation | The mechanism, its call conditions and a qualifying authorized ordinary-interface route |
 
 There is no universal ranking in which screenshots always defeat memory or
 memory always defeats screenshots. Observable behavior constrains the
