@@ -1241,6 +1241,7 @@ def test_release_allowlists_include_only_the_public_udc_and_output_receipts():
         if line.startswith("include docs/evidence/output-024/")
     }
     assert output_receipts == OUTPUT_EVIDENCE_FILES
+<<<<<<< HEAD
     assert all((root / path).is_file() for path in OUTPUT_EVIDENCE_FILES)
     assert (
         set(CONSOLE_GAME_RESOURCES + CONSOLE_GAME_HELPERS + CONSOLE_GAME_EVIDENCE)
@@ -1467,3 +1468,30 @@ def test_selected_delivery_inventory_detects_omission_and_changed_bytes(tmp_path
             damaged[member] = b"modified after source inventory"
         with pytest.raises(ValueError, match=re.escape(name)):
             gate["check_payload"](inventory, damaged, kind)
+=======
+    assert all((root/path).is_file() for path in OUTPUT_EVIDENCE_FILES)
+
+
+@pytest.mark.parametrize('kind', ['source', 'wheel'])
+def test_distribution_check_requires_source_concepts_reference(tmp_path, kind):
+    check = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'scripts/check_dist.py'))['check_archive']
+    resource = 'skills/fdisbull-investigate/references/source-and-concepts.md'
+    if kind == 'source':
+        members = {'fdisbull-test/' + path for path in REQUIRED_SOURCE_FILES}
+        required = 'fdisbull-test/src/fdisbull/' + resource
+    else:
+        members = {path.removeprefix('src/') for path in REQUIRED_SOURCE_FILES
+                   if path.startswith('src/fdisbull/')}
+        members.add('fdisbull-0.dist-info/METADATA')
+        required = 'fdisbull/' + resource
+    suffix = '.whl' if kind == 'wheel' else '.zip'
+    archive = tmp_path / ('fdisbull-resource' + suffix)
+    with zipfile.ZipFile(archive, 'w') as output:
+        for member in sorted(members):
+            output.writestr(member, '')
+    assert check(archive) == len(members)
+    with zipfile.ZipFile(archive, 'w') as output:
+        for member in sorted(members - {required}):
+            output.writestr(member, '')
+    with pytest.raises(ValueError, match=re.escape(resource)):
+        check(archive)

@@ -894,6 +894,7 @@ REQUIRED_KNOWLEDGE_RESOURCES |= {
     "skills/write-gamefaqs-guide/references/source-examples.md",
 }
 
+REQUIRED_KNOWLEDGE_RESOURCES.add("skills/fdisbull-investigate/references/source-and-concepts.md")
 
 # Additional resources retained from the main integration line.
 REQUIRED_TEST_HELPERS |= {
