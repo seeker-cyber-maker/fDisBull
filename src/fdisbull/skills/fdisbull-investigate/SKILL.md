@@ -34,15 +34,26 @@ For archives, executable mappings or media reduction, read
 Use [references/workflows.md](references/workflows.md) to choose between static
 analysis, native investigation, scenes and text workflows. For research-led
 game recovery, source-reconstruction reuse or normal progression, read
-[references/recovery-research.md](references/recovery-research.md). Before costly
-rediscovery, look for matching reconstructed source and build recipes unless the
-task explicitly requires an independent recovery arm. Pin the edition and source
-revision, distinguish notes from executable results, and reuse qualified work
-without treating inferred names or a successful build as recovered meaning.
-Also collate guides, solutions, walkthroughs and analyses into provisional Z
-blueprints where a scene view is useful. Treat them as attributed behavioral
-hypotheses: weigh agreement by source lineage, retain outliers, and compare the
-untested draft with later code-backed behavior rather than skipping Z.
+[references/recovery-research.md](references/recovery-research.md). The default
+order is initial target analysis -> initial documentation pass -> provisional
+blueprints and hypotheses -> focused code/runtime verification. Identify what is
+readily available about the binary, resources, platform, engine and edition;
+record uncertainty rather than waiting for complete identification or recovery.
+Then retrieve applicable guides, solutions, walkthroughs, manuals, third-party
+reversing work, reconstructed source and build notes. Documentation is an early
+investigation step, not a rescue after getting stuck.
+
+Prefer exact matches, but do not require them for a useful hypothesis. Other
+versions, ports and other-language guides can suggest shared objects, rules and
+mechanisms. Record document language separately from the game edition described;
+carry the applicability gaps with each claim. Do not transfer offsets, object IDs
+or exact input sequences without checking the target. Use provisional Z
+blueprints where a scene view is useful; weigh agreement by source lineage,
+retain outliers, and compare the untested draft with later code-backed behavior.
+A local version mismatch does not invalidate unrelated claims from the same
+guide. Reuse qualified work without treating inferred names or successful builds
+as recovered meaning. Respect an explicitly independent recovery arm or a user
+restriction on external research; preserve that exception in the work record.
 When behavior may be
 interpreted from a guest script, look for evidence of the interpreter alongside
 native code and other explanations. Read
