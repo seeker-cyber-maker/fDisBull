@@ -53,19 +53,30 @@ def build(source, capture, artifact_loader):
     observations = capture.get('observations')
     require(isinstance(observations, dict), 'missing observations')
     actions = capture.get('actions')
-    require(isinstance(actions, list) and 1 <= len(actions) <= 3, 'expected one to three observed actions')
+    require(isinstance(actions, list) and 1 <= len(actions) <= 4, 'expected one to four observed actions')
     require(isinstance(actions[0], dict) and actions[0].get('id') == 'show-carrot', 'first action must be show-carrot')
     if len(actions) >= 2:
         require(isinstance(actions[1], dict) and actions[1].get('id') in ('lead-to-water', 'wander-away', 'leave-pen') and
                 actions[1].get('before') == actions[0].get('after'), 'actions are not a contiguous observed route')
-    bridge = len(actions) == 3
+    extension = None
+    if len(actions) >= 3:
+        require(actions[1]['id'] == 'leave-pen' and isinstance(actions[2], dict) and
+                actions[2].get('id') in ('troll-bridge', 'lead-to-water') and
+                actions[2].get('before') == actions[1].get('after'),
+                'third action requires a contiguous show-carrot and leave-pen route')
+        extension = actions[2]['id']
+    bridge = extension == 'troll-bridge'
+    water = extension == 'lead-to-water'
+    if len(actions) == 4:
+        require(water and isinstance(actions[3], dict) and actions[3].get('id') == 'leave-water' and
+                actions[3].get('before') == actions[2].get('after'), 'fourth action requires a contiguous water departure')
     fields = ('room', 'score', 'carrot', 'following', 'gate_open')
     if bridge:
-        require(actions[1]['id'] == 'leave-pen' and isinstance(actions[2], dict) and
-                actions[2].get('id') == 'troll-bridge' and actions[2].get('before') == actions[1].get('after'),
-                'bridge action requires a contiguous show-carrot and leave-pen route')
         require(25 in resources, 'missing bridge logic identity')
         fields += ('carrot_carried', 'troll_removed', 'troll_paid')
+    if water:
+        fields += ('carrot_carried', 'water_refused', 'goat_wandering', 'goat_retired', 'water_departure')
+        if len(actions) == 4: require(8 in resources, 'missing water departure logic identity')
     def observation(ident):
         require(isinstance(ident, str) and ident in observations, 'missing observation')
         value = observations[ident]
@@ -76,6 +87,8 @@ def build(source, capture, artifact_loader):
         if bridge:
             require(all(type(state.get(k)) is bool for k in ('carrot_carried', 'troll_removed', 'troll_paid')),
                     'incomplete bridge observed state')
+        if water:
+            require(all(type(state.get(k)) is bool for k in fields[5:]), 'incomplete water observed state')
         require(type(value.get('goat_visible')) is bool, 'missing explicit goat visibility observation')
         frame(value.get('frame'))
         return state, value['goat_visible']
@@ -94,6 +107,7 @@ def build(source, capture, artifact_loader):
             require(after['following'] and after['score'] == before['score'] + 5, 'unqualified carrot outcome')
         native_binding = None
         score_binding = None
+        branch_binding = None
         if action['id'] == 'leave-pen':
             require(before['room'] in (10, 11) and after['room'] not in (10, 11) and
                     before['carrot'] and after['carrot'] and before['following'] and after['following'] and
@@ -159,6 +173,49 @@ def build(source, capture, artifact_loader):
                              'after_score': proof['after_score'],
                              'writer': {k: writer[k] for k in ('source_offset', 'resume_offset', 'bx', 'al')},
                              'trace': {'sha256': trace['sha256'], 'count': trace['count']}}
+        if water and index >= 2:
+            if action['id'] == 'lead-to-water':
+                require(before['room'] == 9 and before['score'] == 7 and before['carrot'] and before['carrot_carried'] and
+                        before['following'] and not before['water_refused'] and
+                        after['room'] == 8 and after['score'] == 7 and after['carrot'] and after['carrot_carried'] and
+                        after['following'] and after['water_refused'] and after['goat_wandering'] and not after['goat_retired'],
+                        'unqualified water refusal outcome')
+                branch, logic, offset, opcode, argument, writer_offset, resume = 'water-refusal', 103, 381, 84, 13, 0x6dcb, 0x6dcf
+            else:
+                require(after['room'] == 9 and after['score'] == 7 and after['carrot'] and after['carrot_carried'] and
+                        not after['following'] and not after['water_refused'] and after['goat_retired'] and after['water_departure'],
+                        'unqualified water departure outcome')
+                require(after_visible is False, 'water departure needs explicit goat absence observation')
+                branch, logic, offset, opcode, argument, writer_offset, resume = 'water-departure', 8, 478, 13, 75, 0x7432, 0x7434
+            require(resources[logic].code[offset:offset+2] == bytes((opcode, argument)), 'water branch source instruction mismatch')
+            native = action.get('native_branch_effect')
+            require(isinstance(native, dict) and isinstance(native.get('path'), str) and bool(native['path']), 'missing native water branch effect')
+            raw = artifact_loader(native['path'])
+            require(isinstance(raw, bytes) and digest(raw) == native.get('sha256'), 'water branch effect hash mismatch')
+            try:
+                proof = json.loads(raw)
+            except (ValueError, UnicodeDecodeError) as exc:
+                raise ValueError('invalid native water branch effect') from exc
+            require(isinstance(proof, dict) and proof.get('format') == 'fdisbull-agi-goat-branch-effect-1' and
+                    proof.get('branch') == branch and proof.get('status') == 'verified' and proof.get('complete') is True and
+                    proof.get('native_execution') is True and proof.get('source_logic_sha256') == resources[logic].resource_sha256 and
+                    all(type(proof.get(k)) is int and proof[k] == value for k, value in
+                        (('source_logic', logic), ('source_offset', offset), ('opcode', opcode), ('argument', argument))),
+                    'native water branch effect not qualified')
+            writer = proof.get('writer')
+            require(isinstance(writer, dict) and all(type(writer.get(k)) is int and writer[k] == value for k, value in
+                    (('offset', writer_offset), ('resume_offset', resume))), 'water branch native writer differs')
+            trace = proof.get('trace')
+            require(isinstance(trace, dict) and isinstance(trace.get('path'), str) and bool(trace['path']) and
+                    type(trace.get('count')) is int and trace['count'] == 32, 'incomplete water branch trace')
+            trace_raw = artifact_loader(trace['path'])
+            require(isinstance(trace_raw, bytes) and bool(trace_raw) and digest(trace_raw) == trace.get('sha256'),
+                    'water branch trace hash mismatch')
+            branch_binding = {'sha256': native['sha256'], 'branch': branch, 'source_logic': logic,
+                              'source_logic_sha256': proof['source_logic_sha256'], 'source_offset': offset,
+                              'opcode': opcode, 'argument': argument,
+                              'writer': {k: writer[k] for k in ('offset', 'resume_offset')},
+                              'trace': {'sha256': trace['sha256'], 'count': trace['count']}}
         messages = action.get('messages')
         require(isinstance(messages, list), 'missing message observations')
         texts = []
@@ -183,12 +240,15 @@ def build(source, capture, artifact_loader):
             captured_messages = [(m['logic'], m['source_offset'], m['message_id']) for m in messages if m['logic'] == 25]
             require(captured_messages == [(25, 0x14c, 1), (25, 0x16a, 2), (25, 0x19f, 30)],
                     'bridge message capture count or identity differs')
-        checked.append((action, before, after, after_visible, texts, native_binding, score_binding))
+        if water and index == 2:
+            captured_messages = [(m['logic'], m['source_offset'], m['message_id']) for m in messages if m['logic'] == 103]
+            require(captured_messages == [(103, 375, 1)], 'water refusal message capture count or identity differs')
+        checked.append((action, before, after, after_visible, texts, native_binding, score_binding, branch_binding))
     variables = {'$phase': {'type': 'u8', 'initial': 0}}
     for field in fields:
         variables['$' + field] = {'type': 'bool' if type(initial[field]) is bool else 'u8', 'initial': initial[field]}
     programs = {}
-    for i, (action, before, after, _, texts, _, _) in enumerate(checked):
+    for i, (action, before, after, _, texts, _, _, _) in enumerate(checked):
         body = [{'id': 'guard-phase', 'op': 'require', 'condition': {'op': 'eq', 'left': {'var': '$phase'}, 'right': i}}]
         for name, value in before.items():
             if name in fields:
@@ -208,9 +268,15 @@ def build(source, capture, artifact_loader):
     if bridge:
         contexts[-1]['title'] = 'Observed bridge cleared'
         contexts[-1]['description'] = 'A partial reconstruction of the supplied bridge outcome.'
+    if water:
+        contexts[3]['title'] = 'Observed water refusal'
+        contexts[3]['description'] = 'A partial reconstruction of the supplied water refusal.'
+        if len(checked) == 4:
+            contexts[4]['title'] = 'Observed water departure'
+            contexts[4]['description'] = 'A partial reconstruction of the supplied water departure.'
     objects = [{'id': 'carrot', 'context': 'phase-0', 'label': 'carrot', 'aliases': [],
                 'description': 'A recorded carried item.', 'bindings': [],
-                'inventory_when': {'op': 'eq', 'left': {'var': '$carrot_carried' if bridge else '$carrot'}, 'right': True}},
+                'inventory_when': {'op': 'eq', 'left': {'var': '$carrot_carried' if bridge or water else '$carrot'}, 'right': True}},
                {'id': 'goat', 'context': 'phase-0', 'label': 'goat', 'aliases': [],
                 'description': 'The goat observed in the starting frame.',
                 'bindings': [{'verb': 'use', 'item': 'carrot', 'program': 'show-carrot'}]}]
@@ -222,6 +288,14 @@ def build(source, capture, artifact_loader):
         objects.append({'id': 'bridge', 'context': 'phase-2', 'label': 'bridge', 'aliases': [],
                         'description': 'The next recorded bridge encounter.',
                         'bindings': [{'verb': 'use', 'program': 'troll-bridge'}]})
+    if water:
+        objects.append({'id': 'water', 'context': 'phase-2', 'label': 'water', 'aliases': [],
+                        'description': 'The next recorded water encounter.',
+                        'bindings': [{'verb': 'use', 'program': 'lead-to-water'}]})
+        if len(checked) == 4:
+            objects.append({'id': 'exit', 'context': 'phase-3', 'label': 'exit', 'aliases': [],
+                            'description': 'The recorded departure from the water room.',
+                            'bindings': [{'verb': 'use', 'program': 'leave-water'}]})
     scene = {'format': 'fdisbull-il-scene-1', 'programs': programs, 'contexts': contexts,
              'objects': objects, 'partial': True}
     ILSceneBackend(scene)
@@ -230,8 +304,9 @@ def build(source, capture, artifact_loader):
                   'frames': frames, 'edges': [{'id': a['id'], 'before': a['before'], 'after': a['after'],
                                                'messages': [{k: m[k] for k in ('logic', 'source_offset', 'message_id')} for m in a['messages']],
                                                **({'native_invocation': native} if native else {}),
-                                               **({'native_score_write': score} if score else {})}
-                                              for a, _, _, _, _, native, score in checked],
+                                               **({'native_score_write': score} if score else {}),
+                                               **({'native_branch_effect': branch} if branch else {})}
+                                              for a, _, _, _, _, native, score, branch in checked],
                   'scope': 'Supplied ordinary-play observations; hashes do not authenticate capture or establish general gameplay behavior. Text commands are authored projections. Partial coverage; no native execution or durable save.'}
     return scene, provenance
 

@@ -82,12 +82,16 @@ class GoatRun:
                 require(msg['status']=='completed','Original message did not complete: '+str(msg.get('error')))
                 require(self.guest_elapsed<=self.guest_budget_ms and time.monotonic()<self.deadline,'Route budget exhausted after message')
                 self._arm()
+                self.message_observed(msg)
             else:require(out['outcome']=='guest_time','Unexpected native stop preserved')
         return self.state()
 
     def handle_stop(self,out):
         """Extensions must qualify their own stop before any further execution."""
         raise RuntimeError('Foreign stop preserved')
+
+    def message_observed(self,message):
+        """Optional source-bound observation hook; never advances the guest."""
 
     def _idle(self):
         k=self.d.keyboard_state().get('keyboard',{})

@@ -4,6 +4,9 @@ For a scene exported from ordinary gameplay, use the
 [normal goat encounter replay and exporter](AGI_NATURAL_GOAT.md), with the
 [troll-bridge continuation](AGI_TROLL_BRIDGE.md) as a third guarded action. The example
 below preserves the earlier independent diagnostic probes and their limits.
+The [qualified lake routes](AGI_GOAT_BRANCHES.md) add regular water refusal and
+room-exit retirement, and explain why the diagnostic invisible-wander branch
+has no normal-command witness under the recovered guards.
 
 `examples/agi/build_z_scene.py` creates a private, partial Z scene from the
 owner's KQ1 AGI 2.917 logic 103 and the checked-in diagnostic host receipt. It

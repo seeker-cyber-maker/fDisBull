@@ -360,3 +360,209 @@ def test_bridge_additional_messages_from_other_logic_keep_normal_binding(tmp_pat
     message['message_id'] = 2
     with pytest.raises(ValueError, match='instruction mismatch'):
         exporter.build(tmp_path, capture, load())
+
+
+def water_fixture(tmp_path, monkeypatch, departure=True):
+    capture, trial, bind = leave_fixture(tmp_path, monkeypatch)
+    base_loader = bind(trial)
+    goat_code = bytearray(500)
+    goat_code[375:377] = bytes([101, 1]); goat_code[381:383] = bytes([84, 13])
+    goat_code[450:452] = bytes([101, 1])
+    water_code = bytearray(500); water_code[478:480] = bytes([13, 75])
+    resources = {103: SimpleNamespace(resource_sha256='a' * 64, code=bytes(goat_code)),
+                 8: SimpleNamespace(resource_sha256='c' * 64, code=bytes(water_code))}
+    monkeypatch.setattr(exporter, 'load_logic', lambda _directory, _source, number, **kwargs: resources[number])
+    monkeypatch.setattr(exporter, 'logic_messages', lambda r: {r.resource_sha256: {'1': 'Authored water refusal.'}})
+    capture['source']['resources']['8'] = 'c' * 64
+    for index, observation in enumerate(capture['observations'].values()):
+        observation['state'].update(score=2 if index == 0 else 7, carrot_carried=True,
+                                    water_refused=False, goat_wandering=False, goat_retired=False, water_departure=False)
+    capture['observations']['o2']['state']['room'] = 9
+    refused = deepcopy(capture['observations']['o2'])
+    refused['state'].update(room=8, water_refused=True, goat_wandering=True)
+    refused['frame']['metadata']['frame_id'] = 4
+    capture['observations']['o3'] = refused
+    message = deepcopy(capture['actions'][0]['messages'][0]); message['source_offset'] = 375
+    capture['actions'].append({'id': 'lead-to-water', 'label': 'lead the goat to water', 'verb': 'use',
+                               'before': 'o2', 'after': 'o3', 'complete': True, 'messages_complete': True,
+                               'inputs': [deepcopy(capture['actions'][1]['inputs'][0])], 'messages': [message]})
+    specs = [('water-refusal', 103, 'a' * 64, 381, 84, 13, 0x6dcb, 0x6dcf)]
+    if departure:
+        departed = deepcopy(refused)
+        departed['state'].update(room=9, following=False, water_refused=False, goat_retired=True, water_departure=True)
+        departed['goat_visible'] = False; departed['frame']['metadata']['frame_id'] = 5
+        capture['observations']['o4'] = departed
+        capture['actions'].append({'id': 'leave-water', 'label': 'leave the water room', 'verb': 'use',
+                                   'before': 'o3', 'after': 'o4', 'complete': True, 'messages_complete': True,
+                                   'inputs': [deepcopy(capture['actions'][1]['inputs'][0])], 'messages': []})
+        specs.append(('water-departure', 8, 'c' * 64, 478, 13, 75, 0x7432, 0x7434))
+    trace = b'authored water branch fetch trace\n'
+    proofs = [{'format': 'fdisbull-agi-goat-branch-effect-1', 'branch': branch, 'status': 'verified',
+               'complete': True, 'native_execution': True, 'source_logic': logic, 'source_logic_sha256': sha,
+               'source_offset': offset, 'opcode': opcode, 'argument': argument,
+               'writer': {'offset': writer, 'resume_offset': resume},
+               'trace': {'path': branch + '.trace', 'sha256': sha256(trace).hexdigest(), 'count': 32}}
+              for branch, logic, sha, offset, opcode, argument, writer, resume in specs]
+    def load(trace_raw=trace):
+        artifacts = {}
+        for action, proof in zip(capture['actions'][2:], proofs):
+            name = proof['branch'] + '.json'; raw = json.dumps(proof).encode()
+            action['native_branch_effect'] = {'path': name, 'sha256': sha256(raw).hexdigest()}
+            artifacts[name] = raw; artifacts[proof['branch'] + '.trace'] = trace_raw
+        return lambda path: artifacts[path] if path in artifacts else base_loader(path)
+    return capture, proofs, load
+
+
+@pytest.mark.parametrize('departure', [False, True])
+def test_water_player_route_stale_repeat_and_checkpoint(tmp_path, monkeypatch, departure):
+    capture, proofs, load = water_fixture(tmp_path, monkeypatch, departure)
+    scene, evidence = exporter.build(tmp_path, capture, load())
+    backend = ILSceneBackend(scene); player = Player(backend)
+    assert 'no action sent' in player.execute('use water').lower()
+    assert player.execute('use carrot on goat').startswith('Success:')
+    assert player.execute('use route').startswith('Success:')
+    stale = backend.observe()['context']['token']
+    assert 'Authored water refusal.' in player.execute('use water')
+    assert backend.state['$room'] == 8 and backend.state['$score'] == 7 and backend.state['$following'] is True
+    assert backend.state['$water_refused'] is True and backend.state['$goat_wandering'] is True
+    assert backend.state['$goat_retired'] is False and backend.state['$carrot_carried'] is True
+    assert 'Observed water refusal' in player.execute('look')
+    assert backend.act({'verb': 'use', 'target': 'water', 'item': None, 'context_token': stale})['status'] == 'rejected'
+    assert 'no action sent' in player.execute('use water').lower()
+    assert backend.save('refused')['status'] == 'saved'
+    if departure:
+        assert player.execute('use exit').startswith('Success:')
+        assert backend.state['$room'] == 9 and backend.state['$score'] == 7 and backend.state['$following'] is False
+        assert backend.state['$water_refused'] is False and backend.state['$water_departure'] is True
+        assert backend.state['$goat_retired'] is True and backend.state['$carrot_carried'] is True
+        assert 'Observed water departure' in player.execute('look')
+        assert 'no action sent' in player.execute('use exit').lower()
+        assert backend.load('refused')['status'] == 'restored'
+        assert player.execute('use exit').startswith('Success:')
+    else:
+        assert 'no action sent' in player.execute('use exit').lower()
+    assert evidence['edges'][2]['native_branch_effect']['branch'] == 'water-refusal'
+    if departure: assert evidence['edges'][3]['native_branch_effect']['branch'] == 'water-departure'
+    assert 'Authored water refusal.' not in str(evidence)
+
+
+def test_existing_bridge_scene_and_provenance_bytes_unchanged(tmp_path, monkeypatch):
+    capture, proof, load = bridge_fixture(tmp_path, monkeypatch)
+    scene, evidence = exporter.build(tmp_path, capture, load())
+    assert sha256((json.dumps(scene, ensure_ascii=False, indent=2) + '\n').encode()).hexdigest() == \
+        '10b200a15beebaced97dbf0b2676329783b7d93d305b45725a05f69c622a0b2a'
+    assert sha256((json.dumps(evidence, ensure_ascii=False, indent=2) + '\n').encode()).hexdigest() == \
+        '7df3f564b8ac43e6171e77cf7bb7b52b8be5dfcd7fb2d52cbd7c19292b8aba2b'
+
+
+@pytest.mark.parametrize('observation', ['o0', 'o1', 'o2', 'o3', 'o4'])
+@pytest.mark.parametrize('field', ['carrot_carried', 'water_refused', 'goat_wandering', 'goat_retired', 'water_departure'])
+def test_water_requires_typed_extended_state_everywhere(tmp_path, monkeypatch, observation, field):
+    capture, proofs, load = water_fixture(tmp_path, monkeypatch)
+    del capture['observations'][observation]['state'][field]
+    with pytest.raises(ValueError, match='water observed state'):
+        exporter.build(tmp_path, capture, load())
+
+
+@pytest.mark.parametrize('observation, field, value', [
+    ('o2', 'room', 10), ('o2', 'score', 8), ('o2', 'carrot_carried', False),
+    ('o2', 'following', False), ('o2', 'water_refused', True),
+    ('o3', 'room', 9), ('o3', 'score', 8), ('o3', 'carrot', False), ('o3', 'carrot_carried', False),
+    ('o3', 'following', False), ('o3', 'water_refused', False), ('o3', 'goat_wandering', False), ('o3', 'goat_retired', True),
+    ('o4', 'room', 8), ('o4', 'score', 8), ('o4', 'carrot', False), ('o4', 'carrot_carried', False),
+    ('o4', 'following', True), ('o4', 'water_refused', True), ('o4', 'goat_retired', False), ('o4', 'water_departure', False),
+    ('o0', 'goat_wandering', 1),
+])
+def test_water_refuses_other_state_outcomes(tmp_path, monkeypatch, observation, field, value):
+    capture, proofs, load = water_fixture(tmp_path, monkeypatch)
+    capture['observations'][observation]['state'][field] = value
+    with pytest.raises(ValueError): exporter.build(tmp_path, capture, load())
+
+
+@pytest.mark.parametrize('visible', [None, True])
+def test_water_departure_needs_frame_absence_independent_of_drawn_flag(tmp_path, monkeypatch, visible):
+    capture, proofs, load = water_fixture(tmp_path, monkeypatch)
+    capture['observations']['o4'].update(goat_visible=visible, native_state={'goat': {'drawn': False}})
+    with pytest.raises(ValueError): exporter.build(tmp_path, capture, load())
+
+
+@pytest.mark.parametrize('fault', ['missing', 'duplicate', 'extra', 'incomplete', 'frame'])
+def test_water_refusal_requires_exact_completed_regular_print(tmp_path, monkeypatch, fault):
+    capture, proofs, load = water_fixture(tmp_path, monkeypatch)
+    messages = capture['actions'][2]['messages']
+    if fault == 'missing': messages.clear()
+    if fault == 'duplicate': messages.append(deepcopy(messages[0]))
+    if fault == 'extra': messages.append(deepcopy(capture['actions'][0]['messages'][0]))
+    if fault == 'incomplete': messages[0]['input_settled'] = False
+    if fault == 'frame': messages[0]['frame']['sha256'] = '0' * 64
+    with pytest.raises(ValueError): exporter.build(tmp_path, capture, load())
+
+
+@pytest.mark.parametrize('index', [0, 1])
+@pytest.mark.parametrize('field, value', [('format', 'other'), ('branch', 'wander-away'), ('status', 'incomplete'),
+                                        ('complete', False), ('native_execution', False), ('source_logic', 25),
+                                        ('source_logic_sha256', 'd' * 64), ('source_offset', 0),
+                                        ('opcode', 0), ('argument', 0)])
+def test_water_branch_proof_must_match_declared_source_occurrence(tmp_path, monkeypatch, index, field, value):
+    capture, proofs, load = water_fixture(tmp_path, monkeypatch)
+    proofs[index][field] = value
+    with pytest.raises(ValueError, match='branch effect not qualified'):
+        exporter.build(tmp_path, capture, load())
+
+
+@pytest.mark.parametrize('index', [0, 1])
+@pytest.mark.parametrize('field', ['offset', 'resume_offset'])
+def test_water_branch_writer_must_match(tmp_path, monkeypatch, index, field):
+    capture, proofs, load = water_fixture(tmp_path, monkeypatch)
+    proofs[index]['writer'][field] += 1
+    with pytest.raises(ValueError, match='native writer differs'):
+        exporter.build(tmp_path, capture, load())
+
+
+@pytest.mark.parametrize('index', [0, 1])
+@pytest.mark.parametrize('fault', ['proof-missing', 'proof-hash', 'trace-missing', 'trace-path', 'trace-hash', 'trace-count', 'trace-bytes'])
+def test_water_branch_artifacts_are_required_and_hash_bound(tmp_path, monkeypatch, index, fault):
+    capture, proofs, load = water_fixture(tmp_path, monkeypatch)
+    if fault == 'trace-missing': del proofs[index]['trace']
+    if fault == 'trace-path': del proofs[index]['trace']['path']
+    if fault == 'trace-hash': proofs[index]['trace']['sha256'] = '0' * 64
+    if fault == 'trace-count': proofs[index]['trace']['count'] = 31
+    loader = load(trace_raw=b'changed trace') if fault == 'trace-bytes' else load()
+    if fault == 'proof-missing': del capture['actions'][index+2]['native_branch_effect']
+    if fault == 'proof-hash': capture['actions'][index+2]['native_branch_effect']['sha256'] = '0' * 64
+    with pytest.raises(ValueError): exporter.build(tmp_path, capture, loader)
+
+
+@pytest.mark.parametrize('logic, offset', [(103, 381), (8, 478)])
+def test_water_branch_source_operation_is_checked(tmp_path, monkeypatch, logic, offset):
+    capture, proofs, load = water_fixture(tmp_path, monkeypatch)
+    original = exporter.load_logic
+    def changed(*args, **kwargs):
+        resource = original(*args, **kwargs)
+        if args[2] != logic: return resource
+        code = bytearray(resource.code); code[offset+1] ^= 1
+        return SimpleNamespace(resource_sha256=resource.resource_sha256, code=bytes(code))
+    monkeypatch.setattr(exporter, 'load_logic', changed)
+    with pytest.raises(ValueError, match='source instruction mismatch'):
+        exporter.build(tmp_path, capture, load())
+
+
+@pytest.mark.parametrize('fault', ['third-disconnected', 'fourth-disconnected', 'third-id', 'fourth-id',
+                                  'second-id', 'fifth-action', 'missing-logic8'])
+def test_water_route_must_be_contiguous_and_declared(tmp_path, monkeypatch, fault):
+    capture, proofs, load = water_fixture(tmp_path, monkeypatch)
+    if fault == 'third-disconnected': capture['actions'][2]['before'] = 'o1'
+    if fault == 'fourth-disconnected': capture['actions'][3]['before'] = 'o2'
+    if fault == 'third-id': capture['actions'][2]['id'] = 'wander-away'
+    if fault == 'fourth-id': capture['actions'][3]['id'] = 'wander-away'
+    if fault == 'second-id': capture['actions'][1]['id'] = 'lead-to-water'
+    if fault == 'fifth-action': capture['actions'].append(deepcopy(capture['actions'][3]))
+    if fault == 'missing-logic8': del capture['source']['resources']['8']
+    with pytest.raises(ValueError): exporter.build(tmp_path, capture, load())
+
+
+def test_water_refusal_prefix_does_not_require_unobserved_departure_resource(tmp_path, monkeypatch):
+    capture, proofs, load = water_fixture(tmp_path, monkeypatch, departure=False)
+    del capture['source']['resources']['8']
+    scene, _ = exporter.build(tmp_path, capture, load())
+    assert set(scene['programs']) == {'show-carrot', 'leave-pen', 'lead-to-water'}
