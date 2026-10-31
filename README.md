@@ -67,6 +67,10 @@ it does not infer release contents from the package version. The
 [macOS app replication case study](docs/MACOS_APP_REPLICATION.md) records the
 remaining investigation features and the authored UIL model's limits.
 
+The [cpuinfo comparison](docs/CPUINFO_REPLICATION_COMPARISON.md) applies the
+native session tools to a separately identified AppKit replica. It retains
+authored source and measured default-menu/bar geometry with explicit limits.
+
 The 0.25.0 source lets you preserve a qualified Zork story as executable IR,
 recover a small action as game-level rules, and keep playing through the
 unrecovered parts. DinoPark's original-backed provider adds bounded
