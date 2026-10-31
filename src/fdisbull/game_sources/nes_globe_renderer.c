@@ -8,7 +8,7 @@ extern const u8 tile_palette[35];
 const u8 *terrain_pointer(u8 phase);
 u8 projection_bank(u8 phase);
 void select_data(u8 bank);
-i8 object_projection(u8 x,u8 y,u8 raft);
+u16 object_projection_pair(u8 x,u8 y,u8 raft);
 u8 ending_projection(u16 offset);
 
 volatile u8 display_plane[256];
@@ -29,6 +29,9 @@ u8 render_oam_index;
 u8 oam_overflow;
 u16 render_epoch;
 u8 projection_cache[256];
+/* BSS validity is cleared at reset; no other routine writes this cache. */
+u8 projection_cache_valid;
+u8 projection_cache_phase;
 u8 globe_source_hi;
 u8 globe_rowbase;
 u8 globe_colbase;
@@ -68,7 +71,11 @@ void draw_terrain(void) {
     phase=(u8)((player_y<<4)|(player_x & 15));
     select_data(projection_bank(phase));
     globe_source_hi=(u8)(0xA0+(phase & 31));
-    globe_copy_projection();
+    if (!projection_cache_valid || phase!=projection_cache_phase) {
+        globe_copy_projection();
+        projection_cache_phase=phase;
+        projection_cache_valid=1;
+    }
     globe_atlas_pointer=(u16)terrain_pointer((u8)anim);
     globe_rowbase=player_y & 240;
     globe_colbase=player_x>>4;
@@ -111,6 +118,7 @@ void draw_objects(void) {
     u8 first;
     u8 player_screen_y;
     u8 player_palette;
+    u16 projected;
     first=(u8)render_epoch;
     if (first>=192) first=first-192;
     if (first>=96) first=first-96;
@@ -142,8 +150,9 @@ void draw_objects(void) {
         relative_x=relative_x+128;
         relative_y=relative_y+128;
         raft=(type>=2 && type<=5);
-        x=(u8)(124+object_projection(relative_x,relative_y,raft));
-        y=(u8)(148+object_projection(relative_y,relative_x,raft));
+        projected=object_projection_pair(relative_x,relative_y,raft);
+        x=(u8)(124+(u8)projected);
+        y=(u8)(148+(u8)(projected>>8));
         if (raft) {
             x=(u8)(x-4);y=(u8)(y-4);
             draw_sprite(x,y,36,1);

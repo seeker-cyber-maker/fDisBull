@@ -95,6 +95,8 @@ clear:
  bne clear
  lda #0
  jsr select_code
+ lda #$ff
+ sta data_bank
  lda #0
  jsr _select_data
  lda #1

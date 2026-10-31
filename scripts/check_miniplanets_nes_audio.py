@@ -112,10 +112,11 @@ def check(args):
         if len(raw)!=receipt['length'] or sha(raw)!=receipt['sha256']:
             raise ValueError('captured runtime resource identity mismatch: '+name)
         resource_paths.append(resource)
-    runtime=ROOT/'src/fdisbull/game_sources/miniplanets_audio_nes.c'
+    source_dir=Path(getattr(args,'source_dir',None) or ROOT/'src/fdisbull/game_sources').resolve()
+    runtime=source_dir/'miniplanets_audio_nes.c'
     sources=manifest['adapter_sources']
     if sha(runtime.read_bytes())!=sources[runtime.name]:raise ValueError('live C oracle differs from captured cartridge adapter')
-    assembly=ROOT/'src/fdisbull/game_sources/miniplanets_audio_fast.s'
+    assembly=source_dir/'miniplanets_audio_fast.s'
     if sha(assembly.read_bytes())!=sources[assembly.name]:raise ValueError('live assembly differs from captured cartridge adapter')
     labels={}
     for line in labels_path.read_text().splitlines():
@@ -138,12 +139,15 @@ def check(args):
     for source in (runtime,assembly,Path(__file__).resolve(),ROOT/'scripts/check_miniplanets_audio.py',
                    ROOT/'scripts/capture_miniplanets_audio.py',ROOT/'src/fdisbull/miniplanets_audio.py'):
         (retained/source.name).write_bytes(source.read_bytes())
-    (out/'host-bindings.c').write_text(host_bindings(audio))
+    (out/'host-bindings.c').write_text(host_bindings(audio,trace_apu=True))
     host_path=out/('reference.dylib' if sys.platform=='darwin' else 'reference.so')
     build=subprocess.run([args.cc,'-std=c89','-O2','-shared','-fPIC','-DFDISBULL_AUDIO_HOST',str(runtime),str(out/'host-bindings.c'),'-o',str(host_path)],capture_output=True,text=True)
     (out/'host-build.txt').write_text(build.stdout+build.stderr)
     if build.returncode:raise RuntimeError(build.stderr[-3000:])
     reference=C.CDLL(str(host_path));reference.audio_request.argtypes=[C.c_ubyte,C.c_ubyte];reference.audio_busy.restype=C.c_ubyte
+    host_apu_count=C.c_uint.in_dll(reference,'host_apu_count')
+    host_apu_address=(C.c_ushort*65536).in_dll(reference,'host_apu_address')
+    host_apu_value=(C.c_ubyte*65536).in_dll(reference,'host_apu_value')
     host={}
     for name,count in BYTE_FIELDS.items():host[name]=(C.c_ubyte*count).in_dll(reference,'audio_'+name)
     for name,count in WORD_FIELDS.items():host[name]=(C.c_uint*count).in_dll(reference,'audio_'+name)
@@ -180,6 +184,27 @@ def check(args):
     if lib.retro_get_memory_size(2)!=2048 or lib.retro_get_memory_size(0)!=8192:raise RuntimeError('unexpected NES RAM mapping')
     system=(C.c_ubyte*2048).from_address(system_ptr);save_ram=(C.c_ubyte*8192).from_address(save_ptr)
     frames=0;commands=0;maximum_frames=0;trace=[];start=time.perf_counter()
+    native_apu=[];apu_writes_checked=0;apu_digest=hashlib.sha256()
+    write_table=(C.c_void_p*65536).in_dll(lib,'BWrite')
+    apu_addresses=(*range(0x4000,0x4014),0x4015,0x4017)
+    WRITE=C.CFUNCTYPE(None,C.c_uint32,C.c_uint8)
+    saved_writes={address:write_table[address] for address in apu_addresses}
+    original_writes={address:WRITE(pointer) for address,pointer in saved_writes.items()}
+    @WRITE
+    def observe_apu(address,value):
+        original_writes[address](address,value)
+        native_apu.append((address,value))
+    def install_observer():
+        for address in apu_addresses:write_table[address]=C.cast(observe_apu,C.c_void_p).value
+    def remove_observer():
+        for address,pointer in saved_writes.items():write_table[address]=pointer
+    lib.retro_serialize_size.restype=C.c_size_t
+    for name in ('retro_serialize','retro_unserialize'):
+        function=getattr(lib,name);function.argtypes=[C.c_void_p,C.c_size_t];function.restype=C.c_bool
+    def serialized():
+        value=C.create_string_buffer(lib.retro_serialize_size())
+        if not lib.retro_serialize(value,len(value)):raise AssertionError('native serialize failed')
+        return value.raw
     def frame(*,guard=True):
         nonlocal frames
         lib.retro_run();frames+=1
@@ -194,8 +219,9 @@ def check(args):
         result['status_busy']=[save_ram[labels['_status_busy']-0x6000]]
         return result
     def command(procedure,arguments=()):
-        nonlocal commands,maximum_frames
+        nonlocal commands,maximum_frames,apu_writes_checked
         if system[0x7d5]:raise AssertionError('previous native command is unfinished')
+        native_apu.clear()
         epoch=system[0x7d2]|system[0x7d3]<<8
         raw=b''.join(int(value).to_bytes(4,'little') for value in (*arguments,*([0]*(4-len(arguments)))))
         system[0x7d9:0x7e9]=raw;system[0x7d6]=procedure;system[0x7d5]=1
@@ -203,6 +229,14 @@ def check(args):
             frame()
             if not system[0x7d5]:
                 if (system[0x7d2]|system[0x7d3]<<8)!=(epoch+1)&65535:raise AssertionError('native completion epoch differs')
+                count=host_apu_count.value
+                if count>65536:raise AssertionError('portable APU trace capacity exceeded')
+                expected=[(host_apu_address[i],host_apu_value[i]) for i in range(count)]
+                if native_apu!=expected:
+                    (out/'apu-mismatch.json').write_text(json.dumps({'procedure':procedure,'native':native_apu,'expected':expected},indent=2)+'\n')
+                    raise AssertionError('native/portable ordered APU writes differ')
+                for address,value in native_apu:apu_digest.update(address.to_bytes(2,'little')+bytes((value,)))
+                apu_writes_checked+=count;host_apu_count.value=0
                 commands+=1;maximum_frames=max(maximum_frames,waited);return snapshot()
         raise AssertionError(f'native audio command{procedure} exceeded{args.command_frames}frames')
     def compare(actual,engine,shadow):
@@ -219,10 +253,25 @@ def check(args):
             if actual[name]!=value:raise AssertionError(f'independently decoded source voice state differs in{name}')
         if actual['error']!=[0]:raise AssertionError('native source audio decoder fault')
     receipts=[];shadow=LogicalVoices()
+    observer_neutral=False
     try:
         for _ in range(80):system[0x7d4]=1;frame(guard=False)
         if system[0x7ed]:raise AssertionError('native bootstrap did not reach its fault-free boundary')
         if snapshot()['interrupt_count']!=[0]:raise AssertionError('audio advanced before controlled debug boundary')
+        # Exact replay qualifies the forwarding hook before using its trace.
+        initial=serialized()
+        def neutral_init():
+            system[0x7d9:0x7e9]=bytes(16);system[0x7d6]=250;system[0x7d5]=1
+            for _ in range(args.command_frames):
+                frame()
+                if not system[0x7d5]:return
+            raise AssertionError('neutral APU observer command timed out')
+        neutral_init();unhooked=serialized()
+        saved=C.create_string_buffer(initial)
+        if not lib.retro_unserialize(saved,len(initial)):raise AssertionError('native restore failed')
+        install_observer();neutral_init()
+        observer_neutral=serialized()==unhooked
+        if not observer_neutral:raise AssertionError('forwarding APU observer changed serialized core state')
         for track in audio['tracks']:
             kind=1 if track['kind']=='bgm' else 2;ident=track['track']+1 if kind==1 else track['track']-12
             engine=SonaEngine(audio);shadow.reset();reference.audio_init();actual=command(250);compare(actual,engine,shadow)
@@ -280,7 +329,7 @@ def check(args):
                  'claim':'failed controlled native audio check; an observation with a pending command is not completed-call evidence'}
         (out/'receipt.json').write_text(json.dumps(failure,indent=2)+'\n')
         raise
-    finally:lib.retro_unload_game();lib.retro_deinit()
+    finally:remove_observer();lib.retro_unload_game();lib.retro_deinit()
     after={str(path):sha(path.read_bytes()) for path in inputs}
     if after!=before:raise AssertionError('source/cartridge/core/compiler/harness changed during mapped audio check')
     raw=(json.dumps(trace,separators=(',',':'))+'\n').encode();(out/'trace.json').write_bytes(raw)
@@ -291,6 +340,8 @@ def check(args):
              'cases':receipts,'interrupts_checked':sum(r['interrupts'] for r in receipts),'completed_commands':commands,
              'maximum_command_host_frames':maximum_frames,'host_frames':frames,'wall_seconds':time.perf_counter()-start,
              'trace_sha256':sha(raw),'inputs_unchanged':True,'input_hashes':before,
+             'ordered_apu_writes_checked':apu_writes_checked,'ordered_apu_sha256':apu_digest.hexdigest(),
+             'apu_forwarding_observer_serialized_neutral':observer_neutral,
              'claim':'completed controlled native banked audio calls match decoded Python source state and portable C; not normal real-time cadence, waveform parity or natural UI coverage'}
     (out/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n');return receipt
 
@@ -299,6 +350,7 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     for name in ('rom','cartridge','core','cc65-root','output'):parser.add_argument('--'+name,required=True)
     parser.add_argument('--manifest');parser.add_argument('--cc',default='cc')
+    parser.add_argument('--source-dir',help='exact retained C/ASM adapter sources for this cartridge')
     parser.add_argument('--interrupts',type=int,default=20000);parser.add_argument('--batch',type=int,default=256)
     parser.add_argument('--command-frames',type=int,default=600)
     args=parser.parse_args()

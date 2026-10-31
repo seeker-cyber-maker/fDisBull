@@ -48,6 +48,8 @@ REQUIRED_TEST_HELPERS |= {"scripts/check_console_udc.py", "scripts/check_minipla
                          "scripts/check_native_array_offsets.py",
                          "scripts/check_miniplanets_audio_fast.py",
                          "scripts/check_miniplanets_globe_fast.py", "scripts/check_miniplanets_game_fast.py",
+                         "scripts/check_miniplanets_actor_fast.py", "scripts/check_miniplanets_projection_pair.py",
+                         "scripts/check_miniplanets_renderer_objects.py", "scripts/check_miniplanets_projection_cache.py",
                          "tests/test_game_il.py", "tests/test_miniplanets_full.py",
                          "tests/test_console_udc_host.py", "tests/test_miniplanets_globe_assets.py",
                          "tests/test_miniplanets_nes_game.py", "tests/test_nes_audio_clock.py",
@@ -62,6 +64,7 @@ REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/miniplanets-full-game-2026-10-31/" +
                              "normal-audio-tempo.json", "nes-verification.json",
                              "mapper-atomic-verification.json", "source-review.json",
                              "lowering-exploration.json")}
+REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/miniplanets-full-game-2026-10-31/optimization.json")
 REQUIRED_SOURCE_EVIDENCE |= {"docs/MINIPLANETS_FULL_GAME.md",
                             "docs/evidence/miniplanets-full-game-2026-10-31/renderer-fast.json"}
 REQUIRED_CONSOLE_RESOURCES = {"game_il.py", "miniplanets_audio.py", "udl_miniplanets_full.py",

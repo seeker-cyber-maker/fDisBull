@@ -1,7 +1,7 @@
 ; Authored MMC3 native startup, interrupt boundary and coherent view uploader.
 ; Mapper0 scalar/level backends remain separate and byte-stable.
 .setcpu "6502"
-.import _main, zerobss, copydata, callptr4, incsp1
+.import _main, zerobss, copydata, callptr4, incsp1, incsp2
 .importzp sp, sreg, ptr1, ptr4, tmp1, tmp2, tmp4
 .import _display_plane, _display_hud, _display_attributes
 .import _video_ready, _render_phase, _active_nt, _render_oam_page
@@ -10,6 +10,9 @@
 .export _select_data, _banked_call
 .export _begin_state, _publish_state
 .export _rom8
+.export _object_projection_pair
+.import _point_obj_bank, _point_obj_lo, _point_obj_hi
+.import _point_raft_bank, _point_raft_lo, _point_raft_hi
 .import _source_page_banks
 .import _input_buttons, _joy_hold, _joy_press, _mode, _stage, _stage_name
 .import _player_x, _player_y, _player_angle, _player_action, _player_jump
@@ -83,11 +86,55 @@ _rom8:
     ldx #0
     jmp incsp1
 
+; x/y are the unchanged front-hemisphere indices64..192; raft is in A.
+; Return dx in A and the transposed dy in X, preserving their signed bits.
+_object_projection_pair:
+    pha
+    ldy #1
+    lda (sp),y
+    sec
+    sbc #64
+    tax
+    pla
+    bne @raft
+    lda _point_obj_bank,x
+    jsr _select_data
+    lda _point_obj_lo,x
+    sta ptr1
+    lda _point_obj_hi,x
+    jmp @row
+@raft:
+    lda _point_raft_bank,x
+    jsr _select_data
+    lda _point_raft_lo,x
+    sta ptr1
+    lda _point_raft_hi,x
+@row:
+    sta ptr1+1
+    ldy #0
+    lda (sp),y
+    sec
+    sbc #64
+    asl a
+    bcc :+
+    inc ptr1+1
+:
+    tay
+    lda (ptr1),y
+    pha
+    iny
+    lda (ptr1),y
+    tax
+    pla
+    jmp incsp2
+
 _select_data:
     ; An IRQ must see the mapper and its software shadow as one transaction.
     ; NMI never touches these bank registers; preserve the caller's I flag.
     php
     sei
+    cmp data_bank
+    beq data_selected
     pha
     lda #7
     sta mapper_select
@@ -95,6 +142,7 @@ _select_data:
     pla
     sta data_bank
     sta $8001
+data_selected:
     plp
     rts
 
@@ -278,6 +326,10 @@ reset:
     sta sp+1
     jsr zerobss
     jsr copydata
+    ; zerobss cleared the software shadow after the initial R7=1 selection.
+    ; Force the first post-initialization selection to write the real mapper.
+    lda #$ff
+    sta data_bank
     lda #$20
     sta $2006
     lda #0

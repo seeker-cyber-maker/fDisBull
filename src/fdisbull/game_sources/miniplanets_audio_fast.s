@@ -51,7 +51,6 @@ af_product:
   .endrepeat
 .endrepeat
 af_psg_gain: .byte 15,12,9,8,6,5,4,3,2,2,2,1,1,1,1,0
-af_voices: .byte 0,1,2,4,5,6,8,9,10,11,16,17,18,20,21,22,24,25,26,27
 
 _audio_render_reset:
     lda #255
@@ -68,24 +67,39 @@ _audio_render_reset:
     rts
 
 _audio_render_tick:
-    ldy #19
-@envelopes:
-    sty af_counter
-    ldx af_voices,y
-    txa
-    and #15
-    cmp #8
-    bcc @fm
+    ; Keep the original reverse traversal order, while removing per-voice
+    ; table lookup and loop bookkeeping. The PSG clock phase is invariant
+    ; during this renderer call.
     lda _audio_sfx_phase
-    bne @next
+    bne :+
+.repeat 4, I
+    ldx #(27-I)
     jsr af_psg_envelope
-    jmp @next
-@fm:
+.endrepeat
+:
+.repeat 3, I
+    ldx #(22-I)
     jsr af_fm_envelope
-@next:
-    ldy af_counter
-    dey
-    bpl @envelopes
+.endrepeat
+.repeat 3, I
+    ldx #(18-I)
+    jsr af_fm_envelope
+.endrepeat
+    lda _audio_sfx_phase
+    bne :+
+.repeat 4, I
+    ldx #(11-I)
+    jsr af_psg_envelope
+.endrepeat
+:
+.repeat 3, I
+    ldx #(6-I)
+    jsr af_fm_envelope
+.endrepeat
+.repeat 3, I
+    ldx #(2-I)
+    jsr af_fm_envelope
+.endrepeat
 
     ldy #11
 @volumes:
@@ -99,6 +113,8 @@ _audio_render_tick:
     beq @mute
     cpy #8
     bcs @psg_volume
+    lda _audio_envelope,x
+    beq @mute
     ldy _audio_attenuation,x
     lda af_gain,y
     sta af_delta
@@ -113,6 +129,8 @@ _audio_render_tick:
     jmp @volume_ready
 @psg_volume:
     lda _audio_psg_level,x
+    cmp #16
+    bcc @mute
     lsr a
     lsr a
     lsr a

@@ -24,7 +24,12 @@ BANK_SIZE = 8192
 PRG_BANKS = 64
 SOURCE_DIR = Path(__file__).with_name('game_sources')
 GAME_INTRINSICS=frozenset(('update_subpixel','mace_x','mace_y','get_tile',
-                          'get_collision','set_tile','collides_player'))
+                          'get_collision','set_tile','collides_player',
+                          'run_objects','run_fireball'))
+ACTOR_HANDLERS=(None,'run_key',*(['run_raft']*4),*(['run_mace']*2),
+                'run_bomb','run_switch',*(['run_electricity']*2),
+                *(['run_ball']*4),*(['run_orb']*4),*(['run_fireball']*4),
+                'run_key','run_child','run_bomb_fx','run_spring_fx')
 
 
 def native_index_generator(tree):
@@ -91,7 +96,7 @@ def _run(argv, work):
     return process.stdout
 
 
-def _instrument(source, prefix, external_banked=()):
+def _instrument(source, prefix, external_banked=(), *, bank=None, procedure_banks=None):
     """Assign each native procedure its own linkable bank-aware code segment."""
     _, generator, parser = _parser()
     source = re.sub(r'_Pragma\s*\(\s*"(?:\\.|[^"\\])*"\s*\)', '', source)
@@ -105,13 +110,18 @@ def _instrument(source, prefix, external_banked=()):
         if type(node).__name__ == 'Decl' and type(node.type).__name__ == 'FuncDecl' and node.name in names: continue
         if type(node).__name__ == 'Decl' and type(node.type).__name__ == 'FuncDecl' and node.name in external_banked:
             prelude.extend(('#pragma wrapped-call(push,banked_call,bank)',gen.visit(node)+';','#pragma wrapped-call(pop)'))
+        elif bank is not None and bank != 0 and type(node).__name__=='Decl' and type(node.type).__name__!='FuncDecl' and node.name is not None:
+            import copy
+            declaration=copy.deepcopy(node)
+            declaration.init=None
+            declaration.storage=['extern']
+            prelude.append(gen.visit(declaration)+';')
         else:
             prelude.append(gen.visit(node) + ';')
     prelude.append('void banked_call(void);')
     for node in functions:
-        if prefix in ('A','R'):
-            # Each hardware adapter is placed wholly in one code bank below;
-            # internal calls therefore use ordinary native JSR/RTS directly.
+        if prefix in ('A','R') or (bank is not None and procedure_banks[node.decl.name]==bank):
+            # Adapter calls and frozen same-bank game calls use direct JSR/RTS.
             prelude.append(gen.visit(node.decl)+';')
         else:
             prelude.extend(('#pragma wrapped-call(push,banked_call,bank)', gen.visit(node.decl) + ';', '#pragma wrapped-call(pop)'))
@@ -120,9 +130,11 @@ def _instrument(source, prefix, external_banked=()):
         if prefix=='G' and node.decl.name in GAME_INTRINSICS:
             # Exact-profile intrinsic, independently checked for every phase.
             # The UIL body remains the reference; GAMEFAST supplies its native
-            # bit-reversal lookup implementation without changing state/API.
+            # implementation without changing public state or the calling API.
             continue
         segment = f'{prefix}{index:03d}'
+        if bank is not None and procedure_banks[node.decl.name]!=bank:
+            continue
         segments[segment] = node.decl.name
         prelude.extend((f'#pragma code-name(push,"{segment}")', gen.visit(node), '#pragma code-name(pop)'))
     return '\n'.join(prelude) + '\n', segments, tree
@@ -148,6 +160,7 @@ def _api(tree):
                         'void audio_tick(void)', 'unsigned char audio_busy(void)',
                         'void draw_game(void)'):
         lines.extend(('#pragma wrapped-call(push,banked_call,bank)', declaration + ';', '#pragma wrapped-call(pop)'))
+    lines.append('unsigned short object_projection_pair(unsigned char x,unsigned char y,unsigned char raft);')
     return '\n'.join(lines) + '\n'
 
 
@@ -215,6 +228,8 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
         _run([binaries['cc65'],'-E','-t','nes','-I',work,original,'-o',preprocessed],work)
         clean = '\n'.join(line for line in preprocessed.read_text().splitlines() if not line.lstrip().startswith('#'))
         external_banked = {x.decl.name for x in tree.ext if type(x).__name__=='FuncDef'} | {'audio_init','audio_request','audio_tick','audio_busy','audio_render_tick','audio_render_reset','draw_game'}
+        if prefix=='A':
+            external_banked-={'audio_render_tick','audio_render_reset'}
         adapted, mapping, _ = _instrument(clean, prefix,external_banked)
         segments.update(mapping)
         (work/(name+'.c')).write_text(adapted)
@@ -227,7 +242,8 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
         _run([binaries['ca65'],'-t','nes','-g',work/(name+'.s'),'-o',obj],work)
         objects.append(obj)
     special_sizes={}
-    for name,segment in (('nes_game_fast','GAMEFAST'),('nes_globe_fast','RENDERFAST')):
+    for name,segment in (('nes_game_fast','GAMEFAST'),('nes_globe_fast','RENDERFAST'),
+                         ('miniplanets_audio_fast','AUDIOFAST')):
         obj=work/(name+'.o')
         _run([binaries['ca65'],'-t','nes','-g',work/(name+'.s'),'-o',obj],work)
         objects.append(obj)
@@ -250,15 +266,37 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
         raise ValueError('Qualified sine periodicity assumption failed')
     math_data=(bytes(source_sines[i*2+1] for i in range(256))+
                bytes(source_sines[i*2] for i in range(256))+rom[0xA514:0xA614])
-    code_used, placements = [special_sizes['GAMEFAST']+len(math_data)], {}
+    actor_table_bytes=3*len(ACTOR_HANDLERS)
+    code_used, placements = [special_sizes['GAMEFAST']+len(math_data)+actor_table_bytes], {}
     for name in sorted((x for x in sizes if x.startswith('G')),key=lambda x:(-sizes[x],x)):
         if sizes[name] > BANK_SIZE: raise ValueError(f'Procedure {segments[name]} exceeds an 8KiB code bank')
         bank = next((i for i,n in enumerate(code_used) if n+sizes[name] <= BANK_SIZE),len(code_used))
         if bank == len(code_used): code_used.append(0)
         placements[name]=bank;code_used[bank]+=sizes[name]
+    # Bootstrap sizes above are conservative: every game call was wrapped.
+    # Freeze that placement, then compile each bank with direct prototypes for
+    # local callees. Never move a function after selecting its calling ABI.
+    procedure_banks={name:placements[segment] for segment,name in game_segments.items()}
+    procedure_banks.update({name:0 for name in GAME_INTRINSICS})
+    game_objects=[]
+    for bank in range(len(code_used)):
+        local_source,local_segments,_=_instrument(emit_c(program),'G',bank=bank,procedure_banks=procedure_banks)
+        base=work/f'game_bank{bank:02d}'
+        base.with_suffix('.c').write_text(local_source)
+        _run([binaries['cc65'],'-t','nes','-Oirs','--static-locals','-I',work,'-g',base.with_suffix('.c'),'-o',base.with_suffix('.s')],work)
+        obj=base.with_suffix('.o')
+        _run([binaries['ca65'],'-t','nes','-g',base.with_suffix('.s'),'-o',obj],work)
+        game_objects.append(obj)
+        report=_run([binaries['od65'],'-S',obj],work)
+        local_sizes={name:int(size) for name,size in re.findall(r'^\s*([A-Z][A-Z0-9_]+):\s*(\d+)\s*$',report,re.M) if name in local_segments}
+        if set(local_sizes)!=set(local_segments):raise ValueError('Could not measure every local game procedure')
+        sizes.update(local_sizes)
+        code_used[bank]=sum(local_sizes.values())+(special_sizes['GAMEFAST']+len(math_data)+actor_table_bytes if bank==0 else 0)
+        if code_used[bank]>BANK_SIZE:raise ValueError('Direct-call game bank exceeds frozen placement')
+    objects=game_objects+[obj for obj in objects if obj!=work/'game.o']
     for prefix in ('A','R'):
         members=[x for x in sizes if x.startswith(prefix)]
-        total=sum(sizes[x] for x in members)+(special_sizes['RENDERFAST'] if prefix=='R' else 0)
+        total=sum(sizes[x] for x in members)+special_sizes['RENDERFAST' if prefix=='R' else 'AUDIOFAST']
         if total>BANK_SIZE:raise ValueError(f'Native {prefix} adapter exceeds its single-bank direct-call contract')
         bank=len(code_used);code_used.append(total)
         placements.update({name:bank for name in members})
@@ -276,6 +314,15 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
     pages = sorted({address//BANK_SIZE for start,end in contract['immutable_ranges'].values()
                     for address in range(start//BANK_SIZE*BANK_SIZE,end,BANK_SIZE)})
     source_pages = {page:data.add(f'source_page{page}',rom[page*BANK_SIZE:(page+1)*BANK_SIZE],aligned=True) for page in pages}
+    # A row contains both transposed projection coordinates. Each row stays
+    # in one data window, so a visible actor needs one mapper selection.
+    point_rows={}
+    for name in ('objects','rafts'):
+        source=assets[name]
+        point_rows[name]=[data.add(f'point_{name}_{x}',
+            bytes(value for y in range(64,193) for value in
+                  (source[x*256+y],source[y*256+x])),page_fit=True)
+            for x in range(64,193)]
     first_data = len(code_used)
     if first_data + len(data.blocks) > 62: raise ValueError('Game code and qualified data exceed MMC3 512KiB capacity')
     def physical(binding): return (first_data+binding['relative_bank'])*BANK_SIZE+binding['offset']
@@ -297,7 +344,7 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
     # only entered after the explicit private harness command flag is set.
     _, generator, _ = _parser();gen=generator.CGenerator()
     procedures = [x for x in tree.ext if type(x).__name__=='FuncDef']
-    if len(procedures)>=250:raise ValueError('Native game debug procedure budget exceeded')
+    if len(procedures)>=249:raise ValueError('Native game debug procedure budget exceeded')
     debug = ['#include "game_api.h"','unsigned long debug_arg(unsigned char index);',
              'volatile unsigned long *debug_result=(volatile unsigned long*)0x7F0;',
              'void debug_dispatch(unsigned char id){unsigned int audio_i;switch(id){']
@@ -308,7 +355,8 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
         call=f'{proc.decl.name}({args})'
         ret=gen.visit(proc.decl.type.type)
         debug.append(f'case {index}: '+(f'{call};*debug_result=0;' if ret.startswith('void') else f'*debug_result={call};')+'break;')
-    debug.extend(('case 250:audio_init();*debug_result=0;break;',
+    debug.extend(('case 249:*debug_result=object_projection_pair((unsigned char)debug_arg(0),(unsigned char)debug_arg(1),(unsigned char)debug_arg(2));break;',
+                  'case 250:audio_init();*debug_result=0;break;',
                   'case 251:audio_request((unsigned char)debug_arg(0),(unsigned char)debug_arg(1));*debug_result=0;break;',
                   'case 252:for(audio_i=0;audio_i<(unsigned int)debug_arg(0) && audio_i<256;audio_i++)audio_tick();*debug_result=audio_i;break;',
                   'default:*debug_result=0xFFFFFFFFUL;break;}}'))
@@ -320,14 +368,14 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
     # Keep generated banked-call pragmas: unlike hardware source they are the
     # public ABI, so compile debug directly into a dedicated code segment.
     debug_bank=first_data+len(data.blocks)
-    if debug_bank+1>=62:raise ValueError('No MMC3 banks available for assisted verifier and fast audio')
+    if debug_bank>=62:raise ValueError('No MMC3 bank available for assisted verifier')
     _run([binaries['cc65'],'-t','nes','-Oirs','--code-name','DEBUG','-I',work,work/'debug.c','-o',work/'debug.s'],work)
     _run([binaries['ca65'],'-t','nes',work/'debug.s','-o',work/'debug.o'],work);objects.append(work/'debug.o')
     # Compile the captured adapter bytes, even if another worker edits a source
     # file later. The manifest binds these exact captured bytes, not a reread.
     _run([binaries['cc65'],'-t','nes','-Oirs','-I',work,work/'nes_game_platform.c','-o',work/'platform.s'],work)
     _run([binaries['cc65'],'-t','nes','-Oirs','-I',work,work/'nes_audio_clock.c','-o',work/'clock.s'],work)
-    for name in ('platform','clock','nes_game_start','miniplanets_audio_fast'):
+    for name in ('platform','clock','nes_game_start'):
         filename=work/(name+'.s')
         _run([binaries['ca65'],'-t','nes','-g',filename,'-o',work/(name+'.o')],work);objects.append(work/(name+'.o'))
     bank_asm=[]
@@ -337,11 +385,30 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
                      '_native_sine_lo: .incbin "native-math.bin",0,256',
                      '_native_sine_hi: .incbin "native-math.bin",256,256',
                      '_native_collision: .incbin "native-math.bin",512,256'))
+    bank_asm.append('.import '+','.join('_'+name for name in sorted(set(ACTOR_HANDLERS)-{None})))
+    for suffix,operator in (('lo','<'),('hi','>'),('bank','<.bank')):
+        values=['0' if name is None else f'{operator}(_{name})' for name in ACTOR_HANDLERS]
+        bank_asm.extend((f'.export _native_actor_{suffix}',f'_native_actor_{suffix}: .byte '+','.join(values)))
     for index, block in enumerate(data.blocks):
         filename=f'data{index:02d}.bin';(work/filename).write_bytes(bytes(block).ljust(BANK_SIZE,b'\xff'))
         bank_asm.extend((f'.segment "D{index:03d}"',f'.incbin "{filename}"'))
-    (work/'dmc.bin').write_bytes(bytes.fromhex(audio['dpcm_bank_hex']))
+    dpcm=bytes.fromhex(audio['dpcm_bank_hex'])
+    dpcm_length=(audio['dpcm_used_bytes']+63)&~63
+    if any(meta[0]==2 and meta[6]*64+meta[7]*16+1>dpcm_length for meta in (i['nes_meta'] for i in audio['instruments'])):
+        raise ValueError('Projection metadata would overlap an active DMC sample')
+    (work/'dmc.bin').write_bytes(dpcm[:dpcm_length])
     bank_asm.extend(('.segment "DMC"','.incbin "dmc.bin"'))
+    bank_asm.append('.segment "POINTDATA"')
+    for name,prefix in (('objects','obj'),('rafts','raft')):
+        rows=point_rows[name]
+        for suffix,values in (
+            ('bank',[physical(row)//BANK_SIZE for row in rows]),
+            ('lo',[physical(row)%256 for row in rows]),
+            ('hi',[0xA0+(physical(row)%BANK_SIZE)//256 for row in rows])):
+            symbol=f'_point_{prefix}_{suffix}'
+            bank_asm.extend((f'.export {symbol}',symbol+': .byte '+','.join(map(str,values))))
+    if dpcm_length+6*129>BANK_SIZE:
+        raise ValueError('Fixed projection metadata exceeds the unused DMC bank tail')
     (work/'data.s').write_text('\n'.join(bank_asm)+'\n')
     _run([binaries['ca65'],work/'data.s','-o',work/'data.o'],work);objects.append(work/'data.o')
     memory=['MEMORY {','ZP: start=$0002,size=$001A,type=rw,file="";',
@@ -354,8 +421,8 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
                    'DATA: load=FIXED,run=SRAM,type=rw,define=yes;',
                    'STARTUP: load=FIXED,type=ro;', 'CODE: load=FIXED,type=ro;',
                    'RODATA: load=FIXED,type=ro;', 'VECTORS: load=VECTOR,type=ro;',
-                   'DMC: load=SAMPLES,type=ro;',f'DEBUG: load=B{debug_bank:02d},type=ro;',
-                   f'AUDIOFAST: load=B{debug_bank+1:02d},type=ro;'))
+                   'DMC: load=SAMPLES,type=ro;','POINTDATA: load=SAMPLES,type=ro;',f'DEBUG: load=B{debug_bank:02d},type=ro;',
+                   f'AUDIOFAST: load=B{placements[next(x for x in sizes if x.startswith("A"))]:02d},type=ro;'))
     memory.extend(('GAMEFAST: load=B00,type=ro;','GAMEFASTDATA: load=B00,type=ro;',
                    f'RENDERFAST: load=B{len(code_used)-1:02d},type=ro;'))
     for segment,bank in placements.items():memory.append(f'{segment}: load=B{bank:02d},type=ro;')
@@ -404,6 +471,7 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
                        'mode':0x7D4,'command':0x7D5,'procedure':0x7D6,'args':0x7D9,'result':0x7F0,
                        'hv_count':0x7EA,'hv_position':0x7EB,'sound_busy':0x7EC,'fault':0x7ED,
                        'audio_init_procedure':250,'audio_request_procedure':251,'audio_ticks_procedure':252,
+                       'projection_pair_procedure':249,
                        'audio_tick_batch_limit':256},
               'publication':{'memory_id':2,'base':0x700,'slots':4,'stride':48,'head':0x7C0,
                   'hv_count_offset':41,'hv_recording':{'memory_id':0,'offset':0x1F00,'slots':4,'stride':64,'max_words':32,'byte_order':'big'},

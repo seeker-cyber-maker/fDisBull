@@ -104,6 +104,8 @@ CONSOLE_GAME_HELPERS = (
     'scripts/check_native_array_offsets.py',
     'scripts/check_miniplanets_audio_fast.py',
     'scripts/check_miniplanets_globe_fast.py', 'scripts/check_miniplanets_game_fast.py',
+    'scripts/check_miniplanets_actor_fast.py', 'scripts/check_miniplanets_projection_pair.py',
+    'scripts/check_miniplanets_renderer_objects.py', 'scripts/check_miniplanets_projection_cache.py',
     'tests/test_game_il.py', 'tests/test_miniplanets_full.py',
     'tests/test_console_udc_host.py', 'tests/test_miniplanets_globe_assets.py',
     'tests/test_miniplanets_nes_game.py', 'tests/test_nes_audio_clock.py',
@@ -118,6 +120,7 @@ CONSOLE_GAME_EVIDENCE = tuple('docs/evidence/miniplanets-full-game-2026-10-31/' 
     'profile-r13.json', 'bank-race.json', 'audio-tempo-protocol-v2.json',
     'normal-audio-tempo.json', 'nes-verification.json',
     'mapper-atomic-verification.json', 'source-review.json', 'lowering-exploration.json',
+    'optimization.json',
 ))
 CONSOLE_GAME_EVIDENCE += ('docs/MINIPLANETS_FULL_GAME.md',)
 REQUIRED_SOURCE_FILES += CONSOLE_GAME_RESOURCES + CONSOLE_GAME_HELPERS + CONSOLE_GAME_EVIDENCE

@@ -39,7 +39,7 @@ def sha(raw):
 
 
 def extract(text, name):
-    found = re.search(r'(?:void|u8) ' + name + r'\([^\n]*\)\s*\{.*?^\}', text, re.M | re.S)
+    found = re.search(r'(?:void|u8|u16) ' + name + r'\([^\n]*\)\s*\{.*?^\}', text, re.M | re.S)
     if found is None:
         raise ValueError('reviewed procedure not found: ' + name)
     return found.group()
@@ -59,6 +59,13 @@ typedef unsigned long u32;typedef signed long i32;
 u8 before_guard[16];
 u16 anim;u16 subpixel;u8 objects[192];u8 world[256];
 u8 player_x;u8 player_y;u8 player_jump;u8 player_die;
+u8 muteki;u8 player_win;u8 shake_timer;u8 player_action;u8 player_angle;
+u8 current_sfx;u8 sfx_to_play;
+/* Actor intrinsics are linked but not executed by this primitive suite.
+ * Their real handler/effect qualification is a separate actor suite. */
+const u8 native_actor_lo[28]={0};
+const u8 native_actor_hi[28]={0};
+const u8 native_actor_bank[28]={0};
 u8 after_guard[16];
 u8 reference_world[256];u8 original_objects[192];
 u16 stack_pointer(void);
@@ -321,7 +328,7 @@ def main():
     harness = HARNESS.replace('DATA', data).replace('REFERENCE', reference).replace('HAS_ROM', str(int(bool(rom))))
     (out / 'harness.c').write_text(harness)
     (out / 'fast.s').write_bytes(captured[assembly])
-    (out / 'probe.s').write_text('.export _stack_pointer, _same_stack\n.importzp c_sp\n.segment "CODE"\n_stack_pointer:\n lda c_sp\n ldx c_sp+1\n rts\n_same_stack:\n cmp c_sp\n bne no\n cpx c_sp+1\n bne no\n lda #1\n ldx #0\n rts\nno:\n lda #0\n ldx #0\n rts\n')
+    (out / 'probe.s').write_text('.export _stack_pointer, _same_stack, _banked_call\n.importzp c_sp\n.segment "CODE"\n_stack_pointer:\n lda c_sp\n ldx c_sp+1\n rts\n_same_stack:\n cmp c_sp\n bne no\n cpx c_sp+1\n bne no\n lda #1\n ldx #0\n rts\nno:\n lda #0\n ldx #0\n rts\n_banked_call:\n brk ; fail closed if an actor accidentally executes in the primitive suite\n')
     cfg = (toolchain / 'cfg/sim6502.cfg').read_text().replace('    RODATA:', '    GAMEFAST: load = MAIN, type = ro;\n    RODATA:')
     (out / 'sim.cfg').write_text(cfg)
     command = [str(toolchain / 'bin/cl65'), '-t', 'sim6502', '-Oirs', '--static-locals', '-C', str(out / 'sim.cfg'), '-o', str(out / 'check'), str(out / 'harness.c'), str(out / 'fast.s'), str(out / 'probe.s')]

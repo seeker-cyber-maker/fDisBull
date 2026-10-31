@@ -21,7 +21,7 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def host_bindings(audio):
+def host_bindings(audio, *, trace_apu=False):
     rows = []
     for track in audio['tracks']:
         values = ','.join(str(value) for value in encode_sona(track['event_program']))
@@ -39,6 +39,11 @@ unsigned char audio_instrument_byte(unsigned char i,unsigned char f){return meta
 unsigned int audio_period(unsigned int p,unsigned char o){return periods[o][p];}
 void audio_hw_write(unsigned int a,unsigned char v){host_writes++;if(a==0x4015 && (v&16))host_pcm_starts++;if((a==0x4000 || a==0x4004 || a==0x400c) && (v&15))host_tone_volumes++;}
 ''')
+    if trace_apu:
+        rows[-1]=rows[-1].replace('void audio_hw_write(','''unsigned int host_apu_count;
+unsigned short host_apu_address[65536];
+unsigned char host_apu_value[65536];
+void audio_hw_write(''').replace('{host_writes++;','''{if(host_apu_count<65536){host_apu_address[host_apu_count]=(unsigned short)a;host_apu_value[host_apu_count]=v;}host_apu_count++;host_writes++;''')
     return '\n'.join(rows)
 
 

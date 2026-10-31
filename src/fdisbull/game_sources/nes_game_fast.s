@@ -17,8 +17,13 @@
 .export _get_tile, _get_collision, _set_tile, _collides_player
 .import _world, _native_collision
 .import _player_x, _player_y, _player_jump, _player_die
+.export _run_objects, _run_fireball
+.import _native_actor_lo, _native_actor_hi, _native_actor_bank
+.import _banked_call
+.import _muteki, _player_win, _shake_timer, _player_action, _player_angle
+.import _current_sfx, _sfx_to_play
 .import incsp1, incsp2, incsp3
-.importzp c_sp, tmp1, tmp2, tmp3
+.importzp c_sp, tmp1, tmp2, tmp3, tmp4, ptr4
 
 .segment "GAMEFAST"
 
@@ -194,6 +199,123 @@ collision_true:
     lda #1
     ldx #0
     jmp incsp3
+
+; The reviewed source captures each slot's type once, then calls exactly one
+; matching handler. Reload subsequent slots after the call: a newly inserted
+; later-slot effect must run in this same scan. Types28..255 are no-ops in UIL.
+; Save the byte offset on the hardware stack: every handler may clobber ZP.
+; Authored handler-address/bank tables are linker relocations, not ROM assets.
+_run_objects:
+    ldx #0
+objects_next:
+    lda _objects,x
+    beq objects_advance
+    cmp #28
+    bcs objects_advance
+    tay
+    txa
+    pha
+    lda _native_actor_lo,y
+    sta ptr4
+    lda _native_actor_hi,y
+    sta ptr4+1
+    lda _native_actor_bank,y
+    sta tmp4
+    txa
+    lsr a
+    lsr a
+    jsr _banked_call
+    pla
+    tax
+objects_advance:
+    txa
+    clc
+    adc #4
+    tax
+    cpx #192
+    bne objects_next
+    rts
+
+; RunFireball(slot), legal slot0..47. Move first, including byte wrap, then
+; apply the exact pure CollidesPlayer(...,10,10) and HurtPlayer(7) predicates.
+; The inlined source helper writes occur in their original order; PlaySFX(13)
+; compares current_sfx only and replaces both fields when priority permits.
+; No helper has an external event/hardware effect, so eliminating these calls
+; preserves the public state/event contract. Unknown direct-call types do not
+; move but still apply collision, exactly like the typed source procedure.
+_run_fireball:
+    asl a
+    asl a
+    tax
+    lda _objects,x
+    cmp #20
+    beq fireball_up
+    cmp #21
+    beq fireball_down
+    cmp #22
+    beq fireball_left
+    cmp #23
+    bne fireball_check
+    lda _objects+1,x
+    clc
+    adc #1
+    sta _objects+1,x
+    jmp fireball_check
+fireball_up:
+    lda _objects+2,x
+    sec
+    sbc #1
+    sta _objects+2,x
+    jmp fireball_check
+fireball_down:
+    lda _objects+2,x
+    clc
+    adc #1
+    sta _objects+2,x
+    jmp fireball_check
+fireball_left:
+    lda _objects+1,x
+    sec
+    sbc #1
+    sta _objects+1,x
+fireball_check:
+    lda _player_jump
+    beq fireball_grounded
+    cmp #48
+    bne fireball_return
+fireball_grounded:
+    lda _player_die
+    ora _muteki
+    ora _player_win
+    ora _shake_timer
+    bne fireball_return
+    lda _objects+1,x
+    sec
+    sbc _player_x
+    clc
+    adc #10
+    cmp #21
+    bcs fireball_return
+    lda _objects+2,x
+    sec
+    sbc _player_y
+    clc
+    adc #10
+    cmp #21
+    bcs fireball_return
+    lda #1
+    sta _player_die
+    lda #7
+    sta _player_action
+    lda #255
+    sta _player_angle
+    lda #13
+    cmp _current_sfx
+    bcc fireball_return
+    sta _current_sfx
+    sta _sfx_to_play
+fireball_return:
+    rts
 
 reverse8:
     .byte $00,$80,$40,$C0,$20,$A0,$60,$E0,$10,$90,$50,$D0,$30,$B0,$70,$F0

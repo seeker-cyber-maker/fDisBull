@@ -1,5 +1,11 @@
 # Miniplanets full-game UIL and native NES profile
 
+The October 31 optimization follow-up below is the latest qualified build.
+It improves the dense fireball stage from 9.58 to 20.01 logic updates/s and
+the light stage from 32.47 to 40.93. Completed globe views remain slower than
+logic. This is progress toward 60 fps; the measured build does not reach it.
+The earlier R14 receipts are preserved as the comparison baseline.
+
 This profile expands the source-bound Stage 1-1 experiment into the original
 55-stage game rules: all placed actor types, moving terrain, score, lives,
 countdown, stage transitions, continue/password/options, ending and hidden
@@ -188,8 +194,9 @@ cannot run a new sound through older logical time. Long requests can still
 introduce jitter; scheduled time, completed services, source ticks, debt,
 catch-up and request latency have separate diagnostics.
 
-The native backend also uses seven checked 6502 intrinsics for subpixel,
-mace, tile/collision and wrapped-radius operations. Sine/collision bytes are
+The native backend also uses nine checked 6502 intrinsics for subpixel,
+mace, tile/collision, wrapped-radius, ordered actor dispatch and fireball
+operations. Sine/collision bytes are
 materialized privately from the original region. A separate lowering uses
 byte offsets for flat arrays occupying at most 256 bytes, preserving element
 width, signedness, qualifiers, index evaluation and scope. These optimizations
@@ -347,3 +354,193 @@ placement. Its broader generator and layout requirements are not included in
 this module. Earlier unprotected layout timings include a CPU-jam observation
 and are invalid for performance ranking. The simpler qualified lowering is
 retained; the exploratory receipt states its separate canary and runtime scope.
+
+## October 31 optimization follow-up and local review for PR 56
+
+The optimized cartridge has SHA-256
+`11ac422f96f13c5d168a55aeb747e0b73d153e67b0cc14d3ed0e0ce743673bfb`.
+The baseline is the retained R14 cartridge,
+`aecdb39cb4b112de6de64069aab8deb397640cf684ac6942cb4c8e79ac48663e`.
+Both use the same source ROM, authored rules, controller contract, original
+level data, globe presentation and audio arrangement. The UIL program hash
+remains `198484bd9fe39d16f48d6785adcebe172b29b00511af1d77942088f7497e591b`.
+The sanitized [optimization receipt](evidence/miniplanets-full-game-2026-10-31/optimization.json)
+binds the toolchain, adapters, runtime library and private observations.
+
+The implementation makes five changes:
+
+- Native actor dispatch captures each slot's type once, visits all 48 slots
+  in source order, and retains same-scan insertion of later-slot effects.
+  Native fireballs preserve byte wrapping, collision guards and sound priority.
+- The compiler first measures fully wrapped game procedures, freezes their
+  bank placement, then recompiles each bank with direct local-call prototypes.
+  Calls across banks keep the existing trampoline. Global definitions occur
+  once; other translation units import them. Final assembled bank sizes are
+  checked again, without repacking after the calling convention is chosen.
+- Visible objects fetch both transposed projection coordinates from one
+  privately generated, bank-contained row. All 33,282 front-domain coordinate
+  pairs are checked against the retained full source tables in the actual NES
+  core. Lookup metadata occupies verified unused DMC bank padding; every
+  active encoded sample range is checked before that padding is reused.
+- Terrain reuses its projection cache only after initialization and while the
+  camera phase is unchanged. Terrain painting, actor drawing and coherent
+  PPU publication continue normally. The data-bank selector also skips writes
+  for a confirmed cache hit, retaining the atomic bank-change transaction and
+  the caller's interrupt flag. Reset marks its shadow invalid after BSS clear.
+- Audio assembly and its C caller share a bank. Fixed envelope traversal is
+  unrolled in the original order, and silent-volume paths avoid redundant
+  arithmetic. Track count, channel ownership, event interpretation and timer
+  cadence are retained.
+
+### Matched performance protocol
+
+Each build runs in the pinned FCEUmm core for 3,100 physical frames. The first
+100 frames warm up the runtime; 3,000 frame intervals supply the rates below.
+At frame 40, the harness seeds the same valid source-initialized stage state
+and `Muteki=255` to keep an unattended, neutral-controller run alive. Ordinary
+native logic, rendering and audio run throughout the measured window. These
+are assisted steady-stage benchmarks. They are not ordinary playthroughs.
+Time comes from the core's 60.0998265 Hz NTSC hardware clock. Host emulator
+execution speed does not enter the game-rate calculation.
+
+| Stage index and workload | R14 logic updates/s | Optimized logic updates/s | Improvement | R14 completed views/s | Optimized completed views/s |
+|---|---:|---:|---:|---:|---:|
+| 0, light | 32.474 | 40.928 | 26.0% | 11.639 | 13.903 |
+| 40, eight maces | 16.648 | 22.417 | 34.7% | 10.497 | 12.180 |
+| 43, orb/RNG | 20.093 | 30.250 | 50.5% | 11.119 | 12.561 |
+| 44, 28 actors/fireballs | 9.576 | 20.013 | 109.0% | 8.694 | 10.758 |
+
+Logic counts completed epochs. Completed views count nametable flips after
+both upload halves. A swapped view can have the same pixels as its predecessor.
+The physical refresh rate, logic rate and view publication rate are distinct.
+One deterministic warmed run per stage/build is reported, with a repeated
+control/observer replay; these measurements do not supply statistical
+confidence intervals or a general performance ranking. Hardware-derived RNG
+observations can differ when code timing changes. The accuracy checks replay
+those observations explicitly.
+
+The observer forwards the core's real mapped read handler and checks each
+returned code byte against the cartridge and current code-bank shadow. Each
+run checks 32.9–39.7 million reads in `0x8000..0x9fff`; all eight runs report
+zero mismatches, jammed instructions and sampled faults after initialization.
+For each run, the observer and corrected control match byte for byte in audio,
+serialized state, save RAM, system RAM, image, profile and watch trace. An early
+control retained an obsolete diagnostic address; it was corrected and rerun,
+and the failed diagnostic comparison remains in the private record.
+
+The ordinary native checker also ran longer, independent 3,301-frame sessions.
+Its 3,200-interval rates were 40.868, 22.312, 30.087 and 20.002 updates/s for
+stages 0, 40, 43 and 44. Window endpoints explain the small differences from
+the matched 3,000-interval table. Those windows are kept separate.
+
+### Accuracy and original-Genesis comparison
+
+The fresh original CPU comparisons pass 2,678 common-rule cases with 146,905
+68000 instructions and 1,262 actor cases with 292,870 instructions and 192
+observed HV samples. Both reviewed actor variants agree with the original.
+Fresh actor contracts, watched state, registers and HV results also match the
+retained baseline and optimized original-CPU receipts. The separate assisted
+UIL flow check passes 6,044 frames; it is not original CPU execution. These
+checks preserve the same semantic comparison against Genesis used before the
+optimization. A fresh natural whole-game Genesis frame-rate comparison was
+not performed.
+
+The final NES passes the same 4,822-case native component matrix, comparing
+all 79 game variables/arrays, returns, events and environmental consumption.
+It is recorded in two nonoverlapping runs: 4,687 main cases and the remaining
+135 original actor-dispatch cases. Their summed procedure counts equal the
+R14 matrix exactly. A redundant clear-all diagnostic is excluded from that
+total. The older authored variant also compiles and passes its 114 base native
+component cases; its full 4,822-case native matrix was not rerun.
+
+Additional optimization checks pass:
+
+- 67,788 C-versus-native actor cases, including all 256 type bytes in every
+  dispatch slot, movement and collision boundaries, guards, sound priorities,
+  ordering, full state, HV consumption and software-stack balance. Of these,
+  5,428 also run through typed UIL; 198 use retained original CPU vectors.
+- 33,282 coordinate-pair calls in the mapped NES cartridge; 40,960 existing
+  native terrain cases covering 256 views, 32 animation phases and five maps.
+- 100,000 host object-drawing cases and 100,000 cache-sequence steps. Those
+  checks use deterministic synthetic inputs and actual C bodies; they are
+  distinct from native hardware qualification.
+- 114 native completed renders, matched by full 616-byte captured game state
+  and equal game/render epoch. Plane, palettes, attributes, projection cache,
+  OAM index and staged OAM agree exactly: 11 matches on stage 0 and 103 on
+  stage 44. Different host frames are expected after changing execution speed.
+- Real pending-IRQ mapper tests retain the old bank race as a negative
+  control. Store-boundary tests pass with the new selector. They do not
+  exhaustively inject into the new no-write cache-hit branch or every native
+  instruction boundary.
+
+Normal native sessions pass 9,410 completed-state comparisons across 34
+published fields, 9,410 independent controller checks and 208 replayed HV
+words. Read-only feedback with ordinary controller input reaches the first
+level's goal at epoch 897 / host frame 1,407, then the next stage at epoch
+1,147 / host frame 1,882. A further 1,500 neutral frames pass. The unchanged
+fixed host-frame input route remains a DNF: a hold lasting a fixed number of
+physical frames traverses more game updates after optimization. Its result is
+retained rather than changing its acceptance condition.
+
+All 32 tracks and a mixed priority/stop/restart case pass 270,752 controlled
+native sound services and 1,161 completed commands. The stricter sound checker
+now compares all 2,579,855 ordered APU writes with the portable C oracle, not
+only final register values. Five normal schedules also pass the unchanged
+version-2 tempo protocol: each 3,000-interval window observes 6,000 service
+entries and 5,935 source ticks, or 118.89749 ticks/s against 118.89964 Hz.
+Completed services remain within the one-call endpoint allowance. Inconsistent
+sampled high words remain unknown diagnostics; no debt is added to measured
+rates. These results do not establish Genesis-to-NES waveform identity.
+
+### Reproduction and delivery boundary
+
+Use the lift/compile commands above with new private output directories. Keep
+all input ROMs, generated ROMs, assets, raw traces and audio outside Git.
+The permanent checkers accept explicit private inputs:
+
+```sh
+python scripts/check_miniplanets_actor_fast.py --rom "$ROM" \
+  --cc65-root "$CC65" --original-root "$ACTOR_CASES" --output "$PRIVATE/actors"
+python scripts/check_miniplanets_projection_pair.py --rom "$ROM" \
+  --cartridge "$CART/program.nes" --core "$CORE" --output "$PRIVATE/pairs"
+python scripts/check_miniplanets_globe_fast.py --rom "$ROM" \
+  --cc65-root "$CC65" --output "$PRIVATE/terrain"
+python scripts/check_miniplanets_renderer_objects.py --baseline "$BASELINE_RENDERER" \
+  --output "$PRIVATE/objects"
+python scripts/check_miniplanets_projection_cache.py --baseline "$BASELINE_RENDERER" \
+  --output "$PRIVATE/cache"
+python scripts/check_miniplanets_nes_game.py --rom "$ROM" \
+  --cartridge "$CART/program.nes" --core "$CORE" --cc65-root "$CC65" \
+  --common-cases-root "$COMMON_CASES" \
+  --actor-cases-root "$ACTOR_CASES_1" --actor-cases-root "$ACTOR_CASES_2" \
+  --actor-cases-root "$ACTOR_GEOMETRY_CASES" --phase all \
+  --performance-host-frames 3301 --feedback-post-transition-host-frames 1500 \
+  --output "$PRIVATE/native"
+python scripts/check_miniplanets_nes_audio.py --rom "$ROM" \
+  --cartridge "$CART/program.nes" --core "$CORE" --cc65-root "$CC65" \
+  --output "$PRIVATE/audio"
+python scripts/check_miniplanets_nes_timing.py --cartridge "$CART/program.nes" \
+  --core "$CORE" --sessions-root "$PRIVATE/native" --protocol atomic-low-v2 \
+  --output "$PRIVATE/tempo"
+```
+
+Set `PYTHONPATH=src` when running from the checkout. Use its prepared console
+and test dependencies. The private profiling scripts and exact watch schedules
+are retained with the hash-bound raw receipts for the matched table and native
+render joins. The ordinary public checker supplies the independent longer
+performance and accuracy replay. Their different windows remain explicit.
+
+The local macOS full suite reports 2,756 passed, 142 skipped, three failed and
+23 setup errors. All 26 failing/error test IDs match the prior integrated-main
+run: Linux/GNU-linker fixture assumptions and the case-sensitive `VOL.2`/`vol.2`
+media fixture on the case-insensitive host filesystem. This is not a green
+whole-suite result. The affected console and packaging checks are run
+separately; native hardware evidence is also separate from pytest.
+
+GitHub is disabled for the account. This section and the sanitized receipt
+are the local review update prepared for PR 56; they have not been posted to
+GitHub. Delivery uses the configured local Git hub. No hosted CI, release,
+merge, global installation, natural whole-game completion or 60-fps result
+is claimed. The remaining large costs are game/renderer work and coherent
+PPU upload bandwidth; full 60-fps presentation will require further measured
+work on those boundaries.
