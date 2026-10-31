@@ -1,6 +1,8 @@
 """The standalone player is a separate, source-complete distribution."""
 from pathlib import Path
+import io
 import runpy
+import tarfile
 import zipfile
 
 import pytest
@@ -44,3 +46,30 @@ def test_tool_zip_selection_includes_only_player_python_and_manifest(tmp_path):
     selected={p.relative_to(ROOT).as_posix() for p in RELEASE_FILES(ROOT)}
     assert {'player/pyproject.toml'} | {'player/fdisbull_player/'+x for x in MODULES} <= selected
     assert not any(p.startswith('player/') and p not in {'player/pyproject.toml'} | {'player/fdisbull_player/'+x for x in MODULES} for p in selected)
+
+
+def player_sdist(path, *, omit=None, extra=None):
+    files = {'pyproject.toml', 'PKG-INFO'} | {'fdisbull_player/'+name for name in MODULES}
+    if omit: files.remove(omit)
+    if extra: files.add(extra)
+    with tarfile.open(path, 'w:gz') as archive:
+        for name in sorted(files):
+            item = tarfile.TarInfo('fdisbull_player-1.0/'+name)
+            item.size = 1
+            archive.addfile(item, io.BytesIO(b'\n'))
+
+
+def test_player_source_distribution_is_complete_and_tool_only(tmp_path):
+    archive = tmp_path/'fdisbull_player-1.0.tar.gz'
+    player_sdist(archive)
+    assert CHECK(archive) == len(MODULES)+2
+    player_sdist(archive, omit='fdisbull_player/runtime.py')
+    with pytest.raises(ValueError, match='missing required files'): CHECK(archive)
+
+
+@pytest.mark.parametrize('extra', ['fdisbull/__init__.py', 'unknown.txt',
+                                    'fdisbull_player/GAME.EXE', 'fdisbull_player/state.db'])
+def test_player_source_distribution_rejects_extra_files(tmp_path, extra):
+    archive = tmp_path/'fdisbull_player-1.0.tar.gz'
+    player_sdist(archive, extra=extra)
+    with pytest.raises(ValueError): CHECK(archive)

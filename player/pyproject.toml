@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "fdisbull-player"
 version = "0.26.1"
 description = "Standalone deterministic text player for declared scene slices"
+readme = {text = "Standalone fDisBull player for authored projections and compatible endpoints. No game files, emulator or analysis engine is included. See https://github.com/seeker-cyber-maker/fDisBull for usage and backend requirements.", content-type = "text/markdown"}
 requires-python = ">=3.10"
 
 [project.scripts]
