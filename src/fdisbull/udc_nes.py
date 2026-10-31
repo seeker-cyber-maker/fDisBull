@@ -54,6 +54,8 @@ class _Asm:
 _LOGIC_OPCODES = {
     0xa9: (2, 2), 0xad: (3, 4),  # LDA
     0x8d: (3, 4),                # STA
+    0xa2: (2, 2), 0xae: (3, 4),  # LDX immediate/absolute
+    0xbd: (3, 5),                # LDA absolute,X, including page crossing
     0x69: (2, 2), 0x6d: (3, 4),  # ADC
     0xe9: (2, 2), 0xed: (3, 4),  # SBC
     0x18: (1, 2), 0x38: (1, 2),  # CLC, SEC
@@ -133,32 +135,28 @@ def _runtime(a, variables, display):
     a.label('interrupt'); a.emit(0x40)
 
 
-def build(program: dict, layout: dict, *, display_variable: str | None = None) -> dict:
-    """Compile the supported UIL subset into a 32 KiB mapper-0 NES ROM."""
-    if program.get('format') != 'fdisbull-il-1' or program.get('role') != 'uil' or program.get('resources') != {}:
-        raise ValueError('unsupported NES program format or resources')
-    if not isinstance(layout, dict) or set(layout) != set(program.get('variables', {})):
-        raise ValueError('invalid NES variable layout')
-    occupied = set()
-    for name, v in layout.items():
-        if not isinstance(v, dict) or set(v) != {'address', 'width', 'initial'}:
-            raise ValueError('invalid NES variable layout')
-        addr, width, initial = v['address'], v['width'], v['initial']
-        if type(addr) is not int or width not in (8, 16) or type(initial) is not int or not 0 <= initial < (1 << width):
-            raise ValueError('invalid NES variable layout')
-        cells = set(range(addr, addr + width // 8))
-        if not cells <= set(range(0x300, 0x7f0)) or cells & occupied:
-            raise ValueError('NES variable layout overlaps reserved RAM')
-        occupied |= cells
-        declared = program['variables'][name]
-        if declared.get('type') != f'u{width}' or declared.get('initial') != initial:
-            raise ValueError('NES variable declaration differs from layout')
-    if '$buttons' in layout and layout['$buttons']['width'] != 8:
-        raise ValueError('NES buttons must be u8')
-    if display_variable is not None and (display_variable not in layout or layout[display_variable]['width'] != 8):
-        raise ValueError('NES display variable must name a u8')
-    a = _Asm()
+def _validate_tables(program):
+    tables = program.get('tables', {})
+    if not isinstance(tables, dict):
+        raise ValueError('NES tables must be a mapping')
+    for name, table in tables.items():
+        if (not isinstance(name, str) or not isinstance(table, dict) or
+                set(table) != {'type', 'values'} or table['type'] != 'u8' or
+                not isinstance(table['values'], list) or len(table['values']) != 256 or
+                any(type(value) is not int or not 0 <= value <= 255 for value in table['values'])):
+            raise ValueError('native NES lookup requires u8 tables of exactly 256 entries')
+    return tables
 
+
+def _emit_tables(a, program):
+    for name, table in _validate_tables(program).items():
+        a.label('table:' + name)
+        a.emit(*table['values'])
+
+
+def _emit_logic(a, program, layout):
+    """Emit the shared native logic function; the caller owns its console loop."""
+    tables = _validate_tables(program)
     def operand(value, width, byte, imm, absolute):
         if type(value) is int:
             if not 0 <= value < (1 << width):
@@ -216,6 +214,22 @@ def build(program: dict, layout: dict, *, display_variable: str | None = None) -
                 yes, no, end = a.unique(), a.unique(), a.unique()
                 condition(node['condition'], yes, no); a.label(yes); nodes(node['then']); a.jump(0x4c, end)
                 a.label(no); nodes(node['else']); a.label(end)
+            elif op == 'lookup' and set(node) <= {'id', 'op', 'var', 'table', 'index', 'evidence'}:
+                target = layout.get(node.get('var'))
+                table = tables.get(node.get('table'))
+                if target is None or target['width'] != 8 or table is None:
+                    raise ValueError('NES lookup requires a bound u8 target and table')
+                if node['var'] == '$buttons':
+                    raise ValueError('NES buttons are read-only')
+                index = node.get('index')
+                if type(index) is int and 0 <= index <= 255:
+                    a.emit(0xa2, index)
+                elif isinstance(index, dict) and set(index) == {'var'} and index['var'] in layout and layout[index['var']]['width'] == 8:
+                    a.absolute(0xae, layout[index['var']]['address'])
+                else:
+                    raise ValueError('NES lookup index must be a u8 variable or literal')
+                a.jump(0xbd, 'table:' + node['table'])
+                a.absolute(0x8d, target['address'])
             elif op in ('set', 'add', 'subtract') and set(node) <= {'id', 'op', 'var', 'value', 'evidence'} and 'value' in node and node.get('var') in layout:
                 if node['var'] == '$buttons':
                     raise ValueError('NES buttons are read-only')
@@ -230,9 +244,38 @@ def build(program: dict, layout: dict, *, display_variable: str | None = None) -
             else:
                 raise ValueError('unsupported NES statement')
 
-    _runtime(a, layout, display_variable)
     a.label('logic_tick'); nodes(program.get('body')); a.emit(0x60)
     a.label('logic_tick_end')
+
+
+def build(program: dict, layout: dict, *, display_variable: str | None = None) -> dict:
+    """Compile the supported UIL subset into a 32 KiB mapper-0 NES ROM."""
+    if program.get('format') != 'fdisbull-il-1' or program.get('role') != 'uil' or program.get('resources') != {}:
+        raise ValueError('unsupported NES program format or resources')
+    if not isinstance(layout, dict) or set(layout) != set(program.get('variables', {})):
+        raise ValueError('invalid NES variable layout')
+    occupied = set()
+    for name, v in layout.items():
+        if not isinstance(v, dict) or set(v) != {'address', 'width', 'initial'}:
+            raise ValueError('invalid NES variable layout')
+        addr, width, initial = v['address'], v['width'], v['initial']
+        if type(addr) is not int or width not in (8, 16) or type(initial) is not int or not 0 <= initial < (1 << width):
+            raise ValueError('invalid NES variable layout')
+        cells = set(range(addr, addr + width // 8))
+        if not cells <= set(range(0x300, 0x7f0)) or cells & occupied:
+            raise ValueError('NES variable layout overlaps reserved RAM')
+        occupied |= cells
+        declared = program['variables'][name]
+        if declared.get('type') != f'u{width}' or declared.get('initial') != initial:
+            raise ValueError('NES variable declaration differs from layout')
+    if '$buttons' in layout and layout['$buttons']['width'] != 8:
+        raise ValueError('NES buttons must be u8')
+    if display_variable is not None and (display_variable not in layout or layout[display_variable]['width'] != 8):
+        raise ValueError('NES display variable must name a u8')
+    a = _Asm()
+    _runtime(a, layout, display_variable)
+    _emit_logic(a, program, layout)
+    _emit_tables(a, program)
     code = a.finish()
     start = a.labels['logic_tick'] - 0x8000
     end = a.labels['logic_tick_end'] - 0x8000

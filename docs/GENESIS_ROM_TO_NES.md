@@ -1,5 +1,9 @@
 # Real Genesis ROM → UIL → NES pilot
 
+The follow-up now produces a [playable first level on NES](MINIPLANETS_NES_LEVEL.md),
+with original movement/collision comparisons and a naturally completed Genesis
+replay. The bounded function experiment below remains a separate positive control.
+
 The first real-game test uses **Miniplanets REMIX Ver. REV04**, by Javier
 Degirolmo (Sik). The user confirmed that no Genesis cartridge was available in
 their local intake. The pilot therefore acquired the prebuilt game from its

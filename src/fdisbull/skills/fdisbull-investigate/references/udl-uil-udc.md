@@ -205,6 +205,14 @@ a real Miniplanets function tested against controlled execution of the original
 ROM and native NES output. This is a RAM-state projection, not a whole-game port
 or evidence that ordinary gameplay naturally reached the function.
 
+`fdisbull.udl_miniplanets.lift_level` specializes the exact official REV04 ROM's
+first level into standard UIL with immutable tables, plus separate NES scene
+metadata. Pass both to `write_console_rom`, or replay saved inputs with
+`console-udc --target nes --scene scene.json`. This is reviewed source-bound
+recovery, not generic 68000 decompilation. Source-checkout
+`docs/MINIPLANETS_NES_LEVEL.md` records playable controls, original CPU checks and
+aligned natural Genesis/NES replays, plus rendering/reset and score/time exclusions.
+
 ## Read a proof narrowly
 
 `udl-verify` uses the optional Z3 dependency to compare a source block model with

@@ -34,6 +34,8 @@ REQUIRED_TEST_HELPERS |= {"patches/capstone-5.0.9-sh-profile-gating.patch",
                          "scripts/rom_semantic_route/DecompileAuthoredSh2.java", "scripts/rom_semantic_route/README.md"}
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/console-udc-2026-10-30/verification.json")
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/genesis-rom-route-2026-10-30/verification.json")
+REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/miniplanets-nes-level-2026-10-31/verification.json")
+REQUIRED_TEST_HELPERS |= {"scripts/check_miniplanets_native.py", "scripts/verify_miniplanets_level.py"}
 REQUIRED_TEST_HELPERS |= {"scripts/probe_genesis_function.py", "scripts/verify_genesis_rom_route.py"}
 REQUIRED_PE_RESOURCES = {"wine_guest/agent.c", "wine_guest/init.sh", "wine_guest/broker.py", "wine_guest/selftest.c"}
 REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/broker.py", "ida_guest/SDK-LICENSE.txt", "ida_wire.py", "ida_remote.py", "ida_trace.py"}

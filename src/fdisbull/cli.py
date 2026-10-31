@@ -216,7 +216,7 @@ METHODS = {
     "identify": "Identify file header from bytes; path; no project required",
     "inspect": "Parse file metadata; path; no project required",
     "rom-inspect": "Parse console cartridge or Sega data-track descriptor; path; no project required",
-    "console-udc": "Compile bounded UIL to a new private NES/Genesis cartridge directory; path,target,output,[display_variable]",
+    "console-udc": "Compile bounded UIL to a new private NES/Genesis cartridge directory; path,target,output,[display_variable,scene_path]",
     "console-udc-targets": "List native console compiler targets and accepted UIL operations; no project required",
     "rom-disasm": "Decode bounded, explicitly mapped SH-2 bytes with interchangeable engines; path,base_address,[backend,offset,length,max_instructions,mode,ghidra_home,saturn_recomp_root,timeout]",
     "disc-inspect": "Parse bounded CUE/BIN or ISO primary filesystem metadata; path,[mode,max_entries,max_directory_bytes,max_depth]",
@@ -695,6 +695,7 @@ def parser():
     c.add_argument('--target',choices=['nes','genesis'],required=True)
     c.add_argument('--output',required=True)
     c.add_argument('--display-variable')
+    c.add_argument('--scene',dest='scene_path',help='optional NES level scene JSON')
     c=sub.add_parser('rom-disasm',help=METHODS['rom-disasm'])
     c.add_argument('path')
     c.add_argument('--base-address',type=lambda s:int(s,0),required=True,help='explicit address mapping source file offset zero')

@@ -21,9 +21,10 @@ def _encoded(value):
     return json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()
 
 
-def validate_console_program(program):
+def validate_console_program(program, *, level=False):
     validate_il(program)
-    if program['role'] != 'uil' or program['resources'] or not 1 <= len(program['variables']) <= 32:
+    variable_limit, node_limit, depth_limit = (64, 1024, 32) if level else (32, 256, 8)
+    if program['role'] != 'uil' or program['resources'] or not 1 <= len(program['variables']) <= variable_limit:
         raise ValueError('console UDC requires UIL, 1..32 variables and no resources')
     variables = program['variables']
     if any(v['type'] not in ('u8', 'u16') for v in variables.values()):
@@ -52,7 +53,7 @@ def validate_console_program(program):
     def condition(c, depth):
         nonlocal count
         count += 1
-        if count > 256 or depth > 8:
+        if count > node_limit or depth > depth_limit:
             raise ValueError('console UDC node/depth budget exceeded')
         op = c['op']
         if op == 'eq':
@@ -73,12 +74,18 @@ def validate_console_program(program):
         nonlocal count
         for block in blocks:
             count += 1
-            if count > 256 or depth > 8:
+            if count > node_limit or depth > depth_limit:
                 raise ValueError('console UDC node/depth budget exceeded')
             if block['op'] in ('set', 'add', 'subtract'):
                 if block['var'] == '$buttons':
                     raise ValueError('$buttons is read-only controller input')
                 compatible({'var': block['var']}, block['value'])
+            elif block['op'] == 'lookup':
+                if block['var'] == '$buttons':
+                    raise ValueError('$buttons is read-only controller input')
+                table = program['tables'][block['table']]
+                if table['type'] != 'u8' or len(table['values']) != 256 or width(block['index']) not in (None, 8):
+                    raise ValueError('NES lookup requires a 256-entry u8 table and u8 index')
             elif block['op'] == 'if':
                 condition(block['condition'], depth + 1)
                 body(block['then'], depth + 1)
@@ -89,11 +96,14 @@ def validate_console_program(program):
     return program
 
 
-def compile_console_rom(program: dict, *, target: str, display_variable: str | None = None) -> dict:
+def compile_console_rom(program: dict, *, target: str, display_variable: str | None = None,
+                        scene: dict | None = None) -> dict:
     """Return native ROM bytes and a portable metadata manifest, without writing."""
     if target not in TARGETS:
         raise ValueError('target must be nes or genesis')
-    validate_console_program(program)
+    validate_console_program(program, level=scene is not None)
+    if target == 'genesis' and (scene is not None or program.get('tables')):
+        raise ValueError('Genesis compiler does not support the NES level/table profile')
     if display_variable is not None and (display_variable not in program['variables'] or
                                         program['variables'][display_variable]['type'] != 'u8'):
         raise ValueError('display_variable must name a u8 variable')
@@ -106,11 +116,16 @@ def compile_console_rom(program: dict, *, target: str, display_variable: str | N
             cursor += 1
         layout[name] = {'address': cursor, 'width': width, 'initial': item['initial']}
         cursor += width // 8
-    if target == 'nes':
+    if scene is not None:
+        if display_variable is not None:
+            raise ValueError('level scenes supply their own display bindings')
+        from .udc_nes_level import build
+    elif target == 'nes':
         from .udc_nes import build
     else:
         from .udc_genesis import build
-    result = build(program, layout, display_variable=display_variable)
+    result = (build(program, layout, scene=scene) if scene is not None else
+              build(program, layout, display_variable=display_variable))
     from .roms import inspect_rom
     inspection = inspect_rom(result['rom'])
     if not inspection['valid']:
@@ -123,6 +138,8 @@ def compile_console_rom(program: dict, *, target: str, display_variable: str | N
         'button_bits': BUTTON_BITS, 'unsupported_buttons': [] if target == 'nes' else ['select'],
         'display_variable': display_variable, 'diagnostics': result['diagnostics'],
         'executed': False, 'validation_scope': 'compiled declared UIL subset and cartridge structure; runtime/timing require separate checks'}
+    if scene is not None:
+        manifest['scene_sha256'] = hashlib.sha256(_encoded(scene)).hexdigest()
     return {'rom': result['rom'], 'manifest': manifest}
 
 
@@ -138,9 +155,9 @@ def _private_directory(path):
 
 
 def write_console_rom(program: dict, *, target: str, output: str | Path,
-                      display_variable: str | None = None) -> dict:
+                      display_variable: str | None = None, scene: dict | None = None) -> dict:
     destination = _private_directory(output)
-    result = compile_console_rom(program, target=target, display_variable=display_variable)
+    result = compile_console_rom(program, target=target, display_variable=display_variable, scene=scene)
     manifest = result['manifest']
     name = 'program.nes' if target == 'nes' else 'program.md'
     manifest['files'] = {'rom': name, 'uil': 'program.uil.json', 'manifest': 'manifest.json'}
@@ -148,6 +165,9 @@ def write_console_rom(program: dict, *, target: str, output: str | Path,
     try:
         (temporary / name).write_bytes(result['rom'])
         (temporary / 'program.uil.json').write_text(json.dumps(program, indent=2) + '\n')
+        if scene is not None:
+            manifest['files']['scene'] = 'scene.json'
+            (temporary / 'scene.json').write_text(json.dumps(scene, indent=2) + '\n')
         (temporary / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
         if destination.exists():
             raise ValueError('console compiler output appeared during compilation')
@@ -158,10 +178,17 @@ def write_console_rom(program: dict, *, target: str, output: str | Path,
     return {'output_directory': str(destination), **manifest}
 
 
-def compile_console_path(path: str | Path, **kwargs) -> dict:
+def compile_console_path(path: str | Path, *, scene_path: str | Path | None = None, **kwargs) -> dict:
     path = Path(path)
     if not path.is_file() or path.stat().st_size > 65536:
         raise ValueError('expected one UIL JSON file at most 64 KiB')
+    if scene_path is not None:
+        scene_path = Path(scene_path)
+        if not scene_path.is_file() or scene_path.stat().st_size > 65536:
+            raise ValueError('expected one scene JSON file at most 64 KiB')
+        if 'scene' in kwargs:
+            raise ValueError('supply scene or scene_path, not both')
+        kwargs['scene'] = json.loads(scene_path.read_text())
     return write_console_rom(json.loads(path.read_text()), **kwargs)
 
 
@@ -170,4 +197,8 @@ def console_targets():
         'types': ['u8', 'u16'], 'operations': ['set', 'add', 'subtract', 'if'],
         'conditions': ['eq', 'bit_test', 'not', 'and'], 'variable_limit': 32,
         'node_limit': 256, 'depth_limit': 8,
+        'additional_profiles': {'nes-level': {'target': 'nes', 'scene': 'fdisbull-console-scene-1',
+            'operations': ['set', 'add', 'subtract', 'lookup', 'if'],
+            'variable_limit': 64, 'node_limit': 1024, 'depth_limit': 32,
+            'table_type': 'u8', 'table_entries': 256}},
         'scope': 'native compilation of an explicit UIL subset; not a complete source-console lifter or hardware conversion'}

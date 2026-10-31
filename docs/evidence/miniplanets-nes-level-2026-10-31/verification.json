@@ -1,0 +1,907 @@
+{
+  "format": "fdisbull-miniplanets-playable-level-1",
+  "status": "passed",
+  "source_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+  "source_hashes": {
+    "src/fdisbull/interaction_il.py": "ea6f9e1822eb9cd24757c6dd875275a8a11bee8b8381ccad1e04f95b84c9560e",
+    "src/fdisbull/console_udc.py": "34db072cf412bb7749c6eac8118deca69ea754e28affc98cbe41aecfbd2f6c95",
+    "src/fdisbull/udc_nes.py": "1887142ff00e9e9d34221d9771e0856996720ac263351d6878b835f113bc1674",
+    "src/fdisbull/udc_nes_level.py": "6f7f96f3572ef4dd98e6dee64f240eb377f7383211ae5d4b05b6f831aca8009f",
+    "src/fdisbull/udl_miniplanets.py": "c548bd349b531323dd5fcbc062fc4bce1a3c6f0f5de13a2007f057ad2e342d68",
+    "scripts/check_console_udc.py": "1d14efd1d35d3f0be44bb65d2e1ee04f1d3a0acff2124173dced54f9b9d87aa3",
+    "scripts/probe_genesis_function.py": "dfc9844481497215ece70b1bf564a504ffcadfe43c7140a5483205031e49c3e1",
+    "scripts/check_miniplanets_native.py": "4f15e05900c04d4944e5dc23048cbdc06decbbf3f7f6fd548ceeecdb4198d582",
+    "scripts/verify_miniplanets_level.py": "b7a10a76c6443044b125f0eb257c2493f84355317c8e8df5a572c42f01abedec"
+  },
+  "sessions": [
+    {
+      "name": "complete_level",
+      "checked_ticks": 804,
+      "first_key_tick": 472,
+      "first_win_tick": 784,
+      "first_death_tick": null,
+      "final_state": {
+        "$action": 1,
+        "$angle": 6,
+        "$blocked_x": 0,
+        "$blocked_y": 0,
+        "$buttons": 0,
+        "$collision": 0,
+        "$dead": 0,
+        "$direction": 6,
+        "$dx": 0,
+        "$dy": 1,
+        "$index": 250,
+        "$jump": 0,
+        "$key_active": 0,
+        "$keys": 0,
+        "$next_x": 160,
+        "$next_y": 240,
+        "$phase": 16,
+        "$pressed_jump": 0,
+        "$prev_buttons": 0,
+        "$subpixel": 240,
+        "$test_x": 1,
+        "$test_y": 1,
+        "$tile": 4,
+        "$tmp_x": 2,
+        "$tmp_y": 0,
+        "$win": 1,
+        "$x": 160,
+        "$y": 240
+      },
+      "trace_sha256": "96618203bbaf852e5e6e8dc616a88e2a60720034f5410c3c6b3832931f48bd81",
+      "frame_sha256": "14c9f68b2bd83cfdf13497bda3424b3e33bd8d6d5d76238499fd48460a0ffb6b",
+      "input_publication_delay_frames": 1
+    },
+    {
+      "name": "wall_right",
+      "checked_ticks": 84,
+      "first_key_tick": null,
+      "first_win_tick": null,
+      "first_death_tick": null,
+      "final_state": {
+        "$action": 0,
+        "$angle": 0,
+        "$blocked_x": 0,
+        "$blocked_y": 0,
+        "$buttons": 0,
+        "$collision": 0,
+        "$dead": 0,
+        "$direction": 255,
+        "$dx": 0,
+        "$dy": 0,
+        "$index": 1,
+        "$jump": 0,
+        "$key_active": 1,
+        "$keys": 1,
+        "$next_x": 31,
+        "$next_y": 0,
+        "$phase": 84,
+        "$pressed_jump": 0,
+        "$prev_buttons": 0,
+        "$subpixel": 202,
+        "$test_x": 0,
+        "$test_y": 0,
+        "$tile": 0,
+        "$tmp_x": 225,
+        "$tmp_y": 96,
+        "$win": 0,
+        "$x": 31,
+        "$y": 0
+      },
+      "trace_sha256": "2c27c135319f544bebf7d9244ba5c972dcc39a62548147909f0f53e5753f3f9b",
+      "frame_sha256": "fc31f8177e4083a6eab8963b47471a448622d48d31aa9ef265850f7578fb6fa0",
+      "input_publication_delay_frames": 1
+    },
+    {
+      "name": "wall_down",
+      "checked_ticks": 84,
+      "first_key_tick": null,
+      "first_win_tick": null,
+      "first_death_tick": null,
+      "final_state": {
+        "$action": 0,
+        "$angle": 6,
+        "$blocked_x": 0,
+        "$blocked_y": 0,
+        "$buttons": 0,
+        "$collision": 0,
+        "$dead": 0,
+        "$direction": 255,
+        "$dx": 0,
+        "$dy": 0,
+        "$index": 16,
+        "$jump": 0,
+        "$key_active": 1,
+        "$keys": 1,
+        "$next_x": 0,
+        "$next_y": 31,
+        "$phase": 84,
+        "$pressed_jump": 0,
+        "$prev_buttons": 0,
+        "$subpixel": 202,
+        "$test_x": 1,
+        "$test_y": 0,
+        "$tile": 0,
+        "$tmp_x": 0,
+        "$tmp_y": 65,
+        "$win": 0,
+        "$x": 0,
+        "$y": 31
+      },
+      "trace_sha256": "01162ce309a66c342bfe0550ba2f46bd5c6950a397c26ad6dc3dc5415fa654c9",
+      "frame_sha256": "5ca5a63e5976494c4838bb361a6fba5b6df1f12a65efa644494b172727187de7",
+      "input_publication_delay_frames": 1
+    },
+    {
+      "name": "water_death",
+      "checked_ticks": 186,
+      "first_key_tick": null,
+      "first_win_tick": null,
+      "first_death_tick": 160,
+      "final_state": {
+        "$action": 6,
+        "$angle": 255,
+        "$blocked_x": 0,
+        "$blocked_y": 0,
+        "$buttons": 0,
+        "$collision": 2,
+        "$dead": 1,
+        "$direction": 0,
+        "$dx": 1,
+        "$dy": 0,
+        "$index": 164,
+        "$jump": 0,
+        "$key_active": 1,
+        "$keys": 1,
+        "$next_x": 64,
+        "$next_y": 160,
+        "$phase": 160,
+        "$pressed_jump": 0,
+        "$prev_buttons": 0,
+        "$subpixel": 249,
+        "$test_x": 0,
+        "$test_y": 0,
+        "$tile": 3,
+        "$tmp_x": 2,
+        "$tmp_y": 192,
+        "$win": 0,
+        "$x": 64,
+        "$y": 160
+      },
+      "trace_sha256": "e7b756f924d5d7d20634688e55ff0d42a0040e8e2340673dc0a2ed0f660119ed",
+      "frame_sha256": "0290727087941a8e32f444943ae999c1dbbe19c365a2ce8801427b7492983d9f",
+      "input_publication_delay_frames": 1
+    },
+    {
+      "name": "jump_wall",
+      "checked_ticks": 100,
+      "first_key_tick": null,
+      "first_win_tick": null,
+      "first_death_tick": null,
+      "final_state": {
+        "$action": 0,
+        "$angle": 0,
+        "$blocked_x": 0,
+        "$blocked_y": 0,
+        "$buttons": 0,
+        "$collision": 0,
+        "$dead": 0,
+        "$direction": 255,
+        "$dx": 0,
+        "$dy": 0,
+        "$index": 1,
+        "$jump": 0,
+        "$key_active": 1,
+        "$keys": 1,
+        "$next_x": 31,
+        "$next_y": 0,
+        "$phase": 100,
+        "$pressed_jump": 0,
+        "$prev_buttons": 0,
+        "$subpixel": 198,
+        "$test_x": 0,
+        "$test_y": 0,
+        "$tile": 0,
+        "$tmp_x": 225,
+        "$tmp_y": 96,
+        "$win": 0,
+        "$x": 31,
+        "$y": 0
+      },
+      "trace_sha256": "5124383a52c76a1aef00f7e243d7d44d496c4d58891dbc7d27d903f20e0a8393",
+      "frame_sha256": "fc31f8177e4083a6eab8963b47471a448622d48d31aa9ef265850f7578fb6fa0",
+      "input_publication_delay_frames": 1
+    },
+    {
+      "name": "wrap_roundtrip",
+      "checked_ticks": 84,
+      "first_key_tick": null,
+      "first_win_tick": null,
+      "first_death_tick": null,
+      "final_state": {
+        "$action": 0,
+        "$angle": 0,
+        "$blocked_x": 0,
+        "$blocked_y": 0,
+        "$buttons": 0,
+        "$collision": 0,
+        "$dead": 0,
+        "$direction": 255,
+        "$dx": 0,
+        "$dy": 0,
+        "$index": 0,
+        "$jump": 0,
+        "$key_active": 1,
+        "$keys": 1,
+        "$next_x": 0,
+        "$next_y": 0,
+        "$phase": 84,
+        "$pressed_jump": 0,
+        "$prev_buttons": 0,
+        "$subpixel": 202,
+        "$test_x": 1,
+        "$test_y": 0,
+        "$tile": 0,
+        "$tmp_x": 0,
+        "$tmp_y": 96,
+        "$win": 0,
+        "$x": 0,
+        "$y": 0
+      },
+      "trace_sha256": "72e11f99a64dc904691e570649fd942f499ba5cf7a642c0d737c750238b679e7",
+      "frame_sha256": "ee906474512caedbb41f8e5f02a5d72eec7362a1eb205504e7cad587f235b7da",
+      "input_publication_delay_frames": 1
+    },
+    {
+      "name": "restart_after_death",
+      "checked_ticks": 220,
+      "first_key_tick": null,
+      "first_win_tick": null,
+      "first_death_tick": 160,
+      "final_state": {
+        "$action": 0,
+        "$angle": 0,
+        "$blocked_x": 0,
+        "$blocked_y": 0,
+        "$buttons": 0,
+        "$collision": 0,
+        "$dead": 0,
+        "$direction": 255,
+        "$dx": 0,
+        "$dy": 0,
+        "$index": 1,
+        "$jump": 0,
+        "$key_active": 1,
+        "$keys": 1,
+        "$next_x": 16,
+        "$next_y": 0,
+        "$phase": 52,
+        "$pressed_jump": 0,
+        "$prev_buttons": 0,
+        "$subpixel": 204,
+        "$test_x": 0,
+        "$test_y": 0,
+        "$tile": 0,
+        "$tmp_x": 240,
+        "$tmp_y": 96,
+        "$win": 0,
+        "$x": 16,
+        "$y": 0
+      },
+      "trace_sha256": "c3154346858d76b0760fe7c77894e3bd901f2c41ba653892ca335009345a0ada",
+      "frame_sha256": "8d004fb520d5d6035d894b1649c137b06315861c2df9b11924201470291aa0fc",
+      "input_publication_delay_frames": 1
+    }
+  ],
+  "scope": "Stage 1-1 logical gameplay with authored NES presentation, terminal freeze and restart",
+  "excluded": [
+    "score",
+    "lives",
+    "time limit",
+    "audio",
+    "original globe rendering",
+    "other levels"
+  ],
+  "provenance": {
+    "profile": "miniplanets-remix-rev04-stage1-1-logical-1",
+    "source_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+    "upstream_commit": "0ac9c395289cc5d0837c96d45e61a27300e8eebc",
+    "upstream": "https://github.com/sikthehedgehog/miniplanets",
+    "recovery": "reviewed source-bound specialization, not generic native decompilation",
+    "regions": {
+      "update_subpixel": {
+        "offset": 766,
+        "length": 48,
+        "sha256": "9489ccadda48d530b1dd17c181b05715099969ed442f4e37e4d170b0a3d40ee9"
+      },
+      "init_player": {
+        "offset": 17316,
+        "length": 56,
+        "sha256": "7fc6d1162a9ea237443ffd8001d597004dc03513133f3e06e60e6622e9f6618f"
+      },
+      "run_player": {
+        "offset": 17372,
+        "length": 686,
+        "sha256": "8d886e0a828ccf57afebcfad98e508f419cdf7f560b34e492326a6e957c72872"
+      },
+      "locomotion": {
+        "offset": 17630,
+        "length": 136,
+        "sha256": "f77636c2cecf3ac0cd5096a5fa28ddaa90594f1e370b84096373a22dcb6e837c"
+      },
+      "get_tile": {
+        "offset": 15500,
+        "length": 34,
+        "sha256": "7eb0bea3be6e78ef6e0a2a5d9413b8d48274445b426660a03878ba1729bdab8f"
+      },
+      "run_key": {
+        "offset": 19344,
+        "length": 128,
+        "sha256": "3c52fec6b8f18c8a9a8d651b4078fa46075d236aec52ad43f62cd48ae877d1bb"
+      },
+      "collides_player": {
+        "offset": 18848,
+        "length": 66,
+        "sha256": "c8ddd5c86f66407ac9200b18c08596b43054ca0822abc8fd8d9e32dcb86ae8b5"
+      },
+      "hurt_player_ex": {
+        "offset": 18918,
+        "length": 64,
+        "sha256": "c7df51925eb2e129ebd463ee0037a1c7be4d9bbdcbc49be900664b31f8a2d9fb"
+      },
+      "win_stage": {
+        "offset": 14226,
+        "length": 34,
+        "sha256": "baf15144ca4c1a546763bfbff80f035e96d80e1a113ffcbabbada5286f54cb12"
+      },
+      "play_sfx_request": {
+        "offset": 1992,
+        "length": 22,
+        "sha256": "125d095789f22c2c66f747a59c402e28986f4718df2d863ec2e48642e70b50a1"
+      },
+      "map": {
+        "offset": 399072,
+        "length": 256,
+        "sha256": "fa767737abf35837999c3fe79e23d12ca34602a2fe481d7e694832014e8fdf00"
+      },
+      "object": {
+        "offset": 399328,
+        "length": 5,
+        "sha256": "ca63b44844416441657e1bc69328ab952777066c91aa7fc10faf74c2135f14a7"
+      },
+      "joy_angle": {
+        "offset": 18058,
+        "length": 16,
+        "sha256": "77c47b2bec93b43706b3e9388601cb54d27f6e5866733664c6bcadaa64070cf6"
+      },
+      "angle_distance": {
+        "offset": 416648,
+        "length": 20,
+        "sha256": "600b498ff076c8c1e6536f9536535b0d77cf21036e78d04b5be28457a1bc3738"
+      },
+      "collision": {
+        "offset": 42260,
+        "length": 35,
+        "sha256": "12e7ba38e196d522eb453ae4281482516a6cbd11840dbae77b92d2fce8b83653"
+      },
+      "stage_header": {
+        "offset": 415178,
+        "length": 8,
+        "sha256": "b5ead37e39fc4301e10807e91beaa33d5606ae941b08d8ceaaa485cf63c0e87b"
+      }
+    },
+    "stage": 0,
+    "scope": "active Stage 1-1 movement, walls, jumping, water, single key and goal",
+    "authored_adapters": [
+      "flattened NES presentation",
+      "freeze at first death/win",
+      "Start reset"
+    ],
+    "excluded": [
+      "score/tally",
+      "lives",
+      "time limit",
+      "audio",
+      "original rendering",
+      "other levels",
+      "ending",
+      "cheats",
+      "pause"
+    ]
+  },
+  "rom_sha256": "e5ebe0c91ee9a69df6857a5a3b8c01346e779aff9c9c1d4f8aaf6fe77e8e23a1",
+  "compiler_profile": {
+    "mapper": 0,
+    "prg_bytes": 32768,
+    "chr_bytes": 8192,
+    "screen": [
+      256,
+      240
+    ],
+    "map_screen_origin": [
+      64,
+      40
+    ],
+    "world_pixel_scale": [
+      1,
+      2
+    ],
+    "variable_endian": "little",
+    "frame_counter_endian": "little",
+    "logic_cycles_upper_bound": 1155,
+    "max_logic_cycles": 20000,
+    "presentation_cycles_upper_bound": 1674,
+    "max_published_bytes": 96,
+    "published_snapshot": true,
+    "working_variables": {
+      "$action": {
+        "address": 1024,
+        "width": 8,
+        "initial": 0
+      },
+      "$angle": {
+        "address": 1025,
+        "width": 8,
+        "initial": 2
+      },
+      "$blocked_x": {
+        "address": 1026,
+        "width": 8,
+        "initial": 0
+      },
+      "$blocked_y": {
+        "address": 1027,
+        "width": 8,
+        "initial": 0
+      },
+      "$buttons": {
+        "address": 1028,
+        "width": 8,
+        "initial": 0
+      },
+      "$collision": {
+        "address": 1029,
+        "width": 8,
+        "initial": 0
+      },
+      "$dead": {
+        "address": 1030,
+        "width": 8,
+        "initial": 0
+      },
+      "$direction": {
+        "address": 1031,
+        "width": 8,
+        "initial": 255
+      },
+      "$dx": {
+        "address": 1032,
+        "width": 8,
+        "initial": 0
+      },
+      "$dy": {
+        "address": 1033,
+        "width": 8,
+        "initial": 0
+      },
+      "$index": {
+        "address": 1034,
+        "width": 8,
+        "initial": 0
+      },
+      "$jump": {
+        "address": 1035,
+        "width": 8,
+        "initial": 16
+      },
+      "$key_active": {
+        "address": 1036,
+        "width": 8,
+        "initial": 1
+      },
+      "$keys": {
+        "address": 1037,
+        "width": 8,
+        "initial": 1
+      },
+      "$next_x": {
+        "address": 1038,
+        "width": 8,
+        "initial": 0
+      },
+      "$next_y": {
+        "address": 1039,
+        "width": 8,
+        "initial": 0
+      },
+      "$phase": {
+        "address": 1040,
+        "width": 8,
+        "initial": 0
+      },
+      "$pressed_jump": {
+        "address": 1041,
+        "width": 8,
+        "initial": 0
+      },
+      "$prev_buttons": {
+        "address": 1042,
+        "width": 8,
+        "initial": 0
+      },
+      "$subpixel": {
+        "address": 1043,
+        "width": 8,
+        "initial": 0
+      },
+      "$test_x": {
+        "address": 1044,
+        "width": 8,
+        "initial": 0
+      },
+      "$test_y": {
+        "address": 1045,
+        "width": 8,
+        "initial": 0
+      },
+      "$tile": {
+        "address": 1046,
+        "width": 8,
+        "initial": 0
+      },
+      "$tmp_x": {
+        "address": 1047,
+        "width": 8,
+        "initial": 0
+      },
+      "$tmp_y": {
+        "address": 1048,
+        "width": 8,
+        "initial": 0
+      },
+      "$win": {
+        "address": 1049,
+        "width": 8,
+        "initial": 0
+      },
+      "$x": {
+        "address": 1050,
+        "width": 8,
+        "initial": 0
+      },
+      "$y": {
+        "address": 1051,
+        "width": 8,
+        "initial": 0
+      }
+    },
+    "input_publication": "sampled for logic, published on the following vblank",
+    "display_adapter": "authored flat 2D icons and HUD; source game rules execute as UIL",
+    "input_bits": "right,left,up,down,A,B,Start,Select",
+    "ppu_updates": "vblank only"
+  },
+  "original_cpu": {
+    "format": "miniplanets-original-native-level-transitions-1",
+    "status": "passed",
+    "source_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+    "core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+    "cases_sha256": "e6d33bffcbac523b0988196611ce2427548f97c71b714c1d55e25f139f42e1f3",
+    "source_hashes": {
+      "scripts/check_miniplanets_native.py": "4f15e05900c04d4944e5dc23048cbdc06decbbf3f7f6fd548ceeecdb4198d582",
+      "scripts/probe_genesis_function.py": "dfc9844481497215ece70b1bf564a504ffcadfe43c7140a5483205031e49c3e1"
+    },
+    "cases_supplied": 1850,
+    "active_cases": 1796,
+    "excluded_cases": [
+      {
+        "name": "complete_level-785",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-786",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-787",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-788",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-789",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-790",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-791",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-792",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-793",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-794",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-795",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-796",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-797",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-798",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-799",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-800",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-801",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-802",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-803",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "complete_level-804",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-161",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-162",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-163",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-164",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-165",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-166",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-167",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-168",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-169",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-170",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-171",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-172",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-173",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-174",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-175",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-176",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-177",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-178",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-179",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-180",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-181",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-182",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-183",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-184",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-185",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "water_death-186",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "restart_after_death-161",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "restart_after_death-162",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "restart_after_death-163",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "restart_after_death-164",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "restart_after_death-165",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "restart_after_death-166",
+        "reason": "authored terminal-screen adapter"
+      },
+      {
+        "name": "restart_after_death-167",
+        "reason": "authored Start-reset adapter"
+      },
+      {
+        "name": "restart_after_death-168",
+        "reason": "authored Start-reset adapter"
+      }
+    ],
+    "scope": "original RunPlayer then RunKey RAM projection under explicit stage-1 caller state",
+    "assumptions": [
+      "stage 1-1 map and single original key object",
+      "EndingPhase, ShakeTimer, Muteki and PlayerSpring are zero",
+      "source sound-request code executes; rendered audio excluded",
+      "registers reset between declared calls; only declared RAM projection compared",
+      "global clock, score tally, rendering and ordinary game reachability excluded",
+      "Start reset and terminal screen are authored adapters excluded here"
+    ],
+    "native_phase_cases_checked": 256,
+    "native_phase_table_sha256": "459cb7f92764cf14cedc73ac8441f9632c2f3c921d6548a7f0672d182b2f13f6",
+    "native_player_cases_checked": 1796,
+    "native_key_cases_checked": 1484,
+    "active_transitions_checked": 1796,
+    "native_instructions_executed": 183835,
+    "native_master_cycles": 14824390,
+    "native_changed_ram_outside_contract": 0,
+    "inputs_unchanged": true
+  },
+  "natural_gameplay": {
+    "checked_transitions": 784,
+    "first_input_host_frame": 650,
+    "baseline_projection": {
+      "$x": 0,
+      "$y": 0,
+      "$angle": 2,
+      "$action": 0,
+      "$jump": 0,
+      "$win": 0,
+      "$dead": 0,
+      "$keys": 1,
+      "$key_active": 1,
+      "$phase": 78
+    },
+    "baseline": "observed loaded-game state; no original memory/PC mutation",
+    "trace_sha256": "11a5e5a3d37d17bdd7f1d61429a79954544dd8232f389c4ec45bc4b0e2a8d11f",
+    "frame_sha256": "e9ed19c1cbb8965d60061e7384b81593b96a1d17ab69690e33c6d19f6c840206",
+    "final_projection": {
+      "$x": 160,
+      "$y": 240,
+      "$angle": 6,
+      "$action": 1,
+      "$jump": 0,
+      "$win": 1,
+      "$dead": 0,
+      "$keys": 0,
+      "$key_active": 0,
+      "$phase": 94,
+      "$subpixel": 186
+    }
+  },
+  "aligned_original_to_nes": {
+    "checked_transitions": 784,
+    "initial_projection": {
+      "$x": 0,
+      "$y": 0,
+      "$angle": 2,
+      "$action": 0,
+      "$jump": 0,
+      "$win": 0,
+      "$dead": 0,
+      "$keys": 1,
+      "$key_active": 1,
+      "$phase": 78
+    },
+    "rom_sha256": "4fbf442426d8f7f74c698e7bcc8965a26f08c9915cfc4f0b7c1140baf1a1cebf",
+    "nes_trace_sha256": "9350a6c609599b3da4ddaeec0cbc2c9d309f130e6dba8105c92bc8de4acef505",
+    "nes_frame_sha256": "14c9f68b2bd83cfdf13497bda3424b3e33bd8d6d5d76238499fd48460a0ffb6b",
+    "scope": "same observed logical initial state and inputs; selected state projection, aligned application ticks"
+  },
+  "inputs_unchanged": true,
+  "date": "2026-10-31",
+  "host": {
+    "system": "Darwin",
+    "macos": "27.2",
+    "machine": "arm64",
+    "python": "3.13.13"
+  },
+  "total_full_state_nes_ticks": 1562,
+  "core_identities": {
+    "nes": {
+      "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+      "core_name": "FCEUmm",
+      "core_version": "(SVN) ac0d00a"
+    },
+    "genesis": {
+      "core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+      "core_name": "Genesis Plus GX",
+      "core_version": "v1.7.4 f27655b"
+    }
+  },
+  "privacy": "Sanitized metadata, digests and state projections only. No original ROM/assets, raw traces, recovered UIL/table data, generated cartridges or frames in this source package."
+}

@@ -36,9 +36,20 @@ def validate_il(document):
     except (TypeError, ValueError, RecursionError) as exc:
         raise ILInvalid('document must be finite JSON') from exc
     _require(len(raw) <= 65536, 'document size budget exceeded')
-    _fields(document, ('format', 'role', 'variables', 'resources', 'body'), ('evidence',))
+    _fields(document, ('format', 'role', 'variables', 'resources', 'body'), ('evidence', 'tables'))
     _require(document['format'] == 'fdisbull-il-1' and document['role'] in ('udl', 'uil'), 'invalid format or role')
     variables, resources = document['variables'], document['resources']
+    tables = document.get('tables', {})
+    _require(isinstance(tables, dict) and len(tables) <= 16, 'invalid table declarations')
+    total = 0
+    for name, table in tables.items():
+        _require(isinstance(name, str) and bool(name), 'invalid table name')
+        _fields(table, ('type', 'values'))
+        _require(table['type'] in ('u8', 'u16') and isinstance(table['values'], list)
+                 and bool(table['values']) and all(_typed(v, table['type']) for v in table['values']),
+                 'invalid immutable table')
+        total += len(table['values'])
+    _require(total <= 4096, 'immutable table budget exceeded')
     _require(isinstance(variables, dict) and isinstance(resources, dict), 'invalid declarations')
     for name, decl in variables.items():
         _require(isinstance(name, str) and re.fullmatch(r'\$[A-Za-z_][A-Za-z0-9_]*', name), 'invalid variable name')
@@ -97,7 +108,7 @@ def validate_il(document):
             _require(count[0] <= 1024, 'node budget exceeded')
             _require(isinstance(block, dict), 'invalid block')
             op = block.get('op')
-            fields = {'set': ('var','value'), 'add': ('var','value'), 'subtract': ('var','value'), 'if': ('condition','then','else'), 'require': ('condition',), 'text': ('resource',), 'load_graphic': ('resource','x','y'), 'play_sound': ('resource',), 'click': ('target',)}
+            fields = {'set': ('var','value'), 'add': ('var','value'), 'subtract': ('var','value'), 'lookup': ('var','table','index'), 'if': ('condition','then','else'), 'require': ('condition',), 'text': ('resource',), 'load_graphic': ('resource','x','y'), 'play_sound': ('resource',), 'click': ('target',)}
             _require(op in fields, 'unknown block')
             _fields(block, ('id','op',*fields[op]), ('evidence',))
             ident = block['id']
@@ -110,6 +121,15 @@ def validate_il(document):
                 typ = variables[var]['type']; vtyp = value(block['value'])
                 _require((typ == 'bool') == (vtyp == 'bool') and (op == 'set' or typ != 'bool'), 'incompatible assignment')
                 if not isinstance(block['value'], dict): _require(_typed(block['value'], typ), 'literal out of range')
+            elif op == 'lookup':
+                _require(isinstance(block['var'], str) and block['var'] in variables
+                         and isinstance(block['table'], str) and block['table'] in tables,
+                         'unknown lookup binding')
+                _require(variables[block['var']]['type'] == tables[block['table']]['type'],
+                         'lookup result type mismatch')
+                _require(value(block['index']) in ('integer', 'u8', 'u16'), 'invalid lookup index type')
+                if not isinstance(block['index'], dict):
+                    _require(0 <= block['index'] < len(tables[block['table']]['values']), 'lookup index out of range')
             elif op == 'if':
                 condition(block['condition'], depth+1); blocks(block['then'], depth+1); blocks(block['else'], depth+1)
             elif op == 'require':
@@ -172,6 +192,11 @@ def execute_il(document, state=None, capabilities=(), max_steps=1024):
                     else:
                         bits = int(typ[1:]); n = (work[name] + (v if op == 'add' else -v)) % (1 << bits)
                         work[name] = n - (1 << bits) if typ[0] == 'i' and n >= (1 << (bits-1)) else n
+                elif op == 'lookup':
+                    values = document['tables'][b['table']]['values']
+                    index = val(b['index'])
+                    _require(0 <= index < len(values), 'lookup index out of range')
+                    work[b['var']] = values[index]
                 elif op == 'if': run(b['then'] if cond(b['condition']) else b['else'])
                 elif op == 'require': _require(cond(b['condition']), 'qualification condition not met')
                 else:

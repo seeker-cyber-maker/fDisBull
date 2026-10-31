@@ -246,6 +246,11 @@ program into runnable cartridges. Both have been checked in real emulator
 cores, including one bounded Genesis machine-code → UIL → NES experiment.
 See [console UDC](docs/CONSOLE_UDC.md) for the supported profile and results.
 
+A source-bound Miniplanets module also builds a playable first level on NES,
+including movement, collisions, jumping, key collection and a goal. The flat NES
+presentation is adapted; logical gameplay is compared with the original Genesis
+code and a normal playthrough. See the [level build and controls](docs/MINIPLANETS_NES_LEVEL.md).
+
 ## The bounded UDC pipeline
 
 The 0.23 source introduces an original-backed DOS compiler definition (UDC):
