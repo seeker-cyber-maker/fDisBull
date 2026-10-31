@@ -12,6 +12,7 @@ prior work. A coordinator may research references separately from blind workers.
 
 - [Qualify prior work](#qualify-prior-work)
 - [Reuse reconstructed source](#reuse-reconstructed-source)
+- [Guide-derived Z blueprints](#collate-guides-into-provisional-z-blueprints)
 - [Turn leads into scenes](#turn-leads-into-qualified-scenes)
 - [Retain reusable meanings](#retain-reusable-meanings)
 - [From code to semantics](#from-code-to-semantics)
@@ -29,8 +30,9 @@ prior work. A coordinator may research references separately from blind workers.
    Check claimed byte ranges, resource hashes and version mappings against the
    supplied files. A source tree or a recreation can illuminate a hypothesis but
    is not proof that this binary was built from it or behaves identically.
-3. When normal progress matters, research manuals and independent guides as
-   secondary reports. Synthesize an original, task-scoped checklist covering
+3. For scene recovery and normal progression, collate guides, solutions,
+   walkthroughs, manuals, playthroughs and analyses as behavioral blueprints.
+   Check source lineage rather than assuming the reports are independent. Synthesize an original, task-scoped checklist covering
    known normal milestones and prerequisite alternatives through the requested
    end condition. Mark missing sections, version conflicts, uncertainty and
    spoilers; do not reproduce a copyrighted guide. If the sources cannot support
@@ -75,6 +77,7 @@ in that worker; let a separate coordinator curate the other arms.
 | Byte-matching reconstruction | Reproduce/check the build, bind useful source units to retained code | Inferred names/types are historically original or the UIL meaning is correct |
 | Behavioral port or compatible engine | Mine candidate algorithms, formats and test cases; compare against this edition | Exact original behavior, bugs, timing or file compatibility |
 | Recovered C/pseudocode or notes | Use as an attributed reading aid and hypothesis checklist | Code compiles, executes independently or matches the target |
+| Guides, solutions, walkthroughs and analyses | Collate a provisional behavioral blueprint and preliminary Z scenes | Independent corroboration, executable source or verified game behavior |
 | Finished executable only | Compare qualified observations or inspect it under a separate binary-results mode | Its unavailable source/tools have been reused or its internals are known |
 
 Record author/repository, immutable commit, edition/platform/language, source
@@ -118,7 +121,8 @@ Use the available implementation to form executable UDL bindings and a shared
 UIL contract, then qualify a suitable UDC implementation or original-backed
 selection. Do not decompile an already available reconstruction merely to obey
 an ASM -> C -> Z diagram. A direct source/results -> UDL/UIL route is legitimate;
-Z is optional. Check installed methods first: the bounded `udl-lift-c` reader is
+Z is not a compulsory compiler stage, but retain a provisional Z comparison
+blueprint where scenes/actions help the investigation. Check installed methods first: the bounded `udl-lift-c` reader is
 not a general importer for arbitrary reconstructed C. Keep an unsupported adapter
 as an attributed experimental artifact, not an invented CLI or adopted format.
 
@@ -166,6 +170,115 @@ is reproduced. This is distinct from Civ64's Win16-to-modern-port work; shared
 titles do not establish shared code or editions. Do not copy game programs,
 compiler media or upstream reconstructed code into fDisBull's skill packages.
 
+## Collate guides into provisional Z blueprints
+
+For ordinary scene-compatible recovery, actively collate existing game guides,
+solutions, walkthroughs, manuals, playthroughs and analyses before starting cold.
+Use them as a third-party behavioral reconstruction: an incomplete description
+of externally observed actions and outcomes, often assembled through black-box
+play rather than code inspection. This is useful prior knowledge, not recovered
+source code. An analysis may contain code-backed facts; classify each claim by
+its actual evidence rather than promoting everything because the title says
+"analysis". Keep this material out of an explicitly independent benchmark arm.
+
+Synthesize an original, bounded blueprint for the current scene and useful next
+frontier. Extract proposed entities, actions, prerequisite alternatives, outcomes,
+scene transitions and unresolved questions. A blueprint can narrow the search,
+provide a coverage checklist, and later serve as a comparison point for recovered
+behavior. Do not wait for complete UDL recovery before drafting it, or routinely
+skip Z merely because a low-level executable route exists. Z remains optional
+where a scene/action view would distort the target's behavior.
+
+### Weight agreement by lineage, not vote count
+
+Collate claims, not just documents. For a material claim retain its source and
+edition, author/date or revision when available, section or video timestamp,
+reported prerequisites, first-hand evidence if present, and known/suspected
+upstream source family. Keep asserted facts separate from our inferences.
+A compact private ledger is enough; do not require exhaustive source genealogy
+before investigating the next useful action.
+
+Fourteen comparable, apparently independent reports can reasonably make a claim
+the first search hypothesis ahead of one unsupported outlier. That is search
+priority, not truth or verification. Fourteen derivatives of one guide count as
+one source family for corroboration, not fourteen independent witnesses. Shared
+wording, identical unusual mistakes, citations, translations and reposts are
+lineage clues, not proof of copying. Unknown dependence stays unknown; do not
+invent confidence percentages or assume independence from different websites.
+Record raw report counts separately from established source families.
+
+Retain the dissenting claim and the cheapest discriminator. A specific,
+reproducible observation or source-bound finding can outweigh the majority.
+Differences may reflect editions, hidden prerequisites, alternate routes or an
+upstream mistake; do not silently average incompatible claims into one scene.
+An agent's synthesized guide and tests derived from it keep the same lineage:
+neither is new independent corroboration. Repeated agreement does not promote
+hypotheses to accepted UDL/UIL semantics. The goal is a better starting prior,
+not a vote-certified game model.
+
+### Draft Z early without pretending it is tested
+
+Keep a preliminary Z scene as an explicitly untested prediction artifact with
+stable claim IDs and links back to the source ledger. Record which details are
+reported, inferred, unknown or disputed. Draft scene descriptions and commands
+are useful before code bindings exist; guessed descriptions are not recovered
+original narration. Unknown guards, coordinates, item IDs and effects remain
+unknown, not invented executable facts. Use plain structured notes if the
+installed Z format cannot preserve uncertainty; do not invent a supported schema.
+
+Illustrative PQ1-style hypothesis, not a factual claim about any actual room or
+edition: a guide reports "there is a key in this room".
+
+```text
+claim key-in-room: guide-reported, untested; source and edition recorded
+scene: reported room label; native room/resource binding unknown
+object candidate: key; code identity, visibility and availability unknown
+action candidate: find or take key; exact verb/dispatch and prerequisites unknown
+predicted result: acquisition; inventory/flag effects not yet established
+next probe: locate the room/object representation and the acquisition handler
+```
+
+That report justifies looking for the key, not inserting one into the model as
+confirmed. Search candidate room scripts, object/inventory records, text and
+aliases, state predicates, acquisition dispatch and related writes. A literal
+"key" string may be absent or refer to another object; numeric IDs, shared
+handlers or hidden conditions may carry the meaning. Failure of one string
+search does not establish absence. Keep the possible no-key or different-room
+case as a discriminator, and qualify any live click geometry separately.
+
+A draft may run in an explicitly selected conjecture simulator or be authored
+as a guide-based adaptation. That does not make it original-backed execution.
+Do not drive a live guest or mutate authoritative game state on the strength of
+a draft binding. Do not silently replace an unsupported recovered action with
+a conjectured successful one. Future/hidden objects stay in the investigator's
+blueprint unless the chosen assistance/spoiler profile permits their disclosure.
+
+### Compare predictions with recovered behavior and observations
+
+Keep the pre-analysis draft revision instead of overwriting predictions after
+seeing the answer. Reconcile three columns per claim: guide-derived Z prediction,
+source-qualified UDL/UIL behavior, and original-runtime observation when needed.
+They answer different questions. For example, a key's object record may support
+its existence while pickup availability, ordinary reachability and persistence
+remain unresolved. A missing observation is unknown, not a contradiction.
+
+Compare scene contents, accepted/refused/repeated actions, guard alternatives,
+ordered state changes, exits and timing where relevant. Distinguish a guide's
+convenient route order from a necessary dependency. Mark each claim supported
+at a stated boundary, refined, contradicted or still unresolved; retain the
+original prediction and decisive evidence. Add branches discovered in code even
+when every walkthrough omits them. A mismatch directs investigation and does
+not authorize editing the original or forcing the implementation to fit a guide.
+
+The Z blueprint is a comparison point, not the sole oracle. Executing a draft
+against its own expected answers shows internal consistency only. Guide-derived
+cases may guide original-code/runtime checks, but count that evidence according
+to how it was actually obtained; do not call the shared prediction independent.
+Completing the guide checklist establishes coverage of its claims, not the whole
+game. Record prediction accuracy, unresolved claims and correction/preparation
+cost alongside time to accepted behavior. Compare assisted and cold workflows
+separately rather than claiming that prior knowledge was free.
+
 ## Turn leads into qualified scenes
 
 Use a guide or rough code scaffold to propose entities, dependencies and
@@ -177,7 +290,7 @@ with invented success, a no-op or a convenient Boolean default.
 
 Convert each relevant milestone into candidate scenes, objects, entry state,
 prerequisites, actions, transitions, observable outcomes and persistence. Keep
-contradictory alternatives and unknowns. Track the source-qualified guide claim,
+contradictory alternatives and unknowns. Track the attributed guide claim,
 our inferred steps, code binding, runtime readiness and persistence separately.
 For each useful lead, record context, exact claim and origin, inferred steps,
 resource/handler and effect binding, required runtime evidence, disposition
