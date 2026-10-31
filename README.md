@@ -220,6 +220,10 @@ end can grow independently of the DOS interpreter's assembly; supported source
 components and their boundaries stay explicit. Compact control flow keeps shared
 paths once, making larger routines easier to inspect. Unmodeled engine actions
 stay visible and block execution until their effects are implemented.
+An explicit [object/resource effect profile](docs/AGI_EFFECTS.md) now models
+AGI positions, views, queries and controller changes. Drawing and message
+windows use resumable host requests, so an agent can inspect a routine without
+silently treating a requested external action as completed.
 
 The [Z-machine processor](docs/ZMACHINE_PROCESSOR.md) adds direct v3 bytecode
 inspection through fDisBull's processor interface. It reports operands, calls,

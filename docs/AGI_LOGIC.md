@@ -38,3 +38,6 @@ location. `--allow-opaque` retains known action encodings in a control-flow-only
 projection whose execution is refused. Unknown instruction widths are still
 refused rather than guessed. See the decoder-module contract for API examples
 and [the KQ1 structural verification](VERIFICATION-AGI-COMPACT-2026-10-31.md).
+The separate [effect profile](AGI_EFFECTS.md) adds bounded object/resource model
+operations and explicit host suspension; it does not turn static decoding into
+original-engine execution.

@@ -51,7 +51,21 @@ def _validate_flow(document):
     return _validate_v1(synthetic, graph_ids=continuations, graph_conditions=conditions, graph_mode=True)
 
 
-def execute_flow(document, state=None, capabilities=(), max_steps=1024, max_call_depth=8):
+def execute_flow(document, state=None, capabilities=(), max_steps=1024, max_call_depth=8, *,
+                 effect_context=None, checkpoint=None, host_result=None):
+    # The effect runner owns suspension/resumption; the original scalar path
+    # retains its existing result and atomic execution contract.
+    def contains_effect(body):
+        return any(b.get('op')=='effect' or b.get('op')=='if' and
+                   (contains_effect(b.get('then',[])) or contains_effect(b.get('else',[])))
+                   for b in body if isinstance(b,dict))
+    if (any(x is not None for x in (effect_context,checkpoint,host_result)) or
+            isinstance(document,dict) and isinstance(document.get('continuations'),dict) and
+            any(isinstance(c,dict) and isinstance(c.get('body'),list) and contains_effect(c['body'])
+                for c in document['continuations'].values())):
+        from .interaction_effects import execute_effect_flow
+        return execute_effect_flow(document,state,capabilities,max_steps,max_call_depth,
+                                   effect_context,checkpoint,host_result)
     from .interaction_il import execute_il
     original = deepcopy(state)
     try:
