@@ -6,6 +6,11 @@ header, terminated function directory, mandatory driver entries and file-backed
 routine offsets. The filename extension is not used as proof. Unknown function
 IDs are retained; shared routine offsets retain all directory aliases.
 
+From a source checkout without installing a package, use
+`PYTHONPATH=src:player python -m fdisbull` in place of `fdisbull` below. Propagate
+that source path into child processes; an older installed command may expose
+a different interface.
+
 ```text
 fdisbull identify /private/game/SBPFM.ADV
 fdisbull inspect /private/game/SBPFM.ADV
@@ -75,6 +80,13 @@ handler can use the same numbers. Independently bind the resident signature,
 loaded module hash, segment and callable extent before treating it as an
 original driver operation. The disassembler does not silently execute or
 install drivers to establish that binding.
+
+The original DinoPark acceptance found a concrete version difference: its
+MIDPAK play-sequence call returned AX=0064h, while the reference documents
+0000h/0001h. Its original code leaves the last AIL tempo operation's AX
+unnormalized. The catalog's output descriptions remain reference contracts,
+not a return-value decoder for every driver build. See the
+[acceptance findings](VERIFICATION-DOS-AUDIO-2026-10-30.md).
 
 ## Use by a DOS UDC module
 
