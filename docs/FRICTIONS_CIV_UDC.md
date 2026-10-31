@@ -64,3 +64,21 @@
      boundary, not evidence that fDisBull could not analyze the target.
    - The workflow now uses bounded reads, explicit repository paths, and
      fail-fast shell commands; the broker failure remains a harness follow-up.
+
+9. The unpacked DOS root was not present locally, and a size-only decoder was
+   insufficient.
+   - `CIV_UNP.EXE` is the decoded MZ root used for analysis; it is not a
+     media/resource unpacker. The missing artifact initially blocked the
+     `R:0D12:0045` city route.
+   - A bounded clean-room decoder was added in the Civ worktree. Its first
+     output had the correct 340,791-byte size but the wrong SHA because MZ
+     `e_cp`/`e_cblp` must describe the root load module rather than the
+     physical file including overlays, and `e_minalloc` must be compensated for
+     decoded paragraph growth.
+   - An independent UNP 4.12 run isolated the six-byte header difference. The
+     decoder now produces the published
+     `aa63aa396cfa62519b131ee6c0a231bed02bb9aefce26b955608b5815a569e57`
+     identity, with a synthetic regression fixture plus a real-target check.
+   - The utility and the exact-target output remain in the feature PR; this
+     friction PR records the repeatability boundary and the reason not to call
+     any size-only output equivalent.
