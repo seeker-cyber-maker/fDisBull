@@ -279,15 +279,16 @@ jobs:
         run: |
           bash .github/ci/native-build.sh qemu
           python .github/ci/native_cache.py seal qemu
+      - name: Record and smoke check verified QEMU
+        run: |
+          .native-cache/qemu/bin/qemu-system-x86_64 --version
+          python .github/ci/qemu_smoke.py .native-cache/qemu/bin/qemu-system-x86_64 --relocate --output native-evidence/pe/qemu-boot-smoke.json
+          cp .native-cache/qemu/receipt.json native-evidence/pe/build-cache-identity.json
       - uses: actions/cache/save@v4
         if: ${{ !inputs.cold_cache && steps.native-cache.outputs.valid != 'true' && (github.event_name == 'pull_request' || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/'))) }}
         with:
           path: .native-cache/qemu
           key: ${{ env.NATIVE_CACHE_SCOPE }}-${{ steps.native-key.outputs.key }}
-      - name: Record and smoke check verified QEMU
-        run: |
-          .native-cache/qemu/qemu-system-x86_64 --version
-          cp .native-cache/qemu/receipt.json native-evidence/pe/build-cache-identity.json
       - name: Package verified QEMU for this run
         run: |
           mkdir -p .native/qemu-transfer
@@ -319,14 +320,14 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
-      FDISBULL_PE_QEMU: ${{ github.workspace }}/.native-cache/qemu/qemu-system-x86_64
+      FDISBULL_PE_QEMU: ${{ github.workspace }}/.native-cache/qemu/bin/qemu-system-x86_64
       FDISBULL_PE_KERNEL: ${{ github.workspace }}/.native/pe/linux-amd64
       FDISBULL_PE_INITRAMFS: ${{ github.workspace }}/.native/pe/runtime.cpio.gz
       FDISBULL_PE_FIXTURE: ${{ github.workspace }}/.native/pe/oracle.exe
       FDISBULL_PE_EVIDENCE: ${{ github.workspace }}/native-evidence/pe/artifacts
       FDISBULL_REQUIRE_PE: "1"
       FDISBULL_DOSBOX: ${{ github.workspace }}/.native/linux-dosbox/dosbox-x
-      FDISBULL_MACHINE_QEMU: ${{ github.workspace }}/.native-cache/qemu/qemu-system-x86_64
+      FDISBULL_MACHINE_QEMU: ${{ github.workspace }}/.native-cache/qemu/bin/qemu-system-x86_64
       FDISBULL_DOS_KERNEL: ${{ github.workspace }}/.native/pe/linux-amd64
       FDISBULL_DOS_INITRAMFS: ${{ github.workspace }}/.native/pe/dos-runtime.cpio.gz
       FDISBULL_MACHINE_EVIDENCE: ${{ github.workspace }}/native-evidence/unified/boot
@@ -394,8 +395,9 @@ jobs:
             bash .github/ci/native-build.sh qemu
             python .github/ci/native_cache.py seal qemu
           fi
-          .native-cache/qemu/qemu-system-x86_64 --version
+          .native-cache/qemu/bin/qemu-system-x86_64 --version
           mkdir -p native-evidence/pe
+          python .github/ci/qemu_smoke.py .native-cache/qemu/bin/qemu-system-x86_64 --output native-evidence/pe/qemu-boot-smoke.json
           cp .native-cache/qemu/receipt.json native-evidence/pe/build-cache-identity.json
       - name: Build a trusted Wine root filesystem
         run: |

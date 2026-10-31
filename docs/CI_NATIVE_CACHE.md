@@ -47,7 +47,17 @@ installed dpkg package/version inventory, compiler/linker identities, build-tool
 paths and hashes, and relevant build environment values. This deliberately
 invalidates conservatively on runner/toolchain/package changes. The two DOSBox
 profiles have different keys. Native configure flags remain the previous flags;
-QEMU additionally points its data directory at the bundled firmware directory.
+QEMU uses a relocatable prefix with `bin/qemu-system-x86_64` and
+`share/qemu/` firmware. The pinned upstream
+[Meson configuration](https://github.com/qemu/qemu/blob/v9.2.4/meson.build#L32)
+appends `qemu_suffix` (`qemu`) to `--datadir=share`; treating datadir as the final
+firmware directory was incorrect. A flat layout is rejected. A real authored
+boot-sector smoke runs through both PC and q35 without a `-L` override and must
+reach the guest's debug-exit instruction, not merely print a version. Before
+cache saving, the producer copies the bundle to an unrelated directory and hides
+the original during this smoke, then restores it even on failure. The consumer
+boots the transferred bundle before building Wine. The smoke source is included
+in QEMU's identity. No producer-only absolute firmware path is required.
 
 Only exact action cache hits are admitted. Partial-key matches are deleted, no
 `restore-keys` are supplied, and the restored identity must match completely.

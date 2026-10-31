@@ -23,6 +23,7 @@ def load(name):
 
 cache = load('native_cache')
 policy = load('event_policy')
+boot = load('qemu_smoke')
 
 
 class CacheContracts(unittest.TestCase):
@@ -30,7 +31,7 @@ class CacheContracts(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        for name in ('.github/ci/native-build.sh', '.github/ci/native_cache.py',
+        for name in ('.github/ci/native-build.sh', '.github/ci/native_cache.py', '.github/ci/qemu_smoke.py',
                      'experimental/dosbox-x/source-manifest.json',
                      'experimental/dosbox-x/headless-agent.patch'):
             destination = self.root / name
@@ -126,11 +127,17 @@ class CacheContracts(unittest.TestCase):
 
     def test_qemu_requires_firmware_even_when_receipt_lists_existing_files(self):
         expected = {'backend': 'qemu'}
-        (self.directory / 'dosbox-x').rename(self.directory / 'qemu-system-x86_64')
+        (self.directory / 'bin').mkdir()
+        (self.directory / 'dosbox-x').rename(self.directory / 'bin/qemu-system-x86_64')
         with self.assertRaisesRegex(ValueError, 'firmware'):
             cache.seal(self.directory, expected)
-        firmware = self.directory / 'pc-bios/bios-256k.bin'
-        firmware.parent.mkdir()
+        firmware = self.directory / 'share/qemu/bios-256k.bin'
+        firmware.parent.mkdir(parents=True)
+        # A flat pc-bios directory is the previously broken layout.
+        (self.directory / 'pc-bios').mkdir()
+        (self.directory / 'pc-bios/bios-256k.bin').write_bytes(b'wrong lookup directory')
+        with self.assertRaisesRegex(ValueError, 'firmware'):
+            cache.seal(self.directory, expected)
         firmware.write_bytes(b'synthetic firmware inventory')
         cache.seal(self.directory, expected)
         self.assertTrue(cache.validate(self.directory, expected))
@@ -151,10 +158,76 @@ class CacheContracts(unittest.TestCase):
         self.assertGreater(len(receipt['runtime_libraries']), 0)
         self.assertTrue(cache.validate(self.directory, self.expected))
 
+    def test_qemu_boot_smoke_is_a_backend_specific_identity_input(self):
+        dosbox = self.identity()
+        qemu = cache.identity(self.root, 'qemu', 'qemu-9.2.4', lambda args: 'tools')
+        path = self.root / '.github/ci/qemu_smoke.py'
+        path.write_bytes(path.read_bytes() + b'\n# changed boot qualification\n')
+        self.assertEqual(dosbox, self.identity())
+        self.assertNotEqual(qemu, cache.identity(self.root, 'qemu', 'qemu-9.2.4', lambda args: 'tools'))
+
     def test_cold_option_removes_payload_before_validation(self):
         with patch.dict(os.environ, {'NATIVE_COLD_CACHE': 'true'}), patch.object(cache.sys, 'argv', ['native_cache.py', 'key', 'dosbox', '--profile', 'experimental/dosbox-x']), patch.object(cache.Path, 'cwd', return_value=self.root):
             cache.main()
         self.assertFalse(self.directory.exists())
+
+
+class BootSmokeContracts(unittest.TestCase):
+    def test_authored_sector_has_boot_signature_and_guest_exit_instruction(self):
+        self.assertEqual(len(boot.SECTOR), 512)
+        self.assertEqual(boot.SECTOR[:4], bytes.fromhex('b02ae6f4'))
+        self.assertEqual(boot.SECTOR[-2:], b'\x55\xaa')
+
+    def test_pc_and_q35_use_default_firmware_from_an_unrelated_working_directory(self):
+        from types import SimpleNamespace
+        machines = []
+        def runner(command, **options):
+            self.assertNotIn('-L', command)
+            self.assertEqual(command[command.index('-accel') + 1], 'tcg')
+            self.assertEqual((options['cwd'] / 'authored-boot.raw').read_bytes(), boot.SECTOR)
+            self.assertLessEqual(options['timeout'], 30)
+            machines.append(command[command.index('-machine') + 1])
+            return SimpleNamespace(returncode=85, stdout='')
+        receipt = boot.smoke('/bin/true', runner)
+        self.assertEqual(machines, ['pc', 'q35'])
+        self.assertEqual(receipt['status'], 'passed')
+
+    def test_missing_bios_or_no_guest_execution_is_rejected(self):
+        from types import SimpleNamespace
+        for code, output in ((1, "qemu: could not load PC BIOS 'bios-256k.bin'"), (0, 'version check alone succeeds')):
+            with self.subTest(code=code), self.assertRaises(RuntimeError):
+                boot.smoke('/bin/true', lambda *args, **kwargs: SimpleNamespace(returncode=code, stdout=output))
+
+    def test_relocation_hides_original_and_restores_it_even_on_failure(self):
+        from types import SimpleNamespace
+        with tempfile.TemporaryDirectory() as temporary:
+            bundle = Path(temporary) / '.native-cache/qemu'
+            binary = bundle / 'bin/qemu-system-x86_64'
+            binary.parent.mkdir(parents=True)
+            binary.write_bytes(b'ELF test seam; no native proof claimed here')
+            firmware = bundle / 'share/qemu/bios-256k.bin'
+            firmware.parent.mkdir(parents=True)
+            firmware.write_bytes(b'firmware test seam')
+            def runner(command, **options):
+                self.assertFalse(bundle.exists())
+                self.assertNotEqual(Path(command[0]), binary)
+                return SimpleNamespace(returncode=85, stdout='')
+            self.assertTrue(boot.relocated_smoke(binary, runner)['relocated_with_original_unavailable'])
+            self.assertTrue(binary.is_file())
+            def failure(*args, **kwargs):
+                self.assertFalse(bundle.exists())
+                return SimpleNamespace(returncode=1, stdout='missing firmware')
+            with self.assertRaises(RuntimeError):
+                boot.relocated_smoke(binary, failure)
+            self.assertTrue(binary.is_file())
+            self.assertFalse(bundle.with_name('qemu.relocation-hidden').exists())
+
+    def test_boot_timeout_is_a_failure(self):
+        import subprocess
+        def timed_out(*args, **kwargs):
+            raise subprocess.TimeoutExpired(args[0], kwargs['timeout'])
+        with self.assertRaisesRegex(RuntimeError, 'timed out'):
+            boot.smoke('/bin/true', timed_out)
 
 
 class EventContracts(unittest.TestCase):
@@ -277,6 +350,34 @@ class WorkflowContracts(unittest.TestCase):
         for native, qemu, cancelled, expected in (('success', 'success', False, True), ('success', 'failure', False, False), ('failure', 'success', False, False), ('skipped', 'success', False, False), ('success', 'skipped', False, False), ('success', 'success', True, False)):
             context = {'needs': {'native_debugger': {'result': native}, 'prepare_qemu': {'result': qemu}}, 'cancelled': cancelled}
             self.assertEqual(expression(guard, context), expected)
+
+    def test_full_skipped_gate_dependency_path_reaches_unified_acceptance(self):
+        text = (ROOT / '.github/workflows/native-debugger.yml').read_text()
+        def job(name):
+            return text.split('  ' + name + ':\n', 1)[1]
+        def guard(name):
+            line = next(line for line in job(name).splitlines() if line.startswith('    if: '))
+            value = line.split('    if: ', 1)[1].strip()
+            if value.startswith('${{ '): value = value[4:-3]
+            return value.replace('event-policy', 'event_policy').replace('native-debugger', 'native_debugger').replace('prepare-qemu', 'prepare_qemu')
+        for event, ref in (('pull_request', 'refs/pull/58/merge'), ('push', 'refs/heads/main'), ('push', 'refs/heads/release/test'), ('push', 'refs/heads/integration/test'), ('push', 'refs/tags/v0.27.0'), ('workflow_dispatch', 'refs/heads/feature')):
+            context = self.context(event, ref)
+            self.assertFalse(expression(guard('event-policy'), context))
+            context['needs'] = {'event_policy': {'result': 'skipped', 'outputs': {'run': ''}}}
+            for name in ('native-debugger', 'prepare-qemu'):
+                self.assertIn('    needs: event-policy', job(name).split('    steps:', 1)[0])
+                self.assertTrue(expression(guard(name), context))
+                context['needs'][name.replace('-', '_')] = {'result': 'success'}
+            self.assertIn('    needs: [native-debugger, prepare-qemu]', job('pe64-debugger').split('    steps:', 1)[0])
+            self.assertTrue(expression(guard('pe64-debugger'), context))
+
+    def test_real_qemu_boot_check_precedes_cache_save_and_wine_build(self):
+        text = (ROOT / '.github/workflows/native-debugger.yml').read_text()
+        prep = text.split('  prepare-qemu:\n', 1)[1].split('  pe64-debugger:\n', 1)[0]
+        self.assertLess(prep.index('qemu_smoke.py'), prep.index('uses: actions/cache/save@v4'))
+        self.assertIn('--relocate --output', prep)
+        consumer = text.split('  pe64-debugger:\n', 1)[1]
+        self.assertLess(consumer.index('qemu_smoke.py'), consumer.index('name: Build a trusted Wine root filesystem'))
 
     def test_trusted_namespace_is_never_saved_by_pr_tag_manual_or_feature(self):
         text = (ROOT / '.github/workflows/native-debugger.yml').read_text()

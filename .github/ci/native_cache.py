@@ -40,6 +40,8 @@ def identity(root, backend, profile, probe=None):
         return subprocess.check_output(args, stderr=subprocess.STDOUT, text=True)
     probe = probe or command
     inputs = [".github/ci/native-build.sh", ".github/ci/native_cache.py"]
+    if backend == "qemu":
+        inputs += [".github/ci/qemu_smoke.py"]
     if backend == "dosbox":
         inputs += [f"{profile}/source-manifest.json", f"{profile}/headless-agent.patch"]
     return {
@@ -108,18 +110,18 @@ def runtime_libraries(binary):
 
 
 def check_required(directory, expected):
-    executable = "dosbox-x" if expected["backend"] == "dosbox" else "qemu-system-x86_64"
+    executable = "dosbox-x" if expected["backend"] == "dosbox" else "bin/qemu-system-x86_64"
     binary = directory / executable
     if not binary.is_file() or not os.access(binary, os.X_OK) or binary.read_bytes()[:4] != b"\x7fELF":
         raise ValueError("Missing ELF executable")
-    if expected["backend"] == "qemu" and not (directory / "pc-bios/bios-256k.bin").is_file():
+    if expected["backend"] == "qemu" and not (directory / "share/qemu/bios-256k.bin").is_file():
         raise ValueError("Missing QEMU firmware")
 
 
 def seal(directory, expected):
     files = inventory(directory)
     check_required(directory, expected)
-    executable = "dosbox-x" if expected["backend"] == "dosbox" else "qemu-system-x86_64"
+    executable = "dosbox-x" if expected["backend"] == "dosbox" else "bin/qemu-system-x86_64"
     receipt = {"identity": expected, "files": files,
                "runtime_libraries": runtime_libraries(directory / executable),
                "producer": {key: os.environ.get(key, "local") for key in (
@@ -137,7 +139,7 @@ def validate(directory, expected):
             raise ValueError("Identity or file digest mismatch")
         # Recheck the required members, not only those listed in the receipt.
         check_required(directory, expected)
-        executable = "dosbox-x" if expected["backend"] == "dosbox" else "qemu-system-x86_64"
+        executable = "dosbox-x" if expected["backend"] == "dosbox" else "bin/qemu-system-x86_64"
         if receipt["runtime_libraries"] != runtime_libraries(directory / executable):
             raise ValueError("Runtime library ABI/digest mismatch")
         return True
