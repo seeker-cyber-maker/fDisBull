@@ -44,13 +44,16 @@ class AGIDOSHostAdapter:
     adapter. Calling run again only reads the retained result; it never retries.
     Source resources, contexts, screenshots and model checkpoints stay private.
     """
-    def __init__(self,monitor,projection,*,viewdir,volume_dir):
+    def __init__(self,monitor,projection,*,viewdir,volume_dir,dialogue_key=None):
+        if dialogue_key is not None and dialogue_key not in ('enter','escape'):
+            raise ValueError('dialogue_key must be enter, escape or None')
         if not isinstance(monitor,AGIDOSMonitor) or not monitor.prefetch:
             raise ValueError('an original DOS initial-fetch monitor is required')
         if projection.get('calls') or projection.get('opaque_operations'):
             raise ValueError('host adapter requires a fully modeled leaf routine')
         self.monitor=monitor;self.session=monitor.session
         self.viewdir,self.volume_dir=viewdir,volume_dir
+        self.dialogue_key=dialogue_key
         self.projection=deepcopy(projection);self.document=projection['uil']
         self._payloads={};self._views={};self._report=None
         raw=monitor.snapshot();self.initial=capture_state(monitor,self.document['variables'],raw)
@@ -191,14 +194,14 @@ class AGIDOSHostAdapter:
             model=execute_il(self.document,self.initial,effect_context=self.context)
             report['model']=model
             cursor=0
-            def advance(expected):
+            def advance(expected,dialogue_key=None):
                 nonlocal cursor
                 raw=self.monitor.snapshot();offset,_=self.monitor._location(raw['registers'])
                 if offset!=expected:raise ValueError('original source path differs from model')
                 report['attempts'].append({'offset':offset,'status':'attempted'})
                 report['native_execution_attempted']=True
                 if not report['native_execution']:report['native_execution']=None
-                result=self.monitor.step()
+                result=self.monitor.step(dialogue_key=dialogue_key)
                 report['attempts'][-1]=result
                 if result.get('stop'):report['native_execution']=True
                 if result['status'] not in ('completed','returned'):raise ValueError('original operation did not reach its qualified boundary')
@@ -212,8 +215,9 @@ class AGIDOSHostAdapter:
                     site=next(item for item in self.projection['effect_operations'] if item['block_id']==request['block_id'])
                     while cursor<len(expected)-1:advance(expected[cursor])
                     if expected[-1]!=site['offset']:raise ValueError('host request source occurrence mismatch')
-                    result=advance(site['offset']);raw=result['raw_after'];context=self._context(raw)
                     kind=request['operation']
+                    key=self.dialogue_key if kind=='print' and not request['details']['output_mode'] and not request['details']['window_timer'] else None
+                    result=advance(site['offset'],key);raw=result['raw_after'];context=self._context(raw)
                     if kind=='draw':
                         obj=context['objects'][str(request['details']['object'])];answer={k:obj[k] for k in ('x','y')}
                     elif kind=='erase':answer={}
@@ -224,6 +228,7 @@ class AGIDOSHostAdapter:
                     completion=dict(request_id=request['request_id'],status='completed',result=answer)
                     receipt=dict(completion,source_offset=site['offset'],operation=kind,frame_status='pending',
                         basis='observed original handler return',visual_verified=False,identity=deepcopy(self.monitor.identity))
+                    if 'dialogue' in result:receipt['dialogue']=deepcopy(result['dialogue'])
                     report['host_completions'].append(receipt)
                     try:
                         receipt['frame']=self.session.screenshot(f'agi-host-{len(report["host_completions"])-1}.png',hooks=False)
