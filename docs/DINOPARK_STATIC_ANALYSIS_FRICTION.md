@@ -1,5 +1,11 @@
 # DinoPark analysis friction and retained Z terminal replies
 
+The [Coelophysis purchase follow-up](VERIFICATION-DINOPARK-COELOPHYSIS-RECONCILIATION-2026-10-31.md)
+replaces fixed purchase sleeps in Z with bounded original-input phases, retains
+the paused provider and order receipts, and exposes a guarded continuation plus
+read-only purchase reconciliation. It also continues the remaining entry and
+asset investigation without equating an unobserved path with unused content.
+
 The [DinoMart reconciliation follow-up](VERIFICATION-DINOPARK-DINOMART-RECONCILIATION-2026-10-31.md)
 extends the scene host budget, retains failed-navigation input evidence and
 qualifies read-only recovery in the same original guest. It continues the

@@ -149,6 +149,17 @@ remain unresolved; this command does not authorize replay or reconnect an exited
 guest. Observation and session receipts expose `reconciliation_available` and
 the held attempt's `recovery_id`.
 
+A held Coelophysis order retains its delivered input receipts. Use `look` to
+obtain its current guarded actions. When offered, `continue dinosaur order`
+waits for the retained phase and sends only later inputs; it does not repeat
+the buy command. Each request has a host deadline and phase guest allowances
+remain cumulative. After the remaining phases finish, use `reconcile` to
+certify the original buy from cash, pen, expense, display and released-pointer
+observations. This final step is read-only. A confirmed effect survives a
+failed display readback, while an unproved effect stays unknown. See the
+[purchase recovery verification](VERIFICATION-DINOPARK-COELOPHYSIS-RECONCILIATION-2026-10-31.md)
+for the tested scope and retained failures.
+
 The JSON-line backend accepts `{"op":"reconcile"}` and an optional
 `recovery_id` selecting the already-held attempt. A successful result carries
 `read_only: true`, the original canonical action and a fresh destination witness.
