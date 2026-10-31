@@ -268,6 +268,16 @@ class WorkflowContracts(unittest.TestCase):
             expected_count = 1 if file == 'ci.yml' else 2
             self.assertEqual(text.count(guard), expected_count)
 
+    def test_unified_acceptance_runs_after_successful_preparations_with_skipped_gate(self):
+        text = (ROOT / '.github/workflows/native-debugger.yml').read_text()
+        job = text.split('  pe64-debugger:\n', 1)[1]
+        guard = job.split('    if: ${{ ', 1)[1].split(' }}', 1)[0]
+        self.assertIn('!cancelled()', guard)
+        guard = guard.replace('native-debugger', 'native_debugger').replace('prepare-qemu', 'prepare_qemu')
+        for native, qemu, cancelled, expected in (('success', 'success', False, True), ('success', 'failure', False, False), ('failure', 'success', False, False), ('skipped', 'success', False, False), ('success', 'skipped', False, False), ('success', 'success', True, False)):
+            context = {'needs': {'native_debugger': {'result': native}, 'prepare_qemu': {'result': qemu}}, 'cancelled': cancelled}
+            self.assertEqual(expression(guard, context), expected)
+
     def test_trusted_namespace_is_never_saved_by_pr_tag_manual_or_feature(self):
         text = (ROOT / '.github/workflows/native-debugger.yml').read_text()
         self.assertEqual(self.value(text, 'NATIVE_CACHE_SCOPE', self.context('push', 'refs/heads/main')), 'trusted-main')

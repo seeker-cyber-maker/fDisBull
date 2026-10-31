@@ -17,7 +17,8 @@ expensive jobs only when
 GitHub reports an open, mergeable PR from that exact repository/branch with the
 same head SHA. PR, main/integration/release, tag and manual events bypass the
 gate runner entirely, avoiding an extra queue stage; their acceptance runs
-directly. PR events always run, including forks. Branches without a PR run
+directly. The unified job explicitly requires both preparation jobs to succeed
+and checks cancellation, overriding transitive propagation of the skipped gate. PR events always run, including forks. Branches without a PR run
 immediately; conflicting PRs, unknown mergeability, stale PR heads, API failures
 and rate limits keep the push checks. A PR opened after the push policy ran can
 therefore still produce one duplicate initial run. The public read API uses no

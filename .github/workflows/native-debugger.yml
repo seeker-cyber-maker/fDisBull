@@ -314,6 +314,8 @@ jobs:
   pe64-debugger:
     name: Unified DOS, boot and PE64 (installed wheel)
     needs: [native-debugger, prepare-qemu]
+    # Override transitive skip propagation from the intentionally skipped gate.
+    if: ${{ !cancelled() && needs.native-debugger.result == 'success' && needs.prepare-qemu.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
