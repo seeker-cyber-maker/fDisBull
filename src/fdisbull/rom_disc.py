@@ -120,6 +120,6 @@ def parse_sega_disc(data: bytes, *, file_size: int | None = None) -> dict | None
                 'endian': 'big', 'header_offset': offset, 'valid': valid, 'descriptor_valid': valid,
                 'detection': 'magic', 'metadata': meta,
                 'regions': [{'name': 'sector-zero system descriptor', 'kind': 'header',
-                             'file_offset': offset, 'file_size': min(256, max(0, len(data) - offset))}],
+                             'file_offset': offset, 'file_size': min(256 if saturn else 512, max(0, len(data) - offset))}],
                 'warnings': warnings}
     return None

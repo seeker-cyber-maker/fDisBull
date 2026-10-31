@@ -83,6 +83,7 @@ python scripts/check_agent_skill.py --python /path/to/installed/python --skill w
 ```text
 fdisbull identify /path/to/program
 fdisbull rom-inspect /path/to/console-cartridge-or-sega-data-track
+fdisbull disc-inspect /path/to/disc.cue
 fdisbull inspect /path/to/program
 fdisbull import /path/to/program /path/to/analysis.fdb
 fdisbull analyze /path/to/analysis.fdb --max-instructions 10000

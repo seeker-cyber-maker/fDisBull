@@ -60,6 +60,9 @@ def inspect_rom(data: bytes) -> dict:
 def inspect_rom_path(path: str | Path) -> dict:
     """Read cartridges within 64 MiB; sample a disc prefix and one ISO descriptor."""
     from .rom_disc import parse_sega_disc, parse_disc_volume
+    if Path(path).suffix.lower() == '.cue':
+        from .disc import inspect_disc_path
+        return inspect_disc_path(path)
     if not Path(path).is_file():
         raise ValueError('ROM inspection requires a regular file')
     with Path(path).open('rb') as stream:

@@ -1,5 +1,9 @@
 # Console media parsing
 
+The subsequent [CUE/BIN and ISO reader](CUE_ISO_PARSING.md) adds bounded track
+layout and primary directory traversal and resolves the Saturn pilot's sector
+accounting. The descriptor-only route and its original receipt remain below.
+
 This stage reads console media as data. It identifies supported headers,
 reports declared hardware and sizes, records original file offsets, and checks
 bounded structural extents. It does not create CPU mappings, disassemble these
@@ -88,7 +92,7 @@ rules and code correspondence remain separate questions.
 
 | Priority | Formats | Minimum useful parsing outcome |
 | --- | --- | --- |
-| 1 | CUE/BIN and cooked ISO; full bounded ISO 9660 | Explicit tracks, sector framing, descriptor sequence, file paths/extents, available bytes and safe extraction budgets; supports Saturn, Sega CD and PS1 carriers |
+| Added | CUE/BIN and cooked ISO; primary ISO 9660 tree | [Track and filesystem reader](CUE_ISO_PARSING.md); extraction, Mode 2 and other filesystem profiles remain separate |
 | 1 | Game Boy / Game Boy Color, GBA | Header fields, declared ROM/RAM, cartridge controller, header checksums, logo/signature evidence, original offsets |
 | 2 | N64 `.z64/.v64/.n64`, Nintendo DS | Explicit byte order and transformations, header fields, program/data extents and integrity checks |
 | 2 | CHD, GDI, CCD/IMG/SUB, MDS/MDF | Backed track reader with parent/decompression limits and transformation provenance; no extension-only platform guesses |
