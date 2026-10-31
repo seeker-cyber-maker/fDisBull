@@ -54,3 +54,13 @@
    - Until that source change is promoted into the installed release, baseline
      runs use the numeric fallback and report the release/source distinction
      instead of claiming that the installed `0.26.1` command is fixed.
+
+8. Artifact-broker failure was independent of shell execution.
+   - During archive inspection, `proc://omp.blob.broker` reported
+     `blob broker exposure failed to start`; ordinary bash, pytest, and Git
+     operations continued to work.
+   - A source-companion archive also exceeded the reader's 64 MiB in-memory
+     limit for one nested member. This is an inspection transport/size
+     boundary, not evidence that fDisBull could not analyze the target.
+   - The workflow now uses bounded reads, explicit repository paths, and
+     fail-fast shell commands; the broker failure remains a harness follow-up.
