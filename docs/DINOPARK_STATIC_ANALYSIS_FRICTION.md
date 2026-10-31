@@ -264,3 +264,14 @@ The [named-action native batch](VERIFICATION-DINOPARK-Z-NAMED-TERMINAL-2026-10-3
 passed through the public Player in one guest. It also records the existing
 pre-entry operating-report refusal and unsupported modal checkpoint creation
 as concrete follow-ups, without upgrading either to unknown game effects.
+
+### Resumed unused-content investigation
+
+The [subsequent producer and runtime study](VERIFICATION-DINOPARK-UNUSED-CONTENT-2026-10-30.md)
+accounts for filename sources for 54 of 57 ACT files, distinguishes a selective
+sprite reader from full actor loading, and retains BUS/OFFICE/PEOPLE as open
+producer gaps. A muted original-game route completed setup and 24 time advances.
+The candidate visitor-message binding remains unqualified, and an optional
+quit extension exposed a private controller assumption about accepted modal
+results. The record preserves that limitation separately from native gameplay
+and cleanup, along with concrete resource-telemetry follow-ups.
