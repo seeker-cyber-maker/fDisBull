@@ -120,6 +120,45 @@ Eleven further far calls to `0045:0D12` exist in the overlay tail
 as overlay candidates; their caller functions are identified only by the nearest
 prologue and their mode arguments come from registers, not literals.
 
+## BUY commit block
+
+The Civ64 crosswalk names the city screen's buy question at
+`R:0D12:4CDF..4E37` (`docs/DOS-PROFILE.md` row 87, `docs/dos/SCENES-PLAY.md`
+7.1). Decoding the window `R:0D12:4C00..4E40` in the unpacked root
+(`0xd165 + offset`) yields the cost computation and the commit:
+
+```text
+4c00  8b1e4865      mov bx, [0x6548]        ; civ index
+4c04  d1e3          shl bx, 1
+4c06  8b87d6b1      mov ax, [bx-0x4e2a]     ; DGROUP gold table (16-bit wrap)
+...
+4c2b  8b87b20b      mov ax, [bx+0xbb2]      ; unit cost table, 0x1E-byte records
+4c2f  f76eb6        imul word [bp-0x4a]     ; multiplier (unrecovered)
+4c32  2b84fa70      sub ax, [si+0x70fa]     ; minus shield stock
+4c37  9a7c00c41d    lcall 1dc4:007c         ; build the question text
+...
+4de2  0187fa70      add [bx+0x70fa], ax     ; shields += cost
+4dec  8b8634ff      mov ax, [bp-0xcc]
+4df0  d1e0          shl ax, 1               ; 2 * cost
+4df2  2987d6b1      sub [bx-0x4e2a], ax     ; gold -= 2 * cost
+4dfe  80a7f270ef    and byte [bx+0x70f2], 0xef ; clear the buy flag
+```
+
+Two further branches compute the same cost with different divisors and an
+extra surcharge:
+
+- `4ca1..4ca7` (`idiv 3`), `4d03..4d08` (`idiv 3`) and `4d76..4d7e`
+  (`sar 2`) select the divisor by city status and production kind.
+- `4daf..4dd2`: when the gold table entry exceeds `0x7D0` (2000), the cost
+  gains `value / 512`.
+
+Sale of a building (`4e03..4f0e`) continues past this window and is not traced.
+
+Limits: the multiplier `[bp-0x4a]` and both cost tables are unresolved; the
+surcharge divisor and the status conditions are recorded but not modelled. The
+commit itself (shields up, gold down by twice the cost, flag cleared) is
+unambiguous.
+
 ## Limits
 
 - Static decode only. No runtime reachability, dispatch order, or mode-1
@@ -135,6 +174,7 @@ prologue and their mode arguments come from registers, not literals.
 ## What this changes
 
 `CIV-DOS-CITY-001` moves from `candidate` to **statically proven** for the entry
-identity, the calling sites, and the shield reset block. `CIV-UI-001` stays
+identity, the calling sites, and the shield reset block. `CIV-DOS-CITY-BUY-001`
+is statically proven for the commit arithmetic only. `CIV-UI-001` stays
 `candidate`: scene geometry and controls still need a runtime display/state
 comparison.

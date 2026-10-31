@@ -143,6 +143,35 @@ Scope: this proves interpreter/native agreement for the tested states. It does
 not prove that the UIL model matches the DOS routine, which the static trace
 covers separately.
 
+## BUY commit module
+
+A second bounded module, `examples/civ/civ_city_buy_udc.py`, models the buy
+commit recovered at `R:0D12:4DD6`: shields increase by the remaining-shield
+cost, gold decreases by twice that cost, all in 16-bit wraparound. The cost
+derivation (item table times an unresolved multiplier, minus shield stock)
+stays outside the module; the caller supplies the computed remaining cost.
+
+The excluded items are named in the contract evidence: the cost tables, the
+`[bp-0x4a]` multiplier, the `> 2000` surcharge, and the cleared status flag
+(`and byte [bx+0x70f2], 0xef`).
+
+Native macOS arm64 with `shield_box 5, treasury 100, remaining 10`:
+
+```text
+{"format":"fdisbull-macos-observation-1","status":0,"value":0,
+ "state":{"$shield_box":15,"$treasury":80,"$remaining":10}}
+```
+
+| case | initial | interpreter | native arm64 |
+|---|---|---|---|
+| default | `shields 5, gold 100, remaining 10` | `shields 15, gold 80` | `shields 15, gold 80` |
+| wrap-treasury | `shields 0, gold 5, remaining 10` | `shields 10, gold 65521` | `shields 10, gold 65521` |
+| negative-remaining | `shields 2, gold 20, remaining -3` | `shields -1, gold 26` | `shields -1, gold 26` |
+| zero-remaining | `shields 7, gold 40, remaining 0` | unchanged | unchanged |
+
+`examples/civ/civ_city_udc_diff.py --module all` runs both sweeps and reports a
+single verdict.
+
 ## Evidence and conflicts
 
 The source-linked receipt keeps:

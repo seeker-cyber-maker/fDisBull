@@ -16,6 +16,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from examples.civ.civ_city_buy_udc import build_buy_udc, buy_program
 from examples.civ.civ_city_uil import _primitive_program, build_city_udc
 from fdisbull.interaction_il import execute_il
 
@@ -52,6 +53,15 @@ def _normalize(frame_state: dict, state: dict) -> dict:
         name: int(value) if isinstance(state.get(name), bool) else value
         for name, value in frame_state.items()
     }
+
+
+BUY_CASES = (
+    ("default", {"$shield_box": 5, "$treasury": 100, "$remaining": 10}),
+    ("wrap-treasury", {"$shield_box": 0, "$treasury": 5, "$remaining": 10}),
+    ("negative-remaining", {"$shield_box": 2, "$treasury": 20, "$remaining": -3}),
+    ("zero-remaining", {"$shield_box": 7, "$treasury": 40, "$remaining": 0}),
+)
+BUY_PUBLIC = ("$shield_box", "$treasury", "$remaining")
 
 
 def run_case(root: Path, work: Path, name: str, initial: dict, target: str) -> dict:
@@ -101,6 +111,69 @@ def run_case(root: Path, work: Path, name: str, initial: dict, target: str) -> d
     }
 
 
+def run_buy_case(root: Path, work: Path, name: str, initial: dict, target: str) -> dict:
+    destination = work / name
+    receipt = build_buy_udc(
+        root,
+        destination,
+        project_path=work / (name + ".fdb"),
+        initial=initial,
+        target=target,
+    )
+    program = destination / "program"
+    done = subprocess.run(
+        [str(program)], capture_output=True, text=True, timeout=120, check=False
+    )
+    lines = [line for line in done.stdout.splitlines() if line.strip()]
+    frame = json.loads(lines[-1]) if done.returncode == 0 and lines else None
+    program_doc = buy_program(initial)
+    merged = {n: v["initial"] for n, v in program_doc["variables"].items()}
+    expected = execute_il(program_doc, merged)["state"]
+    observed = {
+        "returncode": done.returncode,
+        "frame": frame,
+        "stderr": done.stderr.strip()[-400:],
+    }
+    matched = (
+        done.returncode == 0
+        and frame is not None
+        and frame["status"] == 0
+        and all(frame["state"][key] == expected[key] for key in BUY_PUBLIC)
+    )
+    return {
+        "case": name,
+        "initial": initial,
+        "expected": {key: expected[key] for key in BUY_PUBLIC},
+        "observed": observed,
+        "match": bool(matched),
+        "native_artifact": receipt["native_build"]["output"]["sha256"],
+        "profile": receipt["native_build"]["profile"],
+    }
+
+
+def sweep_buy(
+    root: str | Path, work: str | Path, *, target: str, cases=BUY_CASES
+) -> dict:
+    work_path = Path(work).expanduser().resolve()
+    if work_path.exists():
+        raise ValueError("sweep work directory must be new")
+    work_path.mkdir(parents=True)
+    rows = [
+        run_buy_case(
+            Path(root).expanduser().resolve(), work_path, name, initial, target
+        )
+        for name, initial in cases
+    ]
+    return {
+        "format": "fdisbull-civ-city-buy-diff-1",
+        "target": target,
+        "host": {"platform": sys.platform, "machine": platform.machine()},
+        "cases": rows,
+        "verdict": "match" if all(row["match"] for row in rows) else "mismatch",
+        "scope": "interpreter/native agreement for the buy commit; cost derivation excluded",
+    }
+
+
 def sweep(root: str | Path, work: str | Path, *, target: str, cases=CASES) -> dict:
     work_path = Path(work).expanduser().resolve()
     if work_path.exists():
@@ -132,8 +205,30 @@ def main(argv=None) -> int:
     parser.add_argument(
         "--target", choices=("linux-x64", "macos-arm64"), default="macos-arm64"
     )
+    parser.add_argument("--module", choices=("city", "buy", "all"), default="all")
     args = parser.parse_args(argv)
-    receipt = sweep(args.source, args.work, target=args.target)
+    if args.module == "city":
+        receipt = sweep(args.source, args.work, target=args.target)
+    elif args.module == "buy":
+        receipt = sweep_buy(args.source, args.work, target=args.target)
+    else:
+        work = Path(args.work)
+        receipt = {
+            "format": "fdisbull-civ-city-udc-diff-2",
+            "city": sweep(args.source, work / "city", target=args.target),
+            "buy": sweep_buy(args.source, work / "buy", target=args.target),
+        }
+        receipt["verdict"] = (
+            "match"
+            if all(
+                part["verdict"] == "match" for part in (receipt["city"], receipt["buy"])
+            )
+            else "mismatch"
+        )
+        receipt["scope"] = (
+            "interpreter/native agreement for the modelled transitions; "
+            "not source-to-UIL fidelity"
+        )
     print(json.dumps(receipt, indent=2, sort_keys=True))
     return 0 if receipt["verdict"] == "match" else 1
 
