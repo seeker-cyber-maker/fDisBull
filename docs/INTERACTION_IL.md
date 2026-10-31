@@ -83,3 +83,58 @@ are recorded in its projection wrapper rather than adding AGI-specific opcodes
 to shared IL. A boundary inside a callee ends the component with the caller
 suspended. Host plans, original-runtime execution and model checks retain their
 separate qualification requirements.
+
+## Compact shared continuations
+
+The opt-in `fdisbull-il-2` document keeps the same roles, typed variables,
+resources and evidence. It replaces top-level `body` with `entry` and a
+`continuations` map. Each named continuation has one ordered `body` of existing
+primitives and a `transfer`. Bodies and continuation IDs are globally distinct.
+
+```json
+{
+  "format": "fdisbull-il-2", "role": "uil",
+  "variables": {"$x": {"type": "u8", "initial": 0}}, "resources": {},
+  "entry": "first",
+  "continuations": {
+    "first": {"body": [{"id": "inc", "op": "add", "var": "$x", "value": 1}],
+              "transfer": {"op": "goto", "target": "done"}},
+    "done": {"body": [], "transfer": {"op": "return"}}
+  }
+}
+```
+
+Transfers are `goto` with `target`, `if` with an existing `condition` and named
+`then`/`else` targets, `call` with `target` and `resume`, `return`, and global
+`stop`. A return pops the runtime continuation stack or completes at root.
+A stop completes the selected component and retains the suspended stack; it
+does not resume any caller. A null call `resume` admits no return continuation:
+a stop still works, but an unexpected return refuses atomically. This permits
+a proven nonreturning captured component without inventing its caller's body.
+
+References and all bodies, including inactive/unreachable ones, are checked
+once as a graph without expanding branch paths. The 64 KiB document, 1,024-node
+and depth-32 limits remain. Nodes include continuations, body primitives and
+conditions; graph edges do not increase structural nesting. `execute_il`
+counts both entered continuations and executed body primitives against
+`max_steps`, and has keyword `max_call_depth` (default 8, range 1..64) for v2.
+Generic cycles are bounded by execution limits; the AGI semantic lifter still
+refuses source cycles and recursive logic calls. No loop-termination claim is
+made. Failure preserves the original state with no events or partial trace.
+
+Successful `visited` includes continuation IDs and body IDs, with repeated IDs
+when a shared continuation runs again. `control_trace` records each entered
+continuation and suspended resume stack; final `control` records its location,
+stack and `stop` kind. Host effects retain v1 pending-plan behavior, including
+unchanged committed state until an external host resolves the plans.
+
+V2 adds `opaque` body blocks with a nonempty `reason` (at most 256 characters)
+and optional evidence. They preserve unsupported source effects for inspection.
+An opaque block anywhere in the document makes execution refuse **before any
+state change or event**, regardless of selected path or host capabilities.
+Validation of such a document is structural, not semantic qualification.
+
+`il-check`, `il-run`, `change_role` and immutable IL revision storage accept v2.
+Existing scene execution and source-block/UDC equivalence consumers explicitly
+require v1; they do not ignore continuation tables. Neither format adds an AGI
+renderer, engine-effect implementation, compiler backend or complete game.

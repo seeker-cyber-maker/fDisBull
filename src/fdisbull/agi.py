@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from hashlib import sha256
 from pathlib import Path
 from .processor import ProcessorInfo, Location, Successor, DecodedInstruction, decode_instruction
+from .agi_layout import _ACTION_WIDTHS
 
 # Encoding lengths only; no assertion that actions have been executed.
 _ACTIONS = {1:('increment',1),2:('decrement',1),3:('assignn',2),4:('assignv',2),
@@ -21,6 +22,14 @@ _COND_LENGTHS = {0:0,1:2,2:2,3:2,4:2,5:2,6:2,7:1,8:1,9:1,10:2,
                  11:5,12:1,13:0,15:2,16:5,17:5,18:5}
 _SCALAR_CONDITIONS = {1:'equaln', 2:'equalv', 3:'lessn', 4:'lessv',
                       5:'greatern', 6:'greaterv', 7:'isset'}
+# Encodings needed by the KQ1 logic-103 control-flow case. These are facts,
+# not effect implementations. Widths share the explicit v2.917 layout profile.
+_ENGINE_ACTIONS = {30:'load.view',33:'animate.obj',35:'draw',36:'erase',
+                   37:'position',38:'position.v',39:'get.posn',41:'set.view',
+                   61:'ignore.horizon',65:'object.on.land',69:'distance',
+                   70:'stop.cycling',71:'start.cycling',77:'stop.motion',
+                   78:'start.motion',79:'step.size',83:'follow.ego',84:'wander',
+                   85:'normal.motion',88:'ignore.blocks',89:'observe.blocks'}
 
 
 @dataclass(frozen=True)
@@ -47,7 +56,7 @@ class AGILogicResource:
 
 class AGI2917Processor:
     def __init__(self, space):
-        self.info=ProcessorInfo('fdisbull.agi.2.917.subset','2',space,'byte',('decode','static_successors'),None)
+        self.info=ProcessorInfo('fdisbull.agi.2.917.subset','3',space,'byte',('decode','static_successors'),None)
 
     def decode(self, code, location):
         pos=location.offset
@@ -101,9 +110,13 @@ class AGI2917Processor:
             edge('fallthrough',cursor)
         elif op in _ACTIONS:
             name,n=_ACTIONS[op];require(n);cursor+=n;edge('fallthrough',cursor)
+        elif op in _ENGINE_ACTIONS:
+            name=_ENGINE_ACTIONS[op];require(_ACTION_WIDTHS[op]);cursor+=_ACTION_WIDTHS[op];edge('fallthrough',cursor)
         else:
             name='unsupported'; edges.append(Successor('unknown',None,'unsupported opcode; no length inferred'))
         facts={'opcode':op,'mnemonic':name,'size':cursor-pos,'bytes':code[pos:cursor].hex()}
+        if op in _ENGINE_ACTIONS:
+            facts['effect_status']='unmodeled'
         if op == 3:
             facts['operands'] = [{'kind':'variable', 'index':code[pos+1]},
                                  {'kind':'u8', 'value':code[pos+2]}]

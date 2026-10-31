@@ -10,7 +10,8 @@ identify the input; they do not prove a runtime load or host-to-guest mapping.
 This is an intentionally partial static decoder, not an AGI interpreter or a
 claim that a game is recovered. It recognizes return, signed goto, structured
 condition lists (including variable-length `said`), and selected state, flag,
-logic-load, direct/variable logic calls, and print actions. Calls retain a local
+logic-load, direct/variable logic calls, print, and selected resource/object
+action encodings. The latter have unmodeled effects. Calls retain a local
 continuation and an unresolved cross-resource edge. Unsupported opcodes terminate that path without
 inventing an instruction length. An out-of-range edge, malformed instruction,
 overlap, or exhausted budget prevents `complete`; even `complete` means only
@@ -31,3 +32,9 @@ It requires cached scan-entry witnesses and complete coverage of the selected
 source component. Explicit boundaries inside callees stop that component rather
 than pretending the callee returned. Nominal scalar model verification and
 original-interpreter execution remain separate evidence.
+
+The opt-in compact lift retains one shared continuation per admitted source
+location. `--allow-opaque` retains known action encodings in a control-flow-only
+projection whose execution is refused. Unknown instruction widths are still
+refused rather than guessed. See the decoder-module contract for API examples
+and [the KQ1 structural verification](VERIFICATION-AGI-COMPACT-2026-10-31.md).

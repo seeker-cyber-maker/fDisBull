@@ -238,6 +238,27 @@ interpreter execution. Cycles, recursion, parser/I/O operations and exhausted
 budgets refuse qualification. Keep full-call, bounded call-entry and original
 runtime evidence separate.
 
+For many shared branches or repeated callees, use `control_flow="compact"`
+(`--control-flow compact`). The v3 AGI projection uses `fdisbull-il-2`, with
+one continuation per source location and explicit transfer/call/return/stop.
+The original tree form stays the default. Map continuation IDs in `visited`
+through `block_sources`; use `control_trace` for modeled runtime frames rather
+than attaching one invented frame to a shared source node. Whole-graph
+validation covers inactive branches, all targets and globally unique IDs.
+State and event refusal remains atomic under execution or call-depth budgets.
+
+Use `allow_opaque=True` (`--allow-opaque`) only for a declared structural
+question. It retains known action encodings as explicit opaque operations and
+marks the result `control_flow_only`. Such a graph refuses execution before
+any events, even when the initial witness avoids the action. Unknown widths
+and unsupported conditions still refuse construction. All typed initial values
+remain caller-supplied; synthetic inspection values are not runtime evidence.
+The KQ1 logic-103 comparison covers its selected CFG and structural branch-choice
+paths, not state/effect parity or a working AGI game. Keep generated source-byte
+graphs private; export only authored tests and sanitized counts/digests.
+V1-only scene and source-block/UDC proof consumers explicitly reject v2 graphs;
+do not flatten or omit continuations to get a misleading acceptance result.
+
 Bind source occurrence using the snapshot key plus the module's resource-local
 location. File offsets and guest offsets are different coordinates. Unknown
 instructions, unsupported control flow, malformed source or budget stops refuse semantic

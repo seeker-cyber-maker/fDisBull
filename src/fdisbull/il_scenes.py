@@ -72,6 +72,8 @@ class ILSceneBackend:
                     self.sources[name] = {k: loaded[k] for k in ('id', 'version', 'sha256', 'author')}
                     program = loaded['document']
                 validate_il(program)
+                if program['format'] != 'fdisbull-il-1':
+                    raise ValueError('scene programs require tree IL v1; compact control flow is not supported')
                 def text_bytes(body):
                     total = 0
                     for block in body:

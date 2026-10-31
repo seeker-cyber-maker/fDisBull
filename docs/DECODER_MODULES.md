@@ -95,7 +95,7 @@ an inconsistent source/program pair is rejected when constructed.
 
 ## AGI scalar components and logic calls
 
-The AGI processor/module contract revision is `2`. The existing straight-line
+The AGI processor/module contract revision is `3`. The existing straight-line
 `assignn`/flag set/reset interface and its v1 projection remain available. New
 controlled projections use `fdisbull-agi-state-projection-2`, lowering to the
 same `fdisbull-il-1` UDL/UIL primitives. The shared numeric condition `lt` is
@@ -175,6 +175,49 @@ depth (8), path depth (256), expansion (4096), IL nodes (1024), document bytes
 (65536) and IL nesting (32) are separately bounded. Exhaustion refuses the lift;
 no partially built program is returned as qualified. An `execute_il` refusal or
 step-budget stop is not successful source execution.
+
+## Compact source control flow
+
+`module-lift --control-flow compact` opts into
+`fdisbull-agi-state-projection-3` and shared `fdisbull-il-2` continuations.
+The default remains the existing tree projection. Each admitted `(logic, code
+offset)` has one continuation, even at shared joins or repeated direct calls.
+Call/return transfers use a runtime resume stack. `block_sources` marks
+continuation IDs as source entries and scalar-body IDs as lowering details;
+`control_trace` supplies the actual modeled stack. Static `exits` do not invent
+one stack for a shared return. All callee entry assumptions and source checks
+remain in force. A callee proven to stop on every path has no admitted caller
+continuation; no bytes or variables beyond that stop are invented or inspected.
+
+```text
+fdisbull module-lift fdisbull.agi.2.917.subset /private/game/LOGDIR \
+  --volume-dir /private/game --logic 103 --profile 2.917 \
+  --control-flow compact --allow-opaque --state-file /private/known-model-state.json
+```
+
+`control_flow="compact"` and `allow_opaque=True` are also Python/JSON options.
+They require declared module capabilities; legacy custom lifters receive no
+new keyword unless it is explicitly supplied. `--allow-opaque` is valid only
+with compact control flow. Known engine-action encodings can then be retained
+as evidence-bearing opaque blocks, yielding `qualification: control_flow_only`.
+The graph refuses execution even when a supplied initial state avoids those
+actions. It does not claim to model their scalar reads/writes, object/resource
+state or external effects. Unknown widths, malformed targets, unsupported
+conditions, unresolved callees and budget exhaustion still refuse construction.
+Only an opaque-free graph has nominal scalar `state_projection_only` status.
+
+The same document and execution bounds are used without branch expansion.
+Compact source capture still limits unique instructions to 128, call depth to
+8, and construction depth to 256. No budget is raised to qualify a larger
+source. An initial mapping is still explicit and typed; artificial values for
+structural inspection are not original runtime observations. Generated graphs
+retain original instruction bytes and belong in a private output directory.
+
+The [KQ1 logic-103 check](VERIFICATION-AGI-COMPACT-2026-10-31.md) compares all 111
+source nodes, 132 edges and 922 structural paths while retaining 56 opaque
+actions. That is a complete selected control-flow match, not a complete
+semantic lift or original-game execution. Indexed variable state, loops,
+parser/scheduler and engine effects remain future qualification gates.
 
 ## Next independently qualified modules
 

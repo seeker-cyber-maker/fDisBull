@@ -51,9 +51,11 @@ separate, evidence-bearing provenance. Concurrent node scheduling and blocking,
 device I/O, game UI, goals and grading belong to separate machine or task layers.
 The partial `AGI2917Processor` also supplies source instruction facts; its
 registered resource opener and narrow direct UDL/UIL projection are described
-in [decoder modules](DECODER_MODULES.md). Contract revision `2` retains typed
+in [decoder modules](DECODER_MODULES.md). Contract revision `3` retains typed
 scalar predicates and logic-call operands; call successors remain unresolved
-until a separate lifter binds captured resources and scan-entry witnesses.
+until a separate lifter binds captured resources and scan-entry witnesses. It
+also decodes a declared set of v2 engine-action encodings needed by the KQ1
+control-flow case; known widths and fallthrough do not implement those effects.
 No QP2A, TIS-100 or Comet-64
 processor is supplied by this seam.
 A real module needs an authoritative encoding/semantics and its own tests;
