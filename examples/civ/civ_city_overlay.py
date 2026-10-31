@@ -15,6 +15,9 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from pathlib import Path
+
+CATALOG = Path(__file__).with_name("civ_city_scene.json")
 
 # Stable pixels of the 320x200 city screen shared by the INFO, HAPPY and MAP
 # views (measured on the 474.03 runtime capture).
@@ -57,12 +60,18 @@ def _object(name, area, point, key, outcome, description, evidence):
     }
 
 
-def scene_definition(reference, chooser_frames, city_frame=None):
+def catalog_ids(path=None):
+    """Object ids of the Z scene; the debugger overlay names the same controls."""
+    data = json.loads(Path(path or CATALOG).read_text())
+    return {obj["id"] for obj in data["objects"]}
+
+
+def scene_definition(reference, chooser_frames, city_frame=None, scene_ids=None):
     """Return the validated-shape scene definition for the city screen."""
     if not chooser_frames:
         raise ValueError("at least one production-chooser frame is required")
     city_frame = city_frame or reference
-    return {
+    document = {
         "format": "fdisbull-scene-1",
         "width": 320,
         "height": 200,
@@ -73,7 +82,7 @@ def scene_definition(reference, chooser_frames, city_frame=None):
         "exclusive_group": "main",
         "objects": [
             _object(
-                "tab-happy",
+                "tab-happiness",
                 [128, 106, 160, 118],
                 [140, 111],
                 "h",
@@ -91,7 +100,7 @@ def scene_definition(reference, chooser_frames, city_frame=None):
                 [reference],
             ),
             _object(
-                "change",
+                "production-change",
                 [230, 106, 270, 118],
                 [250, 111],
                 "c",
@@ -119,6 +128,12 @@ def scene_definition(reference, chooser_frames, city_frame=None):
             ),
         ],
     }
+    if scene_ids is not None:
+        known = set(scene_ids)
+        unknown = [obj["name"] for obj in document["objects"] if obj["name"] not in known]
+        if unknown:
+            raise ValueError(f"overlay objects missing from the Z scene catalog: {unknown}")
+    return document
 
 
 def build(project_path, reference, chooser_frames, *, city_frame=None, parent=None,
@@ -126,7 +141,7 @@ def build(project_path, reference, chooser_frames, *, city_frame=None, parent=No
     from fdisbull.project import Project
 
     with Project(project_path) as project:
-        definition = scene_definition(reference, chooser_frames, city_frame)
+        definition = scene_definition(reference, chooser_frames, city_frame, catalog_ids())
         saved = project.debug_save_scene(scene, definition, parent=parent, author=author)
         overlay = project.debug_scene_overlay(saved["id"], name="civ-city-overlay.png", labels="numbers")
         return {"revision": saved["id"], "parent": saved["parent"],

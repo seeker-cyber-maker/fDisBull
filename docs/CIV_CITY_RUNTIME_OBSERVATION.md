@@ -120,20 +120,27 @@ scene lives in the private run project, not in Git.
   the live city frame.
 - Revision `c961e693…` (child): `change` outcome accepts two of three popup
   border pixels because the chooser list length varies with available items.
+- Revision `a2785955…` (child): object ids renamed to the Z scene catalog
+  (`tab-happiness`, `production-change`, …); the builder now refuses any
+  overlay object whose id is absent from `examples/civ/civ_city_scene.json`.
 
-Live verification (run `1dfc9a55…`, 474.03 install, keyboard-only):
+Live verification (run `a2420e60…`, 474.03 install, keyboard-only):
 
 | Operation | Result |
 |---|---|
 | `assert_current()` on the city screen | `matched` |
-| `act('tab-happy')` | `matched`; the HAPPY content pixel changed as recorded |
+| `act('tab-happiness')` | `matched`; the HAPPY content pixel changed as recorded |
 | `act('tab-map')` | `matched`; the MAP content pixel changed as recorded |
-| `act('change')` | `matched`; pressing `c` opened the production chooser |
+| `act('production-change')` | `matched`; pressing `c` opened the production chooser |
 
-The two failed attempts (`bcea8bf2…`, `b51825af…`) are kept: the scene asserted
+An earlier run on the pre-rename ids (`1dfc9a55…`) matched the same operations, so the rename is behaviour-neutral. The two failed attempts (`bcea8bf2…`, `b51825af…`) are kept: the scene asserted
 and both tab acts passed, but `change` timed out because its outcome pixel had
 been authored from an older chooser frame whose list was shorter. That is the
 normal authoring loop: the live frame corrects the recorded predicate.
+
+The overlay names controls with the Z scene's ids and validates them against
+`examples/civ/civ_city_scene.json`, so the IL scene and the debugger overlay
+project one control catalog; `catalog_ids()` is the check.
 
 Adding elements uses append-only child revisions: `debug_save_scene(name,
 definition, parent=current_revision)` keeps object identity by name, binds
