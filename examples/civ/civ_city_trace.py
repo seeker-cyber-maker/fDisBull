@@ -52,7 +52,7 @@ DISPATCH_KEY_ACTIONS = {
     0x73: ("s", "sell-building cursor over the 24-bit buildings mask; Enter/Space opens the sell dialog", "binary-static"),
     0x31: ("1", "specialist slot 0 (key - '1') when size >= 5", "binary-static"),
     0x39: ("9", "specialist slot 8 (key - '1') when size >= 5", "binary-static"),
-    0x70: ("p", "city-radius tile cursor: eight-direction move, radius/visibility guard, Enter/Space toggles the worker", "binary-static (linear decode after the far key read)"),
+    0x70: ("p", "city-radius tile cursor: eight-direction move, radius/visibility guard, Enter/Space toggles the worker", "binary-static (CFG-traversed from an explicit post-call seed)"),
     0x4D: ("M", "building-page flag toggle: flag & 2 gate, flag ^= 1", "binary-static"),
     0x72: ("r", "rename-city overlay int 3F", "binary-static"),
 }

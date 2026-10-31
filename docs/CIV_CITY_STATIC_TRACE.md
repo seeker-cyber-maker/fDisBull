@@ -365,6 +365,12 @@ the 24-slot mask walk.
 civd `CITYMGT.C` 1569-1627 carries the same draw pair, eight direction keys,
 radius guard, visibility bit and worker toggle.
 
+The span is CFG-traversed by `fdisbull analyze-module --entry 0x225E9`, the
+instruction after the far key read: every direction case, the guard, the
+restore and all three exits resolve as edges (`0A99:7B7D` loop re-entry,
+`0A99:8236` worker toggle, `1D12:045F` main-loop exit). The far call's own
+return edge is not admitted by the analyzer, so the seed is explicit.
+
 The mouse CHANGE button reaches the same chooser at `0x727F`
 (`lcall 0ADE:0421`); its result is compared with `0x63` at `0x7294`, which is
 the cancel code.
@@ -389,8 +395,8 @@ reached from the `b` branch and it masks production status with
   unresolved.
 - The dispatch chain is complete as a set of compare sites (`key_dispatch`
   returns all fifteen). Handler interior spans are decoded for `a`, `s` and
-  `p`; the `p` span is a linear decode because the analyzer's traversal stops
-  at its far key read, so its branch targets are not CFG-verified.
+  `p`; the `p` span is CFG-traversed from the explicit post-call seed
+  `0x225E9`, but the far call's return edge itself is not admitted.
 - Overlay callers are candidate sites, not resolved functions.
 - The field-reference counts are in-segment literal-offset matches; an indirect
   access through a copied pointer is not counted.
