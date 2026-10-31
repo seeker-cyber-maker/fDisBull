@@ -59,6 +59,11 @@ Nominal semantics were checked against pinned ScummVM
 and [message behavior](https://github.com/scummvm/scummvm/blob/f7403b6efaae2f033e8abea80b3fb6bee5303369/engines/agi/text.cpp).
 Those implementations include compatibility workarounds. Source agreement is
 not proof of exact original-interpreter behavior.
+Native KQ1 testing subsequently qualified one correction: `set.view` only
+checks the horizon inside its top-edge repair branch. An already valid top
+edge does not cause an independent horizon clamp. The explicit
+[DOS host adapter](AGI_DOS_HOST.md) now supplies original-handler observations
+for selected invocations; it is separate from this nominal evaluator.
 
 ## Explicit private context
 

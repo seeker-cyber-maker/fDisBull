@@ -287,6 +287,22 @@ The 472-case KQ corpus uses synthetic snapshots and supplied host outcomes;
 full model branch/site coverage is not proof of native reachability or parity.
 Keep source-retaining graphs, contexts, messages and checkpoints private.
 
+The separate Python `AGIDOSMonitor` / `AGIDOSHostAdapter` can now qualify one
+original DOS KQ1 leaf invocation against its lifted graph. Bind the unpacked
+interpreter, selected resource, initial fetch, current logic record and call
+frame before advancing. Native source fetches include conditions and jumps;
+handler completions must be observed, and return needs its actual stack
+witness. Capture-key mismatches, foreign breakpoints/watchpoints, hooks, missing
+frames, timeouts and unknown transport outcomes are incomplete or differences,
+never equality. Readback cannot retry an operation. Keep prior native
+completions even when the model or a later capture fails; reconcile or explicitly
+restore before a new trial. The adapter's verified result covers the declared
+final scalar/object projection with named exclusions, not every transient value
+or whole-game parity. A returned print handler is not visual text recognition.
+`examples/agi/verify_host.py` labels its synthetic caller/state interventions;
+do not report them as ordinary gameplay or natural reachability. The standalone
+model evaluator remains native-free.
+
 Bind source occurrence using the snapshot key plus the module's resource-local
 location. File offsets and guest offsets are different coordinates. Unknown
 instructions, unsupported control flow, malformed source or budget stops refuse semantic

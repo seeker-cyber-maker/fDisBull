@@ -224,6 +224,10 @@ An explicit [object/resource effect profile](docs/AGI_EFFECTS.md) now models
 AGI positions, views, queries and controller changes. Drawing and message
 windows use resumable host requests, so an agent can inspect a routine without
 silently treating a requested external action as completed.
+The [original DOS host adapter](docs/AGI_DOS_HOST.md) can now check selected
+KQ1 routines against the running original: follow the same decisions, observe
+real handler returns, and compare the declared state at the routine boundary.
+Interrupted work keeps its evidence and stops for inspection.
 
 The [Z-machine processor](docs/ZMACHINE_PROCESSOR.md) adds direct v3 bytecode
 inspection through fDisBull's processor interface. It reports operands, calls,

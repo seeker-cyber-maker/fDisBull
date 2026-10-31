@@ -167,8 +167,12 @@ def apply_effect(block, evaluated_args, context):
             cels = loops[loop]; cel = o['cel'] if o['cel'] < len(cels) else 0
             o.update(view=v, loop=loop, cel=cel, loop_count=len(loops), cel_count=len(cels), width=cels[cel]['width'], height=cels[cel]['height'], view_replaced=True)
             if o['x'] + o['width'] > 160: o['x'] = 160-o['width']; _flag(o, 'update_pos', True)
-            if o['y'] - o['height'] + 1 < 0: o['y'] = o['height']-1; _flag(o, 'update_pos', True)
-            if o['y'] <= context['horizon'] and 'ignore_horizon' not in o['flags']: o['y'] = context['horizon']+1; _flag(o, 'update_pos', True)
+            if o['y'] - o['height'] + 1 < 0:
+                o['y'] = o['height']-1; _flag(o, 'update_pos', True)
+                # Original DOS 2.917 checks the horizon only while repairing
+                # the top edge. An independent clamp changes valid positions.
+                if o['y'] <= context['horizon'] and 'ignore_horizon' not in o['flags']:
+                    o['y'] = context['horizon']+1
         elif action == 'object.position': o.update(x=a['x'], y=a['y'], prev_x=a['x'], prev_y=a['y'])
         elif action == 'object.get_position': results = {'x': o['x'] & 255, 'y': o['y'] & 255}
         elif action in ('object.ignore_horizon', 'object.land_only', 'object.ignore_blocks', 'object.observe_blocks', 'object.stop_cycling', 'object.start_cycling'):

@@ -121,6 +121,16 @@ def test_position_unclamped_and_set_view_retention():
     c['objects']['1'].update(flags=['drawn'], x=5, y=37, width=1)
     assert call(c, 'object.distance', {'first': 0, 'second': 1})['results']['distance'] == 4
 
+
+@pytest.mark.parametrize('y,expected', [(50,50), (19,19), (18,51)])
+def test_original_set_view_horizon_only_after_top_edge_repair(y,expected):
+    # Native KQ1 set.view at logic103:10 left y=horizon=50 untouched.
+    # A top edge exactly on row zero is valid; only a negative top repairs it.
+    c=context(); c['horizon']=50; c['loaded_views']=[2]
+    c['objects']['0']['y']=y
+    call(c,'object.set_view',{'object':0,'view':2})
+    assert c['objects']['0']['y']==expected
+
 def test_invalid_context_shapes_refuse():
     c = context(); c['objects']['0']['cycle'] = []
     with pytest.raises(ILInvalid): validate_context(c)
