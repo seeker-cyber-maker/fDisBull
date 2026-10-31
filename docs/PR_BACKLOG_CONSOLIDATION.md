@@ -31,7 +31,7 @@ Baseline: `release/0.28.0` at `d06bffb` (local package/install) and `main` at
 | !7 | 22:34 | Add reversible macOS sessions and display-bound capture | `e1b6f16` | !2 | 17 files, +1,869/-4 | no | closed — specs collated here |
 | !8 | 22:53 | Qualify ordinary KQ1 troll bridge and extend the Z scene | `08daea5` | !6 | 13 files, +1,751/-28 | no | closed — specs collated here |
 | !9 | 23:07 | Add cpuinfo replica and fDisBull native comparison | `2375c54` | !7 | 23 files, +1,871 | no | closed — specs collated here |
-| !10 | 23:22 | Deduplicate feature CI and bound agent status polling | `eaaf9ca` | main | 7 files, +745/-12 | yes | closed — landed in 0.28 and main |
+| !10 | 23:22 | Deduplicate feature CI and bound agent status polling | `eaaf9ca` | main | 7 files, +745/-12 | yes | merged in main via b21b204 |
 | !11 | 23:23 | Cortex-M/Thumb static firmware analysis (PR #74 continuation) | `a8a6469` | main | 17 files, +918/-23 | no | closed — specs collated here |
 
 ## 0.28 baseline gap (release blocker)
@@ -575,7 +575,7 @@ ancestor head; this table is a gap scan, not a closure record.
 ## Closure record
 
 - Consolidated review: !12 (this document).
-- Landed in 0.28: !1, !2, !10 closed with a pointer to this document.
+- Landed in 0.28: !1 and !2 closed with a pointer to this document; !10 is merged in `main` via `b21b204`.
 - Unmerged informative reviews: !4, !5, !6, !7, !8, !9, !11 closed with their
   exact heads and source branches retained; their full descriptions are in the
   sections above.
