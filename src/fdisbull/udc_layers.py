@@ -33,7 +33,7 @@ def digest(document):return hashlib.sha256(_json(document)).hexdigest()
 
 
 def _ports(ports,label):
-    if type(ports) is not dict or len(ports)>256 or any(not isinstance(k,str) or not _NAME.fullmatch(k) or v not in _TYPES for k,v in ports.items()):
+    if type(ports) is not dict or len(ports)>256 or any(not isinstance(k,str) or not _NAME.fullmatch(k) or not isinstance(v,str) or v not in _TYPES for k,v in ports.items()):
         raise ValueError(f'invalid {label} typed ports')
 
 

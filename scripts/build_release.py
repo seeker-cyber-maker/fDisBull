@@ -11,6 +11,17 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 ROOT_FILES = ("README.md", "AGENTS.md", "CLAUDE.md", "pyproject.toml", "MANIFEST.in", "player/pyproject.toml")
 DOC_EXAMPLE_FILES = (
+    'examples/recovery/snake_model.py',
+    'examples/recovery/snake_original.py',
+    'examples/recovery/snake_browser.py',
+    'examples/recovery/run_snake_browser.mjs',
+    'examples/recovery/snake_browser_study.mjs',
+    'examples/recovery/civd_browser_shell.py',
+    'examples/recovery/web_shell_study.mjs',
+    'examples/recovery/run_browser_shell.mjs',
+    'examples/recovery/civd_food_web.py',
+    'examples/recovery/run_web_blocks.mjs',
+    'examples/recovery/run_web_browser.mjs',
     'examples/recovery/civd_food_swap.py',
     'examples/recovery/civd_food_arm64.py',
 
@@ -27,6 +38,13 @@ DOC_EXAMPLE_FILES = (
     "docs/uil-rfcs/0002/replay-summary.json",
 )
 SOURCE_PATTERNS = (
+    ("docs/evidence/snake-browser", "verification.json"),
+    ("tests", "memory_shell_checks.mjs"),
+    ("docs/evidence/civd-browser-shell", "verification.json"),
+    ("docs/evidence/civd-food-web", "verification.json"),
+    ("src/fdisbull/web_runtime", "*.mjs"),
+    ("src/fdisbull/web_runtime", "*.html"),
+    ("tests", "web_shell_checks.mjs"),
     ("docs/evidence/civd-food-arm64", "verification.json"),
     ("src/fdisbull", "*.py"),
     ("player/fdisbull_player", "*.py"),

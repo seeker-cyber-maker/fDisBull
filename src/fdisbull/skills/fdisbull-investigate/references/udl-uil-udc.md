@@ -1,5 +1,40 @@
 # Source-backed semantics: UDL, UIL and UDC
 
+The separate `fdisbull-memory-uil-1` profile admits fixed unsigned word arenas,
+indexed loads/stores and bounded loops. `store-memory-block-contract`,
+`store-memory-udl-layer` and `select-memory-udl-layers` retain exact program,
+function, source and target identities in the existing immutable database.
+`build-memory-web-block` emits Wasm/WGSL and `build-memory-web-shell` combines
+per-function selections with an explicit canvas/input orchestration plan.
+These methods do not make scalar contracts accept arrays or arbitrary services.
+Qualify original -> memory UIL -> emitted execution separately, then compare
+ordered inputs, carried state and complete frames through the shell. Preserve
+source-assisted versus blind recovery, diagnostic RAM interventions, cursor/font
+projection and clock-adapter limits. See `docs/UDC_MEMORY_BROWSER.md` in a source
+checkout for the bounded contract, ownership rules and Snake reproduction.
+
+The `build-web-block` JSON method emits one canonical, pure selected UIL
+invocation for `wasm32-scalar-1` or `webgpu-wgsl-scalar-1`. Inspect the actual
+tool's `methods` first. Selection target metadata alone does not add a backend.
+The build guards byte/word types and contract/layer domains, qualifies the
+selected model and refuses extra effects/adapters. Its status is build-only;
+run the emitted artifact and independently qualify original → UIL → output.
+The JavaScript host returns pure values and never commits a delayed result to
+application state. Services, revision checks and a complete shell remain a
+separate composition gate. See repository `docs/UDC_WEB.md` for the finite
+original-backed food study and its reproducible private recipe.
+
+`build-web-shell` combines two such persisted selections with a separate typed
+host plan. It requires identical module/contract identities and equal effective
+admission domains. The shell owns record arenas and activation snapshots;
+providers own compute resources. Stage a real result, then validate session,
+entity generation, record revision, view/binding/operation/provider epochs before
+an output-only commit. Readiness does not commit state. Cancelled GPU jobs keep
+their device lease until settlement; replacement work queues, without fallback
+or replay. Borrowed devices remain caller-owned. See `docs/UDC_BROWSER_SHELL.md`
+for the fixed snapshot/invoke/guarded-commit profile, disposal cutoff and source
+qualification; this does not imply general native-shell or whole-game support.
+
 For first use and source-to-model acceptance, follow the
 [repeatable reconstruction recipe](reconstruction.md).
 

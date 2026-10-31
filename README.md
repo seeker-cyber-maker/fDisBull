@@ -36,6 +36,7 @@ play an authored text projection without opening the debugger yourself.
 | Try shared interaction scenes through Z | [Z scene play](docs/Z_SCENES.md) |
 | Run a qualified DinoPark park through the original game | [DinoPark in Z](docs/DINOPARK_Z.md) |
 | Test a small recovered block against its original DOS backing | [The bounded UDC pipeline](#the-bounded-udc-pipeline) |
+| Run recovered graphics and input with selectable browser backends | [Bounded browser conversion](docs/UDC_MEMORY_BROWSER.md) |
 
 Agents can start with [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) and the
 [agent quickstart](docs/AGENT_QUICKSTART.md). The bundled investigation skill is
@@ -247,6 +248,13 @@ explicit low-level IR. Recovery is partial; the verification report distinguishe
 successful play from evidence that the higher-level rules actually executed.
 
 ## The bounded UDC pipeline
+
+The browser pilot runs a small recovered Snake fixture with graphics, keyboard
+and mouse input. Game logic and drawing can independently select Wasm or WebGPU
+while keeping the same UIL. The known-source fixture is recovered with source
+assistance and compared with original instruction executions, guest inputs and
+complete frames. See the [browser conversion contract and measured limits](docs/UDC_MEMORY_BROWSER.md).
+Original programs, fonts and generated game bundles remain private inputs.
 
 The 0.23 source introduces an original-backed DOS compiler definition (UDC):
 explicitly mapped ASM blocks can be lifted to shared UDL/UIL primitives and

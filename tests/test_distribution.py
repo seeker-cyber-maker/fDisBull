@@ -41,6 +41,17 @@ GAMEFAQS_SKILL_FILES = tuple('src/fdisbull/skills/write-gamefaqs-guide/'+name fo
 REQUIRED_SOURCE_FILES += GAMEFAQS_SKILL_FILES
 REQUIRED_SOURCE_FILES += ('examples/recovery/civd_food_swap.py', 'examples/recovery/civd_food_arm64.py')
 REQUIRED_SOURCE_FILES += ("docs/evidence/civd-food-arm64/verification.json",)
+REQUIRED_SOURCE_FILES += ('src/fdisbull/web_runtime/block.mjs',
+    'examples/recovery/civd_food_web.py','examples/recovery/run_web_blocks.mjs',
+    'examples/recovery/run_web_browser.mjs','docs/evidence/civd-food-web/verification.json')
+REQUIRED_SOURCE_FILES += ('src/fdisbull/web_runtime/shell.mjs','src/fdisbull/web_runtime/app.mjs',
+    'src/fdisbull/web_runtime/index.html','tests/web_shell_checks.mjs',
+    'examples/recovery/civd_browser_shell.py','examples/recovery/web_shell_study.mjs',
+    'examples/recovery/run_browser_shell.mjs','docs/evidence/civd-browser-shell/verification.json')
+REQUIRED_SOURCE_FILES += ('src/fdisbull/web_runtime/memory.mjs','src/fdisbull/web_runtime/memory-shell.mjs',
+    'src/fdisbull/web_runtime/memory-canvas.mjs','src/fdisbull/web_runtime/memory-index.html','tests/memory_shell_checks.mjs',
+    'examples/recovery/snake_model.py','examples/recovery/snake_original.py','examples/recovery/snake_browser.py',
+    'examples/recovery/run_snake_browser.mjs','examples/recovery/snake_browser_study.mjs','docs/evidence/snake-browser/verification.json')
 UDC_EVIDENCE_FILES = {
     'docs/evidence/udc-2026-10-29/dino.json',
     'docs/evidence/udc-2026-10-29/zork.json',
@@ -162,4 +173,12 @@ def test_reviewed_recipe_allowlist_rejects_other_examples(tmp_path):
     with zipfile.ZipFile(archive, 'a') as output:
         output.writestr('fdisbull-test/examples/unreviewed.py', 'unreviewed input')
     with pytest.raises(ValueError, match='Excluded directory'):
+        check(archive)
+
+
+def test_distribution_requires_the_portable_host_adapter(tmp_path):
+    check = runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+    archive = tmp_path/'fdisbull-no-web-adapter-tool.zip'
+    source_archive(archive,tuple(p for p in REQUIRED_SOURCE_FILES if p!='src/fdisbull/web_runtime/block.mjs'))
+    with pytest.raises(ValueError,match='missing'):
         check(archive)

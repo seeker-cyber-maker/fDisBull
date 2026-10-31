@@ -1,0 +1,958 @@
+{
+  "format": "fdisbull-web-food-verification-2",
+  "status": "passed",
+  "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed",
+  "vectors_sha256": "214d93bb67ded3429575659931a7cfa8dd81608cae7814cde647f75ef1796528",
+  "original_native": [
+    {
+      "edition": "474.01",
+      "cases": 2018,
+      "outputs_sha256": "e73ba904f08034dfba4470710f83bf9bac78dc1ab34ce8ccaceb85d3e7c271d7",
+      "code_sha256": "cbaf3048ffe7b3add1e9864eea12ef3872b89e9ffa489e62fba4d1a84eeac374",
+      "original_sha256": "21861cbb5eca78ddf22d7b84219b41a22a1d283c3f7b27f3d1bce98c30eb8e3b",
+      "dosbox_outputs_sha256": "deff1d2d1737c1837d2a9beb028eeef1acfd46725b75bdf123663b5cf0141e7b"
+    },
+    {
+      "edition": "474.03",
+      "cases": 2018,
+      "outputs_sha256": "e73ba904f08034dfba4470710f83bf9bac78dc1ab34ce8ccaceb85d3e7c271d7",
+      "code_sha256": "ce352699d5a2443087917bf763b46f96cf27b9a7befe537d4ce44ea2345361b8",
+      "original_sha256": "31e35b01f4d00df81685dfcb81e6de196a3876bd2afff6e39cbbfd964f5852ad",
+      "dosbox_outputs_sha256": "deff1d2d1737c1837d2a9beb028eeef1acfd46725b75bdf123663b5cf0141e7b"
+    },
+    {
+      "edition": "474.05",
+      "cases": 2018,
+      "outputs_sha256": "e73ba904f08034dfba4470710f83bf9bac78dc1ab34ce8ccaceb85d3e7c271d7",
+      "code_sha256": "ce352699d5a2443087917bf763b46f96cf27b9a7befe537d4ce44ea2345361b8",
+      "original_sha256": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
+      "dosbox_outputs_sha256": "deff1d2d1737c1837d2a9beb028eeef1acfd46725b75bdf123663b5cf0141e7b"
+    }
+  ],
+  "fresh_original_cpu_invocations": 6054,
+  "fresh_dosbox_invocations": 6054,
+  "host_adapter_roundtrips": 12108,
+  "originals_unchanged": true,
+  "toolchain_pins_unchanged": true,
+  "execution": {
+    "format": "fdisbull-web-execution-2",
+    "status": "passed",
+    "runtime": "v22.22.3",
+    "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed",
+    "adapter": {
+      "vendor": "apple",
+      "architecture": "metal-3",
+      "device": "apple-m1-max",
+      "isFallbackAdapter": false
+    },
+    "suites": [
+      {
+        "name": "food",
+        "negative_control": false,
+        "wasm_sha256": "d3e1f6f90cf7f59920da94552512173d589dcc16a9b6c762ecb2cc70da8479a9",
+        "wgsl_sha256": "223718c422a8566993336189096715ded8c663a8ef7031f785c80d2b7f8a20a4",
+        "independent_wat_assembly": "matched",
+        "gpu_input_snapshot_mutation": "isolated",
+        "wasm32-scalar-1": {
+          "cases": 2024,
+          "refusals": 6,
+          "mismatches": 0,
+          "outputs_sha256": "19b572f82415841a24d2834e10f17e53ece7709260c653b904b7a6477b50ad7c",
+          "first_counterexample": null
+        },
+        "webgpu-wgsl-scalar-1": {
+          "cases": 2024,
+          "refusals": 6,
+          "mismatches": 0,
+          "outputs_sha256": "19b572f82415841a24d2834e10f17e53ece7709260c653b904b7a6477b50ad7c",
+          "first_counterexample": null
+        }
+      },
+      {
+        "name": "atomic",
+        "negative_control": false,
+        "wasm_sha256": "55c66845087b82662da9a0220fada94afbd37282d51a4005bf3981944a1060d0",
+        "wgsl_sha256": "4e746f8f121daee5480481ffa7dae9bc5037a6909387cef1aa2d4cf22638c0c5",
+        "independent_wat_assembly": "matched",
+        "gpu_input_snapshot_mutation": "isolated",
+        "wasm32-scalar-1": {
+          "cases": 19,
+          "refusals": 10,
+          "mismatches": 0,
+          "outputs_sha256": "d6746d24b4eb2f2ff49d5f77c4b5c41c12988163a9964a3ba432bc9ec641c768",
+          "first_counterexample": null
+        },
+        "webgpu-wgsl-scalar-1": {
+          "cases": 19,
+          "refusals": 10,
+          "mismatches": 0,
+          "outputs_sha256": "d6746d24b4eb2f2ff49d5f77c4b5c41c12988163a9964a3ba432bc9ec641c768",
+          "first_counterexample": null
+        }
+      },
+      {
+        "name": "narrow",
+        "negative_control": false,
+        "wasm_sha256": "836b59f022f059ef0bc85fd2adba6add336dde20a6aa05eaf06e74a657114af9",
+        "wgsl_sha256": "bc5ff4d90dec6258faf9067429097946fb53a164f10489635d2c5731fff2e513",
+        "independent_wat_assembly": "matched",
+        "gpu_input_snapshot_mutation": "isolated",
+        "wasm32-scalar-1": {
+          "cases": 9,
+          "refusals": 4,
+          "mismatches": 0,
+          "outputs_sha256": "93a13dec50a73e0415cfff9b258747876e4e7823f786096bb83da77dc1b4f38f",
+          "first_counterexample": null
+        },
+        "webgpu-wgsl-scalar-1": {
+          "cases": 9,
+          "refusals": 4,
+          "mismatches": 0,
+          "outputs_sha256": "93a13dec50a73e0415cfff9b258747876e4e7823f786096bb83da77dc1b4f38f",
+          "first_counterexample": null
+        }
+      },
+      {
+        "name": "branch",
+        "negative_control": false,
+        "wasm_sha256": "269a4f69b1ecdb98f3d887a661a5b8751c704507c2d013e85ee82a636285e05f",
+        "wgsl_sha256": "5b844d75050bcaafe5a46c34516595e5dd04a65d742cfb8ac0495e58339faeed",
+        "independent_wat_assembly": "matched",
+        "gpu_input_snapshot_mutation": "isolated",
+        "wasm32-scalar-1": {
+          "cases": 15,
+          "refusals": 0,
+          "mismatches": 0,
+          "outputs_sha256": "a9f704faca2f1cbb3fc92ebc51a06adc69d00abc3cab817d9a90a6986a354f12",
+          "first_counterexample": null
+        },
+        "webgpu-wgsl-scalar-1": {
+          "cases": 15,
+          "refusals": 0,
+          "mismatches": 0,
+          "outputs_sha256": "a9f704faca2f1cbb3fc92ebc51a06adc69d00abc3cab817d9a90a6986a354f12",
+          "first_counterexample": null
+        }
+      },
+      {
+        "name": "food-mutant",
+        "negative_control": true,
+        "wasm_sha256": "947f2d2d6082b737ce6cd18547e34d0cc4afd409c02730d8d27ca4dfb0203047",
+        "wgsl_sha256": "4ab024086fc856ee2895639465f51bece58c6244cfce2dba89c24c6c0b374dd3",
+        "independent_wat_assembly": "matched",
+        "gpu_input_snapshot_mutation": "isolated",
+        "wasm32-scalar-1": {
+          "cases": 2024,
+          "refusals": 6,
+          "mismatches": 1765,
+          "outputs_sha256": "e1357d38c0ce7708fce4f54e3944015e091b21a496e338938bbb297baed51e73",
+          "first_counterexample": {
+            "index": 0,
+            "input": [
+              -128,
+              -32768,
+              -32768,
+              1,
+              -32768
+            ],
+            "expected": {
+              "status": 0,
+              "data": [
+                -32512
+              ]
+            },
+            "actual": {
+              "status": 0,
+              "data": [
+                -32768
+              ]
+            }
+          }
+        },
+        "webgpu-wgsl-scalar-1": {
+          "cases": 2024,
+          "refusals": 6,
+          "mismatches": 1765,
+          "outputs_sha256": "e1357d38c0ce7708fce4f54e3944015e091b21a496e338938bbb297baed51e73",
+          "first_counterexample": {
+            "index": 0,
+            "input": [
+              -128,
+              -32768,
+              -32768,
+              1,
+              -32768
+            ],
+            "expected": {
+              "status": 0,
+              "data": [
+                -32512
+              ]
+            },
+            "actual": {
+              "status": 0,
+              "data": [
+                -32768
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "scope": "same host CPU/GPU; no cross-platform or performance claim",
+    "host_error_checks": [
+      "shader hash",
+      "row arity",
+      "shader compilation failure followed by recovery"
+    ]
+  },
+  "scope": "finite isolated food kernels; host layout checks in Python; no whole-game or timing parity",
+  "builds": {
+    "food": {
+      "wasm32-scalar-1": {
+        "format": "fdisbull-web-block-1",
+        "selection": "selection:f0649707a3e1744c2aef675740db21a51ce928674f649fbad260f682b0ff669e",
+        "selection_sha256": "f0649707a3e1744c2aef675740db21a51ce928674f649fbad260f682b0ff669e",
+        "target": "wasm32-scalar-1",
+        "layer": "layer:26f0d2e227cd0d744f95ac01a407f94718f08bcce9fb2c21842d6725597e8431",
+        "contract": "contract:517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+        "layer_sha256": "26f0d2e227cd0d744f95ac01a407f94718f08bcce9fb2c21842d6725597e8431",
+        "contract_sha256": "517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+        "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed",
+        "program_sha256": "d312213073e87128e82933aed076d1f0cb1e9fe312b6e398c51b0b3d4bbf9724",
+        "qualification": {
+          "format": "fdisbull-uil-qualification-1",
+          "status": "equivalent_under_contract",
+          "timeout_ms": 2000,
+          "programs": {
+            "reference_sha256": "d312213073e87128e82933aed076d1f0cb1e9fe312b6e398c51b0b3d4bbf9724",
+            "implementation_sha256": "d312213073e87128e82933aed076d1f0cb1e9fe312b6e398c51b0b3d4bbf9724"
+          },
+          "interfaces": {
+            "inputs": {
+              "population": "i8",
+              "produced": "i16",
+              "stock": "i16",
+              "support_cost": "i16",
+              "supported": "i16"
+            },
+            "outputs": {
+              "new_stock": "i16"
+            },
+            "reference": {
+              "inputs": {
+                "population": "$population",
+                "produced": "$produced",
+                "stock": "$stock",
+                "support_cost": "$support_cost",
+                "supported": "$supported"
+              },
+              "outputs": {
+                "new_stock": "$new_stock"
+              }
+            },
+            "implementation": {
+              "inputs": {
+                "population": "$population",
+                "produced": "$produced",
+                "stock": "$stock",
+                "support_cost": "$support_cost",
+                "supported": "$supported"
+              },
+              "outputs": {
+                "new_stock": "$new_stock"
+              }
+            }
+          },
+          "domain": {
+            "support_cost": {
+              "max": 2,
+              "min": 1
+            }
+          },
+          "reference_completion_possible": null,
+          "contract_sha256": "517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+          "proof_scope": "same shared-IL definition and interface, including ordered event plans; successful execution and native realization remain unqualified",
+          "method": "shared-definition"
+        },
+        "scope": "one pure canonical UIL invoke; no services or application state commit",
+        "abi": {
+          "format": "fdisbull-web-scalar-abi-1",
+          "inputs": [
+            "population",
+            "produced",
+            "stock",
+            "support_cost",
+            "supported"
+          ],
+          "outputs": [
+            "new_stock"
+          ],
+          "row_limit": 8192,
+          "carrier": "signed i32; logical byte/word guards; status 0=complete, 1=refused"
+        },
+        "artifacts": {
+          "host.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+          "block.wasm": "d3e1f6f90cf7f59920da94552512173d589dcc16a9b6c762ecb2cc70da8479a9",
+          "block.wat": "27ea99856b70306f078fd52604a387355ca59c49ed3e21d521eef8d1e5a80996"
+        },
+        "execution": false,
+        "source_to_uil": false
+      },
+      "webgpu-wgsl-scalar-1": {
+        "format": "fdisbull-web-block-1",
+        "selection": "selection:4af320ac50e36318200a9d5af51957e71dd0461a7e430f776a27cf3c1e752dbb",
+        "selection_sha256": "4af320ac50e36318200a9d5af51957e71dd0461a7e430f776a27cf3c1e752dbb",
+        "target": "webgpu-wgsl-scalar-1",
+        "layer": "layer:26f0d2e227cd0d744f95ac01a407f94718f08bcce9fb2c21842d6725597e8431",
+        "contract": "contract:517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+        "layer_sha256": "26f0d2e227cd0d744f95ac01a407f94718f08bcce9fb2c21842d6725597e8431",
+        "contract_sha256": "517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+        "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed",
+        "program_sha256": "d312213073e87128e82933aed076d1f0cb1e9fe312b6e398c51b0b3d4bbf9724",
+        "qualification": {
+          "format": "fdisbull-uil-qualification-1",
+          "status": "equivalent_under_contract",
+          "timeout_ms": 2000,
+          "programs": {
+            "reference_sha256": "d312213073e87128e82933aed076d1f0cb1e9fe312b6e398c51b0b3d4bbf9724",
+            "implementation_sha256": "d312213073e87128e82933aed076d1f0cb1e9fe312b6e398c51b0b3d4bbf9724"
+          },
+          "interfaces": {
+            "inputs": {
+              "population": "i8",
+              "produced": "i16",
+              "stock": "i16",
+              "support_cost": "i16",
+              "supported": "i16"
+            },
+            "outputs": {
+              "new_stock": "i16"
+            },
+            "reference": {
+              "inputs": {
+                "population": "$population",
+                "produced": "$produced",
+                "stock": "$stock",
+                "support_cost": "$support_cost",
+                "supported": "$supported"
+              },
+              "outputs": {
+                "new_stock": "$new_stock"
+              }
+            },
+            "implementation": {
+              "inputs": {
+                "population": "$population",
+                "produced": "$produced",
+                "stock": "$stock",
+                "support_cost": "$support_cost",
+                "supported": "$supported"
+              },
+              "outputs": {
+                "new_stock": "$new_stock"
+              }
+            }
+          },
+          "domain": {
+            "support_cost": {
+              "max": 2,
+              "min": 1
+            }
+          },
+          "reference_completion_possible": null,
+          "contract_sha256": "517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+          "proof_scope": "same shared-IL definition and interface, including ordered event plans; successful execution and native realization remain unqualified",
+          "method": "shared-definition"
+        },
+        "scope": "one pure canonical UIL invoke; no services or application state commit",
+        "abi": {
+          "format": "fdisbull-web-scalar-abi-1",
+          "inputs": [
+            "population",
+            "produced",
+            "stock",
+            "support_cost",
+            "supported"
+          ],
+          "outputs": [
+            "new_stock"
+          ],
+          "row_limit": 8192,
+          "carrier": "signed i32; logical byte/word guards; status 0=complete, 1=refused"
+        },
+        "artifacts": {
+          "host.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+          "block.wgsl": "223718c422a8566993336189096715ded8c663a8ef7031f785c80d2b7f8a20a4"
+        },
+        "execution": false,
+        "source_to_uil": false
+      }
+    },
+    "atomic": {
+      "wasm32-scalar-1": {
+        "format": "fdisbull-web-block-1",
+        "selection": "selection:a62c685aa913661744c0bbd3c662652e39dfa4fd8bb1d852fda1389ffa2b9e4d",
+        "selection_sha256": "a62c685aa913661744c0bbd3c662652e39dfa4fd8bb1d852fda1389ffa2b9e4d",
+        "target": "wasm32-scalar-1",
+        "layer": "layer:1ecb77bd66022b6e5a59c12aa94a9c37d398fc7ba0eeb9c3d838559fdb0196f9",
+        "contract": "contract:e3ce411f3510c6896800631d54c7aebddecc7350e880c8b725d3bc3fe98a645c",
+        "layer_sha256": "1ecb77bd66022b6e5a59c12aa94a9c37d398fc7ba0eeb9c3d838559fdb0196f9",
+        "contract_sha256": "e3ce411f3510c6896800631d54c7aebddecc7350e880c8b725d3bc3fe98a645c",
+        "module_uil_sha256": "bb27de4ee7ef49a5afc032e07f10b10c1f2522161e3ece867fd633c35cebd173",
+        "program_sha256": "49817e423765834eda11ea7bb67e5d05396a62d109f122886eb109f7ea036a44",
+        "qualification": {
+          "format": "fdisbull-uil-qualification-1",
+          "status": "equivalent_under_contract",
+          "timeout_ms": 2000,
+          "programs": {
+            "reference_sha256": "49817e423765834eda11ea7bb67e5d05396a62d109f122886eb109f7ea036a44",
+            "implementation_sha256": "49817e423765834eda11ea7bb67e5d05396a62d109f122886eb109f7ea036a44"
+          },
+          "interfaces": {
+            "inputs": {
+              "allow": "bool",
+              "delta": "i16",
+              "x": "i16"
+            },
+            "outputs": {
+              "x": "i16"
+            },
+            "reference": {
+              "inputs": {
+                "allow": "$allow",
+                "delta": "$delta",
+                "x": "$x"
+              },
+              "outputs": {
+                "x": "$x"
+              }
+            },
+            "implementation": {
+              "inputs": {
+                "allow": "$allow",
+                "delta": "$delta",
+                "x": "$x"
+              },
+              "outputs": {
+                "x": "$x"
+              }
+            }
+          },
+          "domain": {},
+          "reference_completion_possible": null,
+          "contract_sha256": "e3ce411f3510c6896800631d54c7aebddecc7350e880c8b725d3bc3fe98a645c",
+          "proof_scope": "same shared-IL definition and interface, including ordered event plans; successful execution and native realization remain unqualified",
+          "method": "shared-definition"
+        },
+        "scope": "one pure canonical UIL invoke; no services or application state commit",
+        "abi": {
+          "format": "fdisbull-web-scalar-abi-1",
+          "inputs": [
+            "allow",
+            "delta",
+            "x"
+          ],
+          "outputs": [
+            "x"
+          ],
+          "row_limit": 8192,
+          "carrier": "signed i32; logical byte/word guards; status 0=complete, 1=refused"
+        },
+        "artifacts": {
+          "host.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+          "block.wasm": "55c66845087b82662da9a0220fada94afbd37282d51a4005bf3981944a1060d0",
+          "block.wat": "200c10c9af4df4694da39a76060d4c2a923780a43a7f8ea12cca3ee5a9af0217"
+        },
+        "execution": false,
+        "source_to_uil": false
+      },
+      "webgpu-wgsl-scalar-1": {
+        "format": "fdisbull-web-block-1",
+        "selection": "selection:acb4df5d6e298fa6fda00ab240a595fa7d9e7251996cf72ce7cb4d3e17c48c86",
+        "selection_sha256": "acb4df5d6e298fa6fda00ab240a595fa7d9e7251996cf72ce7cb4d3e17c48c86",
+        "target": "webgpu-wgsl-scalar-1",
+        "layer": "layer:1ecb77bd66022b6e5a59c12aa94a9c37d398fc7ba0eeb9c3d838559fdb0196f9",
+        "contract": "contract:e3ce411f3510c6896800631d54c7aebddecc7350e880c8b725d3bc3fe98a645c",
+        "layer_sha256": "1ecb77bd66022b6e5a59c12aa94a9c37d398fc7ba0eeb9c3d838559fdb0196f9",
+        "contract_sha256": "e3ce411f3510c6896800631d54c7aebddecc7350e880c8b725d3bc3fe98a645c",
+        "module_uil_sha256": "bb27de4ee7ef49a5afc032e07f10b10c1f2522161e3ece867fd633c35cebd173",
+        "program_sha256": "49817e423765834eda11ea7bb67e5d05396a62d109f122886eb109f7ea036a44",
+        "qualification": {
+          "format": "fdisbull-uil-qualification-1",
+          "status": "equivalent_under_contract",
+          "timeout_ms": 2000,
+          "programs": {
+            "reference_sha256": "49817e423765834eda11ea7bb67e5d05396a62d109f122886eb109f7ea036a44",
+            "implementation_sha256": "49817e423765834eda11ea7bb67e5d05396a62d109f122886eb109f7ea036a44"
+          },
+          "interfaces": {
+            "inputs": {
+              "allow": "bool",
+              "delta": "i16",
+              "x": "i16"
+            },
+            "outputs": {
+              "x": "i16"
+            },
+            "reference": {
+              "inputs": {
+                "allow": "$allow",
+                "delta": "$delta",
+                "x": "$x"
+              },
+              "outputs": {
+                "x": "$x"
+              }
+            },
+            "implementation": {
+              "inputs": {
+                "allow": "$allow",
+                "delta": "$delta",
+                "x": "$x"
+              },
+              "outputs": {
+                "x": "$x"
+              }
+            }
+          },
+          "domain": {},
+          "reference_completion_possible": null,
+          "contract_sha256": "e3ce411f3510c6896800631d54c7aebddecc7350e880c8b725d3bc3fe98a645c",
+          "proof_scope": "same shared-IL definition and interface, including ordered event plans; successful execution and native realization remain unqualified",
+          "method": "shared-definition"
+        },
+        "scope": "one pure canonical UIL invoke; no services or application state commit",
+        "abi": {
+          "format": "fdisbull-web-scalar-abi-1",
+          "inputs": [
+            "allow",
+            "delta",
+            "x"
+          ],
+          "outputs": [
+            "x"
+          ],
+          "row_limit": 8192,
+          "carrier": "signed i32; logical byte/word guards; status 0=complete, 1=refused"
+        },
+        "artifacts": {
+          "host.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+          "block.wgsl": "4e746f8f121daee5480481ffa7dae9bc5037a6909387cef1aa2d4cf22638c0c5"
+        },
+        "execution": false,
+        "source_to_uil": false
+      }
+    },
+    "narrow": {
+      "wasm32-scalar-1": {
+        "format": "fdisbull-web-block-1",
+        "selection": "selection:e12460e74fd0714c2344d8600f7eaada3727458c96728aad2c65254e3a629b89",
+        "selection_sha256": "e12460e74fd0714c2344d8600f7eaada3727458c96728aad2c65254e3a629b89",
+        "target": "wasm32-scalar-1",
+        "layer": "layer:8429f48513d80d72ee3d5bc0744fc422911f4d87ff772ddcf887da19f6332acd",
+        "contract": "contract:4d72b3a707b11b7943e0eb8554895294989df897c1a769fe5e6900c8af00d588",
+        "layer_sha256": "8429f48513d80d72ee3d5bc0744fc422911f4d87ff772ddcf887da19f6332acd",
+        "contract_sha256": "4d72b3a707b11b7943e0eb8554895294989df897c1a769fe5e6900c8af00d588",
+        "module_uil_sha256": "f17657bfd718f51d3ca097dcd3b36a62c0fdc6057017405adda9210f6b0c664b",
+        "program_sha256": "55c6f2e1a9a042e8c39445c44ca8533d620abd22fbcd47b10e0bec4e906a0ee8",
+        "qualification": {
+          "format": "fdisbull-uil-qualification-1",
+          "status": "equivalent_under_contract",
+          "timeout_ms": 2000,
+          "programs": {
+            "reference_sha256": "55c6f2e1a9a042e8c39445c44ca8533d620abd22fbcd47b10e0bec4e906a0ee8",
+            "implementation_sha256": "55c6f2e1a9a042e8c39445c44ca8533d620abd22fbcd47b10e0bec4e906a0ee8"
+          },
+          "interfaces": {
+            "inputs": {
+              "value": "i16"
+            },
+            "outputs": {
+              "small": "i8"
+            },
+            "reference": {
+              "inputs": {
+                "value": "$value"
+              },
+              "outputs": {
+                "small": "$small"
+              }
+            },
+            "implementation": {
+              "inputs": {
+                "value": "$value"
+              },
+              "outputs": {
+                "small": "$small"
+              }
+            }
+          },
+          "domain": {},
+          "reference_completion_possible": null,
+          "contract_sha256": "4d72b3a707b11b7943e0eb8554895294989df897c1a769fe5e6900c8af00d588",
+          "proof_scope": "same shared-IL definition and interface, including ordered event plans; successful execution and native realization remain unqualified",
+          "method": "shared-definition"
+        },
+        "scope": "one pure canonical UIL invoke; no services or application state commit",
+        "abi": {
+          "format": "fdisbull-web-scalar-abi-1",
+          "inputs": [
+            "value"
+          ],
+          "outputs": [
+            "small"
+          ],
+          "row_limit": 8192,
+          "carrier": "signed i32; logical byte/word guards; status 0=complete, 1=refused"
+        },
+        "artifacts": {
+          "host.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+          "block.wasm": "836b59f022f059ef0bc85fd2adba6add336dde20a6aa05eaf06e74a657114af9",
+          "block.wat": "5dcb13ab4ce2ca399626087749a531f7993034c76f8431fc55878e782d420baa"
+        },
+        "execution": false,
+        "source_to_uil": false
+      },
+      "webgpu-wgsl-scalar-1": {
+        "format": "fdisbull-web-block-1",
+        "selection": "selection:e49678844aefc294c55936865e34aa13e718df6b8923d592711c5f0381f77240",
+        "selection_sha256": "e49678844aefc294c55936865e34aa13e718df6b8923d592711c5f0381f77240",
+        "target": "webgpu-wgsl-scalar-1",
+        "layer": "layer:8429f48513d80d72ee3d5bc0744fc422911f4d87ff772ddcf887da19f6332acd",
+        "contract": "contract:4d72b3a707b11b7943e0eb8554895294989df897c1a769fe5e6900c8af00d588",
+        "layer_sha256": "8429f48513d80d72ee3d5bc0744fc422911f4d87ff772ddcf887da19f6332acd",
+        "contract_sha256": "4d72b3a707b11b7943e0eb8554895294989df897c1a769fe5e6900c8af00d588",
+        "module_uil_sha256": "f17657bfd718f51d3ca097dcd3b36a62c0fdc6057017405adda9210f6b0c664b",
+        "program_sha256": "55c6f2e1a9a042e8c39445c44ca8533d620abd22fbcd47b10e0bec4e906a0ee8",
+        "qualification": {
+          "format": "fdisbull-uil-qualification-1",
+          "status": "equivalent_under_contract",
+          "timeout_ms": 2000,
+          "programs": {
+            "reference_sha256": "55c6f2e1a9a042e8c39445c44ca8533d620abd22fbcd47b10e0bec4e906a0ee8",
+            "implementation_sha256": "55c6f2e1a9a042e8c39445c44ca8533d620abd22fbcd47b10e0bec4e906a0ee8"
+          },
+          "interfaces": {
+            "inputs": {
+              "value": "i16"
+            },
+            "outputs": {
+              "small": "i8"
+            },
+            "reference": {
+              "inputs": {
+                "value": "$value"
+              },
+              "outputs": {
+                "small": "$small"
+              }
+            },
+            "implementation": {
+              "inputs": {
+                "value": "$value"
+              },
+              "outputs": {
+                "small": "$small"
+              }
+            }
+          },
+          "domain": {},
+          "reference_completion_possible": null,
+          "contract_sha256": "4d72b3a707b11b7943e0eb8554895294989df897c1a769fe5e6900c8af00d588",
+          "proof_scope": "same shared-IL definition and interface, including ordered event plans; successful execution and native realization remain unqualified",
+          "method": "shared-definition"
+        },
+        "scope": "one pure canonical UIL invoke; no services or application state commit",
+        "abi": {
+          "format": "fdisbull-web-scalar-abi-1",
+          "inputs": [
+            "value"
+          ],
+          "outputs": [
+            "small"
+          ],
+          "row_limit": 8192,
+          "carrier": "signed i32; logical byte/word guards; status 0=complete, 1=refused"
+        },
+        "artifacts": {
+          "host.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+          "block.wgsl": "bc5ff4d90dec6258faf9067429097946fb53a164f10489635d2c5731fff2e513"
+        },
+        "execution": false,
+        "source_to_uil": false
+      }
+    },
+    "branch": {
+      "wasm32-scalar-1": {
+        "format": "fdisbull-web-block-1",
+        "selection": "selection:e438670806eea3df7d9bc524efe84497d055b977b0e59d013003117688bf0464",
+        "selection_sha256": "e438670806eea3df7d9bc524efe84497d055b977b0e59d013003117688bf0464",
+        "target": "wasm32-scalar-1",
+        "layer": "layer:7c877bab116f99b32a02e9caf93a26907f8e882717adb9698221c09fb350dfff",
+        "contract": "contract:3e3d240d79df822817c16a574ea00e7b02d9966eb7c6a57b5e5898d08810344e",
+        "layer_sha256": "7c877bab116f99b32a02e9caf93a26907f8e882717adb9698221c09fb350dfff",
+        "contract_sha256": "3e3d240d79df822817c16a574ea00e7b02d9966eb7c6a57b5e5898d08810344e",
+        "module_uil_sha256": "953bd361204b06d436b423e05b3c68e1bb871a295889ae1cd999d41ff0012fe4",
+        "program_sha256": "e5a178b6d140d126a9b0c6db0c8a51e93c269dd86a48d5837e4ff1edf3ba0e42",
+        "qualification": {
+          "format": "fdisbull-uil-qualification-1",
+          "status": "equivalent_under_contract",
+          "timeout_ms": 2000,
+          "programs": {
+            "reference_sha256": "e5a178b6d140d126a9b0c6db0c8a51e93c269dd86a48d5837e4ff1edf3ba0e42",
+            "implementation_sha256": "e5a178b6d140d126a9b0c6db0c8a51e93c269dd86a48d5837e4ff1edf3ba0e42"
+          },
+          "interfaces": {
+            "inputs": {
+              "flags": "i16",
+              "x": "u16"
+            },
+            "outputs": {
+              "x": "u16"
+            },
+            "reference": {
+              "inputs": {
+                "flags": "$flags",
+                "x": "$x"
+              },
+              "outputs": {
+                "x": "$x"
+              }
+            },
+            "implementation": {
+              "inputs": {
+                "flags": "$flags",
+                "x": "$x"
+              },
+              "outputs": {
+                "x": "$x"
+              }
+            }
+          },
+          "domain": {},
+          "reference_completion_possible": null,
+          "contract_sha256": "3e3d240d79df822817c16a574ea00e7b02d9966eb7c6a57b5e5898d08810344e",
+          "proof_scope": "same shared-IL definition and interface, including ordered event plans; successful execution and native realization remain unqualified",
+          "method": "shared-definition"
+        },
+        "scope": "one pure canonical UIL invoke; no services or application state commit",
+        "abi": {
+          "format": "fdisbull-web-scalar-abi-1",
+          "inputs": [
+            "flags",
+            "x"
+          ],
+          "outputs": [
+            "x"
+          ],
+          "row_limit": 8192,
+          "carrier": "signed i32; logical byte/word guards; status 0=complete, 1=refused"
+        },
+        "artifacts": {
+          "host.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+          "block.wasm": "269a4f69b1ecdb98f3d887a661a5b8751c704507c2d013e85ee82a636285e05f",
+          "block.wat": "3a7cca84bf57238a58604e90cdc5ff1c299a8927b9c1e3579a4c655a9064e9e2"
+        },
+        "execution": false,
+        "source_to_uil": false
+      },
+      "webgpu-wgsl-scalar-1": {
+        "format": "fdisbull-web-block-1",
+        "selection": "selection:725ebf60382a43a0150d7b7629e56471c8772711ebb030ecba576aba75c65655",
+        "selection_sha256": "725ebf60382a43a0150d7b7629e56471c8772711ebb030ecba576aba75c65655",
+        "target": "webgpu-wgsl-scalar-1",
+        "layer": "layer:7c877bab116f99b32a02e9caf93a26907f8e882717adb9698221c09fb350dfff",
+        "contract": "contract:3e3d240d79df822817c16a574ea00e7b02d9966eb7c6a57b5e5898d08810344e",
+        "layer_sha256": "7c877bab116f99b32a02e9caf93a26907f8e882717adb9698221c09fb350dfff",
+        "contract_sha256": "3e3d240d79df822817c16a574ea00e7b02d9966eb7c6a57b5e5898d08810344e",
+        "module_uil_sha256": "953bd361204b06d436b423e05b3c68e1bb871a295889ae1cd999d41ff0012fe4",
+        "program_sha256": "e5a178b6d140d126a9b0c6db0c8a51e93c269dd86a48d5837e4ff1edf3ba0e42",
+        "qualification": {
+          "format": "fdisbull-uil-qualification-1",
+          "status": "equivalent_under_contract",
+          "timeout_ms": 2000,
+          "programs": {
+            "reference_sha256": "e5a178b6d140d126a9b0c6db0c8a51e93c269dd86a48d5837e4ff1edf3ba0e42",
+            "implementation_sha256": "e5a178b6d140d126a9b0c6db0c8a51e93c269dd86a48d5837e4ff1edf3ba0e42"
+          },
+          "interfaces": {
+            "inputs": {
+              "flags": "i16",
+              "x": "u16"
+            },
+            "outputs": {
+              "x": "u16"
+            },
+            "reference": {
+              "inputs": {
+                "flags": "$flags",
+                "x": "$x"
+              },
+              "outputs": {
+                "x": "$x"
+              }
+            },
+            "implementation": {
+              "inputs": {
+                "flags": "$flags",
+                "x": "$x"
+              },
+              "outputs": {
+                "x": "$x"
+              }
+            }
+          },
+          "domain": {},
+          "reference_completion_possible": null,
+          "contract_sha256": "3e3d240d79df822817c16a574ea00e7b02d9966eb7c6a57b5e5898d08810344e",
+          "proof_scope": "same shared-IL definition and interface, including ordered event plans; successful execution and native realization remain unqualified",
+          "method": "shared-definition"
+        },
+        "scope": "one pure canonical UIL invoke; no services or application state commit",
+        "abi": {
+          "format": "fdisbull-web-scalar-abi-1",
+          "inputs": [
+            "flags",
+            "x"
+          ],
+          "outputs": [
+            "x"
+          ],
+          "row_limit": 8192,
+          "carrier": "signed i32; logical byte/word guards; status 0=complete, 1=refused"
+        },
+        "artifacts": {
+          "host.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+          "block.wgsl": "5b844d75050bcaafe5a46c34516595e5dd04a65d742cfb8ac0495e58339faeed"
+        },
+        "execution": false,
+        "source_to_uil": false
+      }
+    }
+  },
+  "browser_execution": {
+    "format": "fdisbull-browser-web-execution-2",
+    "status": "passed",
+    "runtime": "Chrome/156.0.0.0",
+    "adapter": {
+      "vendor": "apple",
+      "architecture": "metal-3",
+      "device": "",
+      "isFallbackAdapter": false
+    },
+    "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed",
+    "suites": [
+      {
+        "name": "food",
+        "negative_control": false,
+        "wasm32-scalar-1": {
+          "cases": 2024,
+          "mismatches": 0,
+          "refusals": 6
+        },
+        "webgpu-wgsl-scalar-1": {
+          "cases": 2024,
+          "mismatches": 0,
+          "refusals": 6
+        }
+      },
+      {
+        "name": "atomic",
+        "negative_control": false,
+        "wasm32-scalar-1": {
+          "cases": 19,
+          "mismatches": 0,
+          "refusals": 10
+        },
+        "webgpu-wgsl-scalar-1": {
+          "cases": 19,
+          "mismatches": 0,
+          "refusals": 10
+        }
+      },
+      {
+        "name": "narrow",
+        "negative_control": false,
+        "wasm32-scalar-1": {
+          "cases": 9,
+          "mismatches": 0,
+          "refusals": 4
+        },
+        "webgpu-wgsl-scalar-1": {
+          "cases": 9,
+          "mismatches": 0,
+          "refusals": 4
+        }
+      },
+      {
+        "name": "branch",
+        "negative_control": false,
+        "wasm32-scalar-1": {
+          "cases": 15,
+          "mismatches": 0,
+          "refusals": 0
+        },
+        "webgpu-wgsl-scalar-1": {
+          "cases": 15,
+          "mismatches": 0,
+          "refusals": 0
+        }
+      },
+      {
+        "name": "food-mutant",
+        "negative_control": true,
+        "wasm32-scalar-1": {
+          "cases": 2024,
+          "mismatches": 1765,
+          "refusals": 6
+        },
+        "webgpu-wgsl-scalar-1": {
+          "cases": 2024,
+          "mismatches": 1765,
+          "refusals": 6
+        }
+      }
+    ],
+    "launch_flags": [
+      "--headless=new",
+      "--no-first-run",
+      "--no-default-browser-check",
+      "--enable-unsafe-webgpu",
+      "--use-angle=metal"
+    ]
+  },
+  "browser_node_observation_equality": true,
+  "implementation_sources": {
+    "src/fdisbull/udc_web.py": "1956b7d1ff9bc22f44f5da79d100d0d6b1327d7f2e3e11c92feb06f406d4a5f2",
+    "src/fdisbull/web_runtime/block.mjs": "666d4a315e820941c6a3547db2b1e0a985b2e1b74d1e9039ee384d0311f5e4f4",
+    "examples/recovery/civd_food_web.py": "a1425fe8e30a437b503094a0d5ffb34e4290b84a1638a10d34b26a883a09ff37",
+    "examples/recovery/run_web_blocks.mjs": "3369abaeb2ae2399f9df197f5e197a02d95063d5aa4be8751e63ff7d9310abba",
+    "examples/recovery/run_web_browser.mjs": "6865aebe0f51d21626215c24f87d5fa0bc219d806c34dc33f1ba2552dbe00f84"
+  },
+  "local_validation": {
+    "macos_pytest": {
+      "passed": 2266,
+      "skipped": 132,
+      "deselected": 2,
+      "ignored_modules": [
+        "tests/test_elf_metadata.py",
+        "tests/test_platform_calls.py"
+      ],
+      "deselected_nodes": [
+        "tests/test_inspection.py::test_actual_elf_exports_and_unresolved_imports_are_honest",
+        "tests/test_loading.py::test_real_elf_retains_entry_and_named_function"
+      ],
+      "real_gpu_dependency_root_supplied": true
+    },
+    "parent_8e86687_platform_reproduction": {
+      "failed": 2,
+      "passed": 3,
+      "setup_errors": 23
+    },
+    "new_web_backend_tests": {
+      "passed": 14,
+      "real_gpu_executed": true
+    }
+  }
+}

@@ -31,12 +31,25 @@ REQUIRED_SOURCE_EVIDENCE |= {"docs/uil-rfcs/0002/" + name for name in
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-026/verification.json")
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/civd-food-arm64/verification.json")
 REVIEWED_SOURCE_RECIPES = {'examples/recovery/civd_food_arm64.py', 'examples/recovery/civd_food_swap.py'}
+REVIEWED_SOURCE_RECIPES |= {'examples/recovery/civd_food_web.py','examples/recovery/run_web_blocks.mjs'}
+REVIEWED_SOURCE_RECIPES.add('examples/recovery/run_web_browser.mjs')
+REVIEWED_SOURCE_RECIPES |= {'examples/recovery/civd_browser_shell.py',
+    'examples/recovery/web_shell_study.mjs','examples/recovery/run_browser_shell.mjs'}
+REVIEWED_SOURCE_RECIPES |= {'examples/recovery/snake_model.py','examples/recovery/snake_original.py',
+    'examples/recovery/snake_browser.py','examples/recovery/run_snake_browser.mjs','examples/recovery/snake_browser_study.mjs'}
 REQUIRED_SOURCE_EVIDENCE |= REVIEWED_SOURCE_RECIPES
+REQUIRED_SOURCE_EVIDENCE.add('docs/evidence/civd-food-web/verification.json')
+REQUIRED_SOURCE_EVIDENCE |= {'docs/evidence/civd-browser-shell/verification.json','tests/web_shell_checks.mjs'}
+REQUIRED_SOURCE_EVIDENCE |= {'docs/evidence/snake-browser/verification.json','tests/memory_shell_checks.mjs'}
 REQUIRED_PE_RESOURCES = {"wine_guest/agent.c", "wine_guest/init.sh", "wine_guest/broker.py", "wine_guest/selftest.c"}
 REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/broker.py", "ida_guest/SDK-LICENSE.txt", "ida_wire.py", "ida_remote.py", "ida_trace.py"}
 REQUIRED_PE_RESOURCES |= {"dos_guest/__init__.py", "dos_guest/init.sh", "dos_guest/broker.py", "dos_qemu.py", "dos_runtime.py", "qemu_machine.py", "gdb_rpc.py", "guest_assets.py"}
 REQUIRED_KNOWLEDGE_RESOURCES = {"data/dos-runtime-signatures.json", "data/MICROSOFT-DOS-LICENSE.txt"}
 REQUIRED_KNOWLEDGE_RESOURCES.add("data/civd-z-screen-families.json")
+REQUIRED_KNOWLEDGE_RESOURCES.add('web_runtime/block.mjs')
+REQUIRED_KNOWLEDGE_RESOURCES |= {'web_runtime/shell.mjs','web_runtime/app.mjs','web_runtime/index.html'}
+REQUIRED_KNOWLEDGE_RESOURCES |= {'web_runtime/memory.mjs','web_runtime/memory-shell.mjs',
+    'web_runtime/memory-canvas.mjs','web_runtime/memory-index.html'}
 REQUIRED_KNOWLEDGE_RESOURCES |= {"skills/fdisbull-investigate/SKILL.md", "skills/fdisbull-investigate/references/scenes.md",
                                  "skills/fdisbull-investigate/references/methodology.md",
                                  "skills/fdisbull-investigate/references/reconstruction.md",

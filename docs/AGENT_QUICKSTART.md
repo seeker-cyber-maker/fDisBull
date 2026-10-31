@@ -9,6 +9,13 @@ For recovery, translation or a backing swap, retrieve
 recipe, a runnable counterexample exercise and separate original/UIL/target
 acceptance gates. It requires no earlier conversation or project history.
 
+For array/loop state and browser graphics/input, see
+[bounded-memory browser reconstruction](UDC_MEMORY_BROWSER.md). Its strict
+memory UIL and selected per-function Wasm/WebGPU backings are separate from the
+scalar food profile. The Snake study checks original instructions, real input,
+complete rasters and guarded state commits; finite comparisons are scoped in
+its receipt.
+
 ## Discover commands and bundled skills
 
 ```text
@@ -288,6 +295,16 @@ register boundary and assumptions. Read `docs/UDC_DOS.md`,
 limits.
 
 ## Keep results within their evidence
+
+For one pure selected byte/word block, `build-web-block` emits guarded Wasm or
+WGSL under the same module UIL. Read [Web UDC profiles](UDC_WEB.md) for target
+names, host ABI and original-backed CivD qualification. Browser/GPU availability
+and application state commits need separate checks.
+
+`build-web-shell` adds an explicit typed record arena and orchestration plan over
+two interchangeable selected blocks. Read [the browser shell](UDC_BROWSER_SHELL.md)
+before binding async results to application state; computation readiness is not
+a commit, and cancellation does not release a submitted GPU job early.
 
 Static decode, authored scene geometry, diagnostic state edits, text
 projections, bounded proofs and live ordinary input are different evidence
