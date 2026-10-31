@@ -11,8 +11,10 @@ advances it. Keep remaining required operations in a coverage ledger. A small
 slice is an incremental result, not permission to abandon the full task.
 
 Run the selected executable's `--version`, `agent-skill --index` and `methods`.
-Read `agent-skill --reference SKILL.md` and this reference from that same
-environment. Commands/flags and optional backends must exist in that inventory.
+Prefer `agent-skill --reference SKILL.md` and references from that same
+environment. An agent-installed copy can be newer than the runtime bundle:
+read its local relative references, retain its source revision/file hashes and
+record both identities. Its presence does not add methods to the selected tool. Commands/flags and optional backends must exist in that inventory.
 For Python APIs use the matching interpreter; do not silently fall back to
 system Python. No target executable, emulator, compiler or game data is bundled.
 

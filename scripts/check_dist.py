@@ -26,6 +26,8 @@ REQUIRED_SOURCE_EVIDENCE |= {"docs/uil-rfcs/0002/" + name for name in
                            ("vectors.json", "replay-summary.json")}
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-026/verification.json")
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/civ-original-corrections/verification.json")
+REVIEWED_SOURCE_RECIPES = {'examples/civ/civ_exepack.py', 'examples/civ/civ_city_buy_udc.py', 'examples/civ/civ_city_scene.json', 'examples/civ/civ_city_original.py', 'examples/civ/civ_city_trace.py', 'examples/civ/civ_city_original_compare.py', 'examples/udc/civ_production.py', 'examples/civ/civ_city_uil.py', 'examples/civ/civ_city_udc_diff.py'}
+REQUIRED_SOURCE_EVIDENCE |= REVIEWED_SOURCE_RECIPES
 REQUIRED_PE_RESOURCES = {"wine_guest/agent.c", "wine_guest/init.sh", "wine_guest/broker.py", "wine_guest/selftest.c"}
 REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/broker.py", "ida_guest/SDK-LICENSE.txt", "ida_wire.py", "ida_remote.py", "ida_trace.py"}
 REQUIRED_PE_RESOURCES |= {"dos_guest/__init__.py", "dos_guest/init.sh", "dos_guest/broker.py", "dos_qemu.py", "dos_runtime.py", "qemu_machine.py", "gdb_rpc.py", "guest_assets.py"}
@@ -72,7 +74,11 @@ def check_archive(path: Path) -> int:
     for entry in entries:
         if entry.is_absolute() or ".." in entry.parts:
             raise ValueError(f"Invalid archive path: {entry}")
-        if EXCLUDED_DIRECTORIES.intersection(entry.parts):
+        excluded = EXCLUDED_DIRECTORIES.intersection(entry.parts)
+        relative = PurePosixPath(*entry.parts[1:]).as_posix()
+        reviewed_recipe = (path.suffix != ".whl" and excluded == {"examples"}
+                           and relative in REVIEWED_SOURCE_RECIPES)
+        if excluded and not reviewed_recipe:
             raise ValueError(f"Excluded directory in {path.name}: {entry}")
         if entry.suffix.lower() in EXCLUDED_SUFFIXES or ".fdb-" in entry.name.lower():
             raise ValueError(f"Excluded binary/data file in {path.name}: {entry}")
