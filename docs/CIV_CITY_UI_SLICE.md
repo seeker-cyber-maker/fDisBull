@@ -157,11 +157,11 @@ insufficient.
    for byte identity: the generated root matches the published `CIV_UNP.EXE`
    hash and the loader reports the 23-overlay tail. Use the translated
    `1D12:0045` runtime seed, not the literal root-relative selector.
-3. **Trace the city route.** The entry prologue is now decoded as a candidate.
-   Start from a verified caller or overlay entry and follow reads/writes of the
-   city record fields through the city-screen routine and the
-   `CHANGE`/`BUY`/`VIEW` dispatches. A bounded traversal is not a completion
-   signal.
+3. **Trace the city route.** Complete for the entry, callers and record
+   fields: see `docs/CIV_CITY_STATIC_TRACE.md` (four root call sites, three
+   caller functions, signed shield reset). Next follow the
+   `CHANGE`/`BUY`/`VIEW` dispatches; bounded traversal is still not a
+   completion signal.
 4. **Use runtime only if the matching DOS input/backend is staged.** Drive the
    ordinary city action, capture a baseline and one controlled change, and
    distinguish visible, ready, enabled, committed, and persisted results.
