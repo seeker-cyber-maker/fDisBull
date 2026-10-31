@@ -26,6 +26,7 @@ SOURCE_DIR = Path(__file__).with_name('game_sources')
 GAME_INTRINSICS=frozenset(('update_subpixel','mace_x','mace_y','get_tile',
                           'get_collision','set_tile','collides_player',
                           'run_objects','run_fireball'))
+RENDER_INTRINSICS=frozenset(('draw_objects',))
 ACTOR_HANDLERS=(None,'run_key',*(['run_raft']*4),*(['run_mace']*2),
                 'run_bomb','run_switch',*(['run_electricity']*2),
                 *(['run_ball']*4),*(['run_orb']*4),*(['run_fireball']*4),
@@ -127,6 +128,8 @@ def _instrument(source, prefix, external_banked=(), *, bank=None, procedure_bank
             prelude.extend(('#pragma wrapped-call(push,banked_call,bank)', gen.visit(node.decl) + ';', '#pragma wrapped-call(pop)'))
     segments = {}
     for index, node in enumerate(functions):
+        if prefix=='R' and node.decl.name in RENDER_INTRINSICS:
+            continue
         if prefix=='G' and node.decl.name in GAME_INTRINSICS:
             # Exact-profile intrinsic, independently checked for every phase.
             # The UIL body remains the reference; GAMEFAST supplies its native
@@ -208,7 +211,7 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
     out.mkdir(parents=True)
     work = out/'build';work.mkdir()
     adapter_names=('miniplanets_audio_nes.c','nes_globe_renderer.c','nes_game_platform.c',
-                   'nes_game_start.s','miniplanets_audio_fast.s','nes_globe_fast.s','nes_game_fast.s','nes_audio_clock.c')
+                   'nes_game_start.s','miniplanets_audio_fast.s','nes_globe_fast.s','nes_display_fast.s','nes_game_fast.s','nes_audio_clock.c')
     adapter_sources={name:(SOURCE_DIR/name).read_bytes() for name in adapter_names}
     tool_hashes={name:hashlib.sha256(path.read_bytes()).hexdigest() for name,path in binaries.items()}
     runtime_library=(root/'lib/nes.lib').read_bytes()
@@ -242,7 +245,7 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
         _run([binaries['ca65'],'-t','nes','-g',work/(name+'.s'),'-o',obj],work)
         objects.append(obj)
     special_sizes={}
-    for name,segment in (('nes_game_fast','GAMEFAST'),('nes_globe_fast','RENDERFAST'),
+    for name,segment in (('nes_game_fast','GAMEFAST'),('nes_globe_fast','RENDERFAST'),('nes_display_fast','RENDERFAST'),
                          ('miniplanets_audio_fast','AUDIOFAST')):
         obj=work/(name+'.o')
         _run([binaries['ca65'],'-t','nes','-g',work/(name+'.s'),'-o',obj],work)
@@ -250,7 +253,7 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
         report=_run([binaries['od65'],'-S',obj],work)
         match=re.search(r'^\s*'+segment+r':\s*(\d+)\s*$',report,re.M)
         if not match:raise ValueError(f'Missing native hot-loop segment: {segment}')
-        special_sizes[segment]=int(match.group(1))
+        special_sizes[segment]=special_sizes.get(segment,0)+int(match.group(1))
     sizes = {}
     for obj in objects:
         report = _run([binaries['od65'],'-S',obj],work)
@@ -345,7 +348,10 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
     _, generator, _ = _parser();gen=generator.CGenerator()
     procedures = [x for x in tree.ext if type(x).__name__=='FuncDef']
     if len(procedures)>=249:raise ValueError('Native game debug procedure budget exceeded')
-    debug = ['#include "game_api.h"','unsigned long debug_arg(unsigned char index);',
+    debug = ['#include "game_api.h"',
+             '#pragma wrapped-call(push,banked_call,bank)','void prepare_upload(void);','#pragma wrapped-call(pop)',
+             'extern volatile unsigned char video_ready,render_phase;',
+             'unsigned long debug_arg(unsigned char index);',
              'volatile unsigned long *debug_result=(volatile unsigned long*)0x7F0;',
              'void debug_dispatch(unsigned char id){unsigned int audio_i;switch(id){']
     for index,proc in enumerate(procedures):
@@ -359,6 +365,7 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
                   'case 250:audio_init();*debug_result=0;break;',
                   'case 251:audio_request((unsigned char)debug_arg(0),(unsigned char)debug_arg(1));*debug_result=0;break;',
                   'case 252:for(audio_i=0;audio_i<(unsigned int)debug_arg(0) && audio_i<256;audio_i++)audio_tick();*debug_result=audio_i;break;',
+                  'case 253:if(video_ready==0){prepare_upload();render_phase=0;video_ready=1;*debug_result=0;}else *debug_result=0xFFFFFFFEUL;break;',
                   'default:*debug_result=0xFFFFFFFFUL;break;}}'))
     (work/'debug.c').write_text('\n'.join(debug))
     # The dispatch itself is banked too; it is absent from the ordinary game
@@ -472,6 +479,7 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
                        'hv_count':0x7EA,'hv_position':0x7EB,'sound_busy':0x7EC,'fault':0x7ED,
                        'audio_init_procedure':250,'audio_request_procedure':251,'audio_ticks_procedure':252,
                        'projection_pair_procedure':249,
+                       'display_prepare_procedure':253,
                        'audio_tick_batch_limit':256},
               'publication':{'memory_id':2,'base':0x700,'slots':4,'stride':48,'head':0x7C0,
                   'hv_count_offset':41,'hv_recording':{'memory_id':0,'offset':0x1F00,'slots':4,'stride':64,'max_words':32,'byte_order':'big'},

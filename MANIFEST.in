@@ -41,6 +41,7 @@ recursive-include docs/evidence/miniplanets-full-game-2026-10-31 *.json
 include patches/capstone-5.0.9-sh-profile-gating.patch
 include scripts/rom_semantic_route/DecompileAuthoredSh2.java
 include scripts/rom_semantic_route/README.md
+include scripts/miniplanets_display_observer.c
 include docs/evidence/spatial-2026-10-29/verification.json
 include docs/evidence/zork-2026-10-29/verification.json
 include docs/evidence/zork-uil-2026-10-29/verification.json

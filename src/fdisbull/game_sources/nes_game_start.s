@@ -6,6 +6,7 @@
 .import _display_plane, _display_hud, _display_attributes
 .import _video_ready, _render_phase, _active_nt, _render_oam_page
 .import _irq_phase, _frame_buttons, _irq_audio
+.import _upload_count, _upload_cursor, _upload_target_nt, _upload_lo, _upload_hi
 .import _audio_due_slots, _audio_served_slots, _audio_physical_entries
 .export _select_data, _banked_call
 .export _begin_state, _publish_state
@@ -33,6 +34,7 @@ upload_high: .res 1
 upload_attr_high: .res 1
 pad_bits: .res 1
 oam_page: .res 1
+upload_first: .res 1
 
 .segment "CODE"
 ; cc65 fastcall: source offset in EAX, region byte on software stack.
@@ -404,8 +406,8 @@ reset:
     jsr _main
 @forever: jmp @forever
 
-; Each NMI sends half of a private, completed16x16view into the inactive
-; nametable. The view/palette/OAM changes become visible together after part2.
+; Each NMI sends a bounded chunk of dirty regions into the inactive
+; nametable. View/palette/OAM become visible together after the last job.
 nmi:
     pha
     txa
@@ -428,73 +430,57 @@ nmi:
     rol pad_bits
     dex
     bne @readpad
-    ; serial byte A128,B64,Select32,Start16,U8,D4,L2,R1
-    lda pad_bits
-    and #$0f
-    sta _frame_buttons
-    lda pad_bits
-    and #$80
-    beq :+
-    lda _frame_buttons
-    ora #$10
-    sta _frame_buttons
-:
-    lda pad_bits
-    and #$40
-    beq :+
-    lda _frame_buttons
-    ora #$20
-    sta _frame_buttons
-:
-    lda pad_bits
-    and #$10
-    beq :+
-    lda _frame_buttons
-    ora #$40
-    sta _frame_buttons
-:
-    lda pad_bits
-    and #$20
-    beq :+
-    lda _frame_buttons
-    ora #$80
-    sta _frame_buttons
-:
-    ; Swap U/D nibble to the public profile's R,L,U,D order.
-    lda _frame_buttons
-    and #$f3
-    sta pad_bits
-    lda _frame_buttons
-    and #4
-    asl a
-    ora pad_bits
-    sta pad_bits
-    lda _frame_buttons
-    and #8
-    lsr a
-    ora pad_bits
+    ; The public pad mapping is a pure authored lookup, with the same sampled
+    ; physical frame as before. Avoid spending vblank on repeated bit shifts.
+    ldx pad_bits
+    lda normalized_pad,x
     sta _frame_buttons
     lda _video_ready
-    beq nmi_dma
-    lda _active_nt
-    eor #1
+    bne upload_pending
+    jmp nmi_dma
+upload_pending:
+    bit $2002
+    lda _upload_cursor
+    cmp _upload_count
+    bcc upload_chunk
+    jmp upload_complete
+upload_chunk:
+    sta upload_first
+    ; At most seven <=16-byte jobs. Push targets in reverse order and RTS
+    ; through their fixed, unrolled ROM routines; no cc65 ZP is touched.
+    clc
+    adc #7
+    cmp _upload_count
+    bcc :+
+    lda _upload_count
+:
+    sta _upload_cursor
+    tax
+    lda #>(upload_return-1)
+    pha
+    lda #<(upload_return-1)
+    pha
+@push_job:
+    dex
+    lda _upload_hi,x
+    pha
+    lda _upload_lo,x
+    pha
+    cpx upload_first
+    bne @push_job
+    lda _upload_target_nt
     asl a
     asl a
-    ora #$21
-    sta upload_high
-    lda _render_phase
-    bne @part1
-    jmp upload0
-@part1:
-    jmp upload1
-
-upload_done:
+    tay
+    rts
+upload_return:
     inc _render_phase
-    lda _render_phase
-    cmp #2
-    bne nmi_dma
-    lda _active_nt
-    eor #1
+    lda _upload_cursor
+    cmp _upload_count
+    beq upload_complete
+    jmp nmi_dma
+upload_complete:
+    lda _upload_target_nt
     sta _active_nt
     lda _render_oam_page
     sta oam_page
@@ -541,52 +527,44 @@ nmi_dma:
     pla
     rti
 
-; Macro-generated bounded upload: 128terrain+12HUD+8attribute bytes.
-.macro upload_half half
-    .repeat 8,row
-        lda _active_nt
-        eor #1
-        asl a
-        asl a
-        ora #>($2188+(half*8+row)*32)
-        sta $2006
-        lda #<($2188+(half*8+row)*32)
-        sta $2006
-        .repeat 16,col
-            lda _display_plane+half*128+row*16+col
-            sta $2007
-        .endrepeat
-    .endrepeat
-    lda _active_nt
-    eor #1
-    asl a
-    asl a
-    ora #$21
+; Fixed ROM jobs target the inactive nametable selected in Y (0 or 4).
+; RTS consumes the next job target or NMI continuation prepared above.
+.macro upload_region label, source, address, length
+    .export label
+label:
+    tya
+    ora #>address
     sta $2006
-    lda #<(($2100+4)+half*12)
+    lda #<address
     sta $2006
-    .repeat 12,col
-        lda _display_hud+half*12+col
+    .repeat length, col
+        lda source+col
         sta $2007
     .endrepeat
-    .repeat 2,row
-        lda _active_nt
-        eor #1
-        asl a
-        asl a
-        ora #$23
-        sta $2006
-        lda #<($23da+(half*2+row)*8)
-        sta $2006
-        .repeat 4,col
-            lda _display_attributes+half*8+row*4+col
-            sta $2007
-        .endrepeat
-    .endrepeat
-    jmp upload_done
+    rts
 .endmacro
-upload0: upload_half 0
-upload1: upload_half 1
+upload_region upload_row0,_display_plane+0,$2188,16
+upload_region upload_row1,_display_plane+16,$21a8,16
+upload_region upload_row2,_display_plane+32,$21c8,16
+upload_region upload_row3,_display_plane+48,$21e8,16
+upload_region upload_row4,_display_plane+64,$2208,16
+upload_region upload_row5,_display_plane+80,$2228,16
+upload_region upload_row6,_display_plane+96,$2248,16
+upload_region upload_row7,_display_plane+112,$2268,16
+upload_region upload_row8,_display_plane+128,$2288,16
+upload_region upload_row9,_display_plane+144,$22a8,16
+upload_region upload_row10,_display_plane+160,$22c8,16
+upload_region upload_row11,_display_plane+176,$22e8,16
+upload_region upload_row12,_display_plane+192,$2308,16
+upload_region upload_row13,_display_plane+208,$2328,16
+upload_region upload_row14,_display_plane+224,$2348,16
+upload_region upload_row15,_display_plane+240,$2368,16
+upload_region upload_hud0,_display_hud+0,$2104,12
+upload_region upload_hud1,_display_hud+12,$2110,12
+upload_region upload_attr0,_display_attributes+0,$23da,4
+upload_region upload_attr1,_display_attributes+4,$23e2,4
+upload_region upload_attr2,_display_attributes+8,$23ea,4
+upload_region upload_attr3,_display_attributes+12,$23f2,4
 
 irq:
     pha
@@ -660,6 +638,23 @@ irq:
     rti
 
 .segment "RODATA"
+normalized_pad:
+    .byte 0,1,2,3,8,9,10,11,4,5,6,7,12,13,14,15
+    .byte 64,65,66,67,72,73,74,75,68,69,70,71,76,77,78,79
+    .byte 128,129,130,131,136,137,138,139,132,133,134,135,140,141,142,143
+    .byte 192,193,194,195,200,201,202,203,196,197,198,199,204,205,206,207
+    .byte 32,33,34,35,40,41,42,43,36,37,38,39,44,45,46,47
+    .byte 96,97,98,99,104,105,106,107,100,101,102,103,108,109,110,111
+    .byte 160,161,162,163,168,169,170,171,164,165,166,167,172,173,174,175
+    .byte 224,225,226,227,232,233,234,235,228,229,230,231,236,237,238,239
+    .byte 16,17,18,19,24,25,26,27,20,21,22,23,28,29,30,31
+    .byte 80,81,82,83,88,89,90,91,84,85,86,87,92,93,94,95
+    .byte 144,145,146,147,152,153,154,155,148,149,150,151,156,157,158,159
+    .byte 208,209,210,211,216,217,218,219,212,213,214,215,220,221,222,223
+    .byte 48,49,50,51,56,57,58,59,52,53,54,55,60,61,62,63
+    .byte 112,113,114,115,120,121,122,123,116,117,118,119,124,125,126,127
+    .byte 176,177,178,179,184,185,186,187,180,181,182,183,188,189,190,191
+    .byte 240,241,242,243,248,249,250,251,244,245,246,247,252,253,254,255
 chr_banks: .byte 0,2,4,5,6,7
 palette:
     .byte $0f,$2a,$1a,$30,$0f,$12,$21,$30,$0f,$17,$27,$30,$0f,$16,$28,$30

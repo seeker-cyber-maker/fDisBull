@@ -139,6 +139,7 @@ u8 ending_projection(u16 offset) {
 void main(void) {
     u16 previous;
     u16 sampled;
+    u16 rendered_epoch;
     EPOCH=0;
     FRAME=0;
     FAULT=0;
@@ -146,6 +147,7 @@ void main(void) {
     audio_init();
     draw_game();
     previous=FRAME;
+    rendered_epoch=EPOCH;
     *(volatile u8*)0x2000=0x88;
     *(volatile u8*)0x2001=0x1E;
     for (;;) {
@@ -175,6 +177,9 @@ void main(void) {
         EPOCH=EPOCH+1;
         publish_state();
         if (actor_capacity_fault != 0) { FAULT=8;continue; }
-        if (video_ready==0) draw_game();
+        /* A completed upload must not make rendering monopolize the CPU.
+         * Sample every second logical epoch at most; never skip game updates.
+         * The immutable display plan still owns its full staging buffers. */
+        if (video_ready==0 && (u16)(EPOCH-rendered_epoch)>=2) {draw_game();rendered_epoch=EPOCH;}
     }
 }

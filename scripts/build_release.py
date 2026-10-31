@@ -82,6 +82,7 @@ SOURCE_PATTERNS = (
     ("scripts/rom_semantic_route", "*.java"),
     ("scripts/rom_semantic_route", "README.md"),
     ("scripts", "*.py"),
+    ("scripts", "miniplanets_display_observer.c"),
 )
 
 

@@ -93,6 +93,7 @@ CONSOLE_GAME_RESOURCES = tuple('src/fdisbull/' + name for name in (
     'game_sources/nes_audio_clock.c',
     'game_sources/miniplanets_audio_fast.s', 'game_sources/nes_globe_fast.s',
     'game_sources/nes_game_fast.s', 'game_sources/LICENSE.txt',
+    'game_sources/nes_display_fast.s',
 ))
 CONSOLE_GAME_HELPERS = (
     'scripts/check_console_udc.py', 'scripts/check_miniplanets_common_native.py',
@@ -106,6 +107,10 @@ CONSOLE_GAME_HELPERS = (
     'scripts/check_miniplanets_globe_fast.py', 'scripts/check_miniplanets_game_fast.py',
     'scripts/check_miniplanets_actor_fast.py', 'scripts/check_miniplanets_projection_pair.py',
     'scripts/check_miniplanets_renderer_objects.py', 'scripts/check_miniplanets_projection_cache.py',
+    'scripts/check_miniplanets_hud_fast.py', 'scripts/check_miniplanets_sprite_fast.py',
+    'scripts/check_miniplanets_objects_native.py', 'scripts/check_miniplanets_upload_plan.py',
+    'scripts/check_miniplanets_upload_stress.py', 'scripts/check_miniplanets_nes_display.py',
+    'scripts/miniplanets_display_observer.c',
     'tests/test_game_il.py', 'tests/test_miniplanets_full.py',
     'tests/test_console_udc_host.py', 'tests/test_miniplanets_globe_assets.py',
     'tests/test_miniplanets_nes_game.py', 'tests/test_nes_audio_clock.py',
@@ -121,6 +126,7 @@ CONSOLE_GAME_EVIDENCE = tuple('docs/evidence/miniplanets-full-game-2026-10-31/' 
     'normal-audio-tempo.json', 'nes-verification.json',
     'mapper-atomic-verification.json', 'source-review.json', 'lowering-exploration.json',
     'optimization.json',
+    'display-optimization.json',
 ))
 CONSOLE_GAME_EVIDENCE += ('docs/MINIPLANETS_FULL_GAME.md',)
 REQUIRED_SOURCE_FILES += CONSOLE_GAME_RESOURCES + CONSOLE_GAME_HELPERS + CONSOLE_GAME_EVIDENCE

@@ -39,6 +39,8 @@ u16 globe_atlas_pointer;
 void globe_clear(void);
 void globe_copy_projection(void);
 void globe_paint_terrain(void);
+void globe_hud_attributes(void);
+void prepare_upload(void);
 
 void put_text(u8 x,u8 y,const char *text) {
     u8 at;
@@ -55,16 +57,7 @@ void hex_digit(u8 x,u8 y,u8 digit) {
     display_plane[y*16+x]=(digit & 15)+48;
 }
 
-void draw_sprite(u8 x,u8 y,u8 tile,u8 palette) {
-    volatile u8 *oam;
-    if (render_oam_index>=252) { oam_overflow=1;return; }
-    oam=(volatile u8*)((u16)render_oam_page<<8);
-    oam[render_oam_index]=y-1;
-    oam[render_oam_index+1]=tile;
-    oam[render_oam_index+2]=palette & 3;
-    oam[render_oam_index+3]=x;
-    render_oam_index=render_oam_index+4;
-}
+void draw_sprite(u8 x,u8 y,u8 tile,u8 palette);
 
 void draw_terrain(void) {
     u8 phase;
@@ -207,11 +200,6 @@ void draw_menu(void) {
 }
 
 void draw_game(void) {
-    u16 i;
-    u8 x;
-    u8 y;
-    u8 at;
-    u8 value;
     if (video_ready!=0) return;
     render_epoch=*(volatile u16*)0x7D2;
     render_oam_page=render_oam_page==2 ? 3 : 2;
@@ -222,22 +210,8 @@ void draw_game(void) {
         draw_objects();
         if ((ingame_status & 1)!=0) put_text(5,0,"PAUSED");
     } else draw_menu();
-    for (i=0;i<24;i=i+1) display_hud[i]=32;
-    for (i=0;i<6;i=i+1) display_hud[i]=(u8)((score >> ((5-i)*4)) & 15)+48;
-    display_hud[7]=76;display_hud[8]=(lives>>4)+48;display_hud[9]=(lives & 15)+48;
-    display_hud[11]=84;display_hud[12]=(time_secs>>4)+48;display_hud[13]=(time_secs & 15)+48;
-    display_hud[15]=(stage_name>>4)+48;display_hud[16]=45;display_hud[17]=(stage_name & 15)+48;
-    display_hud[19]=75;display_hud[20]=keys_left+48;
-    for (y=0;y<4;y=y+1) {
-        for (x=0;x<4;x=x+1) {
-            at=y*64+x*4;
-            value=display_palettes[at+17];
-            value=value | (display_palettes[at+19]<<2);
-            value=value | (display_palettes[at+49]<<4);
-            value=value | (display_palettes[at+51]<<6);
-            display_attributes[y*4+x]=value;
-        }
-    }
+    globe_hud_attributes();
+    prepare_upload();
     render_phase=0;
     video_ready=1;
 }

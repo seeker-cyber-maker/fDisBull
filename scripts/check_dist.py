@@ -50,6 +50,10 @@ REQUIRED_TEST_HELPERS |= {"scripts/check_console_udc.py", "scripts/check_minipla
                          "scripts/check_miniplanets_globe_fast.py", "scripts/check_miniplanets_game_fast.py",
                          "scripts/check_miniplanets_actor_fast.py", "scripts/check_miniplanets_projection_pair.py",
                          "scripts/check_miniplanets_renderer_objects.py", "scripts/check_miniplanets_projection_cache.py",
+                         "scripts/check_miniplanets_hud_fast.py", "scripts/check_miniplanets_sprite_fast.py",
+                         "scripts/check_miniplanets_objects_native.py", "scripts/check_miniplanets_upload_plan.py",
+                         "scripts/check_miniplanets_upload_stress.py", "scripts/check_miniplanets_nes_display.py",
+                         "scripts/miniplanets_display_observer.c",
                          "tests/test_game_il.py", "tests/test_miniplanets_full.py",
                          "tests/test_console_udc_host.py", "tests/test_miniplanets_globe_assets.py",
                          "tests/test_miniplanets_nes_game.py", "tests/test_nes_audio_clock.py",
@@ -65,6 +69,7 @@ REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/miniplanets-full-game-2026-10-31/" +
                              "mapper-atomic-verification.json", "source-review.json",
                              "lowering-exploration.json")}
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/miniplanets-full-game-2026-10-31/optimization.json")
+REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/miniplanets-full-game-2026-10-31/display-optimization.json")
 REQUIRED_SOURCE_EVIDENCE |= {"docs/MINIPLANETS_FULL_GAME.md",
                             "docs/evidence/miniplanets-full-game-2026-10-31/renderer-fast.json"}
 REQUIRED_CONSOLE_RESOURCES = {"game_il.py", "miniplanets_audio.py", "udl_miniplanets_full.py",
@@ -73,6 +78,7 @@ REQUIRED_CONSOLE_RESOURCES |= {"game_sources/" + name for name in
                               ("miniplanets_full.c", "miniplanets_actors.c", "miniplanets_audio_nes.c",
                                "nes_globe_renderer.c", "nes_game_platform.c", "nes_game_start.s", "nes_audio_clock.c",
                                "miniplanets_audio_fast.s", "nes_globe_fast.s", "nes_game_fast.s", "LICENSE.txt")}
+REQUIRED_CONSOLE_RESOURCES.add("game_sources/nes_display_fast.s")
 REQUIRED_PE_RESOURCES = {"wine_guest/agent.c", "wine_guest/init.sh", "wine_guest/broker.py", "wine_guest/selftest.c"}
 REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/broker.py", "ida_guest/SDK-LICENSE.txt", "ida_wire.py", "ida_remote.py", "ida_trace.py"}
 REQUIRED_PE_RESOURCES |= {"dos_guest/__init__.py", "dos_guest/init.sh", "dos_guest/broker.py", "dos_qemu.py", "dos_runtime.py", "qemu_machine.py", "gdb_rpc.py", "guest_assets.py"}

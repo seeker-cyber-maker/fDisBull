@@ -1,10 +1,9 @@
 # Miniplanets full-game UIL and native NES profile
 
-The October 31 optimization follow-up below is the latest qualified build.
-It improves the dense fireball stage from 9.58 to 20.01 logic updates/s and
-the light stage from 32.47 to 40.93. Completed globe views remain slower than
-logic. This is progress toward 60 fps; the measured build does not reach it.
-The earlier R14 receipts are preserved as the comparison baseline.
+The display/upload follow-up at the end is the latest qualified build. It
+improves the previous build's dense fireball stage from 20.00 to 25.87 logic
+updates/s and from 10.76 to 12.95 completed globe swaps/s. Both rates remain
+below 60 Hz. Earlier optimization and R14 receipts remain preserved as history.
 
 This profile expands the source-bound Stage 1-1 experiment into the original
 55-stage game rules: all placed actor types, moving terrain, score, lives,
@@ -544,3 +543,184 @@ merge, global installation, natural whole-game completion or 60-fps result
 is claimed. The remaining large costs are game/renderer work and coherent
 PPU upload bandwidth; full 60-fps presentation will require further measured
 work on those boundaries.
+
+## Globe rendering and bounded display uploads
+
+The next qualified cartridge is
+`265f3f1ea51baf46cc5e49bfb647348370d13ca929ac6a7c6def19a79587da35`.
+Its source ROM, authored game tree and game-state contract remain unchanged.
+The [display optimization receipt](evidence/miniplanets-full-game-2026-10-31/display-optimization.json)
+records exact source/tool identities, measurements and private receipt hashes.
+This section supersedes the previous upload implementation; its earlier
+measurements remain historical observations of their stated cartridge hashes.
+
+### Rendering and upload changes
+
+HUD, palette-attribute packing, sprite emission and actor drawing now use
+checked native routines. The retained C actor body remains an oracle. Native
+actor drawing keeps all 48 slots, byte wrapping, culling, mace coordinates,
+raft composition, player priority, rotating order and overflow behavior.
+These are presentation changes; the source game procedures remain in UIL.
+
+The fixed two-half upload is replaced by an immutable dirty-region plan.
+Each physical nametable has an independent 296-byte shadow:256 terrain bytes,
+24 HUD bytes and 16 attributes. The native planner compares 22 regions of at
+most 16 bytes and queues complete changed regions in source order. Both shadows
+start invalid, so first use uploads all contents even when they are zero.
+
+NMI processes at most seven jobs per physical frame using fixed ROM routines.
+A short stack of return addresses dispatches those unrolled jobs without C or
+cc65 zero-page state. Each job sets its own PPU address, including nametable
+selection. Main publishes `video_ready` after preparing the complete plan and
+leaves staging, plan and selected OAM page unchanged until NMI finishes.
+The final transfer, OAM DMA and nametable selection publish a coherent view.
+A zero-data plan can still publish changed sprites. A completely dirty view
+requires 22 jobs / 296 bytes / four upload frames; it is never called complete
+before all four frames. Main cannot reuse speculative shadows while a plan
+is pending. The controller's 256-entry lookup exactly preserves the old bit
+mapping and sampled input frame while shortening NMI work.
+
+The faster display handoff also makes rendering eligible more often. The
+unpaced experiment increased complete swaps but spent enough extra time
+rendering to reduce logic throughput. The selected adapter starts rendering
+at most once per two completed game epochs. This controls presentation work;
+it does not skip game updates or change game rules. Its theoretical render
+start ceiling is 30 Hz when logic reaches 60 Hz. The retained unpaced cartridge
+and its source snapshot describe the measured tradeoff, rather than a second
+fully packaged runtime configuration.
+
+### Matched performance and timing
+
+Each native core run uses 3,100 physical frames with 100 warmup frames. These
+receipts measure 2,999 intervals from frame 100 through 3099, rather than the
+previous iteration's differently indexed 3,000-interval window. The same stage
+seeds, invulnerability and neutral input apply to each build. Rates use the
+core's emulated NTSC clock; host execution speed is excluded. This is one
+bounded deterministic workload per stage/build with control replay, not a
+statistical or natural whole-game performance ranking.
+
+| Stage | Previous logic/s | Selected logic/s | Previous swaps/s | Selected swaps/s | Unpaced experiment logic / swaps/s |
+|---|---:|---:|---:|---:|---:|
+| 0, light | 40.922 | 41.182 | 13.908 | 20.601 | 34.208 / 22.785 |
+| 40, eight maces | 22.405 | 27.595 | 12.184 | 13.787 | 18.577 / 18.236 |
+| 43, orb/RNG | 30.240 | 33.326 | 12.545 | 16.673 | 24.870 / 20.000 |
+| 44, fireballs | 20.000 | 25.872 | 10.761 | 12.946 | 17.495 / 16.713 |
+
+Swaps count completed coherent buffers, not necessarily different pixels.
+Logic and presentation are separate measurements. The chosen build improves
+both over its immediate predecessor in all four scenarios. The unpaced
+experiment favors visual swaps and regresses logic; it is not the default.
+
+A new forwarding observer checks actual PPU writes, including OAM DMA and
+scroll/control restoration. It uses the inspected pinned FCEUmm CPU and frame
+batching to date writes at instruction completion. The conservative vblank
+window is PPU dots 341 through 7160. This is an instruction-level emulator
+timing check, not exact bus-cycle or physical NES qualification.
+
+That check found the earlier build completed tile writes in vblank but let
+some DMA and restoration writes extend into pre-render. The earlier cartridge
+fails the new gate and remains its negative control. All four selected seeded
+runs pass with no out-of-window writes, active-nametable writes, runtime
+faults or content/control differences across 3,195 checked swaps. Captured
+observer and uninstrumented control agree in audio, state, RAM, frame and trace.
+Hardware stack samples show no possible downward wrap; they are not a formal
+worst-case stack proof.
+
+A separate 3,000-frame stage/movement schedule with active audio performs
+95,968 PPU data writes and 681 coherent swaps. Its latest checked write is at
+dot 6534, about 209 CPU cycles before the conservative deadline. Fully changed
+synthetic buffers separately test both cold nametables, four full-dirty
+uploads and two zero-data sprite-only commits. Each full upload takes exactly
+four data frames, and all eight commits match the complete staged data and
+OAM. The synthetic test pauses audio IRQs; the movement and tempo checks cover
+active audio separately. A deliberately shifted HUD reference fails the
+coherence gate. Missing observations and output inside Git are rejected.
+
+### Preserved accuracy checks
+
+Fresh original Genesis execution passes the same 2,678 common cases and 1,262
+actor cases, 439,775 actual 68000 instructions in total, with 192 original HV
+samples replayed into UIL. Both actor variants agree with the original. The
+assisted typed UIL flow passes 6,044 frame updates across 55 stages and 479
+placed actors. This is separate from natural whole-game completion.
+
+The final NES passes all 4,822 complete-state component cases across 79 game
+variables/arrays. Normal sessions pass 10,312 completed 34-field comparisons
+and independent controller checks, with 228 recorded/replayed HV words. The
+feedback route reaches the goal at epoch 897 / host 1214 and the next stage at
+epoch 1147 / host 1643, followed by 1,500 neutral frames. The unchanged fixed
+host-frame route remains a DNF.
+
+The presentation primitives pass 4,096 HUD, 16,384 sprite, 40,960 terrain and
+100,000 native actor-render cases. A further 4,096 actor cases include every
+byte type and arbitrary OAM indices. Projection/mace helpers in the actor
+simulation are synthetic; the separate 33,282 mapped projection-pair calls
+and full cartridge checks cover real assets and bank integration. The native
+planner passes 2,212 sequential calls / 11,900 jobs against an independent C
+model, including both shadows, cold initialization, unchanged data and every
+individual staging byte. Its isolated test assumes the runtime ownership
+contract; the NMI stress test verifies that integration separately.
+
+Completed-render comparisons join equal captured 616-byte game state and
+equal logic/render epoch, with a ready staging buffer. Against the immediately
+previous cartridge, 88 observed matching renders agree in terrain, palettes,
+attributes, projection cache, OAM count and selected OAM page. Another 106 agree
+with the earlier R 14 cartridge. Host frames differ after changing execution
+speed. The comparison is bounded to those observed states.
+
+All 32 audio tracks plus the mixed case pass 270,752 native services, 1,161
+commands and 2,579,855 ordered APU writes. Five normal schedules pass the
+unchanged atomic-low-v 2 tempo check at 118.89749 source ticks/s against the
+118.89964 Hz target. State/controller/video replays match and inputs remain
+unchanged. This does not claim Genesis-to-NES waveform identity.
+
+### Repeatable local gates and GitLab review
+
+The existing lift and compile interface remains unchanged. Add the following
+to the earlier accuracy commands, using a prepared cc65 toolchain and fresh
+private outputs:
+
+```sh
+python scripts/check_miniplanets_hud_fast.py --cc65-root "$CC65" --output "$PRIVATE/hud"
+python scripts/check_miniplanets_sprite_fast.py --cc65-root "$CC65" --output "$PRIVATE/sprites"
+python scripts/check_miniplanets_objects_native.py --cc65-root "$CC65" --output "$PRIVATE/objects"
+python scripts/check_miniplanets_upload_plan.py --cc65-root "$CC65" --output "$PRIVATE/plan"
+python scripts/check_miniplanets_upload_stress.py --core "$CORE" \
+  --rom "$CART/program.nes" --manifest "$CART/manifest.json" \
+  --map "$CART/build/game.map" --output "$PRIVATE/uploads"
+```
+
+`check_miniplanets_nes_display.py` accepts the cartridge, core, declared input
+and watch schedules, and SRAM offsets resolved from that cartridge's linker
+map. `--require-safe-display` fails on timing, coherence, active-table writes,
+missing observations and possible stack wrap. Its receipts capture/recheck
+all inputs and compile the packaged `miniplanets_display_observer.c`. Raw core,
+ROM, state, code, pixel and audio observations remain outside Git.
+
+The final source rebuild reproduces the paced measurement cartridge byte for
+byte. The bridge also compares PRG and labels; generated source differs only
+by the recorded platform comment and debug metadata. Maps differ and are not
+claimed identical. This transfers the bounded observations for the same
+executable bytes, not a broader source-equivalence claim.
+
+The full Mac suite reports 2,770 passed, 142 skipped, three failed and 23 setup
+errors. Its 26 failing/error test IDs exactly match the prior baseline's
+Linux/ELF and case-sensitive-filesystem fixture issues. Affected and package
+guards run separately; the whole suite is not described as green.
+
+The GitLab intake confirmed that the previous optimization commit was already
+present on its private imported branch. Of 120 expected published local refs,
+119 matched and one unrelated PR 41 ref had advanced locally;214 additional
+local preservation refs were intentionally outside that publication set.
+GitLab main matched local integration. No Miniplanets merge request was visible; a later read found two draft
+requests for other work. Historical GitHub discussion/CI receipts remain
+local. This update publishes only this work's new
+branch and a draft merge request, alongside its local PR 56 record. It leaves
+other branches and integration unchanged. The connector handles project,
+branch and merge-request metadata; ordinary Git transports the multi-file
+history that its single-file commit tools cannot preserve. Publication and
+readback receipts remain separate from executable qualification.
+
+The new build remains below 60 Hz. Full-dirty views take four NMIs, source
+hardware behavior is represented through declared adapters, and natural
+all-level completion and physical NES operation remain unqualified.

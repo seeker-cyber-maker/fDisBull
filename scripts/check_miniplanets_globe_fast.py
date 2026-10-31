@@ -22,7 +22,14 @@ HARNESS = r'''
 typedef unsigned char u8;
 typedef unsigned int u16;
 u8 display_plane[256],display_palettes[256],projection_cache[256],world[256];
-u8 render_oam_page,globe_source_hi,globe_rowbase,globe_colbase;
+u8 display_hud[24],display_attributes[16],lives,time_secs,stage_name,keys_left;
+unsigned long score;
+u8 objects[192],player_x,player_y,player_jump,player_die;u16 render_epoch;
+u8 mace_x(u8 slot){return slot;} u8 mace_y(u8 slot){return slot;}
+u16 object_projection_pair(u8 x,u8 y,u8 raft){return x+y+raft;}
+void banked_call(void){}
+
+u8 render_oam_page,render_oam_index,oam_overflow,globe_source_hi,globe_rowbase,globe_colbase;
 u16 globe_atlas_pointer;
 const u8 tile_palette[35]={0,2,2,1,3,0,0,2,0,3,3,0,0,0,0,3,2,0,3,2,0,2,2,1,1,1,1,1,1,1,1,1,1,1,1};
 void globe_clear(void);
@@ -145,7 +152,7 @@ def verify(rom_path, toolchain, output):
                                        (animation * 236) & 255)))
     config = (toolchain / 'cfg/sim6502.cfg').read_text().replace(
         'start = $0200, size = $FFC0 - $0200 - __STACKSIZE__',
-        'start = $2000, size = $FFC0 - $2000 - __STACKSIZE__')
+        'start = $2000, size = $FFC0 - $2000 - __STACKSIZE__, bank = 0')
     config = config.replace('    BSS:', '    RENDERFAST: load = MAIN, type = ro;\n    BSS:')
     (output / 'sim.cfg').write_text(config)
     (output / 'harness.c').write_text(HARNESS)
