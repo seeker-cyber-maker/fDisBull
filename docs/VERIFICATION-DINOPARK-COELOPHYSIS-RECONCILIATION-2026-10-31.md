@@ -33,7 +33,12 @@ One **40-second application deadline** covers the Z request from its initial
 observation through preparation, native phases, oracle readback and final
 witness. It is propagated to the real debugger underneath the input wrapper.
 Native RPCs have a five-second cap; a fresh request is not sent unless that
-allowance remains. Each execution interval also has a 15-second maximum.
+allowance remains. The helper requests at most 15 seconds for an individual
+execution interval. The private passive observer composes owned breakpoint
+stops under its separately recorded 120-second allowance; it does not establish
+that per-interval request limit under instrumentation. The shared 40-second
+deadline on the real native RPC session remains active across that composition
+and is the bounded-return condition exercised by the original-game trials.
 A guest-phase budget bounds an unchanged display.
 Nested helpers adopt the earlier enclosing request deadline. A typed admission
 failure distinguishes a definitely undispatched RPC from an uncertain transport
@@ -166,6 +171,37 @@ from a Batch plan is separate work; this does not claim native Batch end-to-end
 acceptance. Live
 checkpoint metadata also retains the order record.
 
+## Original-game qualification of the corrected adapter
+
+The final pinned source completed an original-game order in a single retained
+guest. The first buy returned its controlled application hold in about
+**35.1 seconds**; one advertised continuation completed the remaining phases
+in **12.4 seconds**. A literal `reconcile` then certified the original buy in
+**0.09 seconds**. The 60-second transport and 40-second application limits
+were unchanged. This verifies bounded multi-request progress, not a one-call
+purchase guarantee.
+
+The parent independently checked the retained proof and every phase ticket:
+selection, price, order, placement and confirmation were each accepted exactly
+once under one order ID. Cash and working cash changed from $4,500 to $3,250;
+loan stayed $5,000. The empty herd became exactly one species-4 dinosaur in
+native record 10. Month remained zero, its purchase-expense entry changed from
+zero to $1,250, and the other eleven expense entries stayed zero.
+
+The read-only certificate identified the original canonical buy and original
+recovery ID, with a fresh DinoMart witness. Counters recorded **zero execution,
+input mutation or restore calls**, one mouse-state read, the same PID/session/
+run and an unchanged diagnostic hash. The continuation acknowledgement alone
+had retained the hold; only this certificate cleared it. The source matched
+all nine frozen runtime files and source commit `72e82e1e`.
+
+Bootstrap and land were explicitly unobserved by the passive 97/13 capture.
+After land's canonical success, all 221 original-byte guards passed and the
+observers were installed once on the native owner, with zero execution/input/
+restore calls at installation. The original 192-file folder remained unchanged.
+Earlier held attempts keep their own source pins and unknown outcomes; this
+fresh qualification does not retroactively certify them.
+
 ## Source checks
 
 The focused regression first failed on the old handler's 37,000 fixed guest
@@ -223,6 +259,16 @@ its role does not remove it from the 97 outstanding caller/producer cases.
 The other ten asset candidates retain their earlier scoped evidence. No asset
 is certified globally unused from a missing literal or a bounded no-hit run.
 
+A separate immutable-database screen examined **8,503 stored non-call rows
+with targets**; none targets the remaining 97 entries. Ninety-three entries
+have an immediately adjacent decoded predecessor, and every one terminates
+unconditionally: 84 far returns, seven near returns and two jumps. All 93
+predecessor byte sequences matched the original relocated image. Four entries
+have no decoded adjacent predecessor. This narrows modeled direct/fallthrough
+routes independently of the earlier call scan. Unmodeled indirect, constructed
+return, segmented and undecoded paths remain open; the count of unresolved
+entries stays 97.
+
 The canonical file-backed load identity is measured over 250,048 bytes after
 4,139 relocations at the declared load segment. It is separate from an older
 database-region digest with a different or unexplained span. Byte identity and
@@ -271,6 +317,18 @@ this producer trace do not establish runtime use of a filename.
   future reviewed-definition handoff would need explicit same-guest ownership,
   source revision and input-history checks; arbitrary hot reload is not a
   recovery mechanism supplied by this change.
+- A known successful purchase was canonically rewound to the pre-purchase
+  checkpoint, with `restored`, `replay_safe`, a same-session witness and equal
+  native fields. The next new order then failed in preparation with "Scene
+  parent must be the current revision": restored host scene IDs referred to
+  an older revision while the persistent scene history retained its later
+  head. No selection or purchase input had been sent. The planned host fault
+  did not trigger, so that case is not native fault-recovery evidence. A
+  restore should qualify the authored scene namespace as well as native state,
+  while preserving all earlier revisions; it must not claim friction-free
+  replay from native-field equality alone. The private controller's single-use
+  restore gate also rejects held attempts. No second canonical restore was
+  attempted through that gate, so public-provider eligibility was not tested.
 - Filename producers require the record, index arithmetic, resource offset
   table and reader path to be linked. A future reusable producer report should
   expose those edges and the legal-domain assumptions; literal scans and a
