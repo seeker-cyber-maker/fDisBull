@@ -2,36 +2,42 @@ name: Native debugger acceptance
 
 on:
   push:
-    paths:
-      - .github/workflows/native-debugger.yml
-      - experimental/dosbox-x/**
-      - experimental/wine/ci/**
-      - src/fdisbull/**
-      - tests/**
-      - pyproject.toml
-      - player/**
-      - scripts/build_offline_kit.py
-      - scripts/build_dosbox_source_companion.py
-      - scripts/verify_offline_kit.py
   pull_request:
-    paths:
-      - .github/workflows/native-debugger.yml
-      - experimental/dosbox-x/**
-      - experimental/wine/ci/**
-      - src/fdisbull/**
-      - tests/**
-      - pyproject.toml
-      - player/**
-      - scripts/build_offline_kit.py
-      - scripts/build_dosbox_source_companion.py
-      - scripts/verify_offline_kit.py
   workflow_dispatch:
+    inputs:
+      cold_cache:
+        description: Build native dependencies without restoring or saving caches
+        type: boolean
+        default: false
+
+# Separate workflows/PRs/branches; intentional tag/manual/trusted pushes are unique.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/heads/integration/') && !startsWith(github.ref, 'refs/heads/release/') && github.ref || github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/heads/integration/') && !startsWith(github.ref, 'refs/heads/release/')) }}
+
+env:
+  NATIVE_COLD_CACHE: ${{ inputs.cold_cache && 'true' || 'false' }}
+  NATIVE_CACHE_SCOPE: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'trusted-main' || format('isolated-{0}', github.ref) }}
 
 permissions:
   contents: read
 
 jobs:
+  event-policy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.policy.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - id: policy
+        run: python3 .github/ci/event_policy.py
+
   native-debugger:
+    needs: event-policy
+    if: needs.event-policy.outputs.run == 'true'
     name: Native debugger (${{ matrix.profile }})
     runs-on: ubuntu-24.04
     timeout-minutes: 45
@@ -92,13 +98,45 @@ jobs:
               assert hashlib.sha256(path.read_bytes()).hexdigest()==item['sha256'], item['path']
           print(f"Verified {len(manifest['source_files'])} patched source files against the declared manifest")
           PY
-      - name: Build the native heavy-debug backend
-        working-directory: .native/dosbox-x
+      - name: Identify exact dosbox build inputs
+        id: native-key
+        run: python .github/ci/native_cache.py key dosbox --profile ${{ matrix.patch_directory }}
+      - uses: actions/cache/restore@v4
+        if: ${{ !inputs.cold_cache }}
+        id: trusted-cache
+        with:
+          path: .native-cache/dosbox
+          key: trusted-main-${{ steps.native-key.outputs.key }}
+      - name: Discard any nonexact trusted cache match
+        if: steps.trusted-cache.outputs.cache-hit != 'true'
+        run: rm -rf .native-cache/dosbox
+      - uses: actions/cache/restore@v4
+        if: ${{ !inputs.cold_cache && steps.trusted-cache.outputs.cache-hit != 'true' && env.NATIVE_CACHE_SCOPE != 'trusted-main' && github.event_name != 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/') }}
+        id: scoped-cache
+        with:
+          path: .native-cache/dosbox
+          key: ${{ env.NATIVE_CACHE_SCOPE }}-${{ steps.native-key.outputs.key }}
+      - name: Discard any nonexact isolated cache match
+        if: steps.trusted-cache.outputs.cache-hit != 'true' && steps.scoped-cache.outputs.cache-hit != 'true'
+        run: rm -rf .native-cache/dosbox
+      - name: Validate dosbox cached payload and identity
+        id: native-cache
+        run: python .github/ci/native_cache.py validate dosbox --profile ${{ matrix.patch_directory }}
+      - name: Build dosbox on cache miss or rejection
+        if: steps.native-cache.outputs.valid != 'true'
         run: |
-          ./autogen.sh
-          ./configure --enable-sdl2 --enable-debug=heavy --enable-dosbox_agent \
-            --disable-avcodec --disable-libslirp --disable-libfluidsynth
-          make -j2
+          bash .github/ci/native-build.sh dosbox
+          python .github/ci/native_cache.py seal dosbox --profile ${{ matrix.patch_directory }}
+      - uses: actions/cache/save@v4
+        if: ${{ !inputs.cold_cache && steps.native-cache.outputs.valid != 'true' && (github.event_name == 'pull_request' || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/'))) }}
+        with:
+          path: .native-cache/dosbox
+          key: ${{ env.NATIVE_CACHE_SCOPE }}-${{ steps.native-key.outputs.key }}
+      - name: Install verified backend into patched source checkout
+        run: |
+          cp .native-cache/dosbox/dosbox-x "$FDISBULL_DOSBOX"
+          mkdir -p native-evidence
+          cp .native-cache/dosbox/receipt.json native-evidence/build-cache-identity.json
       - name: Record the tested backend identity
         run: |
           mkdir -p native-evidence
@@ -191,20 +229,101 @@ jobs:
           path: .native/dosbox-x/src/dosbox-x
           if-no-files-found: error
 
+  prepare-qemu:
+    name: Prepare pinned QEMU dependency
+    needs: event-policy
+    if: needs.event-policy.outputs.run == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install QEMU build dependencies
+        run: |
+          python -m pip install distlib==0.4.0
+          python -c 'import distlib.scripts, distlib.version'
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libglib2.0-dev libpixman-1-dev ninja-build
+          mkdir -p native-evidence/pe
+      - name: Identify exact qemu build inputs
+        id: native-key
+        run: python .github/ci/native_cache.py key qemu
+      - uses: actions/cache/restore@v4
+        if: ${{ !inputs.cold_cache }}
+        id: trusted-cache
+        with:
+          path: .native-cache/qemu
+          key: trusted-main-${{ steps.native-key.outputs.key }}
+      - name: Discard any nonexact trusted cache match
+        if: steps.trusted-cache.outputs.cache-hit != 'true'
+        run: rm -rf .native-cache/qemu
+      - uses: actions/cache/restore@v4
+        if: ${{ !inputs.cold_cache && steps.trusted-cache.outputs.cache-hit != 'true' && env.NATIVE_CACHE_SCOPE != 'trusted-main' && github.event_name != 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/') }}
+        id: scoped-cache
+        with:
+          path: .native-cache/qemu
+          key: ${{ env.NATIVE_CACHE_SCOPE }}-${{ steps.native-key.outputs.key }}
+      - name: Discard any nonexact isolated cache match
+        if: steps.trusted-cache.outputs.cache-hit != 'true' && steps.scoped-cache.outputs.cache-hit != 'true'
+        run: rm -rf .native-cache/qemu
+      - name: Validate qemu cached payload and identity
+        id: native-cache
+        run: python .github/ci/native_cache.py validate qemu
+      - name: Build qemu on cache miss or rejection
+        if: steps.native-cache.outputs.valid != 'true'
+        run: |
+          bash .github/ci/native-build.sh qemu
+          python .github/ci/native_cache.py seal qemu
+      - uses: actions/cache/save@v4
+        if: ${{ !inputs.cold_cache && steps.native-cache.outputs.valid != 'true' && (github.event_name == 'pull_request' || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/'))) }}
+        with:
+          path: .native-cache/qemu
+          key: ${{ env.NATIVE_CACHE_SCOPE }}-${{ steps.native-key.outputs.key }}
+      - name: Record and smoke check verified QEMU
+        run: |
+          .native-cache/qemu/qemu-system-x86_64 --version
+          cp .native-cache/qemu/receipt.json native-evidence/pe/build-cache-identity.json
+      - name: Package verified QEMU for this run
+        run: |
+          mkdir -p .native/qemu-transfer
+          tar -czf .native/qemu-transfer/qemu.tar.gz .native-cache/qemu .native-qemu-identity.json
+          python - <<'PYTHON'
+          import hashlib, json, os
+          from pathlib import Path
+          receipt={'source_commit':os.environ['GITHUB_SHA'],
+                   'sha256':hashlib.sha256(Path('.native/qemu-transfer/qemu.tar.gz').read_bytes()).hexdigest()}
+          Path('.native/qemu-transfer/transfer.json').write_text(json.dumps(receipt,indent=2)+'\n')
+          PYTHON
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-qemu-build
+          path: .native/qemu-transfer/*
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-qemu-build-identity
+          path: native-evidence/pe/*
+          if-no-files-found: warn
+
   pe64-debugger:
     name: Unified DOS, boot and PE64 (installed wheel)
-    needs: native-debugger
+    needs: [native-debugger, prepare-qemu]
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
-      FDISBULL_PE_QEMU: ${{ github.workspace }}/.native/pe/qemu-9.2.4/build/qemu-system-x86_64
+      FDISBULL_PE_QEMU: ${{ github.workspace }}/.native-cache/qemu/qemu-system-x86_64
       FDISBULL_PE_KERNEL: ${{ github.workspace }}/.native/pe/linux-amd64
       FDISBULL_PE_INITRAMFS: ${{ github.workspace }}/.native/pe/runtime.cpio.gz
       FDISBULL_PE_FIXTURE: ${{ github.workspace }}/.native/pe/oracle.exe
       FDISBULL_PE_EVIDENCE: ${{ github.workspace }}/native-evidence/pe/artifacts
       FDISBULL_REQUIRE_PE: "1"
       FDISBULL_DOSBOX: ${{ github.workspace }}/.native/linux-dosbox/dosbox-x
-      FDISBULL_MACHINE_QEMU: ${{ github.workspace }}/.native/pe/qemu-9.2.4/build/qemu-system-x86_64
+      FDISBULL_MACHINE_QEMU: ${{ github.workspace }}/.native-cache/qemu/qemu-system-x86_64
       FDISBULL_DOS_KERNEL: ${{ github.workspace }}/.native/pe/linux-amd64
       FDISBULL_DOS_INITRAMFS: ${{ github.workspace }}/.native/pe/dos-runtime.cpio.gz
       FDISBULL_MACHINE_EVIDENCE: ${{ github.workspace }}/native-evidence/unified/boot
@@ -246,25 +365,35 @@ jobs:
           python -m build --wheel --outdir .native/pe/packages
           python scripts/check_dist.py .native/pe/packages/*.whl
           python -m pip install --force-reinstall --no-deps .native/pe/packages/*.whl
-      - name: Build pinned QEMU with the upstream user-mode IRET fix
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-qemu-build
+          path: .native/qemu-transfer
+      - name: Verify the current-run QEMU dependency transfer
         run: |
-          # QEMU 9.2's mkvenv needs distlib when pip/setuptools are already
-          # present; do not rely on pip's private vendored dependencies.
-          python -m pip install distlib==0.4.0
-          python -c 'import distlib.scripts, distlib.version'
-          sudo apt-get update
-          sudo apt-get install -y build-essential pkg-config libglib2.0-dev libpixman-1-dev ninja-build
+          python - <<'PYTHON'
+          import hashlib, json, os
+          from pathlib import Path
+          receipt=json.loads(Path('.native/qemu-transfer/transfer.json').read_text())
+          assert receipt['source_commit']==os.environ['GITHUB_SHA']
+          assert receipt['sha256']==hashlib.sha256(Path('.native/qemu-transfer/qemu.tar.gz').read_bytes()).hexdigest()
+          PYTHON
+          tar -xzf .native/qemu-transfer/qemu.tar.gz
+          python .github/ci/native_cache.py validate qemu > .native/qemu-transfer/validation.txt
+          cat .native/qemu-transfer/validation.txt
+          if ! grep -qx 'valid=true' .native/qemu-transfer/validation.txt; then
+            # A runner image rollout can change the consumer's runtime ABI.
+            # Rebuild here only after rejecting that transfer; never test it as valid.
+            python -m pip install distlib==0.4.0
+            sudo apt-get update
+            sudo apt-get install -y build-essential pkg-config libglib2.0-dev libpixman-1-dev ninja-build
+            python .github/ci/native_cache.py key qemu
+            bash .github/ci/native-build.sh qemu
+            python .github/ci/native_cache.py seal qemu
+          fi
+          .native-cache/qemu/qemu-system-x86_64 --version
           mkdir -p native-evidence/pe
-          curl --fail --location --retry 3 https://download.qemu.org/qemu-9.2.4.tar.xz \
-            --output .native/pe/qemu-9.2.4.tar.xz
-          echo 'f3cc1c4eabfdb288218ac3e33763dbe9e276d8bc890b867a2335d58de2ddd39a  .native/pe/qemu-9.2.4.tar.xz' | sha256sum --check
-          tar -xJf .native/pe/qemu-9.2.4.tar.xz -C .native/pe
-          mkdir .native/pe/qemu-9.2.4/build
-          cd .native/pe/qemu-9.2.4/build
-          ../configure --target-list=x86_64-softmmu --disable-docs --disable-user \
-            --disable-gtk --disable-sdl --disable-vnc --disable-curses --disable-werror
-          ninja -j2 qemu-system-x86_64
-          ./qemu-system-x86_64 --version
+          cp .native-cache/qemu/receipt.json native-evidence/pe/build-cache-identity.json
       - name: Build a trusted Wine root filesystem
         run: |
           docker build --platform linux/amd64 -f experimental/wine/ci/Containerfile -t fdisbull-pe-ci .
