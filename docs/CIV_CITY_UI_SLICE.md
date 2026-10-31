@@ -67,6 +67,23 @@ or UI proof. The first attempted CLI spelling, `--start ne:20:0x0`, was rejected
 by the 0.26.1 command parser; the accepted numeric identity was `0x140000`. That
 interface friction is recorded separately rather than hidden.
 
+## DOS root and address translation
+
+The missing `CIV_UNP.EXE` transform is now implemented in
+`examples/civ/civ_exepack.py`. For the pinned `CIV.EXE` identity
+`22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a`, it
+produces the published `CIV_UNP.EXE` size and SHA-256
+`aa63aa396cfa62519b131ee6c0a231bed02bb9aefce26b955608b5815a569e57`.
+The full recovery receipt is in `docs/CIV_DOS_EXEPACK.md`.
+
+Civ64's `R:ssss:oooo` coordinates are relative to the DOS root load module.
+fDisBull's MZ loader maps that module at runtime segment `0x1000`; therefore
+`R:0D12:0045` becomes fDisBull `1D12:0045` (linear `0x1D165`). A clean
+fDisBull project seeded with that translated address decodes the city-routine
+prologue and stores `sub_1d12_0045` as a candidate. The route is still static
+navigation evidence: the 2,000-instruction run is bounded and reports
+`stable=false`, and no `ProcessCity` semantic name or dispatch is proven.
+
 ## Draft state model
 
 The city screen can be represented as a state projection over one `townbuf`
@@ -134,11 +151,15 @@ insufficient.
 1. **Resolve `CIV-EDITION-001`.** Verify the supplied raw DOS image's full hash
    and release metadata, then compare the Civ64 DOS listing target with civd's
    474.05 pinned build. Do not use the Windows NE file for this question.
-2. **Import the DOS target through the active fDisBull 0.26.1 DOS profile.**
-   Confirm MZ/EXEPACK/root/overlay identity before using `R:0D12` addresses.
-3. **Trace the city route.** Start from a verified caller or overlay entry and
-   follow reads/writes of the city record fields through the city-screen routine
-   and the `CHANGE`/`BUY`/`VIEW` dispatches.
+2. **Use the generated root through active fDisBull 0.26.1.** This is complete
+   for byte identity: the generated root matches the published `CIV_UNP.EXE`
+   hash and the loader reports the 23-overlay tail. Use the translated
+   `1D12:0045` runtime seed, not the literal root-relative selector.
+3. **Trace the city route.** The entry prologue is now decoded as a candidate.
+   Start from a verified caller or overlay entry and follow reads/writes of the
+   city record fields through the city-screen routine and the
+   `CHANGE`/`BUY`/`VIEW` dispatches. A bounded traversal is not a completion
+   signal.
 4. **Use runtime only if the matching DOS input/backend is staged.** Drive the
    ordinary city action, capture a baseline and one controlled change, and
    distinguish visible, ready, enabled, committed, and persisted results.

@@ -271,10 +271,12 @@ small; later rows should be added only when they unlock a bounded question.
 |---|---|---|---|
 | `CIV-BASE-001` | `proven` for bytes only | The packed DOS `CIV.EXE` can be retained as an original-backed byte-preserving UDC baseline | Supply a verified DOS image when overlay/runtime analysis is required |
 | `CIV-PROD-001` | `proven` for the declared contract | civd city shield storage is signed, values outside `0..999` reset before production, and the fDisBull implementation matches an independent oracle | Extend only through the next caller/record boundary, not by guessing purchase policy |
-| `CIV-ROOT-001` | `candidate` | Civ64's DOS documentation describes an EXEPACK root, 23 overlays, and an unpacked-root comparison path | Implement or reuse a format-aware EXEPACK decoder when a packed DOS image is staged |
+| `CIV-ROOT-001` | `proven` for the pinned DOS byte identity | The clean-room EXEPACK decoder produces the published `CIV_UNP.EXE` size/SHA and preserves the 23-overlay tail | Trace the root/overlay manager and keep packed/unpacked versions distinct |
+| `CIV-DOS-ADDR-001` | `proven` for the loader mapping | Civ64 `R:0D12:0045` is load-module-relative and maps to fDisBull runtime `1D12:0045` at the default MZ load segment | Confirm the same translation for callers and overlay entry points |
+| `CIV-DOS-CITY-001` | `candidate` | The translated city seed decodes a real prologue, but fDisBull retains `sub_1d12_0045` as a candidate and the bounded run is not stable | Trace a verified caller, field read/write, and `CHANGE`/`BUY`/`VIEW` dispatch |
 | `CIV-WIN16-001` | `candidate` | The local original Win16 `CIV.EXE` is a distinct NE target; the active 0.26.1 traversal remains partial and does not prove semantic names | Build the NE inventory and select one function/data family with exact address evidence |
 | `CIV-EDITION-001` | `conflict` | civd labels the `22de2748…` DOS image 474.05 while Civ64's DOS documentation labels the same-size/hash image 475.05 | Verify the supplied raw DOS image and reconcile release metadata before merging DOS UI claims |
-| `CIV-UI-001` | `guessed` / draft | The city-screen geometry, controls, and state candidates are recorded in `docs/CIV_CITY_UI_SLICE.md`; no dispatch or ordinary route is qualified | Import the matching DOS target, trace the city route, and compare visible versus committed state |
+| `CIV-UI-001` | `guessed` / draft | The city-screen geometry, controls, and state candidates are recorded in `docs/CIV_CITY_UI_SLICE.md`; no dispatch or ordinary route is qualified | Trace the city route, then compare visible versus committed state before executable UIL |
 
 The `guessed` and `candidate` rows are navigation aids only. They become
 `proven` or `false` through a later slice gate; they are not release claims.
