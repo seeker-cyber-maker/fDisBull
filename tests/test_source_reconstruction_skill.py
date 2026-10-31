@@ -65,3 +65,70 @@ def test_civd_example_is_edition_pinned_and_attributed():
     assert all(CIVD_PIN in link for link in links)
     assert 'release/474.01' in text and '474.05' in text
     assert 'OpenCiv1' in text and 'attributed upstream reports' in text
+
+
+@pytest.mark.parametrize('heading', [
+    '## Collate guides into provisional Z blueprints',
+    '### Weight agreement by lineage, not vote count',
+    '### Draft Z early without pretending it is tested',
+    '### Compare predictions with recovered behavior and observations',
+])
+def test_guide_blueprint_workflow_is_selectively_retrievable(heading):
+    text = read_reference(REFERENCE)
+    assert heading in text
+    assert len(text.encode('utf-8')) < 65536
+
+
+def test_entrypoint_and_classification_include_guide_derived_z():
+    entry = ' '.join(read_reference('SKILL.md').split())
+    text = ' '.join(read_reference(REFERENCE).split())
+    assert 'provisional Z blueprints' in entry
+    assert 'source lineage' in entry and 'retain outliers' in entry
+    assert '| Guides, solutions, walkthroughs and analyses |' in text
+    assert 'third-party behavioral reconstruction' in text
+    assert 'not recovered source code' in text
+    assert 'Do not wait for complete UDL recovery before drafting it' in text
+    assert 'Keep this material out of an explicitly independent benchmark arm' in text
+
+
+def test_guide_consensus_preserves_dependence_and_dissent():
+    text = ' '.join(read_reference(REFERENCE).split())
+    for phrase in (
+        'search priority, not truth or verification',
+        'one source family for corroboration, not fourteen independent witnesses',
+        'Unknown dependence stays unknown',
+        'Record raw report counts separately from established source families',
+        'Retain the dissenting claim and the cheapest discriminator',
+        'source-bound finding can outweigh the majority',
+        'neither is new independent corroboration',
+    ):
+        assert phrase in text
+
+
+def test_draft_z_keeps_hypotheses_and_execution_authority_separate():
+    text = ' '.join(read_reference(REFERENCE).split())
+    for phrase in (
+        'explicitly untested prediction artifact',
+        'Illustrative PQ1-style hypothesis, not a factual claim',
+        'code identity, visibility and availability unknown',
+        'Failure of one string search does not establish absence',
+        'qualify any live click geometry separately',
+        'Do not drive a live guest or mutate authoritative game state',
+        'Future/hidden objects stay in the investigator',
+    ):
+        assert phrase in text
+
+
+def test_z_comparison_keeps_original_predictions_and_scoped_results():
+    text = ' '.join(read_reference(REFERENCE).split())
+    for phrase in (
+        'Keep the pre-analysis draft revision',
+        'guide-derived Z prediction, source-qualified UDL/UIL behavior, and original-runtime observation',
+        'A missing observation is unknown, not a contradiction',
+        'supported at a stated boundary, refined, contradicted or still unresolved',
+        'comparison point, not the sole oracle',
+        'internal consistency only',
+        'coverage of its claims, not the whole game',
+        'correction/preparation cost',
+    ):
+        assert phrase in text
