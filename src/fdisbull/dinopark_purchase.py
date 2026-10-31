@@ -6,6 +6,7 @@ import struct
 import time
 
 HOST_SECONDS = 40
+NATIVE_PURCHASE_PEN = 10  # Record index used by the qualified original first-plot interaction.
 _clock = time.monotonic
 
 
@@ -73,8 +74,8 @@ def commit_proof(order, after):
             ticket.get('delivery') != 'queued' or order.get('species') != 4 or order.get('price') != 1250 or
             before['balances'] != {'cash': 4500, 'loan': 5000, 'working_cash': 4500} or before['pens'] or
             after['balances'] != {'cash': 3250, 'loan': 5000, 'working_cash': 3250} or
-            after['pens'] != [{'pen': 1, 'species': 4, 'count': 1}] or after['month'] != before['month']):
-        raise ValueError('Coelophysis commit remains unqualified')
+            after['pens'] != [{'pen': NATIVE_PURCHASE_PEN, 'species': 4, 'count': 1}] or after['month'] != before['month']):
+        raise ValueError('Coelophysis commit remains unqualified; observed after=' + repr(after))
     expected = list(before['expenses'])
     expected[before['month']] += 1250
     if after['expenses'] != expected:
@@ -93,22 +94,33 @@ def _record_commit(text, after):
     return proof
 
 
-def selected_card_offsets(image, pattern):
-    """Keep BUY fixed while requiring every card anchor at one bounded offset."""
+def _card_offsets(image, pattern, card_count, button_count, max_shift):
     from .dinopark_scenes import matches
     card = [sample for sample in pattern['samples'] if sample['y'] < 170]
     button = [sample for sample in pattern['samples'] if sample['y'] >= 170]
-    if len(card) != 35 or len(button) != 13 or pattern['min_matches'] != 48:
+    if len(card) != card_count or len(button) != button_count or pattern['min_matches'] != 48:
         return [0] if matches(image, pattern) else []
     fixed = {'samples': button, 'min_matches': len(button), 'tolerance': pattern['tolerance'],
              'reject': pattern.get('reject', [])}
     if not matches(image, fixed):
         return []
-    return [offset for offset in range(-24, 25) if all(
+    return [offset for offset in range(-max_shift, max_shift + 1) if all(
         0 <= sample['x'] + offset < image.width and all(
             abs(a - b) <= pattern['tolerance'] for a, b in zip(
                 image.getpixel((sample['x'] + offset, sample['y'])), sample['rgb']))
         for sample in card)]
+
+
+def selected_card_offsets(image, pattern):
+    """Keep the BUY control fixed and require every selected-price card anchor."""
+    return _card_offsets(image, pattern, 35, 13, 24)
+
+
+def picked_card_offsets(image, pattern, selected_pattern):
+    """The picked card has a narrower bound around the fixed price-click target."""
+    if selected_card_offsets(image, selected_pattern):
+        return []  # Shared control colors do not prove distinct picked/selected states.
+    return _card_offsets(image, pattern, 38, 10, 8)
 
 
 def _wait(text, budget, view, expected, *, transient=(), guest_ms=12000):
@@ -132,13 +144,18 @@ def _wait(text, budget, view, expected, *, transient=(), guest_ms=12000):
         budget.timeout()
         frame, image = take_frame(text.project, text.debug, 'coelophysis-' + view, hooks=False)
         mouse = text.debug.call('input.mouse.state')['mouse']
-        offsets = selected_card_offsets(image, text.patterns[view]) if view == 'coel_selected' else None
+        if view == 'coel_picked':
+            offsets = picked_card_offsets(image, text.patterns[view], text.patterns['coel_selected'])
+        elif view == 'coel_selected':
+            offsets = selected_card_offsets(image, text.patterns[view])
+        else:
+            offsets = None
         visible = bool(offsets) if offsets is not None else matches(image, text.patterns[view])
         ready = (money == expected and visible and
                  not mouse['buttons'] and not mouse['release_pending'])
         text.event({'phase': 'coelophysis_observation', 'view': view, 'frame': frame,
                     'matched': ready, 'balances': money, 'guest_ms': elapsed,
-                    **({'selected_card_offsets': offsets} if offsets is not None else {})})
+                    **({view + '_card_offsets': offsets} if offsets is not None else {})})
         if ready:
             return frame
         if elapsed >= guest_ms:
@@ -239,7 +256,7 @@ def recovery_view(text):
             {'cash':4500, 'loan':5000, 'working_cash':3250},
             {'cash':3250, 'loan':5000, 'working_cash':3250}):
         raise ValueError('Original order balances changed outside the qualified intent')
-    if state['pens'] not in ([], [{'pen':1, 'species':4, 'count':1}]):
+    if state['pens'] not in ([], [{'pen':NATIVE_PURCHASE_PEN, 'species':4, 'count':1}]):
         raise ValueError('Original order herd is not qualified')
     return state
 

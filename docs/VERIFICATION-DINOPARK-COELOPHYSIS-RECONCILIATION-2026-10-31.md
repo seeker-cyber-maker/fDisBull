@@ -87,7 +87,47 @@ anchors, card anchors without a common offset, out-of-range motion, rejected
 views and pending pointer release. An exhausted cumulative wait is never
 renewed to accommodate a new observation.
 
+A later first-selection trial exposed the same layout issue in the distinct
+`coel_picked` profile, before any price or order input. The request returned in
+35.037 seconds; one continuation used the remaining cumulative allowance in
+6.450 seconds. Its selection was delivered once and balances stayed unchanged.
+This profile has **38 moving card anchors and 10 fixed BUY-control anchors**,
+not the selected-price profile's 35/13 split. Its correction uses a separate,
+narrower **-8 through +8 pixel** range around the existing price-click point.
+The price coordinate and the original species/price guard after that click
+are unchanged. No unqualified assumption about the species field before the
+price click is introduced. Of 25 retained first-selection frames, 24 match
+every anchor under the bounded translation and the transitional frame still
+fails. The held older provider was not patched or replayed.
+
+Independent review found that a real selected-price reference also satisfied
+the translated picked signature. The fixed control colors overlap between
+these views and do not prove an enabled or disabled state. First-selection
+qualification now explicitly excludes every view accepted by the selected
+matcher. A regression constructs the overlapping signatures and requires that
+ambiguity to be rejected; an authored selected-frame negative alone had missed
+the real overlap. The post-price native species/quote check remains separate.
+
 ## Native commit versus presentation
+
+One original trial delivered all five inputs exactly once, reached the final
+view and read cash/loan/working cash as $3,250/$5,000/$3,250, but the new
+certificate incorrectly required native pen record 1. The authored boundary
+fake had repeated that assumption. A retained original oracle, independently
+decoded by both parent and Luna, shows record **10**, species 4, count 1 at
+purchase completion and five following command observations. Both the commit
+and retained-order predicates now require that observed record; a separate
+regression rejects record 1. The first-plot user description is not a native
+array index. No interpretation of the record's geometry prefix is needed for
+this correction.
+
+The affected live provider retains its older checker and remains uncertified;
+its current pen/month/expense values were not exported by that installed
+diagnostic surface. Read-only reconciliation correctly returned incomplete
+with zero execution, input mutation or restore and unchanged diagnostics.
+The corrected checker records its observed after-state on a future broad
+commit mismatch so that this evidence is not discarded. It does not certify
+the earlier held attempt retroactively.
 
 The adapter captures a baseline before original input. A commit certificate
 requires all of the following original observations:
@@ -95,7 +135,8 @@ requires all of the following original observations:
 - The qualified species/price are 4 and $1,250, and the final confirmation has
   an accepted, queued original input ticket.
 - Cash changes from $4,500 to $3,250; loan stays $5,000; working cash is $3,250.
-- The previously empty herd contains exactly one species-4 dinosaur in pen 1.
+- The previously empty herd contains exactly one species-4 dinosaur in native
+  pen record 10, the record used by this qualified first-plot interaction.
 - The same original month has a $1,250 purchase-expense increase; the other
   monthly purchase-expense records are unchanged.
 
@@ -139,7 +180,7 @@ The imported scene-class identity and sampled profile hashes remain separate
 from the updated adapter class and new purchase-helper source hashes. No
 original media or executable bytes are added to source or package data.
 
-The final source check ran **200 passed / 19 skipped** across the affected
+The final source check ran **215 passed / 19 skipped** across the affected
 purchase, recovery, Z, Batch and debugger files. Five separately selected real
 native fixture checks passed, covering the shared deadline, paused-provider
 readback with a stored image, speed restoration, input evidence after restart,
@@ -147,7 +188,7 @@ and source/patch isolation. Those authored fixtures are separate from the
 original DinoPark trials below. Independent Luna source review found no further
 material defect in the final deadline/admission change.
 
-The complete suite finished **2,112 passed / 132 skipped / 12 failed /
+The complete suite finished **2,127 passed / 132 skipped / 12 failed /
 23 errors**. The 35 failure/error test IDs exactly match the retained baseline:
 Linux ELF/linker fixtures are unsuitable for the current macOS toolchain, and
 managed-format fixtures report missing parser dependencies. No new failure ID
@@ -213,6 +254,15 @@ this producer trace do not establish runtime use of a filename.
 - A first post-commit screenshot failure could hide an already completed
   business effect. Native commitment is now retained before that screenshot;
   display qualification and original-action completion remain separate.
+- The authored pen-1 fake agreed with an incorrect production assumption.
+  Independent original-memory calibration was available and should have been
+  checked before fixing that expectation in the certificate. The pen-10
+  regression now derives its expectation from the retained original oracle.
+  The installed mismatch diagnostic exposed cash and input receipts but not
+  the other failed-proof fields. Future held-state inspection should return
+  bounded native observations separately from whether the current qualifier
+  accepts them; an unqualified outcome must remain unknown. This change
+  retains the observed after-state in the private broad-guard diagnostic.
 - Reconciliation screenshots must disable hooks. A frame capture that runs a
   hook is not read-only. The source checks include the real hook dispatcher.
 - Keeping a provider alive preserves its guest and receipts, not a supported
@@ -225,6 +275,16 @@ this producer trace do not establish runtime use of a filename.
   table and reader path to be linked. A future reusable producer report should
   expose those edges and the legal-domain assumptions; literal scans and a
   no-hit trace remain supporting evidence with explicit limits.
+- A deferred-observer trial qualified land in 2.57 seconds and installed all
+  221 guarded sites with zero execution/input/restore calls, but navigation
+  then stopped at an observer-owned breakpoint after only two guest
+  milliseconds. The private harness had attached its callback and trace
+  attributes to `BankInputSession`; internal scene execution used the native
+  session underneath it. The zero-mutation installation check did not test
+  actual native callback delivery. This is a harness attribution failure,
+  separate from a game navigation timeout. A useful tool API would install
+  instrumentation through an explicit native owner, with a wrapper-aware
+  qualification check, instead of relying on instance attribute assignment.
 
 The earlier eight evidence packets were rechecked read-only: **16,133 members,
 zero size or hash mismatches**. Current live contexts remain outside that

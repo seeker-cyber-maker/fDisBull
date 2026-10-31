@@ -36,8 +36,8 @@ class NativeShop:
             data = bytearray(200)
             for index in range(10):
                 struct.pack_into('<hh', data, index * 20 + 14,
-                                 4 if self.herd and index == 0 else -1,
-                                 self.herd if index == 0 else 0)
+                                 4 if self.herd and index == 9 else -1,
+                                 self.herd if index == 9 else 0)
             return {'hex': data.hex()}
         if address == '4020:c30b':
             return {'hex': struct.pack('<12I', self.expense, *([0] * 11)).hex()}
@@ -326,7 +326,7 @@ def test_native_commit_proof_survives_first_post_commit_frame_failure(
     diagnostic = (tmp_path / 'z-failure.json').read_bytes()
     state = purchase.native_state(debug)
     assert state['balances'] == {'cash': 3250, 'loan': 5000, 'working_cash': 3250}
-    assert state['pens'] == [{'pen': 1, 'species': 4, 'count': 1}]
+    assert state['pens'] == [{'pen': 10, 'species': 4, 'count': 1}]
     assert state['expenses'][state['month']] == 1250
     assert debug.clicks == [(160, 87), (160, 103), (187, 187), (42, 50), (188, 187)]
     if first_observation == 'action':
