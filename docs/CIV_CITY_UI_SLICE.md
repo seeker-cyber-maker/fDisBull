@@ -157,18 +157,20 @@ insufficient.
    for byte identity: the generated root matches the published `CIV_UNP.EXE`
    hash and the loader reports the 23-overlay tail. Use the translated
    `1D12:0045` runtime seed, not the literal root-relative selector.
-3. **Trace the city route.** Complete for the entry, callers and record
-   fields: see `docs/CIV_CITY_STATIC_TRACE.md` (four root call sites, three
-   caller functions, signed shield reset). Next follow the
-   `CHANGE`/`BUY`/`VIEW` dispatches; bounded traversal is still not a
-   completion signal.
-4. **Use runtime only if the matching DOS input/backend is staged.** Drive the
-   ordinary city action, capture a baseline and one controlled change, and
-   distinguish visible, ready, enabled, committed, and persisted results.
+3. **Trace the city route.** Complete for the entry, callers, record fields
+   and the fifteen-site input dispatch: see `docs/CIV_CITY_STATIC_TRACE.md`
+   (four root call sites, three caller functions, signed shield reset,
+   `a`/`s`/`p` handlers). Bounded traversal is still not a completion signal.
+4. **Use runtime only if the matching DOS input/backend is staged.**
+   Partially staged: a complete **474.03** install was driven with the 0.27.0
+   DOSBox agent (`docs/CIV_CITY_RUNTIME_OBSERVATION.md`). One baseline and
+   display changes for `h`, `m` and `v` were captured; the static target
+   (474.05) has no complete install staged and no state field was bound.
 5. **Promote only after runtime comparison.** A partial UIL inventory and
    bounded source-linked UDC transition now exist in
-   `docs/CIV_CITY_UIL_UDC.md`; keep them partial until a matching DOS input
-   backend supplies one baseline and one controlled display/state change.
+   `docs/CIV_CITY_UIL_UDC.md`; keep them partial until a matching-edition
+   backend supplies a baseline and one controlled display **and** committed
+   state change bound to the same city record.
 
 ## Release boundary
 

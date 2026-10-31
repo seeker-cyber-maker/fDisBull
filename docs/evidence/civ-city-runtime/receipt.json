@@ -1,0 +1,152 @@
+{
+ "format": "fdisbull-civ-city-runtime-observation-1",
+ "method": "fdisbull-investigate: authentic bounded keyboard input; display and state separated; no direct state edits",
+ "target": {
+  "edition": "Civilization DOS 474.03 English install (runtime/47403)",
+  "civ_exe_sha256": "31e35b01f4d00df81685dfcb81e6de196a3876bd2afff6e39cbbfd964f5852ad",
+  "game_dir": "private copy under /tmp; originals unmodified",
+  "edition_relation": "static trace and pinned unpacked root use CIV.EXE 22de2748 (474.05); this runtime observation is the complete 474.03 install, an explicit edition difference"
+ },
+ "client": {
+  "fdisbull_version": "0.26.0 (branch worktree source on PYTHONPATH)",
+  "source_commit": "1ed842a",
+  "interpreter": "/Users/Shared/fDisBull/releases/0.27.0-90e748c/venv/bin/python (3.13.17)",
+  "installed_runtime": "/Users/Shared/fDisBull/current -> 0.27.0-90e748c (dosbox only)"
+ },
+ "backend": {
+  "name": "DOSBox-X headless agent",
+  "executable": "/Users/Shared/fDisBull/releases/0.27.0-90e748c/backend/native-macos-arm64/dosbox-x",
+  "sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+  "video": "mode 5 (320x200) screenshots, mode_id stable across the sequence"
+ },
+ "run": {
+  "id": "62abe65c7361483ba0385b82e42c6acf",
+  "project": "(private /tmp project; not committed)",
+  "route": [
+   "1 VGA graphics",
+   "1 no sound",
+   "2 keyboard only",
+   "difficulty Enter (Chieftain)",
+   "competition Enter (7)",
+   "tribe Enter (Roman)",
+   "leader Enter (Caesar)",
+   "intro completes (approx 2 min, not skipped by space or Esc)",
+   "b on settler opens the first task note",
+   "Enter, b again",
+   "city name Enter (Rome)",
+   "Enter dismisses the production note, city screen appears"
+  ],
+  "note": "the intro cannot be skipped with space or Esc; it runs to completion"
+ },
+ "frames": [
+  {
+   "file": "frames/city-04-screen.png",
+   "bytes": 17112,
+   "sha256": "c4ec043e5e3f454db398120e41c28e519a361696ac05cf478ad75379532237d6",
+   "width": 320,
+   "height": 200,
+   "role": "city screen baseline, INFO tab after founding Rome",
+   "changed_pixels_vs_baseline": 0,
+   "changed_ratio": 0.0,
+   "changed_bbox": null
+  },
+  {
+   "file": "frames/city-05-happy.png",
+   "bytes": 16999,
+   "sha256": "9f9e66d2ef581ecd5eaddac312dc970fb55caab7877b2e630e161ffaaf8cbae1",
+   "width": 320,
+   "height": 200,
+   "role": "HAPPY tab selected by key h",
+   "changed_pixels_vs_baseline": 876,
+   "changed_ratio": 0.013688,
+   "changed_bbox": [
+    96,
+    65,
+    222,
+    146
+   ]
+  },
+  {
+   "file": "frames/city-06-map.png",
+   "bytes": 16077,
+   "sha256": "d3abd91d144502b24fc34cef2060ebb6a61e5028994216d468966ad10be04de0",
+   "width": 320,
+   "height": 200,
+   "role": "MAP tab selected by key m",
+   "changed_pixels_vs_baseline": 9449,
+   "changed_ratio": 0.147641,
+   "changed_bbox": [
+    96,
+    65,
+    221,
+    192
+   ]
+  },
+  {
+   "file": "frames/city-07-view.png",
+   "bytes": 27985,
+   "sha256": "389b40aaa38b1a2d15b37db5c7f102720297aea714639e0a7671c0534cd2f618",
+   "width": 320,
+   "height": 200,
+   "role": "city-view overlay entered by key v (int 3F entry 0x0013)",
+   "changed_pixels_vs_baseline": 63973,
+   "changed_ratio": 0.999578,
+   "changed_bbox": [
+    0,
+    0,
+    319,
+    199
+   ]
+  },
+  {
+   "file": "frames/city-08-back.png",
+   "bytes": 17177,
+   "sha256": "20e70ba91e4fdc4423944a3b1b59f1853903bedff9c7426d7c70cf39a187dbcb",
+   "width": 320,
+   "height": 200,
+   "role": "returns to the INFO baseline after dismissing the overlay",
+   "changed_pixels_vs_baseline": 5,
+   "changed_ratio": 7.8e-05,
+   "changed_bbox": [
+    182,
+    65,
+    183,
+    69
+   ]
+  },
+  {
+   "file": "frames/city-09-units.png",
+   "bytes": 17040,
+   "sha256": "bb333c5b44d063654d039c0de91087b63aa8f3b1be72738b2fa35fe478f8b5d0",
+   "width": 320,
+   "height": 200,
+   "role": "after key a with no unit in the city; INFO content redraw only",
+   "changed_pixels_vs_baseline": 256,
+   "changed_ratio": 0.004,
+   "changed_bbox": [
+    100,
+    65,
+    183,
+    131
+   ]
+  }
+ ],
+ "findings": [
+  "The city screen renders the fixture inventory groups: title (ROME POP:1), CITY RESOURCES, FOOD STORAGE, INFO/HAPPY/MAP/VIEW tabs, CHANGE/BUY controls, RENAME/EXIT, and the 21-tile city map panel.",
+  "h selects HAPPY (876 changed pixels confined to the tab content area), m selects MAP (9,449 pixels; map view), v enters the full-screen city-view overlay (63,973 pixels, 99.96%).",
+  "Dismissing the overlay returns to a frame that differs from the baseline by 5 pixels, so the overlay exit restores the INFO presentation.",
+  "a with no unit in the city produced no unit-cursor panel; only the INFO content icon redraw changed (256 pixels). The handler could not be exercised without a unit.",
+  "c did not open a visible production chooser in three attempts in keyboard-only mode; the recovered static call site 0x22009 (runtime) -> 1ADE:0421 remains the only authority for that branch."
+ ],
+ "limits": [
+  "The runtime install is 474.03, not the pinned 474.05 used by the static trace; cross-edition equivalence is not established.",
+  "Display deltas are measured against one baseline frame; animation and palette timing are not excluded.",
+  "No state field was read from guest memory in this pass; the observations are display-level.",
+  "A single route is not a deterministic replay claim."
+ ],
+ "next_probes": [
+  "Produce a unit (production chooser or turn advance) and exercise key a with a non-empty unit list.",
+  "Capture the production chooser with mouse enabled to test the c branch display.",
+  "Read the city record fields (townbuf shield_box, status) at a breakpoint to bind display to state."
+ ]
+}
