@@ -45,6 +45,7 @@ AGENT_SKILLS = {
 
 METHODS = {
     'capture-audit':'Decode/hash finalized AVI segments and optionally sample frames; inputs,output,[every,html,timeout,max_frames,max_frame_bytes,max_input_bytes,max_metadata_bytes,max_output_bytes,ffmpeg,ffprobe]; no guest or project required',
+    'capabilities':'Read-only analysis capability/dependency catalog; [analyze_headless,lldb,java]; no project or tool execution',
     'media-modules':'Discover shipped media adapters, APIs, dependencies and limits; no project required',
     'media-inspect':'Inventory bounded source members without execution; path,adapter,[volume_root,number]',
     'media-extract':'Copy one member to a new private directory outside Git; path,output,adapter,member,[volume_root,number,max_output_bytes]',
@@ -339,6 +340,9 @@ def invoke(method, params, debugger=None):
     if method=='doctor':
         from .doctor import doctor
         return doctor(**p)
+    if method=='capabilities':
+        from .capabilities import capabilities
+        return capabilities(**p)
     if method in ('zmachine-disasm','zmachine-analyze'):
         from .zmachine_analysis import analyze_story,disassemble_story
         operation=disassemble_story if method=='zmachine-disasm' else analyze_story
@@ -575,7 +579,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('capture-audit','media-modules','media-inspect','media-extract','agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('capture-audit','capabilities','media-modules','media-inspect','media-extract','agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         result=invoke(request["method"],params,debugger)
@@ -716,6 +720,8 @@ def parser():
     sub.add_parser('dos-services',help=METHODS['dos-services'])
     c=sub.add_parser('omf-catalog',help=METHODS['omf-catalog'])
     c.add_argument('path');c.add_argument('--abi',default='x86_16_cdecl_near')
+    c=sub.add_parser('capabilities',help=METHODS['capabilities'])
+    c.add_argument('--analyze-headless');c.add_argument('--lldb');c.add_argument('--java')
     c=sub.add_parser('doctor',help=METHODS['doctor'])
     c.add_argument('--backend',choices=['dosbox','dosbox-qemu','wine-qemu'],required=True)
     c.add_argument('--executable',required=True)

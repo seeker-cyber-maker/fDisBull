@@ -8,6 +8,8 @@ import pytest
 
 
 REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','docs/MACOS_ARM64_ANALYSIS.md',
+                       'docs/CAPABILITIES.md','docs/MACOS_APP_REPLICATION.md',
+                       'src/fdisbull/capabilities.py','tests/test_capabilities.py',
                        'scripts/check_agent_skill.py',
                        'player/pyproject.toml','player/fdisbull_player/__init__.py',
                        'player/fdisbull_player/__main__.py','player/fdisbull_player/player.py','player/fdisbull_player/runtime.py','player/fdisbull_player/live.py','player/fdisbull_player/word16.py',
@@ -114,6 +116,8 @@ def test_distribution_check_requires_runtime_navigation_reference(tmp_path):
 
 @pytest.mark.parametrize('required',[
     'AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','docs/MACOS_ARM64_ANALYSIS.md',
+    'docs/CAPABILITIES.md','docs/MACOS_APP_REPLICATION.md',
+    'src/fdisbull/capabilities.py','tests/test_capabilities.py',
     'src/fdisbull/skills/fdisbull-investigate/references/workflows.md',
     'src/fdisbull/skills/fdisbull-investigate/references/udl-uil-udc.md',
     'src/fdisbull/skills/fdisbull-investigate/references/semantic-contracts.md',

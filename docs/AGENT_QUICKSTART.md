@@ -22,6 +22,7 @@ other agents read the receipt instead of polling GitHub separately. The finite
 
 ```text
 fdisbull --version
+fdisbull capabilities
 fdisbull methods
 fdisbull agent-skill --list
 fdisbull agent-skill --index
@@ -30,7 +31,13 @@ fdisbull agent-skill --skill write-gamefaqs-guide --index
 fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md
 ```
 
-`methods` prints the JSON method names and their parameter summaries.
+`capabilities` reports the imported copy's bounded analysis, debugger, C and
+UIL support, provider hashes and dependency detection without launching tools
+or targets. It is unreleased in this source. Read [capabilities](CAPABILITIES.md)
+before treating dependency presence as working support. `doctor` is a separate
+explicit runtime acceptance test. `methods` prints the JSON method names and
+their parameter summaries; some language operations are CLI-only and appear
+in the capability report with `cli:` interface names.
 `agent-skill --list` returns the small skill catalogue. Use `--skill` to select
 one, then `--index` to list its references and their purposes without fetching
 their text. Choose a reference and retrieve it with `--reference`.
