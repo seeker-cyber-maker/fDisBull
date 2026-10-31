@@ -95,7 +95,8 @@ an inconsistent source/program pair is rejected when constructed.
 
 ## AGI scalar components and logic calls
 
-The AGI processor/module contract revision is `3`. The existing straight-line
+The AGI module contract revision is `4`; the instruction processor remains at
+revision `3`. The existing straight-line
 `assignn`/flag set/reset interface and its v1 projection remain available. New
 controlled projections use `fdisbull-agi-state-projection-2`, lowering to the
 same `fdisbull-il-1` UDL/UIL primitives. The shared numeric condition `lt` is
@@ -204,7 +205,8 @@ The graph refuses execution even when a supplied initial state avoids those
 actions. It does not claim to model their scalar reads/writes, object/resource
 state or external effects. Unknown widths, malformed targets, unsupported
 conditions, unresolved callees and budget exhaustion still refuse construction.
-Only an opaque-free graph has nominal scalar `state_projection_only` status.
+An opaque-free graph without effect ports has nominal scalar
+`state_projection_only` status.
 
 The same document and execution bounds are used without branch expansion.
 Compact source capture still limits unique instructions to 128, call depth to
@@ -218,6 +220,17 @@ source nodes, 132 edges and 922 structural paths while retaining 56 opaque
 actions. That is a complete selected control-flow match, not a complete
 semantic lift or original-game execution. Indexed variable state, loops,
 parser/scheduler and engine effects remain future qualification gates.
+
+## Object and resource effect profile
+
+The opt-in `--effect-profile agi-2.917` (Python/JSON `effect_profile`) lowers the
+22 action encodings used by KQ1 logic 103 to typed object/resource ports, with
+`object_resource_projection` qualification when no opaque actions remain.
+It requires compact control flow and the module's `object_resource_effects`
+capability. Evaluation needs an explicit private context and matching host
+results for drawing/erasing/messages; it is not original-engine execution.
+See [the effect contract](AGI_EFFECTS.md) and
+[verification](VERIFICATION-AGI-EFFECTS-2026-10-31.md).
 
 ## Next independently qualified modules
 

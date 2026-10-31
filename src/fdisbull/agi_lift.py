@@ -101,7 +101,7 @@ def _linear_candidate(code):
 
 def lift_logic(resource, *, initial_state, max_instructions=128, entry_offset=0,
                stop_offsets=(), callees=(), callee_entries=None, max_call_depth=8,
-               stop_points=(), control_flow='tree', allow_opaque=False):
+               stop_points=(), control_flow='tree', allow_opaque=False,effect_profile=None):
     """Lift a bounded scalar source component, including explicit direct calls.
 
     Callee entries witness cached AGI scan-start positions, in code-relative
@@ -118,7 +118,9 @@ def lift_logic(resource, *, initial_state, max_instructions=128, entry_offset=0,
     if control_flow == 'compact':
         from .agi_compact import lift_compact
         return lift_compact(program,initial_state=initial_state,max_instructions=max_instructions,
-                            max_call_depth=max_call_depth,allow_opaque=allow_opaque)
+                            max_call_depth=max_call_depth,allow_opaque=allow_opaque,effect_profile=effect_profile)
+    if effect_profile is not None:
+        raise ValueError('effect profiles require compact control flow')
     if allow_opaque:
         raise ValueError('allow_opaque requires compact control flow')
     if (entry_offset == 0 and not stop_offsets and not stop_points and not callees

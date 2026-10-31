@@ -11,11 +11,13 @@ from .interaction_il import change_role, validate_il
 
 
 class _CompactLift(_Lift):
-    def __init__(self, program, max_instructions, max_call_depth, allow_opaque):
+    def __init__(self, program, max_instructions, max_call_depth, allow_opaque, effect_profile=None):
         super().__init__(program, max_instructions, max_call_depth)
         self.allow_opaque = allow_opaque
         self.continuations, self.completed, self.active = {}, {}, set()
         self.opaque = []
+        self.effect_profile=effect_profile
+        self.effects=[]
 
     def build(self, logic, pc, call_path=()):
         key = (logic, pc)
@@ -80,6 +82,18 @@ class _CompactLift(_Lift):
                 else:
                     if op in (*range(1,9),12,13,14):
                         body = self.scalar_nodes(logic,pc,facts,primary=False,suffix='_effect')
+                    elif self.effect_profile is not None:
+                        from .agi_effect_lift import SUPPORTED,lower_effect
+                        if op in SUPPORTED:
+                            node=lower_effect(self,logic,pc,facts);body=[node]
+                            self.effects.append(dict(logic=logic,offset=pc,opcode=op,
+                                                     action=node['action'],block_id=node['id']))
+                        elif self.allow_opaque and facts['mnemonic']!='unsupported':
+                            node=self.node(logic,pc,facts,'opaque',primary=False,suffix='_opaque',
+                                           reason='Unmodeled AGI action: '+facts['mnemonic'])
+                            body=[node];self.opaque.append(dict(logic=logic,offset=pc,opcode=op,
+                                instruction=facts['mnemonic'],block_id=node['id']))
+                        else:raise ValueError('unsupported instruction or runtime effect')
                     elif self.allow_opaque and facts['mnemonic'] != 'unsupported':
                         node = self.node(logic,pc,facts,'opaque',primary=False,suffix='_opaque',
                                          reason='Unmodeled AGI action: '+facts['mnemonic'])
@@ -99,14 +113,16 @@ class _CompactLift(_Lift):
 
 
 def lift_compact(program, *, initial_state, max_instructions=128, max_call_depth=8,
-                 allow_opaque=False):
+                 allow_opaque=False,effect_profile=None):
     if type(max_instructions) is not int or not 1 <= max_instructions <= 128:
         raise ValueError('max_instructions must be in 1..128')
     if type(max_call_depth) is not int or not 1 <= max_call_depth <= 8:
         raise ValueError('max_call_depth must be in 1..8')
     if type(allow_opaque) is not bool or not isinstance(initial_state,dict):
         raise ValueError('explicit state mapping and boolean allow_opaque required')
-    compiler = _CompactLift(program,max_instructions,max_call_depth,allow_opaque)
+    if effect_profile not in (None,'agi-2.917'):
+        raise ValueError('unsupported explicit effect profile')
+    compiler = _CompactLift(program,max_instructions,max_call_depth,allow_opaque,effect_profile)
     entry,_,depth = compiler.build(program.root.logic,program.entry_offset)
     if depth > max_call_depth:raise ValueError('logic call depth budget exhausted')
     for logic,offset in compiler.stops:
@@ -116,6 +132,12 @@ def lift_compact(program, *, initial_state, max_instructions=128, max_call_depth
         raise ValueError('initial_state must bind exactly all reachable read/write variables and flags')
     variables = {name:{'type':typ,'initial':initial_state[name]}
                  for name,typ in sorted(compiler.types.items())}
+    if compiler.effects:
+        # Instruction kind is already explicit in source-entry mappings and
+        # nonempty byte spans. Omit this repeated optional label, retaining
+        # every source byte, digest and coordinate under the same byte budget.
+        for item in compiler.evidence.values():
+            if item.get('kind')=='instruction':item.pop('kind')
     udl = dict(format='fdisbull-il-2',role='udl',variables=variables,resources={},
                entry=entry,continuations=dict(sorted(compiler.continuations.items())),
                evidence=compiler.evidence)
@@ -127,12 +149,14 @@ def lift_compact(program, *, initial_state, max_instructions=128, max_call_depth
             if transfer.get(field) is not None:incoming[transfer[field]] += 1
     return dict(format='fdisbull-agi-state-projection-3',source=program.provenance(),
                 control_flow='shared_continuations',udl=udl,uil=change_role(udl,'uil'),
-                qualification='control_flow_only' if compiler.opaque else 'state_projection_only',
+                qualification='control_flow_only' if compiler.opaque else
+                              'object_resource_projection' if compiler.effects else 'state_projection_only',
                 runtime_execution=False,coverage='selected_acyclic_source_graph',
                 exits=compiler.exits,calls=list(compiler.calls.values()),
                 block_sources=compiler.block_sources,initial_state=deepcopy(initial_state),
                 read_set=sorted(compiler.reads),write_set=sorted(compiler.writes),
                 opaque_operations=compiler.opaque,
+                effect_operations=compiler.effects,effect_profile=effect_profile,
                 static_metrics=dict(source_instructions=len(compiler.instructions),
                                     continuations=len(compiler.continuations),
                                     shared_joins=sum(n>1 for n in incoming.values())),
@@ -140,4 +164,5 @@ def lift_compact(program, *, initial_state, max_instructions=128, max_call_depth
                             max_il_nodes=1024,max_document_bytes=65536),
                 bounds=['nominal scalar AGI semantics; explicit scan-entry assumptions',
                         'opaque actions prohibit execution of the entire graph',
-                        'cycles, indirect calls, parser and whole-game effects excluded'])
+                        'effect ports require explicit snapshots and matching host results',
+                        'cycles, indirect calls, parser, independent ticks and whole-game parity excluded'])

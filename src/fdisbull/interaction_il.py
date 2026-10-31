@@ -117,6 +117,16 @@ def _validate_v1(document, *, graph_ids=(), graph_conditions=(), graph_mode=Fals
                 refs = block.get('evidence', [])
                 _require(isinstance(refs, list) and all(isinstance(x, str) and x in evidence for x in refs), 'invalid evidence reference')
                 continue
+            if graph_mode and op == 'effect':
+                _require(depth == 1, 'effect ports require a top-level continuation body')
+                from .agi_effects import validate_block
+                validate_block(block, variables)
+                ident = block['id']
+                _require(ident not in ids, 'invalid or duplicate block id')
+                ids.add(ident)
+                refs = block.get('evidence', [])
+                _require(isinstance(refs,list) and all(isinstance(x,str) and x in evidence for x in refs), 'invalid evidence reference')
+                continue
             _require(op in fields, 'unknown block')
             _fields(block, ('id','op',*fields[op]), ('evidence',))
             ident = block['id']
@@ -151,7 +161,8 @@ def change_role(document, role):
     result = deepcopy(document); result['role'] = role
     return result
 
-def execute_il(document, state=None, capabilities=(), max_steps=1024, *, max_call_depth=8):
+def execute_il(document, state=None, capabilities=(), max_steps=1024, *, max_call_depth=8,
+               effect_context=None, checkpoint=None, host_result=None):
     """Evaluate atomically. Pending host events are plans, not executed effects.
 
     Returns committed state, proposed_state, events and visited block IDs. On a
@@ -159,7 +170,11 @@ def execute_il(document, state=None, capabilities=(), max_steps=1024, *, max_cal
     """
     if isinstance(document, dict) and document.get("format") == "fdisbull-il-2":
         from .interaction_flow import execute_flow
-        return execute_flow(document, state, capabilities, max_steps, max_call_depth)
+        return execute_flow(document, state, capabilities, max_steps, max_call_depth,
+                            effect_context=effect_context,checkpoint=checkpoint,host_result=host_result)
+    if any(x is not None for x in (effect_context,checkpoint,host_result)):
+        return {'complete':False,'status':'refused','error':'effects require compact IL v2',
+                'state':deepcopy(state),'events':[],'visited':[]}
     original = deepcopy(state)
     try:
         validate_il(document)

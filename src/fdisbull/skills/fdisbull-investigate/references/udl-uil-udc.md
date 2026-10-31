@@ -259,6 +259,34 @@ graphs private; export only authored tests and sanitized counts/digests.
 V1-only scene and source-block/UDC proof consumers explicitly reject v2 graphs;
 do not flatten or omit continuations to get a misleading acceptance result.
 
+For the bounded object/resource profile, select
+`effect_profile="agi-2.917"` (`--effect-profile agi-2.917`) with compact control
+flow. It lowers the declared 22 KQ1 action encodings to typed effect ports and
+uses `object_resource_projection`, not a native-execution qualification.
+Supply explicit object snapshots and captured VIEW geometry/messages. The
+`agi_resources` helpers validate uncompressed DOS v2 resources; the declared
+2.917 profile is an assumption requiring separate interpreter qualification.
+`object_state()` creates a nominal model fixture, not a captured game object.
+
+Drawing/erasing/messages yield a bound request and private JSON checkpoint.
+Check proposed model values, then resume only with a matching explicit host
+result. Readback without a result must preserve request identity and visits.
+Do not infer collision safety, a displayed frame, dismissed dialogue, arrival,
+or an elapsed guest tick from a planned operation. Motion ports configure
+controllers; they do not advance them. Timers, renderer/collision work and
+independent scheduler changes need another qualified host or observation.
+
+The evaluator dispatches no GUI/native command. Its checksum and a supplied
+`completed` result are not authoritative native completion evidence. Keep
+caller claims distinct from provider receipts. If a later model failure reports
+`recovery_required`, preserve prior `host_completions`, reconcile the host, and
+resume the existing qualified route rather than assuming rollback or replaying
+the original action. `state`/`effect_context` remain the model transaction's
+baseline until completion; proposed fields are intermediate observations.
+The 472-case KQ corpus uses synthetic snapshots and supplied host outcomes;
+full model branch/site coverage is not proof of native reachability or parity.
+Keep source-retaining graphs, contexts, messages and checkpoints private.
+
 Bind source occurrence using the snapshot key plus the module's resource-local
 location. File offsets and guest offsets are different coordinates. Unknown
 instructions, unsupported control flow, malformed source or budget stops refuse semantic

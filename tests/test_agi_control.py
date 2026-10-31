@@ -233,7 +233,7 @@ def test_module_cli_and_captured_callee_are_source_bound(tmp_path,capsys):
     opened=builtin_registry().open(params['module'],params['path'],
                                    **{k:v for k,v in params.items() if k not in ('module','path')})
     before=lift_input(opened,initial_state={})
-    assert before['module']['version']=='3'
+    assert before['module']['version']=='4'
     assert not analyze_input(opened)['complete']  # generic analysis retains external call uncertainty
     (tmp_path/'VOL.0').unlink()
     assert lift_input(opened,initial_state={})==before

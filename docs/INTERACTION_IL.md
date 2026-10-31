@@ -138,3 +138,37 @@ Validation of such a document is structural, not semantic qualification.
 Existing scene execution and source-block/UDC equivalence consumers explicitly
 require v1; they do not ignore continuation tables. Neither format adds an AGI
 renderer, engine-effect implementation, compiler backend or complete game.
+
+## Explicit object/resource effects
+
+V2 also admits a top-level continuation-body `effect` primitive with a fixed
+`contract`, named `action`, typed `args`/`outputs`, source `binding` digest and
+optional evidence. The first built-in is the explicit
+`fdisbull.agi.object-resource.2.917.v1` contract. No input file can import a
+Python handler. Effect ports nested inside a body `if` are refused; source
+branches use continuation transfers. V1 remains unchanged.
+
+`execute_il(..., effect_context=CONTEXT)` uses private snapshots and captured
+resource metadata. Immediate operations affect a model transaction. Draw,
+erase and print can return `pending_host`, a `host_request` and a JSON
+`checkpoint`; no host command is sent by the evaluator. Later model instructions
+do not run until a matching explicit `host_result` is supplied with that
+checkpoint. The checkpoint binds program bytes, state, resource context,
+continuation, stack and cumulative budgets. Readback without a result is
+idempotent. A fresh CLI process can resume it.
+
+During suspension, `state` and `effect_context` are the model's uncommitted
+baseline; `proposed_state` and `proposed_effect_context` show modeled progress.
+This does not say that an external host rolled back an action. Supplied
+completion claims remain in `host_completions`; a later model failure preserves
+them, reports `recovery_required`, and exposes last modeled values. Reconcile
+the host before retrying a route. These claims are caller-provided and are not
+native execution evidence. Checkpoint checksums provide ordinary integrity
+checks, not authentication or tamper-proof authorization.
+
+`il-run` accepts `--effect-context`, `--checkpoint`, `--host-result`,
+`--max-steps` and `--max-call-depth`. Pending/refused runs return exit code 1;
+read the structured status. Save private checkpoints and artifact-backed
+responses outside Git. A model `complete` result still has
+`native_execution: false`. The [AGI effect contract](AGI_EFFECTS.md) describes
+the bound operations and remaining renderer/scheduler gates.

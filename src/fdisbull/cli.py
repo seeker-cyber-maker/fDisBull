@@ -209,7 +209,7 @@ METHODS = {
     "agi-logic": "Read-only partial AGI 2.917 logic decoding; logdir, volume_dir, logic, profile, [max_instructions]",
     "decoder-modules": "List explicitly registered trusted source decoder modules; no project required",
     "module-analyze": "Direct source analysis without native ASM; module,path,[volume_dir,logic,profile,address,max_instructions]",
-    "module-lift": "Direct source-to-UDL/UIL projection; module,path,initial_state,[volume_dir,logic,profile,entry_offset,stop_offsets,stop_points,callee_entries,max_instructions,max_call_depth,control_flow,allow_opaque]",
+    "module-lift": "Direct source-to-UDL/UIL projection; module,path,initial_state,[volume_dir,logic,profile,entry_offset,stop_offsets,stop_points,callee_entries,max_instructions,max_call_depth,control_flow,allow_opaque,effect_profile]",
     "zmachine-disasm": "Read-only Z-machine v3 instruction slice; path,[address,max_instructions]",
     "zmachine-analyze": "Bounded recursive Z-machine v3 processor analysis; path,[entry_points,max_instructions]",
     "decoder-check": "Compare x86 iced/Capstone proposals without execution; data,[bits,address,scan_offsets,max_candidates]",
@@ -343,9 +343,10 @@ def invoke(method, params, debugger=None):
         initial_state = p.pop('initial_state')
         call_depth = p.pop('max_call_depth', None)
         control_flow, allow_opaque = p.pop('control_flow',None), p.pop('allow_opaque',None)
+        effect_profile=p.pop('effect_profile',None)
         return lift_input(registry.open(identity, path, **p),
                           initial_state=initial_state, max_instructions=limit, max_call_depth=call_depth,
-                          control_flow=control_flow,allow_opaque=allow_opaque)
+                          control_flow=control_flow,allow_opaque=allow_opaque,effect_profile=effect_profile)
     from .project import Project, number
     for field in ("base", "entry"):
         if field in p and p[field] is not None:
@@ -591,6 +592,12 @@ def parser():
     for name in ('il-check','il-run'):
         c=sub.add_parser(name,help='Validate or evaluate the shared UDL/UIL primitive block representation')
         c.add_argument('program'); c.add_argument('--state'); c.add_argument('--capability',action='append',choices=('graphics','audio','input'),default=[])
+        if name=='il-run':
+            c.add_argument('--effect-context',help='Private explicit object/resource model context')
+            c.add_argument('--checkpoint',help='Private suspended model invocation')
+            c.add_argument('--host-result',help='Matching explicit host completion result')
+            c.add_argument('--max-steps',type=int,default=1024)
+            c.add_argument('--max-call-depth',type=int,default=8)
     c=sub.add_parser('il-store',help='Store an immutable source-checked shared IL revision with a project')
     c.add_argument('project'); c.add_argument('name'); c.add_argument('program'); c.add_argument('--version',type=int)
     c.add_argument('--parent'); c.add_argument('--source'); c.add_argument('--source-name',default='story')
@@ -736,6 +743,7 @@ def parser():
             c.add_argument('--control-flow',choices=['tree','compact'])
             c.add_argument('--allow-opaque',action='store_const',const=True,default=None,
                            help='Retain known unmodeled actions in a non-executable compact graph')
+            c.add_argument('--effect-profile',choices=['agi-2.917'],help='Explicit object/resource effect contract')
     c=sub.add_parser('zmachine-disasm',help=METHODS['zmachine-disasm'])
     c.add_argument('path');c.add_argument('--address',type=lambda s:int(s,0))
     c.add_argument('--max-instructions',type=int,default=40)
@@ -994,7 +1002,11 @@ def _language_command(command,args):
             if command in ('il-check','il-run'):
                 program=read_json(args['program']);validate_il(program)
                 result=({'complete':True,'status':'valid','role':program['role']} if command=='il-check' else
-                        execute_il(program,state=read_json(args['state']) if args['state'] else None,capabilities=args['capability']))
+                        execute_il(program,state=read_json(args['state']) if args['state'] else None,capabilities=args['capability'],
+                            max_steps=args['max_steps'],max_call_depth=args['max_call_depth'],
+                            effect_context=read_json(args['effect_context']) if args['effect_context'] else None,
+                            checkpoint=read_json(args['checkpoint']) if args['checkpoint'] else None,
+                            host_result=read_json(args['host_result']) if args['host_result'] else None))
                 emit(result);return 0 if result['complete'] else 1
             from .project import Project
             with Project(args['project']) as project:
