@@ -1,0 +1,282 @@
+{
+  "format": "fdisbull-il-scene-1",
+  "partial": true,
+  "programs": {
+    "view-resources": {
+      "format": "fdisbull-il-1",
+      "role": "uil",
+      "variables": {
+        "$view_mode": {"type": "u8", "initial": 0},
+        "$city_size": {"type": "i16", "initial": 1},
+        "$food_box": {"type": "i16", "initial": 0},
+        "$shield_box": {"type": "i16", "initial": 0},
+        "$production": {"type": "i16", "initial": 0},
+        "$city_status": {"type": "u8", "initial": 0},
+        "$city_owner": {"type": "u8", "initial": 0},
+        "$auto_build": {"type": "bool", "initial": false}
+      },
+      "resources": {
+        "resources-caption": {"kind": "text", "text": "City Resources"}
+      },
+      "body": [
+        {"id": "select-resources", "op": "set", "var": "$view_mode", "value": 0},
+        {"id": "announce-resources", "op": "text", "resource": "resources-caption"}
+      ]
+    },
+    "view-happiness": {
+      "format": "fdisbull-il-1",
+      "role": "uil",
+      "variables": {
+        "$view_mode": {"type": "u8", "initial": 0},
+        "$city_size": {"type": "i16", "initial": 1},
+        "$food_box": {"type": "i16", "initial": 0},
+        "$shield_box": {"type": "i16", "initial": 0},
+        "$production": {"type": "i16", "initial": 0},
+        "$city_status": {"type": "u8", "initial": 0},
+        "$city_owner": {"type": "u8", "initial": 0},
+        "$auto_build": {"type": "bool", "initial": false}
+      },
+      "resources": {
+        "happiness-caption": {"kind": "text", "text": "Happiness"}
+      },
+      "body": [
+        {"id": "select-happiness", "op": "set", "var": "$view_mode", "value": 1},
+        {"id": "announce-happiness", "op": "text", "resource": "happiness-caption"}
+      ]
+    },
+    "view-map": {
+      "format": "fdisbull-il-1",
+      "role": "uil",
+      "variables": {
+        "$view_mode": {"type": "u8", "initial": 0},
+        "$city_size": {"type": "i16", "initial": 1},
+        "$food_box": {"type": "i16", "initial": 0},
+        "$shield_box": {"type": "i16", "initial": 0},
+        "$production": {"type": "i16", "initial": 0},
+        "$city_status": {"type": "u8", "initial": 0},
+        "$city_owner": {"type": "u8", "initial": 0},
+        "$auto_build": {"type": "bool", "initial": false}
+      },
+      "resources": {
+        "map-caption": {"kind": "text", "text": "Map"}
+      },
+      "body": [
+        {"id": "select-map", "op": "set", "var": "$view_mode", "value": 2},
+        {"id": "announce-map", "op": "text", "resource": "map-caption"}
+      ]
+    },
+    "view-history": {
+      "format": "fdisbull-il-1",
+      "role": "uil",
+      "variables": {
+        "$view_mode": {"type": "u8", "initial": 0},
+        "$city_size": {"type": "i16", "initial": 1},
+        "$food_box": {"type": "i16", "initial": 0},
+        "$shield_box": {"type": "i16", "initial": 0},
+        "$production": {"type": "i16", "initial": 0},
+        "$city_status": {"type": "u8", "initial": 0},
+        "$city_owner": {"type": "u8", "initial": 0},
+        "$auto_build": {"type": "bool", "initial": false}
+      },
+      "resources": {
+        "history-caption": {"kind": "text", "text": "City View"}
+      },
+      "body": [
+        {"id": "select-history", "op": "set", "var": "$view_mode", "value": 3},
+        {"id": "announce-history", "op": "text", "resource": "history-caption"}
+      ]
+    }
+  },
+  "contexts": [
+    {
+      "id": "city",
+      "title": "City — selected city",
+      "description": "Partial address-free representation of the original 320x200 city screen.",
+      "when": {"op": "eq", "left": 0, "right": 0}
+    }
+  ],
+  "objects": [
+    {
+      "id": "city-title",
+      "context": "city",
+      "label": "City — selected city",
+      "aliases": ["city"],
+      "description": "The selected city record; name and catalog text remain outside this fixture.",
+      "bindings": []
+    },
+    {
+      "id": "tab-resources",
+      "context": "city",
+      "label": "resources",
+      "aliases": ["income", "i"],
+      "description": "Original key i and the first city-view tab.",
+      "bindings": [{"verb": "select", "program": "view-resources"}]
+    },
+    {
+      "id": "tab-happiness",
+      "context": "city",
+      "label": "happiness",
+      "aliases": ["h", "happy"],
+      "description": "Original key h and happiness tab.",
+      "bindings": [{"verb": "select", "program": "view-happiness"}]
+    },
+    {
+      "id": "tab-map",
+      "context": "city",
+      "label": "map",
+      "aliases": ["m"],
+      "description": "Original key m and minimap tab.",
+      "bindings": [{"verb": "select", "program": "view-map"}]
+    },
+    {
+      "id": "tab-city-view",
+      "context": "city",
+      "label": "city view",
+      "aliases": ["v", "view"],
+      "description": "Original key v; animation and VGA scene effects are not modeled.",
+      "bindings": [{"verb": "select", "program": "view-history"}]
+    },
+    {
+      "id": "food-storage",
+      "context": "city",
+      "label": "Food Storage",
+      "aliases": ["food"],
+      "description": "Food box at source panel coordinates 3,115; capacity and granary marker are state fields.",
+      "visible_when": {"op": "eq", "left": {"var": "$view_mode"}, "right": 0},
+      "bindings": []
+    },
+    {
+      "id": "production-storage",
+      "context": "city",
+      "label": "Production",
+      "aliases": ["shields", "shield box"],
+      "description": "Signed shield_box display and selected unit/improvement; source panel begins at 230,99.",
+      "visible_when": {"op": "eq", "left": {"var": "$view_mode"}, "right": 0},
+      "bindings": []
+    },
+    {
+      "id": "city-resources",
+      "context": "city",
+      "label": "City Resources",
+      "aliases": ["resources"],
+      "description": "Food, shields, trade, luxuries, taxes and science bars from the city resource panel.",
+      "visible_when": {"op": "eq", "left": {"var": "$view_mode"}, "right": 0},
+      "bindings": []
+    },
+    {
+      "id": "city-radius",
+      "context": "city",
+      "label": "City Radius",
+      "aliases": ["tiles", "workers"],
+      "description": "The 21-tile radius and worker assignment surface. Tile pixels and terrain are not rendered.",
+      "visible_when": {"op": "eq", "left": {"var": "$view_mode"}, "right": 0},
+      "bindings": []
+    },
+    {
+      "id": "routes",
+      "context": "city",
+      "label": "Trade Routes",
+      "aliases": ["routes", "trade"],
+      "description": "Up to three city routes and their source-derived trade display.",
+      "visible_when": {"op": "eq", "left": {"var": "$view_mode"}, "right": 0},
+      "bindings": []
+    },
+    {
+      "id": "building-panel",
+      "context": "city",
+      "label": "Buildings and Wonders",
+      "aliases": ["buildings", "wonders", "more"],
+      "description": "Improvement list, wonder precedence, sale surface and MORE paging from CITYMGT.C.",
+      "visible_when": {"op": "eq", "left": {"var": "$view_mode"}, "right": 0},
+      "bindings": []
+    },
+    {
+      "id": "unit-panel",
+      "context": "city",
+      "label": "Units",
+      "aliases": ["units", "army"],
+      "description": "The six-column unit panel; source permits selecting and fortification-clearing actions.",
+      "visible_when": {"op": "eq", "left": {"var": "$view_mode"}, "right": 0},
+      "bindings": []
+    },
+    {
+      "id": "production-change",
+      "context": "city",
+      "label": "CHANGE",
+      "aliases": ["change", "c"],
+      "description": "Production selection control. Catalog and chooser effects are intentionally not implemented here.",
+      "visible_when": {"op": "eq", "left": {"var": "$view_mode"}, "right": 0},
+      "bindings": []
+    },
+    {
+      "id": "production-buy",
+      "context": "city",
+      "label": "BUY",
+      "aliases": ["buy", "b"],
+      "description": "Rush-buy control. The price formula is documented separately and is not a scene action.",
+      "visible_when": {"op": "eq", "left": {"var": "$view_mode"}, "right": 0},
+      "bindings": []
+    },
+    {
+      "id": "production-auto",
+      "context": "city",
+      "label": "AUTO.",
+      "aliases": ["auto", "a"],
+      "description": "Automatic production toggle; the source chooser is outside this bounded scene fixture.",
+      "visible_when": {"op": "eq", "left": {"var": "$view_mode"}, "right": 0},
+      "bindings": []
+    },
+    {
+      "id": "happiness-panel",
+      "context": "city",
+      "label": "Happiness",
+      "aliases": ["happy"],
+      "description": "Happiness view placeholder bound to the source tab; citizen arithmetic is not claimed.",
+      "visible_when": {"op": "eq", "left": {"var": "$view_mode"}, "right": 1},
+      "bindings": []
+    },
+    {
+      "id": "map-panel",
+      "context": "city",
+      "label": "Map",
+      "aliases": ["minimap"],
+      "description": "Minimap view placeholder bound to the source tab; map visibility is not claimed.",
+      "visible_when": {"op": "eq", "left": {"var": "$view_mode"}, "right": 2},
+      "bindings": []
+    },
+    {
+      "id": "city-view-panel",
+      "context": "city",
+      "label": "City View",
+      "aliases": ["view"],
+      "description": "City animation view placeholder; source animation and resources are not loaded.",
+      "visible_when": {"op": "eq", "left": {"var": "$view_mode"}, "right": 3},
+      "bindings": []
+    },
+    {
+      "id": "disorder-status",
+      "context": "city",
+      "label": "Civil Disorder",
+      "aliases": ["disorder", "riot"],
+      "description": "Status bit 0 in the recovered city record.",
+      "visible_when": {"op": "bit_test", "value": {"var": "$city_status"}, "bit": 0},
+      "bindings": []
+    },
+    {
+      "id": "rename",
+      "context": "city",
+      "label": "RENAME",
+      "aliases": ["rename", "r"],
+      "description": "Original rename control; host text entry is outside this UIL profile.",
+      "bindings": []
+    },
+    {
+      "id": "exit",
+      "context": "city",
+      "label": "EXIT",
+      "aliases": ["exit", "esc"],
+      "description": "Original city-screen exit control; process/session termination is outside this scene profile.",
+      "bindings": []
+    }
+  ]
+}

@@ -2,12 +2,14 @@
 
 Slice ID: `CIV-UI-001`
 
-Status: **draft blueprint; not a qualified UI or UDC claim**.
+Status: **partial UIL scene fixture; not a qualified UI or whole-screen UDC claim**.
 
-This is the first UI-oriented slice after the signed city-production contract.
-It uses the existing Civ64 DOS scene record and civd city/production
-implementations to lay out a narrow route. It intentionally stops before
-claiming that fDisBull has recovered or executed the original DOS screen.
+This slice began as a UI-oriented blueprint after the signed city-production
+contract. It now has a committed `fdisbull-il-scene-1` inventory in
+`examples/civ/civ_city_scene.json` and a bounded executable UDC transition.
+Those artifacts use the existing Civ64 DOS scene record and civd
+city/production implementations, but they intentionally stop before claiming
+that fDisBull has recovered or executed the original DOS screen.
 
 ## Question
 
@@ -163,13 +165,15 @@ insufficient.
 4. **Use runtime only if the matching DOS input/backend is staged.** Drive the
    ordinary city action, capture a baseline and one controlled change, and
    distinguish visible, ready, enabled, committed, and persisted results.
-5. **Only then extend UIL/UDC.** Add a UI/state layer that references the
-   already-qualified production contract; do not encode the current geometry
-   draft as executable behavior yet.
+5. **Promote only after runtime comparison.** A partial UIL inventory and
+   bounded source-linked UDC transition now exist in
+   `docs/CIV_CITY_UIL_UDC.md`; keep them partial until a matching DOS input
+   backend supplies one baseline and one controlled display/state change.
 
 ## Release boundary
 
-This document does not add a UI implementation or change the release gate for
-`CIV-PROD-001`. It is a temporary blueprint and decision tree. Its guessed,
-candidate, conflict, and unknown rows remain out of release until the probes
-above qualify them independently.
+This document and `docs/CIV_CITY_UIL_UDC.md` add only a partial scene inventory
+and bounded model; they do not change the release gate for `CIV-PROD-001` or
+qualify original VGA rendering, input dispatch, or full city processing. The
+guessed, candidate, conflict, and unknown rows remain out of release until the
+probes above qualify them independently.
