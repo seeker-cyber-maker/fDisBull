@@ -73,6 +73,12 @@ class TargetSourcesMixin:
         image = load_image(path, **document['loader_options'])
         if (image.arch, image.bits, image.format, image.entry) != (self.arch, self.bits, self.meta['format'], self.meta['entry']):
             raise ValueError('candidate layout/processor/entry differs; explicitly start a separate analysis')
+        # NE interpretation currently retains one project-wide declaration set.
+        # Matching mapped bytes/entry cannot qualify changed relocation targets,
+        # symbols, allocation or import tables against those original declarations.
+        # Exact byte approval does not supply version-scoped loader metadata.
+        if image.format == 'NE' and image.metadata.get('ne') != self.meta['loader_metadata']['ne']:
+            raise ValueError('NE loader metadata differs; explicitly start a separate analysis')
         return document, image
 
     def source_candidate(self, path, version=None):

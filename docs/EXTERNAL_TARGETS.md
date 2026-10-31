@@ -88,6 +88,15 @@ format, processor and entry; use a separate analysis for other layouts. Native
 debugger launch still enforces its original/unpatched-version contracts;
 approval of a static source layer does not qualify a new native launch path.
 
+NE source layers additionally require identical retained NE loader metadata.
+The current project has one declaration set for NE fixups, imports, exports,
+segments and related tables. Matching code bytes and entry do not make changed
+declarations compatible. `source-candidate` and `bind-source` refuse such a
+candidate even with exact approval; `new-source-analysis` loads its declarations
+independently. Code-only changes that leave the retained declarations identical
+can still form an approved child. This prevents child hashes from being attached
+to analysis using an original version's relocation targets.
+
 Without approval, keep the candidate unattached. Offer a separate analysis and
 create it only when the caller explicitly chooses the destination:
 

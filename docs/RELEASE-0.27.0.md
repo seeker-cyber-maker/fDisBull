@@ -39,6 +39,11 @@ missing/corrupt objects, legacy migration, immutable identities and original
 versus approved-child behavior. Original-layout compilation remains unavailable
 for a child version; it must not silently substitute the original source.
 Migration reconstructs COM loader options without module mode and recognizes NE.
+NE source layers currently share one retained loader declaration set. Changes to
+NE fixups, imports, exports, segment mappings or other retained NE metadata are
+therefore refused even with exact byte approval; use `new-source-analysis` for
+an independently loaded project. Code-only children with identical declarations
+remain supported. Approval must never bind child evidence to stale fixup targets.
 
 ## Qualification boundary
 
