@@ -205,8 +205,9 @@ def build_selection_shell(project,selection,plan,destination,*,target="windows-x
     from pathlib import Path
     from .udc_shell import build_windows_shell, _remove_owned_output
     from .udc_qualify import qualify_uil
-    if target not in ("windows-x64","linux-x64"):raise ValueError("unsupported native shell target")
+    if target not in ("windows-x64","linux-x64","macos-arm64"):raise ValueError("unsupported native shell target")
     if target=="windows-x64" and (service_adapters is not None or capture_state):raise ValueError("Linux shell adapters/observation cannot be ignored by a Windows target")
+    if target=="macos-arm64" and capture_state:raise ValueError("macOS shell observation is stdout-only; capture_state is unsupported")
     plan=deepcopy(plan)
     selected_info=project.udl_selection_info(selection,full=True)
     selected=selected_info['document'];modules={};proofs={};layers={};contracts={};adapters={}
@@ -266,6 +267,9 @@ def build_selection_shell(project,selection,plan,destination,*,target="windows-x
     if target=='linux-x64':
         from .udc_linux import build_linux_shell
         result=build_linux_shell(plan,modules,destination,service_adapters=service_adapters,capture_state=capture_state,c_compiler=c_compiler)
+    elif target=='macos-arm64':
+        from .udc_macos import build_macos_shell
+        result=build_macos_shell(plan,modules,destination,service_adapters=service_adapters,c_compiler=c_compiler)
     else:result=build_windows_shell(plan,modules,destination,c_compiler=c_compiler)
     directory=Path(result['directory']);owned=directory.stat();path=directory/'selection-capsule.json'
     owned_files={}

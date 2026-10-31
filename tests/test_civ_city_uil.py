@@ -1,5 +1,12 @@
 """Regression coverage for the bounded Civ city UIL/UDC slice."""
 
+import json
+import platform
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
 import pytest
 
 from examples.civ.civ_city_uil import _primitive_program, build_city_udc, city_scene
@@ -84,3 +91,40 @@ def test_city_udc_rejects_non_pinned_source_before_output(tmp_path):
     with pytest.raises(ValueError, match="pinned unpacked root"):
         build_city_udc(source, destination)
     assert not destination.exists()
+
+
+NATIVE = sys.platform == "darwin" and platform.machine() == "arm64"
+PINNED_ROOT = Path("build/civ-analysis/CIV_UNP.EXE")
+
+
+@pytest.mark.skipif(
+    not (NATIVE and shutil.which("clang")),
+    reason="native arm64 Mach-O execution requires macOS arm64 and clang",
+)
+def test_city_udc_macos_target_builds_and_runs_natively(tmp_path):
+    if not PINNED_ROOT.exists():
+        pytest.skip("pinned unpacked Civ root is not present")
+    receipt = build_city_udc(
+        PINNED_ROOT,
+        tmp_path / "out",
+        project_path=tmp_path / "city.fdb",
+        target="macos-arm64",
+    )
+    assert receipt["native_build"]["profile"] == "macos-arm64-c-plan-libsystem-1"
+    assert receipt["native_build"]["target"]["arch"] == "arm64"
+    assert (
+        receipt["native_build"]["native_build_qualification"]["native_execution"]
+        is False
+    )
+    done = subprocess.run(
+        [str(tmp_path / "out/program")],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    assert done.returncode == 0, done.stdout + done.stderr
+    frame = json.loads(done.stdout.strip().splitlines()[-1])
+    assert frame["format"] == "fdisbull-macos-observation-1"
+    assert frame["status"] == 0
+    assert frame["state"]["$shield_box"] == 3

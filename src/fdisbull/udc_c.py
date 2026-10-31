@@ -19,8 +19,12 @@ def _literal(value):
     return '(-9223372036854775807LL-1LL)' if n==-(1<<63) else str(n)+'LL'
 
 
-def generate_c(module):
-    """Render typed scalar nodes; no arbitrary source, includes, calls or events."""
+def generate_c(module, symbol='udc_block'):
+    """Render typed scalar nodes; no arbitrary source, includes, calls or events.
+
+    ``symbol`` names the emitted function so several blocks can coexist in one
+    link unit; the default preserves the single-block ABI.
+    """
     program=module['program'];validate_il(program);variables=program['variables']
     adapter=module.get('state_adapter');inputs=sorted(variables) if adapter is None else list(adapter['inputs'])
     outputs=sorted(variables) if adapter is None else list(adapter['outputs'])
@@ -52,7 +56,8 @@ def generate_c(module):
                     expr=('('+temp+' >= '+str(1<<(bits-1))+'ULL ? (long long)'+temp+' - '+str(1<<bits)+'LL : (long long)'+temp+')') if typ.startswith('i') else '(long long)'+temp
                     lines.append(indent+name+' = '+expr+';')
             else:raise ValueError('C backend supports pure scalar UIL only')
-    lines.append('__attribute__((used,visibility("default"))) unsigned long long udc_block(const unsigned short *in, unsigned short *out) {')
+    _check(isinstance(symbol,str) and symbol.isidentifier(),'C block symbol must be an identifier')
+    lines.append('__attribute__((used,visibility("default"))) unsigned long long '+symbol+'(const unsigned short *in, unsigned short *out) {')
     for n in sorted(variables):
         typ=variables[n]['type'];_check(typ in ('bool','u8','u16','i16'),'C backend supports logical word types only')
         if n in inputs:
@@ -68,8 +73,8 @@ def generate_c(module):
     return '\n'.join(lines)+'\n',inputs,outputs
 
 
-def compile_c(module,compiler):
-    source,inputs,outputs=generate_c(module)
+def compile_c(module,compiler,*,symbol='udc_block'):
+    source,inputs,outputs=generate_c(module,symbol)
     _check(compiler is not None,'C backend requires an explicit clang executable')
     compiler=Path(compiler).expanduser().resolve(strict=True)
     with compiler.open('rb') as stream:before=hashlib.file_digest(stream,'sha256').hexdigest()
@@ -86,7 +91,7 @@ def compile_c(module,compiler):
         _check(done.returncode==0,'C module compilation failed: '+done.stderr.decode(errors='replace')[:2000])
         raw=(root/'module.o').read_bytes();binary=lief.ELF.parse(list(raw))
         _check(binary is not None and not binary.relocations,'C object needs unsupported relocations; no external/constant-pool dependencies admitted')
-        symbols=[s for s in binary.symbols if s.name=='udc_block'];_check(len(symbols)==1,'C object lacks unique udc_block')
+        symbols=[s for s in binary.symbols if s.name==symbol];_check(len(symbols)==1,'C object lacks its unique block symbol')
         symbol=symbols[0];section=binary.sections[symbol.shndx]
         code=bytes(section.content)[symbol.value:symbol.value+symbol.size]
         _check(0<len(code)<=SLOT//2,'C block exceeds its 2048-byte slot profile')

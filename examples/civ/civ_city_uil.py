@@ -175,8 +175,9 @@ def build_city_udc(
     civd_civ_h: str | Path | None = None,
     civd_production_doc: str | Path | None = None,
     initial: dict | None = None,
+    target: str = "linux-x64",
 ) -> dict:
-    """Build a source-bound Linux x86-64 UDC shell for the city step.
+    """Build a source-bound UDC shell (Linux x86-64 or macOS arm64) for the city step.
 
     ``source`` must be the exact unpacked 474.05/475.05 root produced by
     ``civ_exepack.py``.  The destination is intentionally required to be a new
@@ -270,7 +271,7 @@ def build_city_udc(
             "civ-city-production-selection",
             {"city-production": layer_id},
             program=module,
-            target="linux-x64",
+            target=target,
             author="civ-city-uil-slice",
         )
         selection_id = selection_record["id"]
@@ -289,8 +290,8 @@ def build_city_udc(
             selection_id,
             plan,
             destination_path,
-            target="linux-x64",
-            capture_state=True,
+            target=target,
+            capture_state=(target != "macos-arm64"),
         )
         return {
             "format": "fdisbull-civ-city-udc-build-1",
@@ -331,6 +332,12 @@ def main(argv=None) -> int:
         "--civd-production-doc", help="local civd production.md for provenance hashing"
     )
     parser.add_argument("--state", help="JSON object overriding initial module state")
+    parser.add_argument(
+        "--target",
+        choices=("linux-x64", "macos-arm64"),
+        default="linux-x64",
+        help="native output target; macOS arm64 links libSystem and reports on stdout",
+    )
     args = parser.parse_args(argv)
     try:
         initial = None
@@ -345,6 +352,7 @@ def main(argv=None) -> int:
             civd_civ_h=args.civd_civ_h,
             civd_production_doc=args.civd_production_doc,
             initial=initial,
+            target=args.target,
         )
     except (OSError, TypeError, ValueError, RecursionError) as exc:
         print(

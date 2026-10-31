@@ -1,6 +1,7 @@
 # Civ city UIL and executable UDC slice
 
-Status: **partial, source-linked fixture; not a whole-screen or whole-game parity claim**.
+Status: **partial, source-linked fixture with a natively executed macOS arm64 module;
+not a whole-screen or whole-game parity claim**.
 
 This document records the first concrete UIL/UDC realization of the city-screen
 blueprint. It is intentionally narrower than `city_process()` and preserves the
@@ -88,9 +89,37 @@ turning the civd signed-storage/reset mismatch into a reachable-bug claim.
 
 The module is therefore an executable bounded state transition, not a compiled
 replacement for `city_process()`, the DOS VGA provider, or the Civ64 Windows
-implementation. The native shell manifest reports `native_execution: false`
-until a Linux x86-64 runtime is supplied; on macOS the generated ELF is a
-cross-target artifact and is not host-runnable without an external runtime.
+implementation.
+
+## Native targets
+
+`--target linux-x64` (default) emits a static ELF64 shell and reports
+`native_execution: false` until a Linux runtime is supplied; on macOS that ELF
+is a cross-target artifact and is not host-runnable without an external runtime.
+
+`--target macos-arm64` uses the sweding profile
+`macos-arm64-c-plan-libsystem-1`: the same UIL and typed state effects are
+realized as generator-owned C compiled for `arm64-apple-macos11` and linked
+against libSystem. Declared differences:
+
+- machinery changes from fixed x86-64 slot lowering to C plus dyld/libSystem;
+- observation is one JSON frame on stdout (no `capture_state` fd);
+- the builder still records `native_execution: false`; execution is separate
+  evidence.
+
+Observed on this host for the default state:
+
+```text
+$ file /tmp/civ-city-macos-20261030/program
+Mach-O 64-bit executable arm64
+$ /tmp/civ-city-macos-20261030/program
+{"format":"fdisbull-macos-observation-1","status":0,"value":0,
+ "state":{"$shield_box":3,"$shield_delta":3,"$disorder":0,"$sanitized":1}}
+```
+
+That is the disorder-false branch adding the supplied contribution to a
+sanitized box. The unchecked (`sanitized=false`) and disorder cases remain
+covered by the interpreter tests, not by this single native frame.
 
 ## Evidence and conflicts
 
