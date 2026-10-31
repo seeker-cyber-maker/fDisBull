@@ -88,9 +88,9 @@ format, processor and entry; use a separate analysis for other layouts. Native
 debugger launch still enforces its original/unpatched-version contracts;
 approval of a static source layer does not qualify a new native launch path.
 
-NE source layers additionally require identical retained NE loader metadata.
-The current project has one declaration set for NE fixups, imports, exports,
-segments and related tables. Matching code bytes and entry do not make changed
+LE and NE source layers additionally require identical retained loader metadata.
+The current project has one declaration set for their fixups and related object,
+segment, import and export tables. Matching code bytes and entry do not make changed
 declarations compatible. `source-candidate` and `bind-source` refuse such a
 candidate even with exact approval; `new-source-analysis` loads its declarations
 independently. Code-only changes that leave the retained declarations identical

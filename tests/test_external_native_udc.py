@@ -254,3 +254,62 @@ with Project(sys.argv[1]) as project:
     result = subprocess.run([sys.executable, '-c', script, str(path), str(expected), str(child)],
                             capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
+
+
+def test_le_metadata_divergence_cannot_report_original_relocations_for_child(tmp_path, monkeypatch):
+    import struct
+    from test_le_loader import le_file
+    from fdisbull.target_storage import identity
+    monkeypatch.setenv('FDISBULL_TARGET_STORE', str(tmp_path / 'objects'))
+    source = tmp_path / 'BASE.EXE'
+    source.write_bytes(le_file())
+    candidate = tmp_path / 'CHANGED.EXE'
+    candidate.write_bytes(le_file(fixups=[struct.pack('<BBhBH', 7, 0, 1, 2, 3), b'']))
+    path = tmp_path / 'le.fdb'
+    with Project.create(path, source) as project:
+        project.analyze()
+        base = project.source_info(1)
+        approval = {'project_id': project.meta['project_id'], 'base_version': 1,
+                    'base_mapped_sha256': project.version(1)['sha256'],
+                    'base_identity': base['identity'], 'candidate_identity': identity(candidate.read_bytes()),
+                    'loader_options': base['loader_options']}
+        with pytest.raises(ValueError, match='LE loader metadata.*separate analysis'):
+            project.source_candidate(candidate, version=1)
+        with pytest.raises(ValueError, match='LE loader metadata.*separate analysis'):
+            project.bind_source(candidate, version=1, approval=approval)
+        assert len(project.versions()) == 1
+        separate = tmp_path / 'changed.fdb'
+        project.new_source_analysis(candidate, separate, version=1)
+    with Project(path) as original, Project(separate) as changed:
+        assert len(original.versions()) == 1
+        assert original.information('relocations')['items'][0]['relocated_value'] == 0x20002
+        changed.analyze()
+        assert changed.information('relocations')['items'][0]['relocated_value'] == 0x20003
+        assert changed.source_info(1)['identity'] == identity(candidate.read_bytes())
+    with Project(separate) as reopened:
+        assert reopened.information('relocations')['items'][0]['relocated_value'] == 0x20003
+
+
+def test_le_code_only_approved_child_preserves_relocations_and_reopens(tmp_path, monkeypatch):
+    from test_le_loader import le_file
+    from fdisbull.loader import load_image
+    monkeypatch.setenv('FDISBULL_TARGET_STORE', str(tmp_path / 'objects'))
+    source = tmp_path / 'BASE.EXE'
+    source.write_bytes(le_file())
+    candidate = tmp_path / 'CODE.EXE'
+    candidate.write_bytes(le_file(code=bytes.fromhex('b800000000cc')))
+    assert load_image(candidate).metadata['le'] == load_image(source).metadata['le']
+    path = tmp_path / 'le.fdb'
+    with Project.create(path, source) as project:
+        project.analyze()
+        approval = project.source_candidate(candidate, version=1)['approval']
+        child = project.bind_source(candidate, version=1, approval=approval)['version']
+        project.analyze(version=child)
+        parent_rows = project.disassembly(version=1)['instructions']
+        child_rows = project.disassembly(version=child)['instructions']
+        assert parent_rows[1]['bytes'] == 'c3' and child_rows[1]['bytes'] == 'cc'
+        assert project.information('relocations', version=child)['items'][0]['relocated_value'] == 0x20002
+    with Project(path) as reopened:
+        assert reopened.disassembly(version=child)['instructions'] == child_rows
+        assert reopened.disassembly(version=1)['instructions'] == parent_rows
+        assert reopened.source_info(child)['approval'] == approval
