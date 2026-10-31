@@ -61,6 +61,9 @@ SOURCE_PATTERNS = (
     ("docs/evidence/integration-026", "verification.json"),
     ("docs/evidence/source-search-pilot", "verification.json"),
     ("docs/evidence/civd-source-maps", "verification.json"),
+    ("docs/evidence/civd-food-swaps", "verification.json"),
+    ("docs/evidence/civd-food-swaps", "shared-uil.json"),
+    ("docs/evidence/civd-food-swaps", "source-ui-inventory.json"),
     ("scripts", "*.py"),
 )
 

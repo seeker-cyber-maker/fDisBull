@@ -21,6 +21,7 @@ REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scrip
                        'src/fdisbull/dos_qemu.py','src/fdisbull/dos_runtime.py','src/fdisbull/qemu_machine.py',
                        'src/fdisbull/gdb_rpc.py','src/fdisbull/guest_assets.py',
                        'src/fdisbull/data/dos-runtime-signatures.json','src/fdisbull/data/MICROSOFT-DOS-LICENSE.txt',
+                       'src/fdisbull/data/civd-z-screen-families.json',
                        'src/fdisbull/skills/fdisbull-investigate/SKILL.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/scenes.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/methodology.md',
@@ -65,6 +66,8 @@ REQUIRED_SOURCE_FILES += ('docs/evidence/integration-026/verification.json',)
 REQUIRED_SOURCE_FILES += ('docs/evidence/source-search-pilot/verification.json',
                           'src/fdisbull/skills/fdisbull-investigate/references/source-and-concepts.md')
 REQUIRED_SOURCE_FILES += ('docs/evidence/civd-source-maps/verification.json',)
+REQUIRED_SOURCE_FILES += tuple('docs/evidence/civd-food-swaps/' + name for name in
+                              ('verification.json','shared-uil.json','source-ui-inventory.json'))
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):

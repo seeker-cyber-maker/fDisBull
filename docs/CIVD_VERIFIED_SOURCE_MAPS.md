@@ -1,5 +1,8 @@
 # CivD verified builds and source-to-original mappings
 
+Follow-up: [shared food UIL, original-backed swaps and strategy Z design](CIVD_SHARED_FOOD_AND_Z.md)
+adds finite execution evidence without upgrading these earlier static records.
+
 This extends the [source/concept pilot](SOURCE_CONCEPT_SEARCH.md) with actual
 period-toolchain builds and persistent mappings to original DOS Civilization
 bytes. Three editions were built independently: 474.01, 474.03 and 474.05.

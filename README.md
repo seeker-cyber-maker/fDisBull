@@ -107,6 +107,11 @@ and keeping native equivalence separately qualified.
 [Verified CivD builds](docs/CIVD_VERIFIED_SOURCE_MAPS.md) now connect selected food
 and turn-processing source to original bytes across three DOS editions, with
 independent version checks and explicit packed/unpacked address identities.
+The [shared-food experiment](docs/CIVD_SHARED_FOOD_AND_Z.md) selects each
+edition's original kernel under one UIL and compares all nine combinations.
+It also introduces a source-backed Z interface design with one reusable city
+view; the shipped strategy interface reads observations and prepares action
+plans while native screen navigation remains unqualified.
 
 The [DOS/4GW LE module](docs/dos4gw-le.md) adds bounded loading of
 supported 32-bit LE objects and internal fixups for the existing x86 analyzer.

@@ -1,0 +1,206 @@
+{
+  "contract": {
+    "author": "CivD food swap",
+    "behavior": {
+      "kind": "uil",
+      "program": {
+        "body": [
+          {
+            "id": "widen-population",
+            "op": "set",
+            "value": {
+              "var": "$population"
+            },
+            "var": "$consumption"
+          },
+          {
+            "id": "resident-consumption",
+            "op": "add",
+            "value": {
+              "var": "$population"
+            },
+            "var": "$consumption"
+          },
+          {
+            "id": "support-base",
+            "op": "set",
+            "value": {
+              "var": "$supported"
+            },
+            "var": "$support"
+          },
+          {
+            "condition": {
+              "left": {
+                "var": "$support_cost"
+              },
+              "op": "eq",
+              "right": 2
+            },
+            "else": [],
+            "id": "support-rate",
+            "op": "if",
+            "then": [
+              {
+                "id": "double-support",
+                "op": "add",
+                "value": {
+                  "var": "$supported"
+                },
+                "var": "$support"
+              }
+            ]
+          },
+          {
+            "id": "stock-base",
+            "op": "set",
+            "value": {
+              "var": "$stock"
+            },
+            "var": "$new_stock"
+          },
+          {
+            "id": "production",
+            "op": "add",
+            "value": {
+              "var": "$produced"
+            },
+            "var": "$new_stock"
+          },
+          {
+            "id": "residents",
+            "op": "subtract",
+            "value": {
+              "var": "$consumption"
+            },
+            "var": "$new_stock"
+          },
+          {
+            "id": "support",
+            "op": "subtract",
+            "value": {
+              "var": "$support"
+            },
+            "var": "$new_stock"
+          }
+        ],
+        "format": "fdisbull-il-1",
+        "resources": {},
+        "role": "uil",
+        "variables": {
+          "$consumption": {
+            "initial": 0,
+            "type": "i16"
+          },
+          "$new_stock": {
+            "initial": 0,
+            "type": "i16"
+          },
+          "$population": {
+            "initial": 0,
+            "type": "i8"
+          },
+          "$produced": {
+            "initial": 0,
+            "type": "i16"
+          },
+          "$stock": {
+            "initial": 0,
+            "type": "i16"
+          },
+          "$support": {
+            "initial": 0,
+            "type": "i16"
+          },
+          "$support_cost": {
+            "initial": 0,
+            "type": "i16"
+          },
+          "$supported": {
+            "initial": 0,
+            "type": "i16"
+          }
+        }
+      }
+    },
+    "domain": {
+      "support_cost": {
+        "max": 2,
+        "min": 1
+      }
+    },
+    "format": "fdisbull-block-contract-1",
+    "inputs": {
+      "population": "i8",
+      "produced": "i16",
+      "stock": "i16",
+      "support_cost": "i16",
+      "supported": "i16"
+    },
+    "name": "stock.maintenance.word16",
+    "outputs": {
+      "new_stock": "i16"
+    }
+  },
+  "contract_id": "contract:517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+  "module_uil": {
+    "format": "fdisbull-module-uil-1",
+    "role": "uil",
+    "variables": {
+      "$stock": {
+        "type": "i16",
+        "initial": 0
+      },
+      "$produced": {
+        "type": "i16",
+        "initial": 0
+      },
+      "$population": {
+        "type": "i8",
+        "initial": 0
+      },
+      "$supported": {
+        "type": "i16",
+        "initial": 0
+      },
+      "$support_cost": {
+        "type": "i16",
+        "initial": 0
+      },
+      "$new_stock": {
+        "type": "i16",
+        "initial": 0
+      }
+    },
+    "resources": {},
+    "body": [
+      {
+        "id": "maintain-stock",
+        "op": "invoke",
+        "binding": "food",
+        "contract": "contract:517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+        "inputs": {
+          "stock": {
+            "var": "$stock"
+          },
+          "produced": {
+            "var": "$produced"
+          },
+          "population": {
+            "var": "$population"
+          },
+          "supported": {
+            "var": "$supported"
+          },
+          "support_cost": {
+            "var": "$support_cost"
+          }
+        },
+        "outputs": {
+          "new_stock": "$new_stock"
+        }
+      }
+    ]
+  },
+  "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed"
+}

@@ -46,3 +46,12 @@ Before propagating source meaning, qualify source/build identity, native
 placement, target C/ABI profile and behavior separately. A C `int` does not imply
 host width. Existing snippet/contract/layer methods still require their native
 endpoints and independent qualification.
+
+The CivD food follow-up uses `fdisbull.stock_flow` and the existing persisted
+layer/module APIs to retain one address-free UIL across three original
+backings. Its 3×3 comparisons are finite isolated CPU/DOSBox kernel evidence,
+not whole-game substitution. The separate `fdisbull.strategy_z` service consumes
+a supplied public witness and creates unexecuted control plans for parameterized
+screen families. It reads no native game state and dispatches no game input.
+Source-checkout docs/CIVD_SHARED_FOOD_AND_Z.md records adapters, coverage and
+the remaining native-provider qualification.
