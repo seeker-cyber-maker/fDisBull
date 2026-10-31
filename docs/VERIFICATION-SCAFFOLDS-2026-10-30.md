@@ -111,3 +111,19 @@ interpreter builds, screenshots and raw traces stayed in private workspaces.
 Candidate files contain authored source, fixtures and this sanitized record.
 No AGI, NE/Win16, LE/extender or PE writer is inferred from these two scaffolds;
 those require their own qualified loader/runtime and interface contracts.
+
+## Follow-up process-return boundary
+
+Independent runtime review reproduced a missing MZ termination boundary with
+an authored `MOV AX,17; RET` program. The generated COM exited through DOS with
+requested exit code zero; its MZ adaptation timed out after two seconds without
+a guest-exit event. Both processes were reaped. This is a known startup/return
+contract difference: MZ CS:0000 is its load module, not the COM PSP termination
+instruction. Structural port identity did not establish return compatibility.
+
+The MZ adapter now refuses emitted return instructions until a process-return
+adapter is explicitly modeled and qualified. Public API regressions cover both
+plain and immediate-adjustment near returns while retaining the COM output.
+This is a refusal boundary, not a newly implemented DOS termination adapter.
+The fresh affected selection after the correction passed **323 tests** with
+the same actual DOSBox and Frotz runtimes, with zero failures/errors/skips.

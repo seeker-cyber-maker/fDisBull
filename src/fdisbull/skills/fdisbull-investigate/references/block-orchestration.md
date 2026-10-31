@@ -66,6 +66,11 @@ transition, recompile/re-lower to a compatible target, use an appropriate
 emulation boundary, or refuse that composition. Changing ISA labels or source
 metadata does not translate code.
 
+Distinguish a function return from process termination. A container's startup,
+initial return frame and host exit convention need their own qualification;
+preserved instruction bytes and port addresses do not transfer that contract.
+For example, a COM return-to-PSP is not an MZ process-return adapter.
+
 ## Plan adapters before layout
 
 First inventory what each side actually does. A compiler-generated C function may

@@ -159,6 +159,9 @@ The default remains COM. The source definition still requires the COM16 source
 profile above; this output adapter does not relink arbitrary original MZ games,
 overlays, far calls, multiple segments or DOS extenders. Use the original-backed
 native pass-through for a byte-identical baseline of an existing MZ game.
+Terminal returns are also refused: an MZ has no implicit COM return-to-PSP
+termination convention. A near return requires a separately qualified process
+entry/return adapter; matching port IPs cannot supply that contract.
 
 The new container has a 32-byte header, a single loader relocation, equal initial
 CS/SS, SP=FFFEh and a 64 KiB allocation including the reserved stack. Startup at

@@ -4,6 +4,7 @@ import struct
 import pytest
 
 from fdisbull.dos import load_mz
+from fdisbull.project import Project
 from tests.test_dos_udc import setup_project, definition
 
 
@@ -50,3 +51,17 @@ def test_unknown_container_is_rejected(tmp_path, container):
         spec = definition(project, native, terminal)
         with pytest.raises(ValueError, match='container'):
             project.udc_dos_compile(spec['id'], assumptions=ASSUMPTIONS, container=container)
+
+
+@pytest.mark.parametrize('ending', ['c3', 'c20400'])
+def test_mz_refuses_com_return_without_a_process_return_adapter(tmp_path, ending):
+    source = tmp_path / 'RETURN.COM'
+    source.write_bytes(bytes.fromhex('b81100' + ending))
+    with Project.create(tmp_path / 'return.fdb', source, image='com') as project:
+        project.analyze()
+        native = project.udc_native_capture('return-source', ['1000:0100'])
+        spec = project.udc_dos_define('return-code', native['id'])
+        retained = project.udc_dos_compile(spec['id'], assumptions=ASSUMPTIONS)
+        assert retained['target'] == 'dos-com16-i386'
+        with pytest.raises(ValueError, match='return.*adapter'):
+            project.udc_dos_compile(spec['id'], assumptions=ASSUMPTIONS, container='mz')

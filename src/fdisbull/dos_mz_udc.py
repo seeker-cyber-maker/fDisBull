@@ -6,6 +6,7 @@ It preserves code/data IPs and emits its own loader-relocated startup sequence.
 from copy import deepcopy
 from hashlib import sha256
 import struct
+import iced_x86 as ix
 
 from .code_backings import digest
 
@@ -31,6 +32,14 @@ def wrap_com_layout(layout):
     if (not 3 <= len(code) <= 0xef00 or code[0] != 0xe9
             or sha256(code).hexdigest() != source.get('sha256')):
         raise ValueError('invalid COM layout payload or entry jump')
+    # A COM's initial near return can reach its PSP termination instruction.
+    # MZ CS:0000 is the load module, not that PSP. Preserve this boundary as
+    # unsupported until entry/return and termination have an explicit adapter.
+    for occurrence in source['occurrences']:
+        instructions = ix.Decoder(16, bytes.fromhex(occurrence['bytes']),
+                                  ip=occurrence['output_ip'])
+        if any(ins.flow_control == ix.FlowControl.RETURN for ins in instructions):
+            raise ValueError('MZ terminal return requires a qualified process-return adapter')
 
     # DOS enters an MZ with DS/ES referring to the PSP. Preserve caller AX and
     # flags while establishing the single-segment code layout's DS/ES contract.
