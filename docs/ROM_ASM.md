@@ -6,6 +6,10 @@ Capstone, Ghidra and saturn-recomp. The first profile is **big-endian SH-2
 32-bit address. Cartridge bank mapping and other console processors remain
 outside this profile. Container inspection remains parsing-only.
 
+The current [controlled follow-up](#follow-up-corrected-profile-and-persistent-ghidra)
+fixes the Capstone profile issue and measures an owned persistent Ghidra worker.
+The earlier fresh-process measurements are retained as the 34efb23 baseline.
+
 These modules return instruction proposals. They do not discover functions,
 classify code/data, update the persistent native analyzer, execute a game, lift
 UIL or generate C. Unknown words remain explicit; there is no fallback to a
@@ -234,6 +238,122 @@ script byte-for-byte with source. Its public CLI read the same private
 Civilization payload through all three engines: each attempted 32 words in the
 same 64-byte range, returned 26 decoded words, and retained the same source and
 range hashes. The packaged result is a static decode check, not target execution.
+
+## Follow-up: corrected profile and persistent Ghidra
+
+The preceding results and expected failure are the preserved **34efb23
+fresh-process baseline**. The current Capstone adapter corrects the profile
+defect and the Python API can reuse an explicitly owned Ghidra process.
+
+Capstone 5.0.9's instruction and register table lookups test the sign of the
+selected level where they should test the signed table-entry level. This admits
+later-generation exclusive forms in SH-2 mode. The surgical
+[native source patch](../patches/capstone-5.0.9-sh-profile-gating.patch) corrects
+both lookups. A guard in the adapter gives the ordinary pinned wheel the same
+SH-2 acceptance correction without replacing the system installation. Rejected
+native rows remain in `rejected_native_facts` and diagnostics, with an explicit
+profile-rejection reason in `undecoded_words`. They are not rewritten into a
+different instruction. A linear listing stops at such a word.
+
+Two real native libraries were compared across all 65,536 words, in SH-2
+big-endian mode at PC zero. The original accepted 54,204 words; the patched
+library accepted 53,752. Exactly 452 were removed, zero added, and zero remaining
+decoded texts changed. The adapter guard matches the removed set exactly.
+Both libraries still decode the RTV/N control in SH-2A mode. The
+[native differential receipt](evidence/rom-asm-2026-10-30/capstone-profile.json)
+binds the patch and library hashes. This verifies the identified gating fix,
+not every instruction's execution semantics. No upstream publication or global
+Capstone installation change is implied.
+
+The owned session is available directly through the same decode contract:
+
+```python
+from fdisbull.rom_asm import disassemble_rom_path
+from fdisbull.rom_asm_ghidra import GhidraDecodeSession
+
+with GhidraDecodeSession(ghidra_home="/path/to/ghidra") as session:
+    first = disassemble_rom_path(
+        "/private/CIV.BIN", base_address=0x06010000, backend="ghidra",
+        ghidra_session=session, offset=0, length=2048,
+        max_instructions=1024, mode="word-scan")
+    second = disassemble_rom_path(
+        "/private/CIV.BIN", base_address=0x06010000, backend="ghidra",
+        ghidra_session=session, offset=0x10000, length=2048,
+        max_instructions=1024, mode="word-scan")
+```
+
+One JVM/project handles the requests. Atomic private files carry request IDs
+and byte hashes. Memory, listing and register context are reset between images.
+Both modes retain the original native decoding rules. Closing the context kills
+the owned process and removes temporary inputs; timeout and interruption also
+clean up. A queued request has a bounded deadline including its queue wait;
+queue expiry does not kill a different request already using the worker. The
+session is a Python lifetime object, not a serializable JSON session handle or
+an autonomous background service.
+
+### Controlled repeated comparison
+
+The same four windows, 1,024-word budget and five rotated serial rounds were
+used. All three corrected backends first passed the **same 23 manual-derived
+cases**. One untimed full-window warmup round followed, then 20 timed calls per
+engine. Ghidra used one process throughout the gate, warmup and timed calls;
+Capstone reused the loaded native library and Saturn retained its per-request
+subprocess. No competing test or experiment was run during timing.
+
+| Engine | API median | API min–max | API p95 | Backend median | Engine-loop median |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Corrected Capstone | 11.690 ms | 11.132–13.284 ms | 12.693 ms | 8.977 ms | 3.783 ms |
+| Persistent Ghidra | 27.955 ms | 15.056–41.392 ms | 38.588 ms | 24.968 ms | 4.982 ms |
+| saturn-recomp | 65.050 ms | 60.900–75.004 ms | 70.489 ms | 62.795 ms | 3.831 ms |
+
+Ghidra startup cost **3.502 seconds once**. Its measured API calls totalled
+0.531 seconds. Charging startup across those 20 calls gives a mean of
+**201.625 ms/call**, excluding the separately recorded qualification and warmup.
+The request median is approximately 132 times lower than the earlier fresh
+Ghidra baseline; the two experiments have different warmup/qualification setup,
+so this is a descriptive comparison, not a paired cold-cache speedup estimate.
+The file protocol and polling are included in request wall time. Engine-loop
+work still differs among implementations.
+
+All five rounds produced the same facts. Every pair now agrees on **3,871
+decoded words with matching normalized mnemonics and operands, and 225 unknown
+words**, with zero validity/text differences in the real samples. All three
+pass 23/23 cases; the former expected failure is now a passing regression test.
+The immutable [persistent receipt](evidence/rom-asm-2026-10-30/benchmark-persistent.json)
+retains every observation, startup, gate, warmup, source hash and comparison.
+
+As a separate decoding census, every possible 16-bit word was placed once at
+the declared default-context mapping and tested independently: **all three
+accept 53,752, reject 11,784, and agree on all normalized decoded text**. The
+[census receipt](evidence/rom-asm-2026-10-30/decoder-census.json) covers that finite
+input/context set. It does not execute those instructions, test every PC or
+prove their effects.
+
+Reproduce the follow-up with the existing benchmark command plus
+`--ghidra-mode persistent --warmup-rounds 1`. The additional tools are
+`scripts/check_capstone_sh_profile.py` (separately built original/patched
+libraries) and `scripts/check_sh2_decoder_census.py` (all three backends).
+
+For the separate ASM → C/C++ → UIL experiment and the limits of semantic
+preservation, see [ROM semantic route](ROM_SEMANTIC_ROUTE.md).
+
+### Follow-up verification
+
+- **57 passed** with real Ghidra, pinned Saturn and Z3 enabled, covering the
+  common contract, corrected profile, persistent lifetime/state/timeout paths,
+  controlled harness and bounded semantic route. No expected failure remains.
+- **121 passed, 6 optional-engine skips** across focused public, media,
+  distribution and authored-route checks.
+- Full macOS suite: **2,186 passed, 141 skipped, 2 failed, 23 errors**. The
+  remaining failures/errors are the unchanged Linux ELF fixture groups; this
+  local full-suite run remains non-green.
+- Original and patched native libraries both pass the focused profile checks.
+  The separate exhaustive native differential and independent three-engine
+  census pass with the counts reported above.
+- Wheel, source distribution and tool source ZIP pass the distribution guard,
+  including the persistent worker, source patch and authored generation recipe.
+  Source/evidence review found no remaining material issue after the recorded
+  fixes; it does not independently qualify all native execution semantics.
 
 ## Reproduction
 

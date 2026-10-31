@@ -1,0 +1,76 @@
+{
+  "schema": "fdisbull-sh2-word-census-1",
+  "words": 65536,
+  "authored_input_sha256": "281f79f89f0121c31db2bea5d7151db246349b25f5901c114505c18bfaa50ba1",
+  "base_address": 100663296,
+  "decoded_counts": {
+    "capstone": 53752,
+    "ghidra": 53752,
+    "saturn-recomp": 53752
+  },
+  "engine_identities": {
+    "capstone": {
+      "distribution_version": "5.0.9",
+      "binding_version": "5.0.7",
+      "native_api_version": [
+        5,
+        0,
+        1280
+      ],
+      "native_library_sha256": "016084c6e70d929249a2abb22f1afda95095294e6cd70f509964ffc54006bf94",
+      "sh2_profile_correction": {
+        "id": "capstone-5.0.9-sh-negative-level-v1",
+        "guard": "reject known non-SH2 encodings while retaining native facts",
+        "source_patch_sha256": "6f88d820337bcd18cb9bcee116b66ac41036f3e8a25f0af3e58d2adaa753f570"
+      }
+    },
+    "ghidra": {
+      "application_properties_sha256": "7bf69ade52e5530d6534a1202cc4ded88ca1940747456fe3d38ea03b2e3d99be",
+      "sh2_sla_sha256": "e69e099854e5b6c9e8f4d6b2deae1c038f87abfbc99484ca733e84cbdb897390",
+      "headless_launcher_sha256": "a59a302c3bf61767fc142bcb594db226529787a15623e72197a4305c789b9970"
+    },
+    "saturn-recomp": {
+      "revision": "532fd6054ba3171339c972fab05ebd159f29260d",
+      "sh2_py_sha256": "0add78272f1ee398881fbca2850d8d89b4cbd5a7767448299b39498f60d703dd",
+      "hw_py_sha256": "a0a1e036358474b41fd594a1dd2fae9024e3e63059682367aca57eac257d231d"
+    }
+  },
+  "comparisons": [
+    {
+      "left": "capstone",
+      "right": "ghidra",
+      "both_decoded": 53752,
+      "both_unknown": 11784,
+      "validity_differences": 0,
+      "normalized_text_differences": 0,
+      "first_differences": []
+    },
+    {
+      "left": "capstone",
+      "right": "saturn-recomp",
+      "both_decoded": 53752,
+      "both_unknown": 11784,
+      "validity_differences": 0,
+      "normalized_text_differences": 0,
+      "first_differences": []
+    },
+    {
+      "left": "ghidra",
+      "right": "saturn-recomp",
+      "both_decoded": 53752,
+      "both_unknown": 11784,
+      "validity_differences": 0,
+      "normalized_text_differences": 0,
+      "first_differences": []
+    }
+  ],
+  "scope": "Exhaustive aligned 16-bit word hypotheses at the declared PC mapping, default SH-2 context. Agreement does not prove instruction execution, target semantics or all contexts.",
+  "source_file_hashes": {
+    "scripts/check_sh2_decoder_census.py": "05cdcecc3b54cb3055d3781822310de900c6921c3f8038c3dc5540e94b6128bb",
+    "src/fdisbull/rom_asm.py": "0cab79fafaa37267bebb853ff1d293de48c2f937a0d85b75b7e43f2672ca85fb",
+    "src/fdisbull/rom_asm_capstone.py": "a2872b16abcdc2cd3a76059eb78c3e128364f74a068ea196d42527bfc45d3708",
+    "src/fdisbull/rom_asm_ghidra.py": "6cecf36b6c0d705bd64996bec898df9c6400860a82993eb48f5fa53ce759654a",
+    "src/fdisbull/rom_asm_saturn.py": "a026cec810c14a51b5ec5b685dcc7dafa3f47fb9c7a84b7b4dd10de3a9b7d133",
+    "src/fdisbull/ghidra_scripts/RomAsmServer.java": "114dddf93f43927b35fda80e5bbf321986eff492e8c8ca6c1a155f438a339ebe"
+  }
+}

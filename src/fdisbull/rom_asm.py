@@ -51,6 +51,7 @@ def disassemble_rom(data: bytes, *, base_address: int, backend: str = "capstone"
                     arch: str = "sh2", offset: int = 0, length: int | None = None,
                     max_instructions: int = 256, mode: str = "linear",
                     ghidra_home: str | None = None,
+                    ghidra_session=None,
                     saturn_recomp_root: str | None = None,
                     timeout: float = 60.0) -> dict:
     """Decode one explicitly mapped range; all engines receive identical bytes.
@@ -65,6 +66,8 @@ def disassemble_rom(data: bytes, *, base_address: int, backend: str = "capstone"
         raise ValueError("data must be immutable bytes containing 1..64 MiB")
     if backend not in BACKENDS:
         raise ValueError(f"backend must be one of {BACKENDS}")
+    if ghidra_session is not None and backend != "ghidra":
+        raise ValueError("ghidra_session requires the ghidra backend")
     if arch != "sh2":
         raise ValueError("ROM-to-ASM currently supports explicitly mapped big-endian SH-2 only")
     if mode not in ("linear", "word-scan"):
@@ -88,8 +91,11 @@ def disassemble_rom(data: bytes, *, base_address: int, backend: str = "capstone"
     if backend == "capstone":
         from .rom_asm_capstone import decode
     elif backend == "ghidra":
-        from .rom_asm_ghidra import decode
+        from .rom_asm_ghidra import decode, GhidraDecodeSession
+        if ghidra_session is not None and not isinstance(ghidra_session, GhidraDecodeSession):
+            raise ValueError("ghidra_session must be an owned GhidraDecodeSession")
         kwargs["ghidra_home"] = ghidra_home
+        kwargs["session"] = ghidra_session
     else:
         from .rom_asm_saturn import decode
         kwargs["saturn_recomp_root"] = saturn_recomp_root
@@ -111,9 +117,22 @@ def disassemble_rom(data: bytes, *, base_address: int, backend: str = "capstone"
                              "classification": "unconfirmed decode proposal",
                              "normalized": normalize_instruction(row["mnemonic"], row["operands"], dialect=backend)})
     known = {x["address"] for x in instructions}
+    rejected = {}
+    for diagnostic in result.get("diagnostics", []):
+        if not isinstance(diagnostic, dict) or diagnostic.get("kind") != "rejected_native_fact":
+            continue
+        fact = diagnostic["native_fact"]
+        relative = fact["address"] - address
+        if (type(relative) is not int or relative % 2 or not 0 <= relative < candidate_count * 2
+                or fact["size"] != 2 or fact["bytes"] != selected[relative:relative + 2].hex()
+                or fact["address"] in known or fact["address"] in rejected):
+            raise RuntimeError(f"Invalid {backend} rejected instruction facts")
+        rejected[fact["address"]] = {**fact, "file_offset": offset + relative,
+            "reason": diagnostic["reason"], "classification": "native decode rejected by requested CPU profile"}
     attempted = candidate_count if mode == "word-scan" else min(candidate_count, len(instructions) + 1)
     unknown = [{"file_offset": offset + i * 2, "address": address + i * 2,
-                "bytes": selected[i * 2:i * 2 + 2].hex(), "reason": "engine did not decode SH-2 word"}
+                "bytes": selected[i * 2:i * 2 + 2].hex(),
+                "reason": rejected[address + i * 2]["reason"] if address + i * 2 in rejected else "engine did not decode SH-2 word"}
                for i in range(attempted) if address + i * 2 not in known]
     budget_stop = length // 2 > max_instructions and not (mode == "linear" and unknown)
     trailing = bool(length % 2) and attempted == length // 2 and not budget_stop and not (mode == "linear" and unknown)
@@ -130,10 +149,13 @@ def disassemble_rom(data: bytes, *, base_address: int, backend: str = "capstone"
         "range_sha256": hashlib.sha256(selected).hexdigest(), "max_instructions": max_instructions,
         "attempted_words": attempted, "decoded_words": len(instructions),
         "instructions": instructions, "undecoded_words": unknown,
+        "rejected_native_facts": list(rejected.values()),
         "complete_scope": complete, "status": "complete" if complete else "partial",
         "stop_reason": stop, "trailing_bytes": selected[-1:].hex() if trailing else "",
         "backend_elapsed_seconds": result["elapsed_seconds"],
         "decode_seconds": result.get("decode_seconds"),
+        "session_startup_seconds": result.get("startup_seconds"),
+        "engine_lifecycle": "owned persistent session" if ghidra_session is not None else "per-call backend",
         "elapsed_seconds": time.perf_counter() - started,
         "executed": False, "code_discovered": False, "persisted": False,
         "diagnostics": result.get("diagnostics", []),

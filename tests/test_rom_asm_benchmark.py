@@ -36,3 +36,10 @@ def test_comparison_counts_unknowns_and_ordered_hypotheses():
     assert benchmark.compare(a, b) == {"both_decoded": 2, "both_unknown": 1, "left_only_decoded": 1,
                                      "right_only_decoded": 0, "mnemonic_agreement": 2,
                                      "operand_agreement": 1, "both_agreement": 1}
+
+
+def test_accuracy_gate_runs_same_manual_cases_with_corrected_capstone():
+    from types import SimpleNamespace
+    result = benchmark.accuracy_gate(SimpleNamespace(ghidra_home=None, saturn_root=None, timeout=60), None,
+                                     backends=('capstone',))
+    assert result == {'capstone': {'cases': 23, 'passed': 23, 'failed_cases': []}}

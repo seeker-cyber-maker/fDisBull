@@ -28,10 +28,15 @@ REQUIRED_SOURCE_EVIDENCE |= {"docs/uil-rfcs/0002/" + name for name in
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-026/verification.json")
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-0261/verification.json")
 REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/rom-asm-2026-10-30/benchmark.json", "docs/evidence/rom-asm-2026-10-30/accuracy.json"}
+REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/rom-asm-2026-10-30/" + name for name in
+                           ("benchmark-persistent.json", "capstone-profile.json", "decoder-census.json", "semantic-route.json")}
+REQUIRED_TEST_HELPERS |= {"patches/capstone-5.0.9-sh-profile-gating.patch",
+                         "scripts/rom_semantic_route/DecompileAuthoredSh2.java", "scripts/rom_semantic_route/README.md"}
 REQUIRED_PE_RESOURCES = {"wine_guest/agent.c", "wine_guest/init.sh", "wine_guest/broker.py", "wine_guest/selftest.c"}
 REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/broker.py", "ida_guest/SDK-LICENSE.txt", "ida_wire.py", "ida_remote.py", "ida_trace.py"}
 REQUIRED_PE_RESOURCES |= {"dos_guest/__init__.py", "dos_guest/init.sh", "dos_guest/broker.py", "dos_qemu.py", "dos_runtime.py", "qemu_machine.py", "gdb_rpc.py", "guest_assets.py"}
 REQUIRED_PE_RESOURCES.add("ghidra_scripts/RomAsm.java")
+REQUIRED_PE_RESOURCES.add("ghidra_scripts/RomAsmServer.java")
 REQUIRED_KNOWLEDGE_RESOURCES = {"data/dos-runtime-signatures.json", "data/MICROSOFT-DOS-LICENSE.txt"}
 REQUIRED_KNOWLEDGE_RESOURCES |= {"skills/fdisbull-investigate/SKILL.md", "skills/fdisbull-investigate/references/scenes.md",
                                  "skills/fdisbull-investigate/references/methodology.md",

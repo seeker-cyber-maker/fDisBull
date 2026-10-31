@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import ExitStack
 import hashlib
 import itertools
 import importlib.metadata
@@ -100,7 +101,8 @@ def check_result(result, data, base, offset, length):
 
 
 def fact_signature(result):
-    return json.dumps({"instructions": result["instructions"], "undecoded_words": result["undecoded_words"]},
+    return json.dumps({"instructions": result["instructions"], "undecoded_words": result["undecoded_words"],
+                       "rejected_native_facts": result.get("rejected_native_facts", [])},
                       sort_keys=True, separators=(",", ":"))
 
 
@@ -108,8 +110,82 @@ def source_hashes():
     root = Path(__file__).resolve().parent.parent
     paths = ["scripts/benchmark_rom_asm.py", "src/fdisbull/rom_asm.py", "src/fdisbull/rom_asm_capstone.py",
              "src/fdisbull/rom_asm_ghidra.py", "src/fdisbull/rom_asm_saturn.py",
-             "src/fdisbull/ghidra_scripts/RomAsm.java"]
+             "src/fdisbull/ghidra_scripts/RomAsm.java", "src/fdisbull/ghidra_scripts/RomAsmServer.java",
+             "patches/capstone-5.0.9-sh-profile-gating.patch", "tests/rom_asm_sh2_vectors.json"]
     return {p: hashlib.sha256((root / p).read_bytes()).hexdigest() for p in paths}
+
+
+def accuracy_gate(args, session, backends=BACKENDS):
+    fixture = json.loads((Path(__file__).resolve().parent.parent / 'tests/rom_asm_sh2_vectors.json').read_text())
+    cases = fixture['cases'] + [{'name': 'reject_sh2a_rtv_n', 'hex': '027b', 'mnemonic': None, 'operands': None}]
+    results = {}
+    for backend in backends:
+        failures = []
+        for case in cases:
+            report = disassemble_rom(bytes.fromhex(case['hex']), backend=backend,
+                base_address=case.get('address', fixture['base_address']), mode='word-scan',
+                ghidra_home=args.ghidra_home, saturn_recomp_root=args.saturn_root,
+                ghidra_session=session if backend == 'ghidra' else None, timeout=args.timeout)
+            rows = report['instructions']
+            expected = case['mnemonic']
+            if ((expected is None and rows) or
+                    (expected is not None and (len(rows) != 1 or rows[0]['normalized'] !=
+                        {'mnemonic': expected, 'operands': case['operands']}))):
+                failures.append(case['name'])
+        results[backend] = {'cases': len(cases), 'passed': len(cases) - len(failures), 'failed_cases': failures}
+    if any(r['failed_cases'] for r in results.values()):
+        raise RuntimeError(f'accuracy gate failed: {results}')
+    return results
+
+
+def collect(args, data, offsets, summary, output_dir):
+    records = {backend: [] for backend in BACKENDS}
+    with ExitStack() as owned:
+        session = None
+        if args.ghidra_mode == 'persistent':
+            from fdisbull.rom_asm_ghidra import GhidraDecodeSession
+            session = owned.enter_context(GhidraDecodeSession(ghidra_home=args.ghidra_home, timeout=args.timeout))
+        pid = session._proc.pid if session is not None else None
+        summary['ghidra_session'] = {'mode': args.ghidra_mode,
+            'startup_seconds': session.startup_seconds if session is not None else None,
+            'persistent_processes': 1 if session is not None else 0}
+        preflight = time.perf_counter()
+        summary['accuracy_gate'] = accuracy_gate(args, session)
+        summary['accuracy_gate_seconds'] = time.perf_counter() - preflight
+        summary['warmup_runs'] = []
+        for repetition in range(-args.warmup_rounds, args.repetitions):
+            for sample_index, offset in enumerate(offsets):
+                shift = (repetition + sample_index) % len(BACKENDS)
+                order = BACKENDS[shift:] + BACKENDS[:shift]
+                for backend in order:
+                    warmup = repetition < 0
+                    label = f'warmup {repetition + args.warmup_rounds + 1}' if warmup else f'round {repetition + 1}/{args.repetitions}'
+                    print(f'{label}, sample {sample_index + 1}/{len(offsets)}, {backend}', flush=True)
+                    if not warmup:
+                        summary['execution_order'].append({'round': repetition + 1, 'sample_index': sample_index, 'backend': backend})
+                    start = time.perf_counter()
+                    result = disassemble_rom(data, base_address=args.base, backend=backend, offset=offset,
+                        length=args.sample_length, max_instructions=args.sample_length // 2,
+                        mode='word-scan', ghidra_home=args.ghidra_home,
+                        ghidra_session=session if backend == 'ghidra' else None,
+                        saturn_recomp_root=args.saturn_root, timeout=args.timeout)
+                    api_wall = time.perf_counter() - start
+                    check_result(result, data, args.base, offset, args.sample_length)
+                    if session is not None and session._proc.pid != pid:
+                        raise RuntimeError('persistent Ghidra process changed during measurement')
+                    earlier = next((r['result'] for r in records[backend] if r['sample_index'] == sample_index), None)
+                    if earlier is not None and fact_signature(earlier) != fact_signature(result):
+                        raise RuntimeError(f'{backend} produced unstable facts for sample {sample_index}')
+                    name = (f'warmup-{repetition + args.warmup_rounds + 1:02d}' if warmup else f'round-{repetition + 1:02d}') + f'-sample-{sample_index + 1:02d}-{backend}.json'
+                    (output_dir / name).write_text(json.dumps(result, indent=2) + '\n')
+                    item = {'round': repetition + 1, 'sample_index': sample_index,
+                        'api_wall_seconds': api_wall, 'backend_wall_seconds': result['backend_elapsed_seconds'],
+                        'engine_loop_seconds': result.get('decode_seconds'), 'result': result}
+                    if warmup:
+                        summary['warmup_runs'].append({k: v for k, v in item.items() if k != 'result'} | {'backend': backend})
+                    else:
+                        records[backend].append(item)
+    return records
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
@@ -122,9 +198,11 @@ def main():
     ap.add_argument('--sample-offset', action='append', type=integer)
     ap.add_argument('--sample-length', type=int, default=2048)
     ap.add_argument('--timeout', type=float, default=180)
+    ap.add_argument('--ghidra-mode', choices=('fresh', 'persistent'), default='fresh')
+    ap.add_argument('--warmup-rounds', type=int, default=1)
     args = ap.parse_args()
     offsets = args.sample_offset if args.sample_offset is not None else [0, 0x10000, 0x40000, 0x80000]
-    if args.repetitions < 1 or args.sample_length < 2 or args.sample_length > 65536 or args.sample_length % 2:
+    if args.repetitions < 1 or not 0 <= args.warmup_rounds <= 10 or args.sample_length < 2 or args.sample_length > 65536 or args.sample_length % 2:
         ap.error('repetitions must be positive and sample length must be even and in 2..65536')
     if len(set(offsets)) != len(offsets) or any(x < 0 or x % 2 for x in offsets):
         ap.error('sample offsets must be unique nonnegative even integers')
@@ -144,29 +222,7 @@ def main():
                "environment": {"python": platform.python_version(), "os": platform.platform(),
                                "cpu": cpu_name(), "clock": vars(time.get_clock_info('perf_counter'))},
                "scope": "Static aligned word hypotheses; selected ranges include data and do not establish reachable code. Agreement is not an oracle. Engine loop times measure different work; API and backend wall times include different overheads."}
-    records = {backend: [] for backend in BACKENDS}
-    for repetition in range(args.repetitions):
-        for sample_index, offset in enumerate(offsets):
-            shift = (repetition + sample_index) % len(BACKENDS)
-            order = BACKENDS[shift:] + BACKENDS[:shift]
-            for backend in order:
-                print(f'round {repetition + 1}/{args.repetitions}, sample {sample_index + 1}/{len(offsets)}, {backend}', flush=True)
-                summary["execution_order"].append({"round": repetition + 1, "sample_index": sample_index, "backend": backend})
-                start = time.perf_counter()
-                result = disassemble_rom(data, base_address=args.base, backend=backend, offset=offset,
-                                         length=args.sample_length, max_instructions=args.sample_length // 2,
-                                         mode='word-scan', ghidra_home=args.ghidra_home,
-                                         saturn_recomp_root=args.saturn_root, timeout=args.timeout)
-                api_wall = time.perf_counter() - start
-                check_result(result, data, args.base, offset, args.sample_length)
-                earlier = next((r['result'] for r in records[backend] if r['sample_index'] == sample_index), None)
-                if earlier is not None and fact_signature(earlier) != fact_signature(result):
-                    raise RuntimeError(f"{backend} produced unstable facts for sample {sample_index}")
-                name = f'round-{repetition + 1:02d}-sample-{sample_index + 1:02d}-{backend}.json'
-                (output_dir / name).write_text(json.dumps(result, indent=2) + '\n')
-                records[backend].append({"round": repetition + 1, "sample_index": sample_index,
-                                         "api_wall_seconds": api_wall, "backend_wall_seconds": result['backend_elapsed_seconds'],
-                                         "engine_loop_seconds": result.get('decode_seconds'), "result": result})
+    records = collect(args, data, offsets, summary, output_dir)
     for backend, runs in records.items():
         summary['engines'][backend] = {"versions": sorted({r['result']['engine_version'] for r in runs}),
             "distribution_version": importlib.metadata.version("capstone") if backend == "capstone" else None,
@@ -175,6 +231,10 @@ def main():
                      "undecoded_words": len(r['result']['undecoded_words'])} for r in runs],
             "timing": {key: stats([r[key] for r in runs if r[key] is not None]) for key in
                        ('api_wall_seconds', 'backend_wall_seconds', 'engine_loop_seconds')}}
+    if args.ghidra_mode == 'persistent':
+        values = [r['api_wall_seconds'] for r in records['ghidra']]
+        summary['ghidra_session']['startup_plus_measured_api_seconds'] = summary['ghidra_session']['startup_seconds'] + sum(values)
+        summary['ghidra_session']['startup_charged_api_mean_seconds'] = summary['ghidra_session']['startup_plus_measured_api_seconds'] / len(values)
     for repetition in range(1, args.repetitions + 1):
         for sample_index in range(len(offsets)):
             for left, right in itertools.combinations(BACKENDS, 2):

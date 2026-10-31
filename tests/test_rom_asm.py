@@ -39,7 +39,9 @@ def test_capstone_independent_golden():
 
 @pytest.mark.skipif(not os.environ.get("GHIDRA_HOME"), reason="GHIDRA_HOME not configured")
 def test_ghidra_independent_golden():
-    _golden("ghidra", ghidra_home=os.environ["GHIDRA_HOME"])
+    from fdisbull.rom_asm_ghidra import GhidraDecodeSession
+    with GhidraDecodeSession(ghidra_home=os.environ["GHIDRA_HOME"]) as session:
+        _golden("ghidra", ghidra_session=session)
 
 
 @pytest.mark.skipif(not os.environ.get("SATURN_RECOMP_ROOT"), reason="SATURN_RECOMP_ROOT not configured")
@@ -57,7 +59,7 @@ def test_normalization_changes_spelling_only():
 
 
 @pytest.mark.parametrize("backend", [
-    pytest.param("capstone", marks=pytest.mark.xfail(strict=True, reason="Capstone 5.0.9 SH2 mode accepts SH-2A-only RTV/N; raw engine facts deliberately retained")),
+    "capstone",
     pytest.param("ghidra", marks=pytest.mark.skipif(not os.environ.get("GHIDRA_HOME"), reason="GHIDRA_HOME not configured")),
     pytest.param("saturn-recomp", marks=pytest.mark.skipif(not os.environ.get("SATURN_RECOMP_ROOT"), reason="SATURN_RECOMP_ROOT not configured")),
 ])
@@ -68,6 +70,21 @@ def test_engines_reject_sh2a_only_rtv_n(backend):
                              ghidra_home=os.environ.get("GHIDRA_HOME"),
                              saturn_recomp_root=os.environ.get("SATURN_RECOMP_ROOT"))
     assert not result["instructions"]
+
+
+def test_capstone_profile_rejection_preserves_native_evidence():
+    import capstone
+    engine = capstone.Cs(capstone.CS_ARCH_SH, capstone.CS_MODE_SH2 | capstone.CS_MODE_BIG_ENDIAN)
+    native = next(engine.disasm(bytes.fromhex("027b"), BASE, count=1), None)
+    result = disassemble_rom(bytes.fromhex("027b0009"), base_address=BASE, mode="word-scan")
+    assert [r["normalized"]["mnemonic"] for r in result["instructions"]] == ["nop"]
+    rejected = result["rejected_native_facts"]
+    if native is None:
+        assert rejected == []  # A corrected native library needs no guard rejection.
+    else:
+        assert len(rejected) == 1 and rejected[0]["bytes"] == "027b"
+        assert rejected[0]["mnemonic"] == "rtv/n" and rejected[0]["file_offset"] == 0
+        assert result["undecoded_words"][0]["reason"] == "encoding outside SH-2 profile"
 
 
 def test_mapping_hashes_range_and_word_scan():
