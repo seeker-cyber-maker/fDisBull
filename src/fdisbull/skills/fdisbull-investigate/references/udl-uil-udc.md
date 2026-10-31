@@ -7,6 +7,7 @@ general compiler manual.
 ## Contents
 
 - [Keep the terms separate](#keep-the-terms-separate)
+- [Per-module layer design](#per-module-layer-design)
 - [Preserve the accepted compiler priority](#preserve-the-accepted-compiler-priority)
 - [Current DOS block boundary](#current-023-dos-block-boundary)
 - [Overlapping instruction backings](#overlapping-instruction-backings)
@@ -28,6 +29,26 @@ interaction evaluator validates an authored program and may return
 `pending_host` for graphic, sound or input effects. It does not perform those
 side effects or establish correspondence with a game's behavior. See
 source-checkout `docs/INTERACTION_IL.md` for the complete schema and limits.
+
+## Per-module layer design
+
+For a UDC module, distinguish **execution** (the required host/runtime shell,
+entry and lifecycle), **orchestration** (the concrete interoperability contract
+between its blocks, including differing source/output languages), and
+**presentation/polish** (code fixups and memory structuring that form the kernel
+running inside that shell). Here presentation means kernel adaptation, not just
+visual presentation; kernel means the module's program core, not an OS kernel.
+Shared vocabulary does not supply universal ABI, scheduling or memory rules:
+each module declares its own supported profile, adapters and refusals.
+
+This is design guidance, not added schema or implemented runtime support.
+Preserve observable effects, action responses and timing across the composed
+implementation; retain unresolved lower-level semantics. Blocks need not equal
+source functions, and C or Z is not a mandatory intermediate. JavaScript audio
+inside a Win32 shell requires a qualified runtime/bridge in that module.
+Alternate machinery (sweding) does not permit unmarked behavior/timing changes.
+Source-checkout `docs/UDC_MODULE_LAYERS.md` defines responsibilities and an
+authored bounded example; existing compiler limits below remain in force.
 
 ## Preserve the accepted compiler priority
 

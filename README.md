@@ -1,12 +1,13 @@
 # fDisBull
 
-This checkout contains the **0.27.0 cloud release candidate**: private external
-target storage, recovery reconciliation, reusable media adapters, structural
-type sharing and bounded Win16 NE analysis. See the
-[candidate notes](docs/RELEASE-0.27.0.md) for scope and gates. The latest
-published release at this cut is
-[0.26.1](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.26.1).
-Publication, environment promotion and installation are separate steps.
+This checkout contains the **0.27.0 release source**: private external target
+storage, recovery reconciliation, reusable media adapters, structural type
+sharing and bounded Win16 NE analysis. See the [release notes](docs/RELEASE-0.27.0.md)
+for scope and gates. [Version 0.27.0 is published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.27.0)
+with eight release assets, as checked on 2026-10-31. Publication, environment
+promotion and local installation are separate steps; see the
+[provenance check](docs/AGENT_QUICKSTART.md#verify-the-interpreter-and-import-before-analysis)
+before assessing an installation's capabilities.
 
 Give an agent a program to explore—and a place to keep what it learns.
 fDisBull connects disassembly, headless debugging, scene-aware controls and
@@ -271,6 +272,12 @@ not generate arbitrary DOS code or claim whole-game semantic recovery. The
 authored COM demonstration and the bounded real-game observations are described
 in [UDC usage](docs/UDC_DOS.md), [testing methodology](docs/UDC_TESTING.md)
 and [verification](docs/VERIFICATION-0.23.md).
+
+The [per-module UDC layer design](docs/UDC_MODULE_LAYERS.md) separates the
+execution shell, orchestration between blocks and presentation/polish that
+adapts code and memory into the kernel inside that shell. Each UDC module
+defines its own concrete rules. This is design guidance, not a claim of an
+implemented general compiler or mixed-language runtime.
 
 ## Status, testing and history
 

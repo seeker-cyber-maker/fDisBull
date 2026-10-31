@@ -1,10 +1,14 @@
-# 0.27.0 cloud release candidate
+# 0.27.0 release
 
-This is an isolated integration candidate, not a published release. The pinned
-cut and source PR checks are recorded in [the manifest](CLOUD-0.27.0-MANIFEST.json).
-Publication requires ordinary and required-native Linux CI on the final source
-SHA, followed by a separate release decision. No installation or environment
-snapshot is promoted by this candidate.
+[Version 0.27.0 is publicly published](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.27.0)
+with eight release assets, as checked on 2026-10-31. PR #55 is merged and main
+includes the release source at `90e748c8bc6a4f068f9136f4d4ec989672421a03`.
+The integration cut and source PR checks are recorded in
+[the candidate manifest](CLOUD-0.27.0-MANIFEST.json); that historical record does
+not establish completion of the new tag's CI. Consult the
+[release workflows](https://github.com/seeker-cyber-maker/fDisBull/actions)
+and published verification asset for current results. Publication does not
+promote a local installation or environment snapshot.
 
 ## Changes
 
