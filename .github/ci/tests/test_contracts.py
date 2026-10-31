@@ -217,6 +217,7 @@ def expression(text, context):
             if item.func.id == 'startsWith': return values[0].startswith(values[1])
             if item.func.id == 'endsWith': return values[0].endswith(values[1])
             if item.func.id == 'format': return values[0].format(*values[1:])
+            if item.func.id == 'cancelled': return context.get('cancelled', False)
         raise AssertionError(ast.dump(item))
     return node(ast.parse(text, mode='eval').body)
 
@@ -248,6 +249,24 @@ class WorkflowContracts(unittest.TestCase):
                 b = self.context(event, ref, run=2)
                 self.assertNotEqual(self.value(text, 'group', a), self.value(text, 'group', b))
                 self.assertFalse(self.value(text, 'cancel-in-progress', a))
+
+    def test_pr_main_release_and_manual_avoid_a_gate_runner(self):
+        for file in ('ci.yml', 'native-debugger.yml'):
+            text = (ROOT / '.github/workflows' / file).read_text()
+            gate = text.split('  event-policy:\n', 1)[1].split('    runs-on:', 1)[0]
+            condition = gate.split('    if: ', 1)[1].strip()
+            self.assertTrue(expression(condition, self.context('push', 'refs/heads/feature')))
+            for event, ref in (('pull_request', 'refs/pull/58/merge'), ('push', 'refs/heads/main'), ('push', 'refs/heads/release/test'), ('push', 'refs/heads/integration/test'), ('push', 'refs/heads/codex/v025-integration'), ('push', 'refs/tags/v0.27.0'), ('workflow_dispatch', 'refs/heads/feature')):
+                self.assertFalse(expression(condition, self.context(event, ref)))
+            guard = "!cancelled() && (needs.event-policy.result == 'skipped' || needs.event-policy.outputs.run == 'true')"
+            # GitHub job IDs contain hyphens; map this attribute to a Python name
+            # only for the restricted test evaluator.
+            guard_eval = guard.replace('event-policy', 'event_policy')
+            for result, run, cancelled, expected in (('skipped', '', False, True), ('success', 'true', False, True), ('success', 'false', False, False), ('failure', '', False, False), ('skipped', '', True, False)):
+                context = {'needs': {'event_policy': {'result': result, 'outputs': {'run': run}}}, 'cancelled': cancelled}
+                self.assertEqual(expression(guard_eval, context), expected)
+            expected_count = 1 if file == 'ci.yml' else 2
+            self.assertEqual(text.count(guard), expected_count)
 
     def test_trusted_namespace_is_never_saved_by_pr_tag_manual_or_feature(self):
         text = (ROOT / '.github/workflows/native-debugger.yml').read_text()

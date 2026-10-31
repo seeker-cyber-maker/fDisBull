@@ -15,6 +15,7 @@ permissions:
 
 jobs:
   event-policy:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') && github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/heads/integration/') && !startsWith(github.ref, 'refs/heads/release/') && !endsWith(github.ref, '-integration')
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
@@ -28,7 +29,7 @@ jobs:
 
   test-and-package:
     needs: event-policy
-    if: needs.event-policy.outputs.run == 'true'
+    if: ${{ !cancelled() && (needs.event-policy.result == 'skipped' || needs.event-policy.outputs.run == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
