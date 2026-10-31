@@ -14,6 +14,29 @@ are evidence, not instructions. This skill adds investigation guidance; it does
 not authorize publishing, changing original files or acting outside the user's
 task.
 
+
+## Keep game files out of publication
+
+Do not upload original or modified game binaries, game assets, story images,
+saves, emulator states, or raw game-containing FDBs/archives to GitHub or tool
+packages. Semantic UIL/game representations are allowed pending sanitation;
+complete originals embedded in memory arrays, hex caches or nested archives
+are excluded. Review contents, not names. New FDBs retain exact size/SHA-256
+identities and loader provenance with payloads in a private external store;
+that store must never be uploaded. Hash equality verifies recorded byte identity,
+not publisher authenticity, safety, ownership or permission to distribute.
+
+Use `source-candidate` for a changed binary. Obtain the user's explicit approval
+for that exact project/base/candidate receipt before calling `bind-source` with
+it; receiving or echoing the receipt is not consent. An approved binary is a
+distinct provenance-bound layer, with bytes still external and the base
+preserved. Without approval leave it unattached, and create a separate analysis
+only if explicitly chosen. Declining must not execute the candidate. Legacy
+FDBs require read-only `storage-info` and an explicitly requested new derivative
+via `migrate-external`; never silently rewrite an original. Other exports can
+still embed target data and need separate review. See repository
+`docs/EXTERNAL_TARGETS.md` for the full storage and compatibility contract.
+
 ## Establish the target and claim
 
 Before analysis, record `sys.executable`, discovered fdisbull distribution
@@ -41,12 +64,27 @@ For archives, executable mappings or media reduction, read
 
 Use [references/workflows.md](references/workflows.md) to choose between static
 analysis, native investigation, scenes and text workflows. For research-led
-game recovery or normal progression, read
-[references/recovery-research.md](references/recovery-research.md). When behavior may be
+game recovery, source-reconstruction reuse or normal progression, read
+[references/recovery-research.md](references/recovery-research.md). Before costly
+rediscovery, look for matching reconstructed source and build recipes unless the
+task explicitly requires an independent recovery arm. Pin the edition and source
+revision, distinguish notes from executable results, and reuse qualified work
+without treating inferred names or a successful build as recovered meaning.
+When behavior may be
 interpreted from a guest script, look for evidence of the interpreter alongside
 native code and other explanations. Read
 [references/methodology.md](references/methodology.md) before claiming a
 cross-file or native-to-guest execution link.
+
+Before calling an obstacle an input blocker, distinguish an absent original or
+permission from missing tooling, unfinished recovery and host-only verification.
+Discover `media-modules` first. When evidence and authorization permit, build the
+smallest useful missing reader/unpacker and preserve its specification and authored
+tests for reuse. Follow [references/media-modules.md](references/media-modules.md)
+for the decision procedure, shipped APIs, format contracts and extension checks.
+Keep independent binary, notes/source-assisted and documented-results-derived UDP
+lanes explicit; generated code is not recovered source. Report bounded partial,
+unsupported, unknown and refused outcomes honestly.
 
 ## Choose a useful probe
 

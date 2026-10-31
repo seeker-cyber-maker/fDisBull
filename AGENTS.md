@@ -56,13 +56,26 @@ Use the repository's test/build commands. A release commit needs ordinary and
 required-native Linux CI on its exact SHA before tagging. Publishing a release
 or changing a system installation is a separate user-authorized action.
 
+## Game files and target identity
+
+Do not upload original or modified game binaries, assets, story images, saves,
+emulator states or byte-containing databases/archives to GitHub or packages.
+Semantic UIL/game representations are allowed pending sanitation; embedded
+original files are not. Read [external targets](docs/EXTERNAL_TARGETS.md).
+New FDBs store size/SHA-256 references and loader provenance; keep their private
+external object store outside Git. For divergence, obtain explicit user approval
+of the exact project/base/candidate receipt before `bind-source`; an agent must
+not manufacture consent by echoing `source-candidate.approval`. Without approval,
+leave it unattached and create another analysis only on explicit caller choice.
+Hash equality means recorded byte identity, not publisher authenticity or rights.
+
 ## Engineering contract
 
 Build a usable local agent-first disassembler. Native decoders provide instruction facts; our analyzer owns traversal and the persistent database. Screenshots must come from stored state without operating a GUI.
 
 - Start with recursive entry-point traversal, then investigate referenced memory and later symbol/export seeds. Deduplicate work and facts; a budget stop must never be called stable.
 - Resolve entry names and representations from shared address identity in every query/export. Keep raw operands and evidence intact.
-- Preserve original bytes and every earlier code version. Do not key an instruction by address alone.
+- Preserve original byte identity and every earlier code version; new FDB payloads remain in the private external store. Do not key an instruction by address alone.
 - Label inferred functions as candidates; preserve xref evidence and annotation authorship. Keep unknown indirect/segmented behavior unknown.
 - Do not substitute a mock disassembly, web landing page, decompiler framework, or runtime harness for the working tool.
 - Keep `README.md` limitations and verification aligned with the final packaged source. macOS is unverified until actually run there.

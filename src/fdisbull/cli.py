@@ -17,6 +17,7 @@ AGENT_SKILL_GUIDES = {
     'references/udl-uil-udc.md': 'Qualify source blocks, retained Zork IR, recovered intents and original-backed DOS compilation',
     'references/recovery-research.md': 'Qualify research, retain reusable meanings and compare recovery depth and cost',
     'references/semantic-contracts.md': 'Recover complete intent contracts and compare facts, effects, time and projection losses',
+    'references/media-modules.md': 'Reuse shipped parser APIs, recover missing tooling, and extend bounded format specifications',
     'references/formats-and-media.md': 'Qualify containers, executable mappings, release differences and valid media reduction',
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
@@ -42,6 +43,9 @@ AGENT_SKILLS = {
 }
 
 METHODS = {
+    'media-modules':'Discover shipped media adapters, APIs, dependencies and limits; no project required',
+    'media-inspect':'Inventory bounded source members without execution; path,adapter,[volume_root,number]',
+    'media-extract':'Copy one member to a new private directory outside Git; path,output,adapter,member,[volume_root,number,max_output_bytes]',
     'gog-list':'List local GOG Inno Setup payloads without Wine; path,[include,timeout]; no project required',
     'gog-unpack':'Unpack local GOG Inno Setup payloads into a new private directory; path,output,[include,timeout]; no project required',
     'output-info':'Inspect an immutable private output artifact; artifact',
@@ -180,6 +184,8 @@ METHODS = {
     'set-function-type': 'Apply a declared function prototype and ABI; address,type_name,[version,cs,author]',
     'apply-type': 'Bind a type to shared data identity; address,type_name,[name,version,author]',
     'types': 'Registered layouts and data bindings; [version]',
+    'export-types': 'Export unbound structural interpretations with declared provenance; [version,names,output]',
+    'import-types': 'Atomically import structural definitions without bindings; catalog,[version,author]',
     'typed-data': 'Interpret a bound data object; address,[version,max_items]',
     'set-summary': 'Register a qualified function contract; address,name,[prototype,summary,abi,version,cs,author]',
     'summaries': 'Registered and signature-qualified function contracts; [version]',
@@ -236,6 +242,12 @@ METHODS = {
     "patch": "Create a new snapshot, preserve parent; address,data,[version,label,origin]",
     "issues": "Pending/rejected/unresolved work; [version,limit]",
     "render": "Export stored rows as SVG/PNG; output,[version,address,lines,format,cs]",
+    'storage-info': 'Read-only storage inventory; project',
+    'migrate-external': 'Explicitly create an external-storage derivative; project,destination',
+    'source-info': 'Recorded target size/SHA-256, loader provenance and current availability; [version]',
+    'source-candidate': 'Inspect candidate identity without attaching; path,[version]',
+    'bind-source': 'Bind exact source or explicitly approved divergent layer; path,[version,approval]',
+    'new-source-analysis': 'Explicitly create a separate analysis without changing this one; path,destination,[version]',
     "help": "List methods; all project operations require project path",
 }
 
@@ -298,6 +310,13 @@ def invoke(method, params, debugger=None):
         root=files('fdisbull').joinpath('skills',skill)
         resources=(reference,) if reference is not None else tuple(guides)
         return {'name':skill,'files':{n:root.joinpath(n).read_text(encoding='utf-8') for n in resources}}
+    if method=='media-modules':
+        from .media import media_modules
+        if p:raise ValueError('media-modules takes no parameters')
+        return media_modules()
+    if method in ('media-inspect','media-extract'):
+        from .media import inspect_media, extract_media
+        return (inspect_media if method=='media-inspect' else extract_media)(**p)
     if method in ('gog-list','gog-unpack'):
         from .gog_unpack import list_gog, unpack_gog
         return (list_gog if method=='gog-list' else unpack_gog)(**p)
@@ -361,6 +380,11 @@ def invoke(method, params, debugger=None):
     project = p.pop("project",None)
     if not project:
         raise ValueError("project path is required")
+    if method == 'storage-info':
+        from .target_storage import storage_report
+        return storage_report(project)
+    if method == 'migrate-external':
+        return Project.migrate_external(project, p['destination'])
     scene_offline=('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations',
                    'debug-scene-observation','debug-export-scenes','debug-import-scenes',
                    'debug-save-workflow','debug-workflow-info','debug-workflow-receipts','debug-save-text-projection','debug-text-projection-info',
@@ -394,6 +418,11 @@ def invoke(method, params, debugger=None):
                         raise ValueError('expected one JSON argument file at most 4 MiB')
                     p[field] = json.loads(path.read_text())
             return getattr(db, method.replace('-', '_'))(**p)
+        if method in ('source-info','source-candidate','bind-source'):
+            return getattr(db, method.replace('-', '_'))(**p)
+        if method == 'new-source-analysis':
+            p['project'] = p.pop('destination')
+            return db.new_source_analysis(**p)
         if method in ('proof-check','proofs','proof-info'):
             return getattr(db,method.replace('-','_'))(**p)
         if method in ('debug-runs','debug-artifacts','debug-export','debug-grid','debug-save-script','debug-scripts','debug-state-info','debug-fork-state','debug-layer','debug-layer-info','debug-layers','debug-events','debug-experiments','debug-experiment-info','debug-promote-code','debug-trace-view','runtime-version-info'):
@@ -402,14 +431,36 @@ def invoke(method, params, debugger=None):
         if method=='refresh-dos-state':return db.refresh_dos_state(**p)
         file_methods={'attach-file':'attach_file','files':'external_files','file-bytes':'file_bytes','apply-file-type':'apply_file_type','file-data':'typed_file','file-reference':'file_reference','file-xrefs':'file_xrefs'}
         if method in file_methods:return getattr(db,file_methods[method])(**p)
-        if method in ('define-type','add-signature','set-summary','import-signatures'):
+        if method == 'export-types':
+            output = p.pop('output', None)
+            catalog = db.export_types(**p)
+            if output is None:
+                return catalog
+            from .type_catalog import _json as catalog_json
+            raw = catalog_json(catalog).encode('utf-8')
+            if len(raw) > 4 * 1024 * 1024:
+                raise ValueError('Type catalog exceeds 4 MiB')
+            destination = Path(output).expanduser()
+            with destination.open('xb') as stream:
+                stream.write(raw)
+            import hashlib
+            return dict(output=str(destination), bytes=len(raw), sha256=hashlib.sha256(raw).hexdigest(),
+                        exported=len(catalog['types']), version=catalog['source']['version'])
+        if method in ('define-type','add-signature','set-summary','import-signatures','import-types'):
             for field in ('definition','signature','prototype','summary','catalog'):
                 filename=p.pop(field+'_file',None)
                 if filename is not None:
                     path=Path(filename)
                     if not path.is_file() or path.stat().st_size>4*1024*1024:raise ValueError('expected a JSON file at most 4 MiB')
-                    p[field]=json.loads(path.read_text())
-        if method in ('auto-analyze', 'advanced-status', 'function-analysis', 'function-membership', 'define-type', 'apply-type', 'types', 'typed-data', 'set-summary', 'set-function-type', 'capture-signature', 'import-signatures', 'export-signatures', 'summaries', 'add-signature', 'signatures', 'call-effects'):
+                    if method == 'import-types':
+                        with path.open('rb') as stream:
+                            raw = stream.read(4 * 1024 * 1024 + 1)
+                        if len(raw) > 4 * 1024 * 1024:
+                            raise ValueError('expected a JSON file at most 4 MiB')
+                        p[field] = json.loads(raw)
+                    else:
+                        p[field]=json.loads(path.read_text())
+        if method in ('auto-analyze', 'advanced-status', 'function-analysis', 'function-membership', 'define-type', 'apply-type', 'types', 'export-types', 'import-types', 'typed-data', 'set-summary', 'set-function-type', 'capture-signature', 'import-signatures', 'export-signatures', 'summaries', 'add-signature', 'signatures', 'call-effects'):
             return getattr(db,method.replace('-','_'))(**p)
         if method=="memory-accesses":
             return db.memory_accesses(**p)
@@ -476,10 +527,14 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('media-modules','media-inspect','media-extract','agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
-        value={"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
+        result=invoke(request["method"],params,debugger)
+        # Catalog definitions can contain enum members named "address" or
+        # "target". Preserve their numeric values for exact round trips.
+        if request["method"]!='export-types':result=public_addresses(result)
+        value={"id":request_id,"ok":True,"result":result}
     except (ValueError,TypeError,KeyError,OSError,sqlite3.Error,OverflowError,AttributeError,RecursionError) as e:
         value={"id":request_id,"ok":False,"error":{"type":type(e).__name__,"message":str(e)}}
     return (policy or OutputPolicy()).bound(value)
@@ -654,6 +709,18 @@ def parser():
             if name=='debug-artifacts':c.add_argument('--run')
             if name=='debug-save-script':
                 c.add_argument('name');c.add_argument('script',type=json.loads,help='JSON script object')
+    sub.add_parser('media-modules',help=METHODS['media-modules'])
+    for name in ('media-inspect','media-extract'):
+        c=sub.add_parser(name,help=METHODS[name])
+        c.add_argument('path')
+        c.add_argument('--adapter',required=True,choices=('mz-envelope','agi-v2'))
+        c.add_argument('--volume-root')
+        c.add_argument('--number',type=int)
+        if name=='media-extract':
+            c.add_argument('output')
+            c.add_argument('--member',required=True)
+            c.add_argument('--max-payload-bytes',dest='media_max_output_bytes',type=int,default=64*1024*1024,
+                           help='Extracted member byte limit (1..67108864); separate from global JSON reply budget')
     for name in ('gog-list','gog-unpack'):
         c=sub.add_parser(name,help=METHODS[name])
         c.add_argument('path',help='local GOG Inno Setup offline installer')
@@ -665,7 +732,17 @@ def parser():
         c.add_argument('path')
         if name=='inspect':
             c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'])
-            c.add_argument('--image',choices=['auto','pe','le','mz','com'])
+            c.add_argument('--image',choices=['auto','pe','le','ne','mz','com'])
+    for name in ('storage-info','migrate-external','source-info','source-candidate','bind-source','new-source-analysis'):
+        c = sub.add_parser(name, help=METHODS[name]); c.add_argument('project')
+        if name in ('source-candidate','bind-source','new-source-analysis'):
+            c.add_argument('path')
+        if name in ('migrate-external','new-source-analysis'):
+            c.add_argument('destination')
+        if name not in ('storage-info','migrate-external'):
+            c.add_argument('--version', type=int)
+        if name == 'bind-source':
+            c.add_argument('--approval', type=json.loads, help='Exact source-candidate receipt, only after user approval of this base and candidate')
     c = sub.add_parser("import",help="create project from executable or explicit raw code")
     c.add_argument("path")
     c.add_argument("project")
@@ -674,12 +751,12 @@ def parser():
     c.add_argument("--base",default=0,type=lambda s:int(s,0))
     c.add_argument("--entry",type=lambda s:int(s,0))
     c.add_argument("--load-segment",type=lambda s:int(s,0),default=0x1000)
-    c.add_argument('--image',choices=['auto','pe','le','mz','com'],help='select PE, DOS/4GW LE, MZ or explicitly declared DOS COM')
+    c.add_argument('--image',choices=['auto','pe','le','ne','mz','com'],help='select PE, DOS/4GW LE, Win16 NE, MZ or explicitly declared DOS COM')
     c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'],help='select a thin/universal Mach-O CPU slice')
     c.add_argument('--module',action='store_true',help='allow a library without an executable entry')
     c=sub.add_parser('analyze-module',help=METHODS['analyze-module'])
     c.add_argument('path');c.add_argument('project')
-    c.add_argument('--image',choices=['auto','pe','le','mz'])
+    c.add_argument('--image',choices=['auto','pe','le','ne','mz'])
     c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'])
     c.add_argument('--export');c.add_argument('--entry',type=lambda s:int(s,0))
     c.add_argument('--max-instructions',type=int,default=10000)
@@ -788,7 +865,7 @@ def parser():
         if name == "render":
             c.add_argument("output")
             c.add_argument("--format",choices=["svg","png"])
-    for name in ('auto-analyze', 'advanced-status', 'function-analysis', 'function-membership', 'define-type', 'apply-type', 'types', 'typed-data', 'set-summary', 'set-function-type', 'capture-signature', 'import-signatures', 'export-signatures', 'summaries', 'add-signature', 'signatures', 'call-effects'):
+    for name in ('auto-analyze', 'advanced-status', 'function-analysis', 'function-membership', 'define-type', 'apply-type', 'types', 'export-types', 'import-types', 'typed-data', 'set-summary', 'set-function-type', 'capture-signature', 'import-signatures', 'export-signatures', 'summaries', 'add-signature', 'signatures', 'call-effects'):
         c=sub.add_parser(name,help=METHODS[name]);c.add_argument('project');c.add_argument('--version',type=int)
         if name in ('function-analysis','apply-type','typed-data','set-summary','set-function-type','capture-signature'):c.add_argument('address')
         if name in ('function-analysis','set-summary','auto-analyze','set-function-type','capture-signature'):c.add_argument('--cs',type=lambda s:int(s,0))
@@ -806,9 +883,12 @@ def parser():
             c.add_argument('name');c.add_argument('--abi');c.add_argument('--prototype-file');c.add_argument('--summary-file')
         if name=='capture-signature':
             c.add_argument('name');c.add_argument('--max-instructions',type=int,default=4096)
-        if name=='import-signatures':c.add_argument('catalog_file')
+        if name in ('import-signatures','import-types'):c.add_argument('catalog_file')
+        if name=='export-types':
+            c.add_argument('--output',help='write the raw catalog to a new file')
+            c.add_argument('--name',dest='names',action='append',help='select a type and its dependencies; repeat to select more')
         if name=='add-signature':c.add_argument('signature_file')
-        if name in ('define-type','apply-type','set-summary','set-function-type','capture-signature'):c.add_argument('--author',default='agent')
+        if name in ('define-type','apply-type','set-summary','set-function-type','capture-signature','import-types'):c.add_argument('--author',default='agent')
         if name=='call-effects':
             c.add_argument('--address');c.add_argument('--size',type=int,default=1)
             c.add_argument('--access',choices=['all','read','write'],default='all')
@@ -1002,6 +1082,8 @@ def main(argv=None):
 
 def _dispatch(args):
     command = args.pop("command")
+    if command == 'media-extract':
+        args['max_output_bytes'] = args.pop('media_max_output_bytes')
     if command.startswith(('udc-','udl-')) and not command.startswith('udc-native-'):
         return _udc_command(command,args)
     if command in ('story-info','zork','zork-recover','zork-uil','zork-intents','il-check','il-run','il-store','il-info'):

@@ -1,4 +1,4 @@
-"""Identify independently selectable DOS, PE and LE views of retained bytes.
+"""Identify independently selectable DOS, PE, LE and NE views of retained bytes.
 
 A secondary header does not replace the preceding DOS image. View discovery is
 read-only and never executes or extracts a guessed stub. A DOS view is loadable
@@ -103,13 +103,28 @@ def _le_view(data: bytes, offset: int) -> dict:
     return view
 
 
+def _ne_view(data: bytes, offset: int) -> dict:
+    view = dict(image='ne', format='NE', header_offset=offset, arch='x86', bits=16,
+                endian='little', available=False, loadable=False, valid=False, error=None,
+                validation_scope='bounded Win16 logical segments, entry/import tables and symbolic fixups')
+    try:
+        from .ne import inspect_ne
+        metadata = inspect_ne(data)
+        view.update(available=True, loadable=True, valid=True, entrypoint=metadata['entrypoint'],
+                    segment_count=len(metadata['segments']), fixup_count=metadata['fixup_count'],
+                    fixup_source_count=metadata['fixup_source_count'], load_model=metadata['load_model'])
+    except ValueError as error:
+        view['error'] = str(error)
+    return view
+
+
 def image_views(data:bytes)->list[dict]:
-    """Return recognized DOS/PE/LE selectors without replacing or executing bytes.
+    """Return recognized DOS/PE/LE/NE selectors without replacing or executing bytes.
 
     MZ loadability is checked at the ordinary default load segment 0x1000. An
     invalid classic stub is retained as an unavailable DOS view alongside a
-    structurally valid PE or supported LE view. NE/LX remain recognized
-    secondary metadata, not supported native image selectors. Other container
+    structurally valid PE or supported LE/NE view. LX remains recognized
+    secondary metadata without a supported native selector. Other container
     inventories belong to their own format adapters.
     """
     data=_source(data)
@@ -136,4 +151,5 @@ def image_views(data:bytes)->list[dict]:
     views=[mz]
     if secondary and secondary['format']=='PE':views.append(_pe_view(data,secondary['header_offset']))
     if secondary and secondary['format']=='LE':views.append(_le_view(data,secondary['header_offset']))
+    if secondary and secondary['format']=='NE':views.append(_ne_view(data,secondary['header_offset']))
     return views

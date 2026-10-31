@@ -79,9 +79,13 @@ def test_legacy_mz_ne_and_fat_are_identified_without_inventing_analysis():
     assert identify_header(bytes(mz))['format'] == 'DOS MZ'
     struct.pack_into('<I', mz, 0x3c, 0x80)
     mz[0x80:0x82] = b'NE'
-    metadata = inspect_binary(bytes(mz))
-    assert metadata['header']['format'] == 'NE' and metadata['header']['valid']
-    assert metadata['sections'] == metadata['imports'] == metadata['exports'] == []
+    header = identify_header(bytes(mz))
+    assert header['format'] == 'NE' and header['valid']
+    # Recognition remains available, but a zero-filled NE header is not a
+    # supported Windows image and cannot silently produce an empty analysis.
+    assert header['image_views'][-1]['available'] is False
+    with pytest.raises(ValueError, match='Windows16'):
+        inspect_binary(bytes(mz))
     fat = struct.pack('>IIIIIII', 0xcafebabe, 1, 0x100000c, 0, 28, 4, 0) + b'ABCD'
     assert identify_header(fat)['format'] == 'Mach-O fat'
     assert identify_header(fat)['valid']

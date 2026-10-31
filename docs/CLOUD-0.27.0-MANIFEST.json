@@ -1,0 +1,344 @@
+{
+  "version": "0.27.0",
+  "stage": "integration candidate; not published",
+  "base": "f94a5cd74b153b58f56c9fdb6c653d2e295f5ee6",
+  "previous_release": "v0.26.1",
+  "included": [
+    {
+      "pr": 43,
+      "sha": "514f90933a974a34023337398822eb0892739c60",
+      "title": "PRIORITY: keep game binaries out of FDBs and require exact source-layer approval",
+      "upstream_ci": [
+        {
+          "id": 41103250951,
+          "name": "Tests and tool packages",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 293,
+          "jobs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41103250951/jobs",
+          "logs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41103250951/logs",
+          "workflow_id": 394106283
+        },
+        {
+          "id": 41103250861,
+          "name": "Native debugger acceptance",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 164,
+          "jobs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41103250861/jobs",
+          "logs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41103250861/logs",
+          "workflow_id": 394474280
+        }
+      ],
+      "qualification": "Combined native UDC external-object capture/reopen/migration tests required"
+    },
+    {
+      "pr": 37,
+      "sha": "43d24a73d744516653d53d3bc8828787c499d299",
+      "title": "Reconcile completed Z checkpoint saves without saving again",
+      "upstream_ci": [
+        {
+          "id": 41087319913,
+          "name": "Tests and tool packages",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 275,
+          "jobs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41087319913/jobs",
+          "logs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41087319913/logs",
+          "workflow_id": 394106283
+        },
+        {
+          "id": 41087319866,
+          "name": "Native debugger acceptance",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 155,
+          "jobs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41087319866/jobs",
+          "logs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41087319866/logs",
+          "workflow_id": 394474280
+        }
+      ],
+      "qualification": "Source CI does not replace combined exact-head validation"
+    },
+    {
+      "pr": 41,
+      "sha": "16d4704e46e91a8394726c8d612989608c330222",
+      "title": "Add named DinoPark Z quit actions and recover oversized replies",
+      "upstream_ci": [
+        {
+          "id": 41141353926,
+          "name": "Tests and tool packages",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 331,
+          "jobs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41141353926/jobs",
+          "logs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41141353926/logs",
+          "workflow_id": 394106283
+        },
+        {
+          "id": 41141353935,
+          "name": "Native debugger acceptance",
+          "status": "in_progress",
+          "conclusion": null,
+          "run_number": 193,
+          "jobs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41141353935/jobs",
+          "logs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41141353935/logs",
+          "workflow_id": 394474280
+        }
+      ],
+      "qualification": "Admitted provisionally; native source CI must finish; combined exact-head CI required"
+    },
+    {
+      "pr": 31,
+      "sha": "465c725f4e7c7612e5ed730bfd00dbe5cfb4fc88",
+      "title": "Share structural types between projects with a DOS/Win16 pilot",
+      "upstream_ci": [
+        {
+          "id": 41051243234,
+          "name": "Tests and tool packages",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 217,
+          "jobs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41051243234/jobs",
+          "logs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41051243234/logs",
+          "workflow_id": 394106283
+        },
+        {
+          "id": 41051243289,
+          "name": "Native debugger acceptance",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 122,
+          "jobs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41051243289/jobs",
+          "logs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41051243289/logs",
+          "workflow_id": 394474280
+        }
+      ],
+      "qualification": "Source CI does not replace combined exact-head validation"
+    },
+    {
+      "pr": 36,
+      "sha": "cd9b4f892b549209020c8b74890a818e11462d2a",
+      "title": "Load Win16 NE images and map Colonization food counterparts",
+      "upstream_ci": [
+        {
+          "id": 41064743659,
+          "name": "Tests and tool packages",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 256,
+          "jobs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41064743659/jobs",
+          "logs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41064743659/logs",
+          "workflow_id": 394106283
+        },
+        {
+          "id": 41064743635,
+          "name": "Native debugger acceptance",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 139,
+          "jobs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41064743635/jobs",
+          "logs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41064743635/logs",
+          "workflow_id": 394474280
+        }
+      ],
+      "qualification": "Source CI does not replace combined exact-head validation"
+    },
+    {
+      "pr": 40,
+      "sha": "bceebb8ac5f5a6242aff353eaf4f986820890d95",
+      "title": "Document Civilization reverse-engineering and patch leads",
+      "upstream_ci": [
+        {
+          "id": 41097722882,
+          "name": "Tests and tool packages",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 283,
+          "jobs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41097722882/jobs",
+          "logs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41097722882/logs",
+          "workflow_id": 394106283
+        }
+      ],
+      "qualification": "Source CI does not replace combined exact-head validation"
+    },
+    {
+      "pr": 44,
+      "sha": "f9f861c6f18e7f7faf56249013c93d0a2d3d2ad1",
+      "title": "docs: audited research-only Library collection",
+      "upstream_ci": [
+        {
+          "id": 41101954008,
+          "name": "Tests and tool packages",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 291,
+          "jobs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41101954008/jobs",
+          "logs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41101954008/logs",
+          "workflow_id": 394106283
+        }
+      ],
+      "qualification": "Source CI does not replace combined exact-head validation"
+    },
+    {
+      "pr": 51,
+      "sha": "6513ee8b9a474591076dacd643cc9432cf8e5edb",
+      "title": "Teach investigation skill to qualify and reuse source reconstructions",
+      "upstream_ci": [
+        {
+          "id": 41140849102,
+          "name": "Tests and tool packages",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 326,
+          "jobs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41140849102/jobs",
+          "logs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41140849102/logs",
+          "workflow_id": 394106283
+        },
+        {
+          "id": 41140849120,
+          "name": "Native debugger acceptance",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 189,
+          "jobs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41140849120/jobs",
+          "logs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41140849120/logs",
+          "workflow_id": 394474280
+        }
+      ],
+      "qualification": "Source CI does not replace combined exact-head validation"
+    },
+    {
+      "pr": 53,
+      "sha": "3e61386b06907b905681ac5f97c2f122dd795472",
+      "title": "Ship reusable media adapters and missing-tool recovery guidance",
+      "upstream_ci": [
+        {
+          "id": 41144480665,
+          "name": "Tests and tool packages",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 343,
+          "jobs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41144480665/jobs",
+          "logs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41144480665/logs",
+          "workflow_id": 394106283
+        },
+        {
+          "id": 41144480715,
+          "name": "Native debugger acceptance",
+          "status": "in_progress",
+          "conclusion": null,
+          "run_number": 204,
+          "jobs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41144480715/jobs",
+          "logs_url": "https://api.github.com/repos/seeker-cyber-maker/fDisBull/actions/runs/41144480715/logs",
+          "workflow_id": 394474280
+        }
+      ],
+      "qualification": "Admitted provisionally; native source CI must finish; combined exact-head CI required"
+    }
+  ],
+  "deferred": [
+    {
+      "pr": 54,
+      "sha": "d2225d58a4b608a4c325b10802307d91ea0ecd88",
+      "reason": "Deferred broader experimental stack; outside frozen release cut"
+    },
+    {
+      "pr": 52,
+      "sha": "2bc4edafd6ab73233b6c8d00d5c92f583955b224",
+      "reason": "Deferred broader experimental stack; outside frozen release cut"
+    },
+    {
+      "pr": 50,
+      "sha": "07d79fffdbba76518009031b7e3cb257e0cc468c",
+      "reason": "Deferred broader experimental stack; outside frozen release cut"
+    },
+    {
+      "pr": 49,
+      "sha": "5b778238df5e4947e8c2758a4388a42dd52771d1",
+      "reason": "Deferred broader experimental stack; outside frozen release cut"
+    },
+    {
+      "pr": 48,
+      "sha": "19a9417a2369c464e8cd55c48332bc4841b14411",
+      "reason": "Deferred broader experimental stack; outside frozen release cut"
+    },
+    {
+      "pr": 47,
+      "sha": "2b8d4db9fda90edc11dfedf77b8acab1e4d1474c",
+      "reason": "Deferred broader experimental stack; outside frozen release cut"
+    },
+    {
+      "pr": 46,
+      "sha": "713aceb8539977824737d62349c2ce02538b1920",
+      "reason": "Deferred broader experimental stack; outside frozen release cut"
+    },
+    {
+      "pr": 42,
+      "sha": "30d06bc85fe02ad082e29b18863c7fc0571ddfb3",
+      "reason": "Deferred broader experimental stack; outside frozen release cut"
+    },
+    {
+      "pr": 39,
+      "sha": "34699273bd4f0291fd99f62c5054653456ea4360",
+      "reason": "Deferred broader experimental stack; outside frozen release cut"
+    },
+    {
+      "pr": 38,
+      "sha": "2857c42c5b0754e77ed36ab0a7ee9d258e8b9fa3",
+      "reason": "Deferred broader experimental stack; outside frozen release cut"
+    },
+    {
+      "pr": 32,
+      "sha": "4be05579bc623aa65bfe554a9ecd62dc4b90bd0e",
+      "reason": "Outside selected cut; older or independent work"
+    },
+    {
+      "pr": 29,
+      "sha": "cbeb6ce608acf4d448f28c95bb805cd8ed26e2ea",
+      "reason": "Outside selected cut; older or independent work"
+    },
+    {
+      "pr": 28,
+      "sha": "bfcdfe8eb5a030cb6f0e917067690fe2f7e4d03c",
+      "reason": "Outside selected cut; older or independent work"
+    },
+    {
+      "pr": 16,
+      "sha": "96c0d8110bf2d07acf173ec2fae6e94f92efffd8",
+      "reason": "Outside selected cut; older or independent work"
+    },
+    {
+      "pr": 15,
+      "sha": "5d9118ae6c967439c935471c1ca4e992ce2fcdfb",
+      "reason": "Outside selected cut; older or independent work"
+    },
+    {
+      "pr": 11,
+      "sha": "dd56b46b933b2a373d5e3159ea8e3437118ab908",
+      "reason": "Outside selected cut; older or independent work"
+    },
+    {
+      "pr": 10,
+      "sha": "ae39d078595b7557e090b56a036853680374f1e5",
+      "reason": "Outside selected cut; older or independent work"
+    },
+    {
+      "pr": 9,
+      "sha": "04dd0005619915991c6344ca1f85c2e2277706fe",
+      "reason": "Outside selected cut; older or independent work"
+    },
+    {
+      "pr": 7,
+      "sha": "82ab246c7e4e6959957329f2b564c7db45c7f2c6",
+      "reason": "Outside selected cut; older or independent work"
+    }
+  ],
+  "superseded": [
+    {
+      "pr": 45,
+      "reason": "Already incorporated/superseded by main; closed unmerged"
+    }
+  ],
+  "authority": "Isolated branch, tests, artifacts and draft PR only. No merge, tag, final release, environment snapshot or local installation changes."
+}

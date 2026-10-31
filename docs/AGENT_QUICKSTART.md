@@ -4,6 +4,15 @@ Use this page to find the right fDisBull interface for a task. Replace every
 example path with a path selected by the user. The Python distribution does not
 include a native emulator, game files, saved states or project databases.
 
+Do not upload original or modified game binaries/assets, story files, saves,
+emulator states or raw game-containing databases/archives. New FDBs store
+external payload references with exact size/SHA-256 and loader provenance;
+the private object store is never a publication artifact. See
+[external targets](EXTERNAL_TARGETS.md) for explicit divergent-source approval,
+separate analysis, legacy migration and remaining export limits. Semantic
+UIL/game representations are permitted pending sanitation, without embedded
+original files. Hash equality is byte identity, not publisher authenticity.
+
 ## Verify the interpreter and import before analysis
 
 Select the intended interpreter before evaluating capabilities. In a source
@@ -121,6 +130,18 @@ the investigation skill:
 ```text
 python scripts/check_agent_skill.py --python /path/to/installed/python --skill write-gamefaqs-guide --output /private/guide-skill-receipt.json
 ```
+
+## Reuse media readers
+
+Run `fdisbull media-modules` to discover shipped parser APIs, dependencies and
+limits. `media-inspect` inventories classic MZ header/module/opaque-tail ranges
+or a selected AGI v2 resource; `media-extract` copies one member to a new private
+directory outside Git. Both return source/member hashes without inline target
+bytes and never execute inputs. Existing `gog-list/gog-unpack` and AGI picture
+APIs remain available through the catalog. Read the packaged specification with
+`fdisbull agent-skill --reference references/media-modules.md` before recovering
+missing tooling or extending an adapter. This does not unpack compressed DOS
+executables or establish the purpose of their trailing bytes.
 
 ## Choose a route
 

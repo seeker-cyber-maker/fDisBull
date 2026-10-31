@@ -11,7 +11,7 @@ import pytest
 from PIL import Image
 
 from fdisbull.cli import main, respond
-from fdisbull.project import Project
+from fdisbull.project import Project, SCHEMA
 from fdisbull.render import render_snapshot
 from test_shared_labels import (
     file_endpoint, link_chain, make_linked_project, memory_endpoint,
@@ -218,7 +218,7 @@ def test_retraction_and_audit_survive_input_deletion_and_separate_process_restar
         (tmp_path/name).unlink()
     script = '''
 import json,sys
-from fdisbull.project import Project
+from fdisbull.project import Project, SCHEMA
 with Project(sys.argv[1]) as p:
     print(json.dumps(dict(active=p.label_links(), history=p.label_links(include_removed=True),
         file=p.label_info({'file':'save-a.dat','offset':8}), native=p.label_info({'address':0x1020}))))
@@ -246,7 +246,7 @@ def test_schema_seven_migration_preserves_existing_link_and_names(tmp_path):
             project.db.execute('DROP TABLE label_link_removals')
             project.db.execute("UPDATE metadata SET value='7' WHERE key='schema'")
     with Project(path) as migrated:
-        assert migrated.db.execute("SELECT value FROM metadata WHERE key='schema'").fetchone()[0] == '8'
+        assert migrated.db.execute("SELECT value FROM metadata WHERE key='schema'").fetchone()[0] == str(SCHEMA)
         assert migrated.label_info(file_endpoint()) == original
         assert migrated.typed_file('save-a.dat', offset=8) == file_values
         assert migrated.versions() == versions
