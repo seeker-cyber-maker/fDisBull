@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ROOT_FILES = ("README.md", "AGENTS.md", "CLAUDE.md", "pyproject.toml", "MANIFEST.in", "player/pyproject.toml")
 DOC_EXAMPLE_FILES = (
     "docs/CLOUD-0.27.0-MANIFEST.json",
+    "docs/verification/kq1-tas-2026-10-31.json",
     "docs/uil-rfcs/0001/README.md",
     "docs/uil-rfcs/0001/check_examples.py",
     "docs/uil-rfcs/0001/commit.js",
@@ -39,6 +40,7 @@ SOURCE_PATTERNS = (
     ("tests", "*.py"),
     ("tests", "wine_gui_fixture.c"),
     ("tests", "dosbox_zip_empty_write.cpp"),
+    ("tests/fixtures", "frame_capture.S"),
     ("tests", "ida_rpc_vectors.json"),
     ("docs", "*.md"),
     ("docs/evidence/spatial-2026-10-29", "verification.json"),

@@ -1,6 +1,6 @@
 {
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "a91fa0016ec38aeca3f15b4f2b3300651caea20b6ef5163768cf9ac19320eeb2",
+  "patch_sha256": "28c46ac5aeaac4c7c20f33b57bdfc29ece05a923d3954741ac9960f7fc5cb251",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -124,8 +124,8 @@
     },
     {
       "path": "src/gui/render.cpp",
-      "size": 69117,
-      "sha256": "ebd35b92b3d30484605cd1cc954d8eab9413970dc07ba75df3b6bda628b50de6"
+      "size": 69550,
+      "sha256": "4e1c7a47e3f78b67442bf7287d370c3a60eac5fb9d3e5ce411d4267413055a85"
     },
     {
       "path": "src/gui/sdlmain.cpp",

@@ -18,6 +18,12 @@ def media_modules():
     return {
         'format': 'fdisbull-media-modules-1', 'specification': SPEC,
         'modules': [
+            dict(name='avi-capture', layer='recorded-observation',
+                 api='fdisbull.capture_audit.audit_capture', methods=['capture-audit'],
+                 dependencies=['ffmpeg on PATH', 'ffprobe on PATH'],
+                 variants='Finalized AVI segments with one video stream and fixed decoded dimensions',
+                 limits='Full-frame RGBA hashes before sampling; bounded input/metadata/output and host time; no guest-clock mapping, input replay or game-success claim',
+                 specification='docs/TAS_CAPTURE_AUDIT.md'),
             dict(name='mz-envelope', layer='executable-container',
                  api='fdisbull.media.inspect_media / extract_media',
                  methods=['media-inspect', 'media-extract'], dependencies=[],

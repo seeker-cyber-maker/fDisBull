@@ -97,6 +97,14 @@ APIs remain available through the catalog. Read the packaged specification with
 missing tooling or extending an adapter. This does not unpack compressed DOS
 executables or establish the purpose of their trailing bytes.
 
+For a closed native AVI recording, `fdisbull capture-audit CAPTURE.avi --output
+/private/run/audit --every 4 --html` hashes every decoded frame and exports a
+sample with original timestamps for slower review. Its output parent must be
+private and outside Git. Check the audit receipt before analyzing pixels; video
+timestamps do not supply guest ticks or input alignment. The
+[capture-audit guide](TAS_CAPTURE_AUDIT.md) covers the Python/JSON interfaces,
+budgets and failed-run diagnostics.
+
 ## Choose a route
 
 ### Inspect an executable without running it
