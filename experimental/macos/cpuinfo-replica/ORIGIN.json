@@ -1,127 +1,165 @@
 {
   "kind": "frozen-authored-replica-source-snapshot",
   "canonical_project": "CpuinfoReplica",
-  "canonical_commit": "718136e9c918e124703219891b5450a600ecd814",
-  "canonical_tree": "9303bb15a62ca3d64a033b0ab8c233ff212d6e7d",
-  "observed_app_source_commit": "3994fd9b79d83bce0b424f7b2612a0ade142e05a",
-  "fdisbull_capture_tool_commit": "ecbe4c577bcd57d7224a5594a8475dda4c412d10",
+  "canonical_commit": "3ff292ad389c2b13347110dde15409f7be088390",
+  "canonical_tree": "7d210bdcf60d2b1f4dba9937dd2bef6d45bc851b",
+  "observed_app_source_commit": "d445a7b",
+  "production_source_equivalence": "all current Sources/*.swift hashes match the observed build inputs",
+  "fdisbull_capture_tool_commit": "e1b6f164bdc139262d340395b203246c948d01bd",
+  "previous_snapshot_commit": "718136e9c918e124703219891b5450a600ecd814",
   "source_files": [
     {
       "file": ".gitignore",
-      "mode": "100644",
+      "mode": "644",
       "bytes": 36,
       "sha256": "6becf3afbb8f72dbcc8e9203a88672c8d3f446ad72917dbabadbdbb09d120d14"
     },
     {
       "file": "NOTICE.md",
-      "mode": "100644",
+      "mode": "644",
       "bytes": 1333,
       "sha256": "3758ffb582da27314d2bc9ea3993943ade17c359a6e52a36fc79d127f13da54b"
     },
     {
       "file": "PARITY.md",
-      "mode": "100644",
-      "bytes": 3468,
-      "sha256": "c88cefbc6e5e36f9a78e23c5b677872e22e40e0da4fbc265101ce99009786a9e"
+      "mode": "644",
+      "bytes": 4268,
+      "sha256": "82f47dc02d31c72c3b288b2c886b67b1a9ec3585d41906aec0e77831313ce421"
     },
     {
       "file": "README.md",
-      "mode": "100644",
-      "bytes": 4310,
-      "sha256": "caa3dd571f3ec474244a93960e9f3902273d99c1619eaa9c477e2c4366b29d9f"
+      "mode": "644",
+      "bytes": 3500,
+      "sha256": "d604e6b71b8692f34be9f71616bed77dd4298d969b68a726b5b8b174e708ad17"
     },
     {
       "file": "Sources/CPUCore.swift",
-      "mode": "100644",
-      "bytes": 4287,
-      "sha256": "5f0b391ccab1bf2d06985ad6d1b70de81c64f91984f68d51cecc702af32c693a"
+      "mode": "644",
+      "bytes": 6377,
+      "sha256": "31e0b19826429fac817e1687eb35eafdfc4bdd5d1056f402e95d392b1666333f"
+    },
+    {
+      "file": "Sources/DisplayPreferences.swift",
+      "mode": "644",
+      "bytes": 2847,
+      "sha256": "532745b98047400c4ed422a763bc5bc0956cc455f74e5c759e8a7a3b8958a28d"
     },
     {
       "file": "Sources/MachSampler.swift",
-      "mode": "100644",
-      "bytes": 2528,
-      "sha256": "e2ea510ca1bf7aca496c4f1ae70f632632b0d892599f2da759dbe0152a6bbb39"
+      "mode": "644",
+      "bytes": 4808,
+      "sha256": "04f2316598fbbf81997e5b07771b933d0574ac6bf367b26ca9b765dbdcce90ae"
     },
     {
       "file": "Sources/MeterRenderer.swift",
-      "mode": "100644",
-      "bytes": 3878,
-      "sha256": "6330b1147b31a38035abc7c09a2802d30dcdf5543f9753418b8150e0404e59b0"
+      "mode": "644",
+      "bytes": 4063,
+      "sha256": "743d5f0faa000dbb84f8c300b3cc0c648a091d2c0a4b3a72c1bbe3b1d64dc913"
     },
     {
       "file": "Sources/main.swift",
-      "mode": "100644",
-      "bytes": 10772,
-      "sha256": "5a9584cccde415e0d7681711af626d39ac40fc423e28965eec4062ff6f906dbe"
+      "mode": "644",
+      "bytes": 11458,
+      "sha256": "a5df3a312be40bc879398e34592099c368eb47bd2d7a181b25ddfa24e2ae7af2"
     },
     {
       "file": "Tests/CoreTests.swift",
-      "mode": "100644",
-      "bytes": 3167,
-      "sha256": "8c55dcf65293a006c90bcb58d4951a8da2f4943b9015cb27a3e60ecefa21be71"
+      "mode": "644",
+      "bytes": 6719,
+      "sha256": "f461e5d84fd37fce440f8226b1fee544fe12225cb9adacb45f68fee7f393fad5"
+    },
+    {
+      "file": "Tests/MenuTests.swift",
+      "mode": "644",
+      "bytes": 6880,
+      "sha256": "5b1636233bc750f1447e88291478223545a1d59eaf70586eede32782262847b4"
+    },
+    {
+      "file": "Tests/SamplingTests.swift",
+      "mode": "644",
+      "bytes": 1275,
+      "sha256": "374324e8d1e7d189aba4a1672d6c059b5fa4eee88551a714749a890c0a4a2de1"
     },
     {
       "file": "Tests/bars.fixture.json",
-      "mode": "100644",
+      "mode": "644",
       "bytes": 118,
       "sha256": "dacc86aa845102c785bb0cae455783b8de41a786f7bfefcd8e67073882cd8913"
     },
     {
       "file": "Tests/compare_captures.py",
-      "mode": "100644",
-      "bytes": 12652,
-      "sha256": "981844b5fb725ec7a1e5022103d23ee25595ebb55e5e4ae4107e441de369a0e8"
+      "mode": "644",
+      "bytes": 12715,
+      "sha256": "0f48917960315080bb9cf62e4aa62f0d4ed13f99395a80059853b94a313cd064"
     },
     {
       "file": "Tests/verify_render.py",
-      "mode": "100644",
-      "bytes": 2487,
-      "sha256": "921b9b250ec2dc98496642dbf1d1278105e8d0c52d45e112ad801c7c34265fb3"
+      "mode": "644",
+      "bytes": 3946,
+      "sha256": "ae0c22301fd4e1760dc36a89824a6ef8ae15525b9d498034e01338999a38df24"
+    },
+    {
+      "file": "Tests/verify_upstream_render.py",
+      "mode": "644",
+      "bytes": 9094,
+      "sha256": "db1c4463ec56e96b8b6445b7f9191b7e6301190c126b12c28e6fef82daeb5f62"
     },
     {
       "file": "build-app.sh",
-      "mode": "100755",
-      "bytes": 1293,
-      "sha256": "7a71fc6c0ce50fc0e7f93eedff98bfd3ec57d60389471e7ee7c70be94049bca0"
+      "mode": "755",
+      "bytes": 1402,
+      "sha256": "d0c71b771ccd3f2fd76129dade1af10e9be5fa4b49435426d859738fa8ae0ebd"
     },
     {
       "file": "evidence/collect_fdisbull.py",
-      "mode": "100644",
+      "mode": "644",
       "bytes": 3202,
       "sha256": "17407b79adc8234216ca40c0cf0f2751126a1f5cea53e403438b859ff9afa269"
     },
     {
       "file": "evidence/comparison-verification.json",
-      "mode": "100644",
+      "mode": "644",
       "bytes": 3509,
       "sha256": "58c935fa2b3c22c861fc6b98048a3ecd5714102373e87d439fd4980662b34140"
     },
     {
+      "file": "evidence/live-comparison-followup.json",
+      "mode": "644",
+      "bytes": 8125,
+      "sha256": "950354701ca4948331183e1e239872da0a0fb95799be85faf67c3ac4cf236e84"
+    },
+    {
       "file": "evidence/live-comparison.json",
-      "mode": "100644",
+      "mode": "644",
       "bytes": 8069,
       "sha256": "2a6d8083177e3e351d3856d49ed00ced112ab2626c83ab67c6b199b4a7c93ead"
     },
     {
+      "file": "evidence/parity-followup.json",
+      "mode": "644",
+      "bytes": 2655,
+      "sha256": "9d7f2a40819dbf62bc5debf3a3bc018ea1eaeb3bc705029efaa79c6b8314bdbb"
+    },
+    {
       "file": "evidence/source-investigation.json",
-      "mode": "100644",
+      "mode": "644",
       "bytes": 3729,
       "sha256": "b76ca26b0851dc51c6c9d8b14a462146575d13d2bc0f8218c6b07d9cb132561a"
     },
     {
       "file": "evidence/verification.json",
-      "mode": "100644",
+      "mode": "644",
       "bytes": 2821,
       "sha256": "14bbc2a04af9045bbde0a5f4b76d4446e457713f5ccadb4444dbf5a732fec932"
     },
     {
       "file": "test.sh",
-      "mode": "100755",
-      "bytes": 336,
-      "sha256": "df89e064ab2d71a62cd97cb6241506919d0810be36f1e3685e1dc8fccb97e0cc"
+      "mode": "755",
+      "bytes": 866,
+      "sha256": "0b0c3a3f58ca4a4390de5c0c1a12f59adebc6f517ab09c9abfb452e0cabadf92"
     }
   ],
   "original_binary_payload": false,
   "screenshots_or_raw_AX_trees": false,
-  "scope": "source-assisted default English menu/bar geometry subset; no whole-app equivalence"
+  "scope": "source-assisted candidate;122 checks,336 authored render comparisons, current native menu/bar subset; no whole-app equivalence"
 }

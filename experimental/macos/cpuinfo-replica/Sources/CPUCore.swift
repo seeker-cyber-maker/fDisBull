@@ -55,6 +55,53 @@ struct CPUHistory {
     }
 }
 
+enum SamplingMode { case cores, host }
+
+// The menu app follows cpuinfo's source behavior: it draws zero initially,
+// then updates only the active mode. Each mode's first ratio starts at zero
+// ticks (a since-boot ratio); changing modes retains the inactive reading.
+// CPUHistory remains the separate unknown-baseline diagnostic contract.
+struct SelectedCPUHistory {
+    private var host = CPUTicks(user: 0, system: 0, idle: 0, nice: 0)
+    private var cores: [CPUTicks]
+    private var hostUsage: Double? = 0
+    private var coreUsages: [Double?]
+
+    init(coreCount: Int) {
+        precondition((0...1024).contains(coreCount))
+        cores = Array(repeating: CPUTicks(user: 0, system: 0, idle: 0, nice: 0), count: coreCount)
+        coreUsages = Array(repeating: 0, count: coreCount)
+    }
+
+    func snapshot(error: String? = nil) -> CPUSample {
+        CPUSample(capturedAt: ISO8601DateFormatter().string(from: Date()),
+                  overall: hostUsage, cores: coreUsages, error: error)
+    }
+
+    mutating func update(host current: CPUTicks) -> CPUSample {
+        hostUsage = UsageDelta.fraction(previous: host, current: current)
+        host = current
+        return snapshot(error: hostUsage == nil ? "host counters reset; new baseline" : nil)
+    }
+
+    mutating func update(cores current: [CPUTicks]) -> CPUSample {
+        precondition(current.count <= 1024)
+        guard current.count == cores.count else {
+            // The source assumes a fixed topology. Preserve bounded indexing,
+            // but do not pair new identities with old array positions.
+            cores = current
+            coreUsages = Array(repeating: nil, count: current.count)
+            return snapshot(error: "processor topology changed; new baseline")
+        }
+        coreUsages = current.enumerated().map { index, ticks in
+            UsageDelta.fraction(previous: cores[index], current: ticks)
+        }
+        cores = current
+        return snapshot(error: coreUsages.contains(where: { $0 == nil })
+                        ? "processor counters reset; new baseline" : nil)
+    }
+}
+
 enum MeterColor: String, Codable { case green, orange, red, monochrome, unknown }
 struct MeterBar: Codable {
     let x: Double

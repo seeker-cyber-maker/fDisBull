@@ -55,9 +55,11 @@ enum MeterRenderer {
 
     static func color(_ value: MeterColor, dark: Bool) -> NSColor {
         switch value {
-        case .green: return NSColor(red: 0, green: 1, blue: 0, alpha: 1)
-        case .orange: return NSColor(red: 1, green: 140.0 / 255.0, blue: 0, alpha: 1)
-        case .red: return NSColor(red: 1, green: 0, blue: 0, alpha: 1)
+        // Upstream themes use calibrated RGB, whose color management differs
+        // from the sRGB initializer even when the numeric components match.
+        case .green: return NSColor(calibratedRed: 0, green: 1, blue: 0, alpha: 1)
+        case .orange: return NSColor(calibratedRed: 1, green: 140.0 / 255.0, blue: 0, alpha: 1)
+        case .red: return NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 1)
         case .monochrome: return dark ? .white : .black
         case .unknown: return .clear
         }

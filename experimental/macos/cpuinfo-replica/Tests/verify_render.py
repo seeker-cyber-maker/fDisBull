@@ -16,6 +16,29 @@ def check(condition, label):
     checks += 1
 
 with tempfile.TemporaryDirectory(prefix='cpuinfo-replica-render-') as temporary:
+    # Public source theme components use calibrated RGB. Convert the source
+    # colors through AppKit independently instead of assuming their hex values
+    # are already final device pixels (which missed the original color gap).
+    probe = Path(temporary) / 'SourcePalette.swift'
+    probe.write_text('''import AppKit
+import Foundation
+let colors = [NSColor(calibratedRed:0, green:1, blue:0, alpha:1),
+              NSColor(calibratedRed:1, green:140.0/255, blue:0, alpha:1),
+              NSColor(calibratedRed:1, green:0, blue:0, alpha:1)]
+let result = colors.map { color -> [Int] in
+    let c = color.usingColorSpace(.deviceRGB)!
+    return [c.redComponent,c.greenComponent,c.blueComponent].map { Int(($0 * 255).rounded()) }
+}
+print(String(data:try! JSONSerialization.data(withJSONObject:result),encoding:.utf8)!)
+''')
+    palette_binary = Path(temporary) / 'source-palette'
+    architecture = subprocess.check_output(['uname', '-m'], text=True).strip()
+    subprocess.run(['/usr/bin/xcrun', 'swiftc', '-target', architecture+'-apple-macosx14.0', str(probe), '-framework', 'AppKit',
+                    '-o', str(palette_binary)], check=True, capture_output=True, timeout=30)
+    palette = json.loads(subprocess.check_output([str(palette_binary)], text=True, timeout=10))
+    def same_color(actual, expected):
+        return all(abs(left - right) <= 1 for left, right in zip(actual[:3], expected))
+
     for scale in (1, 2, 3):
         path = Path(temporary) / f'bars-{scale}.png'
         result = subprocess.run([str(APP), '--fixture', str(ROOT / 'Tests/bars.fixture.json'),
@@ -27,9 +50,9 @@ with tempfile.TemporaryDirectory(prefix='cpuinfo-replica-render-') as temporary:
         image = Image.open(path).convert('RGBA')
         check(image.size == (52 * scale, 24 * scale), 'logical size/backing pixels')
         check(image.getbbox() == (2 * scale, 5 * scale, 50 * scale, 19 * scale), 'track geometry including negative-space edges')
-        check(image.getpixel((3 * scale, 17 * scale))[:3] == (0, 255, 0), 'zero minimum nub remains green')
-        check(image.getpixel((23 * scale, 16 * scale))[:3] == (255, 140, 0), '75 percent orange')
-        check(image.getpixel((33 * scale, 16 * scale))[:3] == (255, 0, 0), '90 percent red')
+        check(same_color(image.getpixel((3 * scale, 17 * scale)), palette[0]), 'zero minimum nub uses calibrated green')
+        check(same_color(image.getpixel((23 * scale, 16 * scale)), palette[1]), '75 percent uses calibrated orange')
+        check(same_color(image.getpixel((33 * scale, 16 * scale)), palette[2]), '90 percent uses calibrated red')
         unknown = image.getpixel((43 * scale, 16 * scale))
         check(unknown[3] < 80 and unknown[:3] == (255, 255, 255), 'unknown has only a neutral track')
 

@@ -3,28 +3,36 @@ import ServiceManagement
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
-    private var item: NSStatusItem!
+    private var item: NSStatusItem?
     private var timer: Timer?
     private let sampler = MachSampler()
     private var options = DisplayOptions()
     private var latest = CPUSample(capturedAt: "", overall: nil, cores: [], error: nil)
     private var menu: NSMenu!
+    private let defaults: UserDefaults
+    private let strings: MenuStrings
+    var currentOptions: DisplayOptions { options }
+
+    init(defaults: UserDefaults = .standard, strings: MenuStrings = MenuStrings()) {
+        self.defaults = defaults
+        self.strings = strings
+        super.init()
+    }
+
+    func prepareMenu() -> NSMenu {
+        options = DisplayPreferences.load(from: defaults)
+        menu = makeMenu()
+        refreshMenu()
+        return menu
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let defaults = UserDefaults.standard
-        defaults.register(defaults: ["updateInterval":500, "showImage":true,
-            "showText":false, "showCoresIndividually":true, "theme":"Default"])
-        options.setInterval(defaults.integer(forKey: "updateInterval"))
-        options.showImage = defaults.bool(forKey: "showImage")
-        options.showText = defaults.bool(forKey: "showText")
-        options.showCoresIndividually = defaults.bool(forKey: "showCoresIndividually")
-        options.theme = defaults.string(forKey: "theme") == "B/W" ? "B/W" : "Default"
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.button?.setAccessibilityIdentifier("cpuinfo-replica.status")
-        item.button?.setAccessibilityLabel("cpuinfo replica CPU meter")
-        menu = makeMenu(); menu.delegate = self
-        item.menu = menu
-        latest = sampler.sample()
+        item?.button?.setAccessibilityIdentifier("cpuinfo-replica.status")
+        item?.button?.setAccessibilityLabel("cpuinfo replica CPU meter")
+        item?.button?.toolTip = "Cpuinfo Replica"
+        item?.menu = prepareMenu()
+        latest = sampler.initialSample()
         redraw()
         schedule()
     }
@@ -32,55 +40,67 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func makeMenu() -> NSMenu {
         let menu = NSMenu()
         menu.autoenablesItems = false
-        func add(_ title: String, _ action: Selector?, tag: Int = 0, to parent: NSMenu) -> NSMenuItem {
+        menu.delegate = self
+        func add(_ title: String, _ action: Selector?, tag: Int = 0, role: MenuRole? = nil, to parent: NSMenu) -> NSMenuItem {
             let child = NSMenuItem(title: title, action: action, keyEquivalent: "")
-            child.target = self; child.tag = tag; parent.addItem(child)
+            child.target = self; child.tag = tag
+            child.identifier = role.map { NSUserInterfaceItemIdentifier($0.rawValue) }
+            parent.addItem(child)
             return child
         }
-        _ = add("Start at Login", #selector(toggleLogin), to: menu)
+        _ = add(strings.title(.login), #selector(toggleLogin), role: .login, to: menu)
         menu.addItem(.separator())
-        let intervals = add("Update Interval", nil, to: menu)
+        let intervals = add(strings.title(.interval), nil, role: .interval, to: menu)
         let intervalMenu = NSMenu(title: intervals.title)
-        let names = ["0.1sec", "0.2sec", "0.5sec", "1.0sec", "5sec", "10sec", "30sec"]
         for (index, value) in DisplayOptions.intervals.enumerated() {
-            _ = add(names[index], #selector(changeInterval), tag: value, to: intervalMenu)
+            _ = add(strings.interval(index), #selector(changeInterval), tag: value, to: intervalMenu)
         }
+        intervalMenu.autoenablesItems = false; intervalMenu.delegate = self
         intervals.submenu = intervalMenu
-        let view = add("View Mode", nil, to: menu)
+        let view = add(strings.title(.view), nil, role: .view, to: menu)
         let viewMenu = NSMenu(title: view.title)
-        _ = add("Image", #selector(toggleImage), tag: 1, to: viewMenu)
-        _ = add("Text", #selector(toggleText), tag: 2, to: viewMenu)
+        _ = add(strings.title(.image), #selector(toggleImage), tag: 1, role: .image, to: viewMenu)
+        _ = add(strings.title(.text), #selector(toggleText), tag: 2, role: .text, to: viewMenu)
+        viewMenu.autoenablesItems = false; viewMenu.delegate = self
         view.submenu = viewMenu
-        let themes = add("Theme", nil, to: menu)
+        let themes = add(strings.title(.theme), nil, role: .theme, to: menu)
         let themeMenu = NSMenu(title: themes.title)
         _ = add("Default", #selector(changeTheme), to: themeMenu)
         _ = add("B/W", #selector(changeTheme), to: themeMenu)
+        themeMenu.autoenablesItems = false; themeMenu.delegate = self
         themes.submenu = themeMenu
-        _ = add("Show cores individually", #selector(toggleCores), to: menu)
+        _ = add(strings.title(.cores), #selector(toggleCores), role: .cores, to: menu)
         menu.addItem(.separator())
-        let activity = add("Open Activity Monitor", #selector(activityMonitor), to: menu)
+        let activity = add(strings.title(.activity), #selector(activityMonitor), role: .activity, to: menu)
         if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.ActivityMonitor") {
             let image = NSWorkspace.shared.icon(forFile: url.path)
             image.size = NSSize(width: 16, height: 16); activity.image = image
         }
-        _ = add("Quit", #selector(quit), to: menu)
+        _ = add(strings.title(.quit), #selector(quit), role: .quit, to: menu)
         return menu
     }
 
-    func menuWillOpen(_ menu: NSMenu) {
+    func menuWillOpen(_ menu: NSMenu) { refreshMenu() }
+
+    func refreshMenu() {
+        guard let menu else { return }
         for child in menu.items {
-            switch child.title {
-            case "Start at Login":
-                if #available(macOS 13, *) { child.state = SMAppService.mainApp.status == .enabled ? .on : .off }
-            case "Update Interval":
+            switch child.identifier?.rawValue {
+            case MenuRole.login.rawValue:
+                child.state = SMAppService.mainApp.status == .enabled ? .on : .off
+            case MenuRole.interval.rawValue:
                 child.submenu?.items.forEach { $0.state = $0.tag == options.intervalMilliseconds ? .on : .off }
-            case "View Mode":
+            case MenuRole.view.rawValue:
                 child.isEnabled = !options.showCoresIndividually
-                child.submenu?.items.first?.state = options.showImage ? .on : .off
-                child.submenu?.items.last?.state = options.showText ? .on : .off
-            case "Theme":
+                let image = child.submenu?.items.first
+                let text = child.submenu?.items.last
+                image?.state = options.showImage ? .on : .off
+                text?.state = options.showText ? .on : .off
+                image?.isEnabled = options.showText
+                text?.isEnabled = options.showImage
+            case MenuRole.theme.rawValue:
                 child.submenu?.items.forEach { $0.state = $0.title == options.theme ? .on : .off }
-            case "Show cores individually": child.state = options.showCoresIndividually ? .on : .off
+            case MenuRole.cores.rawValue: child.state = options.showCoresIndividually ? .on : .off
             default: break
             }
         }
@@ -88,13 +108,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func schedule() {
         timer?.invalidate()
+        guard item != nil else { return }
         let timer = Timer(timeInterval: Double(options.intervalMilliseconds) / 1000,
                           target: self, selector: #selector(sampleAndRedraw), userInfo: nil, repeats: true)
         RunLoop.main.add(timer, forMode: .common)
         self.timer = timer
     }
-    @objc private func sampleAndRedraw() { latest = sampler.sample(); redraw() }
+    @objc private func sampleAndRedraw() {
+        latest = sampler.sample(mode: options.showCoresIndividually ? .cores : .host)
+        redraw()
+    }
     private func redraw() {
+        guard let item else { return }
         let dark = item.button?.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
         let scale = item.button?.window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
         let image = MeterRenderer.image(sample: latest, options: options, dark: dark, scale: scale)
@@ -102,19 +127,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         item.button?.image = image; item.button?.needsDisplay = true
     }
     private func persist() {
-        let defaults = UserDefaults.standard
-        defaults.set(options.intervalMilliseconds, forKey: "updateInterval")
-        defaults.set(options.showImage, forKey: "showImage")
-        defaults.set(options.showText, forKey: "showText")
-        defaults.set(options.showCoresIndividually, forKey: "showCoresIndividually")
-        defaults.set(options.theme, forKey: "theme")
+        DisplayPreferences.save(options, to: defaults)
+        refreshMenu()
         redraw()
     }
     @objc private func changeInterval(_ sender: NSMenuItem) {
         options.setInterval(sender.tag); persist(); schedule()
     }
-    @objc private func toggleImage(_ sender: NSMenuItem) { options.showImage.toggle(); persist() }
-    @objc private func toggleText(_ sender: NSMenuItem) { options.showText.toggle(); persist() }
+    @objc private func toggleImage(_ sender: NSMenuItem) {
+        guard options.showText else { return }
+        options.showImage.toggle(); persist()
+    }
+    @objc private func toggleText(_ sender: NSMenuItem) {
+        guard options.showImage else { return }
+        options.showText.toggle(); persist()
+    }
     @objc private func toggleCores(_ sender: NSMenuItem) { options.showCoresIndividually.toggle(); persist() }
     @objc private func changeTheme(_ sender: NSMenuItem) { options.theme = sender.title; persist() }
     @objc private func activityMonitor(_ sender: NSMenuItem) {
@@ -147,6 +174,7 @@ struct FixtureInput: Decodable {
     var theme: String?
 }
 
+#if !CPUINFO_TESTING
 @main
 struct CpuinfoReplica {
     @MainActor static func main() throws {
@@ -200,3 +228,5 @@ struct CpuinfoReplica {
         withExtendedLifetime(delegate) { application.run() }
     }
 }
+
+#endif

@@ -5,7 +5,49 @@ an authored, source-assisted candidate with its own app identity and defaults.
 This experiment combines fDisBull's source-qualified binary analysis and
 reversible native capture. It does not claim automatic native-to-UIL recovery.
 
-## Identity and evidence
+
+## Current parity follow-up
+
+The current authored snapshot is canonical `3ff292ad389c2b13347110dde15409f7be088390`;
+its production Sources match the observed app built before the documentation
+commit. The initial comparison below is historical, scoped to its older heads.
+
+The follow-up fixes calibrated RGB colors, prevents disabling both overall
+modes, adds English/Japanese labels with stable action identifiers, and matches
+the public source's zero-start and selected-mode sampling histories. It keeps
+bounded counter reset/topology handling and independent diagnostic baselines.
+
+Fresh checks passed: 39 deterministic core, 9 native sampler, 48 real NSMenu and
+settings, 26 renderer/diagnostic. Separate processes verified saved interval,
+mode/theme values and checkmarks using isolated temporary preference suites.
+
+A hash-pinned source renderer oracle found 126 mismatched frames before the
+color fix and 0 afterward, across 336 authored frames: all modes/themes/appearances
+at 1x/2x/3x. It confirms AppleSystemUIFont 13pt and text geometry under the same
+instrumented bitmap context. This does not claim full original screen pixels.
+
+The follow-up fDisBull native sessions used tool `e1b6f164` and unchanged native
+helper source `3b1f00b9`. Both apps were captured on the same negative-X display.
+The seven root menu rows and ten bar groups matched; the wrong-label control
+was detected. A single same-display screenshot also found identical opaque
+green/orange pixels in both meters, despite different sampling times.
+
+A newly launched status item initially reported a stale offscreen AX frame;
+a menu open synchronized that frame to the already-visible item. The earlier
+packet is retained privately; the fresh synchronized packet passes comparison.
+The comparator no longer asserts a hardcoded tool revision absent from packet
+metadata. The run receipt separately pins the actual tool source.
+
+Both menus were confirmed closed after tests; both apps are deliberately left
+running for user comparison. The original process/binary/preferences and all
+login settings remain untouched. Actual login/relogin, original live text-mode
+pixels and physical mixed-scale capture remain unqualified. Original updater
+configuration is residual/unresolved; no network updater was introduced.
+
+See [the current parity ledger](../experimental/macos/cpuinfo-replica/PARITY.md)
+and [sanitized follow-up receipt](../experimental/macos/cpuinfo-replica/evidence/parity-followup.json).
+
+## Initial comparison identity and evidence
 
 The installed cpuinfo 1.7.0 original has SHA-256
 `ebc5e15fe3b3867c8e72bab1956d584cc640ecce0196243c50757bc3ad1c53f7`.
@@ -75,7 +117,7 @@ python Tests/compare_captures.py --original /private/original-session --replica 
 ```
 
 Live input is a separate explicit [native session](MACOS_REVERSIBLE_CAPTURE.md).
-The candidate's unknown first/reset/topology baseline intentionally differs
+The initial candidate's unknown first/reset/topology baseline intentionally differed
 from upstream's initial-zero accumulation/since-boot first ratio. Font identity,
 full pixels, synchronized counters, Japanese localization, login-helper
 equivalence and restart persistence remain unqualified. No original bug has

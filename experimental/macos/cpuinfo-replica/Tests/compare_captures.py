@@ -181,7 +181,8 @@ def compare(original_directory, replica_directory, *, expected_cores=10):
     return {
         'format': 'cpuinfo-fdisbull-capture-comparison-1',
         'status': 'matched_observed_subset' if not mismatches else 'mismatch',
-        'tool_source_commit': 'ecbe4c577bcd57d7224a5594a8475dda4c412d10',
+        'tool_source_commit': None,
+        'tool_revision_provenance': 'not encoded by packet format; consult the capture run receipt',
         'capture_method': 'fDisBull reversible native macOS session and ScreenCaptureKit',
         'original': original, 'replica': replica, 'differences': mismatches,
         'falsifier': {'wrong_visible_menu_label': 'detected'},
