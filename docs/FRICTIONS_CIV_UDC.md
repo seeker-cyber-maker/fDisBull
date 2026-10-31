@@ -124,3 +124,24 @@
       a timestamped backup beside the live directory. Skills are used from the
       installed copy, so the cached release is not a reason to run an older
       guide.
+
+13. `execute_il` reports refusal in its result, not as an exception.
+    - A differential harness that wraps the call in `try/except ValueError`
+      records the refused branch as "committed" and compares two unchanged
+      states. The refusal is `{"status": "refused", "error": ..., "state":
+      original}` with no raise; harnesses must branch on `status`.
+
+14. The IL cannot express an AND-mask or a multiply.
+    - The recovered buy commit clears a status bit (`and byte [...], 0xef`) and
+      doubles a cost (`shl ax,1`). Doubling is reachable as two `add`s in a
+      signed 16-bit scratch cell, because `set` rejects a negative value for a
+      `u16` cell; the mask is not expressible and was excluded from the model
+      rather than approximated. Any further city routine that masks flags or
+      multiplies by a table value needs an IL primitive first.
+
+15. String-patch scripts silently no-op after `ruff format` rewrites a file.
+    - Patching `examples/civ/civ_city_udc_diff.py` in place with exact-substring
+      `str.replace` matched before formatting and stopped matching after, so
+      `main()` kept its old body while the module gained new functions. Assert
+      the anchor before replacing (`assert old in text`) or the failure is a
+      later `KeyError` in the receipt, not an error at patch time.
