@@ -291,7 +291,7 @@ do not add `0xA990` to those.
 | `a` | `0x7785` | `0x12115` | unit-list cursor (below) | binary-static |
 | `s` | `0x799E` | `0x1232E` | sell-building cursor (below) | binary-static |
 | `1`..`9` | `0x7ABE`, `0x7AC8` | `0x1244E`, `0x12458` | specialist slot `key - '1'`; requires `size >= 5`, else the specialist warning | binary-static |
-| `p` | `0x7B58` | `0x124E8` | city-radius tile cursor | source-backed (civd `CITYMGT.C` 1569); binary branch not decoded |
+| `p` | `0x7B58` | `0x124E8` | city-radius tile cursor: eight-direction move, radius/visibility guard, Enter/Space toggles the worker | binary-static (linear decode; analyzer traversal stops at the far key read) |
 | `M` | `0x7DCF` | `0x1275F` | building-page flag: `flag & 2` gate, then `flag ^= 1` and page base reload | binary-static |
 | `r` | `0x7E01` | `0x12791` | rename-city overlay (`int 3F`) after the button hit test | binary-static |
 
@@ -343,6 +343,28 @@ formula, which is the source-backed cross-check for the binary decode.
 civd `CITYMGT.C` 1527-1548 and its `label_sell` block match both the guard and
 the 24-slot mask walk.
 
+#### `p` - city-radius tile cursor (`0x7B58..0x7DCF`)
+
+- `0x7B62` initialises the cursor to `(0, 0)` the first time and sets the
+  tile-key flag;
+- the cell is drawn at `(160 + 16 * cursor_x, 56 + 16 * cursor_y)`
+  (`0x7B7D`): `blit(scrbuf, ...)` through `1000:07FB`, `draw_box(..., 15, 15,
+  15)` through `2D05:0A05`, `flip(10)`, then the reverse `blit` from
+  `[0x19D4]`; `[0x6B64]` is marked as a map view change (`0x7C31`);
+- `0x7C54` reads the key and the ladder at `0x7CAF` maps the eight directions:
+  `0x4800` y-1, `0x4900` y-1/x+1, `0x4D00` x+1, `0x5100` x+1/y+1, `0x5000`
+  y+1, `0x4F00` x-1/y+1, `0x4B00` x-1, `0x4700` x-1/y-1;
+- the guard at `0x7CFA` rejects `|cursor| > 2`, any corner
+  `|x| + |y| >= 4`, and a radius tile not visible to the current civ
+  (`[0x63F2]` far pointer, bit `1 << [0xD7EE]`), restoring the saved cursor
+  (`0x7D85`);
+- `0x0D`/`0x20` (`0x7D95`) saves the cursor and jumps to the worker-toggle
+  path; `0x1B` (`0x7DBC`) clears the tile-key flag and returns to the main
+  loop.
+
+civd `CITYMGT.C` 1569-1627 carries the same draw pair, eight direction keys,
+radius guard, visibility bit and worker toggle.
+
 The mouse CHANGE button reaches the same chooser at `0x727F`
 (`lcall 0ADE:0421`); its result is compared with `0x63` at `0x7294`, which is
 the cancel code.
@@ -366,8 +388,9 @@ reached from the `b` branch and it masks production status with
   whether that is a second parameter or part of a long first argument is
   unresolved.
 - The dispatch chain is complete as a set of compare sites (`key_dispatch`
-  returns all fifteen). Handler interior spans are decoded for `a` and `s`
-  only; `p` is source-backed without a decoded branch.
+  returns all fifteen). Handler interior spans are decoded for `a`, `s` and
+  `p`; the `p` span is a linear decode because the analyzer's traversal stops
+  at its far key read, so its branch targets are not CFG-verified.
 - Overlay callers are candidate sites, not resolved functions.
 - The field-reference counts are in-segment literal-offset matches; an indirect
   access through a copied pointer is not counted.
