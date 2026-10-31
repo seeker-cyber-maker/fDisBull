@@ -1,0 +1,14 @@
+{
+  "debugger_close": {
+    "state": "interrupted",
+    "reason": "stop deadline expired",
+    "process_reaped": true
+  },
+  "controller_pid": 775,
+  "emulator_pid": 777,
+  "owned_pids_absent": true,
+  "controller_cleanup_error": "Project.close does not exist; occurred after debugger close committed and emulator reaped",
+  "delivered_controller_fix": "Project.__exit__ with nested finally; no second native trial claimed",
+  "guest_exit_observed": false,
+  "emulator_exit_code": null
+}
