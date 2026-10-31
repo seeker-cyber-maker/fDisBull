@@ -18,8 +18,8 @@ city-production contract depends on?
 | Input | unpacked DOS root `CIV_UNP.EXE` |
 | SHA-256 | `aa63aa396cfa62519b131ee6c0a231bed02bb9aefce26b955608b5815a569e57` |
 | Bytes | 340,791 |
-| Root module | 213,712 bytes after a 10,128-byte header |
-| Overlay tail | 116,951 bytes (not linearly mapped as code) |
+| Root load module | 203,584 bytes after a 10,128-byte header; declared root file end 213,712 |
+| Overlay tail | 127,079 bytes (not linearly mapped as code) |
 
 All addresses below are in the root load module (`R`), which fDisBull maps at
 runtime segment `0x1000`. `R:0D12:0045` is linear `0xD165`, file offset 63,733.
@@ -89,15 +89,17 @@ the module deliberately does not re-encode the comparison itself.
 
 The scan accepts `9A`/`EA` instructions whose operand is `0045:0D12`. A root
 hit must also appear in the MZ relocation table, because a real far reference
-to another code segment is relocated at load; unrelocated matches inside the
-root are counted as coincidental (1 in this image).
+to another code segment is relocated at load; relocation addresses are normalized as segment * 16 + offset. No unmatched
+root target patterns remain in this image. The previous offset-only filter
+incorrectly dropped the capunit call whose relocation is 1000:4B2A.
 
 | Runtime linear | Root offset | Caller function (local) | Mode evidence | Interpretation |
 |---:|---:|---:|---|---|
 | `0x1AE31` | `0xAE31` | `0xADE6` | `sub ax,ax; push ax; push ax` → mode `0` | Per-city turn pass |
 | `0x1AE73` | `0xAE73` | `0xADE6` | `mov ax,1` after `cmp [0xB1E8],0` → mode `1` | Same function, display branch |
 | `0x1B1E3` | `0xB1E3` | `0xB1CA` | `mov ax,1; cwd; push dx; push ax` → mode `1` | Small display wrapper |
-| `0x1B21F` | `0xB21F` | `0xB201` | `sub ax,ax` → mode `0` | Second turn-pass caller |
+| `0x1B21F` | `0xB21F` | `0xB201` | `mov ax,FFFFh; push ax` → mode `-1` | `find_slot` recalculation |
+| `0x24B27` | `0x14B27` | `0x14590` | `mov ax,1; cwd; push dx; push ax` → mode `1` | `capunit` display caller |
 
 Caller `0xADE6` matches `civ_economy()` in civd `ECONOMY.C` structurally:
 
@@ -115,10 +117,15 @@ the status test is `0xFF`, all matching the recorded source. The display call is
 guarded by `cmp word ptr [0xB1E8], 0`, consistent with the
 `show_city_display` global.
 
-Eleven further far calls to `0045:0D12` exist in the overlay tail
-(`0x34C4A` … `0x4FB9A`). Overlay bytes are not relocated, so these are retained
-as overlay candidates; their caller functions are identified only by the nearest
-prologue and their mode arguments come from registers, not literals.
+Five resident target sites are retained, including the independently checked
+compiler/map boundary for capunit. Argument recovery is a local constant slice,
+not an all-path proof. INT 3F dispatch descriptors prevent naive linear decoding
+of capunit; its complete reviewed MSC call tail supplies the mode evidence.
+
+Eleven further far-call byte patterns to `0045:0D12` exist in the overlay tail
+(`0x34C4A` … `0x4FB9A`). Their overlay fixups and logical mappings are not decoded, so these remain
+file-offset candidates. The analyzer emits no invented runtime address, caller
+function or mode value for them.
 
 ## Limits
 

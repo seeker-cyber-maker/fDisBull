@@ -1,5 +1,9 @@
 # Behavioral investigation reference
 
+For first use and source-to-model acceptance, follow the
+[repeatable reconstruction recipe](reconstruction.md).
+
+
 Use this reference when a plausible internal explanation disagrees with an
 interaction, a probe fails, or an observation is being generalized. It adds no
 new tool API and does not authorize actions beyond the user's task.

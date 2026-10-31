@@ -1,5 +1,9 @@
 # Source-backed semantics: UDL, UIL and UDC
 
+For first use and source-to-model acceptance, follow the
+[repeatable reconstruction recipe](reconstruction.md).
+
+
 Read this reference only when the task is to relate source operations to a
 shared interaction representation or test a bounded source block. It is not a
 general compiler manual.

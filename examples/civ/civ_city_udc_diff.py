@@ -24,7 +24,7 @@ CASES = (
     ("wrap-high", {"$shield_box": 32767, "$shield_delta": 1}),
     ("wrap-low", {"$shield_box": -32768, "$shield_delta": -1}),
     ("negative-box", {"$shield_box": -5, "$shield_delta": 3}),
-    ("disorder-zeroes", {"$shield_box": 7, "$shield_delta": 5, "$disorder": True}),
+    ("disorder-preserves-stock", {"$shield_box": 7, "$shield_delta": 5, "$disorder": True}),
     (
         "unsanitized-refusal",
         {"$shield_box": 4, "$shield_delta": 2, "$sanitized": False},
