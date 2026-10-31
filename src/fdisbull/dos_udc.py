@@ -304,8 +304,10 @@ def dos_implementation_info(project,implementation):
                 'reference_count':len(item['references'])}
 
 
-def compile_dos_udc(project,definition,*,implementations=None,entry=None,block_order=None,assumptions=None,code_base=None):
-    """Emit a bounded COM from explicit source and selected implementations."""
+def compile_dos_udc(project,definition,*,implementations=None,entry=None,block_order=None,assumptions=None,code_base=None,container='com'):
+    """Emit a bounded DOS code layout with an explicit COM or MZ container."""
+    if container not in ('com', 'mz'):
+        raise ValueError('container must be com or mz')
     if implementations is None:implementations={}
     if not isinstance(implementations,dict) or len(implementations)>4096:raise ValueError('invalid implementation selection')
     with project.transaction():
@@ -326,6 +328,9 @@ def compile_dos_udc(project,definition,*,implementations=None,entry=None,block_o
         from .dos_udc_layout import compile_dos_com
         result=compile_dos_com(native['capsule'],native['plan'],deepcopy(doc['data']),references=deepcopy(doc['references']),
                                replacements=chosen,entry=entry,block_order=block_order,assumptions=assumptions,code_base=code_base)
+        if container == 'mz':
+            from .dos_mz_udc import wrap_com_layout
+            result = wrap_com_layout(result)
         return {**deepcopy(result),'definition':row['id'],'definition_sha256':row['sha256'],
                 'native_definition':row['native_definition'],'native_definition_sha256':doc['native_definition_sha256'],
                 'source_sha256':doc['source_sha256'],'version_sha256':doc['version_sha256'],

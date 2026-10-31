@@ -248,14 +248,20 @@ authored COM demonstration and the bounded real-game observations are described
 in [UDC usage](docs/UDC_DOS.md), [testing methodology](docs/UDC_TESTING.md)
 and [verification](docs/VERIFICATION-0.23.md).
 
-Engine development on main now includes a first **standard DOS COM compiler**:
+The engine candidate includes a first **standard DOS compiler**:
 keep an exact original baseline, choose a different implementation of a native
-block, and build a new COM with repaired near branches and declared pointer
+block, and build a new COM or resident MZ with repaired near branches and declared pointer
 tables. The tool keeps experiments and narrow register proofs distinct. This
 first target uses explicitly declared data and straight-line replacements;
-broader DOS formats and automatic UIL lowering remain further work. See the
+arbitrary MZ-game relinking, broader DOS formats and automatic UIL lowering
+remain further work. See the
 [standard DOS target](docs/STANDARD_DOS_UDC.md) and
 [native pass-through](docs/NATIVE_UDL_UDC.md) contracts.
+
+For Z-machine v3 stories, a separate [source-backed scaffold](docs/ZMACHINE_UDC.md)
+preserves an exact baseline and supports explicit scalar instruction experiments
+with checksum repair. It keeps source data, experimental output and runtime
+evidence separate; it does not reconstruct an entire story or prove its behavior.
 
 ## Status, testing and history
 

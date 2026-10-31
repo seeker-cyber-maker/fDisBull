@@ -190,6 +190,21 @@ independent data readback to check the actual program, including negative
 controls. Source-checkout `docs/STANDARD_DOS_UDC.md` has schemas, examples and
 limits. Keep generated binaries, game inputs, states and databases private.
 
+`udc-dos-compile --container mz` wraps that same admitted COM-source layout in
+a new MZ executable with an explicit loader relocation, stack/allocation and
+AX/flags-preserving DS/ES startup. IP ports stay fixed; emitted file offsets
+become 32 plus IP. This is an output scaffold, not arbitrary MZ-source relinking.
+
+For a checksum-qualified v3 story, `zmachine-udc-capture` and
+`zmachine-udc-compile` provide a separate original-byte baseline and narrowly
+admitted scalar instruction experiment. Preserve the whole expected instruction,
+footprint, variable/store identities and control destinations, and supply explicit
+code/data-alias and scalar-not-address assertions. Story checksum repair and
+decode acceptance do not prove execution or equivalence. Source-checkout
+`docs/ZMACHINE_UDC.md` describes this fixed-footprint target; it does not relocate
+routines or packed references. Use output handles for private definitions and
+keep native interpreter observations separate from compiler receipts.
+
 ## Compose implementations across boundaries
 
 Use [block orchestration](block-orchestration.md) when selected implementations

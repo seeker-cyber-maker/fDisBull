@@ -150,3 +150,29 @@ Structured CLI inputs use bounded JSON files through `--data`, `--references`,
 `--full` opts into private definition details; routine replies use the existing
 output-limit/artifact-handle policy. Keep generated code, byte-retaining
 artifacts, source programs, states and project databases out of Git.
+
+## MZ output scaffold
+
+Select `container='mz'` in Python or `--container mz` on `udc-dos-compile`
+to place the same checked code/data layout in a new resident DOS MZ executable.
+The default remains COM. The source definition still requires the COM16 source
+profile above; this output adapter does not relink arbitrary original MZ games,
+overlays, far calls, multiple segments or DOS extenders. Use the original-backed
+native pass-through for a byte-identical baseline of an existing MZ game.
+Terminal returns are also refused: an MZ has no implicit COM return-to-PSP
+termination convention. A near return requires a separately qualified process
+entry/return adapter; matching port IPs cannot supply that contract.
+
+The new container has a 32-byte header, a single loader relocation, equal initial
+CS/SS, SP=FFFEh and a 64 KiB allocation including the reserved stack. Startup at
+IP 00F7h preserves AX, flags and SP while initializing DS and ES to the actual
+loader-selected segment; execution continues through the existing 0100h entry
+jump. Code/data ports and their near references retain their IP values. Emitted
+file offsets change to **32 plus IP**, and the result separately records loader
+relocations, the container and the underlying code-layout identity.
+
+MZ wrapping adds no semantic equivalence claim. The generated result remains
+`structural_only`, with `native_execution: false`. An authored native acceptance
+test separately checks startup, the relocated segment word, registers, ready
+loop branches, result memory and repaired pointer targets in DOSBox. It does
+not establish reconstruction of an original MZ game's runtime.
