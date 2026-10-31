@@ -56,25 +56,40 @@ def _normalize(frame_state: dict, state: dict) -> dict:
 
 
 BUY_CASES = (
-    ("default", {"$shield_box": 0, "$treasury": 1000, "$item_cost": 4, "$build_id": 0}),
     (
-        "partial-stock",
-        {"$shield_box": 10, "$treasury": 1000, "$item_cost": 4, "$build_id": 0},
+        "unit-default",
+        {"$shield_box": 0, "$treasury": 1000, "$item_cost": 4, "$production": 0},
     ),
     (
-        "unit-doubling",
-        {"$shield_box": 0, "$treasury": 2000, "$item_cost": 4, "$build_id": -22},
+        "unit-partial-stock",
+        {"$shield_box": 10, "$treasury": 1000, "$item_cost": 4, "$production": 0},
     ),
     (
-        "insufficient",
-        {"$shield_box": 0, "$treasury": 100, "$item_cost": 4, "$build_id": 0},
+        "unit-clamped-base",
+        {"$shield_box": 100, "$treasury": 1000, "$item_cost": 4, "$production": 0},
     ),
     (
-        "square-wrap",
-        {"$shield_box": 0, "$treasury": 5000, "$item_cost": 30, "$build_id": 0},
+        "unit-square-wrap",
+        {"$shield_box": 0, "$treasury": 5000, "$item_cost": 30, "$production": 0},
+    ),
+    (
+        "unit-insufficient",
+        {"$shield_box": 0, "$treasury": 100, "$item_cost": 4, "$production": 0},
+    ),
+    (
+        "building-plain",
+        {"$shield_box": 0, "$treasury": 1000, "$item_cost": 4, "$production": -2},
+    ),
+    (
+        "building-doubled",
+        {"$shield_box": 0, "$treasury": 1000, "$item_cost": 4, "$production": -22},
+    ),
+    (
+        "building-stock",
+        {"$shield_box": 10, "$treasury": 1000, "$item_cost": 4, "$production": -22},
     ),
 )
-BUY_PUBLIC = ("$shield_box", "$treasury", "$item_cost", "$build_id")
+BUY_PUBLIC = ("$shield_box", "$treasury", "$item_cost", "$production")
 
 
 def run_case(root: Path, work: Path, name: str, initial: dict, target: str) -> dict:
@@ -188,7 +203,7 @@ def sweep_buy(
         "host": {"platform": sys.platform, "machine": platform.machine()},
         "cases": rows,
         "verdict": "match" if all(row["match"] for row in rows) else "mismatch",
-        "scope": "interpreter/native agreement for the buy price, guard and commit",
+        "scope": "interpreter/native agreement for both production kinds: cost lookup inputs, ClampInt base, unit and building price, doublings, guard and commit",
     }
 
 

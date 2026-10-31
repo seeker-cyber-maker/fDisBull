@@ -132,48 +132,97 @@ starts at `0x737D`:
 7384  e98902          jmp 0x7610                   ; next key
 ```
 
-### Price (`0x7387..0x7470`)
+### Cost lookup and price (`0x7387..0x7470`)
 
-Branch on the production kind: improvements use `word [0x1142 + 0x22*id]`,
-units use `word [0xBB2 - 0x1E*id]` after `neg`. Both then build the price:
+The sign of the production byte at `city + 0x70F5` selects the kind. Both
+tables hold the shield cost **divided by ten** in the word at record offset
+`+0x18`, and both reads are `DS`-relative:
 
 ```text
-73b1  b8e703          mov ax, 0x3e7       ; arg 999 (clamp) to the text helper
-73c1  b80a00          mov ax, 0x0a
-73c4  f7aefafe        imul word [bp-0x106] ; 10 * item_cost
-73c8  2b87fa70        sub ax, [bx+0x70fa]  ; minus shield stock  -> base
-73d9  8b8618ff        mov ax, [bp-0xe8]
-73dd  f7ae18ff        imul word [bp-0xe8]  ; base * base
-73e2  b91400          mov cx, 0x14
-73e5  f7f9            idiv cx              ; / 20
-73e7  8b8e18ff        mov cx, [bp-0xe8]
-73eb  d1e1            shl cx, 1            ; 2 * base
-73ed  03c1            add ax, cx
-73ef  898618ff        mov [bp-0xe8], ax    ; price
-7446  8a87f570        mov al, [bx+0x70f5]  ; production id
-744b  f7d8            neg ax
-744d  3d1500          cmp ax, 0x15
-7455  d1a618ff        shl word [bp-0xe8], 1 ; double when -id > 21
-7461  83bffa7000      cmp word [bx+0x70fa], 0
-746b  d1a618ff        shl word [bp-0xe8], 1 ; double when stock is 0
+7387  b81c00        mov ax, 0x1c
+738a  f76e06        imul word [bp+6]      ; bx = 28 * city
+738f  80bff57000    cmp byte [bx+0x70f5], 0
+7394  7d03          jge 0x7399             ; production >= 0 -> unit
+7396  e95d00        jmp 0x73f6             ; production <  0 -> building
+7399  b81c00        mov ax, 0x1c           ; unit branch
+739c  f76e06        imul word [bp+6]
+739f  8bd8          mov bx, ax
+73a1  b022          mov al, 0x22
+73a3  f6aff570      imul byte [bx+0x70f5]  ; 34 * unit id
+73a7  8bd8          mov bx, ax
+73a9  8b874211      mov ax, [bx+0x1142]    ; unit table word +0x18 = cost/10
+73f6  b81c00        mov ax, 0x1c           ; building branch
+73fe  8a87f570      mov al, [bx+0x70f5]
+7402  98            cwde
+7403  f7d8          neg ax                 ; k = -production
+7405  b91e00        mov cx, 0x1e
+7408  f7e9          imul cx                ; 30 * k
+740c  8b87b20b      mov ax, [bx+0xbb2]     ; improvement word +0x18 = cost/10
 ```
 
-So `price = 2b + b*b/20` with `b = 10*item_cost - shield_box`, doubled for
-units past index 21 and doubled again when the box is empty. Note `0x73E1`
-(`cwd`) between the `imul` and the `idiv`: the high word of the product is
-discarded and the *low 16 bits*, sign-extended, are what gets divided. The
-square is therefore a wrapping 16-bit value, not a 32-bit one, and the model
-reproduces that (cost code 30 gives `b = 300`, `300*300 mod 65536 = 24464`,
-`24464/20 = 1223`).
+The unit table starts at `DS:0x112A` (34-byte records, name at `+0`) and its
+`+0x18` words are `4,1,2,2,3,3,2,4,4,4,4,8` for Settlers, Militia, Phalanx,
+Legion, Musketeers, Riflemen, Cavalry, Knights, Catapult, Cannon, Chariot,
+Armor — Civ1's unit shield costs 40, 10, 20, 20, 30, 30, 20, 40, 40, 40, 40,
+80 divided by ten. The improvement records are named from `DS:0xB9A + 0x1E*k`
+(Palace at `k = 1`, `0xBB8`) and the same `+0x18` word is their cost/10
+(Palace 20, Barracks 4, Granary 6, Temple 4, Marketplace 8, Library 8).
 
-The item-cost board itself is unresolved: the read at `DS:0x1142 + 34*id` does
-not land on the documented 30-byte `IMPR_RECORDS` block (`DGROUP:0BB8`), and the
-34-byte array's first words do not match Civ1 shield costs. A live read for a
-known building settles the identity; until then `item_cost` stays a module
-input. The box text is built at
-`0x746F..0x7560` (cost, item name, treasury, then "CIVIL DISORDER" when status
-bit 1 is set on an improvement), and `0x1EA8:1F6A`/`1EA8:1E22` append the
-decimal fields.
+Then the shared peak, through `ClampInt`:
+
+```text
+73c1  b80a00        mov ax, 0x0a
+73c4  f7aefafe      imul word [bp-0x106]  ; 10 * cost10
+73c8  2b87fa70      sub ax, [bx+0x70fa]   ; - shield_box -> base
+73cc  50            push ax               ; value
+73cd  9a7c00c41d    lcall 1DC4:007C       ; ClampInt(base, 0, 999)
+73d5  898618ff      mov [bp-0xe8], ax
+```
+
+`R:1DC4:007C` is `ClampInt` (the port's `11C8:0063`, `docs/dos/CORRESPONDENCE.md
+line 366`; signed clamp, `docs/dos/TIMING.md` line 510), called here with
+bounds 0 and 999. So `base = ClampInt(10*cost10 - shield_box, 0, 999)`.
+
+The two kinds then price differently:
+
+```text
+73d9  ...                   ; unit
+73dd  f7ae18ff    imul word [bp-0xe8]   ; base * base
+73e1  99          cdq                   ; discard the product's high word
+73e2  b91400      mov cx, 0x14
+73e5  f7f9        idiv cx               ; i16(base*base) / 20
+73e7  b8...       mov cx, [bp-0xe8]
+73eb  d1e1        shl cx, 1             ; 2 * base
+73ed  03c1        add ax, cx
+73ef  898618ff    mov [bp-0xe8], ax     ; unit price = 2b + b*b/20
+73f3  e96300      jmp 0x7459            ; skips the building-only doubling
+7430  9a7c00c41d  lcall 1DC4:007C       ; building: ClampInt(base, 0, 999)
+7435  83c406      add sp, 6
+7438  d1e0        shl ax, 1             ; building price = 2b
+743a  898618ff    mov [bp-0xe8], ax
+7446  8a87f570    mov al, [bx+0x70f5]   ; building-only tail
+744b  f7d8        neg ax
+744d  3d1500      cmp ax, 0x15
+7450  7f03        jg 0x7455
+7455  d1a618ff    shl word [bp-0xe8], 1 ; double when k > 21
+7459  ...
+7461  83bffa7000  cmp word [bx+0x70fa], 0
+7466  7403        je 0x746b
+746b  d1a618ff    shl word [bp-0xe8], 1 ; double when shield_box == 0
+```
+
+So a unit costs `2b + i16(b*b)/20` and a building `2b`, the unit branch jumps
+over the `k > 21` doubling, and both double when the box is empty. The `cdq`
+at `0x73E1` is what makes the square a wrapping 16-bit value: cost code 30
+gives `b = 300`, `300*300 mod 65536 = 24464`, `24464/20 = 1223`, price
+`600 + 1223 = 1823`, doubled to 3646 for an empty box.
+
+`ClampInt` is why a city that has already stored more shields than the item
+costs buys it for zero: `base` clamps to 0 and the price follows.
+
+The box text is built at `0x746F..0x7560` (cost, item name, treasury, then
+"CIVIL DISORDER" when status bit 1 is set on an improvement), and
+`0x1EA8:1F6A`/`0x1EA8:1E22` append the decimal fields.
 
 ### Guard (`0x75D2..0x75E2`)
 

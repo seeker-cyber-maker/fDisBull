@@ -145,44 +145,44 @@ covers separately.
 
 ## BUY price, guard and commit module
 
-A second bounded module, `examples/civ/civ_city_buy_udc.py`, models the city
-screen's buy path recovered at `R:0D12:7387` (price), `R:0D12:75D2` (guard) and
-`R:0D12:75E5` (commit):
+`examples/civ/civ_city_buy_udc.py` models the city screen's buy path:
 
-- price: `b = 10*item_cost - shield_box`, `price = 2b + b*b/20`, doubled when
-  `-build_id >= 22` and doubled when the box is empty. The source's `cwd`
-  before `idiv` discards the high word of the product, so the square is a
-  16-bit wrapping value; the module reproduces that with `multiply`;
-- guard: `treasury >= price` (signed, as the source's `jge`), else no purchase;
-- commit: `shield_box := 10*item_cost` and `treasury -= price`.
+| stage | site | recovered behaviour |
+|---|---|---|
+| cost | `R:0D12:7399` / `R:0D12:73F6` | `production >= 0` reads unit word `[0x1142 + 0x22*id]`; `production < 0` reads improvement word `[0xBB2 - 0x1E*k]`, `k = -production`; both are shield cost / 10 at record offset `+0x18` |
+| base | `R:0D12:73CD` | `ClampInt(10*cost10 - shield_box, 0, 999)` |
+| price | `R:0D12:73D9` / `R:0D12:7430` | unit: `2b + i16(b*b)/20`; building: `2b` |
+| doubling | `R:0D12:7446`, `R:0D12:7461` | buildings double when `k > 21`; both kinds double when `shield_box == 0` |
+| guard | `R:0D12:75D2` | signed `treasury >= price`, else no purchase |
+| commit | `R:0D12:75E5` | `shield_box := 10*cost10`, `treasury -= price` |
 
-The IL gained `multiply` and `divide` for this (accumulate semantics like
-`add`, wrapping into the destination type, truncating toward zero, refusing a
-zero divisor), and `ge` now compares any integer cells as signed 64-bit values.
-All four realizations implement them: interpreter, C block generator, macOS
-plan lowering and the x86-64 shell lowerer. On this host the macOS path runs
-natively; the x86 path is verified by disassembling the emitted
-`imul rax, rcx`, `cqo; idiv rcx` and `setge` sequences rather than by execution.
+The IL gained `multiply` and `divide` for the quadratic (accumulate semantics
+like `add`, wrapping into the destination type, truncating toward zero,
+refusing a zero divisor), and `ge` now compares any integer cells as signed
+64-bit values. All four realizations implement them: interpreter, C block
+generator, macOS plan lowering and the x86-64 shell lowerer. On this host the
+macOS path runs natively; the x86 path is verified by disassembling the emitted
+`imul rax, rcx`, `cqo; idiv rcx` and `setge` sequences rather than by executing.
 
-Native macOS arm64 with `shield_box 0, treasury 1000, item_cost 4, build_id 0`:
+Native macOS arm64 sweep (`civ_city_udc_diff.py sweep_buy`) — interpreter and
+emitted program agree on all eight:
 
-```text
-{"format":"fdisbull-macos-observation-1","status":0,"value":0,
- "state":{"$shield_box":40,"$treasury":680,"$item_cost":4,"$build_id":0}}
-```
-
-| case | initial | price | result |
+| case | inputs | price | result |
 |---|---|---|---|
-| default | `box 0, gold 1000, cost 4` | 320 | `box 40, gold 680` |
-| partial-stock | `box 10, gold 1000, cost 4` | 105 | `box 40, gold 895` |
-| unit-doubling | `box 0, gold 2000, cost 4, id -22` | 640 | `box 40, gold 1360` |
-| square-wrap | `box 0, gold 5000, cost 30` | 3646 | `box 300, gold 1354` |
-| insufficient | `box 0, gold 100, cost 4` | 320 | refused, exit 1, no frame |
+| unit-default | `box 0, gold 1000, cost10 4, prod 0` | 320 | `box 40, gold 680` |
+| unit-partial-stock | `box 10` | 105 | `box 40, gold 895` |
+| unit-clamped-base | `box 100` (base clamps to 0) | 0 | `box 40, gold 1000` |
+| unit-square-wrap | `box 0, cost10 30` | 3646 | `box 300, gold 1354` |
+| unit-insufficient | `gold 100` | 320 | refused, exit 1, no frame |
+| building-plain | `prod -2, box 0` | 160 | `box 40, gold 840` |
+| building-doubled | `prod -22, box 0` | 320 | `box 40, gold 680` |
+| building-stock | `prod -22, box 10` | 120 | `box 40, gold 880` |
 
-`examples/civ/civ_city_udc_diff.py --module all` runs both sweeps and reports a
-single verdict.
+`unit-clamped-base` is the `ClampInt` edge: a city holding more shields than
+the item costs pays nothing.
 
-The remaining external input is the item-cost code: the DOS read
-`DS:0x1142 + 34*id` is not the documented 30-byte `IMPR_RECORDS` block, and the
-34-byte array's values do not match Civ1 shield costs, so the board's identity
-is unresolved. A live read of that word for a known building settles it.
+`cost10` stays a module input because it comes from the two static tables,
+which the IL carries as evidence rather than as data: the unit table costs are
+verified against Civ1 (40/10/20/20/30/30/20/40/40/40/40/80) and the improvement
+costs against Civ1 (Palace 200, Barracks 40, Granary 60, Temple 40,
+Marketplace 80, Library 80), both divided by ten.

@@ -38,12 +38,33 @@ def test_partial_shield_box_lowers_the_price():
     assert result["state"]["$treasury"] == 895
 
 
-def test_unit_build_ids_past_21_double_the_price():
+def test_building_prices_at_twice_the_base():
     result = _run(
-        {"$shield_box": 0, "$treasury": 2000, "$item_cost": 4, "$build_id": -22}
+        {"$shield_box": 0, "$treasury": 1000, "$item_cost": 4, "$production": -2}
     )
-    assert result["state"]["$price"] == 640
-    assert result["state"]["$treasury"] == 1360
+    assert result["state"]["$price"] == 160
+    assert result["state"]["$shield_box"] == 40
+    assert result["state"]["$treasury"] == 840
+
+
+def test_buildings_past_21_and_an_empty_box_each_double_the_price():
+    result = _run(
+        {"$shield_box": 0, "$treasury": 1000, "$item_cost": 4, "$production": -22}
+    )
+    assert result["state"]["$price"] == 320
+    assert result["state"]["$treasury"] == 680
+    result = _run(
+        {"$shield_box": 10, "$treasury": 1000, "$item_cost": 4, "$production": -22}
+    )
+    assert result["state"]["$price"] == 120
+    assert result["state"]["$treasury"] == 880
+
+
+def test_clamped_base_makes_a_fully_paid_unit_free():
+    result = _run({"$shield_box": 100, "$treasury": 1000, "$item_cost": 4})
+    assert result["state"]["$base"] == 0
+    assert result["state"]["$price"] == 0
+    assert result["state"]["$treasury"] == 1000
 
 
 def test_square_wraps_at_16_bits_like_the_source():
@@ -81,13 +102,17 @@ def test_buy_udc_builds_and_matches_interpreter_natively(tmp_path):
         if not row["match"]
     ]
     by_case = {row["case"]: row for row in receipt["cases"]}
-    assert by_case["default"]["observed"]["frame"]["state"] == {
+    assert by_case["unit-default"]["observed"]["frame"]["state"] == {
         "$shield_box": 40,
         "$treasury": 680,
         "$item_cost": 4,
-        "$build_id": 0,
+        "$production": 0,
     }
-    refused = by_case["insufficient"]["observed"]
+    assert by_case["building-plain"]["observed"]["frame"]["state"]["$treasury"] == 840
+    assert (
+        by_case["unit-clamped-base"]["observed"]["frame"]["state"]["$treasury"] == 1000
+    )
+    refused = by_case["unit-insufficient"]["observed"]
     assert refused["returncode"] != 0 and refused["frame"] is None
 
 

@@ -1,20 +1,18 @@
-"""Build the bounded Civ city BUY commit as a UDC module.
+"""Build the recovered Civ city BUY path as a UDC module.
 
-Recovered from the DOS listing of the city screen (R:0D12 route space, decoded
-in the unpacked root at ``0xd120 + offset``):
+Recovered from the DOS listing of the city screen (route space R:0D12):
 
-    price       0x7387..0x7470  base = 10 * item_cost - shield_box
-                                price = base * base / 20 + 2 * base
-                                price *= 2 if -build_id > 0x15
-                                price *= 2 if shield_box == 0
-    guard       0x75d2          if treasury < price -> no purchase
-    commit      0x75e5          cx = 10 * item_cost
-                0x75f6          word [city + 0x70fa] = cx      ; production completes
-                0x7604          word [civ gold] -= price
-
-The price derivation uses a multiply and a divide, which the shared IL cannot
-express, so a caller supplies the computed price.  The tenfold item cost is
-expressed with doubling adds, matching the source's 16-bit store exactly.
+    cost lookup 0x7387          production >= 0: unit table word [0x1142 + 0x22*id]
+                                production <  0: improvement word [0xBB2 - 0x1E*id]
+                                both hold the shield cost divided by ten
+    price       0x73CD          base = ClampInt(10*cost10 - shield_box, 0, 999)
+    unit        0x73D9..0x73F3  price = 2*base + (base*base as i16) / 20
+    building    0x7430..0x743A  price = 2*base
+    0x7446      buildings only  price *= 2 when -production > 0x15
+    0x7461      both            price *= 2 when shield_box == 0
+    guard       0x75D2          if treasury < price -> no purchase (signed)
+    commit      0x75E5          word [city + 0x70FA] = 10 * cost10
+                0x7604          civ gold -= price
 """
 
 from __future__ import annotations
@@ -40,7 +38,7 @@ COMMIT_SITE = "1D12:75E5"
 PRICE_SNIPPET_SIZE = 0xE9
 COMMIT_SNIPPET_SIZE = 0x25
 
-PUBLIC = ("$shield_box", "$treasury", "$item_cost", "$build_id")
+PUBLIC = ("$shield_box", "$treasury", "$item_cost", "$production")
 SCRATCH = (
     "$t2",
     "$t4",
@@ -60,7 +58,7 @@ def buy_program(initial: dict | None = None) -> dict:
         "$shield_box": {"type": "i16", "initial": 0},
         "$treasury": {"type": "i16", "initial": 0},
         "$item_cost": {"type": "i16", "initial": 0},
-        "$build_id": {"type": "i16", "initial": 0},
+        "$production": {"type": "i16", "initial": 0},
         "$t2": {"type": "i16", "initial": 0},
         "$t4": {"type": "i16", "initial": 0},
         "$t8": {"type": "i16", "initial": 0},
@@ -93,6 +91,27 @@ def buy_program(initial: dict | None = None) -> dict:
             "var": "$base",
             "value": {"var": "$shield_box"},
         },
+        {
+            "id": "clamp-low",
+            "op": "if",
+            "condition": {
+                "op": "not",
+                "condition": {"op": "ge", "left": {"var": "$base"}, "right": 0},
+            },
+            "then": [
+                {"id": "clamp-low-store", "op": "set", "var": "$base", "value": 0}
+            ],
+            "else": [],
+        },
+        {
+            "id": "clamp-high",
+            "op": "if",
+            "condition": {"op": "ge", "left": {"var": "$base"}, "right": 1000},
+            "then": [
+                {"id": "clamp-high-store", "op": "set", "var": "$base", "value": 999}
+            ],
+            "else": [],
+        },
         {"id": "square-load", "op": "set", "var": "$square", "value": {"var": "$base"}},
         {"id": "square", "op": "multiply", "var": "$square", "value": {"var": "$base"}},
         {
@@ -109,13 +128,42 @@ def buy_program(initial: dict | None = None) -> dict:
             "var": "$twice",
             "value": {"var": "$base"},
         },
-        {"id": "price", "op": "set", "var": "$price", "value": {"var": "$quotient"}},
-        {"id": "price-add", "op": "add", "var": "$price", "value": {"var": "$twice"}},
+        {
+            "id": "production-kind",
+            "op": "if",
+            "condition": {
+                "op": "ge",
+                "left": {"var": "$production"},
+                "right": 0,
+            },
+            "then": [
+                {
+                    "id": "price",
+                    "op": "set",
+                    "var": "$price",
+                    "value": {"var": "$quotient"},
+                },
+                {
+                    "id": "price-add",
+                    "op": "add",
+                    "var": "$price",
+                    "value": {"var": "$twice"},
+                },
+            ],
+            "else": [
+                {
+                    "id": "price-building",
+                    "op": "set",
+                    "var": "$price",
+                    "value": {"var": "$twice"},
+                }
+            ],
+        },
         {
             "id": "neg-id",
             "op": "subtract",
             "var": "$neg_id",
-            "value": {"var": "$build_id"},
+            "value": {"var": "$production"},
         },
         {
             "id": "unit-doubling",
@@ -187,7 +235,7 @@ def _contract(program: dict, evidence: dict) -> dict:
             "shield_box": "i16",
             "treasury": "i16",
             "item_cost": "i16",
-            "build_id": "i16",
+            "production": "i16",
         },
         "outputs": {"shield_box": "i16", "treasury": "i16"},
         "behavior": {"kind": "uil", "program": deepcopy(program)},
@@ -197,7 +245,7 @@ def _contract(program: dict, evidence: dict) -> dict:
             "boundary": {
                 "guard": "treasury < price means no purchase (0x75D2).",
                 "commit": "production completes: shield_box = 10 * item_cost; treasury -= price.",
-                "price": "price = 2b + b*b/20 with b = 10*item_cost - shield_box, doubled when -build_id > 21 and doubled when shield_box == 0; supplied by the caller because the IL has no multiply/divide.",
+                "price": "b = ClampInt(10*item_cost - shield_box, 0, 999); production >= 0 (unit) prices at 2b + i16(b*b)/20, production < 0 (building) at 2b; doubled when -production > 21 and when shield_box == 0.",
                 "excluded": "The box text, the CIVIL DISORDER variant and the blinking CHANGE timer are outside this transition.",
             },
         },
@@ -228,7 +276,7 @@ def _module_program(contract_id: str, primitive: dict) -> dict:
                     "shield_box": {"var": "$shield_box"},
                     "treasury": {"var": "$treasury"},
                     "item_cost": {"var": "$item_cost"},
-                    "build_id": {"var": "$build_id"},
+                    "production": {"var": "$production"},
                 },
                 "outputs": {
                     "shield_box": "$shield_box",
@@ -272,10 +320,10 @@ def build_buy_udc(
         },
         "disassembly": {
             "route": "R:0D12:7387 price, R:0D12:75D2 guard, R:0D12:75E5 commit",
-            "price": "base = 10*item_cost - shield_box; price = base*base/20 + 2*base",
-            "doubling": "-build_id > 0x15 and shield_box == 0 each double the price",
+            "price": "base = ClampInt(10*item_cost - shield_box, 0, 999); units add base*base/20, buildings do not",
+            "doubling": "-production > 0x15 doubles buildings; shield_box == 0 doubles both",
             "commit": "0x75F6 word [city+0x70FA] = 10*item_cost; 0x7604 gold -= price",
-            "unrecovered": "the item-cost tables and the exact Yes/No dialog call",
+            "unrecovered": "the exact Yes/No dialog call only; the cost tables are the unit record word +0x18 and the improvement record word +0x18 (both cost/10)",
         },
         "civ64_docs": {
             "repository": "Buyukcaglar/Civ64",
