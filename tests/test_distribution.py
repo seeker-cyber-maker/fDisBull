@@ -79,6 +79,7 @@ ROM_ASM_RESOURCES = (
     'scripts/rom_semantic_route/DecompileAuthoredSh2.java',
     'scripts/rom_semantic_route/README.md',
 )
+REQUIRED_SOURCE_FILES += ("docs/evidence/genesis-rom-route-2026-10-30/verification.json", "scripts/probe_genesis_function.py", "scripts/verify_genesis_rom_route.py")
 REQUIRED_SOURCE_FILES += ROM_ASM_RESOURCES
 REQUIRED_SOURCE_FILES += ("docs/evidence/console-udc-2026-10-30/verification.json", "src/fdisbull/data/console-udc-demo.json")
 

@@ -176,6 +176,11 @@ python -m pytest -q tests/test_console_udc.py tests/test_udc_nes.py \
 
 ## Instruction-set references and remaining scope
 
+The next experiment uses an actual third-party game ROM. See
+[real Genesis ROM to NES](GENESIS_ROM_TO_NES.md) for the separate native lifter
+profile, original-CPU oracle, Miniplanets source identity and bounded results.
+The generated-function experiment above remains its own frozen positive control.
+
 Existing emulators provide mature CPU implementations and console-device models:
 [FCEUmm](https://github.com/libretro/libretro-fceumm) and
 [Genesis Plus GX](https://github.com/ekeeke/Genesis-Plus-GX). The

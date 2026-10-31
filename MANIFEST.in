@@ -32,6 +32,7 @@ include docs/evidence/rom-asm-2026-10-30/capstone-profile.json
 include docs/evidence/rom-asm-2026-10-30/decoder-census.json
 include docs/evidence/rom-asm-2026-10-30/semantic-route.json
 include docs/evidence/console-udc-2026-10-30/verification.json
+include docs/evidence/genesis-rom-route-2026-10-30/verification.json
 include patches/capstone-5.0.9-sh-profile-gating.patch
 include scripts/rom_semantic_route/DecompileAuthoredSh2.java
 include scripts/rom_semantic_route/README.md

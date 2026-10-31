@@ -69,6 +69,7 @@ SOURCE_PATTERNS = (
     ("docs/evidence/rom-asm-2026-10-30", "decoder-census.json"),
     ("docs/evidence/rom-asm-2026-10-30", "semantic-route.json"),
     ("docs/evidence/console-udc-2026-10-30", "verification.json"),
+    ("docs/evidence/genesis-rom-route-2026-10-30", "verification.json"),
     ("patches", "capstone-5.0.9-sh-profile-gating.patch"),
     ("scripts/rom_semantic_route", "*.java"),
     ("scripts/rom_semantic_route", "README.md"),

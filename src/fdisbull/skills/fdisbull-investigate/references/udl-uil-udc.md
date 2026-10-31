@@ -197,6 +197,14 @@ Runtime qualification remains a separate receipt. The source-checkout
 machine-code → UIL → NES route with explicit RAM bindings. That initial lifter
 accepts a straight-line generated function pattern, not arbitrary game code.
 
+The separate `fdisbull.udl_genesis.lift_native` profile accepts a bounded native
+RAM function with explicit source range, RAM bindings and address-register
+assumptions. It handles selected byte/word arithmetic, tests and forward branches;
+unknown effects fail closed. Source-checkout `docs/GENESIS_ROM_TO_NES.md` records
+a real Miniplanets function tested against controlled execution of the original
+ROM and native NES output. This is a RAM-state projection, not a whole-game port
+or evidence that ordinary gameplay naturally reached the function.
+
 ## Read a proof narrowly
 
 `udl-verify` uses the optional Z3 dependency to compare a source block model with
