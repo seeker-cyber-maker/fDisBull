@@ -132,3 +132,81 @@ def test_z_comparison_keeps_original_predictions_and_scoped_results():
         'correction/preparation cost',
     ):
         assert phrase in text
+
+
+@pytest.mark.parametrize('heading', [
+    '## Initial documentation pass after target triage',
+    '### Case study seed: an English FF7 guide and regional clock instructions',
+])
+def test_initial_documentation_and_transfer_case_are_retrievable(heading):
+    text = read_reference(REFERENCE)
+    assert heading in text
+    assert len(text.encode('utf-8')) < 65536
+
+
+def test_documentation_follows_triage_before_expensive_recovery():
+    entry = ' '.join(read_reference('SKILL.md').split())
+    text = ' '.join(read_reference(REFERENCE).split())
+    assert ('initial target analysis -> initial documentation pass -> provisional '
+            'blueprints and hypotheses -> focused code/runtime verification') in entry
+    assert 'Do not wait for complete disassembly, an exact build number' in text
+    assert 'normal first-phase deliverable, not an optional rescue' in text
+
+
+def test_related_versions_are_hypothesis_inputs_not_automatic_bindings():
+    text = ' '.join(read_reference(REFERENCE).split())
+    for phrase in (
+        'Exact matching is a preference, not an admission prerequisite',
+        'versions, platforms, localizations, ports or engine families',
+        'does not transfer qualified addresses, object IDs, binary layouts, timing or input sequences automatically',
+        'applicability per claim, not as a single trusted/untrusted guide flag',
+    ):
+        assert phrase in text
+
+
+def test_document_language_and_game_edition_remain_distinct():
+    text = ' '.join(read_reference(REFERENCE).split())
+    for phrase in (
+        "Record the document's language separately from the game edition/region",
+        'an English guide need not describe the US game',
+        'translated aliases without treating lexical matches as object identity',
+        'translated/reposted guide retains its upstream lineage',
+    ):
+        assert phrase in text
+
+
+def test_ff7_recollection_is_not_promoted_to_verified_history():
+    text = ' '.join(read_reference(REFERENCE).split())
+    for phrase in (
+        'TiGa reports remembering',
+        'not independently verified publication history',
+        'guide title, publisher, printing/page and compared game releases',
+        'not evidence of the guide\'s Japanese provenance or a complete JP/US comparison',
+        'no guide-page comparison was completed',
+    ):
+        assert phrase in text
+
+
+def test_local_mismatch_preserves_unrelated_leads_without_certifying_them():
+    text = ' '.join(read_reference(REFERENCE).split())
+    for phrase in (
+        'without deleting unrelated leads',
+        'a clock mismatch neither disproves nor validates them',
+        'version-qualified alternatives for the clock procedure',
+        'not a reason to throw away the rest of the guide or declare the rest correct',
+    ):
+        assert phrase in text
+
+
+def test_documentation_is_bounded_and_preserves_blind_exceptions():
+    text = ' '.join(read_reference(REFERENCE).split())
+    for phrase in (
+        'Stop gathering when the next useful probe is defined',
+        'absence of documentation must not block all analysis',
+        'retrieval, translation, collation and correction costs',
+        'not a guaranteed speedup',
+        'a user-requested blind/independent recovery arm',
+        'Record the reason when the documentation pass is omitted',
+        'State what would contradict it',
+    ):
+        assert phrase in text
