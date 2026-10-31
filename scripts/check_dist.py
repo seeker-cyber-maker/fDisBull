@@ -105,6 +105,20 @@ def check_archive(path: Path) -> int:
             raise ValueError(f"Wheel contains unexpected package or metadata roots: {sorted(roots)}")
     else:
         roots = {entry.parts[0] for entry in entries}
+        if path.name.startswith("fdisbull_player-") and path.name.endswith(".tar.gz"):
+            if len(roots) != 1 or not next(iter(roots)).startswith("fdisbull_player-"):
+                raise ValueError(f"Unexpected player source archive root: {sorted(roots)}")
+            relative = {PurePosixPath(*entry.parts[1:]).as_posix() for entry in entries}
+            required = {"pyproject.toml", "PKG-INFO"} | {"fdisbull_player/" + name for name in PLAYER_MODULES}
+            missing = required - relative
+            if missing:
+                raise ValueError(f"Player source archive is missing required files: {sorted(missing)}")
+            allowed = required | {"setup.cfg"}
+            allowed |= {"fdisbull_player.egg-info/" + name for name in
+                        ("PKG-INFO", "SOURCES.txt", "dependency_links.txt", "entry_points.txt", "top_level.txt")}
+            if relative - allowed:
+                raise ValueError(f"Player source archive contains unexpected files: {sorted(relative - allowed)}")
+            return len(names)
         if len(roots) != 1 or not next(iter(roots)).startswith("fdisbull-"):
             raise ValueError(f"Unexpected source archive root: {sorted(roots)}")
         relative = {PurePosixPath(*entry.parts[1:]).as_posix() for entry in entries}

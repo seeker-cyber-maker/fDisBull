@@ -1,0 +1,122 @@
+name: Prepare or publish Python packages
+
+# Preparation only by default: merging this file, pushing tags, and releasing do
+# not upload anything. See docs/PYPI_RELEASE.md before enabling either index.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing stable tag (vMAJOR.MINOR.PATCH) at the dispatched main SHA
+        required: true
+        type: string
+      source_sha:
+        description: Full source SHA; must equal the dispatched main commit and tag
+        required: true
+        type: string
+      target:
+        description: Validate only, or explicitly upload after setup and approval
+        type: choice
+        default: validate
+        options: [validate, testpypi, pypi]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: python-package-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.repository == 'seeker-cyber-maker/fDisBull' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - name: Require exact source, versions, prior CI and publication readiness
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          TARGET: ${{ inputs.target }}
+          GITHUB_TOKEN: ${{ github.token }}
+          PYPI_PUBLISH_ENABLED: ${{ vars.PYPI_PUBLISH_ENABLED }}
+          PYPI_LICENSE_READY: ${{ vars.PYPI_LICENSE_READY }}
+        run: python scripts/check_pypi_release.py --tag "$RELEASE_TAG" --sha "$SOURCE_SHA" --target "$TARGET"
+      - name: Install build and test dependencies
+        run: python -m pip install ".[test]" build twine
+      - name: Record executable, import, distribution and commit
+        run: |
+          python - <<'PY'
+          import importlib.metadata, pathlib, subprocess, sys, tomllib, fdisbull
+          version = tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version']
+          assert pathlib.Path(fdisbull.__file__).resolve().is_relative_to(pathlib.Path(sys.prefix).resolve())
+          assert version == fdisbull.__version__ == importlib.metadata.version('fdisbull')
+          print(sys.executable, fdisbull.__file__, version)
+          print(subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip())
+          PY
+      - name: Test and build both distributions
+        run: |
+          python -m pytest -q
+          python -m build --outdir pypi-dist/fdisbull
+          python -m build ./player --outdir pypi-dist/fdisbull-player
+          python -m twine check --strict pypi-dist/*/*
+          python scripts/check_dist.py pypi-dist/*/*
+      - name: Install and smoke test the exact wheels without source imports
+        run: |
+          python -m venv "$RUNNER_TEMP/core"
+          "$RUNNER_TEMP/core/bin/python" -m pip install pypi-dist/fdisbull/*.whl
+          "$RUNNER_TEMP/core/bin/python" -m pip check
+          "$RUNNER_TEMP/core/bin/python" -I -m fdisbull --help
+          python scripts/check_agent_skill.py --python "$RUNNER_TEMP/core/bin/python" --output "$RUNNER_TEMP/core-skill.json"
+          python scripts/check_agent_skill.py --python "$RUNNER_TEMP/core/bin/python" --skill write-gamefaqs-guide --output "$RUNNER_TEMP/guide-skill.json"
+          python -m venv "$RUNNER_TEMP/player"
+          "$RUNNER_TEMP/player/bin/python" -m pip install --no-index --no-deps pypi-dist/fdisbull-player/*.whl
+          "$RUNNER_TEMP/player/bin/python" -m pip check
+          "$RUNNER_TEMP/player/bin/python" -I -c "import importlib.util, fdisbull_player; assert importlib.util.find_spec('fdisbull') is None"
+          "$RUNNER_TEMP/player/bin/python" -I -m fdisbull_player --help
+      - name: Hash the tested artifacts
+        working-directory: pypi-dist
+        run: sha256sum fdisbull/* fdisbull-player/* > SHA256SUMS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: tested-python-packages
+          path: pypi-dist/
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: inputs.target != 'validate'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [fdisbull, fdisbull-player]
+    # Configure required reviewers, prevent self-review and allow main only.
+    environment:
+      name: ${{ inputs.target }}
+    permissions:
+      id-token: write
+    steps:
+      # No checkout, build, installation, or source execution in this job.
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: tested-python-packages
+          path: dist
+      - name: Verify the tested bytes
+        working-directory: dist
+        run: sha256sum --check SHA256SUMS
+      - name: Upload selected project with PyPA Trusted Publishing
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # release/v1
+        with:
+          packages-dir: dist/${{ matrix.project }}/
+          repository-url: ${{ inputs.target == 'testpypi' && 'https://test.pypi.org/legacy/' || 'https://upload.pypi.org/legacy/' }}
+          print-hash: true
