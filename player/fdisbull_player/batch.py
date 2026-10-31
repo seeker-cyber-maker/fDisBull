@@ -199,8 +199,27 @@ class BatchSession:
             recovery = self.doc['recovery']
             index = next((i for i, s in enumerate(self.doc['steps']) if s['state'] != 'completed'), None)
             try:
+                if not recovery and index is not None and self.doc['steps'][index]['state'] == 'unknown':
+                    attempts = self.doc['steps'][index]['attempts']
+                    original = attempts[-1].get('result', {}) if attempts else {}
+                    ident = original.get('recovery_id')
+                    reconcile = getattr(self.player.backend,'reconcile',None)
+                    if isinstance(ident,str) and reconcile is not None:
+                        probe = self.player.backend.observe()
+                        if (isinstance(probe,dict) and probe.get('session_token') == self.doc['session_token'] and
+                                probe.get('reconciliation_available') is True and probe.get('recovery_id') == ident):
+                            candidate = reconcile(recovery_id=ident)
+                            if (isinstance(candidate,dict) and candidate.get('read_only') is True and
+                                    candidate.get('recovery_id') == ident and
+                                    candidate.get('action') == original.get('action')):
+                                # The provider can consume its held attempt here.
+                                # Retain its reply before a following read can fail.
+                                attempt = attempts[-1]
+                                attempt.setdefault('result_before_reconciliation', deepcopy(original))
+                                attempt['result'] = deepcopy(candidate)
+                                self._write()
                 observation = self._observe()
-            except (OSError, ValueError, EOFError):
+            except (OSError, ValueError, EOFError, TypeError):
                 return report('unresolved', 'observation-failed', 'load' if recovery else 'action')
             if observation is None:
                 return report('unresolved', 'unqualified-observation', 'load' if recovery else 'action')

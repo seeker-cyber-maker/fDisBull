@@ -111,6 +111,7 @@ class ZService:
         self.failures = []
         self.revision = 0
         self.pending = None
+        self.held_action = None
         self.snapshots = {}
         self.latest_native_save = None
         self.processes = []
@@ -131,10 +132,13 @@ class ZService:
             'latest_native_save':self.latest_native_save,
             'checkpoint_recovery':'unqualified' if self.checkpoint_failed or self.recovery_required else 'qualified',
             'recovery_required':self.recovery_required, 'action_failures':self.failures,
+            'held_command':self.held_action['pending']['command'] if self.held_action else None,
+            'recovery_id':self.held_action['id'] if self.held_action else None,
+            'reconciliation_available':self._reconcilable_navigation(),
             'reply_delivery_pending':delivery_pending,
             'pending_effects':('applied-confirmed' if self.pending and any(e.get('phase') in
                 ('food_purchase_committed','vegasaurus_purchase_confirmed') for e in self.pending['events'])
-                else 'unknown' if self.pending else 'none-pending'),
+                else 'unknown' if self.pending else self.held_action['effects'] if self.held_action else 'none-pending'),
             'processes':processes, 'cleanup_complete':all(p['returncode'] is not None for p in processes),
             'scope':'original-backed UDC with existing native scene actions'})
 
@@ -156,6 +160,7 @@ class ZService:
         self.session_token = secrets.token_hex(32)
         self.checkpoint_failed = False
         self.recovery_required = False
+        self.held_action = None
         if (self.pending and self.pending['command'].startswith('load park ') and any(
                 e.get('phase') == 'result' and e.get('command') == 'load park'
                 for e in self.pending['events'])):
@@ -408,7 +413,70 @@ class ZService:
                     'objects':objects, 'inventory':[], 'coverage':{'partial':True}}
         except Exception:
             return {'complete':False, 'session_token':self.session_token,
-                    'recovery_required':self.recovery_required or self.checkpoint_failed}
+                    'recovery_required':self.recovery_required or self.checkpoint_failed,
+                    'recovery_id':self.held_action['id'] if self.held_action else None,
+                    'reconciliation_available':self._reconcilable_navigation()}
+
+    def _reconcilable_navigation(self):
+        held = self.held_action
+        if not held or self.checkpoint_failed or not self.recovery_required:
+            return False
+        pending, failure = held['pending'], held['scene_failure']
+        action = pending.get('action', {})
+        ticket = failure.get('input', {})
+        return (held['session_token'] == self.session_token and
+                pending.get('session_token') == self.session_token and
+                pending.get('command') == 'go dinomart' and
+                {k:action.get(k) for k in ('verb','target','item')} ==
+                    {'verb':'go','target':'route-dinomart','item':None} and
+                held['source'] == self.text.current == 'street' and
+                failure.get('scene_revision') == getattr(self.text,'street',None) and
+                failure.get('action_name') == 'street.mart' and
+                failure.get('before_observation') is not None and
+                ticket.get('accepted') is True and ticket.get('delivery') == 'queued' and
+                (not getattr(self.text.debug,'run_id',None) or
+                 failure.get('run') == self.text.debug.run_id))
+
+    def reconcile(self, recovery_id=None):
+        """Qualify the held original destination without execution or new input."""
+        result = {'complete':False, 'status':'incomplete',
+                  'effects':self.held_action['effects'] if self.held_action else 'unknown',
+                  'read_only':True, 'recovery_required':self.recovery_required or self.checkpoint_failed,
+                  'recovery_id':self.held_action['id'] if self.held_action else None,
+                  'message':'Original outcome remains unresolved; no input sent.'}
+        if not self.recovery_required and not self.checkpoint_failed:
+            return {**result,'complete':True,'status':'not-needed','effects':'none-confirmed',
+                    'message':'No held original action requires reconciliation.'}
+        if not self._reconcilable_navigation():
+            return result
+        held = self.held_action
+        if recovery_id is not None and recovery_id != held['id']:
+            return result
+        previous = self.text.current, self.text.mart, self.revision
+        try:
+            if self.text.debug.call('session.status').get('state') != 'stopped':
+                return result
+            qualified = load_scenes().qualify_dinomart(self.text)
+            self.revision += 1
+            observed = self.observe(recovering=True)
+            witness = self.witness(observed)
+            if witness is None or observed['context']['id'] != 'dinomart':
+                raise ValueError('Original destination is not qualified')
+        except Exception:
+            self.text.current, self.text.mart, self.revision = previous
+            return result
+        self.recovery_required = False
+        self.held_action = None
+        action = {k:held['pending']['action'][k] for k in ('verb','target','item')}
+        self.failures[held['failure_index']]['reconciliation'] = {
+            'read_only':True,'witness':witness,'original_diagnostic_preserved':True}
+        self.event({'phase':'navigation_reconciled','command':'go dinomart',
+                    'read_only':True,'guest_execution':'not_requested','input':'not_sent',
+                    'frame':qualified['frame'],'witness':witness})
+        self.receipt('reconciled')
+        return {**result,'complete':True,'status':'success','effects':'applied-confirmed',
+                'recovery_required':False,'action':action,'witness':witness,
+                'message':'Original DinoMart destination verified; navigation was not replayed.'}
 
     def witness(self, observation):
         context = observation.get('context', {})
@@ -547,6 +615,7 @@ class ZService:
                     raise ValueError('Restored scene did not requalify')
                 self.checkpoint_failed = False
                 self.recovery_required = False
+                self.held_action = None
                 for failure in self.failures:
                     if failure.get('restored_by') is None:
                         failure['restored_by'] = name
@@ -594,6 +663,11 @@ class ZService:
                     continue
                 if op == 'observe' and set(request) == {'op'}:
                     self.send(self.observe()); continue
+                if op == 'reconcile' and set(request) <= {'op','recovery_id'}:
+                    ident = request.get('recovery_id')
+                    if ident is not None and (not isinstance(ident,str) or not 1 <= len(ident) <= 128):
+                        raise ValueError('Invalid recovery identity')
+                    self.send(self.reconcile(ident)); continue
                 if op in ('save','load') and set(request) <= {'op','slot' if op == 'save' else 'checkpoint'}:
                     self.send(self.checkpoint(request)); continue
                 if op != 'act' or set(request) != {'op','action'}:
@@ -601,7 +675,7 @@ class ZService:
                 if self.recovery_required or self.checkpoint_failed:
                     self.send({'complete':True,'status':'rejected','effects':'none-confirmed',
                                'recovery_required':True,
-                               'message':'Checkpoint recovery is required; no action input was sent.'});continue
+                               'message':'Reconciliation or checkpoint recovery is required; no action input was sent.'});continue
                 action = request['action']
                 if (not isinstance(action,dict) or set(action) != {'verb','target','item','context_token'}
                         or not all(isinstance(action[k],str) for k in ('verb','target','context_token')) or action['item'] is not None):
@@ -616,7 +690,8 @@ class ZService:
                 command = bindings.get((action['verb'],action['target'])) if action['target'] in visible else None
                 if command is None:
                     self.send({'complete':True,'status':'rejected','message':'Action unavailable; no input sent.'});continue
-                self.pending = {'command':command,'messages':[],'events':[], 'session_token':self.session_token}
+                self.pending = {'command':command,'messages':[],'events':[],
+                                'session_token':self.session_token,'action':deepcopy(action)}
                 self.restarted = False
                 self.receipt('acting')
                 if command.startswith('terminal:'):
@@ -682,18 +757,25 @@ class ZService:
         message = ('The purchase is confirmed; its follow-up failed. Do not repeat the purchase.' if confirmed else
                    'The original action did not reach a verified outcome. Do not retry blindly.')
         if recoverable:
-            message += ' Restore an existing live checkpoint to recover; further action input is blocked.'
+            message += ' The provider is retained for reconciliation or checkpoint recovery; further action input is blocked.'
         effects = 'applied-confirmed' if confirmed else 'unknown'
         path = self.work/('z-failure.json' if not self.failures else f'z-failure-{len(self.failures)+1:03d}.json')
         load_scenes().atomic_json(path, {'error_type':type(error).__name__, 'error':str(error),
             'pending':self.pending,'confirmed_effects':confirmed,'recovery_required':recoverable})
+        index = len(self.failures)
         self.failures.append({'command':self.pending['command'],'effects':effects,
                               'diagnostic':path.name,'restored_by':None})
         if recoverable:
+            scene_failure = getattr(error,'result',{})
+            self.held_action = {'id':secrets.token_hex(16),'pending':deepcopy(self.pending),'effects':effects,
+                'session_token':self.session_token,'source':getattr(self.text,'current',None),
+                'scene_failure':deepcopy(scene_failure) if isinstance(scene_failure,dict) else {},
+                'failure_index':index}
             self.pending = None  # Exactly one reply; the next read must not finish it again.
             self.receipt('recovery-required')
         self.send({'complete':False,'status':'incomplete','message':message,
-                   'effects':effects,'followup':'failed','recovery_required':recoverable})
+                   'effects':effects,'followup':'failed','recovery_required':recoverable,
+                   'recovery_id':self.held_action['id'] if recoverable else None})
 
     def stop(self, signum, _frame=None):
         self.stop_reason=signal.Signals(signum).name

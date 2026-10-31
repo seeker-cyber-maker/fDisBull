@@ -139,6 +139,26 @@ before BUY; the last inspected page cannot silently change the intended order.
 
 ## Saving and stopping
 
+An incomplete original action holds further action input while its reachable
+provider remains available. For a held `go dinomart`, `reconcile` can confirm
+the destination from the paused original frame and current selector without
+sending input, running the guest or restoring a checkpoint. This requires the
+retained original input receipt, source scene revision and same live session.
+An unqualified destination leaves the hold intact. Other unknown action effects
+remain unresolved; this command does not authorize replay or reconnect an exited
+guest. Observation and session receipts expose `reconciliation_available` and
+the held attempt's `recovery_id`.
+
+The JSON-line backend accepts `{"op":"reconcile"}` and an optional
+`recovery_id` selecting the already-held attempt. A successful result carries
+`read_only: true`, the original canonical action and a fresh destination witness.
+Batch journal reconciliation checks the attempt ID, action and session before
+accepting that certificate, then refreshes its observation without replaying the
+step. The original failure diagnostic is retained. An already confirmed purchase
+keeps its known commit if an unsupported follow-up hold cannot be reconciled.
+See the [DinoMart recovery verification](VERIFICATION-DINOPARK-DINOMART-RECONCILIATION-2026-10-31.md)
+for the actual tested boundary and remaining analysis obligations.
+
 `save park` uses the original native writer and creates a new backup each time:
 `zpark`, `zpark-002`, and so on. `--slot` chooses the base name. Earlier backups
 are preserved. `load park` loads the latest saved or explicitly loaded backup;

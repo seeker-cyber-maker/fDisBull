@@ -1,5 +1,12 @@
 # DinoPark analysis friction and retained Z terminal replies
 
+The [DinoMart reconciliation follow-up](VERIFICATION-DINOPARK-DINOMART-RECONCILIATION-2026-10-31.md)
+extends the scene host budget, retains failed-navigation input evidence and
+qualifies read-only recovery in the same original guest. It continues the
+97-entry/13-asset ledgers, fixes batch certificate durability and records a
+separate unreplayed purchase transport timeout. Reusable investigation guidance
+is proposed independently in [PR #80](https://github.com/seeker-cyber-maker/fDisBull/pull/80).
+
 The [caller/filename-producer follow-up](VERIFICATION-DINOPARK-CALLER-PRODUCERS-2026-10-31.md)
 traces 62 more entries to pointer publications, identifies matching dispatch
 consumers for 61 of them, and explains the static mechanisms behind all 41

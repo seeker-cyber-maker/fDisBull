@@ -430,6 +430,34 @@ def definition(reference, title, predicate, selector, action, point, outcome):
                      'guest_ms': 12000, 'timeout_ms': 10000}]}
 
 
+def mart_entry_object(reference, predicate, selector, patterns):
+    obj = definition(reference, 'street', predicate, selector, 'street.mart', [160, 66],
+                     {'any': [pixel_predicate(patterns['mart']),
+                              pixel_predicate(patterns['after'])]})['objects'][0]
+    # Loading the catalogue reads several original assets. Native observation
+    # hooks can consume host time while only a few guest seconds have elapsed.
+    # Keep both budgets finite and below the player's 60-second request bound.
+    obj['timeout_ms'] = 40000
+    return obj
+
+
+def qualify_dinomart(text):
+    """Read the current destination and publish its scene; never send guest input."""
+    frame, image = take_frame(text.project, text.debug, 'dinomart-before')
+    views = [view for view in ('mart', 'after') if matches(image, text.patterns[view])]
+    if not views:
+        raise RuntimeError('DinoMart catalogue not recognized; outcome unknown')
+    view = views[0]
+    selector = {'memory': {'address': '4020:3c5c', 'length': 2,
+                          'hex': text.debug.memory('4020:3c5c', length=2)['hex']}}
+    street = text.project.debug_scene_info(text.street)['definition']['match']
+    doc = definition(frame, 'dinomart', pixel_predicate(text.patterns[view]), selector,
+                     'mart.back', [216, 187], street)
+    saved = text.project.debug_save_scene('dinomart', doc, parent=text.mart)
+    text.mart, text.current = saved['id'], 'dinomart'
+    return {'frame': frame, 'view': view, 'scene': saved}
+
+
 def balances(debug):
     fields = {'cash': '4020:5c3a', 'loan': '4020:bfbb', 'working_cash': '4020:bad4'}
     return {key: int.from_bytes(bytes.fromhex(debug.memory(address, length=4)['hex']), 'little', signed=True)
@@ -2059,9 +2087,8 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                                                           'hex': debug.memory('4020:3c5c', length=2)['hex']}}
                             street_doc = definition(street_frame, 'street', street_pred, street_selector,
                                                     'street.office', [175, 140], office_pred)
-                            street_doc['objects'].append(definition(street_frame, 'street', street_pred, street_selector,
-                                'street.mart', [160, 66], {'any': [pixel_predicate(patterns['mart']),
-                                                                  pixel_predicate(patterns['after'])]})['objects'][0])
+                            street_doc['objects'].append(mart_entry_object(
+                                street_frame, street_pred, street_selector, patterns))
                             for obj, point, view in [('street.employment', [270, 66], 'employment'),
                                                      ('street.diner', [55, 65], 'dino_diner'),
                                                      ('street.store', [270, 140], 'general_store')]:
@@ -2083,16 +2110,8 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                             receipt['street_after'] = street_frame
                         elif command == 'go dinomart':
                             action = debug.scene_click(street['id'], 'street.mart')
-                            mart_frame, mart_image = take_frame(project, debug, 'dinomart-before')
-                            view = 'mart' if matches(mart_image, patterns['mart']) else 'after'
-                            if not matches(mart_image, patterns[view]):
-                                raise RuntimeError('DinoMart catalogue not recognized after input')
-                            mart_selector = {'memory': {'address': '4020:3c5c', 'length': 2,
-                                                        'hex': debug.memory('4020:3c5c', length=2)['hex']}}
-                            mart_doc = definition(mart_frame, 'dinomart', pixel_predicate(patterns[view]),
-                                                  mart_selector, 'mart.back', [216, 187], street_pred)
-                            mart = project.debug_save_scene('dinomart', mart_doc, parent=text.mart)
-                            text.mart, text.current = mart['id'], 'dinomart'
+                            qualified = qualify_dinomart(text)
+                            mart_frame, mart = qualified['frame'], qualified['scene']
                             text.vegasaurus_extinct = False
                             rendered = text.describe()
                             receipt['dinomart_before'] = mart_frame
