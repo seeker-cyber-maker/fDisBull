@@ -1,12 +1,14 @@
 include README.md AGENTS.md CLAUDE.md pyproject.toml MANIFEST.in player/pyproject.toml
 include player/fdisbull_player/*.py
 recursive-include src/fdisbull *.py *.c *.sh
+recursive-include src/fdisbull/ghidra_scripts *.java
 recursive-include src/fdisbull/data *.json *.txt
 recursive-include src/fdisbull/skills *.md
 recursive-include tests *.py
 include tests/wine_gui_fixture.c
 include tests/dosbox_zip_empty_write.cpp
 include tests/ida_rpc_vectors.json
+include tests/rom_asm_sh2_vectors.json
 include src/fdisbull/ida_guest/SDK-LICENSE.txt
 recursive-include docs *.md
 prune docs/uil-rfcs/0001
@@ -23,6 +25,8 @@ include docs/uil-rfcs/0002/vectors.json
 include docs/uil-rfcs/0002/replay-summary.json
 include docs/evidence/integration-026/verification.json
 include docs/evidence/integration-0261/verification.json
+include docs/evidence/rom-asm-2026-10-30/benchmark.json
+include docs/evidence/rom-asm-2026-10-30/accuracy.json
 include docs/evidence/spatial-2026-10-29/verification.json
 include docs/evidence/zork-2026-10-29/verification.json
 include docs/evidence/zork-uil-2026-10-29/verification.json

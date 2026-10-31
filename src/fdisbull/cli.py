@@ -216,6 +216,7 @@ METHODS = {
     "identify": "Identify file header from bytes; path; no project required",
     "inspect": "Parse file metadata; path; no project required",
     "rom-inspect": "Parse console cartridge or Sega data-track descriptor; path; no project required",
+    "rom-disasm": "Decode bounded, explicitly mapped SH-2 bytes with interchangeable engines; path,base_address,[backend,offset,length,max_instructions,mode,ghidra_home,saturn_recomp_root,timeout]",
     "disc-inspect": "Parse bounded CUE/BIN or ISO primary filesystem metadata; path,[mode,max_entries,max_directory_bytes,max_depth]",
     "info": "Parsed container summary; [version]",
     "header": "Parsed header fields; [version]",
@@ -353,6 +354,9 @@ def invoke(method, params, debugger=None):
     if method=='disc-inspect':
         from .disc import inspect_disc_path
         return inspect_disc_path(**p)
+    if method=='rom-disasm':
+        from .rom_asm import disassemble_rom_path
+        return disassemble_rom_path(**p)
     if method=='rom-inspect':
         from .roms import inspect_rom_path
         path=p.pop('path')
@@ -486,7 +490,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('agent-skill','identify','inspect','rom-inspect','disc-inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('agent-skill','identify','inspect','rom-inspect','rom-disasm','disc-inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         value={"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
@@ -676,6 +680,16 @@ def parser():
         if name=='inspect':
             c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'])
             c.add_argument('--image',choices=['auto','pe','le','mz','com'])
+    c=sub.add_parser('rom-disasm',help=METHODS['rom-disasm'])
+    c.add_argument('path')
+    c.add_argument('--base-address',type=lambda s:int(s,0),required=True,help='explicit address mapping source file offset zero')
+    c.add_argument('--backend',choices=['capstone','ghidra','saturn-recomp'],default='capstone')
+    c.add_argument('--offset',type=lambda s:int(s,0),default=0)
+    c.add_argument('--length',type=lambda s:int(s,0))
+    c.add_argument('--max-instructions',type=int,default=256)
+    c.add_argument('--mode',choices=['linear','word-scan'],default='linear')
+    c.add_argument('--ghidra-home');c.add_argument('--saturn-recomp-root')
+    c.add_argument('--timeout',type=float,default=60.0)
     c=sub.add_parser('disc-inspect',help=METHODS['disc-inspect'])
     c.add_argument('path')
     c.add_argument('--mode',choices=['MODE1/2048','MODE1/2352'])

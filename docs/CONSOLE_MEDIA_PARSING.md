@@ -7,7 +7,9 @@ accounting. The descriptor-only route and its original receipt remain below.
 This stage reads console media as data. It identifies supported headers,
 reports declared hardware and sizes, records original file offsets, and checks
 bounded structural extents. It does not create CPU mappings, disassemble these
-CPUs, emulate a console, recover game rules or decompile C. `loadable` is always
+CPUs, emulate a console, recover game rules or decompile C. The separate
+[ROM-to-ASM API](ROM_ASM.md) accepts an explicit SH-2 payload mapping; this does
+not change these inspection results. `loadable` is always
 false for these reports. The ordinary executable loader remains separate.
 
 ```sh

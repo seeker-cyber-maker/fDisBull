@@ -65,11 +65,27 @@ REQUIRED_SOURCE_FILES += ('docs/uil-rfcs/0002/vectors.json',
                           'docs/uil-rfcs/0002/replay-summary.json')
 REQUIRED_SOURCE_FILES += ('docs/evidence/integration-026/verification.json',)
 REQUIRED_SOURCE_FILES += ('docs/evidence/integration-0261/verification.json',)
+ROM_ASM_RESOURCES = (
+    'src/fdisbull/ghidra_scripts/RomAsm.java',
+    'tests/rom_asm_sh2_vectors.json',
+    'docs/evidence/rom-asm-2026-10-30/benchmark.json',
+    'docs/evidence/rom-asm-2026-10-30/accuracy.json',
+)
+REQUIRED_SOURCE_FILES += ROM_ASM_RESOURCES
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):
     with zipfile.ZipFile(path,'w') as output:
         for required in files:output.writestr('fdisbull-test/'+required,'')
+
+
+@pytest.mark.parametrize('required', ROM_ASM_RESOURCES)
+def test_distribution_requires_rom_asm_resources(tmp_path, required):
+    check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+    archive=tmp_path/'fdisbull-missing-rom-asm.zip'
+    source_archive(archive,tuple(path for path in REQUIRED_SOURCE_FILES if path!=required))
+    with pytest.raises(ValueError,match=re.escape(required)):
+        check(archive)
 
 
 @pytest.mark.parametrize('unwanted',[
@@ -133,6 +149,7 @@ def test_release_allowlists_include_only_the_public_udc_and_output_receipts():
     root = Path(__file__).resolve().parents[1]
     build = runpy.run_path(str(root/'scripts/build_release.py'))
     selected = {path.relative_to(root).as_posix() for path in build['release_files'](root)}
+    assert set(ROM_ASM_RESOURCES) <= selected
     assert {path for path in selected if path.startswith('docs/evidence/udc-2026-10-29/')} == UDC_EVIDENCE_FILES
 
     manifest_lines = (root/'MANIFEST.in').read_text().splitlines()

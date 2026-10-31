@@ -258,6 +258,17 @@ loaded or executed those bytes. To claim runtime behavior, qualify the resource
 mapping and trace interpreter fetch, branch conditions and effects. See
 `docs/AGI_LOGIC.md` and the interpreter section of `methodology.md`.
 
+### Compare console instruction proposals
+
+Use `rom-inspect` / `disc-inspect` for container facts first. When a payload's
+load mapping has independent evidence, `rom-disasm` can decode a bounded SH-2
+range with Capstone, Ghidra or saturn-recomp. Supply the address mapping file
+offset zero; keep extracted files and returned instruction bytes private.
+`--mode word-scan` tests aligned words independently, including data hypotheses.
+Neither mode discovers executable code or updates a native project. See
+[ROM-to-ASM](ROM_ASM.md) for external engine setup, the shared output contract,
+the Civilization Saturn comparison and the known Capstone CPU-profile issue.
+
 ### Compare a source block with shared semantics
 
 For the supported 0.23 DOS profile, read `udl-uil-udc.md` before using

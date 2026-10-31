@@ -234,6 +234,13 @@ parser, background callbacks, uncertain flag effects and unsupported cases as
 explicit low-level IR. Recovery is partial; the verification report distinguishes
 successful play from evidence that the higher-level rules actually executed.
 
+Console media can be inspected without running a game. A separate bounded
+ROM-to-assembly interface offers Capstone, Ghidra and saturn-recomp for explicitly
+mapped Saturn SH-2 bytes. Results retain source identity and unknown words;
+decoding does not establish that a region is executable code. See
+[console parsing](docs/CONSOLE_MEDIA_PARSING.md) and
+[ROM-to-assembly modules and comparison](docs/ROM_ASM.md).
+
 ## The bounded UDC pipeline
 
 The 0.23 source introduces an original-backed DOS compiler definition (UDC):

@@ -35,10 +35,12 @@ SOURCE_PATTERNS = (
     ("src/fdisbull/ida_guest", "*.sh"),
     ("src/fdisbull/ida_guest", "SDK-LICENSE.txt"),
     ("src/fdisbull/dos_guest", "*.sh"),
+    ("src/fdisbull/ghidra_scripts", "*.java"),
     ("tests", "*.py"),
     ("tests", "wine_gui_fixture.c"),
     ("tests", "dosbox_zip_empty_write.cpp"),
     ("tests", "ida_rpc_vectors.json"),
+    ("tests", "rom_asm_sh2_vectors.json"),
     ("docs", "*.md"),
     ("docs/evidence/spatial-2026-10-29", "verification.json"),
     ("docs/evidence/zork-2026-10-29", "verification.json"),
@@ -60,6 +62,8 @@ SOURCE_PATTERNS = (
     ("docs/evidence/integration-025", "packages.json"),
     ("docs/evidence/integration-026", "verification.json"),
     ("docs/evidence/integration-0261", "verification.json"),
+    ("docs/evidence/rom-asm-2026-10-30", "benchmark.json"),
+    ("docs/evidence/rom-asm-2026-10-30", "accuracy.json"),
     ("scripts", "*.py"),
 )
 
