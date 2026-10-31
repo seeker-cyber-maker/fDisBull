@@ -176,6 +176,8 @@ class BoundaryMixin:
 
     def function_patterns(self, version=None, limit=200, offset=0, scan_unexplored=False):
         """Return native pattern evidence without changing analysis or scheduling work."""
+        if self.arch == 'thumb':
+            raise ValueError('Thumb function-pattern recognition is not implemented; use vector/call candidates')
         from .project import integer
         from .decoder import decode
         from .dos_decoder import decode_dos

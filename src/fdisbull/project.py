@@ -77,9 +77,10 @@ from .advanced import AdvancedMixin
 from .membership_view import MembershipMixin
 from .debugger import DebugProjectMixin, DEBUG_DDL
 from .proofs import ProofProjectMixin, PROOF_DDL
+from .cortex_m import CortexMMixin, DDL as CORTEX_M_DDL
 
 
-class Project(CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
+class Project(CortexMMixin, CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
     def __init__(self, path):
         self.path = Path(path).resolve()
         if not self.path.is_file():
@@ -104,7 +105,7 @@ class Project(CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateR
             self.meta = {k:json.loads(v) for k,v in meta.items() if k not in ("application","schema")}
             self.arch, self.bits = self.meta["arch"], self.meta["bits"]
             self.context = f"{self.arch}:{self.bits}:little"
-            self.db.executescript(DEBUG_DDL+PROOF_DDL)
+            self.db.executescript(DEBUG_DDL+PROOF_DDL+CORTEX_M_DDL)
             self.db.execute("PRAGMA foreign_keys=ON")
             self.db.execute("PRAGMA busy_timeout=30000")
         except Exception:
@@ -257,7 +258,10 @@ class Project(CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateR
                 loader['file_mapping_count'] = len(loader.pop('file_mappings', []))
                 loader['le'] = le
                 metadata['loader_metadata'] = loader
-            return {"project":str(self.path),**metadata,"entry":hx(self.meta["entry"]),"context":self.context,
+            entry=self._entry_address(v['id'])
+            if self.arch=='thumb' and self._document(v['id']).get('cortex_m'):
+                metadata['loader_metadata']=dict(metadata['loader_metadata'],cortex_m=self._document(v['id'])['cortex_m'])
+            return {"project":str(self.path),**metadata,"entry":hx(entry) if entry is not None else None,"context":self.context,
                     "version":v,"counts":counts,"work":work,"regions":regions,"analysis":self.analysis_status(v['id'])}
 
     def _stored_analysis_status(self,version=None):
@@ -356,7 +360,9 @@ class Project(CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateR
         count = integer(lines,"lines",1,500)
         with self.transaction():
             v = self.version(version)
-            a = self.meta["entry"] if address is None else number(address)
+            a = self._entry_address(v['id']) if address is None else number(address)
+            if a is None:
+                raise ValueError('Selected version has no valid entry; supply an explicit address')
             rows = self.db.execute("SELECT i.*,n.text AS name,c.text AS comment,c.author AS comment_author,c.inherited_from AS comment_inherited_from FROM instructions i LEFT JOIN annotations n ON n.version=i.version AND n.context=i.context AND n.address=i.address AND n.kind='name' LEFT JOIN annotations c ON c.version=i.version AND c.context=i.context AND c.address=i.address AND c.kind='comment' WHERE i.version=? AND i.context=? AND i.address>=? ORDER BY i.address LIMIT ?",(v["id"],self.context,key(a),count)).fetchall()
             result = []
             for r in rows:
@@ -370,7 +376,12 @@ class Project(CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateR
                 if references:
                     display += ' ; ' + ', '.join(ref['name'] + (f" <{ref['representation']}>" if ref['representation'] else '') for ref in references)
                 display,file_refs,file_refs_summary=self._file_reference_display(v['id'],self.context,int(r['address'],16),display)
+                predicate=self._thumb_predicate(v['id'],int(r['address'],16)) if self.arch=='thumb' else None
+                if predicate:
+                    display += ' ; conditional under lexical IT at '+', '.join(predicate['origins'])
                 result.append({"references":references,"file_references":file_refs,"file_reference_summary":file_refs_summary,"display_operands":display,"address":address_hex,"size":r["size"],"bytes":r["bytes"],"mnemonic":r["mnemonic"],"operands":r["operands"],"flow":r["flow"],"target":hx(int(r["target"],16)) if r["target"] else None,"name":self._shared_name(v["id"],("memory","",int(r["address"],16))) or r["name"] or (self._label(v["id"],int(r["address"],16)) if fn or self._signature_name(v["id"],self.context,int(r["address"],16)) else None),"comment":r["comment"],"comment_author":r["comment_author"],"comment_inherited_from":r["comment_inherited_from"],"xrefs":self.xrefs(address_hex,"to",v["id"]),"context":self.context})
+                if predicate:
+                    result[-1]['predicate']=predicate
             return {"title":self.meta["filename"],"arch":self.arch,"bits":self.bits,"context":self.context,"version":v["id"],"sha256":v["sha256"],"source_sha256":self.meta["source_sha256"],"address":hx(a),"instructions":result,"analysis":self.analysis_status(v['id']),"view":"stored instructions ordered by address; gaps are not decoded implicitly"}
 
     def patch(self, address, data, label="patch", origin="agent supplied bytes", version=None):

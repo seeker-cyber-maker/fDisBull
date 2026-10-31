@@ -210,7 +210,7 @@ METHODS = {
     "zmachine-disasm": "Read-only Z-machine v3 instruction slice; path,[address,max_instructions]",
     "zmachine-analyze": "Bounded recursive Z-machine v3 processor analysis; path,[entry_points,max_instructions]",
     "decoder-check": "Compare x86 iced/Capstone proposals without execution; data,[bits,address,scan_offsets,max_candidates]",
-    "import": "Create a new project from binary; params: project, path, [arch,bits,base,entry,load_segment,slice_arch,image]",
+    "import": "Create a new project from binary; params: project, path, [arch,bits,base,entry,load_segment,slice_arch,image,profile,vector_count]",
     "segments": "DOS inferred segment inventory; [version]",
     "code-regions": "DOS decoded instruction runs by CS; [version]",
     "identify": "Identify file header from bytes; path; no project required",
@@ -669,9 +669,11 @@ def parser():
     c = sub.add_parser("import",help="create project from executable or explicit raw code")
     c.add_argument("path")
     c.add_argument("project")
-    c.add_argument("--arch",choices=["x86","arm64"],help="explicit raw mode (bypasses executable loader)")
+    c.add_argument('--profile',choices=['cortex-m'],help='explicit Cortex-M flash/vector profile')
+    c.add_argument('--vector-count',type=int,help='declared number of vector words (16..256)')
+    c.add_argument("--arch",choices=["x86","arm64","thumb"],help="explicit raw mode (bypasses executable loader)")
     c.add_argument("--bits",type=int,choices=[16,32,64])
-    c.add_argument("--base",default=0,type=lambda s:int(s,0))
+    c.add_argument("--base",default=None,type=lambda s:int(s,0))
     c.add_argument("--entry",type=lambda s:int(s,0))
     c.add_argument("--load-segment",type=lambda s:int(s,0),default=0x1000)
     c.add_argument('--image',choices=['auto','pe','le','mz','com'],help='select PE, DOS/4GW LE, MZ or explicitly declared DOS COM')

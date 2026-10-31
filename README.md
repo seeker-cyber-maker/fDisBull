@@ -103,6 +103,11 @@ and [external files](docs/EXTERNAL_FILES.md).
 The [DOS/4GW LE module](docs/dos4gw-le.md) adds bounded loading of
 supported 32-bit LE objects and internal fixups for the existing x86 analyzer.
 
+The [Cortex-M static profile](docs/CORTEX_M.md) imports a declared flash image
+and vector table, decodes Thumb/Thumb-2 code and exports stored analysis images.
+It preserves unknown transfers and peripheral state. The first static milestone
+has been tested on the 121GW 2.05 firmware on macOS; it does not emulate the meter.
+
 ## Debug the original program
 
 The DOS debugger uses a separately built, compatible patched DOSBox backend.

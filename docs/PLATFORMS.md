@@ -6,6 +6,10 @@ x86 16/32/64 and ARM64; each native container still has its own supported machin
 and endian constraints. Importing a file never runs its code, loader, imported
 functions or initializers. Native macOS Apple Silicon debugger and actual DinoPark acceptance now pass; see [DOSBOX_DEBUGGER.md](DOSBOX_DEBUGGER.md). Linux ELF fixture construction still requires a Linux compiler/linker, so the full suite is not green on Apple's toolchain.
 
+An additional [Cortex-M raw-flash profile](CORTEX_M.md) supports little-endian
+Thumb native discovery with declared vectors. This does not enable ARM32 ELF,
+ARM state, derived Thumb semantics/ABI analysis or a microcontroller debugger.
+
 ## Start with the supplied projects
 
 ```bash

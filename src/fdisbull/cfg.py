@@ -193,6 +193,11 @@ class CFGMixin:
                             raw_operands=row['operands'], display_operands=display, flow=row['flow'], references=references, file_references=file_refs, file_reference_summary=file_refs_summary,
                             next_address=_following(row, a), name=shown['name'], representation=shown['representation'],
                             presentation=shown, highlights=[])
+                if self.arch=='thumb':
+                    predicate=self._thumb_predicate(v,a)
+                    if predicate:
+                        node['predicate']=predicate
+                        node['display_operands'] += ' ; conditional under lexical IT at '+', '.join(predicate['origins'])
                 nodes.append(node)
                 by_id[node_id] = node
                 if dos:

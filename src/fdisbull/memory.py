@@ -352,6 +352,39 @@ def _arm(raw, address, state):
     return result
 
 
+def _thumb(raw, address):
+    from .thumb import native
+    from capstone import arm
+    ins = native(raw, address)
+    if ins is None:
+        return []
+    op = ins.mnemonic.split('.')[0]
+    result = []
+    for index, operand in enumerate(ins.operands):
+        if operand.type != arm.ARM_OP_MEM:
+            continue
+        access = ix.OpAccess.READ if op.startswith('ld') or op in ('tbb','tbh') else ix.OpAccess.COND_WRITE if op.startswith('st') else ix.OpAccess.NONE
+        width = 1 if op in ('ldrb','ldrsb','strb','tbb') else 2 if op in ('ldrh','ldrsh','strh','tbh') else 4 if op in ('ldr','str') else 8 if op in ('ldrd','strd') else None
+        fact = _base_fact(access,width,32)
+        fact.update(operand_index=index,implicit=False,decoder='Capstone Thumb/M-class',
+                    base_register=ins.reg_name(operand.mem.base),index_register=ins.reg_name(operand.mem.index),
+                    displacement=operand.mem.disp,conditional_read=op.startswith('ld'))
+        if operand.mem.base == arm.ARM_REG_PC and not operand.mem.index:
+            target = (((address+4)&~3)+operand.mem.disp)&0xffffffff
+            fact.update(effective_offset=target,ip_relative=True)
+            _interval(fact,target,width)
+        else:
+            fact['unresolved_reasons'].append('Thumb register-derived address is not modeled in this static milestone')
+        fact['assumptions'].append('Possible access only; live IT predicate and peripheral state are not known.')
+        result.append(fact)
+    if op.startswith(('push','pop','ldm','stm')):
+        fact = _base_fact(ix.OpAccess.READ if op.startswith(('pop','ldm')) else ix.OpAccess.COND_WRITE,None,32)
+        fact.update(operand_index=-1,implicit=True,decoder='Capstone Thumb/M-class')
+        fact['unresolved_reasons'].append('Thumb multi-register/stack interval and predicate are not modeled')
+        result.append(fact)
+    return result
+
+
 def instruction_memory_accesses(raw, address, arch, bits, cs=None, registers=None):
     """Return JSON-compatible static accesses for exactly one real instruction.
 
@@ -363,14 +396,17 @@ def instruction_memory_accesses(raw, address, arch, bits, cs=None, registers=Non
     if not isinstance(raw, bytes):
         raise ValueError('instruction bytes must be bytes')
     _integer(address, 'instruction address')
-    if arch not in ('x86', 'arm64') or bits not in ((16, 32, 64) if arch == 'x86' else (64,)):
-        raise ValueError('memory decoding supports x86 16/32/64 and ARM64')
+    if arch not in ('x86', 'arm64', 'thumb') or bits not in ((16, 32, 64) if arch == 'x86' else (32,) if arch == 'thumb' else (64,)):
+        raise ValueError('memory decoding supports x86 16/32/64, ARM64 and Thumb32')
     if cs is not None:
         _integer(cs, 'CS', high=0xffff)
         if arch != 'x86' or bits != 16 or not 0 <= address - cs * 16 <= 0xffff:
             raise ValueError('CS requires a 16-bit instruction inside its segment window')
     if not raw:
         return []
+    if arch == 'thumb':
+        _states(registers)  # Validate input, without inventing a reaching state.
+        return _thumb(raw,address)
     result, seen = [], set()
     for state in _states(registers):
         facts = _x86(raw, address, bits, cs, state) if arch == 'x86' else _arm(raw, address, state)
