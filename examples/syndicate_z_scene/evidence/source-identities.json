@@ -1,0 +1,39 @@
+{
+  "files": [
+    {
+      "path": "tools/bind_scene.py",
+      "sha256": "c6e4bb8600ebd766551ad2c7a719a8f6e80d10a9227b3f47e2f8813f4c8ac04f",
+      "size": 4749
+    },
+    {
+      "path": "tools/build_map.py",
+      "sha256": "c045c8508d105f210857165016ef25bddb1ab351cbd0009e3833a6c65db82d08",
+      "size": 12127
+    },
+    {
+      "path": "tools/render_static_map.py",
+      "sha256": "e352649a35bb14d47ea6c5bd5b9e4c590164920d0518e47deb6444b73553f028",
+      "size": 3846
+    },
+    {
+      "path": "tools/session_controller.py",
+      "sha256": "4cee7ddceeaa33b8e22c0dfc036bb26b6f8d8d62b00415b7473cc57af9f09f95",
+      "size": 2886
+    },
+    {
+      "path": "tools/syndicate_scene.py",
+      "sha256": "f091b0fd5cfb2371a585f554a26a762bbf22716c43d79bd90075d58d04677c1f",
+      "size": 13970
+    },
+    {
+      "path": "tools/z_provider.py",
+      "sha256": "ac964d0ac8c19a2ee65df4b1ab3a2b02231fcee9c1b0b76ee08d63de6b329b6d",
+      "size": 18250
+    },
+    {
+      "path": "tests/test_scene.py",
+      "sha256": "3f0d8e8f2b97c7ffc677ce20f4b15bc7e64a2b088bb51dbadd47cc2053f0ec2d",
+      "size": 5931
+    }
+  ]
+}

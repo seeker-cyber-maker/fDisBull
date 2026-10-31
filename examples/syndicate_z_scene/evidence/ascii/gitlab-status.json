@@ -1,0 +1,64 @@
+{
+  "checked_date": "2026-10-31",
+  "access": "GitLab connector read-only calls; no GitHub requests or remote writes",
+  "project": {
+    "id": 88349936,
+    "path": "brewster-jennings-group/fdisbull",
+    "main": "7a5caaa4258d826b63fc2546b107dc9fc432e667"
+  },
+  "merge_requests": {
+    "query": "state=all,scope=all,per_page=100",
+    "total": 2,
+    "pagination_complete": true,
+    "items": [
+      {
+        "iid": 1,
+        "title": "Draft: Add source-backed macOS ARM64 investigation"
+      },
+      {
+        "iid": 2,
+        "title": "Draft: Report analysis capabilities and app replication boundaries"
+      }
+    ]
+  },
+  "branches": {
+    "total": 93,
+    "pagination_complete": true,
+    "requested_scene_branch": "research/syndicate-spatial-z-20261031",
+    "scene_branch_found": false,
+    "older_related": [
+      {
+        "branch": "pr/69/diagnostic-recovery-assets-20261030",
+        "sha": "641b7e950e000422a9f740757471498f54fffeb2"
+      },
+      {
+        "branch": "pr/81/syndicate-graphics-diagnostic-friction-20261031",
+        "sha": "7f37c430e0cacda6f3010674af648e48de139759"
+      }
+    ]
+  },
+  "main_examples": {
+    "ref": "7a5caaa4258d826b63fc2546b107dc9fc432e667",
+    "pagination_complete": true,
+    "entries": [
+      "agi",
+      "dinopark",
+      "dinopark_text",
+      "police_quest",
+      "recovery",
+      "synthetic",
+      "udc",
+      "z",
+      "zork"
+    ],
+    "syndicate_z_scene_present": false
+  },
+  "template_project": {
+    "id": 88343038,
+    "path": "brewster-jennings-group/fdisbull-sha256-template",
+    "all_merge_requests": 0,
+    "branches_matching_syndicate": 0
+  },
+  "conclusion": "Older published Syndicate source branches exist. The latest local scene draft has no matching MR or branch, and its example directory is absent from pinned main. No assertion about unrelated differently named payloads.",
+  "read_error_retained": "An attempted old graphics document path on branch81 returned404. Branch existence is verified independently; no conclusion about that specific document is drawn."
+}

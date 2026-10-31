@@ -1,0 +1,87 @@
+{
+  "scope": "Fresh offline projection/model tests using preserved semantic snapshot. No live DOSBox session or native walking.",
+  "source_scene_sha256": "56f657dd2785eb4d8972591b8efcc9d50d618aa54adcb7bd523551aaa7118d02",
+  "source_map_sha256": "8c9fac48a57fd62b56550a8aa145b812f7602221dad76f49be9af2b2ded8c3c1",
+  "tests": {
+    "passed": 63,
+    "prior_scene_tests": 27,
+    "new_authored_tests": 36
+  },
+  "player_version": "0.26.0",
+  "commands": [
+    "look",
+    "examine map",
+    "examine route to car",
+    "examine path to mission target",
+    "examine team"
+  ],
+  "vehicle_route": {
+    "status": "candidate_requires_validation",
+    "grid_steps": 36,
+    "approach_raw": [
+      15744,
+      9088,
+      256
+    ],
+    "target_raw": [
+      15496,
+      9144,
+      256
+    ],
+    "conditional_gates": [],
+    "plan_id": "23a1a0211d8ba80be9b43087b414f4258bf2322ba7181e43dc3b036e62b16b6c"
+  },
+  "target_route": {
+    "status": "candidate_requires_validation",
+    "grid_steps": 37,
+    "approach_raw": [
+      16512,
+      8064,
+      256
+    ],
+    "target_raw": [
+      16448,
+      7872,
+      256
+    ],
+    "conditional_gates": [
+      {
+        "entity": "object-3",
+        "path_index": 36,
+        "condition": "gate transition unqualified; stop before crossing"
+      }
+    ],
+    "plan_id": "de71aa38f76aac80ca390dc22d5846da35f474fc6011db278a7ed68f0d35c15e"
+  },
+  "same_tile_agents": [
+    {
+      "overlay": "r16c36",
+      "ids": [
+        "person-0",
+        "person-1"
+      ]
+    }
+  ],
+  "unchanged_graphic_artifacts": {
+    "public/mission-map.html": "99072bc1f37e074914a56e4de7e7fcde6fea89bc4b546d70355cec3b0a583871",
+    "public/mission-map.png": "ba232de48aaedcd25993f532a25d2ff2494f9f6bdda1a048cccc127a43e1d648",
+    "public/mission-map.svg": "e183186d37c44af21ed403067e98c822d6a4bd7c6d9ea76e8a08f05d09a858cb",
+    "public/map-model.json": "8c9fac48a57fd62b56550a8aa145b812f7602221dad76f49be9af2b2ded8c3c1",
+    "public/mission-1-observation.json": "56f657dd2785eb4d8972591b8efcc9d50d618aa54adcb7bd523551aaa7118d02"
+  },
+  "initial_failure": {
+    "failed": 5,
+    "passed": 57,
+    "cause": "New renderer asked original Terrain for cells outside a small authored map. Bounds handling corrected; final tests all pass."
+  },
+  "runtime": {
+    "python": "3.13.5",
+    "player": "0.26.0 extracted privately from supplied wheel",
+    "live_game_executed": false
+  },
+  "new_source_hashes": {
+    "tools/agent_map.py": "c37ad1d7304748ac27ebd462b3e83392c6c7c37047e6b5ae90be8af24b3815db",
+    "tools/z_provider.py": "8824634a44178e87f1623746c578cd9604039ddc3e55e8e6b0ea7188b682b651",
+    "tests/test_agent_map.py": "64b65791755e628bcac3c1b77a8ee4ee782cce57e65627a959267214ebce79f2"
+  }
+}

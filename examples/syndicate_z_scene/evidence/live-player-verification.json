@@ -1,0 +1,280 @@
+{
+  "runtime": "fDisBull/fDisBull Player 0.26.0; original DOSBox",
+  "run_id": "501bf9e4bc514b18add042518d2ffa73",
+  "passive_read_commands": 11,
+  "passive_cpu_revision_unchanged": true,
+  "passive_game_memory_unchanged": true,
+  "stale_action_refused_without_writes": true,
+  "unsupported_boarding_not_sent": true,
+  "actual_player_teleport_commands": 6,
+  "checkpoint_final_game_matches_baseline": true,
+  "snapshot_counts": {
+    "agent": 4,
+    "civilian": 2,
+    "door": 4,
+    "guard": 4,
+    "tree": 11,
+    "vehicle": 1,
+    "weapon": 10,
+    "window-closed-class": 7,
+    "window-open-class": 1
+  },
+  "selected_initial_position": [
+    91.703125,
+    41.671875,
+    2.0
+  ],
+  "special_target": "person-8",
+  "native_helper_source_verified": {
+    "preferred": "0x29530",
+    "runtime": "0x1dd560",
+    "length": 292,
+    "sha256": "2cdf665b71cf59e26c8d3c9729f4edae15829ffb872eadbfcb71b1420f3672ad",
+    "match": true
+  },
+  "automatic_live_checkpoint_protocol": "unsupported; not advertised",
+  "ordinary_walked_routes": 0,
+  "completed_missions": 0,
+  "results": [
+    {
+      "command": "look",
+      "result": {
+        "outcome": "Syndicate | Mission 1 spatial scene\nDiagnostic global view. Focus person-0 at (91.703, 41.672, z=2). Team 4; civilians 2; police 0; guards 4; cars 1; doors 4. Special objective targets are listed independently of character class. Nearest means XY geometric distance, not travel cost. Reads are passive; teleport is diagnostic, not walking. This is not a fair-play visibility projection.\nVisible: team, civilian summary, police summary, guard summary, agent summary, vehicle summary, door summary, agent 0, agent 1, agent 2, agent 3, civilian 8 [MISSION TARGET], guard 9, guard 10, guard 11, guard 12, civilian 13, vehicle 0, door 0, door 1, door 2, door 3, window-closed-class 4, window-closed-class 5, window-closed-class 6, window-closed-class 7, window-closed-class 8, window-closed-class 9, window-open-class 21, window-closed-class 22, objectives, map, car approach, mission target approach, guard approach, door approach, roof probe, start position, world.\nObservation coverage is partial.",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    },
+    {
+      "command": "examine team",
+      "result": {
+        "outcome": "person-0: (91.703, 41.672, z=2); health raw 16; status 0; vehicle refs [0, 0]\nperson-1: (91.484, 41.078, z=2); health raw 16; status 0; vehicle refs [0, 0]\nperson-2: (91.484, 40.578, z=2); health raw 16; status 0; vehicle refs [0, 0]\nperson-3: (91.422, 40.078, z=2); health raw 16; status 0; vehicle refs [0, 0]\nHealth/life/drug semantics remain partially recovered.",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    },
+    {
+      "command": "examine civilians",
+      "result": {
+        "outcome": "2 registered civilian entities in this entire mission snapshot, not a visible/alive count. Nearest other: person-8 at (64.250, 30.750, z=2); XY straight-line distance 29.546 tiles. Route not verified.",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    },
+    {
+      "command": "examine police",
+      "result": {
+        "outcome": "0 registered police entities in this entire mission snapshot, not a visible/alive count. No matching registered entity in this snapshot; future spawns are not excluded.",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    },
+    {
+      "command": "examine guards",
+      "result": {
+        "outcome": "4 registered guard entities in this entire mission snapshot, not a visible/alive count. Nearest other: person-10 at (74.750, 32.250, z=2); XY straight-line distance 19.395 tiles. Route not verified.",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    },
+    {
+      "command": "examine nearest car",
+      "result": {
+        "outcome": "1 registered vehicle entities in this entire mission snapshot, not a visible/alive count. Nearest other: vehicle-0 at (60.531, 35.719, z=2); XY straight-line distance 31.735 tiles. Route not verified. Boarding point, lock/gate state and occupant interpretation are unqualified.",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    },
+    {
+      "command": "examine car gate",
+      "result": {
+        "outcome": "4 registered door entities in this entire mission snapshot, not a visible/alive count. Nearest other: object-2 at (73.406, 33.844, z=2); XY straight-line distance 19.901 tiles. Route not verified. Door-class records are candidate portals. Open/closed and vehicle-gate relationships are not yet recovered.",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    },
+    {
+      "command": "examine mission target",
+      "result": {
+        "outcome": "person-8: civilian; position [64.25, 30.75, 2.0]; health raw 0; status/class byte 40. Explicit objective reference points here; identity survives other civilian classifications. Vehicle references [0, 0]; life state unknown. ",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    },
+    {
+      "command": "examine objectives",
+      "result": {
+        "outcome": "objective-0: type 2, state 0, target person-8\nobjective-1: type 0, state 1, target none\nobjective-2: type 0, state 1, target none\nobjective-3: type 0, state 1, target none\nobjective-4: type 0, state 1, target none\nobjective-5: type 0, state 1, target none\nobjective-6: type 0, state 1, target none\nobjective-7: type 0, state 1, target none\nEight source-consumer slots; type-zero satisfied slots are not eight distinct missions.",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    },
+    {
+      "command": "examine map",
+      "result": {
+        "outcome": "Local map x=83..99, y=33..49, z=2 (y increases downward)\n33 ?................\n34 ?................\n35 ?................\n36 ?................\n37 ?................\n38 ?................\n39 ?................\n40 ........A........\n41 ?.......@........\n42 ?................\n43 ?................\n44 ?................\n45 ?................\n46 ?................\n47 ?................\n48 ?................\n49 ?................\n@ focus A team C civilian P police G guard V car D door ! mission target . conditional floor ? excluded/unresolved; no verified walking edges.\nMission map: 128 x 96 tiles, 12 height layers. Coordinates are world tiles, not screen pixels. Conditional flat-surface graph does not qualify doors, slopes, dynamic collisions, line-of-sight or a walked route. Consult mission-map.html.",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    },
+    {
+      "command": "inventory",
+      "result": {
+        "outcome": "Carrying: weapon-1 (weapon class 2).",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    },
+    {
+      "command": "teleport car approach",
+      "result": {
+        "outcome": "Success: Diagnostic relocation of person-0 to [60.5, 36.5, 2] committed with coherent spatial links; original updates settled the agent and attached items in 1 bounded window(s), observed 275 guest ms. Walking access is not certified.\nSpatial policy: assisted.",
+        "status": "success",
+        "complete": true,
+        "effects": "applied-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "teleport",
+          "target": "waypoint-car-approach",
+          "item": null
+        }
+      }
+    },
+    {
+      "command": "teleport mission target approach",
+      "result": {
+        "outcome": "Success: Diagnostic relocation of person-0 to [64.5, 31.5, 2] committed with coherent spatial links; original updates settled the agent and attached items in 1 bounded window(s), observed 255 guest ms. Walking access is not certified.\nSpatial policy: assisted.",
+        "status": "success",
+        "complete": true,
+        "effects": "applied-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "teleport",
+          "target": "waypoint-mission-target-approach",
+          "item": null
+        }
+      }
+    },
+    {
+      "command": "teleport guard approach",
+      "result": {
+        "outcome": "Success: Diagnostic relocation of person-0 to [75.5, 32.5, 2] committed with coherent spatial links; original updates settled the agent and attached items in 1 bounded window(s), observed 310 guest ms. Walking access is not certified.\nSpatial policy: assisted.",
+        "status": "success",
+        "complete": true,
+        "effects": "applied-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "teleport",
+          "target": "waypoint-guard-approach",
+          "item": null
+        }
+      }
+    },
+    {
+      "command": "teleport door approach",
+      "result": {
+        "outcome": "Success: Diagnostic relocation of person-0 to [73.5, 34.5, 2] committed with coherent spatial links; original updates settled the agent and attached items in 1 bounded window(s), observed 250 guest ms. Walking access is not certified.\nSpatial policy: assisted.",
+        "status": "success",
+        "complete": true,
+        "effects": "applied-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "teleport",
+          "target": "waypoint-door-approach",
+          "item": null
+        }
+      }
+    },
+    {
+      "command": "teleport roof probe",
+      "result": {
+        "outcome": "Success: Diagnostic relocation of person-0 to [64.5, 30.5, 6] committed with coherent spatial links; original updates settled the agent and attached items in 1 bounded window(s), observed 255 guest ms. Walking access is not certified.\nSpatial policy: assisted.",
+        "status": "success",
+        "complete": true,
+        "effects": "applied-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "teleport",
+          "target": "waypoint-roof-probe",
+          "item": null
+        }
+      }
+    },
+    {
+      "command": "teleport start position",
+      "result": {
+        "outcome": "Success: Diagnostic relocation of person-0 to [91.703125, 41.671875, 2] committed with coherent spatial links; original updates settled the agent and attached items in 1 bounded window(s), observed 255 guest ms. Walking access is not certified.\nSpatial policy: assisted.",
+        "status": "success",
+        "complete": true,
+        "effects": "applied-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "teleport",
+          "target": "waypoint-start-position",
+          "item": null
+        }
+      }
+    },
+    {
+      "command": "focus team agent 2",
+      "result": {
+        "outcome": "Success: Observer focus changed; native UI selection was not changed.",
+        "status": "success",
+        "complete": true,
+        "effects": "applied-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "focus",
+          "target": "person-1",
+          "item": null
+        }
+      }
+    },
+    {
+      "command": "examine nearest car",
+      "result": {
+        "outcome": "1 registered vehicle entities in this entire mission snapshot, not a visible/alive count. Nearest other: vehicle-0 at (60.531, 35.719, z=2); XY straight-line distance 31.414 tiles. Route not verified. Boarding point, lock/gate state and occupant interpretation are unqualified.",
+        "status": "read",
+        "complete": true,
+        "effects": "none-confirmed",
+        "action_sent": false
+      }
+    },
+    {
+      "command": "focus team agent 1",
+      "result": {
+        "outcome": "Success: Observer focus changed; native UI selection was not changed.",
+        "status": "success",
+        "complete": true,
+        "effects": "applied-confirmed",
+        "action_sent": true,
+        "action": {
+          "verb": "focus",
+          "target": "person-0",
+          "item": null
+        }
+      }
+    }
+  ]
+}
