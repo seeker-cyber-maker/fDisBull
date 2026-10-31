@@ -103,6 +103,12 @@ a success code or plausible state variable does not prove a committed action.
 Follow the smallest useful causal interval from input and focus through dispatch,
 conditions, state change, presentation and storage when those claims matter.
 
+When the question is about the original executable itself — a stored value, a
+writer, or a supposed adjustment made by a code path — read
+[references/binary-claim-verification.md](references/binary-claim-verification.md).
+Keep the value, its representation, the writer and the trigger separate; a
+no-writer finding is bounded by the decoded image and the instruction analysis.
+
 Prefer before/after state and an unchanged-state control to one magic final
 value. If a call times out or has an unknown outcome, inspect effects before
 retrying. Direct state edits, forced branches and actor placement can isolate a
