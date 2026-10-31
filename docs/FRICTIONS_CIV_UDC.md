@@ -156,3 +156,22 @@
       bytes away. The earlier window is still unattributed.
     - Lesson applied: trace the key branch to its commit before modelling.
       Store shape alone does not identify an action.
+
+17. `add`/`subtract` are accumulate ops, and `multiply`/`divide` had to match.
+    - Building `price = 2b + b*b/20` the obvious way, `multiply $square` by
+      `$base` computed `0 * 40` because the destination held its initial value.
+      The ops are `cell op= operand`, not `dest = left op right`, so each stage
+      needs an explicit `set` to load the first operand. Cost: one debugging
+      cycle, caught only because the price came out as the doubling-only value.
+
+18. The 0D12 improvement-cost board does not match the documented record block.
+    - `IMPR_RECORDS` is documented as 45 records of `1Eh` bytes at
+      `DGROUP:0BB8` with the name at `+00h`; Civ1 shield costs appear /10 at
+      `DGROUP:0BEE` with a `1Eh` stride (`4,6,4,8,8,8,12,...`).
+    - The buy code reads `DS:0x1142 + 34*id` instead, whose values
+      (`4,1,2,2,3,3,...`) do not match costs, and no 34-byte-stride copy of the
+      cost sequence exists anywhere in the image.
+    - DGROUP is anchored at segment `0x3B010` by "Cost to complete" at
+      `DGROUP:266E`, so the read offset is not a base error. The board's
+      identity stays open; only a live read for a known building resolves it.
+      Keeping `item_cost` as a module input is the honest boundary.
