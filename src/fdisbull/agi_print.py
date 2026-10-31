@@ -30,7 +30,8 @@ class AGIDOSPrintObserver:
         self._session_identity=AGIDOSMonitor._identity(self)
         self._report=None
         status=session.call('session.status')
-        if status.get('state')!='stopped':raise ValueError('print admission requires a paused guest')
+        if status.get('state')!='stopped' or type(status.get('state_revision')) is not int:
+            raise ValueError('print admission requires a paused guest with a state revision')
         self._check_engine()
         if int.from_bytes(self._read(ds*16+0x61d+101*4,2),'little')!=_PRINT_HANDLER:
             raise ValueError('original print command table differs')
@@ -60,9 +61,10 @@ class AGIDOSPrintObserver:
         after=session.call('session.status')
         if after.get('state')!='stopped' or any(status.get(k)!=after.get(k) for k in ('state_revision','frame_id','mode_id')):
             raise ValueError('native print admission changed during capture')
+        self._admission_revision=after['state_revision']
         self.identity={'format':'fdisbull-agi-print-observer-1','session_id':session.session_id,
                        'epoch':uuid4().hex,'cs':cs,'ds':ds,'record':record,
-                       'resource_sha256':self.resource.resource_sha256}
+                       'resource_sha256':self.resource.resource_sha256,'state_revision':self._admission_revision}
 
     _word=staticmethod(AGIDOSMonitor._word)
     _owned_stop=staticmethod(AGIDOSMonitor._owned_stop)
@@ -113,6 +115,11 @@ class AGIDOSPrintObserver:
     def readback(self):
         return deepcopy(self._report)
 
+    def _check_admission(self):
+        status=self.session.call('session.status')
+        if status.get('state')!='stopped' or status.get('state_revision')!=self._admission_revision:
+            raise ValueError('print admission state changed before execution')
+
     def finish(self,dialogue_key='enter',*,frame_name='agi-print',guest_ms=1000,timeout_ms=10000,total_guest_ms=10000,total_timeout_ms=60000):
         if self._report is not None:return self.readback()
         if dialogue_key not in ('enter','escape',None):raise ValueError('invalid dialogue key')
@@ -142,6 +149,7 @@ class AGIDOSPrintObserver:
             remaining-=elapsed
             return result
         try:
+            self._check_admission()
             self._check_binding()
             r=self.session.registers();self._segments(r)
             if self._word(r['instruction_pointer'])!=_PRINT_HANDLER or self._word(r['segments']['ss'])!=self.ss or self._word(r['general']['esp'])!=self.sp or self._read(self.ss*16+self.sp,2)!=RETURN.to_bytes(2,'little'):
@@ -150,6 +158,7 @@ class AGIDOSPrintObserver:
             data=self._read(self.ds*16+9,0x102)
             if si!=self.code_offset+self.offset+1 or self._read(self.ds*16+si,1)!=bytes([self.message_id]) or bool(data[0x101]&1)!=self.output_mode or data[21]!=self.window_timer:
                 raise ValueError('print operand or mode changed after admission')
+            self._check_admission()
             if self.mode=='blocking':
                 if dialogue_key is None:raise ValueError('blocking print requires a key')
                 wait=create(DIALOGUE_WAIT);stop=run()

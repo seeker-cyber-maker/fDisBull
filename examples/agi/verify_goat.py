@@ -52,18 +52,21 @@ class GoatRun:
     def advance(self,ms=100):
         end=self.guest_elapsed+ms
         while self.guest_elapsed<end:
-            require(time.monotonic()<self.deadline and self.guest_elapsed<240000,'Route budget exhausted')
+            guest,wall=self.remaining_limits(min(100,end-self.guest_elapsed),10000)
             attempt={'kind':'run','attempted':True,'result':None};self.journal.append(attempt)
-            out=self.d.run(guest_ms=min(100,end-self.guest_elapsed),timeout_ms=10000,fast_forward=True,stop_on_hook=True)
+            out=self.d.run(guest_ms=guest,timeout_ms=wall,fast_forward=True,stop_on_hook=True)
             attempt['result']=out;elapsed=out.get('guest_elapsed_ms')
             require(type(elapsed) in (int,float) and elapsed>=0,'Missing guest progress')
             self.guest_elapsed+=elapsed
+            require(self.guest_elapsed<=240000 and time.monotonic()<self.deadline,'Route budget exhausted after native slice')
             if out['outcome']=='breakpoint':
                 stop=(out.get('session') or {}).get('stop_reason',{})
                 require(stop.get('breakpoint_id')==self.bp and not stop.get('data_access'),'Foreign stop preserved')
-                observer=AGIDOSPrintObserver(self.d,self.resources,cs=self.cs,ds=self.ds//16)
                 self.d.call('breakpoints.delete',{'breakpoint_id':self.bp});self.bp=None
-                msg=observer.finish(frame_name=f'goat-message-{len(self.messages)}')
+                observer=AGIDOSPrintObserver(self.d,self.resources,cs=self.cs,ds=self.ds//16)
+                guest,wall=self.remaining_limits(10000,60000)
+                msg=observer.finish(frame_name=f'goat-message-{len(self.messages)}',guest_ms=min(1000,guest),
+                    timeout_ms=min(10000,wall),total_guest_ms=guest,total_timeout_ms=wall)
                 self.messages.append(msg);self.journal.append({'kind':'message','observation':msg})
                 require(observer.readback()==msg and observer.finish()==msg,'Message readback replayed')
                 if msg.get('frame'):
@@ -71,6 +74,7 @@ class GoatRun:
                     msg['frame']={'path':name,'sha256':item['sha256'],'metadata':item['metadata']}
                 self.guest_elapsed+=sum(s.get('guest_elapsed_ms',0) for s in msg['stops'])
                 require(msg['status']=='completed','Original message did not complete: '+str(msg.get('error')))
+                require(self.guest_elapsed<=240000 and time.monotonic()<self.deadline,'Route budget exhausted after message')
                 self._arm()
             else:require(out['outcome']=='guest_time','Unexpected native stop preserved')
         return self.state()
@@ -78,6 +82,12 @@ class GoatRun:
     def _idle(self):
         k=self.d.keyboard_state().get('keyboard',{})
         return all(type(k.get(n)) is int and k[n]==0 for n in ('pending_events','owned_keys','queued_guest_ms'))
+
+    def remaining_limits(self,guest=100,wall=10000):
+        guest=min(int(guest),int(240000-self.guest_elapsed))
+        wall=min(int(wall),int((self.deadline-time.monotonic())*1000))
+        require(guest>0 and wall>0,'Route budget exhausted')
+        return guest,wall
 
     def press(self,key,ms=150,*,hold_ms=60,gap_ms=50):
         require(self._idle(),'Existing keyboard input is not settled')
@@ -154,9 +164,13 @@ class GoatRun:
         try:
             for _ in range(2048):
                 require(time.monotonic()-start<30,'Natural logic entry wall budget exhausted')
-                require(time.monotonic()<self.deadline and self.guest_elapsed<240000,'Route budget exhausted at natural entry')
-                stop=self.d.run(guest_ms=100,timeout_ms=5000,fast_forward=True,stop_on_hook=True)
-                self.journal.append({'kind':'entry-search','result':stop});self.guest_elapsed+=stop.get('guest_elapsed_ms',0)
+                guest,wall=self.remaining_limits(100,5000)
+                attempt={'kind':'entry-search','attempted':True,'result':None};self.journal.append(attempt)
+                stop=self.d.run(guest_ms=guest,timeout_ms=wall,fast_forward=True,stop_on_hook=True)
+                attempt['result']=stop;elapsed=stop.get('guest_elapsed_ms')
+                require(type(elapsed) in (int,float) and elapsed>=0,'Missing entry-search guest progress')
+                self.guest_elapsed+=elapsed
+                require(self.guest_elapsed<=240000 and time.monotonic()<self.deadline,'Route budget exhausted during entry search')
                 reason=(stop.get('session') or {}).get('stop_reason',{})
                 require(stop['outcome']=='breakpoint' and reason.get('breakpoint_id')==entry,'Natural entry interrupted')
                 record=int.from_bytes(read(self.d,self.ds+0x979,2),'little');desc=read(self.d,self.ds+record,8)

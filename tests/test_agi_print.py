@@ -12,7 +12,7 @@ from fdisbull.agi_print import AGIDOSPrintObserver
 class FakeSession:
     session_id='test-session'
     def __init__(self, resource):
-        self.cs=0x1000;self.ds=0x2000;self.ss=0x3000;self.mem=bytearray(0x50000);self.calls=[]
+        self.cs=0x1000;self.ds=0x2000;self.ss=0x3000;self.mem=bytearray(0x50000);self.calls=[];self.revision=1;self.state='stopped'
         self.reg={'segments':{'cs':hex(self.cs),'ds':hex(self.ds),'ss':hex(self.ss)},'instruction_pointer':hex(0x1c06),'general':{'esi':hex(0x501),'esp':hex(0x200)}}
         def w(offset,data):self.mem[self.ds*16+offset:self.ds*16+offset+len(data)]=data
         w(0x61d+101*4,(0x1c06).to_bytes(2,'little'));w(0x979,(0x400).to_bytes(2,'little'))
@@ -21,7 +21,7 @@ class FakeSession:
         self.mem[self.ss*16+0x200:self.ss*16+0x202]=bytes([0xfa,0x02])
     def call(self,method,args=None):
         self.calls.append(method);args=args or {}
-        if method=='session.status':return {'state':'stopped','state_revision':1,'frame_id':1,'mode_id':1}
+        if method=='session.status':return {'state':self.state,'state_revision':self.revision,'frame_id':1,'mode_id':1}
         if method=='memory.read':
             pos=int(args['address']['offset'],16);return {'data_base64':base64.b64encode(self.mem[pos:pos+args['length']]).decode()}
         if method=='breakpoints.create':return {'breakpoint_id':'test'}
@@ -158,3 +158,11 @@ def test_rejected_key_never_resumes_or_retries(tmp_path,monkeypatch):
     assert result['status']=='incomplete' and result['input_attempted'] and result['input']=={'accepted':False}
     assert calls['run']==3 and calls['input']==1
     assert o.finish()==result and calls['run']==3 and calls['input']==1
+
+
+@pytest.mark.parametrize('change',[lambda s:setattr(s,'revision',2),lambda s:setattr(s,'state','running')])
+def test_same_site_after_intervening_state_change_is_not_same_occurrence(tmp_path,monkeypatch,change):
+    res,s=setup(tmp_path,monkeypatch);observer=AGIDOSPrintObserver(s,{0:res},cs=s.cs,ds=s.ds)
+    change(s);result=observer.finish()
+    assert result['status']=='incomplete' and not result['native_execution_attempted']
+    assert not result['input_attempted'] and 'admission' in result['error']
