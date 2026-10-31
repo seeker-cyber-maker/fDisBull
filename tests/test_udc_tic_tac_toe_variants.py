@@ -3,6 +3,9 @@ import shutil
 
 import pytest
 
+# Source examples are deliberately omitted from release distributions.
+pytest.importorskip("examples", reason="source-checkout examples are not packaged")
+
 from examples.udc.game_variants.tic_tac_toe import contract, variants
 from fdisbull.interaction_il import execute_il
 from fdisbull.udc_c import compile_c

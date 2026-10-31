@@ -4,6 +4,9 @@ import struct
 
 import pytest
 
+# Source examples are deliberately omitted from release distributions.
+pytest.importorskip("examples", reason="source-checkout examples are not packaged")
+
 from examples.civ import civ_city_trace as trace
 
 PINNED = "aa63aa396cfa62519b131ee6c0a231bed02bb9aefce26b955608b5815a569e57"

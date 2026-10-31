@@ -9,6 +9,9 @@ from pathlib import Path
 
 import pytest
 
+# Source examples are deliberately omitted from release distributions.
+pytest.importorskip("examples", reason="source-checkout examples are not packaged")
+
 from examples.civ.civ_city_uil import _primitive_program, build_city_udc, city_scene
 from fdisbull.il_scenes import ILSceneBackend
 from fdisbull.interaction_il import execute_il

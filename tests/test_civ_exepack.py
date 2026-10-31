@@ -2,6 +2,9 @@ import struct
 
 import pytest
 
+# Source examples are deliberately omitted from release distributions.
+pytest.importorskip("examples", reason="source-checkout examples are not packaged")
+
 from examples.civ.civ_exepack import ExepackError, unpack_exepack
 
 DOS_HEADER = struct.Struct("<14H")
