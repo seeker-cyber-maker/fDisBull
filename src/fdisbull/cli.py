@@ -18,6 +18,7 @@ AGENT_SKILL_GUIDES = {
     'references/recovery-research.md': 'Qualify research, retain reusable meanings and compare recovery depth and cost',
     'references/semantic-contracts.md': 'Recover complete intent contracts and compare facts, effects, time and projection losses',
     'references/formats-and-media.md': 'Qualify containers, executable mappings, release differences and valid media reduction',
+    'references/agi-scenes.md': 'Inventory AGI scene elements, resolve typed references and retain unqualified IR',
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
 DEFAULT_AGENT_SKILL = 'fdisbull-investigate'
@@ -207,6 +208,7 @@ METHODS = {
     "function-patterns": "Candidate prologue/epilogue evidence; [version,limit,offset,scan_unexplored]",
     "managed": "Inspect .NET metadata or disassemble one CIL method; path or project,[token,max_instructions,version]",
     "agi-logic": "Read-only partial AGI 2.917 logic decoding; logdir, volume_dir, logic, profile, [max_instructions]",
+    "agi-scenes": "Read-only AGI scene census, not executable UIL; game_dir, profile, [stage,include_ir,include_text,max_updates,max_instructions,max_code_bytes]",
     "zmachine-disasm": "Read-only Z-machine v3 instruction slice; path,[address,max_instructions]",
     "zmachine-analyze": "Bounded recursive Z-machine v3 processor analysis; path,[entry_points,max_instructions]",
     "decoder-check": "Compare x86 iced/Capstone proposals without execution; data,[bits,address,scan_offsets,max_candidates]",
@@ -348,6 +350,9 @@ def invoke(method, params, debugger=None):
     if method=='agi-logic':
         from .agi import inspect_logic
         return inspect_logic(**p)
+    if method=='agi-scenes':
+        from .agi_scenes import inspect_scenes
+        return inspect_scenes(**p)
     if method in ('identify','inspect'):
         from .inspection import identify_header, inspect_binary
         path=Path(p.pop('path'))
@@ -476,7 +481,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','agi-scenes','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         value={"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
@@ -689,6 +694,13 @@ def parser():
     c=sub.add_parser('agi-logic',help=METHODS['agi-logic'])
     c.add_argument('logdir');c.add_argument('volume_dir');c.add_argument('logic',type=int)
     c.add_argument('--profile',required=True,choices=['2.917']);c.add_argument('--max-instructions',type=int,default=1000)
+    c=sub.add_parser('agi-scenes',help=METHODS['agi-scenes'])
+    c.add_argument('game_dir');c.add_argument('--profile',required=True,choices=['2.917'])
+    c.add_argument('--stage',choices=['outline','resolve'],default='resolve')
+    c.add_argument('--include-ir',action='store_true');c.add_argument('--include-text',action='store_true')
+    c.add_argument('--max-updates',type=int,default=200000)
+    c.add_argument('--max-instructions',type=int,default=100000)
+    c.add_argument('--max-code-bytes',type=int,default=1048576)
     c=sub.add_parser('zmachine-disasm',help=METHODS['zmachine-disasm'])
     c.add_argument('path');c.add_argument('--address',type=lambda s:int(s,0))
     c.add_argument('--max-instructions',type=int,default=40)

@@ -23,3 +23,12 @@ Encoding references: [ScummVM v2 resource loader](https://github.com/scummvm/scu
 and [AGI behavioral specification, logic bytecode](https://peterkelly.github.io/agi-re/spec/logic_bytecode.html).
 The 2.917 profile is explicit and must be established independently for the
 input. Tests use synthetic resources; no commercial game data is distributed.
+
+## Whole-resource scene census
+
+Use the separate [AGI scene census](AGI_SCENE_CENSUS.md) to inventory all present
+LOGIC resources, message/vocabulary/inventory data, typed scene references and
+unresolved dependencies before qualifying complete interactions. Its `outline`
+stage collects source structure; `resolve` adds bounded local value analysis.
+The existing `agi-logic` API and its partial-decoder contract remain unchanged.
+The census retains structural low-level IR and accepts no executable UIL.

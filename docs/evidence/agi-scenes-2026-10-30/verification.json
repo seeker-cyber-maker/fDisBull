@@ -1,0 +1,416 @@
+{
+  "format": "fdisbull-agi-census-verification-1",
+  "games": {
+    "kq1": {
+      "accepted_uil_interactions": 0,
+      "backing_checks": {
+        "all_stages_ir_identity_equal": true,
+        "expanded_references_equal": true,
+        "ir_code_bytes": 54772,
+        "ir_instructions": 11452,
+        "ir_roundtrip_equal": true,
+        "legacy_scope": "source bytes and widths of the preserved partial inspector; not an execution oracle",
+        "legacy_subset_instructions_compared": 4009,
+        "legacy_unsupported_frontier_instructions": 801
+      },
+      "native_execution": false,
+      "profile": "2.917",
+      "resource_issues": [
+        {
+          "error": "Truncated v2 resource header",
+          "kind": "sound",
+          "number": 34,
+          "offset": 134703,
+          "status": "error",
+          "volume": 2
+        },
+        {
+          "error": "Truncated v2 resource header",
+          "kind": "sound",
+          "number": 35,
+          "offset": 134799,
+          "status": "error",
+          "volume": 2
+        },
+        {
+          "error": "Truncated v2 resource header",
+          "kind": "sound",
+          "number": 36,
+          "offset": 134893,
+          "status": "error",
+          "volume": 2
+        },
+        {
+          "error": "Truncated v2 resource header",
+          "kind": "sound",
+          "number": 37,
+          "offset": 135787,
+          "status": "error",
+          "volume": 2
+        }
+      ],
+      "source_files": {
+        "AGI": {
+          "sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+          "size": 39424
+        },
+        "AGIDATA.OVL": {
+          "sha256": "f7ca256c1c0ab12509d695baabdd44a3c5e72a570b08118d3ead995a47f4c383",
+          "size": 8192
+        },
+        "LOGDIR": {
+          "sha256": "18d53ac02a5457494f03352c36a4a4c2eb8251df70fff8dae6dc3d5b41d55b38",
+          "size": 315
+        },
+        "OBJECT": {
+          "sha256": "2d1b7a75bb443b4a340cb8d9a2842ff5c834d7d597ea2a1365b6a7a2dfb57985",
+          "size": 331
+        },
+        "PICDIR": {
+          "sha256": "7a2181429c473c5983547f115869c1a948249d986d0176f5fa30b605510cc3c9",
+          "size": 255
+        },
+        "SNDDIR": {
+          "sha256": "fd5d50fd0eac57168e3cd070b7cf0d7040a26d303415f5318142a0695959563d",
+          "size": 144
+        },
+        "VIEWDIR": {
+          "sha256": "1b36ab1ccaa118870ee7d6d651359912e79f35f3acc71858e4b668e3b34e2a04",
+          "size": 432
+        },
+        "VOL.0": {
+          "sha256": "7f10c63737b4da8cf1633ba7c317ffc84a4bbc4eca10b39d2e349b18636bb5e2",
+          "size": 48472
+        },
+        "VOL.1": {
+          "sha256": "7c3a0c86c8ad1b028dc3d56cafb30a925690f243d70f2e7b2ac6f0dc802b00d0",
+          "size": 200630
+        },
+        "VOL.2": {
+          "sha256": "b6e321821a0d90809d985f57b279c2f155a6972482c4811c4a737987042a53cf",
+          "size": 90891
+        },
+        "WORDS.TOK": {
+          "sha256": "41d863172326c712c0aebadf12fc63b049ff5d892743f4ee990004c344eb3780",
+          "size": 3144
+        }
+      },
+      "source_files_unchanged": true,
+      "source_read_counts_per_scan": {
+        "LOGDIR": 1,
+        "OBJECT": 1,
+        "PICDIR": 1,
+        "SNDDIR": 1,
+        "VIEWDIR": 1,
+        "VOL.0": 1,
+        "VOL.1": 1,
+        "VOL.2": 1,
+        "WORDS.TOK": 1
+      },
+      "stages": {
+        "outline": {
+          "canonical_sha256": "28a5289d5412e8fc5eec01a9ac6903d5c4ca7547d7a03f470abd1b6f8d898406",
+          "coverage": {
+            "accepted_uil_interactions": 0,
+            "background_producing_logics": 81,
+            "budget_stops": 0,
+            "code_bytes": 54772,
+            "command_patterns": 1478,
+            "conditions": 5083,
+            "decoded_logics": 90,
+            "instruction_budget_stops": 0,
+            "instructions": 11452,
+            "inventory_objects": 27,
+            "inventory_status": "decoded",
+            "layout_errors": 0,
+            "logic_layout_complete": true,
+            "message_errors": 0,
+            "message_slots": 1526,
+            "message_tables": 90,
+            "present_logics": 90,
+            "present_messages": 1442,
+            "references": 3161,
+            "resolved_variable_references": 0,
+            "resource_census_complete": true,
+            "resource_entries": {
+              "logic": 90,
+              "picture": 82,
+              "sound": 26,
+              "view": 118
+            },
+            "resource_errors": 0,
+            "resource_integrity_complete": false,
+            "room_dispatch_sites": 1,
+            "scene_candidates": 81,
+            "scene_discovery_complete": false,
+            "unresolved_references": 265,
+            "updates": 0,
+            "value_analysis_complete": false,
+            "variable_references": 265,
+            "vocabulary_entries": 496,
+            "vocabulary_groups": 260,
+            "vocabulary_status": "decoded"
+          },
+          "maximum_ms": 214.02300000045216,
+          "median_ms": 201.87999899644637,
+          "minimum_ms": 163.16003600513795,
+          "samples_ms": [
+            163.16003600513795,
+            204.50415199593408,
+            214.02300000045216,
+            199.25346599484328,
+            201.87999899644637
+          ]
+        },
+        "resolve": {
+          "canonical_sha256": "66d388846646bda4ee93d8d90ca8393d79294ea28eba7a85faa3c9ed006cf00c",
+          "coverage": {
+            "accepted_uil_interactions": 0,
+            "background_producing_logics": 81,
+            "budget_stops": 0,
+            "code_bytes": 54772,
+            "command_patterns": 1478,
+            "conditions": 5083,
+            "decoded_logics": 90,
+            "instruction_budget_stops": 0,
+            "instructions": 11452,
+            "inventory_objects": 27,
+            "inventory_status": "decoded",
+            "layout_errors": 0,
+            "logic_layout_complete": true,
+            "message_errors": 0,
+            "message_slots": 1526,
+            "message_tables": 90,
+            "present_logics": 90,
+            "present_messages": 1442,
+            "references": 3161,
+            "resolved_variable_references": 5,
+            "resource_census_complete": true,
+            "resource_entries": {
+              "logic": 90,
+              "picture": 82,
+              "sound": 26,
+              "view": 118
+            },
+            "resource_errors": 0,
+            "resource_integrity_complete": false,
+            "room_dispatch_sites": 1,
+            "scene_candidates": 81,
+            "scene_discovery_complete": false,
+            "unresolved_references": 260,
+            "updates": 11703,
+            "value_analysis_complete": true,
+            "variable_references": 265,
+            "vocabulary_entries": 496,
+            "vocabulary_groups": 260,
+            "vocabulary_status": "decoded"
+          },
+          "maximum_ms": 262.26140299695544,
+          "median_ms": 252.27902000187896,
+          "minimum_ms": 195.1734679969377,
+          "samples_ms": [
+            195.1734679969377,
+            238.90050999762025,
+            262.26140299695544,
+            258.58697699732147,
+            252.27902000187896
+          ]
+        }
+      }
+    },
+    "pq1": {
+      "accepted_uil_interactions": 0,
+      "backing_checks": {
+        "all_stages_ir_identity_equal": true,
+        "expanded_references_equal": true,
+        "ir_code_bytes": 128087,
+        "ir_instructions": 26105,
+        "ir_roundtrip_equal": true,
+        "legacy_scope": "source bytes and widths of the preserved partial inspector; not an execution oracle",
+        "legacy_subset_instructions_compared": 4232,
+        "legacy_unsupported_frontier_instructions": 724
+      },
+      "native_execution": false,
+      "profile": "2.917",
+      "resource_issues": [],
+      "source_files": {
+        "AGI": {
+          "sha256": "29ddd3f3b91d65b6eade156608d7915e3c8b7f47701cb226ff119b717f3e8bd7",
+          "size": 39424
+        },
+        "AGIDATA.OVL": {
+          "sha256": "f7ca256c1c0ab12509d695baabdd44a3c5e72a570b08118d3ead995a47f4c383",
+          "size": 8192
+        },
+        "LOGDIR": {
+          "sha256": "bb8a07fb13a6af30ab587110ee4dfec66fb11f850776be8fdf5d3d55cedda0ec",
+          "size": 360
+        },
+        "OBJECT": {
+          "sha256": "ed0e6e31fe8f714dcc10243f0b5cdff5f707375ee4b1d55f4b311da3b9803d47",
+          "size": 369
+        },
+        "PICDIR": {
+          "sha256": "3546dc1692780cc3c9df232c7634be18997720f2931f9dc9a014b695124f4f4f",
+          "size": 351
+        },
+        "SNDDIR": {
+          "sha256": "ab6325c099a5d8bfcfd19ec561a33b83885b45ac39cb906a69c32e241805bb48",
+          "size": 126
+        },
+        "VIEWDIR": {
+          "sha256": "e80e7b40535eeaad4b03141613a404329b7bbfd2fef0e9fd08a0a9da3ac457ce",
+          "size": 768
+        },
+        "VOL.0": {
+          "sha256": "04449e1da52628290906eee1fe81c0cbfdae7a6fb146dfda652c1a7dd6304e52",
+          "size": 66869
+        },
+        "VOL.1": {
+          "sha256": "08927df46a0cf3d4d53e0c83c48a446ea5d81c9c46f6ad63c069a35d179b3ec8",
+          "size": 384591
+        },
+        "VOL.2": {
+          "sha256": "dbac3081ccf1f414cf0e8f5ad58ba6d788b7de8c0830ee317b093f8d4c8f3e90",
+          "size": 250262
+        },
+        "WORDS.TOK": {
+          "sha256": "a95eed1c9b2fcafb5ba63f2424adf05a3a1f7c349089fc22b09277ae020a13c2",
+          "size": 6737
+        }
+      },
+      "source_files_unchanged": true,
+      "source_read_counts_per_scan": {
+        "LOGDIR": 1,
+        "OBJECT": 1,
+        "PICDIR": 1,
+        "SNDDIR": 1,
+        "VIEWDIR": 1,
+        "VOL.0": 1,
+        "VOL.1": 1,
+        "VOL.2": 1,
+        "WORDS.TOK": 1
+      },
+      "stages": {
+        "outline": {
+          "canonical_sha256": "3054cda1ad66dab214e1dbe656e43dbac51b164ce29688390e2f25bc308c6a9a",
+          "coverage": {
+            "accepted_uil_interactions": 0,
+            "background_producing_logics": 55,
+            "budget_stops": 0,
+            "code_bytes": 128087,
+            "command_patterns": 3147,
+            "conditions": 10446,
+            "decoded_logics": 118,
+            "instruction_budget_stops": 0,
+            "instructions": 26105,
+            "inventory_objects": 25,
+            "inventory_status": "decoded",
+            "layout_errors": 0,
+            "logic_layout_complete": true,
+            "message_errors": 0,
+            "message_slots": 3678,
+            "message_tables": 118,
+            "present_logics": 118,
+            "present_messages": 3592,
+            "references": 5114,
+            "resolved_variable_references": 0,
+            "resource_census_complete": true,
+            "resource_entries": {
+              "logic": 118,
+              "picture": 71,
+              "sound": 36,
+              "view": 220
+            },
+            "resource_errors": 0,
+            "resource_integrity_complete": true,
+            "room_dispatch_sites": 3,
+            "scene_candidates": 42,
+            "scene_discovery_complete": false,
+            "unresolved_references": 358,
+            "updates": 0,
+            "value_analysis_complete": false,
+            "variable_references": 358,
+            "vocabulary_entries": 1126,
+            "vocabulary_groups": 358,
+            "vocabulary_status": "decoded"
+          },
+          "maximum_ms": 532.8724620048888,
+          "median_ms": 455.4508329965756,
+          "minimum_ms": 372.8627489981591,
+          "samples_ms": [
+            372.8627489981591,
+            462.9872229998,
+            418.46214399993187,
+            455.4508329965756,
+            532.8724620048888
+          ]
+        },
+        "resolve": {
+          "canonical_sha256": "8fbc7e9c971146c3c38312153fb4230f8efa9545db680eaafe0813b49c34ba1e",
+          "coverage": {
+            "accepted_uil_interactions": 0,
+            "background_producing_logics": 55,
+            "budget_stops": 0,
+            "code_bytes": 128087,
+            "command_patterns": 3147,
+            "conditions": 10446,
+            "decoded_logics": 118,
+            "instruction_budget_stops": 0,
+            "instructions": 26105,
+            "inventory_objects": 25,
+            "inventory_status": "decoded",
+            "layout_errors": 0,
+            "logic_layout_complete": true,
+            "message_errors": 0,
+            "message_slots": 3678,
+            "message_tables": 118,
+            "present_logics": 118,
+            "present_messages": 3592,
+            "references": 5114,
+            "resolved_variable_references": 21,
+            "resource_census_complete": true,
+            "resource_entries": {
+              "logic": 118,
+              "picture": 71,
+              "sound": 36,
+              "view": 220
+            },
+            "resource_errors": 0,
+            "resource_integrity_complete": true,
+            "room_dispatch_sites": 3,
+            "scene_candidates": 42,
+            "scene_discovery_complete": false,
+            "unresolved_references": 337,
+            "updates": 28958,
+            "value_analysis_complete": true,
+            "variable_references": 358,
+            "vocabulary_entries": 1126,
+            "vocabulary_groups": 358,
+            "vocabulary_status": "decoded"
+          },
+          "maximum_ms": 704.1498260005028,
+          "median_ms": 684.1781180046382,
+          "minimum_ms": 522.7972110005794,
+          "samples_ms": [
+            704.1498260005028,
+            697.3085010031355,
+            684.1781180046382,
+            657.91400699527,
+            522.7972110005794
+          ]
+        }
+      }
+    }
+  },
+  "implementation_sha256": {
+    "src/fdisbull/agi_layout.py": "4c81c70c000128141c964cb29a913ded5e9e1a05d9ff1622e9c580afbbf94edb",
+    "src/fdisbull/agi_resources.py": "ee71f851ccd77124505e55365b8cf823d8ba07c847cd518c8f382cf03e795468",
+    "src/fdisbull/agi_scenes.py": "bb2833c63082204945c79cef2d83239b25b5eb9055cc747f505432de12a54d48",
+    "src/fdisbull/cli.py": "d45b291b8d930aeafb58caba150c8fdc27d88893f4352012e569352684eb2d25"
+  },
+  "python": "3.12.14",
+  "runs_per_stage": 5,
+  "speedup_comparison": null,
+  "timing_scope": "warm repeated in-process scan including fresh reads, hashing, parsing, stage analysis and canonical digest; excludes process startup, report serialization, source backing checks, setup and research"
+}

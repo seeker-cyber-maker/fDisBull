@@ -256,6 +256,20 @@ loaded or executed those bytes. To claim runtime behavior, qualify the resource
 mapping and trace interpreter fetch, branch conditions and effects. See
 `docs/AGI_LOGIC.md` and the interpreter section of `methodology.md`.
 
+For a complete resource census and scene-element outline of a qualified DOS
+AGI 2.917 resource directory:
+
+```text
+fdisbull agi-scenes /private/game --profile 2.917 --stage outline
+fdisbull agi-scenes /private/game --profile 2.917 --stage resolve
+```
+
+The second stage adds conservative local value resolution. Use `--include-ir`
+and `--include-text` for private source investigation. It retains every LOGIC
+as low-level IR or an opaque source obligation; it is not an executable game
+model. Read [AGI scene census](AGI_SCENE_CENSUS.md) and the bundled
+`references/agi-scenes.md` before interpreting its coverage counts.
+
 ### Compare a source block with shared semantics
 
 For the supported 0.23 DOS profile, read `udl-uil-udc.md` before using

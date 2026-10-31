@@ -40,6 +40,10 @@ native code and other explanations. Read
 [references/methodology.md](references/methodology.md) before claiming a
 cross-file or native-to-guest execution link.
 
+For a qualified DOS AGI resource set, use
+[references/agi-scenes.md](references/agi-scenes.md) to inventory scene elements
+and unresolved references before qualifying complete interactions.
+
 ## Choose a useful probe
 
 For a genuine fork, record one active question, target/context, hypothesis,

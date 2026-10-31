@@ -206,7 +206,10 @@ and output are planned future work; the player currently supplies the text and
 state interface.
 
 The [AGI inspector](docs/AGI_LOGIC.md) reads a limited version-2 logic subset;
-unsupported operations remain unresolved. The [Z-machine harness](docs/ZORK_HARNESS.md)
+unsupported operations remain unresolved. The [AGI scene census](docs/AGI_SCENE_CENSUS.md)
+inventories qualified PQ1/KQ1 resource sets, scene elements and unresolved
+references before complete interactions are accepted as UIL.
+The [Z-machine harness](docs/ZORK_HARNESS.md)
 can run a user-supplied version-3 story using a separately selected Python and
 Jericho environment. Story inspection and the recovered mailbox slice are
 bounded evidence, not recovery of the parser, turn loop or complete game.

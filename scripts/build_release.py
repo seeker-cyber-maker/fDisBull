@@ -60,6 +60,7 @@ SOURCE_PATTERNS = (
     ("docs/evidence/integration-025", "packages.json"),
     ("docs/evidence/integration-026", "verification.json"),
     ("docs/evidence/integration-0261", "verification.json"),
+    ("docs/evidence/agi-scenes-2026-10-30", "verification.json"),
     ("scripts", "*.py"),
 )
 
