@@ -66,6 +66,9 @@ REQUIRED_SOURCE_FILES += ('docs/uil-rfcs/0002/vectors.json',
                           'docs/uil-rfcs/0002/replay-summary.json')
 REQUIRED_SOURCE_FILES += ('docs/evidence/integration-026/verification.json',)
 REQUIRED_SOURCE_FILES += ('docs/evidence/integration-0261/verification.json',)
+REQUIRED_SOURCE_FILES += ('tests/fixtures/frame_capture.S',
+                          'docs/verification/kq1-tas-2026-10-31.json')
+REQUIRED_SOURCE_FILES += ('src/fdisbull/capture_audit.py', 'tests/test_capture_audit.py')
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):

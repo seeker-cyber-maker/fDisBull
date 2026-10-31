@@ -1,0 +1,340 @@
+{
+  "format": "fdisbull-kq1-tas-public-aggregate-1",
+  "date": "2026-10-31",
+  "scope": "Sanitized aggregate of one private native experiment, independently audited; not a public game fixture, exact TAS replay, or full-game result.",
+  "identities": {
+    "investigation_source_commit": "0b7f258cc0fa71daef5c60c068ade42904c5d1c6",
+    "pr_base_commit": "90e748c8bc6a4f068f9136f4d4ec989672421a03",
+    "backend_sha256": "45fb6ffebe01de70599403a10a4a7d4a3b003621e910c36cc63449846ad3d346",
+    "private_harness_sha256": "278f29941688b9dae6622e528f9527d9be86c37823fc747bd9d31dcb2be37167",
+    "private_experiment_receipt_sha256": "4105ed08ca58751e28113c6e13d8d5aee979d1c4b5fff44c1922796fb2d8ca2f",
+    "private_audit_sha256": "5090ca30ff5d749ef47740306b0217fec3f73a8c92d9a3f3a31b6cd8e239ef99",
+    "sealed_private_database_sha256": "e3bb5505fbd7962da3b5ced1ae9e1d6c3fa0aa1eb60f0d45b146db283c5e349f"
+  },
+  "profile": {
+    "cpu_core": "normal",
+    "fixed_cpu_cycles": 157600,
+    "frameskip": 0,
+    "retain_unchanged_frames": true,
+    "game_speed": "normal",
+    "native_fast_forward_both_arms": true
+  },
+  "finish": {
+    "room": 8,
+    "x_range": [
+      0,
+      4
+    ],
+    "y": 100,
+    "score": 0,
+    "actor_direction": 0,
+    "control_direction": 0,
+    "input_drained": true,
+    "fresh_destination_picture_required": true
+  },
+  "intervention": {
+    "category": "assisted",
+    "actor_x": 154,
+    "actor_y": 100,
+    "actor_flags_or": "0x0400",
+    "room_change": "Original Right input executes the original exit"
+  },
+  "trials_in_execution_order": [
+    {
+      "index": 0,
+      "arm": "ordinary",
+      "start_ticks": 5405,
+      "end_ticks": 10080,
+      "guest_elapsed_ms": 4675,
+      "host_elapsed_ms": 24195.075170000564,
+      "preparation_guest_ms": 105,
+      "guest_component_residual_ms": 0,
+      "final_values": {
+        "x": 1,
+        "y": 100,
+        "direction": 0,
+        "control_direction": 0,
+        "room": 8,
+        "score": 0
+      },
+      "passed_checks": 128,
+      "snapshot_refresh_delta": 247
+    },
+    {
+      "index": 0,
+      "arm": "assisted",
+      "start_ticks": 5400,
+      "end_ticks": 5810,
+      "guest_elapsed_ms": 410,
+      "host_elapsed_ms": 2293.2957880002505,
+      "preparation_guest_ms": 100,
+      "guest_component_residual_ms": 0,
+      "final_values": {
+        "x": 1,
+        "y": 100,
+        "direction": 0,
+        "control_direction": 0,
+        "room": 8,
+        "score": 0
+      },
+      "passed_checks": 137,
+      "snapshot_refresh_delta": 20
+    },
+    {
+      "index": 1,
+      "arm": "assisted",
+      "start_ticks": 5400,
+      "end_ticks": 5810,
+      "guest_elapsed_ms": 410,
+      "host_elapsed_ms": 2223.154360999615,
+      "preparation_guest_ms": 100,
+      "guest_component_residual_ms": 0,
+      "final_values": {
+        "x": 1,
+        "y": 100,
+        "direction": 0,
+        "control_direction": 0,
+        "room": 8,
+        "score": 0
+      },
+      "passed_checks": 137,
+      "snapshot_refresh_delta": 20
+    },
+    {
+      "index": 1,
+      "arm": "ordinary",
+      "start_ticks": 5405,
+      "end_ticks": 10089,
+      "guest_elapsed_ms": 4684,
+      "host_elapsed_ms": 24869.95603500054,
+      "preparation_guest_ms": 105,
+      "guest_component_residual_ms": 0,
+      "final_values": {
+        "x": 1,
+        "y": 100,
+        "direction": 0,
+        "control_direction": 0,
+        "room": 8,
+        "score": 0
+      },
+      "passed_checks": 128,
+      "snapshot_refresh_delta": 248
+    },
+    {
+      "index": 2,
+      "arm": "ordinary",
+      "start_ticks": 5400,
+      "end_ticks": 10115,
+      "guest_elapsed_ms": 4715,
+      "host_elapsed_ms": 27340.37285800059,
+      "preparation_guest_ms": 100,
+      "guest_component_residual_ms": 0,
+      "final_values": {
+        "x": 1,
+        "y": 100,
+        "direction": 0,
+        "control_direction": 0,
+        "room": 8,
+        "score": 0
+      },
+      "passed_checks": 128,
+      "snapshot_refresh_delta": 250
+    },
+    {
+      "index": 2,
+      "arm": "assisted",
+      "start_ticks": 5405,
+      "end_ticks": 5824,
+      "guest_elapsed_ms": 419,
+      "host_elapsed_ms": 2873.435911999877,
+      "preparation_guest_ms": 105,
+      "guest_component_residual_ms": 3,
+      "final_values": {
+        "x": 1,
+        "y": 100,
+        "direction": 0,
+        "control_direction": 0,
+        "room": 8,
+        "score": 0
+      },
+      "passed_checks": 137,
+      "snapshot_refresh_delta": 21
+    }
+  ],
+  "statistics": {
+    "ordinary": {
+      "verified_trials": 3,
+      "guest_elapsed_ms": {
+        "median": 4684,
+        "min": 4675,
+        "max": 4715
+      },
+      "host_elapsed_ms": {
+        "median": 24869.95603500054,
+        "min": 24195.075170000564,
+        "max": 27340.37285800059
+      }
+    },
+    "assisted": {
+      "verified_trials": 3,
+      "guest_elapsed_ms": {
+        "median": 410,
+        "min": 410,
+        "max": 419
+      },
+      "host_elapsed_ms": {
+        "median": 2293.2957880002505,
+        "min": 2223.154360999615,
+        "max": 2873.435911999877
+      }
+    },
+    "median_reduction_percent": {
+      "guest_elapsed_ms": 91.24679760888131,
+      "host_elapsed_ms": 90.77885065509244
+    }
+  },
+  "independent_audit": {
+    "experiment_checks": 157,
+    "trial_checks": 795,
+    "total_checks": 952,
+    "deliberately_corrupted_receipts_rejected": 9,
+    "sealed_events": 3524,
+    "sealed_artifacts": 39,
+    "independent_native_rerun": false
+  },
+  "paused_processing": {
+    "host_elapsed_ms": 259.8057010000048,
+    "decoded_frames": 209,
+    "observed_guest_delta_ms": 0,
+    "observed_guest_ticks_before_after": [
+      5405,
+      5405
+    ],
+    "snapshot_refresh_id_before_after": [
+      584,
+      584
+    ],
+    "six_observed_game_fields_unchanged": true
+  },
+  "recording": {
+    "all_frames_decoded_and_rgba_hashed_before_sampling": true,
+    "guest_clock_mapping": null,
+    "segments": [
+      {
+        "width": 720,
+        "height": 400,
+        "time_base": "15625/1095103",
+        "decoded_frames": 213,
+        "saved_frames": 54,
+        "sampling_every_n": 4,
+        "input_sha256": "8fd6ad009fc6d875e94f453d3582f127da8ebd37d1109b45527754b9747b32f5",
+        "rgba_hash_sequence_sha256": "018eb604a4af781b99f062b3f9aea0eaaa012434d22a96b64eeb513e42825d56"
+      },
+      {
+        "width": 320,
+        "height": 200,
+        "time_base": "25000/1752157",
+        "decoded_frames": 1623,
+        "saved_frames": 406,
+        "sampling_every_n": 4,
+        "input_sha256": "da6b910fc377c0928b02a1b53ca16ed17f119a9da0550a9c8cbd54f317c17e52",
+        "rgba_hash_sequence_sha256": "94f5bcfa7277d66e7e3a6596836e4dc68d36a0b24e174aa700e1318c19ee3886"
+      }
+    ]
+  },
+  "snapshot_starvation": {
+    "start_guest_ticks": 5557,
+    "end_guest_ticks": 6567,
+    "requested_guest_ms": 1000,
+    "observed_guest_ms": 1010,
+    "both_endpoint_snapshot_queries_failed": true,
+    "appended_avi_bytes": 228838,
+    "complete_video_payloads_in_byte_interval": 70,
+    "unique_rgba_hashes_in_byte_interval": 70,
+    "adjacent_pixel_changes": 69,
+    "guest_clock_mapping": null,
+    "warning": "File offsets delimit observed appended bytes, not exact guest timestamps. Codec buffering and source-frame/guest-clock alignment are not calibrated.",
+    "private_reproduction_receipt_sha256": "db74a441d25aa5bab608f44a43c5fee9818b27079f728bbd0a1f41fc65300369"
+  },
+  "retained_failure_classes": [
+    "invalid breakpoint address during setup",
+    "blocked movement despite eventual arrival during cleanup",
+    "snapshot unavailable after fast-checkpoint restore",
+    "fast-speed reference destination not retained after cleanup"
+  ],
+  "limitations": [
+    "One native experiment independently audited, not independently rerun.",
+    "Shared checkpoint and six equal observations do not establish equal complete timer/RNG phase after preparation.",
+    "Raw outer host monotonic endpoints were not stored; host duration is source-bracketed and consistency checked, not independently subtractable.",
+    "Outer guest tick delta is authoritative; component residuals are retained explicitly.",
+    "Final PNG encoding/export lies after the timed paused endpoint; its frame metadata and pixel samples match that endpoint.",
+    "AVI container/frame validation is delegated to the separate frame audit.",
+    "Short observed-controller comparison only, not exact TAS replay or whole-game completion.",
+    "snapshot_refresh_delta was called completed_frames in the private receipt; it is not an AVI frame count.",
+    "Frame validation checks the recorded stream, not completeness of every guest scanout.",
+    "Private game inputs and raw evidence are not distributed in this receipt.",
+    "No comparison to a published full-game TAS record is established."
+  ],
+  "offline_capture_tool": {
+    "status": "passed",
+    "host_seconds": 5.560516224999446,
+    "guest_execution": false,
+    "cli_exit_code": 0,
+    "decoded_frames": 1836,
+    "saved_frames": 460,
+    "output_bytes": 9489028,
+    "summary_sha256": "6281af6eb81f6b4d0375a2fc03d919e2aedb1cf6749650c51ed7088bf2ee17bd",
+    "module_sha256": "b10af9805b19b06f3dbfa16bef24cfb9496c23fe1ba1c47b090a9fc49b3348ba",
+    "previous_verifier_sha256": "2bee0ea70ee12c120af609f05118f071c2bcf4c161205b135e2cf55b1dbc8106",
+    "segments": [
+      {
+        "index": 0,
+        "input_sha256": "8fd6ad009fc6d875e94f453d3582f127da8ebd37d1109b45527754b9747b32f5",
+        "decoded_frames": 213,
+        "saved_frames": 54,
+        "rgba_hash_sequence_sha256": "018eb604a4af781b99f062b3f9aea0eaaa012434d22a96b64eeb513e42825d56",
+        "adjacent_identical_frames": 211,
+        "first_source_time_seconds_exact": "0",
+        "last_source_time_seconds_exact": "3312500/1095103",
+        "width": 720,
+        "height": 400,
+        "time_base": "15625/1095103",
+        "all_frame_records_match": true
+      },
+      {
+        "index": 1,
+        "input_sha256": "da6b910fc377c0928b02a1b53ca16ed17f119a9da0550a9c8cbd54f317c17e52",
+        "decoded_frames": 1623,
+        "saved_frames": 406,
+        "rgba_hash_sequence_sha256": "94f5bcfa7277d66e7e3a6596836e4dc68d36a0b24e174aa700e1318c19ee3886",
+        "adjacent_identical_frames": 1222,
+        "first_source_time_seconds_exact": "0",
+        "last_source_time_seconds_exact": "40550000/1752157",
+        "width": 320,
+        "height": 200,
+        "time_base": "25000/1752157",
+        "all_frame_records_match": true
+      }
+    ],
+    "comparison_scope": "Regression parity with the retained earlier verifier; not independent native replay or an independent decoder algorithm",
+    "api": "fdisbull.capture_audit.audit_capture",
+    "cli": "capture-audit",
+    "sampling_every_n": 4,
+    "guest_clock_mapping": null,
+    "tests": {
+      "capture_audit": {
+        "passed": 28,
+        "skipped": 0,
+        "junit_sha256": "b5850b5728f49166dc4ad983687f5e9b630b734ca741a13ff49a207def596f73"
+      },
+      "regression": {
+        "passed": 366,
+        "skipped": 1,
+        "junit_sha256": "9bdbdd9361a29c9612d4a04611b69b5faead08e5a36df17334a128d4637ee996"
+      },
+      "overlap_between_these_invocations": 0,
+      "native_skip": "tests/test_doctor.py::test_real_dos_runtime_doctor_exports_only_evidence; FDISBULL_DOSBOX not configured"
+    },
+    "rebuilt_native_framebuffer_acceptance": "pending"
+  }
+}

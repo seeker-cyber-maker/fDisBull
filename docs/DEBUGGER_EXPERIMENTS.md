@@ -12,6 +12,10 @@ reopening the project. Neither trial edits the original static byte version.
 An experiment is a repeatable scripted procedure; it is not deterministic
 record/replay, an instruction rewind log, or a complete snapshot of host files.
 
+See the [TAS analysis harness guide](TAS_ANALYSIS_HARNESS.md) for checkpoint
+branches, evidence collection, failure minimization and UIL/UDL differential
+tests built around these experiments, including their timing and claim limits.
+
 ## Interfaces
 
 Use Python on a live session or JSON requests through `fdisbull serve` / `debug`:
