@@ -82,3 +82,15 @@
    - The utility and the exact-target output remain in the feature PR; this
      friction PR records the repeatability boundary and the reason not to call
      any size-only output equivalent.
+
+10. The emitted Linux x86-64 city shell is not host-runnable on Darwin.
+    - The bounded builder emits a mode-0700, 32,768-byte static ELF64
+      artifact, but macOS returns `Exec format error`; no local `qemu-x86_64`
+      or `wine64` runtime was available for this check.
+    - The build receipt correctly keeps `native_execution: false`. A Linux
+      runner, QEMU profile, or another explicit target runtime is required
+      before claiming native execution.
+    - The required full Darwin suite remains portable only in part:
+      `2189 passed, 149 skipped, 23 errors, 2 failed`. The errors and failures
+      are the existing Linux-ELF/Mach-O fixture boundary (`/usr/bin/gcc`
+      produces Mach-O or rejects Linux-only linker flags), not the Civ slice.
