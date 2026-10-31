@@ -258,7 +258,10 @@ class _Lower:
                                 'rva': start, 'end_exclusive': self.c.base + len(self.c.data)})
 
 
-def _validate(plan, modules):
+NOTIFICATION_BACKENDS = ('message-box-a', 'debug-string-a')
+
+
+def _validate(plan, modules, notification_backends=NOTIFICATION_BACKENDS):
     _check(len(_json({'plan': plan, 'modules': modules})) <= 1024 * 1024, 'native build input exceeds 1 MiB')
     _fields(plan, ('format', 'entry', 'state', 'resources', 'functions'), ('evidence',))
     _check(plan['format'] == FORMAT, 'unsupported native shell format')
@@ -291,7 +294,7 @@ def _validate(plan, modules):
                     _check(item.get('binding') in modules and modules[item['binding']].get('backend') in ('uil','c-uil'),
                            'native call requires an IL binding')
             elif op == 'notify':
-                _check(item.get('binding') in modules and modules[item['binding']].get('backend') in ('message-box-a', 'debug-string-a'),
+                _check(item.get('binding') in modules and modules[item['binding']].get('backend') in notification_backends,
                        'native notify requires an admitted notification provider')
             if op == 'if':
                 references(item.get('then'), owner, depth + 1); references(item.get('else'), owner, depth + 1)
@@ -321,7 +324,7 @@ def _validate(plan, modules):
                        'native IL text resources require identical declared plan bindings')
             if _event_count(module['program']['body']):
                 binding = module.get('notification_binding')
-                _check(binding in modules and modules[binding].get('backend') in ('message-box-a', 'debug-string-a'),
+                _check(binding in modules and modules[binding].get('backend') in notification_backends,
                        'native IL text requires an admitted notification_binding')
             for var, declaration in module['program']['variables'].items():
                 _check(declaration['type'] in TYPES, 'unsupported native module logical type')
@@ -332,7 +335,7 @@ def _validate(plan, modules):
                    'unknown native module return cell')
         else:
             _fields(module, ('backend', 'title', 'messages', 'default'), ('style', 'id', 'evidence'))
-            _check(module['backend'] in ('message-box-a', 'debug-string-a'), 'unsupported native service backend')
+            _check(module['backend'] in notification_backends, 'unsupported native service backend')
             _text(module['title'])
             _check(isinstance(module['messages'], dict) and len(module['messages']) <= 32, 'native message budget exceeded')
             for key, resource in module['messages'].items():

@@ -99,6 +99,20 @@ files, record types and links, and export disassembly and control-flow images
 from stored state without operating a GUI. See [architecture](docs/ARCHITECTURE.md)
 and [external files](docs/EXTERNAL_FILES.md).
 
+The [source catalog](docs/SOURCE_CONCEPT_SEARCH.md) adds private source snapshots,
+concept relationships and combined text/vector retrieval across editions.
+Its CivD pilot measures source-assisted search while preserving edition identity
+and keeping native equivalence separately qualified.
+
+[Verified CivD builds](docs/CIVD_VERIFIED_SOURCE_MAPS.md) now connect selected food
+and turn-processing source to original bytes across three DOS editions, with
+independent version checks and explicit packed/unpacked address identities.
+The [shared-food experiment](docs/CIVD_SHARED_FOOD_AND_Z.md) selects each
+edition's original kernel under one UIL and compares all nine combinations.
+It also introduces a source-backed Z interface design with one reusable city
+view; the shipped strategy interface reads observations and prepares action
+plans while native screen navigation remains unqualified.
+
 The [DOS/4GW LE module](docs/dos4gw-le.md) adds bounded loading of
 supported 32-bit LE objects and internal fixups for the existing x86 analyzer.
 The [Win16 NE view](docs/NE_LOADING.md) loads supported Windows16 segments with

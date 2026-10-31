@@ -4,6 +4,11 @@ Use this page to find the right fDisBull interface for a task. Replace every
 example path with a path selected by the user. The Python distribution does not
 include a native emulator, game files, saved states or project databases.
 
+For recovery, translation or a backing swap, retrieve
+`agent-skill --reference references/reconstruction.md`. It provides a first-use
+recipe, a runnable counterexample exercise and separate original/UIL/target
+acceptance gates. It requires no earlier conversation or project history.
+
 ## Discover commands and bundled skills
 
 ```text
@@ -89,6 +94,12 @@ Unknown formats remain catalogued inputs with an explicit capability gap.
 The bundled `references/formats-and-media.md` carries the portable summary.
 
 ### Inspect an executable without running it
+
+When source is available, use the separate [source catalog](SOURCE_CONCEPT_SEARCH.md)
+and `source-*` JSON methods to retain revisions and search across editions.
+The bundled `references/source-and-concepts.md` gives the portable workflow.
+Source names, spelling occurrences and similarity do not automatically become
+native symbols, resolved variables or equivalent code.
 
 ```text
 fdisbull identify /path/to/program

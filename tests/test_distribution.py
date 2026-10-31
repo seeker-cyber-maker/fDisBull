@@ -21,9 +21,12 @@ REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scrip
                        'src/fdisbull/dos_qemu.py','src/fdisbull/dos_runtime.py','src/fdisbull/qemu_machine.py',
                        'src/fdisbull/gdb_rpc.py','src/fdisbull/guest_assets.py',
                        'src/fdisbull/data/dos-runtime-signatures.json','src/fdisbull/data/MICROSOFT-DOS-LICENSE.txt',
+                       'src/fdisbull/data/civd-z-screen-families.json',
                        'src/fdisbull/skills/fdisbull-investigate/SKILL.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/scenes.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/methodology.md',
+                       'src/fdisbull/skills/fdisbull-investigate/references/reconstruction.md',
+                       'src/fdisbull/skills/fdisbull-investigate/references/sweding.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/runtime-navigation.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/proofs.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/workflows.md',
@@ -36,6 +39,8 @@ GAMEFAQS_SKILL_FILES = tuple('src/fdisbull/skills/write-gamefaqs-guide/'+name fo
     'references/technical-mechanics.md', 'references/source-examples.md',
 ))
 REQUIRED_SOURCE_FILES += GAMEFAQS_SKILL_FILES
+REQUIRED_SOURCE_FILES += ('examples/recovery/civd_food_swap.py', 'examples/recovery/civd_food_arm64.py')
+REQUIRED_SOURCE_FILES += ("docs/evidence/civd-food-arm64/verification.json",)
 UDC_EVIDENCE_FILES = {
     'docs/evidence/udc-2026-10-29/dino.json',
     'docs/evidence/udc-2026-10-29/zork.json',
@@ -62,6 +67,11 @@ REQUIRED_SOURCE_FILES += tuple(sorted(INTEGRATION_EVIDENCE_FILES))
 REQUIRED_SOURCE_FILES += ('docs/uil-rfcs/0002/vectors.json',
                           'docs/uil-rfcs/0002/replay-summary.json')
 REQUIRED_SOURCE_FILES += ('docs/evidence/integration-026/verification.json',)
+REQUIRED_SOURCE_FILES += ('docs/evidence/source-search-pilot/verification.json',
+                          'src/fdisbull/skills/fdisbull-investigate/references/source-and-concepts.md')
+REQUIRED_SOURCE_FILES += ('docs/evidence/civd-source-maps/verification.json',)
+REQUIRED_SOURCE_FILES += tuple('docs/evidence/civd-food-swaps/' + name for name in
+                              ('verification.json','shared-uil.json','source-ui-inventory.json'))
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):
@@ -142,3 +152,14 @@ def test_release_allowlists_include_only_the_public_udc_and_output_receipts():
                        if line.startswith('include docs/evidence/output-024/')}
     assert output_receipts == OUTPUT_EVIDENCE_FILES
     assert all((root/path).is_file() for path in OUTPUT_EVIDENCE_FILES)
+
+
+def test_reviewed_recipe_allowlist_rejects_other_examples(tmp_path):
+    check = runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+    archive = tmp_path/'fdisbull-examples-tool.zip'
+    source_archive(archive)
+    assert check(archive) == len(REQUIRED_SOURCE_FILES)
+    with zipfile.ZipFile(archive, 'a') as output:
+        output.writestr('fdisbull-test/examples/unreviewed.py', 'unreviewed input')
+    with pytest.raises(ValueError, match='Excluded directory'):
+        check(archive)

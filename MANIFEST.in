@@ -22,6 +22,11 @@ include docs/uil-rfcs/0001/vectors.json
 include docs/uil-rfcs/0002/vectors.json
 include docs/uil-rfcs/0002/replay-summary.json
 include docs/evidence/integration-026/verification.json
+include docs/evidence/source-search-pilot/verification.json
+include docs/evidence/civd-source-maps/verification.json
+include docs/evidence/civd-food-swaps/verification.json
+include docs/evidence/civd-food-swaps/shared-uil.json
+include docs/evidence/civd-food-swaps/source-ui-inventory.json
 include docs/evidence/spatial-2026-10-29/verification.json
 include docs/evidence/zork-2026-10-29/verification.json
 include docs/evidence/zork-uil-2026-10-29/verification.json
@@ -48,3 +53,9 @@ prune build
 prune dist
 prune .github
 global-exclude __pycache__ *.py[cod] *.fdb *.fdb-* *.db *.sqlite *.sqlite3 *.sav *.state *.exe *.com *.dll *.bin *.dat *.DAT
+
+include docs/evidence/civd-food-arm64/verification.json
+
+# Exact authored food recipes; the private target/outputs remain excluded.
+include examples/recovery/civd_food_swap.py
+include examples/recovery/civd_food_arm64.py

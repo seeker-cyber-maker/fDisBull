@@ -8,6 +8,8 @@ from . import __version__
 from .output_limits import OutputPolicy, current_output_policy, output_policy_context, validate_request_id
 
 AGENT_SKILL_GUIDES = {
+    'references/sweding.md': 'Keep intent fixed while qualifying alternative implementations, timing, effects and hosting',
+    'references/reconstruction.md': 'First-use recovery recipe: original-to-UIL-to-target gates, discriminating probes and resumable evidence',
     'SKILL.md': 'Start here: investigation technique, cost/reward/confidence and evidence boundaries',
     'references/scenes.md': 'Define scene objects, masks, recognition, readiness and named actions',
     'references/methodology.md': 'Plan evidence, coordinate independent questions, trace causes and screen for interpreters',
@@ -18,6 +20,7 @@ AGENT_SKILL_GUIDES = {
     'references/recovery-research.md': 'Qualify research, retain reusable meanings and compare recovery depth and cost',
     'references/semantic-contracts.md': 'Recover complete intent contracts and compare facts, effects, time and projection losses',
     'references/formats-and-media.md': 'Qualify containers, executable mappings, release differences and valid media reduction',
+    'references/source-and-concepts.md': 'Intake pinned source, search concepts across editions, and preserve source/native claim boundaries',
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
 DEFAULT_AGENT_SKILL = 'fdisbull-investigate'
@@ -232,6 +235,8 @@ METHODS = {
 
 from .udc_api import METHODS as BLOCK_METHODS
 METHODS.update(BLOCK_METHODS)
+from .source_api import METHODS as SOURCE_METHODS
+METHODS.update(SOURCE_METHODS)
 
 def invoke(method, params, debugger=None):
     if method not in METHODS:
@@ -239,6 +244,9 @@ def invoke(method, params, debugger=None):
     if not isinstance(params,dict):
         raise ValueError("params must be an object")
     p = dict(params)
+    if method in SOURCE_METHODS:
+        from .source_api import invoke as source_invoke
+        return source_invoke(method, p)
     if method in ('output-info','output-read','output-select','output-export'):
         policy=current_output_policy()
         artifact=p.pop('artifact')
@@ -464,10 +472,11 @@ def respond(request, default_project=None, debugger=None):
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
         standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone = standalone or request['method'] in SOURCE_METHODS
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         result=invoke(request["method"],params,debugger)
-        if request["method"] not in BLOCK_METHODS:result=public_addresses(result)
+        if request["method"] not in BLOCK_METHODS and request["method"] not in SOURCE_METHODS:result=public_addresses(result)
         value={"id":request_id,"ok":True,"result":result}
     except (ValueError,TypeError,KeyError,OSError,sqlite3.Error,OverflowError,AttributeError,RecursionError) as e:
         value={"id":request_id,"ok":False,"error":{"type":type(e).__name__,"message":str(e)}}

@@ -14,6 +14,7 @@ test = ["pytest>=8,<10", "setuptools>=68", "dnfile==0.18.0", "dncil==1.0.2", "z3
 proof = ["z3-solver==5.3.2.0"]
 udc = ["unicorn==2.1.4"]
 managed = ["dnfile==0.18.0", "dncil==1.0.2"]
+source = ["tree-sitter==0.25.2", "tree-sitter-c==0.24.1"]
 
 [project.scripts]
 fdisbull = "fdisbull.cli:main"
