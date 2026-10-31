@@ -137,10 +137,9 @@ pending; inspect status and do not call a budget stop complete. `render` exports
 from saved project state without operating a GUI.
 
 For a macOS ARM64 executable, select the `arm64` Mach-O slice explicitly and
-keep the FDB and original file private. This source branch adds exact ARM64
+keep the FDB and original file private. The 0.28.0 release includes exact ARM64
 `code-backings`, source-bound `ghidra-arm64` instruction/C diagnostics and a
-one-stop `macos-observe` LLDB launch. Check installed `methods` first: the
-published 0.27.0 release does not include those new probes. Read
+one-stop `macos-observe` LLDB launch. Read
 [macOS ARM64 analysis](MACOS_ARM64_ANALYSIS.md) for commands, source hashes,
 static/runtime address separation and the still-unimplemented app-level UIL
 export.
