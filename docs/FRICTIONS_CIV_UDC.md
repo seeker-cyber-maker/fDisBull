@@ -145,3 +145,14 @@
       `main()` kept its old body while the module gained new functions. Assert
       the anchor before replacing (`assert old in text`) or the failure is a
       later `KeyError` in the receipt, not an error at patch time.
+
+16. A commit modelled from store shape was the wrong routine.
+    - `R:0D12:4C00..0x4E03` ends with `add [bx+0x70fa], ax`,
+      `shl ax,1 / sub [bx-0x4e2a], ax` and `and [bx+0x70f2], 0xef`. That reads
+      as a purchase, so it was modelled and committed as the buy commit.
+    - The `b` key branch is at `0x737D`; the real price is computed at
+      `0x7387` (`2b + b*b/20`, doubled twice), the guard is `0x75D2`, and the
+      commit is `0x75E5` (`box := 10*cost`, `gold -= price`) - about 0x2A00
+      bytes away. The earlier window is still unattributed.
+    - Lesson applied: trace the key branch to its commit before modelling.
+      Store shape alone does not identify an action.
