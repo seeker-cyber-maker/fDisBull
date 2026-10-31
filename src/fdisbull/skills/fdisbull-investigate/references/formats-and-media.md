@@ -59,6 +59,15 @@ loader-only task need not launch a game.
 Record raw records and unique applied writes separately when a boundary-spanning
 fixup can appear more than once.
 
+For a relocated byte guard or source snippet, retain ownership of every whole
+relocation field intersecting the requested window. For example, if an MZ
+two-byte relocation starts just before the window, relocate the complete word
+before selecting the window bytes; relocating one visible byte loses carry and
+context. Compare the result with the same slice of a qualified full-image
+mapping. A guard mismatch may come from an incomplete expectation; it does not
+by itself establish a loader defect. Preserve original bytes, relocation records,
+load segment and the requested versus expanded window boundaries.
+
 Run one bounded initial analysis, inspect pending work and follow the next
 relevant frontier. Report instructions, candidate functions and cross-references
 with the selected image, seeds, budget and tool revision. These counts do not
