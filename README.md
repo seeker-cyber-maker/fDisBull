@@ -241,6 +241,11 @@ decoding does not establish that a region is executable code. See
 [console parsing](docs/CONSOLE_MEDIA_PARSING.md) and
 [ROM-to-assembly modules and comparison](docs/ROM_ASM.md).
 
+Native NES and Genesis compiler modules can also turn a small shared UIL
+program into runnable cartridges. Both have been checked in real emulator
+cores, including one bounded Genesis machine-code → UIL → NES experiment.
+See [console UDC](docs/CONSOLE_UDC.md) for the supported profile and results.
+
 ## The bounded UDC pipeline
 
 The 0.23 source introduces an original-backed DOS compiler definition (UDC):

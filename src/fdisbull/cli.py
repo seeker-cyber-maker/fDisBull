@@ -216,6 +216,8 @@ METHODS = {
     "identify": "Identify file header from bytes; path; no project required",
     "inspect": "Parse file metadata; path; no project required",
     "rom-inspect": "Parse console cartridge or Sega data-track descriptor; path; no project required",
+    "console-udc": "Compile bounded UIL to a new private NES/Genesis cartridge directory; path,target,output,[display_variable]",
+    "console-udc-targets": "List native console compiler targets and accepted UIL operations; no project required",
     "rom-disasm": "Decode bounded, explicitly mapped SH-2 bytes with interchangeable engines; path,base_address,[backend,offset,length,max_instructions,mode,ghidra_home,saturn_recomp_root,timeout]",
     "disc-inspect": "Parse bounded CUE/BIN or ISO primary filesystem metadata; path,[mode,max_entries,max_directory_bytes,max_depth]",
     "info": "Parsed container summary; [version]",
@@ -354,6 +356,13 @@ def invoke(method, params, debugger=None):
     if method=='disc-inspect':
         from .disc import inspect_disc_path
         return inspect_disc_path(**p)
+    if method=='console-udc':
+        from .console_udc import compile_console_path
+        return compile_console_path(**p)
+    if method=='console-udc-targets':
+        from .console_udc import console_targets
+        if p:raise ValueError('console-udc-targets accepts no parameters')
+        return console_targets()
     if method=='rom-disasm':
         from .rom_asm import disassemble_rom_path
         return disassemble_rom_path(**p)
@@ -490,7 +499,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('agent-skill','identify','inspect','rom-inspect','rom-disasm','disc-inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('agent-skill','identify','inspect','rom-inspect','rom-disasm','disc-inspect','console-udc','console-udc-targets','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         value={"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
@@ -680,6 +689,12 @@ def parser():
         if name=='inspect':
             c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'])
             c.add_argument('--image',choices=['auto','pe','le','mz','com'])
+    sub.add_parser('console-udc-targets',help=METHODS['console-udc-targets'])
+    c=sub.add_parser('console-udc',help=METHODS['console-udc'])
+    c.add_argument('path')
+    c.add_argument('--target',choices=['nes','genesis'],required=True)
+    c.add_argument('--output',required=True)
+    c.add_argument('--display-variable')
     c=sub.add_parser('rom-disasm',help=METHODS['rom-disasm'])
     c.add_argument('path')
     c.add_argument('--base-address',type=lambda s:int(s,0),required=True,help='explicit address mapping source file offset zero')

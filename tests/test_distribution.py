@@ -80,6 +80,7 @@ ROM_ASM_RESOURCES = (
     'scripts/rom_semantic_route/README.md',
 )
 REQUIRED_SOURCE_FILES += ROM_ASM_RESOURCES
+REQUIRED_SOURCE_FILES += ("docs/evidence/console-udc-2026-10-30/verification.json", "src/fdisbull/data/console-udc-demo.json")
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):

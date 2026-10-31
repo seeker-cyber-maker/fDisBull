@@ -269,6 +269,17 @@ Neither mode discovers executable code or updates a native project. See
 [ROM-to-ASM](ROM_ASM.md) for external engine setup, the shared output contract,
 the Civilization Saturn comparison and the known Capstone CPU-profile issue.
 
+### Generate a bounded native console cartridge
+
+`console-udc-targets` lists the common NES/Genesis UIL profile. Compile an
+authored script with `console-udc script.uil.json --target nes --output
+/private/new-cartridge --display-variable '$x'`; change only `--target genesis`
+for a Genesis cartridge. Outputs must be new directories outside Git.
+Both modules emit native CPU and console startup code. See
+[console UDC](CONSOLE_UDC.md) for the supported arithmetic/condition subset,
+workload limits and real emulator results, including a bounded Genesis ROM →
+UIL → NES test. This does not automatically recover a commercial game's UIL.
+
 ### Compare a source block with shared semantics
 
 For the supported 0.23 DOS profile, read `udl-uil-udc.md` before using

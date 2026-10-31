@@ -185,6 +185,18 @@ successful checkpoint on failure; explicitly resume from that checkpoint rather
 than treating a faulted runtime as a fresh attempt. Native host-file effects and
 an independent player's checkpoint have different persistence boundaries.
 
+## Native console UDC profile
+
+`console-udc-targets` lists a shared unsigned eight/16-bit UIL subset for NES
+and Genesis. `console-udc` accepts `path`, `target`, `output` and optional
+`display_variable`; output must be a new private directory outside Git. Both
+targets generate native instructions, console startup and a controller loop.
+Compilation validates structure and bounds and reports `executed: false`.
+Runtime qualification remains a separate receipt. The source-checkout
+`docs/CONSOLE_UDC.md` records real emulator checks and an actual bounded Genesis
+machine-code → UIL → NES route with explicit RAM bindings. That initial lifter
+accepts a straight-line generated function pattern, not arbitrary game code.
+
 ## Read a proof narrowly
 
 `udl-verify` uses the optional Z3 dependency to compare a source block model with
