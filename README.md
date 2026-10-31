@@ -1,11 +1,12 @@
 # fDisBull
 
-This checkout contains the **0.26.1 release source**: read-only recovery
-reconciliation, selected DOS program-exit reporting and broader game-guide
-workflows. See the [0.26.1 notes](docs/RELEASE-0.26.1.md) for scope and gates.
-The published and shared installation is
-[0.26.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.26.0)
-at this source cut; publication and installation are separate steps.
+This checkout contains the **0.27.0 cloud release candidate**: private external
+target storage, recovery reconciliation, reusable media adapters, structural
+type sharing and bounded Win16 NE analysis. See the
+[candidate notes](docs/RELEASE-0.27.0.md) for scope and gates. The latest
+published release at this cut is
+[0.26.1](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.26.1).
+Publication, environment promotion and installation are separate steps.
 
 Give an agent a program to explore—and a place to keep what it learns.
 fDisBull connects disassembly, headless debugging, scene-aware controls and
@@ -22,11 +23,21 @@ play an authored text projection without opening the debugger yourself.
 >
 > Must bring your own weapons. I have only done this once before. Safety not guaranteed.
 
+**Do not upload game binaries or game files.** Keep originals, modified binaries,
+assets, story images, saves and byte-containing databases/archives private.
+New FDBs reference private external payloads by size and SHA-256. A divergent
+source requires explicit approval for its exact identity and base before it
+can become a separate analysis layer. Semantic UIL/game representations remain
+allowed pending sanitation; embedded original files are excluded. See
+[external targets and publication policy](docs/EXTERNAL_TARGETS.md) for scope,
+legacy migration and remaining export limits.
+
 ## Choose a starting point
 
 | I want to… | Start here |
 | --- | --- |
 | Extract a GOG DOS installer on macOS or Linux without Wine | [Native GOG unpacking](docs/GOG_UNPACKING.md) |
+| Reuse a reviewed structure in another analysis project | [Portable type catalogs](docs/TYPE_CATALOGS.md) |
 | Understand an executable without running it | [Disassembly and analysis](#disassemble-and-analyze) |
 | Observe a DOS game or a Windows PE64 program | [Debug the original program](#debug-the-original-program) |
 | Compare a hypothesis, a checkpoint or a temporary patch | [Layers, states and experiments](#layers-states-and-experiments) |
@@ -102,6 +113,9 @@ and [external files](docs/EXTERNAL_FILES.md).
 
 The [DOS/4GW LE module](docs/dos4gw-le.md) adds bounded loading of
 supported 32-bit LE objects and internal fixups for the existing x86 analyzer.
+The [Win16 NE view](docs/NE_LOADING.md) loads supported Windows16 segments with
+logical addresses and symbolic fixups. The [Colonization comparison](docs/COLONIZATION_FOOD_EQUIVALENCIES.md)
+shows how related DOS and Windows code can guide an investigation.
 
 The [Cortex-M static profile](docs/CORTEX_M.md) imports a declared flash image
 with an Armv7-M vector table, decodes Thumb/Thumb-2 code and exports stored analysis images.
@@ -177,11 +191,17 @@ in the published 0.24.0 packages.
 
 The [DinoPark Z provider](docs/DINOPARK_Z.md) lets an agent borrow and repay,
 buy supplies, prepare a pen, hire a guide, open the park and save its progress
-through a bounded text interface. The original-backed compiler reconstructs
+through a bounded text interface. [Named menu and quit actions](docs/DINOPARK_Z_TERMINAL_ACTIONS.md)
+let an agent review the original prompts, cancel a quit request, leave a park
+and return to DOS. The original-backed compiler reconstructs
 your own qualified game files before play, and the original engine performs
 the actions. Bring the game and a compatible native backend. See the
 [native verification and coverage limits](docs/VERIFICATION-DINOPARK-Z-RELIABILITY-2026-10-29.md)
 and [v0.23 merge-readiness checks](docs/VERIFICATION-Z-V023-MERGE-READINESS.md).
+
+A separate [static-analysis study](docs/DINOPARK_STATIC_ANALYSIS_FRICTION.md)
+records whole-binary discovery limits and proposed tool improvements. Its code
+and resource candidates remain unconfirmed; it does not extend playable coverage.
 
 [Recoverable Z batches](docs/Z_BATCH_RECOVERY.md) retain per-step effects,
 resume explicitly declared notice continuations and rewind only after a
@@ -193,6 +213,10 @@ certify that the original intent is complete. Such batch steps remain paused
 for reconciliation, and aliases cannot be used to resend the original action.
 If a result read fails, read-only reconciliation can verify a saved reply in the
 same guest before the batch continues.
+The DinoPark bridge also [retains oversized replies](docs/Z_REPLY_RECOVERY.md)
+before transmission, with read-only retrieval and a delivery hold that prevents
+further actions until the caller acknowledges the retained result against the
+same native session.
 
 The [funded26k recovery path](docs/DINOPARK_FUNDED_RECOVERY.md) preserves a confirmed
 food purchase across its quarter notice and keeps a paused provider available

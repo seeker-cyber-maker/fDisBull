@@ -65,12 +65,16 @@ DEBUG_DDL += MACRO_DDL
 
 class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, ProgressiveSceneProjectMixin, MacroProjectMixin, ScreenshotHookProjectMixin, SceneProjectMixin, RuntimeCodeMixin, ExperimentProjectMixin, LayerProjectMixin):
     def machine(self, executable, *, boot_image, version=None, boot_timeout_ms=30000):
+        if self.meta['format'] == 'NE':
+            raise ValueError('NE static projects cannot launch through the raw machine backend')
         from .qemu_machine import MachineDebugSession
         return MachineDebugSession(self,executable,boot_image=boot_image,version=version,boot_timeout_ms=boot_timeout_ms)
 
     def debugger(self, executable, game_dir, *, version=None, backend=None, kernel=None,
                  initramfs=None, files=None, boot_timeout_ms=240000, state=None, remote_server=None, window=False,_on_spawn=None,
                  spatial_mode=None, fair_play=False):
+        if self.meta['format'] == 'NE':
+            raise ValueError('NE currently supports static analysis only; DOS and PE64 launch backends cannot execute Win16 NE projects')
         if spatial_mode is None: spatial_mode = 'physical' if fair_play else 'assisted'
         validate_mode(spatial_mode, fair_play)
         if (spatial_mode != 'assisted' or fair_play) and (backend not in (None, 'dosbox') or self.meta['format'] == 'PE'):
@@ -115,7 +119,7 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
 
     def debug_artifacts(self, version=None, run=None):
         v = self.version(version)['id']
-        rows = self.db.execute('''SELECT a.id,a.run,a.name,a.kind,a.sha256,length(a.data) AS size,a.metadata
+        rows = self.db.execute('''SELECT a.id,a.run,a.name,a.kind,a.sha256,fdb_length(a.data) AS size,a.metadata
             FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run
             WHERE r.version=? AND (? IS NULL OR r.id=?) ORDER BY a.rowid''',(v,run,run))
         return {'version':v,'artifacts':[{**dict(r),'metadata':json.loads(r['metadata'])} for r in rows]}
@@ -219,13 +223,13 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
         result = dict(artifact=identifier,run=run,version=row['version'],name=name,kind=kind,
                       sha256=digest,size=len(data),metadata=metadata)
         with self.transaction(True):
-            used = self.db.execute('SELECT coalesce(sum(length(data)),0) FROM debug_artifacts').fetchone()[0]
+            used = self.db.execute('SELECT coalesce(sum(fdb_length(data)),0) FROM debug_artifacts').fetchone()[0]
             if used+len(data) > 256*1024*1024:
                 raise ValueError('Project runtime artifact budget exceeds 256 MiB')
             self.db.execute('INSERT INTO debug_artifacts VALUES (?,?,?,?,?,?,?)',
                 (identifier,run,name,kind,digest,data,json.dumps(metadata)))
             self.db.execute('INSERT INTO debug_events(run,created,operation,evidence) VALUES (?,?,?,?)',
-                            (run,stamp(),'artifact',json.dumps(result)))
+                            (run,stamp(),'artifact',self._external_text(json.dumps(result))))
         return result
 
     def debug_grid(self, artifact, *, name='coordinate-grid.png', step=32, target=None):
@@ -392,7 +396,7 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
     def _event(self, operation, evidence):
         with self.project.transaction(True):
             self.project.db.execute('INSERT INTO debug_events(run,created,operation,evidence) VALUES (?,?,?,?)',
-                                    (self.run_id,stamp(),operation,json.dumps(evidence)))
+                                    (self.run_id,stamp(),operation,self.project._external_text(json.dumps(evidence))))
             state = evidence.get('state') or evidence.get('session',{}).get('state')
             if state:
                 self.project.db.execute('UPDATE debug_runs SET state=? WHERE id=?',(state,self.run_id))

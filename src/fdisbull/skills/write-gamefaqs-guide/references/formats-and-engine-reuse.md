@@ -165,3 +165,11 @@ use the supplied original evidence and leave external game facts unread until
 a separately authorized comparison phase. Attribution after reading cannot
 undo exposure during a restricted pass. The examples are optional; a useful
 partial specification or transfer table does not require consulting them.
+
+
+Before rebuilding a media reader, discover `fdisbull media-modules`. Retrieve the
+investigation skill's shipped APIs, bounded specifications and missing-tool
+procedure with `fdisbull agent-skill --reference references/media-modules.md`.
+Its MZ tail remains opaque, and parser acceptance establishes structure only.
+Keep original and modified game payloads private; publish authored specifications
+and synthetic examples only under the user's authorization.

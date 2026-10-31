@@ -25,12 +25,18 @@ def _selector(context):
 
 
 def _segmented(address, context):
+    if context and context.endswith(':ne'):
+        from .ne import logical_location
+        return logical_location(address)['address']
     selector = _selector(context)
     offset = address - selector * 16 if selector is not None else None
     return f'{selector:04x}:{offset:04x}' if offset is not None and 0 <= offset <= 65535 else None
 
 
 def _following(row, address):
+    if row['context'].endswith(':ne'):
+        from .ne import following
+        return following(address, row['size'])
     selector = _selector(row['context'])
     if selector is not None:
         return selector * 16 + ((address - selector * 16 + row['size']) & 65535)
@@ -118,7 +124,7 @@ class CFGMixin:
                 return a, f'x86:16:little:cs={segment:04x}' if segment is not None else None
             if selector is not None:
                 raise ValueError('CS selection applies only to DOS projects')
-            return number(value), self.context
+            return self._address(value), self.context
 
         start, context = parse(address, cs)
         requested = []

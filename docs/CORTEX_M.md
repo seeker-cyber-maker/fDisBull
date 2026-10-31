@@ -89,6 +89,15 @@ python scripts/verify_cortex_m.py /private/EEVBlog2_05.bin \
   --base 0x08006000 --vector-count 73 --output /private/new-qualification
 ```
 
+The verifier keeps its private companion object store at `OUTPUT/target-objects`.
+Keep it with the FDB and set `FDISBULL_TARGET_STORE` to that path when reopening
+the project elsewhere. Without the store, stored text/labels and predicate facts
+remain readable, while instruction bytes are explicitly unavailable and
+byte-dependent analysis/patching fails. Exact `bind-source` can restore the
+recorded parent or an authored reset-vector child without divergence approval.
+Vector word values, tags and validity decisions are semantic loader evidence;
+the FDB remains private and is not a publication-ready sanitized export.
+
 It preserves the input, moves only its own copy, reopens stored instructions and
 annotations, writes real PNG/SVG/CFG files, tests a NOP child and a distinct
 reset-vector child, and verifies the untouched parent. Vector metadata and

@@ -57,6 +57,11 @@ class AnalysisMixin:
 
     def _index_symbols(self, version, document):
         from .linkage import metadata_symbols
+        if self.meta['format'] == 'NE':
+            # Standalone inspection is a bounded preview. Address identity in
+            # an imported project must use the full validated retained tables.
+            ne = self.meta['loader_metadata']['ne']
+            document = dict(document, imports=ne['imports'], exports=ne['exports'])
         for address,kind,item in metadata_symbols(document):
             name=item.get('name') or (f"ordinal_{item['ordinal']}" if item.get('ordinal') is not None else 'unnamed')
             self.db.execute('INSERT OR IGNORE INTO symbols VALUES (?,?,?,?,?,?)',
@@ -101,8 +106,11 @@ class AnalysisMixin:
             doc = self._document(v)
             if topic == 'summary':
                 counts = {x:len(doc.get(x,[])) for x in ('sections','imports','exports','strings','libraries','relocations')}
-                if self.meta['format'] == 'LE':
-                    counts['relocations'] = len(self.meta['loader_metadata']['le']['fixups'])
+                if self.meta['format'] in ('LE', 'NE'):
+                    counts['relocations'] = len(self.meta['loader_metadata'][self.meta['format'].lower()]['fixups'])
+                if self.meta['format'] == 'NE':
+                    for name in ('sections', 'imports', 'exports', 'libraries'):
+                        counts[name] = len(self.meta['loader_metadata']['ne'][name])
                 return {'version':v,'header':doc['header'],**{key:doc[key] for key in ('selected_image','image_views','container_header','selected_slice','cortex_m') if key in doc},'counts':counts,'warnings':doc.get('warnings',[])}
             if topic == 'linkage':
                 return dict(version=v,linkage=doc.get('linkage',{}),metadata_revision=doc.get('metadata_revision',0),warnings=doc.get('warnings',[]))
@@ -111,6 +119,8 @@ class AnalysisMixin:
             if topic not in ('sections','imports','exports','strings','libraries','relocations'):
                 raise ValueError('unknown information topic')
             records = doc.get(topic, [])
+            if self.meta['format'] == 'NE' and topic in ('relocations', 'imports', 'exports', 'sections', 'libraries'):
+                records = self.meta['loader_metadata']['ne']['fixups' if topic == 'relocations' else topic]
             if self.meta['format'] == 'LE' and topic == 'relocations':
                 # Standalone inspection has a bounded preview; the importer
                 # retains every applied LE record. Page that retained list
@@ -259,6 +269,9 @@ class AnalysisMixin:
         from .project import integer,number
         from .processor import NativeProcessor, Location, decode_instruction
         processor=NativeProcessor(self.arch,self.bits)
+        if self.meta['format'] == 'NE':
+            from .ne_processor import NEProcessor
+            processor = NEProcessor(self.meta['loader_metadata']['ne'])
         budget=integer(max_instructions,'max_instructions',1,1_000_000)
         with self.transaction(True):
             v=self.version(version)['id']
@@ -280,7 +293,7 @@ class AnalysisMixin:
             def fact_count():
                 return sum(self.db.execute(f'SELECT count(*) FROM {table} WHERE version=?',(v,)).fetchone()[0] for table in ('instructions','xrefs','functions','data_items','operand_refs'))
             if start is not None:
-                a=number(start)
+                a=self._address(start)
                 if self.arch=='thumb' and a & 1:
                     raise ValueError('Thumb start must be a canonical halfword-aligned code address')
                 if not executable(a):
@@ -305,12 +318,13 @@ class AnalysisMixin:
                     ins=result.facts if result else None
                     if ins is None or blocked(a,ins['size']):
                         state='blocked' if ins is not None else 'invalid'
-                        self.db.execute('UPDATE work SET state=?,detail=? WHERE version=? AND context=? AND address=?',(state,'data definition or evidenced Thumb literal' if state=='blocked' else 'invalid or outside executable mapping',v,self.context,k(a)))
+                        detail = ('data definition or evidenced Thumb literal' if self.arch == 'thumb' else 'user data definition') if state == 'blocked' else getattr(processor, 'last_failure', None) or 'invalid or outside executable mapping'
+                        self.db.execute('UPDATE work SET state=?,detail=? WHERE version=? AND context=? AND address=?',(state,detail,v,self.context,k(a)))
                         continue
                     if self.arch=='thumb':
                         ins=self._thumb_prepare(v,a,ins,regions)
                     flow,target=ins['flow'],ins['target']
-                    inserted=self.db.execute('INSERT OR IGNORE INTO instructions VALUES (?,?,?,?,?,?,?,?,?)',(v,self.context,k(a),ins['size'],ins['bytes'],ins['mnemonic'],ins['operands'],flow,k(target) if target is not None else None))
+                    inserted=self.db.execute('INSERT OR IGNORE INTO instructions VALUES (?,?,?,?,?,?,?,?,?)',(v,self.context,k(a),ins['size'],self._instruction_hex(ins['bytes']),ins['mnemonic'],ins['operands'],flow,k(target) if target is not None else None))
                     detail = 'unresolved indirect control flow' if flow.startswith('indirect') else None
                     if self.arch=='thumb' and (flow=='return' or flow=='conditional' and target is None):
                         detail = 'Thumb conditional/return target and exception state remain unresolved'
@@ -322,7 +336,8 @@ class AnalysisMixin:
                     self._memory_facts(v,self.context,a,bytes.fromhex(ins['bytes']))
                     if target is not None:
                         kind='call' if flow=='call' else 'branch'
-                        self._add_xref(v,a,target,kind,'decoded direct operand')
+                        edge = next((edge for edge in result.successors if edge.kind == kind and edge.target is not None), None)
+                        self._add_xref(v,a,target,kind,edge.evidence if edge else 'decoded direct operand')
                         if executable(target):
                             self._queue_code(v,target,kind)
                             if flow=='call':
@@ -340,6 +355,9 @@ class AnalysisMixin:
                             self.db.execute('INSERT OR IGNORE INTO operand_refs VALUES (?,?,?,?,?,?,?)',(v,self.context,k(a),immediate['operand_index'],'offset_candidate',k(ref),None))
                             self._queue_data(v,ref,'mapped immediate candidate',reopen=bool(inserted))
                     following=a+ins['size']
+                    if self.meta['format'] == 'NE':
+                        from .ne import following as ne_following
+                        following = ne_following(a, ins['size'])
                     if flow in ('next','call','conditional','indirect_call') and executable(following):
                         self._queue_code(v,following,'fallthrough')
                         evidence=('permitted call-return fallthrough; return is assumed' if flow in ('call','indirect_call') else 'decoded conditional fallthrough' if flow=='conditional' else 'decoded straight-line fallthrough')

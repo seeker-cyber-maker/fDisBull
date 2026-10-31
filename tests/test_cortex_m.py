@@ -1,5 +1,6 @@
 """Authored Thumb encodings and public persistent Cortex-M contracts (PM0056)."""
 import json
+import sqlite3
 from pathlib import Path
 import struct
 import subprocess
@@ -15,6 +16,11 @@ from fdisbull.memory import instruction_memory_accesses
 from fdisbull.project import Project
 
 BASE = 0x08000000
+
+
+@pytest.fixture(autouse=True)
+def private_target_store(tmp_path,monkeypatch):
+    monkeypatch.setenv('FDISBULL_TARGET_STORE',str(tmp_path/'target-objects'))
 
 
 def firmware(tmp_path, code='0148804701480047', interrupt=True):
@@ -88,6 +94,7 @@ def test_profile_seeds_reset_first_preserves_vectors_and_literal_data(tmp_path):
     ({'profile':'cortex-m','base':BASE+2,'vector_count':16},'aligned'),
     ({'profile':'cortex-m','base':BASE,'vector_count':True},'16..256'),
     ({'profile':'cortex-m','base':BASE,'vector_count':257},'16..256'),
+    ({'profile':'cortex-m','base':BASE,'vector_count':16,'entry':BASE+66},'derived'),
     ({'vector_count':16},'requires profile'),
     ({'arch':'thumb','bits':64},'32 bits'),
     ({'arch':'thumb','base':1},'alignment'),
@@ -137,6 +144,8 @@ def test_vector_patch_rebuilds_entry_and_parent_isolation(tmp_path):
         assert p.status(version=bad)['entry'] is None
         with pytest.raises(ValueError,match='Invalid Cortex-M vectors'):
             p.analyze(version=bad)
+        with pytest.raises(ValueError,match='no valid entry'):
+            p.source_candidate(tmp_path/'firmware.bin',version=bad)
 
 
 def test_literal_memory_facts_and_unknown_register_memory():
@@ -257,3 +266,47 @@ def test_vfp_store_width_keeps_unknown_register_address(raw,width):
     fact=instruction_memory_accesses(bytes.fromhex(raw),0x1000,'thumb',32)[0]
     assert fact['width']==width and fact['may_write'] and not fact['may_read']
     assert fact['concrete_target'] is None and fact['unresolved_reasons']
+
+
+def test_external_storage_keeps_cortex_payloads_outside_sqlite(tmp_path):
+    from fdisbull.target_storage import reference
+    with create(tmp_path) as p:
+        p.analyze()
+        assert p.storage_info()['embedded_payload_columns']==[]
+        database=p.path
+    with sqlite3.connect(database) as raw:
+        assert reference(raw.execute('SELECT source_bytes FROM binary_info WHERE version=1').fetchone()[0])
+        assert all(reference(r[0]) for r in raw.execute('SELECT data FROM regions'))
+        assert all(reference(r[0]) for r in raw.execute('SELECT bytes FROM instructions'))
+
+
+def test_missing_store_readback_and_exact_reset_child_rebinding(tmp_path,monkeypatch):
+    source=firmware(tmp_path,'08bf704701207047')
+    original=source.read_bytes();database=tmp_path/'binding.fdb'
+    with Project.create(database,source,profile='cortex-m',base=BASE,vector_count=16,entry=BASE+64) as p:
+        p.analyze();p.annotate(BASE+64,'retained_startup',kind='name',author='test')
+        assert 'entry' not in p.source_info()['loader_options']
+        child=p.patch(BASE+4,struct.pack('<I',BASE+97).hex())['version'];p.analyze(version=child)
+    source.rename(tmp_path/'parent-exact.bin')
+    patched=bytearray(original);struct.pack_into('<I',patched,4,BASE+97)
+    child_source=tmp_path/'child-exact.bin';child_source.write_bytes(patched)
+    monkeypatch.setenv('FDISBULL_TARGET_STORE',str(tmp_path/'restored-objects'))
+    with Project(database) as p:
+        assert p.status(version=child)['entry']==hex(BASE+96)
+        rows=p.disassembly(version=1)
+        assert not rows['byte_cache_available'] and rows['instructions'][0]['name']=='retained_startup'
+        assert rows['instructions'][1]['predicate']
+        for operation in (lambda:p.analyze(version=1),lambda:p.patch(BASE+64,'00bf',version=1)):
+            with pytest.raises(ValueError,match='[Oo]bject|[Ss]ource|[Pp]rivate'):
+                operation()
+        invoke('render',dict(project=str(database),output=str(tmp_path/'missing-store.png'),version=1,format='png'))
+        assert p.source_candidate(tmp_path/'parent-exact.bin',version=1)['exact_match']
+        assert p.bind_source(tmp_path/'parent-exact.bin',version=1)['attached']
+        assert p.source_candidate(child_source,version=child)['exact_match']
+        assert p.bind_source(child_source,version=child)['attached']
+        assert p.source_info(version=1)['verified'] and p.source_info(version=child)['verified']
+    with Project(database) as p:
+        assert p.disassembly(version=1)['instructions'][0]['bytes']=='08bf'
+        assert p.disassembly(version=child)['instructions'][0]['bytes']=='7047'
+        assert p.status(version=1)['entry']==hex(BASE+64)
+        assert p.status(version=child)['entry']==hex(BASE+96)

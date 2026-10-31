@@ -3,7 +3,7 @@ import json
 import sqlite3
 
 from fdisbull.cli import respond
-from fdisbull.project import Project
+from fdisbull.project import Project, SCHEMA
 
 
 def _raw(tmp_path, code=bytes.fromhex('9090c3')):
@@ -26,7 +26,7 @@ def test_all_straight_lines_persist_and_old_projects_explicitly_backfill(tmp_pat
             p.db.execute("UPDATE metadata SET value='3' WHERE key='schema'")
         path=p.path
     with Project(path) as p:
-        assert p.db.execute("SELECT value FROM metadata WHERE key='schema'").fetchone()[0]=='8'
+        assert p.db.execute("SELECT value FROM metadata WHERE key='schema'").fetchone()[0]==str(SCHEMA)
         # Read-only CFG can expose old omissions before explicit refresh.
         before=p.db.total_changes
         assert len(p.cfg('0x1000')['nodes'])==3

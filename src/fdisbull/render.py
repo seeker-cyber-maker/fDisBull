@@ -132,7 +132,8 @@ def _layout(snapshot: dict) -> tuple[list[_Text], list[tuple[int, int, str]], in
     y += 40
     rules.append((y - 10, _WIDTH - _PAD, _COLORS["line"]))
     segmented = any(isinstance(row, dict) and row.get("segmented_address") for row in rows)
-    for x, label in [(36, "CS:IP" if segmented else "ADDRESS"), (260, "BYTES (HEX)"), (620, "MNEMONIC"), (754, "OPERANDS")]:
+    ne = context.endswith(':ne')
+    for x, label in [(36, "NE SEG:OFFSET" if ne else "CS:IP" if segmented else "ADDRESS"), (260, "BYTES (HEX)"), (620, "MNEMONIC"), (754, "OPERANDS")]:
         add(x, y, label, "muted", 15, True)
     y += 33
     if not rows:
@@ -147,7 +148,7 @@ def _layout(snapshot: dict) -> tuple[list[_Text], list[tuple[int, int, str]], in
             for line in _wrap(name + ":", 128):
                 add(_PAD, y, line, "name", bold=True)
                 y += _LINE
-        address = _clean(row.get("segmented_address") or row.get("address", "?"), limit=18)
+        address = _clean(row.get('logical_location', {}).get('address') or row.get("segmented_address") or row.get("address", "?"), limit=18)
         byte_text = _clean(row.get("bytes", ""), limit=64).replace(" ", "")
         if byte_text and (not re.fullmatch(r"[0-9a-fA-F]+", byte_text) or len(byte_text) % 2):
             raise ValueError("instruction bytes must be an even-length hexadecimal string")

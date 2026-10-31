@@ -1,6 +1,6 @@
 """Versioned SQLite store and bounded recursive control-flow traversal."""
 from collections import deque
-from contextlib import contextmanager
+from contextlib import contextmanager, closing
 import hashlib
 import json
 from pathlib import Path
@@ -8,9 +8,12 @@ import sqlite3
 from datetime import datetime, timezone
 
 from .model import Region
+from .target_storage import STORAGE, connect, identity
+from .target_sources import TargetSourcesMixin, SOURCES_DDL
+import uuid
 
 MAX_ADDRESS = (1 << 64) - 1
-SCHEMA = 8
+SCHEMA = 9
 
 def number(value):
     if isinstance(value, bool) or not isinstance(value, (int, str)):
@@ -80,17 +83,20 @@ from .proofs import ProofProjectMixin, PROOF_DDL
 from .cortex_m import CortexMMixin, DDL as CORTEX_M_DDL
 
 
-class Project(CortexMMixin, CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
+class Project(TargetSourcesMixin, CortexMMixin, CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
+
     def __init__(self, path):
         self.path = Path(path).resolve()
         if not self.path.is_file():
             raise ValueError(f"project does not exist: {self.path}")
-        self.db = sqlite3.connect(self.path, timeout=30)
+        # Detect the storage contract before any legacy additive migration.
+        with closing(sqlite3.connect(self.path, timeout=30)) as probe:
+            external = dict(probe.execute('SELECT key,value FROM metadata')).get('storage') == json.dumps(STORAGE)
+        self.db = connect(self.path, external=external)
         self._live_debuggers = []
-        self.db.row_factory = sqlite3.Row
         try:
             meta = dict(self.db.execute("SELECT key,value FROM metadata"))
-            if meta.get("application") != "fdisbull" or int(meta.get("schema", -1)) not in (1,2,3,4,5,6,7,SCHEMA):
+            if meta.get("application") != "fdisbull" or int(meta.get("schema", -1)) not in (1,2,3,4,5,6,7,8,SCHEMA):
                 raise ValueError("unsupported project schema")
             if int(meta["schema"]) == 1:
                 self.db.executescript("BEGIN IMMEDIATE;" + EXTENSION_DDL + "INSERT OR IGNORE INTO analysis_state SELECT id,0,0 FROM versions; UPDATE work SET state='pending',detail=NULL; UPDATE metadata SET value='2' WHERE key='schema'; COMMIT;")
@@ -104,8 +110,11 @@ class Project(CortexMMixin, CodeBackingsMixin, ProofProjectMixin, DebugProjectMi
                 self.db.executescript(FACTS_DDL+TYPE_DDL+ADVANCED_DDL+EXTERNAL_FILES_DDL+FILE_REFERENCES_DDL+SHARED_LABELS_DDL)
             self.meta = {k:json.loads(v) for k,v in meta.items() if k not in ("application","schema")}
             self.arch, self.bits = self.meta["arch"], self.meta["bits"]
-            self.context = f"{self.arch}:{self.bits}:little"
-            self.db.executescript(DEBUG_DDL+PROOF_DDL+CORTEX_M_DDL)
+            self.context = f"{self.arch}:{self.bits}:little" + (':ne' if self.meta['format'] == 'NE' else '')
+            self.db.executescript(DEBUG_DDL+PROOF_DDL+SOURCES_DDL+CORTEX_M_DDL)
+            if external and int(meta["schema"]) != SCHEMA:
+                self.db.execute("UPDATE metadata SET value=? WHERE key='schema'", (str(SCHEMA),))
+                self.db.commit()
             self.db.execute("PRAGMA foreign_keys=ON")
             self.db.execute("PRAGMA busy_timeout=30000")
         except Exception:
@@ -140,10 +149,10 @@ class Project(CortexMMixin, CodeBackingsMixin, ProofProjectMixin, DebugProjectMi
         from .loader import load_image
         source = Path(binary)
         image = load_image(source, **options)
-        return cls._create_image(path,source.name,image)
+        return cls._create_image(path,source.name,image,loader_options=options)
 
     @classmethod
-    def _create_image(cls,path,filename,image):
+    def _create_image(cls,path,filename,image,loader_options=None):
         """Persist the exact validated immutable image without rereading its file."""
         # Validate our stable mapping independently of individual loader formats.
         ordered = sorted(image.regions, key=lambda r:r.start)
@@ -162,28 +171,22 @@ class Project(CortexMMixin, CodeBackingsMixin, ProofProjectMixin, DebugProjectMi
         with target.open("xb"):
             pass
         try:
-            db = sqlite3.connect(target)
+            db = connect(target, external=True)
             try:
                 db.executescript(DDL + EXTENSION_DDL + DOS_DDL + FACTS_DDL + TYPE_DDL + ADVANCED_DDL + EXTERNAL_FILES_DDL + FILE_REFERENCES_DDL + SHARED_LABELS_DDL)
                 db.execute("PRAGMA journal_mode=WAL")
                 meta = {"arch":image.arch,"bits":image.bits,"format":image.format,"entry":image.entry,
                         "filename":filename,"source_sha256":image.metadata["source_sha256"],
-                        "loader_metadata":image.metadata}
+                        "loader_metadata":image.metadata,"storage":STORAGE,"project_id":uuid.uuid4().hex}
                 db.executemany("INSERT INTO metadata VALUES (?,?)",
                     [("application","fdisbull"),("schema",str(SCHEMA))] + [(k,json.dumps(v)) for k,v in meta.items()])
                 db.execute("INSERT INTO versions VALUES (1,NULL,?,?,?,?)",
                     ("original","file import",cls.digest(image.regions),now()))
-                context = f"{image.arch}:{image.bits}:little"
+                context = f"{image.arch}:{image.bits}:little" + (':ne' if image.format == 'NE' else '')
                 for r in image.regions:
                     if r.data:
                         db.execute("INSERT INTO regions VALUES (?,?,?,?,?,?)",(1,r.name,key(r.start),r.data,r.executable,r.writable))
-                for seed in image.seeds:
-                    address = key(seed.address)
-                    db.execute("INSERT OR IGNORE INTO functions(version,context,address,name,source) VALUES (1,?,?,?,?)",
-                        (context,address,seed.name,seed.source))
-                    if seed.address == image.entry:
-                        db.execute("INSERT OR IGNORE INTO work(version,context,address,reason) VALUES (1,?,?,?)",
-                            (context,address,seed.source))
+                cls._seed_image(db, image, 1, context)
                 db.commit()
                 db.execute("PRAGMA wal_checkpoint(TRUNCATE)")
             finally:
@@ -192,6 +195,27 @@ class Project(CortexMMixin, CodeBackingsMixin, ProofProjectMixin, DebugProjectMi
             try:
                 with project.transaction(True):
                     project._init_information(image)
+                    from . import __version__
+                    if loader_options is None:
+                        # Existing internal module imports have a known selected image.
+                        loader_options = {'module': True, 'entry': image.entry}
+                        if image.format == 'raw':
+                            loader_options.update(arch=image.arch, bits=image.bits, base=image.regions[0].start)
+                        elif image.format == 'COM':
+                            loader_options.update(image='com', load_segment=image.metadata['dos']['load_segment'])
+                        if image.metadata.get('slice_arch'):
+                            loader_options['slice_arch'] = image.metadata['slice_arch']
+                        if image.metadata.get('cortex_m'):
+                            loader_options = dict(profile='cortex-m', base=image.metadata['cortex_m']['base'],
+                                                  vector_count=image.metadata['cortex_m']['vector_count'])
+                    if loader_options.get('profile') == 'cortex-m':
+                        # The validated reset vector owns entry identity, including
+                        # in later authored reset-vector versions.
+                        loader_options = {k:v for k,v in loader_options.items() if k != 'entry'}
+                    source_record = {'identity':identity(image.source_bytes),'format':image.format,
+                                     'arch':image.arch,'bits':image.bits,'loader_options':loader_options,
+                                     'loader':{'name':'fdisbull.load_image','version':__version__},'schema':SCHEMA}
+                    project.db.execute('INSERT INTO target_sources VALUES (?,?)', (1,json.dumps(source_record)))
                 return project
             except BaseException:
                 project.db.close()
@@ -201,6 +225,17 @@ class Project(CortexMMixin, CodeBackingsMixin, ProofProjectMixin, DebugProjectMi
             Path(str(target)+"-wal").unlink(missing_ok=True)
             Path(str(target)+"-shm").unlink(missing_ok=True)
             raise
+
+    @staticmethod
+    def _seed_image(db, image, version, context):
+        """Use identical initial roots for imports and approved source layers."""
+        for seed in image.seeds:
+            address = key(seed.address)
+            db.execute("INSERT OR IGNORE INTO functions(version,context,address,name,source) VALUES (?,?,?,?,?)",
+                       (version, context, address, seed.name, seed.source))
+            if seed.address == image.entry:
+                db.execute("INSERT OR IGNORE INTO work(version,context,address,reason) VALUES (?,?,?,?)",
+                           (version, context, address, seed.source))
 
     @staticmethod
     def digest(regions):
@@ -237,7 +272,8 @@ class Project(CortexMMixin, CodeBackingsMixin, ProofProjectMixin, DebugProjectMi
             counts = {table:self.db.execute(f"SELECT count(*) FROM {table} WHERE version=?",(v["id"],)).fetchone()[0]
                       for table in ("instructions","functions","xrefs","annotations")}
             work = dict(self.db.execute("SELECT state,count(*) FROM work WHERE version=? GROUP BY state",(v["id"],)))
-            regions = [{"name":r.name,"start":hx(r.start),"size":len(r.data),"executable":r.executable,"writable":r.writable} for r in self.regions(v["id"])]
+            regions = [{"name":r['name'],"start":hx(int(r['start'],16)),"size":r['size'],"executable":bool(r['executable']),"writable":bool(r['writable'])}
+                       for r in self.db.execute('SELECT name,start,fdb_length(data) AS size,executable,writable FROM regions WHERE version=? ORDER BY start',(v['id'],))]
             metadata=dict(self.meta)
             if self.meta['format'] in ('MZ', 'COM'):
                 loader=dict(metadata['loader_metadata'])
@@ -246,23 +282,31 @@ class Project(CortexMMixin, CodeBackingsMixin, ProofProjectMixin, DebugProjectMi
                 dos['segment_candidate_count']=len(dos.pop('segment_candidates',[]))
                 loader['dos']=dos
                 metadata['loader_metadata']=loader
-            elif self.meta['format'] == 'LE':
+            elif self.meta['format'] in ('LE', 'NE'):
                 loader = dict(metadata['loader_metadata'])
-                le = dict(loader['le'])
+                model = self.meta['format'].lower()
+                le = dict(loader[model])
                 le['fixup_count'] = len(le.pop('fixups', []))
                 le['page_count'] = len(le.pop('pages', []))
                 objects = le.pop('objects', [])
                 le['object_count'] = len(objects)
                 le['objects_preview'] = objects[:16]
                 le['objects_truncated'] = len(objects) > 16
+                if model == 'ne':
+                    for field in ('entries', 'resources', 'imports', 'exports', 'name_records', 'sections', 'file_mappings'):
+                        le[field + '_count'] = len(le.pop(field, []))
+                    segments = le.pop('segments', [])
+                    le['segment_count'] = len(segments)
+                    le['segments_preview'] = segments[:16]
+                    le['segments_truncated'] = len(segments) > 16
                 loader['file_mapping_count'] = len(loader.pop('file_mappings', []))
-                loader['le'] = le
+                loader[model] = le
                 metadata['loader_metadata'] = loader
             entry=self._entry_address(v['id'])
             if self.arch=='thumb' and self._document(v['id']).get('cortex_m'):
                 metadata['loader_metadata']=dict(metadata['loader_metadata'],cortex_m=self._document(v['id'])['cortex_m'])
             return {"project":str(self.path),**metadata,"entry":hx(entry) if entry is not None else None,"context":self.context,
-                    "version":v,"counts":counts,"work":work,"regions":regions,"analysis":self.analysis_status(v['id'])}
+                    "storage":self.meta.get("storage","legacy-embedded"),"selected_source_sha256":self.source_sha256(v["id"]),"version":v,"counts":counts,"work":work,"regions":regions,"analysis":self.analysis_status(v['id'])}
 
     def _stored_analysis_status(self,version=None):
         """Current persisted queue state, independent of historical run receipts."""
@@ -299,6 +343,9 @@ class Project(CortexMMixin, CodeBackingsMixin, ProofProjectMixin, DebugProjectMi
                         note='Current stored state. A static fixed point does not establish complete code coverage or runtime behavior.')
 
     def _address(self,value):
+        if self.meta['format'] == 'NE':
+            from .ne import parse_address
+            return parse_address(value)
         return self._dos_parse_address(value)[0] if self.meta['format'] in ('MZ', 'COM') else number(value)
 
     def segments(self,version=None):
@@ -348,21 +395,35 @@ class Project(CortexMMixin, CodeBackingsMixin, ProofProjectMixin, DebugProjectMi
             return self._dos_xrefs(address,direction,version,limit,cs)
         if direction not in ("to","from"):
             raise ValueError("direction must be to or from")
+        if cs is not None:raise ValueError('CS selection applies only to DOS projects')
+        address = self._address(address)
         limit = integer(limit,"limit",1,10000)
         v = self.version(version)["id"]
         column = "target" if direction == "to" else "source"
         rows = self.db.execute(f"SELECT * FROM xrefs WHERE version=? AND context=? AND {column}=? ORDER BY source,target,kind LIMIT ?",(v,self.context,key(address),limit))
-        return [{"source":hx(int(r["source"],16)),"target":hx(int(r["target"],16)),"kind":r["kind"],"evidence":r["evidence"],"version":v,"source_name":self._label(v,int(r["source"],16)),"target_name":self._label(v,int(r["target"],16)),"target_representation":self._presentation(v,int(r["target"],16))["representation"]} for r in rows]
+        result = [{"source":hx(int(r["source"],16)),"target":hx(int(r["target"],16)),"kind":r["kind"],"evidence":r["evidence"],"version":v,"source_name":self._label(v,int(r["source"],16)),"target_name":self._label(v,int(r["target"],16)),"target_representation":self._presentation(v,int(r["target"],16))["representation"]} for r in rows]
+        if self.meta['format'] == 'NE':
+            from .ne import logical_location
+            for row in result:
+                for side in ('source', 'target'):
+                    row[side + '_logical_location'] = logical_location(int(row[side], 16))
+        return result
 
     def _stored_disassembly(self, address=None, lines=50, version=None,cs=None):
         if self.meta["format"] in ('MZ', 'COM'):
             return self._dos_disassembly(address,lines,version,cs)
         count = integer(lines,"lines",1,500)
+        if cs is not None:raise ValueError('CS selection applies only to DOS projects')
         with self.transaction():
             v = self.version(version)
-            a = self._entry_address(v['id']) if address is None else number(address)
+            a = self._entry_address(v['id']) if address is None else self._address(address)
             if a is None:
                 raise ValueError('Selected version has no valid entry; supply an explicit address')
+            ne_processor = None
+            if self.meta['format'] == 'NE':
+                from .ne_processor import NEProcessor
+                from .processor import Location
+                ne_processor = NEProcessor(self.meta['loader_metadata']['ne'])
             rows = self.db.execute("SELECT i.*,n.text AS name,c.text AS comment,c.author AS comment_author,c.inherited_from AS comment_inherited_from FROM instructions i LEFT JOIN annotations n ON n.version=i.version AND n.context=i.context AND n.address=i.address AND n.kind='name' LEFT JOIN annotations c ON c.version=i.version AND c.context=i.context AND c.address=i.address AND c.kind='comment' WHERE i.version=? AND i.context=? AND i.address>=? ORDER BY i.address LIMIT ?",(v["id"],self.context,key(a),count)).fetchall()
             result = []
             for r in rows:
@@ -382,7 +443,14 @@ class Project(CortexMMixin, CodeBackingsMixin, ProofProjectMixin, DebugProjectMi
                 result.append({"references":references,"file_references":file_refs,"file_reference_summary":file_refs_summary,"display_operands":display,"address":address_hex,"size":r["size"],"bytes":r["bytes"],"mnemonic":r["mnemonic"],"operands":r["operands"],"flow":r["flow"],"target":hx(int(r["target"],16)) if r["target"] else None,"name":self._shared_name(v["id"],("memory","",int(r["address"],16))) or r["name"] or (self._label(v["id"],int(r["address"],16)) if fn or self._signature_name(v["id"],self.context,int(r["address"],16)) else None),"comment":r["comment"],"comment_author":r["comment_author"],"comment_inherited_from":r["comment_inherited_from"],"xrefs":self.xrefs(address_hex,"to",v["id"]),"context":self.context})
                 if predicate:
                     result[-1]['predicate']=predicate
-            return {"title":self.meta["filename"],"arch":self.arch,"bits":self.bits,"context":self.context,"version":v["id"],"sha256":v["sha256"],"source_sha256":self.meta["source_sha256"],"address":hx(a),"instructions":result,"analysis":self.analysis_status(v['id']),"view":"stored instructions ordered by address; gaps are not decoded implicitly"}
+            if ne_processor is not None:
+                from .ne import logical_location
+                for row in result:
+                    row['logical_location'] = logical_location(int(row['address'], 16))
+                    decoded = ne_processor.decode(bytes.fromhex(row['bytes']), Location('ne.segment', int(row['address'], 16))) if row['bytes'] else None
+                    row['ne_fixups'] = decoded.facts['ne_fixups'] if decoded else []
+                    row['target_logical_location'] = logical_location(int(row['target'], 16)) if row['target'] else None
+            return {"title":self.meta["filename"],"arch":self.arch,"bits":self.bits,"context":self.context,"version":v["id"],"sha256":v["sha256"],"source_sha256":self.source_sha256(v["id"]),"address":hx(a),"instructions":result,"byte_cache_available":all(bool(row["bytes"]) for row in result),"analysis":self.analysis_status(v['id']),"view":"stored instructions ordered by address; gaps are not decoded implicitly"}
 
     def patch(self, address, data, label="patch", origin="agent supplied bytes", version=None):
         a = self._address(address)
@@ -417,13 +485,14 @@ class Project(CortexMMixin, CodeBackingsMixin, ProofProjectMixin, DebugProjectMi
             info=self.db.execute('SELECT document,source_bytes FROM binary_info WHERE version=?',(parent,)).fetchone()
             if info and self.meta["format"] in ('MZ', 'COM'):
                 self._dos_patch_document(parent,v,bytes(info[1]),patched)
-            elif info and self.meta['format'] == 'LE':
+            elif info and self.meta['format'] in ('LE', 'NE'):
                 # Internal LE fixups can overwrite encoded file bytes during
                 # loading. A patch to relocated memory is not a reversible
                 # file edit without rewriting those fixup records as well.
                 # Retain the exact original container for each memory version.
                 document = json.loads(info[0])
-                note = 'LE mapped-memory patch only; retained source bytes and file metadata remain inherited. No inverse fixup or LE executable rewrite is performed.'
+                kind = self.meta['format']
+                note = f'{kind} mapped-memory patch only; retained source bytes and file metadata remain inherited. No inverse fixup or {kind} executable rewrite is performed.'
                 if note not in document.setdefault('warnings', []):
                     document['warnings'].append(note)
                 self.db.execute('INSERT INTO binary_info VALUES (?,?,?)',
@@ -458,6 +527,7 @@ class Project(CortexMMixin, CodeBackingsMixin, ProofProjectMixin, DebugProjectMi
                 self._index_symbols(v,document)
             self._copy_interpretations(parent,v)
             self._reset_analysis(v)
+            self._record_derived_source(parent, v)
             return {"version":v,"parent":parent,"address":hx(a),"bytes":replacement.hex(),"sha256":self.version(v)["sha256"],"annotations":"inherited; semantic validity requires review","analysis":"fresh work queue; previous analysis preserved in parent"}
 
     def issues(self, version=None, limit=200):

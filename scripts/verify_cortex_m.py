@@ -27,7 +27,8 @@ def main():
     out.mkdir(parents=True,exist_ok=False)
     original=args.input.resolve();before=hashlib.sha256(original.read_bytes()).hexdigest()
     source=out/'input.bin';shutil.copy2(original,source)
-    db=out/'firmware.fdb';env=dict(os.environ,PYTHONPATH=str(repo/'src'))
+    db=out/'firmware.fdb';env=dict(os.environ,PYTHONPATH=str(repo/'src'),
+                                 FDISBULL_TARGET_STORE=str(out/'target-objects'))
     operations=[]
 
     def call(method,**params):

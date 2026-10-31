@@ -34,6 +34,8 @@ class AdvancedMixin:
                for match in json.loads(row[0]).get('signature_matches',[])}
         return next(iter(names)) if len(names)==1 else None
     def _advanced_identity(self,address,cs=None,version=None):
+        if self.meta['format'] == 'NE':
+            raise ValueError('NE advanced IR/ABI analysis requires a selector-aware model; use native static analysis queries')
         v=self.version(version)['id']
         if self.meta['format'] in ('MZ', 'COM'):
             a,selector=self._dos_parse_address(address,cs)
@@ -45,7 +47,7 @@ class AdvancedMixin:
         else:
             from .project import number
             if cs is not None:raise ValueError('CS applies only to DOS')
-            a,context=number(address),self.context
+            a,context=self._address(address),self.context
         return v,context,a
 
     def _sync_advanced_jobs(self,v):
@@ -136,6 +138,8 @@ class AdvancedMixin:
                     version=catalog['version'],signatures=catalog['registered'])
 
     def capture_signature(self,address,name,version=None,cs=None,author='agent',max_instructions=4096):
+        if self.meta['format'] == 'NE':
+            raise ValueError('NE signature capture requires relocation-aware signature semantics; use stored disassembly/CFG')
         if not isinstance(author,str) or not 1<=len(author)<=256:raise ValueError('author must contain 1..256 characters')
         with self.transaction(True):
             v,context,a=self._advanced_identity(address,cs,version)
@@ -391,6 +395,8 @@ class AdvancedMixin:
     def auto_analyze(self,version=None,start=None,cs=None,ds=None,es=None,ss=None,max_instructions=10000,max_functions=200,max_steps=100000,max_entries=256,max_rounds=8,abi=None):
         if self.arch == 'thumb':
             raise ValueError('Thumb supports native analyze; derived semantics/ABI auto-analysis is not implemented')
+        if self.meta['format'] == 'NE':
+            raise ValueError('NE advanced IR/ABI analysis requires a selector-aware model; use analyze for native static traversal')
         from .project import integer
         for name,value,maximum in [('max_instructions',max_instructions,100000),('max_functions',max_functions,10000),('max_steps',max_steps,1000000),('max_entries',max_entries,65536),('max_rounds',max_rounds,100)]:integer(value,name,1,maximum)
         with self.transaction(True):

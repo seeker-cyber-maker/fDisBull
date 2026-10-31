@@ -14,7 +14,11 @@ class FactsMixin:
     def _memory_facts(self, version, context, address, raw, cs=None, registers=None):
         from .memory import instruction_memory_accesses
         source = f'{address:016x}'
-        for fact in instruction_memory_accesses(raw,address,self.arch,self.bits,cs=cs,registers=registers):
+        facts = instruction_memory_accesses(raw,address,self.arch,self.bits,cs=cs,registers=registers)
+        if self.meta['format'] == 'NE':
+            from .ne_processor import memory_accesses
+            facts = memory_accesses(raw, address)
+        for fact in facts:
             detail = json.dumps(fact,sort_keys=True,separators=(',',':'))
             fact_key = hashlib.sha256(detail.encode()).hexdigest()
             self.db.execute('INSERT OR IGNORE INTO memory_refs VALUES (?,?,?,?,?)',
@@ -59,6 +63,9 @@ class FactsMixin:
                 if row['flow'] not in ('next','conditional','call','indirect_call'):
                     continue
                 following = cs*16+((address-cs*16+row['size'])&65535) if cs is not None else address+row['size']
+                if self.meta['format'] == 'NE':
+                    from .ne import following as ne_following
+                    following = ne_following(address, row['size'])
                 # Preserve real decoded continuations, including holes the graph
                 # must report; do not invent destinations outside mapped memory.
                 if not any(r.start<=following<r.start+len(r.data) for r in regions):

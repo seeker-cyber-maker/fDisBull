@@ -11,7 +11,7 @@ import pytest
 from PIL import Image
 
 from fdisbull.cli import main, respond
-from fdisbull.project import Project
+from fdisbull.project import Project, SCHEMA
 from fdisbull.render import render_snapshot
 
 
@@ -212,7 +212,7 @@ def test_parent_child_labels_are_isolated_and_survive_independent_process_restar
         (tmp_path / source).unlink()
     code = '''
 import json, sys
-from fdisbull.project import Project
+from fdisbull.project import Project, SCHEMA
 with Project(sys.argv[1]) as p:
     print(json.dumps([p.label_info({'file':'save-a.dat','offset':8},version=v)['name'] for v in (1,2)]))
 '''
@@ -314,7 +314,7 @@ def test_schema_six_migration_preserves_original_facts_files_and_types(tmp_path)
             UPDATE metadata SET value='6' WHERE key='schema';
         """)
     with Project(path) as migrated:
-        assert migrated.db.execute("SELECT value FROM metadata WHERE key='schema'").fetchone()[0] == '8'
+        assert migrated.db.execute("SELECT value FROM metadata WHERE key='schema'").fetchone()[0] == str(SCHEMA)
         assert migrated.disassembly(entry, lines=1) == before_native
         assert migrated.typed_file('save-a.dat', offset=8) == before_file
         assert migrated.typed_data(data) == before_type

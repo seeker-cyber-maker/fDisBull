@@ -439,12 +439,14 @@ class MemoryMixin:
             queried, selector = self._dos_parse_address(address)
         else:
             try:
-                queried = int(address, 0) if isinstance(address, str) else address
+                queried = self._address(address)
             except ValueError as error:
                 raise ValueError('address must be an integer or integer string') from error
             _integer(queried, 'address')
             selector = None
         end = queried + size
+        if self.meta['format'] == 'NE' and (queried & 0xffff) + size > 65536:
+            raise ValueError('NE memory query interval crosses a logical segment boundary')
         if end > _MAX_ADDRESS + 1:
             raise ValueError('queried interval exceeds the 64-bit address range')
         with self.transaction():
@@ -472,6 +474,9 @@ class MemoryMixin:
                 source_cs = int(match[1], 16) if match else None
                 state = json.loads(row['state_registers']) if row['state_registers'] else {}
                 facts = [json.loads(row['detail'])] if persisted else instruction_memory_accesses(bytes.fromhex(row['bytes']), source, self.arch, self.bits, cs=source_cs, registers=state)
+                if not persisted and self.meta['format'] == 'NE':
+                    from .ne_processor import memory_accesses
+                    facts = memory_accesses(bytes.fromhex(row['bytes']), source)
                 for fact in facts:
                     if access == 'read' and fact.get('may_read') is False or access == 'write' and fact.get('may_write') is False:
                         continue
