@@ -1,6 +1,9 @@
 """Bounded authored Five-Dice UIL variants; no private-source fidelity claim."""
 import pytest
 
+# Source examples are deliberately omitted from release distributions.
+pytest.importorskip("examples", reason="source-checkout examples are not packaged")
+
 from examples.udc.game_variants.five_dice import contract, turn_program, variants
 from fdisbull.interaction_il import execute_il
 from fdisbull.udc_qualify import qualify_uil

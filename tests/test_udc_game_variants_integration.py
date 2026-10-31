@@ -9,6 +9,9 @@ from pathlib import Path
 
 import pytest
 
+# Source examples are deliberately omitted from release distributions.
+pytest.importorskip("examples", reason="source-checkout examples are not packaged")
+
 from examples.udc.game_variants import (
     build_native, register_game_variants, replay_model,
     select_game_variants,
