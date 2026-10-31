@@ -88,6 +88,12 @@ Select mechanisms suggested by the target's bytes, ABI, loader and observations.
 The following are competing possibilities, not a checklist required for every
 binary or a claim that the analyzer resolves them automatically.
 
+Before closing an absence claim, test every applicable alternative that could
+invalidate its stated scope, even without an initial positive lead. For each,
+record the discriminator performed, an ABI/format reason it cannot apply, or
+an explicit open obligation. A low-likelihood mechanism can hide important code;
+a scoped test that establishes its absence is useful evidence too.
+
 | Evidence gap or lead | Hypothesis-specific discriminator |
 | --- | --- |
 | A callback slot has several offset/segment values | Correlate each setter's paired stores, register values, segment assumptions and path/order with the indirect consumer. For example, one setter publishing `(off_a, seg_a)` and another `(off_b, seg_b)` supports those pairs; combining every offset with every segment invents targets. A publication can be overwritten or never selected. |
