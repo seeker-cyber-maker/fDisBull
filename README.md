@@ -214,9 +214,10 @@ No original game or story files are distributed.
 
 [Direct decoder modules](docs/DECODER_MODULES.md) make AGI logic and Z-machine
 stories inputs in their own languages. Inspect them without creating an x86
-analysis project. The first AGI-to-UDL/UIL slice handles assignments and flag
-changes with source evidence and explicit state; extending the guest-language
-front end can grow independently of the DOS interpreter's assembly.
+analysis project. Follow scalar AGI decisions, branches and direct logic calls
+into UDL/UIL with source evidence and explicit state. The guest-language front
+end can grow independently of the DOS interpreter's assembly; supported source
+components and their boundaries stay explicit.
 
 The [Z-machine processor](docs/ZMACHINE_PROCESSOR.md) adds direct v3 bytecode
 inspection through fDisBull's processor interface. It reports operands, calls,

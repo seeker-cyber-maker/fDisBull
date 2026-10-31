@@ -19,6 +19,8 @@ _ACTIONS = {1:('increment',1),2:('decrement',1),3:('assignn',2),4:('assignv',2),
             101:('print',1),102:('print.v',1)}
 _COND_LENGTHS = {0:0,1:2,2:2,3:2,4:2,5:2,6:2,7:1,8:1,9:1,10:2,
                  11:5,12:1,13:0,15:2,16:5,17:5,18:5}
+_SCALAR_CONDITIONS = {1:'equaln', 2:'equalv', 3:'lessn', 4:'lessv',
+                      5:'greatern', 6:'greaterv', 7:'isset'}
 
 
 @dataclass(frozen=True)
@@ -45,7 +47,7 @@ class AGILogicResource:
 
 class AGI2917Processor:
     def __init__(self, space):
-        self.info=ProcessorInfo('fdisbull.agi.2.917.subset','1',space,'byte',('decode','static_successors'),None)
+        self.info=ProcessorInfo('fdisbull.agi.2.917.subset','2',space,'byte',('decode','static_successors'),None)
 
     def decode(self, code, location):
         pos=location.offset
@@ -77,9 +79,26 @@ class AGI2917Processor:
                     require(1); n=1+code[cursor]*2
                 elif cond in _COND_LENGTHS: n=_COND_LENGTHS[cond]
                 else: raise ValueError(f'unsupported condition {cond:#x} at {pos:#x}')
-                require(n); conditions.append({'opcode':cond,'operands':list(code[cursor:cursor+n])});cursor+=n;negate=False
-            require(2);delta=int.from_bytes(code[cursor:cursor+2],'little',signed=True);cursor+=2
+                require(n)
+                item={'opcode':cond,'operands':list(code[cursor:cursor+n]),
+                      'bytes':code[cursor-1:cursor+n].hex()}
+                if cond in _SCALAR_CONDITIONS:
+                    item['mnemonic']=_SCALAR_CONDITIONS[cond]
+                    if cond == 7:
+                        item['typed_operands']=[{'kind':'flag','index':code[cursor]}]
+                    else:
+                        item['typed_operands']=[{'kind':'variable','index':code[cursor]},
+                            {'kind':'variable','index':code[cursor+1]} if cond % 2 == 0
+                            else {'kind':'u8','value':code[cursor+1]}]
+                conditions.append(item);cursor+=n;negate=False
+            # IF skips are unsigned; GOTO above has a signed displacement.
+            require(2);delta=int.from_bytes(code[cursor:cursor+2],'little');cursor+=2
             edge('true',cursor);edge('false',cursor+delta)
+        elif op in (22, 23):
+            require(1);cursor+=1;name='call' if op == 22 else 'call.v'
+            edges.append(Successor('call',None,'callee logic requires explicit resource binding' if op == 22
+                                   else 'callee logic depends on runtime variable and resource binding'))
+            edge('fallthrough',cursor)
         elif op in _ACTIONS:
             name,n=_ACTIONS[op];require(n);cursor+=n;edge('fallthrough',cursor)
         else:
@@ -90,6 +109,8 @@ class AGI2917Processor:
                                  {'kind':'u8', 'value':code[pos+2]}]
         elif op in (12, 13):
             facts['operands'] = [{'kind':'flag', 'index':code[pos+1]}]
+        elif op in (22, 23):
+            facts['operands'] = [{'kind':'logic' if op == 22 else 'variable', 'index':code[pos+1]}]
         if conditions: facts['conditions']=conditions
         return DecodedInstruction(location,facts,tuple(edges))
 

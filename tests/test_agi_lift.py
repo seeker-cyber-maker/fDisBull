@@ -53,7 +53,7 @@ def test_every_encoded_u8_constant_and_overwriting_write(tmp_path):
         assert execute_il(doc)['state'] == {'$agi_v4': constant}
 
 
-@pytest.mark.parametrize('code,match', [('aa00','unsupported'),('fe000000','unsupported'),
+@pytest.mark.parametrize('code,match', [('aa00','unsupported'),('feff7f','unresolved'),
     ('0301','truncated'),('030101','missing final'),('0000','trailing'),('0c','truncated')])
 def test_unsupported_and_incomplete_refused(tmp_path,code,match):
     with pytest.raises(ValueError,match=match): lift_logic(loaded(tmp_path,code),initial_state={})
