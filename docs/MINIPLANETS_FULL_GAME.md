@@ -325,10 +325,19 @@ Finite component comparisons and all-stage loading do not establish that all
 Genesis graphics/waveforms, arbitrary-ROM conversion or real NES hardware
 qualification. Each receipt states its actual observations and exclusions.
 
-The fresh full macOS repository suite records **2,534 passed, 141 skipped,
-two failed and 23 errors**. The remaining failures/errors belong to unchanged
+After integration with main `90e748c`, all 25 game/compiler/profile resources
+remain byte-identical to the qualified source commit `8da0933`. A fresh build
+from the combined 0.27.0 source produces the identical complete r14 cartridge
+and UIL program; the native runtime evidence above remains bound to that
+same image. The conflict resolution preserves console commands alongside
+main's NE, media, source-storage and type-catalog interfaces.
+
+The fresh full macOS repository suite records **2,756 passed, 142 skipped,
+three failed and 23 errors**. The remaining failures/errors belong to unchanged
 Linux ELF fixture groups that invoke Linux linker options or expect ELF from
-the macOS compiler. This full local suite is not green. The final source
+the macOS compiler, plus main's existing case-sensitive `VOL.2`/`vol.2`
+ambiguity fixture on this case-insensitive filesystem. This full local suite
+is not green. The final source
 archive/resource guard and offline-kit fixture checks pass separately; native
 game/audio qualification uses the explicit private inputs described above.
 

@@ -238,7 +238,7 @@ class DOSViewsMixin:
                 state = self.db.execute("SELECT registers,state,reason FROM dos_states WHERE version=? AND context=? AND address=?",
                                         (v["id"], row["context"], row["address"])).fetchone()
                 service=None
-                if row['mnemonic'].lower() in ('int','int3'):
+                if row['mnemonic'].lower() in ('int','int3') and row['bytes']:
                     from .dos_services import describe_interrupt
                     vector=3 if row['mnemonic'].lower()=='int3' else int(row['bytes'][-2:],16)
                     service=describe_interrupt(vector,json.loads(state[0]) if state else {})
@@ -262,9 +262,10 @@ class DOSViewsMixin:
                                      "xrefs": self._dos_xrefs(linear, "to", v["id"], cs=row_cs),
                                      "assumptions": {"registers": json.loads(state[0]), "state": state[1], "reason": state[2]} if state else None})
             return {"title": self.meta["filename"], "arch": self.arch, "bits": self.bits,
-                    "version": v["id"], "sha256": v["sha256"], "source_sha256": self.meta["source_sha256"],
+                    "version": v["id"], "sha256": v["sha256"], "source_sha256": self.source_sha256(v["id"]),
                     "context": chosen_context, "address": _hex(a), "view_start": _hex(start),
                     "alternative_contexts": first_alternatives, "instructions": instructions, "warnings": warnings,
+                    "byte_cache_available": all(bool(row["bytes"]) for row in instructions),
                     "analysis": self.analysis_status(v['id']),
                     "view": "Stored static DOS instructions in one CS context; register assumptions and segment bounds are inferred, not runtime observations."}
 

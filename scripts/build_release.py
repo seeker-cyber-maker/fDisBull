@@ -11,6 +11,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 ROOT_FILES = ("README.md", "AGENTS.md", "CLAUDE.md", "pyproject.toml", "MANIFEST.in", "player/pyproject.toml")
 DOC_EXAMPLE_FILES = (
+    "docs/CLOUD-0.27.0-MANIFEST.json",
     "docs/uil-rfcs/0001/README.md",
     "docs/uil-rfcs/0001/check_examples.py",
     "docs/uil-rfcs/0001/commit.js",

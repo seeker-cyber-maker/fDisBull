@@ -9,6 +9,9 @@ def _hx(address):
 
 
 def _segmented(address, context):
+    if context and context.endswith(':ne'):
+        from .ne import logical_location
+        return logical_location(address)['address']
     if context and ':cs=' in context:
         selector = int(context.rsplit('=', 1)[1], 16)
         offset = address - selector * 16

@@ -77,7 +77,7 @@ class FileReferencesMixin:
                     raise ValueError('source has multiple CS interpretations; specify cs or CS:IP')
             else:
                 if cs is not None:raise ValueError('cs applies only to DOS projects')
-                a = number(address)
+                a = self._address(address)
                 rows = self.db.execute('SELECT context,bytes FROM instructions WHERE version=? AND context=? AND address=?',
                                        (v, self.context, key(a))).fetchall()
             if not rows:raise ValueError('file reference requires an exact stored instruction identity')

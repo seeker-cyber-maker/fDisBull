@@ -110,7 +110,7 @@ class BoundaryMixin:
             return self._dos_parse_address(address, cs)
         if cs is not None:
             raise ValueError('CS selection applies only to DOS projects')
-        return number(address), None
+        return self._address(address), None
 
     def _boundary_presentation(self, version, address, context=None):
         if self.meta['format'] in ('MZ', 'COM'):
@@ -166,13 +166,21 @@ class BoundaryMixin:
             classification = 'outside' if region is None else 'unexplored' if held else 'code' if code else 'data' if data else 'unexplored'
             owner = (definitions or data or spans)
             presentation = owner[0]['presentation'] if owner else self._boundary_presentation(v, a, selected)
-            return dict(version=v, address=_hx(a), requested_context=selected, mapped=region is not None,
+            result = dict(version=v, address=_hx(a), requested_context=selected, mapped=region is not None,
                         classification=classification, held=held, decoded=bool(spans),
                         overlap=len(spans) > 1 or len(data) > 1 or bool(spans and data), presentation=presentation,
                         byte=f'{region.data[a - region.start]:02x}' if region else None,
                         region=dict(name=region.name, address=_hx(region.start), end_exclusive=_hx(region.start + len(region.data))) if region else None,
                         instructions=spans, definitions=definitions, data=data,
                         note='End is the final included byte; end_exclusive is the following address. No bytes were decoded by locate.')
+            if self.meta['format'] == 'NE':
+                from .ne import logical_location
+                result['logical_location'] = logical_location(a)
+                segment = next((s for s in self.meta['loader_metadata']['ne']['segments'] if s['index'] == a >> 16), None)
+                initialized = bool(segment and (a & 0xffff) < segment['file_size'])
+                result['source_backing'] = 'initialized_file_bytes' if initialized else 'allocation_zero_fill' if region else None
+                result['source_file_offset'] = segment['file_offset'] + (a & 0xffff) if initialized else None
+            return result
 
     def function_patterns(self, version=None, limit=200, offset=0, scan_unexplored=False):
         """Return native pattern evidence without changing analysis or scheduling work."""
@@ -192,6 +200,11 @@ class BoundaryMixin:
             cache, evidence, seen = {}, [], set()
             warnings = []
             dos = self.meta['format'] in ('MZ', 'COM')
+            ne_processor = None
+            if self.meta['format'] == 'NE':
+                from .ne_processor import NEProcessor
+                from .processor import Location
+                ne_processor = NEProcessor(self.meta['loader_metadata']['ne'])
 
             def current_bytes(a, size=15):
                 region = next((r for r in regions if r.start <= a < r.start + len(r.data)), None)
@@ -212,7 +225,14 @@ class BoundaryMixin:
                     selector = _selector(context)
                     ins = decode_dos(source, a, selector) if selector is not None and 0 <= a - selector * 16 <= 0xFFFF else None
                 else:
-                    ins = decode(source, a, self.arch, self.bits)
+                    if ne_processor is not None:
+                        decoded = ne_processor.decode(source, Location('ne.segment', a))
+                        ins = decoded.facts if decoded else None
+                        if ins is not None:
+                            from .ne import following
+                            ins['next_address'] = following(a, ins['size'])
+                    else:
+                        ins = decode(source, a, self.arch, self.bits)
                 if ins is not None and not raw and ins['size'] != row['size']:
                     ins = None
                 cache[identity] = ins

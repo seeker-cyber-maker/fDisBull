@@ -51,15 +51,15 @@ def _is_executable(address: int, regions: list[Region]) -> bool:
 def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = None,
                base: int = 0, entry: int | None = None, load_segment: int = 0x1000,
                module: bool = False, slice_arch: str | None = None, image: str | None = None) -> Image:
-    """Load classic MZ, DOS/4GW LE, ELF, PE, Mach-O, declared COM or raw code.
+    """Load classic MZ, Win16 NE, DOS/4GW LE, ELF, PE, Mach-O, COM or raw code.
 
-    Native file mappings use their preferred image addresses (PIE load bias is
-    not applied). Raw mode requires ``arch`` and defaults to 64 bits. DLLs
+    Native flat mappings use preferred image addresses (PIE load bias is not
+    applied). NE uses logical segment/offset keys without assigning selectors. Raw mode requires ``arch`` and defaults to 64 bits. DLLs
     without an entry can be inspected and recursively seeded by exports.
     Module mode also permits an absent entry for other explicitly chosen libraries.
     """
     if image=='auto':image=None
-    if image not in (None,'pe','le','mz','com'):raise ValueError('image must be auto, pe, le, mz or com')
+    if image not in (None,'pe','le','ne','mz','com'):raise ValueError('image must be auto, pe, le, ne, mz or com')
     path = Path(path)
     if not isinstance(module,bool):
         raise ValueError('module must be a boolean')
@@ -109,6 +109,13 @@ def load_image(path: str | Path, *, arch: str | None = None, bits: int | None = 
         return load_mz(data,load_segment=load_segment,entry=entry,allow_secondary=True)
     from .image_views import secondary_header
     secondary = secondary_header(data)
+    if image == 'ne' or (image is None and secondary and secondary['format'] == 'NE'):
+        if slice_arch is not None or bits is not None or base or load_segment != 0x1000:
+            raise ValueError('NE uses logical segment indices; slice/bits/base/load_segment overrides are unsupported')
+        from .ne import load_ne
+        loaded = load_ne(data, entry=entry, module=module)
+        loaded.metadata.update(filename=path.name, source_sha256=hashlib.sha256(data).hexdigest())
+        return loaded
     if image == 'le' or (image is None and (data.startswith(b'LE') or secondary and secondary['format'] == 'LE')):
         if slice_arch is not None:
             raise ValueError('slice_arch selects Mach-O CPUs and cannot select an LE image')

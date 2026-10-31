@@ -1273,5 +1273,22 @@
     "original_genesis_common_components": "common.json",
     "original_genesis_actor_components": "actors.json",
     "reference_flow": "reference-flow.json"
+  },
+  "integration_bridge": {
+    "merged_main_commit": "90e748c8bc6a4f068f9136f4d4ec989672421a03",
+    "qualified_game_source_commit": "8da093332e29289d01f591deb752b99e3da0f3ba",
+    "unchanged_game_compiler_profile_resource_files": 25,
+    "fresh_merged_source_rebuild_passed": true,
+    "same_entire_rom_sha256": "aecdb39cb4b112de6de64069aab8deb397640cf684ac6942cb4c8e79ac48663e",
+    "same_uil_program_sha256": "198484bd9fe39d16f48d6785adcebe172b29b00511af1d77942088f7497e591b",
+    "runtime_library_sha256": "b9bf755f5d0a487e7b8b1a9e869b3f8a57652aff83df42d85c99af579248a70d",
+    "full_macos_suite": {
+      "passed": 2756,
+      "skipped": 142,
+      "failed": 3,
+      "errors": 23,
+      "scope": "Unchanged Linux ELF fixture assumptions and one unchanged case-sensitive media ambiguity fixture remain failing on this Mac."
+    },
+    "scope": "Source integration and exact-image rebuild; native component/play/audio evidence above retains its original inputs and observations."
   }
 }
