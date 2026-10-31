@@ -209,6 +209,8 @@ METHODS = {
     "managed": "Inspect .NET metadata or disassemble one CIL method; path or project,[token,max_instructions,version]",
     "agi-logic": "Read-only partial AGI 2.917 logic decoding; logdir, volume_dir, logic, profile, [max_instructions]",
     "agi-scenes": "Read-only AGI scene census, not executable UIL; game_dir, profile, [stage,include_ir,include_text,max_updates,max_instructions,max_code_bytes]",
+    "kq1-bow-intents": "Export one source-bound court intent with UDL and retained IR; game_dir,output,[uil,udl]",
+    "kq1-bow-evaluate": "Evaluate court intent rules and engine requests; package,state or state_file,[event,event_file]; no native guest",
     "zmachine-disasm": "Read-only Z-machine v3 instruction slice; path,[address,max_instructions]",
     "zmachine-analyze": "Bounded recursive Z-machine v3 processor analysis; path,[entry_points,max_instructions]",
     "decoder-check": "Compare x86 iced/Capstone proposals without execution; data,[bits,address,scan_offsets,max_candidates]",
@@ -353,6 +355,12 @@ def invoke(method, params, debugger=None):
     if method=='agi-scenes':
         from .agi_scenes import inspect_scenes
         return inspect_scenes(**p)
+    if method=='kq1-bow-intents':
+        from .kq1_bow import export_bow
+        return export_bow(**p)
+    if method=='kq1-bow-evaluate':
+        from .court_adapter import evaluate_bow
+        return evaluate_bow(**p)
     if method in ('identify','inspect'):
         from .inspection import identify_header, inspect_binary
         path=Path(p.pop('path'))
@@ -481,7 +489,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','agi-scenes','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','agi-scenes','kq1-bow-intents','kq1-bow-evaluate','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         value={"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
@@ -701,6 +709,12 @@ def parser():
     c.add_argument('--max-updates',type=int,default=200000)
     c.add_argument('--max-instructions',type=int,default=100000)
     c.add_argument('--max-code-bytes',type=int,default=1048576)
+    c=sub.add_parser('kq1-bow-intents',help=METHODS['kq1-bow-intents'])
+    c.add_argument('game_dir');c.add_argument('--output',required=True)
+    c.add_argument('--uil');c.add_argument('--udl')
+    c=sub.add_parser('kq1-bow-evaluate',help=METHODS['kq1-bow-evaluate'])
+    c.add_argument('package');c.add_argument('--state-file',required=True)
+    c.add_argument('--event-file')
     c=sub.add_parser('zmachine-disasm',help=METHODS['zmachine-disasm'])
     c.add_argument('path');c.add_argument('--address',type=lambda s:int(s,0))
     c.add_argument('--max-instructions',type=int,default=40)

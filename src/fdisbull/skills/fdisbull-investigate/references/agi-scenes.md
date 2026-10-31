@@ -70,6 +70,58 @@ refusal, repeat and relevant timing cases. Promote only the covered contract;
 keep the remaining LOGIC operations as low-level IR. The census itself emits
 zero accepted UIL interactions and has no execution capability.
 
+### Close admission, completion and acknowledgement together
+
+The KQ1 initial-audience bow is a worked example of a bounded accepted
+interaction. `kq1-bow-intents` exports its exact-source package;
+`kq1-bow-evaluate` executes named rules and bound engine requests against a
+declared carrier. Neither command replaces the native scheduler or renderer.
+Keep the complete census alongside it and retain other contexts as IR.
+
+Use the following method when promoting another candidate:
+
+1. Establish the dispatch boundary and its caller obligations before naming
+   the action. Separate room entry, earlier global exits, ending phases and
+   ordinary command handling. Preserve unsupported contexts explicitly.
+2. Trace each state field through both writers and consumers. Distinguish
+   this-visit admission from a persistent reward latch, and count carried
+   objects separately from delivered objects. Give unknown fields no semantic
+   name beyond what the evidence supports.
+3. Recover ordered conditions and their effects. A recognized refusal can
+   consume input. Preserve short-circuit `said` order, current actor geometry
+   and source arithmetic; a temporary animation shift can change which refusal
+   a new command receives.
+4. Separate action admission, outstanding animation, completion and modal
+   acknowledgement. Record when the reward occurs. Test a new command and a
+   completion in the same dispatch, including a refusal that pauses before a
+   second response. Restore from current state when the source does so.
+5. Define named game effects in UIL and exact original operations in UDL.
+   Retain scratch/implementation flags as explicit residual IR. Execute the
+   UIL definition itself; listing semantic labels beside source execution does
+   not show that the higher-level representation ran.
+6. Compare full declared state, request order and every suspension/resumption
+   against independent source execution. Cover boundaries, refusal, repeat,
+   re-entry latches, score arithmetic and event ties. Authored tests and a
+   source matrix do not establish normal-play reachability.
+7. Qualify selected original-game observations separately. Verify raw snapshot
+   identities and bit/field decoding before trusting derived values. If a
+   native field is unbound, report it and test relevant alternatives; do not
+   silently invent a measured value. Mark parser bridges explicitly.
+
+Bind a modal continuation to the state the suspended interaction owns, together
+with the exact model and source mapping. The original clock may continue while
+a message waits: the KQ1 contract permits changes to clock variables 11–14 and
+preserves their current values on acknowledgement. Other fields remain bound.
+Do not generalize that exception to unqualified callbacks, timed messages or
+arbitrary host state. An acknowledgement resumes the suspended dispatch before
+the next cycle; it does not automatically declare the whole action finished.
+
+Keep animation duration and presentation behavior as host obligations until
+verified. Original loop/view ordering can matter even when the domain effect
+is simply “finish the bow.” Sampled native frames bracket a phase transition;
+they do not establish an exact cycle count. Report executed intent coverage,
+source-equivalence coverage and native-observation coverage independently.
+
 This follows the existing [semantic contract](semantic-contracts.md) and
 [research workflow](recovery-research.md). Full IR, names and message exports
 can contain game-derived content; they are private investigation data. A
