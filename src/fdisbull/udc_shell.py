@@ -172,11 +172,11 @@ class _Lower:
             for side in ('left', 'right'):
                 item = condition[side]
                 if isinstance(item, dict):
-                    _check(self.cells.get(item.get('var'), {}).get('type') in ('u8', 'u16'),
-                           'native ge compares unsigned cells only')
+                    _check(self.cells.get(item.get('var'), {}).get('type') in ('u8', 'u16', 'i16'),
+                           'native ge compares integer cells only')
             self.value(condition['left']); self.c.emit('50')
             self.value(condition['right']); self.c.emit('4889c1594839c1')
-            self.c.emit('0f93c00fb6c0')
+            self.c.emit('0f9dc00fb6c0')
         elif op == 'bit_test':
             _fields(condition, ('op', 'value', 'bit'))
             _check(type(condition['bit']) is int and 0 <= condition['bit'] < 64, 'unsupported native bit index')
@@ -204,14 +204,19 @@ class _Lower:
             _check(isinstance(item, dict), 'invalid native statement')
             start, op = self.c.base + len(self.c.data), item.get('op')
             common = ('id', 'evidence')
-            if op in ('set', 'add', 'subtract'):
+            if op in ('set', 'add', 'subtract', 'multiply', 'divide'):
                 _fields(item, ('op', 'var', 'value'), common)
                 name = item['var']; _check(name in self.cells, 'unknown native state cell')
                 self.value(item['value'])
                 if op != 'set':
                     _check(self.cells[name]['type'] != 'bool', 'arithmetic on native bool is unsupported')
                     self.c.emit('4889c1'); self.value({'var': name})
-                    self.c.emit('4801c8' if op == 'add' else '4829c8')
+                    if op == 'add': self.c.emit('4801c8')
+                    elif op == 'subtract': self.c.emit('4829c8')
+                    elif op == 'multiply': self.c.emit('480fafc1')
+                    else:
+                        self.c.emit('4885c9'); self.c.relative('0f84', self.fail)
+                        self.c.emit('489948f7f9')
                 self.store(name, checked=op == 'set')
             elif op == 'if':
                 _fields(item, ('op', 'condition', 'then', 'else'), common)

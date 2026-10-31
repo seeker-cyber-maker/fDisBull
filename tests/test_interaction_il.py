@@ -51,7 +51,7 @@ def test_budget_and_evidence_refuse_without_effects():
     assert execute_il(p)['status'] == 'refused'
 
 
-def test_unsigned_ge_gate_accepts_equal_and_rejects_shortfall():
+def test_ge_gate_accepts_equal_and_rejects_shortfall():
     p = {'format': 'fdisbull-il-1', 'role': 'uil', 'resources': {},
          'variables': {'$treasury': {'type': 'u16', 'initial': 160},
                        '$price': {'type': 'u16', 'initial': 160}},
@@ -62,5 +62,42 @@ def test_unsigned_ge_gate_accepts_equal_and_rejects_shortfall():
     p['variables']['$treasury']['initial'] = 159
     assert execute_il(p)['status'] == 'refused'
     p['variables']['$price'] = {'type': 'i16', 'initial': 0}
+    assert execute_il(p)['status'] == 'complete'
+    p['variables']['$price'] = {'type': 'bool', 'initial': False}
     with pytest.raises(ILInvalid):
         validate_il(p)
+
+
+def test_multiply_and_divide_wrap_and_truncate():
+    p = {'format': 'fdisbull-il-1', 'role': 'uil', 'resources': {},
+         'variables': {'$a': {'type': 'i16', 'initial': 300},
+                       '$sq': {'type': 'i16', 'initial': 0},
+                       '$neg': {'type': 'i16', 'initial': -7}},
+         'body': [{'id': 'load', 'op': 'set', 'var': '$sq', 'value': {'var': '$a'}},
+                  {'id': 'square', 'op': 'multiply', 'var': '$sq', 'value': {'var': '$a'}},
+                  {'id': 'div', 'op': 'divide', 'var': '$neg', 'value': 20}]}
+    result = execute_il(p)
+    assert result['status'] == 'complete'
+    assert result['state']['$sq'] == 24464
+    assert result['state']['$neg'] == 0
+
+
+def test_divide_by_zero_refuses_without_effects():
+    p = {'format': 'fdisbull-il-1', 'role': 'uil', 'resources': {},
+         'variables': {'$a': {'type': 'i16', 'initial': 5},
+                       '$z': {'type': 'i16', 'initial': 0}},
+         'body': [{'id': 'div', 'op': 'divide', 'var': '$a', 'value': {'var': '$z'}}]}
+    result = execute_il(p)
+    assert result['status'] == 'refused' and result['state']['$a'] == 5
+
+
+def test_ge_compares_signed_cells():
+    p = {'format': 'fdisbull-il-1', 'role': 'uil', 'resources': {},
+         'variables': {'$gold': {'type': 'i16', 'initial': 100},
+                       '$price': {'type': 'i16', 'initial': -5}},
+         'body': [{'id': 'gate', 'op': 'require',
+                   'condition': {'op': 'ge', 'left': {'var': '$gold'},
+                                 'right': {'var': '$price'}}}]}
+    assert execute_il(p)['status'] == 'complete'
+    p['variables']['$gold']['initial'] = -10
+    assert execute_il(p)['status'] == 'refused'

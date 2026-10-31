@@ -56,22 +56,25 @@ def _normalize(frame_state: dict, state: dict) -> dict:
 
 
 BUY_CASES = (
-    ("default", {"$shield_box": 7, "$treasury": 200, "$item_cost": 4, "$price": 160}),
+    ("default", {"$shield_box": 0, "$treasury": 1000, "$item_cost": 4, "$build_id": 0}),
     (
-        "exact-affordable",
-        {"$shield_box": 3, "$treasury": 160, "$item_cost": 4, "$price": 160},
+        "partial-stock",
+        {"$shield_box": 10, "$treasury": 1000, "$item_cost": 4, "$build_id": 0},
+    ),
+    (
+        "unit-doubling",
+        {"$shield_box": 0, "$treasury": 2000, "$item_cost": 4, "$build_id": -22},
     ),
     (
         "insufficient",
-        {"$shield_box": 3, "$treasury": 100, "$item_cost": 4, "$price": 160},
+        {"$shield_box": 0, "$treasury": 100, "$item_cost": 4, "$build_id": 0},
     ),
     (
-        "wrap-item-cost",
-        {"$shield_box": 0, "$treasury": 50, "$item_cost": 4000, "$price": 10},
+        "square-wrap",
+        {"$shield_box": 0, "$treasury": 5000, "$item_cost": 30, "$build_id": 0},
     ),
-    ("zero-price", {"$shield_box": 0, "$treasury": 30, "$item_cost": 1, "$price": 0}),
 )
-BUY_PUBLIC = ("$shield_box", "$treasury", "$item_cost", "$price")
+BUY_PUBLIC = ("$shield_box", "$treasury", "$item_cost", "$build_id")
 
 
 def run_case(root: Path, work: Path, name: str, initial: dict, target: str) -> dict:
@@ -185,7 +188,7 @@ def sweep_buy(
         "host": {"platform": sys.platform, "machine": platform.machine()},
         "cases": rows,
         "verdict": "match" if all(row["match"] for row in rows) else "mismatch",
-        "scope": "interpreter/native agreement for the buy guard and commit; price derivation excluded",
+        "scope": "interpreter/native agreement for the buy price, guard and commit",
     }
 
 

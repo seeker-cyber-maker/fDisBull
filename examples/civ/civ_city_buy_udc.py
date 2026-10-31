@@ -40,72 +40,139 @@ COMMIT_SITE = "1D12:75E5"
 PRICE_SNIPPET_SIZE = 0xE9
 COMMIT_SNIPPET_SIZE = 0x25
 
-PUBLIC = ("$shield_box", "$treasury", "$item_cost", "$price")
-SCRATCH = ("$t2", "$t4", "$t8", "$t10")
+PUBLIC = ("$shield_box", "$treasury", "$item_cost", "$build_id")
+SCRATCH = (
+    "$t2",
+    "$t4",
+    "$t8",
+    "$t10",
+    "$base",
+    "$square",
+    "$quotient",
+    "$price",
+    "$neg_id",
+    "$twice",
+)
 
 
 def buy_program(initial: dict | None = None) -> dict:
     values = {
         "$shield_box": {"type": "i16", "initial": 0},
-        "$treasury": {"type": "u16", "initial": 0},
+        "$treasury": {"type": "i16", "initial": 0},
         "$item_cost": {"type": "i16", "initial": 0},
-        "$price": {"type": "u16", "initial": 0},
+        "$build_id": {"type": "i16", "initial": 0},
         "$t2": {"type": "i16", "initial": 0},
         "$t4": {"type": "i16", "initial": 0},
         "$t8": {"type": "i16", "initial": 0},
         "$t10": {"type": "i16", "initial": 0},
+        "$base": {"type": "i16", "initial": 0},
+        "$square": {"type": "i16", "initial": 0},
+        "$quotient": {"type": "i16", "initial": 0},
+        "$price": {"type": "i16", "initial": 0},
+        "$neg_id": {"type": "i16", "initial": 0},
+        "$twice": {"type": "i16", "initial": 0},
     }
     if initial is not None:
         if not isinstance(initial, dict) or set(initial) - set(values):
             raise ValueError("initial state contains an unknown Civ buy variable")
         for name, value in initial.items():
             values[name]["initial"] = value
+    body = [
+        {"id": "cost-x2", "op": "add", "var": "$t2", "value": {"var": "$item_cost"}},
+        {"id": "cost-x2b", "op": "add", "var": "$t2", "value": {"var": "$item_cost"}},
+        {"id": "cost-x4", "op": "add", "var": "$t4", "value": {"var": "$t2"}},
+        {"id": "cost-x4b", "op": "add", "var": "$t4", "value": {"var": "$t2"}},
+        {"id": "cost-x8", "op": "add", "var": "$t8", "value": {"var": "$t4"}},
+        {"id": "cost-x8b", "op": "add", "var": "$t8", "value": {"var": "$t4"}},
+        {"id": "cost-x10", "op": "add", "var": "$t10", "value": {"var": "$t8"}},
+        {"id": "cost-x10b", "op": "add", "var": "$t10", "value": {"var": "$t2"}},
+        {"id": "base", "op": "set", "var": "$base", "value": {"var": "$t10"}},
+        {
+            "id": "base-minus-stock",
+            "op": "subtract",
+            "var": "$base",
+            "value": {"var": "$shield_box"},
+        },
+        {"id": "square-load", "op": "set", "var": "$square", "value": {"var": "$base"}},
+        {"id": "square", "op": "multiply", "var": "$square", "value": {"var": "$base"}},
+        {
+            "id": "quotient-load",
+            "op": "set",
+            "var": "$quotient",
+            "value": {"var": "$square"},
+        },
+        {"id": "divide-20", "op": "divide", "var": "$quotient", "value": 20},
+        {"id": "twice-base", "op": "set", "var": "$twice", "value": {"var": "$base"}},
+        {
+            "id": "twice-base-add",
+            "op": "add",
+            "var": "$twice",
+            "value": {"var": "$base"},
+        },
+        {"id": "price", "op": "set", "var": "$price", "value": {"var": "$quotient"}},
+        {"id": "price-add", "op": "add", "var": "$price", "value": {"var": "$twice"}},
+        {
+            "id": "neg-id",
+            "op": "subtract",
+            "var": "$neg_id",
+            "value": {"var": "$build_id"},
+        },
+        {
+            "id": "unit-doubling",
+            "op": "if",
+            "condition": {"op": "ge", "left": {"var": "$neg_id"}, "right": 22},
+            "then": [
+                {
+                    "id": "double-unit-price",
+                    "op": "add",
+                    "var": "$price",
+                    "value": {"var": "$price"},
+                }
+            ],
+            "else": [],
+        },
+        {
+            "id": "empty-box-doubling",
+            "op": "if",
+            "condition": {"op": "eq", "left": {"var": "$shield_box"}, "right": 0},
+            "then": [
+                {
+                    "id": "double-empty-price",
+                    "op": "add",
+                    "var": "$price",
+                    "value": {"var": "$price"},
+                }
+            ],
+            "else": [],
+        },
+        {
+            "id": "require-affordable",
+            "op": "require",
+            "condition": {
+                "op": "ge",
+                "left": {"var": "$treasury"},
+                "right": {"var": "$price"},
+            },
+        },
+        {
+            "id": "complete-production",
+            "op": "set",
+            "var": "$shield_box",
+            "value": {"var": "$t10"},
+        },
+        {
+            "id": "debit-treasury",
+            "op": "subtract",
+            "var": "$treasury",
+            "value": {"var": "$price"},
+        },
+    ]
     program = {
         "format": "fdisbull-il-1",
         "role": "uil",
         "variables": values,
         "resources": {},
-        "body": [
-            {
-                "id": "require-affordable",
-                "op": "require",
-                "condition": {
-                    "op": "ge",
-                    "left": {"var": "$treasury"},
-                    "right": {"var": "$price"},
-                },
-            },
-            {
-                "id": "cost-x2",
-                "op": "add",
-                "var": "$t2",
-                "value": {"var": "$item_cost"},
-            },
-            {
-                "id": "cost-x2b",
-                "op": "add",
-                "var": "$t2",
-                "value": {"var": "$item_cost"},
-            },
-            {"id": "cost-x4", "op": "add", "var": "$t4", "value": {"var": "$t2"}},
-            {"id": "cost-x4b", "op": "add", "var": "$t4", "value": {"var": "$t2"}},
-            {"id": "cost-x8", "op": "add", "var": "$t8", "value": {"var": "$t4"}},
-            {"id": "cost-x8b", "op": "add", "var": "$t8", "value": {"var": "$t4"}},
-            {"id": "cost-x10", "op": "add", "var": "$t10", "value": {"var": "$t8"}},
-            {"id": "cost-x10b", "op": "add", "var": "$t10", "value": {"var": "$t2"}},
-            {
-                "id": "complete-production",
-                "op": "set",
-                "var": "$shield_box",
-                "value": {"var": "$t10"},
-            },
-            {
-                "id": "debit-treasury",
-                "op": "subtract",
-                "var": "$treasury",
-                "value": {"var": "$price"},
-            },
-        ],
+        "body": body,
     }
     validate_il(program)
     return program
@@ -118,11 +185,11 @@ def _contract(program: dict, evidence: dict) -> dict:
         "author": "civ-city-buy-slice",
         "inputs": {
             "shield_box": "i16",
-            "treasury": "u16",
+            "treasury": "i16",
             "item_cost": "i16",
-            "price": "u16",
+            "build_id": "i16",
         },
-        "outputs": {"shield_box": "i16", "treasury": "u16"},
+        "outputs": {"shield_box": "i16", "treasury": "i16"},
         "behavior": {"kind": "uil", "program": deepcopy(program)},
         "domain": {},
         "evidence": {
@@ -161,7 +228,7 @@ def _module_program(contract_id: str, primitive: dict) -> dict:
                     "shield_box": {"var": "$shield_box"},
                     "treasury": {"var": "$treasury"},
                     "item_cost": {"var": "$item_cost"},
-                    "price": {"var": "$price"},
+                    "build_id": {"var": "$build_id"},
                 },
                 "outputs": {
                     "shield_box": "$shield_box",

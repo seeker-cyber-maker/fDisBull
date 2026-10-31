@@ -43,7 +43,7 @@ def generate_c(module, symbol='udc_block'):
             if op=='if':
                 lines.append(indent+'if ('+condition(node['condition'])+') {');emit(node['then'],indent+'  ');lines.append(indent+'} else {');emit(node['else'],indent+'  ');lines.append(indent+'}')
             elif op=='require':lines.append(indent+'if (!('+condition(node['condition'])+')) return 1ULL<<32;')
-            elif op in ('set','add','subtract'):
+            elif op in ('set','add','subtract','multiply','divide'):
                 var=node['var'];typ=variables[var]['type'];name=names[var];operand=value(node['value']);serial[0]+=1;temp='t'+str(serial[0])
                 bits=1 if typ=='bool' else int(typ[1:]);mask=(1<<bits)-1
                 if op=='set':
@@ -52,8 +52,14 @@ def generate_c(module, symbol='udc_block'):
                     lines.append(indent+'if ('+temp+' < '+_literal(low)+' || '+temp+' > '+_literal(high)+') return 1ULL<<32;')
                     lines.append(indent+name+' = '+temp+';')
                 else:
-                    sign='+' if op=='add' else '-'
-                    lines.append(indent+'unsigned long long '+temp+' = ((unsigned long long)'+name+' '+sign+' (unsigned long long)('+operand+')) & '+str(mask)+'ULL;')
+                    if op=='multiply':expression='((unsigned long long)('+name+') * (unsigned long long)('+operand+'))'
+                    elif op=='divide':
+                        lines.append(indent+'if (('+operand+') == 0) return 1ULL<<32;')
+                        expression='(unsigned long long)((long long)('+name+') / (long long)('+operand+'))'
+                    else:
+                        sign='+' if op=='add' else '-'
+                        expression='((unsigned long long)'+name+' '+sign+' (unsigned long long)('+operand+'))'
+                    lines.append(indent+'unsigned long long '+temp+' = '+expression+' & '+str(mask)+'ULL;')
                     expr=('('+temp+' >= '+str(1<<(bits-1))+'ULL ? (long long)'+temp+' - '+str(1<<bits)+'LL : (long long)'+temp+')') if typ.startswith('i') else '(long long)'+temp
                     lines.append(indent+name+' = '+expr+';')
             else:raise ValueError('C backend supports pure scalar UIL only')

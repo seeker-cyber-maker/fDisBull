@@ -143,42 +143,46 @@ Scope: this proves interpreter/native agreement for the tested states. It does
 not prove that the UIL model matches the DOS routine, which the static trace
 covers separately.
 
-## BUY guard and commit module
+## BUY price, guard and commit module
 
 A second bounded module, `examples/civ/civ_city_buy_udc.py`, models the city
 screen's buy path recovered at `R:0D12:7387` (price), `R:0D12:75D2` (guard) and
 `R:0D12:75E5` (commit):
 
-- guard: `treasury >= price`, else the purchase is skipped;
-- commit: `shield_box := 10 * item_cost` (production completes) and
-  `treasury -= price`.
+- price: `b = 10*item_cost - shield_box`, `price = 2b + b*b/20`, doubled when
+  `-build_id >= 22` and doubled when the box is empty. The source's `cwd`
+  before `idiv` discards the high word of the product, so the square is a
+  16-bit wrapping value; the module reproduces that with `multiply`;
+- guard: `treasury >= price` (signed, as the source's `jge`), else no purchase;
+- commit: `shield_box := 10*item_cost` and `treasury -= price`.
 
-The price derivation `price = 2b + b*b/20` with `b = 10*item_cost - shield_box`
-(then doubled for units past index 21 and doubled when the box is empty) needs
-a multiply and a divide, which the IL does not have, so the caller supplies
-`price`. The tenfold item cost is computed with doubling adds and reproduces the
-source's 16-bit store, including wraparound.
+The IL gained `multiply` and `divide` for this (accumulate semantics like
+`add`, wrapping into the destination type, truncating toward zero, refusing a
+zero divisor), and `ge` now compares any integer cells as signed 64-bit values.
+All four realizations implement them: interpreter, C block generator, macOS
+plan lowering and the x86-64 shell lowerer. On this host the macOS path runs
+natively; the x86 path is verified by disassembling the emitted
+`imul rax, rcx`, `cqo; idiv rcx` and `setge` sequences rather than by execution.
 
-`ge` is a new shared-IL condition (unsigned cells only). The interpreter, the
-x86-64 shell lowerer, the C block generator and the macOS plan lowering all
-implement it; on this host the macOS path runs, and the x86 path is verified by
-disassembling the emitted gate (`cmp rcx, rax; setae al`) rather than by
-execution.
-
-Native macOS arm64 with `shield_box 7, treasury 200, item_cost 4, price 160`:
+Native macOS arm64 with `shield_box 0, treasury 1000, item_cost 4, build_id 0`:
 
 ```text
 {"format":"fdisbull-macos-observation-1","status":0,"value":0,
- "state":{"$shield_box":40,"$treasury":40,"$item_cost":4,"$price":160}}
+ "state":{"$shield_box":40,"$treasury":680,"$item_cost":4,"$build_id":0}}
 ```
 
-| case | initial | interpreter | native arm64 |
+| case | initial | price | result |
 |---|---|---|---|
-| default | `box 7, gold 200, cost 4, price 160` | `box 40, gold 40` | `box 40, gold 40` |
-| exact-affordable | `box 3, gold 160, price 160` | `box 40, gold 0` | `box 40, gold 0` |
-| insufficient | `gold 100, price 160` | `refused` | exit 1, no frame |
-| wrap-item-cost | `cost 4000, gold 50, price 10` | `box -25536, gold 40` | `box -25536, gold 40` |
-| zero-price | `cost 1, gold 30, price 0` | `box 10, gold 30` | `box 10, gold 30` |
+| default | `box 0, gold 1000, cost 4` | 320 | `box 40, gold 680` |
+| partial-stock | `box 10, gold 1000, cost 4` | 105 | `box 40, gold 895` |
+| unit-doubling | `box 0, gold 2000, cost 4, id -22` | 640 | `box 40, gold 1360` |
+| square-wrap | `box 0, gold 5000, cost 30` | 3646 | `box 300, gold 1354` |
+| insufficient | `box 0, gold 100, cost 4` | 320 | refused, exit 1, no frame |
 
 `examples/civ/civ_city_udc_diff.py --module all` runs both sweeps and reports a
 single verdict.
+
+The remaining external input is the item-cost code: the DOS read
+`DS:0x1142 + 34*id` is not the documented 30-byte `IMPR_RECORDS` block, and the
+34-byte array's values do not match Civ1 shield costs, so the board's identity
+is unresolved. A live read of that word for a known building settles it.

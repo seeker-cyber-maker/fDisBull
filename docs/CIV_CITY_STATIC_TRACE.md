@@ -158,8 +158,19 @@ units use `word [0xBB2 - 0x1E*id]` after `neg`. Both then build the price:
 746b  d1a618ff        shl word [bp-0xe8], 1 ; double when stock is 0
 ```
 
-So `price = 2b + b*b/20`, `b = 10*item_cost - shield_box`, doubled for units
-past index 21 and doubled again when the box is empty. The box text is built at
+So `price = 2b + b*b/20` with `b = 10*item_cost - shield_box`, doubled for
+units past index 21 and doubled again when the box is empty. Note `0x73E1`
+(`cwd`) between the `imul` and the `idiv`: the high word of the product is
+discarded and the *low 16 bits*, sign-extended, are what gets divided. The
+square is therefore a wrapping 16-bit value, not a 32-bit one, and the model
+reproduces that (cost code 30 gives `b = 300`, `300*300 mod 65536 = 24464`,
+`24464/20 = 1223`).
+
+The item-cost board itself is unresolved: the read at `DS:0x1142 + 34*id` does
+not land on the documented 30-byte `IMPR_RECORDS` block (`DGROUP:0BB8`), and the
+34-byte array's first words do not match Civ1 shield costs. A live read for a
+known building settles the identity; until then `item_cost` stays a module
+input. The box text is built at
 `0x746F..0x7560` (cost, item name, treasury, then "CIVIL DISORDER" when status
 bit 1 is set on an improvement), and `0x1EA8:1F6A`/`1EA8:1E22` append the
 decimal fields.
