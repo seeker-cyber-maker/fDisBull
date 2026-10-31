@@ -93,6 +93,24 @@ def _record_commit(text, after):
     return proof
 
 
+def selected_card_offsets(image, pattern):
+    """Keep BUY fixed while requiring every card anchor at one bounded offset."""
+    from .dinopark_scenes import matches
+    card = [sample for sample in pattern['samples'] if sample['y'] < 170]
+    button = [sample for sample in pattern['samples'] if sample['y'] >= 170]
+    if len(card) != 35 or len(button) != 13 or pattern['min_matches'] != 48:
+        return [0] if matches(image, pattern) else []
+    fixed = {'samples': button, 'min_matches': len(button), 'tolerance': pattern['tolerance'],
+             'reject': pattern.get('reject', [])}
+    if not matches(image, fixed):
+        return []
+    return [offset for offset in range(-24, 25) if all(
+        0 <= sample['x'] + offset < image.width and all(
+            abs(a - b) <= pattern['tolerance'] for a, b in zip(
+                image.getpixel((sample['x'] + offset, sample['y'])), sample['rgb']))
+        for sample in card)]
+
+
 def _wait(text, budget, view, expected, *, transient=(), guest_ms=12000):
     from .dinopark_scenes import balances, matches, take_frame
     waits = text.dinosaur_order.setdefault('wait_guest_ms', {})
@@ -114,10 +132,13 @@ def _wait(text, budget, view, expected, *, transient=(), guest_ms=12000):
         budget.timeout()
         frame, image = take_frame(text.project, text.debug, 'coelophysis-' + view, hooks=False)
         mouse = text.debug.call('input.mouse.state')['mouse']
-        ready = (money == expected and matches(image, text.patterns[view]) and
+        offsets = selected_card_offsets(image, text.patterns[view]) if view == 'coel_selected' else None
+        visible = bool(offsets) if offsets is not None else matches(image, text.patterns[view])
+        ready = (money == expected and visible and
                  not mouse['buttons'] and not mouse['release_pending'])
         text.event({'phase': 'coelophysis_observation', 'view': view, 'frame': frame,
-                    'matched': ready, 'balances': money, 'guest_ms': elapsed})
+                    'matched': ready, 'balances': money, 'guest_ms': elapsed,
+                    **({'selected_card_offsets': offsets} if offsets is not None else {})})
         if ready:
             return frame
         if elapsed >= guest_ms:
