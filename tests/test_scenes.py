@@ -169,7 +169,8 @@ def test_bundled_investigation_skill_is_readable_without_project():
     assert set(result['files'])=={'SKILL.md','references/scenes.md','references/methodology.md',
                                   'references/runtime-navigation.md','references/proofs.md',
                                   'references/workflows.md','references/udl-uil-udc.md','references/recovery-research.md',
-                                  'references/semantic-contracts.md','references/formats-and-media.md'}
+                                  'references/semantic-contracts.md','references/formats-and-media.md',
+                                  'references/sweding.md'}
     local_links={target for target in re.findall(r'\[[^]]+\]\(([^)]+)\)',result['files']['SKILL.md'])
                  if '://' not in target and not target.startswith('#')}
     assert local_links <= set(result['files'])

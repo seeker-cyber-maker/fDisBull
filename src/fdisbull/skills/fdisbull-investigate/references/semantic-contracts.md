@@ -42,6 +42,11 @@ representation; changing its UDL/UIL role metadata is not translation or evidenc
 recovery. Follow [udl-uil-udc.md](udl-uil-udc.md) for supported mappings and the original-backed DOS
 path.
 
+For UIL → UDC implementation choices, [sweding](sweding.md) applies this contract
+across different machinery. Default equivalence preserves original observable
+effects, action responses and timing; an underspecified name cannot waive them.
+Justify and agree exclusions/tolerances, and retain untested coverage as unknown.
+
 ## Link interface evidence to effects
 
 Maintain a compact ledger only for the surfaces and effects relevant to the task:

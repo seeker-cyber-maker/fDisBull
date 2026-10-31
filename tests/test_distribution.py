@@ -29,6 +29,7 @@ REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scrip
                        'src/fdisbull/skills/fdisbull-investigate/references/workflows.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/recovery-research.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/semantic-contracts.md',
+                       'src/fdisbull/skills/fdisbull-investigate/references/sweding.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/formats-and-media.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/udl-uil-udc.md')
 GAMEFAQS_SKILL_FILES = tuple('src/fdisbull/skills/write-gamefaqs-guide/'+name for name in (
@@ -110,6 +111,7 @@ def test_distribution_check_requires_runtime_navigation_reference(tmp_path):
     'src/fdisbull/skills/fdisbull-investigate/references/workflows.md',
     'src/fdisbull/skills/fdisbull-investigate/references/udl-uil-udc.md',
     'src/fdisbull/skills/fdisbull-investigate/references/semantic-contracts.md',
+    'src/fdisbull/skills/fdisbull-investigate/references/sweding.md',
     'src/fdisbull/skills/fdisbull-investigate/references/formats-and-media.md',
 ])
 def test_distribution_check_requires_agent_onboarding_resources(tmp_path,required):

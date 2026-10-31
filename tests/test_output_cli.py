@@ -75,6 +75,7 @@ def test_server_bounds_each_line_and_continues_with_a_selective_query(tmp_path):
 
 @pytest.mark.parametrize('skill,selected_reference', [
     ('fdisbull-investigate', 'references/semantic-contracts.md'),
+    ('fdisbull-investigate', 'references/sweding.md'),
     ('write-gamefaqs-guide', 'references/technical-mechanics.md'),
 ])
 def test_full_skill_export_round_trips_through_output_artifact(tmp_path,skill,selected_reference):

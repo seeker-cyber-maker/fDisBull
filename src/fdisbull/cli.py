@@ -17,6 +17,7 @@ AGENT_SKILL_GUIDES = {
     'references/udl-uil-udc.md': 'Qualify source blocks, retained Zork IR, recovered intents and original-backed DOS compilation',
     'references/recovery-research.md': 'Qualify research, retain reusable meanings and compare recovery depth and cost',
     'references/semantic-contracts.md': 'Recover complete intent contracts and compare facts, effects, time and projection losses',
+    'references/sweding.md': 'Recreate UIL effects across backings while preserving original actions and timing',
     'references/formats-and-media.md': 'Qualify containers, executable mappings, release differences and valid media reduction',
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)

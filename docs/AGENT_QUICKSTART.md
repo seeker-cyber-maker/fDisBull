@@ -35,6 +35,7 @@ fdisbull agent-skill --reference references/runtime-navigation.md
 fdisbull agent-skill --reference references/udl-uil-udc.md
 fdisbull agent-skill --reference references/recovery-research.md
 fdisbull agent-skill --reference references/semantic-contracts.md
+fdisbull agent-skill --reference references/sweding.md
 fdisbull agent-skill --reference references/formats-and-media.md
 fdisbull agent-skill --skill write-gamefaqs-guide --reference references/evidence-and-provenance.md
 fdisbull agent-skill --skill write-gamefaqs-guide --reference references/routes-and-discoveries.md
@@ -58,6 +59,8 @@ artifact reference. Prefer the index and one selected guide for routine work;
 use the output retrieval commands below when a complete export is needed.
 The semantic-contract guide connects intent, effects, time and projection loss;
 the formats/media guide covers input mapping and qualified media reduction.
+For UIL → UDC realization, [sweding](SWEDING.md) permits different backings and
+languages while preserving original observable effects, actions and timing.
 
 Use `write-gamefaqs-guide` to turn established investigation results into a
 human-readable review, route or mechanics reference. Cover recovered unused code,
