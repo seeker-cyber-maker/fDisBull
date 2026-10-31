@@ -41,12 +41,16 @@
      the source commit. This avoids silently attributing stale-agent results to
      the current fDisBull release.
 
-7. NE seed spelling differs between documentation and CLI.
-   - The NE guide uses logical addresses such as `ne:20:0x547c`, while
-     `fdisbull analyze --start ne:20:0x0` rejected with
-     `invalid literal for int() with base 0`.
+7. NE seed spelling differed between the active release and the source under test.
+   - The NE guide uses logical addresses such as `ne:20:0x547c`, while the
+     installed `0.26.1` command rejected `fdisbull analyze --start ne:20:0x0`
+     with `invalid literal for int() with base 0`.
    - The equivalent packed numeric identity `--start 0x140000` was accepted
-     and produced a bounded traversal.
-   - The workflow records the numeric fallback for now. The CLI should either
-     accept the documented logical form or state the numeric-only boundary
-     explicitly, with a regression test before changing parsing.
+     by the installed release and produced a bounded traversal.
+   - The source checkout already routes NE projects through `ne.parse_address`;
+     `tests/test_ne_cli_seed.py` now exercises the documented logical form
+     through a fresh CLI process using the pinned `0.26.1` interpreter, with
+     the source checkout explicitly under test (`1 passed`).
+   - Until that source change is promoted into the installed release, baseline
+     runs use the numeric fallback and report the release/source distinction
+     instead of claiming that the installed `0.26.1` command is fixed.
