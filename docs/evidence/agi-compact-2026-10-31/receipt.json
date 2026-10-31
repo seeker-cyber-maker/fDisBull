@@ -1,0 +1,94 @@
+{
+  "format": "fdisbull-agi-compact-verification-1",
+  "base_pr": 71,
+  "base_commit": "73256035840302017dcb475fc1fa0fc2a19a1799",
+  "qualification": "selected complete control-flow topology and opaque provenance only; no original runtime or state/effect parity",
+  "original_interpreter_executed": false,
+  "game_parity": false,
+  "kq1_logic_103": {
+    "resource_sha256": "cb1293db23b0007712fdd6193bd590dbdfdbaa8a84698f16c56b70c1321cdaed",
+    "profile_assumed": "2.917",
+    "entry_offset": 0,
+    "entry_runtime_observed": false,
+    "scalar_inspection_state": "artificial typed zero/false values, not game observations",
+    "counts": {
+      "source_nodes": 111,
+      "continuations": 111,
+      "source_edges": 132,
+      "edge_mismatches": 0,
+      "transfer_kind_mismatches": 0,
+      "source_structural_paths": 922,
+      "projection_structural_paths": 922,
+      "path_sequence_mismatches": 0,
+      "opaque_actions": 56,
+      "opaque_mismatches": 0,
+      "opaque_instruction_bytes": 138,
+      "opaque_raw_bytes_sha256": "1b53076160742fd04f45c4c504ca98f6ed031f46c3b11e7facc36596b6982032"
+    },
+    "shared_joins": 12,
+    "old_tree_structural_visits": 5105,
+    "longest_source_path": 60,
+    "il_json_bytes": 56714,
+    "document_byte_limit": 65536,
+    "execution": {
+      "status": "refused",
+      "events": 0,
+      "visited": 0
+    },
+    "source_inputs_unchanged": true,
+    "projection_sha256": "9268d0c099f09ce3b244008e9fe4d025d2a6fde82f2be79e3c878a66fc755e36",
+    "comparison_scope": {
+      "logic": 103,
+      "profile": "2.917",
+      "branch_semantics": "structural_choices",
+      "cycles": "rejected",
+      "calls": "rejected",
+      "effect_execution": "not_claimed",
+      "predicate_equivalence": "not_claimed"
+    }
+  },
+  "authored_controls": {
+    "diamond_source_instructions": 25,
+    "diamond_shared_joins": 12,
+    "byte_selectors_checked": 256,
+    "old_tree_refused_budget": true,
+    "shared_calls_returns_stops": "state and source-entry traces match tree; memoized depth checked; null resume refuses unexpected return",
+    "corrupt_verifier_controls": [
+      "swapped branches",
+      "duplicate opaque mapping",
+      "moved opaque body",
+      "altered source evidence"
+    ]
+  },
+  "proof": {
+    "model": "authored acyclic shared-callee IL for all declared u8/bool inputs",
+    "solver": "genuine Z3",
+    "path_coverage": "UNSAT missing-state condition",
+    "output_mismatch": "UNSAT",
+    "mutated_caller_copy_mismatch": "SAT",
+    "original_game_proof": false
+  },
+  "local_tests": {
+    "python": "3.13.13",
+    "platform": "macOS ARM64",
+    "passed": 354,
+    "skipped": 1,
+    "skip_reason": "case-sensitive filesystem required"
+  },
+  "base_ci": {
+    "ordinary": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/41164350553",
+    "native": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/41164350554",
+    "status": "success on exact base SHA"
+  },
+  "engine_source_sha256": {
+    "src/fdisbull/agi.py": "9b0815cfc861ceb0d157ab7a6744c39e414b5eead0a227b6c309a3144dc83fc7",
+    "src/fdisbull/agi_control.py": "59ee728276ce309f3e10de570d5b79a163e6018d07d2db01c96b019d5a0f1268",
+    "src/fdisbull/agi_compact.py": "8b251c9e45b8c701be6bf76f241182595441b4942fb9494a424ec07e40c34e4e",
+    "src/fdisbull/agi_lift.py": "041945e2d3f9c9a917bfcec8bb51f67aebad0e5f07bb54948f3923d6fc316f2d",
+    "src/fdisbull/interaction_il.py": "69ff5aa175211302d904c4cfcaa2904e72227cab126988d6e8029015dc96fbd5",
+    "src/fdisbull/interaction_flow.py": "bdc021c35f6d930c2feeec47400987a8c11a60560b9a134212b71f37cc2809b6",
+    "src/fdisbull/decoder_modules.py": "361c7af040d9f39e140eaf4f39034a2db57ab8734785a8f52c04edcd1b3e367a",
+    "scripts/verify_agi_compact_graph.py": "e69040ad9bd861f3907ea996a61af76dc14f85c8149dc09ffe0773ac3cf1cc14"
+  },
+  "privacy": "No original game/story bytes, generated source graphs, states, project databases, raw private output or absolute target paths included."
+}

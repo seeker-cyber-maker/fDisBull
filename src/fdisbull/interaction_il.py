@@ -30,12 +30,18 @@ def _typed(value, typ):
     return type(value) is int and lo <= value <= hi
 
 def validate_il(document):
+    if isinstance(document, dict) and document.get("format") == "fdisbull-il-2":
+        from .interaction_flow import validate_flow
+        return validate_flow(document)
+    return _validate_v1(document)
+
+def _validate_v1(document, *, graph_ids=(), graph_conditions=(), graph_mode=False):
     """Validate the entire program, raising ILInvalid on any invalid input."""
     try:
         raw = json.dumps(document, ensure_ascii=False, allow_nan=False).encode('utf-8')
     except (TypeError, ValueError, RecursionError) as exc:
         raise ILInvalid('document must be finite JSON') from exc
-    _require(len(raw) <= 65536, 'document size budget exceeded')
+    _require(graph_mode or len(raw) <= 65536, 'document size budget exceeded')
     _fields(document, ('format', 'role', 'variables', 'resources', 'body'), ('evidence',))
     _require(document['format'] == 'fdisbull-il-1' and document['role'] in ('udl', 'uil'), 'invalid format or role')
     variables, resources = document['variables'], document['resources']
@@ -61,7 +67,8 @@ def validate_il(document):
         if 'range' in item:
             value = item['range']
             _require(isinstance(value, list) and len(value) == 2 and all(type(x) is int for x in value) and 0 <= value[0] <= value[1], 'invalid evidence range')
-    ids, count = set(), [0]
+    ids, count = set(graph_ids), [len(graph_ids)]
+    _require(count[0] <= 1024, 'node budget exceeded')
     def value(v):
         if isinstance(v, dict):
             _fields(v, ('var',))
@@ -101,6 +108,15 @@ def validate_il(document):
             _require(isinstance(block, dict), 'invalid block')
             op = block.get('op')
             fields = {'set': ('var','value'), 'add': ('var','value'), 'subtract': ('var','value'), 'if': ('condition','then','else'), 'require': ('condition',), 'text': ('resource',), 'load_graphic': ('resource','x','y'), 'play_sound': ('resource',), 'click': ('target',)}
+            if graph_mode and op == 'opaque':
+                _fields(block, ('id', 'op', 'reason'), ('evidence',))
+                ident = block['id']
+                _require(isinstance(ident, str) and bool(ident) and ident not in ids, 'invalid or duplicate block id')
+                ids.add(ident)
+                _require(isinstance(block['reason'], str) and 0 < len(block['reason']) <= 256, 'invalid opaque reason')
+                refs = block.get('evidence', [])
+                _require(isinstance(refs, list) and all(isinstance(x, str) and x in evidence for x in refs), 'invalid evidence reference')
+                continue
             _require(op in fields, 'unknown block')
             _fields(block, ('id','op',*fields[op]), ('evidence',))
             ident = block['id']
@@ -125,6 +141,8 @@ def validate_il(document):
             else:
                 _require(isinstance(block['target'], str) and bool(block['target']), 'invalid click target')
     blocks(document['body'], 1)
+    for graph_condition in graph_conditions:
+        condition(graph_condition, 2)
     return True
 
 def change_role(document, role):
@@ -133,12 +151,15 @@ def change_role(document, role):
     result = deepcopy(document); result['role'] = role
     return result
 
-def execute_il(document, state=None, capabilities=(), max_steps=1024):
+def execute_il(document, state=None, capabilities=(), max_steps=1024, *, max_call_depth=8):
     """Evaluate atomically. Pending host events are plans, not executed effects.
 
     Returns committed state, proposed_state, events and visited block IDs. On a
     budget or validation failure there are no events and no state changes.
     """
+    if isinstance(document, dict) and document.get("format") == "fdisbull-il-2":
+        from .interaction_flow import execute_flow
+        return execute_flow(document, state, capabilities, max_steps, max_call_depth)
     original = deepcopy(state)
     try:
         validate_il(document)

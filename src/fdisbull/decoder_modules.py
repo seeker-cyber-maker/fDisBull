@@ -149,9 +149,10 @@ def _check_input(opened: DecoderInput) -> None:
 
 
 class AGI2917Module:
-    info = DecoderModuleInfo('fdisbull.agi.2.917.subset', '2', 'agi-v2-logic',
+    info = DecoderModuleInfo('fdisbull.agi.2.917.subset', '3', 'agi-v2-logic',
                              ('decode', 'static_successors', 'lift_state_projection',
-                              'lift_scalar_conditions', 'lift_direct_logic_calls', 'bounded_source_components'))
+                              'lift_scalar_conditions', 'lift_direct_logic_calls', 'bounded_source_components',
+                              'shared_continuations', 'opaque_control_flow'))
 
     def open(self, source, *, volume_dir, logic, profile, entry_offset=0, stop_offsets=(),
              callee_entries=None, stop_points=()) -> DecoderInput:
@@ -273,7 +274,8 @@ def analyze_input(opened: DecoderInput, *, address=None, max_instructions=40) ->
                             max_edges=8192))
 
 
-def lift_input(opened: DecoderInput, *, initial_state, max_instructions=128, max_call_depth=None) -> dict:
+def lift_input(opened: DecoderInput, *, initial_state, max_instructions=128, max_call_depth=None,
+               control_flow=None, allow_opaque=None) -> dict:
     _check_input(opened)
     if opened.lifter is None or 'lift_state_projection' not in opened.module.capabilities:
         raise ValueError('this decoder module has no qualified lifter')
@@ -282,5 +284,13 @@ def lift_input(opened: DecoderInput, *, initial_state, max_instructions=128, max
         if 'lift_direct_logic_calls' not in opened.module.capabilities:
             raise ValueError('this module does not support a logic call depth limit')
         options['max_call_depth'] = max_call_depth
+    if control_flow is not None:
+        if 'shared_continuations' not in opened.module.capabilities:
+            raise ValueError('this module does not support compact control flow')
+        options['control_flow'] = control_flow
+    if allow_opaque is not None:
+        if 'opaque_control_flow' not in opened.module.capabilities:
+            raise ValueError('this module does not support opaque control flow')
+        options['allow_opaque'] = allow_opaque
     result = opened.lifter(**options)
     return dict(result, module=asdict(opened.module), snapshot=opened.identity)

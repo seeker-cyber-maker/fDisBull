@@ -188,9 +188,14 @@ class _Lift:
             return [self.marker(logic,pc,facts,frames)] + self.emit(target,entry,frames+((logic,end),),path)
         if op == 23:
             raise ValueError('indirect call.v target is not qualified')
+        return self.scalar_nodes(logic,pc,facts) + self.emit(logic,end,frames,path)
+
+    def scalar_nodes(self, logic, pc, facts, *, primary=True, suffix=''):
+        """Shared scalar lowering; compact source entries own separate trace IDs."""
+        op = facts['opcode']
         if op not in (*range(1,9),12,13,14):
             raise ValueError('unsupported instruction or runtime effect')
-        args = code[pc+1:end]
+        args = self.resources[logic].code[pc+1:pc+facts['size']]
         flag = op in (12,13,14)
         name = self.variable(args[0],flag=flag,write=True)
         if op in (1,2):
@@ -198,18 +203,18 @@ class _Lift:
             condition = {'op':'lt','left':value if op==1 else 0,'right':255 if op==1 else value}
             child = self.node(logic,pc,facts,'add' if op==1 else 'subtract',
                               primary=False,suffix='_update',var=name,value=1)
-            nodes = [self.node(logic,pc,facts,'if',condition=condition,then=[child],**{'else':[]})]
+            nodes = [self.node(logic,pc,facts,'if',primary=primary,suffix=suffix,condition=condition,then=[child],**{'else':[]})]
         elif op == 14:
             condition = {'op':'eq','left':self.ref(args[0],flag=True),'right':True}
             yes = self.node(logic,pc,facts,'set',primary=False,suffix='_reset',var=name,value=False)
             no = self.node(logic,pc,facts,'set',primary=False,suffix='_set',var=name,value=True)
-            nodes = [self.node(logic,pc,facts,'if',condition=condition,then=[yes],**{'else':[no]})]
+            nodes = [self.node(logic,pc,facts,'if',primary=primary,suffix=suffix,condition=condition,then=[yes],**{'else':[no]})]
         else:
             value = (op==12) if flag else self.ref(args[1]) if op in (4,6,8) else args[1]
             if op in (5,6,7,8): self.reads.add(name)
             nodes = [self.node(logic,pc,facts,'set' if op in (3,4,12,13) else
-                               'add' if op in (5,6) else 'subtract',var=name,value=value)]
-        return nodes + self.emit(logic,end,frames,path)
+                               'add' if op in (5,6) else 'subtract',primary=primary,suffix=suffix,var=name,value=value)]
+        return nodes
 
 
 def lift_program(program, *, initial_state, max_instructions=128, max_call_depth=8):

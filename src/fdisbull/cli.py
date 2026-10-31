@@ -209,7 +209,7 @@ METHODS = {
     "agi-logic": "Read-only partial AGI 2.917 logic decoding; logdir, volume_dir, logic, profile, [max_instructions]",
     "decoder-modules": "List explicitly registered trusted source decoder modules; no project required",
     "module-analyze": "Direct source analysis without native ASM; module,path,[volume_dir,logic,profile,address,max_instructions]",
-    "module-lift": "Direct qualified source-to-UDL/UIL projection; module,path,initial_state,[volume_dir,logic,profile,entry_offset,stop_offsets,stop_points,callee_entries,max_instructions,max_call_depth]",
+    "module-lift": "Direct source-to-UDL/UIL projection; module,path,initial_state,[volume_dir,logic,profile,entry_offset,stop_offsets,stop_points,callee_entries,max_instructions,max_call_depth,control_flow,allow_opaque]",
     "zmachine-disasm": "Read-only Z-machine v3 instruction slice; path,[address,max_instructions]",
     "zmachine-analyze": "Bounded recursive Z-machine v3 processor analysis; path,[entry_points,max_instructions]",
     "decoder-check": "Compare x86 iced/Capstone proposals without execution; data,[bits,address,scan_offsets,max_candidates]",
@@ -342,8 +342,10 @@ def invoke(method, params, debugger=None):
             p['initial_state'] = json.loads(raw)
         initial_state = p.pop('initial_state')
         call_depth = p.pop('max_call_depth', None)
+        control_flow, allow_opaque = p.pop('control_flow',None), p.pop('allow_opaque',None)
         return lift_input(registry.open(identity, path, **p),
-                          initial_state=initial_state, max_instructions=limit, max_call_depth=call_depth)
+                          initial_state=initial_state, max_instructions=limit, max_call_depth=call_depth,
+                          control_flow=control_flow,allow_opaque=allow_opaque)
     from .project import Project, number
     for field in ("base", "entry"):
         if field in p and p[field] is not None:
@@ -731,6 +733,9 @@ def parser():
             c.add_argument('--stop-point',dest='stop_points',action='append',help='LOGIC:OFFSET component boundary')
             c.add_argument('--callee-entry',dest='callee_entries',action='append',help='LOGIC:OFFSET cached scan-entry witness')
             c.add_argument('--max-call-depth',type=int)
+            c.add_argument('--control-flow',choices=['tree','compact'])
+            c.add_argument('--allow-opaque',action='store_const',const=True,default=None,
+                           help='Retain known unmodeled actions in a non-executable compact graph')
     c=sub.add_parser('zmachine-disasm',help=METHODS['zmachine-disasm'])
     c.add_argument('path');c.add_argument('--address',type=lambda s:int(s,0))
     c.add_argument('--max-instructions',type=int,default=40)

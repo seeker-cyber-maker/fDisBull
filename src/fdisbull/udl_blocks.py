@@ -184,6 +184,8 @@ def verify_block(lift, candidate_uil, *, timeout_ms=1000):
     if rebuilt['sha256'] != lift.get('sha256'):
         raise ValueError('source digest mismatch')
     validate_il(candidate_uil)
+    if candidate_uil['format'] != 'fdisbull-il-1':
+        raise ValueError('source-block proof requires tree IL v1; compact control flow is not modeled')
     if candidate_uil['role'] != 'uil' or candidate_uil['resources'] or set(candidate_uil['variables']) != set(rebuilt['uil']['variables']) or candidate_uil['variables'] != rebuilt['uil']['variables']:
         raise ValueError('candidate interface differs')
     bindings = rebuilt['bindings']

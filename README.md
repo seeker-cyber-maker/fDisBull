@@ -217,7 +217,9 @@ stories inputs in their own languages. Inspect them without creating an x86
 analysis project. Follow scalar AGI decisions, branches and direct logic calls
 into UDL/UIL with source evidence and explicit state. The guest-language front
 end can grow independently of the DOS interpreter's assembly; supported source
-components and their boundaries stay explicit.
+components and their boundaries stay explicit. Compact control flow keeps shared
+paths once, making larger routines easier to inspect. Unmodeled engine actions
+stay visible and block execution until their effects are implemented.
 
 The [Z-machine processor](docs/ZMACHINE_PROCESSOR.md) adds direct v3 bytecode
 inspection through fDisBull's processor interface. It reports operands, calls,
