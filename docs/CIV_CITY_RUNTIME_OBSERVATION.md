@@ -34,7 +34,7 @@ Cold boot, keyboard only, no mouse (the game's own "keyboard only" mode):
 <Enter>           competition: 7 civilizations
 <Enter>           tribe: Roman
 <Enter>           leader name: Caesar
-                  intro animation runs ~2 min; space and Esc do not skip it
+                  intro animation is fixed at 3463 ticks (~58 s); see below
 b                 settler order opens "Your first task" note
 <Enter> b         dismiss note, order again
 <Enter>           city name: Rome
@@ -43,6 +43,27 @@ b                 settler order opens "Your first task" note
 
 The intro cannot be skipped; budget roughly two minutes of guest time per cold
 boot. The city screen appears only after the production note is dismissed.
+
+## Intro timing (reversed from the code)
+
+The cold-boot delay is not a guess; it is fixed by `INTRO.C` (`game_startup`,
+lines 131-256) and the sound driver, and it was re-measured here:
+
+- two 320-step scene loops, step *i* waiting for `sound_quiet_ticks() >= i*21/4`
+  and then `>= (i+320)*21/4`, each breaking on `kbhit()`;
+- after them, if no key was consumed, `while (sound_quiet_ticks() < 3463);`;
+- `quiet_ticks` is incremented in `ASOUND.ASM` `music_tick` ("the 60 Hz step"),
+  so the self-running intro is `3463 / 60 ≈ 57.7 s` of guest time;
+- keys queued during the intro do not skip it reliably: `kbhit()` must see them,
+  while the final `switch (key_cmd())` maps only `N/L/E/C`; observed space and
+  Esc presses left the animation running.
+
+Observed confirmation: this run reached the difficulty menu after about 58 s of
+guest time (47.9 s of earlier slices + 7.1 s of key slices + the first seconds of
+a 30 s slice), matching the code-derived value.
+
+Consequence for harnesses: wait ~65 s of guest time once for the intro, then
+drive the menus; do not burn attempts on key-skip timing.
 
 ## Captures
 
@@ -72,9 +93,34 @@ in the run's artifact table before export.
   5 pixels, so the overlay exit restores the INFO presentation.
 - `a` with an empty city produced no unit-cursor panel; only the INFO content
   icon redraw changed. The unit-list handler was **not** exercised.
-- `c` did not open a visible production chooser in three attempts in
-  keyboard-only mode. The static call site (runtime `0x22009` → `1ADE:0421`)
-  remains the only authority for that branch.
+- `c` opens the production chooser only when the city screen is settled. Earlier
+  attempts failed while the founding note or banner was up. With the screen
+  active, `c` displayed `What shall we build in Rome?` with Settlers (40
+  turns) … Hanging Gardens (300 turns); `down` + `Enter` moved the highlight
+  to Militia and accepted it.
+- Production is now bound to the city record: with `DS=0x32A4`, the record at
+  `DS:0x70EC` read `production=0` after the first item and `production=1`
+  after the Militia selection. This matches `find_slot` returning
+  `cand[show_menu(...) + 1]`.
+- The `A` auto-build toggle and the `a` unit-list cursor still lack a runtime
+  exercise; the scene models them from the source and dispatch only.
+
+## Z route (no debugger)
+
+The same recovered transitions are executable as a shared-IL scene, so scene work
+does not need the DOS UI:
+
+```bash
+PYTHONPATH=src:player python -m fdisbull_player \
+  --backend-command "python -m fdisbull.il_scenes examples/civ/civ_city_scene.json"
+```
+
+`activate change` opens the `production-chooser` context (Settlers/Militia), the
+matching `build` action commits `$production` 0/1 and closes the chooser,
+`open units` enters the `unit-list` context, and `next`/`previous`/`select`/
+`exit` reproduce the recovered cursor bounds and `[0x70DC]` store as
+`$city_cursor`. The scene is partial and marks the unit list as source-modelled,
+not runtime-exercised.
 
 ## Limits
 
@@ -82,17 +128,16 @@ in the run's artifact table before export.
   established and the edition conflict row stays open.
 - Display deltas are measured against one baseline frame. Animation and palette
   timing are not excluded; the 5-pixel return delta is within that noise.
-- No guest state field was read in this pass, so these are display observations
-  only; the display is not treated as the program's semantic state.
+- Guest state was read only for `townbuf[0].production`; the tab and overlay
+  claims remain display-level and are not treated as semantic state.
 - One route is not a deterministic replay or general readiness claim.
 - The private game copy, project database and screenshots outside
   `docs/evidence/civ-city-runtime/` are not part of this repository.
 
 ## Next probes
 
-1. Produce a unit (production chooser or turn advance) and exercise `a` with a
+1. Produce a unit (Militia selected; end turns) and exercise `a` with a
    non-empty unit list.
-2. Retry `c` with the mouse enabled to test whether the chooser is
-   mouse-dependent.
-3. Read the city record fields (`shield_box`, `status`, `production`) at a
-   breakpoint so display changes are bound to state, not pixels alone.
+2. Read `shield_box` and `status` before and after the buy and sell paths.
+3. Re-run the same route on the 474.05 executable over a complete data set to
+   close the edition gap.

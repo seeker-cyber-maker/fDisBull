@@ -13,7 +13,13 @@
         "$production": {"type": "i16", "initial": 0},
         "$city_status": {"type": "u8", "initial": 0},
         "$city_owner": {"type": "u8", "initial": 0},
-        "$auto_build": {"type": "bool", "initial": false}
+        "$auto_build": {"type": "bool", "initial": false},
+        "$chooser_open": {"type": "bool", "initial": false},
+        "$unit_list_open": {"type": "bool", "initial": false},
+        "$unit_cursor": {"type": "i16", "initial": 0},
+        "$unit_last": {"type": "i16", "initial": 0},
+        "$unit_count": {"type": "i16", "initial": 0},
+        "$city_cursor": {"type": "i16", "initial": 0}
       },
       "resources": {
         "resources-caption": {"kind": "text", "text": "City Resources"}
@@ -34,7 +40,13 @@
         "$production": {"type": "i16", "initial": 0},
         "$city_status": {"type": "u8", "initial": 0},
         "$city_owner": {"type": "u8", "initial": 0},
-        "$auto_build": {"type": "bool", "initial": false}
+        "$auto_build": {"type": "bool", "initial": false},
+        "$chooser_open": {"type": "bool", "initial": false},
+        "$unit_list_open": {"type": "bool", "initial": false},
+        "$unit_cursor": {"type": "i16", "initial": 0},
+        "$unit_last": {"type": "i16", "initial": 0},
+        "$unit_count": {"type": "i16", "initial": 0},
+        "$city_cursor": {"type": "i16", "initial": 0}
       },
       "resources": {
         "happiness-caption": {"kind": "text", "text": "Happiness"}
@@ -55,7 +67,13 @@
         "$production": {"type": "i16", "initial": 0},
         "$city_status": {"type": "u8", "initial": 0},
         "$city_owner": {"type": "u8", "initial": 0},
-        "$auto_build": {"type": "bool", "initial": false}
+        "$auto_build": {"type": "bool", "initial": false},
+        "$chooser_open": {"type": "bool", "initial": false},
+        "$unit_list_open": {"type": "bool", "initial": false},
+        "$unit_cursor": {"type": "i16", "initial": 0},
+        "$unit_last": {"type": "i16", "initial": 0},
+        "$unit_count": {"type": "i16", "initial": 0},
+        "$city_cursor": {"type": "i16", "initial": 0}
       },
       "resources": {
         "map-caption": {"kind": "text", "text": "Map"}
@@ -76,7 +94,13 @@
         "$production": {"type": "i16", "initial": 0},
         "$city_status": {"type": "u8", "initial": 0},
         "$city_owner": {"type": "u8", "initial": 0},
-        "$auto_build": {"type": "bool", "initial": false}
+        "$auto_build": {"type": "bool", "initial": false},
+        "$chooser_open": {"type": "bool", "initial": false},
+        "$unit_list_open": {"type": "bool", "initial": false},
+        "$unit_cursor": {"type": "i16", "initial": 0},
+        "$unit_last": {"type": "i16", "initial": 0},
+        "$unit_count": {"type": "i16", "initial": 0},
+        "$city_cursor": {"type": "i16", "initial": 0}
       },
       "resources": {
         "history-caption": {"kind": "text", "text": "City View"}
@@ -85,6 +109,267 @@
         {"id": "select-history", "op": "set", "var": "$view_mode", "value": 3},
         {"id": "announce-history", "op": "text", "resource": "history-caption"}
       ]
+    },
+    "open-production": {
+      "format": "fdisbull-il-1",
+      "role": "uil",
+      "variables": {
+        "$view_mode": {"type": "u8", "initial": 0},
+        "$city_size": {"type": "i16", "initial": 1},
+        "$food_box": {"type": "i16", "initial": 0},
+        "$shield_box": {"type": "i16", "initial": 0},
+        "$production": {"type": "i16", "initial": 0},
+        "$city_status": {"type": "u8", "initial": 0},
+        "$city_owner": {"type": "u8", "initial": 0},
+        "$auto_build": {"type": "bool", "initial": false},
+        "$chooser_open": {"type": "bool", "initial": false},
+        "$unit_list_open": {"type": "bool", "initial": false},
+        "$unit_cursor": {"type": "i16", "initial": 0},
+        "$unit_last": {"type": "i16", "initial": 0},
+        "$unit_count": {"type": "i16", "initial": 0},
+        "$city_cursor": {"type": "i16", "initial": 0}
+      },
+      "resources": {
+        "chooser-prompt": {"kind": "text", "text": "What shall we build in Rome?\n 1 Settlers (40 turns)\n 2 Militia (10 turns)"}
+      },
+      "body": [
+        {"id": "require-closed", "op": "require", "condition": {"op": "eq", "left": {"var": "$chooser_open"}, "right": false}},
+        {"id": "open", "op": "set", "var": "$chooser_open", "value": true},
+        {"id": "prompt", "op": "text", "resource": "chooser-prompt"}
+      ]
+    },
+    "build-settlers": {
+      "format": "fdisbull-il-1",
+      "role": "uil",
+      "variables": {
+        "$view_mode": {"type": "u8", "initial": 0},
+        "$city_size": {"type": "i16", "initial": 1},
+        "$food_box": {"type": "i16", "initial": 0},
+        "$shield_box": {"type": "i16", "initial": 0},
+        "$production": {"type": "i16", "initial": 0},
+        "$city_status": {"type": "u8", "initial": 0},
+        "$city_owner": {"type": "u8", "initial": 0},
+        "$auto_build": {"type": "bool", "initial": false},
+        "$chooser_open": {"type": "bool", "initial": false},
+        "$unit_list_open": {"type": "bool", "initial": false},
+        "$unit_cursor": {"type": "i16", "initial": 0},
+        "$unit_last": {"type": "i16", "initial": 0},
+        "$unit_count": {"type": "i16", "initial": 0},
+        "$city_cursor": {"type": "i16", "initial": 0}
+      },
+      "resources": {
+        "settlers-caption": {"kind": "text", "text": "Settlers (40 turns)"}
+      },
+      "body": [
+        {"id": "require-open", "op": "require", "condition": {"op": "eq", "left": {"var": "$chooser_open"}, "right": true}},
+        {"id": "commit", "op": "set", "var": "$production", "value": 0},
+        {"id": "close", "op": "set", "var": "$chooser_open", "value": false},
+        {"id": "announce", "op": "text", "resource": "settlers-caption"}
+      ]
+    },
+    "build-militia": {
+      "format": "fdisbull-il-1",
+      "role": "uil",
+      "variables": {
+        "$view_mode": {"type": "u8", "initial": 0},
+        "$city_size": {"type": "i16", "initial": 1},
+        "$food_box": {"type": "i16", "initial": 0},
+        "$shield_box": {"type": "i16", "initial": 0},
+        "$production": {"type": "i16", "initial": 0},
+        "$city_status": {"type": "u8", "initial": 0},
+        "$city_owner": {"type": "u8", "initial": 0},
+        "$auto_build": {"type": "bool", "initial": false},
+        "$chooser_open": {"type": "bool", "initial": false},
+        "$unit_list_open": {"type": "bool", "initial": false},
+        "$unit_cursor": {"type": "i16", "initial": 0},
+        "$unit_last": {"type": "i16", "initial": 0},
+        "$unit_count": {"type": "i16", "initial": 0},
+        "$city_cursor": {"type": "i16", "initial": 0}
+      },
+      "resources": {
+        "militia-caption": {"kind": "text", "text": "Militia (10 turns)"}
+      },
+      "body": [
+        {"id": "require-open", "op": "require", "condition": {"op": "eq", "left": {"var": "$chooser_open"}, "right": true}},
+        {"id": "commit", "op": "set", "var": "$production", "value": 1},
+        {"id": "close", "op": "set", "var": "$chooser_open", "value": false},
+        {"id": "announce", "op": "text", "resource": "militia-caption"}
+      ]
+    },
+    "toggle-auto": {
+      "format": "fdisbull-il-1",
+      "role": "uil",
+      "variables": {
+        "$view_mode": {"type": "u8", "initial": 0},
+        "$city_size": {"type": "i16", "initial": 1},
+        "$food_box": {"type": "i16", "initial": 0},
+        "$shield_box": {"type": "i16", "initial": 0},
+        "$production": {"type": "i16", "initial": 0},
+        "$city_status": {"type": "u8", "initial": 0},
+        "$city_owner": {"type": "u8", "initial": 0},
+        "$auto_build": {"type": "bool", "initial": false},
+        "$chooser_open": {"type": "bool", "initial": false},
+        "$unit_list_open": {"type": "bool", "initial": false},
+        "$unit_cursor": {"type": "i16", "initial": 0},
+        "$unit_last": {"type": "i16", "initial": 0},
+        "$unit_count": {"type": "i16", "initial": 0},
+        "$city_cursor": {"type": "i16", "initial": 0}
+      },
+      "resources": {
+        "auto-caption": {"kind": "text", "text": "Automatic production toggled"}
+      },
+      "body": [
+        {"id": "toggle", "op": "if", "condition": {"op": "eq", "left": {"var": "$auto_build"}, "right": true}, "then": [{"id": "off", "op": "set", "var": "$auto_build", "value": false}], "else": [{"id": "on", "op": "set", "var": "$auto_build", "value": true}]},
+        {"id": "announce", "op": "text", "resource": "auto-caption"}
+      ]
+    },
+    "open-units": {
+      "format": "fdisbull-il-1",
+      "role": "uil",
+      "variables": {
+        "$view_mode": {"type": "u8", "initial": 0},
+        "$city_size": {"type": "i16", "initial": 1},
+        "$food_box": {"type": "i16", "initial": 0},
+        "$shield_box": {"type": "i16", "initial": 0},
+        "$production": {"type": "i16", "initial": 0},
+        "$city_status": {"type": "u8", "initial": 0},
+        "$city_owner": {"type": "u8", "initial": 0},
+        "$auto_build": {"type": "bool", "initial": false},
+        "$chooser_open": {"type": "bool", "initial": false},
+        "$unit_list_open": {"type": "bool", "initial": false},
+        "$unit_cursor": {"type": "i16", "initial": 0},
+        "$unit_last": {"type": "i16", "initial": 0},
+        "$unit_count": {"type": "i16", "initial": 0},
+        "$city_cursor": {"type": "i16", "initial": 0}
+      },
+      "resources": {
+        "units-caption": {"kind": "text", "text": "City units"}
+      },
+      "body": [
+        {"id": "require-closed", "op": "require", "condition": {"op": "eq", "left": {"var": "$unit_list_open"}, "right": false}},
+        {"id": "seed", "op": "set", "var": "$unit_cursor", "value": 0},
+        {"id": "last", "op": "set", "var": "$unit_last", "value": {"var": "$unit_count"}},
+        {"id": "last-minus-one", "op": "subtract", "var": "$unit_last", "value": 1},
+        {"id": "clamp-last", "op": "if", "condition": {"op": "ge", "left": {"var": "$unit_last"}, "right": 0}, "then": [], "else": [{"id": "floor-last", "op": "set", "var": "$unit_last", "value": 0}]},
+        {"id": "open", "op": "set", "var": "$unit_list_open", "value": true},
+        {"id": "announce", "op": "text", "resource": "units-caption"}
+      ]
+    },
+    "unit-next": {
+      "format": "fdisbull-il-1",
+      "role": "uil",
+      "variables": {
+        "$view_mode": {"type": "u8", "initial": 0},
+        "$city_size": {"type": "i16", "initial": 1},
+        "$food_box": {"type": "i16", "initial": 0},
+        "$shield_box": {"type": "i16", "initial": 0},
+        "$production": {"type": "i16", "initial": 0},
+        "$city_status": {"type": "u8", "initial": 0},
+        "$city_owner": {"type": "u8", "initial": 0},
+        "$auto_build": {"type": "bool", "initial": false},
+        "$chooser_open": {"type": "bool", "initial": false},
+        "$unit_list_open": {"type": "bool", "initial": false},
+        "$unit_cursor": {"type": "i16", "initial": 0},
+        "$unit_last": {"type": "i16", "initial": 0},
+        "$unit_count": {"type": "i16", "initial": 0},
+        "$city_cursor": {"type": "i16", "initial": 0}
+      },
+      "resources": {
+        "cursor-caption": {"kind": "text", "text": "Unit cursor moved"}
+      },
+      "body": [
+        {"id": "require-open", "op": "require", "condition": {"op": "eq", "left": {"var": "$unit_list_open"}, "right": true}},
+        {"id": "advance", "op": "add", "var": "$unit_cursor", "value": 1},
+        {"id": "clamp", "op": "if", "condition": {"op": "ge", "left": {"var": "$unit_cursor"}, "right": {"var": "$unit_count"}}, "then": [{"id": "to-last", "op": "set", "var": "$unit_cursor", "value": {"var": "$unit_last"}}], "else": []},
+        {"id": "announce", "op": "text", "resource": "cursor-caption"}
+      ]
+    },
+    "unit-previous": {
+      "format": "fdisbull-il-1",
+      "role": "uil",
+      "variables": {
+        "$view_mode": {"type": "u8", "initial": 0},
+        "$city_size": {"type": "i16", "initial": 1},
+        "$food_box": {"type": "i16", "initial": 0},
+        "$shield_box": {"type": "i16", "initial": 0},
+        "$production": {"type": "i16", "initial": 0},
+        "$city_status": {"type": "u8", "initial": 0},
+        "$city_owner": {"type": "u8", "initial": 0},
+        "$auto_build": {"type": "bool", "initial": false},
+        "$chooser_open": {"type": "bool", "initial": false},
+        "$unit_list_open": {"type": "bool", "initial": false},
+        "$unit_cursor": {"type": "i16", "initial": 0},
+        "$unit_last": {"type": "i16", "initial": 0},
+        "$unit_count": {"type": "i16", "initial": 0},
+        "$city_cursor": {"type": "i16", "initial": 0}
+      },
+      "resources": {
+        "cursor-caption": {"kind": "text", "text": "Unit cursor moved"}
+      },
+      "body": [
+        {"id": "require-open", "op": "require", "condition": {"op": "eq", "left": {"var": "$unit_list_open"}, "right": true}},
+        {"id": "guard", "op": "if", "condition": {"op": "ge", "left": {"var": "$unit_cursor"}, "right": 1}, "then": [{"id": "back", "op": "subtract", "var": "$unit_cursor", "value": 1}], "else": []},
+        {"id": "announce", "op": "text", "resource": "cursor-caption"}
+      ]
+    },
+    "unit-select": {
+      "format": "fdisbull-il-1",
+      "role": "uil",
+      "variables": {
+        "$view_mode": {"type": "u8", "initial": 0},
+        "$city_size": {"type": "i16", "initial": 1},
+        "$food_box": {"type": "i16", "initial": 0},
+        "$shield_box": {"type": "i16", "initial": 0},
+        "$production": {"type": "i16", "initial": 0},
+        "$city_status": {"type": "u8", "initial": 0},
+        "$city_owner": {"type": "u8", "initial": 0},
+        "$auto_build": {"type": "bool", "initial": false},
+        "$chooser_open": {"type": "bool", "initial": false},
+        "$unit_list_open": {"type": "bool", "initial": false},
+        "$unit_cursor": {"type": "i16", "initial": 0},
+        "$unit_last": {"type": "i16", "initial": 0},
+        "$unit_count": {"type": "i16", "initial": 0},
+        "$city_cursor": {"type": "i16", "initial": 0}
+      },
+      "resources": {
+        "select-caption": {"kind": "text", "text": "Unit selected"}
+      },
+      "body": [
+        {"id": "require-open", "op": "require", "condition": {"op": "eq", "left": {"var": "$unit_list_open"}, "right": true}},
+        {"id": "require-one", "op": "require", "condition": {"op": "ge", "left": {"var": "$unit_count"}, "right": 1}},
+        {"id": "store", "op": "set", "var": "$city_cursor", "value": {"var": "$unit_cursor"}},
+        {"id": "close", "op": "set", "var": "$unit_list_open", "value": false},
+        {"id": "announce", "op": "text", "resource": "select-caption"}
+      ]
+    },
+    "unit-exit": {
+      "format": "fdisbull-il-1",
+      "role": "uil",
+      "variables": {
+        "$view_mode": {"type": "u8", "initial": 0},
+        "$city_size": {"type": "i16", "initial": 1},
+        "$food_box": {"type": "i16", "initial": 0},
+        "$shield_box": {"type": "i16", "initial": 0},
+        "$production": {"type": "i16", "initial": 0},
+        "$city_status": {"type": "u8", "initial": 0},
+        "$city_owner": {"type": "u8", "initial": 0},
+        "$auto_build": {"type": "bool", "initial": false},
+        "$chooser_open": {"type": "bool", "initial": false},
+        "$unit_list_open": {"type": "bool", "initial": false},
+        "$unit_cursor": {"type": "i16", "initial": 0},
+        "$unit_last": {"type": "i16", "initial": 0},
+        "$unit_count": {"type": "i16", "initial": 0},
+        "$city_cursor": {"type": "i16", "initial": 0}
+      },
+      "resources": {
+        "exit-caption": {"kind": "text", "text": "Unit cursor stored"}
+      },
+      "body": [
+        {"id": "require-open", "op": "require", "condition": {"op": "eq", "left": {"var": "$unit_list_open"}, "right": true}},
+        {"id": "store", "op": "set", "var": "$city_cursor", "value": {"var": "$unit_cursor"}},
+        {"id": "close", "op": "set", "var": "$unit_list_open", "value": false},
+        {"id": "announce", "op": "text", "resource": "exit-caption"}
+      ]
     }
   },
   "contexts": [
@@ -92,7 +377,19 @@
       "id": "city",
       "title": "City — selected city",
       "description": "Partial address-free representation of the original 320x200 city screen.",
-      "when": {"op": "eq", "left": 0, "right": 0}
+      "when": {"op": "and", "conditions": [{"op": "not", "condition": {"op": "eq", "left": {"var": "$chooser_open"}, "right": true}}, {"op": "not", "condition": {"op": "eq", "left": {"var": "$unit_list_open"}, "right": true}}]}
+    },
+    {
+      "id": "production-chooser",
+      "title": "What shall we build",
+      "description": "Production menu opened by key c or CHANGE; dispatch compare 0A99:7626 and civd CITYMGT.C 1439-1448.",
+      "when": {"op": "eq", "left": {"var": "$chooser_open"}, "right": true}
+    },
+    {
+      "id": "unit-list",
+      "title": "City units",
+      "description": "Unit-list cursor opened by key a; dispatch compare 0A99:7785 and civd CITYMGT.C 1483-1524.",
+      "when": {"op": "eq", "left": {"var": "$unit_list_open"}, "right": true}
     }
   ],
   "objects": [
@@ -197,16 +494,16 @@
       "aliases": ["units", "army"],
       "description": "The six-column unit panel; source permits selecting and fortification-clearing actions.",
       "visible_when": {"op": "eq", "left": {"var": "$view_mode"}, "right": 0},
-      "bindings": []
+      "bindings": [{"verb": "open", "program": "open-units"}]
     },
     {
       "id": "production-change",
       "context": "city",
       "label": "CHANGE",
       "aliases": ["change", "c"],
-      "description": "Production selection control. Catalog and chooser effects are intentionally not implemented here.",
+      "description": "Production selection control; opens the bounded chooser context (dispatch 0A99:7626).",
       "visible_when": {"op": "eq", "left": {"var": "$view_mode"}, "right": 0},
-      "bindings": []
+      "bindings": [{"verb": "activate", "program": "open-production"}]
     },
     {
       "id": "production-buy",
@@ -222,9 +519,9 @@
       "context": "city",
       "label": "AUTO.",
       "aliases": ["auto", "a"],
-      "description": "Automatic production toggle; the source chooser is outside this bounded scene fixture.",
+      "description": "Automatic production toggle; original key A flips status bit 0x10 in the source.",
       "visible_when": {"op": "eq", "left": {"var": "$view_mode"}, "right": 0},
-      "bindings": []
+      "bindings": [{"verb": "activate", "program": "toggle-auto"}]
     },
     {
       "id": "happiness-panel",
@@ -277,6 +574,55 @@
       "aliases": ["exit", "esc"],
       "description": "Original city-screen exit control; process/session termination is outside this scene profile.",
       "bindings": []
+    }
+,
+    {
+      "id": "build-settlers",
+      "context": "production-chooser",
+      "label": "1 Settlers (40 turns)",
+      "aliases": ["settlers", "1"],
+      "description": "Chooser entry selecting unit code 0; menu index 0 maps to cand[1] in city production.",
+      "bindings": [{"verb": "build", "program": "build-settlers"}]
+    },
+    {
+      "id": "build-militia",
+      "context": "production-chooser",
+      "label": "2 Militia (10 turns)",
+      "aliases": ["militia", "2"],
+      "description": "Chooser entry selecting unit code 1; a 474.03 runtime read of townbuf[0].production returned 1 after this selection.",
+      "bindings": [{"verb": "build", "program": "build-militia"}]
+    },
+    {
+      "id": "unit-cursor-next",
+      "context": "unit-list",
+      "label": "Next unit",
+      "aliases": ["next", "down"],
+      "description": "Down-arrow cursor step; clamps to unit_count-1 per civd CITYMGT.C 1509-1519.",
+      "bindings": [{"verb": "next", "program": "unit-next"}]
+    },
+    {
+      "id": "unit-cursor-previous",
+      "context": "unit-list",
+      "label": "Previous unit",
+      "aliases": ["previous", "up"],
+      "description": "Up-arrow cursor step; clamps at 0.",
+      "bindings": [{"verb": "previous", "program": "unit-previous"}]
+    },
+    {
+      "id": "unit-cursor-select",
+      "context": "unit-list",
+      "label": "Select unit",
+      "aliases": ["select", "enter"],
+      "description": "Enter/Space commit; clears status and goto_x in the original and stores the cursor here.",
+      "bindings": [{"verb": "select", "program": "unit-select"}]
+    },
+    {
+      "id": "unit-cursor-exit",
+      "context": "unit-list",
+      "label": "Exit unit list",
+      "aliases": ["exit", "esc"],
+      "description": "Esc exit; original stores the cursor at [0x70DC], modelled as $city_cursor.",
+      "bindings": [{"verb": "exit", "program": "unit-exit"}]
     }
   ]
 }

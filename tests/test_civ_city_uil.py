@@ -152,3 +152,86 @@ def test_city_udc_matches_interpreter_across_boundaries(tmp_path):
     assert by_case["disorder-preserves-stock"]["observed"]["frame"]["state"]["$shield_box"] == 7
     refused = by_case["unsanitized-refusal"]["observed"]
     assert refused["returncode"] != 0 and refused["frame"] is None
+
+
+def _act(backend, verb, target):
+    observation = backend.observe()
+    return backend.act(
+        {
+            "verb": verb,
+            "target": target,
+            "item": None,
+            "context_token": observation["context"]["token"],
+        }
+    )
+
+
+def test_city_production_chooser_commits_recovered_codes():
+    backend = ILSceneBackend(city_scene())
+    assert _act(backend, "activate", "production-change")["status"] == "success"
+    chooser = backend.observe()
+    assert chooser["context"]["id"] == "production-chooser"
+    assert {item["id"] for item in chooser["objects"]} == {"build-settlers", "build-militia"}
+    assert _act(backend, "build", "build-militia")["status"] == "success"
+    assert backend.observe()["context"]["id"] == "city"
+    assert backend.state["$production"] == 1
+    assert _act(backend, "activate", "production-change")["status"] == "success"
+    assert _act(backend, "build", "build-settlers")["status"] == "success"
+    assert backend.state["$production"] == 0
+
+
+def test_city_auto_build_toggles_and_unit_cursor_clamps():
+    definition = city_scene()
+    backend = ILSceneBackend(definition)
+    assert _act(backend, "activate", "production-auto")["status"] == "success"
+    assert backend.state["$auto_build"] is True
+    assert _act(backend, "activate", "production-auto")["status"] == "success"
+    assert backend.state["$auto_build"] is False
+
+    state = {name: decl["initial"] for name, decl in backend.variables.items()}
+    state["$unit_count"] = 2
+    units = ILSceneBackend(definition, state=state)
+    assert _act(units, "open", "unit-panel")["status"] == "success"
+    assert units.observe()["context"]["id"] == "unit-list"
+    assert (units.state["$unit_cursor"], units.state["$unit_last"]) == (0, 1)
+    assert _act(units, "next", "unit-cursor-next")["status"] == "success"
+    assert units.state["$unit_cursor"] == 1
+    assert _act(units, "next", "unit-cursor-next")["status"] == "success"
+    assert units.state["$unit_cursor"] == 1
+    assert _act(units, "previous", "unit-cursor-previous")["status"] == "success"
+    assert units.state["$unit_cursor"] == 0
+    assert _act(units, "select", "unit-cursor-select")["status"] == "success"
+    assert units.observe()["context"]["id"] == "city"
+    assert units.state["$city_cursor"] == 0
+
+
+def test_city_unit_cursor_refuses_selection_without_units():
+    backend = ILSceneBackend(city_scene())
+    assert _act(backend, "open", "unit-panel")["status"] == "success"
+    assert (backend.state["$unit_cursor"], backend.state["$unit_last"]) == (0, 0)
+    assert _act(backend, "select", "unit-cursor-select")["status"] == "rejected"
+    assert _act(backend, "exit", "unit-cursor-exit")["status"] == "success"
+    assert backend.observe()["context"]["id"] == "city"
+
+
+def test_city_scene_serves_the_z_player_without_a_debugger():
+    import shlex
+
+    root = Path(__file__).resolve().parents[1]
+    scene = root / "examples/civ/civ_city_scene.json"
+    env = dict(os.environ, PYTHONPATH=str(root / "src") + ":" + str(root / "player"))
+    backend = shlex.join([sys.executable, "-m", "fdisbull.il_scenes", str(scene)])
+    result = subprocess.run(
+        [sys.executable, "-m", "fdisbull_player", "--backend-command", backend],
+        input="activate change\nbuild militia\nopen units\nlook\nnext next\nselect select\nquit\n",
+        text=True,
+        capture_output=True,
+        env=env,
+        timeout=30,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "Success: What shall we build in Rome?" in result.stdout
+    assert "Success: Militia (10 turns)" in result.stdout
+    assert "Visible: Next unit" in result.stdout
+    assert "Rejected: Action refused." in result.stdout
