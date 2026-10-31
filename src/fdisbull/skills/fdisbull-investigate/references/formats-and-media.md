@@ -11,6 +11,7 @@ shipped APIs and reusable format contracts, read [media-modules.md](media-module
 
 - [Keep each layer's identity](#keep-each-layers-identity)
 - [Establish a bounded format contract](#establish-a-bounded-format-contract)
+- [Investigate Mach-O ARM64](#investigate-mach-o-arm64)
 - [Compare releases](#compare-releases-at-the-right-boundary)
 - [Reduce media](#reduce-media-through-a-valid-consumer-contract)
 
@@ -58,6 +59,28 @@ Report static mapping qualification separately from native execution; a
 loader-only task need not launch a game.
 Record raw records and unique applied writes separately when a boundary-spanning
 fixup can appear more than once.
+
+## Investigate Mach-O ARM64
+
+Start with `identify` and `inspect --slice-arch arm64`; import the exact thin or
+universal source into a private FDB with `--slice-arch arm64`. Run bounded
+recursive `analyze`, then inspect `analysis-status`, stored disassembly and
+candidate functions. `code-backings` can preserve the complete selected
+4-byte native instructions and original-container offsets for a specific
+entry. Fresh imports add candidate seeds from `LC_FUNCTION_STARTS` and unwind
+offsets only when they resolve to aligned, file-backed executable code;
+preexisting FDBs retain their earlier seeds. Keep the source hash, slice hash,
+byte version, preferred address and runtime slide distinct. Reopen the FDB and validate source backings before
+using them as evidence. An entry fixed point does not imply app-wide code
+coverage, especially across Swift dynamic dispatch.
+
+Where the installed methods include `ghidra-arm64`, use it for a source-bound
+cross-check of caller-selected instructions. Its optional C listing is a
+separate diagnostic, not a UIL lift. `macos-observe` explicitly launches an
+exact source-bound executable to one LLDB breakpoint; do not treat that
+single observation as a persistent debugger session or app behavior parity.
+In a source checkout, `docs/MACOS_ARM64_ANALYSIS.md` has command examples and
+the remaining SwiftUI-to-UIL requirements.
 
 Run one bounded initial analysis, inspect pending work and follow the next
 relevant frontier. Report instructions, candidate functions and cross-references

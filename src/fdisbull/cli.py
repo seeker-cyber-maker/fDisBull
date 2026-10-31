@@ -201,7 +201,9 @@ METHODS = {
     "analyze-module": "Offline DLL/shared-library analysis; path,project,[export,entry,max_instructions,slice_arch,image]",
     "analysis-status": "Current persisted queues, seed states and fixed-point status; [version]",
     "cfg": "Reachable stored CFG from exact entry; address,[version,cs,max_instructions,highlights]",
-    "code-backings": "Complete entry-qualified x86 encodings and many-to-many source occurrences; entries,[version,cs,max_instructions]",
+    "code-backings": "Exact entry-qualified native encodings and source occurrences (x86 and Mach-O ARM64); entries,[version,cs,max_instructions]",
+    "ghidra-arm64": "Cross-check selected source-bound Mach-O ARM64 instructions with optional Ghidra; project,path,addresses,analyze_headless,[decompile_entry,version]",
+    "macos-observe": "Launch one exact source-bound Mach-O ARM64 executable to a named LLDB breakpoint; project,executable,symbol,[version,argv]",
     "code-blocks": "Logical entry-qualified code blocks without source layout changes; entries,[version,cs,max_instructions,split_at]",
     "code-layout": "Bounded raw x86 layout with explicit jumps and caller assumptions; entries,assumptions,[version,cs,max_instructions,order,base,entry_references]",
     "udc-native-capture": "Persist native UDL blocks for direct UDC pass-through; name,entries,[version,cs,max_instructions,split_at,parent,author]",
@@ -356,6 +358,47 @@ def invoke(method, params, debugger=None):
         if not isinstance(data,str):
             raise ValueError('data must be hexadecimal bytes')
         return compare_decoders(bytes.fromhex(data),**p)
+    if method in ('ghidra-arm64', 'macos-observe'):
+        import hashlib
+        project = p.pop('project', None)
+        version = p.pop('version', 1)
+        if not project:
+            raise ValueError('project path is required')
+        if type(version) is not int or version != 1:
+            raise ValueError('macOS native probes currently require the original byte version 1')
+        path = Path(p.pop('path' if method == 'ghidra-arm64' else 'executable'))
+        if not path.is_file() or not 0 < path.stat().st_size <= 64*1024*1024:
+            raise ValueError('expected a nonempty Mach-O source file at most 64 MiB')
+        with path.open('rb') as stream:
+            checked_bytes = stream.read(64*1024*1024 + 1)
+        if not 0 < len(checked_bytes) <= 64*1024*1024:
+            raise ValueError('Mach-O source grew beyond the 64 MiB probe limit')
+        with Project(project) as db:
+            state = db.status(version=version)
+            source = db.source_info(version=version)
+        if state['format'] != 'Mach-O' or state['arch'] != 'arm64' or state['bits'] != 64:
+            raise ValueError('project must contain a Mach-O ARM64 image')
+        identity = source['identity']
+        if not source['verified'] or path.stat().st_size != identity['size']:
+            raise ValueError('original source identity is unavailable or does not match this file')
+        if hashlib.sha256(checked_bytes).hexdigest() != identity['sha256']:
+            raise ValueError('probe file does not match the recorded original source hash')
+        if method == 'ghidra-arm64':
+            from .ghidra_arm64 import probe_macho_arm64
+            try:
+                result = probe_macho_arm64(path, p.pop('addresses'), **p)
+            except RuntimeError as error:
+                raise ValueError(str(error)) from error
+        else:
+            from .macos_lldb import observe_macos_arm64_launch
+            result = observe_macos_arm64_launch(path, **p)
+        observed_hash = (result.get('source_sha256') if method == 'ghidra-arm64'
+                         else (result.get('source') or {}).get('sha256'))
+        if observed_hash != identity['sha256']:
+            raise ValueError('native probe source changed or could not be verified against the project')
+        result['fdisbull_project'] = {'version': version, 'mapped_sha256': state['version']['sha256'],
+                                       'source_sha256': identity['sha256']}
+        return result
     if method=='managed' and 'path' in p:
         from .managed import inspect_managed,disassemble_managed
         path=Path(p.pop('path'))
@@ -752,6 +795,24 @@ def parser():
         if name=='inspect':
             c.add_argument('--slice-arch',choices=['x86','x86_64','arm64'])
             c.add_argument('--image',choices=['auto','pe','le','ne','mz','com'])
+    c=sub.add_parser('ghidra-arm64',help=METHODS['ghidra-arm64'])
+    c.add_argument('project'); c.add_argument('path')
+    c.add_argument('--address',dest='addresses',action='append',type=lambda s:int(s,0),required=True)
+    c.add_argument('--analyze-headless',required=True,help='Ghidra support/analyzeHeadless executable')
+    c.add_argument('--java-home',help='JDK home used by Ghidra')
+    c.add_argument('--max-instructions',type=int,default=64)
+    c.add_argument('--timeout-s',type=float,default=120)
+    c.add_argument('--decompile-entry',type=lambda s:int(s,0))
+    c.add_argument('--decompile-timeout-s',type=int,default=10)
+    c.add_argument('--version',type=int,default=1)
+    c=sub.add_parser('macos-observe',help=METHODS['macos-observe'])
+    c.add_argument('project'); c.add_argument('executable'); c.add_argument('--symbol',required=True)
+    c.add_argument('--arg',dest='argv',action='append',default=[])
+    c.add_argument('--timeout-seconds',type=float,default=20)
+    c.add_argument('--memory-bytes',type=int,default=32)
+    c.add_argument('--instruction-count',type=int,default=8)
+    c.add_argument('--lldb-path')
+    c.add_argument('--version',type=int,default=1)
     for name in ('storage-info','migrate-external','source-info','source-candidate','bind-source','new-source-analysis'):
         c = sub.add_parser(name, help=METHODS[name]); c.add_argument('project')
         if name in ('source-candidate','bind-source','new-source-analysis'):
