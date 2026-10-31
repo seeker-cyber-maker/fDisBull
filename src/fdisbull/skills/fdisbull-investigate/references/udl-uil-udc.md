@@ -13,6 +13,7 @@ general compiler manual.
 - [Zork IR and recovered intents](#zork-ir-and-recovered-intents)
 - [Read a proof narrowly](#read-a-proof-narrowly)
 - [Bytecode inspection and runtime qualification](#do-not-conflate-bytecode-inspection-with-runtime-qualification)
+- [Direct guest-language front ends](#direct-guest-language-front-ends)
 
 ## Keep the terms separate
 
@@ -215,3 +216,22 @@ relevant branch and effect. A byte sequence that resembles a proximity guard is
 not enough to authorize a semantic mapping or guard waiver. See the interpreter
 and cross-file sections in [methodology.md](methodology.md) and the AGI source
 documentation `docs/AGI_LOGIC.md`.
+## Direct guest-language front ends
+
+Use a recognized guest language as input, keeping interpreter and story separate.
+`decoder-modules` lists explicit trusted module identities and capabilities;
+`module-analyze` opens AGI v2 logic or a qualified raw Z-machine v3 story without
+native ASM or a project database. `module-lift` currently admits only complete
+AGI assignn/set/reset fragments ending in return. Supply exactly the touched
+`$agi_vN` u8 and `$agi_fN` bool initial-state witness. Its existing-format UDL
+and UIL preserve ordered state primitives, source spans and an unknown caller
+return boundary; qualification is state projection only, not game behavior.
+
+Bind source occurrence using the snapshot key plus the module's resource-local
+location. File offsets and guest offsets are different coordinates. Unknown
+instructions, control flow, malformed source or budget stops refuse semantic
+qualification. Prefer a cheap supported direct lift over recovering the same
+guest operation from interpreter ASM, but retain ASM for unknown languages and
+engine effects. A missing capability requires another scoped module or probe,
+not an inferred implementation. Persistence, scene/Z recovery, runtime effects
+and UDC emission still require independent tests.

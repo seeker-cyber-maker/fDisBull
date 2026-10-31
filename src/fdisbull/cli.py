@@ -207,6 +207,9 @@ METHODS = {
     "function-patterns": "Candidate prologue/epilogue evidence; [version,limit,offset,scan_unexplored]",
     "managed": "Inspect .NET metadata or disassemble one CIL method; path or project,[token,max_instructions,version]",
     "agi-logic": "Read-only partial AGI 2.917 logic decoding; logdir, volume_dir, logic, profile, [max_instructions]",
+    "decoder-modules": "List explicitly registered trusted source decoder modules; no project required",
+    "module-analyze": "Direct source analysis without native ASM; module,path,[volume_dir,logic,profile,address,max_instructions]",
+    "module-lift": "Direct qualified source-to-UDL/UIL projection; module,path,initial_state,[volume_dir,logic,profile,max_instructions]",
     "zmachine-disasm": "Read-only Z-machine v3 instruction slice; path,[address,max_instructions]",
     "zmachine-analyze": "Bounded recursive Z-machine v3 processor analysis; path,[entry_points,max_instructions]",
     "decoder-check": "Compare x86 iced/Capstone proposals without execution; data,[bits,address,scan_offsets,max_candidates]",
@@ -317,6 +320,29 @@ def invoke(method, params, debugger=None):
         from .zmachine_analysis import analyze_story,disassemble_story
         operation=disassemble_story if method=='zmachine-disasm' else analyze_story
         return operation(**p)
+    if method in ('decoder-modules','module-analyze','module-lift'):
+        from .decoder_modules import analyze_input, builtin_registry, lift_input
+        registry = builtin_registry()
+        if method == 'decoder-modules':
+            if p: raise ValueError('decoder-modules takes no parameters')
+            return {'format':'fdisbull-decoder-modules-1','modules':registry.catalog(),
+                    'registration':'explicit trusted in-process objects; no automatic imports'}
+        identity, path = p.pop('module'), p.pop('path')
+        limit = p.pop('max_instructions', 40 if method == 'module-analyze' else 128)
+        if method == 'module-analyze':
+            address = p.pop('address', None)
+            return analyze_input(registry.open(identity, path, **p),
+                                 address=address, max_instructions=limit)
+        state_file = p.pop('state_file', None)
+        if state_file is not None:
+            if 'initial_state' in p: raise ValueError('supply initial_state or state_file, not both')
+            with Path(state_file).open('rb') as handle:
+                raw = handle.read(65537)
+            if len(raw) > 65536: raise ValueError('initial state exceeds 64 KiB')
+            p['initial_state'] = json.loads(raw)
+        initial_state = p.pop('initial_state')
+        return lift_input(registry.open(identity, path, **p),
+                          initial_state=initial_state, max_instructions=limit)
     from .project import Project, number
     for field in ("base", "entry"):
         if field in p and p[field] is not None:
@@ -476,7 +502,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','decoder-modules','module-analyze','module-lift','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         value={"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
@@ -689,6 +715,15 @@ def parser():
     c=sub.add_parser('agi-logic',help=METHODS['agi-logic'])
     c.add_argument('logdir');c.add_argument('volume_dir');c.add_argument('logic',type=int)
     c.add_argument('--profile',required=True,choices=['2.917']);c.add_argument('--max-instructions',type=int,default=1000)
+    sub.add_parser('decoder-modules',help=METHODS['decoder-modules'])
+    for name in ('module-analyze','module-lift'):
+        c=sub.add_parser(name,help=METHODS[name])
+        c.add_argument('module');c.add_argument('path')
+        c.add_argument('--volume-dir');c.add_argument('--logic',type=int)
+        c.add_argument('--profile',choices=['2.917'])
+        c.add_argument('--max-instructions',type=int,default=40 if name=='module-analyze' else 128)
+        if name=='module-analyze': c.add_argument('--address',type=lambda s:int(s,0))
+        else: c.add_argument('--state-file',required=True)
     c=sub.add_parser('zmachine-disasm',help=METHODS['zmachine-disasm'])
     c.add_argument('path');c.add_argument('--address',type=lambda s:int(s,0))
     c.add_argument('--max-instructions',type=int,default=40)

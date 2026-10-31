@@ -85,3 +85,23 @@ def test_bounded_inputs_and_empty_bytecode_rejected(tmp_path):
     log=fixture(tmp_path,b'\x00')
     (tmp_path/'VOL.0').write_bytes(b'\0'*(2*1024*1024+1))
     with pytest.raises(ValueError,match='volume exceeds'): inspect_logic(log,tmp_path,0,profile='2.917')
+
+
+def test_loaded_resource_is_immutable_and_typed_facts_keep_encoding(tmp_path):
+    from dataclasses import FrozenInstanceError
+    from hashlib import sha256
+    from fdisbull.agi import load_logic
+    log=fixture(tmp_path, bytes.fromhex('0305f00c070d0700'))
+    resource=load_logic(log,tmp_path,0,profile='2.917')
+    assert resource.code == bytes.fromhex('0305f00c070d0700')
+    assert resource.resource_sha256 == sha256(resource.payload).hexdigest()
+    assert resource.code_offset == 10 and resource.resource_offset == 3
+    with pytest.raises(FrozenInstanceError): resource.code=b'\0'
+    before=resource.provenance();before['logic']=99
+    assert resource.provenance()['logic']==0
+    rows=inspect_logic(log,tmp_path,0,profile='2.917')['instructions']
+    assert rows[0]['bytes']=='0305f0' and rows[0]['operands']==[
+        {'kind':'variable','index':5},{'kind':'u8','value':240}]
+    assert rows[1]['operands']==[{'kind':'flag','index':7}]
+    (tmp_path/'VOL.0').write_bytes(b'changed')
+    assert resource.code == bytes.fromhex('0305f00c070d0700')

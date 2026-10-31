@@ -212,6 +212,12 @@ Jericho environment. Story inspection and the recovered mailbox slice are
 bounded evidence, not recovery of the parser, turn loop or complete game.
 No original game or story files are distributed.
 
+[Direct decoder modules](docs/DECODER_MODULES.md) make AGI logic and Z-machine
+stories inputs in their own languages. Inspect them without creating an x86
+analysis project. The first AGI-to-UDL/UIL slice handles assignments and flag
+changes with source evidence and explicit state; extending the guest-language
+front end can grow independently of the DOS interpreter's assembly.
+
 The [Z-machine processor](docs/ZMACHINE_PROCESSOR.md) adds direct v3 bytecode
 inspection through fDisBull's processor interface. It reports operands, calls,
 branches and source identity, and can follow a bounded graph from a selected

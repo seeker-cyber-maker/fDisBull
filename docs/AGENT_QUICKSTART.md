@@ -256,6 +256,14 @@ loaded or executed those bytes. To claim runtime behavior, qualify the resource
 mapping and trace interpreter fetch, branch conditions and effects. See
 `docs/AGI_LOGIC.md` and the interpreter section of `methodology.md`.
 
+For direct guest inputs, `fdisbull decoder-modules` lists the explicitly
+registered AGI and Z-machine front ends. `module-analyze` reads their source
+instructions without a native project; `module-lift` provides the first narrow
+AGI state projection into shared UDL/UIL. See [decoder modules](DECODER_MODULES.md)
+for commands, source identities, required state witnesses and unsupported cases.
+Choose the actual guest language before spending effort on the interpreter's
+ASM; qualify runtime effects separately.
+
 ### Compare a source block with shared semantics
 
 For the supported 0.23 DOS profile, read `udl-uil-udc.md` before using

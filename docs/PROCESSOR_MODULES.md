@@ -5,8 +5,11 @@ version, named address space and address unit, capabilities and a state schema
 (or `None` when state is not modeled). A `Location` belongs to a named space;
 `DecodedInstruction` retains decoder facts plus explicit `Successor` records.
 A successor may have no target when it is unresolved. Processor objects are
-supplied explicitly to `decode_instruction`; there is no plugin discovery,
-automatic import, execution engine or registry. Module code is trusted in-process code, not sandboxed. The dispatcher validates basic result structure, not semantics.
+supplied explicitly to `decode_instruction`. The separate
+[decoder module registry](DECODER_MODULES.md) admits explicitly registered
+trusted front ends; there is no automatic discovery, input-selected Python
+import or execution engine. Module code is trusted in-process code, not
+sandboxed. The dispatcher validates basic result structure, not semantics.
 
 The existing flat analyzer now calls `NativeProcessor`, which delegates to the
 same x86/ARM64 decoder and hands the same native fact dictionary back to the
@@ -46,6 +49,9 @@ not persistence, execution, or compatibility with a real game.
 Processor facts do not establish a host-to-guest/file mapping: retain that as
 separate, evidence-bearing provenance. Concurrent node scheduling and blocking,
 device I/O, game UI, goals and grading belong to separate machine or task layers.
-No AGI, QP2A, TIS-100 or Comet-64 processor is supplied by this seam.
+The partial `AGI2917Processor` also supplies source instruction facts; its
+registered resource opener and narrow direct UDL/UIL projection are described
+in [decoder modules](DECODER_MODULES.md). No QP2A, TIS-100 or Comet-64
+processor is supplied by this seam.
 A real module needs an authoritative encoding/semantics and its own tests;
 QP2A acceptance remains with its native verifier, not this decoder seam.

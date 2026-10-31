@@ -40,6 +40,13 @@ native code and other explanations. Read
 [references/methodology.md](references/methodology.md) before claiming a
 cross-file or native-to-guest execution link.
 
+For recognized guest code, check `decoder-modules` and use the direct source
+front end before choosing an ASM scaffold. AGI `module-analyze` and the narrow
+`module-lift` do not require a native project. Check capabilities, selected
+profile, source occurrence and required initial-state witness; a direct decoder
+does not imply a complete interpreter or scene recovery. Read
+the source-backed semantics reference below for the qualification gates.
+
 ## Choose a useful probe
 
 For a genuine fork, record one active question, target/context, hypothesis,
