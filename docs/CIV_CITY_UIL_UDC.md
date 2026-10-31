@@ -118,8 +118,30 @@ $ /tmp/civ-city-macos-20261030/program
 ```
 
 That is the disorder-false branch adding the supplied contribution to a
-sanitized box. The unchecked (`sanitized=false`) and disorder cases remain
-covered by the interpreter tests, not by this single native frame.
+sanitized box.
+
+## Differential boundary sweep
+
+`examples/civ/civ_city_udc_diff.py` builds one module per boundary state, runs
+the emitted binary, and compares the observation frame with `execute_il` on the
+primitive program. Every listed state agrees:
+
+| case | initial state | interpreter | native arm64 |
+|---|---|---|---|
+| default | `box 0, delta 3` | `box 3` | `box 3` |
+| wrap-high | `box 32767, delta 1` | `box -32768` | `box -32768` |
+| wrap-low | `box -32768, delta -1` | `box 32767` | `box 32767` |
+| negative-box | `box -5, delta 3` | `box -2` | `box -2` |
+| disorder-zeroes | `box 7, delta 5, disorder` | `box 0` | `box 0` |
+| unsanitized-refusal | `box 4, delta 2, sanitized false` | `status: refused` | exit 1, no frame |
+
+`verdict: match` over the six states, with per-case artifact hashes in the
+sweep receipt. Refusal is observable only as a nonzero exit with no observation
+frame, because the program publishes state only on a committed transition.
+
+Scope: this proves interpreter/native agreement for the tested states. It does
+not prove that the UIL model matches the DOS routine, which the static trace
+covers separately.
 
 ## Evidence and conflicts
 

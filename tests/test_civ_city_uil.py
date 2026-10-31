@@ -128,3 +128,26 @@ def test_city_udc_macos_target_builds_and_runs_natively(tmp_path):
     assert frame["format"] == "fdisbull-macos-observation-1"
     assert frame["status"] == 0
     assert frame["state"]["$shield_box"] == 3
+
+
+@pytest.mark.skipif(
+    not (NATIVE and shutil.which("clang")),
+    reason="native arm64 Mach-O execution requires macOS arm64 and clang",
+)
+def test_city_udc_matches_interpreter_across_boundaries(tmp_path):
+    if not PINNED_ROOT.exists():
+        pytest.skip("pinned unpacked Civ root is not present")
+    from examples.civ.civ_city_udc_diff import sweep
+
+    receipt = sweep(PINNED_ROOT, tmp_path / "sweep", target="macos-arm64")
+    assert receipt["verdict"] == "match", [
+        (row["case"], row["expected"], row["observed"])
+        for row in receipt["cases"]
+        if not row["match"]
+    ]
+    by_case = {row["case"]: row for row in receipt["cases"]}
+    assert by_case["wrap-high"]["observed"]["frame"]["state"]["$shield_box"] == -32768
+    assert by_case["wrap-low"]["observed"]["frame"]["state"]["$shield_box"] == 32767
+    assert by_case["disorder-zeroes"]["observed"]["frame"]["state"]["$shield_box"] == 0
+    refused = by_case["unsanitized-refusal"]["observed"]
+    assert refused["returncode"] != 0 and refused["frame"] is None
