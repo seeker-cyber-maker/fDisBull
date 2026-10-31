@@ -73,7 +73,9 @@ def _asm(code):
 def _c(source):
     # A syntactically restricted sequence of statements, not a C parser.
     # Identifiers are registers bound to uint16_t variables by the caller.
-    if not isinstance(source, str) or not 1 <= len(source.encode('utf-8')) <= 1024:
+    # An admitted ASM block can contain 256 one-byte operations. Its
+    # normalized C spelling is longer than its byte stream.
+    if not isinstance(source, str) or not 1 <= len(source.encode('utf-8')) <= 4096:
         raise ValueError('invalid C subset source')
     statements = source.split(';')
     if statements[-1].strip():
@@ -88,7 +90,7 @@ def _c(source):
         if value > 65535:
             raise ValueError('C constant outside uint16_t range')
         result.append(({'=':'set', '+=':'add', '-=':'subtract'}[op], reg, value))
-    if not result or len(result) > 128:
+    if not result or len(result) > 256:
         raise ValueError('invalid statement count')
     return result
 
@@ -128,12 +130,25 @@ def lift_c_block(source, bindings, *, inputs, outputs, flags='unobserved', point
     return _lift('c_u16_subset', source, bindings, inputs, outputs, flags, pointer_assumptions)
 
 
-def asm_to_c(lift):
-    """Render a restricted C statement view from a validated ASM lift.
+_ASM_C_ENGINES = ('builtin', 'ghidra', 'reko', 'dcc')
 
-    The view shares the ASM byte decoder; it is not an independent
-    decompilation, compiler validation, or proof of native parity.
+
+def asm_to_c(lift, *, engine='builtin', tool_path=None, runtime_path=None,
+             analyze_headless=None, java_home=None, timeout_s=60,
+             require_equivalence=False):
+    """Render the same bounded ASM lift through one selected engine.
+
+    ``tool_path`` is the external executable (Ghidra analyzeHeadless, Reko
+    CLI or DCC). ``runtime_path`` is the Java home for Ghidra or dotnet for
+    Reko. The earlier Ghidra-specific names remain accepted. Native decompiler
+    C is diagnostic; only ``text`` is in the restricted UIL reader's grammar.
+    ``require_equivalence`` fails closed unless Z3 proves the declared outputs.
     """
+    if engine not in _ASM_C_ENGINES:
+        raise ValueError('unknown ASM-to-C engine')
+    if (type(timeout_s) not in (int, float) or not 0 < timeout_s <= 3600
+            or type(require_equivalence) is not bool):
+        raise ValueError('invalid ASM-to-C options')
     if not isinstance(lift, dict) or lift.get('source_kind') != 'asm16':
         raise ValueError('ASM lift required')
     try:
@@ -145,13 +160,86 @@ def asm_to_c(lift):
         raise ValueError('invalid ASM lift') from exc
     if rebuilt['sha256'] != lift.get('sha256'):
         raise ValueError('source digest mismatch')
-    symbols = {'set':'=', 'add':'+=', 'subtract':'-='}
-    text = '\n'.join(f'{reg} {symbols[op]} {value};' for op, reg, value in _asm(code))
-    return {'format':'fdisbull-asm-c-view-1', 'source_sha256':rebuilt['sha256'],
-            'text':text, 'assumptions':[
-                'Derived from the same bounded ASM decoder, not an independent decompiler or native parity check',
+    if engine == 'builtin':
+        symbols = {'set':'=', 'add':'+=', 'subtract':'-='}
+        raw = {'format': 'fdisbull-asm-c-view-1', 'source_sha256': rebuilt['sha256'],
+               'text': '\n'.join(f'{reg} {symbols[op]} {value};' for op, reg, value in _asm(code)),
+               'evidence': [], 'diagnostics': {'covered_bytes': len(code),
+                   'text_provenance': 'fDisBull bounded ASM decoder; shared with source lift'},
+               'assumptions': [
+                   'Derived from the same bounded ASM decoder, not an independent decompiler or native parity check',
+                   'Identifiers represent uint16_t objects and int has at least 32 bits',
+                   'Flags, memory, control flow, ABI, timing and intermediate state are excluded']}
+    elif engine == 'ghidra':
+        if tool_path is not None and analyze_headless is not None:
+            raise ValueError('supply tool_path or analyze_headless, not both')
+        if runtime_path is not None and java_home is not None:
+            raise ValueError('supply runtime_path or java_home, not both')
+        from .ghidra_asm_c import render_ghidra_asm_c
+        raw = render_ghidra_asm_c(
+            rebuilt, analyze_headless=tool_path if tool_path is not None else analyze_headless,
+            java_home=runtime_path if runtime_path is not None else java_home,
+            timeout_s=timeout_s)
+    elif engine == 'reko':
+        from .reko_asm_c import render_reko_asm_c
+        raw = render_reko_asm_c(rebuilt, executable=tool_path,
+                                dotnet=runtime_path, timeout_s=timeout_s)
+    else:
+        if runtime_path is not None:
+            raise ValueError('DCC does not take a runtime_path')
+        from .dcc_asm_c import render_dcc_asm_c
+        raw = render_dcc_asm_c(rebuilt, executable=tool_path, timeout_s=timeout_s)
+    if not isinstance(raw, dict) or raw.get('source_sha256') != rebuilt['sha256']:
+        raise RuntimeError('ASM-to-C engine returned the wrong source identity')
+    if (not isinstance(raw.get('evidence', []), list)
+            or not isinstance(raw.get('diagnostics', {}), dict)):
+        raise RuntimeError('ASM-to-C engine returned invalid evidence')
+    text = raw.get('text')
+    if not isinstance(text, str):
+        raise RuntimeError('ASM-to-C engine returned no normalized text')
+    # Every successful engine result has the same parseable bounded statement
+    # contract. This validation does not prove that native decompiler C agrees.
+    lift_c_block(text, rebuilt['bindings'], inputs=rebuilt['inputs'], outputs=rebuilt['outputs'],
+                 flags=rebuilt['flags'], pointer_assumptions=rebuilt['pointer_assumptions'])
+    diagnostic = dict(raw.get('diagnostics') or {})
+    diagnostic.setdefault('covered_bytes', len(code))
+    native_c = raw.get('native_c', raw.get('ghidra_c'))
+    if native_c is not None and not isinstance(native_c, str):
+        raise RuntimeError('ASM-to-C engine returned invalid native C')
+    view = {**raw, 'format': 'fdisbull-asm-c-view-2', 'engine': engine,
+            'engine_result_format': raw.get('format'), 'source_kind': 'asm16',
+            'bindings': dict(rebuilt['bindings']), 'inputs': list(rebuilt['inputs']),
+            'outputs': list(rebuilt['outputs']), 'text': text,
+            'native_c': native_c,
+            'native_c_status': 'diagnostic_unverified' if native_c is not None else 'not_applicable',
+            'evidence': list(raw.get('evidence') or []),
+            'diagnostics': diagnostic,
+            'assumptions': list(raw.get('assumptions') or [
+                'Normalized statements are derived from this engine\'s decoded instruction listing, not its native C',
                 'Identifiers represent uint16_t objects and int has at least 32 bits',
-                'Flags, memory, control flow, ABI, timing and intermediate state are excluded']}
+                'Flags, memory, control flow, ABI, timing and intermediate state are excluded'])}
+    if require_equivalence:
+        proof = qualify_asm_c_view(rebuilt, view)
+        if proof['status'] != 'equivalent_under_assumptions':
+            raise RuntimeError('ASM-to-C engine output is not qualified: ' + proof['status'])
+        view['qualification'] = proof
+    return view
+
+
+def qualify_asm_c_view(lift, view, *, timeout_ms=1000):
+    """Check the normalized C view at the declared register boundary only."""
+    if (not isinstance(view, dict) or view.get('format') != 'fdisbull-asm-c-view-2'
+            or view.get('source_kind') != 'asm16'
+            or view.get('engine') not in _ASM_C_ENGINES
+            or view.get('source_sha256') != lift.get('sha256')
+            or view.get('bindings') != lift.get('bindings')
+            or view.get('inputs') != lift.get('inputs')
+            or view.get('outputs') != lift.get('outputs')):
+        raise ValueError('ASM-to-C view interface differs from source')
+    candidate = lift_c_block(view['text'], lift['bindings'], inputs=lift['inputs'],
+                             outputs=lift['outputs'], flags=lift['flags'],
+                             pointer_assumptions=lift['pointer_assumptions'])
+    return verify_block(lift, candidate['uil'], timeout_ms=timeout_ms)
 
 
 def _check_expression_budget(expressions):

@@ -261,16 +261,20 @@ successful play from evidence that the higher-level rules actually executed.
 The 0.23 source introduces an original-backed DOS compiler definition (UDC):
 explicitly mapped ASM blocks can be lifted to shared UDL/UIL primitives and
 checked with Z3 at a declared register boundary. A limited C statement view
-can be lifted and compared as well; it shares the ASM decoder and is not an
-independent general-purpose decompilation. Unknown, unavailable or failing
-proofs do not qualify a semantic block.
+can be lifted and compared as well. Its default renderer shares the ASM
+decoder; optional Ghidra, Reko and DCC adapters provide decoded instruction
+facts and separate native C listings for the same small block profile.
+None provides general-purpose decompilation through this interface. Unknown, unavailable or
+failing proofs do not qualify a semantic block.
 
 The first target reconstructs original MZ/COM bytes from immutable stored
 backings, including opaque regions and explicitly attached resources. It does
 not generate arbitrary DOS code or claim whole-game semantic recovery. The
 authored COM demonstration and the bounded real-game observations are described
 in [UDC usage](docs/UDC_DOS.md), [testing methodology](docs/UDC_TESTING.md)
-and [verification](docs/VERIFICATION-0.23.md).
+and [verification](docs/VERIFICATION-0.23.md). The optional renderers share a
+[bounded engine contract](docs/ASM_C_ENGINE_CONTRACT.md); their comparison and
+timing use authored blocks.
 
 ## Status, testing and history
 

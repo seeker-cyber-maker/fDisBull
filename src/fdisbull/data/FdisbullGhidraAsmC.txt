@@ -1,0 +1,70 @@
+// Extract independent Ghidra instruction facts from the exact code in a synthetic DOS MZ image.
+import ghidra.app.script.GhidraScript;
+import ghidra.program.model.address.Address;
+import ghidra.program.model.listing.Instruction;
+import ghidra.program.model.lang.Register;
+import ghidra.program.model.scalar.Scalar;
+import ghidra.framework.Application;
+import ghidra.app.decompiler.DecompInterface;
+import ghidra.app.decompiler.DecompileResults;
+import ghidra.program.model.listing.Function;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.io.PrintWriter;
+
+public class FdisbullGhidraAsmC extends GhidraScript {
+    public void run() throws Exception {
+        String[] args = getScriptArgs();
+        int length = Integer.parseInt(args[1]);
+        if (!"Old-style DOS Executable (MZ)".equals(currentProgram.getExecutableFormat()))
+            throw new Exception("expected DOS MZ loader");
+        Address start = currentProgram.getMinAddress();
+        try (PrintWriter out = new PrintWriter(args[0], "UTF-8")) {
+            out.println("VERSION\t" + Application.getApplicationVersion());
+            int offset = 0;
+            while (offset < length) {
+                Address at = start.add(offset);
+                if (!disassemble(at)) throw new Exception("disassembly failed at " + offset);
+                Instruction ins = getInstructionAt(at);
+                if (ins == null || ins.getLength() <= 0 || offset + ins.getLength() > length)
+                    throw new Exception("incomplete instruction at " + offset);
+                if (!ins.getFlowType().isFallthrough()) throw new Exception("control flow at " + offset);
+                int count = ins.getNumOperands();
+                Object[] first = count > 0 ? ins.getOpObjects(0) : new Object[0];
+                Object[] second = count > 1 ? ins.getOpObjects(1) : new Object[0];
+                if (first.length != 1 || !(first[0] instanceof Register) ||
+                    (count != 1 && count != 2) ||
+                    (count == 2 && (second.length != 1 || !(second[0] instanceof Scalar))))
+                    throw new Exception("unsupported operands at " + offset);
+                Register reg = (Register) first[0];
+                long value = count == 2 ? ((Scalar) second[0]).getUnsignedValue() : 1;
+                out.println("INS\t" + offset + "\t" + ins.getLength() + "\t" +
+                    ins.getMnemonicString() + "\t" + reg.getName() + "\t" + reg.getBitLength() + "\t" + value + "\t" + count);
+                offset += ins.getLength();
+            }
+            // The extra RET byte is a synthetic terminator, not source evidence.
+            Address terminator = start.add(length);
+            if (!disassemble(terminator)) throw new Exception("wrapper disassembly failed");
+            Function function = createFunction(start, "fdisbull_block");
+            if (function == null) throw new Exception("function creation failed");
+            DecompInterface decompiler = new DecompInterface();
+            try {
+                if (!decompiler.openProgram(currentProgram)) throw new Exception("decompiler open failed");
+                DecompileResults result = decompiler.decompileFunction(function, 30, monitor);
+                if (!result.decompileCompleted() || result.getDecompiledFunction() == null) {
+                    String error = result.getErrorMessage();
+                    if (error == null || error.isEmpty()) error = "no decompiled function returned";
+                    out.println("ERROR\t" + Base64.getEncoder().encodeToString(error.getBytes(StandardCharsets.UTF_8)));
+                    return;
+                }
+                String c = result.getDecompiledFunction().getC();
+                String warning = result.getErrorMessage();
+                out.println("DECOMPILED\t" + Base64.getEncoder().encodeToString(c.getBytes(StandardCharsets.UTF_8)));
+                out.println("WARNINGS\t" + Base64.getEncoder().encodeToString((warning == null ? "" : warning).getBytes(StandardCharsets.UTF_8)));
+            } finally {
+                decompiler.dispose();
+            }
+            out.println("COMPLETE\t" + offset);
+        }
+    }
+}
