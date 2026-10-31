@@ -39,6 +39,10 @@ rediscovery, look for matching reconstructed source and build recipes unless the
 task explicitly requires an independent recovery arm. Pin the edition and source
 revision, distinguish notes from executable results, and reuse qualified work
 without treating inferred names or a successful build as recovered meaning.
+Also collate guides, solutions, walkthroughs and analyses into provisional Z
+blueprints where a scene view is useful. Treat them as attributed behavioral
+hypotheses: weigh agreement by source lineage, retain outliers, and compare the
+untested draft with later code-backed behavior rather than skipping Z.
 When behavior may be
 interpreted from a guest script, look for evidence of the interpreter alongside
 native code and other explanations. Read
