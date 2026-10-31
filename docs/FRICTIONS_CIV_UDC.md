@@ -94,3 +94,33 @@
       `2189 passed, 149 skipped, 23 errors, 2 failed`. The errors and failures
       are the existing Linux-ELF/Mach-O fixture boundary (`/usr/bin/gcc`
       produces Mach-O or rejects Linux-only linker flags), not the Civ slice.
+
+11. Darwin had no native output target, so executable evidence stopped at a
+    cross-built ELF.
+    - Static `arm64` Mach-O is not a usable route on current macOS: `clang
+      -static -nostdlib -Wl,-e,_entry` links, and even ad-hoc signing succeeds,
+      but the process is killed before `main` (exit 137). Static user binaries
+      need dyld.
+    - Resolution: added the `macos-arm64` target in `src/fdisbull/udc_macos.py`
+      (profile `macos-arm64-c-plan-libsystem-1`). It compiles generator-owned C
+      for `arm64-apple-macos11`, links libSystem for `write` plus CRT startup,
+      and writes one JSON observation frame to stdout. `tests/test_udc_macos.py`
+      runs the artifact natively, and the Civ city slice reports
+      `$shield_box: 3` from a real arm64 process.
+    - Declared differences: dyld/libSystem dependency, stdout-only observation,
+      no `capture_state`. The builder still records `native_execution: false`;
+      running the artifact is separate evidence.
+
+12. The installed investigation skill was stale against the source tree.
+    - `~/.omp/agent/managed-skills/fdisbull-investigate` held 5 files (SKILL.md
+      plus four references) while the source tree ships 12, including
+      `sweding.md`, `source-and-concepts.md`, `formats-and-media.md`,
+      `recovery-research.md` and `workflows.md`.
+    - Open PRs #59 (sweding), #51 (reconstruction reuse) and #52 (source and
+      concepts) each extend different parts of the same skill, so no single
+      branch was the latest complete version.
+    - Installed the union of `main` plus those three branches (one clean
+      three-way merge on `references/udl-uil-udc.md`, no conflict markers) with
+      a timestamped backup beside the live directory. Skills are used from the
+      installed copy, so the cached release is not a reason to run an older
+      guide.
