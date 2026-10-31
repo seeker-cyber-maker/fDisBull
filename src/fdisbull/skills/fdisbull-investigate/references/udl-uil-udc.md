@@ -221,15 +221,26 @@ documentation `docs/AGI_LOGIC.md`.
 Use a recognized guest language as input, keeping interpreter and story separate.
 `decoder-modules` lists explicit trusted module identities and capabilities;
 `module-analyze` opens AGI v2 logic or a qualified raw Z-machine v3 story without
-native ASM or a project database. `module-lift` currently admits only complete
-AGI assignn/set/reset fragments ending in return. Supply exactly the touched
-`$agi_vN` u8 and `$agi_fN` bool initial-state witness. Its existing-format UDL
-and UIL preserve ordered state primitives, source spans and an unknown caller
-return boundary; qualification is state projection only, not game behavior.
+native ASM or a project database. `module-lift` admits bounded acyclic scalar
+AGI components: comparisons/isset with AND/OR/NOT, branches, direct logic calls
+and scalar assignments/arithmetic/flags. Supply exactly all reachable read/write
+`$agi_vN` u8 and `$agi_fN` bool initial values and an explicit code-relative
+`callee_entries` witness for each captured call target. Cached scan-start need
+not be zero. Never select a target from initial values for an unsupported
+`call.v`, or prune an unsupported branch because the witness avoids it.
+
+Use `entry_offset`, root `stop_offsets` and cross-resource `stop_points` to
+declare a smaller observation component. A stop inside a callee ends the entire
+component with its caller suspended; it cannot stand in for a returning callee.
+The v2 projection retains exits, suspended frames and source-entry mappings for
+IL `visited` IDs. Qualification is nominal state/control projection, not actual
+interpreter execution. Cycles, recursion, parser/I/O operations and exhausted
+budgets refuse qualification. Keep full-call, bounded call-entry and original
+runtime evidence separate.
 
 Bind source occurrence using the snapshot key plus the module's resource-local
 location. File offsets and guest offsets are different coordinates. Unknown
-instructions, control flow, malformed source or budget stops refuse semantic
+instructions, unsupported control flow, malformed source or budget stops refuse semantic
 qualification. Prefer a cheap supported direct lift over recovering the same
 guest operation from interpreter ASM, but retain ASM for unknown languages and
 engine effects. A missing capability requires another scoped module or probe,

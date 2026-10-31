@@ -1,49 +1,20 @@
-"""Source-bound straight-line AGI v2 state projection into existing IL.
+"""Source-bound AGI v2 scalar state projection into existing IL.
 
-A decoded instruction is not a runtime observation. Only assignn, set, reset
-and a final return are admitted; no ASM, guest runtime, scheduler or I/O is used.
+A decoded instruction is not a runtime observation. The legacy linear shape is
+retained; bounded acyclic components add conditions and captured direct calls.
+No ASM, guest runtime, scheduler or I/O is used.
 """
 from copy import deepcopy
-from hashlib import sha256
 
-from .agi import AGI2917Processor, AGILogicResource
+from .agi import AGI2917Processor
 from .interaction_il import change_role, validate_il
 from .processor import Location, decode_instruction
 
 
-def _validate_resource(resource):
-    if type(resource) is not AGILogicResource:
-        raise ValueError('expected immutable AGI logic resource')
-    directory, volume, payload, code = resource._directory, resource._volume, resource.payload, resource.code
-    if any(type(v) is not bytes for v in (directory, volume, payload, code)):
-        raise ValueError('invalid resource snapshot bytes')
-    if (resource.profile != '2.917' or type(resource.logic) is not int or not 0 <= resource.logic <= 255
-            or len(directory) > 768 or len(directory) % 3 or resource.logic * 3 + 3 > len(directory)
-            or len(volume) > 2 * 1024 * 1024):
-        raise ValueError('invalid resource snapshot metadata')
-    entry = int.from_bytes(directory[resource.logic*3:resource.logic*3+3], 'big')
-    number, offset = entry >> 20, entry & 0xfffff
-    if (offset == 0xfffff or type(resource.volume) is not int or resource.volume != number
-            or type(resource.resource_offset) is not int or resource.resource_offset != offset
-            or offset + 5 > len(volume) or volume[offset:offset+2] != b'\x12\x34'
-            or volume[offset+2] != number):
-        raise ValueError('resource directory or volume header mismatch')
-    length = int.from_bytes(volume[offset+3:offset+5], 'little')
-    if (type(resource.resource_length) is not int or length != resource.resource_length
-            or length < 2 or offset + 5 + length > len(volume)
-            or payload != volume[offset+5:offset+5+length]
-            or type(resource.code_offset) is not int or resource.code_offset != offset+7):
-        raise ValueError('resource payload provenance mismatch')
-    size = int.from_bytes(payload[:2], 'little')
-    if (size == 0 or size + 2 > len(payload) or code != payload[2:2+size]
-            or resource.directory_sha256 != sha256(directory).hexdigest()
-            or resource.volume_sha256 != sha256(volume).hexdigest()
-            or resource.resource_sha256 != sha256(payload).hexdigest()
-            or resource.space != f'agi.logic.{resource.logic}.{sha256(payload).hexdigest()}'):
-        raise ValueError('resource source identity mismatch')
+from .agi_source import bind_program, validate_resource as _validate_resource
 
 
-def lift_logic(resource, *, initial_state, max_instructions=128):
+def _lift_linear(resource, *, initial_state, max_instructions=128):
     """Return source-bound UDL and UIL for a complete admitted fragment.
 
     ``initial_state`` exactly binds every touched ``$agi_vN`` (u8) and
@@ -114,3 +85,37 @@ def lift_logic(resource, *, initial_state, max_instructions=128):
             'bounds': ['straight-line assignn/set/reset; final return',
                        'scheduler, I/O, caller and whole-game behavior excluded'],
             'initial_state': deepcopy(initial_state)}
+
+
+def _linear_candidate(code):
+    offset = 0
+    while offset < len(code):
+        op = code[offset]
+        if op == 0:
+            return True
+        if op not in (3,12,13):
+            return False
+        offset += 3 if op == 3 else 2
+    return True
+
+
+def lift_logic(resource, *, initial_state, max_instructions=128, entry_offset=0,
+               stop_offsets=(), callees=(), callee_entries=None, max_call_depth=8,
+               stop_points=()):
+    """Lift a bounded scalar source component, including explicit direct calls.
+
+    Callee entries witness cached AGI scan-start positions, in code-relative
+    bytes. An explicit stop inside a callee ends the entire component there;
+    its caller does not resume. No target is inferred from the initial values.
+    """
+    program = bind_program(resource, callees=callees, callee_entries=callee_entries,
+                           entry_offset=entry_offset, stop_offsets=stop_offsets,
+                           stop_points=stop_points)
+    if type(max_call_depth) is not int or not 1 <= max_call_depth <= 8:
+        raise ValueError('max_call_depth must be in 1..8')
+    if (entry_offset == 0 and not stop_offsets and not stop_points and not callees
+            and not callee_entries and _linear_candidate(resource.code)):
+        return _lift_linear(resource,initial_state=initial_state,max_instructions=max_instructions)
+    from .agi_control import lift_program
+    return lift_program(program,initial_state=initial_state,max_instructions=max_instructions,
+                        max_call_depth=max_call_depth)

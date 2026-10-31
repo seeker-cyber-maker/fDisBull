@@ -149,19 +149,27 @@ def _check_input(opened: DecoderInput) -> None:
 
 
 class AGI2917Module:
-    info = DecoderModuleInfo('fdisbull.agi.2.917.subset', '1', 'agi-v2-logic',
-                             ('decode', 'static_successors', 'lift_state_projection'))
+    info = DecoderModuleInfo('fdisbull.agi.2.917.subset', '2', 'agi-v2-logic',
+                             ('decode', 'static_successors', 'lift_state_projection',
+                              'lift_scalar_conditions', 'lift_direct_logic_calls', 'bounded_source_components'))
 
-    def open(self, source, *, volume_dir, logic, profile) -> DecoderInput:
-        from .agi import AGI2917Processor, load_logic
+    def open(self, source, *, volume_dir, logic, profile, entry_offset=0, stop_offsets=(),
+             callee_entries=None, stop_points=()) -> DecoderInput:
+        from .agi import AGI2917Processor
         from .agi_lift import lift_logic
-        resource = load_logic(source, volume_dir, logic, profile=profile)
+        from .agi_source import load_program
+        program = load_program(source, volume_dir, logic, profile=profile, entry_offset=entry_offset,
+                               stop_offsets=stop_offsets, callee_entries=callee_entries,
+                               stop_points=stop_points)
+        resource = program.root
         provenance = dict(kind='agi-v2-logic-resource', code_length=len(resource.code),
                           program_sha256=sha256(resource.code).hexdigest(),
-                          **resource.provenance())
+                          **program.provenance())
         return capture_input(self.info, AGI2917Processor(resource.space), resource.code,
-                             Location(resource.space, 0), provenance,
-                             lambda **options: lift_logic(resource, **options))
+                             Location(resource.space, program.entry_offset), provenance,
+                             lambda **options: lift_logic(resource, callees=program.callees,
+                                 callee_entries=dict(program.callee_entries), entry_offset=program.entry_offset,
+                                 stop_offsets=program.stop_offsets, stop_points=program.stop_points, **options))
 
 
 class ZMachineV3Module:
@@ -265,9 +273,14 @@ def analyze_input(opened: DecoderInput, *, address=None, max_instructions=40) ->
                             max_edges=8192))
 
 
-def lift_input(opened: DecoderInput, *, initial_state, max_instructions=128) -> dict:
+def lift_input(opened: DecoderInput, *, initial_state, max_instructions=128, max_call_depth=None) -> dict:
     _check_input(opened)
     if opened.lifter is None or 'lift_state_projection' not in opened.module.capabilities:
         raise ValueError('this decoder module has no qualified lifter')
-    result = opened.lifter(initial_state=initial_state, max_instructions=max_instructions)
+    options = dict(initial_state=initial_state, max_instructions=max_instructions)
+    if max_call_depth is not None:
+        if 'lift_direct_logic_calls' not in opened.module.capabilities:
+            raise ValueError('this module does not support a logic call depth limit')
+        options['max_call_depth'] = max_call_depth
+    result = opened.lifter(**options)
     return dict(result, module=asdict(opened.module), snapshot=opened.identity)

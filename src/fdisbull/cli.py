@@ -14,7 +14,7 @@ AGENT_SKILL_GUIDES = {
     'references/runtime-navigation.md': 'Choose movement, spatial policies, assistance and observation projections',
     'references/proofs.md': 'Build explicit bounded Z3 models and report their assumptions and scope',
     'references/workflows.md': 'Choose static analysis, native debugging, scene or text-player entry points',
-    'references/udl-uil-udc.md': 'Qualify source blocks, retained Zork IR, recovered intents and original-backed DOS compilation',
+    'references/udl-uil-udc.md': 'Qualify direct AGI components, source blocks, retained Zork IR, recovered intents and DOS compilation',
     'references/recovery-research.md': 'Qualify research, retain reusable meanings and compare recovery depth and cost',
     'references/semantic-contracts.md': 'Recover complete intent contracts and compare facts, effects, time and projection losses',
     'references/formats-and-media.md': 'Qualify containers, executable mappings, release differences and valid media reduction',
@@ -209,7 +209,7 @@ METHODS = {
     "agi-logic": "Read-only partial AGI 2.917 logic decoding; logdir, volume_dir, logic, profile, [max_instructions]",
     "decoder-modules": "List explicitly registered trusted source decoder modules; no project required",
     "module-analyze": "Direct source analysis without native ASM; module,path,[volume_dir,logic,profile,address,max_instructions]",
-    "module-lift": "Direct qualified source-to-UDL/UIL projection; module,path,initial_state,[volume_dir,logic,profile,max_instructions]",
+    "module-lift": "Direct qualified source-to-UDL/UIL projection; module,path,initial_state,[volume_dir,logic,profile,entry_offset,stop_offsets,stop_points,callee_entries,max_instructions,max_call_depth]",
     "zmachine-disasm": "Read-only Z-machine v3 instruction slice; path,[address,max_instructions]",
     "zmachine-analyze": "Bounded recursive Z-machine v3 processor analysis; path,[entry_points,max_instructions]",
     "decoder-check": "Compare x86 iced/Capstone proposals without execution; data,[bits,address,scan_offsets,max_candidates]",
@@ -341,8 +341,9 @@ def invoke(method, params, debugger=None):
             if len(raw) > 65536: raise ValueError('initial state exceeds 64 KiB')
             p['initial_state'] = json.loads(raw)
         initial_state = p.pop('initial_state')
+        call_depth = p.pop('max_call_depth', None)
         return lift_input(registry.open(identity, path, **p),
-                          initial_state=initial_state, max_instructions=limit)
+                          initial_state=initial_state, max_instructions=limit, max_call_depth=call_depth)
     from .project import Project, number
     for field in ("base", "entry"):
         if field in p and p[field] is not None:
@@ -723,7 +724,13 @@ def parser():
         c.add_argument('--profile',choices=['2.917'])
         c.add_argument('--max-instructions',type=int,default=40 if name=='module-analyze' else 128)
         if name=='module-analyze': c.add_argument('--address',type=lambda s:int(s,0))
-        else: c.add_argument('--state-file',required=True)
+        else:
+            c.add_argument('--state-file',required=True)
+            c.add_argument('--entry-offset',type=lambda s:int(s,0),default=0)
+            c.add_argument('--stop-offset',dest='stop_offsets',action='append',type=lambda s:int(s,0))
+            c.add_argument('--stop-point',dest='stop_points',action='append',help='LOGIC:OFFSET component boundary')
+            c.add_argument('--callee-entry',dest='callee_entries',action='append',help='LOGIC:OFFSET cached scan-entry witness')
+            c.add_argument('--max-call-depth',type=int)
     c=sub.add_parser('zmachine-disasm',help=METHODS['zmachine-disasm'])
     c.add_argument('path');c.add_argument('--address',type=lambda s:int(s,0))
     c.add_argument('--max-instructions',type=int,default=40)

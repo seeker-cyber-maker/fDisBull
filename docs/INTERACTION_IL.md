@@ -45,7 +45,10 @@ boolean arithmetic is invalid.
 
 Supported blocks are `set`, `add`, `subtract`, `if` with `then` and `else`
 lists, `require`, `text`, `load_graphic`, `play_sound`, and `click`.
-Conditions are `eq`, `bit_test`, `not`, and `and`. A failed `require` refuses
+Conditions are `eq`, numeric `lt`, `bit_test`, `not`, and `and`. `lt` compares
+mathematical values under their declared signedness; boolean operands are
+invalid. It is an additive primitive used by the direct AGI scalar lifter.
+A failed `require` refuses
 the evaluation. Text resources contain `kind: "text"` and `text`; graphic
 and sound resources contain their `kind` and a `uri`.
 
@@ -73,3 +76,10 @@ source-specific helper that lowers selected Z-machine v3 `set_attr` and
 `clear_attr` instructions. Its caller supplies names and an object-variable
 binding; those names and the runtime correspondence remain claims to verify.
 It is not a general decompiler, complete UDL mapper or UDC.
+
+The [direct AGI module](DECODER_MODULES.md) also lowers supported acyclic scalar
+components into these nodes. Logic calls, source traces and component boundaries
+are recorded in its projection wrapper rather than adding AGI-specific opcodes
+to shared IL. A boundary inside a callee ends the component with the caller
+suspended. Host plans, original-runtime execution and model checks retain their
+separate qualification requirements.
