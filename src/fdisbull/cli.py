@@ -9,6 +9,7 @@ from .output_limits import OutputPolicy, current_output_policy, output_policy_co
 
 AGENT_SKILL_GUIDES = {
     'SKILL.md': 'Start here: investigation technique, cost/reward/confidence and evidence boundaries',
+    'references/reconstruction.md': 'First-use recovery recipe: original-to-UIL-to-target gates, discriminating probes and resumable evidence',
     'references/scenes.md': 'Define scene objects, masks, recognition, readiness and named actions',
     'references/methodology.md': 'Plan evidence, coordinate independent questions, trace causes and screen for interpreters',
     'references/runtime-navigation.md': 'Choose movement, spatial policies, assistance and observation projections',

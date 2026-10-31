@@ -75,10 +75,8 @@ The modeled transition is deliberately preconditioned:
 
 ```text
 require sanitized == true
-if disorder:
-    shield_box = 0
-else:
-    shield_box += shield_delta   # signed i16 semantics
+if not disorder:
+    shield_box += shield_delta   # disorder preserves previously stored shields   # signed i16 semantics
 ```
 
 `sanitized == true` means the caller has already applied the recovered source
@@ -132,7 +130,7 @@ primitive program. Every listed state agrees:
 | wrap-high | `box 32767, delta 1` | `box -32768` | `box -32768` |
 | wrap-low | `box -32768, delta -1` | `box 32767` | `box 32767` |
 | negative-box | `box -5, delta 3` | `box -2` | `box -2` |
-| disorder-zeroes | `box 7, delta 5, disorder` | `box 0` | `box 0` |
+| disorder-preserves-stock | `box 7, delta 5, disorder` | `box 7` | `box 7` |
 | unsanitized-refusal | `box 4, delta 2, sanitized false` | `status: refused` | exit 1, no frame |
 
 `verdict: match` over the six states, with per-case artifact hashes in the
@@ -186,3 +184,21 @@ which the IL carries as evidence rather than as data: the unit table costs are
 verified against Civ1 (40/10/20/20/30/30/20/40/40/40/40/80) and the improvement
 costs against Civ1 (Palace 200, Barracks 40, Granary 60, Temple 40,
 Marketplace 80, Library 80), both divided by ten.
+
+## Original-code correction gate
+
+The former disorder branch zeroed storage instead of the contribution. Its own
+interpreter/native sweep agreed on the wrong rule. That is now corrected, and
+`civ_city_original_compare.py` separately executes the original signed reset
+and accumulation instructions, evaluates UIL, then runs generated ARM64 code.
+All 70 combinations agree, including nonzero stock during disorder, reset
+boundaries, negative deltas and word overflow. Original spans remain unchanged.
+
+```sh
+PYTHONPATH=src:. python examples/civ/civ_city_original_compare.py /private/CIV_UNP.EXE /private/new-original-comparison
+```
+
+These are finite isolated-kernel observations. A city-entry provenance snippet
+and a proof between two authored models do not establish source fidelity.
+See the packaged `references/reconstruction.md` for the repeatable gate and
+`docs/evidence/civ-original-corrections/verification.json` for sanitized results.

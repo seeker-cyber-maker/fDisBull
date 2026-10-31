@@ -24,6 +24,7 @@ REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scrip
                        'src/fdisbull/skills/fdisbull-investigate/SKILL.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/scenes.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/methodology.md',
+                       'src/fdisbull/skills/fdisbull-investigate/references/reconstruction.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/runtime-navigation.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/proofs.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/workflows.md',
@@ -36,6 +37,8 @@ GAMEFAQS_SKILL_FILES = tuple('src/fdisbull/skills/write-gamefaqs-guide/'+name fo
     'references/technical-mechanics.md', 'references/source-examples.md',
 ))
 REQUIRED_SOURCE_FILES += GAMEFAQS_SKILL_FILES
+REQUIRED_SOURCE_FILES += ('examples/civ/civ_exepack.py', 'examples/civ/civ_city_trace.py', 'examples/civ/civ_city_uil.py', 'examples/civ/civ_city_udc_diff.py', 'examples/civ/civ_city_buy_udc.py', 'examples/civ/civ_city_original.py', 'examples/civ/civ_city_original_compare.py', 'examples/civ/civ_city_scene.json', 'examples/udc/civ_production.py')
+REQUIRED_SOURCE_FILES += ("docs/evidence/civ-original-corrections/verification.json",)
 UDC_EVIDENCE_FILES = {
     'docs/evidence/udc-2026-10-29/dino.json',
     'docs/evidence/udc-2026-10-29/zork.json',
@@ -142,3 +145,14 @@ def test_release_allowlists_include_only_the_public_udc_and_output_receipts():
                        if line.startswith('include docs/evidence/output-024/')}
     assert output_receipts == OUTPUT_EVIDENCE_FILES
     assert all((root/path).is_file() for path in OUTPUT_EVIDENCE_FILES)
+
+
+def test_reviewed_recipe_allowlist_rejects_other_examples(tmp_path):
+    check = runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+    archive = tmp_path/'fdisbull-examples-tool.zip'
+    source_archive(archive)
+    assert check(archive) == len(REQUIRED_SOURCE_FILES)
+    with zipfile.ZipFile(archive, 'a') as output:
+        output.writestr('fdisbull-test/examples/unreviewed.py', 'unreviewed input')
+    with pytest.raises(ValueError, match='Excluded directory'):
+        check(archive)

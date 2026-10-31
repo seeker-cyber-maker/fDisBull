@@ -1,6 +1,7 @@
 """Regression coverage for the bounded Civ city UIL/UDC slice."""
 
 import json
+import os
 import platform
 import shutil
 import subprocess
@@ -68,7 +69,7 @@ def test_city_shield_step_preserves_sanitize_and_disorder_boundary():
         },
     )
     assert disorder["status"] == "complete"
-    assert disorder["state"]["$shield_box"] == 0
+    assert disorder["state"]["$shield_box"] == 5
 
     unsanitized = execute_il(
         program,
@@ -94,7 +95,7 @@ def test_city_udc_rejects_non_pinned_source_before_output(tmp_path):
 
 
 NATIVE = sys.platform == "darwin" and platform.machine() == "arm64"
-PINNED_ROOT = Path("build/civ-analysis/CIV_UNP.EXE")
+PINNED_ROOT = Path(os.environ.get("FDISBULL_CIV_UNPACKED", "build/civ-analysis/CIV_UNP.EXE"))
 
 
 @pytest.mark.skipif(
@@ -148,6 +149,6 @@ def test_city_udc_matches_interpreter_across_boundaries(tmp_path):
     by_case = {row["case"]: row for row in receipt["cases"]}
     assert by_case["wrap-high"]["observed"]["frame"]["state"]["$shield_box"] == -32768
     assert by_case["wrap-low"]["observed"]["frame"]["state"]["$shield_box"] == 32767
-    assert by_case["disorder-zeroes"]["observed"]["frame"]["state"]["$shield_box"] == 0
+    assert by_case["disorder-preserves-stock"]["observed"]["frame"]["state"]["$shield_box"] == 7
     refused = by_case["unsanitized-refusal"]["observed"]
     assert refused["returncode"] != 0 and refused["frame"] is None

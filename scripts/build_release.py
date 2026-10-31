@@ -11,6 +11,16 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 ROOT_FILES = ("README.md", "AGENTS.md", "CLAUDE.md", "pyproject.toml", "MANIFEST.in", "player/pyproject.toml")
 DOC_EXAMPLE_FILES = (
+    'examples/civ/civ_exepack.py',
+    'examples/civ/civ_city_trace.py',
+    'examples/civ/civ_city_uil.py',
+    'examples/civ/civ_city_udc_diff.py',
+    'examples/civ/civ_city_buy_udc.py',
+    'examples/civ/civ_city_original.py',
+    'examples/civ/civ_city_original_compare.py',
+    'examples/civ/civ_city_scene.json',
+    'examples/udc/civ_production.py',
+
     "docs/uil-rfcs/0001/README.md",
     "docs/uil-rfcs/0001/check_examples.py",
     "docs/uil-rfcs/0001/commit.js",
@@ -24,6 +34,7 @@ DOC_EXAMPLE_FILES = (
     "docs/uil-rfcs/0002/replay-summary.json",
 )
 SOURCE_PATTERNS = (
+    ("docs/evidence/civ-original-corrections", "verification.json"),
     ("src/fdisbull", "*.py"),
     ("player/fdisbull_player", "*.py"),
     ("src/fdisbull/data", "*.json"),
