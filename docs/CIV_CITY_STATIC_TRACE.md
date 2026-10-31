@@ -189,6 +189,30 @@ price and skips the commit when gold is short:
 7604  2987d6b1        sub [bx-0x4e2a], ax   ; treasury -= price
 ```
 
+### Key dispatch
+
+The compare chain after the buy branch resolves the rest of the documented city
+screen input (Civ64 `SCENES-PLAY` 7.1 lists `A, b, c, i, h, m, v, a, s`):
+
+| key | site | action |
+|---|---|---|
+| `b` | `0x737D` | buy prompt, guard and commit (above) |
+| `c` | `0x7626` | `lcall 0ADE:0421(civ, city)` - the production chooser; result stored at `city+0x70F5`, then the loop exits |
+| `v` | `0x7700` | sets view mode `3` at `0x2496`, then `0x7756`: `push -1; push city; int 3F` entry `0x0013` - the city-view overlay call |
+| `i` | `0x76C7` | sets view mode `0` |
+| `h` | `0x76DA` | next compare in the chain (mode 1 per the tab order) |
+| `m` | `0x76ED` | next compare in the chain (mode 2 per the tab order) |
+| `a` | `0x7785` | not traced |
+| `s` | `0x799E` | not traced |
+
+The mouse CHANGE button reaches the same chooser at `0x727F`
+(`lcall 0ADE:0421`); its result is compared with `0x63` at `0x7294`, which is
+the cancel code.
+
+Crosswalk note: Civ64 names the city view as `O19:0000(city, -1)`. The DOS
+call is an `int 3F` overlay entry `0x0013`, so the overlay-to-segment mapping of
+`O19` is an inference, not a proven identity.
+
 ### Retracted earlier reading
 
 `0x4C00..0x4E03` also ends with `add [bx+0x70fa], ax` and
