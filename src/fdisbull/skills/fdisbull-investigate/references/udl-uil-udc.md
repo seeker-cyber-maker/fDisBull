@@ -1,5 +1,18 @@
 # Source-backed semantics: UDL, UIL and UDC
 
+The separate `fdisbull-memory-uil-1` profile admits fixed unsigned word arenas,
+indexed loads/stores and bounded loops. `store-memory-block-contract`,
+`store-memory-udl-layer` and `select-memory-udl-layers` retain exact program,
+function, source and target identities in the existing immutable database.
+`build-memory-web-block` emits Wasm/WGSL and `build-memory-web-shell` combines
+per-function selections with an explicit canvas/input orchestration plan.
+These methods do not make scalar contracts accept arrays or arbitrary services.
+Qualify original -> memory UIL -> emitted execution separately, then compare
+ordered inputs, carried state and complete frames through the shell. Preserve
+source-assisted versus blind recovery, diagnostic RAM interventions, cursor/font
+projection and clock-adapter limits. See `docs/UDC_MEMORY_BROWSER.md` in a source
+checkout for the bounded contract, ownership rules and Snake reproduction.
+
 The `build-web-block` JSON method emits one canonical, pure selected UIL
 invocation for `wasm32-scalar-1` or `webgpu-wgsl-scalar-1`. Inspect the actual
 tool's `methods` first. Selection target metadata alone does not add a backend.

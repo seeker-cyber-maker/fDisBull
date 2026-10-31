@@ -70,3 +70,11 @@ include examples/recovery/civd_browser_shell.py
 include examples/recovery/web_shell_study.mjs
 include examples/recovery/run_browser_shell.mjs
 include docs/evidence/civd-browser-shell/verification.json
+
+include examples/recovery/snake_model.py
+include examples/recovery/snake_original.py
+include examples/recovery/snake_browser.py
+include examples/recovery/run_snake_browser.mjs
+include examples/recovery/snake_browser_study.mjs
+include tests/memory_shell_checks.mjs
+include docs/evidence/snake-browser/verification.json

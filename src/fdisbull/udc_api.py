@@ -1,5 +1,11 @@
 """Agent JSON surface for persistent snippet and implementation records."""
 METHODS={
+ 'build-memory-web-shell':'Emit an owned canvas and input shell with exact memory selections; selections,plan,initial,destination; build only',
+ 'store-memory-block-contract':'Register a pure bounded word-arena UIL contract; document,[author]',
+ 'store-memory-udl-layer':'Register an exact memory-UIL backing and web target; document,[author]',
+ 'select-memory-udl-layers':'Pin every memory function to an exact layer; name,bindings,program,target,[author]',
+ 'run-memory-udl-selection':'Evaluate one selected memory function atomically; selection,function,words',
+ 'build-memory-web-block':'Emit a selected bounded-memory Wasm/WGSL function; selection,function,destination; build only',
  'build-web-shell':'Build an owned-state browser shell with interchangeable Wasm/WebGPU selections; selections,plan,destination; build only',
  'build-web-block':'Emit WebAssembly/WGSL for one qualified fixed UIL invocation; selection,destination; build only',
  'capture-snippet':'Capture immutable mapped/file spans; name,spans,[version,context,boundary,evidence,author]',
@@ -28,6 +34,15 @@ METHODS={
 
 def invoke(project,method,params):
  from . import udc_layers
+ if method=='build-memory-web-shell':
+  from .udc_memory_shell import build_memory_shell
+  return build_memory_shell(project,**params)
+ if method in ('store-memory-block-contract','store-memory-udl-layer','select-memory-udl-layers','run-memory-udl-selection','build-memory-web-block'):
+  from . import udc_memory_layers
+  functions={'store-memory-block-contract':udc_memory_layers.register_contract,
+    'store-memory-udl-layer':udc_memory_layers.register_layer,'select-memory-udl-layers':udc_memory_layers.select_layers,
+    'run-memory-udl-selection':udc_memory_layers.run_selection,'build-memory-web-block':udc_memory_layers.build_selection}
+  return functions[method](project,**params)
  if method=='build-web-shell':
   from .udc_web_shell import build_web_shell
   return build_web_shell(project,**params)
