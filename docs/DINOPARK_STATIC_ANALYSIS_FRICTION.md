@@ -1,5 +1,11 @@
 # DinoPark analysis friction and retained Z terminal replies
 
+The [caller/filename-producer follow-up](VERIFICATION-DINOPARK-CALLER-PRODUCERS-2026-10-31.md)
+traces 62 more entries to pointer publications, identifies matching dispatch
+consumers for 61 of them, and explains the static mechanisms behind all 41
+previously observed PCs. It retains 97 unresolved caller/producer cases and
+the remaining asset-use limits rather than treating them as dead content.
+
 The [residual-analysis follow-up](VERIFICATION-DINOPARK-RESIDUAL-ANALYSIS-2026-10-31.md)
 implements call-identity and monotone-join fixes, clears all 172 partial jobs,
 and records original-native witnesses and callback publications for 42 of the
