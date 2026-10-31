@@ -1,5 +1,6 @@
 """Agent JSON surface for persistent snippet and implementation records."""
 METHODS={
+ 'build-web-shell':'Build an owned-state browser shell with interchangeable Wasm/WebGPU selections; selections,plan,destination; build only',
  'build-web-block':'Emit WebAssembly/WGSL for one qualified fixed UIL invocation; selection,destination; build only',
  'capture-snippet':'Capture immutable mapped/file spans; name,spans,[version,context,boundary,evidence,author]',
  'snippet-info':'Read a snippet; snippet,[full,include_bytes]',
@@ -27,6 +28,9 @@ METHODS={
 
 def invoke(project,method,params):
  from . import udc_layers
+ if method=='build-web-shell':
+  from .udc_web_shell import build_web_shell
+  return build_web_shell(project,**params)
  if method=='build-web-block':
   from .udc_web import build_web_block
   return build_web_block(project,**params)

@@ -44,6 +44,10 @@ REQUIRED_SOURCE_FILES += ("docs/evidence/civd-food-arm64/verification.json",)
 REQUIRED_SOURCE_FILES += ('src/fdisbull/web_runtime/block.mjs',
     'examples/recovery/civd_food_web.py','examples/recovery/run_web_blocks.mjs',
     'examples/recovery/run_web_browser.mjs','docs/evidence/civd-food-web/verification.json')
+REQUIRED_SOURCE_FILES += ('src/fdisbull/web_runtime/shell.mjs','src/fdisbull/web_runtime/app.mjs',
+    'src/fdisbull/web_runtime/index.html','tests/web_shell_checks.mjs',
+    'examples/recovery/civd_browser_shell.py','examples/recovery/web_shell_study.mjs',
+    'examples/recovery/run_browser_shell.mjs','docs/evidence/civd-browser-shell/verification.json')
 UDC_EVIDENCE_FILES = {
     'docs/evidence/udc-2026-10-29/dino.json',
     'docs/evidence/udc-2026-10-29/zork.json',

@@ -11,6 +11,10 @@ WebGPU an asynchronous compute provider. Game shells, rendering, files, audio,
 browser UI and end-turn scheduling remain outside these profiles. Returned
 values do not automatically commit application state.
 
+The [minimal browser shell](UDC_BROWSER_SHELL.md) adds a separate typed host plan,
+owned record memory, provider selection and guarded asynchronous commits. The
+scalar block profile itself remains pure and build-only.
+
 ## Build a persisted selection
 
 Use a matching checkout/wheel and inspect `methods` before assuming a system
@@ -150,9 +154,10 @@ dispatch is pending tests snapshot ownership.
 
 macOS GNU ELF fixtures reproduce on the unchanged parent: two failed compiler
 probes and 23 setup errors. They remain separate from this backend and Linux CI.
-The next shell step needs services, orchestration, memory/state ownership and
-interruption/revision rules. This tiny food kernel is a fidelity fixture, not
-evidence of a useful GPU speedup.
+The linked browser shell now provides typed record ownership, provider queues
+and guarded commits. General services, orchestration beyond one invocation and
+persistent state remain later boundaries. This tiny food kernel is a fidelity
+fixture, not evidence of a useful GPU speedup.
 
 Primary contracts: [Wasm](https://webassembly.github.io/spec/core/syntax/instructions.html),
 [WGSL](https://www.w3.org/TR/WGSL/), [WebGPU](https://www.w3.org/TR/webgpu/),

@@ -294,6 +294,11 @@ WGSL under the same module UIL. Read [Web UDC profiles](UDC_WEB.md) for target
 names, host ABI and original-backed CivD qualification. Browser/GPU availability
 and application state commits need separate checks.
 
+`build-web-shell` adds an explicit typed record arena and orchestration plan over
+two interchangeable selected blocks. Read [the browser shell](UDC_BROWSER_SHELL.md)
+before binding async results to application state; computation readiness is not
+a commit, and cancellation does not release a submitted GPU job early.
+
 Static decode, authored scene geometry, diagnostic state edits, text
 projections, bounded proofs and live ordinary input are different evidence
 surfaces. Report which one supports each conclusion, with source/version and

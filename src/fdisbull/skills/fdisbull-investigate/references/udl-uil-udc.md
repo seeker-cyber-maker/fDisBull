@@ -11,6 +11,17 @@ application state. Services, revision checks and a complete shell remain a
 separate composition gate. See repository `docs/UDC_WEB.md` for the finite
 original-backed food study and its reproducible private recipe.
 
+`build-web-shell` combines two such persisted selections with a separate typed
+host plan. It requires identical module/contract identities and equal effective
+admission domains. The shell owns record arenas and activation snapshots;
+providers own compute resources. Stage a real result, then validate session,
+entity generation, record revision, view/binding/operation/provider epochs before
+an output-only commit. Readiness does not commit state. Cancelled GPU jobs keep
+their device lease until settlement; replacement work queues, without fallback
+or replay. Borrowed devices remain caller-owned. See `docs/UDC_BROWSER_SHELL.md`
+for the fixed snapshot/invoke/guarded-commit profile, disposal cutoff and source
+qualification; this does not imply general native-shell or whole-game support.
+
 For first use and source-to-model acceptance, follow the
 [repeatable reconstruction recipe](reconstruction.md).
 
