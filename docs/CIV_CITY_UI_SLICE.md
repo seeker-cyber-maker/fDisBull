@@ -172,6 +172,28 @@ insufficient.
    backend supplies a baseline and one controlled display **and** committed
    state change bound to the same city record.
 
+## Z route
+
+The scene is served to the Z text player over the shared IL backend, so the
+recovered transitions can be exercised without a debugger or VGA input:
+
+```bash
+PYTHONPATH=src:player python -m fdisbull_player \
+  --backend-command "python -m fdisbull.il_scenes examples/civ/civ_city_scene.json"
+```
+
+- `activate change` opens the bounded `production-chooser` context; `build
+  settlers` / `build militia` commit unit codes 0 and 1 and close it. The
+  runtime city record confirmed those two codes (`townbuf[0].production` 0 then
+  1).
+- `activate auto` flips the automatic-production flag.
+- `open units` enters the `unit-list` context; `next` / `previous` clamp to
+`unit_count-1` and 0, `select` refuses an empty list, and `exit` stores the
+  cursor as `$city_cursor` (the source `[0x70DC]` store).
+
+The scene remains `partial: true`: unit-list behaviour is source-modelled and
+not yet runtime-exercised, and buy/sell/specialist/rename paths are outside it.
+
 ## Release boundary
 
 This document and `docs/CIV_CITY_UIL_UDC.md` add only a partial scene inventory

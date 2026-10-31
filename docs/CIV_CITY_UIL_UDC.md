@@ -34,9 +34,15 @@ are pure IL state/text transitions, so `ILSceneBackend` can observe and change
 the selected tab without pretending to render VGA pixels.
 
 `partial: true` is REQUIRED. The scene does not load original font/icon/map
-assets, perform text entry, dispatch the production catalog, close a host
+assets, perform text entry, model the full production catalog, close a host
 session, or implement the complete city turn pass. Objects without a binding
 are visible inventory only, not silently executable controls.
+
+Two bounded sub-contexts are executable: `production-chooser` (opened by the
+`CHANGE` control, committing unit codes 0 and 1, matching the runtime record
+read) and `unit-list` (opened by the unit panel, with clamped cursor movement
+and the `[0x70DC]` cursor store). Both are served by the Z text player over the
+shared IL backend; see `docs/CIV_CITY_UI_SLICE.md`.
 
 ## Bounded UDC module
 
