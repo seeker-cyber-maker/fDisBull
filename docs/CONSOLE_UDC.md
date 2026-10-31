@@ -196,3 +196,16 @@ This run qualifies authored programs and one explicit function pattern on the
 two tested cores. Full-ISA lifting, arbitrary Genesis/NES game conversion,
 graphics/audio conversion, mapper families, other console revisions, real
 hardware timing and full semantic equivalence remain unqualified.
+
+## Procedural full-game profile
+
+The separate [Miniplanets full-game profile](MINIPLANETS_FULL_GAME.md) adds
+typed procedures, mutable arrays, signed/32-bit arithmetic and external source
+regions through `fdisbull-game-il-2`. The existing profiles above retain their
+original contract. `rom-game-lift` exports the reviewed source-bound program;
+the same `console-udc` interface selects its MMC3 NES backend using the document
+version plus explicit `--region` and `--cc65-root` inputs. It accepts qualified
+baseline/efficient procedure bodies through the same ABI, including reviewed
+mixes, and refuses other source rewrites. Its finite original/UIL/NES checks,
+audio adaptation and real-time measurements are separate from the small block
+profile's Z3 claims.

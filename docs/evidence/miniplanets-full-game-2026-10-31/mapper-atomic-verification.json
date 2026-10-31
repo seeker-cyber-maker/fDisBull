@@ -1,0 +1,68 @@
+{
+  "format": "fdisbull-nes-mapper-atomic-check-1",
+  "passed": true,
+  "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+  "core_name": "FCEUmm",
+  "core_version": "(SVN) ac0d00a",
+  "checker_sha256": "6b9f59515817cca02ec608ac439f8d735812b2064328f2bee45745d11b32c614",
+  "support_sha256": "761a5313f795db574d5ae86d2691a898ad771930d297307705328ce40731cbe8",
+  "source_hashes": {
+    "before": "7ce5c1df5bba5c75f7eba9040e735c978e9a122e447fc3abd9c5aefd33255c65",
+    "after": "c2262923e036edc060a45709b6f830a97f93eb05b7ad698b41afbe7b4c14e025"
+  },
+  "helper_body_hashes": {
+    "before": {
+      "_select_data": "4e33f27eb0ad2e7fe38dc19de5963fb85c8d7d1b9c84d1512955e97a4e30df04",
+      "select_code": "3c4cdc14f81845196a0722db5800eef6661edafdde26d5761cffa31ee7af5657"
+    },
+    "after": {
+      "_select_data": "7078d029d962979e9b928974403e4749d91125aeadd6c06c8e0d1ff85d3e7612",
+      "select_code": "853603a23d2948dbf261014e033ed4a842e08097f133ae8206b4cd5826adfcc8"
+    }
+  },
+  "toolchain": {
+    "ca65": "c690abcad36611fb66c7368ad6bd5a8462bcba683ab03b2e9023d6792ed645c7",
+    "ld65": "6fc158543f86712729d160d5c951cbf2e3b31c05ea94df15a3164e8c8bd61c68"
+  },
+  "cases": 32,
+  "fixed_cases_passed": 16,
+  "fixed_cases": 16,
+  "forwarding_observer_neutral_cases": 32,
+  "before_counterexamples": [
+    {
+      "selector": "code",
+      "incoming_I": 0,
+      "boundary": "bank_shadow",
+      "physical_bank_mismatches": 1,
+      "completed": true
+    },
+    {
+      "selector": "data",
+      "incoming_I": 0,
+      "boundary": "bank_shadow",
+      "physical_bank_mismatches": 1,
+      "completed": true
+    }
+  ],
+  "injection_boundaries": [
+    "selector shadow store",
+    "selector hardware store",
+    "bank shadow store",
+    "bank hardware store"
+  ],
+  "incoming_I_values": [
+    0,
+    1
+  ],
+  "selectors": [
+    "code",
+    "data"
+  ],
+  "inputs_unchanged": true,
+  "method": "Exact helper bodies assembled into authored asset-free MMC3 cartridges. Chained original BWrite handlers always execute; the observer asserts the actual CPU external IRQ line immediately after the chosen store. Native IRQ code reads physical-bank sentinels. Identical initial serialized states compare unhooked execution with forwarding-only observers.",
+  "claim": "exact helper instructions in authored MMC3 cartridges; actual pending IRQs and native physical-bank sentinels; no original game assets",
+  "limits": [
+    "These authored selectors isolate transaction safety and I-flag preservation. The full game requires its separate normal runtime and audio gates.",
+    "Generated cartridges, full startup-source copies and raw write traces remain private."
+  ]
+}

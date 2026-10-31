@@ -1,5 +1,10 @@
 # Playable Miniplanets Stage 1-1 on NES
 
+This is the retained mapper-0 first-level experiment. The separate
+[full-game profile](MINIPLANETS_FULL_GAME.md) adds all stages, score, lives,
+timer, audio and a globe presentation through procedural UIL and MMC3.
+Its scope and measurements do not replace this experiment's frozen receipts.
+
 The source-bound console pipeline now produces a playable NES version of the
 first level's logical gameplay. The original map, movement and collision data
 come from the official Miniplanets REMIX REV04 cartridge. Native 6502 code runs

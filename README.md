@@ -246,10 +246,18 @@ program into runnable cartridges. Both have been checked in real emulator
 cores, including one bounded Genesis machine-code → UIL → NES experiment.
 See [console UDC](docs/CONSOLE_UDC.md) for the supported profile and results.
 
-A source-bound Miniplanets module also builds a playable first level on NES,
-including movement, collisions, jumping, key collection and a goal. The flat NES
-presentation is adapted; logical gameplay is compared with the original Genesis
-code and a normal playthrough. See the [level build and controls](docs/MINIPLANETS_NES_LEVEL.md).
+A source-bound Miniplanets profile includes all 55 stages, moving hazards and
+terrain, score, lives, timer, menus, ending and an NES soundtrack arrangement.
+Its NES presentation uses the original globe projection with adapted graphics.
+Game rules are compared with original Genesis instructions and native NES play;
+the documentation records the tested scope and measured running speed.
+The full-game cartridge remains experimental: measured gameplay ranges from
+about 32 updates per second on a light stage to 10–20 on busy stages, with
+adapted graphics and sound. All 55 stages load; natural completion of every
+stage has not been verified.
+See the [full-game build and controls](docs/MINIPLANETS_FULL_GAME.md).
+The earlier [flat first-level experiment](docs/MINIPLANETS_NES_LEVEL.md) remains
+available with its separate contract and results.
 
 ## The bounded UDC pipeline
 

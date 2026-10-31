@@ -83,6 +83,43 @@ REQUIRED_SOURCE_FILES += ("docs/evidence/genesis-rom-route-2026-10-30/verificati
 REQUIRED_SOURCE_FILES += ("docs/evidence/miniplanets-nes-level-2026-10-31/verification.json", "scripts/check_miniplanets_native.py", "scripts/verify_miniplanets_level.py")
 REQUIRED_SOURCE_FILES += ROM_ASM_RESOURCES
 REQUIRED_SOURCE_FILES += ("docs/evidence/console-udc-2026-10-30/verification.json", "src/fdisbull/data/console-udc-demo.json")
+CONSOLE_GAME_RESOURCES = tuple('src/fdisbull/' + name for name in (
+    'game_il.py', 'miniplanets_audio.py', 'udl_miniplanets_full.py', 'udc_nes_game.py',
+    'data/miniplanets_full_contract.json',
+    'game_sources/miniplanets_full.c', 'game_sources/miniplanets_actors.c',
+    'game_sources/miniplanets_audio_nes.c', 'game_sources/nes_globe_renderer.c',
+    'game_sources/nes_game_platform.c', 'game_sources/nes_game_start.s',
+    'game_sources/nes_audio_clock.c',
+    'game_sources/miniplanets_audio_fast.s', 'game_sources/nes_globe_fast.s',
+    'game_sources/nes_game_fast.s', 'game_sources/LICENSE.txt',
+))
+CONSOLE_GAME_HELPERS = (
+    'scripts/check_console_udc.py', 'scripts/check_miniplanets_common_native.py',
+    'scripts/check_miniplanets_full_flow.py', 'scripts/check_miniplanets_audio.py',
+    'scripts/check_miniplanets_nes_game.py',
+    'scripts/check_miniplanets_nes_audio.py', 'scripts/check_miniplanets_nes_timing.py',
+    'scripts/capture_miniplanets_audio.py', 'scripts/check_nes_audio_clock.py',
+    'scripts/check_nes_mapper_atomic.py',
+    'scripts/check_native_array_offsets.py',
+    'scripts/check_miniplanets_audio_fast.py',
+    'scripts/check_miniplanets_globe_fast.py', 'scripts/check_miniplanets_game_fast.py',
+    'tests/test_game_il.py', 'tests/test_miniplanets_full.py',
+    'tests/test_console_udc_host.py', 'tests/test_miniplanets_globe_assets.py',
+    'tests/test_miniplanets_nes_game.py', 'tests/test_nes_audio_clock.py',
+    'tests/test_miniplanets_nes_timing.py', 'tests/test_miniplanets_source_capture.py',
+    'tests/test_nes_game_resources.py',
+    'tests/test_miniplanets_audio.py',
+)
+CONSOLE_GAME_EVIDENCE = tuple('docs/evidence/miniplanets-full-game-2026-10-31/' + name for name in (
+    'actors.json', 'common.json', 'reference-flow.json', 'projection.json', 'renderer-fast.json',
+    'audio-clock-verification.json', 'audio-verification.json', 'phase-intrinsic.json',
+    'array-offsets.json', 'profile-r12.json', 'domain.json',
+    'profile-r13.json', 'bank-race.json', 'audio-tempo-protocol-v2.json',
+    'normal-audio-tempo.json', 'nes-verification.json',
+    'mapper-atomic-verification.json', 'source-review.json', 'lowering-exploration.json',
+))
+CONSOLE_GAME_EVIDENCE += ('docs/MINIPLANETS_FULL_GAME.md',)
+REQUIRED_SOURCE_FILES += CONSOLE_GAME_RESOURCES + CONSOLE_GAME_HELPERS + CONSOLE_GAME_EVIDENCE
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):
@@ -120,6 +157,44 @@ def test_distribution_check_requires_methodology_reference(tmp_path):
     methodology='src/fdisbull/skills/fdisbull-investigate/references/methodology.md'
     source_archive(archive,tuple(path for path in REQUIRED_SOURCE_FILES if path!=methodology))
     with pytest.raises(ValueError,match='methodology[.]md'):
+        check(archive)
+
+
+@pytest.mark.parametrize('required', CONSOLE_GAME_RESOURCES + CONSOLE_GAME_HELPERS + CONSOLE_GAME_EVIDENCE)
+def test_distribution_requires_complete_console_compiler_and_evidence(tmp_path, required):
+    check = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'scripts/check_dist.py'))['check_archive']
+    archive = tmp_path / 'fdisbull-missing-console.zip'
+    source_archive(archive, tuple(path for path in REQUIRED_SOURCE_FILES if path != required))
+    with pytest.raises(ValueError, match=re.escape(required)):
+        check(archive)
+
+
+@pytest.mark.parametrize('required', CONSOLE_GAME_RESOURCES)
+def test_core_wheel_requires_installed_console_compiler_sources(tmp_path, required):
+    checker = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'scripts/check_dist.py'))
+    resources = checker['REQUIRED_PE_RESOURCES'] | checker['REQUIRED_KNOWLEDGE_RESOURCES'] | checker['REQUIRED_CONSOLE_RESOURCES']
+    missing = required.removeprefix('src/')
+    archive = tmp_path / 'fdisbull-test.whl'
+    with zipfile.ZipFile(archive, 'w') as output:
+        output.writestr('fdisbull-test.dist-info/METADATA', 'Name: fdisbull\n')
+        output.writestr('fdisbull/__init__.py', '')
+        for name in resources:
+            path = 'fdisbull/' + name
+            if path != missing:
+                output.writestr(path, '')
+    with pytest.raises(ValueError, match=re.escape(missing)):
+        checker['check_archive'](archive)
+
+
+@pytest.mark.parametrize('suffix', ['nes', 'rom', 'gen', 'smd', 'iso', 'cue', 'wav', 'pcm',
+                                    'lut', '4bpp', 'slz', 'sona', 'swav', 'spat', 'tfi', 'chr'])
+def test_distribution_rejects_console_roms_and_derived_assets(tmp_path, suffix):
+    check = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'scripts/check_dist.py'))['check_archive']
+    archive = tmp_path / 'fdisbull-private-asset.zip'
+    source_archive(archive)
+    with zipfile.ZipFile(archive, 'a') as output:
+        output.writestr('fdisbull-test/src/fdisbull/game_sources/private.' + suffix, 'retained private bytes')
+    with pytest.raises(ValueError, match='Excluded binary/data file'):
         check(archive)
 
 
@@ -173,3 +248,5 @@ def test_release_allowlists_include_only_the_public_udc_and_output_receipts():
                        if line.startswith('include docs/evidence/output-024/')}
     assert output_receipts == OUTPUT_EVIDENCE_FILES
     assert all((root/path).is_file() for path in OUTPUT_EVIDENCE_FILES)
+    assert set(CONSOLE_GAME_RESOURCES + CONSOLE_GAME_HELPERS + CONSOLE_GAME_EVIDENCE) <= selected
+    assert all((root / path).is_file() for path in CONSOLE_GAME_RESOURCES + CONSOLE_GAME_HELPERS + CONSOLE_GAME_EVIDENCE)

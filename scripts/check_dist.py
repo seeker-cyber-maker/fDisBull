@@ -11,6 +11,8 @@ import zipfile
 
 EXCLUDED_DIRECTORIES = {"examples", "history", "experimental", "build", "dist", ".git", "__pycache__"}
 EXCLUDED_SUFFIXES = {".fdb", ".db", ".sqlite", ".sqlite3", ".sav", ".state", ".exe", ".com", ".dll", ".bin", ".dat", ".so", ".dylib", ".o", ".pyc"}
+EXCLUDED_SUFFIXES |= {".nes", ".rom", ".gen", ".smd", ".iso", ".cue", ".wav", ".pcm",
+                      ".lut", ".4bpp", ".slz", ".sona", ".swav", ".spat", ".tfi", ".chr"}
 PLAYER_MODULES = {"__init__.py", "__main__.py", "player.py", "runtime.py", "live.py", "word16.py",
                   "game_intents.py", "intent_runtime.py", "batch.py"}
 REQUIRED_PLAYER_SOURCE = {"player/pyproject.toml"} | {"player/fdisbull_player/" + name for name in PLAYER_MODULES}
@@ -37,6 +39,37 @@ REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/genesis-rom-route-2026-10-30/verific
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/miniplanets-nes-level-2026-10-31/verification.json")
 REQUIRED_TEST_HELPERS |= {"scripts/check_miniplanets_native.py", "scripts/verify_miniplanets_level.py"}
 REQUIRED_TEST_HELPERS |= {"scripts/probe_genesis_function.py", "scripts/verify_genesis_rom_route.py"}
+REQUIRED_TEST_HELPERS |= {"scripts/check_console_udc.py", "scripts/check_miniplanets_common_native.py",
+                         "scripts/check_miniplanets_full_flow.py", "scripts/check_miniplanets_audio.py",
+                         "scripts/check_miniplanets_nes_game.py",
+                         "scripts/check_miniplanets_nes_audio.py", "scripts/check_miniplanets_nes_timing.py",
+                         "scripts/capture_miniplanets_audio.py", "scripts/check_nes_audio_clock.py",
+                         "scripts/check_nes_mapper_atomic.py",
+                         "scripts/check_native_array_offsets.py",
+                         "scripts/check_miniplanets_audio_fast.py",
+                         "scripts/check_miniplanets_globe_fast.py", "scripts/check_miniplanets_game_fast.py",
+                         "tests/test_game_il.py", "tests/test_miniplanets_full.py",
+                         "tests/test_console_udc_host.py", "tests/test_miniplanets_globe_assets.py",
+                         "tests/test_miniplanets_nes_game.py", "tests/test_nes_audio_clock.py",
+                         "tests/test_miniplanets_nes_timing.py", "tests/test_miniplanets_source_capture.py",
+                         "tests/test_nes_game_resources.py",
+                         "tests/test_miniplanets_audio.py"}
+REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/miniplanets-full-game-2026-10-31/" + name for name in
+                            ("actors.json", "common.json", "reference-flow.json", "projection.json",
+                             "audio-clock-verification.json", "audio-verification.json",
+                             "phase-intrinsic.json", "array-offsets.json", "profile-r12.json", "domain.json",
+                             "profile-r13.json", "bank-race.json", "audio-tempo-protocol-v2.json",
+                             "normal-audio-tempo.json", "nes-verification.json",
+                             "mapper-atomic-verification.json", "source-review.json",
+                             "lowering-exploration.json")}
+REQUIRED_SOURCE_EVIDENCE |= {"docs/MINIPLANETS_FULL_GAME.md",
+                            "docs/evidence/miniplanets-full-game-2026-10-31/renderer-fast.json"}
+REQUIRED_CONSOLE_RESOURCES = {"game_il.py", "miniplanets_audio.py", "udl_miniplanets_full.py",
+                              "udc_nes_game.py", "data/miniplanets_full_contract.json"}
+REQUIRED_CONSOLE_RESOURCES |= {"game_sources/" + name for name in
+                              ("miniplanets_full.c", "miniplanets_actors.c", "miniplanets_audio_nes.c",
+                               "nes_globe_renderer.c", "nes_game_platform.c", "nes_game_start.s", "nes_audio_clock.c",
+                               "miniplanets_audio_fast.s", "nes_globe_fast.s", "nes_game_fast.s", "LICENSE.txt")}
 REQUIRED_PE_RESOURCES = {"wine_guest/agent.c", "wine_guest/init.sh", "wine_guest/broker.py", "wine_guest/selftest.c"}
 REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/broker.py", "ida_guest/SDK-LICENSE.txt", "ida_wire.py", "ida_remote.py", "ida_trace.py"}
 REQUIRED_PE_RESOURCES |= {"dos_guest/__init__.py", "dos_guest/init.sh", "dos_guest/broker.py", "dos_qemu.py", "dos_runtime.py", "qemu_machine.py", "gdb_rpc.py", "guest_assets.py"}
@@ -114,6 +147,9 @@ def check_archive(path: Path) -> int:
                 raise ValueError(f"Wheel is missing PE backend sources: {sorted(missing)}")
             missing={"fdisbull/"+name for name in REQUIRED_KNOWLEDGE_RESOURCES}-set(names)
             if missing:raise ValueError(f"Wheel is missing DOS analysis resources: {sorted(missing)}")
+            missing = {"fdisbull/" + name for name in REQUIRED_CONSOLE_RESOURCES} - set(names)
+            if missing:
+                raise ValueError(f"Wheel is missing console compiler resources: {sorted(missing)}")
         else:
             raise ValueError(f"Wheel contains unexpected package or metadata roots: {sorted(roots)}")
     else:
@@ -124,6 +160,7 @@ def check_archive(path: Path) -> int:
         required = REQUIRED_TEST_HELPERS | REQUIRED_PLAYER_SOURCE | {"src/fdisbull/__init__.py", "pyproject.toml", "tests/wine_gui_fixture.c"}
         required |= {"src/fdisbull/" + name for name in REQUIRED_PE_RESOURCES}
         required |= {"src/fdisbull/" + name for name in REQUIRED_KNOWLEDGE_RESOURCES}
+        required |= {"src/fdisbull/" + name for name in REQUIRED_CONSOLE_RESOURCES}
         required |= {"AGENTS.md", "CLAUDE.md", "docs/AGENT_QUICKSTART.md"}
         required |= {"scripts/check_agent_skill.py"}
         required |= REQUIRED_SOURCE_EVIDENCE

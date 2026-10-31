@@ -1,0 +1,76 @@
+{
+  "format": "miniplanets-native-bank-publication-counterexample-1",
+  "status": "observed-defect",
+  "affected_artifact": "full-native-build-r13",
+  "cartridge_sha256": "bce5c3924c398e89d10e85a0da5bcb3715cb89b1cf19b018facc833c716d1d97",
+  "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+  "stage_index": 44,
+  "host_frame": 793,
+  "observer": "A C observer wraps original core ROM-read and save-RAM-write callbacks, forwarding each original callback exactly once; no core binary or cartridge edits.",
+  "observer_source_sha256": "f9501e84aa34d5e91261edfe60e40dc0a16aa0477c4861583065821baf198335",
+  "observer_binary_sha256": "f61edc503515e6751fd6cb4ca1a3fd60a99b3e6b6ac5ddb0b6259d7a43858bb7",
+  "observer_host_sha256": "902942f28e3de7b0afdb8481f9e1d45a0b48eaae9c411d5bad9ac87a723b72d2",
+  "neutrality_frames": 3301,
+  "neutrality": {
+    "rom_sha256": true,
+    "core_sha256": true,
+    "ram_trace_sha256": true,
+    "frame_rgb_sha256": true,
+    "system_ram_sha256": true,
+    "save_ram_sha256": true,
+    "state_sha256": true,
+    "pcm": true
+  },
+  "trace_rows": 78870,
+  "trace_sha256": "abcf9f1289a94bb78d0b6d7b60ae2c2dc846f3af6c845fccb1831a7683785fdc",
+  "private_counterexample_sha256": "34b4d6186211b2200477e749ffc84debad37ff1d99ff48742e9ab529a5ecf328",
+  "hardware_stack_min_observed": 186,
+  "witness": [
+    {
+      "pc": 62434,
+      "event": "Main select_code publishes shadow bank1 to2."
+    },
+    {
+      "pc": 60062,
+      "event": "IRQ begins before the following physical mapper-register write at0xF3E5."
+    },
+    {
+      "pc": 62460,
+      "event": "The same-bank fast path trusts shadow bank2 and skips selecting it physically."
+    },
+    {
+      "pc": 36851,
+      "event": "The core fetches an opcode from physical old bank1 rather than the expected audio_tick entry in bank2; the call returns without incrementing audio service/tick counters."
+    },
+    {
+      "pc": 62221,
+      "event": "The scheduler nonetheless commits completed slot1508 while service entry count stays1507."
+    }
+  ],
+  "conclusion": "The shadow bank and mapper register must be published atomically with respect to IRQ. Reordering alone merely reverses which half-state can be observed.",
+  "scope": "One fully reproduced native platform race. The logical game source and UIL AST were unchanged; all earlier partial/failed tempo receipts are preserved.",
+  "fix_verification": {
+    "artifact": "full-native-build-r14",
+    "cartridge_sha256": "aecdb39cb4b112de6de64069aab8deb397640cf684ac6942cb4c8e79ac48663e",
+    "status": "passed-bounded-regression",
+    "neutrality_frames": 3301,
+    "neutrality": {
+      "rom_sha256": true,
+      "core_sha256": true,
+      "frame_rgb_sha256": true,
+      "system_ram_sha256": true,
+      "save_ram_sha256": true,
+      "state_sha256": true,
+      "pcm": true,
+      "every_shared_ram_watch": true
+    },
+    "trace_rows": 78850,
+    "trace_sha256": "257a9177a6e0b7272e5ecbd792cb8f6cbdb1cae79261c90ab4cddb13dbcd189d",
+    "hardware_stack_min_observed": 183,
+    "audio_entry_fetches": 15,
+    "wrong_audio_entry_opcodes": 0,
+    "bank_shadow_writes_observed": 234,
+    "unmasked_bank_shadow_writes": 0,
+    "scope": "Neutral original-core observation over the old failure window; exhaustive authored interrupt-injection qualification is a separate receipt."
+  }
+}

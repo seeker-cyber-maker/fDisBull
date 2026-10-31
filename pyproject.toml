@@ -10,9 +10,10 @@ requires-python = ">=3.12"
 dependencies = ["iced-x86==1.21.0", "capstone==5.0.9", "lief==1.0.0", "Pillow>=10.4,<13"]
 
 [project.optional-dependencies]
-test = ["pytest>=8,<10", "setuptools>=68", "dnfile==0.18.0", "dncil==1.0.2", "z3-solver==5.3.2.0"]
+test = ["pytest>=8,<10", "setuptools>=68", "dnfile==0.18.0", "dncil==1.0.2", "z3-solver==5.3.2.0", "pycparser==3.0"]
 proof = ["z3-solver==5.3.2.0"]
 managed = ["dnfile==0.18.0", "dncil==1.0.2"]
+console = ["pycparser==3.0"]
 
 [project.scripts]
 fdisbull = "fdisbull.cli:main"
@@ -25,4 +26,4 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 
 [tool.setuptools.package-data]
-fdisbull = ["wine_guest/*.c", "wine_guest/*.sh", "wine_guest/*.py", "ida_guest/*.c", "ida_guest/*.sh", "ida_guest/*.py", "ida_guest/SDK-LICENSE.txt", "dos_guest/*.sh", "dos_guest/*.py", "ghidra_scripts/*.java", "data/*.json", "data/*.txt", "skills/*/*.md", "skills/*/references/*.md"]
+fdisbull = ["wine_guest/*.c", "wine_guest/*.sh", "wine_guest/*.py", "ida_guest/*.c", "ida_guest/*.sh", "ida_guest/*.py", "ida_guest/SDK-LICENSE.txt", "dos_guest/*.sh", "dos_guest/*.py", "ghidra_scripts/*.java", "game_sources/*.c", "game_sources/*.s", "game_sources/*.cfg", "game_sources/*.txt", "data/*.json", "data/*.txt", "skills/*/*.md", "skills/*/references/*.md"]

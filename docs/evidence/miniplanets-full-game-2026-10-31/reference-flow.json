@@ -1,0 +1,743 @@
+{
+  "format": "miniplanets-full-reference-flow-1",
+  "status": "passed",
+  "source_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+  "program_sha256": "5a899bf1fd14f37aec6b8028a1338b5482b689b2b88ee439388e9ef0fdaf4e05",
+  "tree_sha256": "4dedfae8da10f4cb137572e9c65e971c1b84a0fee8f25d12386a4a6480cb023c",
+  "source_hashes": {
+    "src/fdisbull/game_sources/miniplanets_full.c": "5d0e171b074b784887df27e06ca122cb99147fc13d8fcae84724bd526017bc58",
+    "src/fdisbull/game_sources/miniplanets_actors.c": "62380335e51cb08159f34507993961e37cc2f60a7d724cca6567072e1b6e642b",
+    "src/fdisbull/game_il.py": "bffa76d822c3bff6947eda8631c672c215a50ee406575d416f86a9b13c7c07ac",
+    "src/fdisbull/udl_miniplanets_full.py": "77e25655ca0ddfa4800e20b458186e6523c241054a495dc1677e978c8fe8876e",
+    "scripts/check_miniplanets_full_flow.py": "5b242aa04f351062223095547d8524124bacc9b7322fc6bbf9f0bd173234b36b"
+  },
+  "stages": [
+    {
+      "index": 0,
+      "name_bcd": 17,
+      "original_objects": 1,
+      "keys": 1,
+      "map_sha256": "fa767737abf35837999c3fe79e23d12ca34602a2fe481d7e694832014e8fdf00",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 1,
+      "name_bcd": 18,
+      "original_objects": 2,
+      "keys": 2,
+      "map_sha256": "b49eef286fd53a2000ac98d630de8ae56975291a45ff89b79aebaafb03657982",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 2,
+      "name_bcd": 19,
+      "original_objects": 4,
+      "keys": 2,
+      "map_sha256": "c41bd8a2e0b387e2734dde3c0ac1c3930c70591fb0e9ce87f7b86ea08c30366e",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 3,
+      "name_bcd": 20,
+      "original_objects": 6,
+      "keys": 2,
+      "map_sha256": "a2556995eb0be49bc4748e815282c5d49b1683de7bbdda33974a3072a4cb96a0",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 4,
+      "name_bcd": 21,
+      "original_objects": 4,
+      "keys": 1,
+      "map_sha256": "7e789b58fe366f0265ed9c53ce208f1d73cef6df1a034a25127695dd8d51ea40",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 5,
+      "name_bcd": 22,
+      "original_objects": 4,
+      "keys": 1,
+      "map_sha256": "9e96f628d9a78a06bca5af7e55c9e0839a1ac77bab8942c0631c6b59cc725309",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 6,
+      "name_bcd": 23,
+      "original_objects": 4,
+      "keys": 1,
+      "map_sha256": "61b11b251c4bd565f35f096c5721f42545fc80b2111d187bff3b1eddce5b92ab",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 7,
+      "name_bcd": 24,
+      "original_objects": 7,
+      "keys": 1,
+      "map_sha256": "d8db53eae2bf11afde103e93a4629a35868712e66e55b0b3d6d43e83b496fda8",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 8,
+      "name_bcd": 25,
+      "original_objects": 13,
+      "keys": 8,
+      "map_sha256": "feb4983382710631d446a27302ffa4d914ca5f36446699adde6e1406982db3a5",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 9,
+      "name_bcd": 33,
+      "original_objects": 2,
+      "keys": 2,
+      "map_sha256": "0ed5186bc2bc156a00273eb9acee6fcbebd330d9a16fcea76b991e6392c124fe",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 10,
+      "name_bcd": 34,
+      "original_objects": 3,
+      "keys": 3,
+      "map_sha256": "8d20e691c590dad40b3c12796b606eed5ea6403542dea76a331eb2de70704ce0",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 11,
+      "name_bcd": 35,
+      "original_objects": 2,
+      "keys": 2,
+      "map_sha256": "f5b5e2f5fae1218e9d4dcfebfae7c100f463ef067e8c3609b241c67a7a264ec7",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 12,
+      "name_bcd": 36,
+      "original_objects": 1,
+      "keys": 1,
+      "map_sha256": "e0e810e8228b7363dcc9dc866d0e9b0afa2cd4ad44cdde30812c47bfd9004ae9",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 13,
+      "name_bcd": 37,
+      "original_objects": 2,
+      "keys": 2,
+      "map_sha256": "23a367c7bb51d1c0df4d10fef5f287d349bb6c28290e9633321e50c1602332f4",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 14,
+      "name_bcd": 38,
+      "original_objects": 1,
+      "keys": 1,
+      "map_sha256": "3dcedf8ec678a277b25c767a16f9c1966726d018b96f26a1057719da52a742f6",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 15,
+      "name_bcd": 39,
+      "original_objects": 2,
+      "keys": 2,
+      "map_sha256": "e668bb99e8a8a05c4c55d8e8a15be5b99a20fb4516ace2bafe731eaec26cb995",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 16,
+      "name_bcd": 40,
+      "original_objects": 8,
+      "keys": 4,
+      "map_sha256": "8154c56890caba0b5096082322b59d2d2606430930e58d2b27ea1f41c89d9e79",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 17,
+      "name_bcd": 41,
+      "original_objects": 7,
+      "keys": 6,
+      "map_sha256": "d4761a345c962cd8dae1b093358afa5c263b01a2cf71cc89ff601c45c4c55ec0",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 18,
+      "name_bcd": 49,
+      "original_objects": 2,
+      "keys": 2,
+      "map_sha256": "8824ce3d723696b4cfff70e9246e2dc235313320d3945d244f86a76d837f8ae9",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 19,
+      "name_bcd": 50,
+      "original_objects": 2,
+      "keys": 2,
+      "map_sha256": "2b707edb6737ef10be79c878b9f38f2850014494fe75c6f77533d5e905b35b0e",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 20,
+      "name_bcd": 51,
+      "original_objects": 2,
+      "keys": 2,
+      "map_sha256": "143b8363458e95b93a149fcffb7cfee1414adfdf780640427742f77aabe65cee",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 21,
+      "name_bcd": 52,
+      "original_objects": 3,
+      "keys": 3,
+      "map_sha256": "8684871edca6d3219bc4bd1ffbf93329ff67bd1a1e28f70caf74f889d4662402",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 22,
+      "name_bcd": 53,
+      "original_objects": 22,
+      "keys": 2,
+      "map_sha256": "a2cb07567aa6280b47a1e1ba6eada07d40d7e82109a3ba6c61a0ffed5b0878ec",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 23,
+      "name_bcd": 54,
+      "original_objects": 10,
+      "keys": 2,
+      "map_sha256": "f07535384b6960517d2a11b1b5626c2489e36534f64efff4bb35e16bd2485969",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 24,
+      "name_bcd": 55,
+      "original_objects": 10,
+      "keys": 2,
+      "map_sha256": "7acbec193f0514270f6b88cdcfc96381c73f3802b6193b44eb5b81765024299d",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 25,
+      "name_bcd": 56,
+      "original_objects": 6,
+      "keys": 1,
+      "map_sha256": "3628605c84134ed03099b1613218ecbc1c85391bcf576d16214830e4bae533e7",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 26,
+      "name_bcd": 57,
+      "original_objects": 20,
+      "keys": 9,
+      "map_sha256": "ac3106a7856a5361580cbe57017d9e85bdf32c1b6689687139d0f18764dd2b7f",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 27,
+      "name_bcd": 65,
+      "original_objects": 4,
+      "keys": 2,
+      "map_sha256": "c877fa057e76f2a0cf7cb0e6de0ec398a2a5973d662b7019d395f5a2047242f3",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 28,
+      "name_bcd": 66,
+      "original_objects": 12,
+      "keys": 4,
+      "map_sha256": "24e6ea36b64b466e5f99a55f954cc3ac4a9d6f3bc344e66f1b21166a59ccc111",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 29,
+      "name_bcd": 67,
+      "original_objects": 6,
+      "keys": 2,
+      "map_sha256": "c7039c431207b327df64fd98f0da90e26ba39bbe528a2a92926b066fa5d20ed8",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 30,
+      "name_bcd": 68,
+      "original_objects": 10,
+      "keys": 2,
+      "map_sha256": "016e4025bb292e0bfb5373598c19978be9d5f3da829c91a70e16cb8b7eb7b9aa",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 31,
+      "name_bcd": 69,
+      "original_objects": 12,
+      "keys": 4,
+      "map_sha256": "7f5dd6bbc3dc7f3e7f0313bae656e10dfd71fe0644369e9e5f16a3dbc54a4088",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 32,
+      "name_bcd": 70,
+      "original_objects": 20,
+      "keys": 4,
+      "map_sha256": "370715f1c6110a43733386df2f31838fe75f79305fbaad01ce26696b581ba269",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 33,
+      "name_bcd": 71,
+      "original_objects": 16,
+      "keys": 4,
+      "map_sha256": "19deebf36b8ed16c8ac993f7f28e74bb238d50ec4f83b63907e278f9e4717caa",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 34,
+      "name_bcd": 72,
+      "original_objects": 17,
+      "keys": 4,
+      "map_sha256": "1038883e2b19f6ba2794b9fc161e3b0d95418613d6caa7bbc9153a959bcf92b2",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 35,
+      "name_bcd": 73,
+      "original_objects": 23,
+      "keys": 6,
+      "map_sha256": "9093155a369412074e1d6d07764a68ba615a8ef23b868e39ddd4b041be63eac0",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 36,
+      "name_bcd": 81,
+      "original_objects": 3,
+      "keys": 1,
+      "map_sha256": "516094a33211331395bcce6e979967efd089e74f6b4299be78b7869d30851646",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 37,
+      "name_bcd": 82,
+      "original_objects": 7,
+      "keys": 1,
+      "map_sha256": "d1892da459ed9c60a859a047fad4369860e6cb1897861f6af8671922c3fcee7b",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 38,
+      "name_bcd": 83,
+      "original_objects": 4,
+      "keys": 4,
+      "map_sha256": "957b79b1d97fdcca2647ffa6b7806cfbb9f9ea95b0d9bfe51142ead892aee87b",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 39,
+      "name_bcd": 84,
+      "original_objects": 5,
+      "keys": 2,
+      "map_sha256": "8bd9cda010dbaccb526fdf9bd93b10505b7be09a646fda1313983b3779607b3d",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 40,
+      "name_bcd": 85,
+      "original_objects": 10,
+      "keys": 2,
+      "map_sha256": "6bc5d9257529b704daca1295ceca33f01af2bd7075ff1b9acdb3d52139f999b1",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 41,
+      "name_bcd": 86,
+      "original_objects": 8,
+      "keys": 2,
+      "map_sha256": "23d4d652fd2eb4a69e4473e16aaefd606cbd8399565a08604b1f032928fb9a62",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 42,
+      "name_bcd": 87,
+      "original_objects": 10,
+      "keys": 3,
+      "map_sha256": "aa8b6a1888ddfc9ce249aca4f3e85491ee3727a7c70e86347e2d7a10b2e293f2",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 43,
+      "name_bcd": 88,
+      "original_objects": 11,
+      "keys": 7,
+      "map_sha256": "4ff843fddff02a3b27295dd5e287724e01b888fe5a957c1d757460e7adee6a20",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 44,
+      "name_bcd": 89,
+      "original_objects": 28,
+      "keys": 7,
+      "map_sha256": "f16f26af427bf0f938570860b57bf4f646af6b007a32276b79ca5a2dc795fd16",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 45,
+      "name_bcd": 96,
+      "original_objects": 23,
+      "keys": 7,
+      "map_sha256": "d7d8c4ec417d90fb13e2f0a595d86b89a9449857e0e1344ea2cfaacec6bb97e5",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 46,
+      "name_bcd": 113,
+      "original_objects": 1,
+      "keys": 1,
+      "map_sha256": "89278f918484930be5bcf6c14de91322924dec6b8ab85ca2cdb3137804cf495c",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 47,
+      "name_bcd": 114,
+      "original_objects": 1,
+      "keys": 1,
+      "map_sha256": "402e387ed7d183965a306bb1e8ae55d880c408457e8e6ee833de43dd2c59b849",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 48,
+      "name_bcd": 115,
+      "original_objects": 5,
+      "keys": 0,
+      "map_sha256": "c53ae3e267320cc646a8669964b326ec222faef8eaea2dc18a4eedfbedda0033",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 49,
+      "name_bcd": 116,
+      "original_objects": 6,
+      "keys": 1,
+      "map_sha256": "581135e23a2dbec118a521787524837f30f143d15aea8ce4db62a6ebfac330cb",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 50,
+      "name_bcd": 117,
+      "original_objects": 9,
+      "keys": 1,
+      "map_sha256": "298844e0d7e9b69b4eb5745d6ac26949a1b552434ed5151fb77d79b1a9c80bd4",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 51,
+      "name_bcd": 118,
+      "original_objects": 15,
+      "keys": 3,
+      "map_sha256": "667202cf597ee2c5cd53144cb410e1be07c5c2c6ece614eafc73019612a8b1bf",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 52,
+      "name_bcd": 119,
+      "original_objects": 22,
+      "keys": 2,
+      "map_sha256": "f02d7216349757e95d18ed81bb51bcada391d99b118c47ffe0a8738cc5f51cbe",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 53,
+      "name_bcd": 120,
+      "original_objects": 22,
+      "keys": 2,
+      "map_sha256": "139899b1cd51c2dcbb05be2cbc78749d847fd7f743125f20c6b2d7f0bbbfca78",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    },
+    {
+      "index": 54,
+      "name_bcd": 121,
+      "original_objects": 19,
+      "keys": 4,
+      "map_sha256": "f1874fe476b3c5a1a1b2aff826e53102df91d80a254a13b11d52e97339acace5",
+      "opening_updates": 16,
+      "assisted": "stage selected and intro skipped; original data loaded by UIL"
+    }
+  ],
+  "branches": [
+    {
+      "name": "stage1_input_route_clock_tally_and_advance",
+      "first_key_tick": 472,
+      "first_win_tick": 784,
+      "seconds_at_goal_bcd": 47,
+      "score_bcd": 18176,
+      "next_stage": 1,
+      "assisted": "stage load and intro skip only; route uses buttons"
+    },
+    {
+      "name": "timer_death_life_loss_and_restart",
+      "assisted": "timer set at original zero-second borrow boundary"
+    },
+    {
+      "name": "source_pause_and_render_side_shake",
+      "assisted": "paused state and shake countdown initialized"
+    },
+    {
+      "name": "last_life_game_over_continue",
+      "assisted": "last-life death boundary initialized; menus use buttons"
+    },
+    {
+      "name": "all_password_destinations",
+      "cases": [
+        {
+          "index": 0,
+          "stage": 0,
+          "muteki": 0
+        },
+        {
+          "index": 1,
+          "stage": 9,
+          "muteki": 0
+        },
+        {
+          "index": 2,
+          "stage": 18,
+          "muteki": 0
+        },
+        {
+          "index": 3,
+          "stage": 27,
+          "muteki": 0
+        },
+        {
+          "index": 4,
+          "stage": 36,
+          "muteki": 0
+        },
+        {
+          "index": 5,
+          "stage": 45,
+          "muteki": 0
+        },
+        {
+          "index": 6,
+          "stage": 46,
+          "muteki": 0
+        },
+        {
+          "index": 7,
+          "stage": 0,
+          "muteki": 1
+        }
+      ],
+      "assisted": "entered digits initialized; original packing/lookup executed"
+    },
+    {
+      "name": "title_options_and_sound_test",
+      "assisted": "none within button-driven menu sequence"
+    },
+    {
+      "name": "title_cheat_and_debug_selection",
+      "assisted": "none within button-driven cheat/menu sequence"
+    },
+    {
+      "name": "all_six_original_attract_streams_and_exit",
+      "assisted": "attract sequence selected; first replay pair and Start exit executed"
+    },
+    {
+      "name": "boss_stage_clear_bonus_and_world_advance",
+      "assisted": "boss win boundary initialized; complete original tally phases executed"
+    },
+    {
+      "name": "ending_hidden_world_and_complete_staff_roll",
+      "assisted": "ending/Invict boundaries initialized; complete typewriter/timing flow executed"
+    }
+  ],
+  "environment": {
+    "hv16": "constant0 declared hardware adapter",
+    "sound_busy": "constant0; original audio engine qualified separately"
+  },
+  "claim_ceiling": "UIL reference execution; stage selection and terminal branches assisted; not natural all-level completion or NES parity",
+  "placed_actor_counts": {
+    "1": 103,
+    "2": 7,
+    "3": 9,
+    "4": 4,
+    "5": 10,
+    "6": 21,
+    "7": 20,
+    "8": 28,
+    "9": 20,
+    "10": 42,
+    "11": 34,
+    "12": 16,
+    "13": 20,
+    "14": 26,
+    "15": 26,
+    "16": 2,
+    "17": 2,
+    "18": 2,
+    "19": 2,
+    "20": 12,
+    "21": 12,
+    "22": 4,
+    "23": 4,
+    "24": 47,
+    "25": 6
+  },
+  "frame_updates": 6044,
+  "uil_steps": 6880212,
+  "emitted_event_counts": [
+    {
+      "kind": 1,
+      "id": 1,
+      "count": 4
+    },
+    {
+      "kind": 1,
+      "id": 2,
+      "count": 3
+    },
+    {
+      "kind": 1,
+      "id": 3,
+      "count": 2
+    },
+    {
+      "kind": 1,
+      "id": 4,
+      "count": 2
+    },
+    {
+      "kind": 1,
+      "id": 5,
+      "count": 3
+    },
+    {
+      "kind": 1,
+      "id": 6,
+      "count": 1
+    },
+    {
+      "kind": 1,
+      "id": 7,
+      "count": 2
+    },
+    {
+      "kind": 1,
+      "id": 8,
+      "count": 6
+    },
+    {
+      "kind": 1,
+      "id": 9,
+      "count": 2
+    },
+    {
+      "kind": 1,
+      "id": 10,
+      "count": 1
+    },
+    {
+      "kind": 1,
+      "id": 11,
+      "count": 1
+    },
+    {
+      "kind": 1,
+      "id": 12,
+      "count": 1
+    },
+    {
+      "kind": 1,
+      "id": 13,
+      "count": 1
+    },
+    {
+      "kind": 2,
+      "id": 3,
+      "count": 3
+    },
+    {
+      "kind": 2,
+      "id": 5,
+      "count": 1
+    },
+    {
+      "kind": 2,
+      "id": 8,
+      "count": 1
+    },
+    {
+      "kind": 2,
+      "id": 11,
+      "count": 2
+    },
+    {
+      "kind": 2,
+      "id": 17,
+      "count": 1
+    },
+    {
+      "kind": 2,
+      "id": 18,
+      "count": 1
+    },
+    {
+      "kind": 2,
+      "id": 19,
+      "count": 1
+    },
+    {
+      "kind": 3,
+      "id": 0,
+      "count": 1
+    }
+  ],
+  "inputs_unchanged": true,
+  "raw_artifacts": "Original-byte-retaining inputs, contracts and CPU traces retained privately outside Git."
+}

@@ -1,6 +1,8 @@
 include README.md AGENTS.md CLAUDE.md pyproject.toml MANIFEST.in player/pyproject.toml
 include player/fdisbull_player/*.py
 recursive-include src/fdisbull *.py *.c *.sh
+recursive-include src/fdisbull/game_sources *.c *.s *.S *.cfg
+include src/fdisbull/game_sources/LICENSE.txt
 recursive-include src/fdisbull/ghidra_scripts *.java
 recursive-include src/fdisbull/data *.json *.txt
 recursive-include src/fdisbull/skills *.md
@@ -34,6 +36,7 @@ include docs/evidence/rom-asm-2026-10-30/semantic-route.json
 include docs/evidence/console-udc-2026-10-30/verification.json
 include docs/evidence/genesis-rom-route-2026-10-30/verification.json
 include docs/evidence/miniplanets-nes-level-2026-10-31/verification.json
+recursive-include docs/evidence/miniplanets-full-game-2026-10-31 *.json
 include patches/capstone-5.0.9-sh-profile-gating.patch
 include scripts/rom_semantic_route/DecompileAuthoredSh2.java
 include scripts/rom_semantic_route/README.md
@@ -62,4 +65,4 @@ prune experimental
 prune build
 prune dist
 prune .github
-global-exclude __pycache__ *.py[cod] *.fdb *.fdb-* *.db *.sqlite *.sqlite3 *.sav *.state *.exe *.com *.dll *.bin *.dat *.DAT
+global-exclude __pycache__ *.py[cod] *.fdb *.fdb-* *.db *.sqlite *.sqlite3 *.sav *.state *.exe *.com *.dll *.bin *.dat *.DAT *.nes *.rom *.gen *.smd *.iso *.cue *.wav *.pcm *.lut *.4bpp *.slz *.sona *.swav *.spat *.tfi *.chr

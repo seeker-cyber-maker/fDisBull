@@ -178,10 +178,23 @@ def write_console_rom(program: dict, *, target: str, output: str | Path,
     return {'output_directory': str(destination), **manifest}
 
 
-def compile_console_path(path: str | Path, *, scene_path: str | Path | None = None, **kwargs) -> dict:
+def compile_console_path(path: str | Path, *, scene_path: str | Path | None = None,
+                         region_path: str | Path | None = None, cc65_root: str | Path | None = None, **kwargs) -> dict:
     path = Path(path)
-    if not path.is_file() or path.stat().st_size > 65536:
-        raise ValueError('expected one UIL JSON file at most 64 KiB')
+    if not path.is_file() or path.stat().st_size > 8*1024*1024:
+        raise ValueError('expected one UIL JSON file within its profile size limit')
+    program=json.loads(path.read_text())
+    if isinstance(program,dict) and program.get('format')=='fdisbull-game-il-2':
+        from .udc_nes_game import write_nes_game
+        if kwargs.pop('target',None)!='nes' or scene_path is not None or kwargs.pop('display_variable',None) is not None:
+            raise ValueError('Procedural game profile requires NES target with its own globe presentation')
+        if region_path is None:raise ValueError('Procedural game compilation requires the original --region cartridge')
+        region=Path(region_path).expanduser().resolve()
+        if not region.is_file() or region.stat().st_size!=524288:raise ValueError('Expected qualified 512KiB source region')
+        return write_nes_game(program,region.read_bytes(),cc65_root=cc65_root,**kwargs)
+    if path.stat().st_size>65536:raise ValueError('expected one UIL-v1 JSON file at most 64 KiB')
+    if region_path is not None or cc65_root is not None:
+        raise ValueError('region/toolchain options apply only to procedural game UIL')
     if scene_path is not None:
         scene_path = Path(scene_path)
         if not scene_path.is_file() or scene_path.stat().st_size > 65536:
@@ -189,7 +202,7 @@ def compile_console_path(path: str | Path, *, scene_path: str | Path | None = No
         if 'scene' in kwargs:
             raise ValueError('supply scene or scene_path, not both')
         kwargs['scene'] = json.loads(scene_path.read_text())
-    return write_console_rom(json.loads(path.read_text()), **kwargs)
+    return write_console_rom(program, **kwargs)
 
 
 def console_targets():
@@ -200,5 +213,8 @@ def console_targets():
         'additional_profiles': {'nes-level': {'target': 'nes', 'scene': 'fdisbull-console-scene-1',
             'operations': ['set', 'add', 'subtract', 'lookup', 'if'],
             'variable_limit': 64, 'node_limit': 1024, 'depth_limit': 32,
-            'table_type': 'u8', 'table_entries': 256}},
+            'table_type': 'u8', 'table_entries': 256},
+            'miniplanets-full': {'target':'nes','format':'fdisbull-game-il-2','mapper':4,
+                'procedures':True,'mutable_arrays':True,'external_toolchain':'cc65 with wrapped-call bank support',
+                'source_contract':'exact reviewed Miniplanets REV04 profile; original region required'}},
         'scope': 'native compilation of an explicit UIL subset; not a complete source-console lifter or hardware conversion'}

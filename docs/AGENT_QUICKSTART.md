@@ -280,6 +280,14 @@ Both modules emit native CPU and console startup code. See
 workload limits and real emulator results, including a bounded Genesis ROM →
 UIL → NES test. This does not automatically recover a commercial game's UIL.
 
+For the reviewed full Miniplanets profile, `rom-game-lift ORIGINAL_ROM --output
+/private/new-uil` exports procedural game/audio UIL. `console-udc
+/private/new-uil/program.uil.json --target nes --region ORIGINAL_ROM
+--cc65-root /private/tools/cc65 --output /private/new-game` compiles the same
+rules into a banked NES cartridge. See the [full-game contract and measured
+qualification](MINIPLANETS_FULL_GAME.md); original data remains external and
+this source-bound profile is separate from arbitrary ROM decompilation.
+
 ### Compare a source block with shared semantics
 
 For the supported 0.23 DOS profile, read `udl-uil-udc.md` before using
