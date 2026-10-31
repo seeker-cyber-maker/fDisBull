@@ -51,7 +51,12 @@ coverage ledger linking each material claim to evidence, unresolved alternatives
 and the next discriminator. Deepen the causal chain until those claims are
 supported; unrelated exhaustive decoding is not a substitute. Check the installed
 methods and backend capabilities before using guidance from a newer proposal.
-For archives, executable mappings or media reduction, read
+When this copy provides `capabilities`, use it before selecting a native
+decoder, debugger, C diagnostic or UIL path. It reports code scope and dependency
+detection without running tools. `runtime_validation: not_run` is not an
+acceptance result; `doctor` and explicitly authorized native probes are separate.
+A package version alone does not establish release inclusion. For archives,
+executable mappings or media reduction, read
 [references/formats-and-media.md](references/formats-and-media.md).
 
 Use [references/workflows.md](references/workflows.md) to choose between static

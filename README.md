@@ -36,6 +36,7 @@ legacy migration and remaining export limits.
 
 | I want to… | Start here |
 | --- | --- |
+| Check this copy's decoder, debugger, decompiler and UIL scope without running a target | [`capabilities`](docs/CAPABILITIES.md) |
 | Extract a GOG DOS installer on macOS or Linux without Wine | [Native GOG unpacking](docs/GOG_UNPACKING.md) |
 | Reuse a reviewed structure in another analysis project | [Portable type catalogs](docs/TYPE_CATALOGS.md) |
 | Understand an executable without running it | [Disassembly and analysis](#disassemble-and-analyze) |
@@ -58,6 +59,12 @@ and their boundaries; they do not turn an inferred result into observed fact.
 The [definitions and contract roadmap](docs/DEFINITIONS_AND_ROADMAP.md) brings
 the language, interface, scene and proof proposals together and shows which
 parts are working, partial or still proposed.
+
+This source also adds an unreleased, read-only `fdisbull capabilities` report.
+It distinguishes implemented code, detected dependencies and runtime validation;
+it does not infer release contents from the package version. The
+[macOS app replication case study](docs/MACOS_APP_REPLICATION.md) records the
+remaining investigation features and the authored UIL model's limits.
 
 The 0.25.0 source lets you preserve a qualified Zork story as executable IR,
 recover a small action as game-level rules, and keep playing through the
