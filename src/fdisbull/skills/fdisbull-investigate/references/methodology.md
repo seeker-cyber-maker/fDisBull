@@ -305,6 +305,13 @@ before assigning ownership of the fault:
 | Observer dispatch | Check whether instrumentation only records or also changes control flow, stop/resume policy, guest time or response volume. A bridge exception or repeated host stops can invalidate the probe; a timeout with hooks active does not isolate their causal role. An observer cannot mint action completion. |
 | Probe setup/byte guard | A missing helper import or incorrect expected-byte window can fail before player input. Qualify the probe against the selected image and relocation mapping before blaming the emulator, loader or target. |
 
+Preflight diagnostic wrappers against the selected method signatures and
+canonical result fields. Forward supported optional arguments, and distinguish
+a test assertion failure from a valid provider completion. A wrapper rejecting
+a request before its body or an assertion reading the wrong witness field can
+break the experiment without disproving the underlying game behavior. Preserve
+both the raw response and the failed check instead of replacing either.
+
 For example, a guard spanning only one byte of a relocated two-byte word needs
 the whole word's relocation context; see [formats-and-media.md](formats-and-media.md).
 Keep synthetic preflight separate from actual runtime validation. Change one
