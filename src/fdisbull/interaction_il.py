@@ -79,6 +79,10 @@ def validate_il(document):
             _fields(c, ('op', 'left', 'right'))
             a, b = value(c['left']), value(c['right'])
             _require((a == 'bool') == (b == 'bool'), 'incompatible equality')
+        elif op == 'ge':
+            _fields(c, ('op', 'left', 'right'))
+            a, b = value(c['left']), value(c['right'])
+            _require(a in ('u8', 'u16') and b in ('u8', 'u16'), 'ge compares unsigned cells only')
         elif op == 'bit_test':
             _fields(c, ('op', 'value', 'bit'))
             _require(value(c['value']) != 'bool' and type(c['bit']) is int and 0 <= c['bit'] < 64, 'invalid bit test')
@@ -158,6 +162,7 @@ def execute_il(document, state=None, capabilities=(), max_steps=1024):
         def cond(c):
             op = c['op']
             if op == 'eq': return val(c['left']) == val(c['right'])
+            if op == 'ge': return val(c['left']) >= val(c['right'])
             if op == 'bit_test': return bool(val(c['value']) & (1 << c['bit']))
             if op == 'not': return not cond(c['condition'])
             return all(cond(x) for x in c['conditions'])

@@ -49,3 +49,18 @@ def test_budget_and_evidence_refuse_without_effects():
     with pytest.raises(ILInvalid): validate_il(p)
     p = program(); p['body'] = [{'id': str(i), 'op': 'text', 'resource': 'msg'} for i in range(1025)]
     assert execute_il(p)['status'] == 'refused'
+
+
+def test_unsigned_ge_gate_accepts_equal_and_rejects_shortfall():
+    p = {'format': 'fdisbull-il-1', 'role': 'uil', 'resources': {},
+         'variables': {'$treasury': {'type': 'u16', 'initial': 160},
+                       '$price': {'type': 'u16', 'initial': 160}},
+         'body': [{'id': 'gate', 'op': 'require',
+                   'condition': {'op': 'ge', 'left': {'var': '$treasury'},
+                                 'right': {'var': '$price'}}}]}
+    assert execute_il(p)['status'] == 'complete'
+    p['variables']['$treasury']['initial'] = 159
+    assert execute_il(p)['status'] == 'refused'
+    p['variables']['$price'] = {'type': 'i16', 'initial': 0}
+    with pytest.raises(ILInvalid):
+        validate_il(p)

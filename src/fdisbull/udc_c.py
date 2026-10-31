@@ -33,6 +33,7 @@ def generate_c(module, symbol='udc_block'):
     def condition(c):
         op=c['op']
         if op=='eq':return '('+value(c['left'])+' == '+value(c['right'])+')'
+        if op=='ge':return '('+value(c['left'])+' >= '+value(c['right'])+')'
         if op=='bit_test':return '((((unsigned long long)'+value(c['value'])+') >> '+str(c['bit'])+') & 1ULL)'
         if op=='not':return '!('+condition(c['condition'])+')'
         return '('+' && '.join(condition(x) for x in c['conditions'])+')'

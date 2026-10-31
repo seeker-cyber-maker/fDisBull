@@ -120,44 +120,82 @@ Eleven further far calls to `0045:0D12` exist in the overlay tail
 as overlay candidates; their caller functions are identified only by the nearest
 prologue and their mode arguments come from registers, not literals.
 
-## BUY commit block
+## BUY guard, price and commit
 
-The Civ64 crosswalk names the city screen's buy question at
-`R:0D12:4CDF..4E37` (`docs/DOS-PROFILE.md` row 87, `docs/dos/SCENES-PLAY.md`
-7.1). Decoding the window `R:0D12:4C00..4E40` in the unpacked root
-(`0xd165 + offset`) yields the cost computation and the commit:
+The city screen's input loop reads a key at `0x71F1`
+(`lcall 1D05:0AC9`) and dispatches on it with literal compares. The `b` branch
+starts at `0x737D`:
 
 ```text
-4c00  8b1e4865      mov bx, [0x6548]        ; civ index
-4c04  d1e3          shl bx, 1
-4c06  8b87d6b1      mov ax, [bx-0x4e2a]     ; DGROUP gold table (16-bit wrap)
-...
-4c2b  8b87b20b      mov ax, [bx+0xbb2]      ; unit cost table, 0x1E-byte records
-4c2f  f76eb6        imul word [bp-0x4a]     ; multiplier (unrecovered)
-4c32  2b84fa70      sub ax, [si+0x70fa]     ; minus shield stock
-4c37  9a7c00c41d    lcall 1dc4:007c         ; build the question text
-...
-4de2  0187fa70      add [bx+0x70fa], ax     ; shields += cost
-4dec  8b8634ff      mov ax, [bp-0xcc]
-4df0  d1e0          shl ax, 1               ; 2 * cost
-4df2  2987d6b1      sub [bx-0x4e2a], ax     ; gold -= 2 * cost
-4dfe  80a7f270ef    and byte [bx+0x70f2], 0xef ; clear the buy flag
+737d  83be10ff62      cmp word [bp-0xf0], 0x62    ; 'b'
+7382  7403            je 0x7387
+7384  e98902          jmp 0x7610                   ; next key
 ```
 
-Two further branches compute the same cost with different divisors and an
-extra surcharge:
+### Price (`0x7387..0x7470`)
 
-- `4ca1..4ca7` (`idiv 3`), `4d03..4d08` (`idiv 3`) and `4d76..4d7e`
-  (`sar 2`) select the divisor by city status and production kind.
-- `4daf..4dd2`: when the gold table entry exceeds `0x7D0` (2000), the cost
-  gains `value / 512`.
+Branch on the production kind: improvements use `word [0x1142 + 0x22*id]`,
+units use `word [0xBB2 - 0x1E*id]` after `neg`. Both then build the price:
 
-Sale of a building (`4e03..4f0e`) continues past this window and is not traced.
+```text
+73b1  b8e703          mov ax, 0x3e7       ; arg 999 (clamp) to the text helper
+73c1  b80a00          mov ax, 0x0a
+73c4  f7aefafe        imul word [bp-0x106] ; 10 * item_cost
+73c8  2b87fa70        sub ax, [bx+0x70fa]  ; minus shield stock  -> base
+73d9  8b8618ff        mov ax, [bp-0xe8]
+73dd  f7ae18ff        imul word [bp-0xe8]  ; base * base
+73e2  b91400          mov cx, 0x14
+73e5  f7f9            idiv cx              ; / 20
+73e7  8b8e18ff        mov cx, [bp-0xe8]
+73eb  d1e1            shl cx, 1            ; 2 * base
+73ed  03c1            add ax, cx
+73ef  898618ff        mov [bp-0xe8], ax    ; price
+7446  8a87f570        mov al, [bx+0x70f5]  ; production id
+744b  f7d8            neg ax
+744d  3d1500          cmp ax, 0x15
+7455  d1a618ff        shl word [bp-0xe8], 1 ; double when -id > 21
+7461  83bffa7000      cmp word [bx+0x70fa], 0
+746b  d1a618ff        shl word [bp-0xe8], 1 ; double when stock is 0
+```
 
-Limits: the multiplier `[bp-0x4a]` and both cost tables are unresolved; the
-surcharge divisor and the status conditions are recorded but not modelled. The
-commit itself (shields up, gold down by twice the cost, flag cleared) is
-unambiguous.
+So `price = 2b + b*b/20`, `b = 10*item_cost - shield_box`, doubled for units
+past index 21 and doubled again when the box is empty. The box text is built at
+`0x746F..0x7560` (cost, item name, treasury, then "CIVIL DISORDER" when status
+bit 1 is set on an improvement), and `0x1EA8:1F6A`/`1EA8:1E22` append the
+decimal fields.
+
+### Guard (`0x75D2..0x75E2`)
+
+After "Yes" (`0x75CA` returns zero), the source compares treasury with the
+price and skips the commit when gold is short:
+
+```text
+75d2  8b1e4865        mov bx, [0x6548]
+75d6  d1e3            shl bx, 1
+75d8  8b8618ff        mov ax, [bp-0xe8]
+75dc  3987d6b1        cmp [bx-0x4e2a], ax
+75e0  7d03            jge 0x75e5
+75e2  e92300          jmp 0x7608
+```
+
+### Commit (`0x75E5..0x7608`)
+
+```text
+75e5  b80a00          mov ax, 0x0a
+75e8  f7aefafe        imul word [bp-0x106]  ; 10 * item_cost
+75ec  8bc8            mov cx, ax
+75f6  898ffa70        mov [bx+0x70fa], cx   ; shield box := full cost
+75fe  d1e3            shl bx, 1
+7604  2987d6b1        sub [bx-0x4e2a], ax   ; treasury -= price
+```
+
+### Retracted earlier reading
+
+`0x4C00..0x4E03` also ends with `add [bx+0x70fa], ax` and
+`shl ax,1 / sub [bx-0x4e2a], ax`, which reads like a purchase, but it is not
+reached from the `b` branch and it masks production status with
+`and byte [bx+0x70f2], 0xef`. Its caller and action stay unattributed
+(candidate); no model claims it.
 
 ## Limits
 
@@ -175,6 +213,6 @@ unambiguous.
 
 `CIV-DOS-CITY-001` moves from `candidate` to **statically proven** for the entry
 identity, the calling sites, and the shield reset block. `CIV-DOS-CITY-BUY-001`
-is statically proven for the commit arithmetic only. `CIV-UI-001` stays
+is statically proven for the guard, price and commit stores. `CIV-UI-001` stays
 `candidate`: scene geometry and controls still need a runtime display/state
 comparison.

@@ -56,12 +56,22 @@ def _normalize(frame_state: dict, state: dict) -> dict:
 
 
 BUY_CASES = (
-    ("default", {"$shield_box": 5, "$treasury": 100, "$remaining": 10}),
-    ("wrap-treasury", {"$shield_box": 0, "$treasury": 5, "$remaining": 10}),
-    ("negative-remaining", {"$shield_box": 2, "$treasury": 20, "$remaining": -3}),
-    ("zero-remaining", {"$shield_box": 7, "$treasury": 40, "$remaining": 0}),
+    ("default", {"$shield_box": 7, "$treasury": 200, "$item_cost": 4, "$price": 160}),
+    (
+        "exact-affordable",
+        {"$shield_box": 3, "$treasury": 160, "$item_cost": 4, "$price": 160},
+    ),
+    (
+        "insufficient",
+        {"$shield_box": 3, "$treasury": 100, "$item_cost": 4, "$price": 160},
+    ),
+    (
+        "wrap-item-cost",
+        {"$shield_box": 0, "$treasury": 50, "$item_cost": 4000, "$price": 10},
+    ),
+    ("zero-price", {"$shield_box": 0, "$treasury": 30, "$item_cost": 1, "$price": 0}),
 )
-BUY_PUBLIC = ("$shield_box", "$treasury", "$remaining")
+BUY_PUBLIC = ("$shield_box", "$treasury", "$item_cost", "$price")
 
 
 def run_case(root: Path, work: Path, name: str, initial: dict, target: str) -> dict:
@@ -128,22 +138,27 @@ def run_buy_case(root: Path, work: Path, name: str, initial: dict, target: str) 
     frame = json.loads(lines[-1]) if done.returncode == 0 and lines else None
     program_doc = buy_program(initial)
     merged = {n: v["initial"] for n, v in program_doc["variables"].items()}
-    expected = execute_il(program_doc, merged)["state"]
+    result = execute_il(program_doc, merged)
+    if result["status"] == "refused":
+        expected = {"status": "refused", "detail": result["error"]}
+        matched = done.returncode != 0 and frame is None
+    else:
+        expected = {key: result["state"][key] for key in BUY_PUBLIC}
+        matched = (
+            done.returncode == 0
+            and frame is not None
+            and frame["status"] == 0
+            and all(frame["state"][key] == expected[key] for key in BUY_PUBLIC)
+        )
     observed = {
         "returncode": done.returncode,
         "frame": frame,
         "stderr": done.stderr.strip()[-400:],
     }
-    matched = (
-        done.returncode == 0
-        and frame is not None
-        and frame["status"] == 0
-        and all(frame["state"][key] == expected[key] for key in BUY_PUBLIC)
-    )
     return {
         "case": name,
         "initial": initial,
-        "expected": {key: expected[key] for key in BUY_PUBLIC},
+        "expected": expected,
         "observed": observed,
         "match": bool(matched),
         "native_artifact": receipt["native_build"]["output"]["sha256"],
@@ -170,7 +185,7 @@ def sweep_buy(
         "host": {"platform": sys.platform, "machine": platform.machine()},
         "cases": rows,
         "verdict": "match" if all(row["match"] for row in rows) else "mismatch",
-        "scope": "interpreter/native agreement for the buy commit; cost derivation excluded",
+        "scope": "interpreter/native agreement for the buy guard and commit; price derivation excluded",
     }
 
 

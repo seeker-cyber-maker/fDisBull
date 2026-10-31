@@ -1,18 +1,20 @@
 """Build the bounded Civ city BUY commit as a UDC module.
 
-Recovered from the DOS listing of the city screen at R:0D12:4C00 (cost) and
-R:0D12:4DD6 (commit), via the Civ64 route map (R:0D12:xxxx -> fDisBull runtime
-1D12:xxxx):
+Recovered from the DOS listing of the city screen (R:0D12 route space, decoded
+in the unpacked root at ``0xd120 + offset``):
 
-    4c00  mov bx,[0x6548] / shl bx,1 / mov ax,[bx-0x4e2a]  ; civ gold table
-    ...   cost = item_cost * [bp-0x4a] - word [si+0x70fa]   ; minus shield stock
-    4de2  add word [bx+0x70fa], ax                          ; shields += cost
-    4df2  shl ax,1 / sub word [bx-0x4e2a], ax               ; gold -= 2 * cost
-    4dfe  and byte [bx+0x70f2], 0xef                        ; clear the buy flag
+    price       0x7387..0x7470  base = 10 * item_cost - shield_box
+                                price = base * base / 20 + 2 * base
+                                price *= 2 if -build_id > 0x15
+                                price *= 2 if shield_box == 0
+    guard       0x75d2          if treasury < price -> no purchase
+    commit      0x75e5          cx = 10 * item_cost
+                0x75f6          word [city + 0x70fa] = cx      ; production completes
+                0x7604          word [civ gold] -= price
 
-The item-cost derivation (table lookup times an unknown multiplier) stays
-outside the model; a caller supplies the computed remaining-shield cost.  The
-status bit clear is a UI flag and is also outside this bounded transition.
+The price derivation uses a multiply and a divide, which the shared IL cannot
+express, so a caller supplies the computed price.  The tenfold item cost is
+expressed with doubling adds, matching the source's 16-bit store exactly.
 """
 
 from __future__ import annotations
@@ -33,18 +35,25 @@ from fdisbull.udc_layers import (
     select_layers,
 )
 
-COST_SITE = "1D12:4C00"
-COMMIT_SITE = "1D12:4DD6"
-COST_SNIPPET_SIZE = 0x40
-COMMIT_SNIPPET_SIZE = 0x30
+PRICE_SITE = "1D12:7387"
+COMMIT_SITE = "1D12:75E5"
+PRICE_SNIPPET_SIZE = 0xE9
+COMMIT_SNIPPET_SIZE = 0x25
+
+PUBLIC = ("$shield_box", "$treasury", "$item_cost", "$price")
+SCRATCH = ("$t2", "$t4", "$t8", "$t10")
 
 
 def buy_program(initial: dict | None = None) -> dict:
     values = {
         "$shield_box": {"type": "i16", "initial": 0},
         "$treasury": {"type": "u16", "initial": 0},
-        "$remaining": {"type": "i16", "initial": 0},
-        "$gold_cost": {"type": "i16", "initial": 0},
+        "$item_cost": {"type": "i16", "initial": 0},
+        "$price": {"type": "u16", "initial": 0},
+        "$t2": {"type": "i16", "initial": 0},
+        "$t4": {"type": "i16", "initial": 0},
+        "$t8": {"type": "i16", "initial": 0},
+        "$t10": {"type": "i16", "initial": 0},
     }
     if initial is not None:
         if not isinstance(initial, dict) or set(initial) - set(values):
@@ -58,28 +67,43 @@ def buy_program(initial: dict | None = None) -> dict:
         "resources": {},
         "body": [
             {
-                "id": "copy-cost",
+                "id": "require-affordable",
+                "op": "require",
+                "condition": {
+                    "op": "ge",
+                    "left": {"var": "$treasury"},
+                    "right": {"var": "$price"},
+                },
+            },
+            {
+                "id": "cost-x2",
+                "op": "add",
+                "var": "$t2",
+                "value": {"var": "$item_cost"},
+            },
+            {
+                "id": "cost-x2b",
+                "op": "add",
+                "var": "$t2",
+                "value": {"var": "$item_cost"},
+            },
+            {"id": "cost-x4", "op": "add", "var": "$t4", "value": {"var": "$t2"}},
+            {"id": "cost-x4b", "op": "add", "var": "$t4", "value": {"var": "$t2"}},
+            {"id": "cost-x8", "op": "add", "var": "$t8", "value": {"var": "$t4"}},
+            {"id": "cost-x8b", "op": "add", "var": "$t8", "value": {"var": "$t4"}},
+            {"id": "cost-x10", "op": "add", "var": "$t10", "value": {"var": "$t8"}},
+            {"id": "cost-x10b", "op": "add", "var": "$t10", "value": {"var": "$t2"}},
+            {
+                "id": "complete-production",
                 "op": "set",
-                "var": "$gold_cost",
-                "value": {"var": "$remaining"},
-            },
-            {
-                "id": "double-cost",
-                "op": "add",
-                "var": "$gold_cost",
-                "value": {"var": "$remaining"},
-            },
-            {
-                "id": "add-shields",
-                "op": "add",
                 "var": "$shield_box",
-                "value": {"var": "$remaining"},
+                "value": {"var": "$t10"},
             },
             {
-                "id": "debit-gold",
+                "id": "debit-treasury",
                 "op": "subtract",
                 "var": "$treasury",
-                "value": {"var": "$gold_cost"},
+                "value": {"var": "$price"},
             },
         ],
     }
@@ -92,22 +116,25 @@ def _contract(program: dict, evidence: dict) -> dict:
         "format": "fdisbull-block-contract-1",
         "name": "civ.city.buy.commit",
         "author": "civ-city-buy-slice",
-        "inputs": {"shield_box": "i16", "treasury": "u16", "remaining": "i16"},
+        "inputs": {
+            "shield_box": "i16",
+            "treasury": "u16",
+            "item_cost": "i16",
+            "price": "u16",
+        },
         "outputs": {"shield_box": "i16", "treasury": "u16"},
         "behavior": {"kind": "uil", "program": deepcopy(program)},
         "domain": {},
         "evidence": {
             "source": evidence,
             "boundary": {
-                "cost": "remaining = item_cost * multiplier - shield_box, computed by the caller; the multiplier at [bp-0x4a] is not recovered.",
-                "commit": "shields += remaining, gold -= 2 * remaining, with 16-bit wraparound as in the source.",
-                "excluded": "The item-cost table lookup and the status flag clear (and byte [bx+0x70f2], 0xef) are outside this transition.",
+                "guard": "treasury < price means no purchase (0x75D2).",
+                "commit": "production completes: shield_box = 10 * item_cost; treasury -= price.",
+                "price": "price = 2b + b*b/20 with b = 10*item_cost - shield_box, doubled when -build_id > 21 and doubled when shield_box == 0; supplied by the caller because the IL has no multiply/divide.",
+                "excluded": "The box text, the CIVIL DISORDER variant and the blinking CHANGE timer are outside this transition.",
             },
         },
     }
-
-
-PUBLIC = ("$shield_box", "$treasury", "$remaining")
 
 
 def _public_state(primitive: dict) -> dict:
@@ -133,7 +160,8 @@ def _module_program(contract_id: str, primitive: dict) -> dict:
                 "inputs": {
                     "shield_box": {"var": "$shield_box"},
                     "treasury": {"var": "$treasury"},
-                    "remaining": {"var": "$remaining"},
+                    "item_cost": {"var": "$item_cost"},
+                    "price": {"var": "$price"},
                 },
                 "outputs": {
                     "shield_box": "$shield_box",
@@ -176,30 +204,30 @@ def build_buy_udc(
             "file": source_path.name,
         },
         "disassembly": {
-            "route": "R:0D12:4C00 cost, R:0D12:4DD6 commit -> runtime 1D12 same offsets",
-            "shields": "add word [bx+0x70fa], ax",
-            "gold": "shl ax,1; sub word [bx-0x4e2a], ax",
-            "flag": "and byte [bx+0x70f2], 0xef",
-            "unrecovered": "the multiplier at [bp-0x4a] and the item-cost tables",
+            "route": "R:0D12:7387 price, R:0D12:75D2 guard, R:0D12:75E5 commit",
+            "price": "base = 10*item_cost - shield_box; price = base*base/20 + 2*base",
+            "doubling": "-build_id > 0x15 and shield_box == 0 each double the price",
+            "commit": "0x75F6 word [city+0x70FA] = 10*item_cost; 0x7604 gold -= price",
+            "unrecovered": "the item-cost tables and the exact Yes/No dialog call",
         },
         "civ64_docs": {
             "repository": "Buyukcaglar/Civ64",
-            "paths": ["docs/dos/SCENES-PLAY.md 7.1", "docs/dos/OFFSETS.md"],
-            "role": "crosswalk for the buy box and the city record offsets",
+            "paths": ["docs/DOS-PROFILE.md row 87", "docs/dos/SCENES-PLAY.md 7.1"],
+            "role": "crosswalk for the buy box text and the city record offsets",
         },
     }
     primitive = buy_program(initial)
     contract = _contract(primitive, evidence)
 
     with Project.create(project_path, source_path) as project:
-        cost = project.capture_snippet(
-            "civ-city-buy-cost",
-            [{"address": COST_SITE, "size": COST_SNIPPET_SIZE}],
+        price = project.capture_snippet(
+            "civ-city-buy-price",
+            [{"address": PRICE_SITE, "size": PRICE_SNIPPET_SIZE}],
             evidence={
-                "site": COST_SITE,
-                "role": "cost = item_cost * multiplier - shield_box",
+                "site": PRICE_SITE,
+                "role": "price = 2b + b*b/20 with two doublings",
             },
-            boundary="cost derivation window; tables and multiplier unresolved",
+            boundary="price derivation window; box text and dialog excluded",
             author="civ-city-buy-slice",
         )
         commit = project.capture_snippet(
@@ -207,9 +235,9 @@ def build_buy_udc(
             [{"address": COMMIT_SITE, "size": COMMIT_SNIPPET_SIZE}],
             evidence={
                 "site": COMMIT_SITE,
-                "role": "shields += cost; gold -= 2 * cost; clear flag",
+                "role": "production completes; gold -= price",
             },
-            boundary="commit stores only",
+            boundary="treasury guard and commit stores",
             author="civ-city-buy-slice",
         )
         contract_record = register_contract(
@@ -225,9 +253,9 @@ def build_buy_udc(
             "implementation": {"backend": "uil", "program": deepcopy(primitive)},
             "assurance": {
                 "kind": "candidate-source-bound-model",
-                "source_to_uil": "commit stores proven by disassembly; cost derivation not modelled",
+                "source_to_uil": "guard and commit stores proven by disassembly; price derivation not modelled",
             },
-            "evidence": {"cost_snippet": cost["id"], "commit_snippet": commit["id"]},
+            "evidence": {"price_snippet": price["id"], "commit_snippet": commit["id"]},
         }
         layer_record = register_layer(project, layer, author="civ-city-buy-slice")
         module = _module_program(contract_id, primitive)
@@ -259,7 +287,11 @@ def build_buy_udc(
             "format": "fdisbull-civ-city-buy-udc-build-1",
             "source": evidence["original_root"],
             "snippets": {
-                "cost": {"id": cost["id"], "sha256": cost["sha256"], "site": COST_SITE},
+                "price": {
+                    "id": price["id"],
+                    "sha256": price["sha256"],
+                    "site": PRICE_SITE,
+                },
                 "commit": {
                     "id": commit["id"],
                     "sha256": commit["sha256"],
@@ -277,7 +309,7 @@ def build_buy_udc(
             },
             "native_build": build,
             "qualification": build["qualification"],
-            "scope": "bounded buy commit; cost derivation and status flag excluded",
+            "scope": "bounded buy guard and commit; price derivation supplied by the caller",
         }
 
 

@@ -100,6 +100,14 @@ def _condition(item, cells: dict) -> str:
             + _value(item["right"], cells)
             + ")"
         )
+    if op == "ge":
+        return (
+            "("
+            + _value(item["left"], cells)
+            + " >= "
+            + _value(item["right"], cells)
+            + ")"
+        )
     if op == "bit_test":
         return (
             "((((unsigned long long)"

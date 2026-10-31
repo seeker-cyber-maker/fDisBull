@@ -167,6 +167,16 @@ class _Lower:
             self.value(condition['left']); self.c.emit('50')
             self.value(condition['right']); self.c.emit('4889c1594839c8')
             self.c.emit('0f94c00fb6c0')
+        elif op == 'ge':
+            _fields(condition, ('op', 'left', 'right'))
+            for side in ('left', 'right'):
+                item = condition[side]
+                if isinstance(item, dict):
+                    _check(self.cells.get(item.get('var'), {}).get('type') in ('u8', 'u16'),
+                           'native ge compares unsigned cells only')
+            self.value(condition['left']); self.c.emit('50')
+            self.value(condition['right']); self.c.emit('4889c1594839c1')
+            self.c.emit('0f93c00fb6c0')
         elif op == 'bit_test':
             _fields(condition, ('op', 'value', 'bit'))
             _check(type(condition['bit']) is int and 0 <= condition['bit'] < 64, 'unsupported native bit index')

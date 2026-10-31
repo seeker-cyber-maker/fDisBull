@@ -143,61 +143,42 @@ Scope: this proves interpreter/native agreement for the tested states. It does
 not prove that the UIL model matches the DOS routine, which the static trace
 covers separately.
 
-## BUY commit module
+## BUY guard and commit module
 
-A second bounded module, `examples/civ/civ_city_buy_udc.py`, models the buy
-commit recovered at `R:0D12:4DD6`: shields increase by the remaining-shield
-cost, gold decreases by twice that cost, all in 16-bit wraparound. The cost
-derivation (item table times an unresolved multiplier, minus shield stock)
-stays outside the module; the caller supplies the computed remaining cost.
+A second bounded module, `examples/civ/civ_city_buy_udc.py`, models the city
+screen's buy path recovered at `R:0D12:7387` (price), `R:0D12:75D2` (guard) and
+`R:0D12:75E5` (commit):
 
-The excluded items are named in the contract evidence: the cost tables, the
-`[bp-0x4a]` multiplier, the `> 2000` surcharge, and the cleared status flag
-(`and byte [bx+0x70f2], 0xef`).
+- guard: `treasury >= price`, else the purchase is skipped;
+- commit: `shield_box := 10 * item_cost` (production completes) and
+  `treasury -= price`.
 
-Native macOS arm64 with `shield_box 5, treasury 100, remaining 10`:
+The price derivation `price = 2b + b*b/20` with `b = 10*item_cost - shield_box`
+(then doubled for units past index 21 and doubled when the box is empty) needs
+a multiply and a divide, which the IL does not have, so the caller supplies
+`price`. The tenfold item cost is computed with doubling adds and reproduces the
+source's 16-bit store, including wraparound.
+
+`ge` is a new shared-IL condition (unsigned cells only). The interpreter, the
+x86-64 shell lowerer, the C block generator and the macOS plan lowering all
+implement it; on this host the macOS path runs, and the x86 path is verified by
+disassembling the emitted gate (`cmp rcx, rax; setae al`) rather than by
+execution.
+
+Native macOS arm64 with `shield_box 7, treasury 200, item_cost 4, price 160`:
 
 ```text
 {"format":"fdisbull-macos-observation-1","status":0,"value":0,
- "state":{"$shield_box":15,"$treasury":80,"$remaining":10}}
+ "state":{"$shield_box":40,"$treasury":40,"$item_cost":4,"$price":160}}
 ```
 
 | case | initial | interpreter | native arm64 |
 |---|---|---|---|
-| default | `shields 5, gold 100, remaining 10` | `shields 15, gold 80` | `shields 15, gold 80` |
-| wrap-treasury | `shields 0, gold 5, remaining 10` | `shields 10, gold 65521` | `shields 10, gold 65521` |
-| negative-remaining | `shields 2, gold 20, remaining -3` | `shields -1, gold 26` | `shields -1, gold 26` |
-| zero-remaining | `shields 7, gold 40, remaining 0` | unchanged | unchanged |
+| default | `box 7, gold 200, cost 4, price 160` | `box 40, gold 40` | `box 40, gold 40` |
+| exact-affordable | `box 3, gold 160, price 160` | `box 40, gold 0` | `box 40, gold 0` |
+| insufficient | `gold 100, price 160` | `refused` | exit 1, no frame |
+| wrap-item-cost | `cost 4000, gold 50, price 10` | `box -25536, gold 40` | `box -25536, gold 40` |
+| zero-price | `cost 1, gold 30, price 0` | `box 10, gold 30` | `box 10, gold 30` |
 
 `examples/civ/civ_city_udc_diff.py --module all` runs both sweeps and reports a
 single verdict.
-
-## Evidence and conflicts
-
-The source-linked receipt keeps:
-
-- Civd `CITYMGT.C`, `CIV.H` and production documentation hashes and exact
-  commit `d9214fcd36aa6003d28aae60c3974b665f752280`.
-- Civ64 analysis commit
-  `4e46572d727544722d90c24dc2ce51a9c6d22f15` and the relative-to-runtime
-  address translation.
-- The pinned packed/unpacked executable identities.
-
-The Civd label `474.05` and Civ64 label `475.05` still refer to the same packed
-hash and remain `CIV-EDITION-001`; this slice does not resolve that conflict.
-
-## Verification boundary
-
-Fresh checks for this slice:
-
-- `tests/test_civ_city_uil.py`: scene tab transitions, disorder/reset refusal,
-  and pinned-source rejection.
-- The builder was run against the exact unpacked root and produced a 32,768-byte
-  ELF64 x86-64 executable with mode `0700`.
-- fDisBull's shared-IL qualification status is
-  `equivalent_under_contract`; that status qualifies the supplied model and
-  selected layer, not source recovery or native runtime behavior.
-
-Next required probe: trace a verified DOS caller/overlay path through the city
-screen and compare one controlled state/display transition before promoting
-any scene object from inventory to an executable game action.
