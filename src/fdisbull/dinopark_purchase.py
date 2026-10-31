@@ -94,22 +94,31 @@ def _record_commit(text, after):
     return proof
 
 
-def selected_card_offsets(image, pattern):
-    """Keep BUY fixed while requiring every card anchor at one bounded offset."""
+def _card_offsets(image, pattern, card_count, button_count, max_shift):
     from .dinopark_scenes import matches
     card = [sample for sample in pattern['samples'] if sample['y'] < 170]
     button = [sample for sample in pattern['samples'] if sample['y'] >= 170]
-    if len(card) != 35 or len(button) != 13 or pattern['min_matches'] != 48:
+    if len(card) != card_count or len(button) != button_count or pattern['min_matches'] != 48:
         return [0] if matches(image, pattern) else []
     fixed = {'samples': button, 'min_matches': len(button), 'tolerance': pattern['tolerance'],
              'reject': pattern.get('reject', [])}
     if not matches(image, fixed):
         return []
-    return [offset for offset in range(-24, 25) if all(
+    return [offset for offset in range(-max_shift, max_shift + 1) if all(
         0 <= sample['x'] + offset < image.width and all(
             abs(a - b) <= pattern['tolerance'] for a, b in zip(
                 image.getpixel((sample['x'] + offset, sample['y'])), sample['rgb']))
         for sample in card)]
+
+
+def selected_card_offsets(image, pattern):
+    """Keep enabled BUY fixed and require every selected-price card anchor."""
+    return _card_offsets(image, pattern, 35, 13, 24)
+
+
+def picked_card_offsets(image, pattern):
+    """The picked card has a narrower bound around the fixed price-click target."""
+    return _card_offsets(image, pattern, 38, 10, 8)
 
 
 def _wait(text, budget, view, expected, *, transient=(), guest_ms=12000):
@@ -133,13 +142,14 @@ def _wait(text, budget, view, expected, *, transient=(), guest_ms=12000):
         budget.timeout()
         frame, image = take_frame(text.project, text.debug, 'coelophysis-' + view, hooks=False)
         mouse = text.debug.call('input.mouse.state')['mouse']
-        offsets = selected_card_offsets(image, text.patterns[view]) if view == 'coel_selected' else None
+        qualifier = {'coel_selected': selected_card_offsets, 'coel_picked': picked_card_offsets}.get(view)
+        offsets = qualifier(image, text.patterns[view]) if qualifier else None
         visible = bool(offsets) if offsets is not None else matches(image, text.patterns[view])
         ready = (money == expected and visible and
                  not mouse['buttons'] and not mouse['release_pending'])
         text.event({'phase': 'coelophysis_observation', 'view': view, 'frame': frame,
                     'matched': ready, 'balances': money, 'guest_ms': elapsed,
-                    **({'selected_card_offsets': offsets} if offsets is not None else {})})
+                    **({view + '_card_offsets': offsets} if offsets is not None else {})})
         if ready:
             return frame
         if elapsed >= guest_ms:

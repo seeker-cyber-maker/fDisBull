@@ -87,6 +87,19 @@ anchors, card anchors without a common offset, out-of-range motion, rejected
 views and pending pointer release. An exhausted cumulative wait is never
 renewed to accommodate a new observation.
 
+A later first-selection trial exposed the same layout issue in the distinct
+`coel_picked` profile, before any price or order input. The request returned in
+35.037 seconds; one continuation used the remaining cumulative allowance in
+6.450 seconds. Its selection was delivered once and balances stayed unchanged.
+This profile has **38 moving card anchors and 10 fixed disabled-BUY anchors**,
+not the selected-price profile's 35/13 split. Its correction uses a separate,
+narrower **-8 through +8 pixel** range around the existing price-click point.
+The price coordinate and the original species/price guard after that click
+are unchanged. No unqualified assumption about the species field before the
+price click is introduced. Of 25 retained first-selection frames, 24 match
+every anchor under the bounded translation and the transitional frame still
+fails. The held older provider was not patched or replayed.
+
 ## Native commit versus presentation
 
 One original trial delivered all five inputs exactly once, reached the final
@@ -159,7 +172,7 @@ The imported scene-class identity and sampled profile hashes remain separate
 from the updated adapter class and new purchase-helper source hashes. No
 original media or executable bytes are added to source or package data.
 
-The final source check ran **204 passed / 19 skipped** across the affected
+The final source check ran **214 passed / 19 skipped** across the affected
 purchase, recovery, Z, Batch and debugger files. Five separately selected real
 native fixture checks passed, covering the shared deadline, paused-provider
 readback with a stored image, speed restoration, input evidence after restart,
@@ -167,7 +180,7 @@ and source/patch isolation. Those authored fixtures are separate from the
 original DinoPark trials below. Independent Luna source review found no further
 material defect in the final deadline/admission change.
 
-The complete suite finished **2,116 passed / 132 skipped / 12 failed /
+The complete suite finished **2,126 passed / 132 skipped / 12 failed /
 23 errors**. The 35 failure/error test IDs exactly match the retained baseline:
 Linux ELF/linker fixtures are unsuitable for the current macOS toolchain, and
 managed-format fixtures report missing parser dependencies. No new failure ID
@@ -233,6 +246,15 @@ this producer trace do not establish runtime use of a filename.
 - A first post-commit screenshot failure could hide an already completed
   business effect. Native commitment is now retained before that screenshot;
   display qualification and original-action completion remain separate.
+- The authored pen-1 fake agreed with an incorrect production assumption.
+  Independent original-memory calibration was available and should have been
+  checked before fixing that expectation in the certificate. The pen-10
+  regression now derives its expectation from the retained original oracle.
+  The installed mismatch diagnostic exposed cash and input receipts but not
+  the other failed-proof fields. Future held-state inspection should return
+  bounded native observations separately from whether the current qualifier
+  accepts them; an unqualified outcome must remain unknown. This change
+  retains the observed after-state in the private broad-guard diagnostic.
 - Reconciliation screenshots must disable hooks. A frame capture that runs a
   hook is not read-only. The source checks include the real hook dispatcher.
 - Keeping a provider alive preserves its guest and receipts, not a supported
