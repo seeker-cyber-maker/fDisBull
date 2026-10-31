@@ -1,7 +1,7 @@
 # PR consolidation, 0.28 gap analysis and 0.29 slate
 
-Status: consolidated review object. This document replaces the closed GitLab
-review descriptions; every source branch and exact head remains available.
+Status: consolidated review object in !12. This document replaces the closed
+GitLab review descriptions; every source branch and exact head remains available.
 Baseline: `release/0.28.0` at `d06bffb` (local package/install) and `main` at
 `b21b204`. The 0.28 candidate is **not** a superset of current `main`: see
 “0.28 baseline gap” below.
@@ -574,6 +574,7 @@ ancestor head; this table is a gap scan, not a closure record.
 
 ## Closure record
 
+- Consolidated review: !12 (this document).
 - Landed in 0.28: !1, !2, !10 closed with a pointer to this document.
 - Unmerged informative reviews: !4, !5, !6, !7, !8, !9, !11 closed with their
   exact heads and source branches retained; their full descriptions are in the
