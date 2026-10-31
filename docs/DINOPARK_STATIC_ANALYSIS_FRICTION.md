@@ -1,5 +1,10 @@
 # DinoPark analysis friction and retained Z terminal replies
 
+The [October 31 content-accounting follow-up](VERIFICATION-DINOPARK-CONTENT-ACCOUNTING-2026-10-31.md)
+closes the file/format and physical-byte inventory, adds a native sound-expander
+comparison and diagnoses the original demo's early stop. Its later measurements
+retain the distinction between byte accounting and complete semantic analysis.
+
 This records observed analysis limits and proposed follow-ups from a private
 DinoPark MZ investigation on 2026-10-30, followed by bounded native asset tracing.
 The PR now also implements [oversized Z reply recovery](Z_REPLY_RECOVERY.md):
