@@ -209,6 +209,11 @@ The [AGI inspector](docs/AGI_LOGIC.md) reads a limited version-2 logic subset;
 unsupported operations remain unresolved. The [AGI scene census](docs/AGI_SCENE_CENSUS.md)
 inventories qualified PQ1/KQ1 resource sets, scene elements and unresolved
 references before complete interactions are accepted as UIL.
+The separate [KQ1 audience interaction](docs/KQ1_BOW_INTENT.md) executes one
+qualified bow through named intent rules and UDL correspondence. Admission,
+reward, animation completion and modal acknowledgement are compared with
+source execution and selected original-game observations; the host engine
+and remaining game behavior stay explicit dependencies or low-level IR.
 The [Z-machine harness](docs/ZORK_HARNESS.md)
 can run a user-supplied version-3 story using a separately selected Python and
 Jericho environment. Story inspection and the recovered mailbox slice are

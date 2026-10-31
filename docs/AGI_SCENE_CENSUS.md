@@ -169,8 +169,10 @@ Bind exact entry and admission conditions; recover named state from writers
 and consumers; include helper, refusal and repeat branches; preserve output,
 modal work, RNG and cycle effects; define UDL correspondence; then execute the
 candidate against a qualified reference boundary. Promote only the covered
-contract. This PR accepts no interaction and supplies no AGI UIL player or native
-code generator.
+contract. The census accepts no interaction and supplies no AGI UIL player or
+native code generator. A separate [KQ1 bow intent](KQ1_BOW_INTENT.md) now executes
+one bounded initial-audience interaction with UDL mappings, preserved IR,
+source comparisons and selected original-game checks.
 
 ## Evidence, cost and sources
 
