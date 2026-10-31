@@ -37,6 +37,7 @@ REQUIRED_KNOWLEDGE_RESOURCES |= {"skills/fdisbull-investigate/SKILL.md", "skills
                                  "skills/fdisbull-investigate/references/workflows.md",
                                  "skills/fdisbull-investigate/references/recovery-research.md",
                                  "skills/fdisbull-investigate/references/semantic-contracts.md",
+                                 "skills/fdisbull-investigate/references/sweding.md",
                                  "skills/fdisbull-investigate/references/formats-and-media.md",
                                  "skills/fdisbull-investigate/references/udl-uil-udc.md"}
 REQUIRED_KNOWLEDGE_RESOURCES |= {

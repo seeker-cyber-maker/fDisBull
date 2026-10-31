@@ -41,6 +41,14 @@ translator. A new backend can add implementations of common contracts. It still
 has to support the required subset and adapters; there is no automatic universal
 language coverage.
 
+[Sweding](../SWEDING.md) names the realization freedom within these contracts:
+reuse or create a backing with different machinery while preserving original
+observable effects, action responses and timing. Missing a target-language
+primitive does not alone require a UIL amendment. Explicitly justify and agree
+comparison exclusions/tolerances; an underspecified contract cannot silently
+weaken the original behavior. Bounded matching evidence leaves untested coverage
+unknown. This guidance adds no runtime or schema.
+
 ## 2. Terminology and responsibility
 
 | Term | Meaning in this proposal |

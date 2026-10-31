@@ -8,6 +8,7 @@ general compiler manual.
 
 - [Keep the terms separate](#keep-the-terms-separate)
 - [Preserve the accepted compiler priority](#preserve-the-accepted-compiler-priority)
+- [Realize intent through sweding](#realize-intent-through-sweding)
 - [Current DOS block boundary](#current-023-dos-block-boundary)
 - [Overlapping instruction backings](#overlapping-instruction-backings)
 - [Zork IR and recovered intents](#zork-ir-and-recovered-intents)
@@ -48,6 +49,15 @@ Qualification precedes optimization: compare candidates with compatible
 semantic, input-domain, capability and assurance contracts, then measure cost
 on comparable inputs and conditions. Retain unsupported effects and the
 original-backed fallback; an unmeasured candidate is not free.
+
+## Realize intent through sweding
+
+A missing target-language primitive is a realization task for UDC orchestration,
+not automatically a missing UIL meaning. [Sweding](sweding.md) permits qualified
+module reuse or a new backing, including feasible mixed-language hosting, while
+preserving original observable effects, action responses and timing. Keep
+semantic identity separate from implementation and adapter revisions. This is
+architectural guidance; it does not widen the installed compiler profile.
 
 ## Current 0.23 DOS block boundary
 

@@ -97,6 +97,13 @@ working low-level behavior and mark opaque operations explicitly while recoverin
 one complete interaction at a time. Renaming machine operations does not recover
 intent.
 
+During UIL → UDC realization, use
+[references/sweding.md](references/sweding.md) to reuse or create equivalent
+backings across formats and languages. Sweding preserves the original observable
+effects, action responses and timing while changing the machinery. Qualify the
+orchestration and adapters; missing coverage stays unknown, and deliberately
+relaxed behavior is a separately accepted variation.
+
 ## Report the tested scope
 
 State what the evidence establishes, how it was collected, confidence, the
