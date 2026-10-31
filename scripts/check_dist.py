@@ -51,6 +51,7 @@ REQUIRED_KNOWLEDGE_RESOURCES |= {
     "skills/write-gamefaqs-guide/references/source-examples.md",
 }
 
+REQUIRED_KNOWLEDGE_RESOURCES.add("skills/fdisbull-investigate/references/source-and-concepts.md")
 
 def archive_names(path: Path) -> list[str]:
     if path.suffix in {".whl", ".zip"}:
