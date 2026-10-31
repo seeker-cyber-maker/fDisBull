@@ -142,9 +142,10 @@ identity against the selected implementation and source revisions. Native test
 results likewise cover only the exercised target and states; neither establishes
 whole-program parity or unobserved reachability.
 
-The current bounded COM16/i386 target places retained native blocks and selected
+The current bounded DOS16/i386 profile places retained native blocks and selected
 straight-line replacements with declared data and near-reference repairs. It
-requires one CS context and refuses calls and unsupported control transfers; it
+can emit COM or a resident MZ scaffold. It requires one CS context and refuses
+calls and unsupported control transfers; it
 does not generate the general language/ABI adapters described here. Check the
 installed methods and backend before proposing a native run.
 

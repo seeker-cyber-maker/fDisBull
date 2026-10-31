@@ -95,7 +95,7 @@ read [references/block-orchestration.md](references/block-orchestration.md).
 Qualify program interfaces before layout: inline blocks and callable functions
 have different obligations. Plan only the required ABI/architecture adapters,
 then resolve references after their sizes are known. General adapter generation
-is a methodology boundary beyond the current COM target, not an installed
+is a methodology boundary beyond the current bounded DOS targets, not an installed
 capability implied by this reference.
 
 When recovering game intent or comparing representations, use

@@ -204,7 +204,7 @@ METHODS = {
     "udc-dos-info": "Read a standard DOS compiler definition; definition,[include_blocks]",
     "udc-dos-implementation": "Register an immutable straight-line replacement; definition,block,code,expected_block_revision,[purpose,projection,references,parent,author]",
     "udc-dos-implementation-info": "Inspect a pinned DOS block implementation; implementation",
-    "udc-dos-compile": "Generate a DOS COM with selected blocks and checked reference fixups; definition,[implementations,entry,block_order,assumptions,code_base]",
+    "udc-dos-compile": "Generate a DOS COM/MZ with selected blocks and checked reference fixups; definition,[implementations,entry,block_order,assumptions,code_base,container]",
     "render-cfg": "Export reachable basic-block CFG as SVG; address,output,[version,cs,max_instructions,highlights]",
     "memory-accesses": "Read/write/overlap and unresolved memory evidence; address,[size,version,access,limit,offset,include_unresolved]",
     "refresh-facts": "Backfill persisted fallthrough and memory-access facts from stored instructions; [version]",
@@ -215,6 +215,8 @@ METHODS = {
     "agi-logic": "Read-only partial AGI 2.917 logic decoding; logdir, volume_dir, logic, profile, [max_instructions]",
     "zmachine-disasm": "Read-only Z-machine v3 instruction slice; path,[address,max_instructions]",
     "zmachine-analyze": "Bounded recursive Z-machine v3 processor analysis; path,[entry_points,max_instructions]",
+    "zmachine-udc-capture": "Capture a private immutable Z-machine v3 source scaffold; path,[max_instructions]",
+    "zmachine-udc-compile": "Emit exact story or fixed-footprint scalar experiment; definition|definition_file,[edits,edits_file,mode,assumptions,assumptions_file]",
     "decoder-check": "Compare x86 iced/Capstone proposals without execution; data,[bits,address,scan_offsets,max_candidates]",
     "import": "Create a new project from binary; params: project, path, [arch,bits,base,entry,load_segment,slice_arch,image]",
     "segments": "DOS inferred segment inventory; [version]",
@@ -323,6 +325,26 @@ def invoke(method, params, debugger=None):
         from .zmachine_analysis import analyze_story,disassemble_story
         operation=disassemble_story if method=='zmachine-disasm' else analyze_story
         return operation(**p)
+    if method in ('zmachine-udc-capture', 'zmachine-udc-compile'):
+        from .zmachine_udc import capture_zmachine_definition, compile_zmachine_definition
+        if method == 'zmachine-udc-capture':
+            from .zmachine import MAX_STORY_FILE
+            path = p.pop('path')
+            with Path(path).open('rb') as stream:
+                story = stream.read(MAX_STORY_FILE + 1)
+            return capture_zmachine_definition(story, **p)
+        for field in ('definition', 'edits', 'assumptions'):
+            filename = p.pop(field + '_file', None)
+            if filename is not None:
+                path = Path(filename)
+                if field in p or not path.is_file() or path.stat().st_size > 4*1024*1024:
+                    raise ValueError('expected one JSON argument file at most 4 MiB')
+                with path.open('rb') as stream:
+                    payload = stream.read(4*1024*1024 + 1)
+                if len(payload) > 4*1024*1024:
+                    raise ValueError('JSON argument file exceeds 4 MiB')
+                p[field] = json.loads(payload)
+        return compile_zmachine_definition(**p)
     from .project import Project, number
     for field in ("base", "entry"):
         if field in p and p[field] is not None:
@@ -485,7 +507,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','zmachine-udc-capture','zmachine-udc-compile','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         value={"id":request_id,"ok":True,"result":public_addresses(invoke(request["method"],params,debugger))}
@@ -704,6 +726,12 @@ def parser():
     c=sub.add_parser('zmachine-analyze',help=METHODS['zmachine-analyze'])
     c.add_argument('path');c.add_argument('--entry',dest='entry_points',action='append',type=lambda s:int(s,0))
     c.add_argument('--max-instructions',type=int,default=10000)
+    c=sub.add_parser('zmachine-udc-capture',help=METHODS['zmachine-udc-capture'])
+    c.add_argument('path');c.add_argument('--max-instructions',type=int,default=10000)
+    c=sub.add_parser('zmachine-udc-compile',help=METHODS['zmachine-udc-compile'])
+    c.add_argument('definition_file')
+    c.add_argument('--mode',choices=('original-layout','experiment'),default='original-layout')
+    c.add_argument('--edits',dest='edits_file');c.add_argument('--assumptions',dest='assumptions_file')
     c=sub.add_parser('decoder-check',help=METHODS['decoder-check'])
     c.add_argument('data');c.add_argument('--bits',type=int,choices=[16,32,64],default=64)
     c.add_argument('--address',type=lambda s:int(s,0),default=0)
@@ -764,6 +792,7 @@ def parser():
                 c.add_argument('--entry'); c.add_argument('--block-order', dest='block_order_file')
                 c.add_argument('--assumptions', dest='assumptions_file')
                 c.add_argument('--code-base', type=lambda s:int(s,0))
+                c.add_argument('--container', choices=('com', 'mz'), default='com')
     for name in ["status","analyze","functions","disasm","xrefs","rename","comment","versions","patch","issues","render","info","header","sections","imports","exports","strings","items","queue","represent","recover-imports","segments","code-regions","locate","function-patterns","analysis-status","calls","cfg","render-cfg","memory-accesses","refresh-facts","libraries","relocations","linkage","refresh-metadata","refresh-dos-state"]:
         c = sub.add_parser(name,help=METHODS[name])
         c.add_argument("project")

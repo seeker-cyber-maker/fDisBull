@@ -26,8 +26,8 @@ class DOSUDCProjectMixin:
         return dos_implementation_info(self, implementation)
 
     def udc_dos_compile(self, definition, implementations=None, entry=None,
-                        block_order=None, assumptions=None, code_base=None):
+                        block_order=None, assumptions=None, code_base=None, container='com'):
         from .dos_udc import compile_dos_udc
         return compile_dos_udc(self, definition, implementations=implementations,
                                entry=entry, block_order=block_order,
-                               assumptions=assumptions, code_base=code_base)
+                               assumptions=assumptions, code_base=code_base, container=container)

@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import pytest
 
 from fdisbull.cli import respond
 from fdisbull.project import Project
@@ -35,7 +36,8 @@ def cli(*args):
     return completed, json.loads(completed.stdout)
 
 
-def test_cli_defines_selects_and_compiles_variable_size_block(tmp_path):
+@pytest.mark.parametrize('container', ['com', 'mz'])
+def test_cli_defines_selects_and_compiles_variable_size_block(tmp_path, container):
     path, source, native, compute, stop = fixture(tmp_path)
     data = tmp_path/'data.json'; data.write_text(json.dumps([{'id': 'table', 'ip': 0x110, 'size': 2}]))
     refs = tmp_path/'refs.json'; refs.write_text(json.dumps([
@@ -58,12 +60,14 @@ def test_cli_defines_selects_and_compiles_variable_size_block(tmp_path):
     selection = tmp_path/'selection.json'; selection.write_text(json.dumps({compute['id']: implementation}))
     assertions = tmp_path/'assumptions.json'; assertions.write_text(json.dumps(ASSUMPTIONS))
     completed, emitted = cli('udc-dos-compile', path, definition,
-                               '--implementations', selection, '--assumptions', assertions)
+                               '--implementations', selection, '--assumptions', assertions,
+                               '--container', container)
     assert completed.returncode == 0 and emitted['ok'], emitted
     result = emitted['result']; raw = bytes.fromhex(result['bytes'])
     assert result['qualification'] == 'structural_only' and result['native_execution'] is False
-    assert raw[0] == 0xe9
-    assert int.from_bytes(raw[0x10:0x12], 'little') == result['ports'][stop['id']]
+    prefix = 0 if container == 'com' else 0x120
+    assert raw[prefix] == 0xe9
+    assert int.from_bytes(raw[prefix+0x10:prefix+0x12], 'little') == result['ports'][stop['id']]
     assert result['implementations'][compute['id']]['id'] == implementation
     with Project(path) as project:
         exact = project.udc_native_compile(native['id'])
