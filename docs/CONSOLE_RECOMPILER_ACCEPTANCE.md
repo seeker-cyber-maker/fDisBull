@@ -2,7 +2,11 @@
 
 **Revision in progress. Proposed protocol, 31 October 2026.**
 
-Companion to the [integration plan](CONSOLE_RECOMPILER_INTEGRATION_PLAN.md).
+Companion to the [first-party synthesis plan](CONSOLE_RECOMPILER_INTEGRATION_PLAN.md).
+The revised default is our own implementation of recovered mechanisms. External
+tools are optional research comparators, not prerequisites or bundled engines.
+The existing fixtures/oracles remain usable under their declared conditions; this
+proposal does not require replacing all approved generic project dependencies.
 The cases below have not been executed by this documentation change. They define
 what a future implementation must demonstrate, not new tool APIs or status enums.
 A provider qualifies for its declared subset; it need not solve all consoles or
@@ -11,11 +15,13 @@ successful no-ops or vanishing from the workload denominator.
 
 ## 1. Keep the comparison questions separate
 
-Compare three routes only where they support the same requested output contract:
+Compare these routes where available and where they support the same requested
+output contract. Absence of an external converter must not prevent qualification
+against an original/specification reference:
 
 1. Original target execution, with an explicit CPU/device/reference implementation.
 2. fDisBull executable UDL bindings -> shared UIL -> selected UDC and runtime.
-3. An external direct recompiler or retained compatibility implementation.
+3. Optionally, an authorized external direct recompiler or retained compatibility implementation.
 
 An external provider can serve either as a candidate or as one reference, but
 must not certify itself. A second implementation sharing the same CPU core or
@@ -89,6 +95,22 @@ emitted source, assemble it, run both sides and record the actual outcome.
 Fixes can preserve a value in a temporary rather than recreate the physical
 stack. The acceptance concerns meaning, not a mandatory implementation technique.
 
+### First-party synthesis acceptance additions
+
+These supplement CR-A01 through CR-A16; they are not executed results.
+
+| ID | Experiment | Required discriminator / acceptance |
+| --- | --- | --- |
+| CR-A17 | Build and run the admitted native profile without surveyed recompiler packages | No hidden runtime or generated-support dependency on those tools; approved generic toolchains/oracles remain declared |
+| CR-A18 | Combine a mapped-code switch, saved-value/carry operation and interrupt/device boundary | Shared state, visibility, ordering and error assumptions agree; separate unit successes cannot replace the composed run |
+| CR-A19 | An external translator gives a wrong result on an authored discriminator | Judge against qualified original/specification evidence, not majority agreement or external output imitation; retain disagreements |
+| CR-A20 | Implement a mechanism from an authored contract, then test unseen instances and a second supported target | Preserve contract across different realization choices; record source-assistance lineage and failures without claiming universal or clean-room recovery |
+
+For CR-A20, retain the specification packet and its source references before
+implementation; exclude copied upstream code/fixtures and mechanically translated
+source from the no-copy lane. Record already viewed source honestly. This is
+provenance review plus behavioral checking, not an automated legal certificate.
+
 ## 4. Benchmark the investigation method as well as the runtime
 
 Use a small pilot first: one pure/stateful slice and one device-bearing
@@ -102,6 +124,20 @@ Select the information condition before opening target-specific material:
 | Independent recovery | Target and agreed tools, no supplied target-specific analysis | Fresh context/workspace; this informed review cannot be that worker |
 | Notes-assisted | Frozen guides, disassembly notes or documented mechanics | Reading, translation, collation and correction; shared upstream lineage |
 | Results-derived | Existing reconstruction/port and permitted interfaces | Import, contract recovery, adapters and verification; code comments are prior knowledge |
+
+Add a separate mechanism-development study: independently derive a contract from
+an ISA/device specification or original observations; compare that with a frozen
+source-informed design-note packet; optionally compare with an authorized external
+black-box reference. All no-copy implementation workers receive authored contracts
+and tests rather than upstream implementations. Source-informed notes still count
+as assistance, and shared references remain correlated evidence. Source-import
+experiments belong to the separately labeled results-derived condition, not this
+no-copy lane.
+
+Measure the cost to implement and qualify each mechanism, then its reuse on a
+second target or previously unseen mapping. A catalogue of described mechanisms
+is not the same result as executable native components. Charge integration and
+composition testing, not only the short code-writing step.
 
 First hold one information condition fixed while changing the translation route.
 Then hold a route fixed to measure the value of notes or reusable implementations.
