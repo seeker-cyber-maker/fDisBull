@@ -175,3 +175,37 @@
       `DGROUP:266E`, so the read offset is not a base error. The board's
       identity stays open; only a live read for a known building resolves it.
       Keeping `item_cost` as a module input is the honest boundary.
+
+19. The two buy cost branches were labelled backwards, and the "unresolved board"
+    was the unit table all along.
+    - The trace said "improvements use `[0x1142 + 0x22*id]`, units use
+      `[0xBB2 - 0x1E*id]`". Reading the bytes shows the test is
+      `cmp byte [city+0x70F5],0 / jge` and the *positive* branch reads
+      0x1142: production >= 0 is a unit.
+    - `DS:0x112A` is the 34-byte unit table (names "Settlers", "Militia",
+      "Phalanx"), and `0x1142 = 0x112A + 0x18` is its cost/10 word:
+      4,1,2,2,3,3,2,4,4,4,4,8 = Civ1 costs 40/10/20/20/30/30/20/40/40/40/40/80
+      divided by ten. The improvement table is named from `0xBB8` and its
+      `+0x18` words are 20, 4, 6, 4, 8, 8 (Palace 200, Barracks 40,
+      Granary 60, Temple 40, Marketplace 80, Library 80) — also /10.
+    - One comparison against known Civ1 data would have settled it before the
+      first "unresolved board" note. Lesson: read the branch predicate and one
+      record's leading strings before concluding an array is unexplained.
+
+20. `ClampInt` was mistaken for a text formatter and left out of the model.
+    - `lcall 1DC4:007C` sits between the base subtraction and the price maths
+      in both branches. The call is `ClampInt(base, 0, 999)`; Civ64's
+      `docs/dos/CORRESPONDENCE.md` (line 366) and `TIMING.md` (line 510) name
+      it, and the pushed arguments (999, 0, base) are Borland's right-to-left
+      order for `ClampInt(base, 0, 999)`.
+    - Leaving it out changed behaviour at the edges: a city holding more
+      shields than the item costs has a negative base, and negative base
+      makes the price negative (always affordable, and it credits the
+      treasury). With the clamp the price is 0. The sweep case
+      `unit-clamped-base` now covers it.
+
+21. The unit branch skips the `-id > 21` doubling; only buildings reach it.
+    - `0x73F3 jmp 0x7459` jumps over `0x7446..0x7455`. A model with a shared
+      tail is still correct because a unit's negated id is never > 21, but
+      the reason has to be recorded, not assumed: it is dead for units, not
+      conditional on them.
