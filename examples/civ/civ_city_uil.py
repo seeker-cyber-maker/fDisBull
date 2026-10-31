@@ -94,14 +94,7 @@ def _primitive_program(initial: dict | None = None) -> dict:
                 "id": "disorder-or-accumulate",
                 "op": "if",
                 "condition": {"op": "eq", "left": {"var": "$disorder"}, "right": True},
-                "then": [
-                    {
-                        "id": "zero-disorder-contribution",
-                        "op": "set",
-                        "var": "$shield_box",
-                        "value": 0,
-                    }
-                ],
+                "then": [],
                 "else": [
                     {
                         "id": "add-shield-contribution",
@@ -135,7 +128,7 @@ def _contract(program: dict, evidence: dict) -> dict:
             "source": evidence,
             "boundary": {
                 "reset": "The caller supplies sanitized=true after applying the source reset rule shield_box > 999 or shield_box < 0 -> 0.",
-                "disorder": "The source sets the production contribution to zero in disorder; this model then leaves shield_box at zero.",
+                "disorder": "The source zeroes the turn contribution during disorder, preserving the existing shield_box.",
                 "scope": "One bounded state transition; not a complete city_process model.",
             },
         },

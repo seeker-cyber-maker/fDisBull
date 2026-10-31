@@ -24,6 +24,7 @@ DOC_EXAMPLE_FILES = (
     "docs/uil-rfcs/0002/replay-summary.json",
 )
 SOURCE_PATTERNS = (
+    ("docs/evidence/civ-original-corrections", "verification.json"),
     ("src/fdisbull", "*.py"),
     ("player/fdisbull_player", "*.py"),
     ("src/fdisbull/data", "*.json"),
