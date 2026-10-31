@@ -1,7 +1,7 @@
 {
   "feature": "Selected DOS guest exit after process cleanup; prior headless/state/input/continuation features preserved",
   "baseline_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-  "patch_sha256": "2e46d11ede99724459628c6568d5e7b2de2d1cba21d80fd0cc150db3a564b363",
+  "patch_sha256": "9146ef4c61c28e1091955cfb5fa611b37633cc71df796fa4c1a603276b862c3b",
   "source_files": [
     {
       "path": "client/python/dosbox_agent/__init__.py",
@@ -130,8 +130,8 @@
     },
     {
       "path": "src/gui/render.cpp",
-      "size": 69117,
-      "sha256": "ebd35b92b3d30484605cd1cc954d8eab9413970dc07ba75df3b6bda628b50de6"
+      "size": 69550,
+      "sha256": "4e1c7a47e3f78b67442bf7287d370c3a60eac5fb9d3e5ce411d4267413055a85"
     },
     {
       "path": "src/gui/sdlmain.cpp",

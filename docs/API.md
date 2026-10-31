@@ -35,6 +35,7 @@ Include `project` in params when there is no session default, or to override it.
 | --- | --- | --- |
 | identify | path; no project needed | |
 | inspect | path; no project needed | slice_arch (`x86`, `x86_64`, `arm64`), image (`auto`, `pe`, `mz`) |
+| capture-audit | inputs (1–16 AVI paths), output (fresh private directory outside Git); no project needed | every, html, timeout, max_frames, max_frame_bytes, max_input_bytes, max_metadata_bytes, max_output_bytes, ffmpeg, ffprobe; see [capture audit](TAS_CAPTURE_AUDIT.md) |
 | import | path | arch, bits, base, entry, module, load_segment (MZ; default `0x1000`), slice_arch, image |
 | analyze-module | path, project (new target) | export (name, integer ordinal or `#ordinal`), entry, max_instructions, slice_arch, image |
 | managed | path **or** project | token (MethodDef), max_instructions (with token), version (project only) |

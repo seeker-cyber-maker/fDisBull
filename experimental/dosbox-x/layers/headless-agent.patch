@@ -3354,7 +3354,7 @@ diff -ruN a/src/gui/render.cpp b/src/gui/render.cpp
  
  #include "render_scalers.h"
  #include "render_glsl.h"
-@@ -100,6 +103,108 @@
+@@ -100,6 +103,115 @@
  
  uint32_t                                GFX_palette32bpp[256] = {0};
  
@@ -3399,7 +3399,7 @@ diff -ruN a/src/gui/render.cpp b/src/gui/render.cpp
 +static void CaptureCompletedAgentFrame()
 +{
 +    if (!agent_frame_capture_enabled || !scalerSourceCacheBuffer ||
-+        render.scale.inLine < render.src.height || !render.src.width || !render.src.height)
++        !render.src.width || !render.src.height)
 +        return;
 +    const std::size_t width = render.src.width;
 +    const std::size_t height = render.src.height;
@@ -3416,6 +3416,13 @@ diff -ruN a/src/gui/render.cpp b/src/gui/render.cpp
 +        agent_frame_valid = false;
 +        return;
 +    }
++    // Simple scalers advance cacheRead for each source row, but their
++    // inLine/outLine accounting differs between linear and random variants.
++    // The bounds above make this one-past-end pointer valid; compare equality
++    // instead of subtracting or ordering a potentially stale cache cursor.
++    const std::size_t source_frame_bytes = render.scale.cachePitch * height;
++    if (render.scale.cacheRead != scalerSourceCacheBuffer + source_frame_bytes)
++        return;
 +    // Headless display change flags can miss palette-only changes, including
 +    // a palette already expanded into a 32-bit renderer source. Refresh
 +    // every completed source frame; resize reuses the RGBA allocation.
@@ -3463,7 +3470,7 @@ diff -ruN a/src/gui/render.cpp b/src/gui/render.cpp
  unsigned int                            GFX_GetBShift();
  void                                    aspect_ratio_menu();
  void                                    RENDER_CallBack( GFX_CallBackFunctions_t function );
-@@ -480,6 +585,11 @@
+@@ -480,6 +592,11 @@
      if (video_debug_overlay && !abort && render.active && render.scale.outLine != 0)
          VGA_DebugOverlay();
  
@@ -3475,7 +3482,7 @@ diff -ruN a/src/gui/render.cpp b/src/gui/render.cpp
      if (!abort && render.active && RENDER_DrawLine == RENDER_ClearCacheHandler)
          render.scale.clearCache = false;
  
-@@ -562,6 +672,9 @@
+@@ -562,6 +679,9 @@
  static int aspect_x=0, aspect_y=0;
  
  void RENDER_Shutdown() {
@@ -3485,7 +3492,7 @@ diff -ruN a/src/gui/render.cpp b/src/gui/render.cpp
  	Scaler_AspectChangedLinesFree();
  	scalerSourceCacheBufferFree();
  	scalerChangeCacheFree();
-@@ -571,6 +684,9 @@
+@@ -571,6 +691,9 @@
  }
  
  void RENDER_Reset( void ) {
@@ -3495,7 +3502,7 @@ diff -ruN a/src/gui/render.cpp b/src/gui/render.cpp
  	Bitu width=render.src.width;
  	Bitu height=render.src.height;
  	bool dblw=render.src.dblw;
-@@ -1126,6 +1242,9 @@
+@@ -1126,6 +1249,9 @@
  void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double scrn_ratio) {
      RENDER_Halt( );
      if (!width || !height) {

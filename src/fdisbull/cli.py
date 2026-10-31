@@ -19,6 +19,7 @@ AGENT_SKILL_GUIDES = {
     'references/semantic-contracts.md': 'Recover complete intent contracts and compare facts, effects, time and projection losses',
     'references/media-modules.md': 'Reuse shipped parser APIs, recover missing tooling, and extend bounded format specifications',
     'references/formats-and-media.md': 'Qualify containers, executable mappings, release differences and valid media reduction',
+    'references/binary-claim-verification.md': 'Prove or falsify stored-value, writer and behavior claims against the decoded original binary',
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
 DEFAULT_AGENT_SKILL = 'fdisbull-investigate'
@@ -43,6 +44,7 @@ AGENT_SKILLS = {
 }
 
 METHODS = {
+    'capture-audit':'Decode/hash finalized AVI segments and optionally sample frames; inputs,output,[every,html,timeout,max_frames,max_frame_bytes,max_input_bytes,max_metadata_bytes,max_output_bytes,ffmpeg,ffprobe]; no guest or project required',
     'media-modules':'Discover shipped media adapters, APIs, dependencies and limits; no project required',
     'media-inspect':'Inventory bounded source members without execution; path,adapter,[volume_root,number]',
     'media-extract':'Copy one member to a new private directory outside Git; path,output,adapter,member,[volume_root,number,max_output_bytes]',
@@ -314,6 +316,9 @@ def invoke(method, params, debugger=None):
         from .media import media_modules
         if p:raise ValueError('media-modules takes no parameters')
         return media_modules()
+    if method=='capture-audit':
+        from .capture_audit import audit_capture
+        return audit_capture(**p)
     if method in ('media-inspect','media-extract'):
         from .media import inspect_media, extract_media
         return (inspect_media if method=='media-inspect' else extract_media)(**p)
@@ -527,7 +532,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('media-modules','media-inspect','media-extract','agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('capture-audit','media-modules','media-inspect','media-extract','agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         result=invoke(request["method"],params,debugger)
@@ -710,6 +715,20 @@ def parser():
             if name=='debug-save-script':
                 c.add_argument('name');c.add_argument('script',type=json.loads,help='JSON script object')
     sub.add_parser('media-modules',help=METHODS['media-modules'])
+    c=sub.add_parser('capture-audit',help=METHODS['capture-audit'])
+    c.add_argument('inputs',nargs='+',help='Finalized AVI files; each keeps its own clock')
+    c.add_argument('--output',required=True,help='New directory beneath an existing private parent outside Git')
+    c.add_argument('--every',type=int,default=0,help='Export frames 0,N,2N,...; 0 hashes all without PNG export')
+    c.add_argument('--html',action='store_true',help='Self-contained sampled-frame viewer; requires --every')
+    c.add_argument('--timeout',type=float,default=120,help='Host seconds per reader process')
+    c.add_argument('--max-frames',type=int,default=10000)
+    c.add_argument('--max-frame-bytes',type=int,default=16*1024*1024)
+    c.add_argument('--max-input-bytes',type=int,default=512*1024*1024)
+    c.add_argument('--max-metadata-bytes',type=int,default=32*1024*1024)
+    c.add_argument('--audit-output-bytes',dest='capture_max_output_bytes',type=int,default=512*1024*1024,
+                   help='Audit file budget, separate from the global JSON reply budget')
+    c.add_argument('--ffmpeg',default='ffmpeg')
+    c.add_argument('--ffprobe',default='ffprobe')
     for name in ('media-inspect','media-extract'):
         c=sub.add_parser(name,help=METHODS[name])
         c.add_argument('path')
@@ -1086,6 +1105,8 @@ def _dispatch(args):
     command = args.pop("command")
     if command == 'media-extract':
         args['max_output_bytes'] = args.pop('media_max_output_bytes')
+    if command == 'capture-audit':
+        args['max_output_bytes'] = args.pop('capture_max_output_bytes')
     if command.startswith(('udc-','udl-')) and not command.startswith('udc-native-'):
         return _udc_command(command,args)
     if command in ('story-info','zork','zork-recover','zork-uil','zork-intents','il-check','il-run','il-store','il-info'):
@@ -1120,7 +1141,7 @@ def _dispatch(args):
         request = {"method":"help" if command=="methods" else command,"params":{k:v for k,v in args.items() if v is not None}}
     result = respond(request)
     emit(result)
-    if command=='doctor' and result['ok']:
+    if command in ('doctor','capture-audit') and result['ok']:
         body=result['result']
         status=body['execution']['status'] if body.get('format')=='fdisbull-output-ref-1' else body['status']
         if status!='passed':return 1

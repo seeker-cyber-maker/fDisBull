@@ -15,6 +15,11 @@ original files. Hash equality is byte identity, not publisher authenticity.
 
 ## Discover commands and bundled skills
 
+For repository CI, first read [CI coordination](CI_COORDINATION.md). One named
+owner refreshes a shared, dated status receipt at most every five minutes;
+other agents read the receipt instead of polling GitHub separately. The finite
+`scripts/ci_status.py` helper defaults to cache-only operation.
+
 ```text
 fdisbull --version
 fdisbull methods
@@ -96,6 +101,14 @@ APIs remain available through the catalog. Read the packaged specification with
 `fdisbull agent-skill --reference references/media-modules.md` before recovering
 missing tooling or extending an adapter. This does not unpack compressed DOS
 executables or establish the purpose of their trailing bytes.
+
+For a closed native AVI recording, `fdisbull capture-audit CAPTURE.avi --output
+/private/run/audit --every 4 --html` hashes every decoded frame and exports a
+sample with original timestamps for slower review. Its output parent must be
+private and outside Git. Check the audit receipt before analyzing pixels; video
+timestamps do not supply guest ticks or input alignment. The
+[capture-audit guide](TAS_CAPTURE_AUDIT.md) covers the Python/JSON interfaces,
+budgets and failed-run diagnostics.
 
 ## Choose a route
 

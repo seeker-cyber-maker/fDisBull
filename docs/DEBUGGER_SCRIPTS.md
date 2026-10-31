@@ -17,6 +17,11 @@ A native checkpoint is an editable machine-state artifact, like a restorable cra
 
 A route is a bounded JSON script executed by the foreground debugger owner. It can navigate menus, load an in-game save with mouse clicks, set breakpoints, run until a hit, capture evidence, and restore an emulator checkpoint within the same run. No Python, shell commands, expressions, or arbitrary RPC calls execute from a route.
 
+The [TAS analysis harness guide](TAS_ANALYSIS_HARNESS.md) combines these routes
+with observed input, checkpoints and captures for agent automation, focused
+investigation and regression testing. It separates the working feedback APIs
+from proposed exact timed replay and synchronized frame capture.
+
 There are two different saved states:
 
 - An **in-game save** such as `DINOSG.000` is a game-owned file loaded through the game's menu. Its meaning belongs to DinoPark.
