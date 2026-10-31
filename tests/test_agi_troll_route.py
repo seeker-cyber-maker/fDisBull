@@ -317,3 +317,65 @@ def test_inventory_binding_refuses_unqualified_bounds_or_name(monkeypatch, fault
     with pytest.raises(RuntimeError, match=message):
         module.bind_carrot(session, source, cs, ds)
     assert session.calls == session.runs == []
+
+
+@pytest.mark.parametrize('failure, exception, message, errors', [
+    ('trace-artifact', OSError, 'trace artifact persistence failed', 'persistence_errors'),
+    ('trace-stop', TimeoutError, 'trace stop response lost', 'cleanup_errors'),
+])
+def test_trace_failure_preserves_score_proof_and_attempts_cleanup_independently(
+        monkeypatch, failure, exception, message, errors):
+    """A qualified write survives later delivery failure without claiming success."""
+    run = score_run(monkeypatch)
+    files = {}
+
+    class MemoryPath:
+        def __init__(self, name=''):
+            self.name = name
+
+        def __truediv__(self, name):
+            return MemoryPath(name)
+
+        def write_text(self, text):
+            if failure == 'trace-artifact' and self.name == 'troll-score-trace.private.json':
+                raise OSError('trace artifact persistence failed')
+            files[self.name] = text.encode()
+
+        def read_bytes(self):
+            return files[self.name]
+
+    run.root = MemoryPath()
+
+    def call(method, *args, **kwargs):
+        run.d.calls.append(method)
+        if method == 'trace.read':
+            return {'events': [{'offset': number} for number in range(32)], 'next_cursor': None}
+        if method == 'trace.stop' and failure == 'trace-stop':
+            raise TimeoutError('trace stop response lost')
+        assert method in ('breakpoints.delete', 'trace.start', 'trace.stop')
+        return {}
+
+    def continuation(**kwargs):
+        run.d.runs.append(kwargs)
+        assert len(run.d.runs) == 1, 'A failed capture or cleanup must not resume the guest'
+        return {'outcome': 'pause', 'guest_elapsed_ms': 0}
+
+    run.d.call, run.d.run = call, continuation
+    with pytest.raises(exception, match=message):
+        run.handle_stop(score_stop())
+
+    assert run.d.calls == ['breakpoints.delete', 'trace.start', 'trace.read', 'trace.stop']
+    assert len(run.d.runs) == 1
+    assert run.journal == [{'kind': 'score-trace', 'attempted': True,
+                            'result': {'outcome': 'pause', 'guest_elapsed_ms': 0}}]
+    assert 'troll-score-write.private.json' in files
+    proof = json.loads(files['troll-score-write.private.json'])
+    assert proof['status'] == 'incomplete' and proof['complete'] is False
+    assert proof['native_execution'] is True
+    assert proof['source_logic_sha256'] == 'authored-resource' and proof['source_offset'] == 0x1b8
+    assert (proof['before_score'], proof['after_score']) == (7, 11)
+    assert proof['writer'] == {'source_offset': 0x72da, 'resume_offset': 0x72de, 'bx': 3, 'al': 4}
+    assert proof['code_binding']['offset'] == 0x4000
+    expected_error = ({'artifact': 'troll-score-trace.private.json', 'error': message}
+                      if failure == 'trace-artifact' else {'operation': 'trace.stop', 'error': message})
+    assert expected_error in proof[errors]

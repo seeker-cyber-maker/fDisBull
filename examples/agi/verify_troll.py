@@ -97,6 +97,8 @@ class TrollRun(GoatRun):
             'before_score':7,'after_score':11,'writer':{'source_offset':0x72da,'resume_offset':0x72de,'bx':bx,'al':al},
             'code_binding':{'offset':code,'length':len(resource.code),'sha256':sha256(resource.code).hexdigest()},
             'stop':out,'registers':regs,'inventory':self.inventory}
+        proof_path=self.root/'troll-score-write.private.json'
+        proof_path.write_text(json.dumps(self.score_write,indent=2)+'\n')
         self.d.call('breakpoints.delete',{'breakpoint_id':self.watch});self.watch=None
         # A fetch trace has a separate bounded run, with measured guest progress.
         # The game-owned write is established above; the trace is continuation
@@ -105,6 +107,7 @@ class TrollRun(GoatRun):
         trace={'format':'fdisbull-agi-troll-continuation-1','events':[],'run':None,'complete':False,
                'instruction_semantics':'fetch observed; completion unknown'}
         path=self.root/'troll-score-trace.private.json'
+        primary=None
         try:
             guest,wall=self.remaining_limits(100,10000)
             attempt={'kind':'score-trace','attempted':True,'result':None};self.journal.append(attempt)
@@ -116,13 +119,29 @@ class TrollRun(GoatRun):
             require(not page.get('next_cursor') and len(trace['events'])==32 and result['outcome']=='pause','Trace stop incomplete or interrupted')
             require(self.guest_elapsed<=self.guest_budget_ms and time.monotonic()<self.deadline,'Route budget exhausted after trace')
             trace['complete']=True
+        except BaseException as exc:
+            primary=exc
+            raise
         finally:
-            path.write_text(json.dumps(trace,indent=2)+'\n')
-            self.d.call('trace.stop')
-            self.score_write['trace']={'path':path.name,'sha256':sha256(path.read_bytes()).hexdigest(),'count':len(trace['events'])}
-            (self.root/'troll-score-write.private.json').write_text(json.dumps(self.score_write,indent=2)+'\n')
-        self.score_write.update(status='verified',complete=True)
-        (self.root/'troll-score-write.private.json').write_text(json.dumps(self.score_write,indent=2)+'\n')
+            errors=[]
+            try:self.d.call('trace.stop')
+            except Exception as exc:
+                self.score_write.setdefault('cleanup_errors',[]).append({'operation':'trace.stop','error':str(exc)})
+                errors.append(exc)
+            try:
+                path.write_text(json.dumps(trace,indent=2)+'\n')
+                self.score_write['trace']={'path':path.name,'sha256':sha256(path.read_bytes()).hexdigest(),'count':len(trace['events'])}
+            except Exception as exc:
+                self.score_write.setdefault('persistence_errors',[]).append({'artifact':path.name,'error':str(exc)})
+                errors.append(exc)
+            try:proof_path.write_text(json.dumps(self.score_write,indent=2)+'\n')
+            except Exception as exc:
+                self.score_write.setdefault('persistence_errors',[]).append({'artifact':proof_path.name,'error':str(exc)})
+                errors.append(exc)
+            if errors and primary is None:raise errors[0]
+        confirmed={**self.score_write,'status':'verified','complete':True}
+        proof_path.write_text(json.dumps(confirmed,indent=2)+'\n')
+        self.score_write=confirmed
         print(json.dumps({'score_write':'verified','score':11,'source':'logic25:01b8','guest_ms':self.guest_elapsed}),flush=True)
 
     def route(self):
@@ -183,6 +202,8 @@ def main():
         if driver:
             (root/'journal.private.json').write_text(json.dumps(driver.journal,indent=2)+'\n')
             (root/'partial-capture.private.json').write_text(json.dumps(driver.capture(),indent=2)+'\n')
+            if driver.score_write:
+                (root/'partial-score-write.private.json').write_text(json.dumps(driver.score_write,indent=2)+'\n')
             receipt=json.loads((root/'result.json').read_text());original=receipt['source_manifest']
             receipt['post_teardown_source_unchanged']=manifest(source)==original
             receipt['post_teardown_copy_unchanged']=manifest(root/'game')==original
