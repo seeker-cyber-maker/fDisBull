@@ -130,7 +130,8 @@ def test_wrong_return_stack_is_not_a_logic_return(tmp_path,monkeypatch):
 def test_total_budget_and_initial_frame_fail_closed(tmp_path,monkeypatch):
     m,s=prefetch_monitor(tmp_path,monkeypatch)
     m.guest_remaining=0
-    with pytest.raises(ValueError,match='total native run budget'):m.step()
+    result=m.step()
+    assert result['status']=='stopped' and 'total native run budget' in result['reason']
     with pytest.raises(ValueError,match='reconciliation'):m.step()
     assert not m.history
     s.memory[0x30000+0x9008:0x30000+0x900a]=bytes(2)

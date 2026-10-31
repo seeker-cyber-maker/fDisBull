@@ -40,6 +40,17 @@ receipt = host.run()
 assert host.readback() == receipt
 ```
 
+Pass `dialogue_key="enter"` or `"escape"` explicitly to the host constructor
+to handle untimed blocking print requests. The default sends no keyboard input.
+The opt-in policy binds the original RAM message to the resource, stops at the
+qualified native wait and checks its call frame and open-window flag. It
+requires idle keyboard input and a fresh stored frame after at least 50 guest
+milliseconds inside that wait, then rechecks readiness before queuing one
+physical key. The original handler must return with the window closed and the
+keyboard queue settled. Foreign stops, stale/missing frames, a lost key response
+or exhausted budgets preserve the phase and stop incomplete without replay.
+Each phase consumes the existing per-step and total guest/wall budgets.
+
 The monitor verifies the full unpacked code fingerprint, command table,
 complete selected bytecode, current logic descriptor, initial scan pointer
 and evaluator call frame. Its identity includes the live session and runtime
@@ -84,8 +95,10 @@ A print protocol result named `shown` or `dismissed` records the original
 handler's completion in the declared output mode. It is not a pixel/text
 assertion. Receipts carry `visual_verified: false`. In particular, the tested
 nonblocking print frame did not establish a visible message window. A blocking
-message awaiting input remains incomplete; the adapter does not dismiss it
-automatically or silently continue through a stop.
+message awaiting input remains incomplete under the default policy. The
+explicit key policy above records the waiting frame, source message digest,
+queued input and returned native completion. Timed messages use the original
+timer and can finish without a key when the declared budgets permit.
 
 `status: verified` and `complete: true` mean the observed source path, selected
 scalars, loaded resources and declared object projection matched at the

@@ -23,19 +23,23 @@ NAMES=[f'$agi_v{n}' for n in (0,1,5,21,40,41,60,61,94,107)]+[
 def diagnostic_state(case):
     """Authored branch probes, deliberately not claims of reachable saves."""
     values={name:False if name.startswith('$agi_f') else 0 for name in NAMES}
-    if case in ('print','blocking-print'):
+    if case in ('print','blocking-print','dialogue-enter','dialogue-escape','dialogue-timer'):
         values.update({'$agi_f5':True,'$agi_v0':17,'$agi_v1':18,'$agi_v40':35,
             '$agi_v41':2,'$agi_f75':True,'$agi_f43':True,'$agi_v94':1,
             '$agi_f15':case=='print'})
-    elif case=='erase':
+        if case=='dialogue-timer':values['$agi_v21']=1
+    elif case in ('erase','dialogue-erase'):
         values.update({'$agi_v0':39,'$agi_v1':10,'$agi_v40':24,'$agi_f66':True,
             '$agi_f15':True,'$agi_v107':1,'$agi_f75':True,'$agi_f68':True,
             '$agi_f79':True,'$agi_v5':1})
+        if case=='dialogue-erase':values['$agi_f15']=False
     return values
 
 
 def verify(args):
     source=args.source.resolve();output=args.output.resolve()
+    checkout=Path(__file__).resolve().parents[2]
+    require(output!=checkout and checkout not in output.parents,'Use a private output directory outside the checkout')
     resource=load_logic(source/'LOGDIR',source,103,profile='2.917')
     with native_game('kq1',source,output,args.backend.resolve()) as (p,d,obs,restore,frame,report,game):
         regs=report['resolution']['registers'];cs=int(regs['segments']['cs'],16);ds=int(regs['segments']['ds'],16)
@@ -80,20 +84,21 @@ def verify(args):
             require(read(d,address,1)==bytes([103]),'Caller operand changed unexpectedly')
             write(address,old)
             d.call('breakpoints.delete',{'breakpoint_id':loaded})
-            if args.case in ('initialize','horizon','erase','interrupt'):
+            if args.case in ('initialize','horizon','erase','dialogue-erase','interrupt'):
                 flags=read(d,ds*16+0x109,1);write(ds*16+0x109,bytes([flags[0]|4]))
                 report['interventions'].append({'kind':'synthetic initial state','flag':5,'value':True})
             if args.case=='horizon':
                 pointer=int.from_bytes(read(d,ds*16+0x963,2),'little')
                 horizon=read(d,ds*16+0x12d,2);write(ds*16+pointer+13*43+5,horizon)
                 report['interventions'].append({'kind':'synthetic object position','object':13,'y':'horizon'})
-            if args.case in ('print','blocking-print'):scalars(diagnostic_state(args.case))
+            if args.case in ('print','blocking-print','dialogue-enter','dialogue-escape','dialogue-timer'):scalars(diagnostic_state(args.case))
             entry=bp(FETCH);stop(FETCH);d.call('breakpoints.delete',{'breakpoint_id':entry})
             def trial():
                 m=AGIDOSMonitor(d,resource,cs=cs,ds=ds,code_offset=code_offset)
                 initial=capture_state(m,NAMES)
                 projection=lift_logic(resource,initial_state=initial,control_flow='compact',effect_profile='agi-2.917')
-                adapter=AGIDOSHostAdapter(m,projection,viewdir=source/'VIEWDIR',volume_dir=source)
+                key={'dialogue-enter':'enter','dialogue-escape':'escape','dialogue-erase':'enter'}.get(args.case)
+                adapter=AGIDOSHostAdapter(m,projection,viewdir=source/'VIEWDIR',volume_dir=source,dialogue_key=key)
                 result=adapter.run()
                 (output/f'trial-{len(list(output.glob("trial-*.private.json")))}.private.json').write_text(json.dumps(result,indent=2)+'\n')
                 require(adapter.run()==result and adapter.readback()==result,'Host readback changed or replayed')
@@ -103,7 +108,7 @@ def verify(args):
             try:result=trial()
             finally:
                 if interruption:d.call('breakpoints.delete',{'breakpoint_id':interruption})
-            if args.case=='erase':
+            if args.case in ('erase','dialogue-erase'):
                 require(result['status']=='verified','First invocation did not complete')
                 report['setup_trial']=result
                 r=d.registers();stack=int(r['segments']['ss'],16)*16+(int(r['general']['esp'],16)&65535)
@@ -115,7 +120,7 @@ def verify(args):
                 d.call('state.set_register',{'register':'EIP','value':0x1303})
                 require(int(d.registers()['instruction_pointer'],16)==0x1303,'Callsite edit readback differs')
                 report['interventions'].append({'kind':'new diagnostic invocation','from':0x1306,'to':0x1303,'completed_frame_checked':True})
-                scalars(diagnostic_state('erase'))
+                scalars(diagnostic_state(args.case))
                 entry=bp(FETCH);stop(FETCH);d.call('breakpoints.delete',{'breakpoint_id':entry})
                 result=trial()
             after=frame('host-after.png')
@@ -123,6 +128,8 @@ def verify(args):
             (output/'trial.private.json').write_text(json.dumps(result,indent=2)+'\n')
             for completion in result['host_completions']:
                 p.debug_export(completion['frame']['artifact'],output/f'host-effect-{completion["source_offset"]}.png')
+                if completion.get('dialogue',{}).get('waiting_frame'):
+                    p.debug_export(completion['dialogue']['waiting_frame']['artifact'],output/f'dialogue-{completion["source_offset"]}-waiting.png')
             print(json.dumps({k:result[k] for k in ('status','complete','error','source_offsets','differences','excluded_fields') if k in result}))
             negative=args.case in ('blocking-print','interrupt')
             require(result['status']==('incomplete' if negative else 'verified'),'Unexpected host trial outcome')
@@ -139,5 +146,5 @@ if __name__=='__main__':
     parser.add_argument('--source',type=Path,required=True)
     parser.add_argument('--backend',type=Path,required=True)
     parser.add_argument('--output',type=Path,required=True)
-    parser.add_argument('--case',choices=['baseline','initialize','horizon','print','blocking-print','erase','interrupt'],default='initialize')
+    parser.add_argument('--case',choices=['baseline','initialize','horizon','print','blocking-print','erase','interrupt','dialogue-enter','dialogue-escape','dialogue-timer','dialogue-erase'],default='initialize')
     verify(parser.parse_args())

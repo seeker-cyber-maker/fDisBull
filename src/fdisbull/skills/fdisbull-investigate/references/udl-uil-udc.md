@@ -303,6 +303,25 @@ or whole-game parity. A returned print handler is not visual text recognition.
 do not report them as ordinary gameplay or natural reachability. The standalone
 model evaluator remains native-free.
 
+For branch closure, use `aggregate_native_coverage` with complete source-bound
+host receipts and keep expected, observed and missing source/effect/branch
+sets. Counts must use completed native steps and distinguish actual branch
+destinations; same-target outcomes stay unknown. Reject partial, duplicate or
+foreign-source records. The aggregator validates caller records, not their
+authenticity or whole-game equivalence. Prefer guided model cases to select
+cheap discriminating native probes, then independently run each original path.
+
+An explicit `dialogue_key="enter"` or `"escape"` host policy now qualifies an
+untimed native message wait before sending one physical key. It binds RAM text
+to source, checks the original wait/stack/window and idle keyboard, requires a
+fresh stored preview after measured guest progress, and verifies window closure,
+settled input and original return. Missing capture, foreign stop or lost input
+response must preserve the attempted phase and cannot trigger a replay. Default
+blocking behavior still stops incomplete. Source-linked diagnostic Z builders
+can reuse checked messages and observed state changes with a separate player;
+keep original text/generated content private and label authored commands,
+projection loss, in-memory checkpoint limits and natural-route coverage.
+
 Bind source occurrence using the snapshot key plus the module's resource-local
 location. File offsets and guest offsets are different coordinates. Unknown
 instructions, unsupported control flow, malformed source or budget stops refuse semantic

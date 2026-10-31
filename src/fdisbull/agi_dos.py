@@ -12,6 +12,7 @@ import time
 from uuid import uuid4
 
 from .agi_source import validate_resource
+from .agi_resources import logic_messages
 
 _ENGINE_SHA256 = '11bca817fecc1829f569c3751db7e74aedeb9e8ae970d49247d68607af04cc48'
 _ENGINE_LENGTH = 0x9800
@@ -21,6 +22,7 @@ RETURN = 0x02fa
 FETCH = 0x294a
 FAST_FETCH = 0x0303
 LOGIC_RETURN = 0x1306
+DIALOGUE_WAIT = 0x4620
 _TABLE = 0x061d
 _SIGNATURE = bytes.fromhex('3cfc733e3c00743a3cad760a')
 _CALL_SIGNATURE = bytes.fromhex('56ff971d0683c4028bf00bf67403acebbe')
@@ -148,9 +150,14 @@ class AGIDOSMonitor:
             raise ValueError('native snapshot changed during capture')
         return result
 
-    def step(self):
+    def step(self,*,dialogue_key=None):
+        if dialogue_key is not None and dialogue_key not in ('enter','escape'):
+            raise ValueError('dialogue_key must be enter, escape or None')
         if self.failed:raise ValueError('monitor requires reconciliation after an interrupted step')
-        if self.prefetch:return self._step_source()
+        self._step_deadline=time.monotonic()+self.timeout_ms/1000
+        self._step_guest_remaining=self.guest_ms
+        if self.prefetch:return self._step_source(dialogue_key)
+        if dialogue_key is not None:raise ValueError('dialogue input requires a whole-invocation monitor')
         before = self.snapshot(); regs=before['registers']
         if self._word(regs['instruction_pointer']) != DISPATCH: raise ValueError('not at dispatch boundary')
         off, opcode = self._location(regs)
@@ -177,15 +184,96 @@ class AGIDOSMonitor:
         self.failed=False
         return dict(common,status='completed',next_offset=next_offset,stop=stop,raw_after=after)
 
-    def _run(self):
-        wall=int((self.deadline-time.monotonic())*1000)
-        if wall<=0 or self.guest_remaining<=0:raise ValueError('total native run budget exhausted')
-        result=self.session.run(guest_ms=min(self.guest_ms,self.guest_remaining),
+    def _run(self,*,guest_ms=None):
+        wall=int((min(self.deadline,self._step_deadline)-time.monotonic())*1000)
+        if wall<=0 or min(self.guest_remaining,self._step_guest_remaining)<=0:raise ValueError('total native run budget exhausted')
+        result=self.session.run(guest_ms=min(guest_ms or self.guest_ms,self.guest_remaining,self._step_guest_remaining),
             timeout_ms=min(self.timeout_ms,wall),fast_forward=True,stop_on_hook=True)
         self.guest_remaining-=result.get('guest_elapsed_ms',0)
+        self._step_guest_remaining-=result.get('guest_elapsed_ms',0)
         return result
 
-    def _step_source(self):
+    def _message_identity(self,number):
+        """Bind the original decoded RAM string, before formatting, to input."""
+        record=int.from_bytes(self._read(self.ds*16+0x979,2),'little')
+        if not 0<record<=65526:raise ValueError('invalid current message record')
+        descriptor=self._read(self.ds*16+record,10)
+        if descriptor[2]!=self.resource.logic or descriptor[3]<number or int.from_bytes(descriptor[4:6],'little')!=self.code_offset:
+            raise ValueError('native message record differs from source')
+        table=int.from_bytes(descriptor[8:10],'little')
+        if not 0<table<=65535-2*number-2:raise ValueError('invalid native message table')
+        offset=int.from_bytes(self._read(self.ds*16+table+2*number,2),'little')
+        text=logic_messages(self.resource)[self.resource.resource_sha256].get(str(number))
+        if text is None or len(text)>1024 or not offset:raise ValueError('missing bounded source message')
+        expected=text.encode('cp437')+b'\0'
+        if table+offset+len(expected)>65536 or self._read(self.ds*16+table+offset,len(expected))!=expected:
+            raise ValueError('native message bytes differ from source')
+        return {'message_id':number,'resource_sha256':self.resource.resource_sha256,
+                'text_sha256':sha256(expected[:-1]).hexdigest(),'length':len(expected)-1,
+                'basis':'original decoded RAM text before formatting'}
+
+    def _modal_wait(self):
+        raw=self.snapshot();r=raw['registers']
+        if self._word(r['segments']['cs'])!=self.cs or self._word(r['instruction_pointer'])!=DIALOGUE_WAIT:
+            raise ValueError('not at the qualified dialogue wait')
+        ss=self._word(r['segments']['ss']);sp=self._word(r['general']['esp'])
+        if sp>65527 or int.from_bytes(self._read(ss*16+sp+6,2),'little')!=0x1d25:
+            raise ValueError('dialogue wait call frame differs')
+        if not int.from_bytes(self._read(self.ds*16+0xd15,2),'little'):
+            raise ValueError('original dialogue window is not open')
+        return raw
+
+    def _keyboard_idle(self):
+        state=self.session.keyboard_state();keys=state.get('keyboard',{})
+        if any(type(keys.get(k)) is not int or keys[k]!=0 for k in ('pending_events','owned_keys','queued_guest_ms')):
+            raise ValueError('dialogue keyboard input is not settled')
+        return state
+
+    def _dialogue_run(self,key,off,create,remove,common):
+        if self.resource.code[off]!=101 or off+1>=len(self.resource.code):raise ValueError('dialogue policy requires source print')
+        data=bytes.fromhex(common['raw_before']['data_0009_013f_hex'])
+        if data[0x101]&1 or data[21]!=0:raise ValueError('dialogue key requires untimed blocking print')
+        phase=common['dialogue']={'status':'awaiting_original_wait','key':key,'input_attempted':False,'stops':[]}
+        phase['message']=self._message_identity(self.resource.code[off+1])
+        wait=create(DIALOGUE_WAIT)
+        stop=self._run();common['stop']=stop;phase['stops'].append(stop)
+        if not self._owned_stop(stop,[wait]):raise ValueError('dialogue wait interrupted')
+        phase['waiting_snapshot']=self._modal_wait()
+        phase['keyboard_before']=self._keyboard_idle()
+        first=self.session.screenshot(f'agi-dialogue-{off}-initial.png',hooks=False)
+        phase['initial_frame']=first
+        if not isinstance(first.get('artifact'),str) or not first['artifact']:
+            raise ValueError('initial dialogue frame artifact is missing')
+        remove(wait)
+        # The native wait is already qualified. Allow a bounded video interval
+        # with no input so a completed guest frame can represent the window.
+        preview=self._run(guest_ms=50);common['stop']=preview;phase['stops'].append(preview)
+        elapsed=preview.get('guest_elapsed_ms')
+        if preview.get('outcome')!='guest_time' or type(elapsed) not in (int,float) or not elapsed>=50:
+            raise ValueError('dialogue frame interval interrupted or incomplete')
+        if not int.from_bytes(self._read(self.ds*16+0xd15,2),'little'):raise ValueError('dialogue closed before input')
+        fresh=self.session.screenshot(f'agi-dialogue-{off}-waiting.png',hooks=False)
+        phase['waiting_frame']=fresh
+        if not isinstance(fresh.get('artifact'),str) or not fresh['artifact']:
+            raise ValueError('fresh dialogue frame artifact is missing')
+        a,b=first.get('metadata',{}),fresh.get('metadata',{})
+        if (type(a.get('frame_id')) is not int or type(b.get('frame_id')) is not int or
+            b['frame_id']<=a['frame_id'] or
+            any(type(m) is not int or m<0 for m in (a.get('mode_id'),b.get('mode_id'))) or
+            a['mode_id']!=b['mode_id']):
+            raise ValueError('fresh dialogue frame was not captured')
+        wait=create(DIALOGUE_WAIT)
+        stop=self._run();common['stop']=stop;phase['stops'].append(stop)
+        if not self._owned_stop(stop,[wait]):raise ValueError('dialogue readiness interrupted')
+        phase['ready_snapshot']=self._modal_wait()
+        self._keyboard_idle();remove(wait)
+        phase['status']='input_attempted';phase['input_attempted']=True
+        phase['input']=self.session.keyboard_press(key,hold_ms=1,gap_ms=1)
+        stop=self._run();common['stop']=stop;phase['stops'].append(stop)
+        phase['status']='awaiting_handler_return'
+        return stop
+
+    def _step_source(self,dialogue_key=None):
         before=self.snapshot();regs=before['registers']
         if self._word(regs['instruction_pointer']) not in (FETCH,FAST_FETCH):
             raise ValueError('not at source fetch boundary')
@@ -199,21 +287,27 @@ class AGIDOSMonitor:
             return dict(common,status='stopped',reason='nested logic invocation is outside this monitor profile')
         self.remaining-=1
         owned=[];live=[];cleanup_errors=[];stop=None
+        common['cleanup_errors']=cleanup_errors
         def cleanup():
             while live:
                 ident=live.pop()
                 try:self.session.call('breakpoints.delete',{'breakpoint_id':ident})
                 except Exception as exc:cleanup_errors.append({'breakpoint_id':ident,'error':str(exc)})
+        def create(point):
+            bp=self.session.call('breakpoints.create',{'kind':'execution','once':False,
+                'address':{'space':'segmented','segment':f'0x{self.cs:04X}','offset':f'0x{point:08X}'}})
+            owned.append(bp['breakpoint_id']);live.append(bp['breakpoint_id'])
+            return bp['breakpoint_id']
+        def remove(ident):
+            self.session.call('breakpoints.delete',{'breakpoint_id':ident});live.remove(ident)
         # Mark the attempt before continuing. Unknown transport outcomes must
         # never permit an implicit retry of the original operation.
         self.failed=True
         try:
             for point in ((LOGIC_RETURN,) if opcode==0 else (FETCH,FAST_FETCH)):
-                bp=self.session.call('breakpoints.create',{'kind':'execution','once':False,
-                    'address':{'space':'segmented','segment':f'0x{self.cs:04X}','offset':f'0x{point:08X}'}})
-                owned.append(bp['breakpoint_id'])
-                live.append(bp['breakpoint_id'])
-            stop=self._run();common['stop']=stop
+                create(point)
+            stop=self._run() if dialogue_key is None else self._dialogue_run(dialogue_key,off,create,remove,common)
+            common['stop']=stop
             # Removing our breakpoints can advance backend state_revision.
             # Finish those mutations before publishing a coherent snapshot.
             cleanup()
@@ -234,9 +328,19 @@ class AGIDOSMonitor:
                 return deepcopy(result)
             if pc not in (FETCH,FAST_FETCH):return dict(common,status='stopped',reason='unexpected native boundary')
             next_offset,_=self._location(r)
+            if dialogue_key is not None:
+                common['dialogue']['handler_return_observed']=True
+                if int.from_bytes(self._read(self.ds*16+0xd15,2),'little'):
+                    return dict(common,status='stopped',reason='original dialogue window did not close')
+                common['dialogue']['keyboard_after']=self._keyboard_idle()
+                common['dialogue'].update(status='completed',window_closed=True,input_settled=True)
             result=dict(common,status='completed',next_offset=next_offset)
             self.history.append(result);self.failed=False
             return deepcopy(result)
+        except Exception as exc:
+            # A lost response may follow real input/effects. Preserve the phase
+            # and attempted action; never repeat a key or original operation.
+            return dict(common,status='stopped',reason=str(exc))
         finally:
             # Retain every stop/attempt. Cleanup never continues the guest.
             cleanup()

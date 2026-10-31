@@ -1,11 +1,11 @@
 # fDisBull
 
-This checkout contains the **0.26.1 release source**: read-only recovery
-reconciliation, selected DOS program-exit reporting and broader game-guide
-workflows. See the [0.26.1 notes](docs/RELEASE-0.26.1.md) for scope and gates.
-The published and shared installation is
-[0.26.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.26.0)
-at this source cut; publication and installation are separate steps.
+See the [feature history](docs/FEATURE_HISTORY.md) for what shipped in each
+version and what remains in review. The latest published package is
+[0.27.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.27.0).
+This development branch adds direct AGI lifting and original-DOS qualification
+to the earlier source line; those additions are in the open PR stack described
+in the feature map. Check the installed capabilities when choosing a workflow.
 
 Give an agent a program to explore—and a place to keep what it learns.
 fDisBull connects disassembly, headless debugging, scene-aware controls and
