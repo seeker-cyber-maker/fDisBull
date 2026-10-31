@@ -131,6 +131,7 @@ def test_promoted_profiles_and_adapter_edits_keep_provenance():
     expected=provenance.get('adapted_text_scene_class_source_sha256',
                             provenance['native_text_scene_class_source_sha256'])
     assert hashlib.sha256(original_class.encode()).hexdigest()==expected
+    assert hashlib.sha256((data.parent/'dinopark_purchase.py').read_bytes()).hexdigest()==provenance['bounded_purchase_helper_source_sha256']
 
 
 def test_no_udc_means_no_game_copy_or_implicit_legacy_fallback(tmp_path,monkeypatch):
