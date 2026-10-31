@@ -37,6 +37,7 @@ legacy migration and remaining export limits.
 | I want to… | Start here |
 | --- | --- |
 | Check this copy's decoder, debugger, decompiler and UIL scope without running a target | [`capabilities`](docs/CAPABILITIES.md) |
+| Capture a Mac status menu with explicit display coordinates and restore owned changes | [Reversible native sessions](docs/MACOS_REVERSIBLE_CAPTURE.md) |
 | Extract a GOG DOS installer on macOS or Linux without Wine | [Native GOG unpacking](docs/GOG_UNPACKING.md) |
 | Reuse a reviewed structure in another analysis project | [Portable type catalogs](docs/TYPE_CATALOGS.md) |
 | Understand an executable without running it | [Disassembly and analysis](#disassemble-and-analyze) |

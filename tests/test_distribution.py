@@ -27,6 +27,10 @@ REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','docs/
                        'src/fdisbull/data/dos-runtime-signatures.json','src/fdisbull/data/MICROSOFT-DOS-LICENSE.txt',
                        'src/fdisbull/ghidra_arm64.py','src/fdisbull/macos_lldb.py',
                        'src/fdisbull/_macos_lldb_driver.py','src/fdisbull/data/FdisbullGhidraArm64.txt',
+                       'src/fdisbull/macos_capture.py','src/fdisbull/macos_session.py',
+                       'src/fdisbull/data/FdisbullMacCapture.swift','tests/macos_capture_fixture.swift',
+                       'docs/MACOS_REVERSIBLE_CAPTURE.md','tests/test_macos_capture.py','tests/test_macos_session.py',
+                       'scripts/check_macos_capture_native.py',
                        'src/fdisbull/skills/fdisbull-investigate/SKILL.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/scenes.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/methodology.md',
@@ -123,6 +127,7 @@ def test_distribution_check_requires_runtime_navigation_reference(tmp_path):
     'src/fdisbull/media.py',
     'tests/test_media_modules.py',
     'src/fdisbull/data/FdisbullGhidraArm64.txt',
+    'src/fdisbull/data/FdisbullMacCapture.swift','docs/MACOS_REVERSIBLE_CAPTURE.md',
 ])
 def test_distribution_check_requires_agent_onboarding_resources(tmp_path,required):
     check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']

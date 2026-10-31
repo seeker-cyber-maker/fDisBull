@@ -33,7 +33,8 @@ REQUIRED_PE_RESOURCES |= {"dos_guest/__init__.py", "dos_guest/init.sh", "dos_gue
 REQUIRED_KNOWLEDGE_RESOURCES = {"media.py", "capabilities.py", "skills/fdisbull-investigate/references/media-modules.md"}
 REQUIRED_KNOWLEDGE_RESOURCES |= {"data/dos-runtime-signatures.json", "data/MICROSOFT-DOS-LICENSE.txt"}
 REQUIRED_MACOS_RESOURCES = {"ghidra_arm64.py", "macos_lldb.py", "_macos_lldb_driver.py",
-                            "data/FdisbullGhidraArm64.txt"}
+                            "data/FdisbullGhidraArm64.txt", "macos_capture.py", "macos_session.py",
+                            "data/FdisbullMacCapture.swift"}
 REQUIRED_KNOWLEDGE_RESOURCES |= {"skills/fdisbull-investigate/SKILL.md", "skills/fdisbull-investigate/references/scenes.md",
                                  "skills/fdisbull-investigate/references/methodology.md",
                                  "skills/fdisbull-investigate/references/runtime-navigation.md",
@@ -120,6 +121,9 @@ def check_archive(path: Path) -> int:
         required |= {"src/fdisbull/" + name for name in REQUIRED_MACOS_RESOURCES}
         required |= {"AGENTS.md", "CLAUDE.md", "docs/AGENT_QUICKSTART.md", "docs/MACOS_ARM64_ANALYSIS.md",
                      "docs/CAPABILITIES.md", "docs/MACOS_APP_REPLICATION.md", "tests/test_capabilities.py"}
+        required |= {"docs/MACOS_REVERSIBLE_CAPTURE.md", "tests/test_macos_session.py",
+                     "tests/test_macos_capture.py", "tests/macos_capture_fixture.swift",
+                     "scripts/check_macos_capture_native.py"}
         required |= {"scripts/check_agent_skill.py"}
         required |= REQUIRED_SOURCE_EVIDENCE
         missing = required - relative

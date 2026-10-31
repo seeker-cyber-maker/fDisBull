@@ -2,6 +2,8 @@ include README.md AGENTS.md CLAUDE.md pyproject.toml MANIFEST.in player/pyprojec
 include player/fdisbull_player/*.py
 recursive-include src/fdisbull *.py *.c *.sh
 recursive-include src/fdisbull/data *.json *.txt
+include src/fdisbull/data/FdisbullMacCapture.swift
+include tests/macos_capture_fixture.swift
 recursive-include src/fdisbull/skills *.md
 recursive-include tests *.py
 include tests/wine_gui_fixture.c
