@@ -18,13 +18,17 @@ METHODS={
  'run-module-uil':'Execute a typed symbolic UIL composition; program,selection,[state,max_steps]',
  'run-udl-layer':'Explicitly execute and compare a bounded backing; layer,inputs,[caller_registers,max_steps]',
  'run-udl-selection':'Execute one selected logical binding; selection,binding,inputs,[caller_registers,max_steps]',
- 'build-udc-shell':'Emit native PE64/ELF64 from selected modules; selection,plan,destination,[target,service_adapters,capture_state,c_compiler]',
+ 'build-udc-shell':'Emit native PE64/ELF64/Mach-O arm64 from selected modules; selection,plan,destination,[target,service_adapters,capture_state,c_compiler]',
+ 'build-macos-block-probe':'Emit guarded ARM64 stdin/stdout analysis scaffold for one fixed UIL invoke; selection,destination,[c_compiler]; build only',
  'compile-udc-splice':'Emit source-bound binary substitutions; selection,recipe,destination,[output_name]',
 }
 
 
 def invoke(project,method,params):
  from . import udc_layers
+ if method=='build-macos-block-probe':
+  from .udc_macos_probe import build_macos_block_probe
+  return build_macos_block_probe(project,**params)
  if method=='run-module-uil':
   from .udc_blueprint import execute_module_uil
   return execute_module_uil(project,**params)

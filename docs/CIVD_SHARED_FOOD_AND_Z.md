@@ -34,6 +34,50 @@ exact selection IDs; the source is the literal range in the packed original,
 cross-checked against its decoded resident module and earlier build map.
 No selected instruction bytes change, including 474.01's distinct operands.
 
+## Native macOS ARM64 realization
+
+The same UIL now runs as an ARM64 Mach-O analysis program. It reuses PR #50's
+macOS C generation/compiler/linker backend from commit `fcff554`. The new
+`build-macos-block-probe` method admits a single canonical module invocation,
+emits its selected pure UIL/C-UIL implementation and adds a word-input,
+JSON-output scaffold. It builds without executing.
+
+The ordinary native-shell profile still refuses contract domains. This separate
+analysis scaffold compiles type and domain admission guards instead: support
+cost stays in 1..2, and population stays signed i8. The C generator now widens
+signed-byte ports correctly. No UIL, original instruction, contract domain or
+game resource is changed to fit ARM64.
+
+One actual ARM64 process consumed the exact existing 2,018 vectors, plus four
+invalid rows. Its valid results matched the UIL interpreter, all three
+separately rerun original instruction blocks, and their retained independent
+DOSBox observations: **6,054 original/ARM64 comparisons, zero differences**.
+All three host layouts round-tripped those inputs and committed only the stock
+word. Invalid costs 0/3 and populations -129/128 refused before the block ran.
+The persisted selection reopened with the unchanged UIL identity above.
+
+The scaffold uses sorted-port little-endian word carriers. Signed-byte values
+are sign-extended into those words; noncanonical out-of-range inputs are refused.
+Each complete row produces one indexed JSON observation. Truncated rows and
+more than 10,000 rows fail. It uses libSystem input/output and is not a
+freestanding game executable or a translated full city/turn routine.
+
+The [sanitized ARM64 receipt](evidence/civd-food-arm64/verification.json) keeps
+model qualification separate from actual execution. Model proof scope does
+not expand to source fidelity; original CPU observations establish the finite
+first edge. Existing source/flags/timing/gameplay limits below still apply.
+
+Reproduction from the repository, with the matching Python environment:
+
+```sh
+PYTHONPATH=src:. python examples/recovery/civd_food_arm64.py /private/food-swap /private/verified-builds /private/new-arm64-run
+```
+
+The agent JSON method is discoverable through `fdisbull methods` and accepts
+`selection`, `destination` and optional `c_compiler`. Use the selected runtime's
+request interface and a persisted project; if that method is absent, report
+the install/source capability gap rather than invoking an invented command.
+
 ## Host and backing adapters
 
 Each host representation decodes into the typed logical ports. The selected

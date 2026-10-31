@@ -8,6 +8,8 @@ from . import __version__
 from .output_limits import OutputPolicy, current_output_policy, output_policy_context, validate_request_id
 
 AGENT_SKILL_GUIDES = {
+    'references/sweding.md': 'Keep intent fixed while qualifying alternative implementations, timing, effects and hosting',
+    'references/reconstruction.md': 'First-use recovery recipe: original-to-UIL-to-target gates, discriminating probes and resumable evidence',
     'SKILL.md': 'Start here: investigation technique, cost/reward/confidence and evidence boundaries',
     'references/scenes.md': 'Define scene objects, masks, recognition, readiness and named actions',
     'references/methodology.md': 'Plan evidence, coordinate independent questions, trace causes and screen for interpreters',

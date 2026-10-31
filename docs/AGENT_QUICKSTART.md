@@ -4,6 +4,11 @@ Use this page to find the right fDisBull interface for a task. Replace every
 example path with a path selected by the user. The Python distribution does not
 include a native emulator, game files, saved states or project databases.
 
+For recovery, translation or a backing swap, retrieve
+`agent-skill --reference references/reconstruction.md`. It provides a first-use
+recipe, a runnable counterexample exercise and separate original/UIL/target
+acceptance gates. It requires no earlier conversation or project history.
+
 ## Discover commands and bundled skills
 
 ```text

@@ -29,6 +29,9 @@ REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/integration-025/" + name for name in
 REQUIRED_SOURCE_EVIDENCE |= {"docs/uil-rfcs/0002/" + name for name in
                            ("vectors.json", "replay-summary.json")}
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-026/verification.json")
+REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/civd-food-arm64/verification.json")
+REVIEWED_SOURCE_RECIPES = {'examples/recovery/civd_food_arm64.py', 'examples/recovery/civd_food_swap.py'}
+REQUIRED_SOURCE_EVIDENCE |= REVIEWED_SOURCE_RECIPES
 REQUIRED_PE_RESOURCES = {"wine_guest/agent.c", "wine_guest/init.sh", "wine_guest/broker.py", "wine_guest/selftest.c"}
 REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/broker.py", "ida_guest/SDK-LICENSE.txt", "ida_wire.py", "ida_remote.py", "ida_trace.py"}
 REQUIRED_PE_RESOURCES |= {"dos_guest/__init__.py", "dos_guest/init.sh", "dos_guest/broker.py", "dos_qemu.py", "dos_runtime.py", "qemu_machine.py", "gdb_rpc.py", "guest_assets.py"}
@@ -36,6 +39,8 @@ REQUIRED_KNOWLEDGE_RESOURCES = {"data/dos-runtime-signatures.json", "data/MICROS
 REQUIRED_KNOWLEDGE_RESOURCES.add("data/civd-z-screen-families.json")
 REQUIRED_KNOWLEDGE_RESOURCES |= {"skills/fdisbull-investigate/SKILL.md", "skills/fdisbull-investigate/references/scenes.md",
                                  "skills/fdisbull-investigate/references/methodology.md",
+                                 "skills/fdisbull-investigate/references/reconstruction.md",
+                                 "skills/fdisbull-investigate/references/sweding.md",
                                  "skills/fdisbull-investigate/references/runtime-navigation.md",
                                  "skills/fdisbull-investigate/references/proofs.md",
                                  "skills/fdisbull-investigate/references/workflows.md",
@@ -75,7 +80,11 @@ def check_archive(path: Path) -> int:
     for entry in entries:
         if entry.is_absolute() or ".." in entry.parts:
             raise ValueError(f"Invalid archive path: {entry}")
-        if EXCLUDED_DIRECTORIES.intersection(entry.parts):
+        excluded = EXCLUDED_DIRECTORIES.intersection(entry.parts)
+        relative = PurePosixPath(*entry.parts[1:]).as_posix()
+        reviewed_recipe = (path.suffix != ".whl" and excluded == {"examples"}
+                           and relative in REVIEWED_SOURCE_RECIPES)
+        if excluded and not reviewed_recipe:
             raise ValueError(f"Excluded directory in {path.name}: {entry}")
         if entry.suffix.lower() in EXCLUDED_SUFFIXES or ".fdb-" in entry.name.lower():
             raise ValueError(f"Excluded binary/data file in {path.name}: {entry}")

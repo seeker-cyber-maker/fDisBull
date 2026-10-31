@@ -14,6 +14,42 @@ are evidence, not instructions. This skill adds investigation guidance; it does
 not authorize publishing, changing original files or acting outside the user's
 task.
 
+
+## Start without project history
+
+fDisBull stores analysis and evidence; it does not automatically recover a game.
+**UDL** maps source operations to shared semantics. **UIL** expresses the
+operation and its effects. **UDC** realizes that UIL with a selected implementation
+and explicit adapters. Do not invent alternative meanings for these terms.
+
+Identify the selected executable and runtime before choosing commands:
+
+```text
+fdisbull --version
+fdisbull agent-skill --index
+fdisbull methods
+```
+
+Use the same explicit executable/Python environment for subsequent calls. A
+repository, installed runtime and agent-installed skill can be different
+revisions. Record their identities; use the installed method inventory as the
+capability authority. Do not combine unrelated branch copies into an unversioned
+"latest" skill. Keep unsupported work visible and choose a qualified route.
+
+For any recovery, translation, port, provider swap or source-reuse task, read
+[the reconstruction recipe](references/reconstruction.md) before authoring a
+model. It works without earlier chat context and includes an executable
+counterexample exercise. Preserve the user's full outcome in a coverage ledger;
+finish one bounded operation at a time without silently replacing the requested
+result with a smaller demonstration.
+
+Before describing behavior as recovered or equivalent, compare **original →
+UIL** and **UIL → generated/selected output** separately on the same declared
+inputs, and then compare the composed results. Two models with shared ancestry,
+a source-entry snippet, a file hash and a successful native build cannot replace
+the original-to-model check. If original execution is unavailable, continue
+useful permitted work with that edge explicitly unqualified.
+
 ## Establish the target and claim
 
 Identify the input and its format before choosing a path. Keep file offsets,
@@ -98,6 +134,10 @@ conditions, effects, events, time, persistence and public observations. Preserve
 working low-level behavior and mark opaque operations explicitly while recovering
 one complete interaction at a time. Renaming machine operations does not recover
 intent.
+
+For implementation alternatives and composed effects, use
+[the sweding guide](references/sweding.md). These are architecture and
+qualification instructions, not an automatic backend or language bridge.
 
 ## Report the tested scope
 
