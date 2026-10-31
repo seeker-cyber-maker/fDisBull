@@ -1,11 +1,40 @@
 # DinoPark analysis friction and retained Z terminal replies
 
+The [Coelophysis purchase follow-up](VERIFICATION-DINOPARK-COELOPHYSIS-RECONCILIATION-2026-10-31.md)
+replaces fixed purchase sleeps in Z with bounded original-input phases, retains
+the paused provider and order receipts, and exposes a guarded continuation plus
+read-only purchase reconciliation. It also continues the remaining entry and
+asset investigation without equating an unobserved path with unused content.
+
+The [DinoMart reconciliation follow-up](VERIFICATION-DINOPARK-DINOMART-RECONCILIATION-2026-10-31.md)
+extends the scene host budget, retains failed-navigation input evidence and
+qualifies read-only recovery in the same original guest. It continues the
+97-entry/13-asset ledgers, fixes batch certificate durability and records a
+separate unreplayed purchase transport timeout. Reusable investigation guidance
+is proposed independently in [PR #80](https://github.com/seeker-cyber-maker/fDisBull/pull/80).
+
+The [caller/filename-producer follow-up](VERIFICATION-DINOPARK-CALLER-PRODUCERS-2026-10-31.md)
+traces 62 more entries to pointer publications, identifies matching dispatch
+consumers for 61 of them, and explains the static mechanisms behind all 41
+previously observed PCs. It retains 97 unresolved caller/producer cases and
+the remaining asset-use limits rather than treating them as dead content.
+
+The [residual-analysis follow-up](VERIFICATION-DINOPARK-RESIDUAL-ANALYSIS-2026-10-31.md)
+implements call-identity and monotone-join fixes, clears all 172 partial jobs,
+and records original-native witnesses and callback publications for 42 of the
+201 entry hypotheses. It also revisits all 13 resource candidates with Luna.
+
+The [October 31 content-accounting follow-up](VERIFICATION-DINOPARK-CONTENT-ACCOUNTING-2026-10-31.md)
+closes the file/format and physical-byte inventory, adds a native sound-expander
+comparison and diagnoses the original demo's early stop. Its later measurements
+retain the distinction between byte accounting and complete semantic analysis.
+
 This records observed analysis limits and proposed follow-ups from a private
 DinoPark MZ investigation on 2026-10-30, followed by bounded native asset tracing.
 The PR now also implements [oversized Z reply recovery](Z_REPLY_RECOVERY.md):
 the original result is retained before transmission and can be retrieved without
-repeating an input. The static-analysis and remaining observer/menu proposals
-stay prospective. No original routine or resource is certified unused.
+repeating an input. Other analysis and observer/menu proposals remain
+prospective. No original routine or resource is certified unused.
 
 The investigation used source version **0.26.1**, pinned at
 `43d24a73d744516653d53d3bc8828787c499d299`, with the source import path set
@@ -264,3 +293,14 @@ The [named-action native batch](VERIFICATION-DINOPARK-Z-NAMED-TERMINAL-2026-10-3
 passed through the public Player in one guest. It also records the existing
 pre-entry operating-report refusal and unsupported modal checkpoint creation
 as concrete follow-ups, without upgrading either to unknown game effects.
+
+### Resumed unused-content investigation
+
+The [subsequent producer and runtime study](VERIFICATION-DINOPARK-UNUSED-CONTENT-2026-10-30.md)
+accounts for filename sources for 54 of 57 ACT files, distinguishes a selective
+sprite reader from full actor loading, and retains BUS/OFFICE/PEOPLE as open
+producer gaps. A muted original-game route completed setup and 24 time advances.
+The candidate visitor-message binding remains unqualified, and an optional
+quit extension exposed a private controller assumption about accepted modal
+results. The record preserves that limitation separately from native gameplay
+and cleanup, along with concrete resource-telemetry follow-ups.

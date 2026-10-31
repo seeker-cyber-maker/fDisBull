@@ -105,6 +105,12 @@ evidence. Install `.[managed]` for optional .NET metadata and CIL inspection.
 See the [user guide](docs/USER_GUIDE.md), [API](docs/API.md) and
 [platform support](docs/PLATFORMS.md) for more options.
 
+Miles AIL music drivers can be recognized and inspected directly, including
+their exported functions and device descriptions. DOS disassembly also names
+documented DIGPAK/MIDPAK audio calls. See [DOS audio drivers](docs/DOS_AUDIO_DRIVERS.md)
+for commands and the limits of static recognition; execution and hardware
+support require separate original-runtime evidence.
+
 ## Disassemble and analyze
 
 Import x86 16/32/64 or ARM64 programs in supported DOS MZ, COM, PE, ELF,

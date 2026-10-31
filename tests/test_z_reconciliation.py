@@ -79,6 +79,109 @@ def test_confirmed_action_readback_can_reconcile_without_dispatching_or_running_
     assert backend.mutations() == before and backend.state['$key'] is True
 
 
+@pytest.mark.parametrize('wrong_identity', [False, True])
+def test_provider_navigation_receipt_reconciles_only_the_bound_attempt(tmp_path, wrong_identity):
+    class HeldProvider(ReadbackBackend):
+        held = False
+        def observe(self):
+            if self.held:
+                return {'complete':False,'session_token':self.receipt['witness']['session_token'],
+                        'reconciliation_available':True,
+                        'recovery_id':'different' if wrong_identity else 'original-attempt'}
+            return super().observe()
+        def act(self, request):
+            self.receipt = super().act(request)
+            self.action = {k:request[k] for k in ('verb','target','item')}
+            self.held = True
+            return {'complete':False,'status':'incomplete','effects':'unknown',
+                    'recovery_required':True,'recovery_id':'original-attempt'}
+        def reconcile(self, recovery_id=None):
+            assert recovery_id == 'original-attempt'
+            self.operations.append('provider-read-only-reconcile')
+            self.held = False
+            return {**self.receipt,'read_only':True,'recovery_id':recovery_id,
+                    'effects':'applied-confirmed','action':self.action}
+    backend = HeldProvider(); session = batch(tmp_path, backend)
+    assert session.run()['status'] == 'unknown'
+    original = json.loads(session.path.read_text())['steps'][0]['attempts'][0]['result']
+    result = session.reconcile()
+    if wrong_identity:
+        assert result['reconciliation']['status'] == 'unresolved' and backend.held
+        assert 'provider-read-only-reconcile' not in backend.operations
+    else:
+        assert result['steps'][0]['state'] == 'completed' and result['next_step'] == 'unlock'
+        attempt = result['steps'][0]['attempts'][0]
+        assert attempt['result_before_reconciliation'] == original
+        assert attempt['result']['read_only'] is True
+    assert backend.operations.count('act') == 1
+
+
+@pytest.mark.parametrize('following_read', ['error', 'unqualified'])
+def test_consumed_provider_reconciliation_survives_failed_read_and_journal_reopen(tmp_path, following_read):
+    class HeldProvider(ReadbackBackend):
+        held = False
+        fail_after_reconcile = False
+
+        def observe(self):
+            if self.fail_after_reconcile:
+                self.fail_after_reconcile = False
+                self.operations.append('observe')
+                if following_read == 'error':
+                    raise ValueError('declared reconciliation readback error')
+                return {'complete':False,'session_token':self.receipt['witness']['session_token']}
+            if self.held:
+                self.operations.append('observe')
+                return {'complete':False,'session_token':self.receipt['witness']['session_token'],
+                        'reconciliation_available':True,'recovery_id':'original-attempt'}
+            return super().observe()
+
+        def act(self, request):
+            self.receipt = super().act(request)
+            self.action = {k:request[k] for k in ('verb','target','item')}
+            self.held = True
+            return {'complete':False,'status':'incomplete','effects':'unknown',
+                    'recovery_required':True,'recovery_id':'original-attempt'}
+
+        def reconcile(self, recovery_id=None):
+            assert self.held, 'The consumed provider reconciliation must not be repeated'
+            assert recovery_id == 'original-attempt'
+            self.operations.append('provider-read-only-reconcile')
+            self.held = False
+            self.fail_after_reconcile = True
+            self.certificate = {**self.receipt,'read_only':True,'recovery_id':recovery_id,
+                                'effects':'applied-confirmed','action':self.action}
+            return deepcopy(self.certificate)
+
+    backend = HeldProvider(); session = batch(tmp_path, backend)
+    assert session.run()['status'] == 'unknown'
+    original = json.loads(session.path.read_text())['steps'][0]['attempts'][0]['result']
+    result = session.reconcile()
+    assert result['status'] == 'unknown' and result['reconciliation']['status'] == 'unresolved'
+    assert result['reconciliation']['reason'] == (
+        'observation-failed' if following_read == 'error' else 'unqualified-observation')
+    assert not backend.held
+    saved = json.loads(session.path.read_text())['steps'][0]
+    assert saved['state'] == 'unknown'
+    assert saved['attempts'][0]['result_before_reconciliation'] == original
+    assert saved['attempts'][0]['result'] == backend.certificate
+    before = backend.mutations()
+    assert before == ['act', 'provider-read-only-reconcile']
+
+    reopened = batch(tmp_path, backend)
+    result = reopened.reconcile()
+    assert result['reconciliation']['status'] == 'reconciled'
+    assert result['steps'][0]['state'] == 'completed'
+    assert result['status'] == 'pending' and result['next_step'] == 'unlock'
+    assert result['steps'][1]['state'] == 'pending' and result['steps'][1]['attempts'] == []
+    attempt = result['steps'][0]['attempts'][0]
+    assert attempt['result_before_reconciliation'] == original
+    assert attempt['result'] == backend.certificate
+    assert backend.state['$key'] is True
+    assert backend.mutations() == before
+    assert reopened.reconcile()['reconciliation']['status'] == 'not-needed'
+    assert backend.mutations() == before
+
+
 def test_restore_reply_is_durable_before_following_read_and_reconciliation_rewinds_only_journal(tmp_path):
     backend = ReadbackBackend(); original = batch(tmp_path, backend)
     original.checkpoint('before'); original.run(max_steps=1)

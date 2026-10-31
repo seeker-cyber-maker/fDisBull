@@ -145,6 +145,14 @@ published 0.27.0 release does not include those new probes. Read
 static/runtime address separation and the still-unimplemented app-level UIL
 export.
 
+Miles AIL 2 driver libraries (often `.ADV`) are recognized by validated bytes
+and expose named exports and a bounded descriptor candidate. They import
+automatically or with `--image ail`; addresses remain module-relative and no
+runtime driver is installed. Use `dos-services --vector 0x66 --ax 0x688` to
+describe a DIGPAK call, or `--ax 0x702` for MIDPAK. Stored DOS disassembly uses
+the same names when AX is known, retaining unverified-handler and unknown-outcome
+qualifications. See [DOS audio drivers](DOS_AUDIO_DRIVERS.md).
+
 ### Observe a real DOS target
 
 ```text

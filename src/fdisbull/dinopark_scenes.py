@@ -180,13 +180,13 @@ def pixel_predicate(pattern):
     return {'all': [base] + [{'not': pixel_predicate(other)} for other in rejected]} if rejected else base
 
 
-def take_frame(project, debug, name):
+def take_frame(project, debug, name, *, hooks=True):
     filename = name + '.png'
     number = 2
     while (project.path.parent / filename).exists():
         filename = f'{name}-{number}.png'
         number += 1
-    frame = debug.screenshot(filename)
+    frame = debug.screenshot(filename, hooks=hooks)
     project.debug_export(frame['artifact'], project.path.parent / filename)
     row = project.db.execute('SELECT data FROM debug_artifacts WHERE id=?', (frame['artifact'],)).fetchone()
     with Image.open(io.BytesIO(row['data'])) as picture:
@@ -343,13 +343,18 @@ def prepare_scene_pointer(debug, scene, event, *, object_name='office.bank'):
 prepare_bank_pointer = prepare_scene_pointer
 
 
-def park_catalogue_pointer(text):
+def park_catalogue_pointer(text, *, budget=None):
     """Move the original software cursor away from labels and toolbar probes."""
+    if budget is not None:
+        budget.timeout()
     moved = text.debug.call('input.mouse.move', {'x': 270, 'y': 170})
     text.event({'phase': 'mart_pointer_parked', 'point': [270, 170], 'result': moved})
     if moved.get('accepted') is not True:
         raise RuntimeError('Catalogue pointer movement unavailable; no purchase input sent')
-    run_guest(text.debug, 150)
+    if budget is None:
+        run_guest(text.debug, 150)
+    else:
+        budget.run(text.debug, 150)
 
 
 def catalogue_pan_valid(text, frame, image, selector):
@@ -387,12 +392,14 @@ class KnownSceneNotice(RuntimeError):
         self.notice, self.frame = notice, frame
 
 
-def prepare_mart_first_page(text):
+def prepare_mart_first_page(text, *, budget=None):
     """Resolve the Coelophysis intent independently of the last catalogue read."""
     text.debug.scene_assert(text.mart, object='mart.back')
-    park_catalogue_pointer(text)
+    park_catalogue_pointer(text, budget=budget)
     selector = text.debug.memory('4020:3c5c', length=2)['hex']
     for attempt in range(49):
+        if budget is not None:
+            budget.timeout()
         frame, image = take_frame(text.project, text.debug, 'mart-first-page')
         if matches(image, text.patterns['coel_page']):
             predicate = pixel_predicate(text.patterns['coel_page'])
@@ -407,12 +414,17 @@ def prepare_mart_first_page(text):
             raise RuntimeError('Catalogue navigation context changed; purchase input withheld')
         if attempt == 48:
             break
+        if budget is not None:
+            budget.timeout()
         moved = text.debug.call('input.mouse.move', {'x': 0, 'y': 50})
         text.event({'phase': 'mart_pan_input', 'result': moved, 'point': [0, 50]})
         if moved.get('accepted') is not True:
             raise RuntimeError('Catalogue movement outcome unknown; do not retry')
-        run_guest(text.debug, 80)
-        park_catalogue_pointer(text)
+        if budget is None:
+            run_guest(text.debug, 80)
+        else:
+            budget.run(text.debug, 80)
+        park_catalogue_pointer(text, budget=budget)
     raise RuntimeError('First catalogue page not reached within the pan budget; purchase input withheld')
 
 
@@ -428,6 +440,34 @@ def definition(reference, title, predicate, selector, action, point, outcome):
                      'visible': predicate, 'ready': selector, 'enabled': selector,
                      'action': {'kind': 'click'}, 'outcome': outcome,
                      'guest_ms': 12000, 'timeout_ms': 10000}]}
+
+
+def mart_entry_object(reference, predicate, selector, patterns):
+    obj = definition(reference, 'street', predicate, selector, 'street.mart', [160, 66],
+                     {'any': [pixel_predicate(patterns['mart']),
+                              pixel_predicate(patterns['after'])]})['objects'][0]
+    # Loading the catalogue reads several original assets. Native observation
+    # hooks can consume host time while only a few guest seconds have elapsed.
+    # Keep both budgets finite and below the player's 60-second request bound.
+    obj['timeout_ms'] = 40000
+    return obj
+
+
+def qualify_dinomart(text):
+    """Read the current destination and publish its scene; never send guest input."""
+    frame, image = take_frame(text.project, text.debug, 'dinomart-before', hooks=False)
+    views = [view for view in ('mart', 'after') if matches(image, text.patterns[view])]
+    if not views:
+        raise RuntimeError('DinoMart catalogue not recognized; outcome unknown')
+    view = views[0]
+    selector = {'memory': {'address': '4020:3c5c', 'length': 2,
+                          'hex': text.debug.memory('4020:3c5c', length=2)['hex']}}
+    street = text.project.debug_scene_info(text.street)['definition']['match']
+    doc = definition(frame, 'dinomart', pixel_predicate(text.patterns[view]), selector,
+                     'mart.back', [216, 187], street)
+    saved = text.project.debug_save_scene('dinomart', doc, parent=text.mart)
+    text.mart, text.current = saved['id'], 'dinomart'
+    return {'frame': frame, 'view': view, 'scene': saved}
 
 
 def balances(debug):
@@ -556,6 +596,8 @@ class TextScene:
         self.vegasaurus_proof = None
         self.vegasaurus_extinct = False
         self.last_continuation = None
+        self.bounded_purchases = False
+        self.dinosaur_order = None
 
     def save_preflight(self, name):
         try:
@@ -812,7 +854,7 @@ class TextScene:
                     'persistence': 'unknown'})
         if result.get('accepted') is not True or result.get('delivery') != 'queued':
             raise RuntimeError('shop input not queued; outcome unknown')
-        return run_guest(self.debug, ms)
+        return result if ms is None else run_guest(self.debug, ms)
 
     def observe_resources(self, expected, label):
         observed = park_resources(self.debug)
@@ -1221,6 +1263,9 @@ class TextScene:
                 'The finances retain a $25,000 dinosaur-purchase expense. You are in DinoMart.')
 
     def buy_dinosaur(self):
+        if self.bounded_purchases:
+            from .dinopark_purchase import buy
+            return buy(self)
         if self.current != 'dinomart':
             return 'That action is not available in this scene.'
         before = balances(self.debug)
@@ -1733,6 +1778,11 @@ class TextScene:
             return self.buy_land()
         if command == 'buy coelophysis':
             return self.buy_dinosaur()
+        if command == 'continue dinosaur order':
+            if self.dinosaur_order is None:
+                return 'There is no active dinosaur order. No input was sent.'
+            from .dinopark_purchase import resume
+            return resume(self)
         if command in ('buy vegasaurus', 'buy vegasosaurus'):
             return self.buy_vegasaurus()
         if command == 'read vegasaurus':
@@ -1782,6 +1832,13 @@ class TextScene:
         # scene_click has already matched the fresh target predicate.
         self.current = target
         return self.describe()
+
+
+def dispatch_local_action(text, command):
+    """Use the same local action dispatcher for CLI and Z; route travel separately."""
+    if command.startswith('go ') and command != 'go park':
+        return None
+    return text.act(command)
 
 
 def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, on_event=None, on_spawn=None,
@@ -2012,8 +2069,9 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                             event(observed)
                             say(rendered, flush=True)
                             continue
-                        if command in ('borrow', 'repay', 'buy desert plot', 'buy coelophysis', 'buy vegasaurus', 'buy vegasosaurus', 'read vegasaurus', 'buy wood fence', 'hire tour guide', 'buy 20 small feeders', 'open park', 'go park', 'check inventory', 'status', 'advance time', 'acknowledge notice'):
-                            say(text.act(command), flush=True)
+                        local_result = dispatch_local_action(text, command)
+                        if local_result is not None:
+                            say(local_result, flush=True)
                             continue
                         if text.current == 'general_store' and command == 'go street':
                             say(text.act(command), flush=True)
@@ -2059,9 +2117,8 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                                                           'hex': debug.memory('4020:3c5c', length=2)['hex']}}
                             street_doc = definition(street_frame, 'street', street_pred, street_selector,
                                                     'street.office', [175, 140], office_pred)
-                            street_doc['objects'].append(definition(street_frame, 'street', street_pred, street_selector,
-                                'street.mart', [160, 66], {'any': [pixel_predicate(patterns['mart']),
-                                                                  pixel_predicate(patterns['after'])]})['objects'][0])
+                            street_doc['objects'].append(mart_entry_object(
+                                street_frame, street_pred, street_selector, patterns))
                             for obj, point, view in [('street.employment', [270, 66], 'employment'),
                                                      ('street.diner', [55, 65], 'dino_diner'),
                                                      ('street.store', [270, 140], 'general_store')]:
@@ -2083,16 +2140,8 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                             receipt['street_after'] = street_frame
                         elif command == 'go dinomart':
                             action = debug.scene_click(street['id'], 'street.mart')
-                            mart_frame, mart_image = take_frame(project, debug, 'dinomart-before')
-                            view = 'mart' if matches(mart_image, patterns['mart']) else 'after'
-                            if not matches(mart_image, patterns[view]):
-                                raise RuntimeError('DinoMart catalogue not recognized after input')
-                            mart_selector = {'memory': {'address': '4020:3c5c', 'length': 2,
-                                                        'hex': debug.memory('4020:3c5c', length=2)['hex']}}
-                            mart_doc = definition(mart_frame, 'dinomart', pixel_predicate(patterns[view]),
-                                                  mart_selector, 'mart.back', [216, 187], street_pred)
-                            mart = project.debug_save_scene('dinomart', mart_doc, parent=text.mart)
-                            text.mart, text.current = mart['id'], 'dinomart'
+                            qualified = qualify_dinomart(text)
+                            mart_frame, mart = qualified['frame'], qualified['scene']
                             text.vegasaurus_extinct = False
                             rendered = text.describe()
                             receipt['dinomart_before'] = mart_frame
