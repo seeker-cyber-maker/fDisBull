@@ -105,6 +105,45 @@ in the run's artifact table before export.
 - The `A` auto-build toggle and the `a` unit-list cursor still lack a runtime
   exercise; the scene models them from the source and dispatch only.
 
+## Debugger scene overlay
+
+The city screen is also a `fdisbull-scene-1` overlay bound to the debugger's own
+captures. The definition builder is `examples/civ/civ_city_overlay.py`; the
+scene lives in the private run project, not in Git.
+
+- Revision `731dea45…`: city-screen match (three stable pixels across INFO,
+  HAPPY and MAP), `tab-happy`, `tab-map`, `change`; overlay exported with
+  numbered markers.
+- Revision `3529f038…` (child): adds `tab-city-view`.
+- Revision `97950c30…` (child): `change` outcome re-measured from the live
+  chooser frame and both live frames attached as evidence; reference replaced by
+  the live city frame.
+- Revision `c961e693…` (child): `change` outcome accepts two of three popup
+  border pixels because the chooser list length varies with available items.
+
+Live verification (run `1dfc9a55…`, 474.03 install, keyboard-only):
+
+| Operation | Result |
+|---|---|
+| `assert_current()` on the city screen | `matched` |
+| `act('tab-happy')` | `matched`; the HAPPY content pixel changed as recorded |
+| `act('tab-map')` | `matched`; the MAP content pixel changed as recorded |
+| `act('change')` | `matched`; pressing `c` opened the production chooser |
+
+The two failed attempts (`bcea8bf2…`, `b51825af…`) are kept: the scene asserted
+and both tab acts passed, but `change` timed out because its outcome pixel had
+been authored from an older chooser frame whose list was shorter. That is the
+normal authoring loop: the live frame corrects the recorded predicate.
+
+Adding elements uses append-only child revisions: `debug_save_scene(name,
+definition, parent=current_revision)` keeps object identity by name, binds
+per-object evidence to run artifacts, and retains the older revisions for
+review (`debug_scene_info`, `debug_scene_overlay`, `debug_scene_observations`).
+The whole object list is resent in each revision, and the scene's `match` must
+hold before an action, so controls that only exist inside a popup belong to a
+handler or a separate scene. Debug scenes and Z IL scenes are separate formats;
+there is no automatic sync between them.
+
 ## Z route (no debugger)
 
 The same recovered transitions are executable as a shared-IL scene, so scene work
