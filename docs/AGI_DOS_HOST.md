@@ -77,7 +77,15 @@ counts as a return.
 Variable bytes and high-bit-first packed flags are captured from paused RAM.
 Object records retain signed positions, dimensions, indices, flags, controller
 settings and previous-position data. Loaded-view lists are traversed with
-cycle/count bounds; every loaded payload must match its captured resource.
+cycle/count bounds. Loaded payloads must be byte-identical to their captured
+resource or pass the bounded shared-cel mirror-cache relation. This edition
+re-encodes shared VIEW cels in RAM during ordinary direction changes. The check
+preserves directories, geometry, transparency and every effective loop/cel
+image; other changes and incomplete transformations refuse. Re-encoded rows and
+unused tails are confined to allocations bounded by the next structural pointer.
+Source and runtime hashes remain distinct in `view_bindings`; normalization does
+not establish byte identity or authenticate a writer. `native_view_captures`
+retains the observed runtime byte versions for private export by the caller.
 Object view, loop and cel pointers and dimensions must bind to those payloads.
 Nonzero previous-cel pointers must also refer to a bound cel. Paused-state
 revisions are checked across captures, after owned breakpoint cleanup.

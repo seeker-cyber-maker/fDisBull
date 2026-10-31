@@ -1,5 +1,9 @@
 # Source-linked AGI diagnostic Z scene
 
+For a scene exported from ordinary gameplay, use the
+[normal goat encounter replay and exporter](AGI_NATURAL_GOAT.md). The example
+below preserves the earlier independent diagnostic probes and their limits.
+
 `examples/agi/build_z_scene.py` creates a private, partial Z scene from the
 owner's KQ1 AGI 2.917 logic 103 and the checked-in diagnostic host receipt. It
 checks the source resource identity and instruction bytes at offsets 413, 427

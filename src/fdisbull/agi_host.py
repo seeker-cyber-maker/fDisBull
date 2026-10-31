@@ -12,7 +12,7 @@ from .agi_dos import AGIDOSMonitor
 from .agi_effects import CONTRACT, object_state, validate_context
 from .agi_lift import lift_logic
 from .agi_picture import extract_v2_resource
-from .agi_resources import capture_view, logic_messages
+from .agi_resources import bind_native_view, capture_view, logic_messages
 from .interaction_il import execute_il
 
 _SCALAR=re.compile(r'^\$agi_([vf])(0|[1-9][0-9]{0,2})$')
@@ -56,6 +56,7 @@ class AGIDOSHostAdapter:
         self.dialogue_key=dialogue_key
         self.projection=deepcopy(projection);self.document=projection['uil']
         self._payloads={};self._views={};self._report=None
+        self._view_bindings={};self.native_view_captures={}
         raw=monitor.snapshot();self.initial=capture_state(monitor,self.document['variables'],raw)
         rebuilt=lift_logic(monitor.resource,initial_state=self.initial,control_flow='compact',
                            effect_profile='agi-2.917')
@@ -82,7 +83,13 @@ class AGIDOSHostAdapter:
             seen.add(pointer);node=self._read(pointer,5);n=node[2];data=int.from_bytes(node[3:5],'little')
             if n in views or not data:raise ValueError('ambiguous loaded view')
             self._view(n)
-            if self._read(data,len(self._payloads[n]))!=self._payloads[n]:raise ValueError('native VIEW bytes differ from captured resource')
+            native=self._read(data,len(self._payloads[n]))
+            binding=bind_native_view(self._payloads[n],native)
+            key=(n,binding['source_sha256'],binding['runtime_sha256'])
+            if key not in self._view_bindings:
+                if len(self._view_bindings)>=1024:raise ValueError('native VIEW version budget exhausted')
+                self._view_bindings[key]={'view':n,**binding}
+                self.native_view_captures[binding['runtime_sha256']]=native
             views[n]=data;pointer=int.from_bytes(node[:2],'little')
         return views
 
@@ -253,5 +260,6 @@ class AGIDOSHostAdapter:
         except Exception as exc:
             report.update(status='incomplete',error=str(exc),recovery_required=bool(report['attempts']))
         finally:
+            report['view_bindings']=deepcopy(list(self._view_bindings.values()))
             if report['status']!='verified' and report['attempts']:report['recovery_required']=True
         return self.readback()
