@@ -49,10 +49,14 @@ def test_shifted_selected_frame_still_requires_original_species_and_price(monkey
     real_matches = scenes.matches
     text, native, events = shop(monkeypatch)
     frame, pattern = selected_frame(-16)
+    from test_dinopark_picked_catalogue import picked_frame
+    first_frame,first_pattern=picked_frame()
     text.patterns['coel_selected'] = pattern
+    text.patterns['coel_picked'] = first_pattern
     take_frame, fake_matches = scenes.take_frame, scenes.matches
     monkeypatch.setattr(scenes, 'take_frame', lambda *a, **k:
-        ({'artifact':'authored-selected'}, frame) if native.view == 'coel_selected' else take_frame(*a, **k))
+        ({'artifact':'authored-selected'}, frame) if native.view == 'coel_selected' else
+        ({'artifact':'authored-picked'}, first_frame) if native.view == 'coel_picked' else take_frame(*a, **k))
     monkeypatch.setattr(scenes, 'matches', lambda image, spec:
         real_matches(image, spec) if isinstance(image, Image.Image) else fake_matches(image, spec))
     if fault == 'species': native.species = 19

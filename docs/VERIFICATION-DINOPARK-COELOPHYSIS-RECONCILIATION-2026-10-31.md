@@ -91,7 +91,7 @@ A later first-selection trial exposed the same layout issue in the distinct
 `coel_picked` profile, before any price or order input. The request returned in
 35.037 seconds; one continuation used the remaining cumulative allowance in
 6.450 seconds. Its selection was delivered once and balances stayed unchanged.
-This profile has **38 moving card anchors and 10 fixed disabled-BUY anchors**,
+This profile has **38 moving card anchors and 10 fixed BUY-control anchors**,
 not the selected-price profile's 35/13 split. Its correction uses a separate,
 narrower **-8 through +8 pixel** range around the existing price-click point.
 The price coordinate and the original species/price guard after that click
@@ -99,6 +99,14 @@ are unchanged. No unqualified assumption about the species field before the
 price click is introduced. Of 25 retained first-selection frames, 24 match
 every anchor under the bounded translation and the transitional frame still
 fails. The held older provider was not patched or replayed.
+
+Independent review found that a real selected-price reference also satisfied
+the translated picked signature. The fixed control colors overlap between
+these views and do not prove an enabled or disabled state. First-selection
+qualification now explicitly excludes every view accepted by the selected
+matcher. A regression constructs the overlapping signatures and requires that
+ambiguity to be rejected; an authored selected-frame negative alone had missed
+the real overlap. The post-price native species/quote check remains separate.
 
 ## Native commit versus presentation
 
@@ -172,7 +180,7 @@ The imported scene-class identity and sampled profile hashes remain separate
 from the updated adapter class and new purchase-helper source hashes. No
 original media or executable bytes are added to source or package data.
 
-The final source check ran **214 passed / 19 skipped** across the affected
+The final source check ran **215 passed / 19 skipped** across the affected
 purchase, recovery, Z, Batch and debugger files. Five separately selected real
 native fixture checks passed, covering the shared deadline, paused-provider
 readback with a stored image, speed restoration, input evidence after restart,
@@ -180,7 +188,7 @@ and source/patch isolation. Those authored fixtures are separate from the
 original DinoPark trials below. Independent Luna source review found no further
 material defect in the final deadline/admission change.
 
-The complete suite finished **2,126 passed / 132 skipped / 12 failed /
+The complete suite finished **2,127 passed / 132 skipped / 12 failed /
 23 errors**. The 35 failure/error test IDs exactly match the retained baseline:
 Linux ELF/linker fixtures are unsuitable for the current macOS toolchain, and
 managed-format fixtures report missing parser dependencies. No new failure ID

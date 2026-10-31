@@ -112,12 +112,14 @@ def _card_offsets(image, pattern, card_count, button_count, max_shift):
 
 
 def selected_card_offsets(image, pattern):
-    """Keep enabled BUY fixed and require every selected-price card anchor."""
+    """Keep the BUY control fixed and require every selected-price card anchor."""
     return _card_offsets(image, pattern, 35, 13, 24)
 
 
-def picked_card_offsets(image, pattern):
+def picked_card_offsets(image, pattern, selected_pattern):
     """The picked card has a narrower bound around the fixed price-click target."""
+    if selected_card_offsets(image, selected_pattern):
+        return []  # Shared control colors do not prove distinct picked/selected states.
     return _card_offsets(image, pattern, 38, 10, 8)
 
 
@@ -142,8 +144,12 @@ def _wait(text, budget, view, expected, *, transient=(), guest_ms=12000):
         budget.timeout()
         frame, image = take_frame(text.project, text.debug, 'coelophysis-' + view, hooks=False)
         mouse = text.debug.call('input.mouse.state')['mouse']
-        qualifier = {'coel_selected': selected_card_offsets, 'coel_picked': picked_card_offsets}.get(view)
-        offsets = qualifier(image, text.patterns[view]) if qualifier else None
+        if view == 'coel_picked':
+            offsets = picked_card_offsets(image, text.patterns[view], text.patterns['coel_selected'])
+        elif view == 'coel_selected':
+            offsets = selected_card_offsets(image, text.patterns[view])
+        else:
+            offsets = None
         visible = bool(offsets) if offsets is not None else matches(image, text.patterns[view])
         ready = (money == expected and visible and
                  not mouse['buttons'] and not mouse['release_pending'])
