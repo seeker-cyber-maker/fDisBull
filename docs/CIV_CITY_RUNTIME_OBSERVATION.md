@@ -123,6 +123,13 @@ scene lives in the private run project, not in Git.
 - Revision `a2785955…` (child): object ids renamed to the Z scene catalog
   (`tab-happiness`, `production-change`, …); the builder now refuses any
   overlay object whose id is absent from `examples/civ/civ_city_scene.json`.
+- Revision `902d1329…` (child): adds `exit` (escape), whose outcome is the
+  city match failing. Run `c778c405…` reported `matched`, but its frame
+  (`f2d40dea…`) is the **blank transition frame**, so that predicate never
+  proved the destination.
+- Revision `3e9e4034…` (child): `exit` outcome requires both the city match
+  failing and the map panel's cyan resource bar. Run `4f362301…` matched with
+  the map view drawn (artifact `88d50321…`, no message box).
 
 Live verification (run `a2420e60…`, 474.03 install, keyboard-only):
 
@@ -132,6 +139,12 @@ Live verification (run `a2420e60…`, 474.03 install, keyboard-only):
 | `act('tab-happiness')` | `matched`; the HAPPY content pixel changed as recorded |
 | `act('tab-map')` | `matched`; the MAP content pixel changed as recorded |
 | `act('production-change')` | `matched`; pressing `c` opened the production chooser |
+| `act('exit')` | `matched`; escape left the city screen and the map panel was drawn (run `4f362301…`, artifact `88d50321…`) |
+
+A first `exit` predicate that only required the city match to fail reported
+`matched` on the blank transition frame (`c778c405…`, artifact `f2d40dea…`).
+The destination marker fixed it: a screen transition needs a positive sample of
+the destination, not just the absence of the source.
 
 An earlier run on the pre-rename ids (`1dfc9a55…`) matched the same operations, so the rename is behaviour-neutral. The two failed attempts (`bcea8bf2…`, `b51825af…`) are kept: the scene asserted
 and both tab acts passed, but `change` timed out because its outcome pixel had

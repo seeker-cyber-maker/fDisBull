@@ -10,6 +10,7 @@ Usage:
     python examples/civ/civ_city_overlay.py PROJECT REFERENCE \
         --chooser CH1 --chooser CH2 [--parent REVISION] [--scene NAME]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -126,27 +127,73 @@ def scene_definition(reference, chooser_frames, city_frame=None, scene_ids=None)
                 "VIEW tab; recovered key v enters the int 3F city-view overlay",
                 [reference],
             ),
+            # Escape leaves the city screen for the map view. `not match` alone
+            # is satisfied by the blank frame drawn during the transition
+            # (observed in run c778c405), so the map panel's cyan resource bar
+            # must also be drawn.
+            _object(
+                "exit",
+                [280, 190, 320, 199],
+                [288, 193],
+                "escape",
+                {
+                    "all": [
+                        {"not": _pixels(MATCH_SAMPLES)},
+                        _pixels(
+                            [
+                                {"x": 5, "y": 62, "rgb": [12, 227, 235]},
+                                {"x": 30, "y": 66, "rgb": [12, 227, 235]},
+                                {"x": 60, "y": 62, "rgb": [12, 227, 235]},
+                            ],
+                            min_matches=2,
+                        ),
+                    ]
+                },
+                "EXIT control; escape returns to the map view",
+                [reference],
+            ),
         ],
     }
     if scene_ids is not None:
         known = set(scene_ids)
-        unknown = [obj["name"] for obj in document["objects"] if obj["name"] not in known]
+        unknown = [
+            obj["name"] for obj in document["objects"] if obj["name"] not in known
+        ]
         if unknown:
-            raise ValueError(f"overlay objects missing from the Z scene catalog: {unknown}")
+            raise ValueError(
+                f"overlay objects missing from the Z scene catalog: {unknown}"
+            )
     return document
 
 
-def build(project_path, reference, chooser_frames, *, city_frame=None, parent=None,
-          scene="civ-city-screen", author="agent"):
+def build(
+    project_path,
+    reference,
+    chooser_frames,
+    *,
+    city_frame=None,
+    parent=None,
+    scene="civ-city-screen",
+    author="agent",
+):
     from fdisbull.project import Project
 
     with Project(project_path) as project:
-        definition = scene_definition(reference, chooser_frames, city_frame, catalog_ids())
-        saved = project.debug_save_scene(scene, definition, parent=parent, author=author)
-        overlay = project.debug_scene_overlay(saved["id"], name="civ-city-overlay.png", labels="numbers")
-        return {"revision": saved["id"], "parent": saved["parent"],
-                "objects": [o["name"] for o in saved["definition"]["objects"]],
-                "overlay": overlay["artifact"]}
+        definition = scene_definition(
+            reference, chooser_frames, city_frame, catalog_ids()
+        )
+        saved = project.debug_save_scene(
+            scene, definition, parent=parent, author=author
+        )
+        overlay = project.debug_scene_overlay(
+            saved["id"], name="civ-city-overlay.png", labels="numbers"
+        )
+        return {
+            "revision": saved["id"],
+            "parent": saved["parent"],
+            "objects": [o["name"] for o in saved["definition"]["objects"]],
+            "overlay": overlay["artifact"],
+        }
 
 
 def main(argv=None):
@@ -159,8 +206,15 @@ def main(argv=None):
     parser.add_argument("--scene", default="civ-city-screen")
     parser.add_argument("--author", default="agent")
     args = parser.parse_args(argv)
-    result = build(args.project, args.reference, args.chooser, city_frame=args.city_frame,
-                   parent=args.parent, scene=args.scene, author=args.author)
+    result = build(
+        args.project,
+        args.reference,
+        args.chooser,
+        city_frame=args.city_frame,
+        parent=args.parent,
+        scene=args.scene,
+        author=args.author,
+    )
     print(json.dumps(result, indent=1))
     return 0
 

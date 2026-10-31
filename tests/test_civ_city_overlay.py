@@ -24,7 +24,7 @@ def test_city_overlay_definition_uses_valid_geometry_and_predicates():
         assert mask.getpixel(tuple(obj["point"])), obj["name"]
         assert obj["evidence"]
         names.append(obj["name"])
-    assert names == ["tab-happiness", "tab-map", "production-change", "tab-city-view"]
+    assert names == ["tab-happiness", "tab-map", "production-change", "tab-city-view", "exit"]
 
 
 def test_city_overlay_change_accepts_a_longer_chooser_list():
@@ -52,3 +52,15 @@ def test_city_overlay_names_come_from_the_z_scene_catalog():
 def test_city_overlay_rejects_an_object_outside_the_catalog():
     with pytest.raises(ValueError, match="missing from the Z scene catalog"):
         scene_definition("reference", ["chooser-1"], scene_ids={"tab-map"})
+
+
+def test_city_overlay_exit_waits_for_the_city_match_to_fail():
+    document = scene_definition("reference", ["chooser-1"])
+    exit_object = next(obj for obj in document["objects"] if obj["name"] == "exit")
+    assert exit_object["action"] == {"kind": "press", "key": "escape"}
+    outcome = exit_object["outcome"]
+    assert set(outcome) == {"all"} and len(outcome["all"]) == 2
+    assert outcome["all"][0] == {"not": document["match"]}
+    map_panel = outcome["all"][1]
+    assert map_panel["pixels"]["min_matches"] == 2
+    assert len(map_panel["pixels"]["samples"]) == 3
