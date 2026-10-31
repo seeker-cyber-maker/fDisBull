@@ -17,13 +17,16 @@ Linux and native gates below.
 - **CI coordination:** bounded agent status reads and duplicate-feature-CI
   avoidance, with scripts/tests and workflow updates. These are local-validated;
   hosted CI is not yet configured.
-- **DinoPark Coelophysis recovery:** purchase reconciliation, selected catalogue
-  motion, retained navigation, operation budgets and Z bridge changes backed by
+- **DinoPark Coelophysis recovery:** purchase reconciliation, selected and
+  picked catalogue qualification (including the native pen record 10), retained
+  navigation, operation budgets and Z bridge changes backed by
   original-observation tests.
 - **DOS/audio:** Miles AIL 2 driver libraries import as `ail` with named exports
   and a bounded descriptor candidate; DIGPAK/MIDPAK call descriptions and DOS
   audio-driver documentation are retained. AIL is static inspection; no runtime
   driver is installed.
+- **Syndicate spatial Z scenes:** exact-coordinate ASCII agent maps and bound
+  scene/session tooling, merged from `main`.
 - **Skill:** the investigation skill gains
   `references/binary-claim-verification.md` for settling stored-value, writer
   and behavior claims against a decoded original binary.
@@ -41,12 +44,13 @@ Linux and native gates below.
 ## Qualification at this cut
 
 - Merged branches: CI coordination, PR #83 macOS ARM64, app-replication
-  capabilities draft, and the Coelophysis recovery update.
+  capabilities draft, the Coelophysis recovery update through
+  `72e82e1`, and `main` including the Syndicate spatial Z scene.
 - Focused suites: 104 passed / 1 skipped for CI + macOS ARM64; 143 passed / 1
   skipped for capabilities + distribution; 192 passed / 5 skipped for the
   Coelophysis, AIL, scene and distribution set.
 - Full macOS suite with the worktree player on `PYTHONPATH=src:player`:
-  **2581 passed, 127 skipped, 3 failed, 23 errors**. The three failures and 23
+  **2596 passed, 127 skipped, 3 failed, 23 errors**. The three failures and 23
   errors reproduce unchanged on `integration` and come from Linux ELF/GCC
   fixture builds and one case-sensitive media fixture on this macOS host. They
   are not release acceptance for those lanes.
@@ -59,7 +63,8 @@ Linux and native gates below.
   conflicts. It needs an explicit rebase, private-ROM/toolchain qualification
   and its own full-suite pass; schedule it as a separate milestone (0.29 or an
   opt-in 0.28 feature branch).
-- Hosted CI, a published GitLab tag, and a fresh shared macOS installation.
+- Hosted CI and a published GitLab tag. A fresh shared macOS installation is
+  prepared locally only; it makes no publication claim.
 
 ## Publication gates
 
