@@ -52,9 +52,12 @@ commands from the installed method inventory; an open proposal or a successful
 container listing does not provide a missing loader or processor.
 
 Static call-flow can screen for a script interpreter, asset reader or dispatch
-table. A data file that resembles code is still not proof of a load or execution
-edge. Read the interpreter section of
-[methodology.md](methodology.md) when the task needs that distinction.
+table. Missing incoming xrefs or exact filename literals leave candidate-use
+questions open. For caller/resource inventories, use the candidate-verification
+section of [methodology.md](methodology.md); for a possible guest interpreter,
+use its interpreter section. A data file that resembles code is still not proof
+of a load or execution edge. Follow only relevant mechanisms while accounting
+for every candidate in the requested scope.
 
 ## Native investigation
 

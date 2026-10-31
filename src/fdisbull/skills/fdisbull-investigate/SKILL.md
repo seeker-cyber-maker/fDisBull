@@ -25,7 +25,11 @@ they do not by themselves prove reachable behavior.
 
 Define the requested result and the claims needed to support it. Keep a small
 coverage ledger linking each material claim to evidence, unresolved alternatives
-and the next discriminator. Deepen the causal chain until those claims are
+and the next discriminator. For a requested inventory, declare the finite
+candidate set and search scope, then account for every candidate, including
+unresolved and untested ones. Compact presentation must not omit candidates.
+Missing incoming static references do not establish
+dead code. Deepen the causal chain until the requested claims are
 supported; unrelated exhaustive decoding is not a substitute. Check the installed
 methods and backend capabilities before using guidance from a newer proposal.
 For archives, executable mappings or media reduction, read
@@ -37,8 +41,11 @@ game recovery or normal progression, read
 [references/recovery-research.md](references/recovery-research.md). When behavior may be
 interpreted from a guest script, look for evidence of the interpreter alongside
 native code and other explanations. Read
-[references/methodology.md](references/methodology.md) before claiming a
-cross-file or native-to-guest execution link.
+[references/methodology.md](references/methodology.md) for candidate caller and
+filename-producer verification, cross-file or native-to-guest execution links,
+and provider/probe failure triage. Select its relevant sections for the task;
+the mechanisms described there are possibilities to test, not assumptions about
+every binary.
 
 ## Choose a useful probe
 
@@ -48,7 +55,11 @@ and stopping condition. Reward means a decision or reusable capability unlocked;
 cost includes setup, guest and wall time, execution risk, context and artifact
 volume. Use qualitative estimates when measurements are unavailable. Prefer
 high information or decision value per cost. Reassess after a failed probe; do
-not repeat settled work without a reason to reopen it.
+not repeat settled work without a reason to reopen it. Cost and likelihood order
+the work; they do not remove candidates from the user's requested coverage.
+A low-likelihood candidate can contain important logic or prove absent within a
+declared scope; settle it with a hypothesis-specific discriminator or retain it
+as an explicit open obligation.
 
 Reuse qualified setup and retrieve existing evidence before collecting it again.
 Preserve the tool's required identity, resource and freshness checks. Parallelize
@@ -66,11 +77,13 @@ Follow the smallest useful causal interval from input and focus through dispatch
 conditions, state change, presentation and storage when those claims matter.
 
 Prefer before/after state and an unchanged-state control to one magic final
-value. If a call times out or has an unknown outcome, inspect effects before
-retrying. Direct state edits, forced branches and actor placement can isolate a
-mechanism; label them as diagnostic interventions and do not present them as
-ordinary player reachability. Keep failed placement, unsupported capability and
-guest rejection distinct.
+value. If an action times out or has an unknown outcome, hold further input,
+preserve the reachable provider and reconcile retained evidence through qualified
+read-only observations. Missing follow-up evidence does not authorize replay of
+the original action. Direct state edits, forced branches and actor placement
+can isolate a mechanism; label them as diagnostic interventions and do not
+present them as ordinary player reachability. Keep failed placement, unsupported
+capability and guest rejection distinct.
 
 For scene and spatial work, read
 [references/runtime-navigation.md](references/runtime-navigation.md) and the
@@ -82,7 +95,7 @@ policy, not a restriction on the analysis API.
 
 A partial or artifact-backed response is not evidence that an action was rolled
 back or a proof succeeded. Retrieve the needed saved fields or chunks before
-repeating any side effect.
+deciding on any separately authorized continuation.
 
 For supported source mappings, interaction IL or DOS block reconstruction, read
 [references/udl-uil-udc.md](references/udl-uil-udc.md). Keep each model's

@@ -1,17 +1,20 @@
 # Behavioral investigation reference
 
-Use this reference when a plausible internal explanation disagrees with an
-interaction, a probe fails, or an observation is being generalized. It adds no
-new tool API and does not authorize actions beyond the user's task.
+Use this reference for candidate caller/resource coverage, or when an internal
+explanation disagrees with an interaction, a probe fails, or an observation is
+being generalized. It adds no new tool API and does not authorize actions beyond
+the user's task.
 
 ## Contents
 
 - [Plan depth and reuse evidence](#plan-depth-and-reuse-evidence)
+- [Verify candidate callers and resource producers](#verify-candidate-callers-and-resource-producers)
 - [Parallelize independent questions](#parallelize-independent-questions)
 - [Screen for interpreted control flow](#screen-for-and-map-interpreted-control-flow)
 - [Select evidence](#select-evidence-for-the-exact-claim)
 - [Trace an action](#trace-a-complete-action-not-just-an-interesting-field)
 - [Triage failure](#triage-a-failed-interaction)
+- [Separate provider, action, observer and probe failures](#separate-provider-action-observer-and-probe-failures)
 - [Compare preparations](#compare-equivalent-preparations)
 - [Preserve knowledge](#preserve-knowledge-without-preserving-stale-observations)
 
@@ -26,12 +29,37 @@ claim and scope, current evidence, competing explanation, missing observation,
 next probe and completion condition. A private note or existing project
 annotation suffices; this is not a new required database schema.
 
+For an inventory or thorough candidate review, define the finite work set and
+its limits: selected images/resources, candidate identities and byte versions,
+search ranges/encodings, producer families and tested runtime conditions. Give
+each candidate a disposition with supporting evidence, exclusions and remaining
+alternatives. Keep static publication, potential consumer, observed invocation
+and verified effect distinct; overlapping evidence is not additional candidates.
+Queue closure or a high decoded-byte percentage does not close this ledger.
+
+A compact row can use: candidate and byte version; requested claim; producer,
+consumer and effect evidence; checked domain; disposition; remaining alternatives
+and next discriminator. Adapt the fields to the claim rather than introducing
+a mandatory storage format. A producer-domain exclusion needs enumerated inputs,
+bounds and branches; any unresolved indirect, configuration or other-module
+origin keeps the wider claim open. If the domain cannot be enumerated, report
+that limit instead of inventing a completion threshold.
+
 Choose the cheapest probe capable of distinguishing the alternatives at the
 required boundary. An expensive trace is justified when a cheap visible result
 cannot settle causality. Stop expanding a settled claim, then advance the
 remaining obligations. Do not trade away a material unknown to improve a count,
 speed figure or apparent coverage. If a budget prevents completion, preserve
 the remaining work and the best next discriminator.
+
+Use cost and likelihood to sequence that work without shrinking the requested
+depth. An unlikely candidate may carry important logic, or the suspected
+mechanism may be absent. Choose an observation that can distinguish those
+outcomes; an uninformative miss just changes the next probe. A bounded negative
+needs its searched domain, detector limits and untested alternatives. For
+example, "no matching literal in these mapped ranges" excludes that literal
+there, while constructed pointers or external input remain open. Deferred work
+stays visible rather than becoming a negative result.
 
 Reuse immutable source facts and qualified setup through their existing
 receipts. Refresh only the affected observations after a dependency changes:
@@ -47,6 +75,51 @@ the decisive counterexample when rejecting a hypothesis. Link large traces and
 retrieve relevant fields before rerunning an operation. Expand evidence on first
 qualification, disagreement or failure; compact routine receipts must still
 retain missing fields and uncertainty.
+
+## Verify candidate callers and resource producers
+
+Use this section when a candidate has no incoming static xref, a suspected
+resource has no literal reference, or the user requests caller/use coverage.
+An absent stored edge means no edge was recovered under the implemented rules
+and searched scope. It does not establish unreachable or unused code. Check
+the relevant producer and consumer together before dismissing a candidate.
+
+Select mechanisms suggested by the target's bytes, ABI, loader and observations.
+The following are competing possibilities, not a checklist required for every
+binary or a claim that the analyzer resolves them automatically.
+
+| Evidence gap or lead | Hypothesis-specific discriminator |
+| --- | --- |
+| A callback slot has several offset/segment values | Correlate each setter's paired stores, register values, segment assumptions and path/order with the indirect consumer. For example, one setter publishing `(off_a, seg_a)` and another `(off_b, seg_b)` supports those pairs; combining every offset with every segment invents targets. A publication can be overwritten or never selected. |
+| An indexed word or descriptor resembles a code pointer | Determine field width, stride, bounds, root/active-list selection and the consuming instruction. A near offset needs its implied code segment; a far pointer needs both components. Keep the data segment locating the table separate from the code segment interpreting its entries. A plausible table or repeated small integer alone is insufficient. |
+| No ordinary direct caller is recovered | Where source evidence suggests them, trace register/stack-passed offsets, initializer tables, tail transfers or interrupt-vector publication. At a native entry, retain the actual transfer and bounded stack/slot bytes; normal call-return correlations and interrupt frames need different interpretations. A PC hit establishes arrival there, not its caller or effect. |
+| A filename search finds a basename but not the exact candidate | Retain exact full-name, basename-substring and inventory evidence separately, with case/path normalization declared. `badge.act` does not reference `badge.pic`. Follow open-wrapper arguments through fixed strings, tables, formatters, forwarded pointers, external data and configuration/setup programs when those paths are relevant. |
+| No candidate file appears in a tested route | Define which producer inputs and branches the route exercised. Distinguish a request, successful open/read, parser consumption, display and scene readiness. A valid decoded resource, equal payload hash or related alias does not establish selection of that filename. |
+
+Prefer discriminators that separate actual alternatives. To test whether a
+name is constructed, trace the filename argument at its consumer and the
+formatter's input domain; repeating an exact-string scan cannot settle it.
+To test whether a mutable slot invokes a candidate, correlate the selected
+setter and live pointer with the transfer; merely finding its address in data
+cannot settle that claim. An authorized forced branch is a separate diagnostic
+test, with ordinary reachability still open.
+
+Account for every member of the declared candidate set without promoting an
+unresolved case to dead code or a potential consumer to runtime invocation.
+If a finite producer domain is fully recovered, report the exclusion against
+that domain and retain untraced forwarding, configuration or computed paths.
+If a mechanism is unsupported by the evidence, record the scoped negative and
+move to the remaining alternatives rather than assuming it must exist.
+
+The attributed DinoPark study in [PR #41](https://github.com/seeker-cyber-maker/fDisBull/pull/41)
+illustrates the distinction. Its [pinned caller/producer report](https://github.com/seeker-cyber-maker/fDisBull/blob/cc4501079dc411d5b8bdb23d561a20e212d08f42/docs/VERIFICATION-DINOPARK-CALLER-PRODUCERS-2026-10-31.md#the-remaining-159-entries)
+reports 62 of 159 unresolved entries with new static producer evidence: 61 with
+potential dispatch consumers and one with a publisher only. The other 97 remain
+unresolved, and none of those 159 was reached in the new native routes. All 13
+exact candidate filenames were absent from the selected executable, while
+computed/forwarded origins and other loader paths prevented global unusedness
+claims. These bounded findings motivate verification; they establish neither
+the same mechanisms in another binary nor a shipped automatic recovery feature.
 
 ## Parallelize independent questions
 
@@ -219,6 +292,56 @@ change the evidence when necessary; repeat only with a stated new discriminator.
 A diagnostic record needs expected behavior, observed behavior, the minimal
 route, target/runtime identities and what remains unproven. Do not assign an
 unrelated image or old capture to a current run.
+
+### Separate provider, action, observer and probe failures
+
+When an instrumented provider fails, identify the first unsupported boundary
+before assigning ownership of the fault:
+
+| Boundary | Useful distinction |
+| --- | --- |
+| Provider startup/readiness | Process launch, transport connection and a qualified ready scene are separate. Retain the startup phase and readiness receipt before claiming an action was sent. A startup deadline does not show a game-action failure. |
+| Dispatched action | Preserve its canonical identity, delivered input, confirmed effects, unknown effects and last qualified context. A scene deadline, successful resource read or later driver exit does not certify arrival or action completion. |
+| Observer dispatch | Check whether instrumentation only records or also changes control flow, stop/resume policy, guest time or response volume. A bridge exception or repeated host stops can invalidate the probe; a timeout with hooks active does not isolate their causal role. An observer cannot mint action completion. |
+| Probe setup/byte guard | A missing helper import or incorrect expected-byte window can fail before player input. Qualify the probe against the selected image and relocation mapping before blaming the emulator, loader or target. |
+
+For example, a guard spanning only one byte of a relocated two-byte word needs
+the whole word's relocation context; see [formats-and-media.md](formats-and-media.md).
+Keep synthetic preflight separate from actual runtime validation. Change one
+declared layer in a comparable trial when attribution is still needed.
+
+On an effects-unknown action, hold further input and retain the reachable owned
+provider for reconciliation where the existing interface permits it. Inspect
+saved replies, journals and raw receipts first; use only qualified read-only
+queries that do not resume or advance the guest. Keep one controller. Do not
+close the provider merely to finish a batch, replay the original action to
+recover its response, or claim readiness from a file read. If the selected
+transport already closed the process, report loss of live reconciliation and
+use retained evidence; saved history cannot reconnect the guest. Any checkpoint
+restore or continuation must obey the selected provider's existing authorization
+and resource contract and does not itself certify the original intent complete.
+
+Check the selected source/method inventory for actual recovery and timeout
+controls. The current player process transport's `--backend-timeout` accepts
+finite values up to 60 seconds; do not invent a larger value or an independent
+startup control. A provider needing more time to become ready is a separate
+compatibility question. Retaining a provider after a hold is conditional on its
+existing lifecycle support, not a new API supplied by this guidance.
+
+Before relying on a reconciliation query, inspect its contract or implementation
+in the selected revision: it must not send input, resume/advance execution or
+restore state. A read-like name alone is insufficient. Discover the actual
+methods/help and qualify the paused provider and response evidence; if that
+interface is unavailable, retain the unresolved outcome and report the missing
+capability rather than synthesizing a command.
+
+The [pinned DinoPark native verification](https://github.com/seeker-cyber-maker/fDisBull/blob/cc4501079dc411d5b8bdb23d561a20e212d08f42/docs/VERIFICATION-DINOPARK-CALLER-PRODUCERS-2026-10-31.md#native-verification-and-limitations)
+reports readiness beyond 100 seconds, two private setup failures before public
+input, and a later DinoMart scene timeout with resource reads but unknown action
+effects. The action was not replayed; observation hooks were active, with their
+causal role unisolated. Its proposed guard-sharing and retained-reconciliation
+improvements are follow-ups, not capabilities promised by this skill or current
+main. Keep private paths, bytes and receipts out of reusable documentation.
 
 ## Compare equivalent preparations
 
