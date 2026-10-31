@@ -416,7 +416,7 @@ class AdvancedMixin:
             selected=abi if abi is not None else previous.get('abi',self._default_abi())
             _select_abi(dict(arch=self.arch,bits=self.bits),{},selected)
             options=dict(max_instructions=max_instructions,max_steps=max_steps,max_entries=max_entries,abi=selected,
-                         analysis_revision='dos-knowledge-1',
+                         analysis_revision='monotone-symbols-3',
                          signature_catalog_sha256=hashlib.sha256(_dump(builtin_signatures()).encode()).hexdigest())
             if previous and previous!=options:self._invalidate_derived(v,reason='analysis options changed')
             self.db.execute('INSERT OR REPLACE INTO metadata VALUES (?,?)',(option_key,_dump(options)))

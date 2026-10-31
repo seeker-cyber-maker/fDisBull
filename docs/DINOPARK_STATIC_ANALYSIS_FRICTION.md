@@ -1,5 +1,10 @@
 # DinoPark analysis friction and retained Z terminal replies
 
+The [residual-analysis follow-up](VERIFICATION-DINOPARK-RESIDUAL-ANALYSIS-2026-10-31.md)
+implements call-identity and monotone-join fixes, clears all 172 partial jobs,
+and records original-native witnesses and callback publications for 42 of the
+201 entry hypotheses. It also revisits all 13 resource candidates with Luna.
+
 The [October 31 content-accounting follow-up](VERIFICATION-DINOPARK-CONTENT-ACCOUNTING-2026-10-31.md)
 closes the file/format and physical-byte inventory, adds a native sound-expander
 comparison and diagnoses the original demo's early stop. Its later measurements
@@ -9,8 +14,8 @@ This records observed analysis limits and proposed follow-ups from a private
 DinoPark MZ investigation on 2026-10-30, followed by bounded native asset tracing.
 The PR now also implements [oversized Z reply recovery](Z_REPLY_RECOVERY.md):
 the original result is retained before transmission and can be retrieved without
-repeating an input. The static-analysis and remaining observer/menu proposals
-stay prospective. No original routine or resource is certified unused.
+repeating an input. Other analysis and observer/menu proposals remain
+prospective. No original routine or resource is certified unused.
 
 The investigation used source version **0.26.1**, pinned at
 `43d24a73d744516653d53d3bc8828787c499d299`, with the source import path set
