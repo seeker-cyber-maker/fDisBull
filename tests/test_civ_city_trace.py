@@ -87,6 +87,65 @@ def test_synthetic_unrelocated_match_is_coincidental_not_a_caller():
     assert result["callers"]["coincidental_byte_matches"] == 1
 
 
+def test_dispatch_window_maps_synthetic_compare_to_segment_offset():
+    root = bytearray(_synthetic_root())
+    at = 0xA990 + 0x0100
+    root[48 + at : 48 + at + 5] = bytes.fromhex("83be10ff62")
+    dispatch = trace.key_dispatch(bytes(root))
+    assert dispatch["segment"] == "0A99"
+    assert [site["key"] for site in dispatch["sites"]] == [0x62]
+    site = dispatch["sites"][0]
+    assert site["segment_offset"] == "0A99:0100"
+    assert site["linear"] == at
+    assert site["runtime_linear"] == 0x10000 + at
+    assert site["key_text"] == "b"
+
+
+def test_real_root_key_dispatch_locates_a_and_s():
+    from pathlib import Path
+
+    root_path = Path(REAL_ROOT)
+    if not root_path.exists():
+        pytest.skip("pinned unpacked Civ root is not present")
+    root = root_path.read_bytes()
+    if trace.identity(root)["sha256"] != PINNED:
+        pytest.skip("present root is not the pinned Civ identity")
+    dispatch = trace.key_dispatch(root)
+    assert len(dispatch["sites"]) == 15
+    assert [site["key"] for site in dispatch["sites"]] == [
+        0x41,
+        -1,
+        0x62,
+        0x63,
+        0x69,
+        0x68,
+        0x6D,
+        0x76,
+        0x61,
+        0x73,
+        0x31,
+        0x39,
+        0x70,
+        0x4D,
+        0x72,
+    ]
+    sites = {site["key"]: site for site in dispatch["sites"]}
+    # Segment 0A99 is the input-loop segment; the same bytes are 1D12:4FF5
+    # and 1D12:520E in the fDisBull MZ paragraph window.
+    assert sites[0x61]["segment_offset"] == "0A99:7785"
+    assert sites[0x61]["linear"] == 0x12115
+    assert sites[0x61]["runtime_linear"] == 0x22115
+    assert "unit-list cursor" in sites[0x61]["action"]
+    assert sites[0x73]["segment_offset"] == "0A99:799E"
+    assert sites[0x73]["linear"] == 0x1232E
+    assert sites[0x73]["runtime_linear"] == 0x2232E
+    assert "sell-building" in sites[0x73]["action"]
+    assert sites[0x62]["segment_offset"] == "0A99:737D"
+    assert sites[0x63]["segment_offset"] == "0A99:7626"
+    # No site may silently claim an action the trace has not established.
+    assert all("not attributed" not in site["action"] for site in dispatch["sites"])
+
+
 def test_real_root_entry_reset_and_root_callers():
     from pathlib import Path
 
