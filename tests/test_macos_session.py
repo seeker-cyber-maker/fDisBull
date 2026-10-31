@@ -69,6 +69,16 @@ def test_default_session_is_observation_only_and_preserves_global_coordinates(tm
     assert (tmp_path / 'session').stat().st_mode & 0o777 == 0o700
 
 
+def test_unknown_home_directory_refuses_before_native_actions(tmp_path, monkeypatch):
+    native = NativeDouble()
+    def missing_home(path):
+        raise RuntimeError('unknown user home directory')
+    monkeypatch.setattr(sessions.Path, 'expanduser', missing_home)
+    with pytest.raises(ValueError, match='cannot expand'):
+        run(native, tmp_path / 'session')
+    assert native.calls == []
+
+
 def test_external_menu_open_without_delivery_is_not_owned_or_dismissed(tmp_path):
     class ExternalOpen(NativeDouble):
         def __call__(self, operation, **kwargs):

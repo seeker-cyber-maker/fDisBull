@@ -167,7 +167,10 @@ def _preferences(native, bundle_id, keys):
 
 
 def _private_path(output, *, new):
-    path = Path(output).expanduser()
+    try:
+        path = Path(output).expanduser()
+    except RuntimeError as exc:
+        raise ValueError('cannot expand the session output path') from exc
     if path.is_symlink():
         raise ValueError('session output cannot be a symbolic link')
     path = path.resolve()
