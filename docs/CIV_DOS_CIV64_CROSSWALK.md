@@ -35,6 +35,18 @@ and evidence wording are copied as a semantic crosswalk from
 The first 17 anchors are the Civ64 city section; anchors 18–21 are the
 city-adjacent economy/status surfaces used to scope the first UIL expansion.
 
+## Address-resolution pass (2026-10-31)
+
+`examples/civ/civ_exe_atlas.py` parsed `CIV.MAP` and the 42 `*.COD` listings and
+resolved all 21 DOS addresses to the civd function that contains them:
+15 at a function entry and 6 inside a function. The per-row result is in
+[CIV_EXE_ATLAS.md](CIV_EXE_ATLAS.md#civ64-anchor-resolution).
+
+This pass changes the **address** status, not the byte-equivalence status. It
+proves that each DOS anchor lands in a named, map-verified function; it does not
+pair that range with a Windows/PE64 range. The table's byte-verification count
+therefore remains **0/21**.
+
 ## Why byte verification is still open
 
 The exact DOS target available locally is the packed 305,030-byte

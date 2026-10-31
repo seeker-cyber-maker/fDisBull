@@ -34,7 +34,7 @@ play an authored text projection without opening the debugger yourself.
 | Disassemble Zork's v3 bytecode and follow static calls and branches | [Z-machine processor](docs/ZMACHINE_PROCESSOR.md) |
 | Try shared interaction scenes through Z | [Z scene play](docs/Z_SCENES.md) |
 | Run a qualified DinoPark park through the original game | [DinoPark in Z](docs/DINOPARK_Z.md) |
-| Experiment with the release-gated Civilization DOS city-production slice | [Civ analysis phases](docs/CIV_ANALYSIS_PHASES.md) · [City UI blueprint slice](docs/CIV_CITY_UI_SLICE.md) · [City UIL/UDC fixture](docs/CIV_CITY_UIL_UDC.md) · [City static trace](docs/CIV_CITY_STATIC_TRACE.md) · [City runtime observation](docs/CIV_CITY_RUNTIME_OBSERVATION.md) · [DOS EXEPACK recovery](docs/CIV_DOS_EXEPACK.md) · [Civ repository intake](docs/CIV_REPO_INTAKE.md) · [DOS traversal receipt](docs/CIV_DOS_TRAVERSAL.md) · [City-production UDC](docs/CIV_PRODUCTION_UDC.md) |
+| Experiment with the release-gated Civilization DOS city-production slice | [Civ analysis phases](docs/CIV_ANALYSIS_PHASES.md) · [CIV.EXE address/source atlas](docs/CIV_EXE_ATLAS.md) · [Unit pathfinding trace](docs/CIV_PATHFINDING_TRACE.md) · [City UI blueprint slice](docs/CIV_CITY_UI_SLICE.md) · [City UIL/UDC fixture](docs/CIV_CITY_UIL_UDC.md) · [City static trace](docs/CIV_CITY_STATIC_TRACE.md) · [City runtime observation](docs/CIV_CITY_RUNTIME_OBSERVATION.md) · [DOS EXEPACK recovery](docs/CIV_DOS_EXEPACK.md) · [Civ repository intake](docs/CIV_REPO_INTAKE.md) · [DOS traversal receipt](docs/CIV_DOS_TRAVERSAL.md) · [City-production UDC](docs/CIV_PRODUCTION_UDC.md) |
 
 Agents can start with [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) and the
 [agent quickstart](docs/AGENT_QUICKSTART.md). The bundled investigation skill is
