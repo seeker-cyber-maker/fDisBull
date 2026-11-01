@@ -118,8 +118,9 @@ full native/UIL state agreement is a different, stronger compiler-edge check.
 Reproduce with `scripts/check_shadowrun_snes_field.py`,
 `scripts/check_shadowrun_snes.py`, and `scripts/check_genesis_native_compat.py`.
 The trace adapter refuses a different SNES9x revision or source anchor hash.
-Clean tool packages carry the authored adapters and sanitized receipts, never
-the ROM, private snapshots, native app or embedded collision data.
+Clean tool packages carry the authored adapters. Sanitized comparison receipts
+are retained in the repository review evidence; the ROM, private snapshots,
+native app and embedded collision data stay in the private workspace.
 
 The broad suite completed on CODEX after the initial 1.3 GB CACHE admission
 failed and the user approved up to an additional 1.5 GB of bounded tests and
