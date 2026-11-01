@@ -349,6 +349,19 @@ from .udc_api import METHODS as BLOCK_METHODS
 METHODS.update(BLOCK_METHODS)
 from .source_api import METHODS as SOURCE_METHODS
 METHODS.update(SOURCE_METHODS)
+METHODS["source-info"] = (
+    "Recorded target size/SHA-256, loader provenance and current availability; [version]; "
+    "or source-catalog counts and scope with catalog"
+)
+
+
+def source_catalog_request(method, params):
+    """Select the source-catalog API only when its catalog argument is present."""
+    return (
+        method in SOURCE_METHODS
+        and isinstance(params, dict)
+        and (method != "source-info" or "catalog" in params)
+    )
 
 
 def invoke(method, params, debugger=None):
@@ -357,7 +370,7 @@ def invoke(method, params, debugger=None):
     if not isinstance(params, dict):
         raise ValueError("params must be an object")
     p = dict(params)
-    if method in SOURCE_METHODS and "catalog" in p:
+    if source_catalog_request(method, p):
         from .source_api import invoke as source_invoke
         return source_invoke(method, p)
     if method.startswith("uil-"):
@@ -1152,7 +1165,7 @@ def respond(request, default_project=None, debugger=None):
             )
         request_id = validate_request_id(request.get("id"))
         params = request.get("params", {})
-        standalone = request["method"] in SOURCE_METHODS or (
+        standalone = source_catalog_request(request["method"], params) or (
             request["method"]
             in (
                 "uil-check",
@@ -2025,7 +2038,11 @@ def parser():
         "new-source-analysis",
     ):
         c = sub.add_parser(name, help=METHODS[name])
-        c.add_argument("project")
+        if name == "source-info":
+            c.add_argument("project", nargs="?")
+            c.add_argument("--catalog")
+        else:
+            c.add_argument("project")
         if name in ("source-candidate", "bind-source", "new-source-analysis"):
             c.add_argument("path")
         if name in ("migrate-external", "new-source-analysis"):

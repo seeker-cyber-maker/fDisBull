@@ -9,7 +9,8 @@ from pathlib import Path, PurePosixPath
 import tarfile
 import zipfile
 
-EXCLUDED_DIRECTORIES = {"examples", "history", "experimental", "build", "dist", ".git", "__pycache__"}
+EXCLUDED_DIRECTORIES = {"examples", "history", "experimental", "build", "dist", ".git", "__pycache__",
+                        "freeware-games", "freeware-games.zip"}
 EXCLUDED_SUFFIXES = {".fdb", ".db", ".sqlite", ".sqlite3", ".sav", ".state", ".exe", ".com", ".dll", ".bin", ".dat", ".so", ".dylib", ".o", ".pyc"}
 EXCLUDED_SUFFIXES |= {".nes", ".rom", ".gen", ".smd", ".iso", ".cue", ".wav", ".pcm",
                       ".lut", ".4bpp", ".slz", ".sona", ".swav", ".spat", ".tfi", ".chr"}
@@ -32,6 +33,29 @@ REQUIRED_SOURCE_EVIDENCE |= {"docs/uil-rfcs/0002/" + name for name in
                            ("vectors.json", "replay-summary.json")}
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-026/verification.json")
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-0261/verification.json")
+REVIEWED_SOURCE_RECIPES = {
+    "examples/recovery/civd_food_swap.py",
+    "examples/recovery/civd_food_arm64.py",
+    "examples/recovery/civd_food_web.py",
+    "examples/recovery/run_web_blocks.mjs",
+    "examples/recovery/run_web_browser.mjs",
+    "examples/recovery/civd_browser_shell.py",
+    "examples/recovery/web_shell_study.mjs",
+    "examples/recovery/run_browser_shell.mjs",
+    "examples/recovery/snake_model.py",
+    "examples/recovery/snake_original.py",
+    "examples/recovery/snake_browser.py",
+    "examples/recovery/run_snake_browser.mjs",
+    "examples/recovery/snake_browser_study.mjs",
+    "examples/recovery/prepare_snake_rng_study.py",
+    "examples/recovery/snake_rng_study.mjs",
+    "examples/recovery/run_snake_rng_switch.mjs",
+    "examples/recovery/snake_macos.py",
+    "examples/recovery/verify_snake_macos.py",
+    "examples/recovery/verify_snake_appkit.py",
+    "examples/recovery/snake_desktop.py",
+    "examples/recovery/verify_snake_desktop.py",
+}
 REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/rom-asm-2026-10-30/benchmark.json", "docs/evidence/rom-asm-2026-10-30/accuracy.json"}
 REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/rom-asm-2026-10-30/" + name for name in
                            ("benchmark-persistent.json", "capstone-profile.json", "decoder-census.json", "semantic-route.json")}
@@ -637,7 +661,14 @@ def check_archive(path: Path) -> int:
     for entry in entries:
         if entry.is_absolute() or ".." in entry.parts:
             raise ValueError(f"Invalid archive path: {entry}")
-        if EXCLUDED_DIRECTORIES.intersection(entry.parts):
+        excluded = EXCLUDED_DIRECTORIES.intersection(entry.parts)
+        relative = PurePosixPath(*entry.parts[1:]).as_posix()
+        reviewed_recipe = (
+            path.suffix != ".whl"
+            and excluded == {"examples"}
+            and relative in REVIEWED_SOURCE_RECIPES
+        )
+        if excluded and not reviewed_recipe:
             raise ValueError(f"Excluded directory in {path.name}: {entry}")
         if entry.suffix.lower() in EXCLUDED_SUFFIXES or ".fdb-" in entry.name.lower():
             raise ValueError(f"Excluded binary/data file in {path.name}: {entry}")
@@ -680,7 +711,7 @@ def check_archive(path: Path) -> int:
         required |= {"src/fdisbull/" + name for name in REQUIRED_CONSOLE_RESOURCES}
         required |= {"AGENTS.md", "CLAUDE.md", "docs/AGENT_QUICKSTART.md"}
         required |= {"scripts/check_agent_skill.py"}
-        required |= REQUIRED_SOURCE_EVIDENCE
+        required |= REQUIRED_SOURCE_EVIDENCE | REVIEWED_SOURCE_RECIPES
         missing = required - relative
         if missing:
             raise ValueError(f"Source archive is missing required files: {sorted(missing)}")

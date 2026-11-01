@@ -56,7 +56,7 @@ test-and-package:
   resource_group: "fdisbull-verify-$CI_COMMIT_REF_SLUG"
   script:
     - python -m pip install --upgrade pip
-    - python -m pip install ".[test]" build
+    - python -m pip install ".[test,source]" build
     - python -m pytest -q
     - python -m build
     - python -m build --wheel ./player --outdir dist

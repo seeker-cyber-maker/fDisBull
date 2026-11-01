@@ -687,6 +687,12 @@ REQUIRED_SOURCE_FILES = tuple(
     path for path in REQUIRED_SOURCE_FILES
     if not path.startswith(("examples/", "experimental/", "history/", "build/", "dist/"))
 )
+MANIFEST_REVIEWED_RECIPES = frozenset(
+    line.split(None, 1)[1]
+    for line in (Path(__file__).resolve().parents[1] / "MANIFEST.in").read_text().splitlines()
+    if line.startswith("include examples/")
+)
+REQUIRED_SOURCE_FILES += tuple(sorted(MANIFEST_REVIEWED_RECIPES))
 
 
 REQUIRED_SOURCE_FILES += tuple(path for path in (
@@ -725,6 +731,46 @@ def test_distribution_check_rejects_game_state_and_database_files(tmp_path,unwan
     with zipfile.ZipFile(archive,'a') as output:
         output.writestr('fdisbull-test/docs/'+unwanted,'local bytes')
     with pytest.raises(ValueError,match='Excluded binary/data file'):
+        check(archive)
+
+
+def test_reviewed_recipe_policy_matches_manifest_and_rejects_other_examples(tmp_path):
+    module = runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))
+    check = module['check_archive']
+    assert module['REVIEWED_SOURCE_RECIPES'] == MANIFEST_REVIEWED_RECIPES
+    archive = tmp_path/'fdisbull-reviewed-recipes.zip'
+    source_archive(archive)
+    assert check(archive) == len(REQUIRED_SOURCE_FILES)
+    with zipfile.ZipFile(archive, 'a') as output:
+        output.writestr('fdisbull-test/examples/recovery/unreviewed.py', 'unreviewed input')
+    with pytest.raises(ValueError, match='Excluded directory'):
+        check(archive)
+
+
+def test_reviewed_recipes_are_not_allowed_in_wheels(tmp_path):
+    check = runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+    wheel = tmp_path/'fdisbull-test.whl'
+    with zipfile.ZipFile(wheel, 'w') as output:
+        output.writestr('fdisbull/examples/recovery/civd_food_swap.py', '')
+    with pytest.raises(ValueError, match='Excluded directory'):
+        check(wheel)
+
+
+@pytest.mark.parametrize('unwanted', [
+    'fixtures/freeware-games/tic-tac-toe/ATTT.COM',
+    'fixtures/freeware-games/snake/linux/program',
+    'fixtures/freeware-games/snake/index.html',
+    'fixtures/freeware-games/README.md',
+    'fixtures/freeware-games.zip',
+])
+def test_review_freeware_exception_never_enters_tool_distribution(tmp_path, unwanted):
+    check = runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+    archive = tmp_path/'fdisbull-review-fixtures-tool.zip'
+    source_archive(archive)
+    assert check(archive) == len(REQUIRED_SOURCE_FILES)
+    with zipfile.ZipFile(archive, 'a') as output:
+        output.writestr('fdisbull-test/' + unwanted, b'review-only corpus content')
+    with pytest.raises(ValueError, match='Excluded directory'):
         check(archive)
 
 
