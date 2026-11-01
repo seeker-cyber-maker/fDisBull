@@ -33,6 +33,7 @@ merged with `integration` at `b21b204` (clean merge).
 | `offline-kit-sha256.txt` | Full kit and source companion hashes |
 | `offline-kit-install.log` | Python 3.13.5 no-index install of the full kit |
 | `offline-kit-acceptance.json` | Installed-kit Z3, keyboard, memory, restore, player and restart acceptance |
+| `native-focused.log` | Focused native debugger, DOS exit/COM, keyboard and ZIP tests using the rebuilt backend |
 
 ## Qualification
 
@@ -67,6 +68,8 @@ merged with `integration` at `b21b204` (clean merge).
   Python 3.13.5 no-index install passed; installed acceptance reports Z3
   equivalence/counterexample, BIOS keyboard, memory, screenshot, native
   restore, post-restore input, player resume and project restart all true.
+- Focused native suite using the rebuilt backend: **60 passed, 0 failed** in
+  45.05s across debugger, DOS guest exit/COM, keyboard and ZIP stream tests.
 
 ## Limits
 

@@ -106,6 +106,13 @@
       "player_live_resume": true,
       "project_restart": true,
       "screenshot_recorded": true
+    },
+    "native_focused": {
+      "passed": 60,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 45.05,
+      "backend": "fdisbull-0.29.0-linux-x86_64-offline/bin/dosbox"
     }
   },
   "scope": [

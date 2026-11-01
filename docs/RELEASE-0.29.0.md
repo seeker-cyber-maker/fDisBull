@@ -111,6 +111,8 @@ full native CI matrix and hosted runs remain separate gates.
   fresh venv install and byte-identical reuse passed.
 - Full native offline kit: rebuilt backend and source companion, seven wheels,
   SHA-256 above; installed-kit acceptance passed on Python 3.13.5.
+- Focused native backend suite on the rebuilt kit binary: **60 passed, 0
+  failed** in 45.05s.
 - Installed-wheel smoke: `fdisbull --version` reports `0.29.0`; `capabilities`
   loads from the wheel.
 - 0.28.0's focused and full-suite results are historical evidence for its own
