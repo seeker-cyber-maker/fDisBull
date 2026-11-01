@@ -37,6 +37,9 @@ SOURCE_PATTERNS = (
     ("src/fdisbull/ida_guest", "*.sh"),
     ("src/fdisbull/ida_guest", "SDK-LICENSE.txt"),
     ("src/fdisbull/dos_guest", "*.sh"),
+    ("src/fdisbull/native_runtime", "*.c"),
+    ("src/fdisbull/native_runtime", "*.h"),
+    ("src/fdisbull/native_runtime", "*.m"),
     ("tests", "*.py"),
     ("tests", "wine_gui_fixture.c"),
     ("tests", "dosbox_zip_empty_write.cpp"),
@@ -65,6 +68,7 @@ SOURCE_PATTERNS = (
     ("docs/evidence/integration-0261", "verification.json"),
     ("docs/evidence/common-uil-2026-11-01", "verification.json"),
     ("docs/evidence/common-uil-native-2026-11-01", "verification.json"),
+    ("docs/evidence/common-uil-desktop-2026-11-01", "verification.json"),
     ("scripts", "*.py"),
 )
 

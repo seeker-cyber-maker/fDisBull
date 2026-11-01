@@ -153,3 +153,24 @@ argument snapshots; full entry state and outputs are retained. Qualify original
 instructions, full models, native execution and physical windows/devices as
 distinct edges. The source guide `docs/COMMON_UIL_NATIVE.md` records the APIs,
 owned ABI, runtime protocol, component contracts and evidence boundaries.
+
+## Native desktop shells
+
+`uil-desktop` adds a native AppKit, X11 or Win64 window over a fixed u32 arena.
+Supply program, presentation, catalog, orchestration, desktop plan and initial
+arena as separate documents, followed by a new private output path. Source-only
+emission uses `--source-only`; `uil-desktop-build` compiles retained sources and
+`uil-desktop-seal` admits already compiled artifacts. All three commands work
+without an analysis project. A build or seal does not execute the application.
+
+The host plan declares indexed function bindings, input patches, output/commit
+footprints, guards, palette/frame geometry, physical-keycode mapping and clock.
+Choices select sealed arithmetic/component realizations of the same UIL;
+intentional algorithm changes need their own declared semantic variant.
+Keep one synchronous owner and a captured selection for each transaction;
+refusal preserves committed state and drawing reads an owned snapshot.
+
+Separate typed-core, stored-frame, native-window/presentation, programmatic
+callback and original-code comparisons. Constructed events do not establish
+physical keyboard/mouse consumption. The source-checkout guide
+`docs/COMMON_UIL_DESKTOP.md` specifies the API and current qualification status.

@@ -52,6 +52,7 @@ legacy migration and remaining export limits.
 | Test a small recovered block against its original DOS backing | [The bounded UDC pipeline](#the-bounded-udc-pipeline) |
 | Combine source blocks under a typed indexed UIL and emit a new standalone program | [Common UIL contract](docs/COMMON_UIL_CONTRACT.md) · [Conformance examples](docs/COMMON_UIL_CONFORMANCE.md) |
 | Resolve nested block requirements and realize common UIL as native code | [Native UIL and component linking](docs/COMMON_UIL_NATIVE.md) |
+| Build a native window and input shell over fixed-arena common UIL | [Common UIL desktop shells](docs/COMMON_UIL_DESKTOP.md) |
 
 Agents can start with [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) and the
 [agent quickstart](docs/AGENT_QUICKSTART.md). The bundled investigation skill is

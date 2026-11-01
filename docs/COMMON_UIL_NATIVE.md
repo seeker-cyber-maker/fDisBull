@@ -128,6 +128,12 @@ observable carry, memory, ordering or device behavior.
 
 ## Build and observe
 
+For a native window with keyboard, pointer and indexed-frame adapters, use the
+[common UIL desktop shell](COMMON_UIL_DESKTOP.md). It adds a declared host plan
+and owned arena orchestration around these same indexed functions. Building or
+sealing a shell is separate from qualifying its window callbacks and original
+game correspondence.
+
 Choose a new private output directory outside Git. Apply the workspace's storage
 admission policy before builds and keep temporary output on the admitted pool.
 

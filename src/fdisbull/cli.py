@@ -53,6 +53,9 @@ METHODS = {
     'uil-components':'Describe nested typed module/provider choices without execution; modules,providers,target,[pins]',
     'uil-build':'Compile and seal an existing native source realization; output,[c_compiler]',
     'uil-seal':'Seal externally compiled native artifacts against retained sources; output,[compiler_evidence]',
+    'uil-desktop':'Emit or build a native window shell over fixed-arena common UIL; program,presentation,catalog,orchestration,plan,initial,output,[target,source_only,variants,c_compiler]; build is not runtime qualification',
+    'uil-desktop-build':'Compile and seal an existing desktop source shell; output,[c_compiler]; no application execution',
+    'uil-desktop-seal':'Seal externally compiled desktop artifacts against their sources; output; no application execution',
     'uil-fold':'Retain a function child graph in a recoverable higher-level block; program,function,semantic_id',
     'uil-expand':'Recover the exact lower-level program from a pinned fold receipt; program,recovery',
     'uil-store':'Persist an immutable common UIL package; project,name,package,[version,parent,author]',
@@ -606,7 +609,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('uil-check','uil-catalog','uil-run','uil-compile','uil-link','uil-components','uil-build','uil-seal','uil-fold','uil-expand','capture-audit','capabilities','media-modules','media-inspect','media-extract','agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('uil-check','uil-catalog','uil-run','uil-compile','uil-link','uil-components','uil-build','uil-seal','uil-desktop','uil-desktop-build','uil-desktop-seal','uil-fold','uil-expand','capture-audit','capabilities','media-modules','media-inspect','media-extract','agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         result=invoke(request["method"],params,debugger)
@@ -718,6 +721,14 @@ def parser():
             c.add_argument('--module-requirements',help='JSON file of exact per-module intrinsic/component requirements')
     c=sub.add_parser('uil-build',help=METHODS['uil-build']);c.add_argument('output');c.add_argument('--c-compiler')
     c=sub.add_parser('uil-seal',help=METHODS['uil-seal']);c.add_argument('output');c.add_argument('--compiler-evidence')
+    c=sub.add_parser('uil-desktop',help=METHODS['uil-desktop'])
+    for field in ('program','presentation','catalog','orchestration','plan','initial','output'):
+        c.add_argument(field)
+    c.add_argument('--target',choices=('macos-arm64','linux-x64','windows-x64'),default='macos-arm64')
+    c.add_argument('--source-only',action='store_true');c.add_argument('--variants',help='JSON file containing declared sealed implementation variants')
+    c.add_argument('--c-compiler')
+    c=sub.add_parser('uil-desktop-build',help=METHODS['uil-desktop-build']);c.add_argument('output');c.add_argument('--c-compiler')
+    c=sub.add_parser('uil-desktop-seal',help=METHODS['uil-desktop-seal']);c.add_argument('output')
     c=sub.add_parser('uil-components',help=METHODS['uil-components']);c.add_argument('modules');c.add_argument('providers')
     c.add_argument('--target',required=True,choices=('macos-arm64','linux-x64','windows-x64'));c.add_argument('--pins')
     c=sub.add_parser('uil-catalog',help=METHODS['uil-catalog']);c.add_argument('blocks')

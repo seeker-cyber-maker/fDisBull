@@ -91,7 +91,7 @@ _C_RUNTIME = r'''
 #endif
 typedef struct {uint32_t block,status;const char *error;} FdbCall;
 typedef struct {
- uint32_t steps,depth,used[32],budgets[32],call_count,event_count,trace_cells;
+ uint32_t steps,depth,used[32],budgets[32],call_count,event_count,trace_cells,aggregate_limit;
  size_t heap_cells,event_bytes;const char *error;
  FdbCall calls[1024];char *events[256];
 } FdbContext;
@@ -110,7 +110,9 @@ static int enter(FdbContext *c,uint32_t budget){
  c->used[c->depth]=0;c->budgets[c->depth++]=budget;return 0;
 }
 static int charge(FdbContext *c){
- uint32_t i;c->steps++;if(c->steps>FDB_MAX_STEPS){return fail(c,"aggregate step budget exhausted");}
+ uint32_t i;
+ if(c->aggregate_limit && c->steps>=c->aggregate_limit){return fail(c,"aggregate step budget exhausted");}
+ c->steps++;if(c->steps>FDB_MAX_STEPS){return fail(c,"aggregate step budget exhausted");}
  for(i=0;i<c->depth;i++){if(++c->used[i]>c->budgets[i]){return fail(c,"function step budget exhausted");}}
  return 0;
 }
@@ -438,13 +440,23 @@ def _legacy_adapter(functions, entry):
             if node['op'] in ('while','group') and effects(node['body']):return True
             if node['op']=='if' and (effects(node['then']) or effects(node['else'])):return True
         return False
-    ins=[entry['variables'][s] for s in entry['inputs']];outs=[entry['variables'][s] for s in entry['outputs']]
-    admitted=(len(ins)==len(outs)==1 and ins[0]==outs[0] and ins[0]['type']=='u32-array'
-              and not any(effects(fn['body']) for fn in functions.values()))
-    return ({'available':True,'symbol':'fdb_block','words':ins[0]['length'],'ownership':'serialized-host-copy-in-copy-out',
-             'status':{'complete':0,'refused':1},'cut':0,'capture_local':False,
-             'projection':'one u32 array output; other entry slots are invocation-local'} if admitted else
-            {'available':False,'reason':'requires one same-length u32-array input/output and an effects-free closure'})
+    def arena_words(fn):
+        ins=[fn['variables'][s] for s in fn['inputs']];outs=[fn['variables'][s] for s in fn['outputs']]
+        if len(ins)==len(outs)==1 and ins[0]==outs[0] and ins[0]['type']=='u32-array':
+            return ins[0]['length']
+        return None
+    words=arena_words(entry)
+    if words is None or any(effects(fn['body']) for fn in functions.values()):
+        return {'available':False,'functions':[],
+                'reason':'requires one same-length u32-array input/output and an effects-free closure'}
+    admitted=[{'index':int(symbol[2:]),'words':words} for symbol,fn in functions.items()
+              if symbol.startswith('fn') and arena_words(fn)==words]
+    return {'available':True,'symbol':'fdb_block','function_symbol':'fdb_function_block',
+            'function_limited_symbol':'fdb_function_block_limit',
+            'aggregate_step_limit':{'min':1,'max':LIMITS['max_steps'],'exhaustion':'before-next-charge'},
+            'functions':admitted,'words':words,'ownership':'serialized-host-copy-in-copy-out',
+            'status':{'complete':0,'refused':1},'cut':0,'capture_local':False,
+            'projection':'one u32 array output; other function slots are invocation-local'}
 
 
 def _legacy_sources(adapter, entry_index):
@@ -461,24 +473,35 @@ typedef struct { uint32_t status, steps, cut; } FdbBlockResult;
  * Local capture is unsupported. Refusal leaves every caller word unchanged. */
 '''
     header+='#define FDB_NATIVE_ARENA_ADAPTER '+str(int(adapter['available']))+'\n'
+    header+='#define FDB_NATIVE_ARENA_FUNCTION_COUNT '+str(len(adapter['functions']))+'u\n'
     if not adapter['available']:
         return header+'/* No legacy arena symbol: this entry has a different contract. */\n#endif\n',''
     words=adapter['words']
-    header+='#define FDB_NATIVE_ARENA_WORDS '+str(words)+'u\n#ifdef __cplusplus\nextern "C" {\n#endif\nFdbBlockResult fdb_block(uint32_t *words);\n#ifdef __cplusplus\n}\n#endif\n#endif\n'
-    source='''FdbBlockResult fdb_block(uint32_t *words){
+    header+='#define FDB_NATIVE_ARENA_WORDS '+str(words)+'u\n#define FDB_NATIVE_ARENA_MAX_STEPS '+str(LIMITS['max_steps'])+'u\n#ifdef __cplusplus\nextern "C" {\n#endif\nFdbBlockResult fdb_function_block_limit(uint32_t function_index, uint32_t *words, uint32_t remaining_steps);\nFdbBlockResult fdb_function_block(uint32_t function_index, uint32_t *words);\nFdbBlockResult fdb_block(uint32_t *words);\n#ifdef __cplusplus\n}\n#endif\n#endif\n'
+    source='''FdbBlockResult fdb_function_block_limit(uint32_t function_index,uint32_t *words,uint32_t remaining_steps){
  FdbBlockResult result={1u,0u,0u};FdbContext *c;uint64_t *a,*o;size_t i;
- if(!words){return result;}
+ int (*selected)(FdbContext*,const uint64_t*,uint64_t*,uint64_t*)=NULL;
+ fdb_math_reset();
+ if(!remaining_steps||remaining_steps>FDB_MAX_STEPS){return result;}
+ switch(function_index){
+'''
+    for fn in adapter['functions']:
+        source+='case '+str(fn['index'])+'u:selected=fn'+str(fn['index'])+';break;\n'
+    source+='''default:return result;}
+ if(!words||!selected){return result;}
  c=(FdbContext*)calloc(1,sizeof(FdbContext));
  a=(uint64_t*)calloc(FDB_NATIVE_ARENA_WORDS,sizeof(uint64_t));
  o=(uint64_t*)calloc(FDB_NATIVE_ARENA_WORDS,sizeof(uint64_t));
  if(!c||!a||!o){free(c);free(a);free(o);return result;}
+ c->aggregate_limit=remaining_steps;
  for(i=0;i<FDB_NATIVE_ARENA_WORDS;i++){a[i]=words[i];}
- fdb_math_reset();
 '''
-    source+='if(!fn'+str(entry_index)+'(c,a,o,NULL) && !c->error && !c->event_count){\n'
+    source+='if(!selected(c,a,o,NULL) && !c->error && !c->event_count){\n'
     source+='for(i=0;i<FDB_NATIVE_ARENA_WORDS;i++){if(o[i]>UINT32_MAX){break;}}\n'
     source+='if(i==FDB_NATIVE_ARENA_WORDS){for(i=0;i<FDB_NATIVE_ARENA_WORDS;i++){words[i]=(uint32_t)o[i];}result.status=0u;}}\n'
     source+='result.steps=c->steps;for(i=0;i<c->event_count;i++){free(c->events[i]);}\nfree(c);free(a);free(o);return result;}\n'
+    source+='FdbBlockResult fdb_function_block(uint32_t function_index,uint32_t *words){return fdb_function_block_limit(function_index,words,FDB_MAX_STEPS);}\n'
+    source+='FdbBlockResult fdb_block(uint32_t *words){return fdb_function_block('+str(entry_index)+'u,words);}\n'
     return header,source
 
 

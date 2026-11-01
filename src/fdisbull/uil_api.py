@@ -11,6 +11,32 @@ def _document(value):
 
 def invoke_common(method, params):
     p = dict(params)
+    if method in ('uil-desktop-build', 'uil-desktop-seal'):
+        output = p.pop('output')
+        compiler = p.pop('c_compiler', None) if method == 'uil-desktop-build' else None
+        if p: raise ValueError('unknown '+method+' parameter')
+        from .uil_desktop import compile_desktop_shell, seal_desktop_shell
+        return (compile_desktop_shell(output, c_compiler=compiler) if method == 'uil-desktop-build'
+                else seal_desktop_shell(output))
+    if method == 'uil-desktop':
+        from .uil_desktop import load_desktop_json
+        documents = []
+        for name in ('program', 'presentation', 'catalog', 'orchestration', 'plan', 'initial'):
+            value = p.pop(name)
+            documents.append(load_desktop_json(value) if name == 'plan' and isinstance(value, str)
+                             else _document(value))
+        output = p.pop('output'); target = p.pop('target', 'macos-arm64')
+        source_only = p.pop('source_only', False); compiler = p.pop('c_compiler', None)
+        variants = _document(p.pop('variants')) if 'variants' in p else None
+        if p: raise ValueError('unknown uil-desktop parameter')
+        if type(source_only) is not bool: raise ValueError('source_only must be a boolean')
+        if source_only and compiler is not None:
+            raise ValueError('source-only desktop emission does not accept a compiler')
+        from .uil_desktop import emit_desktop_shell, build_desktop_shell
+        if source_only:
+            return emit_desktop_shell(*documents, output, target=target, variants=variants)
+        return build_desktop_shell(*documents, output, target=target,
+                                   c_compiler=compiler, variants=variants)
     if method == 'uil-components':
         from .uil_link import describe_components
         modules = _document(p.pop('modules')); providers = _document(p.pop('providers'))

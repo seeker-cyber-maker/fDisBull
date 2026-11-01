@@ -1,6 +1,7 @@
 include README.md AGENTS.md CLAUDE.md pyproject.toml MANIFEST.in player/pyproject.toml
 include player/fdisbull_player/*.py
 recursive-include src/fdisbull *.py *.c *.sh
+recursive-include src/fdisbull/native_runtime *.c *.h *.m
 recursive-include src/fdisbull/data *.json *.txt
 recursive-include src/fdisbull/skills *.md
 recursive-include tests *.py
@@ -28,6 +29,7 @@ include docs/evidence/integration-026/verification.json
 include docs/evidence/integration-0261/verification.json
 include docs/evidence/common-uil-2026-11-01/verification.json
 include docs/evidence/common-uil-native-2026-11-01/verification.json
+include docs/evidence/common-uil-desktop-2026-11-01/verification.json
 include docs/evidence/spatial-2026-10-29/verification.json
 include docs/evidence/zork-2026-10-29/verification.json
 include docs/evidence/zork-uil-2026-10-29/verification.json
