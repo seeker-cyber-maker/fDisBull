@@ -91,12 +91,14 @@ from .advanced import AdvancedMixin
 from .membership_view import MembershipMixin
 from .debugger import DebugProjectMixin, DEBUG_DDL
 from .proofs import ProofProjectMixin, PROOF_DDL
+from .snippet_links import SnippetLinksMixin, SNIPPET_DDL
 from .uil_store import CommonUILMixin
 from .cortex_m import CortexMMixin, DDL as CORTEX_M_DDL
 
 
 class Project(
     CommonUILMixin,
+    SnippetLinksMixin,
     TargetSourcesMixin,
     CortexMMixin,
     CodeBackingsMixin,
@@ -178,7 +180,7 @@ class Project(
             self.context = f"{self.arch}:{self.bits}:little" + (
                 ":ne" if self.meta["format"] == "NE" else ""
             )
-            self.db.executescript(DEBUG_DDL + PROOF_DDL + SOURCES_DDL + CORTEX_M_DDL)
+            self.db.executescript(DEBUG_DDL + PROOF_DDL + SOURCES_DDL + CORTEX_M_DDL + SNIPPET_DDL)
             if external and int(meta["schema"]) != SCHEMA:
                 self.db.execute(
                     "UPDATE metadata SET value=? WHERE key='schema'", (str(SCHEMA),)

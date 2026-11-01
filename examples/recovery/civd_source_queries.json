@@ -1,0 +1,13 @@
+[
+  {"id":"food-stock","query":"accumulated food kept by a city","kind":"field","expected":[{"path":"src/CIV.H","name":"food_box"}]},
+  {"id":"production-stock","query":"accumulated production kept by a city","kind":"field","expected":[{"path":"src/CIV.H","name":"shield_box"}]},
+  {"id":"terrain-food","query":"food produced by a terrain type","kind":"field","expected":[{"path":"src/CIV.H","name":"food"}]},
+  {"id":"growth-starvation","query":"handle starvation and population growth when food storage is depleted or full","kind":"function","expected":[{"path":"src/CITYMGT.C","name":"city_process"}]},
+  {"id":"tile-output","query":"compute the resource yield for a map square with improvements and government modifiers","kind":"function","expected":[{"path":"src/CITYMGT.C","name":"tile_yield"}]},
+  {"id":"worked-tile-totals","query":"accumulate worked tile resources into a city's totals","kind":"function","expected":[{"path":"src/CITYMGT.C","name":"add_tile_yield"}]},
+  {"id":"empire-economy","query":"process economic updates for each city belonging to a civilization","kind":"function","expected":[{"path":"src/ECONOMY.C","name":"civ_economy"}]},
+  {"id":"next-turn","query":"advance the game through players and the year change","kind":"function","expected":[{"path":"src/TURN.C","name":"game_turn"}]},
+  {"id":"restore-session","query":"restore a previously saved game from disk","kind":"function","expected":[{"path":"src/SAVE.C","name":"load_game"}]},
+  {"id":"persist-session","query":"write the current game state to a save slot","kind":"function","expected":[{"path":"src/SAVE.C","name":"save_game"}]},
+  {"id":"unsupported-network","query":"establish TCP/IP network matchmaking with a remote multiplayer lobby","kind":"function","expected":[]}
+]

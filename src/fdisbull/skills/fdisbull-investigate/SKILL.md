@@ -15,6 +15,41 @@ not authorize publishing, changing original files or acting outside the user's
 task.
 
 
+## Start without project history
+
+fDisBull stores analysis and evidence; it does not automatically recover a game.
+**UDL** maps source operations to shared semantics. **UIL** expresses the
+operation and its effects. **UDC** realizes that UIL with a selected implementation
+and explicit adapters. Do not invent alternative meanings for these terms.
+
+Identify the selected executable and runtime before choosing commands:
+
+```text
+fdisbull --version
+fdisbull agent-skill --index
+fdisbull methods
+```
+
+Use the same explicit executable/Python environment for subsequent calls. A
+repository, installed runtime and agent-installed skill can be different
+revisions. Record their identities; use the installed method inventory as the
+capability authority. Do not combine unrelated branch copies into an unversioned
+"latest" skill. Keep unsupported work visible and choose a qualified route.
+
+For any recovery, translation, port, provider swap or source-reuse task, read
+[the reconstruction recipe](references/reconstruction.md) before authoring a
+model. It works without earlier chat context and includes an executable
+counterexample exercise. Preserve the user's full outcome in a coverage ledger;
+finish one bounded operation at a time without silently replacing the requested
+result with a smaller demonstration.
+
+Before describing behavior as recovered or equivalent, compare **original →
+UIL** and **UIL → generated/selected output** separately on the same declared
+inputs, and then compare the composed results. Two models with shared ancestry,
+a source-entry snippet, a file hash and a successful native build cannot replace
+the original-to-model check. If original execution is unavailable, continue
+useful permitted work with that edge explicitly unqualified.
+
 ## Keep game files out of publication
 
 Do not upload original or modified game binaries, game assets, story images,
@@ -58,6 +93,8 @@ acceptance result; `doctor` and explicitly authorized native probes are separate
 A package version alone does not establish release inclusion. For archives,
 executable mappings or media reduction, read
 [references/formats-and-media.md](references/formats-and-media.md).
+For source or cross-edition concept searches, read
+[references/source-and-concepts.md](references/source-and-concepts.md).
 
 Use [references/workflows.md](references/workflows.md) to choose between static
 analysis, native investigation, scenes and text workflows. For research-led
@@ -163,6 +200,10 @@ To recover UIL scenes from game data or handlers, read
 [references/scene-recovery.md](references/scene-recovery.md). Start from the required
 scene elements and investigate the bounded source dependencies needed to qualify
 them, retaining unresolved behavior explicitly.
+
+For implementation alternatives and composed effects, use
+[the sweding guide](references/sweding.md). These are architecture and
+qualification instructions, not an automatic backend or language bridge.
 
 ## Report the tested scope
 

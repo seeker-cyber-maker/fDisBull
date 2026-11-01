@@ -28,6 +28,10 @@ REQUIRED_TEST_HELPERS.add("tests/test_uil_desktop_cli.py")
 REQUIRED_TEST_HELPERS |= {"tests/test_uil_desktop.py", "tests/test_uil_desktop_admission.py", "tests/test_uil_native_arena_functions.py"}
 REQUIRED_SOURCE_EVIDENCE = {"docs/evidence/output-024/" + name for name in
                             ("amplification.json", "dinopark-native.json", "dinopark-output.json", "tests.json")}
+REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/source-search-pilot/verification.json")
+REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/civd-source-maps/verification.json")
+REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/civd-food-swaps/" + name for name in
+                             ("verification.json","shared-uil.json","source-ui-inventory.json")}
 REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/scene-recovery-2026-10-29/" + name for name in
                            ("representation-paths.json", "scene-pipeline-summary.json")}
 REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/integration-025/" + name for name in
@@ -51,8 +55,30 @@ REQUIRED_NATIVE_RUNTIME_RESOURCES = {"uil_desktop.py"} | {
     "native_runtime/" + name for name in
     ("memory-desktop.c", "memory-desktop.h", "memory-appkit.m", "memory-x11.c", "memory-win32.c")}
 REQUIRED_KNOWLEDGE_RESOURCES |= REQUIRED_NATIVE_RUNTIME_RESOURCES
+REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/civd-food-arm64/verification.json")
+REVIEWED_SOURCE_RECIPES = {'examples/recovery/civd_food_arm64.py', 'examples/recovery/civd_food_swap.py'}
+REVIEWED_SOURCE_RECIPES |= {'examples/recovery/civd_food_web.py','examples/recovery/run_web_blocks.mjs'}
+REVIEWED_SOURCE_RECIPES.add('examples/recovery/run_web_browser.mjs')
+REVIEWED_SOURCE_RECIPES |= {'examples/recovery/civd_browser_shell.py',
+    'examples/recovery/web_shell_study.mjs','examples/recovery/run_browser_shell.mjs'}
+REVIEWED_SOURCE_RECIPES |= {'examples/recovery/snake_model.py','examples/recovery/snake_original.py',
+    'examples/recovery/snake_browser.py','examples/recovery/run_snake_browser.mjs','examples/recovery/snake_browser_study.mjs'}
+REQUIRED_SOURCE_EVIDENCE |= REVIEWED_SOURCE_RECIPES
+REVIEWED_SOURCE_RECIPES |= {'examples/recovery/snake_desktop.py',
+    'examples/recovery/verify_snake_desktop.py','examples/recovery/snake_macos.py',
+    'examples/recovery/verify_snake_macos.py','examples/recovery/verify_snake_appkit.py'}
+REQUIRED_SOURCE_EVIDENCE.add('docs/evidence/civd-food-web/verification.json')
+REQUIRED_SOURCE_EVIDENCE |= {'docs/evidence/civd-browser-shell/verification.json','tests/web_shell_checks.mjs'}
+REQUIRED_SOURCE_EVIDENCE |= {'docs/evidence/snake-browser/verification.json','tests/memory_shell_checks.mjs'}
+REQUIRED_KNOWLEDGE_RESOURCES.add("data/civd-z-screen-families.json")
+REQUIRED_KNOWLEDGE_RESOURCES.add('web_runtime/block.mjs')
+REQUIRED_KNOWLEDGE_RESOURCES |= {'web_runtime/shell.mjs','web_runtime/app.mjs','web_runtime/index.html'}
+REQUIRED_KNOWLEDGE_RESOURCES |= {'web_runtime/memory.mjs','web_runtime/memory-shell.mjs',
+    'web_runtime/memory-canvas.mjs','web_runtime/memory-index.html'}
 REQUIRED_KNOWLEDGE_RESOURCES |= {"skills/fdisbull-investigate/SKILL.md", "skills/fdisbull-investigate/references/scenes.md",
                                  "skills/fdisbull-investigate/references/methodology.md",
+                                 "skills/fdisbull-investigate/references/reconstruction.md",
+                                 "skills/fdisbull-investigate/references/sweding.md",
                                  "skills/fdisbull-investigate/references/runtime-navigation.md",
                                  "skills/fdisbull-investigate/references/proofs.md",
                                  "skills/fdisbull-investigate/references/workflows.md",
@@ -96,7 +122,11 @@ def check_archive(path: Path) -> int:
     for entry in entries:
         if entry.is_absolute() or ".." in entry.parts:
             raise ValueError(f"Invalid archive path: {entry}")
-        if EXCLUDED_DIRECTORIES.intersection(entry.parts):
+        excluded = EXCLUDED_DIRECTORIES.intersection(entry.parts)
+        relative = PurePosixPath(*entry.parts[1:]).as_posix()
+        reviewed_recipe = (path.suffix != ".whl" and excluded == {"examples"}
+                           and relative in REVIEWED_SOURCE_RECIPES)
+        if excluded and not reviewed_recipe:
             raise ValueError(f"Excluded directory in {path.name}: {entry}")
         if entry.suffix.lower() in EXCLUDED_SUFFIXES or ".fdb-" in entry.name.lower():
             raise ValueError(f"Excluded binary/data file in {path.name}: {entry}")

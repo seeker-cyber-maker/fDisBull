@@ -1,0 +1,405 @@
+{
+  "format": "fdisbull-snake-browser-qualification-1",
+  "status": "finite_original_match",
+  "recovery_method": "source-assisted known-source fixture",
+  "original": {
+    "sha256": "f8b672501f85d2b3feae0fb8acae626cbff96b8f3e4fccee6a3eb1746031d9be",
+    "bytes": 3851,
+    "unchanged": true,
+    "format": "DOS MZ",
+    "cpu": "8086"
+  },
+  "udl_sha256": "986713c25859408dcefe33186b74eb249956934d71d69ad71797c787da9c56d1",
+  "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+  "entries": [
+    "action",
+    "render",
+    "reset",
+    "step"
+  ],
+  "original_to_uil": {
+    "compiled_cpu_cases": 342,
+    "mismatches": 0,
+    "wrong_rule_detected": true,
+    "native_observations": 69,
+    "new_native_rasters": 62,
+    "projected_state_words": 621,
+    "pixel_indices_per_observation": 64000,
+    "carried_state_mismatches": 0,
+    "raster_mismatches": 0,
+    "ordinary_answer_resets": 0,
+    "diagnostic_ram_interventions": 1,
+    "originals_sha256": "1a1daa34fdbb8e827b98208dcf9046514a4834d42f630bb219c095e117e82f5a",
+    "recovery_sha256": "d556f54a3523bbe4ce26086875da238a6082af63ba1c374639f479923984be97",
+    "carried_receipt_sha256": "092c40d1e7ba7c3d4abd4e3483dfb51cdfd95127fa9e072144e4cfcdaa5ab80f",
+    "font_sha256": "75c79a7e7fa423dda67ec6d6d76cec86b63f85677726368750c75b0920ddf319",
+    "font_private": true,
+    "palette_observed_indices": [
+      0,
+      1,
+      2,
+      8,
+      10,
+      12,
+      15
+    ],
+    "snippets": 10,
+    "process_reaped": true,
+    "database_reopened": true
+  },
+  "execution": {
+    "node": {
+      "runtime": "v22.22.3",
+      "adapter": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "isFallbackAdapter": false
+      },
+      "cpu_cases": {
+        "wasm": {
+          "cases": 342,
+          "mismatches": 0,
+          "projection_sha256": "c422f03049200598af246c004ff98d949b560f22218a954dd65a333dbd4a3fd9"
+        },
+        "webgpu": {
+          "cases": 342,
+          "mismatches": 0,
+          "projection_sha256": "c422f03049200598af246c004ff98d949b560f22218a954dd65a333dbd4a3fd9"
+        }
+      },
+      "carried_arms": [
+        {
+          "logic": "wasm",
+          "render": "wasm",
+          "observations": 69,
+          "events": 79,
+          "declared_interventions": 1,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "wasm",
+          "render": "webgpu",
+          "observations": 69,
+          "events": 79,
+          "declared_interventions": 1,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "webgpu",
+          "render": "wasm",
+          "observations": 69,
+          "events": 79,
+          "declared_interventions": 1,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "webgpu",
+          "render": "webgpu",
+          "observations": 69,
+          "events": 79,
+          "declared_interventions": 1,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "alternating",
+          "render": "alternating",
+          "observations": 69,
+          "events": 79,
+          "declared_interventions": 1,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        }
+      ],
+      "receipt_sha256": "86a5600c194a3c5f58e022ac7e948c221b876737d18a3118bd684aa04a689eec",
+      "reuse": {
+        "source_sha256": "86a5600c194a3c5f58e022ac7e948c221b876737d18a3118bd684aa04a689eec",
+        "original_runner_sha256": "a9ee0abb874751e3e0205d3ac158ef898f78f094ef4d8ea2e6d16c4a36cd56af",
+        "current_runner_sha256": "038e48b664df36e2b66dcff3a578a24dbc3924192ee9032a9935ac43747aff8f",
+        "scope": "unchanged successful original-backed Node stage; browser and UI re-executed"
+      }
+    },
+    "chrome": {
+      "runtime": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
+      "adapter": {
+        "vendor": "apple",
+        "architecture": "metal-3",
+        "isFallbackAdapter": false
+      },
+      "cpu_cases": {
+        "wasm": {
+          "cases": 342,
+          "mismatches": 0,
+          "projection_sha256": "c422f03049200598af246c004ff98d949b560f22218a954dd65a333dbd4a3fd9"
+        },
+        "webgpu": {
+          "cases": 342,
+          "mismatches": 0,
+          "projection_sha256": "c422f03049200598af246c004ff98d949b560f22218a954dd65a333dbd4a3fd9"
+        }
+      },
+      "carried_arms": [
+        {
+          "logic": "wasm",
+          "render": "wasm",
+          "observations": 69,
+          "events": 79,
+          "declared_interventions": 1,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "wasm",
+          "render": "webgpu",
+          "observations": 69,
+          "events": 79,
+          "declared_interventions": 1,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "webgpu",
+          "render": "wasm",
+          "observations": 69,
+          "events": 79,
+          "declared_interventions": 1,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "webgpu",
+          "render": "webgpu",
+          "observations": 69,
+          "events": 79,
+          "declared_interventions": 1,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        },
+        {
+          "logic": "alternating",
+          "render": "alternating",
+          "observations": 69,
+          "events": 79,
+          "declared_interventions": 1,
+          "projection_sha256": "0f401c8d504333258b31847bf0ab63b534c0f172403189551a321bec9ce4448f"
+        }
+      ],
+      "receipt_sha256": "ed6c1e1c6cb6dea1fcbcb916c347474caa116cb3f87c02f2ee48c1c9a9a5f62e"
+    }
+  },
+  "browser_ui": {
+    "original_backed_arms": [
+      {
+        "backend": "wasm",
+        "observations": 69,
+        "normalized_events": 79,
+        "trusted_game_dom_events": 75,
+        "full_canvas_rgb": true,
+        "exit_disposed": true
+      },
+      {
+        "backend": "webgpu",
+        "observations": 69,
+        "normalized_events": 79,
+        "trusted_game_dom_events": 75,
+        "full_canvas_rgb": true,
+        "exit_disposed": true
+      }
+    ],
+    "additional_regressions": [
+      {
+        "name": "post-exit-square-canvas-uses-intrinsic-aspect",
+        "status": "passed",
+        "measurements": {
+          "intrinsic": [
+            2,
+            2
+          ],
+          "content": [
+            800,
+            800
+          ],
+          "border_box": [
+            804,
+            804
+          ],
+          "closed": true
+        }
+      },
+      {
+        "name": "ctrl-modified-key-does-not-reach-game",
+        "status": "passed"
+      },
+      {
+        "name": "alt-modified-key-does-not-reach-game",
+        "status": "passed"
+      },
+      {
+        "name": "meta-modified-key-does-not-reach-game",
+        "status": "passed"
+      },
+      {
+        "name": "keyboard-focus-excludes-toolbar-keys",
+        "status": "passed"
+      },
+      {
+        "name": "production-logic-and-render-change-handlers-change-bindings-both-ways",
+        "status": "passed",
+        "instrumentation": "Explicit value+change; native popup driver not qualified"
+      },
+      {
+        "name": "lost-native-pointer-capture-ends-logical-gesture",
+        "status": "passed"
+      },
+      {
+        "name": "window-blur-handler-releases-held-button",
+        "status": "passed",
+        "native_blur_observed": false,
+        "instrumentation": "Native blur unavailable in this headless profile; explicit isTrusted:false blur event tests the production handler only"
+      },
+      {
+        "name": "backend-change-ends-held-gesture-and-next-press-is-consumed",
+        "status": "passed"
+      }
+    ],
+    "instrumentation": {
+      "gpu_observer": "Delegates native requestAdapter and returns original objects; restored after loading",
+      "core": "Public production shell API; normalized original input/clock adapters; ordinary state carried between events"
+    },
+    "process_reaped": true,
+    "server_closed": true,
+    "exit": {
+      "code": 0,
+      "signal": null
+    },
+    "screenshot_sha256": "9b8b5ff92d1b33d9ca544b1f48ae97c175f66cb6abeb74c0a24ea85221ec2b04"
+  },
+  "orchestration": {
+    "plan_sha256": "4ad824dc4d4b6544861a5fba45ef3d4fc87f0c2602fd6f5fc59192fa0e201ad1",
+    "ordered_inputs": true,
+    "owned_snapshots": true,
+    "output_footprints": true,
+    "typed_and_relational_admission": true,
+    "atomic_state_and_frame_commit": true,
+    "provider_ownership": "one wrapper owner; centrally owned loader device; per-function borrowed wrappers",
+    "cancellation": "logical invalidation and physical drain; no implicit retry or backend fallback",
+    "backpressure_regression": {
+      "status": "passed",
+      "calculation": "actual compiled Snake Wasm",
+      "previous_committed_button": 1,
+      "queued_discarded": 64,
+      "physical_tail_drained": true,
+      "release_committed": true,
+      "logical_mouse_buttons": 0,
+      "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720"
+    }
+  },
+  "identities": {
+    "browser_manifest_sha256": "f5bd4ed84910c6e214d7c64b3e99b333d9a146f1529e924963fbf3e00aec65be",
+    "study_sha256": "c64ed82937a9ee31e045241d3fec0e456d34381be7298e10bd56ad8bb5833e5a",
+    "runner_sha256": "038e48b664df36e2b66dcff3a578a24dbc3924192ee9032a9935ac43747aff8f",
+    "study_helper_sha256": "98689fbde170188b7ca267668f0b9f69f17012c220f70e8f0edee08c1e11e8e4",
+    "artifacts": {
+      "memory.mjs": "e43b1e0a2ada59ccb424edaabca3e5fa7442ad210f09d1c3aa387d1f84656af7",
+      "memory-shell.mjs": "ca657bd249315ca895174592c201f2662a06bf8a726cc0cce3a15a6f341959b6",
+      "memory-canvas.mjs": "4b83f5973f1d6fc14ae6ffc04a15d46118f8444335086a42b7f30647018fad9c",
+      "index.html": "0c2602bf77fdf8d9f953afcf2a11bc4f80a3e23018c352aed79df344b251b8b1",
+      "initial.json": "c97738864f839d3e13cf6983447f1a29ac9a339440376f90dfb8d8634147272e",
+      "blocks/wasm/action/block.wasm": "779ccfbac241932aee52636f6681c19c97c22f2dde47fb5d9a85f76730f2bc5e",
+      "blocks/wasm/action/build.json": "56e2e7474a31cb6150d7c3620d025437a65c1f066fa8c2574f9889d619f69294",
+      "blocks/wasm/render/block.wasm": "2015d914c5c9f20a911bb0497f0d6d14960c00b5befc242509000ab50824954d",
+      "blocks/wasm/render/build.json": "c8c13d39e6b872122ec486b124f04d3d2fa6828ff70a6cc2d4421c6e0dc5a3f1",
+      "blocks/wasm/reset/block.wasm": "8989bb79e3d053f57df80052261baa5b69166e9bc2ab672e4d1d4c7d4ce5f84a",
+      "blocks/wasm/reset/build.json": "10f0b70448a29404ca82739577a2888443cce6c71b406c2091f3f24eb8b49ee3",
+      "blocks/wasm/step/block.wasm": "896c2aab21a71652f16659feba700d7e8db099fdc776b4751c6463266c9a0460",
+      "blocks/wasm/step/build.json": "2665fb8dd3fa76e8bad7c504def559b27f1d695ac3ea541d87f84a8f0f925aed",
+      "blocks/webgpu/action/block.wgsl": "a9c5aebaa88daecc26fe87c513c17c65679fdddacc0fb27c457bfe69979dde4a",
+      "blocks/webgpu/action/build.json": "11915440d3c755e8d9bab172db14b0ba438c2e4c9e3de70c533e6393a00f1c23",
+      "blocks/webgpu/render/block.wgsl": "66d3a43e59d09f9dea468c291cbb3fb472f2859f502e0c08574f9c40c5b1a768",
+      "blocks/webgpu/render/build.json": "e11402c9817abc0367428c5968a3e3db8e0e1fa4b7ba4d3ed66ce007d9c6d7e4",
+      "blocks/webgpu/reset/block.wgsl": "cd49e657414be0fe31afa85f32a5b18a661e0aeec006eb45c2a01394ae56bd7a",
+      "blocks/webgpu/reset/build.json": "4bb04727e5b5dbcf55147ecb6e045389ba066646975f517e1ce7bb706070965e",
+      "blocks/webgpu/step/block.wgsl": "b89f721b92939ed8113fb892500577cb3fd8bb71b8e72fbbba07fb5305cb2a15",
+      "blocks/webgpu/step/build.json": "371600967d496cbc649e0efa5532a515c7e9de7f4901e118ad4ddf7d8b6fa0f4"
+    },
+    "contracts": {
+      "step": "contract:f4161cf7b925cc3e3f17a2cafc4649f9725f0ccc8a758ef512750cfca6e72401",
+      "action": "contract:f255c9c6a123c29793d23f48201bde62e27b554453d3b9feb9d7726ffb14f80e",
+      "reset": "contract:7c7af99f08318166eb7010bb2adf9e569cbd735e913e57b716966e3952424abb",
+      "render": "contract:11b98d4229e55d3f28a6ad28e62aa70378c791a081ba0f53d8349b7b7a151669"
+    },
+    "layers": {
+      "wasm": {
+        "step": "layer:3b64fd3f2892e5aec102c6608903a9dc87d7880838a172a30413bbd062d59234",
+        "reset": "layer:b564b09dd2a6fc04462841d88cfdca194ba6ffe51e3fd6dd5b461340e3d79584",
+        "action": "layer:34ceabdec8a0cce39b80be00d9ee57f5484f4778446e02e1d702acf0a8cc040a",
+        "render": "layer:f7b9bb8d5eee534b7539389e44bdc556b522b351c046cac7ecb3e83a62010e48"
+      },
+      "webgpu": {
+        "step": "layer:05526ae80a369a3ec5ce3d5dc8f574d3481df72eb705029ea42f2f1f8585a7d0",
+        "reset": "layer:9560d99dc4fc3a128761d2002512475e0c2e36a524b80119bd9df1ca83974e7f",
+        "action": "layer:57c8427555b8827b7f3f0edf0f7b1a97ece62801735a8286be743f8ad0323089",
+        "render": "layer:8f81f03a697fa4f15729bec9ba61b283d36c429c300f09dc4355a0ffeac8d9a3"
+      }
+    },
+    "selections": {
+      "wasm": "selection:32936dd2025832ab509967dd8cdba18a713918b19e98424f30a1239212f02236",
+      "webgpu": "selection:f790c8b40648c76fbd5797eb62378e5c0a133a5929542f13fdba5512091f78ce"
+    },
+    "database_reopened": true
+  },
+  "local_verification": {
+    "macos": {
+      "passed": 2322,
+      "skipped": 132,
+      "deselected": 2,
+      "ignored": [
+        "tests/test_elf_metadata.py",
+        "tests/test_platform_calls.py"
+      ],
+      "deselected_tests": [
+        "tests/test_inspection.py::test_actual_elf_exports_and_unresolved_imports_are_honest",
+        "tests/test_loading.py::test_real_elf_retains_entry_and_named_function"
+      ],
+      "reason": "Established GNU/ELF-dependent fixture limitations; ordinary Linux CI separate"
+    },
+    "installed_wheel": {
+      "passed": 52,
+      "own_module_imports_verified": true,
+      "actual_json_selected_build": true
+    },
+    "domain_and_queue": {
+      "passed": 23
+    },
+    "focused_with_distribution": {
+      "passed": 77
+    },
+    "both_bundled_skills": "passed",
+    "extracted_source": {
+      "passed": 97
+    },
+    "package_gates": {
+      "wheel_entries": 200,
+      "sdist_entries": 671,
+      "tool_zip_entries": 663,
+      "policy": "tool-only; source recipes explicit; private target payloads excluded"
+    },
+    "skills": {
+      "investigation": "passed",
+      "guide": "passed"
+    }
+  },
+  "scope": {
+    "qualified": "finite source-assisted original step, carried projected game state, indexed graphics, declared keyboard/mouse controls, browser services and guarded backing swaps",
+    "excluded": [
+      "mouse-driver cursor overlays",
+      "arithmetic FLAGS",
+      "arbitrary keyboard/IME or native firmware equivalence",
+      "identical wall-clock scheduling or performance",
+      "saved browser persistence",
+      "all-input mathematical proof",
+      "complete binary analysis"
+    ],
+    "interventions": "full-board RAM setup is explicit and separate from ordinary play",
+    "step_composition": "action contains step nodes inline; UI changes action/step/reset as a logic group; separate step selection is not an internal dynamic call override"
+  },
+  "privacy": {
+    "git": "tool sources, authored semantic recipes, tests and this sanitized receipt only",
+    "private": "original executable/source, ROM font, raw rasters, FDBs, full model exports, generated bundle, browser profiles"
+  },
+  "system_installation_changed": false
+}

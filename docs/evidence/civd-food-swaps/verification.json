@@ -1,0 +1,713 @@
+{
+  "format": "fdisbull-civd-food-swap-1",
+  "contract_id": "contract:517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+  "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed",
+  "vectors": 2018,
+  "vectors_sha256": "214d93bb67ded3429575659931a7cfa8dd81608cae7814cde647f75ef1796528",
+  "matrix": [
+    {
+      "host": "474.01",
+      "backing": "474.01",
+      "invocations": 2018,
+      "mismatches": 0,
+      "results_sha256": "deff1d2d1737c1837d2a9beb028eeef1acfd46725b75bdf123663b5cf0141e7b",
+      "source_code_sha256": "cbaf3048ffe7b3add1e9864eea12ef3872b89e9ffa489e62fba4d1a84eeac374",
+      "original_bytes_unchanged": true,
+      "adapter": {
+        "records": 28780,
+        "stride": 28,
+        "population_field": 7,
+        "stock_field": 12,
+        "produced": 28762,
+        "supported": 62182,
+        "cost_frame_offset": -70,
+        "record_frame_offset": 6,
+        "record_count": 128
+      },
+      "selections": {
+        "(0, 34816)": "selection:8233b70758af7c789364d1c2bfaa8af38745725549c6fd7eb95a69e18daaaab3",
+        "(1, 36864)": "selection:67da199b417beefdf11899c9de016a99719c8eae65125afeddcfd690924752b5",
+        "(63, 34816)": "selection:2d4d465e6a8b549fa6ddf7a31d54965d60c1b2765ad50c2d002ba3bea597bc8f",
+        "(127, 36864)": "selection:2523e59fc080c3fc72cc300664941d4959ce1be7f776c27e8414b53cdbdb6118"
+      }
+    },
+    {
+      "host": "474.01",
+      "backing": "474.03",
+      "invocations": 2018,
+      "mismatches": 0,
+      "results_sha256": "deff1d2d1737c1837d2a9beb028eeef1acfd46725b75bdf123663b5cf0141e7b",
+      "source_code_sha256": "ce352699d5a2443087917bf763b46f96cf27b9a7befe537d4ce44ea2345361b8",
+      "original_bytes_unchanged": true,
+      "adapter": {
+        "records": 28908,
+        "stride": 28,
+        "population_field": 7,
+        "stock_field": 12,
+        "produced": 28890,
+        "supported": 58310,
+        "cost_frame_offset": -72,
+        "record_frame_offset": 6,
+        "record_count": 128
+      },
+      "selections": {
+        "(0, 34816)": "selection:4dec61b3e18f85bf42d10628ada6303cd35f0daf2514bb2eeb9d7e86891ed79d",
+        "(1, 36864)": "selection:fc02554cf8b66c9e445e6ba6e8b7f7fcb596377b282ee06023c517bfed0db5b4",
+        "(63, 34816)": "selection:89a469a06911ac79d09a531fd1a51f5b41149e6e3f30eb7be0f389e71fddf7c1",
+        "(127, 36864)": "selection:0e2a1a9a59c597b2f585dc7351b454847b676a2a575c220f573c6793ea631a94"
+      }
+    },
+    {
+      "host": "474.01",
+      "backing": "474.05",
+      "invocations": 2018,
+      "mismatches": 0,
+      "results_sha256": "deff1d2d1737c1837d2a9beb028eeef1acfd46725b75bdf123663b5cf0141e7b",
+      "source_code_sha256": "ce352699d5a2443087917bf763b46f96cf27b9a7befe537d4ce44ea2345361b8",
+      "original_bytes_unchanged": true,
+      "adapter": {
+        "records": 28908,
+        "stride": 28,
+        "population_field": 7,
+        "stock_field": 12,
+        "produced": 28890,
+        "supported": 58310,
+        "cost_frame_offset": -72,
+        "record_frame_offset": 6,
+        "record_count": 128
+      },
+      "selections": {
+        "(0, 34816)": "selection:5a2990c8b0d7278876397896edf580afb7b53fdfa71347993359268d25c829d4",
+        "(1, 36864)": "selection:6c1b9213db754bc9bfae82b8ca60503c95d56b2c97be7f3ec731a64027b520c3",
+        "(63, 34816)": "selection:526337cf417b24346cb7e41a0498520b35dc2a33b1cdcc46199e83114a0494f5",
+        "(127, 36864)": "selection:f1e1a0d381237e2248b68c873a62c6ecef8b6dff9db605b334a1e3cdef254c12"
+      }
+    },
+    {
+      "host": "474.03",
+      "backing": "474.01",
+      "invocations": 2018,
+      "mismatches": 0,
+      "results_sha256": "deff1d2d1737c1837d2a9beb028eeef1acfd46725b75bdf123663b5cf0141e7b",
+      "source_code_sha256": "cbaf3048ffe7b3add1e9864eea12ef3872b89e9ffa489e62fba4d1a84eeac374",
+      "original_bytes_unchanged": true,
+      "adapter": {
+        "records": 28780,
+        "stride": 28,
+        "population_field": 7,
+        "stock_field": 12,
+        "produced": 28762,
+        "supported": 62182,
+        "cost_frame_offset": -70,
+        "record_frame_offset": 6,
+        "record_count": 128
+      },
+      "selections": {
+        "(0, 34816)": "selection:d9595f4e0aa526a53ba4e37c9ea60f3876a546989c3bc96727191990a4b70302",
+        "(1, 36864)": "selection:9efb65ad72bdf4b54352736247c33a98c0215757e812a3e76d106cfaf69fb5ee",
+        "(63, 34816)": "selection:e1cc226f51e4b7e58df194d6d5fd5cf6db71aa589ca9abec5a8f3bedc3bee11d",
+        "(127, 36864)": "selection:fb762808cf605296620e9a1904f2cc99f1bb51c86c85f2afe44907f198b7ce3d"
+      }
+    },
+    {
+      "host": "474.03",
+      "backing": "474.03",
+      "invocations": 2018,
+      "mismatches": 0,
+      "results_sha256": "deff1d2d1737c1837d2a9beb028eeef1acfd46725b75bdf123663b5cf0141e7b",
+      "source_code_sha256": "ce352699d5a2443087917bf763b46f96cf27b9a7befe537d4ce44ea2345361b8",
+      "original_bytes_unchanged": true,
+      "adapter": {
+        "records": 28908,
+        "stride": 28,
+        "population_field": 7,
+        "stock_field": 12,
+        "produced": 28890,
+        "supported": 58310,
+        "cost_frame_offset": -72,
+        "record_frame_offset": 6,
+        "record_count": 128
+      },
+      "selections": {
+        "(0, 34816)": "selection:2ee7aae4d0aa5b17dadbf1bae1b4050d4428e90391c7031da7fcbadf3b486963",
+        "(1, 36864)": "selection:7c83282a1456a5f11c70acfbb487815fb418405ff9aa43c46350aa960d7c324b",
+        "(63, 34816)": "selection:3eadfe7074874a01f01f66941fc36293c57701fd9ac7a6543e822f762004568e",
+        "(127, 36864)": "selection:88e0afae106fb1147cb40b7885d96b8219ee51b509113a197dd635c440817d23"
+      }
+    },
+    {
+      "host": "474.03",
+      "backing": "474.05",
+      "invocations": 2018,
+      "mismatches": 0,
+      "results_sha256": "deff1d2d1737c1837d2a9beb028eeef1acfd46725b75bdf123663b5cf0141e7b",
+      "source_code_sha256": "ce352699d5a2443087917bf763b46f96cf27b9a7befe537d4ce44ea2345361b8",
+      "original_bytes_unchanged": true,
+      "adapter": {
+        "records": 28908,
+        "stride": 28,
+        "population_field": 7,
+        "stock_field": 12,
+        "produced": 28890,
+        "supported": 58310,
+        "cost_frame_offset": -72,
+        "record_frame_offset": 6,
+        "record_count": 128
+      },
+      "selections": {
+        "(0, 34816)": "selection:16fc0e08fd99f23a21db89c0a626dc209742a0f26964cd0df098e654e33d81a9",
+        "(1, 36864)": "selection:69f50b3b3ffb26e4ebc9e54f5e06b874ec597edb16a8715cba97cdf7466a76ae",
+        "(63, 34816)": "selection:5ee3bb8571a39fb2fd435b3d11d317349b311528c44e2be8467b904c21e5c17d",
+        "(127, 36864)": "selection:5d5174bd99fe6f7941e7b0db73c962b257e731a211368737f085ece6708a2173"
+      }
+    },
+    {
+      "host": "474.05",
+      "backing": "474.01",
+      "invocations": 2018,
+      "mismatches": 0,
+      "results_sha256": "deff1d2d1737c1837d2a9beb028eeef1acfd46725b75bdf123663b5cf0141e7b",
+      "source_code_sha256": "cbaf3048ffe7b3add1e9864eea12ef3872b89e9ffa489e62fba4d1a84eeac374",
+      "original_bytes_unchanged": true,
+      "adapter": {
+        "records": 28780,
+        "stride": 28,
+        "population_field": 7,
+        "stock_field": 12,
+        "produced": 28762,
+        "supported": 62182,
+        "cost_frame_offset": -70,
+        "record_frame_offset": 6,
+        "record_count": 128
+      },
+      "selections": {
+        "(0, 34816)": "selection:59b6d69cfd00845f3b5ba19ada0df0bcc7146d1d427bf48d14628126c4e81eca",
+        "(1, 36864)": "selection:ae84d546967fdff1db91c08a961d737a44aaeaf4c885347a69d1561b38dc95e4",
+        "(63, 34816)": "selection:584b30f1df76962660683a0fcffec67b9a21df7fb72889c0f15c0192ac1b8160",
+        "(127, 36864)": "selection:91e4a97c2fc63f5a1f15187b2e57612bba958c08049ee0881ae07d0554bb3d2d"
+      }
+    },
+    {
+      "host": "474.05",
+      "backing": "474.03",
+      "invocations": 2018,
+      "mismatches": 0,
+      "results_sha256": "deff1d2d1737c1837d2a9beb028eeef1acfd46725b75bdf123663b5cf0141e7b",
+      "source_code_sha256": "ce352699d5a2443087917bf763b46f96cf27b9a7befe537d4ce44ea2345361b8",
+      "original_bytes_unchanged": true,
+      "adapter": {
+        "records": 28908,
+        "stride": 28,
+        "population_field": 7,
+        "stock_field": 12,
+        "produced": 28890,
+        "supported": 58310,
+        "cost_frame_offset": -72,
+        "record_frame_offset": 6,
+        "record_count": 128
+      },
+      "selections": {
+        "(0, 34816)": "selection:5777f2e8324b48367fa4ff5d92932a7336d2399e5bf4f32ea8ced9c604add222",
+        "(1, 36864)": "selection:b8f0aab016c01a47e2ce127ae1ea62643a99a508537dbbfbbcbbba29ce5167b1",
+        "(63, 34816)": "selection:9396f5dfa7d8c6e2ddaece2ea4af6592637056033deef09bbfa580424c9a5f6a",
+        "(127, 36864)": "selection:1283175a2ea3eca973e3e8a451ace704d592b66284404f5a68345e5f18b32ab1"
+      }
+    },
+    {
+      "host": "474.05",
+      "backing": "474.05",
+      "invocations": 2018,
+      "mismatches": 0,
+      "results_sha256": "deff1d2d1737c1837d2a9beb028eeef1acfd46725b75bdf123663b5cf0141e7b",
+      "source_code_sha256": "ce352699d5a2443087917bf763b46f96cf27b9a7befe537d4ce44ea2345361b8",
+      "original_bytes_unchanged": true,
+      "adapter": {
+        "records": 28908,
+        "stride": 28,
+        "population_field": 7,
+        "stock_field": 12,
+        "produced": 28890,
+        "supported": 58310,
+        "cost_frame_offset": -72,
+        "record_frame_offset": 6,
+        "record_count": 128
+      },
+      "selections": {
+        "(0, 34816)": "selection:268d8b09b587a4ad93a6235d9fd984565349122785032e8ad91b29ea6a6a027c",
+        "(1, 36864)": "selection:747220a030a60fb023e1ca2b4078beed0948caf97ac54136fc18dfe44dcf1ef7",
+        "(63, 34816)": "selection:8a02474dac26e0b7db83b4dcb8e5cf8a6a6531eeba655eb1d80cab9a9ef61c82",
+        "(127, 36864)": "selection:06c93fe2645e1e44b118591e998d5bacc3539b7ef540b7007db008b99d567653"
+      }
+    }
+  ],
+  "negative_controls": [
+    {
+      "host": "474.01",
+      "kind": "changed-operation",
+      "rejected": true,
+      "expected": {
+        "new_stock": 13
+      },
+      "observed": {
+        "new_stock": 7
+      }
+    },
+    {
+      "host": "474.01",
+      "kind": "wrong-frame-local",
+      "rejected": true,
+      "error": "native read is outside declared inputs/outputs/scratch"
+    },
+    {
+      "host": "474.03",
+      "kind": "changed-operation",
+      "rejected": true,
+      "expected": {
+        "new_stock": 13
+      },
+      "observed": {
+        "new_stock": 7
+      }
+    },
+    {
+      "host": "474.03",
+      "kind": "wrong-frame-local",
+      "rejected": true,
+      "error": "native read is outside declared inputs/outputs/scratch"
+    },
+    {
+      "host": "474.05",
+      "kind": "changed-operation",
+      "rejected": true,
+      "expected": {
+        "new_stock": 13
+      },
+      "observed": {
+        "new_stock": 7
+      }
+    },
+    {
+      "host": "474.05",
+      "kind": "wrong-frame-local",
+      "rejected": true,
+      "error": "native read is outside declared inputs/outputs/scratch"
+    }
+  ],
+  "restart": [
+    {
+      "host": "474.01",
+      "selection": "selection:8233b70758af7c789364d1c2bfaa8af38745725549c6fd7eb95a69e18daaaab3",
+      "outputs": {
+        "new_stock": 13
+      },
+      "version": 1
+    },
+    {
+      "host": "474.03",
+      "selection": "selection:2ee7aae4d0aa5b17dadbf1bae1b4050d4428e90391c7031da7fcbadf3b486963",
+      "outputs": {
+        "new_stock": 13
+      },
+      "version": 1
+    },
+    {
+      "host": "474.05",
+      "selection": "selection:268d8b09b587a4ad93a6235d9fd984565349122785032e8ad91b29ea6a6a027c",
+      "outputs": {
+        "new_stock": 13
+      },
+      "version": 1
+    }
+  ],
+  "originals_unchanged": true,
+  "originals": {
+    "474.01": "21861cbb5eca78ddf22d7b84219b41a22a1d283c3f7b27f3d1bce98c30eb8e3b",
+    "474.03": "31e35b01f4d00df81685dfcb81e6de196a3876bd2afff6e39cbbfd964f5852ad",
+    "474.05": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a"
+  },
+  "scope": "Finite original-block CPU/DOSBox projection checks with authored adapters; no whole-game replacement or all-input proof",
+  "snippet_links": [
+    {
+      "id": "link:8db0aef52ccd7fa13aea1941983016c31e0b960482c0ce8369a7e2e2c4f41d1b",
+      "sha256": "8db0aef52ccd7fa13aea1941983016c31e0b960482c0ce8369a7e2e2c4f41d1b",
+      "document": {
+        "adapters": {
+          "logical_contract": "contract:517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+          "source_layout": {
+            "cost_frame_offset": -70,
+            "population_field": 7,
+            "produced": 28762,
+            "record_count": 128,
+            "record_frame_offset": 6,
+            "records": 28780,
+            "stock_field": 12,
+            "stride": 28,
+            "supported": 62182
+          },
+          "target_layout": {
+            "cost_frame_offset": -72,
+            "population_field": 7,
+            "produced": 28890,
+            "record_count": 128,
+            "record_frame_offset": 6,
+            "records": 28908,
+            "stock_field": 12,
+            "stride": 28,
+            "supported": 58310
+          }
+        },
+        "assertion_status": "authored-declaration",
+        "assurance": "finite-execution-evidence",
+        "author": "agent",
+        "domain": {
+          "support_cost": [
+            1,
+            2
+          ],
+          "vector_set_sha256": "214d93bb67ded3429575659931a7cfa8dd81608cae7814cde647f75ef1796528"
+        },
+        "evidence": {
+          "invocations": 2018,
+          "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed",
+          "native_original_block_oracle": "dosbox-x-original-block-harness",
+          "source_map": "source-native-map:799aa29529ca0dd0351d15aaeb86fd5c2620a8d9a1106f0097315c81e9900d40"
+        },
+        "format": "fdisbull-snippet-link-1",
+        "name": "tested-stock-projection",
+        "relation": "tested-stock-projection",
+        "sources": [
+          "snippet:4cb5e1501a4d1bb269b172403abe33d863d8bf467301db33e67530d3952409c9"
+        ],
+        "targets": [
+          "snippet:f57f5cdbaa23133b82269899dd03a191fe99294f8b0a13de9d6eb0fc08e6cd6a"
+        ],
+        "unknowns": [
+          "whole-game effects",
+          "flags",
+          "untested input combinations"
+        ]
+      }
+    },
+    {
+      "id": "link:5fa33a7f9319b156b588b5463461f97239c740bf93cbd2e4916f71dc0c339afc",
+      "sha256": "5fa33a7f9319b156b588b5463461f97239c740bf93cbd2e4916f71dc0c339afc",
+      "document": {
+        "adapters": {
+          "logical_contract": "contract:517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+          "source_layout": {
+            "cost_frame_offset": -70,
+            "population_field": 7,
+            "produced": 28762,
+            "record_count": 128,
+            "record_frame_offset": 6,
+            "records": 28780,
+            "stock_field": 12,
+            "stride": 28,
+            "supported": 62182
+          },
+          "target_layout": {
+            "cost_frame_offset": -72,
+            "population_field": 7,
+            "produced": 28890,
+            "record_count": 128,
+            "record_frame_offset": 6,
+            "records": 28908,
+            "stock_field": 12,
+            "stride": 28,
+            "supported": 58310
+          }
+        },
+        "assertion_status": "authored-declaration",
+        "assurance": "finite-execution-evidence",
+        "author": "agent",
+        "domain": {
+          "support_cost": [
+            1,
+            2
+          ],
+          "vector_set_sha256": "214d93bb67ded3429575659931a7cfa8dd81608cae7814cde647f75ef1796528"
+        },
+        "evidence": {
+          "invocations": 2018,
+          "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed",
+          "native_original_block_oracle": "dosbox-x-original-block-harness",
+          "source_map": "source-native-map:a6529b3c3f6074494cad59916e209b3b38b530fb08366f0c67521226450f2eef"
+        },
+        "format": "fdisbull-snippet-link-1",
+        "name": "tested-stock-projection",
+        "relation": "tested-stock-projection",
+        "sources": [
+          "snippet:4cb5e1501a4d1bb269b172403abe33d863d8bf467301db33e67530d3952409c9"
+        ],
+        "targets": [
+          "snippet:5f38e4df00ed5392164820d159a942e1e7df567d04a14005e5cb6a0c77ea4e07"
+        ],
+        "unknowns": [
+          "whole-game effects",
+          "flags",
+          "untested input combinations"
+        ]
+      }
+    },
+    {
+      "id": "link:01f8c77d7675df7d18a962ae95a63da77639e3d79d130c7bd632ae4805d8a1dc",
+      "sha256": "01f8c77d7675df7d18a962ae95a63da77639e3d79d130c7bd632ae4805d8a1dc",
+      "document": {
+        "adapters": {
+          "logical_contract": "contract:517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+          "source_layout": {
+            "cost_frame_offset": -72,
+            "population_field": 7,
+            "produced": 28890,
+            "record_count": 128,
+            "record_frame_offset": 6,
+            "records": 28908,
+            "stock_field": 12,
+            "stride": 28,
+            "supported": 58310
+          },
+          "target_layout": {
+            "cost_frame_offset": -70,
+            "population_field": 7,
+            "produced": 28762,
+            "record_count": 128,
+            "record_frame_offset": 6,
+            "records": 28780,
+            "stock_field": 12,
+            "stride": 28,
+            "supported": 62182
+          }
+        },
+        "assertion_status": "authored-declaration",
+        "assurance": "finite-execution-evidence",
+        "author": "agent",
+        "domain": {
+          "support_cost": [
+            1,
+            2
+          ],
+          "vector_set_sha256": "214d93bb67ded3429575659931a7cfa8dd81608cae7814cde647f75ef1796528"
+        },
+        "evidence": {
+          "invocations": 2018,
+          "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed",
+          "native_original_block_oracle": "dosbox-x-original-block-harness",
+          "source_map": "source-native-map:9b2c2ab53c748834244b18f97e1ad7f7c6ecd166e016da96cd0ca861a9fa9046"
+        },
+        "format": "fdisbull-snippet-link-1",
+        "name": "tested-stock-projection",
+        "relation": "tested-stock-projection",
+        "sources": [
+          "snippet:40d3af4174ba084d82943b53f46bcca218563306699a332b3876ecd119725191"
+        ],
+        "targets": [
+          "snippet:910910699c6f11305759837411a2f9e5cdba2ca3b12c65982bb199d84eda3711"
+        ],
+        "unknowns": [
+          "whole-game effects",
+          "flags",
+          "untested input combinations"
+        ]
+      }
+    },
+    {
+      "id": "link:6aac188386af97472ea69138e9225bb70f4d3a7c4c05c2d67e8fdcc2194c7a05",
+      "sha256": "6aac188386af97472ea69138e9225bb70f4d3a7c4c05c2d67e8fdcc2194c7a05",
+      "document": {
+        "adapters": {
+          "logical_contract": "contract:517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+          "source_layout": {
+            "cost_frame_offset": -72,
+            "population_field": 7,
+            "produced": 28890,
+            "record_count": 128,
+            "record_frame_offset": 6,
+            "records": 28908,
+            "stock_field": 12,
+            "stride": 28,
+            "supported": 58310
+          },
+          "target_layout": {
+            "cost_frame_offset": -72,
+            "population_field": 7,
+            "produced": 28890,
+            "record_count": 128,
+            "record_frame_offset": 6,
+            "records": 28908,
+            "stock_field": 12,
+            "stride": 28,
+            "supported": 58310
+          }
+        },
+        "assertion_status": "authored-declaration",
+        "assurance": "finite-execution-evidence",
+        "author": "agent",
+        "domain": {
+          "support_cost": [
+            1,
+            2
+          ],
+          "vector_set_sha256": "214d93bb67ded3429575659931a7cfa8dd81608cae7814cde647f75ef1796528"
+        },
+        "evidence": {
+          "invocations": 2018,
+          "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed",
+          "native_original_block_oracle": "dosbox-x-original-block-harness",
+          "source_map": "source-native-map:a6529b3c3f6074494cad59916e209b3b38b530fb08366f0c67521226450f2eef"
+        },
+        "format": "fdisbull-snippet-link-1",
+        "name": "tested-stock-projection",
+        "relation": "tested-stock-projection",
+        "sources": [
+          "snippet:40d3af4174ba084d82943b53f46bcca218563306699a332b3876ecd119725191"
+        ],
+        "targets": [
+          "snippet:ae9685d6ff7e2028f34522372e95252ba1a8a36f7974e38583fa845e38e12717"
+        ],
+        "unknowns": [
+          "whole-game effects",
+          "flags",
+          "untested input combinations"
+        ]
+      }
+    },
+    {
+      "id": "link:8faba9d7eaac37d0aa5df6a865c4704d35b9592223355e83a27cae5bd8a65684",
+      "sha256": "8faba9d7eaac37d0aa5df6a865c4704d35b9592223355e83a27cae5bd8a65684",
+      "document": {
+        "adapters": {
+          "logical_contract": "contract:517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+          "source_layout": {
+            "cost_frame_offset": -72,
+            "population_field": 7,
+            "produced": 28890,
+            "record_count": 128,
+            "record_frame_offset": 6,
+            "records": 28908,
+            "stock_field": 12,
+            "stride": 28,
+            "supported": 58310
+          },
+          "target_layout": {
+            "cost_frame_offset": -70,
+            "population_field": 7,
+            "produced": 28762,
+            "record_count": 128,
+            "record_frame_offset": 6,
+            "records": 28780,
+            "stock_field": 12,
+            "stride": 28,
+            "supported": 62182
+          }
+        },
+        "assertion_status": "authored-declaration",
+        "assurance": "finite-execution-evidence",
+        "author": "agent",
+        "domain": {
+          "support_cost": [
+            1,
+            2
+          ],
+          "vector_set_sha256": "214d93bb67ded3429575659931a7cfa8dd81608cae7814cde647f75ef1796528"
+        },
+        "evidence": {
+          "invocations": 2018,
+          "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed",
+          "native_original_block_oracle": "dosbox-x-original-block-harness",
+          "source_map": "source-native-map:9b2c2ab53c748834244b18f97e1ad7f7c6ecd166e016da96cd0ca861a9fa9046"
+        },
+        "format": "fdisbull-snippet-link-1",
+        "name": "tested-stock-projection",
+        "relation": "tested-stock-projection",
+        "sources": [
+          "snippet:f915dbab17a52bfca63dbf8ac30fef451b6c080ad0f10e487e6620452064ba96"
+        ],
+        "targets": [
+          "snippet:4a9f0a5919a5a82f5ff6a269bb4a5c4cb928c934b4817d027f32d677d20b11ea"
+        ],
+        "unknowns": [
+          "whole-game effects",
+          "flags",
+          "untested input combinations"
+        ]
+      }
+    },
+    {
+      "id": "link:03c231943e65a7e3cbe4832e77930e397023f26a643c5fb8d7f2eeb4b19be37d",
+      "sha256": "03c231943e65a7e3cbe4832e77930e397023f26a643c5fb8d7f2eeb4b19be37d",
+      "document": {
+        "adapters": {
+          "logical_contract": "contract:517559b2bb7965666e294861d0c3f694754d7ab0caf6f74650721a1a7e7b27b6",
+          "source_layout": {
+            "cost_frame_offset": -72,
+            "population_field": 7,
+            "produced": 28890,
+            "record_count": 128,
+            "record_frame_offset": 6,
+            "records": 28908,
+            "stock_field": 12,
+            "stride": 28,
+            "supported": 58310
+          },
+          "target_layout": {
+            "cost_frame_offset": -72,
+            "population_field": 7,
+            "produced": 28890,
+            "record_count": 128,
+            "record_frame_offset": 6,
+            "records": 28908,
+            "stock_field": 12,
+            "stride": 28,
+            "supported": 58310
+          }
+        },
+        "assertion_status": "authored-declaration",
+        "assurance": "finite-execution-evidence",
+        "author": "agent",
+        "domain": {
+          "support_cost": [
+            1,
+            2
+          ],
+          "vector_set_sha256": "214d93bb67ded3429575659931a7cfa8dd81608cae7814cde647f75ef1796528"
+        },
+        "evidence": {
+          "invocations": 2018,
+          "module_uil_sha256": "332f84e5067fa7aee5405a001ac68efb991fd644bcf34cd62a232f453df057ed",
+          "native_original_block_oracle": "dosbox-x-original-block-harness",
+          "source_map": "source-native-map:799aa29529ca0dd0351d15aaeb86fd5c2620a8d9a1106f0097315c81e9900d40"
+        },
+        "format": "fdisbull-snippet-link-1",
+        "name": "tested-stock-projection",
+        "relation": "tested-stock-projection",
+        "sources": [
+          "snippet:f915dbab17a52bfca63dbf8ac30fef451b6c080ad0f10e487e6620452064ba96"
+        ],
+        "targets": [
+          "snippet:48104682742f8df429ee5e1dc74f1f0ace4379dcca8b193179b335eab6be5dec"
+        ],
+        "unknowns": [
+          "whole-game effects",
+          "flags",
+          "untested input combinations"
+        ]
+      }
+    }
+  ],
+  "oracle": {
+    "execution": "dosbox-x-original-block-harness",
+    "dosbox_sha256": "ce67eb513fbd7a87022624b47a36cf5ae073bb65bc99df1a67d9ca163d1e10bd",
+    "masm_sha256": "1c6286c69b616160b8475ad17453ee872702a2c98075c2159ec792a1c745275f",
+    "linker_sha256": "f8609d3e72dfc1c1e6bcfed52cd1f649baffc21f23a0917bddbd7933b33bfa0b",
+    "returncode": 0,
+    "vectors_per_edition": 2018,
+    "whole_game": false,
+    "blocks_unchanged": true,
+    "period_tool_pins_checked": true,
+    "guarded_cpu_preflight": true
+  },
+  "total_selected_invocations": 18162,
+  "total_original_dosbox_invocations": 6054,
+  "whole_game_replacement": false,
+  "native_ui_screens_visited": 0
+}

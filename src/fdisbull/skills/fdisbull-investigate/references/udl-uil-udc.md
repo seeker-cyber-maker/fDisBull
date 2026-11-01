@@ -1,5 +1,78 @@
 # Source-backed semantics: UDL, UIL and UDC
 
+The separate `fdisbull-memory-uil-1` profile admits fixed unsigned word arenas,
+indexed loads/stores and bounded loops. `store-memory-block-contract`,
+`store-memory-udl-layer` and `select-memory-udl-layers` retain exact program,
+function, source and target identities in the existing immutable database.
+`build-memory-web-block` emits Wasm/WGSL and `build-memory-web-shell` combines
+per-function selections with an explicit canvas/input orchestration plan.
+These methods do not make scalar contracts accept arrays or arbitrary services.
+Qualify original -> memory UIL -> emitted execution separately, then compare
+ordered inputs, carried state and complete frames through the shell. Preserve
+source-assisted versus blind recovery, diagnostic RAM interventions, cursor/font
+projection and clock-adapter limits. See `docs/UDC_MEMORY_BROWSER.md` in a source
+checkout for the bounded contract, ownership rules and Snake reproduction.
+
+An inline region does not dynamically consult another function's selected
+backing. For that experiment, `build-memory-web-shell` accepts a separately
+hash-bound `fdisbull-memory-cuts-1` document. It requires exact contiguous
+callee-body equality after removing only IDs/evidence, no loop ancestor or
+local live-ins, and separately bounded continuation phases. Preserve the
+canonical UIL hash. Qualify the derivation, source budget and memory domain,
+then check actual nested invocation receipts under independent bindings and
+compare carried original state/frames. Output equality by itself does not show
+that routing occurred. Unsupported cuts must refuse rather than guess a stack
+or silently reuse the inline implementation.
+
+For named one-store subregions, use the separate memory-region contract/layer
+methods and `build-memory-web-shell`'s `regions` parameter. Preserve the canonical
+UIL and distinguish its digest from the derived execution view and each actual
+implementation digest. Exact defaults must match the source expression.
+Intentional behavior variants require explicit policy opt-in and their own
+assurance; keeping the source document unchanged does not establish semantic
+equivalence. Test both current-seed/state preservation at selection and the
+subsequent actual invocation, capture algorithm and backend choices together,
+and qualify original fidelity separately from the desired changed behavior.
+The current region profile permits one pure store expression, literal reads,
+one guarded output word and one source charge. It is not arbitrary code splicing.
+
+`build-memory-macos-shell` retargets the same bounded-memory source selections,
+cuts and regions to native ARM64 blocks and AppKit adapters. Preserve old layer
+target metadata as source provenance and inspect the new native realization
+hashes. Native compilation is build-only; qualify the actual dylib/application
+against original state and complete raster data. This shell has one synchronous
+main-thread owner, guarded staging and terminal close. Snapshot final quit state
+before teardown. AppKit responder tests with constructed `NSEvent` objects and
+offscreen `drawRect` establish a different edge from physical hardware/window
+hit-testing. See source-checkout `docs/UDC_MEMORY_MACOS.md` for the exact ABI,
+ownership, diagnostic modes and private Snake reproduction.
+
+The `build-web-block` JSON method emits one canonical, pure selected UIL
+invocation for `wasm32-scalar-1` or `webgpu-wgsl-scalar-1`. Inspect the actual
+tool's `methods` first. Selection target metadata alone does not add a backend.
+The build guards byte/word types and contract/layer domains, qualifies the
+selected model and refuses extra effects/adapters. Its status is build-only;
+run the emitted artifact and independently qualify original → UIL → output.
+The JavaScript host returns pure values and never commits a delayed result to
+application state. Services, revision checks and a complete shell remain a
+separate composition gate. See repository `docs/UDC_WEB.md` for the finite
+original-backed food study and its reproducible private recipe.
+
+`build-web-shell` combines two such persisted selections with a separate typed
+host plan. It requires identical module/contract identities and equal effective
+admission domains. The shell owns record arenas and activation snapshots;
+providers own compute resources. Stage a real result, then validate session,
+entity generation, record revision, view/binding/operation/provider epochs before
+an output-only commit. Readiness does not commit state. Cancelled GPU jobs keep
+their device lease until settlement; replacement work queues, without fallback
+or replay. Borrowed devices remain caller-owned. See `docs/UDC_BROWSER_SHELL.md`
+for the fixed snapshot/invoke/guarded-commit profile, disposal cutoff and source
+qualification; this does not imply general native-shell or whole-game support.
+
+For first use and source-to-model acceptance, follow the
+[repeatable reconstruction recipe](reconstruction.md).
+
+
 Read this reference only when the task is to relate source operations to a
 shared interaction representation or test a bounded source block. It is not a
 general compiler manual.
@@ -10,6 +83,7 @@ general compiler manual.
 - [Preserve the accepted compiler priority](#preserve-the-accepted-compiler-priority)
 - [Current DOS block boundary](#current-023-dos-block-boundary)
 - [Overlapping instruction backings](#overlapping-instruction-backings)
+- [Persistent snippets and selectable block layers](#persistent-snippets-and-selectable-block-layers)
 - [Zork IR and recovered intents](#zork-ir-and-recovered-intents)
 - [Qualified Zork scene rules](#qualified-zork-scene-rules)
 - [Read a proof narrowly](#read-a-proof-narrowly)
@@ -33,8 +107,9 @@ Read [common-uil.md](common-uil.md) for a complete installed-package example.
 - **UDL** is the source-to-shared-IL mapping role.
 - **UIL** is the candidate shared-IL program.
 - **UDC** is a target compiler definition that reads UIL and binds its declared
-  behavior to an implementation. The currently qualified fDisBull target checks
-  a candidate and can select retained original DOS block backings.
+  behavior to an implementation. The original DOS profile can select retained
+  block backings. The selectable-layer prototype adds immutable contracts,
+  isolated CPU providers and separately admitted native output profiles.
 
 For v1 `fdisbull-il-1`, UDL and UIL are role metadata over the same primitive
 nodes and evaluator; changing role does not perform a translation. The separate
@@ -53,7 +128,7 @@ byte-preserving baseline remains `original_bytes_only`; unsupported edits
 remain refused.
 
 The supported reduced-C route retains its derivation from the ASM lift and its
-shared decoder lineage. Generated DOS lowering, richer process/object models,
+shared decoder lineage. General generated DOS lowering, richer process/object models,
 automatic cross-language propagation and compiler learning remain future work.
 Separately authored Rust/JavaScript/Python examples are conformance seeds, not
 existing general translators or the first implementation target.
@@ -170,6 +245,72 @@ incomplete and qualify native behavior separately. Source-checkout
 byte-retaining capsules and emitted code outside Git. No physical-overlap
 operation was added to UIL; unsupported effects remain native residuals.
 
+## Persistent snippets and selectable block layers
+
+The block-layer prototype persists source captures, authored cross-project
+relations, typed contracts, UDL implementations and explicit selections.
+`capture-snippet` accepts ordered `{address,size}` spans from an immutable mapped
+version or `{file,offset,size}` spans from retained files. `file:"source"`
+means the original source in version 1. Endpoint identities retain source,
+byte-version, architecture/view, context and span hashes. NE indices remain
+logical segment identities; a DOS CS context is separate from a physical address.
+
+Read `snippet-info` and record lists with compact defaults. `full:true` returns
+metadata documents; native payloads require the explicit `include_bytes:true`
+request. Projects, byte-bearing exports, compiler capsules and original game
+files remain outside Git. Copied metadata endpoints are external declarations,
+not silently locally verified source. A relation needs its admitted domain,
+evidence, assurance and unknowns; graph connectivity does not establish
+equivalence or grant execution authority.
+
+Use `store-block-contract`, `store-udl-layer` and `select-udl-layers` to register
+supported profiles and pin exact contract/layer IDs. Python execution helpers
+are in `fdisbull.udc_layers`: `register_contract`, `register_layer`,
+`select_layers`, `run_layer` and `run_selection`. Persistence's `store_*` methods
+validate structure and references; the execution helpers also admit behavioral
+and backend profiles. A candidate's stored assurance is an authored declaration.
+
+Keep exact behavior separate from deliberate variation. A shared-IL behavior
+contract fixes its declared results and event plans. A bounded RNG policy may
+explicitly permit different seed algorithms/sequences, but matching a u16 range
+does not prove fairness, period, determinism or original sequence compatibility.
+ADD and ADC are interchangeable for a sum only when their carry dependency is
+discharged or included in the contract. An invocation that happens to match is
+finite evidence. Unobserved flags do not become proved equivalent.
+
+`fdisbull-module-uil-1` adds contract-bound `invoke` and unsigned `remainder`
+through `run-module-uil` / `fdisbull.udc_blueprint.execute_module_uil`. It is a
+separate profile; `fdisbull-il-1` primitives are unchanged. It validates exact
+selected contracts and typed ports in untaken branches, bounds execution, and
+retains modeled refusal state. It does not undo an effect in an external process.
+
+The native x86-16 provider executes selected bytes in an isolated CPU through
+explicit register/memory/segment/scratch adapters; it requires the optional
+`udc` dependency. This is not a running DOS or Win16 process. Recovered source
+data/pointer/caller assumptions still need evidence. Pure scalar Z3 admission
+qualifies supplied IL completion/output models only; unknown, unsupported or
+counterexample results do not become native equivalence.
+
+`compile-udc-splice` emits a new hash-bound COM artifact through an explicit
+placement/data recipe. Keep reusable math separate from target offsets,
+seed loads/stores, ABI adapters and continuations. The first profile is limited
+to a 65280-byte COM image and is not a general DOS linker. `build-udc-shell`
+emits a new PE64 shell from supported selected UIL and notification modules.
+The first selected PE bridge admits canonical port maps and rejects nonempty
+extra contract/layer domains until native guards exist. Its notification service
+is ui.notify, not a file/media service. Generated bytes, imported PE structure,
+native execution and visible provider effects are distinct evidence gates.
+
+Logical services such as future read_file ports can connect DOS or Windows
+source provenance through explicit handle/buffer/status adapters. Current notify
+providers do not implement that service. This is not an automatic BIOS sweep.
+Different providers may have separate state arenas if their ports and adapters
+declare authority, transfer and failure semantics. Never retry another provider
+after unknown or partial effects as though no action occurred.
+
+Source-checkout `docs/UDL_BLOCK_LAYERS.md` supplies concrete API examples,
+formats, policy distinctions, first-profile limits and verification boundaries.
+
 ## Zork IR and recovered intents
 
 The supported v3 story converter preserves an executable word16 representation
@@ -252,3 +393,73 @@ relevant branch and effect. A byte sequence that resembles a proximity guard is
 not enough to authorize a semantic mapping or guard waiver. See the interpreter
 and cross-file sections in [methodology.md](methodology.md) and the AGI source
 documentation `docs/AGI_LOGIC.md`.
+
+## Linux and generated C realization
+
+`build-udc-shell` additionally accepts `target:"linux-x64"`, explicit
+`service_adapters`, optional Linux `capture_state` and `c_compiler`. The default
+remains Windows PE64. The Linux output uses the shared private math ABI inside a
+static ELF64 shell; its public System V entry and Linux services are adapters.
+A notification needs the explicit linux-stdout/no-acknowledgment profile. A UI
+provider change is not automatically effect-equivalent.
+
+`implementation.backend:"c-uil"` realizes supported pure word-scalar UIL as
+generator-owned freestanding C through an explicit Clang executable. It retains
+source, compiler, object and native text identities. This is not a general C
+parser or an independent source oracle. Native object relocations, unsupported
+effects/types and unimplemented contract profiles refuse. Model qualification,
+source preservation, compiler output and native execution remain separate.
+Capture descriptor3 observations only in the explicit analysis profile, validate
+complete frames and bind the executable/process identity before making claims.
+Source-checkout docs/UDC_LINUX_AND_C.md records the actual pilot and limits.
+
+## Windows x86/x64 and Linux bounded-memory desktop realization
+
+The same memory UIL, cuts and selectable region contracts can emit native
+Win32/GDI and Linux x86-64/X11 shells with `emit-memory-desktop-shell` or
+`build-memory-desktop-shell`. Source-only emission, native compilation, immutable
+format/architecture/hash admission and runtime qualification are separate gates.
+Stored Wasm/WebGPU selections remain source provenance; generated native
+realizations record their actual targets and source identities.
+
+The shell owns palette presentation, physical keys, pointer capture/coordinates,
+selectors and monotonic clock. Native integer pixels use the same deterministic
+center sampling for drawing and picking. Refused-call observation reads the
+actual live core; final closed observations use a labelled owned snapshot.
+Qualify full state, frame bytes and native surfaces on the same original inputs,
+including wrong-adapter/refusal counterexamples. Programmatic window messages or
+X server queue events do not establish physical hardware/global hit-testing.
+`windows-x86` admits I386/PE32 and uses i686 MinGW; `windows-x64` retains
+AMD64/PE32+ and its x64 compiler. Both use Win32 services with different pointer
+ABIs. Windows execution under Wine does not qualify Microsoft Windows OS execution.
+Source-checkout docs/UDC_MEMORY_DESKTOP.md documents APIs, recipes and limits.
+
+## Win16 segmented memory shell
+
+The same canonical memory UIL, cuts and selectable region contracts can emit
+genuine Windows NE artifacts through `emit-memory-win16-shell` or
+`build-memory-win16-shell`. The Python module is
+`fdisbull.udc_memory_win16_shell`; separate compile/seal methods admit a real
+Open Watcom build. Confirm all method names in the selected runtime before use.
+This target uses generated C89 blocks and the Win16 ABI, not an x64 executable
+with a different label.
+
+Logical indices and arithmetic remain u32. A 70,000-word arena occupies nine
+pages of at most 32 KiB, retaining all 280,000 logical bytes. Far-pointer offsets
+and native 16-bit `size_t` never replace logical indexing. The cooperative owner
+stages pages, captures region choices and checks budgets/guards/footprints
+before committing declared ranges. Selector changes do not reseed or rewrite
+state; an alternative RNG is an explicitly different variant.
+
+The native host uses `_lread`/`_lwrite` for far-buffer streams and streams RGBA
+and GDI strips within segment bounds. Actual buffered-stdio corruption in the
+qualified compiler/runtime combination required this adapter; successful byte
+counts did not prove correct contents. Check complete bytes on both file and
+graphics seams. Chrome is CP1252, callbacks are far Pascal instance thunks,
+pointer carriers are signed16 and fractional clock division is retained.
+
+Source recipes, compiler/NE admission, native API observations and original
+DOS/UIL/composed comparisons remain separate. Authored NE/GDI/input checks in
+Wine 11 new WoW64 do not qualify original Windows 3.x, physical hardware or
+whole-game behavior. Source-checkout docs/UDC_MEMORY_WIN16.md documents the
+Python/JSON APIs, SDK recipe, storage and current limits.

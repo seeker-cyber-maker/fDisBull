@@ -1,0 +1,1086 @@
+{
+  "format": "fdisbull-strategy-screen-catalog-1",
+  "game": "Civilization DOS / CivD",
+  "status": "source-backed interface design",
+  "native_provider_qualified": false,
+  "entity_scenes": false,
+  "scope": "Finite source-backed screen families. Parameters select cities, units, tabs, civilizations and pages; this is not a completed graphical traversal or native input provider.",
+  "families": [
+    {
+      "id": "boot",
+      "title": "Startup and driver selection",
+      "parameters": [
+        "stage"
+      ],
+      "actions": [
+        "startup.choose",
+        "dismiss"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/SETUP.C",
+          "symbols": [
+            "setup_main"
+          ]
+        },
+        {
+          "file": "src/INTRO.C",
+          "symbols": [
+            "game_startup"
+          ]
+        },
+        {
+          "file": "src/GAME.C",
+          "symbols": [
+            "main",
+            "start_game"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "main-menu",
+      "title": "Main menu",
+      "parameters": [],
+      "actions": [
+        "game.new",
+        "game.load",
+        "game.earth",
+        "game.customize",
+        "game.fame"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/GAME.C",
+          "symbols": [
+            "game_menu"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "world-setup",
+      "title": "World generation settings",
+      "parameters": [
+        "stage"
+      ],
+      "actions": [
+        "world.configure",
+        "choose",
+        "cancel"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/GAME.C",
+          "symbols": [
+            "game_menu"
+          ]
+        },
+        {
+          "file": "src/WORLDGEN.C",
+          "symbols": [
+            "make_world"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "new-game",
+      "title": "Difficulty, competition, tribe and leader",
+      "parameters": [
+        "stage"
+      ],
+      "actions": [
+        "game.configure",
+        "choose",
+        "rename",
+        "continue"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/NEWGAME.C",
+          "symbols": [
+            "new_game"
+          ]
+        },
+        {
+          "file": "src/NAMES.C",
+          "symbols": [
+            "rename_leader",
+            "rename_tribe"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "load",
+      "title": "Load game and drive selection",
+      "parameters": [
+        "slot",
+        "drive",
+        "page"
+      ],
+      "actions": [
+        "game.load",
+        "page",
+        "cancel"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/SAVE.C",
+          "symbols": [
+            "load_game",
+            "choose_drive"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "save",
+      "title": "Save game and drive selection",
+      "parameters": [
+        "slot",
+        "drive",
+        "page"
+      ],
+      "actions": [
+        "game.save",
+        "page",
+        "cancel"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/SAVE.C",
+          "symbols": [
+            "save_game",
+            "choose_drive"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "map",
+      "title": "World map and active units",
+      "parameters": [
+        "unit",
+        "viewport",
+        "phase"
+      ],
+      "actions": [
+        "unit.select",
+        "unit.move",
+        "unit.order",
+        "city.open",
+        "view.open",
+        "turn.end",
+        "map.scroll"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/CONTROL.C",
+          "symbols": [
+            "ai_turn"
+          ]
+        },
+        {
+          "file": "src/TURN.C",
+          "symbols": [
+            "sel_player"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "game-menu",
+      "title": "Game commands",
+      "parameters": [],
+      "actions": [
+        "view.open",
+        "game.save",
+        "game.retire",
+        "game.quit",
+        "government.revolt",
+        "dismiss"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/MENUS.C",
+          "symbols": [
+            "game_menu_a"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "unit-orders",
+      "title": "Unit orders menu",
+      "parameters": [
+        "unit"
+      ],
+      "actions": [
+        "unit.order",
+        "cancel"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/MENUS.C",
+          "symbols": [
+            "unit_orders_menu"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "options",
+      "title": "Game options",
+      "parameters": [
+        "page"
+      ],
+      "actions": [
+        "option.toggle",
+        "dismiss"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/MENUS.C",
+          "symbols": [
+            "game_menu_a"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "rates",
+      "title": "Tax and luxuries rates",
+      "parameters": [
+        "rate"
+      ],
+      "actions": [
+        "rate.set",
+        "dismiss"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/CONTROL.C",
+          "symbols": [
+            "ai_turn"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "find-city",
+      "title": "Find a known city",
+      "parameters": [
+        "query",
+        "page"
+      ],
+      "actions": [
+        "city.locate",
+        "city.open",
+        "page",
+        "cancel"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/NAMES.C",
+          "symbols": [
+            "goto_city",
+            "find_city"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "city",
+      "title": "City management",
+      "parameters": [
+        "city",
+        "tab",
+        "focus"
+      ],
+      "actions": [
+        "city.select",
+        "city.tab",
+        "worker.assign",
+        "specialist.change",
+        "production.open",
+        "city.rush",
+        "building.sell",
+        "city.rename",
+        "unit.activate",
+        "dismiss"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/CITYMGT.C",
+          "symbols": [
+            "city_process"
+          ]
+        },
+        {
+          "file": "src/CITYVIEW.C",
+          "symbols": [
+            "city_scene"
+          ]
+        },
+        {
+          "file": "src/ECONOMY.C",
+          "symbols": [
+            "kill"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": [
+        "city",
+        "tab"
+      ]
+    },
+    {
+      "id": "production",
+      "title": "Choose city production",
+      "parameters": [
+        "city",
+        "category",
+        "page"
+      ],
+      "actions": [
+        "production.choose",
+        "page",
+        "cancel"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/ECONOMY.C",
+          "symbols": [
+            "find_slot"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": [
+        "city"
+      ]
+    },
+    {
+      "id": "city-unit-list",
+      "title": "Supported or present units",
+      "parameters": [
+        "city",
+        "unit",
+        "page"
+      ],
+      "actions": [
+        "unit.activate",
+        "page",
+        "dismiss"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/CITYMGT.C",
+          "symbols": [
+            "city_process"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": [
+        "city"
+      ]
+    },
+    {
+      "id": "building-sale",
+      "title": "Building selection and sale",
+      "parameters": [
+        "city",
+        "building",
+        "page"
+      ],
+      "actions": [
+        "building.sell",
+        "page",
+        "cancel"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/CITYMGT.C",
+          "symbols": [
+            "city_process"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": [
+        "city"
+      ]
+    },
+    {
+      "id": "rename",
+      "title": "City, leader or tribe naming",
+      "parameters": [
+        "entity",
+        "kind"
+      ],
+      "actions": [
+        "rename",
+        "cancel"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/NAMES.C",
+          "symbols": [
+            "rename_city",
+            "rename_leader",
+            "rename_tribe",
+            "edit_line"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": [
+        "entity"
+      ]
+    },
+    {
+      "id": "advisor",
+      "title": "Six advisors, dossiers and losses",
+      "parameters": [
+        "report",
+        "civilization",
+        "page",
+        "selection"
+      ],
+      "actions": [
+        "city.open",
+        "view.open",
+        "page",
+        "dismiss"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/ADVISORS.C",
+          "symbols": [
+            "city_rpt",
+            "mil_rpt",
+            "spy_rpt",
+            "mood_rpt",
+            "trade_rpt",
+            "sci_rpt",
+            "civ_dossier",
+            "military_losses"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": [
+        "report",
+        "civilization"
+      ]
+    },
+    {
+      "id": "world-report",
+      "title": "World reports and statistics",
+      "parameters": [
+        "report",
+        "civilization",
+        "page"
+      ],
+      "actions": [
+        "view.open",
+        "map.scroll",
+        "page",
+        "dismiss"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/REPORTS.C",
+          "symbols": [
+            "wonders",
+            "demographics",
+            "world_map",
+            "power_graph",
+            "historian_report",
+            "cont_table"
+          ]
+        },
+        {
+          "file": "src/FAME.C",
+          "symbols": [
+            "top_five"
+          ]
+        },
+        {
+          "file": "src/STATUS.C",
+          "symbols": [
+            "civ_info",
+            "unit_table",
+            "kill_table"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": [
+        "report"
+      ]
+    },
+    {
+      "id": "civilopedia",
+      "title": "Civilopedia browser",
+      "parameters": [
+        "category",
+        "entry",
+        "page"
+      ],
+      "actions": [
+        "pedia.open",
+        "page",
+        "dismiss"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/PEDIA.C",
+          "symbols": [
+            "civilopedia",
+            "pedia_list",
+            "pedia_show"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "audience",
+      "title": "Diplomatic audience",
+      "parameters": [
+        "civilization",
+        "phase"
+      ],
+      "actions": [
+        "diplomacy.choose",
+        "choose",
+        "dismiss"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/AUDIENCE.C",
+          "symbols": [
+            "leader_audience",
+            "leader_menu",
+            "treaty_prompt"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": [
+        "civilization"
+      ]
+    },
+    {
+      "id": "diplomat",
+      "title": "Diplomat and espionage choices",
+      "parameters": [
+        "unit",
+        "city",
+        "phase"
+      ],
+      "actions": [
+        "diplomat.choose",
+        "choose",
+        "cancel"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/DIPLOMAT.C",
+          "symbols": [
+            "dip_menu",
+            "buy_u"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": [
+        "unit"
+      ]
+    },
+    {
+      "id": "research",
+      "title": "Discovery and research selection",
+      "parameters": [
+        "advance",
+        "phase",
+        "page"
+      ],
+      "actions": [
+        "research.choose",
+        "page",
+        "continue"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/ECONOMY.C",
+          "symbols": [
+            "give_advance"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "government",
+      "title": "Revolution and government selection",
+      "parameters": [
+        "phase"
+      ],
+      "actions": [
+        "government.choose",
+        "continue",
+        "cancel"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/NEWGAME.C",
+          "symbols": [
+            "new_government",
+            "cabinet"
+          ]
+        },
+        {
+          "file": "src/DIPLOMAC.C",
+          "symbols": [
+            "set_government"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "spaceship",
+      "title": "Spaceship construction and launch",
+      "parameters": [
+        "civilization",
+        "part",
+        "phase"
+      ],
+      "actions": [
+        "spaceship.place",
+        "spaceship.launch",
+        "view.open",
+        "dismiss"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/SPACESHP.C",
+          "symbols": [
+            "spaceship_inspect",
+            "spaceship_view",
+            "spaceship_build",
+            "spaceship_launch"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": [
+        "civilization"
+      ]
+    },
+    {
+      "id": "palace",
+      "title": "Palace design",
+      "parameters": [
+        "section",
+        "style",
+        "phase"
+      ],
+      "actions": [
+        "palace.choose",
+        "continue",
+        "dismiss"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/PALACE.C",
+          "symbols": [
+            "palace_view",
+            "palpic"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "replay",
+      "title": "History replay",
+      "parameters": [
+        "frame",
+        "phase"
+      ],
+      "actions": [
+        "replay.seek",
+        "replay.play",
+        "dismiss"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/REPLAY.C",
+          "symbols": [
+            "replay"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "hall-of-fame",
+      "title": "Hall of fame",
+      "parameters": [
+        "page",
+        "entry"
+      ],
+      "actions": [
+        "page",
+        "dismiss"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/FAME.C",
+          "symbols": [
+            "show_fame"
+          ]
+        },
+        {
+          "file": "src/TURN.C",
+          "symbols": [
+            "show_hall_of_fame"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "score",
+      "title": "Civilization score and retirement result",
+      "parameters": [
+        "civilization",
+        "phase"
+      ],
+      "actions": [
+        "continue",
+        "dismiss"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/CITY.C",
+          "symbols": [
+            "civ_score"
+          ]
+        },
+        {
+          "file": "src/TURN.C",
+          "symbols": [
+            "rate_civs"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "notification",
+      "title": "News, warnings and discoveries",
+      "parameters": [
+        "kind",
+        "entity",
+        "phase"
+      ],
+      "actions": [
+        "continue",
+        "dismiss"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/NEWS.C",
+          "symbols": [
+            "news_box"
+          ]
+        },
+        {
+          "file": "src/MESSAGE.C",
+          "symbols": [
+            "news_effect"
+          ]
+        },
+        {
+          "file": "src/NOTES.C",
+          "symbols": [
+            "notice_a",
+            "notice_b"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "help",
+      "title": "Help and advice",
+      "parameters": [
+        "topic",
+        "page"
+      ],
+      "actions": [
+        "page",
+        "dismiss"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/NOTES.C",
+          "symbols": [
+            "show_help",
+            "advice"
+          ]
+        },
+        {
+          "file": "src/MESSAGE.C",
+          "symbols": [
+            "help_open"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "quiz",
+      "title": "Original challenge prompt",
+      "parameters": [
+        "phase"
+      ],
+      "actions": [
+        "choose",
+        "cancel"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/QUIZ.C",
+          "symbols": [
+            "quiz_event",
+            "quiz"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "resource-prompt",
+      "title": "Disk and resource prompt",
+      "parameters": [
+        "resource",
+        "phase"
+      ],
+      "actions": [
+        "retry",
+        "cancel"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/GAME.C",
+          "symbols": [
+            "disk_insert"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "confirmation",
+      "title": "A native confirmation or choice dialog",
+      "parameters": [
+        "kind",
+        "entity",
+        "choice_set"
+      ],
+      "actions": [
+        "confirm",
+        "cancel",
+        "choose"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/DIALOG.C",
+          "symbols": [
+            "menu_choose",
+            "menu_core"
+          ]
+        },
+        {
+          "file": "src/TURN.C",
+          "symbols": [
+            "show_menu",
+            "show_msg"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "turn-processing",
+      "title": "Turn and opponent processing",
+      "parameters": [
+        "phase"
+      ],
+      "actions": [
+        "continue"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/TURN.C",
+          "symbols": [
+            "game_turn"
+          ]
+        },
+        {
+          "file": "src/ECONOMY.C",
+          "symbols": [
+            "civ_economy"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "combat",
+      "title": "Combat and nuclear presentation",
+      "parameters": [
+        "attacker",
+        "defender",
+        "phase"
+      ],
+      "actions": [
+        "continue"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/BATTLE.C",
+          "symbols": [
+            "battle"
+          ]
+        },
+        {
+          "file": "src/DIPLOMAT.C",
+          "symbols": [
+            "nuke_animation"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "event-choice",
+      "title": "Trade, capture, disorder and incidental choices",
+      "parameters": [
+        "kind",
+        "entity",
+        "phase"
+      ],
+      "actions": [
+        "choose",
+        "continue",
+        "cancel"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/CITY.C",
+          "symbols": [
+            "city_disaster"
+          ]
+        },
+        {
+          "file": "src/CAPTURE.C",
+          "symbols": [
+            "capunit"
+          ]
+        },
+        {
+          "file": "src/DIPLOMAC.C",
+          "symbols": [
+            "diplomacy_event"
+          ]
+        },
+        {
+          "file": "src/CIVWAR.C",
+          "symbols": [
+            "civil_war"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    },
+    {
+      "id": "endgame",
+      "title": "Victory, destruction and arrival",
+      "parameters": [
+        "kind",
+        "civilization",
+        "phase"
+      ],
+      "actions": [
+        "continue",
+        "dismiss"
+      ],
+      "source_anchors": [
+        {
+          "file": "src/INTRO.C",
+          "symbols": [
+            "spaceship_arrival",
+            "civ_destroyed"
+          ]
+        },
+        {
+          "file": "src/TURN.C",
+          "symbols": [
+            "show_ad_screen"
+          ]
+        }
+      ],
+      "runtime_qualified": false,
+      "required_parameters": []
+    }
+  ]
+}

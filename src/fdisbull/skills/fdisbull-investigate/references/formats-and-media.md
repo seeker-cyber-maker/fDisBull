@@ -10,6 +10,7 @@ shipped APIs and reusable format contracts, read [media-modules.md](media-module
 ## Contents
 
 - [Keep each layer's identity](#keep-each-layers-identity)
+- [Intake a batch or a later addition](#intake-a-batch-or-a-later-addition)
 - [Establish a bounded format contract](#establish-a-bounded-format-contract)
 - [Investigate Mach-O ARM64](#investigate-mach-o-arm64)
 - [Compare releases](#compare-releases-at-the-right-boundary)
@@ -89,6 +90,52 @@ measure reachable coverage, semantic recovery or comparative speed. Do not
 repeat an identical exhausted pass without a new seed, mapping or question.
 Use [methodology.md](methodology.md) for native-to-resource or interpreter links.
 
+## Intake a batch or a later addition
+
+Use the same per-artifact checks for a collection and one additional game.
+Inventory the outer sources first, then retain every archive/filesystem/codec
+edge to the selected program. Record source and output hashes, reader/options,
+roles, attributed edition/language labels, capability observations and unknowns.
+Keep learner inputs separate from source/test oracles; record later oracle use.
+An exact existing payload adds a provenance alias and a receipt rather than
+another binary or an invented version.
+
+Stage each candidate in a new private directory, verify its complete intended
+output set, and register only accepted payloads. Unsupported or partially read
+members keep explicit status without hiding useful intake of other members.
+One writer maintains the shared selected-program roster/archive and verifies
+earlier entries plus new member hashes. Keep source media and original bytes;
+program-only deliveries exclude movies, full installers, oracles and databases.
+Nonstandard guest programs need reviewed explicit selection, not suffix guessing.
+
+Keep received, catalogued, extracted, mapped, analyzed, runtime-observed and
+contract-qualified as separate observations. A recognized unsupported format
+is still a catalogued input. Identify the missing seam: archive/filesystem,
+codec, container loader, ISA/mode/endian processor, guest language or consumer.
+Reuse the existing ISA decoder when only the container changes. Do not force an
+unknown format through raw x86 or call a decompressed file a qualified process.
+Implement/qualify missing readers with bounded structures and authored valid,
+truncated and unsupported examples before promoting their support status.
+
+Preserve an independently supplied revision as a new original artifact/project.
+`Project.patch` makes a child mapped-byte version; it does not import/remap an
+arbitrary new release. NE/LE memory patches do not reconstruct their containers.
+A selectable UDL layer is another concept: it realizes a fixed logical contract.
+Source-backed claims retain exact captures; domain/adapter requirements depend
+on the backend. Authored UIL/C/service profiles can omit native snippets.
+Keep unresolved notes in supported evidence fields or a relation's `unknowns`,
+not an invented layer field. Registration/selection is not proof. Admit a replacement only
+to the appropriate qualification scope. A bug fix changing admitted outputs/effects needs a revised
+contract/UIL or explicitly chosen policy; do not relabel it as exact equivalence.
+
+For major rewrites or new ISAs, keep separate projects and link only supported
+small counterparts. Similarity is a triage lead, not admission. Shared resource
+payloads do not establish code equivalence. Candidate links are authored claims;
+they do not inherit proof transitively. See `udl-uil-udc.md` for
+the actual supported backends and the source/model/native qualification edges.
+The source checkout's `docs/TARGET_COLLECTION_INTAKE.md` gives the full workflow
+and decision tables; no universal batch-intake command is implied here.
+
 ## Win16 NE static view
 
 Supported Windows16 NE images can be imported directly with automatic selection
@@ -99,9 +146,10 @@ Keep declared zero fill, initialized file data and runtime-initialized state
 separate. Query stored native facts/CFGs; selector-aware advanced IR and native
 Win16 execution remain unsupported. In a source checkout, `docs/NE_LOADING.md`
 details the bounded profile and `docs/COLONIZATION_FOOD_EQUIVALENCIES.md` records
-a paired source-model comparison with explicit ABI limits. Cross-edition snippet
-links and selectable UDL backings remain a proposal in RFC0003; current UDC
-acceptance is unchanged.
+a paired source-model comparison with explicit ABI limits. Persistent snippet
+links and selectable UDL backings have a bounded prototype described in
+[udl-uil-udc.md](udl-uil-udc.md); storing a candidate relationship does not qualify
+a backing or expand the native acceptance profile.
 
 ## Compare releases at the right boundary
 

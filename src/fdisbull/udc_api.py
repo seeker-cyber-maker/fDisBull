@@ -1,0 +1,98 @@
+"""Agent JSON surface for persistent snippet and implementation records."""
+METHODS={
+ 'build-memory-win16-shell':'Emit and compile Windows NE blocks and paged Win16 shell; selections,plan,initial,destination,[cuts,regions,c_compiler,linker]; build only',
+ 'emit-memory-win16-shell':'Emit a source-only segmented C89 Windows NE recipe; selections,plan,initial,destination,[cuts,regions]; no compilation/execution',
+ 'compile-memory-win16-shell':'Compile a private Win16 source recipe with separate Open Watcom SDK; destination,[c_compiler,linker]; no execution',
+ 'seal-memory-win16-shell':'Bind Windows NE executable/segment facts and artifact hashes; destination,[compiler_evidence]; no execution/fidelity claim',
+ 'build-memory-desktop-shell':'Compile native Win64/Win32 or Linux x86-64/X11 blocks and shell; selections,plan,initial,destination,target,[cuts,regions,c_compiler]; build only',
+ 'emit-memory-desktop-shell':'Emit a source-only native desktop recipe; selections,plan,initial,destination,target,[cuts,regions]; compilation and execution separate',
+ 'compile-memory-desktop-shell':'Compile an admitted private desktop source recipe; destination,[c_compiler]; does not execute outputs',
+ 'seal-memory-desktop-shell':'Record format/architecture/hashes of privately compiled desktop outputs; destination,[compiler_evidence]; does not establish compiler lineage or execution',
+ 'build-memory-macos-shell':'Emit native ARM64 memory blocks and AppKit adapters from exact source selections; selections,plan,initial,destination,[cuts,regions,c_compiler,with_app]; build only',
+ 'build-memory-web-shell':'Emit an owned canvas and input shell with exact memory selections; selections,plan,initial,destination,[cuts,regions]; build only',
+ 'store-memory-region-contract':'Register a source-bound pure word-update region; document,[author]',
+ 'store-memory-region-layer':'Register an exact or explicitly variant region realization; document,[author]',
+ 'select-memory-region-layers':'Pin named region implementations to immutable layers; name,bindings,program,target,[author]',
+ 'store-memory-block-contract':'Register a pure bounded word-arena UIL contract; document,[author]',
+ 'store-memory-udl-layer':'Register an exact memory-UIL backing and web target; document,[author]',
+ 'select-memory-udl-layers':'Pin every memory function to an exact layer; name,bindings,program,target,[author]',
+ 'run-memory-udl-selection':'Evaluate one selected memory function atomically; selection,function,words',
+ 'build-memory-web-block':'Emit a selected bounded-memory Wasm/WGSL function; selection,function,destination; build only',
+ 'build-web-shell':'Build an owned-state browser shell with interchangeable Wasm/WebGPU selections; selections,plan,destination; build only',
+ 'build-web-block':'Emit WebAssembly/WGSL for one qualified fixed UIL invocation; selection,destination; build only',
+ 'capture-snippet':'Capture immutable mapped/file spans; name,spans,[version,context,boundary,evidence,author]',
+ 'snippet-info':'Read a snippet; snippet,[full,include_bytes]',
+ 'snippets':'List snippet metadata; [version,limit,offset,full]',
+ 'link-snippets':'Link exact local/portable snippet endpoints; sources,targets,kind,domain,evidence,[assurance,adapters,unknowns,author,name]',
+ 'snippet-links':'List authored snippet relations; [limit,offset,full]',
+ 'snippet-link-info':'Read authored relation; link,[full]',
+ 'store-block-contract':'Register a typed block behavior; document,[author]',
+ 'block-contract-info':'Read immutable contract; contract,[full]',
+ 'block-contracts':'List contracts; [limit,offset,full]',
+ 'store-udl-layer':'Register a contract backing and adapter; document,[author]',
+ 'udl-layer-info':'Read immutable layer; layer,[full]',
+ 'udl-layers':'List layers; [limit,offset,full]',
+ 'select-udl-layers':'Pin logical bindings to exact layers; name,bindings,[program,target,author]',
+ 'udl-selection-info':'Read immutable selection; selection,[full]',
+ 'udl-selections':'List selections; [limit,offset,full]',
+ 'run-module-uil':'Execute a typed symbolic UIL composition; program,selection,[state,max_steps]',
+ 'run-udl-layer':'Explicitly execute and compare a bounded backing; layer,inputs,[caller_registers,max_steps]',
+ 'run-udl-selection':'Execute one selected logical binding; selection,binding,inputs,[caller_registers,max_steps]',
+ 'build-udc-shell':'Emit native PE64/ELF64/Mach-O arm64 from selected modules; selection,plan,destination,[target,service_adapters,capture_state,c_compiler]',
+ 'build-macos-block-probe':'Emit guarded ARM64 stdin/stdout analysis scaffold for one fixed UIL invoke; selection,destination,[c_compiler]; build only',
+ 'compile-udc-splice':'Emit source-bound binary substitutions; selection,recipe,destination,[output_name]',
+}
+
+
+def invoke(project,method,params):
+ from . import udc_layers
+ if method in ('build-memory-win16-shell','emit-memory-win16-shell','compile-memory-win16-shell','seal-memory-win16-shell'):
+  from . import udc_memory_win16_shell
+  function=getattr(udc_memory_win16_shell,method.replace('-','_'))
+  return function(project,**params) if method.startswith(('build-','emit-')) else function(**params)
+ if method in ('build-memory-desktop-shell','emit-memory-desktop-shell','compile-memory-desktop-shell','seal-memory-desktop-shell'):
+  from . import udc_memory_desktop
+  return getattr(udc_memory_desktop,method.replace('-','_'))(project,**params) if method.startswith(('build-','emit-')) else getattr(udc_memory_desktop,method.replace('-','_'))(**params)
+ if method=='build-memory-macos-shell':
+  from .udc_memory_macos import build_memory_macos_shell
+  return build_memory_macos_shell(project,**params)
+ if method=='build-memory-web-shell':
+  from .udc_memory_shell import build_memory_shell
+  return build_memory_shell(project,**params)
+ if method in ('store-memory-region-contract','store-memory-region-layer','select-memory-region-layers'):
+  from . import udc_memory_regions
+  functions={'store-memory-region-contract':udc_memory_regions.register_contract,
+    'store-memory-region-layer':udc_memory_regions.register_layer,'select-memory-region-layers':udc_memory_regions.select_layers}
+  return functions[method](project,**params)
+ if method in ('store-memory-block-contract','store-memory-udl-layer','select-memory-udl-layers','run-memory-udl-selection','build-memory-web-block'):
+  from . import udc_memory_layers
+  functions={'store-memory-block-contract':udc_memory_layers.register_contract,
+    'store-memory-udl-layer':udc_memory_layers.register_layer,'select-memory-udl-layers':udc_memory_layers.select_layers,
+    'run-memory-udl-selection':udc_memory_layers.run_selection,'build-memory-web-block':udc_memory_layers.build_selection}
+  return functions[method](project,**params)
+ if method=='build-web-shell':
+  from .udc_web_shell import build_web_shell
+  return build_web_shell(project,**params)
+ if method=='build-web-block':
+  from .udc_web import build_web_block
+  return build_web_block(project,**params)
+ if method=='build-macos-block-probe':
+  from .udc_macos_probe import build_macos_block_probe
+  return build_macos_block_probe(project,**params)
+ if method=='run-module-uil':
+  from .udc_blueprint import execute_module_uil
+  return execute_module_uil(project,**params)
+ functions={
+  'capture-snippet':project.capture_snippet,'snippet-info':project.snippet_info,'snippets':project.snippets,
+  'link-snippets':project.link_snippets,'snippet-links':project.snippet_links,'snippet-link-info':project.snippet_link_info,
+  'block-contract-info':project.contract_info,'block-contracts':project.contracts,
+  'udl-layer-info':project.udl_layer_info,'udl-layers':project.udl_layers,
+  'udl-selection-info':project.udl_selection_info,'udl-selections':project.udl_selections,
+ }
+ if method in functions:return functions[method](**params)
+ functions={'store-block-contract':udc_layers.register_contract,'store-udl-layer':udc_layers.register_layer,
+  'select-udl-layers':udc_layers.select_layers,'run-udl-layer':udc_layers.run_layer,
+  'run-udl-selection':udc_layers.run_selection,'build-udc-shell':udc_layers.build_selection_shell,
+  'compile-udc-splice':udc_layers.compile_splice_selection}
+ if method not in functions:raise ValueError('unknown block method')
+ return functions[method](project,**params)

@@ -13,6 +13,35 @@ separate analysis, legacy migration and remaining export limits. Semantic
 UIL/game representations are permitted pending sanitation, without embedded
 original files. Hash equality is byte identity, not publisher authenticity.
 
+For recovery, translation or a backing swap, retrieve
+`agent-skill --reference references/reconstruction.md`. It provides a first-use
+recipe, a runnable counterexample exercise and separate original/UIL/target
+acceptance gates. It requires no earlier conversation or project history.
+
+For array/loop state and browser graphics/input, see
+[bounded-memory browser reconstruction](UDC_MEMORY_BROWSER.md). Its strict
+memory UIL and selected per-function Wasm/WebGPU backings are separate from the
+scalar food profile. The Snake study checks original instructions, real input,
+complete rasters and guarded state commits; finite comparisons are scoped in
+its receipt.
+
+For a native macOS ARM64 window over the same memory UIL, see
+[native memory reconstruction](UDC_MEMORY_MACOS.md). The native compiler and
+AppKit adapters have separate execution and input/view qualification gates;
+source selection target metadata remains provenance.
+
+For Windows x86/Win64 and Linux x86-64/X11 shells over that same memory UIL, see
+[native desktop reconstruction](UDC_MEMORY_DESKTOP.md). Source emission,
+compilation, immutable artifact admission and native input/view qualification
+are separate gates; Wine execution does not qualify Microsoft Windows itself.
+
+For a genuine Win16 NE shell, see [segmented memory reconstruction](UDC_MEMORY_WIN16.md).
+It retains the same logical u32 arena, cuts and selectable RNG regions through
+paged storage, C89 blocks, native far-buffer file transfer and streamed GDI/RGBA.
+Use its explicit emit/compile/seal route and qualify source, artifact, native
+boundary and original/composed behavior separately. A supported Wine 11 route
+does not establish original Windows 3.x or whole-game compatibility.
+
 ## Discover commands and bundled skills
 
 For repository CI, first read [CI coordination](CI_COORDINATION.md). One named
@@ -123,6 +152,21 @@ budgets and failed-run diagnostics.
 
 ## Choose a route
 
+### Intake a collection or a single addition
+
+Use [collection intake](TARGET_COLLECTION_INTAKE.md) for the common per-artifact
+workflow, source/member identities, unsupported formats and version decisions.
+Inventory the batch before choosing programs, preserve learner/oracle separation,
+and compare extracted hashes with the current private roster. An exact repeat
+adds provenance rather than another program copy. A different release gets its
+own original artifact before any snippet/layer relationship is proposed.
+
+Identification, extraction, image loading, bounded analysis and native execution
+are separate observations. Use a qualified archive/filesystem reader outside the
+tool where needed; inspect the installed commands before assuming support.
+Unknown formats remain catalogued inputs with an explicit capability gap.
+The bundled `references/formats-and-media.md` carries the portable summary.
+
 ### Compose a new program from recovered or authored blocks
 
 Use [the common indexed UIL contract](COMMON_UIL_CONTRACT.md) for the additive
@@ -143,6 +187,12 @@ cascaded choices. Use `--source-only` for another prepared environment, then
 pruning retains source children, logical slots and step charges.
 
 ### Inspect an executable without running it
+
+When source is available, use the separate [source catalog](SOURCE_CONCEPT_SEARCH.md)
+and `source-*` JSON methods to retain revisions and search across editions.
+The bundled `references/source-and-concepts.md` gives the portable workflow.
+Source names, spelling occurrences and similarity do not automatically become
+native symbols, resolved variables or equivalent code.
 
 ```text
 fdisbull identify /path/to/program
@@ -368,6 +418,16 @@ register boundary and assumptions. Read `docs/UDC_DOS.md`,
 limits.
 
 ## Keep results within their evidence
+
+For one pure selected byte/word block, `build-web-block` emits guarded Wasm or
+WGSL under the same module UIL. Read [Web UDC profiles](UDC_WEB.md) for target
+names, host ABI and original-backed CivD qualification. Browser/GPU availability
+and application state commits need separate checks.
+
+`build-web-shell` adds an explicit typed record arena and orchestration plan over
+two interchangeable selected blocks. Read [the browser shell](UDC_BROWSER_SHELL.md)
+before binding async results to application state; computation readiness is not
+a commit, and cancellation does not release a submitted GPU job early.
 
 Static decode, authored scene geometry, diagnostic state edits, text
 projections, bounded proofs and live ordinary input are different evidence

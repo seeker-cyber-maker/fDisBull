@@ -1,0 +1,820 @@
+{
+  "concept_bindings": {
+    "has_more": false,
+    "items": [
+      {
+        "document": {
+          "assertion_status": "authored-declaration",
+          "assurance": "source-supported",
+          "author": "source-pilot",
+          "binary_equivalence": false,
+          "concept": "concept:5f48cebe970efa8ea1b36cfe59646e6836893970b6983d9d6d6a81b9f7a7351e",
+          "entity": "entity:e2e970e8ea790d68cea86ee78bbf0a81a26112a5455a467411eb356296f84e70",
+          "evidence": "Manual source review: struct city declaration labels food_box as accumulated food. Upstream is reconstructed source; native layout and behavior remain unqualified.",
+          "layer_admission": false,
+          "relation": "represents"
+        },
+        "id": "concept-link:be85224056ed0473ef1d8a21f2b6808a0e0a42ab9b2049be7f08cd0f7c71f6cb",
+        "kind": "field",
+        "line": 38,
+        "name": "food_box",
+        "path": "src/CIV.H",
+        "snapshot": "source:5023bef660a4b176d4618365f7c0630a19b578e4e399530ab1fcca8bc4a1b1f3"
+      },
+      {
+        "document": {
+          "assertion_status": "authored-declaration",
+          "assurance": "source-supported",
+          "author": "source-pilot",
+          "binary_equivalence": false,
+          "concept": "concept:5f48cebe970efa8ea1b36cfe59646e6836893970b6983d9d6d6a81b9f7a7351e",
+          "entity": "entity:f30339ecd514b48ea005cc06d2acde280d7b4b24db2b80557b2ef5dd17d2fb33",
+          "evidence": "Manual source review: struct city declaration labels food_box as accumulated food. Upstream is reconstructed source; native layout and behavior remain unqualified.",
+          "layer_admission": false,
+          "relation": "represents"
+        },
+        "id": "concept-link:a3aa29fc97bc00f376d83058c3f5ea2cd01e81722149ed2c57ac7a7de7e5716f",
+        "kind": "field",
+        "line": 38,
+        "name": "food_box",
+        "path": "src/CIV.H",
+        "snapshot": "source:c6487d4481cae5b25d8523d8e6c198ebf0c9c642814d95660e01dcd4cbdfec58"
+      },
+      {
+        "document": {
+          "assertion_status": "authored-declaration",
+          "assurance": "source-supported",
+          "author": "source-pilot",
+          "binary_equivalence": false,
+          "concept": "concept:5f48cebe970efa8ea1b36cfe59646e6836893970b6983d9d6d6a81b9f7a7351e",
+          "entity": "entity:6e0d331ea7d71761779b9ea6e3b648d1f7cf3ca8578b658962cdd41d6066fa76",
+          "evidence": "Manual source review: struct city declaration labels food_box as accumulated food. Upstream is reconstructed source; native layout and behavior remain unqualified.",
+          "layer_admission": false,
+          "relation": "represents"
+        },
+        "id": "concept-link:fab9ad10fcac1c48d06ef006d37035e62a85dd94f94e17360929e9070de802c6",
+        "kind": "field",
+        "line": 38,
+        "name": "food_box",
+        "path": "src/CIV.H",
+        "snapshot": "source:dfe0bba560ca7c3cd2f9faa9307529354ce79541c3b71bf8587cba100736de69"
+      }
+    ],
+    "scope": "Exact enumeration of recorded claims; unmapped concepts and versions remain unknown.",
+    "total": 3
+  },
+  "counts": {
+    "blobs": 165,
+    "cards": 1741,
+    "concept_links": 3,
+    "concepts": 1,
+    "embeddings": 1741,
+    "entities": 2731,
+    "files": 357,
+    "models": 1,
+    "snapshots": 3
+  },
+  "created": "2026-10-30T22:49:42.243031+00:00",
+  "embedding_profile": {
+    "dimensions": 384,
+    "name": "sentence-transformers/all-MiniLM-L6-v2",
+    "preprocessing": "{\"artifacts\": {\"1_Pooling/config.json\": \"4be450dde3b0273bb9787637cfbd28fe04a7ba6ab9d36ac48e92b11e350ffc23\", \"config.json\": \"953f9c0d463486b10a6871cc2fd59f223b2c70184f49815e7efbcab5d8908b41\", \"model.safetensors\": \"53aa51172d142c89d9012cce15ae4d6cc0ca6895895114379cacb4fab128d9db\", \"sentence_bert_config.json\": \"fc1993fde0a95c24ec6c022539d41cf6e2f7c9721e5415d6fb6897472a9cd4b7\", \"special_tokens_map.json\": \"303df45a03609e4ead04bc3dc1536d0ab19b5358db685b6f3da123d05ec200e3\", \"tokenizer.json\": \"be50c3628f2bf5bb5e3a7f17b1f74611b2561a3a27eeab05e5aa30f411572037\", \"tokenizer_config.json\": \"acb92769e8195aabd29b7b2137a9e6d6e25c476a4f15aa4355c233426c61576b\", \"vocab.txt\": \"07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3\"}, \"machine\": \"arm64\", \"profile\": \"attention-mask-mean-l2-256-cpu-fp32-v1\", \"torch\": \"2.8.0\", \"transformers\": \"5.15.0\"}",
+    "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
+  },
+  "embedding_seconds": 29.68306612499873,
+  "exact_food_box_occurrences": 21,
+  "intake_seconds": 1.8554121250053868,
+  "manifest_sha256": "862c0efbdbc3e9a5cd0ddc03fff2dffb77c65197e0fc2803fc6a330f1bca234f",
+  "metrics": {
+    "hybrid": {
+      "hit_at_1": 21,
+      "hit_at_10": 30,
+      "hit_at_3": 30,
+      "mrr_at_10": 0.8333333333333334,
+      "queries": 30,
+      "search_seconds": 0.8188539190014126
+    },
+    "lexical": {
+      "hit_at_1": 15,
+      "hit_at_10": 30,
+      "hit_at_3": 24,
+      "mrr_at_10": 0.6687037037037037,
+      "queries": 30,
+      "search_seconds": 0.18169333397236187
+    },
+    "vector": {
+      "hit_at_1": 15,
+      "hit_at_10": 30,
+      "hit_at_3": 27,
+      "mrr_at_10": 0.6922222222222222,
+      "queries": 30,
+      "search_seconds": 0.7798050849232823
+    }
+  },
+  "model": "embedding-model:8462e60dcd162521d249b9fd18b68289be81e6f3f7de55cfcd5ee3ae157e80d5",
+  "native_execution": false,
+  "negative_controls": [
+    {
+      "case": "unsupported-network",
+      "edition": "474.01",
+      "mode": "lexical",
+      "returned_candidates": 10,
+      "top_name": "dip_menu"
+    },
+    {
+      "case": "unsupported-network",
+      "edition": "474.01",
+      "mode": "vector",
+      "returned_candidates": 10,
+      "top_name": "leader_audience"
+    },
+    {
+      "case": "unsupported-network",
+      "edition": "474.01",
+      "mode": "hybrid",
+      "returned_candidates": 10,
+      "top_name": "spy_rpt"
+    },
+    {
+      "case": "unsupported-network",
+      "edition": "474.03",
+      "mode": "lexical",
+      "returned_candidates": 10,
+      "top_name": "dip_menu"
+    },
+    {
+      "case": "unsupported-network",
+      "edition": "474.03",
+      "mode": "vector",
+      "returned_candidates": 10,
+      "top_name": "leader_audience"
+    },
+    {
+      "case": "unsupported-network",
+      "edition": "474.03",
+      "mode": "hybrid",
+      "returned_candidates": 10,
+      "top_name": "spy_rpt"
+    },
+    {
+      "case": "unsupported-network",
+      "edition": "474.05",
+      "mode": "lexical",
+      "returned_candidates": 10,
+      "top_name": "dip_menu"
+    },
+    {
+      "case": "unsupported-network",
+      "edition": "474.05",
+      "mode": "vector",
+      "returned_candidates": 10,
+      "top_name": "leader_audience"
+    },
+    {
+      "case": "unsupported-network",
+      "edition": "474.05",
+      "mode": "hybrid",
+      "returned_candidates": 10,
+      "top_name": "spy_rpt"
+    }
+  ],
+  "parse_states": [
+    {
+      "errors": 132,
+      "files": 31,
+      "snapshot": "source:5023bef660a4b176d4618365f7c0630a19b578e4e399530ab1fcca8bc4a1b1f3",
+      "status": "partial-syntax"
+    },
+    {
+      "errors": 0,
+      "files": 18,
+      "snapshot": "source:5023bef660a4b176d4618365f7c0630a19b578e4e399530ab1fcca8bc4a1b1f3",
+      "status": "retained-unparsed"
+    },
+    {
+      "errors": 0,
+      "files": 70,
+      "snapshot": "source:5023bef660a4b176d4618365f7c0630a19b578e4e399530ab1fcca8bc4a1b1f3",
+      "status": "syntax-indexed"
+    },
+    {
+      "errors": 154,
+      "files": 35,
+      "snapshot": "source:c6487d4481cae5b25d8523d8e6c198ebf0c9c642814d95660e01dcd4cbdfec58",
+      "status": "partial-syntax"
+    },
+    {
+      "errors": 0,
+      "files": 18,
+      "snapshot": "source:c6487d4481cae5b25d8523d8e6c198ebf0c9c642814d95660e01dcd4cbdfec58",
+      "status": "retained-unparsed"
+    },
+    {
+      "errors": 0,
+      "files": 66,
+      "snapshot": "source:c6487d4481cae5b25d8523d8e6c198ebf0c9c642814d95660e01dcd4cbdfec58",
+      "status": "syntax-indexed"
+    },
+    {
+      "errors": 154,
+      "files": 35,
+      "snapshot": "source:dfe0bba560ca7c3cd2f9faa9307529354ce79541c3b71bf8587cba100736de69",
+      "status": "partial-syntax"
+    },
+    {
+      "errors": 0,
+      "files": 18,
+      "snapshot": "source:dfe0bba560ca7c3cd2f9faa9307529354ce79541c3b71bf8587cba100736de69",
+      "status": "retained-unparsed"
+    },
+    {
+      "errors": 0,
+      "files": 66,
+      "snapshot": "source:dfe0bba560ca7c3cd2f9faa9307529354ce79541c3b71bf8587cba100736de69",
+      "status": "syntax-indexed"
+    }
+  ],
+  "pinned_source_bytes_verified": true,
+  "private_artifact_sha256": {
+    "query-vectors.json": "16ec7e45ecf9d93f1385c1d81c0278184883ac51a2b7d926529ef431c8d7351a",
+    "rankings.json": "1f5e5a6920e12b33d4565f368869a41226d95a787c9c3d23e89fedeadde02be2",
+    "report.json": "dc5c5a695918e437ee4fb74ca1b169f456892a6bdae27a57559c7b851d9166b5",
+    "sources.sqlite": "1410d8d84457eda2016a701b74d99537169371300bb241b044bc76136563da13"
+  },
+  "query_embedding_seconds": 0.1419395829725545,
+  "query_ranks": [
+    {
+      "case": "food-stock",
+      "edition": "474.01",
+      "mode": "lexical",
+      "rank": 2
+    },
+    {
+      "case": "food-stock",
+      "edition": "474.01",
+      "mode": "vector",
+      "rank": 1
+    },
+    {
+      "case": "food-stock",
+      "edition": "474.01",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "food-stock",
+      "edition": "474.03",
+      "mode": "lexical",
+      "rank": 2
+    },
+    {
+      "case": "food-stock",
+      "edition": "474.03",
+      "mode": "vector",
+      "rank": 1
+    },
+    {
+      "case": "food-stock",
+      "edition": "474.03",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "food-stock",
+      "edition": "474.05",
+      "mode": "lexical",
+      "rank": 2
+    },
+    {
+      "case": "food-stock",
+      "edition": "474.05",
+      "mode": "vector",
+      "rank": 1
+    },
+    {
+      "case": "food-stock",
+      "edition": "474.05",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "production-stock",
+      "edition": "474.01",
+      "mode": "lexical",
+      "rank": 1
+    },
+    {
+      "case": "production-stock",
+      "edition": "474.01",
+      "mode": "vector",
+      "rank": 2
+    },
+    {
+      "case": "production-stock",
+      "edition": "474.01",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "production-stock",
+      "edition": "474.03",
+      "mode": "lexical",
+      "rank": 1
+    },
+    {
+      "case": "production-stock",
+      "edition": "474.03",
+      "mode": "vector",
+      "rank": 2
+    },
+    {
+      "case": "production-stock",
+      "edition": "474.03",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "production-stock",
+      "edition": "474.05",
+      "mode": "lexical",
+      "rank": 1
+    },
+    {
+      "case": "production-stock",
+      "edition": "474.05",
+      "mode": "vector",
+      "rank": 2
+    },
+    {
+      "case": "production-stock",
+      "edition": "474.05",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "terrain-food",
+      "edition": "474.01",
+      "mode": "lexical",
+      "rank": 1
+    },
+    {
+      "case": "terrain-food",
+      "edition": "474.01",
+      "mode": "vector",
+      "rank": 1
+    },
+    {
+      "case": "terrain-food",
+      "edition": "474.01",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "terrain-food",
+      "edition": "474.03",
+      "mode": "lexical",
+      "rank": 1
+    },
+    {
+      "case": "terrain-food",
+      "edition": "474.03",
+      "mode": "vector",
+      "rank": 1
+    },
+    {
+      "case": "terrain-food",
+      "edition": "474.03",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "terrain-food",
+      "edition": "474.05",
+      "mode": "lexical",
+      "rank": 1
+    },
+    {
+      "case": "terrain-food",
+      "edition": "474.05",
+      "mode": "vector",
+      "rank": 1
+    },
+    {
+      "case": "terrain-food",
+      "edition": "474.05",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "growth-starvation",
+      "edition": "474.01",
+      "mode": "lexical",
+      "rank": 1
+    },
+    {
+      "case": "growth-starvation",
+      "edition": "474.01",
+      "mode": "vector",
+      "rank": 1
+    },
+    {
+      "case": "growth-starvation",
+      "edition": "474.01",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "growth-starvation",
+      "edition": "474.03",
+      "mode": "lexical",
+      "rank": 1
+    },
+    {
+      "case": "growth-starvation",
+      "edition": "474.03",
+      "mode": "vector",
+      "rank": 1
+    },
+    {
+      "case": "growth-starvation",
+      "edition": "474.03",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "growth-starvation",
+      "edition": "474.05",
+      "mode": "lexical",
+      "rank": 1
+    },
+    {
+      "case": "growth-starvation",
+      "edition": "474.05",
+      "mode": "vector",
+      "rank": 1
+    },
+    {
+      "case": "growth-starvation",
+      "edition": "474.05",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "tile-output",
+      "edition": "474.01",
+      "mode": "lexical",
+      "rank": 2
+    },
+    {
+      "case": "tile-output",
+      "edition": "474.01",
+      "mode": "vector",
+      "rank": 1
+    },
+    {
+      "case": "tile-output",
+      "edition": "474.01",
+      "mode": "hybrid",
+      "rank": 2
+    },
+    {
+      "case": "tile-output",
+      "edition": "474.03",
+      "mode": "lexical",
+      "rank": 2
+    },
+    {
+      "case": "tile-output",
+      "edition": "474.03",
+      "mode": "vector",
+      "rank": 1
+    },
+    {
+      "case": "tile-output",
+      "edition": "474.03",
+      "mode": "hybrid",
+      "rank": 2
+    },
+    {
+      "case": "tile-output",
+      "edition": "474.05",
+      "mode": "lexical",
+      "rank": 2
+    },
+    {
+      "case": "tile-output",
+      "edition": "474.05",
+      "mode": "vector",
+      "rank": 1
+    },
+    {
+      "case": "tile-output",
+      "edition": "474.05",
+      "mode": "hybrid",
+      "rank": 2
+    },
+    {
+      "case": "worked-tile-totals",
+      "edition": "474.01",
+      "mode": "lexical",
+      "rank": 1
+    },
+    {
+      "case": "worked-tile-totals",
+      "edition": "474.01",
+      "mode": "vector",
+      "rank": 2
+    },
+    {
+      "case": "worked-tile-totals",
+      "edition": "474.01",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "worked-tile-totals",
+      "edition": "474.03",
+      "mode": "lexical",
+      "rank": 1
+    },
+    {
+      "case": "worked-tile-totals",
+      "edition": "474.03",
+      "mode": "vector",
+      "rank": 3
+    },
+    {
+      "case": "worked-tile-totals",
+      "edition": "474.03",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "worked-tile-totals",
+      "edition": "474.05",
+      "mode": "lexical",
+      "rank": 1
+    },
+    {
+      "case": "worked-tile-totals",
+      "edition": "474.05",
+      "mode": "vector",
+      "rank": 3
+    },
+    {
+      "case": "worked-tile-totals",
+      "edition": "474.05",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "empire-economy",
+      "edition": "474.01",
+      "mode": "lexical",
+      "rank": 9
+    },
+    {
+      "case": "empire-economy",
+      "edition": "474.01",
+      "mode": "vector",
+      "rank": 2
+    },
+    {
+      "case": "empire-economy",
+      "edition": "474.01",
+      "mode": "hybrid",
+      "rank": 2
+    },
+    {
+      "case": "empire-economy",
+      "edition": "474.03",
+      "mode": "lexical",
+      "rank": 10
+    },
+    {
+      "case": "empire-economy",
+      "edition": "474.03",
+      "mode": "vector",
+      "rank": 2
+    },
+    {
+      "case": "empire-economy",
+      "edition": "474.03",
+      "mode": "hybrid",
+      "rank": 2
+    },
+    {
+      "case": "empire-economy",
+      "edition": "474.05",
+      "mode": "lexical",
+      "rank": 10
+    },
+    {
+      "case": "empire-economy",
+      "edition": "474.05",
+      "mode": "vector",
+      "rank": 2
+    },
+    {
+      "case": "empire-economy",
+      "edition": "474.05",
+      "mode": "hybrid",
+      "rank": 2
+    },
+    {
+      "case": "next-turn",
+      "edition": "474.01",
+      "mode": "lexical",
+      "rank": 3
+    },
+    {
+      "case": "next-turn",
+      "edition": "474.01",
+      "mode": "vector",
+      "rank": 3
+    },
+    {
+      "case": "next-turn",
+      "edition": "474.01",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "next-turn",
+      "edition": "474.03",
+      "mode": "lexical",
+      "rank": 3
+    },
+    {
+      "case": "next-turn",
+      "edition": "474.03",
+      "mode": "vector",
+      "rank": 3
+    },
+    {
+      "case": "next-turn",
+      "edition": "474.03",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "next-turn",
+      "edition": "474.05",
+      "mode": "lexical",
+      "rank": 3
+    },
+    {
+      "case": "next-turn",
+      "edition": "474.05",
+      "mode": "vector",
+      "rank": 3
+    },
+    {
+      "case": "next-turn",
+      "edition": "474.05",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "restore-session",
+      "edition": "474.01",
+      "mode": "lexical",
+      "rank": 4
+    },
+    {
+      "case": "restore-session",
+      "edition": "474.01",
+      "mode": "vector",
+      "rank": 5
+    },
+    {
+      "case": "restore-session",
+      "edition": "474.01",
+      "mode": "hybrid",
+      "rank": 3
+    },
+    {
+      "case": "restore-session",
+      "edition": "474.03",
+      "mode": "lexical",
+      "rank": 4
+    },
+    {
+      "case": "restore-session",
+      "edition": "474.03",
+      "mode": "vector",
+      "rank": 5
+    },
+    {
+      "case": "restore-session",
+      "edition": "474.03",
+      "mode": "hybrid",
+      "rank": 3
+    },
+    {
+      "case": "restore-session",
+      "edition": "474.05",
+      "mode": "lexical",
+      "rank": 4
+    },
+    {
+      "case": "restore-session",
+      "edition": "474.05",
+      "mode": "vector",
+      "rank": 5
+    },
+    {
+      "case": "restore-session",
+      "edition": "474.05",
+      "mode": "hybrid",
+      "rank": 3
+    },
+    {
+      "case": "persist-session",
+      "edition": "474.01",
+      "mode": "lexical",
+      "rank": 1
+    },
+    {
+      "case": "persist-session",
+      "edition": "474.01",
+      "mode": "vector",
+      "rank": 1
+    },
+    {
+      "case": "persist-session",
+      "edition": "474.01",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "persist-session",
+      "edition": "474.03",
+      "mode": "lexical",
+      "rank": 1
+    },
+    {
+      "case": "persist-session",
+      "edition": "474.03",
+      "mode": "vector",
+      "rank": 1
+    },
+    {
+      "case": "persist-session",
+      "edition": "474.03",
+      "mode": "hybrid",
+      "rank": 1
+    },
+    {
+      "case": "persist-session",
+      "edition": "474.05",
+      "mode": "lexical",
+      "rank": 1
+    },
+    {
+      "case": "persist-session",
+      "edition": "474.05",
+      "mode": "vector",
+      "rank": 1
+    },
+    {
+      "case": "persist-session",
+      "edition": "474.05",
+      "mode": "hybrid",
+      "rank": 1
+    }
+  ],
+  "ranking_policy": "RRF k=60; entity ties by name,path,start,kind,snapshot. Scores are ranking values, not confidence.",
+  "restart_verified": true,
+  "schema": "fdisbull-source-search-pilot-1",
+  "scope": "Source-assisted retrieval sanity experiment across three DOS source editions; labels were investigator-selected, not a blind benchmark. No native equivalence, automatic binding resolution or UDL admission.",
+  "source_build_verified": false,
+  "source_editions": [
+    {
+      "edition": "474.01",
+      "files": 119,
+      "native_sha256": "21861cbb5eca78ddf22d7b84219b41a22a1d283c3f7b27f3d1bce98c30eb8e3b",
+      "native_unchanged": true,
+      "repository": "https://github.com/sjmelia/civd",
+      "revision": "c425f7ba45411111c7c71d926e1ce8d4fa641571"
+    },
+    {
+      "edition": "474.03",
+      "files": 119,
+      "native_sha256": "31e35b01f4d00df81685dfcb81e6de196a3876bd2afff6e39cbbfd964f5852ad",
+      "native_unchanged": true,
+      "repository": "https://github.com/sjmelia/civd",
+      "revision": "9aefe00fce1b4d014bbc7a1dc9b2a25914cce9e5"
+    },
+    {
+      "edition": "474.05",
+      "files": 119,
+      "native_sha256": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
+      "native_unchanged": true,
+      "repository": "https://github.com/sjmelia/civd",
+      "revision": "d9214fcd36aa6003d28aae60c3974b665f752280"
+    }
+  ],
+  "source_to_machine_mapping": false,
+  "sqlite_integrity": "ok"
+}

@@ -162,6 +162,51 @@ REQUIRED_SOURCE_FILES += DESKTOP_RUNTIME_FILES + (
 )
 
 
+
+REQUIRED_SOURCE_FILES += tuple(path for path in (
+    "src/fdisbull/data/civd-z-screen-families.json",
+    "src/fdisbull/skills/fdisbull-investigate/references/reconstruction.md",
+    "src/fdisbull/skills/fdisbull-investigate/references/sweding.md",
+    "src/fdisbull/skills/fdisbull-investigate/references/source-and-concepts.md",
+    "examples/recovery/civd_food_swap.py",
+    "examples/recovery/civd_food_arm64.py",
+    "examples/recovery/civd_food_web.py",
+    "examples/recovery/run_web_blocks.mjs",
+    "examples/recovery/run_web_browser.mjs",
+    "examples/recovery/civd_browser_shell.py",
+    "examples/recovery/web_shell_study.mjs",
+    "examples/recovery/run_browser_shell.mjs",
+    "examples/recovery/snake_model.py",
+    "examples/recovery/snake_original.py",
+    "examples/recovery/snake_browser.py",
+    "examples/recovery/run_snake_browser.mjs",
+    "examples/recovery/snake_browser_study.mjs",
+    "examples/recovery/snake_desktop.py",
+    "examples/recovery/verify_snake_desktop.py",
+    "examples/recovery/snake_macos.py",
+    "examples/recovery/verify_snake_macos.py",
+    "examples/recovery/verify_snake_appkit.py",
+    "src/fdisbull/web_runtime/block.mjs",
+    "src/fdisbull/web_runtime/shell.mjs",
+    "src/fdisbull/web_runtime/app.mjs",
+    "src/fdisbull/web_runtime/index.html",
+    "src/fdisbull/web_runtime/memory.mjs",
+    "src/fdisbull/web_runtime/memory-shell.mjs",
+    "src/fdisbull/web_runtime/memory-canvas.mjs",
+    "src/fdisbull/web_runtime/memory-index.html",
+    "tests/web_shell_checks.mjs",
+    "tests/memory_shell_checks.mjs",
+    "docs/evidence/civd-food-arm64/verification.json",
+    "docs/evidence/civd-food-web/verification.json",
+    "docs/evidence/civd-browser-shell/verification.json",
+    "docs/evidence/snake-browser/verification.json",
+    "docs/evidence/source-search-pilot/verification.json",
+    "docs/evidence/civd-source-maps/verification.json",
+    "docs/evidence/civd-food-swaps/verification.json",
+    "docs/evidence/civd-food-swaps/shared-uil.json",
+    "docs/evidence/civd-food-swaps/source-ui-inventory.json",
+) if path not in REQUIRED_SOURCE_FILES)
+
 def source_archive(path, files=REQUIRED_SOURCE_FILES):
     with zipfile.ZipFile(path, "w") as output:
         for required in files:

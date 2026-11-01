@@ -18,6 +18,8 @@ AGENT_SKILL_GUIDES = {
     "references/scenes.md": "Define native scene objects, masks, recognition, readiness and named actions",
     "references/methodology.md": "Plan evidence, coordinate independent questions, trace causes and screen for interpreters",
     "references/runtime-navigation.md": "Choose movement, spatial policies, assistance and observation projections",
+    "references/sweding.md": "Keep intent fixed while qualifying alternative implementations, timing, effects and hosting",
+    "references/reconstruction.md": "First-use recovery recipe: original-to-UIL-to-target gates, discriminating probes and resumable evidence",
     "references/proofs.md": "Build explicit bounded Z3 models and report their assumptions and scope",
     "references/workflows.md": "Choose static analysis, native debugging, scene or text-player entry points",
     "references/udl-uil-udc.md": "Qualify source blocks, retained Zork IR, recovered intents and scene rules, and original-backed DOS compilation",
@@ -26,6 +28,7 @@ AGENT_SKILL_GUIDES = {
     "references/semantic-contracts.md": "Recover complete intent contracts and compare facts, effects, time and projection losses",
     "references/media-modules.md": "Reuse shipped parser APIs, recover missing tooling, and extend bounded format specifications",
     "references/scene-recovery.md": "Recover UIL scenes from required elements, bounded source dependencies and explicit residuals",
+    "references/source-and-concepts.md": "Intake pinned source, search concepts across editions, and preserve source/native claim boundaries",
     "references/formats-and-media.md": "Qualify containers, executable mappings, release differences and valid media reduction",
     "references/binary-claim-verification.md": "Prove or falsify stored-value, writer and behavior claims against the decoded original binary",
 }
@@ -284,6 +287,11 @@ METHODS = {
     "help": "List methods; all project operations require project path",
 }
 
+from .udc_api import METHODS as BLOCK_METHODS
+METHODS.update(BLOCK_METHODS)
+from .source_api import METHODS as SOURCE_METHODS
+METHODS.update(SOURCE_METHODS)
+
 
 def invoke(method, params, debugger=None):
     if method not in METHODS:
@@ -291,6 +299,9 @@ def invoke(method, params, debugger=None):
     if not isinstance(params, dict):
         raise ValueError("params must be an object")
     p = dict(params)
+    if method in SOURCE_METHODS:
+        from .source_api import invoke as source_invoke
+        return source_invoke(method, p)
     if method.startswith("uil-"):
         from .uil_api import invoke_common
 
@@ -685,6 +696,9 @@ def invoke(method, params, debugger=None):
                         )
                     p[field] = json.loads(path.read_text())
             return getattr(db, method.replace("-", "_"))(**p)
+        if method in BLOCK_METHODS:
+            from .udc_api import invoke as invoke_block
+            return invoke_block(db,method,p)
         if method in ("source-info", "source-candidate", "bind-source"):
             return getattr(db, method.replace("-", "_"))(**p)
         if method == "new-source-analysis":
@@ -943,7 +957,7 @@ def respond(request, default_project=None, debugger=None):
             )
         request_id = validate_request_id(request.get("id"))
         params = request.get("params", {})
-        standalone = (
+        standalone = request["method"] in SOURCE_METHODS or (
             request["method"]
             in (
                 "uil-check",
@@ -991,8 +1005,11 @@ def respond(request, default_project=None, debugger=None):
         result = invoke(request["method"], params, debugger)
         # Catalog definitions can contain enum members named "address" or
         # "target". Preserve their numeric values for exact round trips.
-        if request["method"] != "export-types" and not request["method"].startswith(
-            "uil-"
+        if (
+            request["method"] not in BLOCK_METHODS
+            and request["method"] not in SOURCE_METHODS
+            and request["method"] != "export-types"
+            and not request["method"].startswith("uil-")
         ):
             result = public_addresses(result)
         value = {"id": request_id, "ok": True, "result": result}
@@ -1011,6 +1028,9 @@ def respond(request, default_project=None, debugger=None):
             "ok": False,
             "error": {"type": type(e).__name__, "message": str(e)},
         }
+        from .udc_layers import LayerQualificationError
+        if isinstance(e, LayerQualificationError):
+            value["error"]["qualification"] = e.receipt
     return (policy or OutputPolicy()).bound(value)
 
 

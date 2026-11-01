@@ -51,10 +51,12 @@ legacy migration and remaining export limits.
 | Play a supported projection or a user-supplied Zork story | [Text play and interpreter inspection](#text-play-and-interpreter-inspection) |
 | Convert Zork I to executable IR and recover bounded game-intent UIL | [Executable IR](docs/ZORK_UIL.md) · [Game-intent UIL](docs/ZORK_INTENTS.md) |
 | Disassemble Zork's v3 bytecode and follow static calls and branches | [Z-machine processor](docs/ZMACHINE_PROCESSOR.md) |
+| Inventory a collection or add another game edition | [Collection intake and version relationships](docs/TARGET_COLLECTION_INTAKE.md) |
 | Recover named Zork rooms, exits and direct rule links | [Scene UIL](docs/ZORK_SCENES.md) |
 | Try shared interaction scenes through Z | [Z scene play](docs/Z_SCENES.md) |
 | Run a qualified DinoPark park through the original game | [DinoPark in Z](docs/DINOPARK_Z.md) |
 | Test a small recovered block against its original DOS backing | [The bounded UDC pipeline](#the-bounded-udc-pipeline) |
+| Run recovered graphics and input with selectable browser backends | [Bounded browser conversion](docs/UDC_MEMORY_BROWSER.md) |
 | Combine source blocks under a typed indexed UIL and emit a new standalone program | [Common UIL contract](docs/COMMON_UIL_CONTRACT.md) · [Conformance examples](docs/COMMON_UIL_CONFORMANCE.md) |
 | Resolve nested block requirements and realize common UIL as native code | [Native UIL and component linking](docs/COMMON_UIL_NATIVE.md) |
 | Build a native window and input shell over fixed-arena common UIL | [Common UIL desktop shells](docs/COMMON_UIL_DESKTOP.md) |
@@ -132,6 +134,20 @@ Original bytes and previous versions are preserved. You can attach supporting
 files, record types and links, and export disassembly and control-flow images
 from stored state without operating a GUI. See [architecture](docs/ARCHITECTURE.md)
 and [external files](docs/EXTERNAL_FILES.md).
+
+The [source catalog](docs/SOURCE_CONCEPT_SEARCH.md) adds private source snapshots,
+concept relationships and combined text/vector retrieval across editions.
+Its CivD pilot measures source-assisted search while preserving edition identity
+and keeping native equivalence separately qualified.
+
+[Verified CivD builds](docs/CIVD_VERIFIED_SOURCE_MAPS.md) now connect selected food
+and turn-processing source to original bytes across three DOS editions, with
+independent version checks and explicit packed/unpacked address identities.
+The [shared-food experiment](docs/CIVD_SHARED_FOOD_AND_Z.md) selects each
+edition's original kernel under one UIL and compares all nine combinations.
+It also introduces a source-backed Z interface design with one reusable city
+view; the shipped strategy interface reads observations and prepares action
+plans while native screen navigation remains unqualified.
 
 The [DOS/4GW LE module](docs/dos4gw-le.md) adds bounded loading of
 supported 32-bit LE objects and internal fixups for the existing x86 analyzer.
@@ -301,6 +317,18 @@ explicit residual IR; recovering their entry points does not recover their inten
 
 ## The bounded UDC pipeline
 
+The browser pilot runs a small recovered Snake fixture with graphics, keyboard
+and mouse input. Game logic and drawing can independently select Wasm or WebGPU
+while keeping the same UIL. The known-source fixture is recovered with source
+assistance and compared with original instruction executions, guest inputs and
+complete frames. See the [browser conversion contract and measured limits](docs/UDC_MEMORY_BROWSER.md).
+The same recovered game also compiles into native 32-bit and 16-bit Windows
+shells with selectable RNG blocks and Windows graphics/input adapters. See the
+[native desktop guide](docs/UDC_MEMORY_DESKTOP.md) and [Win16 guide](docs/UDC_MEMORY_WIN16.md)
+for the finite DOS-reference comparisons and the tested runtime boundaries.
+
+Original programs, fonts and generated game bundles remain private inputs.
+
 The 0.23 source introduces an original-backed DOS compiler definition (UDC):
 explicitly mapped ASM blocks can be lifted to shared UDL/UIL primitives and
 checked with Z3 at a declared register boundary. A limited C statement view
@@ -314,6 +342,16 @@ not generate arbitrary DOS code or claim whole-game semantic recovery. The
 authored COM demonstration and the bounded real-game observations are described
 in [UDC usage](docs/UDC_DOS.md), [testing methodology](docs/UDC_TESTING.md)
 and [verification](docs/VERIFICATION-0.23.md).
+
+The [selectable block-layer prototype](docs/UDL_BLOCK_LAYERS.md) keeps one
+logical operation while choosing an explicitly bound implementation. It retains
+source relationships and immutable selections, with separate checks for modeled
+behavior, isolated original instructions and new native output.
+The [shared-UIL milestone](docs/milestones/2026-10-30-shared-uil-native-shells.md)
+records the demonstrated results and the next step: reusing the same semantic
+modules across different program shells.
+The [Linux and C pilot](docs/UDC_LINUX_AND_C.md) demonstrates shared native module
+bytes across Windows and Linux, plus C regeneration of supported scalar logic.
 
 ## Status, testing and history
 

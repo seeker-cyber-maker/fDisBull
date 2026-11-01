@@ -198,7 +198,7 @@ jobs:
     name: Unified DOS, boot and PE64 (installed wheel)
     needs: native-debugger
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 75
     env:
       FDISBULL_PE_QEMU: ${{ github.workspace }}/.native/pe/qemu-9.2.4/build/qemu-system-x86_64
       FDISBULL_PE_KERNEL: ${{ github.workspace }}/.native/pe/linux-amd64
@@ -256,7 +256,7 @@ jobs:
           python -m pip install distlib==0.4.0
           python -c 'import distlib.scripts, distlib.version'
           sudo apt-get update
-          sudo apt-get install -y build-essential pkg-config libglib2.0-dev libpixman-1-dev ninja-build
+          sudo apt-get install -y build-essential clang pkg-config libglib2.0-dev libpixman-1-dev ninja-build
           mkdir -p native-evidence/pe
           curl --fail --location --retry 3 https://download.qemu.org/qemu-9.2.4.tar.xz \
             --output .native/pe/qemu-9.2.4.tar.xz
@@ -318,7 +318,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -m pytest -q -s tests/test_wine_debugger.py tests/test_wine_advanced.py tests/test_wine_doctor.py -o pythonpath= \
+          python -m pytest -q -s tests/test_wine_debugger.py tests/test_wine_advanced.py tests/test_wine_doctor.py tests/test_udc_shell.py tests/test_udc_selected_shell.py -o pythonpath= \
             --junitxml=native-evidence/pe/tests.xml 2>&1 | tee native-evidence/pe/tests.log
       - name: Require real DOS-in-QEMU and boot-context acceptance
         shell: bash
