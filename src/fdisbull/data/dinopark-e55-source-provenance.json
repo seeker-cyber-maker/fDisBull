@@ -11,7 +11,7 @@
   "native_text_scene_class_ast_sha256": "e44f3ebee8431f93822434e7d264fcd59e680aa96f604a6b7c1ef1a5cfa5fbe2",
   "native_text_scene_class_ast_python": "3.13",
   "native_text_scene_class_source_sha256": "05a4b1d350fa033e2e178870a0a9b33b0b056d51963de405ed6537190f87436d",
-  "adapted_text_scene_class_source_sha256": "70eb9e72a9d8f6cf656d379d00bfbc8aab4d6e6fbcda5b498d52951f0293eee5",
+  "adapted_text_scene_class_source_sha256": "aa420531624872044db9e5b7d7f4fc441ecc241a6254c8702adf61d8f36e3cdc",
   "adapter_edits": [
     "Native save titles are allocated independently from renumbered disk slots.",
     "Coelophysis selection uses qualified catalogue navigation, static markers and original species/price fields.",
@@ -37,5 +37,6 @@
     "Picked-card qualification explicitly excludes the selected-price signature; shared control colors alone do not prove distinct enabled or disabled states."
   ],
   "bounded_purchase_helper_source_sha256": "92a8bf478ed7b8b9ae05f4b6dadd2d005c94e620fde499338860b3fe9ea808b4",
-  "bounded_land_helper_source_sha256": "a7766c8c053b4c25815f814ac913c87d2797d37703dc03c617838411900cfc24"
+  "bounded_land_helper_source_sha256": "a7766c8c053b4c25815f814ac913c87d2797d37703dc03c617838411900cfc24",
+  "bounded_fence_helper_source_sha256": "a5af2ed46b469272389008517764862ef46288b619a4c41fd446b2e1da0b5ed3"
 }

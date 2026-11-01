@@ -641,6 +641,7 @@ class TextScene:
         self.bounded_purchases = False
         self.dinosaur_order = None
         self.land_order = None
+        self.fence_order = None
 
     def save_preflight(self, name):
         try:
@@ -1427,42 +1428,8 @@ class TextScene:
         return self.describe()
 
     def buy_fence(self):
-        if self.current != 'general_store':
-            return 'That action is not available in this scene.'
-        before = balances(self.debug)
-        if not self.dinosaur_bought or self.fence_bought or (before['cash'], before['loan'], before['working_cash']) != (3250, 5000, 3250):
-            self.event({'phase': 'refused', 'command': 'buy wood fence', 'input': 'not_sent',
-                        'reason': 'unqualified dinosaur, fence history or balances', 'before': before})
-            return 'This fence purchase requires the first dinosaur and $3,250 cash, and is qualified once. No input was sent.'
-        self.event({'phase': 'intent', 'command': 'buy wood fence', 'before': before, 'input': 'not_yet_sent'})
-        self.store_fences_tab(before)
-        self.shop_click((110, 109), 5000, 'select wood fence price')
-        self.shop_observe('fence_tab', before, 'fence-price', wait_slices=12)
-        self.shop_click((60, 85), 5000, 'select wood fence')
-        self.shop_observe('fence_selected', before, 'fence-selected', wait_slices=12)
-        self.shop_click((160, 54), 2500, 'reopen fences tab')
-        self.shop_observe('fence_selected', before, 'fence-order-ready', wait_slices=12)
-        self.shop_click((160, 188), 8000, 'open fence placement map')
-        self.shop_observe('fence_map', before, 'fence-placement', wait_slices=24)
-        self.shop_click((42, 50), 1800, 'place wood fence around occupied pen')
-        staged = {'cash': 3250, 'loan': 5000, 'working_cash': 2250}
-        self.shop_observe('fence_staged', staged, 'fence-staged', wait_slices=12)
-        self.shop_click((216, 187), 12000, 'confirm fence placement')
-        committed = {'cash': 2250, 'loan': 5000, 'working_cash': 2250}
-        self.shop_observe('fence_selected', committed, 'fence-committed', wait_slices=12)
-        # Reopen the same placement map without selecting a pen. The border is
-        # a separate post-confirmation observation, not a second purchase.
-        self.shop_click((160, 188), 8000, 'inspect committed fence map')
-        self.shop_observe('fence_reopened', committed, 'fence-reopened', wait_slices=24)
-        self.shop_click((188, 187), 6000, 'cancel inspection map')
-        self.shop_observe('fence_selected', committed, 'fence-inspection-closed', wait_slices=12)
-        self.shop_click((216, 187), 8000, 'return from store')
-        self.shop_observe('shop_street', committed, 'fence-return-street', wait_slices=12)
-        self.debug.scene_assert(self.street, object='street.office')
-        self.current, self.fence_bought = 'street', True
-        self.event({'phase': 'result', 'command': 'buy wood fence', 'before': before,
-                    'after': committed, 'persistence': 'unknown'})
-        return 'Wood fence placed around the dinosaur’s pen for $1,000. Cash: $2,250. You are on the street.'
+        from .dinopark_fence import buy
+        return buy(self)
 
     def hire_guide(self):
         if self.current != 'employment':
@@ -1808,6 +1775,9 @@ class TextScene:
             return self.read_vegasaurus()
         if command == 'check inventory':
             return self.check_inventory()
+        if command == 'continue fence order':
+            from .dinopark_fence import resume
+            return resume(self)
         if command == 'buy wood fence':
             return self.buy_fence()
         if command == 'hire tour guide':

@@ -101,3 +101,19 @@ def test_press_preserves_ticket_only_when_dispatch_was_definitely_refused(monkey
     else:
         assert not calls
         assert {key:text.dinosaur_order[key] for key in previous} == previous
+@pytest.mark.parametrize('outer,timeout,expected',[(None,15000,15),(40,15000,15),(4,15000,4)])
+def test_composed_request_deadline_never_widens_incoming_or_outer_allowance(monkeypatch,outer,timeout,expected):
+    from types import SimpleNamespace
+    from fdisbull import operation_budget
+    monkeypatch.setattr(operation_budget.time,'monotonic',lambda:0)
+    session=SimpleNamespace(_rpc_deadline=outer)
+    assert operation_budget.request_deadline(session,timeout)==expected
+    assert session._rpc_deadline==outer
+
+
+@pytest.mark.parametrize('timeout',[True,0,600001])
+def test_composed_request_deadline_rejects_invalid_allowance(timeout):
+    from types import SimpleNamespace
+    from fdisbull.operation_budget import request_deadline
+    with pytest.raises(ValueError):request_deadline(SimpleNamespace(),timeout)
+
