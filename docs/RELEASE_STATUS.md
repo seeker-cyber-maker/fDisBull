@@ -1,3 +1,30 @@
+# Release status checked on 2026-11-01 (America/New_York)
+
+## Local 0.29.0 candidate active on this Mac
+
+`0.29.0` is a **local candidate**, not a published release. The shared selector
+`/Users/Shared/fDisBull/current` points to
+`releases/0.29.0-c03dc4f` at source
+`c03dc4f9d4b5b9d0b374f6423e21962bfb0b07c9`. `INSTALLATION.json` records
+`active_verified`; the complete 3,221-entry payload passed before and after
+activation.
+
+The fresh Python 3.13.18 prefix passed **818 installed-package tests** with no
+failures, errors or skips. DOSBox, DOS-in-QEMU and Wine/QEMU doctors passed
+native-state restoration; the global DOSBox alias also passed. The installed
+player restored `hall`/`key` state across two fresh processes. The backend was
+inherited from the 0.28.0 prefix by an APFS clone; it was requalified, not
+rebuilt. The 0.28.0 prefix and guarded rollback helper remain available, and
+rollback preflight was checked without switching.
+
+Hosted Linux CI, the hosted native matrix, a Git tag and publication remain
+pending. These checks qualify this host and prefix only. Historical published
+entries below describe their own source cuts. See
+[installation](SYSTEM_INSTALLATION.md), [release notes](RELEASE-0.29.0.md), and
+the [candidate evidence](evidence/0.29.0-release/README.md).
+
+---
+
 # Release status checked on 2026-10-30 (America/New_York)
 
 ## Published 0.25.0 and active shared installation

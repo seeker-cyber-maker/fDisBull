@@ -291,7 +291,7 @@
     },
     "installation": "/Users/Shared/fDisBull/releases/0.29.0-c03dc4f",
     "payload_entries": 3221,
-    "payload_manifest_sha256": "f5429f8fae66227a73d84475ce7e01808dc9b9d5b98efe18758f2abd0d884c6b",
+    "payload_manifest_sha256": "fd0b43f4b52bb6f536bd0db412eea6f85dcd2514a705f22368ff830704285513",
     "previous_payload_sha256": "3876bc6ce88c9de714e3acb5736f78de67a456ccf4e59c12389db4c2f1d8c1ca",
     "previous_selector": "releases/0.28.0-d06bffb",
     "qualification": {
