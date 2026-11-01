@@ -228,6 +228,9 @@ The [original DOS host adapter](docs/AGI_DOS_HOST.md) can now check selected
 KQ1 routines against the running original: follow the same decisions, observe
 real handler returns, and compare the declared state at the routine boundary.
 Interrupted work keeps its evidence and stops for inspection.
+The [eastern bridge case study](docs/AGI_BRIDGE_CLIP.md) follows a speedrunner's
+description to a reproduced KQ1 corner clip, a neighboring failure control,
+and a reusable partial scene in the separate player.
 
 The [Z-machine processor](docs/ZMACHINE_PROCESSOR.md) adds direct v3 bytecode
 inspection through fDisBull's processor interface. It reports operands, calls,

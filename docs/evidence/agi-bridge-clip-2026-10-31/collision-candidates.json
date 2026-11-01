@@ -1,0 +1,969 @@
+{
+  "assumptions": {
+    "actor": "land_baseline",
+    "allow_priority_one": false,
+    "diagonal_policy": "destination_only",
+    "flag_zero": "potential_water_hazard_target_assumption",
+    "ignored": [
+      "horizon",
+      "dynamic_objects",
+      "overlays",
+      "runtime_blocks",
+      "parent_conditions",
+      "control_flow_reachability"
+    ],
+    "width": 6
+  },
+  "complete": true,
+  "directory_sha256": {
+    "LOGDIR": "18d53ac02a5457494f03352c36a4a4c2eb8251df70fff8dae6dc3d5b41d55b38",
+    "PICDIR": "7a2181429c473c5983547f115869c1a948249d986d0176f5fa30b605510cc3c9"
+  },
+  "native_validation": "not_run",
+  "profile": "AGI v2.917 layout",
+  "rooms": [
+    {
+      "complete": true,
+      "edge_seams": {
+        "complete": true,
+        "examined": 646,
+        "retained_candidate_count": 0,
+        "segments": []
+      },
+      "hazard_overlaps": {
+        "complete": true,
+        "examined": 1268,
+        "overlaps": [
+          {
+            "complete": true,
+            "geometry_passable_count": 474,
+            "if_offset": 135,
+            "parent_condition_caveat": "Lexical parents, other control flow and runtime conditions are not evaluated; this guard may be conditional or unreachable.",
+            "rectangle": [
+              84,
+              59,
+              113,
+              78
+            ],
+            "sample_origins": [
+              [
+                84,
+                59
+              ],
+              [
+                85,
+                59
+              ],
+              [
+                86,
+                59
+              ],
+              [
+                87,
+                59
+              ],
+              [
+                88,
+                59
+              ],
+              [
+                95,
+                59
+              ],
+              [
+                96,
+                59
+              ],
+              [
+                97,
+                59
+              ]
+            ],
+            "status": "conditional_script_hazard"
+          },
+          {
+            "complete": true,
+            "geometry_passable_count": 153,
+            "if_offset": 135,
+            "parent_condition_caveat": "Lexical parents, other control flow and runtime conditions are not evaluated; this guard may be conditional or unreachable.",
+            "rectangle": [
+              102,
+              79,
+              113,
+              94
+            ],
+            "sample_origins": [
+              [
+                102,
+                79
+              ],
+              [
+                103,
+                79
+              ],
+              [
+                104,
+                79
+              ],
+              [
+                105,
+                79
+              ],
+              [
+                106,
+                79
+              ],
+              [
+                107,
+                79
+              ],
+              [
+                108,
+                79
+              ],
+              [
+                109,
+                79
+              ]
+            ],
+            "status": "conditional_script_hazard"
+          },
+          {
+            "complete": true,
+            "geometry_passable_count": 394,
+            "if_offset": 135,
+            "parent_condition_caveat": "Lexical parents, other control flow and runtime conditions are not evaluated; this guard may be conditional or unreachable.",
+            "rectangle": [
+              100,
+              95,
+              113,
+              128
+            ],
+            "sample_origins": [
+              [
+                100,
+                95
+              ],
+              [
+                101,
+                95
+              ],
+              [
+                102,
+                95
+              ],
+              [
+                103,
+                95
+              ],
+              [
+                104,
+                95
+              ],
+              [
+                105,
+                95
+              ],
+              [
+                106,
+                95
+              ],
+              [
+                107,
+                95
+              ]
+            ],
+            "status": "conditional_script_hazard"
+          }
+        ]
+      },
+      "logic_sha256": "889eb805667460a09a85046fa6e7effac65a74ade60ef64dd5363d85f99f75ca",
+      "paths": [],
+      "picture_sha256": "5b5042ffd4b45bf05053d730b281ff6f0eb52158afec4e2b632d85a2b83b389f",
+      "room": 8,
+      "status": "static_candidates_only",
+      "water_flag_guards": [
+        {
+          "body_offset": 159,
+          "body_payload_offset": 161,
+          "condition_offsets": [
+            137,
+            143,
+            149
+          ],
+          "effect": "set_flag_zero",
+          "false_offset": 163,
+          "if_offset": 135,
+          "if_payload_offset": 137,
+          "if_sha256": "16af2590cde0b3ae6c70a0de982dbbae328bf119ec18e0d8f62f5ccacf10433a",
+          "lexical_parent_if_offsets": [
+            128
+          ],
+          "logic": 8,
+          "parent_condition_caveat": "Lexical parents, other control flow and runtime conditions are not evaluated; this guard may be conditional or unreachable.",
+          "predicate": "positive_ego_posn_or",
+          "rectangles": [
+            [
+              84,
+              59,
+              113,
+              78
+            ],
+            [
+              102,
+              79,
+              113,
+              94
+            ],
+            [
+              100,
+              95,
+              113,
+              128
+            ]
+          ],
+          "source_sha256": "889eb805667460a09a85046fa6e7effac65a74ade60ef64dd5363d85f99f75ca",
+          "status": "static_conditional_guard",
+          "writer_sha256": "bf60e4349cace6bce0d552e8d783428db66d0d649bd9e430a3627e2ee14ac839"
+        }
+      ]
+    },
+    {
+      "complete": true,
+      "edge_seams": {
+        "complete": true,
+        "examined": 646,
+        "retained_candidate_count": 37,
+        "segments": [
+          {
+            "count": 21,
+            "edge": "left",
+            "inward_delta": [
+              1,
+              0
+            ],
+            "x_range": [
+              0,
+              0
+            ],
+            "y_range": [
+              58,
+              78
+            ]
+          },
+          {
+            "count": 5,
+            "edge": "left",
+            "inward_delta": [
+              1,
+              0
+            ],
+            "x_range": [
+              0,
+              0
+            ],
+            "y_range": [
+              81,
+              85
+            ]
+          },
+          {
+            "count": 2,
+            "edge": "right",
+            "inward_delta": [
+              -1,
+              0
+            ],
+            "x_range": [
+              154,
+              154
+            ],
+            "y_range": [
+              58,
+              59
+            ]
+          },
+          {
+            "count": 9,
+            "edge": "right",
+            "inward_delta": [
+              -1,
+              0
+            ],
+            "x_range": [
+              154,
+              154
+            ],
+            "y_range": [
+              79,
+              87
+            ]
+          }
+        ]
+      },
+      "hazard_overlaps": {
+        "complete": true,
+        "examined": 49,
+        "overlaps": [
+          {
+            "complete": true,
+            "geometry_passable_count": 38,
+            "if_offset": 1064,
+            "parent_condition_caveat": "Lexical parents, other control flow and runtime conditions are not evaluated; this guard may be conditional or unreachable.",
+            "rectangle": [
+              64,
+              84,
+              70,
+              90
+            ],
+            "sample_origins": [
+              [
+                64,
+                84
+              ],
+              [
+                65,
+                84
+              ],
+              [
+                66,
+                84
+              ],
+              [
+                67,
+                84
+              ],
+              [
+                68,
+                84
+              ],
+              [
+                69,
+                84
+              ],
+              [
+                64,
+                85
+              ],
+              [
+                65,
+                85
+              ]
+            ],
+            "status": "conditional_script_hazard"
+          }
+        ]
+      },
+      "logic_sha256": "81517460b01bd710d309f187bd608f78a0aea16cfa24935a871e027850ec6eeb",
+      "paths": [],
+      "picture_sha256": "e6f2bff7a6ac4404de2bf053de434f2f59eecc478f397b9a249870c8e7837918",
+      "room": 25,
+      "status": "static_candidates_only",
+      "water_flag_guards": [
+        {
+          "body_offset": 1074,
+          "body_payload_offset": 1076,
+          "condition_offsets": [
+            1065
+          ],
+          "effect": "set_flag_zero",
+          "false_offset": 1078,
+          "if_offset": 1064,
+          "if_payload_offset": 1066,
+          "if_sha256": "456969385e9c2dff00d25d098c7e04bfc882ce2541c826c26f918566a017c547",
+          "lexical_parent_if_offsets": [
+            1057
+          ],
+          "logic": 25,
+          "parent_condition_caveat": "Lexical parents, other control flow and runtime conditions are not evaluated; this guard may be conditional or unreachable.",
+          "predicate": "positive_ego_posn_or",
+          "rectangles": [
+            [
+              64,
+              84,
+              70,
+              90
+            ]
+          ],
+          "source_sha256": "81517460b01bd710d309f187bd608f78a0aea16cfa24935a871e027850ec6eeb",
+          "status": "static_conditional_guard",
+          "writer_sha256": "bf60e4349cace6bce0d552e8d783428db66d0d649bd9e430a3627e2ee14ac839"
+        }
+      ]
+    },
+    {
+      "complete": true,
+      "edge_seams": {
+        "complete": true,
+        "examined": 646,
+        "retained_candidate_count": 57,
+        "segments": [
+          {
+            "count": 36,
+            "edge": "left",
+            "inward_delta": [
+              1,
+              0
+            ],
+            "x_range": [
+              0,
+              0
+            ],
+            "y_range": [
+              66,
+              101
+            ]
+          },
+          {
+            "count": 21,
+            "edge": "right",
+            "inward_delta": [
+              -1,
+              0
+            ],
+            "x_range": [
+              154,
+              154
+            ],
+            "y_range": [
+              43,
+              63
+            ]
+          }
+        ]
+      },
+      "hazard_overlaps": {
+        "complete": true,
+        "examined": 3095,
+        "overlaps": [
+          {
+            "complete": true,
+            "geometry_passable_count": 876,
+            "if_offset": 256,
+            "parent_condition_caveat": "Lexical parents, other control flow and runtime conditions are not evaluated; this guard may be conditional or unreachable.",
+            "rectangle": [
+              14,
+              66,
+              54,
+              107
+            ],
+            "sample_origins": [
+              [
+                14,
+                66
+              ],
+              [
+                15,
+                66
+              ],
+              [
+                16,
+                66
+              ],
+              [
+                17,
+                66
+              ],
+              [
+                18,
+                66
+              ],
+              [
+                19,
+                66
+              ],
+              [
+                20,
+                66
+              ],
+              [
+                21,
+                66
+              ]
+            ],
+            "status": "conditional_script_hazard"
+          },
+          {
+            "complete": true,
+            "geometry_passable_count": 735,
+            "if_offset": 256,
+            "parent_condition_caveat": "Lexical parents, other control flow and runtime conditions are not evaluated; this guard may be conditional or unreachable.",
+            "rectangle": [
+              99,
+              64,
+              145,
+              82
+            ],
+            "sample_origins": [
+              [
+                108,
+                64
+              ],
+              [
+                109,
+                64
+              ],
+              [
+                110,
+                64
+              ],
+              [
+                111,
+                64
+              ],
+              [
+                112,
+                64
+              ],
+              [
+                113,
+                64
+              ],
+              [
+                114,
+                64
+              ],
+              [
+                115,
+                64
+              ]
+            ],
+            "status": "conditional_script_hazard"
+          },
+          {
+            "complete": true,
+            "geometry_passable_count": 224,
+            "if_offset": 256,
+            "parent_condition_caveat": "Lexical parents, other control flow and runtime conditions are not evaluated; this guard may be conditional or unreachable.",
+            "rectangle": [
+              114,
+              113,
+              133,
+              136
+            ],
+            "sample_origins": [
+              [
+                123,
+                113
+              ],
+              [
+                124,
+                113
+              ],
+              [
+                125,
+                113
+              ],
+              [
+                126,
+                113
+              ],
+              [
+                127,
+                113
+              ],
+              [
+                128,
+                113
+              ],
+              [
+                129,
+                113
+              ],
+              [
+                130,
+                113
+              ]
+            ],
+            "status": "conditional_script_hazard"
+          }
+        ]
+      },
+      "logic_sha256": "40133de0083849d99f57a9d869533536028621771d7b98e06581c02c4e96750e",
+      "paths": [],
+      "picture_sha256": "fff62fadb5168159916862cf65ca9971dc9fc1c67af77aa0393a16a1083c1ffc",
+      "room": 33,
+      "status": "static_candidates_only",
+      "water_flag_guards": [
+        {
+          "body_offset": 280,
+          "body_payload_offset": 282,
+          "condition_offsets": [
+            258,
+            264,
+            270
+          ],
+          "effect": "set_flag_zero",
+          "false_offset": 284,
+          "if_offset": 256,
+          "if_payload_offset": 258,
+          "if_sha256": "55db013502fefaa8f17dc082090fa2ea04993d943bc55f8156fe7bc9f6090f74",
+          "lexical_parent_if_offsets": [
+            249
+          ],
+          "logic": 33,
+          "parent_condition_caveat": "Lexical parents, other control flow and runtime conditions are not evaluated; this guard may be conditional or unreachable.",
+          "predicate": "positive_ego_posn_or",
+          "rectangles": [
+            [
+              14,
+              66,
+              54,
+              107
+            ],
+            [
+              99,
+              64,
+              145,
+              82
+            ],
+            [
+              114,
+              113,
+              133,
+              136
+            ]
+          ],
+          "source_sha256": "40133de0083849d99f57a9d869533536028621771d7b98e06581c02c4e96750e",
+          "status": "static_conditional_guard",
+          "writer_sha256": "bf60e4349cace6bce0d552e8d783428db66d0d649bd9e430a3627e2ee14ac839"
+        }
+      ]
+    },
+    {
+      "complete": true,
+      "edge_seams": {
+        "complete": true,
+        "examined": 646,
+        "retained_candidate_count": 38,
+        "segments": [
+          {
+            "count": 38,
+            "edge": "right",
+            "inward_delta": [
+              -1,
+              0
+            ],
+            "x_range": [
+              154,
+              154
+            ],
+            "y_range": [
+              64,
+              101
+            ]
+          }
+        ]
+      },
+      "hazard_overlaps": {
+        "complete": true,
+        "examined": 0,
+        "overlaps": []
+      },
+      "logic_sha256": "a89cda3ef5bd15a577135c4378272a67dad21d5bae8a81d6fa69586b3e2e56ad",
+      "paths": [],
+      "picture_sha256": "391b1b5ca95cb43d96d259bf23ad0716254eacd86e3785b910bea93825474d95",
+      "room": 34,
+      "status": "static_candidates_only",
+      "water_flag_guards": []
+    },
+    {
+      "complete": true,
+      "edge_seams": {
+        "complete": true,
+        "examined": 646,
+        "retained_candidate_count": 0,
+        "segments": []
+      },
+      "hazard_overlaps": {
+        "complete": true,
+        "examined": 679,
+        "overlaps": [
+          {
+            "complete": true,
+            "geometry_passable_count": 360,
+            "if_offset": 1032,
+            "parent_condition_caveat": "Lexical parents, other control flow and runtime conditions are not evaluated; this guard may be conditional or unreachable.",
+            "rectangle": [
+              24,
+              44,
+              68,
+              58
+            ],
+            "sample_origins": [
+              [
+                24,
+                44
+              ],
+              [
+                25,
+                44
+              ],
+              [
+                26,
+                44
+              ],
+              [
+                27,
+                44
+              ],
+              [
+                28,
+                44
+              ],
+              [
+                29,
+                44
+              ],
+              [
+                30,
+                44
+              ],
+              [
+                31,
+                44
+              ]
+            ],
+            "status": "conditional_script_hazard"
+          },
+          {
+            "complete": true,
+            "geometry_passable_count": 4,
+            "if_offset": 1032,
+            "parent_condition_caveat": "Lexical parents, other control flow and runtime conditions are not evaluated; this guard may be conditional or unreachable.",
+            "rectangle": [
+              72,
+              84,
+              72,
+              87
+            ],
+            "sample_origins": [
+              [
+                72,
+                84
+              ],
+              [
+                72,
+                85
+              ],
+              [
+                72,
+                86
+              ],
+              [
+                72,
+                87
+              ]
+            ],
+            "status": "conditional_script_hazard"
+          }
+        ]
+      },
+      "logic_sha256": "49ebf4046de0446b7c307108e4d2e264560447aa778e898df292ad3e523758f6",
+      "paths": [
+        {
+          "extracted_guards_excluded": true,
+          "goal": [
+            68,
+            87
+          ],
+          "result": {
+            "claim": "static_candidate_only",
+            "complete": true,
+            "diagonal_policy": "destination_only",
+            "path": [
+              [
+                73,
+                89
+              ],
+              [
+                72,
+                89
+              ],
+              [
+                71,
+                89
+              ],
+              [
+                70,
+                88
+              ],
+              [
+                69,
+                87
+              ],
+              [
+                68,
+                87
+              ]
+            ],
+            "status": "found",
+            "visited": 41
+          },
+          "start": [
+            73,
+            89
+          ]
+        }
+      ],
+      "picture_sha256": "3fe43fc43ad170ea502e034f0d7a6be1727f5e8ec83e2db0b343119de2b5f303",
+      "room": 39,
+      "status": "static_candidates_only",
+      "water_flag_guards": [
+        {
+          "body_offset": 1050,
+          "body_payload_offset": 1052,
+          "condition_offsets": [
+            1034,
+            1040
+          ],
+          "effect": "set_flag_zero",
+          "false_offset": 1054,
+          "if_offset": 1032,
+          "if_payload_offset": 1034,
+          "if_sha256": "b93bc086006ef2d28189789b412537099c43e4cc9c1d201fc36496a80f95fd2a",
+          "lexical_parent_if_offsets": [
+            1025
+          ],
+          "logic": 39,
+          "parent_condition_caveat": "Lexical parents, other control flow and runtime conditions are not evaluated; this guard may be conditional or unreachable.",
+          "predicate": "positive_ego_posn_or",
+          "rectangles": [
+            [
+              24,
+              44,
+              68,
+              58
+            ],
+            [
+              72,
+              84,
+              72,
+              87
+            ]
+          ],
+          "source_sha256": "49ebf4046de0446b7c307108e4d2e264560447aa778e898df292ad3e523758f6",
+          "status": "static_conditional_guard",
+          "writer_sha256": "bf60e4349cace6bce0d552e8d783428db66d0d649bd9e430a3627e2ee14ac839"
+        }
+      ]
+    },
+    {
+      "complete": true,
+      "edge_seams": {
+        "complete": true,
+        "examined": 646,
+        "retained_candidate_count": 42,
+        "segments": [
+          {
+            "count": 42,
+            "edge": "right",
+            "inward_delta": [
+              -1,
+              0
+            ],
+            "x_range": [
+              154,
+              154
+            ],
+            "y_range": [
+              109,
+              150
+            ]
+          }
+        ]
+      },
+      "hazard_overlaps": {
+        "complete": true,
+        "examined": 0,
+        "overlaps": []
+      },
+      "logic_sha256": "df4ef57d4ca9ef7c9684b1b8204f4ce6daa13028d660d6f060aaa029bf0e97ed",
+      "paths": [],
+      "picture_sha256": "e1d1c86bd3d12844c16dbb52f61f9d5fdd57123818b38913bd9f0cc9781960ae",
+      "room": 41,
+      "status": "static_candidates_only",
+      "water_flag_guards": []
+    },
+    {
+      "complete": true,
+      "edge_seams": {
+        "complete": true,
+        "examined": 646,
+        "retained_candidate_count": 88,
+        "segments": [
+          {
+            "count": 15,
+            "edge": "left",
+            "inward_delta": [
+              1,
+              0
+            ],
+            "x_range": [
+              0,
+              0
+            ],
+            "y_range": [
+              107,
+              121
+            ]
+          },
+          {
+            "count": 29,
+            "edge": "left",
+            "inward_delta": [
+              1,
+              0
+            ],
+            "x_range": [
+              0,
+              0
+            ],
+            "y_range": [
+              123,
+              151
+            ]
+          },
+          {
+            "count": 44,
+            "edge": "right",
+            "inward_delta": [
+              -1,
+              0
+            ],
+            "x_range": [
+              154,
+              154
+            ],
+            "y_range": [
+              86,
+              129
+            ]
+          }
+        ]
+      },
+      "hazard_overlaps": {
+        "complete": true,
+        "examined": 0,
+        "overlaps": []
+      },
+      "logic_sha256": "ab995f11cf849a7a5e3f735e8e5fbb7e3b9ea8bd0d1da49db2de4a9aab0b363d",
+      "paths": [],
+      "picture_sha256": "19d64fec40434df7b1031a59eabfa2840330d7f130946266394e5b295b7fa699",
+      "room": 42,
+      "status": "static_candidates_only",
+      "water_flag_guards": []
+    }
+  ],
+  "schema": "agi-static-collision-candidates-v1",
+  "selected_rooms": [
+    8,
+    25,
+    33,
+    34,
+    39,
+    41,
+    42
+  ],
+  "status": "static_candidates_only"
+}

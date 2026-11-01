@@ -264,6 +264,12 @@ for commands, source identities, required state witnesses and unsupported cases.
 Choose the actual guest language before spending effort on the interpreter's
 ASM; qualify runtime effects separately.
 
+For an original-game route and reusable scene example, see the
+[KQ1 bridge-corner investigation](AGI_BRIDGE_CLIP.md). Its fresh-game collector,
+source-linked predicate observation and separate scene exporter have distinct
+checks. The companion collision scanner proposes bounded static candidates;
+it does not certify safe movement or glitches.
+
 ### Compare a source block with shared semantics
 
 For the supported 0.23 DOS profile, read `udl-uil-udc.md` before using

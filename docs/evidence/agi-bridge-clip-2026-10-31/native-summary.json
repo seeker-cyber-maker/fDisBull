@@ -1,0 +1,265 @@
+{
+  "format": "fdisbull-agi-bridge-clip-native-summary-1",
+  "runs": [
+    {
+      "id": "native-04",
+      "kind": "physical-bridge-clip",
+      "complete": true,
+      "collector_sha256": "4a7702d253941c0b7db529a5af59fe0f60c52c2902518a225b697abc8ca46f45",
+      "backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+      "runtime": {
+        "policy": "physical",
+        "fresh_game": true,
+        "interventions": [],
+        "session_id": "ses-1",
+        "guest_elapsed_ms": 78977
+      },
+      "route_guest_elapsed_ms": 78977,
+      "limits": {
+        "guest_ms": 300000,
+        "wall_ms": 360000
+      },
+      "final_state": {
+        "room": 40,
+        "score": 0,
+        "ego": {
+          "x": 151,
+          "y": 87,
+          "direction": 0,
+          "drawn": true
+        },
+        "in_water": false,
+        "on_trigger": false,
+        "swimming": 0,
+        "dead": false,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "bridge_active": false,
+        "troll_removed": false,
+        "troll_paid": false
+      },
+      "observations": {
+        "clip-before": {
+          "room": 39,
+          "score": 0,
+          "ego": {
+            "x": 85,
+            "y": 100,
+            "direction": 0,
+            "drawn": true
+          },
+          "in_water": false,
+          "on_trigger": false,
+          "swimming": 0,
+          "dead": false,
+          "ego_width": 6,
+          "ego_view": 0,
+          "step_size": 1,
+          "bridge_active": false,
+          "troll_removed": false,
+          "troll_paid": false
+        },
+        "clip-corner": {
+          "room": 39,
+          "score": 0,
+          "ego": {
+            "x": 72,
+            "y": 88,
+            "direction": 0,
+            "drawn": true
+          },
+          "in_water": false,
+          "on_trigger": false,
+          "swimming": 0,
+          "dead": false,
+          "ego_width": 6,
+          "ego_view": 0,
+          "step_size": 1,
+          "bridge_active": false,
+          "troll_removed": false,
+          "troll_paid": false
+        },
+        "clip-bank": {
+          "room": 39,
+          "score": 0,
+          "ego": {
+            "x": 10,
+            "y": 87,
+            "direction": 0,
+            "drawn": true
+          },
+          "in_water": false,
+          "on_trigger": false,
+          "swimming": 0,
+          "dead": false,
+          "ego_width": 6,
+          "ego_view": 0,
+          "step_size": 1,
+          "bridge_active": false,
+          "troll_removed": false,
+          "troll_paid": false
+        },
+        "clip-complete": {
+          "room": 40,
+          "score": 0,
+          "ego": {
+            "x": 151,
+            "y": 87,
+            "direction": 0,
+            "drawn": true
+          },
+          "in_water": false,
+          "on_trigger": false,
+          "swimming": 0,
+          "dead": false,
+          "ego_width": 6,
+          "ego_view": 0,
+          "step_size": 1,
+          "bridge_active": false,
+          "troll_removed": false,
+          "troll_paid": false
+        }
+      },
+      "original_predicate": {
+        "source_logic": 39,
+        "source_logic_sha256": "49ebf4046de0446b7c307108e4d2e264560447aa778e898df292ad3e523758f6",
+        "condition_offset": 1040,
+        "arguments": [
+          0,
+          72,
+          84,
+          72,
+          87
+        ],
+        "input_position": {
+          "x": 72,
+          "y": 88,
+          "width": 6
+        },
+        "handler_entry_offset": 2246,
+        "return_offset": 2043,
+        "result": false,
+        "call_frame_verified": true,
+        "handler_return_observed": true,
+        "continuation_source_offset": 1054
+      },
+      "source_and_copy_unchanged_after_teardown": true,
+      "raw_private_artifacts": {
+        "result.json": "5fd31f0a74738fd1bd937227d0ac6886d87d1473c3de0f56df398b6bdc6a6703",
+        "capture.private.json": "140e45e8d2dfd2e0cb1fd9ff50c2f22c620cd8889defb95f3aca0b8d877fd990",
+        "journal.private.json": "084e0cdc6e9452165047546be1bac3832cfa681a5f5ec48e60615f5eb1fc33af",
+        "corner-predicate.private.json": "90c321e32e3c52e54e35cc275af0ca9904f1fc9ea29e5c03757712f3e30ccb86",
+        "corner-predicate-trace.private.json": "dc45fca4021f9495880b9dfef170abab53a8f51379184ddccd9c87b531a5d1cc"
+      },
+      "completed_messages": [
+        {
+          "logic": 40,
+          "source_offset": 175,
+          "message_id": 1,
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "control-02",
+      "kind": "adjacent-control",
+      "complete": true,
+      "collector_sha256": "4a7702d253941c0b7db529a5af59fe0f60c52c2902518a225b697abc8ca46f45",
+      "backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+      "runtime": {
+        "policy": "physical",
+        "fresh_game": true,
+        "interventions": [],
+        "session_id": "ses-1",
+        "guest_elapsed_ms": 70287
+      },
+      "route_guest_elapsed_ms": 70287,
+      "limits": {
+        "guest_ms": 300000,
+        "wall_ms": 360000
+      },
+      "final_state": {
+        "room": 39,
+        "score": 0,
+        "ego": {
+          "x": 72,
+          "y": 87,
+          "direction": 8,
+          "drawn": true
+        },
+        "in_water": true,
+        "on_trigger": false,
+        "swimming": 0,
+        "dead": false,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "bridge_active": false,
+        "troll_removed": false,
+        "troll_paid": false
+      },
+      "observations": {
+        "clip-before": {
+          "room": 39,
+          "score": 0,
+          "ego": {
+            "x": 85,
+            "y": 100,
+            "direction": 0,
+            "drawn": true
+          },
+          "in_water": false,
+          "on_trigger": false,
+          "swimming": 0,
+          "dead": false,
+          "ego_width": 6,
+          "ego_view": 0,
+          "step_size": 1,
+          "bridge_active": false,
+          "troll_removed": false,
+          "troll_paid": false
+        }
+      },
+      "original_predicate": {
+        "source_logic": 39,
+        "source_logic_sha256": "49ebf4046de0446b7c307108e4d2e264560447aa778e898df292ad3e523758f6",
+        "condition_offset": 1040,
+        "arguments": [
+          0,
+          72,
+          84,
+          72,
+          87
+        ],
+        "input_position": {
+          "x": 72,
+          "y": 87,
+          "width": 6
+        },
+        "handler_entry_offset": 2246,
+        "return_offset": 2043,
+        "result": true,
+        "call_frame_verified": true,
+        "handler_return_observed": true,
+        "continuation_source_offset": 1050
+      },
+      "source_and_copy_unchanged_after_teardown": true,
+      "raw_private_artifacts": {
+        "result.json": "9ca414fd081a0f045200d83f04552cd4561537f4cb7daaa599d41576e57755da",
+        "capture.private.json": "bd309947c3a152d71502ca2f0e7ef40d2946c232d8bc51e7b3031d0c9145e8cf",
+        "journal.private.json": "795dca5100fe39099e115fed981e3e61f5be9aee8413711583c26128a2c7c633",
+        "corner-predicate.private.json": "f4e880553b666ada9e0281b2d6f799961d6f1366f1c542e58363024d27f08632",
+        "corner-predicate-trace.private.json": "0655c3cb40792f997df61563dfdb994f57c21834ce177d9615f6e8798aa81da8"
+      },
+      "completed_messages": [
+        {
+          "logic": 39,
+          "source_offset": 1135,
+          "message_id": 23,
+          "status": "completed"
+        }
+      ]
+    }
+  ]
+}

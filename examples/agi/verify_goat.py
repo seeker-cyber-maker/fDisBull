@@ -24,6 +24,7 @@ DIRECTIONS = {1:'up',2:'pageup',3:'right',4:'pagedown',5:'down',6:'end',7:'left'
 class GoatRun:
     guest_budget_ms=240000
     wall_budget_ms=180000
+    fast_forward=True
 
     def __init__(self,p,d,report,frame,source,root):
         self.p,self.d,self.report,self.frame,self.source,self.root=p,d,report,frame,source,root
@@ -57,7 +58,7 @@ class GoatRun:
         while self.guest_elapsed<end:
             guest,wall=self.remaining_limits(min(100,end-self.guest_elapsed),10000)
             attempt={'kind':'run','attempted':True,'result':None};self.journal.append(attempt)
-            out=self.d.run(guest_ms=guest,timeout_ms=wall,fast_forward=True,stop_on_hook=True)
+            out=self.d.run(guest_ms=guest,timeout_ms=wall,fast_forward=self.fast_forward,stop_on_hook=True)
             attempt['result']=out;elapsed=out.get('guest_elapsed_ms')
             require(type(elapsed) in (int,float) and elapsed>=0,'Missing guest progress')
             self.guest_elapsed+=elapsed

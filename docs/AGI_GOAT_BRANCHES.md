@@ -179,6 +179,10 @@ control-plane account remains distinct from that stronger mechanism claim.
 The separate three-pixel bridge clip and later mushroom-island crossing were
 not reproduced by this follow-up.
 
+The [next bridge-corner follow-up](AGI_BRIDGE_CLIP.md) now qualifies the eastern
+bridge clip and its adjacent script-water control separately. Its source-linked
+route and reusable scene do not change this earlier receipt's scope.
+
 ![Gnome island reached without troll payment or removal](evidence/agi-goat-branches-2026-10-31/river-crossed.png)
 ![Adjacent x153 control invokes the original fatal-river notification](evidence/agi-goat-branches-2026-10-31/adjacent-water-control.png)
 
