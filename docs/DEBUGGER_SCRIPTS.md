@@ -38,7 +38,7 @@ The existing `fdisbull serve --project PROJECT` and `fdisbull debug PROJECT --ex
 | `debug-save-script` | `name`, `script`, optional `version` | Immutable script ID and SHA-256, stored with the project version |
 | `debug-scripts` | Optional `version` | Saved script identities |
 | `debug-script` | `run`, exactly one of `script` or `script_id`, optional `timeout_ms` | Step results and saved execution-report artifact |
-| `debug-save-state` | `run`, optional `name` | Native state artifact ID |
+| `debug-save-state` | `run`, optional `name`, `max_bytes` | Native state artifact ID; optional payload budget checked before storage |
 | `debug-load-state` | `run`, `artifact` | Restored CPU identity and restore-history event |
 | `debug-state-info` | `artifact` | Offline native-component sizes, saved registers, identity, and derivation |
 | `debug-fork-state` | `artifact`, `executable`, `game_dir`, optional `name`, `memory`, `registers` | Derived native checkpoint captured in an isolated paused emulator |

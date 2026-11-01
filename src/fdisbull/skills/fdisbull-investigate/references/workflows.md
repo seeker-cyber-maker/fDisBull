@@ -71,6 +71,15 @@ screenshots and traces are stored in the project and can be exported later;
 exporting an existing artifact is different from claiming a fresh capture.
 Checkpoint restore does not roll back mounted host files or external services.
 
+For a short native DOS debugging history, use `debug-rewind-start`, advance with
+`debug-rewind-record`, inspect `debug-rewind-status`, then `debug-rewind` a
+declared count. This records bounded next-fetch intervals with native states;
+instruction retirement remains unknown. Unrecorded mutations invalidate the
+cursor, and capture/byte budgets include discarded branches. It restores existing
+states rather than replaying instructions; use ordinary `debug-load-state` when
+the checkpoint is already known. See `docs/DEBUGGER_REWIND.md` for limits and the
+local comparison procedure. Other execution backends are outside this first scope.
+
 A DOS data watch confirms the observed access boundary, not whole-instruction
 completion. Starting with 0.26, normalized DOS watch stops report
 `instruction_completed=null` and `registers_stage="after-access"`. A REP copy
