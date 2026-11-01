@@ -12,6 +12,24 @@ from .dinopark_purchase import PurchaseBudget
 
 PEN_MARKER_OFFSET = 190
 PHASE_GUEST_MS = 16000
+# The retained profiles include the original software hand. Exclude its
+# reference position and the next prepared control, then require EVERY other
+# authored sample. These masks do not replace native phase/allocation checks.
+CURSOR_POINTS = {'estate':((60,140),(60,100)), 'choice':((60,100),(145,187)),
+                 'inventory':((145,187),(172,187)), 'plot':((172,187),(42,52)),
+                 'plot_staged':((42,52),(201,187))}
+
+
+def observation_pattern(text, view):
+    pattern = text.patterns[view]
+    points = CURSOR_POINTS.get(view)
+    if points is None:
+        return pattern
+    samples = [sample for sample in pattern['samples'] if not any(
+        x-12 <= sample['x'] <= x+20 and y-12 <= sample['y'] <= y+28 for x,y in points)]
+    if not samples or len(samples)*2 < len(pattern['samples']):
+        raise ValueError('Insufficient land pixels outside the cursor regions')
+    return {**pattern, 'samples':samples, 'min_matches':len(samples)}
 
 
 def native_state(debug):
@@ -66,7 +84,7 @@ def _read(text, view, goal, *, transient=()):
                                               'committed_state':deepcopy(state)}
     frame,image = take_frame(text.project, text.debug, 'land-' + view, hooks=False)
     mouse = text.debug.call('input.mouse.state')['mouse']
-    ready = (state == goal and matches(image, text.patterns[view]) and
+    ready = (state == goal and matches(image, observation_pattern(text, view)) and
              not mouse['buttons'] and not mouse['release_pending'])
     text.event({'phase':'land_observation', 'view':view, 'frame':frame,
                 'state':state, 'ready':ready, 'input':'not_sent'})

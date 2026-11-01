@@ -342,3 +342,30 @@ def test_land_helper_source_is_bound_to_adapter_provenance():
     root=Path(bridge.__file__).parent
     data=json.loads((root/'data/dinopark-e55-source-provenance.json').read_text())
     assert data['bounded_land_helper_source_sha256']==hashlib.sha256(Path(dinopark_land.__file__).read_bytes()).hexdigest()
+
+
+@pytest.mark.parametrize('view',['estate','choice','inventory','plot','plot_staged'])
+def test_cursor_masks_preserve_every_remaining_authored_land_pixel(view):
+    from PIL import Image
+    from fdisbull import dinopark_land as land
+    patterns=json.loads(scenes.SHOP_PATTERNS.read_text())['scenes']
+    original=deepcopy(patterns[view])
+    clean=land.observation_pattern(SimpleNamespace(patterns=patterns),view)
+    assert patterns[view]==original
+    assert clean['min_matches']==len(clean['samples'])>=16
+    image=Image.new('RGB',(320,200),(255,0,255))
+    kept={(s['x'],s['y']) for s in clean['samples']}
+    for sample in original['samples']:
+        point=sample['x'],sample['y']
+        image.putpixel(point,tuple(sample['rgb']) if point in kept else (255,0,255))
+    assert scenes.matches(image,clean)
+    sample=clean['samples'][0]
+    image.putpixel((sample['x'],sample['y']),(255,0,255))
+    assert not scenes.matches(image,clean)
+
+
+def test_cursor_occlusion_cannot_remove_all_land_evidence():
+    from fdisbull import dinopark_land as land
+    text=SimpleNamespace(patterns={'estate':{'samples':[{'x':60,'y':100,'rgb':[0,0,0]}],
+                                                    'min_matches':1}})
+    with pytest.raises(ValueError,match='Insufficient land pixels'):land.observation_pattern(text,'estate')
