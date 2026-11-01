@@ -50,6 +50,9 @@ def test_real_pe_delta_undo_freezes_both_contexts_and_recovers_full_anchor(tmp_p
                 states.append(projection(debug, exports['counter']))
                 debug.cpu_delta_record()
             assert projection(debug, exports['counter'])[1] == '11000000'
+            history = debug.cpu_delta_status()
+            assert debug.capture_code(exports['write_only'], length=8)['artifact']
+            assert debug.cpu_delta_status() == history
             result = debug.cpu_delta_rewind()
             assert result['partial_restored'] and not result['full_machine_restored']
             assert projection(debug, exports['counter']) == states[2]
@@ -57,6 +60,7 @@ def test_real_pe_delta_undo_freezes_both_contexts_and_recovers_full_anchor(tmp_p
             for operation in (
                 lambda: debug.run(guest_ms=None), lambda: debug.trace(count=1),
                 lambda: debug.screenshot(), lambda: debug.save_anchor_stone(),
+                lambda: debug.capture_code(exports['write_only'], length=8),
                 lambda: debug.layers([]),
                 lambda: debug.write_registers({'rax': {'expected': frozen[0]['general']['rax'], 'value': 42}}),
                 lambda: debug.cpu_delta_record(), lambda: machine.resume(),
@@ -71,6 +75,7 @@ def test_real_pe_delta_undo_freezes_both_contexts_and_recovers_full_anchor(tmp_p
             assert not debug.cpu_delta_status()['frozen']
             assert projection(debug, exports['counter']) == initial
             assert old_process.poll() is not None and debug.rpc.process.pid != old_process.pid
+            assert debug.capture_code(exports['write_only'], length=8)['artifact']
             assert debug.script({'format': 'fdisbull-script-1', 'steps': [
                 {'op': 'delta-start', 'ranges': [{'address': exports['counter'], 'length': 4}]},
                 {'op': 'delta-record'}, {'op': 'delta-rewind'}, {'op': 'delta-recover'}]})['ok']

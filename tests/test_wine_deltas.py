@@ -366,6 +366,37 @@ def test_actual_native_save_entry_refuses_frozen_state_before_capture(debug):
     assert debug.rpc.calls == calls
 
 
+@pytest.mark.parametrize('scripted', [False, True])
+def test_runtime_code_capture_refuses_partial_state_and_allows_full_recovery(debug, scripted):
+    debug.project.arch, debug.project.bits = 'x86', 64
+    debug._layer_generation = 0
+    start_and_record(debug)
+    history = debug.cpu_delta_status()
+    assert debug.capture_code(DATA, length=4, view='ram')['artifact']
+    assert debug.cpu_delta_status() == history
+    debug.cpu_delta_rewind()
+    before = deepcopy((debug.cpu, debug.ram))
+    calls = list(debug.rpc.calls)
+    if scripted:
+        result = debug.script({'format': 'fdisbull-script-1', 'steps': [
+            {'op': 'capture-code', 'address': DATA, 'length': 4, 'view': 'ram'}]})
+        assert not result['ok'] and result['completed_steps'] == 0
+        assert 'frozen' in result['error']['message']
+    else:
+        with pytest.raises(ValueError, match='frozen'):
+            debug.capture_code(DATA, length=4, view='ram')
+    assert debug.rpc.calls == calls
+    assert (debug.cpu, debug.ram) == before
+    assert debug.project.db.execute(
+        "SELECT COUNT(*) FROM debug_artifacts WHERE kind='code-snapshot'").fetchone()[0] == 1
+    assert debug.cpu_delta_status()['frozen'] and not debug.closed
+    debug.cpu_delta_recover()
+    capture = debug.capture_code(DATA, length=4, view='ram')
+    assert capture['artifact']
+    assert debug.project.db.execute(
+        "SELECT COUNT(*) FROM debug_artifacts WHERE kind='code-snapshot'").fetchone()[0] == 2
+
+
 @pytest.mark.parametrize('operation', ['layers', 'write-registers'])
 def test_high_level_frozen_edit_refusal_preserves_native_recovery(debug, operation):
     debug.rpc.capabilities['code_layers'] = True

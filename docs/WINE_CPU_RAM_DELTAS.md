@@ -65,6 +65,9 @@ Normal execution, input, new snapshots, screenshots and ordinary edits are
 refused until full native recovery. A previously obtained outer-machine handle
 cannot bypass the guard. Read-only selected-register/RAM/status inspection and
 further guarded undo remain available. A clean refusal leaves recovery possible.
+Runtime code snapshots (`capture-code`), including scripted captures, are also
+refused before any observation or artifact creation; ordinary code inspection
+remains available. Capture becomes available again after full native recovery.
 
 `delta-recover` or a successful compatible `load_anchor_stone` restores the full
 native context and leaves the target stopped. Failed recovery retains the guard.

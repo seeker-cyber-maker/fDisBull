@@ -139,6 +139,11 @@ class PEDebugSession(WineCpuDeltaSessionMixin,ExperimentSessionMixin,PELayerSess
         if active is not None:self._cpu_delta_before_call('layers.configure')
         return super().layers(active,conflict=conflict)
 
+    @pe_delta_locked
+    def capture_code(self,address,*,cs=None,length=64,view='execute',name='code-view.json'):
+        self._cpu_delta_before_call('code')
+        return super().capture_code(address,cs=cs,length=length,view=view,name=name)
+
     def project_address(self,runtime):
         runtime=int(runtime,16) if isinstance(runtime,str) else runtime
         value=runtime-self.delta
