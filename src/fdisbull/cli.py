@@ -230,10 +230,15 @@ METHODS = {
     "genesis-replay-export": "Capture semantic UIL and a locked NES or Genesis build in a new private bundle; path,output,[target,cc65_root,m68k_root,variant,procedures]",
     "genesis-replay-inspect": "Check private replay payload integrity without executing tools or trusting qualification claims; path",
     "genesis-replay-build": "Replay a registered bundle with exact original ROM and explicit trusted target compiler; path,output,rom_path,[target,cc65_root,m68k_root]",
+    'shadowrun-systems': 'List recovered Shadowrun procedural components and whole-game gaps; no parameters',
+    'shadowrun-system-export': 'Export one registered source-bound component as UIL; rom_path,system,output',
+    'shadowrun-system-inspect': 'Validate a private Shadowrun component bundle; path',
+    'shadowrun-system-build-check': 'Compile finite scalar UIL cases to a headless NES check cartridge; path,rom_path,procedure,cases_path,cc65_root,output',
     'shadowrun-opening-profiles': 'List the bounded Shadowrun Genesis opening and Stoker projection profile; no parameters',
     'shadowrun-opening-export': 'Export a source-bound Shadowrun opening GameIL and private capture/atlas bundle; rom_path,snapshot,atlas,output',
     'shadowrun-opening-inspect': 'Verify a private Shadowrun opening bundle integrity without executing tools; path',
     'shadowrun-opening-build': 'Build a registered Shadowrun opening bundle for NES with exact ROM and explicit cc65 root; path,rom_path,cc65_root,output',
+    'shadowrun-opening-animation-build': 'Build the separate right-only animated NES probe; path,rom_path,capture,cc65_root,output',
     "nes-multicart-profiles": "List bounded NES packaging UDC profiles and compatibility requirements",
     "nes-multicart-inspect": "Inspect NES cartridge mapper and bank geometry without assuming a game count; path",
     "nes-multicart-build": "Package two compatible authored NROM cartridges behind a bank-switching menu; inputs,output,authored_compatible",
@@ -412,6 +417,19 @@ def invoke(method, params, debugger=None):
                  'genesis-replay-inspect':udc_genesis.inspect_translation_bundle,
                  'genesis-replay-build':udc_genesis.replay_translation}.get(method)
         if handler is not None:return handler(**p)
+    if method=='shadowrun-systems' or method.startswith('shadowrun-system-'):
+        from . import shadowrun_systems
+        if method=='shadowrun-systems':
+            if p:raise ValueError('shadowrun-systems accepts no parameters')
+            return shadowrun_systems.catalog()
+        if method=='shadowrun-system-export':return shadowrun_systems.export_system(**p)
+        if method=='shadowrun-system-inspect':
+            path=p.pop('path')
+            if p:raise ValueError('shadowrun-system-inspect accepts only path')
+            return shadowrun_systems.inspect_system(path)
+        if method=='shadowrun-system-build-check':
+            path=p.pop('path')
+            return shadowrun_systems.build_system_check(path,**p)
     if method.startswith('shadowrun-opening-'):
         from . import shadowrun_replay
         if method=='shadowrun-opening-profiles':
@@ -426,6 +444,9 @@ def invoke(method, params, debugger=None):
         if method=='shadowrun-opening-build':
             path=p.pop('path')
             return shadowrun_replay.build_opening(path,**p)
+        if method=='shadowrun-opening-animation-build':
+            path=p.pop('path')
+            return shadowrun_replay.build_animated_opening(path,**p)
     if method=='console-udc-targets':
         from .console_udc import console_targets
         if p:raise ValueError('console-udc-targets accepts no parameters')
@@ -598,7 +619,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('media-modules','media-inspect','media-extract','agent-skill','identify','inspect','rom-inspect','rom-disasm','disc-inspect','console-udc','console-udc-targets','rom-game-lift','genesis-replay-profiles','genesis-replay-source','genesis-replay-export','genesis-replay-inspect','genesis-replay-build','shadowrun-opening-profiles','shadowrun-opening-export','shadowrun-opening-inspect','shadowrun-opening-build','nes-multicart-profiles','nes-multicart-inspect','nes-multicart-build','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('shadowrun-systems','shadowrun-system-export','shadowrun-system-inspect','shadowrun-system-build-check','shadowrun-opening-animation-build','media-modules','media-inspect','media-extract','agent-skill','identify','inspect','rom-inspect','rom-disasm','disc-inspect','console-udc','console-udc-targets','rom-game-lift','genesis-replay-profiles','genesis-replay-source','genesis-replay-export','genesis-replay-inspect','genesis-replay-build','shadowrun-opening-profiles','shadowrun-opening-export','shadowrun-opening-inspect','shadowrun-opening-build','nes-multicart-profiles','nes-multicart-inspect','nes-multicart-build','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         result=invoke(request["method"],params,debugger)
@@ -831,6 +852,14 @@ def parser():
     c.add_argument('--rom',dest='rom_path',required=True)
     c.add_argument('--target',choices=['nes','genesis'],default='nes')
     c.add_argument('--cc65-root');c.add_argument('--m68k-root')
+    sub.add_parser('shadowrun-systems',help=METHODS['shadowrun-systems'])
+    c=sub.add_parser('shadowrun-system-export',help=METHODS['shadowrun-system-export'])
+    c.add_argument('rom_path');c.add_argument('--system',required=True);c.add_argument('--output',required=True)
+    c=sub.add_parser('shadowrun-system-inspect',help=METHODS['shadowrun-system-inspect'])
+    c.add_argument('path')
+    c=sub.add_parser('shadowrun-system-build-check',help=METHODS['shadowrun-system-build-check'])
+    c.add_argument('path');c.add_argument('--rom',dest='rom_path',required=True);c.add_argument('--procedure',required=True)
+    c.add_argument('--cases',dest='cases_path',required=True);c.add_argument('--cc65-root',required=True);c.add_argument('--output',required=True)
     sub.add_parser('shadowrun-opening-profiles',help=METHODS['shadowrun-opening-profiles'])
     c=sub.add_parser('shadowrun-opening-export',help=METHODS['shadowrun-opening-export'])
     c.add_argument('rom_path');c.add_argument('--snapshot',required=True);c.add_argument('--atlas',required=True);c.add_argument('--output',required=True)
@@ -838,6 +867,9 @@ def parser():
     c.add_argument('path')
     c=sub.add_parser('shadowrun-opening-build',help=METHODS['shadowrun-opening-build'])
     c.add_argument('path');c.add_argument('--rom',dest='rom_path',required=True);c.add_argument('--cc65-root',required=True);c.add_argument('--output',required=True)
+    c=sub.add_parser('shadowrun-opening-animation-build',help=METHODS['shadowrun-opening-animation-build'])
+    c.add_argument('path');c.add_argument('--rom',dest='rom_path',required=True);c.add_argument('--capture',required=True)
+    c.add_argument('--cc65-root',required=True);c.add_argument('--output',required=True)
     sub.add_parser('nes-multicart-profiles',help=METHODS['nes-multicart-profiles'])
     c=sub.add_parser('nes-multicart-inspect',help=METHODS['nes-multicart-inspect'])
     c.add_argument('path')

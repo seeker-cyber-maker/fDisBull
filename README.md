@@ -299,6 +299,9 @@ bounded NES scene from the reviewed Genesis version, with movement, wall
 collisions, a following camera and a projected motel conversation. Its
 prepared starting state and captured graphics keep the scope explicit;
 general dialogue, combat and the rest of the game remain unrecovered.
+The [full-game recovery work](docs/SHADOWRUN_FULL_GAME_PROGRESS.md) adds tested
+UIL components and a separate animated walking probe. A full playable NES
+conversion, including sound, is still incomplete.
 The separate [Mario debugging study](docs/MARIO_MINUS_WORLD.md) reproduces the
 minus-world warp in the supplied cartridge and traces the incorrect table
 selection that produces it.

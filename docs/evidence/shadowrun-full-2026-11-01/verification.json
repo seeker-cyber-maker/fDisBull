@@ -1,0 +1,107 @@
+{
+  "format": "fdisbull-shadowrun-full-progress-1",
+  "status": "partial",
+  "whole_game": false,
+  "source_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "source_inventory_combat_cases": 8087,
+  "nes_component_cases": 3590,
+  "nes_component_runs": 17,
+  "nes_component_differences": 0,
+  "animated_original_matching_updates": 60,
+  "animated_poses": 7,
+  "animated_target_pixel_samples": 2737,
+  "animated_target_differences": 0,
+  "animated_physical_frames_per_update": 2,
+  "animated_right_update_limit": 60,
+  "animated_nes_sha256": "9aafcb13c6ca54958f98ed659ad305065a99fa081021f99e04c04c8e535b9281",
+  "prior_opening_rebuilt_sha256": "b51b7cc71b101db990deb1a2ac3ed9dc147fc2651a9a651a0dfd91047efed0da",
+  "focused_tests": {
+    "passed": 119
+  },
+  "distribution_tests": {
+    "passed": 341
+  },
+  "full_suite": {
+    "format": "fdisbull-shadowrun-suite-comparison-1",
+    "full_run": {
+      "passed": 3180,
+      "skipped": 142,
+      "failures": 4,
+      "errors": 23
+    },
+    "known_baseline_cases": 26,
+    "unexpected_cases": [
+      {
+        "classname": "tests.test_z_process_backend",
+        "name": "test_quiet_model_protocol_keeps_full_transcript_out_of_stdout",
+        "kind": "failure"
+      }
+    ],
+    "missing_baseline_cases": [],
+    "source_unchanged": true,
+    "junit_sha256": "86f6681dbf928f6ee2db1a9f72031e81183aaf9512cf1e38e8b0d2a4879d2525",
+    "log_sha256": "a203079191e068619c349ba481b54a62e96e1a3aff5958b0a422358b357a7203",
+    "baseline_receipt_sha256": "ef81232bfbace1dd30e27111c79c443fd45cbdcdac6bed42de2d1be2e23ff40f",
+    "additional_environment_failure": {
+      "reason": "OS error 28 while writing the quiet-model transcript",
+      "isolated_rerun": "passed: 1 test on external-volume temporary storage",
+      "rerun_junit_sha256": "3f3c8322492133c7b04e7667af01cb2dfb220b8b3a4abfc6321269546a95191e",
+      "rerun_log_sha256": "1de35c6705200f587263c83005e9f31ab13478c878f7a3eb315d8c44fbbc91cc"
+    }
+  },
+  "changed_code_sha256": {
+    "scripts/build_release.py": "46fee15f4b18b68b6ed35c4891884b738c1103d20da07265245a4e58a07dba64",
+    "scripts/check_dist.py": "6dff3c5cb18e54fff23161c0073aa290b268acca44bef09f71e47fbfe0d50b42",
+    "scripts/check_shadowrun_combat.py": "607c1a2228eb2a432f64aaaf2f32e4bcec5a55dd20e9777c260e3ee1979df3b8",
+    "scripts/check_shadowrun_dialogue_extra.py": "b911ddd2fde3ad2319841be27ab80bf60ef3c46090790a646c72f647350e4439",
+    "scripts/check_shadowrun_dialogue_world.py": "bbf13f665b5d1cdbc65d4b42ba1df9058924b885656a9fb6c5f975b2b1cce0e7",
+    "scripts/check_shadowrun_field_combat.py": "412b9d1d9ea20520c0d68c748a62703f8d4df3b16ca9263326686c878b03e5c6",
+    "scripts/check_shadowrun_hp.py": "cce301b050be004a1bc9554334dae38e26aa89f39ba2fa773398bd0c30540e8b",
+    "scripts/check_shadowrun_inventory.py": "3f984cadc53e59401e3f87f602d216991f880ec6dc67e3f2b0ad34942bfaf84d",
+    "scripts/check_shadowrun_nes_animation.py": "a46491130cc104d5269801d39706dca81064997a31d819da07383f117f8ceb2c",
+    "scripts/check_shadowrun_system_nes.py": "4c50151c68cc45e77413b7a08b9a25b3d4d02f1ad7d7d707d351cacdef801ea2",
+    "scripts/probe_genesis_function.py": "499596176217180cc748ee5cd941e4602dfaa36819ac84316c22d752b7539863",
+    "src/fdisbull/cli.py": "9a8ba095426db3a9fcd81c1f57b2a1ab9deaa9b82594bdb3b575b784ec9f2a39",
+    "src/fdisbull/game_sources/shadowrun_animation.c": "93e86a80fdf02128c88fbb1b005044c7b7b2f3e475decebb4675933b6d398347",
+    "src/fdisbull/game_sources/shadowrun_combat.c": "adcb1b52befa86af0862b780889e04339ec4abee8a90c3bf8b07d8b74a267bb8",
+    "src/fdisbull/game_sources/shadowrun_dialogue.c": "9f11b5eb9e540b88d1c497d331aa9a51495a203e4d9273a78dc6e4f747ddf427",
+    "src/fdisbull/game_sources/shadowrun_inventory.c": "8b3356ef4e48446565208d1345348d0bcddd1fd8409e7e8ff83ad94af969abae",
+    "src/fdisbull/game_sources/shadowrun_nes_animation.c": "cf93ba489b64909320b41ee583b390e344af0e085925ce5b4e1ed6460b0efad8",
+    "src/fdisbull/shadowrun_animation.py": "349cea4fdbfd4c09b5de42c05564d272fe65fe9147382d919203a8a89360c6be",
+    "src/fdisbull/shadowrun_combat.py": "1c840b8f59b1b64cf1bb3f7206c3c3cc3a396a5ef6e10e512c2bcf3a8da642c5",
+    "src/fdisbull/shadowrun_dialogue.py": "015bc96b9ed19fbf4a62e336b91057a294211745666f8faad0c0384790078d84",
+    "src/fdisbull/shadowrun_inventory.py": "4afb161af990e0a286ca067e0766f1f1031a7ff3362f5a4b5b69a3a1e93cfe78",
+    "src/fdisbull/shadowrun_nes_animation.py": "a6f52b6997e40ef209bf7a6caaab2af4c69b3150debcb6988a9a8770ffa49577",
+    "src/fdisbull/shadowrun_replay.py": "8051fcabe713cd38953e74d3dc0046d226a4ece772982a1de7683143d2d010b0",
+    "src/fdisbull/shadowrun_systems.py": "0631789ce66842304fa82c9b98935f2b5bf5539fbaeca8d8796c02074c7fb3de",
+    "src/fdisbull/shadowrun_world.py": "1c1d95babbe1f60428a1557fdb200ea02b03b94fa0dff84f2ec6905073169f43",
+    "tests/test_distribution.py": "dedaf367d0f96821a58805217f267126918cc1adea158f423b9a04b85f7267a7",
+    "tests/test_genesis_function_probe.py": "dd1377cd7387d5c5ccf4105e91eb50de2971dafec1b40dc5e492b7f2eb7370bc",
+    "tests/test_shadowrun_animated_replay.py": "dbc8c50839ae75559bc238e2c1eba0b819d9ecb292ae933e102788d2e9543be7",
+    "tests/test_shadowrun_animation.py": "d6a3ac8c0ca930ec350686ca68839a5623612990f2029ae7e89f1777a52a19e7",
+    "tests/test_shadowrun_combat_inventory.py": "922b6cf246568f2c989ad64d14d27ed3eb91095d0c242783ca2f6eaf7288129c",
+    "tests/test_shadowrun_dialogue_world.py": "eecc112fb7373fb3d5aefc23b47381ea877ed2bebd767146fd4fa87cfc3d685b",
+    "tests/test_shadowrun_systems.py": "05ac62c55f6d4f07f001dac5aea7f055aa1c2be8a4a7d57ec28588c5120453f4"
+  },
+  "evidence_sha256": {
+    "animation.json": "e70f96283fbb63e13f452aadceba0a7bfec6f8965b042a2e7394740e8601e428",
+    "combat.json": "6f021aafe1ad6350d6c64e5a10abde0f908667d4e258c2eab95ba8872f38eab5",
+    "dialogue-world-qualification.json": "289489c50e0308ed34b59c110fba3f63cd1d99121c46317e3142c6fe2b3e14c2",
+    "dialogue-world.json": "7976ef04bbdc0ae0a57ae35b1fa0425b03a9e131a6342ecfa4539a1069ad723c",
+    "field-combat.json": "8e246fc626a2b9ca9b87fa433d914a80076282188d1536dc7880d849892a844d",
+    "hp.json": "f6ffa780f1fe3b38cebbb7a12ead6c645d8e1f82b3f920804bea246cda3c3b8b",
+    "inventory.json": "3a6d7a53b91545e7aa621f9b0519d31d9de2bdeaa5b24f74dd43a5b5b9811a62",
+    "native-nes.json": "15c816271e9ad987aafe5764a0e24694767c61f8011588c27e33930a60bca224"
+  },
+  "open": [
+    "general playable combat, inventory and dialogue integration",
+    "complete world/scene loader and rendering",
+    "enemy AI, missions, Matrix and progression",
+    "general animation dispatch",
+    "original audio driver and NES arrangement",
+    "save/load and endings",
+    "banked full-game memory/timing integration and native comparisons"
+  ],
+  "private_artifacts_excluded_from_git": true,
+  "hosted_ci_verified": false
+}

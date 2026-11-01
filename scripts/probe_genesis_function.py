@@ -69,7 +69,7 @@ def validate_contract(contract, rom_size):
         raise ValueError('register inputs must be unsigned D0..D7 or A0..A6 values')
     if not _integer(contract.get('ccr', 0), 0, 31):
         raise ValueError('ccr must be 0..31; supervisor and interrupt mask are fixed')
-    for key, default, maximum in (('max_instructions', 1000, 100000),
+    for key, default, maximum in (('max_instructions', 1000, 200000),
                                    ('max_master_cycles', 1000000, 10000000)):
         if not _integer(contract.get(key, default), 1, maximum):
             raise ValueError(f'invalid {key}')
@@ -124,7 +124,7 @@ def validate_contract(contract, rom_size):
             raise ValueError('invalid or duplicate RAM watch')
         names.add(name)
         total += length
-    if total > 16384:
+    if total > 32768:
         raise ValueError('RAM watch budget exceeded')
     return contract
 

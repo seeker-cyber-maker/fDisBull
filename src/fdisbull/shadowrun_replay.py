@@ -25,6 +25,13 @@ ROM_SHA256 = '92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e'
 CORE_SHA256 = '27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268'
 ATLAS_ORIGIN = (768, 512)
 ATLAS_SIZE = (512, 480)
+# The separate animated experiment admits this reviewed atlas only. A bundle's
+# self-declared payload hashes alone are not independent observation evidence.
+ANIMATED_ATLAS_SHA256 = {
+    'atlas/vdp-rgb.bin': 'edce6bcd35ee612fd04210bf5bb864568982c83f91e65b893e3b46895f399a0f',
+    'atlas/vdp-coverage.bin': '8b88873e4c48de164e1c3ee2410a4c1c180d8e01d668307ba8d08d4f717b6e18',
+    'atlas/vdp-conflicts.bin': '9eb8fa54d87a9b9775dd55c07b3d164453884695bd1ed83fe2f63259ee9e6afc',
+}
 SNAPSHOT_FILES = {
     'capture/vram.bin': ('vram', 65536),
     'capture/cram.bin': ('cram', 128),
@@ -363,6 +370,49 @@ def inspect_opening(manifest_path: str | Path) -> dict:
         'executed': False, 'source_relift_checked': False,
         'capture_receipts_reopened': False,
         'limits': manifest['scope']['projection_limits']}
+
+
+def build_animated_opening(manifest_path: str | Path, *, rom_path: str | Path,
+                           capture: str | Path, cc65_root: str | Path,
+                           output: str | Path) -> dict:
+    """Build the separately qualified, right-only animated experiment.
+
+    This preserves the existing courtyard/Stoker build. The extra source run
+    supplies private observed poses, not a recorded input playback program.
+    """
+    initial_manifest, manifest_raw = _json(Path(manifest_path).expanduser())
+    _, manifest, payloads = _bundle(manifest_path)
+    if canonical(initial_manifest) != canonical(manifest):
+        raise ValueError('Opening manifest changed during validation')
+    rom = _read_rom(rom_path)
+    from .udl_shadowrun import lift_opening_stoker
+    if (_sha(rom) != manifest['source']['sha256'] or
+            canonical(lift_opening_stoker(rom)) != canonical(json.loads(payloads['program.uil.json']))):
+        raise ValueError('Animated build differs from the registered source lift')
+    if any(_sha(payloads[name]) != digest for name, digest in ANIMATED_ATLAS_SHA256.items()):
+        raise ValueError('Animated build requires the independently reviewed atlas payloads')
+    snapshot = Path(capture).expanduser().resolve() / 'native/scene-005999'
+    _, arrays, _ = _source_capture(snapshot, _sha(rom))
+    if any(arrays[field] != payloads[name] for name, (field, _) in SNAPSHOT_FILES.items()):
+        raise ValueError('Animation initial state differs from the opening bundle')
+    from .shadowrun_nes_animation import build_right_walk_animation_probe
+    result = build_right_walk_animation_probe(rom, capture, output, cc65_root=cc65_root,
+        atlas_rgb=payloads['atlas/vdp-rgb.bin'], atlas_coverage=payloads['atlas/vdp-coverage.bin'],
+        atlas_conflicts=payloads['atlas/vdp-conflicts.bin'],
+        atlas_origin_x=manifest['recipe']['atlas_origin_x'], atlas_origin_y=manifest['recipe']['atlas_origin_y'],
+        atlas_row_offset=manifest['recipe']['atlas_row_offset'],
+        max_pattern_merges=manifest['recipe']['max_pattern_merges'])
+    if _sha(_read(Path(output).expanduser().resolve() / 'animated.nes', 128 * 1024)) != result['output_sha256']:
+        raise ValueError('Animated backend output hash mismatch')
+    if _read_rom(rom_path) != rom:
+        raise ValueError('Original ROM path changed during animated build')
+    if _read(Path(manifest_path).expanduser(), MAX_JSON) != manifest_raw:
+        raise ValueError('Opening manifest changed during animated build')
+    result = {**result, 'bundle_manifest_sha256': _sha(manifest_raw),
+              'atlas_payloads': {name: _record(payloads[name]) for name in ATLAS_FILES},
+              'source_path_unchanged': True, 'executed': False}
+    (Path(output).expanduser().resolve() / 'animated-replay.json').write_text(json.dumps(result, indent=2) + '\n')
+    return result
 
 
 def build_opening(manifest_path: str | Path, *, rom_path: str | Path,

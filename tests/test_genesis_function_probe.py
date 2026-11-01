@@ -72,3 +72,25 @@ def test_private_output_must_be_fresh_outside_git(tmp_path):
     (tmp_path / '.git').write_text('gitdir: elsewhere')
     with pytest.raises(ValueError, match='Git'):
         PROBE['_private_output'](tmp_path / 'fresh')
+
+
+def test_watch_budget_accepts_32k_but_keeps_individual_and_total_limits():
+    value = contract()
+    value['watch'] = [{'name': f'part{i}', 'address': 0xff0000 + i * 4096, 'length': 4096}
+                      for i in range(8)]
+    assert PROBE['validate_contract'](value, 32768)
+    value['watch'].append({'name': 'extra', 'address': 0xff8000, 'length': 1})
+    with pytest.raises(ValueError, match='watch budget'):
+        PROBE['validate_contract'](value, 32768)
+    value['watch'] = [{'name': 'oversized', 'address': 0xff0000, 'length': 4097}]
+    with pytest.raises(ValueError, match='RAM watch'):
+        PROBE['validate_contract'](value, 32768)
+
+
+def test_single_case_instruction_budget_remains_bounded():
+    value = contract()
+    value['max_instructions'] = 200000
+    assert PROBE['validate_contract'](value, 32768)
+    value['max_instructions'] = 200001
+    with pytest.raises(ValueError, match='max_instructions'):
+        PROBE['validate_contract'](value, 32768)

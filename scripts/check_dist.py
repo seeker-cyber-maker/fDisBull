@@ -133,6 +133,27 @@ REQUIRED_SOURCE_EVIDENCE |= {
     "docs/evidence/mario-minus-world-2026-11-01/verification.json",
 } | {"docs/evidence/shadowrun-uil-2026-11-01/" + name + ".json" for name in
      ("verification", "camera", "assets", "interaction", "source-research")}
+REQUIRED_CONSOLE_RESOURCES |= {
+    "shadowrun_animation.py", "shadowrun_combat.py", "shadowrun_dialogue.py",
+    "shadowrun_inventory.py", "shadowrun_nes_animation.py", "shadowrun_systems.py",
+    "shadowrun_world.py",
+} | {"game_sources/shadowrun_" + name + ".c" for name in
+     ("animation", "combat", "dialogue", "inventory", "nes_animation")}
+REQUIRED_TEST_HELPERS |= {
+    "scripts/check_shadowrun_combat.py", "scripts/check_shadowrun_dialogue_extra.py",
+    "scripts/check_shadowrun_dialogue_world.py", "scripts/check_shadowrun_field_combat.py",
+    "scripts/check_shadowrun_hp.py", "scripts/check_shadowrun_inventory.py",
+    "scripts/check_shadowrun_nes_animation.py", "scripts/check_shadowrun_system_nes.py",
+    "tests/test_shadowrun_animated_replay.py", "tests/test_shadowrun_animation.py",
+    "tests/test_shadowrun_combat_inventory.py", "tests/test_shadowrun_dialogue_world.py",
+    "tests/test_shadowrun_systems.py",
+}
+REQUIRED_SOURCE_EVIDENCE |= {
+    "docs/SHADOWRUN_ANIMATION_AUDIO.md", "docs/SHADOWRUN_COMBAT_INVENTORY.md",
+    "docs/SHADOWRUN_DIALOGUE_WORLD.md", "docs/SHADOWRUN_FULL_GAME_PROGRESS.md",
+} | {"docs/evidence/shadowrun-full-2026-11-01/" + name + ".json" for name in
+     ("combat", "dialogue-world-qualification", "dialogue-world", "field-combat", "hp", "inventory",
+      "verification", "native-nes", "animation")}
 REQUIRED_TEST_HELPERS |= {
     "scripts/check_genesis_copy.py", "scripts/check_genesis_performance.py",
     "scripts/check_genesis_stage_performance.py", "scripts/check_genesis_seeded_states.py",

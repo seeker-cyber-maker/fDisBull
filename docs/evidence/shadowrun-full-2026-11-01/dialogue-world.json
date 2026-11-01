@@ -1,0 +1,22 @@
+{
+  "format": "fdisbull-shadowrun-scene2-decompression-1",
+  "status": "passed",
+  "source_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+  "probe_source_sha256": "499596176217180cc748ee5cd941e4602dfaa36819ac84316c22d752b7539863",
+  "contract_sha256": "a6c35b32c3918d244d80516d14936376d8d46bc179952138931fa567a19eadb0",
+  "source_stream_offset": 1507586,
+  "source_end_offset_exclusive": 1518671,
+  "source_stream_bytes_consumed": 11085,
+  "decoded_bytes": 20288,
+  "decoded_sha256": "96dfec04a6a4313ea06c40b47e5597255bce89effcdb1f1b482789dd181b971c",
+  "native_comparison": "all decoded bytes matched",
+  "instructions_executed": 112567,
+  "source_and_core_unchanged": true,
+  "method": "controlled original-core processor entry 0x1610, source profile candidate; not ordinary scene loading",
+  "limitations": [
+    "intervening loader state not qualified",
+    "no scene rendering or whole-game parity claim",
+    "raw inputs and output retained privately"
+  ]
+}

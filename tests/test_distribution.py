@@ -199,6 +199,30 @@ CONSOLE_GAME_EVIDENCE += (
 ) + tuple('docs/evidence/shadowrun-uil-2026-11-01/' + name + '.json' for name in (
     'verification', 'camera', 'assets', 'interaction', 'source-research',
 ))
+CONSOLE_GAME_RESOURCES += tuple('src/fdisbull/' + name for name in (
+    'shadowrun_animation.py', 'shadowrun_combat.py', 'shadowrun_dialogue.py',
+    'shadowrun_inventory.py', 'shadowrun_nes_animation.py', 'shadowrun_systems.py',
+    'shadowrun_world.py',
+))
+CONSOLE_GAME_RESOURCES += tuple('src/fdisbull/game_sources/shadowrun_' + name + '.c' for name in (
+    'animation', 'combat', 'dialogue', 'inventory', 'nes_animation',
+))
+CONSOLE_GAME_HELPERS += (
+    'scripts/check_shadowrun_combat.py', 'scripts/check_shadowrun_dialogue_extra.py',
+    'scripts/check_shadowrun_dialogue_world.py', 'scripts/check_shadowrun_field_combat.py',
+    'scripts/check_shadowrun_hp.py', 'scripts/check_shadowrun_inventory.py',
+    'scripts/check_shadowrun_nes_animation.py', 'scripts/check_shadowrun_system_nes.py',
+    'tests/test_shadowrun_animated_replay.py', 'tests/test_shadowrun_animation.py',
+    'tests/test_shadowrun_combat_inventory.py', 'tests/test_shadowrun_dialogue_world.py',
+    'tests/test_shadowrun_systems.py',
+)
+CONSOLE_GAME_EVIDENCE += (
+    'docs/SHADOWRUN_ANIMATION_AUDIO.md', 'docs/SHADOWRUN_COMBAT_INVENTORY.md',
+    'docs/SHADOWRUN_DIALOGUE_WORLD.md', 'docs/SHADOWRUN_FULL_GAME_PROGRESS.md',
+) + tuple('docs/evidence/shadowrun-full-2026-11-01/' + name + '.json' for name in (
+    'combat', 'dialogue-world-qualification', 'dialogue-world', 'field-combat', 'hp', 'inventory',
+    'verification', 'native-nes', 'animation',
+))
 REQUIRED_SOURCE_FILES += CONSOLE_GAME_RESOURCES + CONSOLE_GAME_HELPERS + CONSOLE_GAME_EVIDENCE
 
 

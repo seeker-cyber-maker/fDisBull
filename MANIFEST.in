@@ -42,6 +42,7 @@ include docs/evidence/nes-multicart-2026-10-31/verification.json
 include docs/evidence/console-intake-2026-10-31/intake.json
 recursive-include docs/evidence/mario-minus-world-2026-11-01 *.json
 recursive-include docs/evidence/shadowrun-uil-2026-11-01 *.json
+recursive-include docs/evidence/shadowrun-full-2026-11-01 *.json
 include patches/capstone-5.0.9-sh-profile-gating.patch
 include scripts/rom_semantic_route/DecompileAuthoredSh2.java
 include scripts/rom_semantic_route/README.md
