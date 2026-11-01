@@ -1,7 +1,7 @@
 {
  "format": "fdisbull-civ-game-uil-provenance-1",
  "scene": "examples/civ/civ_game_scene.json",
- "scene_sha256": "aca776e068ae69a9d5093c0609fe12dc80d708fa029f2f5a4ac87149fe18c685",
+ "scene_sha256": "5577d7181f1a966841b242ea965e516d53d0c699daf2e26544a56bbbce7d9d67",
  "edition": {
   "label": "pinned Civ 474.05 / Civ64 475.05 DOS root",
   "packed_sha256": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
@@ -973,6 +973,12 @@
    "type": "u8",
    "initial": 5,
    "evidence": "civ_total+1, the first second-group menu row; civd NEWGAME.C:114-117."
+  },
+  {
+   "name": "$tribe_rows",
+   "type": "u8",
+   "initial": 10,
+   "evidence": "2*(civ_total+1), both tribe menu groups; civd NEWGAME.C:103-110."
   },
   {
    "name": "$tax_rate",

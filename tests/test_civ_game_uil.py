@@ -118,6 +118,7 @@ def test_competition_menu_binds_civ_total_and_players_mask():
         assert backend.state["$competition"] == civ_total
         assert backend.state["$players"] == players
         assert backend.state["$tribe_split"] == civ_total + 1
+        assert backend.state["$tribe_rows"] == 2 * (civ_total + 1)
         assert backend.observe()["context"]["id"] == "tribe"
 
 
@@ -126,6 +127,7 @@ def test_first_tribe_row_binds_civnow_and_tribe():
     _to_tribe(backend)
     assert backend.state["$tribe_row"] == 0
     assert backend.state["$tribe_split"] == 5
+    assert backend.state["$tribe_rows"] == 10
     assert _act(backend, "choose", "tribe-choose")["status"] == "success"
     assert backend.state["$human_civ"] == 1
     assert backend.state["$tribe"] == 1

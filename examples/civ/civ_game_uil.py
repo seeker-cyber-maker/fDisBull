@@ -80,6 +80,7 @@ VARIABLES = {
     "$human_civ": {"type": "u8", "initial": 0},
     "$tribe_row": {"type": "u8", "initial": 0},
     "$tribe_split": {"type": "u8", "initial": 5},
+    "$tribe_rows": {"type": "u8", "initial": 10},
     "$tax_rate": {"type": "u8", "initial": 0},
     "$science_rate": {"type": "u8", "initial": 0},
     "$luxury_rate": {"type": "u8", "initial": 10},
@@ -119,6 +120,7 @@ STATE_EVIDENCE = {
     "$human_civ": "DGROUP:D7EE `_civnow`; civd NEWGAME.C:113-117 masks second-group rows to slots 1..7; Civ64 SCENES-PLAY 7.19 reads the human civilization.",
     "$tribe_row": "Zero-based tribe menu row; civd NEWGAME.C:103-117 builds two groups of civ_total+1 rows.",
     "$tribe_split": "civ_total+1, the first second-group menu row; civd NEWGAME.C:114-117.",
+    "$tribe_rows": "2*(civ_total+1), both tribe menu groups; civd NEWGAME.C:103-110.",
     "$tax_rate": "DGROUP:DF0E[civ]; Civ64 SCENES-PLAY 7.20.",
     "$science_rate": "DGROUP:B210[civ]; Civ64 SCENES-PLAY 7.20.",
     "$luxury_rate": "Derived as 10 - tax - science; Civ64 SCENES-PLAY 7.20.",
@@ -1412,6 +1414,7 @@ def build_programs() -> dict:
             ("$players", 255),
             ("$tribe_row", 0),
             ("$tribe_split", 7),
+            ("$tribe_rows", 14),
         ),
     )
     add(
@@ -1424,6 +1427,7 @@ def build_programs() -> dict:
             ("$players", 127),
             ("$tribe_row", 0),
             ("$tribe_split", 6),
+            ("$tribe_rows", 12),
         ),
     )
     add(
@@ -1436,6 +1440,7 @@ def build_programs() -> dict:
             ("$players", 63),
             ("$tribe_row", 0),
             ("$tribe_split", 5),
+            ("$tribe_rows", 10),
         ),
     )
     add(
@@ -1448,6 +1453,7 @@ def build_programs() -> dict:
             ("$players", 31),
             ("$tribe_row", 0),
             ("$tribe_split", 4),
+            ("$tribe_rows", 8),
         ),
     )
     add(
@@ -1460,6 +1466,7 @@ def build_programs() -> dict:
             ("$players", 15),
             ("$tribe_row", 0),
             ("$tribe_split", 3),
+            ("$tribe_rows", 6),
         ),
     )
     add(
@@ -1467,18 +1474,6 @@ def build_programs() -> dict:
         _program(
             "tribe-next-row",
             [
-                {
-                    "id": "tribe-row-total",
-                    "op": "set",
-                    "var": "$buy_temp",
-                    "value": {"var": "$tribe_split"},
-                },
-                {
-                    "id": "tribe-row-double",
-                    "op": "multiply",
-                    "var": "$buy_temp",
-                    "value": 2,
-                },
                 {
                     "id": "tribe-row-advance",
                     "op": "add",
@@ -1491,7 +1486,7 @@ def build_programs() -> dict:
                     "condition": {
                         "op": "ge",
                         "left": {"var": "$tribe_row"},
-                        "right": {"var": "$buy_temp"},
+                        "right": {"var": "$tribe_rows"},
                     },
                     "then": [
                         {

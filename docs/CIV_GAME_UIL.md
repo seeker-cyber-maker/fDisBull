@@ -128,7 +128,7 @@ carries every field and its evidence; the important groups are:
 | `$players` | `u8` | DGROUP:6B8A `_players`; civd GLOBALS.C:17, NEWGAME.C:77 | source-bound mask written with each competition row |
 | `$rule_options` | `u8` | DGROUP:E3C4 `_rule_options`; civd GLOBALS.C:186, NEWGAME.C:82 | source-bound constant 15 at new game |
 | `$tribe`, `$human_civ` | `u8` | DGROUP:D7F4 `_civ_tribe_of`; DGROUP:D7EE `_civnow`; civd NEWGAME.C:113-117 | dynamic row mapping for both groups |
-| `$tribe_row`, `$tribe_split` | `u8` | zero-based menu row; `civ_total+1`; civd NEWGAME.C:103-117 | navigation state; split written by each competition row |
+| `$tribe_row`, `$tribe_split`, `$tribe_rows` | `u8` | zero-based row; `civ_total+1`; `2*(civ_total+1)`; civd NEWGAME.C:103-117 | navigation state; split/rows written by each competition row |
 | `$tax_rate`, `$science_rate`, `$luxury_rate` | `u8` | DGROUP:DF0E/B210 and `10-tax-science`; Civ64 SCENES-PLAY 7.20 | declared rates |
 | `$view_x`, `$view_y` | `u8` | DGROUP:D4CC/D75E; Civ64 SCENES-PLAY 3 | viewport projection |
 | `$selected_city` | `u8` | selector into DGROUP:70EC records | declared index |

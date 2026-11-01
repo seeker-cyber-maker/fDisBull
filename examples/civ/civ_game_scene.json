@@ -50,6 +50,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -218,6 +222,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -388,6 +396,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -556,6 +568,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -726,6 +742,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -894,6 +914,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -1064,6 +1088,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -1233,6 +1261,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -1401,6 +1433,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -1577,6 +1613,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -1751,6 +1791,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -1927,6 +1971,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -2101,6 +2149,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -2277,6 +2329,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -2416,6 +2472,12 @@
      "value": 7
     },
     {
+     "id": "choose-seven-civs-set-tribe_rows",
+     "op": "set",
+     "var": "$tribe_rows",
+     "value": 14
+    },
+    {
      "id": "choose-seven-civs-text",
      "op": "text",
      "resource": "choose-seven-civs-text"
@@ -2469,6 +2531,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -2609,6 +2675,12 @@
      "value": 6
     },
     {
+     "id": "choose-six-civs-set-tribe_rows",
+     "op": "set",
+     "var": "$tribe_rows",
+     "value": 12
+    },
+    {
      "id": "choose-six-civs-text",
      "op": "text",
      "resource": "choose-six-civs-text"
@@ -2662,6 +2734,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -2802,6 +2878,12 @@
      "value": 5
     },
     {
+     "id": "choose-five-civs-set-tribe_rows",
+     "op": "set",
+     "var": "$tribe_rows",
+     "value": 10
+    },
+    {
      "id": "choose-five-civs-text",
      "op": "text",
      "resource": "choose-five-civs-text"
@@ -2855,6 +2937,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -2995,6 +3081,12 @@
      "value": 4
     },
     {
+     "id": "choose-four-civs-set-tribe_rows",
+     "op": "set",
+     "var": "$tribe_rows",
+     "value": 8
+    },
+    {
      "id": "choose-four-civs-text",
      "op": "text",
      "resource": "choose-four-civs-text"
@@ -3048,6 +3140,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -3188,6 +3284,12 @@
      "value": 3
     },
     {
+     "id": "choose-three-civs-set-tribe_rows",
+     "op": "set",
+     "var": "$tribe_rows",
+     "value": 6
+    },
+    {
      "id": "choose-three-civs-text",
      "op": "text",
      "resource": "choose-three-civs-text"
@@ -3241,6 +3343,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -3351,20 +3457,6 @@
    },
    "body": [
     {
-     "id": "tribe-row-total",
-     "op": "set",
-     "var": "$buy_temp",
-     "value": {
-      "var": "$tribe_split"
-     }
-    },
-    {
-     "id": "tribe-row-double",
-     "op": "multiply",
-     "var": "$buy_temp",
-     "value": 2
-    },
-    {
      "id": "tribe-row-advance",
      "op": "add",
      "var": "$tribe_row",
@@ -3379,7 +3471,7 @@
        "var": "$tribe_row"
       },
       "right": {
-       "var": "$buy_temp"
+       "var": "$tribe_rows"
       }
      },
      "then": [
@@ -3446,6 +3538,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -3697,6 +3793,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -3866,6 +3966,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -4034,6 +4138,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -4234,6 +4342,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -4421,6 +4533,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -4601,6 +4717,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -4783,6 +4903,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -4963,6 +5087,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -5145,6 +5273,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -5325,6 +5457,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -5645,6 +5781,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -5954,6 +6094,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -6153,6 +6297,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -6339,6 +6487,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -6539,6 +6691,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -6732,6 +6888,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -6932,6 +7092,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -7114,6 +7278,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -7314,6 +7482,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -7512,6 +7684,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -7712,6 +7888,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -7910,6 +8090,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -8110,6 +8294,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -8308,6 +8496,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
@@ -8508,6 +8700,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -8707,6 +8903,10 @@
      "type": "u8",
      "initial": 5
     },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
+    },
     "$tax_rate": {
      "type": "u8",
      "initial": 0
@@ -8881,6 +9081,10 @@
     "$tribe_split": {
      "type": "u8",
      "initial": 5
+    },
+    "$tribe_rows": {
+     "type": "u8",
+     "initial": 10
     },
     "$tax_rate": {
      "type": "u8",
