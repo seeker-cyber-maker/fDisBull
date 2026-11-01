@@ -42,6 +42,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -206,6 +214,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -372,6 +388,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -536,6 +560,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -702,6 +734,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -866,6 +906,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -1032,6 +1080,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -1197,6 +1253,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -1361,6 +1425,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -1533,6 +1605,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -1703,6 +1783,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -1875,6 +1963,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -2045,6 +2141,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -2217,6 +2321,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -2348,6 +2460,18 @@
      "value": 255
     },
     {
+     "id": "choose-seven-civs-set-tribe_row",
+     "op": "set",
+     "var": "$tribe_row",
+     "value": 0
+    },
+    {
+     "id": "choose-seven-civs-set-tribe_split",
+     "op": "set",
+     "var": "$tribe_split",
+     "value": 7
+    },
+    {
      "id": "choose-seven-civs-text",
      "op": "text",
      "resource": "choose-seven-civs-text"
@@ -2393,6 +2517,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -2525,6 +2657,18 @@
      "value": 127
     },
     {
+     "id": "choose-six-civs-set-tribe_row",
+     "op": "set",
+     "var": "$tribe_row",
+     "value": 0
+    },
+    {
+     "id": "choose-six-civs-set-tribe_split",
+     "op": "set",
+     "var": "$tribe_split",
+     "value": 6
+    },
+    {
      "id": "choose-six-civs-text",
      "op": "text",
      "resource": "choose-six-civs-text"
@@ -2570,6 +2714,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -2702,6 +2854,18 @@
      "value": 63
     },
     {
+     "id": "choose-five-civs-set-tribe_row",
+     "op": "set",
+     "var": "$tribe_row",
+     "value": 0
+    },
+    {
+     "id": "choose-five-civs-set-tribe_split",
+     "op": "set",
+     "var": "$tribe_split",
+     "value": 5
+    },
+    {
      "id": "choose-five-civs-text",
      "op": "text",
      "resource": "choose-five-civs-text"
@@ -2747,6 +2911,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -2879,6 +3051,18 @@
      "value": 31
     },
     {
+     "id": "choose-four-civs-set-tribe_row",
+     "op": "set",
+     "var": "$tribe_row",
+     "value": 0
+    },
+    {
+     "id": "choose-four-civs-set-tribe_split",
+     "op": "set",
+     "var": "$tribe_split",
+     "value": 4
+    },
+    {
      "id": "choose-four-civs-text",
      "op": "text",
      "resource": "choose-four-civs-text"
@@ -2924,6 +3108,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -3056,13 +3248,25 @@
      "value": 15
     },
     {
+     "id": "choose-three-civs-set-tribe_row",
+     "op": "set",
+     "var": "$tribe_row",
+     "value": 0
+    },
+    {
+     "id": "choose-three-civs-set-tribe_split",
+     "op": "set",
+     "var": "$tribe_split",
+     "value": 3
+    },
+    {
      "id": "choose-three-civs-text",
      "op": "text",
      "resource": "choose-three-civs-text"
     }
    ]
   },
-  "choose-tribe-1": {
+  "tribe-next-row": {
    "format": "fdisbull-il-1",
    "role": "uil",
    "variables": {
@@ -3101,6 +3305,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -3208,38 +3420,62 @@
     }
    },
    "resources": {
-    "choose-tribe-1-text": {
+    "tribe-next-row-text": {
      "kind": "text",
-     "text": "First tribe row chosen: civnow = 1, civ_tribe_of[1] = 1; leader name."
+     "text": "Tribe menu row advanced and wrapped after both groups."
     }
    },
    "body": [
     {
-     "id": "choose-tribe-1-set-screen",
+     "id": "tribe-row-total",
      "op": "set",
-     "var": "$screen",
-     "value": 7
+     "var": "$buy_temp",
+     "value": {
+      "var": "$tribe_split"
+     }
     },
     {
-     "id": "choose-tribe-1-set-human_civ",
-     "op": "set",
-     "var": "$human_civ",
+     "id": "tribe-row-double",
+     "op": "multiply",
+     "var": "$buy_temp",
+     "value": 2
+    },
+    {
+     "id": "tribe-row-advance",
+     "op": "add",
+     "var": "$tribe_row",
      "value": 1
     },
     {
-     "id": "choose-tribe-1-set-tribe",
-     "op": "set",
-     "var": "$tribe",
-     "value": 1
+     "id": "tribe-row-wrap",
+     "op": "if",
+     "condition": {
+      "op": "ge",
+      "left": {
+       "var": "$tribe_row"
+      },
+      "right": {
+       "var": "$buy_temp"
+      }
+     },
+     "then": [
+      {
+       "id": "tribe-row-reset",
+       "op": "set",
+       "var": "$tribe_row",
+       "value": 0
+      }
+     ],
+     "else": []
     },
     {
-     "id": "choose-tribe-1-text",
+     "id": "tribe-row-text",
      "op": "text",
-     "resource": "choose-tribe-1-text"
+     "resource": "tribe-next-row-text"
     }
    ]
   },
-  "choose-tribe-9": {
+  "choose-tribe-row": {
    "format": "fdisbull-il-1",
    "role": "uil",
    "variables": {
@@ -3278,6 +3514,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -3385,34 +3629,103 @@
     }
    },
    "resources": {
-    "choose-tribe-9-text": {
+    "choose-tribe-row-text": {
      "kind": "text",
-     "text": "Second-group row 9 chosen: civnow = 1, civ_tribe_of[1] = 9; leader name."
+     "text": "Tribe row mapped to civnow and civ_tribe_of; leader name."
     }
    },
    "body": [
     {
-     "id": "choose-tribe-9-set-screen",
+     "id": "tribe-row-group",
+     "op": "if",
+     "condition": {
+      "op": "ge",
+      "left": {
+       "var": "$tribe_row"
+      },
+      "right": {
+       "var": "$tribe_split"
+      }
+     },
+     "then": [
+      {
+       "id": "tribe-row-second",
+       "op": "set",
+       "var": "$tribe",
+       "value": {
+        "var": "$tribe_row"
+       }
+      },
+      {
+       "id": "tribe-row-subtract",
+       "op": "subtract",
+       "var": "$tribe",
+       "value": {
+        "var": "$competition"
+       }
+      },
+      {
+       "id": "tribe-row-add-eight",
+       "op": "add",
+       "var": "$tribe",
+       "value": 8
+      }
+     ],
+     "else": [
+      {
+       "id": "tribe-row-first",
+       "op": "set",
+       "var": "$tribe",
+       "value": {
+        "var": "$tribe_row"
+       }
+      },
+      {
+       "id": "tribe-row-add-one",
+       "op": "add",
+       "var": "$tribe",
+       "value": 1
+      }
+     ]
+    },
+    {
+     "id": "tribe-row-slot",
+     "op": "set",
+     "var": "$human_civ",
+     "value": {
+      "var": "$tribe"
+     }
+    },
+    {
+     "id": "tribe-row-mask",
+     "op": "if",
+     "condition": {
+      "op": "ge",
+      "left": {
+       "var": "$human_civ"
+      },
+      "right": 9
+     },
+     "then": [
+      {
+       "id": "tribe-row-mask-eight",
+       "op": "subtract",
+       "var": "$human_civ",
+       "value": 8
+      }
+     ],
+     "else": []
+    },
+    {
+     "id": "choose-tribe-row-set-screen-screen",
      "op": "set",
      "var": "$screen",
      "value": 7
     },
     {
-     "id": "choose-tribe-9-set-human_civ",
-     "op": "set",
-     "var": "$human_civ",
-     "value": 1
-    },
-    {
-     "id": "choose-tribe-9-set-tribe",
-     "op": "set",
-     "var": "$tribe",
-     "value": 9
-    },
-    {
-     "id": "choose-tribe-9-text",
+     "id": "choose-tribe-row-text",
      "op": "text",
-     "resource": "choose-tribe-9-text"
+     "resource": "choose-tribe-row-text"
     }
    ]
   },
@@ -3455,6 +3768,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -3621,6 +3942,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -3785,6 +4114,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -3981,6 +4318,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -4164,6 +4509,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -4340,6 +4693,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -4518,6 +4879,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -4694,6 +5063,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -4872,6 +5249,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -5048,6 +5433,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -5364,6 +5757,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -5669,6 +6070,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -5864,6 +6273,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -6046,6 +6463,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -6242,6 +6667,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -6431,6 +6864,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -6627,6 +7068,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -6805,6 +7254,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -7001,6 +7458,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -7195,6 +7660,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -7391,6 +7864,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -7585,6 +8066,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -7781,6 +8270,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -7975,6 +8472,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -8171,6 +8676,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -8366,6 +8879,14 @@
      "type": "u8",
      "initial": 0
     },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
+    },
     "$treasury": {
      "type": "i32",
      "initial": 0
@@ -8536,6 +9057,14 @@
     "$human_civ": {
      "type": "u8",
      "initial": 0
+    },
+    "$tribe_row": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$tribe_split": {
+     "type": "u8",
+     "initial": 5
     },
     "$treasury": {
      "type": "i32",
@@ -9399,39 +9928,38 @@
     "tribe",
     "civilization"
    ],
-   "description": "Tribe choice; representative rows 1 and 9 are bound.",
+   "description": "Tribe choice; two groups of civ_total+1 rows are generated from the competition count.",
    "bindings": [],
    "context": "tribe"
   },
   {
-   "id": "tribe-row-1",
-   "label": "First tribe row",
+   "id": "tribe-next",
+   "label": "Next tribe row",
    "aliases": [
-    "first tribe",
-    "tribe row 1"
+    "next row",
+    "cycle"
    ],
-   "description": "Sets civnow = 1 and civ_tribe_of[1] = 1 for the representative first row.",
+   "description": "Advances the zero-based menu row and wraps after the second group; NEWGAME.C:103-117.",
    "bindings": [
     {
-     "verb": "activate",
-     "program": "choose-tribe-1"
+     "verb": "next",
+     "program": "tribe-next-row"
     }
    ],
    "context": "tribe"
   },
   {
-   "id": "tribe-row-9",
-   "label": "First second-group row",
+   "id": "tribe-choose",
+   "label": "Choose tribe row",
    "aliases": [
-    "second group",
-    "tribe 9",
-    "tribe row 9"
+    "choose",
+    "select"
    ],
-   "description": "Sets civnow = 1 and civ_tribe_of[1] = 9 for the first alternate-tribe row.",
+   "description": "Maps the current row to civnow and civ_tribe_of; NEWGAME.C:113-117.",
    "bindings": [
     {
-     "verb": "activate",
-     "program": "choose-tribe-9"
+     "verb": "choose",
+     "program": "choose-tribe-row"
     }
    ],
    "context": "tribe"

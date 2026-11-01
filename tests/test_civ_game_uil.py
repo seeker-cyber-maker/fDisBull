@@ -36,13 +36,21 @@ def _act(backend, verb, target):
     )
 
 
-def _to_world(backend):
+def _to_tribe(backend):
     for verb, target in (
         ("activate", "title-new"),
         ("activate", "birth-continue"),
         ("activate", "difficulty-prince"),
         ("activate", "competition-five"),
-        ("activate", "tribe-row-1"),
+    ):
+        assert _act(backend, verb, target)["status"] == "success", (verb, target)
+    assert backend.observe()["context"]["id"] == "tribe"
+
+
+def _to_world(backend):
+    _to_tribe(backend)
+    for verb, target in (
+        ("choose", "tribe-choose"),
         ("activate", "name-accept"),
         ("activate", "intro-begin"),
     ):
@@ -109,33 +117,39 @@ def test_competition_menu_binds_civ_total_and_players_mask():
         assert _act(backend, "activate", target)["status"] == "success"
         assert backend.state["$competition"] == civ_total
         assert backend.state["$players"] == players
+        assert backend.state["$tribe_split"] == civ_total + 1
         assert backend.observe()["context"]["id"] == "tribe"
 
 
 def test_first_tribe_row_binds_civnow_and_tribe():
     backend = ILSceneBackend(build_scene())
-    assert _act(backend, "activate", "title-new")["status"] == "success"
-    assert _act(backend, "activate", "birth-continue")["status"] == "success"
-    assert _act(backend, "activate", "difficulty-prince")["status"] == "success"
-    assert _act(backend, "activate", "competition-five")["status"] == "success"
-    assert backend.observe()["context"]["id"] == "tribe"
-    assert _act(backend, "activate", "tribe-row-1")["status"] == "success"
+    _to_tribe(backend)
+    assert backend.state["$tribe_row"] == 0
+    assert backend.state["$tribe_split"] == 5
+    assert _act(backend, "choose", "tribe-choose")["status"] == "success"
     assert backend.state["$human_civ"] == 1
     assert backend.state["$tribe"] == 1
     assert backend.observe()["context"]["id"] == "leader-name"
 
 
-def test_second_tribe_group_row_binds_alternate_tribe():
+def test_second_tribe_group_row_maps_to_first_slot():
     backend = ILSceneBackend(build_scene())
-    assert _act(backend, "activate", "title-new")["status"] == "success"
-    assert _act(backend, "activate", "birth-continue")["status"] == "success"
-    assert _act(backend, "activate", "difficulty-prince")["status"] == "success"
-    assert _act(backend, "activate", "competition-five")["status"] == "success"
-    assert backend.observe()["context"]["id"] == "tribe"
-    assert _act(backend, "activate", "tribe-row-9")["status"] == "success"
+    _to_tribe(backend)
+    for _ in range(5):
+        assert _act(backend, "next", "tribe-next")["status"] == "success"
+    assert backend.state["$tribe_row"] == 5
+    assert _act(backend, "choose", "tribe-choose")["status"] == "success"
     assert backend.state["$human_civ"] == 1
     assert backend.state["$tribe"] == 9
     assert backend.observe()["context"]["id"] == "leader-name"
+
+
+def test_tribe_row_advance_wraps_after_both_groups():
+    backend = ILSceneBackend(build_scene())
+    _to_tribe(backend)
+    for _ in range(10):
+        assert _act(backend, "next", "tribe-next")["status"] == "success"
+    assert backend.state["$tribe_row"] == 0
 
 
 def test_startup_flow_reaches_world_and_end_turn_advances_declared_state():

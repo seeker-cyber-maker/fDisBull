@@ -127,8 +127,8 @@ carries every field and its evidence; the important groups are:
 | `$competition` | `u8` | DGROUP:D2F4 `_civ_total`; civd GLOBALS.C:113, NEWGAME.C:73-76 | source-bound 6..2; five menu rows write the field |
 | `$players` | `u8` | DGROUP:6B8A `_players`; civd GLOBALS.C:17, NEWGAME.C:77 | source-bound mask written with each competition row |
 | `$rule_options` | `u8` | DGROUP:E3C4 `_rule_options`; civd GLOBALS.C:186, NEWGAME.C:82 | source-bound constant 15 at new game |
-| `$tribe` | `u8` | DGROUP:D7F4 `_civ_tribe_of`; civd NEWGAME.C:141 | representative rows 1 and 9 write 1 and 9; other rows declared |
-| `$human_civ` | `u8` | DGROUP:D7EE `_civnow`; civd NEWGAME.C:113-117; Civ64 SCENES-PLAY 7.19 | representative rows 1 and 9 write slot 1 |
+| `$tribe`, `$human_civ` | `u8` | DGROUP:D7F4 `_civ_tribe_of`; DGROUP:D7EE `_civnow`; civd NEWGAME.C:113-117 | dynamic row mapping for both groups |
+| `$tribe_row`, `$tribe_split` | `u8` | zero-based menu row; `civ_total+1`; civd NEWGAME.C:103-117 | navigation state; split written by each competition row |
 | `$treasury` | `i32` | DGROUP:B1D6[civ]; Civ64 SCENES-PLAY 5.2 | declared economy state |
 | `$tax_rate`, `$science_rate`, `$luxury_rate` | `u8` | DGROUP:DF0E/B210 and `10-tax-science`; Civ64 SCENES-PLAY 7.20 | declared rates |
 | `$view_x`, `$view_y` | `u8` | DGROUP:D4CC/D75E; Civ64 SCENES-PLAY 3 | viewport projection |
@@ -162,14 +162,15 @@ objects write both `$competition` and `$players` (0xFF, 0x7F, 0x3F, 0x1F,
 0x0F); `test_competition_menu_binds_civ_total_and_players_mask` checks each
 pair and the transition to `tribe`.
 
-Two representative tribe rows are bound. With `$competition = 4`, `NEWGAME.C`
-builds first-group rows 1..5 and second-group rows 9..13. Row 0 maps to
-`civnow = 1` and `civ_tribe_of[1] = 1`; row 5 (the first second-group row) maps
-to `civnow = 1` and `civ_tribe_of[1] = 9` after the `civnow & 7` and
-`civnow + 8` branch. The scene binds both as `$human_civ = 1` with
-`$tribe = 1` and `$tribe = 9`; the two tests check state and the transition to
-`leader-name`. The remaining rows depend on the competition count and are not
-modelled.
+The tribe menu is generated from the competition count. With
+`$competition = 4`, `NEWGAME.C` builds first-group rows 0..4 and second-group
+rows 5..9. `$tribe_split = civ_total + 1` marks the first second-group row.
+`tribe-next` advances and wraps `$tribe_row`; `tribe-choose` maps it exactly as
+`NEWGAME.C:113-117`: first-group row `r` sets `tribe = r + 1`, while
+second-group row `r` sets `tribe = r - competition + 8`; `human_civ` is that
+value with 8 subtracted when it reaches 9. Tests cover row 0, the first
+second-group row, the wrap, and the `civ_total + 1` split for every competition
+row.
 
 The city auto-build object binds `$auto_build` to `townbuf[city].status` bit
 `0x10` (record offset `0x06`). The action toggles the bit and reports the new
@@ -239,10 +240,10 @@ The Z-player test uses the committed scene, not an in-memory rebuild.
 
 Observed on this host with the active fDisBull 0.28.0 interpreter:
 
-- `tests/test_civ_game_uil.py`: **14 passed**
+- `tests/test_civ_game_uil.py`: **15 passed**
 - CIV-focused set (`game UIL`, `city UIL`, `atlas`, `city trace`, `city overlay`):
-  **45 passed**
-- full repository suite: **2,249 passed, 152 skipped, 2 failed, 23 errors**.
+  **46 passed**
+- full repository suite: **2,250 passed, 152 skipped, 2 failed, 23 errors**.
   The failures/errors are the existing Apple-toolchain Linux ELF fixture
   boundary (`/usr/bin/gcc` is Apple clang; missing `-z ibtplt` and Linux
   metadata), not this scene.
@@ -255,11 +256,11 @@ remain static. No DOS screen was run for this slice.
 - Partial scene graph and state projection, not a full simulation.
 - No DOS execution, VGA rendering, palette/font/asset loading or input decoding.
 - Difficulty and competition rows are bound to `cur_tier`, `civ_total` and
-  `players`; tribe rows 1 and 9 are representative bindings; city auto-build
+  `players`; tribe rows map dynamically for both groups; city auto-build
   toggles status bit `0x10`; unit-list navigation clamps over a representative
   3-unit garrison; buy computes unit and improvement rush prices and commits
-  shields. Other tribe rows and rename remain declared, and no action has a
-  live-screen observation.
+  shields. Rename remains declared, and no action has a live-screen
+  observation.
 - Unit-list navigation is cursor-only; select does not write army-record
   moves/status/goto. Buy uses representative cost/index/treasury reads; the
   disorder guard and real improvement/wonder names are absent. Sell, rename,
@@ -275,15 +276,13 @@ remain static. No DOS screen was run for this slice.
 
 ## Next probes
 
-1. Model the remaining competition-dependent tribe rows; rows 1 and 9 are now
-   representative bindings but the full dynamic menu is not generated.
-2. Replace the representative garrison, treasury, unit cost and improvement
+1. Replace the representative garrison, treasury, unit cost and improvement
    cost/index with live reads.
-3. Add a matched live-screen or DOSBox observation for one setup row so the
+2. Add a matched live-screen or DOSBox observation for one setup row so the
    source-bound scene claim can become bounded-observed.
-4. Use the atlas's caller graph to add one bounded transition not yet modeled,
+3. Use the atlas's caller graph to add one bounded transition not yet modeled,
    such as the production chooser returning through `_city_process` after a
    commit.
-5. Keep the scene at `partial: true` until a matching-edition backend supplies
+4. Keep the scene at `partial: true` until a matching-edition backend supplies
    a baseline, one controlled action and a committed state change bound to the
    same record.

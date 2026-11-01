@@ -78,6 +78,8 @@ VARIABLES = {
     "$rule_options": {"type": "u8", "initial": 15},
     "$tribe": {"type": "u8", "initial": 0},
     "$human_civ": {"type": "u8", "initial": 0},
+    "$tribe_row": {"type": "u8", "initial": 0},
+    "$tribe_split": {"type": "u8", "initial": 5},
     "$treasury": {"type": "i32", "initial": 0},
     "$tax_rate": {"type": "u8", "initial": 0},
     "$science_rate": {"type": "u8", "initial": 0},
@@ -114,8 +116,10 @@ STATE_EVIDENCE = {
     "$competition": "DGROUP:D2F4 `_civ_total`; civd GLOBALS.C:113 and NEWGAME.C:73-76 map menu rows 7..3 to 6..2, clamped 2..6.",
     "$players": "DGROUP:6B8A `_players`; civd GLOBALS.C:17 and NEWGAME.C:77 derive `255 >> (6 - civ_total)`; five competition rows write both fields.",
     "$rule_options": "DGROUP:E3C4 `_rule_options`; civd GLOBALS.C:186 and NEWGAME.C:82 set 15 at the start of a new game.",
-    "$tribe": "DGROUP:D7F4 `_civ_tribe_of`; civd NEWGAME.C:141 writes the selected tribe; one representative row is bound.",
-    "$human_civ": "DGROUP:D7EE `_civnow`; civd NEWGAME.C:113-117 selects the slot; Civ64 SCENES-PLAY 7.19 reads the human civilization.",
+    "$tribe": "DGROUP:D7F4 `_civ_tribe_of`; civd NEWGAME.C:113-117 maps the menu row to a tribe.",
+    "$human_civ": "DGROUP:D7EE `_civnow`; civd NEWGAME.C:113-117 masks second-group rows to slots 1..7; Civ64 SCENES-PLAY 7.19 reads the human civilization.",
+    "$tribe_row": "Zero-based tribe menu row; civd NEWGAME.C:103-117 builds two groups of civ_total+1 rows.",
+    "$tribe_split": "civ_total+1, the first second-group menu row; civd NEWGAME.C:114-117.",
     "$treasury": "DGROUP:B1D6[civ]; Civ64 SCENES-PLAY 5.2.",
     "$tax_rate": "DGROUP:DF0E[civ]; Civ64 SCENES-PLAY 7.20.",
     "$science_rate": "DGROUP:B210[civ]; Civ64 SCENES-PLAY 7.20.",
@@ -494,23 +498,23 @@ SCREEN_SPECS = [
                 "tribe-menu",
                 "Tribe menu",
                 ["tribe", "civilization"],
-                "Tribe choice; representative rows 1 and 9 are bound.",
+                "Tribe choice; two groups of civ_total+1 rows are generated from the competition count.",
             ),
             _object(
-                "tribe-row-1",
-                "First tribe row",
-                ["first tribe", "tribe row 1"],
-                "Sets civnow = 1 and civ_tribe_of[1] = 1 for the representative first row.",
-                "activate",
-                "choose-tribe-1",
+                "tribe-next",
+                "Next tribe row",
+                ["next row", "cycle"],
+                "Advances the zero-based menu row and wraps after the second group; NEWGAME.C:103-117.",
+                "next",
+                "tribe-next-row",
             ),
             _object(
-                "tribe-row-9",
-                "First second-group row",
-                ["second group", "tribe 9", "tribe row 9"],
-                "Sets civnow = 1 and civ_tribe_of[1] = 9 for the first alternate-tribe row.",
-                "activate",
-                "choose-tribe-9",
+                "tribe-choose",
+                "Choose tribe row",
+                ["choose", "select"],
+                "Maps the current row to civnow and civ_tribe_of; NEWGAME.C:113-117.",
+                "choose",
+                "choose-tribe-row",
             ),
         ],
     ),
@@ -1408,6 +1412,8 @@ def build_programs() -> dict:
             "7 Civilizations chosen: civ_total = 6, players = 0xFF; tribe question.",
             ("$competition", 6),
             ("$players", 255),
+            ("$tribe_row", 0),
+            ("$tribe_split", 7),
         ),
     )
     add(
@@ -1418,6 +1424,8 @@ def build_programs() -> dict:
             "6 Civilizations chosen: civ_total = 5, players = 0x7F; tribe question.",
             ("$competition", 5),
             ("$players", 127),
+            ("$tribe_row", 0),
+            ("$tribe_split", 6),
         ),
     )
     add(
@@ -1428,6 +1436,8 @@ def build_programs() -> dict:
             "5 Civilizations chosen: civ_total = 4, players = 0x3F; tribe question.",
             ("$competition", 4),
             ("$players", 63),
+            ("$tribe_row", 0),
+            ("$tribe_split", 5),
         ),
     )
     add(
@@ -1438,6 +1448,8 @@ def build_programs() -> dict:
             "4 Civilizations chosen: civ_total = 3, players = 0x1F; tribe question.",
             ("$competition", 3),
             ("$players", 31),
+            ("$tribe_row", 0),
+            ("$tribe_split", 4),
         ),
     )
     add(
@@ -1448,26 +1460,150 @@ def build_programs() -> dict:
             "3 Civilizations chosen: civ_total = 2, players = 0x0F; tribe question.",
             ("$competition", 2),
             ("$players", 15),
+            ("$tribe_row", 0),
+            ("$tribe_split", 3),
         ),
     )
     add(
-        "choose-tribe-1",
-        _transition(
-            "choose-tribe-1",
-            LEADER_NAME,
-            "First tribe row chosen: civnow = 1, civ_tribe_of[1] = 1; leader name.",
-            ("$human_civ", 1),
-            ("$tribe", 1),
+        "tribe-next-row",
+        _program(
+            "tribe-next-row",
+            [
+                {
+                    "id": "tribe-row-total",
+                    "op": "set",
+                    "var": "$buy_temp",
+                    "value": {"var": "$tribe_split"},
+                },
+                {
+                    "id": "tribe-row-double",
+                    "op": "multiply",
+                    "var": "$buy_temp",
+                    "value": 2,
+                },
+                {
+                    "id": "tribe-row-advance",
+                    "op": "add",
+                    "var": "$tribe_row",
+                    "value": 1,
+                },
+                {
+                    "id": "tribe-row-wrap",
+                    "op": "if",
+                    "condition": {
+                        "op": "ge",
+                        "left": {"var": "$tribe_row"},
+                        "right": {"var": "$buy_temp"},
+                    },
+                    "then": [
+                        {
+                            "id": "tribe-row-reset",
+                            "op": "set",
+                            "var": "$tribe_row",
+                            "value": 0,
+                        }
+                    ],
+                    "else": [],
+                },
+                {
+                    "id": "tribe-row-text",
+                    "op": "text",
+                    "resource": "tribe-next-row-text",
+                },
+            ],
+            {
+                "tribe-next-row-text": {
+                    "kind": "text",
+                    "text": "Tribe menu row advanced and wrapped after both groups.",
+                }
+            },
         ),
     )
     add(
-        "choose-tribe-9",
-        _transition(
-            "choose-tribe-9",
-            LEADER_NAME,
-            "Second-group row 9 chosen: civnow = 1, civ_tribe_of[1] = 9; leader name.",
-            ("$human_civ", 1),
-            ("$tribe", 9),
+        "choose-tribe-row",
+        _program(
+            "choose-tribe-row",
+            [
+                {
+                    "id": "tribe-row-group",
+                    "op": "if",
+                    "condition": {
+                        "op": "ge",
+                        "left": {"var": "$tribe_row"},
+                        "right": {"var": "$tribe_split"},
+                    },
+                    "then": [
+                        {
+                            "id": "tribe-row-second",
+                            "op": "set",
+                            "var": "$tribe",
+                            "value": {"var": "$tribe_row"},
+                        },
+                        {
+                            "id": "tribe-row-subtract",
+                            "op": "subtract",
+                            "var": "$tribe",
+                            "value": {"var": "$competition"},
+                        },
+                        {
+                            "id": "tribe-row-add-eight",
+                            "op": "add",
+                            "var": "$tribe",
+                            "value": 8,
+                        },
+                    ],
+                    "else": [
+                        {
+                            "id": "tribe-row-first",
+                            "op": "set",
+                            "var": "$tribe",
+                            "value": {"var": "$tribe_row"},
+                        },
+                        {
+                            "id": "tribe-row-add-one",
+                            "op": "add",
+                            "var": "$tribe",
+                            "value": 1,
+                        },
+                    ],
+                },
+                {
+                    "id": "tribe-row-slot",
+                    "op": "set",
+                    "var": "$human_civ",
+                    "value": {"var": "$tribe"},
+                },
+                {
+                    "id": "tribe-row-mask",
+                    "op": "if",
+                    "condition": {
+                        "op": "ge",
+                        "left": {"var": "$human_civ"},
+                        "right": 9,
+                    },
+                    "then": [
+                        {
+                            "id": "tribe-row-mask-eight",
+                            "op": "subtract",
+                            "var": "$human_civ",
+                            "value": 8,
+                        }
+                    ],
+                    "else": [],
+                },
+                _set_block("choose-tribe-row", "$screen", LEADER_NAME, "-screen"),
+                {
+                    "id": "choose-tribe-row-text",
+                    "op": "text",
+                    "resource": "choose-tribe-row-text",
+                },
+            ],
+            {
+                "choose-tribe-row-text": {
+                    "kind": "text",
+                    "text": "Tribe row mapped to civnow and civ_tribe_of; leader name.",
+                }
+            },
         ),
     )
     add(
@@ -2247,7 +2383,7 @@ def build_provenance(
         "limits": [
             "Partial scene graph and state projection, not a full game simulation.",
             "No DOS execution, VGA rendering, input decoding, AI, combat, technology, diplomacy, save parsing or economy model.",
-            "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; representative tribe rows 1 and 9 are bound; city auto-build toggles status bit 10h; unit-list next/previous clamp over a representative 3-unit garrison and select stores the cursor; city buy computes the source unit rush price from a representative unit cost and commits shields; an improvement branch doubles the clamped raw and again past index 21. No setup or city action has a live-screen observation.",
+            "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; tribe-menu row navigation maps both groups to civnow and civ_tribe_of; city auto-build toggles status bit 10h; unit-list next/previous clamp over a representative 3-unit garrison and select stores the cursor; city buy computes the source unit rush price from a representative unit cost and commits shields; an improvement branch doubles the clamped raw and again past index 21. No setup or city action has a live-screen observation.",
             "The game-over context is state-reachable for inspection; its trigger conditions are not modelled.",
             "Every screen boundary is resolved against a civd function; this is address resolution, not Windows-to-DOS byte equivalence.",
         ],
