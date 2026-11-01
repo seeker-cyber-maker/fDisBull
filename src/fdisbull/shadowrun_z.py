@@ -75,6 +75,12 @@ class ShadowrunRuntime:
         from .shadowrun_world import SOURCE_SHA256
         with self._lock:
             s = self.machine.snapshot()
+            arena = s.get('shadowrun_arena_profile') == 1
+            actor_x = s.get('shadowrun_target_x')
+            actor_y = s.get('shadowrun_target_y')
+            if arena and isinstance(actor_x, list) and len(actor_x) == 7 and isinstance(actor_y, list) and len(actor_y) == 7:
+                actor_x, actor_y = list(actor_x), list(actor_y)
+                actor_x[0], actor_y[0] = s.get('shadowrun_hostile_x'), s.get('shadowrun_hostile_y')
             return {'source_sha256': SOURCE_SHA256, 'scene_id': self.scene_id,
                     'revision': f'{self._epoch}:{self._revision}',
                     'player_x': s['shadowrun_player_x'], 'player_y': s['shadowrun_player_y'],
@@ -83,6 +89,12 @@ class ShadowrunRuntime:
                                s['shadowrun_y_min'], s['shadowrun_y_max']],
                     'terrain': bytes(s['shadowrun_terrain_map']),
                     'model_actor_hp': s.get('shadowrun_play_actor_hp'),
+                    'model_actor_x': actor_x, 'model_actor_y': actor_y,
+                    'model_actor_flags': s.get('shadowrun_target_flags'),
+                    'model_actor_status': s.get('shadowrun_ai_slot_status'),
+                    'actor_state_profile': ('constructed_arena' if arena else
+                                            'qualified_dynamic' if 'shadowrun_ai_slot_status' in s else 'captured'),
+                    'model_player_hp': s.get('shadowrun_arena_hp') if arena else None,
                     'captured_entities': [] if self.captured_entities is None else deepcopy(self.captured_entities['entities'])}
 
     def move(self, pad, frames=1):
@@ -98,20 +110,38 @@ class ShadowrunRuntime:
             candidate = deepcopy(self.machine)
             before = self.snapshot()
             executed = 0
+            arena = candidate.snapshot().get('shadowrun_arena_profile') == 1
+            if arena and candidate.snapshot().get('shadowrun_arena_frame_status') == 3:
+                return {'complete': True, 'status': 'terminal', 'frames_executed': 0,
+                        'reason': 'The player has been defeated; restart to play again.'}
+            boundary = False
+            terminal = False
             try:
                 for _ in range(frames):
-                    candidate.call('shadowrun_play_frame', pad)
+                    # Keep the last fully qualified arena frame atomically.
+                    next_candidate = deepcopy(candidate) if arena else candidate
+                    next_candidate.call('shadowrun_arena_frame' if arena else 'shadowrun_play_frame', pad)
+                    if arena and next_candidate.snapshot().get('shadowrun_arena_frame_status') == 2:
+                        boundary = True
+                        break
+                    candidate = next_candidate
                     executed += 1
+                    if arena and candidate.snapshot().get('shadowrun_arena_frame_status') == 3:
+                        terminal = True
+                        break
                     if candidate.snapshot()['shadowrun_opening_status'] in (2, 3, 4):
                         break
             except (ValueError, IndexError, KeyError) as exc:
                 return {'complete': False, 'status': 'unsupported', 'reason': str(exc)}
+            if not executed and boundary:
+                return {'complete': False, 'status': 'unsupported', 'frames_executed': 0,
+                        'reason': 'The assisted arena reached an unsupported model boundary.'}
             self.machine = candidate
             self._revision += 1
             status = candidate.snapshot()['shadowrun_opening_status']
             after = self.snapshot()
-            return {'complete': True, 'status': 'advanced', 'opening_status': status,
-                    'frames_executed': executed,
+            return {'complete': True, 'status': 'terminal' if terminal else 'advanced', 'opening_status': status,
+                    'frames_executed': executed, 'boundary_reached': boundary,
                     'action_refused': bool(candidate.snapshot().get('shadowrun_play_refused', 0)),
                     'position_changed': (before['player_x'], before['player_y']) != (after['player_x'], after['player_y']),
                     'revision': after['revision']}
@@ -189,7 +219,10 @@ class ShadowrunZBackend:
             inventory = inventory_view(model_state)
             selected = model_state.get('shadowrun_target_selected')
             target_state = ('none' if selected == 255 else 'selected' if type(selected) is int and 0 <= selected < 7 else 'unknown')
-            target_id = (f'shadowrun.capture.5999.actor.ff{0x400 + selected * 0x100:04x}'
+            target_id = (next((actor['id'] for actor in actors
+                               if actor.get('slot_address') == 0xff0400 + selected * 0x100
+                               and (state.get('actor_state_profile', 'captured') == 'captured' or
+                                    (actor.get('present') is True and actor.get('current_position') == 'shared model'))), None)
                          if target_state == 'selected' else None)
             combat = {'target_state': target_state, 'target_id': target_id,
                       'shot_pending': (None if 'shadowrun_play_shot_pending' not in model_state else
@@ -240,13 +273,17 @@ class ShadowrunZBackend:
             equipment_text = (f"\nInventory: {inventory['status']}; weapon {display(inventory['weapon'])}; "
                               f"armor code {display(inventory['armor'])}; ammunition {display(inventory['ammo'])} {inventory['ammo_units']}."
                               f" Target: {combat['target_id'] if combat['target_id'] else combat['target_state']}; shot pending: {display(combat['shot_pending'])}.")
+            if state.get('actor_state_profile') == 'constructed_arena':
+                equipment_text += f"\nAssisted source-constructed arena. Player HP: {display(state.get('model_player_hp'))}."
             return {'complete': True, 'session_token': self.runtime._epoch,
                     'context': {'id': city['scene_key'], 'title': f"Scene {state['scene_id']}",
-                                'description': render_region_text(state) + '\n\n' + render_city_text(state, radius_x=4, radius_y=3) + equipment_text + ('\nActor records (player position from current model; other positions from captured frame 5999; visibility unknown): ' + '; '.join(a['id'] + ' at ' + str(a['x']) + ',' + str(a['y']) + ' kind=' + str(a['kind']) + ' captured HP-byte=' + str(a['hp_byte_4c']) + ' current model HP=' + display(a['hp_current']) for a in actors) if actors else ''),
+                                'description': render_region_text(state) + '\n\n' + render_city_text(state, radius_x=4, radius_y=3) + equipment_text + ('\nActor records (position status and visibility are explicit): ' + '; '.join(a['id'] + ' at ' + display(a['x']) + ',' + display(a['y']) + ' kind=' + str(a.get('kind', 'unknown')) + ' position=' + a.get('current_position', 'unknown') + ' current HP=' + display(a['hp_current']) for a in actors) if actors else ''),
                                 'token': state['revision']},
-                    'objects': objects, 'inventory': items, 'inventory_state': inventory, 'combat_state': combat, 'captured_entities': actors,
+                    'objects': objects, 'inventory': items, 'inventory_state': inventory, 'combat_state': combat,
+                    'player_state': city['player'], 'actor_records': actors, 'captured_entities': actors,
                     'coverage': {'partial': True, 'visibility': 'unknown',
-                                 'profile': 'investigator', 'policy': self.policy}}
+                                 'profile': 'investigator', 'policy': self.policy,
+                                 'actor_state_profile': state.get('actor_state_profile', 'captured')}}
 
     def act(self, request):
         with self.runtime._lock:
@@ -284,12 +321,22 @@ class ShadowrunZBackend:
                 result = assisted_teleport(self.runtime, policy=self.policy,
                                           scene_id=self.runtime.scene_id, x=x, y=y,
                                           revision=obs['context']['token'], recenter=request['verb'] == 'teleport-recenter')
-            success = (result['status'] in ('advanced', 'placed') and
-                       not result.get('action_refused', False) and result.get('opening_status') not in (2, 3, 4))
+            success = ((result['status'] in ('advanced', 'placed') and
+                        not result.get('action_refused', False) and result.get('opening_status') not in (2, 3, 4))
+                       or (result['status'] == 'terminal' and result.get('frames_executed', 0) > 0))
             new = self.observe()
+            if result['status'] == 'terminal' and success:
+                message = 'The player was defeated; restart to play again.'
+            elif result['status'] == 'placed':
+                message = 'Assisted debug placement.'
+            elif success:
+                message = f"Model advanced {result.get('frames_executed', 1)} frame(s)."
+                if result.get('boundary_reached'):
+                    message += ' It then stopped at an unsupported model boundary.'
+            else:
+                message = result.get('reason', 'Action refused; a model frame advanced.')
             return {'complete': result['complete'], 'status': 'success' if success else 'rejected',
-                    'message': ('Assisted debug placement.' if result['status'] == 'placed' else
-                                ('Model frame advanced; movement was refused.' if result.get('opening_status') in (2, 3, 4) else f"Model advanced {result.get('frames_executed', 1)} frame(s).") if success else result.get('reason', 'Action refused; a model frame advanced.')),
+                    'message': message,
                     'detail': result,
                     'witness': {'session_token': self.runtime._epoch,
                                 'context_id': new['context']['id'], 'context_token': new['context']['token']}}

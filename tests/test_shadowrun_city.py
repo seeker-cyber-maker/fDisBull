@@ -201,6 +201,129 @@ def test_captured_player_uses_live_position_without_losing_capture():
     assert next(c for c in city['local_cells'] if c['contains_player'])['captured_entity_ids']==['player']
 
 
+def test_dynamic_actor_status_keeps_unknown_positions_and_health_unknown():
+    s = state(); s.update({'actor_state_profile': 'qualified_dynamic',
+        'model_actor_x': [6000, 7000, 8000, 0, 0, 0, 0],
+        'model_actor_y': [7000, 8000, 9000, 0, 0, 0, 0],
+        'model_actor_status': [1, 2, 0, 0, 0, 0, 0],
+        'model_actor_flags': [37, 37, 0, 0, 0, 0, 0], 'model_actor_hp': [9, 8, 0, 0, 0, 0, 0]})
+    s['captured_entities'] = [
+        {'id': f'npc{i}', 'slot_address': 0xff0400 + i * 0x100,
+         'x': 5000 + i, 'y': 6000 + i, 'kind': 11} for i in range(3)]
+    live, unknown, absent = project_city(s)['captured_entities']
+    assert (live['x'], live['y'], live['hp_current']) == (6000, 7000, 9)
+    assert live['captured_position'] == {'x': 5000, 'y': 6000}
+    assert (unknown['x'], unknown['y'], unknown['hp_current'], unknown['current_position']) == (None, None, None, 'unknown')
+    assert (absent['x'], absent['y'], absent['hp_current'], absent['present']) == (None, None, None, None)
+    assert unknown['inside_camera_rectangle'] is None
+    s['model_actor_flags'] = None
+    unverified = project_city(s)['captured_entities'][0]
+    assert (unverified['x'], unverified['y'], unverified['hp_current'], unverified['present']) == (None, None, None, None)
+
+
+def test_assisted_constructor_actor_replaces_prior_slot_occupant_without_ghosts():
+    s = state(); s.update({'actor_state_profile': 'constructed_arena', 'model_player_hp': 3,
+        'model_actor_x': [6000, 0, 0, 0, 0, 0, 0], 'model_actor_y': [7000, 0, 0, 0, 0, 0, 0],
+        'model_actor_flags': [5, 0, 0, 0, 0, 0, 0], 'model_actor_status': [0] * 7,
+        'model_actor_hp': [8, 0, 0, 0, 0, 0, 0]})
+    s['captured_entities'] = [
+        {'id': 'runner', 'slot_address': 0xff0100, 'x': 5000, 'y': 6000, 'kind': 3},
+        {'id': 'old-npc', 'slot_address': 0xff0400, 'x': 5001, 'y': 6001, 'kind': 11},
+        {'id': 'other-npc', 'slot_address': 0xff0500, 'x': 5002, 'y': 6002, 'kind': 11}]
+    city = project_city(s); player, hostile, old_other = city['captured_entities']
+    assert (player['hp_current'], city['player']['hp_current']) == (3, 3)
+    assert (hostile['id'], hostile['kind'], hostile['x'], hostile['y'], hostile['hp_current']) == (
+        'shadowrun.assisted.scene.02.actor.ff0400.kind08', 8, 6000, 7000, 8)
+    assert (hostile['captured_record_id'], hostile['captured_kind'], hostile['captured_position']) == (
+        'old-npc', 11, {'x': 5001, 'y': 6001})
+    assert hostile['source_position'] == {'x': 1960, 'y': 18176}
+    assert old_other['current_position'] == 'unknown' and old_other['present'] is None and old_other['x'] is None
+    assert old_other['current_position_reason'] == 'not simulated by the assisted arena profile'
+    s['scene_id'] = 1
+    with pytest.raises(ValueError, match='only in scene 2'):
+        project_city(s)
+
+
+def test_arena_advance_preserves_last_qualified_frame_on_partial_refusal(monkeypatch):
+    import hashlib
+    import fdisbull.shadowrun_city as city_module
+    import fdisbull.shadowrun_world as world_module
+    from fdisbull.shadowrun_z import ShadowrunRuntime
+
+    source = b'synthetic source for runtime contract'
+    identity = hashlib.sha256(source).hexdigest()
+    monkeypatch.setattr(world_module, 'SOURCE_SHA256', identity)
+    monkeypatch.setattr(city_module, 'SOURCE_SHA256', identity)
+
+    class Machine:
+        def __init__(self):
+            self.regions = {0: source}
+            self.values = {'shadowrun_arena_profile': 1, 'shadowrun_arena_frame_status': 0,
+                'shadowrun_player_x': 1600, 'shadowrun_player_y': 3200,
+                'shadowrun_camera_x': 0, 'shadowrun_camera_y': 0,
+                'shadowrun_x_min': 0, 'shadowrun_x_max': 2048, 'shadowrun_y_min': 0,
+                'shadowrun_y_max': 1408, 'shadowrun_terrain_map': [0] * 2816,
+                'shadowrun_opening_status': 0, 'shadowrun_play_refused': 0, 'frames': 0}
+
+        def snapshot(self):
+            return dict(self.values)
+
+        def call(self, name, pad):
+            assert name == 'shadowrun_arena_frame' and pad == 0
+            self.values['frames'] += 1
+            self.values['shadowrun_player_x'] += 16 if self.values['frames'] == 1 else 500
+            self.values['shadowrun_arena_frame_status'] = 1 if self.values['frames'] == 1 else 2
+
+    runtime = ShadowrunRuntime(Machine())
+    result = runtime.advance(0, 3)
+    assert (result['status'], result['frames_executed'], result['boundary_reached']) == ('advanced', 1, True)
+    before = runtime.snapshot()
+    assert before['player_x'] == 1616
+    refused = runtime.advance(0, 1)
+    assert refused['status'] == 'unsupported' and refused['frames_executed'] == 0
+    assert runtime.snapshot() == before
+
+    class DefeatedMachine(Machine):
+        def call(self, name, pad):
+            assert name == 'shadowrun_arena_frame' and pad == 0
+            self.values['frames'] += 1
+            self.values['shadowrun_arena_frame_status'] = 3
+            self.values['shadowrun_arena_hp'] = 0
+
+    terminal_runtime = ShadowrunRuntime(DefeatedMachine())
+    terminal = terminal_runtime.advance(0, 3)
+    assert (terminal['status'], terminal['frames_executed']) == ('terminal', 1)
+    assert terminal_runtime.snapshot()['model_player_hp'] == 0
+    again = terminal_runtime.advance(0, 3)
+    assert (again['status'], again['frames_executed']) == ('terminal', 0)
+
+
+def test_z_target_uses_constructed_actor_identity_not_prior_slot_record():
+    import threading
+    from fdisbull.shadowrun_z import ShadowrunZBackend
+
+    s = state(); s.update({'actor_state_profile': 'constructed_arena', 'model_player_hp': 10,
+        'model_actor_x': [6000, 0, 0, 0, 0, 0, 0], 'model_actor_y': [7000, 0, 0, 0, 0, 0, 0],
+        'model_actor_flags': [5, 0, 0, 0, 0, 0, 0], 'model_actor_status': [0] * 7,
+        'model_actor_hp': [10, 0, 0, 0, 0, 0, 0], 'captured_entities': []})
+
+    class Machine:
+        def snapshot(self):
+            return {'shadowrun_target_selected': 0}
+
+    class Runtime:
+        _lock = threading.RLock()
+        _epoch = 'test-session'
+        machine = Machine()
+
+        def snapshot(self):
+            return s
+
+    obs = ShadowrunZBackend(Runtime(), policy='assisted').observe()
+    assert obs['combat_state']['target_id'] == 'shadowrun.assisted.scene.02.actor.ff0400.kind08'
+    assert 'Assisted source-constructed arena' in obs['context']['description']
+
+
 def test_inventory_view_preserves_empty_unknown_and_equipment():
     from fdisbull.shadowrun_z import inventory_view
     assert inventory_view({})['status'] == 'unknown'

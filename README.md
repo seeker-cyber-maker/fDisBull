@@ -309,6 +309,12 @@ route matches sampled original player, target, ammo and HP effects; NPCs remain
 frozen and projectile handling is adapted. An assisted placement mode and a
 separate text and interactive city view support investigation of the large map.
 These are bounded prepared-state profiles, not a full Shadowrun conversion.
+The [Pac-Man-like actor stage](docs/SHADOWRUN_AI_EXPERIMENT.md) adds a separate
+assisted arena with source-derived actor movement, enemy target selection,
+burst fire, player damage and recovery. Original captures, the shared UIL model
+and native NES execution are compared separately. The test presets use a
+source-constructed armed actor; ordinary encounter reachability, unrestricted
+AI, original graphics/audio and normal-speed play remain unverified.
 The separate [Mario debugging study](docs/MARIO_MINUS_WORLD.md) reproduces the
 minus-world warp in the supplied cartridge and traces the incorrect table
 selection that produces it.

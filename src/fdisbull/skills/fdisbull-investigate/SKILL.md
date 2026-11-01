@@ -78,6 +78,25 @@ Keep independent binary, notes/source-assisted and documented-results-derived UD
 lanes explicit; generated code is not recovered source. Report bounded partial,
 unsupported, unknown and refused outcomes honestly.
 
+## Decide what to analyze next
+
+When the outcome is broad or the next useful question is unclear, read
+[references/analysis-approach.md](references/analysis-approach.md). Start with
+identity and a scoped topology/state inventory, then select a dependency that
+can change the requested outcome. A “Pac-Man-like” moving-actor/placed-item
+view can be a useful intermediate observation; it does not imply pickup,
+combat, NPC behavior or original-game reachability. Qualify interactions and
+Z/text projection as separate capabilities. Skip unrelated stages when the
+user asks a narrower question.
+
+| Next question | Read next |
+| --- | --- |
+| What should be investigated, and why now? | `references/analysis-approach.md` |
+| Which installed interface can answer it? | `references/workflows.md` |
+| Which observations and causal links justify it? | `references/methodology.md` |
+| Does an actor, item, action or text view preserve meaning? | `references/semantic-contracts.md` |
+| Which route, spatial policy or assisted intervention is supported? | `references/runtime-navigation.md` |
+
 ## Choose a useful probe
 
 For a genuine fork, record one active question, target/context, hypothesis,

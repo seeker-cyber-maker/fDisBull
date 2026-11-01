@@ -38,6 +38,7 @@ It reads no project and does not register or install a skill into an agent's
 own discovery directory. Fetch a single resource when needed:
 
 ```text
+fdisbull agent-skill --reference references/analysis-approach.md
 fdisbull agent-skill --reference references/workflows.md
 fdisbull agent-skill --reference references/scenes.md
 fdisbull agent-skill --reference references/runtime-navigation.md
@@ -65,6 +66,8 @@ request cannot keep a live emulator attached.
 The full skill may exceed the inline response budget and return an output
 artifact reference. Prefer the index and one selected guide for routine work;
 use the output retrieval commands below when a complete export is needed.
+The analysis-approach guide helps choose what to investigate next, including
+actor, item, interaction and text-projection dependencies.
 The semantic-contract guide connects intent, effects, time and projection loss;
 the formats/media guide covers input mapping and qualified media reduction.
 

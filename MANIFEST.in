@@ -13,6 +13,12 @@ include tests/ida_rpc_vectors.json
 include tests/rom_asm_sh2_vectors.json
 include src/fdisbull/ida_guest/SDK-LICENSE.txt
 recursive-include docs *.md
+include docs/evidence/shadowrun-ai-2026-11-01/source.json
+include docs/evidence/shadowrun-ai-2026-11-01/nes.json
+include docs/evidence/shadowrun-ai-2026-11-01/skill.json
+include docs/evidence/shadowrun-ai-2026-11-01/verification.json
+include docs/evidence/shadowrun-ai-2026-11-01/suite.json
+include docs/evidence/shadowrun-ai-2026-11-01/z.json
 include docs/CLOUD-0.27.0-MANIFEST.json
 prune docs/uil-rfcs/0001
 include docs/uil-rfcs/0001/README.md

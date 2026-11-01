@@ -19,6 +19,10 @@ def validate_snapshot(state):
     if not isinstance(state, dict) or state.get('source_sha256') != SOURCE_SHA256:
         raise ValueError('Snapshot source identity mismatch')
     _integer(state.get('scene_id'), 0, SCENE_COUNT - 1, 'scene ID')
+    if state.get('actor_state_profile', 'captured') not in ('captured', 'qualified_dynamic', 'constructed_arena'):
+        raise ValueError('Unknown actor state profile')
+    if state.get('actor_state_profile') == 'constructed_arena' and state['scene_id'] != 2:
+        raise ValueError('The assisted constructed arena is qualified only in scene 2')
     if not isinstance(state.get('revision'), str) or not state['revision']:
         raise ValueError('A current runtime revision is required')
     for name in ('player_x', 'player_y', 'camera_x', 'camera_y'):
@@ -65,7 +69,14 @@ def project_city(state, *, radius_x=8, radius_y=5):
                                 'cell_bounds': [rx, ex, ry, ey], 'visibility': 'unknown',
                                 'contains_player': rx <= cx < ex and ry <= cy < ey})
     actors = []
-    for actor in state.get('captured_entities', []):
+    records = list(state.get('captured_entities', []))
+    profile = state.get('actor_state_profile', 'captured')
+    if profile == 'constructed_arena' and not any(a.get('slot_address') == 0xff0400 for a in records):
+        records.append({'id': 'shadowrun.assisted.scene.02.actor.ff0400.kind08',
+                        'slot_address': 0xff0400, 'x': 1960, 'y': 18176, 'kind': 8,
+                        'kind_meaning': 'unknown', 'source': 'source-constructed assisted actor',
+                        'no_captured_record': True})
+    for actor in records:
         actor = dict(actor)
         actor['captured_position'] = {'x': actor['x'], 'y': actor['y']}
         actor['hp_current'] = None
@@ -78,33 +89,87 @@ def project_city(state, *, radius_x=8, radius_y=5):
             if type(value) is int and 0 <= value <= 255:
                 actor['hp_current'] = value
                 actor['hp_current_status'] = 'shared model'
+        if (profile in ('constructed_arena', 'qualified_dynamic') and type(address) is int and
+                0xff0400 <= address <= 0xff0a00 and (address - 0xff0400) % 0x100 == 0):
+            index = (address - 0xff0400) // 0x100
+            flags, status = state.get('model_actor_flags'), state.get('model_actor_status')
+            xs, ys = state.get('model_actor_x'), state.get('model_actor_y')
+            flags_known = isinstance(flags, list) and len(flags) == 7 and type(flags[index]) is int
+            live = (profile == 'constructed_arena' and index == 0) or (
+                profile == 'qualified_dynamic' and isinstance(status, list) and len(status) == 7 and
+                type(status[index]) is int and status[index] == 1)
+            # Zero flags in an unmodeled slot describe model coverage, not
+            # absence from the original scene.
+            present = bool(flags[index] & 1) if flags_known and live else None
+            actor['present'] = present
+            actor['presence_status'] = 'shared model' if present is not None else 'unknown'
+            if profile == 'constructed_arena' and index == 0:
+                if actor.pop('no_captured_record', False):
+                    actor['captured_position'] = None
+                else:
+                    actor['captured_record_id'] = actor['id']
+                    actor['captured_kind'] = actor.get('kind')
+                    actor['captured_hp_byte_4c'] = actor.pop('hp_byte_4c', None)
+                actor['id'] = 'shadowrun.assisted.scene.02.actor.ff0400.kind08'
+                actor['kind'] = 8
+                actor['kind_meaning'] = 'unknown'
+                actor['source'] = 'source-constructed actor, assisted relocation'
+                actor['source_position'] = {'x': 1960, 'y': 18176}
+                actor['source_hp_at_construction'] = 10
+            if present is not True or not live:
+                actor['hp_current'] = None
+                actor['hp_current_status'] = 'absent' if present is False else 'unknown'
+            if (present is True and live and isinstance(xs, list) and len(xs) == 7 and
+                    isinstance(ys, list) and len(ys) == 7 and type(xs[index]) is int and
+                    type(ys[index]) is int and 0 <= xs[index] <= 65535 and 0 <= ys[index] <= 65535):
+                actor['x'], actor['y'] = xs[index], ys[index]
+                actor['current_position'] = 'shared model'
+            else:
+                actor['x'], actor['y'] = None, None
+                actor['current_position'] = 'absent' if present is False else 'unknown'
+                if profile == 'constructed_arena' and index != 0:
+                    actor['current_position_reason'] = 'not simulated by the assisted arena profile'
+                elif profile == 'qualified_dynamic' and not live:
+                    actor['current_position_reason'] = 'actor behavior is not currently qualified'
         if actor.get('slot_address') == 0xff0100:
             actor['x'], actor['y'] = state['player_x'], state['player_y']
             actor['current_position'] = 'shared model'
-        ax, ay = actor['x'] >> 4, actor['y'] >> 4
-        actor['inside_camera_rectangle'] = (state['camera_x'] >> 4 <= ax < (state['camera_x'] >> 4) + 256 and
-                                            state['camera_y'] >> 4 <= ay < (state['camera_y'] >> 4) + 224)
+            player_hp = state.get('model_player_hp')
+            if type(player_hp) is int and 0 <= player_hp <= 255:
+                actor['hp_current'], actor['hp_current_status'] = player_hp, 'shared model'
+        if actor['x'] is None or actor['y'] is None:
+            actor['inside_camera_rectangle'] = None
+        else:
+            ax, ay = actor['x'] >> 4, actor['y'] >> 4
+            actor['inside_camera_rectangle'] = (state['camera_x'] >> 4 <= ax < (state['camera_x'] >> 4) + 256 and
+                                                state['camera_y'] >> 4 <= ay < (state['camera_y'] >> 4) + 224)
         actor['visibility'] = 'unknown'
         actors.append(actor)
     cells = []
     for y in range(max(0, cy - radius_y), min(HEIGHT, cy + radius_y + 1)):
         for x in range(max(0, cx - radius_x), min(WIDTH, cx + radius_x + 1)):
+            entity_ids = [a['id'] for a in actors if a['x'] is not None and a['y'] is not None
+                          and a['x'] >> 9 == x and a['y'] >> 9 == y]
             cells.append({'id': _cell_id(scene, x, y), 'x': x, 'y': y,
                           'terrain_code': state['terrain'][y * WIDTH + x],
                           'visibility': 'unknown', 'walkability': 'unknown',
                           'contains_player': x == cx and y == cy,
-                          'captured_entity_ids': [a['id'] for a in actors if a['x'] >> 9 == x and a['y'] >> 9 == y]})
+                          'entity_ids': entity_ids, 'captured_entity_ids': list(entity_ids),
+                          'entity_id_basis': 'projected records; inspect each position status'})
     return {'format': 'fdisbull-shadowrun-city-1', 'source_sha256': SOURCE_SHA256,
             'scene_id': scene, 'scene_key': f'shadowrun.scene.{scene:02d}',
             'revision': state['revision'], 'observation_profile': 'investigator',
             'units': {'position': '1/16 source pixel', 'bounds': 'source pixels',
                       'cell': '32 by 32 source pixels'},
-            'player': {'x': state['player_x'], 'y': state['player_y'], 'cell': [cx, cy]},
+            'player': {'x': state['player_x'], 'y': state['player_y'], 'cell': [cx, cy],
+                       'hp_current': state.get('model_player_hp') if type(state.get('model_player_hp')) is int
+                       and 0 <= state['model_player_hp'] <= 255 else None},
             'camera': {'x': state['camera_x'], 'y': state['camera_y'],
                        'graphics_coverage': 'unknown'},
             'field_bounds': list(state['bounds']), 'terrain_grid': [WIDTH, HEIGHT],
-            'regions': regions, 'local_cells': cells, 'captured_entities': actors,
-            'coverage': {'terrain': 'captured runtime map', 'visibility': 'unknown',
+            'regions': regions, 'local_cells': cells, 'actor_records': actors,
+            'captured_entities': actors,  # Legacy key; records carry individual provenance.
+            'coverage': {'terrain': 'captured runtime map', 'actor_state_profile': profile, 'visibility': 'unknown',
                          'cross_scene_connections': 'unknown', 'graphics': 'unknown',
                          'walkability': 'unknown', 'partial': True}}
 

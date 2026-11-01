@@ -23,8 +23,8 @@ def render_html(state):
     return _HTML.replace('__CITY_DATA__', packed)
 
 
-def export_city(rom_path, *, snapshot, output):
-    runtime = open_runtime(rom_path, snapshot=snapshot)
+def export_city(rom_path, *, snapshot, output, profile='static', preset='stationary'):
+    runtime = open_runtime(rom_path, snapshot=snapshot, profile=profile, preset=preset)
     state = runtime.snapshot()
     city = project_city(state)
     identity, _, _ = _source_capture(snapshot, state['source_sha256'])
@@ -53,9 +53,18 @@ def export_city(rom_path, *, snapshot, output):
     return result
 
 
-def open_runtime(rom_path, *, snapshot):
+def open_runtime(rom_path, *, snapshot, profile='static', preset='stationary'):
+    if profile not in ('static', 'assisted-arena') or preset not in ('stationary', 'moving'):
+        raise ValueError('unknown Shadowrun runtime profile or preset')
+    if profile == 'static' and preset != 'stationary':
+        raise ValueError('moving preset requires the assisted-arena profile')
     rom = _read_rom(rom_path)
-    return ShadowrunRuntime(machine_from_capture(rom, snapshot),
+    if profile == 'assisted-arena':
+        from .shadowrun_assisted_arena import assisted_arena_from_capture
+        machine = assisted_arena_from_capture(rom, snapshot, moving=(preset == 'moving'))
+    else:
+        machine = machine_from_capture(rom, snapshot)
+    return ShadowrunRuntime(machine,
                             captured_entities=captured_entities(rom, snapshot))
 
 
@@ -76,7 +85,7 @@ table{border-collapse:collapse;width:100%;font-size:14px}td,th{padding:9px;borde
 </style>
 <h1>Shadowrun · city and tactical index</h1>
 <p id="context"></p>
-<p>This investigator snapshot keeps the city grid, exact positions and captured actors together.
+<p>This investigator snapshot keeps the city grid, exact positions and actor records together.
 Terrain colors distinguish source byte categories. Visibility and walkability remain unknown.
 Selecting a cell shows its bounds and occupants; it does not choose a movement or teleport destination.</p>
 <div class="tools"><label>Zoom <input id="zoom" type="range" min="10" max="40" value="16"></label>
@@ -85,8 +94,8 @@ Selecting a cell shows its bounds and occupants; it does not choose a movement o
 <button id="focus">Focus runner</button></div>
 <div class="legend" id="legend"></div><div class="map" id="map"><canvas id="canvas"></canvas></div>
 <div id="selection">Select a cell to inspect its exact interval.</div>
-<h2>Actors and observation layers</h2><p>The runner uses the shared model's current position. Other actor positions and health bytes come from the recorded capture; their current positions, AI and line of sight remain unknown. This viewer is a passive snapshot.</p>
-<table><thead><tr><th>Stable ID</th><th>Kind</th><th>Exact source pixels</th><th>Observed health byte</th><th>Visibility</th></tr></thead><tbody id="entities"></tbody></table>
+<h2>Actors and observation layers</h2><p>Positions and health use the shared model where qualified. A recorded position may describe an earlier slot occupant; unmodeled current positions and visibility remain unknown. This viewer is a passive snapshot.</p>
+<table><thead><tr><th>Stable ID</th><th>Kind</th><th>Exact source pixels</th><th>Current health</th><th>Visibility</th></tr></thead><tbody id="entities"></tbody></table>
 <p><small id="identity"></small></p>
 <script id="data" type="application/json">__CITY_DATA__</script>
 <script>
@@ -99,18 +108,18 @@ const text=(id,value)=>document.getElementById(id).textContent=value;
 text('context',`Scene ${city.scene_id} · ${W} × ${H} cells · each cell 32 × 32 source pixels · Y increases downward`);
 text('identity',`Source ${city.source_sha256} · snapshot revision ${city.revision}`);
 for(let i=0;i<labels.length;i++){const item=document.createElement('span'),s=document.createElement('span');s.className='swatch';s.style.background=colors[i];item.append(s,document.createTextNode(labels[i]));document.getElementById('legend').append(item);}
-for(const a of city.captured_entities){const tr=document.createElement('tr');for(const value of [a.id,a.kind,`${a.x/16}, ${a.y/16}`,a.hp_byte_4c,'unknown']){const td=document.createElement('td');td.textContent=String(value);tr.append(td);}document.getElementById('entities').append(tr);}
+for(const a of city.captured_entities){const tr=document.createElement('tr'),position=a.x===null||a.y===null?'unknown':`${a.x/16}, ${a.y/16}`;for(const value of [a.id,a.kind,position,a.hp_current??'unknown','unknown']){const td=document.createElement('td');td.textContent=String(value);tr.append(td);}document.getElementById('entities').append(tr);}
 function draw(){const s=Number(document.getElementById('zoom').value);canvas.width=W*s;canvas.height=H*s;
  for(let y=0;y<H;y++)for(let x=0;x<W;x++){ctx.fillStyle=colors[city.terrain_symbols[y*W+x]];ctx.fillRect(x*s,y*s,s,s);}
  ctx.strokeStyle='#ffffff60';ctx.lineWidth=1;if(document.getElementById('regions').checked){for(let x=0;x<=W;x+=8){ctx.beginPath();ctx.moveTo(x*s,0);ctx.lineTo(x*s,H*s);ctx.stroke();}for(let y=0;y<=H;y+=8){ctx.beginPath();ctx.moveTo(0,y*s);ctx.lineTo(W*s,y*s);ctx.stroke();}}
- if(document.getElementById('actors').checked)for(const a of city.captured_entities){ctx.beginPath();ctx.fillStyle='#f4c55a';ctx.arc(a.x/512*s,a.y/512*s,Math.max(3,s*.2),0,Math.PI*2);ctx.fill();}
+ if(document.getElementById('actors').checked)for(const a of city.captured_entities){if(a.x===null||a.y===null)continue;ctx.beginPath();ctx.fillStyle='#f4c55a';ctx.arc(a.x/512*s,a.y/512*s,Math.max(3,s*.2),0,Math.PI*2);ctx.fill();}
  ctx.fillStyle='#ff7070';ctx.beginPath();ctx.arc(city.player.x/512*s,city.player.y/512*s,Math.max(4,s*.24),0,Math.PI*2);ctx.fill();
  ctx.strokeStyle='#e3f1ff';ctx.lineWidth=2;ctx.strokeRect(city.camera.x/512*s,city.camera.y/512*s,256/32*s,224/32*s);
 }
 for(const id of ['zoom','regions','actors'])document.getElementById(id).addEventListener('input',draw);
 document.getElementById('focus').addEventListener('click',()=>{const s=Number(document.getElementById('zoom').value),map=document.getElementById('map');map.scrollTo({left:city.player.x/512*s-map.clientWidth/2,top:city.player.y/512*s-map.clientHeight/2,behavior:'smooth'});});
 canvas.addEventListener('click',event=>{const r=canvas.getBoundingClientRect(),s=Number(document.getElementById('zoom').value),x=Math.floor((event.clientX-r.left)/s),y=Math.floor((event.clientY-r.top)/s);if(x<0||x>=W||y<0||y>=H)return;
- const actors=city.captured_entities.filter(a=>(a.x>>9)===x&&(a.y>>9)===y).map(a=>a.id);
- text('selection',`Cell (${x}, ${y}) · raw code ${city.terrain_codes[y*W+x]}\nSource-pixel bounds: X [${x*32}, ${(x+1)*32}), Y [${y*32}, ${(y+1)*32})\nFixed-point bounds: X [${x*512}, ${(x+1)*512}), Y [${y*512}, ${(y+1)*512})\nCaptured actors: ${actors.join(', ')||'none recorded in this cell'}\nNo execution coordinate has been selected. Visibility and walkability are unknown.`);
+ const actors=city.captured_entities.filter(a=>a.x!==null&&a.y!==null&&(a.x>>9)===x&&(a.y>>9)===y).map(a=>a.id);
+ text('selection',`Cell (${x}, ${y}) · raw code ${city.terrain_codes[y*W+x]}\nSource-pixel bounds: X [${x*32}, ${(x+1)*32}), Y [${y*32}, ${(y+1)*32})\nFixed-point bounds: X [${x*512}, ${(x+1)*512}), Y [${y*512}, ${(y+1)*512})\nActor records: ${actors.join(', ')||'none recorded in this cell'}\nNo execution coordinate has been selected. Visibility and walkability are unknown.`);
 });draw();
 </script></html>'''

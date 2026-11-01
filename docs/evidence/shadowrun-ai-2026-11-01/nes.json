@@ -1,0 +1,128 @@
+{
+  "format": "fdisbull-shadowrun-ai-nes-1",
+  "status": "bounded_native_comparisons_passed",
+  "source_rom_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "shared_program_sha256": "bed27370cb4625331b9c2de870a48acfff8f4c91d5630d24d2d1c8874fcf7227",
+  "fceumm_core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+  "genesis_core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+  "toolchain_sha256": {
+    "cc65": "f23e2fb0af1061ceeac7fb7e12e577e6d8c5dd9986b5506bbeccadae1a89f559",
+    "ca65": "c690abcad36611fb66c7368ad6bd5a8462bcba683ab03b2e9023d6792ed645c7",
+    "ld65": "6fc158543f86712729d160d5c951cbf2e3b31c05ea94df15a3164e8c8bd61c68",
+    "od65": "08b7168660b527289fd72a647c5c8b4c15e69b102d8044a5dc4aabc474a816",
+    "cl65": "00530a81fb76e3a9ce992fd2c678790957f2870a3f234db9324cd25a9c09766a",
+    "nes_lib": "b9bf755f5d0a487e7b8b1a9e869b3f8a57652aff83df42d85c99af579248a70d"
+  },
+  "moving_preset": {
+    "nes_sha256": "e615b9aa9ffe74d2b75d2ec5a4947e52058a9eb211b62dc60f3aecdf348cb0a8",
+    "setup": "Source-constructed hostile relocated to captured scene with initial cooldown 2; assisted setup. Other captured actors remain in the original run, while the target does not simulate them; their absence is not asserted.",
+    "original_vs_model": {
+      "dense_frames": 101,
+      "first_frame": 6000,
+      "last_frame": 6100,
+      "later_checkpoints": [
+        6110,
+        6119
+      ],
+      "comparison_sha256": "a1d5126a08a3fc55bde67a1b1bedc5666d7b08af79786d38d339ac9b5c1f9c6f"
+    },
+    "model_vs_fceumm": {
+      "logical_ticks": 124,
+      "attempted_stop_tick": 125,
+      "unsupported_tick_published": false,
+      "first_physical_frame": 85,
+      "last_physical_frame": 726,
+      "comparison_sha256": "d17c9a4a56cc15ae2d3dbf4b5c3b41c8a5e7b7f7cd78d08623b773d8ea1c34d3",
+      "native_receipt_sha256": "d6c7d652cbdd88be81bd0d004de676f2429bf15ae869e1fa1830e9c38dfa831b",
+      "native_trace_sha256": "0841ae9fe25d16b409f5b8e08daa1bfcb40a014af085f61189aa1e29a2eb60cb"
+    },
+    "stop": "Explicit unsupported source service at model frame 6124; no general AI or natural encounter claim."
+  },
+  "stationary_preset": {
+    "nes_sha256": "be99441ad8d7afce009ccb816af16077767a7ddc5e1675e3aae1fe97f91ab608",
+    "original_vs_model": {
+      "dense_frames": 61,
+      "later_checkpoints": [
+        6070,
+        6079
+      ],
+      "dense_comparison_sha256": "e0f02a18638a56d7fbb9d456540598cf04b06ce0c0e1ee3d4a40d703b3dc8405",
+      "terminal_run_checkpoint_count": 43,
+      "terminal_run_comparison_sha256": "5168009020440274a583801624671602dae23592ded77263a854d7171aa6d9ff",
+      "held_a_checkpoints": 15,
+      "held_a_comparison_sha256": "bd5d175a9f6775322513c7f781fc904d8f579f87a9ae5b30e3a44a9fcc0c8582"
+    },
+    "model_vs_fceumm": {
+      "logical_ticks": 243,
+      "first_physical_frame": 91,
+      "last_physical_frame": 953,
+      "comparison_sha256": "4fa083155b69d9a5742f0b5d239d907116c939d422cb553628cb9ed9d067075b",
+      "native_receipt_sha256": "0bdf5a31dd43febf0d26850eb51910fb2b375219861bea37335a1decbd91cf3f",
+      "native_trace_sha256": "6b5d3ec215ad3f599c580b91b2ab14657105295aac7094301279a804d464ad77"
+    },
+    "held_a_model_vs_fceumm": {
+      "logical_ticks": 165,
+      "attempted_stop_tick": 166,
+      "unsupported_tick_published": false,
+      "first_physical_frame": 91,
+      "last_physical_frame": 715,
+      "comparison_sha256": "6ec0c834e46fb1cf797360ea3fa6028869cde0c2b5fcd0a865baa56a60274eab",
+      "native_receipt_sha256": "a2ea054666a3cf56d79a0207c6eeb69b16c1f168e74bdfc1a6ce41654d8ce3a7",
+      "native_trace_sha256": "1441d3f239594ae600b4b9f4fa1e9f0f7fac3f9f57046081032afb4d56f179f7",
+      "scope": "Held-A return-fire route through an explicit unsupported stop."
+    },
+    "terminal": {
+      "source_frame": 6242,
+      "hp": 0,
+      "rng": 2258,
+      "target_status": 3,
+      "scope": "Stops at source-confirmed damage boundary; original death continuation is not modeled."
+    },
+    "start_restart": {
+      "terminal_observed_physical_frame": 959,
+      "fresh_first_tick_physical_frame": 1050,
+      "comparison_sha256": "cd122d3be2d813acbcc2fc9accf8a0f0ff9d8d8d2b1ee60ae358f897e4e609b7",
+      "native_receipt_sha256": "16d899ae81ed59c9a3ded14622232dcf3e584582b415ef7c480afc09560b9a72",
+      "scope": "target-authored START reset after terminal HP0; original death scene excluded"
+    }
+  },
+  "reader_timing_experiment": {
+    "equal_logical_ticks": 112,
+    "before": {
+      "first_physical_frame": 104,
+      "last_physical_frame": 798,
+      "program_sha256": "9f06e4c6f6d201799e6b86151ef5841f04c99e0f6fa041d7825e8a0c4a70823d",
+      "comparison_sha256": "57bec4077c5c034477fd1dcf704e2cb93f83d451ef0046afba5897819d4ad169"
+    },
+    "after": {
+      "first_physical_frame": 91,
+      "last_physical_frame": 511,
+      "program_sha256": "53a24ee7c415ed892a1e1c9a8e1b251695aa440c83b698d68cb188c08119714a",
+      "comparison_sha256": "aa53b8bae71c5f574738cda9293a8c7a7387e0326014ec36bdc8245798e5bb23"
+    },
+    "scope": "Equal completed logical counts on two intermediate program versions; the program changed, so this is not an isolated causal performance measurement."
+  },
+  "limits": [
+    "The encounter is assisted and does not demonstrate natural scene reachability.",
+    "Movement, targeting, firing, collision, actor services and input combinations are bounded to recovered branches; unsupported transitions stop.",
+    "The moving preset has an explicit stop at frame 6124 and does not establish complete enemy AI.",
+    "Enemy movement and combat do not demonstrate general NPC behavior or autonomous item placement.",
+    "Original death, story and scene transitions remain unknown.",
+    "The symbolic city presentation does not claim original pixels.",
+    "Logical ticks take multiple physical frames; no real-time timing parity is claimed.",
+    "Original game bytes, emulator states and source-derived assets remain private."
+  ],
+  "refusal_regression": {
+    "z_refused_transactions": [
+      "unequipped",
+      "empty_ammo",
+      "unsupported_targeting"
+    ],
+    "valid_shot_ammo": [
+      12,
+      11
+    ],
+    "comparison_sha256": "5f70327a224eca6f5610cf6863c3182e57a921e294756c8fd484dd4f039420c9",
+    "native_boundary": "The last completed publication and epoch remain unchanged; refusal is latched and the interrupted internal frame is unqualified."
+  }
+}

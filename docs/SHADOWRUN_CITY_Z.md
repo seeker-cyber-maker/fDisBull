@@ -49,9 +49,16 @@ health consumer is at `$55a62..$55a9e`; the DTO labels the observed byte
 The four captured bit-0 records are retained separately, including their raw
 kind, flags and exact coordinates. Kind 11 remains uninterpreted. Captured slot
 IDs describe this capture, not a persistent identity through scene changes.
-They are not updated by simulated AI. The local view retains all captured IDs
-in a cell, even when several stack. `inside_camera_rectangle` is geometry only;
-visibility and current NPC positions remain unknown, including outside it.
+The original captured position stays historical. Where a qualified dynamic
+model reports status 1, the view separately uses its current coordinates;
+unsupported or absent slots do not produce a current map marker. The local
+view retains all known IDs in a cell, even when several stack.
+`inside_camera_rectangle` is geometry only; visibility remains unknown.
+The `actor_records` field names the mixed current/historical projection;
+`captured_entities` is retained as a legacy alias and each record carries its
+own provenance and current-position status. Local cell `entity_ids` follows
+the same projection; `captured_entity_ids` is its legacy alias, not a claim
+that a source-constructed actor appeared in the original capture.
 The player's current model position and captured starting position are separate.
 
 Debug placement is implemented by the authored `shadowrun_debug_place` GameIL
@@ -78,8 +85,12 @@ controls do not extend the underlying NES composition's supported domain.
 
 When the model exposes `shadowrun_play_actor_hp`, NPC records also carry a
 separate current model HP value; the originally captured HP byte is retained as
-historical evidence. Missing HP state stays unknown. Player HP remains unknown
-in this projection. NPC position and AI remain capture-bound/unsupported.
+historical evidence. Missing or unsupported current HP stays unknown. In the
+separate assisted arena profile, player HP and the source-constructed kind-8
+actor's current coordinates and HP come from the same shared model. The former
+kind-11 occupant of slot `$ff0400` remains a historical captured record, not
+the identity of the constructed actor. This does not establish natural
+encounter reachability, general NPC AI or whole-game parity.
 The `wait` controls advance 1, 10, 30 or 60 model frames with no buttons held,
 and report the number actually executed. This lets a pending bounded action
 progress without treating a long action as a single input press.
