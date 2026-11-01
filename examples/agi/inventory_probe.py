@@ -198,8 +198,13 @@ class PickupProbe:
         require(self._binding() == self.proof['inventory_binding'], 'Inventory binding changed')
         ip = int(regs['instruction_pointer'], 16)
         cursor = self.item_offset+2
+        # Retain each returned byte before a later read or writer check can
+        # fail. These raw stage observations do not qualify known effects.
+        observed = self.proof['last_observed'] = {'stage': stage}
         score = read(o.d, o.ds+12, 1)[0]
+        observed['score'] = score
         item = read(o.d, self.location, 1)[0]
+        observed['item_location'] = item
         effects = self.proof['known_effects']
         if stage == 'return':
             ss, bp, prior_code = self.item_frame

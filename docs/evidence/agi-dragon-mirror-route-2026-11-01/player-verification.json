@@ -1,0 +1,72 @@
+{
+  "format": "fdisbull-independent-export-player-gate-1",
+  "complete": true,
+  "scope": "Closed fresh Native07 independently rebuilt as a partial authored scene; installed direct and separate content-process player, with in-memory checkpoints only.",
+  "capture_sha256": "2af06b3630806fa1c967740444eaf2f4a69b79ef870506815caae6417051b35f",
+  "builder_sha256": "45c66014cff3260aaacc26b7b4d0fa2c0dc746b9ccdf03cc693b6da5e966c084",
+  "scene_sha256": "18a45ccfe80c37999a0be6eb18e823aaf97e132e6dab31bc965743920950dd61",
+  "provenance_sha256": "92d949e8313bcb19e42e581070a8ad2c2d149bdac067c587ec1bbf64b379a78e",
+  "byte_identical_to_primary_export": true,
+  "expected_from_raw_sha256": "0a50d24d1627541b39ba3dded17f561044da18bc7b840c72f6e7374b390cbf00",
+  "expected_native_fields": 44,
+  "expected_variables_including_phase": 45,
+  "observed_phases": 9,
+  "installed_player_receipt_sha256": "18792da5733735d19880e71435b1a41c1047ef10125a011666fe54526c2bcf8d",
+  "versions": {
+    "fdisbull": "0.28.0",
+    "fdisbull-player": "0.28.0"
+  },
+  "module_sha256": {
+    "fdisbull.il_scenes": "303cbf995ed7669428969a54e3f0520375024167bca92392a521a36108798e97",
+    "fdisbull_player.player": "ec8e916c8b9c82d420b9675d560c8cbec60707ac48fb3196d74c867630def65c"
+  },
+  "checks": {
+    "direct": {
+      "checked_phases": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "inventory_matches_capture": true,
+      "stale_and_repeat_preserve_state": true,
+      "before_mirror_in_memory_checkpoint_restore": true,
+      "restore_invalidates_old_token": true
+    },
+    "separate_content_process": {
+      "checked_phases": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "inventory_matches_capture": true,
+      "stale_and_repeat_preserve_state": true,
+      "before_mirror_in_memory_checkpoint_restore": true,
+      "restore_invalidates_old_token": true
+    },
+    "three_worker_installation_identities": true,
+    "all_44_native_fields_and_phase_match_raw": true,
+    "all_carried_inventory_phases_match_raw": true,
+    "stale_and_repeat_preserve_state": true,
+    "failed_precondition_preserves_state_and_token": true,
+    "restore_invalidates_old_token": true,
+    "before_mirror_in_memory_checkpoint_restore": true,
+    "fresh_checkpoint_missing": true
+  },
+  "limits": [
+    "Separate authored partial projection, not native interpreter equivalence.",
+    "In-memory checkpoints only; no durable-save qualification.",
+    "No Linux CI, release, or system installation mutation."
+  ]
+}

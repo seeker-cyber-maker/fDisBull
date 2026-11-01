@@ -241,6 +241,10 @@ The [gnome/key and giant's chest follow-up](docs/AGI_GNOME_GIANT_ROUTE.md)
 continues from a verified native checkpoint through the original game's
 riddle, tree and clouds. Its eight guarded text actions retain the recorded
 inventory, score and source evidence in the separate player.
+The [dragon and magic mirror route](docs/AGI_DRAGON_MIRROR_ROUTE.md) starts a
+fresh game, uses water to clear the dragon, takes the mirror and returns to the
+surface. Original inventory writes and short traces support eight guarded
+text actions, with the preparation, failures and final evidence kept inspectable.
 A separate [reconstruction of Robb's short TAS](docs/research/kq1-robb-9.89/ROUTE.md)
 preserves the visible route and its unresolved inputs for another investigator.
 

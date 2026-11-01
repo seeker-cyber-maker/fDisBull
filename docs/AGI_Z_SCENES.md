@@ -98,3 +98,27 @@ keyboard input after the declared restore; the text actions update the
 projection. A separate cold-start attempt failed in the rat preparation and
 remains a failed observation. Model checkpoint checks cover in-memory restore
 and token invalidation, with no inherited checkpoint in a fresh process.
+
+## A fresh well, dragon and mirror segment
+
+The [dragon and mirror example](AGI_DRAGON_MIRROR_ROUTE.md) starts from the
+original game's fresh room 1, acquires the dagger and bucket, descends the well,
+uses water, takes the mirror and returns to room 22 at score 28. It records
+eight actions in one native session, exports two private diagnostic checkpoints
+and performs no state loads. The earlier incomplete attempts remain separate.
+
+Its exporter requires all nine main boundaries, water and mirror launch
+observations, completed messages, native inventory/score writer evidence,
+original handler returns and two separately framed repeat controls. Original
+PIC52 priority classes explain why the physical flag-0 observation is false at
+the recorded underwater pose. Missing, extra, contradictory or incomplete
+captures are rejected before a scene is emitted.
+
+The authored commands are `take dagger`, `take bucket`, `use rope`, `use water`,
+`use passage`, `use dragon`, `take mirror` and `use exit`. Every edge checks
+44 typed native fields and its phase before applying the declared changes.
+They consume an authored partial projection; they do not operate DOSBox or
+simulate AGI's autonomous movement, air counters or enemy timing. The original
+source, native captures and generated scene/provenance stay private. Player
+qualification checks direct and separate-process use, all nine boundary states
+and inventories, stale/repeat refusal and in-memory checkpoint behavior.

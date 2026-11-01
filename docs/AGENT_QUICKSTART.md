@@ -282,6 +282,14 @@ text actions. Keep the prepared checkpoint, full single-session observations,
 source-bound writes/returns and player verification as separate gates. A
 scratch variable can be stale: the chest example observes the original
 distance operation inside the command before continuing its effects.
+The [dragon and mirror route](AGI_DRAGON_MIRROR_ROUTE.md) qualifies eight
+fresh-game actions through a safe surface return. It adds source-bound water
+consumption and mirror pickup, pretyped input with guarded movement, and a
+coast-tolerant exit corridor. End short handler traces before blocking dialogue
+and observe later score effects separately. A physical priority-plane flag is
+not a story-state label: the underwater example binds actual PIC52 baseline
+classes, swimming state and carried water. Its separate Z scene checks all
+44 modeled native fields plus phase; original-game timing remains outside it.
 For video-led route research, the [Robb TAS reconstruction](research/kq1-robb-9.89/ROUTE.md)
 keeps visible key highlights, inferred directions and unknown dispatch separate.
 Qualify those proposed actions in the original game before using them as evidence.

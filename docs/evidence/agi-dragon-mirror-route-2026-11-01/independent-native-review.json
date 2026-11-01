@@ -1,0 +1,68 @@
+{
+  "format": "fdisbull-independent-native07-checklist-1",
+  "complete": true,
+  "material_findings": [],
+  "scope": "One closed bounded fresh physical eight-action segment. Source-bound supplied-record consistency independently checked; hashes are not authentication.",
+  "capture_sha256": "2af06b3630806fa1c967740444eaf2f4a69b79ef870506815caae6417051b35f",
+  "result_sha256": "9643db84d1b51a01408fa587910c215b18da8e9d2b050bad50f0547d740c9eda",
+  "process_receipt_sha256": "a34e5d9790fa359abfb961adbc62f4980a4f21f194750611be0ac0b19bd3cda5",
+  "collector_sha256": "797ea3da5092db98f7af3b0eaeec4b537c1c383ccc397fa52f2b34b3dc6b1368",
+  "probe_sha256": "baacb0487fbf9c763ce43b0e463de5cf2852383f40d269c876ceae87cfe9ec34",
+  "inventory_helper_sha256": "b7b059a46327419faddef20efdd8b0511b5f26fa1fabca878b4ddb33ad9bbff1",
+  "checks": {
+    "fresh_physical": true,
+    "interventions_empty": true,
+    "eight_contiguous_completed_actions": true,
+    "nine_ordered_main_boundaries": true,
+    "two_separate_repeat_controls": true,
+    "all_21_dependency_hashes_and_backend_agi_pre_post_current_match": true,
+    "all_24_source_and_private_copy_files_match": true,
+    "all_23_referenced_pngs_match_stored_frame_artifacts": true,
+    "all_227_keyboard_records_accepted_complete_and_journal_matched": true,
+    "all_eight_original_prints_completed_and_source_bound": true,
+    "exact_water_and_mirror_writer_return_and_modal_order": true,
+    "both_six_fetch_traces_match_artifact_hashes_and_journal_returns": true,
+    "canonical_and_independent_retained_proofs_match": true,
+    "writer_instruction_completion_remains_unknown": true,
+    "one_exited_native_run_child_reaped": true,
+    "database_integrity_ok": true,
+    "no_recorded_guest_edits_or_state_loads": true,
+    "three_state_artifacts_two_exported_diagnostic_checkpoints": true,
+    "no_recorded_top_level_cleanup_or_persistence_errors": true,
+    "all_eight_print_cleanup_error_lists_empty": true
+  },
+  "final": {
+    "room": 22,
+    "x": 140,
+    "y": 83,
+    "score": 28
+  },
+  "guest_elapsed_ms": 194516,
+  "trace_events": {
+    "water": 6,
+    "mirror": 6
+  },
+  "known_effects": {
+    "water": {
+      "before_score": 15,
+      "after_score": 20,
+      "before_item26_location": 255,
+      "after_item26_location": 0
+    },
+    "mirror": {
+      "before_score": 20,
+      "after_score": 28,
+      "before_item19_location": 0,
+      "after_item19_location": 255
+    }
+  },
+  "native_audit_sha256": "d12ef1bdda6c6aebaacfe32ac32e42bd1a3d88bc3831aab0f229e9142bf072be",
+  "export_player_receipt_sha256": "8844c4510026862f63f3688d26e3775a5f565d47b0659ed97cebb8632e3edab1",
+  "player_summary_sha256": "a4c06407521874a4b83ca807b1a93374fe35bc94417fb5443b6111fad7208d86",
+  "limits": [
+    "Writer data-access instruction completion remains null.",
+    "Dagger/bucket use completed original print and observed effects, without pickup writer traces.",
+    "Three native state artifacts were saved; two were exported, and none loaded.",
+    "Separate authored partial scene; no full-game/native interpreter equivalence, durable-save, timing/RNG reliability, hosted CI or release qualification."
+  ]
+}

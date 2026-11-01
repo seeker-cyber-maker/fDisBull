@@ -69,6 +69,54 @@ def test_both_original_orders_and_complete_trace(case):
     assert not o.trace_active and not o.d.runs
 
 
+def test_returned_raw_score_survives_later_item_read_failure(case,monkeypatch):
+    o,p=case
+    while p.order[p.index]!='score':
+        p.handle_stop(stop_for(o,p,p.order[p.index]))
+    prior=deepcopy(p.proof['known_effects'])
+    out=stop_for(o,p,'score');original=module.read;received=[]
+    def read(d,address,length):
+        if address==p.location and length==1:
+            raise OSError('authored later item read lost')
+        value=original(d,address,length)
+        if address==o.ds+12 and length==1:received.append(value[0])
+        return value
+    monkeypatch.setattr(module,'read',read)
+    with pytest.raises(OSError,match='authored later item read lost'):
+        p.handle_stop(out)
+    assert received==[p.before_score+p.score_delta]
+    persisted=json.loads((o.root/f'{p.name}-pickup.private.json').read_text())
+    # The score is a raw observation until all writer checks succeed. In the
+    # key order this also clears the earlier stage's now-unread item snapshot.
+    assert persisted['last_observed']=={'stage':'score','score':received[0]}
+    assert persisted['known_effects']==prior and 'score_writer' not in persisted
+    assert persisted['status']=='incomplete' and persisted['complete'] is False
+    assert p.failed and o.execution_blocked and not o.d.runs
+
+
+def test_returned_raw_item_survives_later_frame_read_failure(case,monkeypatch):
+    o,p=case
+    while p.order[p.index]!='item':
+        p.handle_stop(stop_for(o,p,p.order[p.index]))
+    prior=deepcopy(p.proof['known_effects'])
+    out=stop_for(o,p,'item');original=module.read;received=[]
+    def read(d,address,length):
+        if address==0x40106 and length==4:
+            raise OSError('authored later frame read lost')
+        value=original(d,address,length)
+        if address==p.location and length==1:received.append(value[0])
+        return value
+    monkeypatch.setattr(module,'read',read)
+    with pytest.raises(OSError,match='authored later frame read lost'):
+        p.handle_stop(out)
+    assert received==[255]
+    persisted=json.loads((o.root/f'{p.name}-pickup.private.json').read_text())
+    assert persisted['last_observed']=={'stage':'item','score':prior['score'],'item_location':255}
+    assert persisted['known_effects']==prior and 'item_writer' not in persisted
+    assert persisted['status']=='incomplete' and persisted['complete'] is False
+    assert p.failed and o.execution_blocked and not o.d.runs
+
+
 @pytest.mark.parametrize('fault',['foreign','outcome','cs','ds','code','operation','record','access','cause','resume','operands'])
 def test_first_writer_rejected_without_resuming(case,fault):
     o,p=case;stage=p.order[0];out=stop_for(o,p,stage);reg=o.d.register_state

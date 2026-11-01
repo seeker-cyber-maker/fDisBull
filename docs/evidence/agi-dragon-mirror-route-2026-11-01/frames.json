@@ -1,0 +1,65 @@
+{
+  "format": "fdisbull-native-frame-manifest-1",
+  "frames": [
+    {
+      "file": "bucket-carried.png",
+      "sha256": "8ada8ce9691bb4150ca0f5e0297c6ef285bb892da95686b349d0cd90310a851b",
+      "size": [
+        320,
+        200
+      ],
+      "source": "last_completed_guest_frame",
+      "byte_identical_to_native": true
+    },
+    {
+      "file": "water-ready.png",
+      "sha256": "a74b75be0f085811a1d578820db2574a889a79c6e20f371945106bcfc44666d6",
+      "size": [
+        320,
+        200
+      ],
+      "source": "last_completed_guest_frame",
+      "byte_identical_to_native": true
+    },
+    {
+      "file": "water-before.png",
+      "sha256": "731d7c1d9a0f873f38f7b25eef515db70ef4a1a491a192d1f07f93e733c0d873",
+      "size": [
+        320,
+        200
+      ],
+      "source": "last_completed_guest_frame",
+      "byte_identical_to_native": true
+    },
+    {
+      "file": "dragon-retreated.png",
+      "sha256": "27f32ee6e9ff406b090035b6bfd7fb831cf416666f7f5e867b8b60289220980d",
+      "size": [
+        320,
+        200
+      ],
+      "source": "last_completed_guest_frame",
+      "byte_identical_to_native": true
+    },
+    {
+      "file": "mirror-taken.png",
+      "sha256": "e28017622ac9b73bf6f9ec1764a520105547a8730c989293d3e9428ba63a5ee4",
+      "size": [
+        320,
+        200
+      ],
+      "source": "last_completed_guest_frame",
+      "byte_identical_to_native": true
+    },
+    {
+      "file": "surface-return.png",
+      "sha256": "bd04220faabec396986c0056f83b5361329f91c5f92afc7e9bdabd46d3d697c6",
+      "size": [
+        320,
+        200
+      ],
+      "source": "last_completed_guest_frame",
+      "byte_identical_to_native": true
+    }
+  ]
+}
