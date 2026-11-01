@@ -13,7 +13,7 @@ screen inventory, civd for source-shaped state, and the pinned `CIV.EXE` atlas
 for address identity?
 
 The answer is a bounded **yes**: the committed scene is a valid
-`fdisbull-il-scene-1` document with 23 contexts, 82 objects and 31 programs.
+`fdisbull-il-scene-1` document with 23 contexts, 85 objects and 35 programs.
 It can be driven through the shared IL backend or Z text player. It is not a
 claim that the game's simulation, assets, input decoding or save format has
 been recovered.
@@ -88,7 +88,7 @@ provenance file.
 | `load` | 1 | SCENES.md 7.2 | SAVE.C | 2 | O11:0000 `_load_game` (entry) |
 | `customize` | 2 | SCENES.md 7.4 | GAME.C | 6 | R:01A8:0591 `_game_menu` (inside) |
 | `birth` | 3 | SCENES.md 8 | WORLDGEN.C | 2 | O7:0012 `_make_world` (entry) |
-| `difficulty` | 4 | SCENES.md 9.1 | NEWGAME.C | 2 | O5:0031 `_new_game` (inside) |
+| `difficulty` | 4 | SCENES.md 9.1 | NEWGAME.C | 5 | O5:0031 `_new_game` (inside) |
 | `competition` | 5 | SCENES.md 9.2 | NEWGAME.C | 2 | O5:012E `_new_game` (inside) |
 | `tribe` | 6 | SCENES.md 9.3 | NEWGAME.C | 2 | O5:0309 `_new_game` (inside) |
 | `leader-name` | 7 | SCENES.md 9.4-9.5, 10.4 | NAMES.C | 2 | O23:00D6 `_rename_leader` (entry), O23:0414 `_edit_line` (entry) |
@@ -123,7 +123,11 @@ carries every field and its evidence; the important groups are:
 | `$screen` | `u8` | UIL scene selector; no DOS symbol | authored |
 | `$turn` | `u16` | `R:0238:0092` game loop | declared counter, not a full turn model |
 | `$year` | `i16` | DGROUP:B220; Civ64 SCENES-PLAY 5.2 | display state only |
-| `$difficulty`, `$competition`, `$tribe` | `u8` | Civ64 SCENES 9.1-9.3 | declared setup state; menu result binding not modelled |
+| `$difficulty` | `u8` | DGROUP:6B86 `_cur_tier`; civd GLOBALS.C:15, NEWGAME.C:54-62; Civ64 SCENES-PLAY 5.2 | source-bound 0..4; five menu rows write the field |
+| `$competition` | `u8` | DGROUP:D2F4 `_civ_total`; civd GLOBALS.C:113, NEWGAME.C:73-76 | source-bound clamp 2..6; no per-row action |
+| `$players` | `u8` | DGROUP:6B8A `_players`; civd GLOBALS.C:17, NEWGAME.C:77 | source-bound mask derived from `$competition` |
+| `$rule_options` | `u8` | DGROUP:E3C4 `_rule_options`; civd GLOBALS.C:186, NEWGAME.C:82 | source-bound constant 15 at new game |
+| `$tribe` | `u8` | Civ64 SCENES 9.3 | declared setup state; menu result binding not modelled |
 | `$human_civ` | `u8` | DGROUP:D7F0; Civ64 SCENES-PLAY 7.19 | declared player identity |
 | `$treasury` | `i32` | DGROUP:B1D6[civ]; Civ64 SCENES-PLAY 5.2 | declared economy state |
 | `$tax_rate`, `$science_rate`, `$luxury_rate` | `u8` | DGROUP:DF0E/B210 and `10-tax-science`; Civ64 SCENES-PLAY 7.20 | declared rates |
@@ -137,6 +141,14 @@ carries every field and its evidence; the important groups are:
 | `$report` | `u8` | F1-F10 table `R:0403 3B7D..3BFF` | declared selector |
 | `$earth_world` | `bool` | DGROUP:D76A; Civ64 SCENES 7.3 | declared branch |
 | `$game_over` | `bool` | UIL end-state flag | authored |
+
+The difficulty binding is static/source-bound, not a live observation. civd
+`NEWGAME.C:54-62` assigns `cur_tier` from the five menu rows, `GLOBALS.C:15`
+declares the field, and the CIV.EXE linker public `_cur_tier` resolves to
+DGROUP:6B86. Civ64 `SCENES-PLAY 5.2` reads `[6B86]` as the difficulty level.
+The scene's five difficulty objects mirror rows 0..4 and each writes
+`$difficulty`; `test_difficulty_menu_binds_all_five_cur_tier_rows` drives all
+five through the shared IL backend.
 
 The scene deliberately does **not** load a save, render a map, execute a turn,
 run AI, resolve combat, advance technology or write a city record. Those are
@@ -184,10 +196,10 @@ The Z-player test uses the committed scene, not an in-memory rebuild.
 
 Observed on this host with the active fDisBull 0.28.0 interpreter:
 
-- `tests/test_civ_game_uil.py`: **6 passed**
+- `tests/test_civ_game_uil.py`: **7 passed**
 - CIV-focused set (`game UIL`, `city UIL`, `atlas`, `city trace`, `city overlay`):
-  **37 passed**
-- full repository suite: **2,241 passed, 152 skipped, 2 failed, 23 errors**.
+  **38 passed**
+- full repository suite: **2,242 passed, 152 skipped, 2 failed, 23 errors**.
   The failures/errors are the existing Apple-toolchain Linux ELF fixture
   boundary (`/usr/bin/gcc` is Apple clang; missing `-z ibtplt` and Linux
   metadata), not this scene.
@@ -199,8 +211,9 @@ remain static. No DOS screen was run for this slice.
 
 - Partial scene graph and state projection, not a full simulation.
 - No DOS execution, VGA rendering, palette/font/asset loading or input decoding.
-- Setup choices are represented as one declared initial value; individual menu
-  selections are not bound.
+- The five difficulty rows are bound to `cur_tier`; competition and tribe menu
+  rows remain declared, and none of the setup bindings has a live-screen
+  observation.
 - Unit next/previous/select, sell, buy, rename, text entry and report paging are
   only partially represented or absent. The detailed city fixture carries more
   source-modeled city behavior.
@@ -214,15 +227,17 @@ remain static. No DOS screen was run for this slice.
 
 ## Next probes
 
-1. Bind one setup menu result to its actual DGROUP field with a live or
-   original-code observation; the scene currently records only the declared
-   initial value.
+1. Bind the five competition rows to `civ_total` and the derived `players`
+   mask, then check the clamp on the original code; the difficulty axis is now
+   source-bound.
 2. Bind the unit-list `next`/`previous`/`select` actions to the existing city
    fixture and to a live cursor read, rather than leaving the game scene with a
    single close action.
-3. Use the atlas's caller graph to add one bounded transition not yet modeled,
+3. Add a matched live-screen or DOSBox observation for one setup row so the
+   source-bound scene claim can become bounded-observed.
+4. Use the atlas's caller graph to add one bounded transition not yet modeled,
    such as the production chooser returning through `_city_process` after a
    commit.
-4. Keep the scene at `partial: true` until a matching-edition backend supplies
+5. Keep the scene at `partial: true` until a matching-edition backend supplies
    a baseline, one controlled action and a committed state change bound to the
    same record.

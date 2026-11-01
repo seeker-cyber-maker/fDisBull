@@ -20,11 +20,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -145,11 +153,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -270,11 +286,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -395,11 +419,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -520,11 +552,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -645,11 +685,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -770,11 +818,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -895,11 +951,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -1002,7 +1066,7 @@
     }
    ]
   },
-  "difficulty-continue": {
+  "choose-chieftain": {
    "format": "fdisbull-il-1",
    "role": "uil",
    "variables": {
@@ -1020,11 +1084,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -1108,22 +1180,584 @@
     }
    },
    "resources": {
-    "difficulty-continue-text": {
+    "choose-chieftain-text": {
      "kind": "text",
-     "text": "Difficulty choice recorded as declared state; competition question."
+     "text": "Chieftain chosen: cur_tier = 0; competition question."
     }
    },
    "body": [
     {
-     "id": "difficulty-continue-set-screen",
+     "id": "choose-chieftain-set-screen",
      "op": "set",
      "var": "$screen",
      "value": 5
     },
     {
-     "id": "difficulty-continue-text",
+     "id": "choose-chieftain-set-difficulty",
+     "op": "set",
+     "var": "$difficulty",
+     "value": 0
+    },
+    {
+     "id": "choose-chieftain-text",
      "op": "text",
-     "resource": "difficulty-continue-text"
+     "resource": "choose-chieftain-text"
+    }
+   ]
+  },
+  "choose-warlord": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "choose-warlord-text": {
+     "kind": "text",
+     "text": "Warlord chosen: cur_tier = 1; competition question."
+    }
+   },
+   "body": [
+    {
+     "id": "choose-warlord-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 5
+    },
+    {
+     "id": "choose-warlord-set-difficulty",
+     "op": "set",
+     "var": "$difficulty",
+     "value": 1
+    },
+    {
+     "id": "choose-warlord-text",
+     "op": "text",
+     "resource": "choose-warlord-text"
+    }
+   ]
+  },
+  "choose-prince": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "choose-prince-text": {
+     "kind": "text",
+     "text": "Prince chosen: cur_tier = 2; competition question."
+    }
+   },
+   "body": [
+    {
+     "id": "choose-prince-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 5
+    },
+    {
+     "id": "choose-prince-set-difficulty",
+     "op": "set",
+     "var": "$difficulty",
+     "value": 2
+    },
+    {
+     "id": "choose-prince-text",
+     "op": "text",
+     "resource": "choose-prince-text"
+    }
+   ]
+  },
+  "choose-king": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "choose-king-text": {
+     "kind": "text",
+     "text": "King chosen: cur_tier = 3; competition question."
+    }
+   },
+   "body": [
+    {
+     "id": "choose-king-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 5
+    },
+    {
+     "id": "choose-king-set-difficulty",
+     "op": "set",
+     "var": "$difficulty",
+     "value": 3
+    },
+    {
+     "id": "choose-king-text",
+     "op": "text",
+     "resource": "choose-king-text"
+    }
+   ]
+  },
+  "choose-emperor": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "choose-emperor-text": {
+     "kind": "text",
+     "text": "Emperor chosen: cur_tier = 4; competition question."
+    }
+   },
+   "body": [
+    {
+     "id": "choose-emperor-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 5
+    },
+    {
+     "id": "choose-emperor-set-difficulty",
+     "op": "set",
+     "var": "$difficulty",
+     "value": 4
+    },
+    {
+     "id": "choose-emperor-text",
+     "op": "text",
+     "resource": "choose-emperor-text"
     }
    ]
   },
@@ -1145,11 +1779,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -1270,11 +1912,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -1395,11 +2045,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -1520,11 +2178,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -1645,11 +2311,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -1800,11 +2474,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -1943,11 +2625,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -2080,11 +2770,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -2217,11 +2915,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -2354,11 +3060,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -2491,11 +3205,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -2634,11 +3356,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -2773,11 +3503,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -2928,11 +3666,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -3083,11 +3829,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -3238,11 +3992,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -3393,11 +4155,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -3548,11 +4318,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -3703,11 +4481,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -3858,11 +4644,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -4013,11 +4807,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -4144,11 +4946,19 @@
     },
     "$difficulty": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$competition": {
      "type": "u8",
      "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
     },
     "$tribe": {
      "type": "u8",
@@ -4817,28 +5627,81 @@
    "context": "birth"
   },
   {
-   "id": "difficulty-menu",
-   "label": "Difficulty menu",
+   "id": "difficulty-chieftain",
+   "label": "Chieftain",
    "aliases": [
-    "difficulty",
-    "level"
+    "chieftain",
+    "level 0"
    ],
-   "description": "Five portrait levels; only the declared initial value is represented.",
-   "bindings": [],
-   "context": "difficulty"
-  },
-  {
-   "id": "difficulty-continue",
-   "label": "Continue difficulty",
-   "aliases": [
-    "continue",
-    "next"
-   ],
-   "description": "Advances to the competition question.",
+   "description": "Sets cur_tier = 0 (easiest); civd NEWGAME.C menu row 0.",
    "bindings": [
     {
      "verb": "activate",
-     "program": "difficulty-continue"
+     "program": "choose-chieftain"
+    }
+   ],
+   "context": "difficulty"
+  },
+  {
+   "id": "difficulty-warlord",
+   "label": "Warlord",
+   "aliases": [
+    "warlord",
+    "level 1"
+   ],
+   "description": "Sets cur_tier = 1; civd NEWGAME.C menu row 1.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "choose-warlord"
+    }
+   ],
+   "context": "difficulty"
+  },
+  {
+   "id": "difficulty-prince",
+   "label": "Prince",
+   "aliases": [
+    "prince",
+    "level 2"
+   ],
+   "description": "Sets cur_tier = 2; civd NEWGAME.C menu row 2.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "choose-prince"
+    }
+   ],
+   "context": "difficulty"
+  },
+  {
+   "id": "difficulty-king",
+   "label": "King",
+   "aliases": [
+    "king",
+    "level 3"
+   ],
+   "description": "Sets cur_tier = 3; civd NEWGAME.C menu row 3.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "choose-king"
+    }
+   ],
+   "context": "difficulty"
+  },
+  {
+   "id": "difficulty-emperor",
+   "label": "Emperor",
+   "aliases": [
+    "emperor",
+    "level 4"
+   ],
+   "description": "Sets cur_tier = 4 (toughest); civd NEWGAME.C menu row 4.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "choose-emperor"
     }
    ],
    "context": "difficulty"

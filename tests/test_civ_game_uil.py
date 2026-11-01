@@ -40,7 +40,7 @@ def _to_world(backend):
     for verb, target in (
         ("activate", "title-new"),
         ("activate", "birth-continue"),
-        ("activate", "difficulty-continue"),
+        ("activate", "difficulty-prince"),
         ("activate", "competition-continue"),
         ("activate", "tribe-continue"),
         ("activate", "name-accept"),
@@ -55,8 +55,8 @@ def test_scene_has_bounded_screens_and_validates():
     assert scene["format"] == "fdisbull-il-scene-1"
     assert scene["partial"] is True
     assert len(scene["contexts"]) == 23
-    assert len(scene["objects"]) == 82
-    assert len(scene["programs"]) == 31
+    assert len(scene["objects"]) == 85
+    assert len(scene["programs"]) == 35
     context_ids = {context["id"] for context in scene["contexts"]}
     assert context_ids == set(SCREEN_NAMES.values()) | {"production", "units"}
     object_ids = {item["id"] for item in scene["objects"]}
@@ -74,6 +74,23 @@ def test_scene_has_bounded_screens_and_validates():
     }
     assert used == set(scene["programs"])
     ILSceneBackend(scene)
+
+
+def test_difficulty_menu_binds_all_five_cur_tier_rows():
+    for target, level in (
+        ("difficulty-chieftain", 0),
+        ("difficulty-warlord", 1),
+        ("difficulty-prince", 2),
+        ("difficulty-king", 3),
+        ("difficulty-emperor", 4),
+    ):
+        backend = ILSceneBackend(build_scene())
+        assert _act(backend, "activate", "title-new")["status"] == "success"
+        assert _act(backend, "activate", "birth-continue")["status"] == "success"
+        assert backend.observe()["context"]["id"] == "difficulty"
+        assert _act(backend, "activate", target)["status"] == "success"
+        assert backend.state["$difficulty"] == level
+        assert backend.observe()["context"]["id"] == "competition"
 
 
 def test_startup_flow_reaches_world_and_end_turn_advances_declared_state():

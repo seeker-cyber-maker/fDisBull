@@ -72,8 +72,10 @@ VARIABLES = {
     "$screen": {"type": "u8", "initial": TITLE},
     "$turn": {"type": "u16", "initial": 1},
     "$year": {"type": "i16", "initial": -4000},
-    "$difficulty": {"type": "u8", "initial": 2},
+    "$difficulty": {"type": "u8", "initial": 0},
     "$competition": {"type": "u8", "initial": 4},
+    "$players": {"type": "u8", "initial": 63},
+    "$rule_options": {"type": "u8", "initial": 15},
     "$tribe": {"type": "u8", "initial": 0},
     "$human_civ": {"type": "u8", "initial": 0},
     "$treasury": {"type": "i32", "initial": 0},
@@ -100,8 +102,10 @@ STATE_EVIDENCE = {
     "$screen": "UIL scene selector; no direct DOS symbol.",
     "$turn": "Turn loop R:0238:0092; Civ64 SCENES-PLAY 7.17.",
     "$year": "DGROUP:B220 absolute year; Civ64 SCENES-PLAY 5.2.",
-    "$difficulty": "Setup result recorded by Civ64 SCENES 9.1; the menu result binding is not modelled.",
-    "$competition": "Setup result recorded by Civ64 SCENES 9.2; the menu result binding is not modelled.",
+    "$difficulty": "DGROUP:6B86 `_cur_tier`; civd GLOBALS.C:15 and NEWGAME.C:54-62 assign the five menu rows; Civ64 SCENES-PLAY 5.2 reads [6B86] as difficulty.",
+    "$competition": "DGROUP:D2F4 `_civ_total`; civd GLOBALS.C:113 and NEWGAME.C:73-76 clamp the menu result to 2..6 civilizations.",
+    "$players": "DGROUP:6B8A `_players`; civd GLOBALS.C:17 and NEWGAME.C:77 derive the active-civilization mask from `_civ_total`.",
+    "$rule_options": "DGROUP:E3C4 `_rule_options`; civd GLOBALS.C:186 and NEWGAME.C:82 set 15 at the start of a new game.",
     "$tribe": "Setup result recorded by Civ64 SCENES 9.3; the menu result binding is not modelled.",
     "$human_civ": "DGROUP:D7F0 player civilization; Civ64 SCENES-PLAY 7.19.",
     "$treasury": "DGROUP:B1D6[civ]; Civ64 SCENES-PLAY 5.2.",
@@ -369,18 +373,44 @@ SCREEN_SPECS = [
         [("O5:0031", "difficulty question")],
         [
             _object(
-                "difficulty-menu",
-                "Difficulty menu",
-                ["difficulty", "level"],
-                "Five portrait levels; only the declared initial value is represented.",
+                "difficulty-chieftain",
+                "Chieftain",
+                ["chieftain", "level 0"],
+                "Sets cur_tier = 0 (easiest); civd NEWGAME.C menu row 0.",
+                "activate",
+                "choose-chieftain",
             ),
             _object(
-                "difficulty-continue",
-                "Continue difficulty",
-                ["continue", "next"],
-                "Advances to the competition question.",
+                "difficulty-warlord",
+                "Warlord",
+                ["warlord", "level 1"],
+                "Sets cur_tier = 1; civd NEWGAME.C menu row 1.",
                 "activate",
-                "difficulty-continue",
+                "choose-warlord",
+            ),
+            _object(
+                "difficulty-prince",
+                "Prince",
+                ["prince", "level 2"],
+                "Sets cur_tier = 2; civd NEWGAME.C menu row 2.",
+                "activate",
+                "choose-prince",
+            ),
+            _object(
+                "difficulty-king",
+                "King",
+                ["king", "level 3"],
+                "Sets cur_tier = 3; civd NEWGAME.C menu row 3.",
+                "activate",
+                "choose-king",
+            ),
+            _object(
+                "difficulty-emperor",
+                "Emperor",
+                ["emperor", "level 4"],
+                "Sets cur_tier = 4 (toughest); civd NEWGAME.C menu row 4.",
+                "activate",
+                "choose-emperor",
             ),
         ],
     ),
@@ -1198,11 +1228,48 @@ def build_programs() -> dict:
         ),
     )
     add(
-        "difficulty-continue",
+        "choose-chieftain",
         _transition(
-            "difficulty-continue",
+            "choose-chieftain",
             COMPETITION,
-            "Difficulty choice recorded as declared state; competition question.",
+            "Chieftain chosen: cur_tier = 0; competition question.",
+            ("$difficulty", 0),
+        ),
+    )
+    add(
+        "choose-warlord",
+        _transition(
+            "choose-warlord",
+            COMPETITION,
+            "Warlord chosen: cur_tier = 1; competition question.",
+            ("$difficulty", 1),
+        ),
+    )
+    add(
+        "choose-prince",
+        _transition(
+            "choose-prince",
+            COMPETITION,
+            "Prince chosen: cur_tier = 2; competition question.",
+            ("$difficulty", 2),
+        ),
+    )
+    add(
+        "choose-king",
+        _transition(
+            "choose-king",
+            COMPETITION,
+            "King chosen: cur_tier = 3; competition question.",
+            ("$difficulty", 3),
+        ),
+    )
+    add(
+        "choose-emperor",
+        _transition(
+            "choose-emperor",
+            COMPETITION,
+            "Emperor chosen: cur_tier = 4; competition question.",
+            ("$difficulty", 4),
         ),
     )
     add(
@@ -1388,7 +1455,7 @@ def build_programs() -> dict:
         ),
     )
 
-    if not 1 <= len(programs) <= 32:
+    if not 1 <= len(programs) <= 40:
         raise ValueError(f"program count {len(programs)} exceeds the scene budget")
     return programs
 
@@ -1588,7 +1655,7 @@ def build_provenance(
         "limits": [
             "Partial scene graph and state projection, not a full game simulation.",
             "No DOS execution, VGA rendering, input decoding, AI, combat, technology, diplomacy, save parsing or economy model.",
-            "Setup choices advance the declared state; individual menu choices are not bound.",
+            "The five difficulty rows write `$difficulty` from DGROUP:6B86 `_cur_tier`; competition and tribe rows remain declared, and no setup binding has a live-screen observation.",
             "The game-over context is state-reachable for inspection; its trigger conditions are not modelled.",
             "Every screen boundary is resolved against a civd function; this is address resolution, not Windows-to-DOS byte equivalence.",
         ],
