@@ -1,0 +1,77 @@
+{
+  "format": "fdisbull-verification-1",
+  "scope": "Codex review corrective pass; no release or push",
+  "tested_commit": "29539bc90e5fcdac49c11d7d5cd7ef6340abe6a6",
+  "generated_at": "2026-11-01T23:48:44Z",
+  "environment": {
+    "platform": "macOS 27.2 arm64",
+    "python": "3.13.14",
+    "pytest": "9.1.1",
+    "clang": "Apple clang 21.0.0 (clang-2100.3.34.2)",
+    "gcc": "Apple clang 21.0.0 (clang-2100.3.34.2)"
+  },
+  "commands": {
+    "focused": "PYTHONPATH=src:player python -m pytest -q tests/test_distribution.py tests/test_target_storage.py tests/test_source_catalog.py tests/test_udc_macos.py",
+    "full": "PYTHONPATH=src:player python -m pytest -q",
+    "archives": "python -m build --no-isolation; python -m build --no-isolation --wheel ./player; python scripts/check_dist.py <built archives>"
+  },
+  "focused": {
+    "passed": 920,
+    "skipped": 1,
+    "failed": 0,
+    "errors": 0
+  },
+  "full": {
+    "passed": 8911,
+    "skipped": 335,
+    "failed": 3,
+    "errors": 23,
+    "elapsed_seconds": 265.61,
+    "failed_identities": [
+      "tests/test_inspection.py::test_actual_elf_exports_and_unresolved_imports_are_honest",
+      "tests/test_loading.py::test_real_elf_retains_entry_and_named_function",
+      "tests/test_media_modules.py::test_resource_ambiguity_and_directory_bounds"
+    ],
+    "failure_class": "Known host-environment failures; the same identities were observed before this correction.",
+    "error_files": {
+      "tests/test_elf_metadata.py": 14,
+      "tests/test_platform_calls.py": 9
+    },
+    "error_class": "gcc-backed ELF fixture compilation fails on this macOS host; no integration-caused failure was observed.",
+    "reconstruction_note": "Failure identities were reconstructed from the captured pytest summary, not by rerunning the suite."
+  },
+  "archives": {
+    "sdist": {
+      "name": "fdisbull-0.29.0.tar.gz",
+      "sha256": "599c6e3542043aa6aed920d9af5ba3787bde24a6cbe5b63e47676a79390ea909",
+      "entries": 1825
+    },
+    "core_wheel": {
+      "name": "fdisbull-0.29.0-py3-none-any.whl",
+      "sha256": "aa2fe1ccc786500a445e968ddb43a7ead259aec286c7d46732b7d3ffba96792d",
+      "entries": 562
+    },
+    "player_wheel": {
+      "name": "fdisbull_player-0.29.0-py3-none-any.whl",
+      "sha256": "da9cb1962aa973e9f2412ef8f757ca89f9f8b296d106acff5cec78c24ca9fc8a",
+      "entries": 19
+    },
+    "checker": "passed for all three archives",
+    "reviewed_recipes": 21
+  },
+  "native_builder": {
+    "test": "tests/test_udc_macos.py::test_legacy_native_builder_compiles_links_and_loads",
+    "result": "passed",
+    "scope": "legacy build_macos compiled, linked, loaded, created a context, stepped, and returned state on macOS arm64; bounded single-procedure program"
+  },
+  "source_catalog": {
+    "test": "tests/test_source_catalog.py",
+    "result": "16 passed after installing the source extra locally",
+    "cli": "tests/test_source_catalog.py::test_cli_source_info_catalog_form"
+  },
+  "limits": [
+    "This receipt covers a local integration checkpoint, not a release candidate.",
+    "No hosted CI pipeline, package publication, version bump, or shared-prefix installation was performed.",
+    "The 3 failures and 23 errors are host-environment limitations and are not qualified as product defects or product passes."
+  ]
+}
