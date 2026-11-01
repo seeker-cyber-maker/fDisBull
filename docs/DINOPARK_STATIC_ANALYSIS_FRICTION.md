@@ -1,5 +1,15 @@
 # DinoPark analysis friction and retained Z terminal replies
 
+The [land purchase recovery follow-up](VERIFICATION-DINOPARK-LAND-RECONCILIATION-2026-11-01.md)
+qualifies the original first plot and two read-only reconciliation attempts,
+separates draft from committed allocation, and excludes cursor regions from
+land predicates. Its same-guest tracing adds 14 caller snapshots and 440 matching
+read prefixes; a separate retained-code pass normalizes 54 filename origins
+using `PUSH CS; CALL rel16`. All 97 unresolved entries and 13 asset candidates
+remain open. A later instrumented fence timeout killed the worker through the
+transport failure path; the fence outcome remains unknown. The report records
+the observer deadline widening, process-lifetime limits and next changes.
+
 The [Employment recovery follow-up](VERIFICATION-DINOPARK-EMPLOYMENT-RECONCILIATION-2026-11-01.md)
 qualifies bounded business entry and original-action read-only reconciliation,
 including repeated witness failures. Its same-guest batch covers all eight

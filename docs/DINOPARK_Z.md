@@ -170,6 +170,16 @@ failed display readback, while an unproved effect stays unknown. See the
 [purchase recovery verification](VERIFICATION-DINOPARK-COELOPHYSIS-RECONCILIATION-2026-10-31.md)
 for the tested scope and retained failures.
 
+A held first-desert-plot order similarly offers `continue land purchase` when
+its recorded phase can proceed. The adapter distinguishes the original draft
+allocation and reserved working cash from the committed pen array and cash.
+The next press waits for pointer preparation and fresh phase checks. A known
+commit survives later display failure; `reconcile` certifies the original
+`buy desert plot` without another click or guest execution. Guest phase budgets
+remain cumulative, and uncertain execution does not authorize continuation.
+See the [land recovery verification](VERIFICATION-DINOPARK-LAND-RECONCILIATION-2026-11-01.md)
+for the bounded first-plot contract and original-game cursor recognition finding.
+
 The JSON-line backend accepts `{"op":"reconcile"}` and an optional
 `recovery_id` selecting the already-held attempt. A successful result carries
 `read_only: true`, the original canonical action and a fresh destination witness.
