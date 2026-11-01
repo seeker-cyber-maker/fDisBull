@@ -513,6 +513,26 @@ def qualify_street(text):
     return {'frame': frame, 'view': 'street', 'scene': saved}
 
 
+def qualify_park(text):
+    """Bind the existing original park from reads only; never repeat entry."""
+    frame, image = take_frame(text.project, text.debug, 'park-revisited', hooks=False)
+    if (not matches(image, text.patterns['park_view']) or
+            any(matches(image, text.patterns[n]) for n in ('quarter_popup', 'parking_hint'))):
+        raise RuntimeError('Park destination not uniquely recognized; outcome unknown')
+    selector = {'memory': {'address': '4020:3c5c', 'length': 2,
+                          'hex': text.debug.memory('4020:3c5c', length=2)['hex']}}
+    doc = definition(frame, 'park', pixel_predicate(text.patterns['park_view']), selector,
+                     'park.back', [173, 187], pixel_predicate(text.patterns['street_view']))
+    version = text.debug.version['id']
+    original = text.project.debug_scene_info(text.park, version=version)
+    latest = text.project.debug_scene_info(original['name'], version=version)
+    if latest['scene'] != original['scene']:
+        raise RuntimeError('Park scene root changed; outcome unknown')
+    saved = text.project.debug_save_scene('park', doc, parent=latest['id'], version=version)
+    text.park, text.current, text.pending_park_entry = saved['id'], 'park', False
+    return {'frame': frame, 'view': 'park', 'scene': saved}
+
+
 def qualify_business(text, view):
     """Publish a fresh destination from host reads only, including scene re-entry."""
     if view == 'dinomart':
@@ -1777,6 +1797,7 @@ class TextScene:
                     'open_closed_status': 'unknown', 'persistence': 'unknown'})
         return self.describe()
 
+    @bounded_preparation
     def revisit_park(self):
         if self.current != 'street':
             return 'That action is not available in this scene.'
@@ -1789,27 +1810,36 @@ class TextScene:
             return message
         self.event({'phase': 'intent', 'command': 'go park', 'input': 'not_yet_sent',
                     'before': before, 'persistence': 'unknown'})
-        entry_run = self.shop_click((201, 187), 8000, 'return to park view', hold_ms=80)
-        frame, image = take_frame(self.project, self.debug, 'park-revisited')
-        notices = [n for n in ('quarter_popup', 'parking_hint') if matches(image, self.patterns[n])]
-        if notices:
-            if len(notices) == 1:
-                self.pending_park_entry = True
-                self.event({'phase': 'interrupted', 'command': 'go park', 'notices': notices,
-                            'frame': frame, 'run': entry_run, 'destination': 'not_yet_verified'})
-                label = 'A quarter notice' if notices == ['quarter_popup'] else 'Parking advice'
-                return label + ' interrupted park entry. Use acknowledge notice to continue.'
-            self.event({'phase': 'indeterminate', 'command': 'go park', 'frame': frame,
-                        'notices': notices, 'persistence': 'unknown'})
-            raise RuntimeError('notice during park entry; outcome unknown')
-        if not matches(image, self.patterns['park_view']):
-            raise RuntimeError('park revisit not recognized; outcome unknown')
-        selector = {'memory': {'address': '4020:3c5c', 'length': 2,
-                               'hex': self.debug.memory('4020:3c5c', length=2)['hex']}}
-        doc = definition(frame, 'park', pixel_predicate(self.patterns['park_view']), selector,
-                         'park.back', [173, 187], pixel_predicate(self.patterns['street_view']))
-        self.park = self.project.debug_save_scene('park', doc, parent=self.park)['id']
-        self.current = 'park'
+        source = self.street
+        observed = self.debug.scene_assert(source, object='street.office')
+        receipt = {'complete': False, 'status': 'observation-failed',
+                   'run': self.debug.run_id, 'scene_revision': source, 'action_name': 'street.park',
+                   'before_observation': observed['observation']}
+        try:
+            # Preserve the original press and continuous guest interval. Capture
+            # its actual ticket before a wait/readback can raise.
+            receipt['input'] = self.shop_click((201, 187), None, 'return to park view', hold_ms=80)
+            entry_run = self.debug.run(guest_ms=8000, timeout_ms=40000, fast_forward=True)
+            if entry_run.get('outcome') != 'guest_time':
+                raise RuntimeError('park entry stopped unexpectedly; outcome unknown')
+            frame, image = take_frame(self.project, self.debug, 'park-entry-notices')
+            notices = [n for n in ('quarter_popup', 'parking_hint') if matches(image, self.patterns[n])]
+            if notices:
+                if len(notices) == 1:
+                    self.pending_park_entry = True
+                    self.event({'phase': 'interrupted', 'command': 'go park', 'notices': notices,
+                                'frame': frame, 'run': entry_run, 'destination': 'not_yet_verified'})
+                    label = 'A quarter notice' if notices == ['quarter_popup'] else 'Parking advice'
+                    return label + ' interrupted park entry. Use acknowledge notice to continue.'
+                self.event({'phase': 'indeterminate', 'command': 'go park', 'frame': frame,
+                            'notices': notices, 'persistence': 'unknown'})
+                raise RuntimeError('notice during park entry; outcome unknown')
+            qualified = qualify_park(self)
+            frame = qualified['frame']
+            receipt.update(complete=True, status='matched', frame=frame)
+            self.last_action = receipt
+        finally:
+            self.event({'phase': 'navigation_input_result', 'command': 'go park', 'result': receipt})
         after = park_snapshot(self.debug)
         self.event({'phase': 'result', 'command': 'go park', 'before': before, 'after': after,
                     'frame': frame, 'persistence': 'unknown'})
