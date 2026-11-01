@@ -52,6 +52,7 @@ other agents read the receipt instead of polling GitHub separately. The finite
 ```text
 fdisbull --version
 fdisbull capabilities
+fdisbull macos-snapshot com.example.authorized-app
 fdisbull methods
 fdisbull agent-skill --list
 fdisbull agent-skill --index
@@ -67,6 +68,14 @@ before treating dependency presence as working support. `doctor` is a separate
 explicit runtime acceptance test. `methods` prints the JSON method names and
 their parameter summaries; some language operations are CLI-only and appear
 in the capability report with `cli:` interface names.
+
+On macOS 14+, `macos-snapshot` observes running-app, accessibility and display
+state without input or permission prompts. `macos-session` records a private
+capture journal; `--live` explicitly enables declared menu/preference actions.
+Select a display and CoreGraphics global logical rectangle from the snapshot,
+including negative origins. Read [reversible native capture](MACOS_REVERSIBLE_CAPTURE.md)
+before a live operation or `macos-session-recover`. Never reopen an unrelated
+app or treat failed capture as permission to repeat an uncertain action.
 `agent-skill --list` returns the small skill catalogue. Use `--skill` to select
 one, then `--index` to list its references and their purposes without fetching
 their text. Choose a reference and retrieve it with `--reference`.

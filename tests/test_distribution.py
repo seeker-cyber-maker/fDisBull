@@ -207,6 +207,17 @@ REQUIRED_SOURCE_FILES += tuple(path for path in (
     "docs/evidence/civd-food-swaps/source-ui-inventory.json",
 ) if path not in REQUIRED_SOURCE_FILES)
 
+
+REQUIRED_SOURCE_FILES += tuple(path for path in (
+    'docs/MACOS_REVERSIBLE_CAPTURE.md',
+    'src/fdisbull/macos_capture.py',
+    'src/fdisbull/macos_session.py',
+    'src/fdisbull/data/FdisbullMacCapture.swift',
+    'tests/macos_capture_fixture.swift',
+    'tests/test_macos_capture.py',
+    'tests/test_macos_session.py',
+    'scripts/check_macos_capture_native.py',
+) if path not in REQUIRED_SOURCE_FILES)
 def source_archive(path, files=REQUIRED_SOURCE_FILES):
     with zipfile.ZipFile(path, "w") as output:
         for required in files:

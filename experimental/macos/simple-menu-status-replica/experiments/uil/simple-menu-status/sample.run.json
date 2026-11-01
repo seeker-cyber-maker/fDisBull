@@ -1,0 +1,247 @@
+{
+  "complete": true,
+  "status": "complete",
+  "state": {
+    "$ack_id": 0,
+    "$action": 2,
+    "$additional_open": false,
+    "$arg": 3,
+    "$checked_0": false,
+    "$checked_1": false,
+    "$checked_2": false,
+    "$checked_3": true,
+    "$checked_4": false,
+    "$detail_page": 0,
+    "$icon": 0,
+    "$layout": 3,
+    "$memory_mood": 0,
+    "$menu_open": false,
+    "$preferences_dirty": true,
+    "$preferences_revision": 1,
+    "$settings_open": false,
+    "$show_battery": false,
+    "$show_details": false,
+    "$show_gpu": true,
+    "$show_network": false,
+    "$show_processes": false,
+    "$show_storage": true,
+    "$sleep_active": false,
+    "$sleep_display": false,
+    "$sleep_error": false,
+    "$sleep_pending": 0,
+    "$sleep_request_id": 0
+  },
+  "proposed_state": {
+    "$ack_id": 0,
+    "$action": 2,
+    "$additional_open": false,
+    "$arg": 3,
+    "$checked_0": false,
+    "$checked_1": false,
+    "$checked_2": false,
+    "$checked_3": true,
+    "$checked_4": false,
+    "$detail_page": 0,
+    "$icon": 0,
+    "$layout": 3,
+    "$memory_mood": 0,
+    "$menu_open": false,
+    "$preferences_dirty": true,
+    "$preferences_revision": 1,
+    "$settings_open": false,
+    "$show_battery": false,
+    "$show_details": false,
+    "$show_gpu": true,
+    "$show_network": false,
+    "$show_processes": false,
+    "$show_storage": true,
+    "$sleep_active": false,
+    "$sleep_display": false,
+    "$sleep_error": false,
+    "$sleep_pending": 0,
+    "$sleep_request_id": 0
+  },
+  "events": [
+    {
+      "op": "text",
+      "block_id": "layout.3.name",
+      "evidence": [],
+      "resource": "layout.3",
+      "resource_data": {
+        "kind": "text",
+        "text": "Local AI"
+      }
+    },
+    {
+      "op": "text",
+      "block_id": "layout.3.persist",
+      "evidence": [],
+      "resource": "effect.preferences.write.request",
+      "resource_data": {
+        "kind": "text",
+        "text": "Host request: write replica preferences"
+      }
+    },
+    {
+      "op": "text",
+      "block_id": "memory.emoji.unknown",
+      "evidence": [],
+      "resource": "memory.unknown",
+      "resource_data": {
+        "kind": "text",
+        "text": "❔"
+      }
+    },
+    {
+      "op": "text",
+      "block_id": "sleep.render.off",
+      "evidence": [],
+      "resource": "sleep.off",
+      "resource_data": {
+        "kind": "text",
+        "text": "Off"
+      }
+    }
+  ],
+  "visited": [
+    "input.action.valid",
+    "state.layout.valid",
+    "state.memory.valid",
+    "state.icon.valid",
+    "state.sleep.pending.valid",
+    "state.sleep.start.consistent",
+    "state.sleep.stop.consistent",
+    "state.detail.valid",
+    "action.toggle_dashboard",
+    "action.select_layout",
+    "layout.request.valid",
+    "layout.0",
+    "layout.1",
+    "layout.2",
+    "layout.3",
+    "layout.3.layout",
+    "layout.3.show_gpu",
+    "layout.3.show_storage",
+    "layout.3.show_battery",
+    "layout.3.show_network",
+    "layout.3.show_processes",
+    "layout.3.show_details",
+    "layout.3.preferences_dirty",
+    "layout.3.prefs.not_exhausted",
+    "layout.3.prefs.revision",
+    "layout.3.prefs.dirty",
+    "layout.3.name",
+    "layout.3.persist",
+    "layout.4",
+    "action.toggle_section",
+    "action.memory_pressure_event",
+    "action.request_sleep_start",
+    "action.complete_sleep_start",
+    "action.request_sleep_stop",
+    "action.complete_sleep_stop",
+    "action.toggle_additional_options",
+    "action.select_sleep_mode",
+    "action.select_detail",
+    "action.select_icon",
+    "action.toggle_settings",
+    "action.complete_preference_write",
+    "checkmark.0",
+    "checkmark.0.off",
+    "checkmark.1",
+    "checkmark.1.off",
+    "checkmark.2",
+    "checkmark.2.off",
+    "checkmark.3",
+    "checkmark.3.on",
+    "checkmark.4",
+    "checkmark.4.off",
+    "icon.render",
+    "memory.render.unknown",
+    "memory.emoji.unknown",
+    "memory.render.normal",
+    "memory.render.warning",
+    "memory.render.critical",
+    "sleep.render",
+    "sleep.render.off"
+  ],
+  "evidence": {
+    "authored.host_protocol": {
+      "claim": "request/ack protocol authored for this experiment; not recovered from original",
+      "kind": "authored_candidate"
+    },
+    "observed.controls": {
+      "claim": "screen-visible labels and surfaces; not a native execution trace",
+      "file": "PARITY.md",
+      "kind": "observation_ledger",
+      "observation_index": "observations.json",
+      "observation_index_sha256": "8e8905a1eecbcbd2b7582ceab240d7dd648236efc43ad223c178f21d2de9d27e",
+      "sha256": "8257b43e6623918be0b4c53e4a218a4ead79a50cf9586367b952e0cc262f5440"
+    },
+    "replica.layout": {
+      "claim": "replica source projection; original correspondence unproved",
+      "file": "Sources/StatusReplica/main.swift",
+      "kind": "replica_source",
+      "lines": [
+        316,
+        327
+      ],
+      "selection_sha256": "cd333649873a244f401c1bc74d9f79a31d78dcfb82b2793e9d35b149a576e0f9",
+      "sha256": "028ee1d150348973c7a7b03542dc0b1abd61c036b9f01f64feb56d03730f67bb"
+    },
+    "replica.memory": {
+      "claim": "replica source projection; original correspondence unproved",
+      "file": "Sources/StatusCore/MemoryMood.swift",
+      "kind": "replica_source",
+      "lines": [
+        1,
+        23
+      ],
+      "selection_sha256": "3e30b41bb3f523d71d07abfd4b1907a15366972eaf3c7cf250c68bbf611b9c1e",
+      "sha256": "3e30b41bb3f523d71d07abfd4b1907a15366972eaf3c7cf250c68bbf611b9c1e"
+    },
+    "replica.preferences": {
+      "claim": "replica source projection; original correspondence unproved",
+      "file": "Sources/StatusCore/ReplicaPreferences.swift",
+      "kind": "replica_source",
+      "lines": [
+        1,
+        54
+      ],
+      "selection_sha256": "16fa758311e71324548a9e576afab3c933abe668d5080040bc5b721f4d647b32",
+      "sha256": "16fa758311e71324548a9e576afab3c933abe668d5080040bc5b721f4d647b32"
+    },
+    "replica.sleep": {
+      "claim": "replica source projection; original correspondence unproved",
+      "file": "Sources/StatusReplica/main.swift",
+      "kind": "replica_source",
+      "lines": [
+        219,
+        236
+      ],
+      "selection_sha256": "e973602e17074878343a87c06a9b8ec36a278ba041d7c21547e43a5b4f6cd747",
+      "sha256": "028ee1d150348973c7a7b03542dc0b1abd61c036b9f01f64feb56d03730f67bb"
+    },
+    "replica.sleep_footer": {
+      "claim": "replica source projection; original correspondence unproved",
+      "file": "Sources/StatusReplica/main.swift",
+      "kind": "replica_source",
+      "lines": [
+        669,
+        669
+      ],
+      "selection_sha256": "7bc21c2e4336af1dc1c3de93b8a931e5a9f0664bdbdc4bfa7bab8419b3e7afc8",
+      "sha256": "028ee1d150348973c7a7b03542dc0b1abd61c036b9f01f64feb56d03730f67bb"
+    },
+    "replica.sleep_ui": {
+      "claim": "replica source projection; original correspondence unproved",
+      "file": "Sources/StatusReplica/main.swift",
+      "kind": "replica_source",
+      "lines": [
+        1099,
+        1150
+      ],
+      "selection_sha256": "2e0c3f98d1c3b0438174e94873da2c48e2de26fb9692a2eb8ebd0325ace89587",
+      "sha256": "028ee1d150348973c7a7b03542dc0b1abd61c036b9f01f64feb56d03730f67bb"
+    }
+  }
+}

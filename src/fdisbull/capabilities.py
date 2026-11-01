@@ -97,6 +97,11 @@ def _catalog():
                ['macos_lldb.py', '_macos_lldb_driver.py'], ['lief', 'iced-x86', 'capstone', 'Pillow', 'lldb'],
                'One explicit source-bound launch to one symbol; no attach, persistent session or UI recorder.',
                maturity='experimental', required_host={'system': 'Darwin', 'machine': 'arm64'}),
+        _entry('macos.reversible-capture', 'partial', ['arm64', 'x86-64'],
+               ['cli:macos-snapshot', 'cli:macos-session', 'cli:macos-session-recover'],
+               ['macos_capture.py', 'macos_session.py', 'data/FdisbullMacCapture.swift'], ['swiftc'],
+               'macOS 14+ display-bound native PNG/AX capture; explicit live action, owned-change restoration and recovery journal. Native permissions not checked here.',
+               maturity='experimental', required_host={'system': 'Darwin'}),
         _entry('debug.dos', 'partial', ['x86-16'], ['cli:debug', 'cli:doctor'],
                ['debugger.py', 'dosbox_rpc.py'], ['lief', 'iced-x86', 'capstone', 'Pillow', 'dos-backend'],
                'Configured compatible DOSBox backend; backend identity and doctor acceptance are separate gates.'),
@@ -166,6 +171,7 @@ def capabilities(*, analyze_headless=None, lldb=None, java=None):
     dependencies.update({
         'ghidra-headless': _tool('analyzeHeadless', analyze_headless),
         'lldb': _tool('lldb', lldb), 'java': _tool('java', java),
+        'swiftc': _tool('swiftc', None),
         'dos-backend': {'kind': 'configuration', 'status': 'not_selected'},
         'pe64-backend': {'kind': 'configuration', 'status': 'not_selected'},
         'native-c-compiler': {'kind': 'configuration', 'status': 'not_selected'},
@@ -176,7 +182,7 @@ def capabilities(*, analyze_headless=None, lldb=None, java=None):
     for item in entries:
         if item['implementation'] == 'unsupported':
             available = 'unsupported'
-        elif item.get('required_host') and item['required_host'] != host:
+        elif any(host.get(key) != value for key, value in item.get('required_host', {}).items()):
             available = 'host_unsupported'
         elif any(sources[name]['status'] != 'read' for name in item['providers']):
             available = 'component_missing'

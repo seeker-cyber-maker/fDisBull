@@ -72,6 +72,9 @@ METHODS = {
     "uil-info": "Inspect an immutable common UIL package; project,revision,[full]",
     "uil-list": "List common UIL packages without payloads; project,[limit,offset]",
     "capture-audit": "Decode/hash finalized AVI segments and optionally sample frames; inputs,output,[every,html,timeout,max_frames,max_frame_bytes,max_input_bytes,max_metadata_bytes,max_output_bytes,ffmpeg,ffprobe]; no guest or project required",
+    "macos-snapshot": "Inspect native macOS displays, target accessibility and menu state without input; bundle_id",
+    "macos-session": "Capture a bounded reversible native session; bundle_id,output,[live,status_index,display_id,rect,keys,preference_changes,max_seconds]",
+    "macos-session-recover": "Inspect and restore owned pending native session changes; output",
     "capabilities": "Read-only analysis capability/dependency catalog; [analyze_headless,lldb,java]; no project or tool execution",
     "media-modules": "Discover shipped media adapters, APIs, dependencies and limits; no project required",
     "media-inspect": "Inventory bounded source members without execution; path,adapter,[volume_root,number]",
@@ -464,6 +467,15 @@ def invoke(method, params, debugger=None):
         from .capabilities import capabilities
 
         return capabilities(**p)
+    if method in ("macos-snapshot", "macos-session", "macos-session-recover"):
+        from .macos_capture import NativeCapture
+        native = NativeCapture()
+        if method == "macos-snapshot":
+            if set(p) != {"bundle_id"} or not isinstance(p["bundle_id"], str):
+                raise ValueError("macos-snapshot requires only bundle_id")
+            return native("snapshot", **p)
+        from .macos_session import run_session, recover_session
+        return (run_session if method == "macos-session" else recover_session)(native=native, **p)
     if method in ("zmachine-disasm", "zmachine-analyze"):
         from .zmachine_analysis import analyze_story, disassemble_story
 
@@ -974,6 +986,9 @@ def respond(request, default_project=None, debugger=None):
                 "uil-fold",
                 "uil-expand",
                 "capture-audit",
+                "macos-snapshot",
+                "macos-session",
+                "macos-session-recover",
                 "capabilities",
                 "media-modules",
                 "media-inspect",
@@ -1453,6 +1468,20 @@ def parser():
     c.add_argument("--analyze-headless")
     c.add_argument("--lldb")
     c.add_argument("--java")
+    c = sub.add_parser("macos-snapshot", help=METHODS["macos-snapshot"])
+    c.add_argument("bundle_id")
+    c = sub.add_parser("macos-session", help=METHODS["macos-session"])
+    c.add_argument("bundle_id")
+    c.add_argument("output")
+    c.add_argument("--live", action="store_true", help="Explicitly permit the selected status-menu action and declared preference changes")
+    c.add_argument("--status-index", type=int)
+    c.add_argument("--display-id", type=int)
+    c.add_argument("--rect", type=json.loads, help="Global CoreGraphics logical rectangle as JSON {x,y,width,height}")
+    c.add_argument("--keys", action="append", default=[])
+    c.add_argument("--preference-changes", type=json.loads, help="Explicit key-to-binary-plist values as JSON; null removes a key")
+    c.add_argument("--max-seconds", type=float, default=30)
+    c = sub.add_parser("macos-session-recover", help=METHODS["macos-session-recover"])
+    c.add_argument("output")
     c = sub.add_parser("doctor", help=METHODS["doctor"])
     c.add_argument(
         "--backend", choices=["dosbox", "dosbox-qemu", "wine-qemu"], required=True
@@ -2631,11 +2660,12 @@ def _dispatch(args):
     emit(result)
     if command in ("doctor", "capture-audit") and result["ok"]:
         body = result["result"]
-        status = (
-            body["execution"]["status"]
-            if body.get("format") == "fdisbull-output-ref-1"
-            else body["status"]
-        )
+        status = body["execution"]["status"] if body.get("format") == "fdisbull-output-ref-1" else body["status"]
         if status != "passed":
+            return 1
+    if command in ("macos-session", "macos-session-recover") and result["ok"]:
+        body = result["result"]
+        status = body["execution"]["status"] if body.get("format") == "fdisbull-output-ref-1" else body["status"]
+        if status != "confirmed":
             return 1
     return 0 if result["ok"] else 1
