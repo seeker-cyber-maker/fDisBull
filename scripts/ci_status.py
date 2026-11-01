@@ -3,6 +3,9 @@
 
 This development helper reports observations, never acceptance or release
 qualification. It has no watch, force, retry, owner takeover, or resume mode.
+Supports both GitLab (gitlab.com, active 30-day trial) and GitHub (portable
+fallback / unit-test compatibility), while blocking live requests to the
+retired seeker-cyber-maker/fDisBull GitHub repository.
 """
 from __future__ import annotations
 
@@ -17,6 +20,7 @@ import re
 import subprocess
 import tempfile
 import time
+from urllib.parse import quote
 
 try:
     import fcntl
@@ -27,6 +31,7 @@ INTERVAL_SECONDS = 300
 FETCH_TIMEOUT_SECONDS = 30
 PAGE_SIZE = 100
 SCHEMA = 1
+RETIRED_GITHUB_REPOS = frozenset({'seeker-cyber-maker/fdisbull'})
 
 
 class StatusError(ValueError):
@@ -40,7 +45,9 @@ class FetchError(Exception):
 
 
 def _identity(repo, sha, host, owner, refresh):
-    if not isinstance(repo, str) or not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repo):
+    if not isinstance(repo, str) or not re.fullmatch(r'[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+', repo):
+        raise StatusError('repo must be an explicit OWNER/REPOSITORY')
+    if repo.count('/') != 1 and 'gitlab' not in str(host).lower():
         raise StatusError('repo must be an explicit OWNER/REPOSITORY')
     if not isinstance(sha, str) or not re.fullmatch(r'[0-9a-fA-F]{40}', sha):
         raise StatusError('sha must contain exactly 40 hexadecimal characters')
@@ -124,11 +131,97 @@ def _restricted(message):
                                      'account is currently restricted', 'owner is currently restricted',
                                      'owner marked spammy', 'owner has been marked spammy',
                                      'actions has been disabled for this user',
-                                     'account has been suspended', 'account is suspended'))
+                                     'account has been suspended', 'account is suspended',
+                                     'account has been blocked', 'user is blocked',
+                                     'pipeline minutes quota', 'ci/cd minutes quota'))
+
+
+def _is_gitlab_host(host):
+    return 'gitlab' in host.lower()
+
+
+def _normalize_gitlab_pipelines(rows, sha):
+    """Convert a GitLab /projects/:id/pipelines JSON list into workflow_runs shape."""
+    if not isinstance(rows, list):
+        raise FetchError('invalid_provider_shape')
+    if len(rows) > PAGE_SIZE:
+        raise FetchError('invalid_provider_count')
+    status_map = {
+        'success': ('completed', 'success'),
+        'failed': ('completed', 'failure'),
+        'canceled': ('completed', 'cancelled'),
+        'skipped': ('completed', 'skipped'),
+        'manual': ('waiting', None),
+        'scheduled': ('queued', None),
+        'created': ('queued', None),
+        'waiting_for_resource': ('queued', None),
+        'preparing': ('queued', None),
+        'pending': ('queued', None),
+        'running': ('in_progress', None),
+    }
+    workflow_runs = []
+    for item in rows:
+        if not isinstance(item, dict):
+            raise FetchError('invalid_provider_shape')
+        raw_status = str(item.get('status') or '')
+        mapped_status, conclusion = status_map.get(raw_status, (raw_status or 'unknown', None))
+        workflow_runs.append({
+            'id': item.get('id'),
+            'workflow_id': item.get('iid', item.get('id')),
+            'name': f"GitLab Pipeline ({item.get('ref') or 'unknown'})",
+            'event': item.get('source') or 'gitlab_pipeline',
+            'status': mapped_status,
+            'conclusion': conclusion,
+            'run_attempt': 1,
+            'head_sha': item.get('sha'),
+        })
+    return {'total_count': len(workflow_runs), 'workflow_runs': workflow_runs}
+
+
+def fetch_gitlab_runs(host, repo, sha):
+    """Exactly one glab api invocation; no pagination or application-level retry."""
+    encoded_repo = quote(repo, safe='')
+    endpoint = f'projects/{encoded_repo}/pipelines?sha={sha}&per_page={PAGE_SIZE}'
+    env = dict(os.environ, GLAB_CHECK_UPDATE='false', NO_PROMPT='1', GLAB_PAGER='cat')
+    env.pop('GLAB_DEBUG', None)
+    try:
+        result = subprocess.run(['glab', 'api', '--hostname', host, '--method', 'GET', endpoint],
+                                capture_output=True, text=True, timeout=FETCH_TIMEOUT_SECONDS, env=env)
+    except subprocess.TimeoutExpired as exc:
+        raise FetchError('provider_timeout') from exc
+    except UnicodeError as exc:
+        raise FetchError('invalid_provider_output') from exc
+    except OSError as exc:
+        raise FetchError('provider_command_unavailable') from exc
+    if result.returncode:
+        message = result.stderr + '\n' + result.stdout
+        code = re.search(r'HTTP\s+(401|403|429)\b', message, re.IGNORECASE)
+        if code:
+            raise FetchError('provider_http_' + code[1], provider_stop=True)
+        if _restricted(message):
+            raise FetchError('provider_restriction', provider_stop=True)
+        if 'glab auth login' in message.lower() or 'not logged into' in message.lower():
+            raise FetchError('provider_authentication_required', provider_stop=True)
+        raise FetchError('provider_request_failed')
+    try:
+        document = json.loads(result.stdout)
+    except (ValueError, UnicodeError) as exc:
+        raise FetchError('invalid_provider_json') from exc
+    if isinstance(document, dict):
+        if _restricted(str(document.get('message', ''))):
+            raise FetchError('provider_restriction', provider_stop=True)
+        if 'workflow_runs' in document:
+            return document
+        raise FetchError('invalid_provider_shape')
+    return _normalize_gitlab_pipelines(document, sha)
 
 
 def fetch_runs(host, repo, sha):
-    """Exactly one gh api invocation; no pagination or application-level retry."""
+    """Exactly one provider API invocation; blocks retired GitHub repository."""
+    if host == 'github.com' and repo.lower() in RETIRED_GITHUB_REPOS:
+        raise FetchError('provider_retired_repository', provider_stop=True)
+    if _is_gitlab_host(host):
+        return fetch_gitlab_runs(host, repo, sha)
     endpoint = f'repos/{repo}/actions/runs?head_sha={sha}&per_page={PAGE_SIZE}'
     env = dict(os.environ, GH_PROMPT_DISABLED='1', GH_PAGER='cat')
     # Debug output can contain request details; it is neither needed nor stored.
@@ -163,6 +256,8 @@ def fetch_runs(host, repo, sha):
 
 
 def _snapshot(document, host, repo, sha, observed):
+    if isinstance(document, list) and _is_gitlab_host(host):
+        document = _normalize_gitlab_pipelines(document, sha)
     if not isinstance(document, dict) or not isinstance(document.get('workflow_runs'), list):
         raise FetchError('invalid_provider_shape')
     rows, total = document['workflow_runs'], document.get('total_count')

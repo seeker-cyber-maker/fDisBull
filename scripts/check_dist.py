@@ -546,8 +546,8 @@ REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/brok
 REQUIRED_PE_RESOURCES |= {"dos_guest/__init__.py", "dos_guest/init.sh", "dos_guest/broker.py", "dos_qemu.py", "dos_runtime.py", "qemu_machine.py", "gdb_rpc.py", "guest_assets.py", "wine_deltas.py"}
 REQUIRED_PE_RESOURCES.add("ghidra_scripts/RomAsm.java")
 REQUIRED_PE_RESOURCES.add("ghidra_scripts/RomAsmServer.java")
-REQUIRED_KNOWLEDGE_RESOURCES = {"media.py", "capture_audit.py", "skills/fdisbull-investigate/references/media-modules.md",
-                                "data/console-udc-demo.json"}
+REQUIRED_KNOWLEDGE_RESOURCES = {"data/dinopark-e55-terminal.json", "media.py", "capabilities.py", "capture_audit.py",
+                                "skills/fdisbull-investigate/references/media-modules.md", "data/console-udc-demo.json"}
 REQUIRED_KNOWLEDGE_RESOURCES |= {"data/dos-runtime-signatures.json", "data/MICROSOFT-DOS-LICENSE.txt"}
 REQUIRED_KNOWLEDGE_RESOURCES |= {"skills/fdisbull-investigate/SKILL.md", "skills/fdisbull-investigate/references/scenes.md",
                                  "skills/fdisbull-investigate/references/methodology.md",

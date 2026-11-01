@@ -71,29 +71,23 @@ prefix locally, then run
 from the source tree. A release is not locally complete until the active
 payload, version, commit and selector all verify.
 
-## CI coordination
+## Repository mirrors and CI coordination (GitLab 30-day trial + local Git parity)
 
-Read [CI triggers and status coordination](docs/CI_COORDINATION.md) before
-starting or observing hosted checks. Name one CI owner for the repository;
-other agents consume that owner's dated receipt. Use `scripts/ci_status.py`
-in cache-only mode by default. Only the named owner uses `--refresh --owner`;
-the helper permits one repository-wide refresh per five minutes, shared across
-local worktrees. Do not run parallel job-status loops, `gh run watch`, automatic
-retry loops, or empty commits to restart CI. Independent cloud clones do not
-share the local cooldown: coordinate one owner across them explicitly.
-
-Feature branches run automatic checks through PR events. Before a PR exists,
-use an explicitly authorized manual qualification when needed. Main and version
-tags retain both workflows. A missing, skipped, stale or cancelled check is not
-qualification. Stop hosted probing when the provider restricts the account;
-resume only after normal access is restored. Do not create background polling
-or monitoring services without a separate user request.
+- **GitHub (`origin` / `seeker-cyber-maker/fDisBull`) is permanently retired and obsolete.** Never push to, fetch from, or poll GitHub (`origin` push URL is locked to `RETIRED_GITHUB_DO_NOT_PUSH`).
+- **Local Git and GitLab (`gitlab` -> `https://gitlab.com/brewster-jennings-group/fdisbull.git`, project `88349936`) are equal representations.** Because GitLab is under a 30-day evaluation trial, agents must update **both** the local Git repository (`local-hub` at `/Volumes/GitHub/GitHub/fDisBull-hub/fDisBull.git` and local branches/tags in `/Volumes/CODEX/Codex_Projects/fDisBull`) and GitLab (`gitlab`), using `python scripts/sync_mirrors.py` or pushing to the `dual` remote (`git push -o ci.skip dual <branch>`).
+- Read [CI triggers and status coordination](docs/CI_COORDINATION.md) before starting or observing hosted checks.
+- **Anti-abuse CI rules**: `.gitlab-ci.yml` never runs automatic pipelines on feature/topic/archive branch pushes or `Draft:` Merge Requests, and heavy C++ DOSBox-X compilation jobs (`native-debugger-*`) are manual-only (`when: manual` or `FDISBULL_RUN_NATIVE_CI=1`). Always pass `-o ci.skip` when mirroring non-main branches to GitLab.
+- Name one CI owner for the repository; other agents consume that owner's dated receipt. Use `scripts/ci_status.py` in cache-only mode by default:
+  ```sh
+  python scripts/ci_status.py --host gitlab.com --repo brewster-jennings-group/fdisbull --sha "$(git rev-parse HEAD)"
+  ```
+  Only the named owner uses `--refresh --owner`; the helper permits one repository-wide refresh per five minutes, shared across local worktrees. Do not run parallel job-status loops, `glab ci trace`, `gh run watch`, automatic retry loops, or empty commits to restart CI.
 
 ## Game files and target identity
 
 Outside the narrow freeware fixture exception above, do not upload original
-or modified game binaries, assets, story images, saves,
-emulator states or byte-containing databases/archives to GitHub or packages.
+or modified game binaries, assets, story images, saves, emulator states or
+byte-containing databases/archives to GitHub, GitLab, local hubs or packages.
 Semantic UIL/game representations are allowed pending sanitation; embedded
 original files are not. Read [external targets](docs/EXTERNAL_TARGETS.md).
 New FDBs store size/SHA-256 references and loader provenance; keep their private
