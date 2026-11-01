@@ -41,5 +41,7 @@ preservation branch. The copied results remain attributed to their original
 runtime and source revision.
 
 No original `MAIN.EXE`, installer, game archive, private FDB, memory image or
-native checkpoint is included. The Space Quest evidence is authored results and
+native checkpoint is included. Sandbox paths copied in the Space Quest helper
+scripts and compile log were normalized to `/path/to/private`; the source
+archive retains the original strings. The Space Quest evidence is authored results and
 small generated excerpts, not original game payloads.

@@ -7,8 +7,8 @@
   "files": [
     {
       "path": "README.md",
-      "bytes": 2052,
-      "sha256": "4f7e2e5f6a230ff9c1a85e918a9782e7bf702c0874cea313151763199ea62fac"
+      "bytes": 2211,
+      "sha256": "fd6f0eee7e4aa7ce01bad4bf6c638f676dc955a1769467087c0f8ab4ed836c9e"
     },
     {
       "path": "civ/PLAN.md",
@@ -87,13 +87,13 @@
     },
     {
       "path": "space-quest/game-patch-evidence/extract_verified_payloads.py",
-      "bytes": 4340,
-      "sha256": "4c395ca885453957fd7aeb3a2dab85a9e0883e6a2fde206c829759a57978ec2a"
+      "bytes": 4354,
+      "sha256": "eae45228d5b68e184044a0bd01b0da8bddc2894dd2f6eb40103d724e686bdcc9"
     },
     {
       "path": "space-quest/game-patch-evidence/inno_probe.py",
-      "bytes": 3884,
-      "sha256": "9bb956cbc6a55c4f7e3df2f833a007a61ccf5b910809aad5da10af4eec60e246"
+      "bytes": 3898,
+      "sha256": "8b5531007259a5427942feddc435575dc1d7bdbba549e1c3be644b7837bd9f0d"
     },
     {
       "path": "space-quest/game-patch-evidence/make_report.py",
@@ -142,8 +142,8 @@
     },
     {
       "path": "space-quest/game-patch-evidence/results/c_compile.stderr",
-      "bytes": 1235,
-      "sha256": "8682afce042e6001de8a05ee4b08924be1e7b36069fbc5a54f99d3185f854184"
+      "bytes": 1270,
+      "sha256": "e71abd230a964d9ba3d8316f5b9aaef40c38a06b5168e8a70fd0a4c72b497efe"
     },
     {
       "path": "space-quest/game-patch-evidence/results/c_saved_read_regression.json",
@@ -377,13 +377,13 @@
     },
     {
       "path": "space-quest/ultima-evidence/Space_Quest_Ultima_Evidence/tools/extract_verified_payloads.py",
-      "bytes": 4340,
-      "sha256": "4c395ca885453957fd7aeb3a2dab85a9e0883e6a2fde206c829759a57978ec2a"
+      "bytes": 4354,
+      "sha256": "eae45228d5b68e184044a0bd01b0da8bddc2894dd2f6eb40103d724e686bdcc9"
     },
     {
       "path": "space-quest/ultima-evidence/Space_Quest_Ultima_Evidence/tools/inno_probe.py",
-      "bytes": 3884,
-      "sha256": "9bb956cbc6a55c4f7e3df2f833a007a61ccf5b910809aad5da10af4eec60e246"
+      "bytes": 3898,
+      "sha256": "8b5531007259a5427942feddc435575dc1d7bdbba549e1c3be644b7837bd9f0d"
     },
     {
       "path": "space-quest/ultima-evidence/Space_Quest_Ultima_Evidence/ultima_avatar-analysis-summary.json",

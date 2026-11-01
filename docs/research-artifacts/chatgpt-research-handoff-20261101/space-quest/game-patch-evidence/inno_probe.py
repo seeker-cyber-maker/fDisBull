@@ -3,8 +3,8 @@ Layout cross-checked against dscharrer/innoextract src/{setup,stream}; never run
 """
 from pathlib import Path
 import re,struct,lzma,zlib,json,hashlib
-ROOT=Path('/mnt/data/game_intake')
-INPUT=Path('/mnt/data')
+ROOT=Path('/path/to/private/game_intake')
+INPUT=Path('/path/to/private')
 def u32(b,p):return struct.unpack_from('<I',b,p)[0]
 def lzma1(b):
  prop=b[0];ds=u32(b,1)

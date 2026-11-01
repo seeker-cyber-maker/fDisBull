@@ -4,8 +4,8 @@ No Inno Pascal bytecode, PE executable or helper DLL is executed.
 """
 from pathlib import Path
 import struct,re,json,hashlib,zlib,sys
-ROOT=Path('/mnt/data/game_intake')
-INPUT=Path('/mnt/data')
+ROOT=Path('/path/to/private/game_intake')
+INPUT=Path('/path/to/private')
 def safe_path(root,name):
  name=name.replace('\\','/');p=Path(name)
  if p.is_absolute() or '..' in p.parts or ':' in name:raise ValueError('unsafe path')
