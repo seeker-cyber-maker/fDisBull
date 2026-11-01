@@ -120,6 +120,11 @@ class PEDebugSession(WineCpuDeltaSessionMixin,ExperimentSessionMixin,PELayerSess
     def call(self, method, params=None, *, timeout_ms=30000):
         if self.closed:raise DebuggerError('Debugger session is closed')
         self._cpu_delta_before_call(method,params)
+        deadline=getattr(self,'_rpc_deadline',None)
+        if deadline is not None:
+            remaining=int((deadline-time.monotonic())*1000)
+            if remaining<=0:raise TimeoutError('Shared debugger host-time budget expired')
+            timeout_ms=min(timeout_ms,remaining)
         if method=='layers.configure':return self._configure_pe_layers(params)
         return self.rpc.call(method,params,timeout_ms=timeout_ms)
 

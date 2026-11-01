@@ -468,3 +468,78 @@ def test_ida_deltas_are_not_admitted_or_enabled_in_scripts():
         session._cpu_delta_native()
     assert not {'delta-start', 'delta-record', 'delta-rewind', 'delta-recover', 'delta-status'} & session.script_operations
 
+
+@pytest.fixture
+def delta_clock(monkeypatch):
+    clock = SimpleNamespace(now=100.0)
+    monkeypatch.setattr('time.monotonic', lambda: clock.now)
+    return clock
+
+
+def test_expired_shared_deadline_refuses_pe_rpc_before_dispatch(debug, delta_clock):
+    debug._rpc_deadline = delta_clock.now - 0.001
+    calls = list(debug.rpc.calls)
+    with pytest.raises(TimeoutError, match='budget|deadline'):
+        debug.call('status')
+    assert debug.rpc.calls == calls
+    assert not debug.closed
+
+
+@pytest.mark.parametrize('requested,expected', [(30000, 125), (50, 50)])
+def test_pe_rpc_timeout_respects_remaining_shared_budget(debug, delta_clock, monkeypatch, requested, expected):
+    debug._rpc_deadline = delta_clock.now + 0.125
+    native_call = debug.rpc.call
+    observed_timeouts = []
+
+    def observed_call(method, params=None, timeout_ms=30000):
+        observed_timeouts.append(timeout_ms)
+        return native_call(method, params, timeout_ms=timeout_ms)
+
+    monkeypatch.setattr(debug.rpc, 'call', observed_call)
+    assert debug.call('status', timeout_ms=requested)['state'] == 'stopped'
+    assert observed_timeouts == [expected]
+
+
+@pytest.mark.parametrize('scripted', [False, True])
+def test_post_step_deadline_expiry_never_dispatches_more_rpcs_or_claims_success(
+        debug, delta_clock, monkeypatch, scripted):
+    initial = deepcopy((debug.cpu, debug.ram))
+    debug.cpu_delta_start(RANGES)
+    native_call = debug.rpc.call
+    dispatches = []
+
+    def completed_step_after_deadline(method, params=None, timeout_ms=30000):
+        dispatches.append((method, delta_clock.now, getattr(debug, '_rpc_deadline', None)))
+        result = native_call(method, params, timeout_ms=timeout_ms)
+        if method == 'step':
+            # Model an already-dispatched native step returning after the
+            # operation budget. Later RPCs still must not be dispatched.
+            delta_clock.now += 0.125
+        return result
+
+    monkeypatch.setattr(debug.rpc, 'call', completed_step_after_deadline)
+    if scripted:
+        result = debug.script({'format': 'fdisbull-script-1', 'steps': [
+            {'op': 'delta-record', 'count': 1}]}, timeout_ms=100)
+        assert not result['ok']
+        assert result['completed_steps'] == 0
+        assert result['error']['type'] == 'TimeoutError'
+    else:
+        with pytest.raises(TimeoutError, match='budget|deadline'):
+            debug.cpu_delta_record(timeout_ms=100)
+    assert not [(method, now, deadline) for method, now, deadline in dispatches
+                if deadline is not None and now >= deadline]
+    assert debug.rpc.trace_calls == 1
+    assert debug._rpc_deadline is None
+    status = debug.cpu_delta_status()
+    assert not status['valid'] and status['cursor'] == 0
+    assert not debug.closed
+    assert debug.project.db.execute(
+        "SELECT COUNT(*) FROM debug_artifacts WHERE kind='cpu-ram-delta'").fetchone()[0] == 0
+    # The failed recording retained its complete Anchor Stone. Once the
+    # deadline scope exits, explicit recovery can safely restore it.
+    recovered = debug.cpu_delta_recover()
+    assert recovered['full_native_anchor_loaded']
+    assert not recovered['history']['frozen']
+    assert (debug.cpu, debug.ram) == initial
+

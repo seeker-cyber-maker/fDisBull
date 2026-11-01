@@ -45,6 +45,10 @@ foreground JSON debugger owner. Literal range structure/length budgets are
 checked before any script step executes; dynamically resolved values and
 project mapping are checked before recording.
 
+New register/memory/status RPCs honor the remaining shared recording or script
+deadline. Expiration invalidates an incomplete recording instead of reporting
+success. An already dispatched native serialization retains its own RPC deadline.
+
 ## Refusal, failure and recovery
 
 Before undo, the recorder validates the full selected CPU/RAM projection,
