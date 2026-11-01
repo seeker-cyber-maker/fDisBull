@@ -129,7 +129,6 @@ carries every field and its evidence; the important groups are:
 | `$rule_options` | `u8` | DGROUP:E3C4 `_rule_options`; civd GLOBALS.C:186, NEWGAME.C:82 | source-bound constant 15 at new game |
 | `$tribe`, `$human_civ` | `u8` | DGROUP:D7F4 `_civ_tribe_of`; DGROUP:D7EE `_civnow`; civd NEWGAME.C:113-117 | dynamic row mapping for both groups |
 | `$tribe_row`, `$tribe_split` | `u8` | zero-based menu row; `civ_total+1`; civd NEWGAME.C:103-117 | navigation state; split written by each competition row |
-| `$treasury` | `i32` | DGROUP:B1D6[civ]; Civ64 SCENES-PLAY 5.2 | declared economy state |
 | `$tax_rate`, `$science_rate`, `$luxury_rate` | `u8` | DGROUP:DF0E/B210 and `10-tax-science`; Civ64 SCENES-PLAY 7.20 | declared rates |
 | `$view_x`, `$view_y` | `u8` | DGROUP:D4CC/D75E; Civ64 SCENES-PLAY 3 | viewport projection |
 | `$selected_city` | `u8` | selector into DGROUP:70EC records | declared index |
