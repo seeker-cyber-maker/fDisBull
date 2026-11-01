@@ -1,5 +1,15 @@
 # DinoPark analysis friction and retained Z terminal replies
 
+The [return-to-park deadline and read-only recovery fix](VERIFICATION-DINOPARK-PARK-RETURN-RECOVERY-2026-11-01.md)
+addresses the subsequent original return timeout. It retains the actual queued
+input before the continuous guest interval, shares the complete host deadline,
+and qualifies the existing Park destination without guest execution or input.
+Recognized notice continuations and committed-head readback retries remain
+separate from arrival confirmation. The original native-save case qualifies both
+normal return and repeated read-only recovery with all 97 probes armed. Older
+held providers remain preserved, including a new confirmed-purchase presentation
+blocker found during fresh setup.
+
 The [park-exit deadline and read-only recovery fix](VERIFICATION-DINOPARK-PARK-EXIT-RECOVERY-2026-11-01.md)
 qualifies the normal original exit after month rollover and the final-source
 fault/reconciliation/retry path, with all 97 probes verified armed through the
