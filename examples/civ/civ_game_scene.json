@@ -88,11 +88,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -261,11 +261,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -434,11 +434,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -607,11 +607,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -780,11 +780,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -953,11 +953,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -1126,11 +1126,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -1299,11 +1299,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -1472,11 +1472,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -1651,11 +1651,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -1830,11 +1830,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -2009,11 +2009,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -2188,11 +2188,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -2367,11 +2367,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -2570,11 +2570,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -2773,11 +2773,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -2976,11 +2976,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -3179,11 +3179,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -3382,11 +3382,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -3577,11 +3577,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -3831,11 +3831,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -4004,11 +4004,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -4177,11 +4177,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -4380,11 +4380,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -4571,11 +4571,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -4756,11 +4756,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -4941,11 +4941,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -5011,7 +5011,7 @@
    "resources": {
     "build-settlers-text": {
      "kind": "text",
-     "text": "Settlers committed as production code 0."
+     "text": "Settlers committed as production code 0; unit cost 4."
     }
    },
    "body": [
@@ -5026,6 +5026,12 @@
      "op": "set",
      "var": "$production",
      "value": 0
+    },
+    {
+     "id": "build-settlers-set-unit_cost",
+     "op": "set",
+     "var": "$unit_cost",
+     "value": 4
     },
     {
      "id": "build-settlers-set-chooser_open",
@@ -5126,11 +5132,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -5196,7 +5202,7 @@
    "resources": {
     "build-militia-text": {
      "kind": "text",
-     "text": "Militia committed as production code 1."
+     "text": "Militia committed as production code 1; unit cost 1."
     }
    },
    "body": [
@@ -5213,6 +5219,12 @@
      "value": 1
     },
     {
+     "id": "build-militia-set-unit_cost",
+     "op": "set",
+     "var": "$unit_cost",
+     "value": 1
+    },
+    {
      "id": "build-militia-set-chooser_open",
      "op": "set",
      "var": "$chooser_open",
@@ -5225,7 +5237,7 @@
     }
    ]
   },
-  "build-improvement": {
+  "build-marketplace": {
    "format": "fdisbull-il-1",
    "role": "uil",
    "variables": {
@@ -5311,11 +5323,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -5379,34 +5391,46 @@
     }
    },
    "resources": {
-    "build-improvement-text": {
+    "build-marketplace-text": {
      "kind": "text",
-     "text": "Representative improvement committed as production code -5."
+     "text": "MarketPlace committed as production code -5; improvement cost 8."
     }
    },
    "body": [
     {
-     "id": "build-improvement-set-screen",
+     "id": "build-marketplace-set-screen",
      "op": "set",
      "var": "$screen",
      "value": 10
     },
     {
-     "id": "build-improvement-set-production",
+     "id": "build-marketplace-set-production",
      "op": "set",
      "var": "$production",
      "value": -5
     },
     {
-     "id": "build-improvement-set-chooser_open",
+     "id": "build-marketplace-set-improvement_cost",
+     "op": "set",
+     "var": "$improvement_cost",
+     "value": 8
+    },
+    {
+     "id": "build-marketplace-set-improvement_index",
+     "op": "set",
+     "var": "$improvement_index",
+     "value": 5
+    },
+    {
+     "id": "build-marketplace-set-chooser_open",
      "op": "set",
      "var": "$chooser_open",
      "value": false
     },
     {
-     "id": "build-improvement-text",
+     "id": "build-marketplace-text",
      "op": "text",
-     "resource": "build-improvement-text"
+     "resource": "build-marketplace-text"
     }
    ]
   },
@@ -5496,11 +5520,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -5819,11 +5843,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -6132,11 +6156,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -6335,11 +6359,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -6526,11 +6550,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -6729,11 +6753,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -6927,11 +6951,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -7130,11 +7154,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -7317,11 +7341,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -7520,11 +7544,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -7723,11 +7747,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -7926,11 +7950,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -8129,11 +8153,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -8332,11 +8356,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -8535,11 +8559,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -8738,11 +8762,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -8941,11 +8965,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -9120,11 +9144,11 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 10
+     "initial": 4
     },
     "$improvement_cost": {
      "type": "u16",
-     "initial": 20
+     "initial": 8
     },
     "$improvement_index": {
      "type": "u8",
@@ -10351,12 +10375,12 @@
   },
   {
    "id": "city-buy-improvement",
-   "label": "Buy improvement",
+   "label": "Buy MarketPlace",
    "aliases": [
     "buy improvement",
-    "rush improvement"
+    "buy marketplace"
    ],
-   "description": "Improvement rush price doubles the clamped cost raw; wonders past index 21 double again. CITYMGT.C:1408-1415.",
+   "description": "MarketPlace rush price doubles the clamped cost raw; wonders past index 21 double again. CITYMGT.C:1408-1415.",
    "bindings": [
     {
      "verb": "buy",
@@ -10457,17 +10481,18 @@
    "context": "production"
   },
   {
-   "id": "build-improvement",
-   "label": "Representative improvement",
+   "id": "build-marketplace",
+   "label": "MarketPlace",
    "aliases": [
-    "improvement",
-    "building"
+    "marketplace",
+    "market place",
+    "improvement"
    ],
-   "description": "Sets production code -5 as a representative improvement index; the source chooser writes -improvement.",
+   "description": "Sets production code -5; improvements[5] is MarketPlace with cost 8 in 47401/.03/.05.",
    "bindings": [
     {
      "verb": "build",
-     "program": "build-improvement"
+     "program": "build-marketplace"
     }
    ],
    "context": "production"
