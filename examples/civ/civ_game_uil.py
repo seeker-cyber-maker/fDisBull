@@ -85,6 +85,11 @@ VARIABLES = {
     "$selected_city": {"type": "u8", "initial": 0},
     "$selected_unit": {"type": "u16", "initial": 0},
     "$production": {"type": "i16", "initial": 0},
+    "$shield_box": {"type": "i16", "initial": 0},
+    "$money": {"type": "i32", "initial": 1500},
+    "$unit_cost": {"type": "u16", "initial": 10},
+    "$buy_price": {"type": "u32", "initial": 0},
+    "$buy_temp": {"type": "u32", "initial": 0},
     "$chooser_open": {"type": "bool", "initial": False},
     "$unit_list_open": {"type": "bool", "initial": False},
     "$unit_count": {"type": "u8", "initial": 3},
@@ -116,6 +121,11 @@ STATE_EVIDENCE = {
     "$selected_city": "UIL selector into the 128 city records at DGROUP:70EC; no direct DOS symbol.",
     "$selected_unit": "UIL selector into DGROUP:81D4 + civ*600h + unit*0Ch; Civ64 SCENES-PLAY 2.2.",
     "$production": "DGROUP:70EC + city*1Ch + 09h; civd CITYMGT.C:1444 and reference/struct_city.md.",
+    "$shield_box": "DGROUP:70EC + city*1Ch + 0Eh; civd CITYMGT.C:1433 and reference/struct_city.md.",
+    "$money": "money[selected_owner]; civd CITYMGT.C:1428-1434. Scene starts at 1500.",
+    "$unit_cost": "utypes[production].cost; civd CITYMGT.C:1405. Scene uses a representative cost of 10.",
+    "$buy_price": "Rush price scratch_i; civd CITYMGT.C:1406-1415.",
+    "$buy_temp": "Rush-price intermediate from scratch_i; civd CITYMGT.C:1407-1412.",
     "$chooser_open": "UIL context flag for key c / R:0ADE:0421; Civ64 SCENES-PLAY 7.12.",
     "$unit_list_open": "UIL context flag for key a / 0A99:7785; Civ64 SCENES-PLAY 7.1.",
     "$unit_count": "Representative garrison length 3; source fills local unit_count_i from the city garrison up to 18 at CITYMGT.C:1158-1165.",
@@ -745,7 +755,9 @@ SCREEN_SPECS = [
                 "city-buy",
                 "Buy production",
                 ["buy", "purchase"],
-                "Buy price/guard/commit are recovered in the separate buy contract; not exercised here.",
+                "Unit rush price is computed from utypes cost and shield_box; commit sets shield_box to 10*cost. CITYMGT.C:1401-1435.",
+                "buy",
+                "city-buy-production",
             ),
             _object(
                 "city-auto",
@@ -1502,6 +1514,134 @@ def build_programs() -> dict:
         ),
     )
     add(
+        "city-buy-production",
+        _program(
+            "city-buy-production",
+            [
+                {
+                    "id": "buy-cost",
+                    "op": "set",
+                    "var": "$buy_price",
+                    "value": {"var": "$unit_cost"},
+                },
+                {
+                    "id": "buy-cost-ten",
+                    "op": "multiply",
+                    "var": "$buy_price",
+                    "value": 10,
+                },
+                {
+                    "id": "buy-raw",
+                    "op": "subtract",
+                    "var": "$buy_price",
+                    "value": {"var": "$shield_box"},
+                },
+                {
+                    "id": "buy-clamp-low",
+                    "op": "if",
+                    "condition": _not(
+                        {"op": "ge", "left": {"var": "$buy_price"}, "right": 0}
+                    ),
+                    "then": [
+                        {"id": "buy-zero", "op": "set", "var": "$buy_price", "value": 0}
+                    ],
+                    "else": [],
+                },
+                {
+                    "id": "buy-clamp-high",
+                    "op": "if",
+                    "condition": {
+                        "op": "ge",
+                        "left": {"var": "$buy_price"},
+                        "right": 1000,
+                    },
+                    "then": [
+                        {
+                            "id": "buy-cap",
+                            "op": "set",
+                            "var": "$buy_price",
+                            "value": 999,
+                        }
+                    ],
+                    "else": [],
+                },
+                {
+                    "id": "buy-remember",
+                    "op": "set",
+                    "var": "$buy_temp",
+                    "value": {"var": "$buy_price"},
+                },
+                {
+                    "id": "buy-square",
+                    "op": "multiply",
+                    "var": "$buy_price",
+                    "value": {"var": "$buy_price"},
+                },
+                {
+                    "id": "buy-twentieth",
+                    "op": "divide",
+                    "var": "$buy_price",
+                    "value": 20,
+                },
+                {"id": "buy-linear", "op": "multiply", "var": "$buy_temp", "value": 2},
+                {
+                    "id": "buy-total",
+                    "op": "add",
+                    "var": "$buy_price",
+                    "value": {"var": "$buy_temp"},
+                },
+                {
+                    "id": "buy-empty-double",
+                    "op": "if",
+                    "condition": _eq("$shield_box", 0),
+                    "then": [
+                        {
+                            "id": "buy-double",
+                            "op": "multiply",
+                            "var": "$buy_price",
+                            "value": 2,
+                        }
+                    ],
+                    "else": [],
+                },
+                {
+                    "id": "buy-guard",
+                    "op": "require",
+                    "condition": {
+                        "op": "ge",
+                        "left": {"var": "$money"},
+                        "right": {"var": "$buy_price"},
+                    },
+                },
+                {
+                    "id": "buy-store-cost",
+                    "op": "set",
+                    "var": "$shield_box",
+                    "value": {"var": "$unit_cost"},
+                },
+                {
+                    "id": "buy-store-shields",
+                    "op": "multiply",
+                    "var": "$shield_box",
+                    "value": 10,
+                },
+                {
+                    "id": "buy-charge",
+                    "op": "subtract",
+                    "var": "$money",
+                    "value": {"var": "$buy_price"},
+                },
+                {"id": "buy-text", "op": "text", "resource": "city-buy-text"},
+            ],
+            {
+                "city-buy-text": {
+                    "kind": "text",
+                    "text": "Unit rush purchased: shield_box set to 10*cost and the treasury charged.",
+                }
+            },
+        ),
+    )
+    add(
         "toggle-auto-build",
         _toggle_bool(
             "toggle-auto-build",
@@ -1941,7 +2081,7 @@ def build_provenance(
         "limits": [
             "Partial scene graph and state projection, not a full game simulation.",
             "No DOS execution, VGA rendering, input decoding, AI, combat, technology, diplomacy, save parsing or economy model.",
-            "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; representative tribe rows 1 and 9 are bound; city auto-build toggles status bit 10h; unit-list next/previous clamp over a representative 3-unit garrison and select stores the cursor. No setup or city action has a live-screen observation.",
+            "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; representative tribe rows 1 and 9 are bound; city auto-build toggles status bit 10h; unit-list next/previous clamp over a representative 3-unit garrison and select stores the cursor; city buy computes the source unit rush price from a representative unit cost and commits shields. No setup or city action has a live-screen observation.",
             "The game-over context is state-reachable for inspection; its trigger conditions are not modelled.",
             "Every screen boundary is resolved against a civd function; this is address resolution, not Windows-to-DOS byte equivalence.",
         ],
