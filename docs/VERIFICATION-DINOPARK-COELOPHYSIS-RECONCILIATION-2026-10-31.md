@@ -4,6 +4,9 @@ This continues the [DinoMart entry study](VERIFICATION-DINOPARK-DINOMART-RECONCI
 from source commit `076f8ab4ef85dd36faff0b66d7c13fb97e47cdc5` on the 0.26.1
 research branch. It changes the original-backed Z purchase adapter, not the
 original game. Raw game files, native states and trace databases remain private.
+Scene actions use original physical inputs and passive observation. The
+separate owned-checkpoint rehearsal is recorded as assisted state recovery;
+its rollback is distinct from the original purchase qualification.
 
 ## Retained failure and implemented change
 
@@ -23,7 +26,7 @@ the observer's causal share of the wall-clock timeout.
 
 Z now selects an authored bounded purchase helper. It sends the same five
 original inputs, in the same order: select dinosaur, select price, order,
-place in the first pen and confirm placement. Each press is delivered once and
+place the dinosaur at the verified pen location and confirm placement. Each press is delivered once and
 its original ticket is retained. After consuming its press/release interval,
 the helper checks the actual phase pixels, balances and released mouse state.
 It advances in at most 500 ms guest slices only while the next phase is absent.
@@ -202,6 +205,33 @@ restore calls at installation. The original 192-file folder remained unchanged.
 Earlier held attempts keep their own source pins and unknown outcomes; this
 fresh qualification does not retroactively certify them.
 
+## Original-game post-commit host-failure test
+
+A second fresh guest used the same frozen production source with a separately
+declared first-order diagnostic. It did not save or restore a checkpoint.
+The private wrapper was armed from a live DinoMart witness and bound the
+native/worker PID, session, run and one new order. It called the real production
+qualifier first and raised one host-only exception after committed phase and
+proof existed. Eighteen mode checks, within 105 host checks, qualified this
+fixture before launch. It introduced no game-memory/register edit or extra
+purchase input.
+
+The buy returned its controlled hold in about **35.1 seconds**. One guarded
+continuation delivered the remaining phases and hit the injected error in
+**10.5 seconds**. All five purchase inputs occurred once. Cash/working cash
+were $3,250, loan was $5,000, native record 10 contained one species-4 dinosaur,
+and month-zero purchase expense was $1,250. The actual retained RuntimeError
+response kept **`effects: applied-confirmed`**.
+
+Read-only reconciliation then certified that original buy and recovery ID,
+cleared the hold, and returned a fresh DinoMart witness. Counters recorded zero
+execution, input mutation or restore calls, one mouse-state read and unchanged
+native/session/run identity. Both original diagnostic files remained byte-for-
+byte identical. The parent independently rechecked the proof, five tickets,
+fault marker, original-action certificate, counters and diagnostic hashes.
+This qualifies the deliberate later host-failure case. The separate
+first-postcommit-frame failure remains covered by the authored source tests.
+
 ## Source checks
 
 The focused regression first failed on the old handler's 37,000 fixed guest
@@ -274,6 +304,56 @@ The canonical file-backed load identity is measured over 250,048 bytes after
 database-region digest with a different or unexplained span. Byte identity and
 this producer trace do not establish runtime use of a filename.
 
+## Final same-guest batch and retained inventory
+
+After the certified first-fresh host-fault recovery, Luna reused that guest for
+street → office → bank → office → street. All five navigation steps succeeded.
+An initial `check status` was a complete, known refusal requiring first park
+entry and sent no game input. The following `go employment` stopped after
+**10.349091 host seconds** with `SceneError: Scene operation timeout`.
+Its stored observation retains one accepted queued click, 22 unmatched polls
+over 2,170 guest milliseconds and raw selector bytes `0300`; the stored frame
+still shows the street. Employment asset reads are evidence of loader activity,
+not a qualified destination witness. Read-only observation remained incomplete,
+with no actions or reconciliation advertised. The provider remained alive and
+held. No replay, restore, quit or further navigation followed that unknown.
+
+Employment return, diner, store, fence, guide, food, opening/time, native park
+save and terminal/DOS exit were **not executed in this batch**. This batch does
+not qualify every location or a complete playthrough. The earlier purchase
+certificate remains a historical success; the current held action is the
+separate Employment navigation attempt.
+
+The final individual ledgers retain all **97 unresolved entries and 13 asset
+candidates**. Across the 201 inventory targets, the cumulative PC-arrival union
+is still 44, including three already established in the prior DinoMart packet.
+The current packet contributes 35 distinct callback targets, none among the 97.
+The separately recovered native06 raw stop belongs to the historical observed
+set and does not enlarge that union. The four inventory classes remain 41
+historical PC arrivals, 62 structured publications, one vector-only publication
+and 97 unresolved callers/producers. Publication is not invocation evidence.
+
+Retained prior and current captures supply 293 entry snapshots with zero
+caller/slot derivation mismatches: 91 near and 208 far CALL-return candidates,
+plus 38 near-cell and 219 far-slot correlations. These are bounded candidates
+and correlations, not counts of proven functions or complete effects. The
+current packet accounts for 191 snapshots. Filename analysis retains 755 entry
+snapshots, 712 exact original far-CALL candidates and 43 origins still unknown.
+The parent independently checked all **13,251 captured read prefixes** against
+their raw events and supplied original bytes: zero mismatches. These counts
+combine prior and current captures. Five hundred read rows retain limited
+filename/handle attribution after checkpoint restoration; matching prefix bytes
+do not remove that limitation.
+
+No qualified exact-name successful-open or positive-read witness was recovered
+for any of the 13 candidates. All 13 remain open; unobserved setup, failed
+observer intervals, live tails, unattributed reads and unrun locations remain
+unknown. Newly observed read names outside those candidates include
+`BLWCFFE.ABT`, `DRIP11.ABT`, `EMPOFF.ACT`, `EMPOFF.PIC` and `SPEAK.ABT`.
+In particular, the failed Employment attempt supplied positive reads of
+`EMPOFF.ACT` and `EMPOFF.PIC`; those names do not qualify `OFFICE.ACT`.
+Neither the branch screen nor these traces establishes global unusedness.
+
 ## Friction and follow-up boundaries
 
 - The input wrapper did not itself establish a deadline on the native RPC
@@ -333,6 +413,14 @@ this producer trace do not establish runtime use of a filename.
   table and reader path to be linked. A future reusable producer report should
   expose those edges and the legal-domain assumptions; literal scans and a
   no-hit trace remain supporting evidence with explicit limits.
+- Employment navigation exhausted its host allowance after only 2.17 seconds
+  of guest progress under passive instrumentation. The useful next change is
+  a shared, bounded navigation budget with retained input identity and an
+  explicit continuation or read-only reconciliation path. Increasing a
+  transport timeout alone does not authorize replaying the queued click. The
+  current source does not supply that Employment recovery path, so later
+  location tests stopped at this boundary instead of treating loader reads as
+  destination readiness.
 - A deferred-observer trial qualified land in 2.57 seconds and installed all
   221 guarded sites with zero execution/input/restore calls, but navigation
   then stopped at an observer-owned breakpoint after only two guest
@@ -343,6 +431,12 @@ this producer trace do not establish runtime use of a filename.
   separate from a game navigation timeout. A useful tool API would install
   instrumentation through an explicit native owner, with a wrapper-aware
   qualification check, instead of relying on instance attribute assignment.
+  The failed run's saved native stop still qualified one raw PC arrival after
+  independent runtime-to-project address translation and a matching 23-byte
+  pre-observer guard. It belongs to the historical 41-entry observed set, so
+  cumulative coverage does not increase. Its callback log was empty; caller
+  and at-stop code captures remain missing. The supplemental positive is kept
+  separately instead of discarding the entire failed interval.
 
 The earlier eight evidence packets were rechecked read-only: **16,133 members,
 zero size or hash mismatches**. Current live contexts remain outside that
