@@ -70,6 +70,10 @@ post-0.28 world-model examples.
   errors reproduce unchanged on 0.28.0 and come from Linux ELF/GCC fixture
   builds and one case-sensitive media fixture on this macOS host. They are not
   release acceptance for those lanes.
+- Full suite in a local Apple Linux container (`linux/amd64` under Rosetta,
+  Debian 13, Python 3.13.18, Node 20.19.2, GCC 14.2.0):
+  **2,593 passed, 156 skipped, 0 failed, 0 errors** in 156.39s. This is local
+  container evidence, not hosted Linux CI.
 - Distribution build: `fdisbull-0.29.0-py3-none-any.whl` and
   `fdisbull-0.29.0.tar.gz`; `check_dist.py` reports 196 and 708 tool-only
   entries respectively.
@@ -95,10 +99,11 @@ post-0.28 world-model examples.
 
 ## Publication gates
 
-1. Linux CI (ordinary and required-native) on the final source SHA; add GitLab
-   CI or run the existing GitHub workflows once access returns.
-2. Re-run the full suite on Linux and record environment-only macOS failures
-   separately.
+1. Hosted Linux CI (ordinary and required-native) on the final source SHA; add
+   GitLab CI or run the existing GitHub workflows once access returns. The
+   local Apple container result above does not replace hosted CI.
+2. Record the local Linux container result and re-run the full suite in hosted
+   Linux CI; keep the environment-only macOS failures separate.
 3. Build the wheel and source ZIP with `check_dist`; verify packaged skills,
    capability catalog and native resource files.
 4. Rebuild both native macOS backends and run installed-wheel acceptance.

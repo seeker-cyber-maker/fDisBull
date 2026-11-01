@@ -12,6 +12,8 @@ merged with `integration` at `b21b204` (clean merge).
 | --- | --- |
 | `record.json` | Machine-readable identities, test counts, artifact hashes and limits |
 | `full-suite-macos.log` | Full macOS pytest run with `z3-solver` and `managed` extras available |
+| `linux-container-full-suite.log` | Full suite in the local Apple Linux container |
+| `linux-container-info.txt` | Container image, platform and toolchain identities |
 | `base-0.28-three-failures.log` | Same three failing tests run at the 0.28.0 base |
 | `check-dist.log` | `scripts/check_dist.py` result for the 0.29.0 wheel and sdist |
 | `artifact-sha256.txt` | Wheel and source-distribution hashes |
@@ -24,6 +26,9 @@ merged with `integration` at `b21b204` (clean merge).
   a Linux ELF expectation on macOS, a GCC ELF fixture build, and a
   case-sensitive `VOL.2`/`vol.2` media fixture.
 - The 23 errors are Linux ELF/GCC fixture builds on this macOS host.
+- Local Apple Linux container, `linux/amd64` under Rosetta, Debian 13,
+  Python 3.13.18, Node 20.19.2, GCC 14.2.0:
+  **2,593 passed, 156 skipped, 0 failed, 0 errors** in 156.39s.
 - Wheel: `fdisbull-0.29.0-py3-none-any.whl`,
   SHA-256 `4642cbafad4860dc0abb2602237ad84f471fccd167e6e2e0fdc008cd567aaebd`.
 - Source distribution: `fdisbull-0.29.0.tar.gz`,
@@ -34,7 +39,9 @@ merged with `integration` at `b21b204` (clean merge).
 
 ## Limits
 
-This packet is local host evidence. It does not supply Linux CI, native backend
-rebuilds, installed-wheel acceptance on a fresh shared prefix, a Git tag, a
-GitLab/GitHub release, or a publication claim. The three failures and 23 errors
-must be resolved or explicitly accepted by the Linux/native release gates.
+This packet is local host evidence. The Linux result comes from a local Apple
+container, not hosted Linux CI. It does not supply native backend rebuilds,
+installed-wheel acceptance on a fresh shared prefix, a Git tag, a
+GitLab/GitHub release, or a publication claim. The macOS three failures and 23
+errors remain environment-specific and must be resolved or explicitly accepted
+by the remaining release gates.
