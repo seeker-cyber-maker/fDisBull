@@ -72,6 +72,8 @@ class GoatRun:
 
     def _admit_transport(self):
         """Adapters can refuse input and execution before either is dispatched."""
+        require(not getattr(self, 'execution_blocked', False),
+                'Earlier execution/observation failed; preserve the stop and start a fresh session')
 
     def advance(self,ms=100):
         controller=self._transport()
