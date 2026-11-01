@@ -1,12 +1,8 @@
 {
   "kind": "frozen-authored-replica-source-snapshot",
   "canonical_project": "CpuinfoReplica",
-  "canonical_commit": "3ff292ad389c2b13347110dde15409f7be088390",
-  "canonical_tree": "7d210bdcf60d2b1f4dba9937dd2bef6d45bc851b",
-  "observed_app_source_commit": "d445a7b",
-  "production_source_equivalence": "all current Sources/*.swift hashes match the observed build inputs",
-  "fdisbull_capture_tool_commit": "e1b6f164bdc139262d340395b203246c948d01bd",
-  "previous_snapshot_commit": "718136e9c918e124703219891b5450a600ecd814",
+  "canonical_commit": "9d560c98f9188db04110e975623cc7bef51aa477",
+  "canonical_tree": "1fcedcc74c75125dd9827245c6eddce5c6944a88",
   "source_files": [
     {
       "file": ".gitignore",
@@ -23,14 +19,14 @@
     {
       "file": "PARITY.md",
       "mode": "644",
-      "bytes": 4268,
-      "sha256": "82f47dc02d31c72c3b288b2c886b67b1a9ec3585d41906aec0e77831313ce421"
+      "bytes": 4393,
+      "sha256": "81bf1ddcb176bc5d660733a56acc41c13a930cce6d66ce6b3fd6e9c8646befaf"
     },
     {
       "file": "README.md",
       "mode": "644",
-      "bytes": 3500,
-      "sha256": "d604e6b71b8692f34be9f71616bed77dd4298d969b68a726b5b8b174e708ad17"
+      "bytes": 3972,
+      "sha256": "ef9f64b6a0a260797fcf968a2cf4e10cdff9ece91fe5753916e543ac2f54c8b7"
     },
     {
       "file": "Sources/CPUCore.swift",
@@ -41,8 +37,8 @@
     {
       "file": "Sources/DisplayPreferences.swift",
       "mode": "644",
-      "bytes": 2847,
-      "sha256": "532745b98047400c4ed422a763bc5bc0956cc455f74e5c759e8a7a3b8958a28d"
+      "bytes": 2042,
+      "sha256": "d468283d8a5a46e3fecbcf44dfa2c7590f6983a0d512a57ac9b52a59ea0fa2ee"
     },
     {
       "file": "Sources/MachSampler.swift",
@@ -71,8 +67,8 @@
     {
       "file": "Tests/MenuTests.swift",
       "mode": "644",
-      "bytes": 6880,
-      "sha256": "5b1636233bc750f1447e88291478223545a1d59eaf70586eede32782262847b4"
+      "bytes": 6030,
+      "sha256": "e4b7b4ed589b9cc0acf651da2426c69d87334e2bae920c9c75dcada73638ed78"
     },
     {
       "file": "Tests/SamplingTests.swift",
@@ -107,8 +103,8 @@
     {
       "file": "build-app.sh",
       "mode": "755",
-      "bytes": 1402,
-      "sha256": "d0c71b771ccd3f2fd76129dade1af10e9be5fa4b49435426d859738fa8ae0ebd"
+      "bytes": 1366,
+      "sha256": "b68eec44b191a78bd1a5da26f53891ce93d49f12bdf60e5481c06fc445a87b5a"
     },
     {
       "file": "evidence/collect_fdisbull.py",
@@ -137,8 +133,8 @@
     {
       "file": "evidence/parity-followup.json",
       "mode": "644",
-      "bytes": 2655,
-      "sha256": "9d7f2a40819dbf62bc5debf3a3bc018ea1eaeb3bc705029efaa79c6b8314bdbb"
+      "bytes": 2800,
+      "sha256": "a4f9f00d92ebe670f7315af577d388328c9f4e40e39666d26626a5cdc96371d8"
     },
     {
       "file": "evidence/source-investigation.json",
@@ -155,11 +151,14 @@
     {
       "file": "test.sh",
       "mode": "755",
-      "bytes": 866,
-      "sha256": "0b0c3a3f58ca4a4390de5c0c1a12f59adebc6f517ab09c9abfb452e0cabadf92"
+      "bytes": 953,
+      "sha256": "6ccd2685b58e67e9d1557a8d5739362f638722950d9d12ad6be5cdf1b78bf2b5"
     }
   ],
-  "original_binary_payload": false,
-  "screenshots_or_raw_AX_trees": false,
-  "scope": "source-assisted candidate;122 checks,336 authored render comparisons, current native menu/bar subset; no whole-app equivalence"
+  "source_copy_transformed": false,
+  "original_binary_or_resources": false,
+  "compiled_app_or_fdb_or_raw_capture": false,
+  "scope": "Authored native app source and checks; no whole-app equivalence or automatic native-to-UIL claim; English-only",
+  "retained_scope_commit": "a2a4aef4cda8d6a6e379cd6e2def86fb64a116e8",
+  "historical_evidence": "Earlier receipts retain their own source hashes and observation scope"
 }

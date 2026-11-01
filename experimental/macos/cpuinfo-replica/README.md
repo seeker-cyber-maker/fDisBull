@@ -57,8 +57,7 @@ The source is cpuinfo v1.7.0, revision
 `d7f9e846909f9775e1d6d03214796dbaff4d5492`,
 [published by Yusuke Shibata](https://github.com/yusukeshib/cpuinfo/tree/v1.7.0).
 Binary correspondence is unproved. [NOTICE.md](NOTICE.md) retains MIT attribution.
-[PARITY.md](PARITY.md), [evidence/parity-followup.json](evidence/parity-followup.json)
-and [evidence/live-language-followup.json](evidence/live-language-followup.json)
+[PARITY.md](PARITY.md) and [evidence/parity-followup.json](evidence/parity-followup.json)
 separate implementation, static source tests, native observations and unknowns.
 
 fDisBull revalidated original identity and stored instruction backings, and
@@ -74,3 +73,9 @@ revisions. Only authored source and sanitized derived receipts are committed;
 original binaries/resources, FDBs, screenshots, raw AX trees, preference journals
 and compiled builds remain outside Git. No installation, actual login/relogin,
 physical mixed-scale capture or whole-app equivalence is claimed.
+
+The earlier comparison state is historical. The later installed replacement
+uses the combined Simple Menu replica with CPU Graph + Memory Emoji; the two
+originals and this standalone comparison app were stopped separately. This
+standalone source remains English-only as selected in the current review.
+Build and ordinary checks do not launch a menu-bar process.

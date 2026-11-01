@@ -1,0 +1,21 @@
+{
+  "application": "Simple Menu STATUS",
+  "version": "1.8",
+  "build": "19",
+  "source_sha256": "a9e49f2746a860f11f4f087fb29cf7a56b128e42d27434e03f84e4c19fc41765",
+  "source_size": 2824128,
+  "arm64_slice_sha256": "115261c3e5928b8afdb42a51b27c3958a8ecc4597545cdc6a943d24bac6e0d97",
+  "slice_offset": 1441792,
+  "slice_size": 1382336,
+  "entry_preferred_va": "0x1000c678c",
+  "ghidra_version": "12.2",
+  "probe_source_revision": "bbcb67d8244a83d7aa4b0e35b3ca3243a7c5ff64",
+  "ghidra_script_sha256": "4a630b8fd5ebff73eba8d54641fbff03881508a973871564f38d2300de6d50a3",
+  "private_receipt_sha256": "bd7ae5436c4899842fccf23a6c7670d431e776a38938051df89c9459a7a4c6dd",
+  "c_diagnostic_sha256": "bdcd8fc3d73d3d867d024fdd7cd8f979fbd3d6c26cd32f34ae244a31e8c6fbfe",
+  "c_diagnostic_characters": 238,
+  "decompiler_status": "complete",
+  "window_bytes": 4096,
+  "claim": "exact source identity and bounded entry C diagnostic; no native-to-UIL behavioral mapping",
+  "original_app_executed": false
+}

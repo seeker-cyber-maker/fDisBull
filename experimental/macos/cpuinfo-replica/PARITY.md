@@ -32,3 +32,9 @@ The first packet is retained privately; the qualified comparator uses a fresh
 synchronized packet. Both tested menus were confirmed closed after capture.
 The original kept its process identity. The updated replica is deliberately
 left running beside it for the user's comparison.
+
+Current use: the later combined Simple Menu replica replaces the two originals.
+The earlier statement that this standalone app was left running describes that
+comparison session. Earlier receipts retain their own source/observation scope.
+The current standalone scope is English-only; the intervening Japanese
+acceptance is historical and is not a current feature or gate.

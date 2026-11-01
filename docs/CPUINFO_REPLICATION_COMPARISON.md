@@ -6,7 +6,7 @@ This experiment combines fDisBull's source-qualified binary analysis and
 reversible native capture. It does not claim automatic native-to-UIL recovery.
 
 
-## Current parity follow-up
+## Cpuinfo parity follow-up (historical comparison phase)
 
 The authored Sources in this branch are the current scope. Hash-pinned snapshot
 identities in earlier receipts predate the removal of incidental Japanese
@@ -37,9 +37,11 @@ packet is retained privately; the fresh synchronized packet passes comparison.
 The comparator no longer asserts a hardcoded tool revision absent from packet
 metadata. The run receipt separately pins the actual tool source.
 
-Both menus were confirmed closed after tests; both apps are deliberately left
-running for user comparison. The original process/binary/preferences and all
-login settings remain untouched. Actual login/relogin, original live text-mode
+Both menus were confirmed closed after those tests; both apps were then left
+running for comparison without changing the original preferences/login settings.
+That state is historical: the later [combined replica replacement](MACOS_REPLICA_UPDATES.md)
+stopped both originals and the standalone cpuinfo replica, and configured the
+combined app for login. Actual login/relogin, original live text-mode
 pixels and physical mixed-scale capture remain unqualified. Original updater
 configuration is residual/unresolved; no network updater was introduced.
 
