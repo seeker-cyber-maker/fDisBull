@@ -15,6 +15,7 @@ AGENT_SKILL_GUIDES = {
     'references/proofs.md': 'Build explicit bounded Z3 models and report their assumptions and scope',
     'references/workflows.md': 'Choose static analysis, native debugging, scene or text-player entry points',
     'references/udl-uil-udc.md': 'Qualify source blocks, retained Zork IR, recovered intents and original-backed DOS compilation',
+    'references/common-uil.md': 'Compose indexed typed UIL, semantic catalogs, recoverable blocks and standalone selected output',
     'references/recovery-research.md': 'Qualify research, retain reusable meanings and compare recovery depth and cost',
     'references/semantic-contracts.md': 'Recover complete intent contracts and compare facts, effects, time and projection losses',
     'references/media-modules.md': 'Reuse shipped parser APIs, recover missing tooling, and extend bounded format specifications',
@@ -44,6 +45,15 @@ AGENT_SKILLS = {
 }
 
 METHODS = {
+    'uil-check':'Validate indexed common UIL or a complete package; program,[presentation,catalog,orchestration] or package; no execution',
+    'uil-catalog':'Compile a list of UDL descriptors into exact semantic groups; blocks; unsupported languages remain explicit',
+    'uil-run':'Execute bounded indexed UIL with typed copies and planned effects; program,presentation,[catalog,orchestration,inputs,max_steps]',
+    'uil-compile':'Generate standalone Python/JavaScript with selected blocks, shims and presentation; program,presentation,catalog,orchestration,output,[target]',
+    'uil-fold':'Retain a function child graph in a recoverable higher-level block; program,function,semantic_id',
+    'uil-expand':'Recover the exact lower-level program from a pinned fold receipt; program,recovery',
+    'uil-store':'Persist an immutable common UIL package; project,name,package,[version,parent,author]',
+    'uil-info':'Inspect an immutable common UIL package; project,revision,[full]',
+    'uil-list':'List common UIL packages without payloads; project,[limit,offset]',
     'capture-audit':'Decode/hash finalized AVI segments and optionally sample frames; inputs,output,[every,html,timeout,max_frames,max_frame_bytes,max_input_bytes,max_metadata_bytes,max_output_bytes,ffmpeg,ffprobe]; no guest or project required',
     'media-modules':'Discover shipped media adapters, APIs, dependencies and limits; no project required',
     'media-inspect':'Inventory bounded source members without execution; path,adapter,[volume_root,number]',
@@ -259,6 +269,9 @@ def invoke(method, params, debugger=None):
     if not isinstance(params,dict):
         raise ValueError("params must be an object")
     p = dict(params)
+    if method.startswith('uil-'):
+        from .uil_api import invoke_common
+        return invoke_common(method,p)
     if method in ('output-info','output-read','output-select','output-export'):
         policy=current_output_policy()
         artifact=p.pop('artifact')
@@ -532,13 +545,13 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('capture-audit','media-modules','media-inspect','media-extract','agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('uil-check','uil-catalog','uil-run','uil-compile','uil-fold','uil-expand','capture-audit','media-modules','media-inspect','media-extract','agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         result=invoke(request["method"],params,debugger)
         # Catalog definitions can contain enum members named "address" or
         # "target". Preserve their numeric values for exact round trips.
-        if request["method"]!='export-types':result=public_addresses(result)
+        if request["method"]!='export-types' and not request['method'].startswith('uil-'):result=public_addresses(result)
         value={"id":request_id,"ok":True,"result":result}
     except (ValueError,TypeError,KeyError,OSError,sqlite3.Error,OverflowError,AttributeError,RecursionError) as e:
         value={"id":request_id,"ok":False,"error":{"type":type(e).__name__,"message":str(e)}}
@@ -627,6 +640,23 @@ def parser():
     c.add_argument('--parent'); c.add_argument('--source'); c.add_argument('--source-name',default='story')
     c=sub.add_parser('il-info',help='Read an immutable IL revision and verify its attached source evidence')
     c.add_argument('project'); c.add_argument('revision'); c.add_argument('--version',type=int)
+    for name in ('uil-check','uil-run','uil-compile'):
+        c=sub.add_parser(name,help=METHODS[name]);c.add_argument('program')
+        c.add_argument('--presentation',required=name!='uil-check')
+        c.add_argument('--catalog',required=name=='uil-compile')
+        c.add_argument('--orchestration',required=name=='uil-compile')
+        if name=='uil-run':
+            c.add_argument('--inputs',help='JSON file with the indexed entry input list')
+            c.add_argument('--max-steps',type=int,default=4000000)
+        if name=='uil-compile':
+            c.add_argument('--output',required=True);c.add_argument('--target',choices=('python','javascript'),default='python')
+    c=sub.add_parser('uil-catalog',help=METHODS['uil-catalog']);c.add_argument('blocks')
+    c=sub.add_parser('uil-fold',help=METHODS['uil-fold']);c.add_argument('program');c.add_argument('function',type=int);c.add_argument('semantic_id')
+    c=sub.add_parser('uil-expand',help=METHODS['uil-expand']);c.add_argument('program');c.add_argument('recovery')
+    c=sub.add_parser('uil-store',help=METHODS['uil-store']);c.add_argument('project');c.add_argument('name');c.add_argument('package')
+    c.add_argument('--version',type=int);c.add_argument('--parent');c.add_argument('--author',default='agent')
+    c=sub.add_parser('uil-info',help=METHODS['uil-info']);c.add_argument('project');c.add_argument('revision');c.add_argument('--full',action='store_true')
+    c=sub.add_parser('uil-list',help=METHODS['uil-list']);c.add_argument('project');c.add_argument('--limit',type=int,default=100);c.add_argument('--offset',type=int,default=0)
     for name in ('udc-capture','udc-info','udc-programs','udc-compile'):
         c=sub.add_parser(name,help='Original-backed DOS block definitions and private byte-preserving compilation')
         c.add_argument('project')
@@ -1101,6 +1131,14 @@ def main(argv=None):
 
 def _dispatch(args):
     command = args.pop("command")
+    if command.startswith('uil-'):
+        try:
+            from .uil_api import invoke_common
+            result=invoke_common(command,{k:v for k,v in args.items() if v is not None})
+            emit(result)
+            return 1 if isinstance(result,dict) and result.get('status') in ('refused','pending_host') else 0
+        except (ValueError,TypeError,KeyError,OSError,sqlite3.Error,RecursionError) as error:
+            emit({'status':'refused','error':str(error)});return 1
     if command == 'media-extract':
         args['max_output_bytes'] = args.pop('media_max_output_bytes')
     if command == 'capture-audit':

@@ -1,5 +1,9 @@
 # Shared interaction blocks
 
+For the additive indexed profile, mixed-source semantic catalog, recoverable
+function views and standalone output, see [common UIL](COMMON_UIL_CONTRACT.md).
+The legacy schema and role semantics documented below remain unchanged.
+
 The 0.23 source adds a separate [original-backed DOS UDC](UDC_DOS.md) companion.
 It retains this v1 schema and role behavior, while a bounded source-block
 profile and Z3 checks qualify selection of original native backings. It does

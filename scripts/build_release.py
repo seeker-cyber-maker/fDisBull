@@ -63,6 +63,7 @@ SOURCE_PATTERNS = (
     ("docs/evidence/integration-025", "packages.json"),
     ("docs/evidence/integration-026", "verification.json"),
     ("docs/evidence/integration-0261", "verification.json"),
+    ("docs/evidence/common-uil-2026-11-01", "verification.json"),
     ("scripts", "*.py"),
 )
 

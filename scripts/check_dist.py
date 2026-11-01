@@ -19,6 +19,7 @@ REQUIRED_TEST_HELPERS.add("tests/fixtures_z_scenes.py")
 REQUIRED_TEST_HELPERS.add("tests/test_media_modules.py")
 REQUIRED_TEST_HELPERS.add("tests/fixtures/frame_capture.S")
 REQUIRED_TEST_HELPERS.add("tests/test_capture_audit.py")
+REQUIRED_TEST_HELPERS.add("tests/fixtures_common_uil.py")
 REQUIRED_SOURCE_EVIDENCE = {"docs/evidence/output-024/" + name for name in
                             ("amplification.json", "dinopark-native.json", "dinopark-output.json", "tests.json")}
 REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/scene-recovery-2026-10-29/" + name for name in
@@ -29,6 +30,7 @@ REQUIRED_SOURCE_EVIDENCE |= {"docs/uil-rfcs/0002/" + name for name in
                            ("vectors.json", "replay-summary.json")}
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-026/verification.json")
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-0261/verification.json")
+REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/common-uil-2026-11-01/verification.json")
 REQUIRED_SOURCE_EVIDENCE.add("docs/verification/kq1-tas-2026-10-31.json")
 REQUIRED_PE_RESOURCES = {"wine_guest/agent.c", "wine_guest/init.sh", "wine_guest/broker.py", "wine_guest/selftest.c"}
 REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/broker.py", "ida_guest/SDK-LICENSE.txt", "ida_wire.py", "ida_remote.py", "ida_trace.py"}

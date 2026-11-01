@@ -47,6 +47,7 @@ fdisbull agent-skill --reference references/workflows.md
 fdisbull agent-skill --reference references/scenes.md
 fdisbull agent-skill --reference references/runtime-navigation.md
 fdisbull agent-skill --reference references/udl-uil-udc.md
+fdisbull agent-skill --reference references/common-uil.md
 fdisbull agent-skill --reference references/recovery-research.md
 fdisbull agent-skill --reference references/semantic-contracts.md
 fdisbull agent-skill --reference references/formats-and-media.md
@@ -111,6 +112,18 @@ timestamps do not supply guest ticks or input alignment. The
 budgets and failed-run diagnostics.
 
 ## Choose a route
+
+### Compose a new program from recovered or authored blocks
+
+Use [the common indexed UIL contract](COMMON_UIL_CONTRACT.md) for the additive
+`uil-*` methods. UIL references typed zero-based variable/constant slots;
+presentation binds values/resources and orchestration selects exact catalog
+implementations through owned call shims. The initial single-instruction
+fallback admits decoded register INC/ADD/ADC, not arbitrary native execution.
+Recoverable groups retain their children; a group label alone grants no semantic
+or execution authority. [Conformance](COMMON_UIL_CONFORMANCE.md) demonstrates
+mixed-source reconstruction, food arithmetic and Snake memory-model migration.
+Run generated code and qualify original/source correspondence separately.
 
 ### Inspect an executable without running it
 
