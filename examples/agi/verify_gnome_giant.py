@@ -13,6 +13,7 @@ from examples.agi.spatial_trial import read, require
 from examples.agi.verify_leprechaun import CaveRun
 from examples.agi.inventory_probe import PickupProbe
 from examples.agi.motion_probe import MotionProbe
+from examples.agi.distance_probe import DistanceProbe
 from examples.agi.verify_bridge_clip import retain_private_evidence
 from examples.agi.spatial_trial import native_game
 from fdisbull.agi import load_logic
@@ -35,9 +36,12 @@ class QuestRun(CaveRun):
         self.preceding_cave = None
         self.quest_probe = None
         self.motion_probe = None
+        self.distance_probe = None
+        self.capture_checkpoints = False
         self.guess_observations = []
         self.report['implementation_sha256']['examples/agi/inventory_probe.py'] = sha256(Path(__file__).with_name('inventory_probe.py').read_bytes()).hexdigest()
         self.report['implementation_sha256']['examples/agi/motion_probe.py'] = sha256(Path(__file__).with_name('motion_probe.py').read_bytes()).hexdigest()
+        self.report['implementation_sha256']['examples/agi/distance_probe.py'] = sha256(Path(__file__).with_name('distance_probe.py').read_bytes()).hexdigest()
 
     def state(self):
         s = super().state()
@@ -63,6 +67,13 @@ class QuestRun(CaveRun):
         return s
 
     def handle_stop(self,out):
+        distance=getattr(self,'distance_probe',None)
+        if distance is not None and distance.active:
+            distance.handle_stop(out)
+            if not distance.active:
+                require(distance.proof['complete'] is True,'Original distance proof incomplete')
+                self.quest_probe.start()
+            return
         motion=getattr(self,'motion_probe',None)
         if motion is not None and motion.active:
             return motion.handle_stop(out)
@@ -127,6 +138,24 @@ class QuestRun(CaveRun):
         require(self.clip_observations[after]['state']['player_control']==1 and self._idle(),
                 'Quest controls changed during capture')
         self.action(name,before,after,*start)
+        if after in ('tree-unlocked','giant-awake','giant-asleep'):
+            self.checkpoint(after)
+
+    def checkpoint(self,name):
+        if not getattr(self,'capture_checkpoints',False):return
+        try:
+            require(self._idle() and self.watch is None and not self.trace_active,
+                    'Private checkpoint requires idle execution without a data watch or trace')
+            artifact=self.d.save_state(name+'.sav')
+            path=self.root/(name+'.sav')
+            self.p.debug_export(artifact['artifact'],path)
+            require(sha256(path.read_bytes()).hexdigest()==artifact['sha256'],'Private checkpoint export differs')
+            self.report.setdefault('private_checkpoints',[]).append({'path':path.name,
+                'sha256':artifact['sha256'],'guest_ms':self.guest_elapsed,'loaded':False})
+        except BaseException as error:
+            self.execution_blocked=True
+            self.report['checkpoint_failure']={'name':name,'error':str(error)}
+            raise
 
     def guess_frame(self,stage):
         require(type(stage) is int and 1<=stage<=3 and len(getattr(self,'guess_observations',[]))==stage-1,
@@ -170,7 +199,11 @@ class QuestRun(CaveRun):
         self.quest_safe(logic,before);start=len(self.inputs),len(self.messages)
         self.quest_probe=PickupProbe(self,name=name,logic=logic,item=item,item_offset=offset,
             score_offset=score_offset,score_delta=delta,before_score=before,order=order)
-        self.quest_probe.start();self.command('get '+name)
+        if name=='chest':
+            self.distance_probe=DistanceProbe(self)
+            self.distance_probe.start()
+        else:self.quest_probe.start()
+        self.command('get '+name)
         self.wait_for(lambda s:not self.quest_probe.active and s[name+'_carried'] and s['score']==before+delta,
                       'original '+name+' pickup')
         require(self.quest_probe.proof['complete'] is True and self.quest_probe.proof['status']=='verified' and
@@ -178,6 +211,10 @@ class QuestRun(CaveRun):
         self.quest_action('take-'+name,anchor,after,start)
         path=self.root/(name+'-pickup.private.json')
         self.clip_actions[-1]['native_pickup']={'path':path.name,'sha256':sha256(path.read_bytes()).hexdigest()}
+        if name=='chest':
+            require(self.distance_probe.proof['complete'] is True,'Native distance observation incomplete')
+            path=self.root/'giant-distance.private.json'
+            self.clip_actions[-1]['native_distance']={'path':path.name,'sha256':sha256(path.read_bytes()).hexdigest()}
 
     def get_key(self):self.pickup('key')
     def get_chest(self):self.pickup('chest')
@@ -288,11 +325,15 @@ class QuestRun(CaveRun):
         s=self.quest_safe(58,26);a=qualify(s)
         fields=('x','y','width','height','view','drawn','motion','direction')
         original=tuple(a[k] for k in fields)
+        # Check that the observed sleeping pose stays put. The game computes
+        # v70 later, inside GET CHEST; elapsed time cannot refresh that value.
         self.advance(100);s=self.quest_safe(58,26);a=qualify(s)
         require(tuple(a[k] for k in fields)==original,'Sleeping giant changed during observation')
         center=a['x']+a['width']//2
         initial_distance=abs(s['ego']['x']+s['ego_width']//2-center)+abs(s['ego']['y']-a['y'])
-        if initial_distance==s['quest_variables']['70'] and initial_distance<=30:
+        if initial_distance<=30:
+            self.report['pre_chest_geometry']={'kind':'host-derived','distance':initial_distance,
+                'native_distance_observed':False,'ego':s['ego'],'giant':a}
             return
         offsets=((0,24),(0,-24),(24,0),(-24,0),(18,6),(18,-6),(-18,6),(-18,-6),
                  (12,12),(12,-12),(-12,12),(-12,-12))
@@ -318,8 +359,10 @@ class QuestRun(CaveRun):
         self.static_path(*target);self.advance(100);s=self.quest_safe(58,26)
         a=qualify(s)
         distance=abs(s['ego']['x']+s['ego_width']//2-a['x']-a['width']//2)+abs(s['ego']['y']-a['y'])
-        require(tuple(a[k] for k in fields)==original and distance==s['quest_variables']['70'] and distance<=30,
-                'Original sleeping-chest distance not qualified')
+        require(tuple(a[k] for k in fields)==original and distance<=30,
+                'Sleeping-chest approach geometry changed')
+        self.report['pre_chest_geometry']={'kind':'host-derived','distance':distance,
+            'native_distance_observed':False,'ego':s['ego'],'giant':a}
 
     def resume_quest(self):
         self.reach_gnome();self.gnome();self.get_key();self.reach_tree();self.unlock_tree()
@@ -344,6 +387,7 @@ class QuestRun(CaveRun):
                 'Prepared quest state differs')
         self.clip_observations={};self.clip_actions=[];self.quest_started=True
         self.observe_clip('quest-start')
+        self.checkpoint('quest-start')
         return self.capture()
 
     def capture(self):
@@ -358,6 +402,7 @@ class QuestRun(CaveRun):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     for name in ('source','backend','output'):parser.add_argument('--'+name,required=True,type=Path)
+    parser.add_argument('--checkpoints',action='store_true',help='Save private native checkpoints; never load them during this route')
     args=parser.parse_args();source=args.source.resolve();root=args.output.resolve()
     checkout=Path(__file__).resolve().parents[2]
     require(not args.output.is_symlink() and root!=checkout and checkout not in root.parents and
@@ -372,6 +417,7 @@ def main():
     try:
         with native_game('kq1',source,root,args.backend.resolve(),fair_play=True) as (p,d,obs,restore,frame,report,game):
             driver=QuestRun(p,d,report,frame,source,root)
+            driver.capture_checkpoints=args.checkpoints
             try:
                 capture=driver.route()
                 (root/'capture.private.json').write_text(json.dumps(capture,indent=2)+'\n')
@@ -384,6 +430,11 @@ def main():
                 if driver.trace_active:secondary('partial trace readback',driver.retain_trace_readback)
                 if driver.trace_active:secondary('trace cleanup',driver.stop_trace)
                 probe=driver.quest_probe
+                distance=driver.distance_probe
+                if distance is not None and distance.proof is not None:
+                    report['retained_distance_proof']=deepcopy(distance.proof)
+                    secondary('independent distance proof snapshot',lambda:(root/'retained-distance-proof.private.json').write_text(
+                        json.dumps(distance.proof,indent=2)+'\n'))
                 # A complete in-memory prefix trace may have failed its first
                 # file write. Retain it even after tracing has stopped.
                 if (driver.trace_receipt is not None and

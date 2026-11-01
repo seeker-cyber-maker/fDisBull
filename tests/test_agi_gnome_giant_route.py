@@ -16,6 +16,8 @@ def initial_state():
 def authored_run(tmp_path):
     run=object.__new__(module.QuestRun)
     run.root=tmp_path;run.guest_elapsed=0;run.inputs=[];run.messages=[];run.clip_actions=[]
+    run.report={};run.quest_probe=None;run.motion_probe=None;run.distance_probe=None
+    run.capture_checkpoints=False;run.execution_blocked=False
     run.guess_observations=[];run.events=[];run.current=initial_state();run.frame_id=0
     run.safe_state=lambda:deepcopy(run.current)
     run.ready=lambda:run.events.append(('ready',))
@@ -138,12 +140,30 @@ def test_pickup_constructs_distinct_probe_and_binds_only_complete_action(tmp_pat
     created=[]
     class Probe:
         def __init__(self,owner,**kwargs):
-            assert owner is run;created.append(kwargs);self.active=True;self.proof={'complete':False}
-        def start(self):run.events.append(('probe-start',))
+            assert owner is run;created.append(kwargs);self.active=False;self.proof={'complete':False}
+        def start(self):self.active=True;run.events.append(('probe-start',))
+    class Distance:
+        def __init__(self,owner):
+            assert owner is run;self.active=False;self.stage='write';self.proof={'complete':False}
+        def start(self):self.active=True;run.events.append(('distance-start',))
+        def handle_stop(self,out):
+            assert not run.quest_probe.active
+            run.events.append(('distance-stop',out['stage']))
+            assert out['stage']==self.stage
+            if self.stage=='write':self.stage='return';return
+            (tmp_path/'giant-distance.private.json').write_bytes(b'authored distance')
+            self.proof={'complete':True,'status':'verified','native_execution':True};self.active=False
     monkeypatch.setattr(module,'PickupProbe',Probe)
+    monkeypatch.setattr(module,'DistanceProbe',Distance)
     def command(text):
-        assert text=='get '+name and run.quest_probe.active
+        assert text=='get '+name
         run.events.append(('command',text));run.inputs.append({'key':text})
+        if name=='chest':
+            assert run.distance_probe.active and not run.quest_probe.active
+            run.handle_stop({'stage':'write'})
+            assert not run.quest_probe.active
+            run.handle_stop({'stage':'return'})
+        assert run.quest_probe.active
         (tmp_path/(name+'-pickup.private.json')).write_bytes(b'authored proof')
         run.quest_probe.proof={'complete':True,'status':'verified','native_execution':True}
         run.quest_probe.active=False;run.current[name+'_carried']=True;run.current['score']=before+delta
@@ -151,7 +171,13 @@ def test_pickup_constructs_distinct_probe_and_binds_only_complete_action(tmp_pat
     run.pickup(name)
     assert created==[{'name':name,'logic':logic,'item':item,'item_offset':off,'score_offset':score_off,
                       'score_delta':delta,'before_score':before,'order':order}]
-    assert run.events.index(('probe-start',))<run.events.index(('command','get '+name))
+    if name=='chest':
+        assert [e for e in run.events if e[0] in ('probe-start','distance-start','command','distance-stop')]==[
+            ('distance-start',),('command','get chest'),('distance-stop','write'),
+            ('distance-stop','return'),('probe-start',)]
+        assert run.clip_actions[-1]['native_distance']=={'path':'giant-distance.private.json',
+            'sha256':sha256(b'authored distance').hexdigest()}
+    else:assert run.events.index(('probe-start',))<run.events.index(('command','get '+name))
     assert run.clip_actions[-1]['native_pickup']=={'path':name+'-pickup.private.json','sha256':sha256(b'authored proof').hexdigest()}
 
 
@@ -292,8 +318,6 @@ def sleeping_run(tmp_path):
     run.path_model=plan
     def move(x,y):
         run.moves.append((x,y));run.current['ego']={'x':x,'y':y}
-        a=run.current['quest_actors']['1']
-        run.current['quest_variables']['70']=abs(x+3-a['x']-a['width']//2)+abs(y-a['y'])
     run.static_path=move
     return run
 
@@ -321,6 +345,8 @@ def test_sleeping_giant_at_qualified_distance_needs_no_path_or_input(tmp_path,mo
     run.current['quest_actors']['1']['motion_bit']=motion_bit
     run.approach_sleeping_giant()
     assert run.events==[('advance',100)] and not run.plans and not run.moves and not run.inputs
+    assert run.report['pre_chest_geometry']['distance']==21
+    assert run.report['pre_chest_geometry']['native_distance_observed'] is False
 
 
 @pytest.mark.parametrize('field,value',[('motion',False),('motion',0.0),('direction',False),('direction',0.0)])
@@ -340,15 +366,18 @@ def test_sleeping_giant_rejects_missing_static_proposal_without_input(tmp_path,s
     assert run.plans and not run.moves and not run.inputs and not run.journal
 
 
-def test_sleeping_giant_uses_one_proposal_and_rechecks_native_distance(tmp_path):
+def test_sleeping_giant_uses_one_proposal_and_rechecks_host_geometry(tmp_path):
     run=sleeping_run(tmp_path);run.approach_sleeping_giant()
     assert len(run.moves)==1 and len(run.journal)==1 and not run.inputs
     assert run.guest_elapsed==200 and run.journal[0]['target']==run.moves[0]
     s=run.current;a=s['quest_actors']['1'];e=s['ego']
-    assert s['quest_variables']['70']==abs(e['x']+3-a['x']-a['width']//2)+abs(e['y']-a['y'])<=30
+    assert run.report['pre_chest_geometry']['distance']==abs(e['x']+3-a['x']-a['width']//2)+abs(e['y']-a['y'])<=30
+    assert run.report['pre_chest_geometry']['kind']=='host-derived'
+    assert run.report['pre_chest_geometry']['native_distance_observed'] is False
+    assert s['quest_variables']['70']==0
 
 
-@pytest.mark.parametrize('fault',['changed_actor','changed_width','changed_height','motion','direction','view','unscored','chest','wrong_native_distance'])
+@pytest.mark.parametrize('fault',['changed_actor','changed_width','changed_height','motion','direction','view','unscored','chest'])
 def test_sleeping_giant_rejects_changed_actor_or_state_after_approach(tmp_path,fault):
     run=sleeping_run(tmp_path);move=run.static_path
     def change(x,y):
@@ -361,7 +390,6 @@ def test_sleeping_giant_rejects_changed_actor_or_state_after_approach(tmp_path,f
         if fault=='view':a['view']=36
         if fault=='unscored':s['quest_flags']['205']=False
         if fault=='chest':s['chest_carried']=True
-        if fault=='wrong_native_distance':s['quest_variables']['70']+=1
     run.static_path=change
     with pytest.raises(RuntimeError):run.approach_sleeping_giant()
     assert len(run.moves)==1 and not run.inputs
@@ -425,13 +453,17 @@ def test_sleeping_giant_refuses_static_path_through_actor_body(tmp_path):
     assert run.plans and not run.moves and not run.inputs
 
 
-def test_near_giant_must_not_shortcut_on_wrong_native_distance(tmp_path):
-    run=sleeping_run(tmp_path);run.current['ego']={'x':56,'y':70};run.current['quest_variables']['70']=22
+@pytest.mark.parametrize('stale_distance',[0,22,255])
+def test_near_giant_accepts_host_geometry_without_claiming_stale_native_distance(tmp_path,stale_distance):
+    run=sleeping_run(tmp_path);run.current['ego']={'x':56,'y':70};run.current['quest_variables']['70']=stale_distance
     def plan(room,start,target,*,allow_priority_one):
         run.plans.append(target);return {'status':'blocked_endpoint','path':[]},None
     run.path_model=plan
-    with pytest.raises(RuntimeError,match='No conservative'):run.approach_sleeping_giant()
-    assert run.plans and not run.moves and not run.inputs
+    run.approach_sleeping_giant()
+    assert not run.plans and not run.moves and not run.inputs
+    assert run.current['quest_variables']['70']==stale_distance
+    assert run.report['pre_chest_geometry']['distance']==21
+    assert run.report['pre_chest_geometry']['native_distance_observed'] is False
 
 
 @pytest.mark.parametrize('fault',['position','y_position','width','height','motion','direction','unscored','already_taken'])
@@ -474,7 +506,7 @@ def test_main_retains_completed_prefix_trace_when_first_artifact_write_fails(tmp
 
     source=tmp_path/'source';source.mkdir();output=tmp_path/'output';output.mkdir()
     run=shield_run(tmp_path,monkeypatch);run.root=output;set_phase(run,'score')
-    run.quest_probe=None;run.trace_active=True;run.trace_start_index=0
+    run.quest_probe=None;run.distance_probe=None;run.trace_active=True;run.trace_start_index=0
     run.trace_receipt={'format':'fdisbull-agi-shield-trace-1','maximum_count':128,
                        'complete':False,'events':[],'runs':[]}
     run.journal=[{'result':{'outcome':'breakpoint'}}]
@@ -526,7 +558,7 @@ def test_main_retains_current_pickup_when_canonical_proof_destination_fails(tmp_
     shutil.copytree(source,output/'game')
     monkeypatch.setattr(verify_leprechaun,'OBJECT_SHA256',sha256((source/'OBJECT').read_bytes()).hexdigest())
     run.report={'source_manifest':manifest(source)};report=run.report
-    run.quest_probe=probe;run.motion_probe=None;run.quest_started=True;run.execution_blocked=False
+    run.quest_probe=probe;run.motion_probe=None;run.distance_probe=None;run.quest_started=True;run.execution_blocked=False
     run.inputs=[];run.messages=[];run.observations={};run.actions=[]
     run.clip_observations={};run.clip_actions=[];run.samples=[];run.pictures={}
     run.preparation=[];run.guess_observations=[];run.guest_elapsed=0
@@ -573,6 +605,150 @@ def test_main_retains_current_pickup_when_canonical_proof_destination_fails(tmp_
     assert retained['complete'] is False and retained['status']=='incomplete'
     assert result['normal_gnome_giant_complete'] is False and run.execution_blocked
     assert (output/'partial-capture.private.json').is_file()
+    assert result['post_teardown_source_unchanged'] and result['post_teardown_copy_unchanged']
+    with pytest.raises(RuntimeError,match='Earlier execution/observation failed'):
+        module.CaveRun.advance(run,10)
+    assert len(run.d.runs)==1
+
+
+def checkpoint_run(tmp_path):
+    run=authored_run(tmp_path);run.capture_checkpoints=True
+    run.watch=None;run.trace_active=False;run._idle=lambda:True;run.guest_elapsed=123
+    payload=b'authored checkpoint fixture; not original emulator state'
+    artifact={'artifact':{'id':'authored-state'},'sha256':sha256(payload).hexdigest()}
+    def save(name):run.events.append(('save',name));return deepcopy(artifact)
+    def export(reference,path):
+        run.events.append(('export',reference,path.name));path.write_bytes(payload)
+    run.d=SimpleNamespace(save_state=save);run.p=SimpleNamespace(debug_export=export)
+    return run,payload,artifact
+
+
+def test_private_checkpoint_is_opt_in_and_hash_bound_save_only(tmp_path):
+    run,payload,artifact=checkpoint_run(tmp_path);run.capture_checkpoints=False
+    run.checkpoint('giant-asleep')
+    assert not run.events and not list(tmp_path.iterdir())
+    run.capture_checkpoints=True;run.checkpoint('giant-asleep')
+    assert run.events==[('save','giant-asleep.sav'),('export',artifact['artifact'],'giant-asleep.sav')]
+    assert (tmp_path/'giant-asleep.sav').read_bytes()==payload
+    assert run.report['private_checkpoints']==[{'path':'giant-asleep.sav','sha256':sha256(payload).hexdigest(),
+                                               'guest_ms':123,'loaded':False}]
+    assert not run.execution_blocked
+
+
+@pytest.mark.parametrize('fault',['idle','watch','trace','idle_query','save','export','hash'])
+def test_private_checkpoint_failure_latches_and_preserves_primary_without_execution(tmp_path,fault):
+    run,_,_=checkpoint_run(tmp_path);error=OSError('authored checkpoint '+fault)
+    def fail(*args,**kwargs):raise error
+    if fault=='idle':run._idle=lambda:False
+    if fault=='watch':run.watch='owned-watch'
+    if fault=='trace':run.trace_active=True
+    if fault=='idle_query':run._idle=fail
+    if fault=='save':run.d.save_state=fail
+    if fault=='export':run.p.debug_export=fail
+    if fault=='hash':run.p.debug_export=lambda reference,path:path.write_bytes(b'wrong authored state')
+    with pytest.raises((RuntimeError,OSError)) as raised:run.checkpoint('giant-asleep')
+    if fault in ('idle_query','save','export'):assert raised.value is error
+    assert run.execution_blocked and run.report['checkpoint_failure']['name']=='giant-asleep'
+    assert 'private_checkpoints' not in run.report
+    if fault in ('idle','watch','trace','idle_query'):assert not run.events
+    with pytest.raises(RuntimeError,match='Earlier execution/observation failed'):
+        module.CaveRun.advance(run,10)
+
+
+@pytest.mark.parametrize('after',['gnome-ready','key-on-ground','key-taken','tree-ready',
+                                  'tree-unlocked','giant-awake','giant-asleep','chest-taken'])
+def test_quest_action_checkpoints_only_selected_completed_boundaries(tmp_path,after):
+    run=authored_run(tmp_path);run.current['player_control']=1;run.clip_observations={}
+    run.state=lambda:deepcopy(run.current);run._idle=lambda:True
+    def observe(name):
+        run.events.append(('capture',name));run.clip_observations[name]={'state':deepcopy(run.current)}
+    run.observe_clip=observe
+    run.action=lambda *args:run.events.append(('action',args))
+    run.checkpoint=lambda name:run.events.append(('checkpoint',name))
+    module.QuestRun.quest_action(run,'authored-action','before',after,(0,0))
+    checkpoints=[event for event in run.events if event[0]=='checkpoint']
+    assert checkpoints==([('checkpoint',after)] if after in ('tree-unlocked','giant-awake','giant-asleep') else [])
+    assert run.events.index(('capture',after))<next(i for i,e in enumerate(run.events) if e[0]=='action')
+    if checkpoints:assert run.events[-1]==('checkpoint',after)
+
+
+def test_prefix_checkpoint_follows_qualified_quest_start_capture(tmp_path,monkeypatch):
+    run=authored_run(tmp_path);run.quest_started=False;run.current['room']=36
+    monkeypatch.setattr(module.CaveRun,'route',lambda self:{'scope':'authored prefix only'})
+    run.observe_clip=lambda name:run.events.append(('capture',name))
+    run.checkpoint=lambda name:run.events.append(('checkpoint',name))
+    run.capture=lambda:{'scope':'authored quest only'}
+    assert run.prepare_prefix()=={'scope':'authored quest only'}
+    assert run.quest_started and run.events==[('capture','quest-start'),('checkpoint','quest-start')]
+
+
+def test_distance_failure_does_not_start_pickup_or_fall_back(tmp_path,monkeypatch):
+    run=authored_run(tmp_path);calls=[];error=OSError('authored distance observation lost')
+    def fail(out):calls.append(('distance',out));raise error
+    run.distance_probe=SimpleNamespace(active=True,handle_stop=fail)
+    run.quest_probe=SimpleNamespace(active=False,start=lambda:calls.append(('pickup',)))
+    monkeypatch.setattr(module.CaveRun,'handle_stop',lambda self,out:calls.append(('fallback',)))
+    with pytest.raises(OSError) as raised:run.handle_stop({'stage':'write'})
+    assert raised.value is error and calls==[('distance',{'stage':'write'})]
+
+
+def test_main_retains_distance_result_when_canonical_destination_fails(tmp_path,monkeypatch):
+    """Use the real authored distance ABI fixture and real advance/main cleanup."""
+    from contextlib import contextmanager
+    import json
+    from pathlib import Path
+    import shutil
+    import sys
+    import time
+    from examples.agi import distance_probe
+    from examples.agi.spatial_trial import manifest
+    from test_agi_distance_probe import case as distance_case,stop_for
+
+    source=tmp_path/'source';source.mkdir();output=tmp_path/'output';output.mkdir()
+    with monkeypatch.context() as setup:
+        setup.setattr(distance_probe.DistanceProbe,'start',lambda self:None)
+        run,probe=distance_case.__wrapped__(source,monkeypatch)
+    run.__class__=module.QuestRun;run.root=output
+    shutil.copytree(source,output/'game')
+    report=run.report;report['source_manifest']=manifest(source)
+    run.distance_probe=probe;run.quest_probe=SimpleNamespace(name='chest',active=False,proof=None)
+    run.quest_started=True;run.journal=[];run.inputs=[];run.messages=[]
+    run.observations={};run.actions=[];run.clip_observations={};run.clip_actions=[]
+    run.samples=[];run.pictures={};run.preparation=[];run.guess_observations=[]
+    run.guest_elapsed=0;run.deadline=time.monotonic()+30;run.fast_forward=False
+    run.trace_receipt=None;run.bp=None;run.frame=lambda name:None
+    run.predicate_proof=None;run.state=lambda:{'room':58,'score':26,'distance':run.d.memory[run.ds+79]}
+    def authored_stop(**kwargs):
+        run.d.runs.append(kwargs)
+        return dict(stop_for(run,probe,'write'),guest_elapsed_ms=10)
+    run.d.run=authored_stop
+    def route():
+        probe.start();run.advance(10);pytest.fail('Canonical distance fault must stop the action')
+    run.route=route
+    @contextmanager
+    def native_game(*args,**kwargs):yield None,run.d,None,None,run.frame,report,None
+    monkeypatch.setattr(module,'native_game',native_game);monkeypatch.setattr(module,'QuestRun',lambda *args:run)
+    monkeypatch.setattr(sys,'argv',['quest','--source',str(source),'--backend',str(tmp_path/'backend'),
+                                  '--output',str(output)])
+    canonical=output/'giant-distance.private.json';original=Path.write_text;writes=[]
+    fault=OSError('authored canonical distance destination failed after baseline')
+    def fail_canonical(path,*args,**kwargs):
+        if path==canonical:
+            writes.append(path)
+            if len(writes)>1:raise fault
+        return original(path,*args,**kwargs)
+    monkeypatch.setattr(Path,'write_text',fail_canonical)
+    with pytest.raises(OSError) as raised:module.main()
+    assert raised.value is fault
+    assert 'known_result' not in json.loads(canonical.read_text())
+    retained=json.loads((output/'retained-distance-proof.private.json').read_text())
+    result=json.loads((output/'result.json').read_text())
+    assert retained==result['retained_distance_proof']==probe.proof
+    assert retained['source_logic']==58 and retained['source_offset']==0x234 and retained['known_result']==24
+    assert retained['distance_writer']['cause_offset']==0x48a2 and retained['distance_writer']['resume_offset']==0x48a6
+    assert retained['native_execution'] is True and retained['complete'] is False and retained['status']=='incomplete'
+    assert run.execution_blocked and len(run.d.runs)==1 and run.quest_probe.proof is None
+    assert result['normal_gnome_giant_complete'] is False
     assert result['post_teardown_source_unchanged'] and result['post_teardown_copy_unchanged']
     with pytest.raises(RuntimeError,match='Earlier execution/observation failed'):
         module.CaveRun.advance(run,10)

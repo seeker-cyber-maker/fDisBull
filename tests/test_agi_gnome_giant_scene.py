@@ -37,6 +37,7 @@ def case(tmp_path, monkeypatch):
     source = tmp_path / 'source'
     source.mkdir()
     (source / 'AGI').write_bytes(b'authored unit engine, not a native executable')
+    monkeypatch.setattr(exporter, 'DISTANCE_AGI_SHA', sha256((source/'AGI').read_bytes()).hexdigest())
     decoded = bytearray(0x300)
     decoded[:2] = (81).to_bytes(2, 'little')
     for item in ITEMS.values():
@@ -53,6 +54,7 @@ def case(tmp_path, monkeypatch):
             codes[logic][offset:offset+2] = bytes((101, message))
     for logic, offset, instruction in [(40, 0x2d6, bytes((92, 5))),
                                        (40, 0x2db, bytes((5, 3, 3))),
+                                       (58, 0x234, bytes((69, 0, 1, 70))),
                                        (58, 0x25a, bytes((5, 3, 8))),
                                        (58, 0x25d, bytes((92, 2)))]:
         codes[logic][offset:offset+len(instruction)] = instruction
@@ -99,14 +101,14 @@ def case(tmp_path, monkeypatch):
                 'quest_variables': {'84': 0 if index < 2 else 3,
                                     '66': 0 if index < 5 else 1 if index == 5 else 2,
                                     '86': 0 if index < 7 else 1 if index == 7 else 3,
-                                    '70': 0},
+                                    '70': 24 if index == 8 else 0},
                 'quest_flags': {'21': index == 2, '22': False, '84': index >= 3,
                                 '85': index >= 5, '102': True, '104': index == 8,
                                 '169': index == 8, '205': index >= 7}}
         if index >= 7:
             result['quest_actors'] = {'1': {'view': 52, 'drawn': True, 'motion_bit': False,
                                           'motion': 0, 'direction': 0,
-                                          'x': x-2, 'y': y, 'width': 10, 'height': 12}}
+                                          'x': x-12, 'y': y-24, 'width': 30, 'height': 15}}
         return result
 
     observations = {f'o{i}': {'state': state(i), 'frame': frame(i*100+1),
@@ -117,6 +119,8 @@ def case(tmp_path, monkeypatch):
                 'complete': True, 'messages_complete': True,
                 'inputs': [] if i == 6 else [deepcopy(delivered)], 'messages': []}
                for i, name in enumerate(ACTIONS)]
+    actions[7]['inputs'] = [{**deepcopy(delivered), 'key': key}
+                            for key in ('type:get chest', 'press:enter')]
 
     def message(logic, offset, number, number_frame, guest_ms):
         return {'format': 'fdisbull-agi-print-observation-1',
@@ -192,6 +196,23 @@ def case(tmp_path, monkeypatch):
                                        ('item', 'return', 'score'))
     actions[7]['native_pickup'] = proof('chest', 58, 2, 0x25d, 0x25a, 8, 26,
                                        ('score', 'item', 'return'))
+    pose = distance_pose(observations['o7']['state'])
+    distance = {'format': 'fdisbull-agi-chest-distance-1', 'status': 'verified',
+        'complete': True, 'native_execution': True, 'source_logic': 58,
+        'source_logic_sha256': resources['58'], 'source_offset': 0x234,
+        'source_cursor_offset': 0x238, 'arguments': [0, 1, 70], 'actor_table': 0x5000,
+        'identity': {'session_id': 'unit-session', 'cs': 0x1000, 'ds': 0x2000,
+                     'agi_sha256': sha256((source/'AGI').read_bytes()).hexdigest(),
+                     'handler_sha256': exporter.DISTANCE_HANDLER_SHA},
+        'before': {**deepcopy(pose), 'v70': 0, 'expected_distance': 24},
+        'after': {**deepcopy(pose), 'v70': 24}, 'known_result': 24,
+        'distance_writer': {'cause_offset': 0x48a2, 'resume_offset': 0x48a6, 'bx': 70,
+            'ax': 24, 'si': 0x5000, 'di': 0x502b, 'bp': 0x8000, 'sp': 0x7ffc, 'ss': 0x3000},
+        'handler_return': {'offset': 0x2fa, 'observed': True, 'source_cursor_offset': 0x238,
+            'stack_verified': True, 'ss': 0x3000, 'writer_bp': 0x8000, 'sp': 0x8008,
+            'ax': 0x6238, 'si': 0x6235}}
+    raw = json.dumps(distance).encode(); artifacts['giant-distance-proof'] = raw
+    actions[7]['native_distance'] = {'path': 'giant-distance-proof', 'sha256': sha256(raw).hexdigest()}
     capture = {'format': 'fdisbull-agi-gnome-giant-capture-1',
                'fixture_scope': 'synthetic-unit-test-only; not native evidence',
                'runtime': {'policy': 'physical', 'fresh_game': True, 'interventions': [],
@@ -201,6 +222,25 @@ def case(tmp_path, monkeypatch):
                'observations': observations, 'actions': actions,
                'guess_observations': guesses, 'door_observation': door}
     return source, capture, lambda path: artifacts[path], artifacts, message
+
+
+def distance_pose(state):
+    """Authored unit fixture in DistanceProbe's public receipt schema."""
+    actor = state['quest_actors']['1']
+    return {'room': 58, 'score': 26,
+        'ego': {'x': state['ego']['x'], 'y': state['ego']['y'], 'width': 6, 'view': 0,
+                'direction': 0, 'drawn': True},
+        'giant': {key: actor[key] for key in
+            ('x', 'y', 'width', 'height', 'view', 'direction', 'motion', 'drawn')},
+        'sleep_state': 1, 'sleep_scored': True, 'chest_taken_flag': False, 'shield_flag': True,
+        'key_location': 255, 'shield_location': 255, 'chest_location': 0}
+
+
+def rewrite_distance(capture, artifacts, mutation):
+    ref = capture['actions'][7]['native_distance']
+    proof = json.loads(artifacts[ref['path']]); mutation(proof)
+    raw = json.dumps(proof).encode(); artifacts[ref['path']] = raw
+    ref['sha256'] = sha256(raw).hexdigest()
 
 
 def test_eight_actions_inventory_guards_checkpoint_and_privacy(case):
@@ -441,7 +481,7 @@ def test_complete_hash_bound_bounded_traces_required(case, action, fault):
     assert capture == before_capture and artifacts == before_artifacts
 
 
-@pytest.mark.parametrize('logic,offset', [(40, 0x2d6), (40, 0x2db), (58, 0x25a), (58, 0x25d)])
+@pytest.mark.parametrize('logic,offset', [(40, 0x2d6), (40, 0x2db), (58, 0x234), (58, 0x25a), (58, 0x25d)])
 def test_changed_pickup_opcode_cannot_be_relabelled_with_new_hash(case, logic, offset):
     source, capture, loader, _, _ = case
     directory = (source/'LOGDIR').read_bytes()
@@ -552,23 +592,159 @@ def test_legacy_motion_enabled_alias_cannot_prove_stationary(case, field, value)
     with pytest.raises(ValueError): exporter.build(source, capture, loader)
 
 
-@pytest.mark.parametrize('distance', [1, 31, True, 0.0])
-def test_native_chest_distance_must_match_and_be_in_range(case, distance):
+def test_pre_get_v70_is_stale_until_command_computes_native_distance(case):
+    _, capture, _, _, _ = case
+    state = capture['observations']['o7']['state']
+    state['quest_variables']['70'] = 0
+    condition = exporter.giant_pickup_condition(state)
+    assert condition['derived_distance'] == 24
+    assert condition['captured_v70'] == 0
+    assert condition['captured_v70_used_as_distance_witness'] is False
+
+
+@pytest.mark.parametrize('distance', [True, False, 0.0, -1, 256, None])
+def test_pre_get_v70_keeps_byte_schema_without_claiming_freshness(case, distance):
     source, capture, loader, _, _ = case
     capture['observations']['o7']['state']['quest_variables']['70'] = distance
     with pytest.raises(ValueError): exporter.build(source, capture, loader)
 
 
-@pytest.mark.parametrize('dx,dy,width', [(-10, 0, 10), (0, -10, 20), (10, 5, 8)])
-def test_sleeping_giant_accepts_nonfixed_source_distance_pose(case, dx, dy, width):
+@pytest.mark.parametrize('stale', [0, 1, 31, 255])
+def test_stale_pre_get_byte_accepts_later_native_distance_24(case, stale):
     source, capture, loader, _, _ = case
+    capture['observations']['o7']['state']['quest_variables']['70'] = stale
+    _, evidence = exporter.build(source, capture, loader)
+    assert evidence['giant_pickup_condition']['captured_v70'] == stale
+    assert evidence['giant_pickup_condition']['derived_distance'] == 24
+    assert evidence['native_distance']['derived_expected_distance'] == 24
+    assert evidence['native_distance']['native_result'] == 24
+
+
+def test_derived_host_distance_still_requires_close_enough_actor(case):
+    _, capture, _, _, _ = case
+    state = capture['observations']['o7']['state']
+    state['quest_actors']['1']['y'] = state['ego']['y']-31
+    state['quest_variables']['70'] = 0
+    with pytest.raises(ValueError, match='derived sleeping giant distance'):
+        exporter.giant_pickup_condition(state)
+
+
+@pytest.mark.parametrize('part,field,value', [
+    (None, 'format', 'other'), (None, 'status', 'incomplete'), (None, 'complete', False),
+    (None, 'native_execution', False), (None, 'source_logic', 40),
+    (None, 'source_logic_sha256', '0'*64), (None, 'source_offset', 0x235),
+    (None, 'source_cursor_offset', 0x239), (None, 'arguments', [0, 1, 71]),
+    (None, 'arguments', [False, 1, 70]), (None, 'known_result', 0),
+    (None, 'known_result', True), (None, 'actor_table', 0x5001),
+    (None, 'actor_table', True), (None, 'actor_table', 65500),
+    (None, 'failure', {'phase': 'return'}), (None, 'cleanup_errors', ['failed']),
+    ('identity', 'session_id', 'other'), ('identity', 'cs', 0x1001),
+    ('identity', 'ds', 0x2001), ('identity', 'agi_sha256', '0'*64),
+    ('identity', 'handler_sha256', '0'*64), ('before', 'expected_distance', 0),
+    ('before', 'v70', True), ('before', 'score', 19), ('before', 'key_location', 0),
+    ('after', 'v70', 0), ('after', 'chest_location', 255), ('after', 'shield_flag', False),
+    ('distance_writer', 'cause_offset', 0x48a1), ('distance_writer', 'resume_offset', 0x48a7),
+    ('distance_writer', 'bx', 69), ('distance_writer', 'ax', 0),
+    ('distance_writer', 'si', 0x5001), ('distance_writer', 'di', 0x502c),
+    ('distance_writer', 'bp', True), ('distance_writer', 'bp', 65526),
+    ('distance_writer', 'sp', 0x7ffd), ('distance_writer', 'ss', 0x3001),
+    ('handler_return', 'offset', 0x2fb), ('handler_return', 'observed', False),
+    ('handler_return', 'source_cursor_offset', 0x239), ('handler_return', 'stack_verified', False),
+    ('handler_return', 'ss', 0x3001), ('handler_return', 'writer_bp', 0x8001),
+    ('handler_return', 'sp', 0x8007), ('handler_return', 'ax', 0),
+    ('handler_return', 'si', 0x6236), ('handler_return', 'ax', True)])
+def test_native_distance_receipt_rejects_partial_stale_or_mismatched_fields(case, part, field, value):
+    source, capture, loader, artifacts, _ = case
+    rewrite_distance(capture, artifacts, lambda proof: (proof if part is None else proof[part]).update({field: value}))
+    before_capture, before_artifacts = deepcopy(capture), deepcopy(artifacts)
+    with pytest.raises(ValueError): exporter.build(source, capture, loader)
+    assert capture == before_capture and artifacts == before_artifacts
+
+
+@pytest.mark.parametrize('part', [None, 'identity', 'before', 'after', 'distance_writer', 'handler_return'])
+def test_native_distance_requires_complete_receipt(case, part):
+    source, capture, loader, artifacts, _ = case
+    if part is None: del capture['actions'][7]['native_distance']
+    else: rewrite_distance(capture, artifacts, lambda proof: proof.pop(part))
+    with pytest.raises(ValueError): exporter.build(source, capture, loader)
+
+
+@pytest.mark.parametrize('part', ['before', 'after'])
+@pytest.mark.parametrize('actor,field,value', [
+    ('ego', 'x', 31), ('ego', 'direction', False), ('ego', 'drawn', 1),
+    ('giant', 'x', 19), ('giant', 'height', 16), ('giant', 'motion', False),
+    ('giant', 'direction', False), ('giant', 'drawn', 1)])
+def test_native_distance_must_use_same_typed_ego_and_giant_pose(case, part, actor, field, value):
+    source, capture, loader, artifacts, _ = case
+    rewrite_distance(capture, artifacts, lambda proof: proof[part][actor].update({field: value}))
+    with pytest.raises(ValueError): exporter.build(source, capture, loader)
+
+
+def test_native_distance_artifact_hash_is_required(case):
+    source, capture, loader, _, _ = case
+    capture['actions'][7]['native_distance']['sha256'] = '0'*64
+    with pytest.raises(ValueError): exporter.build(source, capture, loader)
+
+
+@pytest.mark.parametrize('keys', [
+    ['press:up'], ['type:get chest'], ['type:get chest', 'press:enter', 'press:f3', 'press:enter'],
+    ['type:get chest', 'press:enter', 'type:get chest', 'press:enter'],
+    ['press:enter', 'type:get chest'], ['type:get key', 'press:enter']])
+def test_distance_and_pickup_belong_to_one_get_chest_input(case, keys):
+    source, capture, loader, _, _ = case
+    accepted = capture['actions'][7]['inputs'][0]
+    capture['actions'][7]['inputs'] = [{**deepcopy(accepted), 'key': key} for key in keys]
+    with pytest.raises(ValueError, match='one original GET CHEST'): exporter.build(source, capture, loader)
+
+
+def test_different_engine_cannot_relabel_distance_abi(case):
+    source, capture, loader, artifacts, _ = case
+    (source/'AGI').write_bytes(b'different authored unit engine')
+    altered = sha256((source/'AGI').read_bytes()).hexdigest()
+    capture['source']['agi_sha256'] = altered
+    rewrite_distance(capture, artifacts, lambda proof: proof['identity'].update(agi_sha256=altered))
+    with pytest.raises(ValueError, match='distance engine'): exporter.build(source, capture, loader)
+
+
+def test_original_distance_operand_cannot_be_relabelled(case):
+    source, capture, loader, _, _ = case
+    directory = (source/'LOGDIR').read_bytes()
+    address = int.from_bytes(directory[58*3:58*3+3], 'big') & 0xfffff
+    raw = bytearray((source/'VOL.0').read_bytes()); raw[address+7+0x237] = 71
+    (source/'VOL.0').write_bytes(raw)
+    capture['source']['resources']['58'] = load_logic(source/'LOGDIR', source, 58, profile='2.917').resource_sha256
+    with pytest.raises(ValueError, match='distance source operation'): exporter.build(source, capture, loader)
+
+
+def test_distance_actor_and_source_tables_can_use_other_valid_offsets(case):
+    source, capture, loader, artifacts, _ = case
+    def relocate(proof):
+        proof['actor_table'] = 0x5100
+        proof['distance_writer'].update(si=0x5100, di=0x512b)
+        proof['handler_return'].update(ax=0x6438, si=0x6435)
+        proof['before']['v70'] = 255
+    rewrite_distance(capture, artifacts, relocate)
+    _, evidence = exporter.build(source, capture, loader)
+    assert evidence['native_distance']['native_result'] == 24
+    assert evidence['native_distance']['actor_table'] == 0x5100
+
+
+@pytest.mark.parametrize('dx,dy', [(-10, 0), (0, -10), (10, 5)])
+def test_sleeping_giant_accepts_nonfixed_source_distance_pose(case, dx, dy):
+    source, capture, loader, artifacts, _ = case
     s = capture['observations']['o7']['state']
     x, y = s['ego']['x']+dx, s['ego']['y']+dy
-    s['quest_actors']['1'].update(x=x, y=y, width=width)
-    expected = abs(s['ego']['x']+s['ego_width']//2-x-width//2)+abs(s['ego']['y']-y)
-    s['quest_variables']['70'] = expected
+    s['quest_actors']['1'].update(x=x, y=y)
+    expected = abs(s['ego']['x']+s['ego_width']//2-x-15)+abs(s['ego']['y']-y)
+    def update(proof):
+        pose = distance_pose(s)
+        proof['before'] = {**deepcopy(pose), 'v70': 0, 'expected_distance': expected}
+        proof['after'] = {**deepcopy(pose), 'v70': expected}
+        proof['known_result'] = expected; proof['distance_writer']['ax'] = expected
+    rewrite_distance(capture, artifacts, update)
     _, evidence = exporter.build(source, capture, loader)
-    assert evidence['giant_pickup_condition']['distance'] == expected
+    assert evidence['giant_pickup_condition']['derived_distance'] == expected
+    assert evidence['native_distance']['native_result'] == expected
 
 
 def test_pending_room_contract_can_tighten_a_single_anchor(case, monkeypatch):

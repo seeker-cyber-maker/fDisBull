@@ -20,6 +20,8 @@ from fdisbull.il_scenes import ILSceneBackend
 
 
 OBJECT_SHA = '2d1b7a75bb443b4a340cb8d9a2842ff5c834d7d597ea2a1365b6a7a2dfb57985'
+DISTANCE_AGI_SHA = '5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74'
+DISTANCE_HANDLER_SHA = '1948a0f4a7f843c374a0a80216cc781e9fbf73cf97de2cf42d0d4ada2d422bc9'
 ACTION_IDS = ('reach-gnome', 'wrong-names', 'take-key', 'reach-tree', 'unlock-tree',
               'climb-to-clouds', 'wait-for-sleep', 'take-chest')
 # Only this contract supplies route coordinates. Tighten its None coordinates
@@ -32,7 +34,7 @@ ROUTE_CONTRACT = {
     'scores': (14, 14, 14, 17, 17, 19, 19, 26, 34),
     'dynamic_source_predicate_anchors': (7, 8),
     'same_ego_pairs': ((7, 8),),
-    'dynamic_witness': 'Phase 7 sleeping actor/source distance and phase 8 complete native chest pickup proof.',
+    'dynamic_witness': 'Phase 7 derived sleeping-actor distance, command-time original distance write/return, and phase 8 complete native chest pickup proof.',
 }
 ITEMS = {'chest': 2, 'key': 5, 'clover': 8, 'diamonds': 15,
          'bag': 16, 'shield': 21, 'mushroom': 24}
@@ -129,6 +131,11 @@ def object_records(raw):
 
 
 def source_check(resources):
+    distance = resources[58]
+    starts = set(logic_layout(distance.payload)['instructions'])
+    require({0x236, 0x23a}.issubset(starts)
+            and distance.code[0x234:0x238] == bytes((69, 0, 1, 70)),
+            'chest distance source operation differs')
     for spec in PICKUPS.values():
         resource = resources[spec['logic']]
         starts = set(logic_layout(resource.payload)['instructions'])
@@ -287,7 +294,7 @@ def route_states(states):
 
 
 def giant_pickup_condition(raw):
-    """Check the supplied native sleep/distance predicate, not a fixed pose."""
+    """Derive a close-enough pose; pre-command v70 need not be fresh."""
     actors = raw.get('quest_actors')
     require(isinstance(actors, dict) and isinstance(actors.get('1'), dict),
             'missing sleeping giant actor')
@@ -298,20 +305,83 @@ def giant_pickup_condition(raw):
             and type(actor.get('motion_bit')) is bool
             and all(type(actor.get(key)) is int and -32768 <= actor[key] <= 32767
                     for key in ('x', 'y'))
-            and type(actor.get('width')) is int and 0 < actor['width'] <= 65535,
+            and all(type(actor.get(key)) is int and 0 < actor[key] <= 65535
+                    for key in ('width', 'height')),
             'sleeping giant pose or motion differs')
     distance = raw['quest_variables'].get('70')
     ego = raw['ego']
     measured = abs(ego['x']+raw['ego_width']//2-actor['x']-actor['width']//2)
     measured += abs(ego['y']-actor['y'])
-    require(type(distance) is int and 0 <= distance <= 30 and distance == measured,
-            'sleeping giant source distance differs or is out of range')
+    require(type(distance) is int and 0 <= distance <= 255, 'invalid captured pre-command v70')
+    require(measured <= 30, 'derived sleeping giant distance is out of range')
     return {'actor': 1, 'view': 52, 'drawn': True, 'motion': 0, 'direction': 0,
             'motion_bit': actor['motion_bit'],
-            'actor_position': {key: actor[key] for key in ('x', 'y', 'width')},
+            'actor_position': {key: actor[key] for key in ('x', 'y', 'width', 'height')},
             'ego_position': {'x': ego['x'], 'y': ego['y'], 'width': raw['ego_width']},
-            'distance': distance, 'maximum_distance': 30,
-            'scope': 'Supplied state checks for the source pickup predicate; motion_bit is opaque, and actor motion and timers are not projected.'}
+            'derived_distance': measured, 'maximum_distance': 30,
+            'captured_v70': distance, 'captured_v70_used_as_distance_witness': False,
+            'scope': 'Host-derived pre-command distance only; original v70 is computed inside GET CHEST. motion_bit is opaque, and actor motion and timers are not projected.'}
+
+
+def distance_evidence(reference, loader, resource, raw, condition, binding, agi_sha):
+    """Bind the command-time original distance write and real handler return."""
+    proof = json_artifact(reference, loader, 'giant distance')
+    expected = condition['derived_distance']
+    require(exact(proof, {'format': 'fdisbull-agi-chest-distance-1', 'status': 'verified',
+                         'complete': True, 'native_execution': True, 'source_logic': 58,
+                         'source_logic_sha256': resource.resource_sha256,
+                         'source_offset': 0x234, 'source_cursor_offset': 0x238,
+                         'known_result': expected})
+            and proof.get('cleanup_errors', []) == [] and not proof.get('failure')
+            and isinstance(proof.get('arguments'), list) and proof['arguments'] == [0, 1, 70]
+            and all(type(value) is int for value in proof['arguments']),
+            'original distance completion, source or native result differs')
+    identity = {**binding, 'agi_sha256': agi_sha, 'handler_sha256': DISTANCE_HANDLER_SHA}
+    require(agi_sha == DISTANCE_AGI_SHA and exact(proof.get('identity'), identity),
+            'distance engine or session identity differs')
+    actor = raw['quest_actors']['1']
+    ego = {'x': raw['ego']['x'], 'y': raw['ego']['y'], 'width': raw['ego_width'],
+           'view': raw['ego_view'], 'direction': raw['ego']['direction'], 'drawn': raw['ego']['drawn']}
+    giant = {key: actor[key] for key in ('x', 'y', 'width', 'height', 'view', 'direction', 'motion', 'drawn')}
+    require(exact(giant, {'width': 30, 'height': 15}), 'distance original VIEW 52 dimensions differ')
+    state = {'room': raw['room'], 'score': raw['score'], 'sleep_state': raw['quest_variables']['86'],
+             'sleep_scored': raw['quest_flags']['205'], 'chest_taken_flag': raw['quest_flags']['104'],
+             'shield_flag': raw['quest_flags']['102'],
+             **{name+'_location': raw['inventory_locations'][str(item)]
+                for name, item in (('key', 5), ('shield', 21), ('chest', 2))}}
+    for name in ('before', 'after'):
+        observed = proof.get(name)
+        require(exact(observed, state) and exact(observed.get('ego'), ego)
+                and exact(observed.get('giant'), giant), 'distance pose or quest state differs')
+    before_v70 = proof['before'].get('v70')
+    require(type(before_v70) is int and 0 <= before_v70 <= 255
+            and exact(proof['before'], {'expected_distance': expected})
+            and exact(proof['after'], {'v70': expected}), 'distance calculated value differs')
+    table, writer, returned = proof.get('actor_table'), proof.get('distance_writer'), proof.get('handler_return')
+    require(type(table) is int and 0 < table and table+86 <= 65536
+            and exact(writer, {'cause_offset': 0x48a2, 'resume_offset': 0x48a6,
+                               'bx': 70, 'ax': expected, 'si': table, 'di': table+43})
+            and all(type(writer.get(key)) is int and 0 <= writer[key] <= 65535
+                    for key in ('bp', 'sp', 'ss')) and 4 <= writer['bp'] <= 65525
+            and writer['sp'] == writer['bp']-4, 'distance original writer or call frame differs')
+    require(exact(returned, {'offset': 0x2fa, 'observed': True, 'source_cursor_offset': 0x238,
+                            'stack_verified': True, 'ss': writer['ss'], 'writer_bp': writer['bp'],
+                            'sp': writer['bp']+8})
+            and all(type(returned.get(key)) is int and 0 <= returned[key] <= 65535 for key in ('ax', 'si')),
+            'distance original handler return differs')
+    code = returned['ax']-0x238
+    require(0 <= code and code+len(resource.code) <= 65536 and returned['si'] == code+0x235,
+            'distance original return source cursor differs')
+    return {'sha256': reference['sha256'], 'source_logic': 58,
+            'source_logic_sha256': resource.resource_sha256, 'source_offset': 0x234,
+            'source_cursor_offset': 0x238, 'arguments': [0, 1, 70], 'identity': identity,
+            'derived_expected_distance': expected, 'native_result': proof['known_result'],
+            'before_v70': before_v70, 'actor_table': table,
+            'distance_writer': {key: writer[key] for key in
+                ('cause_offset', 'resume_offset', 'bx', 'ax', 'si', 'di', 'bp', 'sp', 'ss')},
+            'handler_return': {key: returned[key] for key in
+                ('offset', 'observed', 'source_cursor_offset', 'stack_verified', 'ss', 'writer_bp', 'sp', 'ax', 'si')},
+            'scope': 'Supplied command-time native distance write and real return, bound to the captured sleeping pose; not independent authentication.'}
 
 
 def build(source, capture, artifact_loader):
@@ -374,6 +444,9 @@ def build(source, capture, artifact_loader):
                         and item.get('delivered') is True and item.get('complete') is True
                         and isinstance(item.get('delivery'), dict) and item['delivery'].get('accepted') is True
                         for item in inputs), 'unqualified physical input')
+        if i == 7:
+            require([item['key'].strip().lower() for item in inputs] ==
+                    ['type:get chest', 'press:enter'], 'expected one original GET CHEST command')
         raw_messages = action.get('messages')
         require(isinstance(raw_messages, list), 'missing action messages')
         bindings = [message_evidence(message, artifact_loader, resources, ordered[i], ordered[i+1],
@@ -441,6 +514,9 @@ def build(source, capture, artifact_loader):
     native_binding = messages[1][0]['native_binding']
     require(all(message['native_binding'] == native_binding for group in messages for message in group),
             'message native session or segment binding differs')
+    native_distance = distance_evidence(actions[7].get('native_distance'), artifact_loader, resources[58],
+                                       observations[ids[7]]['state'], giant_condition, native_binding,
+                                       identity['agi_sha256'])
     pickups = {name: pickup_evidence(actions[index].get('native_pickup'), artifact_loader, name,
                 resources[PICKUPS[name]['logic']], records, states[index], states[index+1], native_binding['ds'])
                for name, index in (('key', 2), ('chest', 7))}
@@ -495,6 +571,7 @@ def build(source, capture, artifact_loader):
                 'projection_fields': list(FIELDS), 'observations': checked,
                 'guess_observations': checked_guesses, 'door_observation': door, 'pickups': pickups,
                 'giant_pickup_condition': giant_condition,
+                'native_distance': native_distance,
                 'edges': [{'id': action['id'], 'before': action['before'], 'after': action['after'],
                            'messages': messages[i]} for i, action in enumerate(actions)],
                 'scope': 'Supplied consistency and hashes do not authenticate execution, recover all AGI behavior, provide autonomous timing, or create durable saves.'}
