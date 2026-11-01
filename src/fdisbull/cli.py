@@ -225,6 +225,11 @@ METHODS = {
     "console-udc": "Compile bounded UIL to a new private NES/Genesis cartridge directory; path,target,output,[display_variable,scene_path]",
     "console-udc-targets": "List native console compiler targets and accepted UIL operations; no project required",
     "rom-game-lift": "Export the reviewed full Miniplanets game/audio UIL to a new private directory; path,output",
+    "genesis-replay-profiles": "List registered Genesis-source UIL/replay profiles and explicit target limits",
+    "genesis-replay-source": "Preflight original ROM parsing and registered semantic-profile eligibility; path",
+    "genesis-replay-export": "Capture semantic UIL and a locked NES or Genesis build in a new private bundle; path,output,[target,cc65_root,m68k_root,variant,procedures]",
+    "genesis-replay-inspect": "Check private replay payload integrity without executing tools or trusting qualification claims; path",
+    "genesis-replay-build": "Replay a registered bundle with exact original ROM and explicit trusted target compiler; path,output,rom_path,[target,cc65_root,m68k_root]",
     "rom-disasm": "Decode bounded, explicitly mapped SH-2 bytes with interchangeable engines; path,base_address,[backend,offset,length,max_instructions,mode,ghidra_home,saturn_recomp_root,timeout]",
     "disc-inspect": "Parse bounded CUE/BIN or ISO primary filesystem metadata; path,[mode,max_entries,max_directory_bytes,max_depth]",
     "info": "Parsed container summary; [version]",
@@ -382,6 +387,16 @@ def invoke(method, params, debugger=None):
     if method=='rom-game-lift':
         from .udl_miniplanets_full import lift_game_path
         return lift_game_path(**p)
+    if method.startswith('genesis-replay-'):
+        from . import udc_genesis
+        if method=='genesis-replay-profiles':
+            if p:raise ValueError('genesis-replay-profiles accepts no parameters')
+            return udc_genesis.translation_profiles()
+        handler={'genesis-replay-source':udc_genesis.inspect_translation_source,
+                 'genesis-replay-export':udc_genesis.write_translation,
+                 'genesis-replay-inspect':udc_genesis.inspect_translation_bundle,
+                 'genesis-replay-build':udc_genesis.replay_translation}.get(method)
+        if handler is not None:return handler(**p)
     if method=='console-udc-targets':
         from .console_udc import console_targets
         if p:raise ValueError('console-udc-targets accepts no parameters')
@@ -554,7 +569,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('media-modules','media-inspect','media-extract','agent-skill','identify','inspect','rom-inspect','rom-disasm','disc-inspect','console-udc','console-udc-targets','rom-game-lift','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('media-modules','media-inspect','media-extract','agent-skill','identify','inspect','rom-inspect','rom-disasm','disc-inspect','console-udc','console-udc-targets','rom-game-lift','genesis-replay-profiles','genesis-replay-source','genesis-replay-export','genesis-replay-inspect','genesis-replay-build','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         result=invoke(request["method"],params,debugger)
@@ -769,9 +784,24 @@ def parser():
     c.add_argument('--scene',dest='scene_path',help='optional NES level scene JSON')
     c.add_argument('--region',dest='region_path',help='original immutable ROM region for a procedural game profile')
     c.add_argument('--cc65-root',help='prepared external cc65 toolchain for the banked procedural game profile')
+    c.add_argument('--m68k-root',help='prepared external m68k-elf toolchain for the full Genesis procedural profile')
     c=sub.add_parser('rom-game-lift',help=METHODS['rom-game-lift'])
     c.add_argument('path');c.add_argument('--output',required=True)
     c.add_argument('--variant',choices=['efficient','baseline'],default='efficient')
+    sub.add_parser('genesis-replay-profiles',help=METHODS['genesis-replay-profiles'])
+    for name in ('genesis-replay-source','genesis-replay-inspect'):
+        c=sub.add_parser(name,help=METHODS[name]);c.add_argument('path')
+    c=sub.add_parser('genesis-replay-export',help=METHODS['genesis-replay-export'])
+    c.add_argument('path');c.add_argument('--output',required=True)
+    c.add_argument('--target',choices=['nes','genesis'],default='nes')
+    c.add_argument('--cc65-root');c.add_argument('--m68k-root')
+    c.add_argument('--variant',choices=['efficient','baseline'],default='efficient')
+    c.add_argument('--procedures',type=json.loads,help='JSON map of reviewed procedure names to baseline/efficient')
+    c=sub.add_parser('genesis-replay-build',help=METHODS['genesis-replay-build'])
+    c.add_argument('path');c.add_argument('--output',required=True)
+    c.add_argument('--rom',dest='rom_path',required=True)
+    c.add_argument('--target',choices=['nes','genesis'],default='nes')
+    c.add_argument('--cc65-root');c.add_argument('--m68k-root')
     c=sub.add_parser('rom-disasm',help=METHODS['rom-disasm'])
     c.add_argument('path')
     c.add_argument('--base-address',type=lambda s:int(s,0),required=True,help='explicit address mapping source file offset zero')

@@ -134,6 +134,28 @@ CONSOLE_GAME_EVIDENCE = tuple('docs/evidence/miniplanets-full-game-2026-10-31/' 
     'moving-optimization.json',
 ))
 CONSOLE_GAME_EVIDENCE += ('docs/MINIPLANETS_FULL_GAME.md',)
+CONSOLE_GAME_RESOURCES += tuple('src/fdisbull/' + name for name in (
+    'genesis_replay.py', 'udc_genesis_game.py', 'presentation_il.py', 'psg_il.py',
+    'data/miniplanets_presentation.uil.json', 'data/miniplanets_psg.uil.json',
+    'game_sources/miniplanets_presentation_uil.c', 'game_sources/miniplanets_psg_uil.c',
+    'game_sources/genesis_game_platform.c', 'game_sources/genesis_game_start.s',
+    'game_sources/genesis_game_renderer.c', 'game_sources/genesis_game_audio.c',
+    'game_sources/genesis_game_audio.S',
+))
+CONSOLE_GAME_HELPERS += (
+    'scripts/check_genesis_game.py', 'scripts/check_genesis_game_audio_source.py',
+    'scripts/check_genesis_game_renderer.py', 'scripts/check_genesis_vdp_presentation.py',
+    'scripts/check_genesis_presentation.py',
+    'scripts/check_miniplanets_psg_uil.py', 'scripts/check_presentation_uil.py',
+    'tests/test_genesis_replay.py', 'tests/test_genesis_replay_targets.py',
+    'tests/test_genesis_replay_review.py', 'tests/test_udc_genesis_game.py',
+    'tests/test_genesis_game_audio.py', 'tests/test_presentation_il.py', 'tests/test_psg_il.py',
+)
+CONSOLE_GAME_EVIDENCE += (
+    'docs/GENESIS_UIL_REPLAY.md',
+    'docs/evidence/miniplanets-full-game-2026-10-31/genesis-replay.json',
+    'docs/evidence/miniplanets-full-game-2026-10-31/genesis-presentation.json',
+)
 REQUIRED_SOURCE_FILES += CONSOLE_GAME_RESOURCES + CONSOLE_GAME_HELPERS + CONSOLE_GAME_EVIDENCE
 
 

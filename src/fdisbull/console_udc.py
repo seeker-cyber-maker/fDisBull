@@ -179,21 +179,39 @@ def write_console_rom(program: dict, *, target: str, output: str | Path,
 
 
 def compile_console_path(path: str | Path, *, scene_path: str | Path | None = None,
-                         region_path: str | Path | None = None, cc65_root: str | Path | None = None, **kwargs) -> dict:
+                         region_path: str | Path | None = None, cc65_root: str | Path | None = None,
+                         m68k_root: str | Path | None = None, **kwargs) -> dict:
     path = Path(path)
     if not path.is_file() or path.stat().st_size > 8*1024*1024:
         raise ValueError('expected one UIL JSON file within its profile size limit')
     program=json.loads(path.read_text())
+    if isinstance(program,dict) and program.get('format')=='fdisbull-genesis-replay-1':
+        from .udc_genesis import replay_translation
+        target=kwargs.pop('target',None)
+        if (target not in TARGETS or scene_path is not None
+                or kwargs.pop('display_variable',None) is not None):
+            raise ValueError('Genesis replay profile requires a registered console target')
+        if region_path is None:
+            raise ValueError('Genesis replay requires the exact --region cartridge')
+        return replay_translation(path,rom_path=region_path,target=target,
+                                  cc65_root=cc65_root,m68k_root=m68k_root,**kwargs)
     if isinstance(program,dict) and program.get('format')=='fdisbull-game-il-2':
-        from .udc_nes_game import write_nes_game
-        if kwargs.pop('target',None)!='nes' or scene_path is not None or kwargs.pop('display_variable',None) is not None:
-            raise ValueError('Procedural game profile requires NES target with its own globe presentation')
+        target=kwargs.pop('target',None)
+        if target not in TARGETS or scene_path is not None or kwargs.pop('display_variable',None) is not None:
+            raise ValueError('Procedural game profile requires a console target with its own globe presentation')
         if region_path is None:raise ValueError('Procedural game compilation requires the original --region cartridge')
         region=Path(region_path).expanduser().resolve()
         if not region.is_file() or region.stat().st_size!=524288:raise ValueError('Expected qualified 512KiB source region')
+        if target=='genesis':
+            if m68k_root is None or cc65_root is not None:
+                raise ValueError('Genesis procedural game requires explicit --m68k-root')
+            from .udc_genesis_game import write_genesis_game
+            return write_genesis_game(program,region.read_bytes(),m68k_root=m68k_root,**kwargs)
+        if m68k_root is not None:raise ValueError('--m68k-root applies to the Genesis target')
+        from .udc_nes_game import write_nes_game
         return write_nes_game(program,region.read_bytes(),cc65_root=cc65_root,**kwargs)
     if path.stat().st_size>65536:raise ValueError('expected one UIL-v1 JSON file at most 64 KiB')
-    if region_path is not None or cc65_root is not None:
+    if region_path is not None or cc65_root is not None or m68k_root is not None:
         raise ValueError('region/toolchain options apply only to procedural game UIL')
     if scene_path is not None:
         scene_path = Path(scene_path)
@@ -215,6 +233,11 @@ def console_targets():
             'variable_limit': 64, 'node_limit': 1024, 'depth_limit': 32,
             'table_type': 'u8', 'table_entries': 256},
             'miniplanets-full': {'target':'nes','format':'fdisbull-game-il-2','mapper':4,
+                'additional_target':'genesis','genesis_toolchain':'m68k-elf GCC, -m68000 -mshort',
                 'procedures':True,'mutable_arrays':True,'external_toolchain':'cc65 with wrapped-call bank support',
-                'source_contract':'exact reviewed Miniplanets REV04 profile; original region required'}},
+                'source_contract':'exact reviewed Miniplanets REV04 profile; original region required'},
+            'genesis-replay': {'target':'nes','format':'fdisbull-genesis-replay-1',
+                'additional_target':'genesis',
+                'source_platform':'genesis','semantic_modules':['game','audio','presentation','psg'],
+                'source_contract':'registered identity-bound source/model/lowering; explicit trusted tools and original ROM required'}},
         'scope': 'native compilation of an explicit UIL subset; not a complete source-console lifter or hardware conversion'}

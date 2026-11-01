@@ -275,11 +275,16 @@ terrain, score, lives, timer, menus, ending and an NES soundtrack arrangement.
 Its NES presentation uses the original globe projection with adapted graphics.
 Game rules are compared with original Genesis instructions and native NES play;
 the documentation records the tested scope and measured running speed.
-The full-game cartridge remains experimental: measured gameplay ranges from
-about 32 updates per second on a light stage to 10–20 on busy stages, with
-adapted graphics and sound. All 55 stages load; natural completion of every
-stage has not been verified.
+The full-game cartridge remains experimental. The latest moving-player NES
+benchmark reaches about 43.68 game updates and 18.26 completed globe swaps per
+second, with adapted graphics and sound. All 55 stages load; natural completion
+of every stage has not been verified.
 See the [full-game build and controls](docs/MINIPLANETS_FULL_GAME.md).
+The [repeatable Genesis UIL workflow](docs/GENESIS_UIL_REPLAY.md) captures the
+reviewed game, audio, display-planner and PSG representations and builds either
+NES or a new native Genesis cartridge. The Genesis rules passed the same 4,822
+original-backed cases; its display is adapted and its audio retains the original
+Sona hardware driver. Larger ROMs need their own recovered semantic profile.
 The earlier [flat first-level experiment](docs/MINIPLANETS_NES_LEVEL.md) remains
 available with its separate contract and results.
 

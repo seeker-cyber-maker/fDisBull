@@ -8,6 +8,33 @@ from __future__ import annotations
 import struct
 
 
+def translation_profiles():
+    """Discover reviewed Genesis-source replay routes, separately from build()."""
+    from .genesis_replay import profiles
+    return profiles()
+
+
+def inspect_translation_source(path):
+    from .genesis_replay import inspect_source
+    return inspect_source(path)
+
+
+def write_translation(path, output, **options):
+    """Capture Genesis-source UIL and a registered console lowering privately."""
+    from .genesis_replay import write_bundle
+    return write_bundle(path, output, **options)
+
+
+def inspect_translation_bundle(path):
+    from .genesis_replay import inspect_bundle
+    return inspect_bundle(path)
+
+
+def replay_translation(path, output, **options):
+    from .genesis_replay import replay_bundle
+    return replay_bundle(path, output, **options)
+
+
 class _Assembler:
     def __init__(self):
         self.data = bytearray()

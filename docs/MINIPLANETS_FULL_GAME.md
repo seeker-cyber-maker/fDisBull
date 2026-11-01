@@ -1,6 +1,11 @@
-# Miniplanets full-game UIL and native NES profile
+# Miniplanets full-game UIL and native console profiles
 
-The moving-gameplay follow-up at the end is the latest qualified build.
+The [repeatable Genesis UIL workflow](GENESIS_UIL_REPLAY.md) is the latest
+compilation follow-up. It adds a locked replay bundle and a full procedural
+Genesis target alongside the existing NES target. The NES ROM remains byte
+identical to the moving-gameplay build described below.
+
+The moving-gameplay follow-up at the end is the latest qualified NES performance build.
 It improves the matched moving-player test from 15.42 to 18.26 completed globe
 swaps/s, with game updates near 43.68/s. Audio work, weighted upload scheduling
 and certified terrain spans preserve the checked outputs. These are bounded
@@ -47,8 +52,10 @@ ROMs, raw states and captures remain in private directories outside Git.
 
 The ordinary `console-udc` API/CLI selects this profile from its document
 version. Its original scalar NES/Genesis and first-level profiles retain their
-separate limits. The full-game profile currently has a NES backend; the
-original Genesis cartridge supplies the comparison runtime.
+separate limits. The full-game profile has NES and Genesis backends; the
+original Genesis cartridge supplies the comparison runtime. See the separate
+[Genesis replay contract](GENESIS_UIL_REPLAY.md) for the new target's adapted
+display, retained Sona driver, native checks and measured limits.
 
 ## Replay and build
 

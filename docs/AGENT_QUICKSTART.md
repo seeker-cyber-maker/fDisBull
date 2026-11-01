@@ -308,6 +308,13 @@ For the reviewed full Miniplanets profile, `rom-game-lift ORIGINAL_ROM --output
 rules into a banked NES cartridge. See the [full-game contract and measured
 qualification](MINIPLANETS_FULL_GAME.md); original data remains external and
 this source-bound profile is separate from arbitrary ROM decompilation.
+For a locked game/audio/presentation/PSG export with repeatable native builds,
+use `genesis-replay-export ORIGINAL_ROM --target nes --cc65-root TOOLS --output
+/private/new-bundle`. Select `--target genesis --m68k-root TOOLS` to compile
+the full procedural game back to Genesis. `genesis-replay-source` reports
+whether an intake has a reviewed semantic profile; parsing alone is insufficient.
+See [Genesis UIL replay](GENESIS_UIL_REPLAY.md) for build/replay commands,
+tool trust and the target-specific validation limits.
 
 ### Compare a source block with shared semantics
 
