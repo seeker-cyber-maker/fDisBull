@@ -106,8 +106,8 @@ STATE_EVIDENCE = {
     "$competition": "DGROUP:D2F4 `_civ_total`; civd GLOBALS.C:113 and NEWGAME.C:73-76 map menu rows 7..3 to 6..2, clamped 2..6.",
     "$players": "DGROUP:6B8A `_players`; civd GLOBALS.C:17 and NEWGAME.C:77 derive `255 >> (6 - civ_total)`; five competition rows write both fields.",
     "$rule_options": "DGROUP:E3C4 `_rule_options`; civd GLOBALS.C:186 and NEWGAME.C:82 set 15 at the start of a new game.",
-    "$tribe": "Setup result recorded by Civ64 SCENES 9.3; the menu result binding is not modelled.",
-    "$human_civ": "DGROUP:D7F0 player civilization; Civ64 SCENES-PLAY 7.19.",
+    "$tribe": "DGROUP:D7F4 `_civ_tribe_of`; civd NEWGAME.C:141 writes the selected tribe; one representative row is bound.",
+    "$human_civ": "DGROUP:D7EE `_civnow`; civd NEWGAME.C:113-117 selects the slot; Civ64 SCENES-PLAY 7.19 reads the human civilization.",
     "$treasury": "DGROUP:B1D6[civ]; Civ64 SCENES-PLAY 5.2.",
     "$tax_rate": "DGROUP:DF0E[civ]; Civ64 SCENES-PLAY 7.20.",
     "$science_rate": "DGROUP:B210[civ]; Civ64 SCENES-PLAY 7.20.",
@@ -478,15 +478,15 @@ SCREEN_SPECS = [
                 "tribe-menu",
                 "Tribe menu",
                 ["tribe", "civilization"],
-                "Tribe choice; only the declared initial value is represented.",
+                "Tribe choice; only row 1 of the first group is bound.",
             ),
             _object(
-                "tribe-continue",
-                "Continue tribe",
-                ["continue", "next"],
-                "Advances to leader naming.",
+                "tribe-row-1",
+                "First tribe row",
+                ["first tribe", "tribe row 1"],
+                "Sets civnow = 1 and civ_tribe_of[1] = 1 for the representative first row.",
                 "activate",
-                "tribe-continue",
+                "choose-tribe-1",
             ),
         ],
     ),
@@ -1349,11 +1349,13 @@ def build_programs() -> dict:
         ),
     )
     add(
-        "tribe-continue",
+        "choose-tribe-1",
         _transition(
-            "tribe-continue",
+            "choose-tribe-1",
             LEADER_NAME,
-            "Tribe choice recorded as declared state; leader name.",
+            "First tribe row chosen: civnow = 1, civ_tribe_of[1] = 1; leader name.",
+            ("$human_civ", 1),
+            ("$tribe", 1),
         ),
     )
     add(
@@ -1723,7 +1725,7 @@ def build_provenance(
         "limits": [
             "Partial scene graph and state projection, not a full game simulation.",
             "No DOS execution, VGA rendering, input decoding, AI, combat, technology, diplomacy, save parsing or economy model.",
-            "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; the tribe rows remain declared and no setup binding has a live-screen observation.",
+            "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; only representative tribe row 1 is bound, and no setup binding has a live-screen observation.",
             "The game-over context is state-reachable for inspection; its trigger conditions are not modelled.",
             "Every screen boundary is resolved against a civd function; this is address resolution, not Windows-to-DOS byte equivalence.",
         ],

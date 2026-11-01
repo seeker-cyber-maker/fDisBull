@@ -1,7 +1,7 @@
 {
  "format": "fdisbull-civ-game-uil-provenance-1",
  "scene": "examples/civ/civ_game_scene.json",
- "scene_sha256": "d0864c1b54cd9855d464ef1ceeb4e96370f06a2afd03338aa017346b0068cfac",
+ "scene_sha256": "8cc917e432a71d8969d56ef49d8d92d2bd1cdefad719747bc79a20ee56541793",
  "edition": {
   "label": "pinned Civ 474.05 / Civ64 475.05 DOS root",
   "packed_sha256": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
@@ -954,13 +954,13 @@
    "name": "$tribe",
    "type": "u8",
    "initial": 0,
-   "evidence": "Setup result recorded by Civ64 SCENES 9.3; the menu result binding is not modelled."
+   "evidence": "DGROUP:D7F4 `_civ_tribe_of`; civd NEWGAME.C:141 writes the selected tribe; one representative row is bound."
   },
   {
    "name": "$human_civ",
    "type": "u8",
    "initial": 0,
-   "evidence": "DGROUP:D7F0 player civilization; Civ64 SCENES-PLAY 7.19."
+   "evidence": "DGROUP:D7EE `_civnow`; civd NEWGAME.C:113-117 selects the slot; Civ64 SCENES-PLAY 7.19 reads the human civilization."
   },
   {
    "name": "$treasury",
@@ -1098,7 +1098,7 @@
  "limits": [
   "Partial scene graph and state projection, not a full game simulation.",
   "No DOS execution, VGA rendering, input decoding, AI, combat, technology, diplomacy, save parsing or economy model.",
-  "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; the tribe rows remain declared and no setup binding has a live-screen observation.",
+  "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; only representative tribe row 1 is bound, and no setup binding has a live-screen observation.",
   "The game-over context is state-reachable for inspection; its trigger conditions are not modelled.",
   "Every screen boundary is resolved against a civd function; this is address resolution, not Windows-to-DOS byte equivalence."
  ]

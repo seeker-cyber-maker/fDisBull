@@ -42,7 +42,7 @@ def _to_world(backend):
         ("activate", "birth-continue"),
         ("activate", "difficulty-prince"),
         ("activate", "competition-five"),
-        ("activate", "tribe-continue"),
+        ("activate", "tribe-row-1"),
         ("activate", "name-accept"),
         ("activate", "intro-begin"),
     ):
@@ -110,6 +110,19 @@ def test_competition_menu_binds_civ_total_and_players_mask():
         assert backend.state["$competition"] == civ_total
         assert backend.state["$players"] == players
         assert backend.observe()["context"]["id"] == "tribe"
+
+
+def test_first_tribe_row_binds_civnow_and_tribe():
+    backend = ILSceneBackend(build_scene())
+    assert _act(backend, "activate", "title-new")["status"] == "success"
+    assert _act(backend, "activate", "birth-continue")["status"] == "success"
+    assert _act(backend, "activate", "difficulty-prince")["status"] == "success"
+    assert _act(backend, "activate", "competition-five")["status"] == "success"
+    assert backend.observe()["context"]["id"] == "tribe"
+    assert _act(backend, "activate", "tribe-row-1")["status"] == "success"
+    assert backend.state["$human_civ"] == 1
+    assert backend.state["$tribe"] == 1
+    assert backend.observe()["context"]["id"] == "leader-name"
 
 
 def test_startup_flow_reaches_world_and_end_turn_advances_declared_state():

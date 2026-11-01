@@ -127,8 +127,8 @@ carries every field and its evidence; the important groups are:
 | `$competition` | `u8` | DGROUP:D2F4 `_civ_total`; civd GLOBALS.C:113, NEWGAME.C:73-76 | source-bound 6..2; five menu rows write the field |
 | `$players` | `u8` | DGROUP:6B8A `_players`; civd GLOBALS.C:17, NEWGAME.C:77 | source-bound mask written with each competition row |
 | `$rule_options` | `u8` | DGROUP:E3C4 `_rule_options`; civd GLOBALS.C:186, NEWGAME.C:82 | source-bound constant 15 at new game |
-| `$tribe` | `u8` | Civ64 SCENES 9.3 | declared setup state; menu result binding not modelled |
-| `$human_civ` | `u8` | DGROUP:D7F0; Civ64 SCENES-PLAY 7.19 | declared player identity |
+| `$tribe` | `u8` | DGROUP:D7F4 `_civ_tribe_of`; civd NEWGAME.C:141 | representative row 1 writes 1; other rows declared |
+| `$human_civ` | `u8` | DGROUP:D7EE `_civnow`; civd NEWGAME.C:113-117; Civ64 SCENES-PLAY 7.19 | representative row 1 writes slot 1 |
 | `$treasury` | `i32` | DGROUP:B1D6[civ]; Civ64 SCENES-PLAY 5.2 | declared economy state |
 | `$tax_rate`, `$science_rate`, `$luxury_rate` | `u8` | DGROUP:DF0E/B210 and `10-tax-science`; Civ64 SCENES-PLAY 7.20 | declared rates |
 | `$view_x`, `$view_y` | `u8` | DGROUP:D4CC/D75E; Civ64 SCENES-PLAY 3 | viewport projection |
@@ -157,6 +157,13 @@ civd `NEWGAME.C:73-76` maps row `r` to `_civ_total = clamp(6 - r, 2, 6)`, so
 objects write both `$competition` and `$players` (0xFF, 0x7F, 0x3F, 0x1F,
 0x0F); `test_competition_menu_binds_civ_total_and_players_mask` checks each
 pair and the transition to `tribe`.
+
+One representative tribe row is bound. With `$competition = 4`, `NEWGAME.C`
+builds first-group rows 1..5; row 0 maps to `civnow = 1` and
+`civ_tribe_of[1] = 1`. The scene binds that row as `$human_civ = 1` and
+`$tribe = 1`; `test_first_tribe_row_binds_civnow_and_tribe` checks the state
+and the transition to `leader-name`. The remaining rows depend on the
+competition count and are not modelled.
 
 The scene deliberately does **not** load a save, render a map, execute a turn,
 run AI, resolve combat, advance technology or write a city record. Those are
@@ -204,10 +211,10 @@ The Z-player test uses the committed scene, not an in-memory rebuild.
 
 Observed on this host with the active fDisBull 0.28.0 interpreter:
 
-- `tests/test_civ_game_uil.py`: **8 passed**
+- `tests/test_civ_game_uil.py`: **9 passed**
 - CIV-focused set (`game UIL`, `city UIL`, `atlas`, `city trace`, `city overlay`):
-  **39 passed**
-- full repository suite: **2,243 passed, 152 skipped, 2 failed, 23 errors**.
+  **40 passed**
+- full repository suite: **2,244 passed, 152 skipped, 2 failed, 23 errors**.
   The failures/errors are the existing Apple-toolchain Linux ELF fixture
   boundary (`/usr/bin/gcc` is Apple clang; missing `-z ibtplt` and Linux
   metadata), not this scene.
@@ -220,8 +227,8 @@ remain static. No DOS screen was run for this slice.
 - Partial scene graph and state projection, not a full simulation.
 - No DOS execution, VGA rendering, palette/font/asset loading or input decoding.
 - Difficulty and competition rows are bound to `cur_tier`, `civ_total` and
-  `players`; the tribe rows remain declared, and none of the setup bindings has
-  a live-screen observation.
+  `players`; tribe row 1 is a representative binding, the other tribe rows
+  remain declared, and no setup binding has a live-screen observation.
 - Unit next/previous/select, sell, buy, rename, text entry and report paging are
   only partially represented or absent. The detailed city fixture carries more
   source-modeled city behavior.
@@ -235,8 +242,8 @@ remain static. No DOS screen was run for this slice.
 
 ## Next probes
 
-1. Bind the tribe rows to `civ_tribe_of` and `civnow`; difficulty and
-   competition are now source-bound.
+1. Model the competition-dependent tribe menu rows and bind the second group
+   (tribes 9..15), rather than stopping at representative row 1.
 2. Bind the unit-list `next`/`previous`/`select` actions to the existing city
    fixture and to a live cursor read, rather than leaving the game scene with a
    single close action.
