@@ -102,8 +102,22 @@ guest execution if the condition is already true. Guest progress and wall time
 are separate budgets; measured guest time may overshoot a requested slice by
 the backend's scheduling granularity. A breakpoint, watchpoint, hook, guest error,
 missing capture, ambiguity or exhausted budget is an explicit stop/exception.
-The framework does not continue through debugger stops. Diagnostics and artifact
-export are separate from the guest-driving timeout.
+Debugger stops remain stops by default. A local passive collector can explicitly
+register its exact breakpoint IDs with
+`fdisbull.scenes.register_scene_observer(session, 'collector-name', breakpoint_ids=[...])`.
+Refresh that registration when its hooks change. Only a single matching observer
+hook with a matching native breakpoint ID, run, source version and runtime epoch
+can be consumed by a scene wait; a reply's observer name alone is insufficient.
+An empty ID list disables the registration. Restore/version changes invalidate it.
+This does not change raw debugger `run(stop_on_hook=True)` behavior. Intentional,
+unregistered, mixed, unknown and other stop kinds remain explicit stops.
+
+Consumed stops retain their full native replies in linked project scene
+observations. The wait reply includes a count and at most sixteen recent
+observation references. They retain measured guest progress and share the
+original wall/guest/poll limits, including the zero-progress guard; they do not
+repeat the scene input. Diagnostics and artifact export are separate from the
+guest-driving timeout.
 
 Scenes in the same `exclusive_group` (default `main`) cannot both match. Objects
 can declare an `exclusive_group` for mutually exclusive visible variants.

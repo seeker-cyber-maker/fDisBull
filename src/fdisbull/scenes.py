@@ -16,6 +16,45 @@ from .scene_geometry import dimensions, integer, region
 from .scene_values import ObservationReads, before_refs, comparison, evaluate_comparison, compact_result
 from .scene_bundles import SceneBundleMixin
 
+
+def register_scene_observer(session, observer, *, breakpoint_ids):
+    """Explicitly allow one local observer's exact hooks during scene waits.
+
+    This changes no debugger run policy. Refresh registration when the observer
+    adds/removes hooks; restoration or a version/epoch change invalidates it.
+    An observer name in a reply alone is never permission to resume a stop.
+    """
+    if not isinstance(observer,str) or not 1<=len(observer)<=128:
+        raise ValueError('Invalid scene observer name')
+    if not isinstance(breakpoint_ids,(list,tuple,set,frozenset)) or len(breakpoint_ids)>10000:
+        raise ValueError('Scene observer requires bounded breakpoint IDs')
+    if any(not isinstance(x,str) or not 1<=len(x)<=128 for x in breakpoint_ids):
+        raise ValueError('Invalid scene observer breakpoint ID')
+    registry=getattr(session,'_scene_observers',None)
+    if registry is None:session._scene_observers=registry={}
+    registry[observer]={'breakpoints':frozenset(breakpoint_ids),'run':session.run_id,
+                        'epoch':getattr(session,'_runtime_epoch',None),
+                        'version':getattr(session,'version',{}).get('id')}
+    return {'observer':observer,'run':session.run_id,'breakpoints':len(set(breakpoint_ids))}
+
+
+def scene_observer_stop(session, stop):
+    """Recognize one explicitly registered observer stop, retaining raw evidence."""
+    hits=stop.get('hook_hits')
+    if stop.get('outcome')!='hook' or not isinstance(hits,list) or len(hits)!=1:
+        return False
+    hit=hits[0]
+    if not isinstance(hit,dict) or not isinstance(hit.get('observer'),str):return False
+    policy=getattr(session,'_scene_observers',{}).get(hit.get('observer'))
+    native=stop.get('session')
+    if not isinstance(native,dict):return False
+    reason=native.get('stop_reason',{})
+    if not isinstance(reason,dict):return False
+    return bool(policy and stop.get('run')==policy['run']==session.run_id and
+                policy['epoch']==getattr(session,'_runtime_epoch',None) and
+                policy['version']==getattr(session,'version',{}).get('id') and
+                reason.get('kind')=='breakpoint' and reason.get('breakpoint_id') in policy['breakpoints'])
+
 SCENE_DDL = '''
 CREATE TABLE IF NOT EXISTS debug_scenes(
  id TEXT PRIMARY KEY, version INTEGER NOT NULL REFERENCES versions(id),
@@ -389,6 +428,14 @@ class SceneHandle:
         self.info=session.project.debug_scene_info(scene,version=session.version['id'])
         self.revision=self.info['id']
 
+    def _observer_stop(self, stop, previous=None):
+        # Keep full native evidence in the project, not repeatedly in replies.
+        retained=self._store({'status':'stopped','complete':False,'kind':'scene-observer-stop',
+                              'previous_observer_stop':previous,'stop':deepcopy(stop)})
+        return {'observation':retained['observation'],'observer':stop['hook_hits'][0]['observer'],
+                'breakpoint_id':stop['session']['stop_reason']['breakpoint_id'],
+                'guest_elapsed_ms':stop.get('guest_elapsed_ms',0)}
+
     def _object(self, target):
         found=[o for o in self.info['definition']['objects'] if target in [o['id'],o['name'],*o['aliases']]]
         if len(found)!=1:raise ValueError('Unknown scene object')
@@ -526,9 +573,12 @@ class SceneHandle:
 
     def _wait(self, object, predicate, *, guest_ms, timeout_ms, slice_ms):
         integer(guest_ms,1,120000);integer(timeout_ms,1,60000);integer(slice_ms,1,1000)
-        started=time.monotonic();elapsed=0;polls=[]
+        started=time.monotonic();elapsed=0;polls=[];observer_stops=[]
         while True:
             result=self._observe(object,extra=predicate)
+            if observer_stops:
+                result['observer_stops']=deepcopy(observer_stops[-16:])
+                result['observer_stop_count']=len(observer_stops)
             polls.append(dict(frame_id=result.get('frame',{}).get('frame_id'),status=result['status']))
             remaining=timeout_ms-int((time.monotonic()-started)*1000)
             if result['status']=='matched' and remaining>0:
@@ -539,6 +589,9 @@ class SceneHandle:
                 raise SceneError(self._store(result,diagnostic=True))
             stop=self.session.run(guest_ms=min(slice_ms,guest_ms-elapsed),timeout_ms=max(1,remaining),fast_forward=True,stop_on_hook=True)
             elapsed+=stop.get('guest_elapsed_ms',0)
+            if scene_observer_stop(self.session,stop):
+                observer_stops.append(self._observer_stop(stop,observer_stops[-1]['observation'] if observer_stops else None))
+                continue
             if stop['outcome']!='guest_time' or stop.get('hook_hits'):
                 result.update(status='stopped',complete=False,stop=stop,polls=polls,guest_elapsed_ms=elapsed)
                 raise SceneError(self._store(result,diagnostic=True))
@@ -617,9 +670,12 @@ class SceneHandle:
         return self._store(outcome)
 
     def _wait_outcome(self, predicate, *, guest_ms, timeout_ms, baseline=None):
-        started=time.monotonic();elapsed=0;polls=[]
+        started=time.monotonic();elapsed=0;polls=[];observer_stops=[]
         while True:
             result=self._observe(extra=predicate,baseline=baseline)
+            if observer_stops:
+                result['observer_stops']=deepcopy(observer_stops[-16:])
+                result['observer_stop_count']=len(observer_stops)
             # A destination match is independent of the old scene name; keep
             # conflicts, absent captures and blocking modals as explicit failures.
             ok=result.get('predicate_matched') is True and result['status'] not in ('ambiguous','unavailable')
@@ -633,6 +689,9 @@ class SceneHandle:
                 raise SceneError(self._store(result,diagnostic=True))
             stop=self.session.run(guest_ms=min(100,guest_ms-elapsed),timeout_ms=max(1,remaining),fast_forward=True,stop_on_hook=True)
             elapsed+=stop.get('guest_elapsed_ms',0)
+            if scene_observer_stop(self.session,stop):
+                observer_stops.append(self._observer_stop(stop,observer_stops[-1]['observation'] if observer_stops else None))
+                continue
             if stop['outcome']!='guest_time' or stop.get('hook_hits'):
                 result.update(status='stopped',complete=False,stop=stop,polls=polls,guest_elapsed_ms=elapsed)
                 raise SceneError(self._store(result,diagnostic=True))
