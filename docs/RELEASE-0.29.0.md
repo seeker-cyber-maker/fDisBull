@@ -155,4 +155,7 @@ full native CI matrix and hosted runs remain separate gates.
    build and installed acceptance in hosted native CI; the local build passed.
 5. Rebuild both native macOS backends and repeat installed-wheel acceptance;
    the active local prefix reuses the 0.28.0 backend by an APFS clone.
-6. Decide the tag (`v0.29.0`) only after the above pass on the same commit.
+6. Install and activate the fresh local prefix, then run
+   `python scripts/check_local_install.py --version 0.29.0 --commit <commit>`;
+   a release is not locally complete until that check passes.
+7. Decide the tag (`v0.29.0`) only after the above pass on the same commit.

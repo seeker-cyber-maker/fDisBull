@@ -28,6 +28,17 @@ records backend paths. Verify the complete payload with:
 fdisbull-python -B -I /Users/Shared/fDisBull/current/share/verify-system.py verify
 ```
 
+After each release, confirm the local installation from the release source tree:
+
+```bash
+python scripts/check_local_install.py --version 0.29.0 \
+  --commit c03dc4f9d4b5b9d0b374f6423e21962bfb0b07c9
+```
+
+The check requires `INSTALLATION.json` to be `active_verified`, the selector to
+resolve under `releases/`, the installed version and source commit to match the
+release, and the complete payload verifier to report `active_default: true`.
+
 Discover both skills with `fdisbull agent-skill --list`; retrieve only the
 needed reference. Keep games, story inputs, saved native states and project
 databases outside the managed prefix. The macOS backend was not rebuilt for
