@@ -78,6 +78,74 @@ def clock(value):
     return value
 
 
+def checkpoint_origin(capture, loader, source, first, binding):
+    """Validate supplied single-session checkpoint provenance, never splice runs."""
+    runtime=capture['runtime'];reference=capture.get('native_origin')
+    if runtime.get('fresh_game') is True:
+        require(runtime.get('interventions')==[] and reference is None,
+                'fresh origin contradicts a checkpoint or intervention')
+        return {'kind':'fresh-original-boot','fresh_game':True}
+    require(runtime.get('fresh_game') is False and isinstance(reference,dict),
+            'missing explicit checkpoint origin')
+    origin=json_artifact(reference,loader,'native checkpoint origin')
+    require(exact(origin,{'format':'fdisbull-agi-checkpoint-origin-1','complete':True,'load_count':1,
+                         'policy':'physical','disk_manifest_verified':True,'no_guest_edits':True,
+                         'source_observation_id':'quest-start','loaded_session_id':runtime['session_id'],
+                         'source_agi_sha256':source['agi_sha256'],'object_sha256':OBJECT_SHA}),
+            'checkpoint origin completion or identity differs')
+    state_sha=origin.get('state_sha256');backend=origin.get('backend_sha256')
+    require(all(isinstance(value,str) and re.fullmatch('[0-9a-f]{64}',value)
+                for value in (state_sha,backend)) and origin.get('loaded_state_sha256')==state_sha
+            and runtime.get('interventions')==[{'kind':'native-checkpoint-load','state_sha256':state_sha}],
+            'checkpoint hash or intervention differs')
+    cpus=[]
+    for name in ('saved_cpu','restored_cpu'):
+        cpu=origin.get(name)
+        require(isinstance(cpu,dict) and cpu.get('cpu_mode')=='real'
+                and set(cpu)=={'cpu_mode','general','segments','instruction_pointer','flags'},
+                'checkpoint CPU schema differs')
+        for group,keys,maximum in (('general',{'eax','ebx','ecx','edx','esi','edi','esp','ebp'},0xffffffff),
+                                   ('segments',{'cs','ds','es','ss','fs','gs'},0xffff)):
+            values=cpu.get(group)
+            require(isinstance(values,dict) and set(values)==keys and all(
+                isinstance(v,str) and re.fullmatch('0x[0-9a-fA-F]{1,8}',v) and int(v,16)<=maximum
+                for v in values.values()),'checkpoint CPU register values differ')
+        require(all(isinstance(cpu.get(key),str) and re.fullmatch('0x[0-9a-fA-F]{1,8}',cpu[key])
+                    and int(cpu[key],16)<=maximum for key,maximum in
+                    (('instruction_pointer',0xffff),('flags',0xffffffff))),
+                'checkpoint CPU pointer or flags differ')
+        cpus.append(cpu)
+    require(cpus[0]==cpus[1] and all(int(cpus[1]['segments'][key],16)==binding[key] for key in ('cs','ds')),
+            'checkpoint saved/restored CPU or native binding differs')
+    donor=json_artifact(origin.get('source_capture'),loader,'checkpoint source capture')
+    result=json_artifact(origin.get('source_result'),loader,'checkpoint source result')
+    require(exact(result,{'format':'fdisbull-native-spatial-trial-1','game':'kq1',
+                         'normal_leprechaun_complete':True,'post_teardown_source_unchanged':True,
+                         'post_teardown_copy_unchanged':True,'backend_sha256':backend})
+            and result.get('persistence_errors',[])==[], 'checkpoint donor preparation or integrity differs')
+    manifest=result.get('source_manifest')
+    require(isinstance(manifest,dict) and manifest.get('AGI')==source['agi_sha256']
+            and manifest.get('OBJECT')==OBJECT_SHA and donor.get('source')==source
+            and exact(donor.get('runtime'),{'policy':'physical','fresh_game':True,'interventions':[]}),
+            'checkpoint donor source or origin differs')
+    observed=donor.get('observations',{}).get('quest-start')
+    initial=origin.get('initial_projected_state')
+    require(isinstance(observed,dict) and project_state(observed.get('state'))==first
+            and isinstance(initial,dict) and set(initial)==set(first) and exact(initial,first),
+            'checkpoint initial projected state differs')
+    matches=[row for row in result.get('private_checkpoints',[]) if isinstance(row,dict)
+             and row.get('path')=='quest-start.sav']
+    require(len(matches)==1 and exact(matches[0],{'sha256':state_sha,'loaded':False})
+            and clock(matches[0].get('guest_ms'))==clock(observed.get('guest_ms')),
+            'checkpoint does not match its saved source observation')
+    return {'kind':'native-checkpoint','fresh_game':False,'sha256':reference['sha256'],
+            'state_sha256':state_sha,'backend_sha256':backend,'load_count':1,
+            'source_capture_sha256':origin['source_capture']['sha256'],
+            'source_result_sha256':origin['source_result']['sha256'],
+            'saved_restored_cpu_equal':True,'initial_projected_state_equal':True,
+            'scope':'Supplied supported-restore provenance; one subsequent session, no record splicing or cold-boot claim.'}
+
+
 def project_state(raw):
     require(isinstance(raw, dict) and isinstance(raw.get('ego'), dict), 'missing state')
     ego = raw['ego']
@@ -391,7 +459,7 @@ def build(source, capture, artifact_loader):
             'invalid quest capture')
     runtime = capture.get('runtime')
     require(isinstance(runtime, dict) and runtime.get('policy') == 'physical'
-            and runtime.get('fresh_game') is True and runtime.get('interventions') == []
+            and type(runtime.get('fresh_game')) is bool
             and isinstance(runtime.get('session_id'), str) and bool(runtime['session_id']),
             'unqualified runtime')
     identity = capture.get('source')
@@ -514,6 +582,7 @@ def build(source, capture, artifact_loader):
     native_binding = messages[1][0]['native_binding']
     require(all(message['native_binding'] == native_binding for group in messages for message in group),
             'message native session or segment binding differs')
+    origin = checkpoint_origin(capture,artifact_loader,identity,states[0],native_binding)
     native_distance = distance_evidence(actions[7].get('native_distance'), artifact_loader, resources[58],
                                        observations[ids[7]]['state'], giant_condition, native_binding,
                                        identity['agi_sha256'])
@@ -568,7 +637,7 @@ def build(source, capture, artifact_loader):
                            'resources': deepcopy(expected)}, 'route_contract': deepcopy(ROUTE_CONTRACT),
                 'capture_sha256': digest(json.dumps(capture, sort_keys=True, separators=(',', ':'),
                                                     ensure_ascii=False, allow_nan=False).encode()),
-                'projection_fields': list(FIELDS), 'observations': checked,
+                'projection_fields': list(FIELDS), 'origin':origin, 'observations': checked,
                 'guess_observations': checked_guesses, 'door_observation': door, 'pickups': pickups,
                 'giant_pickup_condition': giant_condition,
                 'native_distance': native_distance,

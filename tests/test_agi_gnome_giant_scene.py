@@ -844,3 +844,100 @@ def test_flag169_before_chest_is_captured_not_assumed_false(case):
     player = Player(backend)
     for command in COMMANDS[:7]: assert player.execute(command).startswith('Success:')
     assert backend.state['$chest_callback'] is True
+
+
+def checkpoint_case(case):
+    source,capture,loader,artifacts,_=case
+    def store(name,value):
+        raw=json.dumps(value).encode();artifacts[name]=raw
+        return {'path':name,'sha256':sha256(raw).hexdigest()}
+    first=capture['observations']['o0'];state_sha='2'*64;backend_sha='3'*64
+    donor={'source':deepcopy(capture['source']),'runtime':deepcopy(capture['runtime']),
+           'observations':{'quest-start':deepcopy(first)}}
+    result={'format':'fdisbull-native-spatial-trial-1','game':'kq1','normal_leprechaun_complete':True,
+            'post_teardown_source_unchanged':True,'post_teardown_copy_unchanged':True,
+            'backend_sha256':backend_sha,'source_manifest':{'AGI':capture['source']['agi_sha256'],
+            'OBJECT':exporter.OBJECT_SHA},'private_checkpoints':[{'path':'quest-start.sav',
+            'sha256':state_sha,'loaded':False,'guest_ms':first['guest_ms']}]}
+    cpu={'cpu_mode':'real','general':{n:'0x00000000' for n in
+         ('eax','ebx','ecx','edx','esi','edi','esp','ebp')},
+         'segments':dict(cs='0x1000',ds='0x2000',es='0x2000',ss='0x2000',fs='0x0000',gs='0x0000'),
+         'instruction_pointer':'0x1234','flags':'0x0202'}
+    origin={'format':'fdisbull-agi-checkpoint-origin-1','complete':True,'load_count':1,
+            'state_sha256':state_sha,'loaded_state_sha256':state_sha,'source_agi_sha256':capture['source']['agi_sha256'],
+            'object_sha256':exporter.OBJECT_SHA,'backend_sha256':backend_sha,
+            'loaded_session_id':'unit-session','policy':'physical','disk_manifest_verified':True,
+            'no_guest_edits':True,'source_observation_id':'quest-start',
+            'initial_projected_state':exporter.project_state(first['state']),
+            'saved_cpu':cpu,'restored_cpu':deepcopy(cpu),
+            'source_capture':store('donor-capture',donor),'source_result':store('donor-result',result)}
+    capture['runtime'].update(fresh_game=False,interventions=[{'kind':'native-checkpoint-load','state_sha256':state_sha}])
+    capture['native_origin']=store('native-origin',origin)
+    return origin,donor,result,store
+
+
+def test_checkpoint_origin_is_explicit_and_keeps_one_continuous_eight_action_capture(case):
+    source,capture,loader,_,_=case
+    checkpoint_case(case)
+    scene,proof=exporter.build(source,capture,loader)
+    assert proof['origin']['kind']=='native-checkpoint' and proof['origin']['fresh_game'] is False
+    assert proof['origin']['load_count']==1 and proof['origin']['saved_restored_cpu_equal']
+    player=Player(ILSceneBackend(scene))
+    for command in COMMANDS:assert player.execute(command).startswith('Success:')
+
+
+@pytest.mark.parametrize('fault',['missing_origin','origin_hash','complete','load_count','load_bool','state_hash',
+    'loaded_hash','agi','object','backend','session','policy','disk','edits','observation','initial',
+    'initial_bool','initial_extra','cpu_mode','cpu_mismatch','cpu_general','cpu_segment','cpu_flags','cpu_pointer',
+    'cpu_binding','donor_hash','donor_origin','donor_source','donor_state','donor_complete','donor_integrity',
+    'donor_errors','donor_checkpoint','donor_loaded','donor_clock','donor_extra_checkpoint','intervention',
+    'second_load','fresh_lie','missing_action','extra_action'])
+def test_checkpoint_origin_rejects_incomplete_contradictory_or_spliced_evidence(case,fault):
+    source,capture,loader,_,_=case
+    origin,donor,result,store=checkpoint_case(case)
+    if fault=='complete':origin['complete']=False
+    if fault=='load_count':origin['load_count']=2
+    if fault=='load_bool':origin['load_count']=True
+    if fault=='state_hash':origin['state_sha256']='invalid'
+    if fault=='loaded_hash':origin['loaded_state_sha256']='4'*64
+    if fault=='agi':origin['source_agi_sha256']='4'*64
+    if fault=='object':origin['object_sha256']='4'*64
+    if fault=='backend':origin['backend_sha256']='4'*64
+    if fault=='session':origin['loaded_session_id']='other'
+    if fault=='policy':origin['policy']='assisted'
+    if fault=='disk':origin['disk_manifest_verified']=False
+    if fault=='edits':origin['no_guest_edits']=False
+    if fault=='observation':origin['source_observation_id']='tree-unlocked'
+    if fault=='initial':origin['initial_projected_state']['score']+=1
+    if fault=='initial_bool':origin['initial_projected_state']['drawn']=1
+    if fault=='initial_extra':origin['initial_projected_state']['extra']=0
+    if fault=='cpu_mode':origin['restored_cpu']['cpu_mode']='protected'
+    if fault=='cpu_mismatch':origin['restored_cpu']['flags']='0x0203'
+    if fault=='cpu_general':origin['restored_cpu']['general']['eax']=0
+    if fault=='cpu_segment':origin['restored_cpu']['segments']['ss']='0x10000'
+    if fault=='cpu_flags':origin['restored_cpu']['flags']='0x100000000'
+    if fault=='cpu_pointer':origin['restored_cpu']['instruction_pointer']='0x10000'
+    if fault=='cpu_binding':
+        origin['restored_cpu']['segments']['ds']='0x2001';origin['saved_cpu']['segments']['ds']='0x2001'
+    if fault=='donor_origin':donor['runtime']['fresh_game']=False
+    if fault=='donor_source':donor['source']['agi_sha256']='4'*64
+    if fault=='donor_state':donor['observations']['quest-start']['state']['score']+=1
+    if fault=='donor_complete':result['normal_leprechaun_complete']=False
+    if fault=='donor_integrity':result['post_teardown_copy_unchanged']=False
+    if fault=='donor_errors':result['persistence_errors']=[{'error':'unobserved'}]
+    if fault=='donor_checkpoint':result['private_checkpoints'][0]['sha256']='4'*64
+    if fault=='donor_loaded':result['private_checkpoints'][0]['loaded']=True
+    if fault=='donor_clock':result['private_checkpoints'][0]['guest_ms']+=1
+    if fault=='donor_extra_checkpoint':result['private_checkpoints']*=2
+    origin['source_capture']=store('donor-capture',donor)
+    origin['source_result']=store('donor-result',result)
+    if fault=='donor_hash':origin['source_result']['sha256']='4'*64
+    capture['native_origin']=store('native-origin',origin)
+    if fault=='missing_origin':del capture['native_origin']
+    if fault=='origin_hash':capture['native_origin']['sha256']='4'*64
+    if fault=='intervention':capture['runtime']['interventions']=[]
+    if fault=='second_load':capture['runtime']['interventions']*=2
+    if fault=='fresh_lie':capture['runtime']['fresh_game']=True
+    if fault=='missing_action':capture['actions'].pop()
+    if fault=='extra_action':capture['actions'].append(deepcopy(capture['actions'][-1]))
+    with pytest.raises(ValueError):exporter.build(source,capture,loader)
