@@ -1,0 +1,5747 @@
+{
+  "method": "Bounded zlib carve; exact SHA-256/size correspondence to retained manifest. Prior filenames are labels, not freshly parsed installer metadata.",
+  "source_sha256": "3456d8d1e39fb97c073964c90c087317d5440eac7c967091dc899a5cf87e0742",
+  "candidates": 4772,
+  "matched_payloads": 605,
+  "matched_paths": 897,
+  "missing_paths": [],
+  "receipts": [
+    {
+      "offset": 7444913,
+      "zlib_size": 118947,
+      "output_size": 231179,
+      "sha256": "7192b80d1551769c2d2897b2f58015dc18fadca2b7e093a20f45b34011933c6c",
+      "prior_manifest_paths": [
+        "DATADISK/DOS4GW.EXE",
+        "SYNDICAT/DOS4GW.EXE"
+      ]
+    },
+    {
+      "offset": 8346833,
+      "zlib_size": 26929,
+      "output_size": 48626,
+      "sha256": "a90c1f8e3f0fb1ecc4ccfc3776e352c14561fcedd9b7e0386bea799906b573a2",
+      "prior_manifest_paths": [
+        "DATADISK/GINTRO.EXE",
+        "SYNDICAT/GINTRO.EXE"
+      ]
+    },
+    {
+      "offset": 8373766,
+      "zlib_size": 172245,
+      "output_size": 536633,
+      "sha256": "68207df1160ea7bf48cf4ef195592f162eae99e26088a9fc81505699103fcb50",
+      "prior_manifest_paths": [
+        "DATADISK/GMAIN.EXE"
+      ]
+    },
+    {
+      "offset": 8546015,
+      "zlib_size": 26262,
+      "output_size": 45170,
+      "sha256": "5fd1494311ba8d75ad823720a7b75f9f36bcbf0294c3dfc332b3149629c524f2",
+      "prior_manifest_paths": [
+        "DATADISK/INTRO.EXE",
+        "SYNDICAT/INTRO.EXE"
+      ]
+    },
+    {
+      "offset": 8572281,
+      "zlib_size": 178765,
+      "output_size": 553529,
+      "sha256": "9da4689e395ea4714830020187b18d6fb2a013a020fedfc7198d8494921d300a",
+      "prior_manifest_paths": [
+        "DATADISK/MAIN.EXE"
+      ]
+    },
+    {
+      "offset": 8751050,
+      "zlib_size": 26891,
+      "output_size": 48638,
+      "sha256": "9ecc487fd04ac178c4b8ac0cafd1395c1fba050771b50d6201f3e7ca2ff85ab8",
+      "prior_manifest_paths": [
+        "DATADISK/SINTRO.EXE",
+        "SYNDICAT/SINTRO.EXE"
+      ]
+    },
+    {
+      "offset": 8777945,
+      "zlib_size": 172130,
+      "output_size": 536633,
+      "sha256": "563764643b5c6e07370336fb731ac2fb7ffb963c13a722f2fd5bc002a97f4a28",
+      "prior_manifest_paths": [
+        "DATADISK/SMAIN.EXE"
+      ]
+    },
+    {
+      "offset": 8950079,
+      "zlib_size": 136,
+      "output_size": 127,
+      "sha256": "07aaefe68af4789133208bab35e63b5a07d827bee09070682021635615d2a01f",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/COL01.DAT",
+        "SYNDICAT/DATA/COL01.DAT"
+      ]
+    },
+    {
+      "offset": 8950219,
+      "zlib_size": 1419,
+      "output_size": 1417,
+      "sha256": "959119f7b26efa2674516c386293a5fcf6923138521041ec34a18892932c1fbf",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME01.DAT",
+        "SYNDICAT/DATA/GAME01.DAT"
+      ]
+    },
+    {
+      "offset": 8951642,
+      "zlib_size": 7722,
+      "output_size": 7733,
+      "sha256": "41de6b1410f8e211d5eeade7974e620048f3b391bd5bba1f7e83e318f083d502",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME02.DAT",
+        "SYNDICAT/DATA/GAME02.DAT"
+      ]
+    },
+    {
+      "offset": 8959368,
+      "zlib_size": 7727,
+      "output_size": 7753,
+      "sha256": "dfadd84e1f40079ed14069bdf383890ce619fb3bc2e45cfabb69bceefe3ef581",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME03.DAT",
+        "SYNDICAT/DATA/GAME03.DAT"
+      ]
+    },
+    {
+      "offset": 8967099,
+      "zlib_size": 6075,
+      "output_size": 6133,
+      "sha256": "c6c70b63fe6915b6be1d78282624c07b74dea4571adcc70f76fff14348ce48d2",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME04.DAT",
+        "SYNDICAT/DATA/GAME04.DAT"
+      ]
+    },
+    {
+      "offset": 8973178,
+      "zlib_size": 9074,
+      "output_size": 9087,
+      "sha256": "9ca598cdccd1ec4661afd04e0590e68542762c7791a59df78df1bd6d9d5d4e2d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME05.DAT"
+      ]
+    },
+    {
+      "offset": 8982256,
+      "zlib_size": 8921,
+      "output_size": 8991,
+      "sha256": "ff7712e67fe32e32b8eaa2f25d712dec17d96d46fe0ae29820f3b69fccbd6c0f",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME06.DAT",
+        "SYNDICAT/DATA/GAME06.DAT"
+      ]
+    },
+    {
+      "offset": 8991181,
+      "zlib_size": 5584,
+      "output_size": 5609,
+      "sha256": "15e759c767e367dd783b437fcec98f43be60610c866e5357276a608242311140",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME07.DAT",
+        "SYNDICAT/DATA/GAME07.DAT"
+      ]
+    },
+    {
+      "offset": 8996769,
+      "zlib_size": 5238,
+      "output_size": 5274,
+      "sha256": "e5e244070dd64da839d60c10336839985bf0a49c72a0d9b578d9e396ef9f7f3f",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME08.DAT"
+      ]
+    },
+    {
+      "offset": 9002011,
+      "zlib_size": 7163,
+      "output_size": 7187,
+      "sha256": "1e6017383cca64def885d532e5a81cb4f706f69c712180ddb048ab49f54edb08",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME09.DAT",
+        "SYNDICAT/DATA/GAME09.DAT"
+      ]
+    },
+    {
+      "offset": 9009178,
+      "zlib_size": 5761,
+      "output_size": 5768,
+      "sha256": "893c414db57e2a750a18f9e6bc535115ded575c4521baa3bb8168bd701754ebf",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME10.DAT",
+        "SYNDICAT/DATA/GAME10.DAT"
+      ]
+    },
+    {
+      "offset": 9014943,
+      "zlib_size": 8527,
+      "output_size": 8573,
+      "sha256": "ae18218a9c164d40fa686bd8598acb2f8f08e2b08ea622563871b90db02c9d8b",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME11.DAT",
+        "SYNDICAT/DATA/GAME11.DAT"
+      ]
+    },
+    {
+      "offset": 9023474,
+      "zlib_size": 3334,
+      "output_size": 3323,
+      "sha256": "c67469a072fc8a452cab5edaa21d5c6bc2869885c78621a793691ddd9f893662",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME12.DAT",
+        "SYNDICAT/DATA/GAME12.DAT"
+      ]
+    },
+    {
+      "offset": 9026812,
+      "zlib_size": 3298,
+      "output_size": 3322,
+      "sha256": "14b1af856373afd40ed8deaa71468a5d695ebdeb6d643d9b4be575a4c4a33eb8",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME13.DAT",
+        "SYNDICAT/DATA/GAME13.DAT"
+      ]
+    },
+    {
+      "offset": 9030114,
+      "zlib_size": 5508,
+      "output_size": 5566,
+      "sha256": "8fe006b8b10e4742675f13e34318ce0b04e2277abc4b1488bc559e5ab838be2b",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME14.DAT"
+      ]
+    },
+    {
+      "offset": 9035626,
+      "zlib_size": 3003,
+      "output_size": 3007,
+      "sha256": "b373462719ce3c832b67fcdb8f3da0b53243d83a401cf29677f88b5b3becaf0e",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME15.DAT",
+        "SYNDICAT/DATA/GAME15.DAT"
+      ]
+    },
+    {
+      "offset": 9038633,
+      "zlib_size": 5061,
+      "output_size": 5120,
+      "sha256": "417eef16925b8c4940a35758a15c8d16647970d558192dabd81d4d085e75d44a",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME16.DAT"
+      ]
+    },
+    {
+      "offset": 9043698,
+      "zlib_size": 1734,
+      "output_size": 1739,
+      "sha256": "6504c5239c68170aa38f9ac6d32f1d12537c8dfd741c57e96d4c64a3ff521f8d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME17.DAT"
+      ]
+    },
+    {
+      "offset": 9045436,
+      "zlib_size": 2258,
+      "output_size": 2247,
+      "sha256": "4e5207d2d9579f19a6ee94179b512c222486e0159f05daa55701fe4793c8d5f7",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME18.DAT",
+        "SYNDICAT/DATA/GAME18.DAT"
+      ]
+    },
+    {
+      "offset": 9047698,
+      "zlib_size": 5383,
+      "output_size": 5403,
+      "sha256": "e223cb19fe1faef981d5b8d0cc9a0829869edf64fee81a74ce68b8222a8b6625",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME19.DAT",
+        "SYNDICAT/DATA/GAME19.DAT"
+      ]
+    },
+    {
+      "offset": 9053085,
+      "zlib_size": 2538,
+      "output_size": 2544,
+      "sha256": "6011ffe79262e577925b6dc649c018cf16f639f41edc8ce841320c94d43f657d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME20.DAT",
+        "SYNDICAT/DATA/GAME20.DAT"
+      ]
+    },
+    {
+      "offset": 9055627,
+      "zlib_size": 4341,
+      "output_size": 4411,
+      "sha256": "d6b7d5efce9a1deebd073032ec549ac5dc17cb1be2fc89932cb6b1cd3d73bb33",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME21.DAT"
+      ]
+    },
+    {
+      "offset": 9059972,
+      "zlib_size": 7743,
+      "output_size": 7749,
+      "sha256": "9c93fe8d0438e75de27a889db30b6135f873a88572d036c90c5136e078030574",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME22.DAT",
+        "SYNDICAT/DATA/GAME22.DAT"
+      ]
+    },
+    {
+      "offset": 9067719,
+      "zlib_size": 3294,
+      "output_size": 3297,
+      "sha256": "277a98a4434d3f55013473387cd64ed5bff45bdee5ebc958a29d5f2cc3ace27a",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME23.DAT"
+      ]
+    },
+    {
+      "offset": 9071017,
+      "zlib_size": 3443,
+      "output_size": 3466,
+      "sha256": "8cffc0a002156422d7f1015a3972adf7260c75d486b48a6404543e021706b9d2",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME24.DAT"
+      ]
+    },
+    {
+      "offset": 9074464,
+      "zlib_size": 4509,
+      "output_size": 4546,
+      "sha256": "64e15bd8b957fbce08b07c16bf7bace34ec1af2837a69b9f31aec6bfb68b013d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME25.DAT",
+        "SYNDICAT/DATA/GAME25.DAT"
+      ]
+    },
+    {
+      "offset": 9078977,
+      "zlib_size": 8090,
+      "output_size": 8122,
+      "sha256": "e24f0c0951c6b763fce90952d5745779f0ed5dbe229f7623cfa7cd6f27f7006c",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME26.DAT"
+      ]
+    },
+    {
+      "offset": 9087071,
+      "zlib_size": 5587,
+      "output_size": 5609,
+      "sha256": "5e5cc4cc9338ddf5ecc8ca7943c3b2deb3ed235e4ef6f68b21fa48c6b7ae035a",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME27.DAT",
+        "SYNDICAT/DATA/GAME27.DAT"
+      ]
+    },
+    {
+      "offset": 9092662,
+      "zlib_size": 8273,
+      "output_size": 8279,
+      "sha256": "ad904e4ff1c783a45b4a1a801064d6d741a9e270f46c9714bc7c517e13a52aed",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME28.DAT",
+        "SYNDICAT/DATA/GAME28.DAT"
+      ]
+    },
+    {
+      "offset": 9100939,
+      "zlib_size": 7069,
+      "output_size": 7073,
+      "sha256": "c8c618c564deb7d34a054d02877eb7491a1929034e359a790ee0c0c4cc6d8ede",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME29.DAT"
+      ]
+    },
+    {
+      "offset": 9108012,
+      "zlib_size": 8807,
+      "output_size": 8853,
+      "sha256": "84bd80755e4ccd08343e80b85dd8c366b372efcd3eb16c033782990e01e00011",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME30.DAT"
+      ]
+    },
+    {
+      "offset": 9116823,
+      "zlib_size": 6316,
+      "output_size": 6319,
+      "sha256": "16ed258a40cfcdc03adc488e957de3e1fb28c245babda0aa89aa0c21f464d2e3",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME31.DAT",
+        "SYNDICAT/DATA/GAME31.DAT"
+      ]
+    },
+    {
+      "offset": 9123143,
+      "zlib_size": 7774,
+      "output_size": 7880,
+      "sha256": "ca50eb38991eddd1ea2f2abac97ea73d91e8619be90930f93cc3811a5137f732",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME32.DAT"
+      ]
+    },
+    {
+      "offset": 9130921,
+      "zlib_size": 7512,
+      "output_size": 7546,
+      "sha256": "310027880563dabb30e8565efed4ad6e06b59914be3884e01d68098fb768229f",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME33.DAT",
+        "SYNDICAT/DATA/GAME33.DAT"
+      ]
+    },
+    {
+      "offset": 9138437,
+      "zlib_size": 8522,
+      "output_size": 8570,
+      "sha256": "13ca385c699edd405bfbc39246e8c5dc0a66c3ce82dad32712bf5aa345e52c7c",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME34.DAT"
+      ]
+    },
+    {
+      "offset": 9146963,
+      "zlib_size": 8695,
+      "output_size": 8737,
+      "sha256": "1f3b98ac15888770a8e1dd774490a02e3142939824effb55fadb3e18da0a3b58",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME35.DAT",
+        "SYNDICAT/DATA/GAME35.DAT"
+      ]
+    },
+    {
+      "offset": 9155662,
+      "zlib_size": 5437,
+      "output_size": 5498,
+      "sha256": "42779e4aa281c5537876d402e7519934c1f5ddf32b4abcd4ddb0bc9ad22f5da7",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME36.DAT"
+      ]
+    },
+    {
+      "offset": 9161103,
+      "zlib_size": 2809,
+      "output_size": 2845,
+      "sha256": "f0dcd42b7675c70357f362d235a6b54dd72c41983379e56a3716ef538d296e93",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME37.DAT"
+      ]
+    },
+    {
+      "offset": 9163916,
+      "zlib_size": 4523,
+      "output_size": 4545,
+      "sha256": "c9671006cadaa82ed77ac75d4be6cb9ef6bd7ab76609fc09c66cd13369c8a8de",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME38.DAT",
+        "SYNDICAT/DATA/GAME38.DAT"
+      ]
+    },
+    {
+      "offset": 9168443,
+      "zlib_size": 7159,
+      "output_size": 7198,
+      "sha256": "a35936f59a1b389ba341f5c7e54b88cccd8e0e2668a870a3b4c1e7de4c6a8dda",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME39.DAT"
+      ]
+    },
+    {
+      "offset": 9175606,
+      "zlib_size": 6680,
+      "output_size": 6746,
+      "sha256": "3d5a47fec12f798d705c0642f1a8a1fb65e1436a0f2b21217d661eb29b9a53e3",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME40.DAT",
+        "SYNDICAT/DATA/GAME40.DAT"
+      ]
+    },
+    {
+      "offset": 9182290,
+      "zlib_size": 6166,
+      "output_size": 6174,
+      "sha256": "9f25b39ac96cc40c6461818798261d75dc1cc988bea2201a2015e59ef9881e43",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME41.DAT",
+        "SYNDICAT/DATA/GAME41.DAT"
+      ]
+    },
+    {
+      "offset": 9188460,
+      "zlib_size": 4571,
+      "output_size": 4601,
+      "sha256": "5f654e0bd7420ea77e62f818c92796476543cab6ac6fd52205412cdbd20c6962",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME42.DAT"
+      ]
+    },
+    {
+      "offset": 9193035,
+      "zlib_size": 8651,
+      "output_size": 8656,
+      "sha256": "3acf160199fb0fe32bd8191233c0ba33f941aa05eb9bccfb167cb6265741a035",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME43.DAT",
+        "SYNDICAT/DATA/GAME43.DAT"
+      ]
+    },
+    {
+      "offset": 9201690,
+      "zlib_size": 6599,
+      "output_size": 6688,
+      "sha256": "fcf0b3658796c7fbfa42b79d2aecff267059e982407ba252f697f6b0e391818a",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME44.DAT"
+      ]
+    },
+    {
+      "offset": 9208293,
+      "zlib_size": 7030,
+      "output_size": 7045,
+      "sha256": "02aec8eaf04604a4d236d7e93ca8e3eb9a14e813bd3512cf481d844f30de2ef3",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME45.DAT",
+        "SYNDICAT/DATA/GAME45.DAT"
+      ]
+    },
+    {
+      "offset": 9215327,
+      "zlib_size": 4242,
+      "output_size": 4276,
+      "sha256": "72fdced679ddd88f83d9c5c6e1c6db73d817c23c38d5138bec0826aab6a91c09",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME46.DAT"
+      ]
+    },
+    {
+      "offset": 9219573,
+      "zlib_size": 7218,
+      "output_size": 7350,
+      "sha256": "9529d96ccc28864b97e8e6d45a894c69306529d71ed58585aa38f50912f2fa43",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME47.DAT"
+      ]
+    },
+    {
+      "offset": 9226795,
+      "zlib_size": 7692,
+      "output_size": 7708,
+      "sha256": "b1f27c76d4acb808cb6c8453d63e7ac506f8d3b3611631b4b0cb3c3d5d63d3ae",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME48.DAT",
+        "SYNDICAT/DATA/GAME48.DAT"
+      ]
+    },
+    {
+      "offset": 9234491,
+      "zlib_size": 2621,
+      "output_size": 2687,
+      "sha256": "da35a3975a12df6cddf265671f1f1886a439a507a9b8d33e36e368cf161f6734",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME49.DAT"
+      ]
+    },
+    {
+      "offset": 9237116,
+      "zlib_size": 7161,
+      "output_size": 7186,
+      "sha256": "c1ad84abcf6584a255f063fe2b87f5bdc08fd5b3ed6f72b52957b19c668a465b",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME50.DAT",
+        "SYNDICAT/DATA/GAME50.DAT"
+      ]
+    },
+    {
+      "offset": 9244281,
+      "zlib_size": 5533,
+      "output_size": 5526,
+      "sha256": "f358a738c7ee16ba954c8c0d5906f98edfb40ba763c41af62207a93413b7b36c",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME90.DAT",
+        "SYNDICAT/DATA/GAME90.DAT"
+      ]
+    },
+    {
+      "offset": 9249818,
+      "zlib_size": 4474,
+      "output_size": 4463,
+      "sha256": "a6343eeec69bf7520c64487fbf029bb74a6eb28c6d5aeb3d7060e7e580a29e1d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME91.DAT"
+      ]
+    },
+    {
+      "offset": 9254296,
+      "zlib_size": 4879,
+      "output_size": 4875,
+      "sha256": "df1334cf03c64f550b4de86c66d8158cb7ee56fbb2a970154b9153c4c1cc983b",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME92.DAT"
+      ]
+    },
+    {
+      "offset": 9259179,
+      "zlib_size": 7082,
+      "output_size": 7091,
+      "sha256": "285e6e2b72f01eff56a1ad1f203b4984894ab6141344484d8ed71f45ff51b8da",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME93.DAT"
+      ]
+    },
+    {
+      "offset": 9266265,
+      "zlib_size": 10330,
+      "output_size": 10361,
+      "sha256": "d15f53b6488ad45250628e7de680f3e2615704dd1d2a248d1a197ba5a079a078",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME94.DAT"
+      ]
+    },
+    {
+      "offset": 9276599,
+      "zlib_size": 7797,
+      "output_size": 7814,
+      "sha256": "9ec8f78a4cf32124bd4c15539450dbe2ec583813e06a58e43b3b8f200675153e",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME95.DAT"
+      ]
+    },
+    {
+      "offset": 9284400,
+      "zlib_size": 2795,
+      "output_size": 2784,
+      "sha256": "046141da529e9c1ffb2b42e3a2f82b58c8650710d4d062b78458b9e56c3f60ea",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME96.DAT"
+      ]
+    },
+    {
+      "offset": 9287199,
+      "zlib_size": 1653,
+      "output_size": 1642,
+      "sha256": "3d1c10a729566cca030291c8737fe192e131a9c4f309e00941156501b7f1b103",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME97.DAT",
+        "SYNDICAT/DATA/GAME97.DAT"
+      ]
+    },
+    {
+      "offset": 9288856,
+      "zlib_size": 1118,
+      "output_size": 1107,
+      "sha256": "a07f631deb24e263d10231fb0d4c192e60b8b196c6642c4dc20593d057435b01",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME98.DAT",
+        "SYNDICAT/DATA/GAME98.DAT"
+      ]
+    },
+    {
+      "offset": 9289978,
+      "zlib_size": 3044,
+      "output_size": 3196,
+      "sha256": "d4a48a7bb3649a616feae17a5a0a02b36e3c3bd3db20e7d05110e30e3675de31",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAME99.DAT",
+        "SYNDICAT/DATA/GAME99.DAT"
+      ]
+    },
+    {
+      "offset": 9293026,
+      "zlib_size": 3899,
+      "output_size": 8464,
+      "sha256": "99acf41846f02fac929d4282a1650e6d1aeff4647b3624d89055589f0ac4d4c9",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAMEDG.DLL",
+        "SYNDICAT/DATA/GAMEDG.DLL"
+      ]
+    },
+    {
+      "offset": 9296929,
+      "zlib_size": 8226,
+      "output_size": 19968,
+      "sha256": "520db726d034394e7ea7f62b9bfa90767898990836522fc09f89931f2c388a7e",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GAMEFM.DLL",
+        "SYNDICAT/DATA/GAMEFM.DLL"
+      ]
+    },
+    {
+      "offset": 9305159,
+      "zlib_size": 178856,
+      "output_size": 237888,
+      "sha256": "c7c50bf03d10f623d6f083d073a7a462498c91a07d54081b61326cfd719bab44",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GSOUND-0.DAT",
+        "DATADISK/DATA/GSOUND-D.DAT",
+        "SYNDICAT/DATA/GSOUND-0.DAT"
+      ]
+    },
+    {
+      "offset": 9484019,
+      "zlib_size": 248,
+      "output_size": 928,
+      "sha256": "6eb1eda671c3404bd8674129f9f89850da2d5153121ed6412250291022179143",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/GSOUND-0.TAB",
+        "DATADISK/DATA/GSOUND-D.TAB",
+        "SYNDICAT/DATA/GSOUND-0.TAB"
+      ]
+    },
+    {
+      "offset": 9484271,
+      "zlib_size": 116203,
+      "output_size": 117484,
+      "sha256": "e23244cfdc83d8736b8c120e4f573ef77a75dd4307c5fd63f1273fcde82278fd",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/HBLK01.DAT",
+        "SYNDICAT/DATA/HBLK01.DAT"
+      ]
+    },
+    {
+      "offset": 9600478,
+      "zlib_size": 38220,
+      "output_size": 38453,
+      "sha256": "25463962a6db7b0902098194c018bc591c4a0c6b7ff922600dbe83f850547a7c",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/HELE-0.ANI",
+        "SYNDICAT/DATA/HELE-0.ANI"
+      ]
+    },
+    {
+      "offset": 9638702,
+      "zlib_size": 1058,
+      "output_size": 1047,
+      "sha256": "4904dc534dc03a8050eedb4fd1b2e1035c478a2e659e7d5a5e22af1d6c4a47da",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/HFNT01.DAT",
+        "SYNDICAT/DATA/HFNT01.DAT"
+      ]
+    },
+    {
+      "offset": 9639764,
+      "zlib_size": 17228,
+      "output_size": 17583,
+      "sha256": "41912e956103884256e921aebb5c725a58c838ea33c1554ddc26a2effc010207",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/HFRA-0.ANI",
+        "SYNDICAT/DATA/HFRA-0.ANI"
+      ]
+    },
+    {
+      "offset": 9656996,
+      "zlib_size": 95,
+      "output_size": 90,
+      "sha256": "b2a857daf7255a45777ec979f72af3b330dd8ef52c1a9e7d6314362704f71f89",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/HPAL01.DAT",
+        "SYNDICAT/DATA/HPAL01.DAT"
+      ]
+    },
+    {
+      "offset": 9657095,
+      "zlib_size": 93,
+      "output_size": 88,
+      "sha256": "ff7e5f374e5203116fead047894f63dc1233bdd95005f68fa074519c366a4ccf",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/HPAL02.DAT",
+        "SYNDICAT/DATA/HPAL02.DAT"
+      ]
+    },
+    {
+      "offset": 9657192,
+      "zlib_size": 94,
+      "output_size": 90,
+      "sha256": "602d324b716617b1bdf6bc891de27a1ef44cc39cb544f1c15b4aff826fa581e3",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/HPAL03.DAT",
+        "SYNDICAT/DATA/HPAL03.DAT"
+      ]
+    },
+    {
+      "offset": 9657290,
+      "zlib_size": 527,
+      "output_size": 577,
+      "sha256": "54b60a2002ba5c14a3f34d4da9276dcd486bd107b89308cf5f4b99fa70154325",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/HPAL04.DAT",
+        "SYNDICAT/DATA/HPAL04.DAT"
+      ]
+    },
+    {
+      "offset": 9657821,
+      "zlib_size": 533,
+      "output_size": 576,
+      "sha256": "7727a002b7f297c76f3be43c1f635ad9bbfb5d13f7113ca511b628506263f7c5",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/HPAL05.DAT",
+        "SYNDICAT/DATA/HPAL05.DAT"
+      ]
+    },
+    {
+      "offset": 9658358,
+      "zlib_size": 94,
+      "output_size": 90,
+      "sha256": "d97012a433c92b53aa975051a5523bd67e5b6176e91105a8c05a0de8c2d246bc",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/HPALETTE.DAT",
+        "SYNDICAT/DATA/HPALETTE.DAT"
+      ]
+    },
+    {
+      "offset": 9658456,
+      "zlib_size": 535,
+      "output_size": 524,
+      "sha256": "cbba6cf5a597caaa6143302e57e85e1264611462809aba1f5dc1f0ac1b46bd57",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/HPOINTER.DAT",
+        "SYNDICAT/DATA/HPOINTER.DAT"
+      ]
+    },
+    {
+      "offset": 9658995,
+      "zlib_size": 34,
+      "output_size": 42,
+      "sha256": "8252d937699786aa909bb4cb13d2b9af69fb9370c79260543ee2279888c7bdad",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/HPOINTER.TAB",
+        "SYNDICAT/DATA/HPOINTER.TAB"
+      ]
+    },
+    {
+      "offset": 9659033,
+      "zlib_size": 2687,
+      "output_size": 2719,
+      "sha256": "18cacc787a9a34d1000cb1bdb1e77672a52d5791bfc20df86bdd53af3193b2f1",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/HREQ.DAT",
+        "SYNDICAT/DATA/HREQ.DAT"
+      ]
+    },
+    {
+      "offset": 9661724,
+      "zlib_size": 121026,
+      "output_size": 121993,
+      "sha256": "2d13c4a51670928689e26dfbe61daac6538409203655cbe5fc06e655f163c4b5",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/HSPR-0-D.DAT"
+      ]
+    },
+    {
+      "offset": 9782754,
+      "zlib_size": 4348,
+      "output_size": 4641,
+      "sha256": "1086c676fed24c87ecadcf9198bb1027147ba16af57aa88fb01e852685e99148",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/HSPR-0-D.TAB",
+        "SYNDICAT/DATA/HSPR-0.TAB"
+      ]
+    },
+    {
+      "offset": 9787106,
+      "zlib_size": 116967,
+      "output_size": 355376,
+      "sha256": "3fbb811c09c34bb1911d6c0f446975a668c9e9ddb33b46df77cb915bd0923ccd",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/HSPR-1-D.DAT"
+      ]
+    },
+    {
+      "offset": 9904077,
+      "zlib_size": 4311,
+      "output_size": 10812,
+      "sha256": "773e6f730e3989f3a602d9cf18d9e2aaffecbd727c02ede852d519b13213d705",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/HSPR-1-D.TAB",
+        "SYNDICAT/DATA/HSPR-1.TAB"
+      ]
+    },
+    {
+      "offset": 9908392,
+      "zlib_size": 1857,
+      "output_size": 1937,
+      "sha256": "7f662322d060542069a8954a467a9efbfedc32d18b1a69ddbc3c0e2e9913c2c8",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/HSTA-0.ANI",
+        "SYNDICAT/DATA/HSTA-0.ANI"
+      ]
+    },
+    {
+      "offset": 9910253,
+      "zlib_size": 1821098,
+      "output_size": 3611522,
+      "sha256": "d8f2d535d9bff0707f45053c306497039c92b752a95789d5064cbede150ebefb",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/INTRO.DAT",
+        "SYNDICAT/DATA/INTRO.DAT"
+      ]
+    },
+    {
+      "offset": 11731355,
+      "zlib_size": 2271,
+      "output_size": 12170,
+      "sha256": "570bb41f9cbfceabed47fdb8828fb8bdaf512a23445946624a2dced171672940",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/INTRO.XMI",
+        "SYNDICAT/DATA/INTRO.XMI"
+      ]
+    },
+    {
+      "offset": 11733630,
+      "zlib_size": 256884,
+      "output_size": 359136,
+      "sha256": "cd888d6ed68efc51c4d5b58d77b47932d273b9b5bfe1f7ec8b0fde06df834449",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/ISNDS-0.DAT",
+        "SYNDICAT/DATA/ISNDS-0.DAT"
+      ]
+    },
+    {
+      "offset": 11990518,
+      "zlib_size": 155,
+      "output_size": 608,
+      "sha256": "d507638eb9b6367b7ff980e7d46810a6ea9a6aa7df6a442120a957687736fbdd",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/ISNDS-0.TAB",
+        "SYNDICAT/DATA/ISNDS-0.TAB"
+      ]
+    },
+    {
+      "offset": 11990677,
+      "zlib_size": 176688,
+      "output_size": 257440,
+      "sha256": "bfdfafea4451422f650a1536137ee5600ec8b116bfb486e9d335a995a7187792",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/ISNDS-1.DAT",
+        "SYNDICAT/DATA/ISNDS-1.DAT"
+      ]
+    },
+    {
+      "offset": 12167369,
+      "zlib_size": 143,
+      "output_size": 576,
+      "sha256": "75772b18819440b46a69fa71c14d3a37eb5c5554a4f59060ce04e8b8db968065",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/ISNDS-1.TAB",
+        "SYNDICAT/DATA/ISNDS-1.TAB"
+      ]
+    },
+    {
+      "offset": 12167516,
+      "zlib_size": 5345,
+      "output_size": 5406,
+      "sha256": "6b12d40b65cde1d6d3451eea2c71014ee36898dfd13a0b111033eff517cbdc53",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP01.DAT",
+        "SYNDICAT/DATA/MAP01.DAT"
+      ]
+    },
+    {
+      "offset": 12172865,
+      "zlib_size": 10924,
+      "output_size": 11015,
+      "sha256": "c140bc4043a850b18523a19eeba336eb2aa31ab55f75b6bd574e8da7a8d78926",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP02.DAT",
+        "SYNDICAT/DATA/MAP02.DAT"
+      ]
+    },
+    {
+      "offset": 12183793,
+      "zlib_size": 13779,
+      "output_size": 13895,
+      "sha256": "826558b1586bc177f6f9860f09fe2ddc184bf944da3bcc7cd1a35eb3f63b1c4a",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP03.DAT",
+        "SYNDICAT/DATA/MAP03.DAT"
+      ]
+    },
+    {
+      "offset": 12197576,
+      "zlib_size": 11150,
+      "output_size": 11218,
+      "sha256": "3b90170315d5c3ac0a35e9574ba38b572aa70853a7f8df6dfd0bd13211d47863",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP04.DAT",
+        "SYNDICAT/DATA/MAP04.DAT"
+      ]
+    },
+    {
+      "offset": 12208730,
+      "zlib_size": 15585,
+      "output_size": 15729,
+      "sha256": "c535bf285e99f3538cd11c4dde3475272459adcf88b690fc75ba06ab00267d71",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP05.DAT",
+        "SYNDICAT/DATA/MAP05.DAT"
+      ]
+    },
+    {
+      "offset": 12224319,
+      "zlib_size": 25665,
+      "output_size": 26168,
+      "sha256": "716916a27d6e888859779fb178edb81f831f06de6e2d2894f47e0b2d1b59fcab",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP06.DAT",
+        "SYNDICAT/DATA/MAP06.DAT"
+      ]
+    },
+    {
+      "offset": 12249988,
+      "zlib_size": 13656,
+      "output_size": 13860,
+      "sha256": "ff4f7b6745bf8120ef931c30241979bdb70bdcbf57beb42835aeeaacd83172d5",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP07.DAT",
+        "SYNDICAT/DATA/MAP07.DAT"
+      ]
+    },
+    {
+      "offset": 12263648,
+      "zlib_size": 8819,
+      "output_size": 8863,
+      "sha256": "dac80796384733ce9b49939d9959f36eae58547a2868171983796cfff9e9d038",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP08.DAT"
+      ]
+    },
+    {
+      "offset": 12272471,
+      "zlib_size": 141,
+      "output_size": 154,
+      "sha256": "2cbc85d5d1b5ff579d4038afb6f4f517252cce94978a8d4e6c95b1468df42b17",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP09.DAT",
+        "SYNDICAT/DATA/MAP09.DAT"
+      ]
+    },
+    {
+      "offset": 12272616,
+      "zlib_size": 8022,
+      "output_size": 8079,
+      "sha256": "c44b22f81470d3c9835230a98b275ceff0fd5e5bcf4aeacfe806a75e1de1c80d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP10.DAT",
+        "SYNDICAT/DATA/MAP10.DAT"
+      ]
+    },
+    {
+      "offset": 12280642,
+      "zlib_size": 8781,
+      "output_size": 8843,
+      "sha256": "f57c9b68e5f698557b020b9674623be618cf5adc9878b1db0fd97c6dfd2b4211",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP11.DAT",
+        "SYNDICAT/DATA/MAP11.DAT"
+      ]
+    },
+    {
+      "offset": 12289427,
+      "zlib_size": 8154,
+      "output_size": 8215,
+      "sha256": "787a9dbc16891648eb589ff75a7b95c6853e7a19c486ce1a8a84a536cefcf5e2",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP12.DAT",
+        "SYNDICAT/DATA/MAP12.DAT"
+      ]
+    },
+    {
+      "offset": 12297585,
+      "zlib_size": 14545,
+      "output_size": 14798,
+      "sha256": "eb98aac0bcbecbb2df619c9bb4cad3d3d7b742d89744962f02a8b6d528a976fd",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP13.DAT",
+        "SYNDICAT/DATA/MAP13.DAT"
+      ]
+    },
+    {
+      "offset": 12312134,
+      "zlib_size": 109,
+      "output_size": 115,
+      "sha256": "6b07d8f3fd4bbd86247a47d1431f2e91eb3020d7ba9954b3cf7bdfc5395f4739",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP15.DAT",
+        "SYNDICAT/DATA/MAP15.DAT"
+      ]
+    },
+    {
+      "offset": 12312247,
+      "zlib_size": 12483,
+      "output_size": 12671,
+      "sha256": "56e7e76c34e6a4503e47645148b2ee4b835553085980da9f076d564061a37efe",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP16.DAT",
+        "SYNDICAT/DATA/MAP16.DAT"
+      ]
+    },
+    {
+      "offset": 12324734,
+      "zlib_size": 1789,
+      "output_size": 1778,
+      "sha256": "9a1662b8b2c5ae96b6f3fd7c767cc1d93f7860a131fbf79755906e16a1834ac4",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP17.DAT",
+        "SYNDICAT/DATA/MAP17.DAT"
+      ]
+    },
+    {
+      "offset": 12326527,
+      "zlib_size": 11416,
+      "output_size": 11660,
+      "sha256": "88b394b9e45cad4232fe7689bc5f39ff34a3e06e6a2dd028fdcc8c22d0d5ff90",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP18.DAT",
+        "SYNDICAT/DATA/MAP18.DAT"
+      ]
+    },
+    {
+      "offset": 12337947,
+      "zlib_size": 12233,
+      "output_size": 12363,
+      "sha256": "3f7185f6f329a03b83d896fb7ee0ecedf1267285dfb282b301b6e71fbadd00e1",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP19.DAT",
+        "SYNDICAT/DATA/MAP19.DAT"
+      ]
+    },
+    {
+      "offset": 12350184,
+      "zlib_size": 15440,
+      "output_size": 15601,
+      "sha256": "efaac831d25ab9b389052143162f9c5b37da4210f42eecf78a9bf98788e52498",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP20.DAT",
+        "SYNDICAT/DATA/MAP20.DAT"
+      ]
+    },
+    {
+      "offset": 12365628,
+      "zlib_size": 10031,
+      "output_size": 10235,
+      "sha256": "dd88037b42ade700803169ed203e9c139f91623249b2b7e4a7be0b696337e205",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP21.DAT",
+        "SYNDICAT/DATA/MAP21.DAT"
+      ]
+    },
+    {
+      "offset": 12375663,
+      "zlib_size": 16570,
+      "output_size": 16733,
+      "sha256": "de33b060aed0479e636cf11b09868576ee22b3694f19abffc39c5ec6d109a587",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP31.DAT",
+        "SYNDICAT/DATA/MAP31.DAT"
+      ]
+    },
+    {
+      "offset": 12392237,
+      "zlib_size": 8047,
+      "output_size": 8124,
+      "sha256": "1f79ab1606369367ae05bec49e68321a988dd53ce2edb02b71a2d68d956426f0",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP32.DAT",
+        "SYNDICAT/DATA/MAP32.DAT"
+      ]
+    },
+    {
+      "offset": 12400288,
+      "zlib_size": 10808,
+      "output_size": 10927,
+      "sha256": "716bda86185f90a0212bfc42eb66c624f86660317eee2cb2025fe657550a24be",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP34.DAT",
+        "SYNDICAT/DATA/MAP34.DAT"
+      ]
+    },
+    {
+      "offset": 12411100,
+      "zlib_size": 9880,
+      "output_size": 10111,
+      "sha256": "6af53dab861f1a485e0ce240583539982a8b6c546bd1a300622a1f1b8192f0dd",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP35.DAT",
+        "SYNDICAT/DATA/MAP35.DAT"
+      ]
+    },
+    {
+      "offset": 12420984,
+      "zlib_size": 10809,
+      "output_size": 10896,
+      "sha256": "0bf4ec12ef8923cb0dd1c66f5bfb8c4726191d4b00808cc9d6a07fadb9d89112",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP37.DAT",
+        "SYNDICAT/DATA/MAP37.DAT"
+      ]
+    },
+    {
+      "offset": 12431797,
+      "zlib_size": 5483,
+      "output_size": 5515,
+      "sha256": "7945c5715e26b7f146e58b48fd825fe3beb0e92c2f33bff857933afe8e80c940",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP38.DAT",
+        "SYNDICAT/DATA/MAP38.DAT"
+      ]
+    },
+    {
+      "offset": 12437284,
+      "zlib_size": 7477,
+      "output_size": 7515,
+      "sha256": "ea528766f69a54a9fc1e5e149a33c8be647b23049d9659790a7bed26808fa7cb",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP39.DAT",
+        "SYNDICAT/DATA/MAP39.DAT"
+      ]
+    },
+    {
+      "offset": 12444765,
+      "zlib_size": 13891,
+      "output_size": 14045,
+      "sha256": "cb998ce8440a992f59b7cc71c179a13190f15d5cebef23676a8105f0d6c0ba63",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP40.DAT",
+        "SYNDICAT/DATA/MAP40.DAT"
+      ]
+    },
+    {
+      "offset": 12458660,
+      "zlib_size": 11397,
+      "output_size": 11482,
+      "sha256": "4c449a4fd5a665a29937d6116563cddc3bcf60283f8a86f1c1bace6a7b43d342",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP41.DAT",
+        "SYNDICAT/DATA/MAP41.DAT"
+      ]
+    },
+    {
+      "offset": 12470061,
+      "zlib_size": 13290,
+      "output_size": 13421,
+      "sha256": "7ff022da49b0c3df52fca8fd34d02d6dc5c706e304bfd376bbd995475af44a23",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP43.DAT",
+        "SYNDICAT/DATA/MAP43.DAT"
+      ]
+    },
+    {
+      "offset": 12483355,
+      "zlib_size": 11450,
+      "output_size": 11557,
+      "sha256": "335beaf7cb74f439d5586a12564e88fc5e9b5537fa60a7f3c1f7d427d5f716ce",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP50.DAT",
+        "SYNDICAT/DATA/MAP50.DAT"
+      ]
+    },
+    {
+      "offset": 12494809,
+      "zlib_size": 10937,
+      "output_size": 10998,
+      "sha256": "4975248fe3e87818c801250debf1947f15047fc7436c94f073d464721eb01533",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP51.DAT",
+        "SYNDICAT/DATA/MAP51.DAT"
+      ]
+    },
+    {
+      "offset": 12505750,
+      "zlib_size": 7302,
+      "output_size": 7335,
+      "sha256": "656227d685374dc610db631d07711199fc90320673b79690ee71f7cbb448b7a0",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP52.DAT",
+        "SYNDICAT/DATA/MAP52.DAT"
+      ]
+    },
+    {
+      "offset": 12513056,
+      "zlib_size": 5894,
+      "output_size": 5903,
+      "sha256": "3d712bfc746c537d0e97fbcbcb9f7423d0db9f4515c5dc76f79f05cd8166ad90",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP53.DAT",
+        "SYNDICAT/DATA/MAP53.DAT"
+      ]
+    },
+    {
+      "offset": 12518954,
+      "zlib_size": 12571,
+      "output_size": 12672,
+      "sha256": "7df4a4252560a136f722a1973292f2c6c02e2324ede33b4df2382e143ef28d33",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP54.DAT",
+        "SYNDICAT/DATA/MAP54.DAT"
+      ]
+    },
+    {
+      "offset": 12531529,
+      "zlib_size": 13192,
+      "output_size": 13291,
+      "sha256": "0d631ccc30a30891956e93b3d27cadeefe3422fdd2ed3e81e2452cad8a10002c",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP55.DAT",
+        "SYNDICAT/DATA/MAP55.DAT"
+      ]
+    },
+    {
+      "offset": 12544725,
+      "zlib_size": 7453,
+      "output_size": 7486,
+      "sha256": "df04dfb3b1f38a49ee215578e97c7880c74e7de018ff699d0be6eaefb0549194",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP56.DAT",
+        "SYNDICAT/DATA/MAP56.DAT"
+      ]
+    },
+    {
+      "offset": 12552182,
+      "zlib_size": 5793,
+      "output_size": 5802,
+      "sha256": "abe86a7d90e4cf8545296d90a749cda7f191b6eef5a1566b30ddd44c61a54f54",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP57.DAT",
+        "SYNDICAT/DATA/MAP57.DAT"
+      ]
+    },
+    {
+      "offset": 12557979,
+      "zlib_size": 5884,
+      "output_size": 5939,
+      "sha256": "a8ed27edb195afa28a313bc512e4ff8ad28c885314af66d138539ff7731209ce",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP58.DAT",
+        "SYNDICAT/DATA/MAP58.DAT"
+      ]
+    },
+    {
+      "offset": 12563867,
+      "zlib_size": 11752,
+      "output_size": 11871,
+      "sha256": "efd851fb3a5cd0b3d715cc7e635aef14f89a27b4bd0857431a114e8791162b94",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP60.DAT",
+        "SYNDICAT/DATA/MAP60.DAT"
+      ]
+    },
+    {
+      "offset": 12575623,
+      "zlib_size": 9273,
+      "output_size": 9333,
+      "sha256": "80c09b0d801590a138e396995f5c1bceec2910e5d33dde8813ff9a7421b3e64d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP61.DAT",
+        "SYNDICAT/DATA/MAP61.DAT"
+      ]
+    },
+    {
+      "offset": 12584900,
+      "zlib_size": 10765,
+      "output_size": 10833,
+      "sha256": "dd63b343ccb542095ae8e7719da2306715c2f4ab4178f6430de25b4da0ca38c9",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP62.DAT",
+        "SYNDICAT/DATA/MAP62.DAT"
+      ]
+    },
+    {
+      "offset": 12595669,
+      "zlib_size": 11723,
+      "output_size": 11808,
+      "sha256": "f72dfe5cd2593f533318a9b62201c7e0e9f253f643503d2f5b0b99bbd5a9f016",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP63.DAT",
+        "SYNDICAT/DATA/MAP63.DAT"
+      ]
+    },
+    {
+      "offset": 12607396,
+      "zlib_size": 9807,
+      "output_size": 9882,
+      "sha256": "4d70e7daf022ab0cf063521fd8e355183ce938b1dac1e4b9141db11852e1306a",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP64.DAT",
+        "SYNDICAT/DATA/MAP64.DAT"
+      ]
+    },
+    {
+      "offset": 12617207,
+      "zlib_size": 13474,
+      "output_size": 13569,
+      "sha256": "41ac5b7ad8144051e1aab612ba22f8dbd4e061528af2d31a9130df1fd080d4b4",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP65.DAT",
+        "SYNDICAT/DATA/MAP65.DAT"
+      ]
+    },
+    {
+      "offset": 12630685,
+      "zlib_size": 10687,
+      "output_size": 10748,
+      "sha256": "8dc5ed526baf84b1c02189bdbf7dcd191baf60e3c958cde6cb4f5ac1ad098fc8",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP66.DAT",
+        "SYNDICAT/DATA/MAP66.DAT"
+      ]
+    },
+    {
+      "offset": 12641376,
+      "zlib_size": 11282,
+      "output_size": 11342,
+      "sha256": "61aef6b0b3866d2c5c19af0ed2b445f32585b8ed4f225fb5c9aa17c2427b7052",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP67.DAT",
+        "SYNDICAT/DATA/MAP67.DAT"
+      ]
+    },
+    {
+      "offset": 12652662,
+      "zlib_size": 13169,
+      "output_size": 13269,
+      "sha256": "eceb4a27ab0e6714e16766719e5ffc76dec72d17ff465fc0739430426000f9a8",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP70.DAT",
+        "SYNDICAT/DATA/MAP70.DAT"
+      ]
+    },
+    {
+      "offset": 12665835,
+      "zlib_size": 16653,
+      "output_size": 16819,
+      "sha256": "e221aeda94fbc6fd8cc5ee20561b54ed790e9e11fe015c341106a03058e5face",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP71.DAT",
+        "SYNDICAT/DATA/MAP71.DAT"
+      ]
+    },
+    {
+      "offset": 12682492,
+      "zlib_size": 15651,
+      "output_size": 15729,
+      "sha256": "c0357cd9d7515ac50e55016fcfe2661c94a8e19689d8f4644f1e29dd4dc28edc",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP72.DAT",
+        "SYNDICAT/DATA/MAP72.DAT"
+      ]
+    },
+    {
+      "offset": 12698147,
+      "zlib_size": 11651,
+      "output_size": 11707,
+      "sha256": "cbd3ccfbf3b8a8afdb24b51aa5b03cd55a6447c77a5cbcf7eb8954733bad44e8",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP73.DAT",
+        "SYNDICAT/DATA/MAP73.DAT"
+      ]
+    },
+    {
+      "offset": 12709802,
+      "zlib_size": 8705,
+      "output_size": 8734,
+      "sha256": "3bc17888141fe02db4c0488d8a25b9bac044206390fba0bf1df3acf8131f905d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP80.DAT",
+        "SYNDICAT/DATA/MAP80.DAT"
+      ]
+    },
+    {
+      "offset": 12718511,
+      "zlib_size": 13612,
+      "output_size": 13743,
+      "sha256": "586ed1e560a0811b247c40501a71b8b5e308884aace2f436f68d2b66c56f8475",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP81.DAT",
+        "SYNDICAT/DATA/MAP81.DAT"
+      ]
+    },
+    {
+      "offset": 12732127,
+      "zlib_size": 13564,
+      "output_size": 13653,
+      "sha256": "ef16f0b821fe1b30ea6c4b1557f0cd87325e718d4adbb7510cf4fbf3e846390c",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP82.DAT",
+        "SYNDICAT/DATA/MAP82.DAT"
+      ]
+    },
+    {
+      "offset": 12745695,
+      "zlib_size": 20827,
+      "output_size": 21077,
+      "sha256": "9d8c566aeed3e230a8afeea2132fd67a74138486be2d29bcff4a8aa09fd1c1f9",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP90.DAT",
+        "SYNDICAT/DATA/MAP90.DAT"
+      ]
+    },
+    {
+      "offset": 12766526,
+      "zlib_size": 17415,
+      "output_size": 17588,
+      "sha256": "6d638a62524feded5dc245654afa9c19248d1e371ad2b5544e0e45a21d37bbec",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP91.DAT",
+        "SYNDICAT/DATA/MAP91.DAT"
+      ]
+    },
+    {
+      "offset": 12783945,
+      "zlib_size": 16323,
+      "output_size": 16471,
+      "sha256": "f72531289f96cd02be71498a4d0ae9e0bd9e67dbaf055e61feb881dce1d65249",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP92.DAT",
+        "SYNDICAT/DATA/MAP92.DAT"
+      ]
+    },
+    {
+      "offset": 12800272,
+      "zlib_size": 11021,
+      "output_size": 11103,
+      "sha256": "f747efdc918c06b66c3411132eccf8a2a537212948dd7d0f809e268f16622de7",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP93.DAT",
+        "SYNDICAT/DATA/MAP93.DAT"
+      ]
+    },
+    {
+      "offset": 12811297,
+      "zlib_size": 6894,
+      "output_size": 6942,
+      "sha256": "b1ddd78dcc224305977546c96c022e56c6639f1617661888109f4fe4fe7adaa9",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MAP94.DAT",
+        "SYNDICAT/DATA/MAP94.DAT"
+      ]
+    },
+    {
+      "offset": 12818195,
+      "zlib_size": 67191,
+      "output_size": 140606,
+      "sha256": "c435aceac30dd6cc46ddf014f8a1f7c23bed672a52da1f7904e2578391cb6748",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MBRIEF.DAT",
+        "SYNDICAT/DATA/MBRIEF.DAT"
+      ]
+    },
+    {
+      "offset": 12885390,
+      "zlib_size": 32295,
+      "output_size": 71986,
+      "sha256": "0622f031626168a2afa2ee4d179baf01fc6fe3d37cafe6b0ff4f82bd723d65fb",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MBRIEOUT.DAT",
+        "SYNDICAT/DATA/MBRIEOUT.DAT"
+      ]
+    },
+    {
+      "offset": 12917689,
+      "zlib_size": 17797,
+      "output_size": 36608,
+      "sha256": "df1c4dc0cacb3a09a075222a6ac6d957b060c4f627954cc9a9b4ddcb6865c2cc",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MCONFOUT.DAT",
+        "SYNDICAT/DATA/MCONFOUT.DAT"
+      ]
+    },
+    {
+      "offset": 12935490,
+      "zlib_size": 44583,
+      "output_size": 83822,
+      "sha256": "f9285874354e00c012a67919225ca4ac24f6cb3ac23448f8b570734bf9bb2074",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MCONFUP.DAT",
+        "SYNDICAT/DATA/MCONFUP.DAT"
+      ]
+    },
+    {
+      "offset": 12980077,
+      "zlib_size": 12400,
+      "output_size": 64000,
+      "sha256": "d0b9eeed477eba9a46c37278e064d063395df6d9230b54a37ed818a7fb8f631e",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MCONSCR.DAT",
+        "SYNDICAT/DATA/MCONSCR.DAT"
+      ]
+    },
+    {
+      "offset": 12992481,
+      "zlib_size": 25110,
+      "output_size": 46526,
+      "sha256": "b209c1a8974ff6385435063a89a1c33f4fe190f8429d77c59467fbff5f3f102d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MDEBRIEF.DAT",
+        "SYNDICAT/DATA/MDEBRIEF.DAT"
+      ]
+    },
+    {
+      "offset": 13017595,
+      "zlib_size": 17450,
+      "output_size": 34454,
+      "sha256": "becf58b854564e006e0832b0c103f6ade9c1ecef171bcc91e37319f03668a28a",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MDEOUT.DAT",
+        "SYNDICAT/DATA/MDEOUT.DAT"
+      ]
+    },
+    {
+      "offset": 13035049,
+      "zlib_size": 287922,
+      "output_size": 603564,
+      "sha256": "7150d6408b719fd3aea5dc8465d260a5409c56bf1ca8bae560aaed0ec85e9270",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MENDLOSE.DAT",
+        "SYNDICAT/DATA/MENDLOSE.DAT"
+      ]
+    },
+    {
+      "offset": 13322975,
+      "zlib_size": 396414,
+      "output_size": 946798,
+      "sha256": "b4af5b842f99012a601fb7eed0a7a277fb1e82a4bbd4496e90660d2d5c65a533",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MENDWIN.DAT",
+        "SYNDICAT/DATA/MENDWIN.DAT"
+      ]
+    },
+    {
+      "offset": 13719393,
+      "zlib_size": 712,
+      "output_size": 5962,
+      "sha256": "d0203466a2e8396739f742ce9f79a45f97dd93c3c230a38daa773bbeebd4297f",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MFNT-0.DAT",
+        "SYNDICAT/DATA/MFNT-0.DAT"
+      ]
+    },
+    {
+      "offset": 13720109,
+      "zlib_size": 534,
+      "output_size": 1230,
+      "sha256": "6967494a15fad3c9627c47f39bb8be6f40f168f79b632ba2d0460f52e5456199",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MFNT-0.TAB",
+        "SYNDICAT/DATA/MFNT-0.TAB"
+      ]
+    },
+    {
+      "offset": 13720647,
+      "zlib_size": 233367,
+      "output_size": 359220,
+      "sha256": "a120d69f8f99c364cea227657b5963ef4038f13296d4f23f79711d7c843b7264",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MGAMEWIN.DAT",
+        "SYNDICAT/DATA/MGAMEWIN.DAT"
+      ]
+    },
+    {
+      "offset": 13954018,
+      "zlib_size": 609,
+      "output_size": 1169,
+      "sha256": "ee3cfd5742111d082eced95883f9751d66756c4c8b3746bfa04fa4087af73e96",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS01.DAT",
+        "SYNDICAT/DATA/MISS01.DAT"
+      ]
+    },
+    {
+      "offset": 13954631,
+      "zlib_size": 495,
+      "output_size": 919,
+      "sha256": "66033e785e78d804c677443fc69a6c964028744a1f5956a401f6fc66822d5a64",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS02.DAT",
+        "SYNDICAT/DATA/MISS02.DAT"
+      ]
+    },
+    {
+      "offset": 13955130,
+      "zlib_size": 661,
+      "output_size": 1264,
+      "sha256": "f1a619d1281dff5801977253b8a607cdeaa8d7ec30887b02610ee2aa068e4604",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS03.DAT",
+        "SYNDICAT/DATA/MISS03.DAT"
+      ]
+    },
+    {
+      "offset": 13955795,
+      "zlib_size": 507,
+      "output_size": 972,
+      "sha256": "b7fc5131e889e7d664479b0911d44e93fb80a2813b495f1799b62880f4088cf1",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS04.DAT",
+        "SYNDICAT/DATA/MISS04.DAT"
+      ]
+    },
+    {
+      "offset": 13956306,
+      "zlib_size": 453,
+      "output_size": 823,
+      "sha256": "e509fb0457dbecad145c96304761a8884cdbe554ad03eea35899a89e3b9d631a",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS05.DAT"
+      ]
+    },
+    {
+      "offset": 13956763,
+      "zlib_size": 676,
+      "output_size": 1304,
+      "sha256": "f9e43c6a24d302477f7cabde694f1b91c749d308944a912dba3f1aa28c8a3ae0",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS06.DAT",
+        "SYNDICAT/DATA/MISS06.DAT"
+      ]
+    },
+    {
+      "offset": 13957443,
+      "zlib_size": 531,
+      "output_size": 1023,
+      "sha256": "cbf4d400fb18ab52af7dec950ebd6b2c5de487b3476de263ebe0dbe91e07eabb",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS07.DAT",
+        "SYNDICAT/DATA/MISS07.DAT"
+      ]
+    },
+    {
+      "offset": 13957978,
+      "zlib_size": 514,
+      "output_size": 951,
+      "sha256": "a12f939c93f2df997923a07f700e3442357b045e0562c58412bddb09f8d55436",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS08.DAT"
+      ]
+    },
+    {
+      "offset": 13958496,
+      "zlib_size": 555,
+      "output_size": 1047,
+      "sha256": "7b74e52806af36811ee64e81bace05a5d8213c396a3c2f3880e7cffbb45d82e7",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS09.DAT",
+        "SYNDICAT/DATA/MISS09.DAT"
+      ]
+    },
+    {
+      "offset": 13959055,
+      "zlib_size": 527,
+      "output_size": 970,
+      "sha256": "5b6755ec4613240f6d2a92ea24c2afdf2abc06e658a7a213bed1e70c23b195ed",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS10.DAT",
+        "SYNDICAT/DATA/MISS10.DAT"
+      ]
+    },
+    {
+      "offset": 13959586,
+      "zlib_size": 647,
+      "output_size": 1288,
+      "sha256": "2bf0845352e60cdb6b3ab307d7eec88656a3dcc21186576b8e5c7f71be5fea49",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS101.DAT"
+      ]
+    },
+    {
+      "offset": 13960237,
+      "zlib_size": 589,
+      "output_size": 1159,
+      "sha256": "4730e8a6aef7c312091b1b72b5002e7f4d67d42c207226a489bb00c3311498be",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS102.DAT",
+        "SYNDICAT/DATA/MISS102.DAT"
+      ]
+    },
+    {
+      "offset": 13960830,
+      "zlib_size": 755,
+      "output_size": 1496,
+      "sha256": "cc60b14287aa7bd0d08ac181706cbe852ea20292b2c4824a2a6f3ec566becf20",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS103.DAT",
+        "SYNDICAT/DATA/MISS103.DAT"
+      ]
+    },
+    {
+      "offset": 13961589,
+      "zlib_size": 567,
+      "output_size": 1107,
+      "sha256": "bf8f30499b9ccfec4ca61905c0de2df91a9591e2cdd7b92826b5c0dc1d40df02",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS104.DAT",
+        "SYNDICAT/DATA/MISS104.DAT"
+      ]
+    },
+    {
+      "offset": 13962160,
+      "zlib_size": 527,
+      "output_size": 1037,
+      "sha256": "57d65de94fdcbcccb36501d4ae5a6b5aef2b97b67e50ac4b14850d2ac741e840",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS105.DAT"
+      ]
+    },
+    {
+      "offset": 13962691,
+      "zlib_size": 665,
+      "output_size": 1323,
+      "sha256": "5cdc496b648cecd0ab4f2d7bf0280b597444ccbb0ef47e7394207977fa50b3b7",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS106.DAT",
+        "SYNDICAT/DATA/MISS106.DAT"
+      ]
+    },
+    {
+      "offset": 13963360,
+      "zlib_size": 593,
+      "output_size": 1178,
+      "sha256": "e90dc6b4cfbb8435420950000046f96aff00076f53c758e53a6700c4d7b01c80",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS107.DAT",
+        "SYNDICAT/DATA/MISS107.DAT"
+      ]
+    },
+    {
+      "offset": 13963957,
+      "zlib_size": 545,
+      "output_size": 1040,
+      "sha256": "61f3492181994ec998902b6c10491f9045bd1b618c78c72ddaf516b5f34cf341",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS108.DAT"
+      ]
+    },
+    {
+      "offset": 13964506,
+      "zlib_size": 611,
+      "output_size": 1172,
+      "sha256": "4308a61680def7d6d0241110907971954f71c3a12b5181565ee87201546c41c6",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS109.DAT",
+        "SYNDICAT/DATA/MISS109.DAT"
+      ]
+    },
+    {
+      "offset": 13965121,
+      "zlib_size": 717,
+      "output_size": 1371,
+      "sha256": "7300df0f99fb80c1d0447627a0eccba73142b00457a5d7a5f00146b773c7bc2e",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS11.DAT",
+        "SYNDICAT/DATA/MISS11.DAT"
+      ]
+    },
+    {
+      "offset": 13965842,
+      "zlib_size": 629,
+      "output_size": 1220,
+      "sha256": "b9debcb806ac0db6ecaa38f73544b6579d512462f3476f2b93102b72c09b919e",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS110.DAT",
+        "SYNDICAT/DATA/MISS110.DAT"
+      ]
+    },
+    {
+      "offset": 13966475,
+      "zlib_size": 776,
+      "output_size": 1570,
+      "sha256": "107f96fe7df73250ccf76dc36fbaa4dbd3b76a233d87b908b27d3bcfd4831f46",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS111.DAT"
+      ]
+    },
+    {
+      "offset": 13967255,
+      "zlib_size": 828,
+      "output_size": 1645,
+      "sha256": "1abecd55a9aa8d15875ca8a340a3e686af6f39b0bb3b292eda52be02840825fe",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS112.DAT"
+      ]
+    },
+    {
+      "offset": 13968087,
+      "zlib_size": 799,
+      "output_size": 1575,
+      "sha256": "8c1e23401cc829a1962c7a0f8df8c2d135953ed01a219592885554c777e32093",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS113.DAT"
+      ]
+    },
+    {
+      "offset": 13968890,
+      "zlib_size": 420,
+      "output_size": 768,
+      "sha256": "4a64bb97fb2e27238253d5472bbdf060fce996d309c99a11a86a488d0b747bd2",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS114.DAT"
+      ]
+    },
+    {
+      "offset": 13969314,
+      "zlib_size": 588,
+      "output_size": 1111,
+      "sha256": "8cfcb2d71fce3091361dcbec361c048fff817efc5b5a743b33188c89f3397db2",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS115.DAT"
+      ]
+    },
+    {
+      "offset": 13969906,
+      "zlib_size": 598,
+      "output_size": 1174,
+      "sha256": "2db37732966a7e208334b4318b9dc9a41413870251640e4cbf7eca802d2d155d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS116.DAT"
+      ]
+    },
+    {
+      "offset": 13970508,
+      "zlib_size": 505,
+      "output_size": 980,
+      "sha256": "78690386a4ddca717afedde51229da01d38f26cea71cf4c72bd0757b7a92b2fb",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS117.DAT"
+      ]
+    },
+    {
+      "offset": 13971017,
+      "zlib_size": 570,
+      "output_size": 1101,
+      "sha256": "21fd0f06e6e3ff9d9011d74b6a7d4ed94be79437028648ab59eabede4e5fccf9",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS118.DAT",
+        "SYNDICAT/DATA/MISS118.DAT"
+      ]
+    },
+    {
+      "offset": 13971591,
+      "zlib_size": 505,
+      "output_size": 980,
+      "sha256": "f0432930e37cf94a28f16034d62160f94ea2be3a66b3d2d94e4d41b22d4269e1",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS119.DAT",
+        "SYNDICAT/DATA/MISS119.DAT"
+      ]
+    },
+    {
+      "offset": 13972100,
+      "zlib_size": 740,
+      "output_size": 1403,
+      "sha256": "087c37a3648fcf08f4ee74e0028d10af7574eb1606ad487a436adec445a0410e",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS12.DAT",
+        "SYNDICAT/DATA/MISS12.DAT"
+      ]
+    },
+    {
+      "offset": 13972844,
+      "zlib_size": 594,
+      "output_size": 1155,
+      "sha256": "e8ddfd4929bb3659ac44c66e1e6334b8afaa47296d546608cbab77501eaf1aa7",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS120.DAT",
+        "SYNDICAT/DATA/MISS120.DAT"
+      ]
+    },
+    {
+      "offset": 13973442,
+      "zlib_size": 524,
+      "output_size": 1007,
+      "sha256": "3ece0c4f0461cc844e3dab0adeed108e8c6e1ec4f48a1507826958a0bc53f934",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS121.DAT"
+      ]
+    },
+    {
+      "offset": 13973970,
+      "zlib_size": 698,
+      "output_size": 1383,
+      "sha256": "e067f8f90a1d57ba3608f4029cabadbbaa7268e3f499b232253299dce4992a01",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS122.DAT",
+        "SYNDICAT/DATA/MISS122.DAT"
+      ]
+    },
+    {
+      "offset": 13974672,
+      "zlib_size": 464,
+      "output_size": 848,
+      "sha256": "cf68a3769fa2a3feef6d6e1f6d4ffab9387f98d233c6d0c407422748ecefa093",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS123.DAT"
+      ]
+    },
+    {
+      "offset": 13975140,
+      "zlib_size": 585,
+      "output_size": 1136,
+      "sha256": "d9147bffe491f9a8c1ad34c5193333b645608f137f8c39a5a6271f6f37ead542",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS124.DAT"
+      ]
+    },
+    {
+      "offset": 13975729,
+      "zlib_size": 982,
+      "output_size": 2053,
+      "sha256": "613cdc0e5ea7d42a59d82ffa16eaab909941241b6195675de62bf3df02489fc7",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS125.DAT"
+      ]
+    },
+    {
+      "offset": 13976715,
+      "zlib_size": 482,
+      "output_size": 901,
+      "sha256": "3970bda7e1771a972493e5107e221fed5e5b0be79584126a2348b83e8b3dcc78",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS126.DAT"
+      ]
+    },
+    {
+      "offset": 13977201,
+      "zlib_size": 749,
+      "output_size": 1475,
+      "sha256": "83fe1e5e7cc914b7b9a048714970414b5cee965895c5b98e6bf04cbaa7d1a5a8",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS127.DAT",
+        "SYNDICAT/DATA/MISS127.DAT"
+      ]
+    },
+    {
+      "offset": 13977954,
+      "zlib_size": 539,
+      "output_size": 1007,
+      "sha256": "e12421f35b2307fee6bd17b25e9349a0dcff215e7845cfdf0ee757ac694bccf0",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS128.DAT",
+        "SYNDICAT/DATA/MISS128.DAT"
+      ]
+    },
+    {
+      "offset": 13978497,
+      "zlib_size": 564,
+      "output_size": 1088,
+      "sha256": "8f5f063ca56886be02b212a7ed7fea6d086868e337f9bf0e41199f2f2966d1e3",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS129.DAT"
+      ]
+    },
+    {
+      "offset": 13979065,
+      "zlib_size": 708,
+      "output_size": 1382,
+      "sha256": "49fc0333debfec75ec9a77cf0f5427563937e3ef0a56c288484442085687f7d7",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS13.DAT",
+        "SYNDICAT/DATA/MISS13.DAT"
+      ]
+    },
+    {
+      "offset": 13979777,
+      "zlib_size": 431,
+      "output_size": 795,
+      "sha256": "78d41ef7e8cb24da016dd5523f8e00ddec02628652890f958c935693919326b1",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS130.DAT"
+      ]
+    },
+    {
+      "offset": 13980212,
+      "zlib_size": 796,
+      "output_size": 1655,
+      "sha256": "eea1f5208eb4d7303c583fe4b7e6ea5898c1a7e411bc237164ca4d92941be005",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS131.DAT"
+      ]
+    },
+    {
+      "offset": 13981012,
+      "zlib_size": 521,
+      "output_size": 981,
+      "sha256": "cc2295a0e7d0183f445aa3f0a18ee4f48ba020c0bd5b9018bf9ea07f96d1fe50",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS132.DAT"
+      ]
+    },
+    {
+      "offset": 13981537,
+      "zlib_size": 656,
+      "output_size": 1334,
+      "sha256": "13303909523f5e6bfb17b4d2da628d6f36846449b2e0ca6899fbce2261df6393",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS133.DAT"
+      ]
+    },
+    {
+      "offset": 13982197,
+      "zlib_size": 551,
+      "output_size": 1112,
+      "sha256": "e0a5fe24b0264d1422df8cb82d4b8cf18fe893b886d6e88e48fc64de8dd73ab7",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS134.DAT"
+      ]
+    },
+    {
+      "offset": 13982752,
+      "zlib_size": 714,
+      "output_size": 1461,
+      "sha256": "d5d922c7740746bb011a6dc341a28574a36fc4b7baa843df8dd49d715573dc65",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS135.DAT"
+      ]
+    },
+    {
+      "offset": 13983470,
+      "zlib_size": 187,
+      "output_size": 270,
+      "sha256": "6090d07b64e3ec5080a8ae5e174a628b1223b43407467a0c02219ba80ae6c243",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS136.DAT"
+      ]
+    },
+    {
+      "offset": 13983661,
+      "zlib_size": 403,
+      "output_size": 758,
+      "sha256": "33d7dd73f57a26eb3870189ea3ac36e924aeb96168cd1920cf1ab09656b6fc9e",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS137.DAT"
+      ]
+    },
+    {
+      "offset": 13984068,
+      "zlib_size": 523,
+      "output_size": 969,
+      "sha256": "6e2b06f81635596c503dac7aa51bd12d4491d0b50f6a5cbf8d2537c80cfc6de7",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS138.DAT",
+        "SYNDICAT/DATA/MISS138.DAT"
+      ]
+    },
+    {
+      "offset": 13984595,
+      "zlib_size": 602,
+      "output_size": 1166,
+      "sha256": "ff7a92b6e5346234bff30ff714c6446dd49434f5f2b1127c39c1e4c56c0df9a5",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS139.DAT"
+      ]
+    },
+    {
+      "offset": 13985201,
+      "zlib_size": 369,
+      "output_size": 648,
+      "sha256": "c0210437fe01c5383873c93fe4584cefc9baa9a9da9916a240673bda8fb4aece",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS14.DAT"
+      ]
+    },
+    {
+      "offset": 13985574,
+      "zlib_size": 672,
+      "output_size": 1343,
+      "sha256": "41c8ea83945164164200979d87788e9f8956ae10b0f8588c3a140c924e8c938c",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS140.DAT",
+        "SYNDICAT/DATA/MISS140.DAT"
+      ]
+    },
+    {
+      "offset": 13986250,
+      "zlib_size": 771,
+      "output_size": 1640,
+      "sha256": "b035255c8f9670907c01a365cb130dc74a0066d769105949c95ea11c2b74edf5",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS141.DAT",
+        "SYNDICAT/DATA/MISS141.DAT"
+      ]
+    },
+    {
+      "offset": 13987025,
+      "zlib_size": 603,
+      "output_size": 1165,
+      "sha256": "57b6299dd40e61fc006bbc4c5256c8a0f8bd0deed77b5dfd2720f04d8306aeb7",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS142.DAT"
+      ]
+    },
+    {
+      "offset": 13987632,
+      "zlib_size": 568,
+      "output_size": 1065,
+      "sha256": "81f4eaba4d380411750e47300e4b000312ff55d9d10ea9cd28a3da241178ad63",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS143.DAT",
+        "SYNDICAT/DATA/MISS143.DAT"
+      ]
+    },
+    {
+      "offset": 13988204,
+      "zlib_size": 516,
+      "output_size": 993,
+      "sha256": "ec21cc9f51006b6cea36d8f7af226da74778b620ad002e5ff141660408b74bd3",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS144.DAT"
+      ]
+    },
+    {
+      "offset": 13988724,
+      "zlib_size": 426,
+      "output_size": 763,
+      "sha256": "3be3e10b94cfc83b77ae924a12b372d4b5079e5c5f3f9bcc200ac164a21b474f",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS145.DAT",
+        "SYNDICAT/DATA/MISS145.DAT"
+      ]
+    },
+    {
+      "offset": 13989154,
+      "zlib_size": 317,
+      "output_size": 523,
+      "sha256": "78bd807428bce3fd8d753b4146f8c642501163f8be386d0dde1f61e4d024f343",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS146.DAT"
+      ]
+    },
+    {
+      "offset": 13989475,
+      "zlib_size": 456,
+      "output_size": 858,
+      "sha256": "55c58ddd5c35cc0023ae2eddeaa27cd7b6f59a7c7f71a5fa7df1f80e551b8799",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS147.DAT"
+      ]
+    },
+    {
+      "offset": 13989935,
+      "zlib_size": 351,
+      "output_size": 624,
+      "sha256": "5f6b507aec657054c65c644fcc85f2bc1236e6cebf51723489494b7dcc2ebc64",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS148.DAT",
+        "SYNDICAT/DATA/MISS148.DAT"
+      ]
+    },
+    {
+      "offset": 13990290,
+      "zlib_size": 424,
+      "output_size": 748,
+      "sha256": "602d26962bf8083559513e2329ef45f5230f9e873c0f57d4770236eb0f3d2980",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS149.DAT"
+      ]
+    },
+    {
+      "offset": 13990718,
+      "zlib_size": 514,
+      "output_size": 967,
+      "sha256": "fc8a68623fd58d19939aa5e079a4ed31582686a633439b67db672428c422b093",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS15.DAT",
+        "SYNDICAT/DATA/MISS15.DAT"
+      ]
+    },
+    {
+      "offset": 13991236,
+      "zlib_size": 286,
+      "output_size": 453,
+      "sha256": "c292eafb3f88cea9f7d29940371e77cd4eb2ce10ded8635dc9fa4459115187d2",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS150.DAT"
+      ]
+    },
+    {
+      "offset": 13991526,
+      "zlib_size": 490,
+      "output_size": 928,
+      "sha256": "e1eea3bb6764c2efc7d20e51cd02c6c61208db50d88f5c60b6ec64047e484ae2",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS16.DAT"
+      ]
+    },
+    {
+      "offset": 13992020,
+      "zlib_size": 460,
+      "output_size": 840,
+      "sha256": "77073bbb9d42ef62fb3a421ba495fe3f11f3982d3291d91bf08aeb8cec89e1ba",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS17.DAT"
+      ]
+    },
+    {
+      "offset": 13992484,
+      "zlib_size": 568,
+      "output_size": 1084,
+      "sha256": "cb02798ad949210b2e03408c96866c41fa68083694e569b375345d961c62920f",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS18.DAT",
+        "SYNDICAT/DATA/MISS18.DAT"
+      ]
+    },
+    {
+      "offset": 13993056,
+      "zlib_size": 493,
+      "output_size": 898,
+      "sha256": "4e133158ea21fc054d00b1b5c3aeacf5a6da6ac1a421eb2b723ed615d14ba58e",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS19.DAT",
+        "SYNDICAT/DATA/MISS19.DAT"
+      ]
+    },
+    {
+      "offset": 13993553,
+      "zlib_size": 593,
+      "output_size": 1126,
+      "sha256": "46e599309c29a3eaead8313c90ba1d3fc81213874c19b579c086329d21f006e9",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS20.DAT",
+        "SYNDICAT/DATA/MISS20.DAT"
+      ]
+    },
+    {
+      "offset": 13994150,
+      "zlib_size": 653,
+      "output_size": 1287,
+      "sha256": "6f2601c84379b92789320ab1ba438c745089193bbbf10e9101a0a8e072e51265",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS201.DAT",
+        "SYNDICAT/DATA/MISS201.DAT"
+      ]
+    },
+    {
+      "offset": 13994807,
+      "zlib_size": 564,
+      "output_size": 1052,
+      "sha256": "0740c215fa13bf4944cb86d3043d5037667d92e5a505d3242ecaa9e26a7076b3",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS202.DAT",
+        "SYNDICAT/DATA/MISS202.DAT"
+      ]
+    },
+    {
+      "offset": 13995375,
+      "zlib_size": 655,
+      "output_size": 1270,
+      "sha256": "8a6bc0d4d09af68d85603514f0bf280f13eb716c5a1d3e54157b249c1a7744cb",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS203.DAT",
+        "SYNDICAT/DATA/MISS203.DAT"
+      ]
+    },
+    {
+      "offset": 13996034,
+      "zlib_size": 586,
+      "output_size": 1118,
+      "sha256": "30728b438d31f95c23ba2b514b98f6224474d8982ead23864c5471c92b296d4e",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS204.DAT",
+        "SYNDICAT/DATA/MISS204.DAT"
+      ]
+    },
+    {
+      "offset": 13996624,
+      "zlib_size": 504,
+      "output_size": 948,
+      "sha256": "a0788f84a0f089c01b127c0e1fdf4dc0ba03e81c1d02d0969b4deaf9042b9b4a",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS205.DAT"
+      ]
+    },
+    {
+      "offset": 13997132,
+      "zlib_size": 723,
+      "output_size": 1382,
+      "sha256": "3853a58706823dda376ebd3ab0b1f2a2299d22fe0c0a2e95b10c2cc698fa73d9",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS206.DAT",
+        "SYNDICAT/DATA/MISS206.DAT"
+      ]
+    },
+    {
+      "offset": 13997859,
+      "zlib_size": 596,
+      "output_size": 1110,
+      "sha256": "ec4abe4744e2db69c8c7108196ac51bbb1d39390d7b76fd58e4ffdabfb3a4e4a",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS207.DAT",
+        "SYNDICAT/DATA/MISS207.DAT"
+      ]
+    },
+    {
+      "offset": 13998459,
+      "zlib_size": 500,
+      "output_size": 946,
+      "sha256": "647a8e590b14b95bb566805dd6235a7ab0bafeb70b5573217f161931bf76acb2",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS208.DAT"
+      ]
+    },
+    {
+      "offset": 13998963,
+      "zlib_size": 626,
+      "output_size": 1179,
+      "sha256": "6103fe871912f545126b54958c418f482022c4636e4078f5185ffcdc20396a2c",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS209.DAT"
+      ]
+    },
+    {
+      "offset": 13999593,
+      "zlib_size": 469,
+      "output_size": 897,
+      "sha256": "34e5b8d636be7ca17f65a06f095aeb979a7c00352e479b887779904ef59e136a",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS21.DAT"
+      ]
+    },
+    {
+      "offset": 14000066,
+      "zlib_size": 582,
+      "output_size": 1088,
+      "sha256": "80112301eb146d0c9b75c6c99299f8a3cafa70063dc186700518e4b262ab9f95",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS210.DAT",
+        "SYNDICAT/DATA/MISS210.DAT"
+      ]
+    },
+    {
+      "offset": 14000652,
+      "zlib_size": 810,
+      "output_size": 1559,
+      "sha256": "1f9c6c8cf4a734bf7f14554d0699c6d4b122ad0a162dcca9c68a5741c7402e72",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS211.DAT",
+        "SYNDICAT/DATA/MISS211.DAT"
+      ]
+    },
+    {
+      "offset": 14001466,
+      "zlib_size": 687,
+      "output_size": 1293,
+      "sha256": "737e3d3aff7a49c0574c07446ee3c3625fee47cc00820c46e44ab7129dc9fa72",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS212.DAT",
+        "SYNDICAT/DATA/MISS212.DAT"
+      ]
+    },
+    {
+      "offset": 14002157,
+      "zlib_size": 794,
+      "output_size": 1556,
+      "sha256": "8351fc64d3f2a86ce14f0bb4b4155ba9597cf90b526766bc4e9ecdc18149e054",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS213.DAT"
+      ]
+    },
+    {
+      "offset": 14002955,
+      "zlib_size": 344,
+      "output_size": 631,
+      "sha256": "f96553e5bc8122847e80adae15e6f8fd488f18a704e6f6db0e44c39e73371f85",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS214.DAT"
+      ]
+    },
+    {
+      "offset": 14003303,
+      "zlib_size": 557,
+      "output_size": 1054,
+      "sha256": "2675c773e8ce44b23420a29b0dab54534c0797b4989101107c337a3602eeeec6",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS215.DAT",
+        "SYNDICAT/DATA/MISS215.DAT"
+      ]
+    },
+    {
+      "offset": 14003864,
+      "zlib_size": 491,
+      "output_size": 935,
+      "sha256": "f7522cbed209f4beb2a8dc685325e4eb3cc4433e2d54b42ccee747c98f5cfee4",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS216.DAT"
+      ]
+    },
+    {
+      "offset": 14004359,
+      "zlib_size": 512,
+      "output_size": 980,
+      "sha256": "4e2980855e2d69541d13f59c70305f9bbf23d48ec0167f410602be83f5832ec7",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS217.DAT"
+      ]
+    },
+    {
+      "offset": 14004875,
+      "zlib_size": 619,
+      "output_size": 1199,
+      "sha256": "af3971c1a9ab548cd6134325947e4c9abec42a24ca0edb7382958713a0f32ec0",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS218.DAT",
+        "SYNDICAT/DATA/MISS218.DAT"
+      ]
+    },
+    {
+      "offset": 14005498,
+      "zlib_size": 532,
+      "output_size": 995,
+      "sha256": "80a5be8174453924d3fd30c5defff45c5c38a6206d4596fd512c9d63ce62fbf9",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS219.DAT",
+        "SYNDICAT/DATA/MISS219.DAT"
+      ]
+    },
+    {
+      "offset": 14006034,
+      "zlib_size": 645,
+      "output_size": 1243,
+      "sha256": "a3ec1589379ad298ddc4d3ae4015b01c95cc7d2c11a2ef4896d419df494b176e",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS22.DAT",
+        "SYNDICAT/DATA/MISS22.DAT"
+      ]
+    },
+    {
+      "offset": 14006683,
+      "zlib_size": 675,
+      "output_size": 1310,
+      "sha256": "267697c06a582d9a4ab90284c46bfe7be9331bca692807d1d796177db7dd87e5",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS220.DAT",
+        "SYNDICAT/DATA/MISS220.DAT"
+      ]
+    },
+    {
+      "offset": 14007362,
+      "zlib_size": 480,
+      "output_size": 913,
+      "sha256": "f3ed0482dabb5667366ed561259aac344b05bc8a984a9864a3db9f36f2f15b73",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS221.DAT"
+      ]
+    },
+    {
+      "offset": 14007846,
+      "zlib_size": 723,
+      "output_size": 1401,
+      "sha256": "e9c9fff08906af2ba52e40e186d9efdad0ea49bdb1265147e487857670178c22",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS222.DAT",
+        "SYNDICAT/DATA/MISS222.DAT"
+      ]
+    },
+    {
+      "offset": 14008573,
+      "zlib_size": 433,
+      "output_size": 781,
+      "sha256": "cec9c250368088bb98e2f002ac744d1552c4000d840fc6e21cb6a559983beed4",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS223.DAT"
+      ]
+    },
+    {
+      "offset": 14009010,
+      "zlib_size": 583,
+      "output_size": 1121,
+      "sha256": "bee049ed36aa367d6e1ffa04570c8eb5e97953fdad739577bd18aaccfd944361",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS224.DAT"
+      ]
+    },
+    {
+      "offset": 14009597,
+      "zlib_size": 947,
+      "output_size": 1870,
+      "sha256": "004f63d8e972a933b222b27562bacbc6c82afadd67e3bb6fa6b902098507ca64",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS225.DAT"
+      ]
+    },
+    {
+      "offset": 14010548,
+      "zlib_size": 468,
+      "output_size": 832,
+      "sha256": "99ddd9f51c0fefbafc67446929cd837c14992e4dc62d4ae419039925e6a9fa36",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS226.DAT"
+      ]
+    },
+    {
+      "offset": 14011020,
+      "zlib_size": 762,
+      "output_size": 1505,
+      "sha256": "323c4c06d0a887b2935d8e21c81f169ac0f881d8f3b14d88b84bcd6f12043b61",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS227.DAT",
+        "SYNDICAT/DATA/MISS227.DAT"
+      ]
+    },
+    {
+      "offset": 14011786,
+      "zlib_size": 544,
+      "output_size": 1005,
+      "sha256": "bb43e3bc870c85e7bcf359c67437b416bc950e9bcd6410c6ab163bb116d786f1",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS228.DAT",
+        "SYNDICAT/DATA/MISS228.DAT"
+      ]
+    },
+    {
+      "offset": 14012334,
+      "zlib_size": 526,
+      "output_size": 987,
+      "sha256": "df86009a48eb52b8a7e8cc2851d55f1206c92f29bc92dd39a8a9dae74c75cb29",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS229.DAT"
+      ]
+    },
+    {
+      "offset": 14012864,
+      "zlib_size": 402,
+      "output_size": 722,
+      "sha256": "9fb4ceb7af0c35e0eba865f37b25afedc9e62b9c1ef49048368f7cd1dd898448",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS23.DAT"
+      ]
+    },
+    {
+      "offset": 14013270,
+      "zlib_size": 430,
+      "output_size": 776,
+      "sha256": "a6990e90e9d8adbf81ba91ab1731e6fc3baee89466cf84cc4aa1effbe82f132c",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS230.DAT"
+      ]
+    },
+    {
+      "offset": 14013704,
+      "zlib_size": 785,
+      "output_size": 1619,
+      "sha256": "1b5879e072baf3d43003d1f2651dff308de7522ec7971e826354ca9b201e6682",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS231.DAT",
+        "SYNDICAT/DATA/MISS231.DAT"
+      ]
+    },
+    {
+      "offset": 14014493,
+      "zlib_size": 513,
+      "output_size": 971,
+      "sha256": "45f644a151ae8d8bc7516fdc6b30ffa35a6c8c19860ad385cf267968b8252643",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS232.DAT"
+      ]
+    },
+    {
+      "offset": 14015010,
+      "zlib_size": 691,
+      "output_size": 1372,
+      "sha256": "259157144cb6646ea5941c60c43fa0057f3095795e793d036ab039c155f1fb6e",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS233.DAT",
+        "SYNDICAT/DATA/MISS233.DAT"
+      ]
+    },
+    {
+      "offset": 14015705,
+      "zlib_size": 536,
+      "output_size": 1037,
+      "sha256": "23a46810d7c29eb0acbf41d4f2cb7a85e5836ee3fd30bf8629279ad725c7080a",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS234.DAT"
+      ]
+    },
+    {
+      "offset": 14016245,
+      "zlib_size": 720,
+      "output_size": 1436,
+      "sha256": "74d545ac65239874c7065cd97a5b9759d704573cb91b8380a87c7e9bf023b10d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS235.DAT",
+        "SYNDICAT/DATA/MISS235.DAT"
+      ]
+    },
+    {
+      "offset": 14016969,
+      "zlib_size": 158,
+      "output_size": 224,
+      "sha256": "3b7bf98ac9967d849bd7247419a42987a9f89a8fc19ce4753a4abd9bc4c9525d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS236.DAT"
+      ]
+    },
+    {
+      "offset": 14017131,
+      "zlib_size": 412,
+      "output_size": 773,
+      "sha256": "b38be8e94fec08772bf036a1ce9567f271ef98ff42c1f04546f0355d0e8ca970",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS237.DAT"
+      ]
+    },
+    {
+      "offset": 14017547,
+      "zlib_size": 549,
+      "output_size": 1017,
+      "sha256": "cf93681b2c7a9f77fb491ed2739994d3f756db747b1b85eecf922a4233e5e2bc",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS238.DAT",
+        "SYNDICAT/DATA/MISS238.DAT"
+      ]
+    },
+    {
+      "offset": 14018100,
+      "zlib_size": 601,
+      "output_size": 1183,
+      "sha256": "3f00aeff707e79bf1848cc666753096d0a5bc10a225c920ba0661a03d3e4d405",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS239.DAT"
+      ]
+    },
+    {
+      "offset": 14018705,
+      "zlib_size": 545,
+      "output_size": 1000,
+      "sha256": "9da81f82f521b2a0b352c4198bde3ef342abe6badb850e0a861b828f2a6f0a72",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS24.DAT"
+      ]
+    },
+    {
+      "offset": 14019254,
+      "zlib_size": 652,
+      "output_size": 1262,
+      "sha256": "fc59d3a14e07d884874526e5badb818cc43a10f5ff265714d27a18e0757cedf3",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS240.DAT",
+        "SYNDICAT/DATA/MISS240.DAT"
+      ]
+    },
+    {
+      "offset": 14019910,
+      "zlib_size": 803,
+      "output_size": 1628,
+      "sha256": "6bcd03a99328ee16b22ff73208693f3409906d1aa812f9f474bb138eb59f7c11",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS241.DAT",
+        "SYNDICAT/DATA/MISS241.DAT"
+      ]
+    },
+    {
+      "offset": 14020717,
+      "zlib_size": 575,
+      "output_size": 1147,
+      "sha256": "0796d133892195c2bd4c3ccd53c2a7208cc9a082e66bc02438aee31c20a170a5",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS242.DAT"
+      ]
+    },
+    {
+      "offset": 14021296,
+      "zlib_size": 577,
+      "output_size": 1099,
+      "sha256": "eea555266bfadfe11c780cf0cef70d0d526265b075c1a987c61045fd6ad845d1",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS243.DAT",
+        "SYNDICAT/DATA/MISS243.DAT"
+      ]
+    },
+    {
+      "offset": 14021877,
+      "zlib_size": 540,
+      "output_size": 1058,
+      "sha256": "f4553ce2c67392b97ee8c6ffbff6b7e4c858e043254032a5fd33046ef1b81482",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS244.DAT"
+      ]
+    },
+    {
+      "offset": 14022421,
+      "zlib_size": 442,
+      "output_size": 745,
+      "sha256": "84d4eb7116595c0efb99bc0a9ef9200774811a863b388bbe18713ba1f193c496",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS245.DAT",
+        "SYNDICAT/DATA/MISS245.DAT"
+      ]
+    },
+    {
+      "offset": 14022867,
+      "zlib_size": 278,
+      "output_size": 449,
+      "sha256": "d613778834c25e616025952fbef85d609127b0170b47cce2edfd53637551f70a",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS246.DAT"
+      ]
+    },
+    {
+      "offset": 14023149,
+      "zlib_size": 413,
+      "output_size": 780,
+      "sha256": "c698cd6b63114f47a9400d45e95e4c3fed960b722f6d9b658bb33ce28ce652ff",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS247.DAT"
+      ]
+    },
+    {
+      "offset": 14023566,
+      "zlib_size": 368,
+      "output_size": 655,
+      "sha256": "ac2b703c6d4b200ebace0d10bc7e16ca72f51b5322cbb52ec3b9fbebaa773784",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS248.DAT",
+        "SYNDICAT/DATA/MISS248.DAT"
+      ]
+    },
+    {
+      "offset": 14023938,
+      "zlib_size": 410,
+      "output_size": 719,
+      "sha256": "44b9a2e79d5b2053ca48b582ebff432e33febb8b840fa83459ed587a0c84c5be",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS249.DAT"
+      ]
+    },
+    {
+      "offset": 14024352,
+      "zlib_size": 890,
+      "output_size": 1829,
+      "sha256": "cd8f7f468691890068faa1012984a75f4c1ff61d93c82b3a51da3e3cba26c617",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS25.DAT",
+        "SYNDICAT/DATA/MISS25.DAT"
+      ]
+    },
+    {
+      "offset": 14025246,
+      "zlib_size": 260,
+      "output_size": 415,
+      "sha256": "27cfa31f897faae81a9bddd8988606dd0b84f85934bd48f82a597e2aab488a9d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS250.DAT",
+        "SYNDICAT/DATA/MISS250.DAT"
+      ]
+    },
+    {
+      "offset": 14025510,
+      "zlib_size": 445,
+      "output_size": 807,
+      "sha256": "b47220d61310f5245dae576624751f9f646051ce5590aef338df65ae252ecfac",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS26.DAT"
+      ]
+    },
+    {
+      "offset": 14025959,
+      "zlib_size": 650,
+      "output_size": 1285,
+      "sha256": "e89f195f45032875ca965c5b899e36ce8ce0068a308a29c954c25bdbe1daa3b5",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS27.DAT",
+        "SYNDICAT/DATA/MISS27.DAT"
+      ]
+    },
+    {
+      "offset": 14026613,
+      "zlib_size": 493,
+      "output_size": 900,
+      "sha256": "c5b6be94e44bd30e0cd6a297c7ae0e8c7b7c43f2212819ad80a2a820d194517b",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS28.DAT",
+        "SYNDICAT/DATA/MISS28.DAT"
+      ]
+    },
+    {
+      "offset": 14027110,
+      "zlib_size": 494,
+      "output_size": 910,
+      "sha256": "ffc33dc31400fb6e9859cce39e9bb8d2e46709761e8f2fde874de3c6903a5058",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS29.DAT"
+      ]
+    },
+    {
+      "offset": 14027608,
+      "zlib_size": 405,
+      "output_size": 711,
+      "sha256": "e95257431e8067f2cb6946d61a828d7866dbf4277f4a391144012ba7d659cd5a",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS30.DAT"
+      ]
+    },
+    {
+      "offset": 14028017,
+      "zlib_size": 664,
+      "output_size": 1260,
+      "sha256": "854540dc1c0a6a2afe23cd6296faf27705e811b08b30e3ed745626fcaddafb5d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS301.DAT",
+        "SYNDICAT/DATA/MISS301.DAT"
+      ]
+    },
+    {
+      "offset": 14028685,
+      "zlib_size": 568,
+      "output_size": 1053,
+      "sha256": "c4111725f864a98d6ddd195487c058dc39ed9a1fa4cf033a4a70a878bd1772e9",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS302.DAT",
+        "SYNDICAT/DATA/MISS302.DAT"
+      ]
+    },
+    {
+      "offset": 14029257,
+      "zlib_size": 773,
+      "output_size": 1432,
+      "sha256": "7357ef7905a56300c7ad6db0a68279f9e169828c84a2626ccafacd2c5098ea09",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS303.DAT",
+        "SYNDICAT/DATA/MISS303.DAT"
+      ]
+    },
+    {
+      "offset": 14030034,
+      "zlib_size": 634,
+      "output_size": 1191,
+      "sha256": "e46e3d4d12fe0864d09272a5bbb3199b4b6ae9c25c7e0c67b5abab4bf340be2a",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS304.DAT",
+        "SYNDICAT/DATA/MISS304.DAT"
+      ]
+    },
+    {
+      "offset": 14030672,
+      "zlib_size": 628,
+      "output_size": 1132,
+      "sha256": "774ead81a12ca2f1b5c500ef65790bf89505cb9e085cfb2dd57274cfa9ab2716",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS305.DAT"
+      ]
+    },
+    {
+      "offset": 14031304,
+      "zlib_size": 758,
+      "output_size": 1431,
+      "sha256": "b3e9837a6067005ebdfaf60d98bdfb5d4013b2120d053000217c59d8e8220276",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS306.DAT",
+        "SYNDICAT/DATA/MISS306.DAT"
+      ]
+    },
+    {
+      "offset": 14032066,
+      "zlib_size": 570,
+      "output_size": 1059,
+      "sha256": "7733a0a9732c5c680938cea6ef734f7ecdcf92b1ff25baf3742ed72274e0d713",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS307.DAT",
+        "SYNDICAT/DATA/MISS307.DAT"
+      ]
+    },
+    {
+      "offset": 14032640,
+      "zlib_size": 701,
+      "output_size": 1307,
+      "sha256": "176bea05ceec7c961262167d50cff214ce02ee6741c90172365b58fc5ba9f29e",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS308.DAT"
+      ]
+    },
+    {
+      "offset": 14033345,
+      "zlib_size": 650,
+      "output_size": 1208,
+      "sha256": "071925304abf367d1c0e7201ba26fc1d0292e718a509e7b2c0c6fa96be2443bb",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS309.DAT",
+        "SYNDICAT/DATA/MISS309.DAT"
+      ]
+    },
+    {
+      "offset": 14033999,
+      "zlib_size": 766,
+      "output_size": 1586,
+      "sha256": "ea03f080c93a3b82ceed5e45d9ef31ae3bb6caee4d05ed4cfdf3a32134762a06",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS31.DAT",
+        "SYNDICAT/DATA/MISS31.DAT"
+      ]
+    },
+    {
+      "offset": 14034769,
+      "zlib_size": 662,
+      "output_size": 1173,
+      "sha256": "295d2682519527f4bc2cb5948b25f37e9a1576eb7e22dc9db6f25b5fdff5b3a8",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS310.DAT",
+        "SYNDICAT/DATA/MISS310.DAT"
+      ]
+    },
+    {
+      "offset": 14035435,
+      "zlib_size": 856,
+      "output_size": 1671,
+      "sha256": "c6d5dac6de4f9b1c766291005bcc625a15a72dc192ee2513d1637b756abaad87",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS311.DAT",
+        "SYNDICAT/DATA/MISS311.DAT"
+      ]
+    },
+    {
+      "offset": 14036295,
+      "zlib_size": 849,
+      "output_size": 1650,
+      "sha256": "0b678e0f5cf3ac2e9800ebfd24d88bf7c6247e54c43c58820d21a119e04795a8",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS312.DAT",
+        "SYNDICAT/DATA/MISS312.DAT"
+      ]
+    },
+    {
+      "offset": 14037148,
+      "zlib_size": 823,
+      "output_size": 1591,
+      "sha256": "c212ecd19118a39d52e7c505d1793fca2432060150f1e2be3882b2c615f7558d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS313.DAT",
+        "SYNDICAT/DATA/MISS313.DAT"
+      ]
+    },
+    {
+      "offset": 14037975,
+      "zlib_size": 477,
+      "output_size": 839,
+      "sha256": "73c80711fde9272684f94941e8a9beecc4b1b2123bf7a2826c8b371f31301694",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS314.DAT"
+      ]
+    },
+    {
+      "offset": 14038456,
+      "zlib_size": 679,
+      "output_size": 1274,
+      "sha256": "2793c0e319cac349868311711ee28dfc34505a5219cf9088d746f517d4d862df",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS315.DAT",
+        "SYNDICAT/DATA/MISS315.DAT"
+      ]
+    },
+    {
+      "offset": 14039139,
+      "zlib_size": 649,
+      "output_size": 1177,
+      "sha256": "9c215f535b61db181af4af01c83aff4a60cd0ce865622ed49c2b255fc6fe2d35",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS316.DAT"
+      ]
+    },
+    {
+      "offset": 14039792,
+      "zlib_size": 555,
+      "output_size": 991,
+      "sha256": "3f55ad0e102f564a3134f779496e2731113f1654929c8472d51959b9cd66f302",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS317.DAT"
+      ]
+    },
+    {
+      "offset": 14040351,
+      "zlib_size": 618,
+      "output_size": 1140,
+      "sha256": "c896fa1947e2da0d92d66cba7bb20565cd2b3a13c1af18b3164c99ff70161759",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS318.DAT",
+        "SYNDICAT/DATA/MISS318.DAT"
+      ]
+    },
+    {
+      "offset": 14040973,
+      "zlib_size": 552,
+      "output_size": 1005,
+      "sha256": "0b29f4a593ca006b114ed5af9469a06a3176cfa547305de0ca8294aa35fa5d90",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS319.DAT",
+        "SYNDICAT/DATA/MISS319.DAT"
+      ]
+    },
+    {
+      "offset": 14041529,
+      "zlib_size": 485,
+      "output_size": 893,
+      "sha256": "2c797b0b1980ee8b9e9f19d7d50f249988be7edc0dfa549f1823de2a9de3b635",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS32.DAT"
+      ]
+    },
+    {
+      "offset": 14042018,
+      "zlib_size": 715,
+      "output_size": 1343,
+      "sha256": "5c62c99894d491a529ef7a6255a70615a984b5ef761db1ae26648c55643967c6",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS320.DAT",
+        "SYNDICAT/DATA/MISS320.DAT"
+      ]
+    },
+    {
+      "offset": 14042737,
+      "zlib_size": 652,
+      "output_size": 1241,
+      "sha256": "2cc44514070a0fbfaede4f6c9d6cb874c8827f324937496610525aef694e40a1",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS321.DAT"
+      ]
+    },
+    {
+      "offset": 14043393,
+      "zlib_size": 675,
+      "output_size": 1251,
+      "sha256": "b2937ccaa8e5995c388351655cb3bf8ad7070a4db110e2200273fddbcf229287",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS322.DAT",
+        "SYNDICAT/DATA/MISS322.DAT"
+      ]
+    },
+    {
+      "offset": 14044072,
+      "zlib_size": 495,
+      "output_size": 862,
+      "sha256": "b8623e7c8056f6a67cc5fe720f578bc81b40901c5c5bb38d7038f5ba92c87b28",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS323.DAT"
+      ]
+    },
+    {
+      "offset": 14044571,
+      "zlib_size": 722,
+      "output_size": 1353,
+      "sha256": "41c3e39b032bcc797907d4945103589a00f63a48ff25442484a9deb98a995ecb",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS324.DAT"
+      ]
+    },
+    {
+      "offset": 14045297,
+      "zlib_size": 1056,
+      "output_size": 2083,
+      "sha256": "c1faefecedf6ade524625381aa71e00753b4dac1284161b15fe0dbd4b25c2a0f",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS325.DAT",
+        "SYNDICAT/DATA/MISS325.DAT"
+      ]
+    },
+    {
+      "offset": 14046357,
+      "zlib_size": 570,
+      "output_size": 1012,
+      "sha256": "cd195f9279d78174c9186cc92209fa21d030dbd0fa6ce39fb1fa0818d31dc649",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS326.DAT"
+      ]
+    },
+    {
+      "offset": 14046931,
+      "zlib_size": 743,
+      "output_size": 1468,
+      "sha256": "5aadc05e96c9116e2e6eb1174f326784a972b1924927a48fa5d646610b96a80c",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS327.DAT",
+        "SYNDICAT/DATA/MISS327.DAT"
+      ]
+    },
+    {
+      "offset": 14047678,
+      "zlib_size": 509,
+      "output_size": 943,
+      "sha256": "29c18f9d2c00c8d8bd79dd8e3140e703b3c81ceb7994aa85e68515fccb148edc",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS328.DAT",
+        "SYNDICAT/DATA/MISS328.DAT"
+      ]
+    },
+    {
+      "offset": 14048191,
+      "zlib_size": 687,
+      "output_size": 1250,
+      "sha256": "9a26910ff3235d4c1284f58482575a479f907c291b1277a6bf851d411e549141",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS329.DAT"
+      ]
+    },
+    {
+      "offset": 14048882,
+      "zlib_size": 618,
+      "output_size": 1229,
+      "sha256": "baba6ab04af47d17d59c229ccc5c4522e7b26b3148423e8b9eff9164743fc4c5",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS33.DAT"
+      ]
+    },
+    {
+      "offset": 14049504,
+      "zlib_size": 573,
+      "output_size": 1016,
+      "sha256": "587f89b1854752efbe02a69db45cd9c7e027fbf02905ded0fee3be5291e507e0",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS330.DAT"
+      ]
+    },
+    {
+      "offset": 14050081,
+      "zlib_size": 978,
+      "output_size": 1945,
+      "sha256": "c39862491cff8c535393ee9444046f7efa12a0cf4779e4f8b994589ff04a0eec",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS331.DAT",
+        "SYNDICAT/DATA/MISS331.DAT"
+      ]
+    },
+    {
+      "offset": 14051063,
+      "zlib_size": 557,
+      "output_size": 1029,
+      "sha256": "05498589993597d7aa646402867397b9568f172490a1bcf2ecc2e8cc399ef85f",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS332.DAT"
+      ]
+    },
+    {
+      "offset": 14051624,
+      "zlib_size": 623,
+      "output_size": 1223,
+      "sha256": "41286bbaaa847379f2d8235623fe77c60a2d26e6141fc29f7bb032947000ef60",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS333.DAT",
+        "SYNDICAT/DATA/MISS333.DAT"
+      ]
+    },
+    {
+      "offset": 14052251,
+      "zlib_size": 642,
+      "output_size": 1167,
+      "sha256": "c45f715eca24aa9a8516b85142b824f97ad5c90c428cda246c363afab10b7b4f",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS334.DAT"
+      ]
+    },
+    {
+      "offset": 14052897,
+      "zlib_size": 757,
+      "output_size": 1441,
+      "sha256": "f35c8ebee4d455e0d7d8384ea9547a21ec66855ea4cba87170d612de512d5bb8",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS335.DAT",
+        "SYNDICAT/DATA/MISS335.DAT"
+      ]
+    },
+    {
+      "offset": 14053658,
+      "zlib_size": 287,
+      "output_size": 452,
+      "sha256": "8b01af90bbf42e2799cbf8223b3c74aadab29b83e9eb0f5aaf1578c3ff5ce109",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS336.DAT"
+      ]
+    },
+    {
+      "offset": 14053949,
+      "zlib_size": 513,
+      "output_size": 912,
+      "sha256": "3240cee3a0f77a5d69a86f8e88edc3b4eae15da8d5637ab9c4c1e66338c938af",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS337.DAT"
+      ]
+    },
+    {
+      "offset": 14054466,
+      "zlib_size": 621,
+      "output_size": 1149,
+      "sha256": "49b8cf8b533d3b10aa5e2ebae90098f1d50f10e9837638a6c333f3d462a3a321",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS338.DAT",
+        "SYNDICAT/DATA/MISS338.DAT"
+      ]
+    },
+    {
+      "offset": 14055091,
+      "zlib_size": 843,
+      "output_size": 1598,
+      "sha256": "52f8e216d237d387f0143c63eca4cb98687d00fa479c1c34141aca2367609df3",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS339.DAT"
+      ]
+    },
+    {
+      "offset": 14055938,
+      "zlib_size": 496,
+      "output_size": 948,
+      "sha256": "d8a8b076ab47d473a159fabc4009fdf361e1fd63ff08382b1614b40fd81f8d92",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS34.DAT"
+      ]
+    },
+    {
+      "offset": 14056438,
+      "zlib_size": 642,
+      "output_size": 1168,
+      "sha256": "086e8afd71a743cab56b3492849372d87a4577d9df0c84019fda73babe65fbdf",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS340.DAT",
+        "SYNDICAT/DATA/MISS340.DAT"
+      ]
+    },
+    {
+      "offset": 14057084,
+      "zlib_size": 792,
+      "output_size": 1502,
+      "sha256": "e600e370feb47814eb41e3dfd65afa4ca113182f84a2a42413935ff7c0d3b024",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS341.DAT",
+        "SYNDICAT/DATA/MISS341.DAT"
+      ]
+    },
+    {
+      "offset": 14057880,
+      "zlib_size": 720,
+      "output_size": 1327,
+      "sha256": "0703b4555629910cc508af6402be45292b33b4bf3097b6629f24f86dfda06f20",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS342.DAT"
+      ]
+    },
+    {
+      "offset": 14058604,
+      "zlib_size": 775,
+      "output_size": 1483,
+      "sha256": "fed3749d110a44aa70039b4c14b4d559bbae7cc43eeff04030365ebf8dcf0afd",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS343.DAT",
+        "SYNDICAT/DATA/MISS343.DAT"
+      ]
+    },
+    {
+      "offset": 14059383,
+      "zlib_size": 638,
+      "output_size": 1160,
+      "sha256": "624ab35a64ce2644e4f73d88c09f6c96a49be7bffa11ca4ecf295a19283d5756",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS344.DAT"
+      ]
+    },
+    {
+      "offset": 14060025,
+      "zlib_size": 531,
+      "output_size": 956,
+      "sha256": "e7c99cd713ecc6bb42359237fb4c5d8ad9e28c6d383744fa700a00508cb379c1",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS345.DAT",
+        "SYNDICAT/DATA/MISS345.DAT"
+      ]
+    },
+    {
+      "offset": 14060560,
+      "zlib_size": 436,
+      "output_size": 729,
+      "sha256": "51f315677ebe8889610944d2df9600990405fb842f5e328e4d818d2db5e2c296",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS346.DAT"
+      ]
+    },
+    {
+      "offset": 14061000,
+      "zlib_size": 539,
+      "output_size": 982,
+      "sha256": "1a6865a5a5e5d1af22ef08df89ddd7904e567583af03918d76ff3085084a1eac",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS347.DAT"
+      ]
+    },
+    {
+      "offset": 14061543,
+      "zlib_size": 404,
+      "output_size": 687,
+      "sha256": "7fe3c5e36ad64213fa4c1109c6dcd3bd6c4cc85922e254a1e8541857617b2f2f",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS348.DAT",
+        "SYNDICAT/DATA/MISS348.DAT"
+      ]
+    },
+    {
+      "offset": 14061951,
+      "zlib_size": 578,
+      "output_size": 1053,
+      "sha256": "db6cc3e0337d71339340fb0170a5b073219a84aece176e053ad6a1193aed86da",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS349.DAT"
+      ]
+    },
+    {
+      "offset": 14062533,
+      "zlib_size": 658,
+      "output_size": 1292,
+      "sha256": "3f56e8af6f9b031d713048aae610322461299709cff4c65bce83fb58dc01990a",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS35.DAT",
+        "SYNDICAT/DATA/MISS35.DAT"
+      ]
+    },
+    {
+      "offset": 14063195,
+      "zlib_size": 353,
+      "output_size": 603,
+      "sha256": "be98800fdacd546de21f6a7af728cc957be78c7962301225bb022bf1bb8cab85",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS350.DAT",
+        "SYNDICAT/DATA/MISS350.DAT"
+      ]
+    },
+    {
+      "offset": 14063552,
+      "zlib_size": 149,
+      "output_size": 205,
+      "sha256": "17ee30fcb6f109bc7e95b9c0cb7b578e2c510172093475f732ecc9403975a5f9",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS36.DAT"
+      ]
+    },
+    {
+      "offset": 14063705,
+      "zlib_size": 391,
+      "output_size": 692,
+      "sha256": "fdd3f6d6b86dc815fc4eb4c0d0fd918c4b88e331ecf2d6331c50bca724370bb6",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS37.DAT"
+      ]
+    },
+    {
+      "offset": 14064100,
+      "zlib_size": 490,
+      "output_size": 906,
+      "sha256": "5492f2cbdf39be322eb44f7e225d4aa09140e75eb4aa00c1173979164ff7285d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS38.DAT",
+        "SYNDICAT/DATA/MISS38.DAT"
+      ]
+    },
+    {
+      "offset": 14064594,
+      "zlib_size": 533,
+      "output_size": 1045,
+      "sha256": "46f9f0c1ad904cea7dd7bc1b332ee84f5e4189cc5e4f40bb4507c03c64c6c249",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS39.DAT"
+      ]
+    },
+    {
+      "offset": 14065131,
+      "zlib_size": 577,
+      "output_size": 1078,
+      "sha256": "3f5d8590575fdd90001d244236cfc3e664505d2f054566feaade3f6459935fbe",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS40.DAT",
+        "SYNDICAT/DATA/MISS40.DAT"
+      ]
+    },
+    {
+      "offset": 14065712,
+      "zlib_size": 561,
+      "output_size": 1126,
+      "sha256": "99b5253a8376d29aad9a4a4a71e754473cdc302af54a4a33f3f710c2cafd5c76",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS401.DAT",
+        "SYNDICAT/DATA/MISS401.DAT"
+      ]
+    },
+    {
+      "offset": 14066277,
+      "zlib_size": 446,
+      "output_size": 842,
+      "sha256": "49cc396d85938ee06d502c4904ba3cbbe223229ee5b0cfcf7b2e7c5106c134d0",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS402.DAT",
+        "SYNDICAT/DATA/MISS402.DAT"
+      ]
+    },
+    {
+      "offset": 14066727,
+      "zlib_size": 597,
+      "output_size": 1144,
+      "sha256": "72fb37e4c5dc1b3d3a962136b3f066f081fb4722d90a964e69079d9590b88a46",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS403.DAT",
+        "SYNDICAT/DATA/MISS403.DAT"
+      ]
+    },
+    {
+      "offset": 14067328,
+      "zlib_size": 455,
+      "output_size": 871,
+      "sha256": "2e7de98961d331bde92ef0a047014eacb04af55345715fae4a995373769cff68",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS404.DAT",
+        "SYNDICAT/DATA/MISS404.DAT"
+      ]
+    },
+    {
+      "offset": 14067787,
+      "zlib_size": 421,
+      "output_size": 765,
+      "sha256": "6dd2c9abac2385ca797d6bb5f98320c7155139c3caaa4a35f6a12d30ee4973f0",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS405.DAT"
+      ]
+    },
+    {
+      "offset": 14068212,
+      "zlib_size": 643,
+      "output_size": 1222,
+      "sha256": "0fcb35d9f8e191827bef6125b71c441e92606b91aaea0564c57e30397f9cd158",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS406.DAT",
+        "SYNDICAT/DATA/MISS406.DAT"
+      ]
+    },
+    {
+      "offset": 14068859,
+      "zlib_size": 502,
+      "output_size": 960,
+      "sha256": "df94311428d3d237b532452713a22ef2df4583a68f3d361d92e0edf6f1879ebc",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS407.DAT",
+        "SYNDICAT/DATA/MISS407.DAT"
+      ]
+    },
+    {
+      "offset": 14069365,
+      "zlib_size": 483,
+      "output_size": 909,
+      "sha256": "d122a60b4727ab6fc89754f8754fc54a6c1d46b56392bea28c075d171daa9109",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS408.DAT"
+      ]
+    },
+    {
+      "offset": 14069852,
+      "zlib_size": 503,
+      "output_size": 952,
+      "sha256": "4a76e942457ec7ab5abed432d5833b024462f035e8960cf26d6a08e0339f3d0b",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS409.DAT",
+        "SYNDICAT/DATA/MISS409.DAT"
+      ]
+    },
+    {
+      "offset": 14070359,
+      "zlib_size": 726,
+      "output_size": 1459,
+      "sha256": "d316267e590598fd5a6486ce2c2ce2ed3800ea95398b7a21545f616e5301c8fd",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS41.DAT",
+        "SYNDICAT/DATA/MISS41.DAT"
+      ]
+    },
+    {
+      "offset": 14071089,
+      "zlib_size": 495,
+      "output_size": 934,
+      "sha256": "0a116cede9b3103aeba83b7b82bd04eb37217d8077c327781a6d4042c73691ab",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS410.DAT",
+        "SYNDICAT/DATA/MISS410.DAT"
+      ]
+    },
+    {
+      "offset": 14071588,
+      "zlib_size": 650,
+      "output_size": 1287,
+      "sha256": "f3d7a577d7196a36fbc470515ec398fa4dfd63e53459ee440285e294bfec5569",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS411.DAT",
+        "SYNDICAT/DATA/MISS411.DAT"
+      ]
+    },
+    {
+      "offset": 14072242,
+      "zlib_size": 703,
+      "output_size": 1316,
+      "sha256": "df80bebb0e4a7fbd6d5d3e7a7d590dd8ee135e6a5d85ae088566de96ef674d6b",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS412.DAT",
+        "SYNDICAT/DATA/MISS412.DAT"
+      ]
+    },
+    {
+      "offset": 14072949,
+      "zlib_size": 687,
+      "output_size": 1359,
+      "sha256": "86d693cef647dac5e17ac057a203ee6b3ce9764c1dd0a60de171082f4842c9f6",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS413.DAT",
+        "SYNDICAT/DATA/MISS413.DAT"
+      ]
+    },
+    {
+      "offset": 14073640,
+      "zlib_size": 346,
+      "output_size": 586,
+      "sha256": "4a2c6062b2d4f6ff721468ae3fc33d9393907bbfdf882141af5fbf93118769f1",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS414.DAT"
+      ]
+    },
+    {
+      "offset": 14073990,
+      "zlib_size": 502,
+      "output_size": 948,
+      "sha256": "b4ff21ab4b92736bc5b3a852acc54d2a46cc3dcf34af2d8914b37a3baba3e44a",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS415.DAT",
+        "SYNDICAT/DATA/MISS415.DAT"
+      ]
+    },
+    {
+      "offset": 14074496,
+      "zlib_size": 456,
+      "output_size": 860,
+      "sha256": "fba37834b01c43c1c0470313552c266f4d6ccfbfe8083726b4586250a89da586",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS416.DAT"
+      ]
+    },
+    {
+      "offset": 14074956,
+      "zlib_size": 418,
+      "output_size": 763,
+      "sha256": "a59a753bf1d68cef6bf60a2e5d4118e2302874db68ca1ebf49a978a288640eb2",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS417.DAT"
+      ]
+    },
+    {
+      "offset": 14075378,
+      "zlib_size": 517,
+      "output_size": 992,
+      "sha256": "446723ca414ee6a5d09f3cc0c7e437f58a9030da541696453750584260a16049",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS418.DAT",
+        "SYNDICAT/DATA/MISS418.DAT"
+      ]
+    },
+    {
+      "offset": 14075899,
+      "zlib_size": 463,
+      "output_size": 865,
+      "sha256": "13181c198144c32985c6bd4bdf7a52314576f5918655d6a26847d7048b72d7b7",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS419.DAT",
+        "SYNDICAT/DATA/MISS419.DAT"
+      ]
+    },
+    {
+      "offset": 14076366,
+      "zlib_size": 536,
+      "output_size": 1008,
+      "sha256": "06ac3d25f4e8bd4d407c228092ce11873a8b3c77a3c286b86fdba11f0e6c4fc2",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS42.DAT"
+      ]
+    },
+    {
+      "offset": 14076906,
+      "zlib_size": 536,
+      "output_size": 1046,
+      "sha256": "460516968d07fe1092d6b8c1664e574944eb529f47f49a7fbd5267d875ae7327",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS420.DAT",
+        "SYNDICAT/DATA/MISS420.DAT"
+      ]
+    },
+    {
+      "offset": 14077446,
+      "zlib_size": 425,
+      "output_size": 786,
+      "sha256": "998d1313e6a0ce50bde5f8497119f22b1a0760fcedf8997649406dd3fed35803",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS421.DAT"
+      ]
+    },
+    {
+      "offset": 14077875,
+      "zlib_size": 622,
+      "output_size": 1177,
+      "sha256": "050acb8d1b4b3d90ea62fe436c61f13702c301424c23b54c4f22e7af25f1377e",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS422.DAT",
+        "SYNDICAT/DATA/MISS422.DAT"
+      ]
+    },
+    {
+      "offset": 14078501,
+      "zlib_size": 368,
+      "output_size": 628,
+      "sha256": "2e8b0ca9d24147fbedac4af2e6ca27a53213ee3151ed6a6110a082f3a6cd52fe",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS423.DAT"
+      ]
+    },
+    {
+      "offset": 14078873,
+      "zlib_size": 516,
+      "output_size": 979,
+      "sha256": "b20cc70710b67515a68f4b3fec824366edd7c33a516f22b6b4255acb8313c787",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS424.DAT"
+      ]
+    },
+    {
+      "offset": 14079393,
+      "zlib_size": 847,
+      "output_size": 1739,
+      "sha256": "e13ebbe276a54ffc1d063a4c773032f3e5e18d81a0114899f75b0b0c7511da78",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS425.DAT",
+        "SYNDICAT/DATA/MISS425.DAT"
+      ]
+    },
+    {
+      "offset": 14080244,
+      "zlib_size": 412,
+      "output_size": 744,
+      "sha256": "c8afbf9e460b9b98e2cca367413195b881e97cb48e31957763d55eee5a3a05f8",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS426.DAT"
+      ]
+    },
+    {
+      "offset": 14080660,
+      "zlib_size": 614,
+      "output_size": 1230,
+      "sha256": "1d43b49008d83f1966effd99fc27fe301cd8297a96cae7428062ba48f521e9c5",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS427.DAT",
+        "SYNDICAT/DATA/MISS427.DAT"
+      ]
+    },
+    {
+      "offset": 14081278,
+      "zlib_size": 481,
+      "output_size": 887,
+      "sha256": "0bbd59fbe9fccedbc0eb697bf95b4ba8c46f87a504ee98583a30e02e149fb20d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS428.DAT",
+        "SYNDICAT/DATA/MISS428.DAT"
+      ]
+    },
+    {
+      "offset": 14081763,
+      "zlib_size": 469,
+      "output_size": 889,
+      "sha256": "60a8a1c73df6292e48def8c0fc349e2d5f9fa98ce488d0fc7adfb79525eec0f7",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS429.DAT"
+      ]
+    },
+    {
+      "offset": 14082236,
+      "zlib_size": 528,
+      "output_size": 989,
+      "sha256": "4511f31de984645c2d27fb05fc274aebdb10aa8e46c64e780f352a6fcdfe9fdb",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS43.DAT",
+        "SYNDICAT/DATA/MISS43.DAT"
+      ]
+    },
+    {
+      "offset": 14082768,
+      "zlib_size": 366,
+      "output_size": 627,
+      "sha256": "f37d50101b23ceb82d38e0b9cd92b58776d7047e6a39bbc2b085d6410c9c162f",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS430.DAT"
+      ]
+    },
+    {
+      "offset": 14083138,
+      "zlib_size": 764,
+      "output_size": 1528,
+      "sha256": "aa6226d01eab28f57ecd1f5c8501cb45fb4629a825c229d49ae9521e4e18be73",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS431.DAT",
+        "SYNDICAT/DATA/MISS431.DAT"
+      ]
+    },
+    {
+      "offset": 14083906,
+      "zlib_size": 446,
+      "output_size": 804,
+      "sha256": "f1e7cd6f1bde9484c6a5b0a75126a00da71b5536e78b459581da7e83400195a2",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS432.DAT"
+      ]
+    },
+    {
+      "offset": 14084356,
+      "zlib_size": 580,
+      "output_size": 1180,
+      "sha256": "33d8f5efde69eb93507b320f59bbceaa57022cc72a3c8728f4c32b51d664b475",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS433.DAT",
+        "SYNDICAT/DATA/MISS433.DAT"
+      ]
+    },
+    {
+      "offset": 14084940,
+      "zlib_size": 458,
+      "output_size": 874,
+      "sha256": "88817127dedaa9f6dd0f0289f95e1292248ea70899c1fa8e8d893d7a1fb27a81",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS434.DAT"
+      ]
+    },
+    {
+      "offset": 14085402,
+      "zlib_size": 633,
+      "output_size": 1296,
+      "sha256": "4e813b664029ccefd1127a0fd4dc97fbb95a4574bd2aebe5e0ac7cf32c50cbe0",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS435.DAT",
+        "SYNDICAT/DATA/MISS435.DAT"
+      ]
+    },
+    {
+      "offset": 14086039,
+      "zlib_size": 139,
+      "output_size": 191,
+      "sha256": "429f333036dd756db720d0688536b2fd00ed6b088dc3caec4bbd53d77532fba0",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS436.DAT"
+      ]
+    },
+    {
+      "offset": 14086182,
+      "zlib_size": 351,
+      "output_size": 645,
+      "sha256": "2bed986a6c63a034c1ed2dde8e7b0fd04efacfa8f80de43c0982740516093607",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS437.DAT"
+      ]
+    },
+    {
+      "offset": 14086537,
+      "zlib_size": 465,
+      "output_size": 856,
+      "sha256": "d4f39d4c767c32890350bceadc98001ffb20c84c71d899cbf9077c9c03d58613",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS438.DAT",
+        "SYNDICAT/DATA/MISS438.DAT"
+      ]
+    },
+    {
+      "offset": 14087006,
+      "zlib_size": 502,
+      "output_size": 930,
+      "sha256": "7ff3c8fa426fc3b3e1ad68cbf4ce17907c3d32e6676861847544348aedddd91e",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS439.DAT"
+      ]
+    },
+    {
+      "offset": 14087512,
+      "zlib_size": 477,
+      "output_size": 886,
+      "sha256": "b7f63a8e73d304d8b9c46fae3cee8945076ac8538a287c09fc3dc382cfe5e40d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS44.DAT"
+      ]
+    },
+    {
+      "offset": 14087993,
+      "zlib_size": 554,
+      "output_size": 1057,
+      "sha256": "f8a5e49233cd32f7da25d0d6ce78d03b3380abfc0c8f4a2d59e627c2963a13c0",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS440.DAT",
+        "SYNDICAT/DATA/MISS440.DAT"
+      ]
+    },
+    {
+      "offset": 14088551,
+      "zlib_size": 702,
+      "output_size": 1421,
+      "sha256": "65860baeab2949e7b6eb297a5f1cd8461a827cdc09f13312079917399e18ffd2",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS441.DAT",
+        "SYNDICAT/DATA/MISS441.DAT"
+      ]
+    },
+    {
+      "offset": 14089257,
+      "zlib_size": 493,
+      "output_size": 910,
+      "sha256": "c736475e2da94321e4a745b5eb918340f84ad1ba70e9d9849f310febb360aefd",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS442.DAT"
+      ]
+    },
+    {
+      "offset": 14089754,
+      "zlib_size": 508,
+      "output_size": 977,
+      "sha256": "e29c71b329f1fd749411111f475900cf5ac5d1f1962e4448d0ce425c5812d367",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS443.DAT",
+        "SYNDICAT/DATA/MISS443.DAT"
+      ]
+    },
+    {
+      "offset": 14090266,
+      "zlib_size": 444,
+      "output_size": 820,
+      "sha256": "b4297d97d70cc7dd9ad5bf5db1d5b062b6fd1412722bf2dbdae815eda0760dac",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS444.DAT"
+      ]
+    },
+    {
+      "offset": 14090714,
+      "zlib_size": 387,
+      "output_size": 665,
+      "sha256": "a6c7b0e3cd74987efbc11b252db3ab5b05ab58320d866e0c8cb1449250ce5396",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS445.DAT",
+        "SYNDICAT/DATA/MISS445.DAT"
+      ]
+    },
+    {
+      "offset": 14091105,
+      "zlib_size": 237,
+      "output_size": 371,
+      "sha256": "dc575537d75212c6af56a4a45f8a5739c0d584ad4eede0a198823af84686f591",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS446.DAT"
+      ]
+    },
+    {
+      "offset": 14091346,
+      "zlib_size": 365,
+      "output_size": 652,
+      "sha256": "efd98f5c7705767989d25a943858bff8864ca8ae94028bb258205e730275dc48",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS447.DAT"
+      ]
+    },
+    {
+      "offset": 14091715,
+      "zlib_size": 330,
+      "output_size": 574,
+      "sha256": "7e6798867b58b56c023147873a9c3dd8b0fad18ea3901d7d9a948b0d7d74effc",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS448.DAT",
+        "SYNDICAT/DATA/MISS448.DAT"
+      ]
+    },
+    {
+      "offset": 14092049,
+      "zlib_size": 363,
+      "output_size": 639,
+      "sha256": "35d90c27ac890780884195e32aed3cccf7c885db9084fe49b33b7b0da91e0da3",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS449.DAT"
+      ]
+    },
+    {
+      "offset": 14092416,
+      "zlib_size": 410,
+      "output_size": 702,
+      "sha256": "e3c3d55f78672a4727d7077fa61f60ccab4b667e40c2ef95e175e28ac75f7d26",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS45.DAT",
+        "SYNDICAT/DATA/MISS45.DAT"
+      ]
+    },
+    {
+      "offset": 14092830,
+      "zlib_size": 234,
+      "output_size": 373,
+      "sha256": "ccf86c62f1120b4648e544318ecf3ce08107cbac30261d569db84071868a2bfd",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS450.DAT",
+        "SYNDICAT/DATA/MISS450.DAT"
+      ]
+    },
+    {
+      "offset": 14093068,
+      "zlib_size": 271,
+      "output_size": 420,
+      "sha256": "c0be1472ba96f57663b0f0c933ad50dad757f56159aebe99e7e084c6032dcd3b",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS46.DAT"
+      ]
+    },
+    {
+      "offset": 14093343,
+      "zlib_size": 384,
+      "output_size": 704,
+      "sha256": "74453ecb149c56ea141712d47896ec7e86b9d3f31b961d364ad5ea66d7349f0d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS47.DAT"
+      ]
+    },
+    {
+      "offset": 14093731,
+      "zlib_size": 323,
+      "output_size": 536,
+      "sha256": "2ee0c33d8b0b5ef09507782ba9f83811c313c7fc7098176ce35703dc3948d17c",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS48.DAT",
+        "SYNDICAT/DATA/MISS48.DAT"
+      ]
+    },
+    {
+      "offset": 14094058,
+      "zlib_size": 364,
+      "output_size": 630,
+      "sha256": "4340c0da71d7593a5e4677f178fc1a400ab117abe04a5d46824a8bf9e50a1ec5",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS49.DAT"
+      ]
+    },
+    {
+      "offset": 14094426,
+      "zlib_size": 235,
+      "output_size": 364,
+      "sha256": "a32157f50ef29e78f6e10d6e109058785f4d18987ccaab9f587e5d6e771bdc2d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MISS50.DAT",
+        "SYNDICAT/DATA/MISS50.DAT"
+      ]
+    },
+    {
+      "offset": 14094665,
+      "zlib_size": 4321,
+      "output_size": 4393,
+      "sha256": "9d6bc9a375a56ef23791c4c2b1866d20d231918490903b3edecb0eb9498d2f23",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MLOGOS.DAT",
+        "SYNDICAT/DATA/MLOGOS.DAT"
+      ]
+    },
+    {
+      "offset": 14098990,
+      "zlib_size": 43831,
+      "output_size": 87484,
+      "sha256": "91dea744cfe4fb9565d85504f98ac536356a43eab32fc946bf358bb83dbf0f97",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MLOSA.DAT",
+        "SYNDICAT/DATA/MLOSA.DAT"
+      ]
+    },
+    {
+      "offset": 14142825,
+      "zlib_size": 31751,
+      "output_size": 69084,
+      "sha256": "cfc6df4f043e80a2c3be830791557ab6f7129b53291d2b0d1cc4fc0f6be36515",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MLOSAOUT.DAT",
+        "SYNDICAT/DATA/MLOSAOUT.DAT"
+      ]
+    },
+    {
+      "offset": 14174580,
+      "zlib_size": 76859,
+      "output_size": 142426,
+      "sha256": "a60a3d8b6f578e29b028d033f7e9b441bdf01ca0c4c55114b3d2af79871b56e1",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MLOSEGAM.DAT",
+        "SYNDICAT/DATA/MLOSEGAM.DAT"
+      ]
+    },
+    {
+      "offset": 14251443,
+      "zlib_size": 77297,
+      "output_size": 155430,
+      "sha256": "5430a23167cb59eff58abf032e4da5bfc6c567797a3702be4e12832452f1a12e",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MMAP.DAT",
+        "SYNDICAT/DATA/MMAP.DAT"
+      ]
+    },
+    {
+      "offset": 14328744,
+      "zlib_size": 2587,
+      "output_size": 2613,
+      "sha256": "358316f949aa0c922f6c690724356555588362208cddc6afec5930a2e565433d",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MMAPBLK.DAT",
+        "SYNDICAT/DATA/MMAPBLK.DAT"
+      ]
+    },
+    {
+      "offset": 14331335,
+      "zlib_size": 41651,
+      "output_size": 89706,
+      "sha256": "afab1ebe21d9d1964bed90b5c82be9b565e5eef4b56180210debf10eb19ad69f",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MMAPOUT.DAT",
+        "SYNDICAT/DATA/MMAPOUT.DAT"
+      ]
+    },
+    {
+      "offset": 14372990,
+      "zlib_size": 1541,
+      "output_size": 1533,
+      "sha256": "cde23f9b730b865ea05a0c8626ad80a599ca61efd660539349f6400a18caae2a",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MMINLOGO.DAT",
+        "SYNDICAT/DATA/MMINLOGO.DAT"
+      ]
+    },
+    {
+      "offset": 14374535,
+      "zlib_size": 47630,
+      "output_size": 95818,
+      "sha256": "bb8515950d63cc39fd9c62354fe963d1ef34fe150a8106482f00069be5aff171",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MMULTI.DAT"
+      ]
+    },
+    {
+      "offset": 14422169,
+      "zlib_size": 32881,
+      "output_size": 71836,
+      "sha256": "37937feef5e3cf68770f30be46c7f613b3c60a0ae54670f65af68c6132eeb00f",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MMULTOUT.DAT"
+      ]
+    },
+    {
+      "offset": 14455054,
+      "zlib_size": 25280,
+      "output_size": 53158,
+      "sha256": "4f97e746050d685693725ceefe054b90955d77c4d18479b5deea7a8d3b717795",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MOPTION.DAT",
+        "SYNDICAT/DATA/MOPTION.DAT"
+      ]
+    },
+    {
+      "offset": 14480338,
+      "zlib_size": 24153,
+      "output_size": 49728,
+      "sha256": "88dde8e997f2c82f332f011627465b815929bce850e4dcb95600fb3f2252d8c3",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MOPTOUT.DAT",
+        "SYNDICAT/DATA/MOPTOUT.DAT"
+      ]
+    },
+    {
+      "offset": 14504495,
+      "zlib_size": 38667,
+      "output_size": 84726,
+      "sha256": "2fc16ce262b8893455bf0c4060d327048b2ac42716babf0cf1b67582d3b21cf3",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MRESOUT.DAT",
+        "SYNDICAT/DATA/MRESOUT.DAT"
+      ]
+    },
+    {
+      "offset": 14543166,
+      "zlib_size": 84034,
+      "output_size": 167044,
+      "sha256": "77df8767df7f1cb2ffcb30ff9fbca7ec4074765bba54eb5c1b1fc8228e6d1b72",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MRESRCH.DAT",
+        "SYNDICAT/DATA/MRESRCH.DAT"
+      ]
+    },
+    {
+      "offset": 14627204,
+      "zlib_size": 67856,
+      "output_size": 141968,
+      "sha256": "e132a9894b735825e222ae5961f4af730845d48853c1943a278e67b9e6f0cbe5",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MSCRENUP.DAT",
+        "SYNDICAT/DATA/MSCRENUP.DAT"
+      ]
+    },
+    {
+      "offset": 14695064,
+      "zlib_size": 80658,
+      "output_size": 164860,
+      "sha256": "f54ddcfa65012c78cf482f6877f3860ef7673dfa15058e9a4e772e7fe298afe6",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MSELECT.DAT",
+        "SYNDICAT/DATA/MSELECT.DAT"
+      ]
+    },
+    {
+      "offset": 14775726,
+      "zlib_size": 647,
+      "output_size": 679,
+      "sha256": "2bc3eea0a463da234ccd4dc03d5d5b40e290e6c8d639d63135fed499817675f1",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MSELECT.PAL",
+        "SYNDICAT/DATA/MSELECT.PAL"
+      ]
+    },
+    {
+      "offset": 14776377,
+      "zlib_size": 37872,
+      "output_size": 78184,
+      "sha256": "5528d373213886a6aff95989fe7db2311699d2cbfdc0b35b7003f3dc2d499756",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MSELOUT.DAT",
+        "SYNDICAT/DATA/MSELOUT.DAT"
+      ]
+    },
+    {
+      "offset": 14814253,
+      "zlib_size": 29235,
+      "output_size": 144485,
+      "sha256": "2b6725f68204e228dfc60b497fc18a561767cb71869dd9bdbcd8e9456177e64e",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MSPR-0-D.DAT"
+      ]
+    },
+    {
+      "offset": 14843492,
+      "zlib_size": 3220,
+      "output_size": 7080,
+      "sha256": "abeda739cfd4ac827f977d88ad879d53e92d205c436b1bcfe0a600ca47384045",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MSPR-0-D.TAB"
+      ]
+    },
+    {
+      "offset": 14846716,
+      "zlib_size": 19161,
+      "output_size": 79964,
+      "sha256": "970314ebda50d50126514d31662b6edceff0d2488635789fb38bc54d595b1083",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MTITLE.DAT",
+        "SYNDICAT/DATA/MTITLE.DAT"
+      ]
+    },
+    {
+      "offset": 14865881,
+      "zlib_size": 27550,
+      "output_size": 58476,
+      "sha256": "6f529c1ccb3d27546736bedfcab16c6caff87a2048f78ad97e61f019a175e8a4",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MULTIOPT.DAT"
+      ]
+    },
+    {
+      "offset": 14893435,
+      "zlib_size": 26023,
+      "output_size": 54160,
+      "sha256": "a251a7da8ef72c81d75a9f0f9ad4b0530c821630fdaf447048f66cdf427646fe",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/MULTIOUT.DAT"
+      ]
+    },
+    {
+      "offset": 14919462,
+      "zlib_size": 1641,
+      "output_size": 3242,
+      "sha256": "475980d49cda4d94512716fbc9981d74be93af3c0aa80a8bdc767db55a5b4ce6",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/SAMPLE.AD",
+        "DATADISK/DATA/SAMPLE.OPL",
+        "SYNDICAT/DATA/SAMPLE.AD",
+        "SYNDICAT/DATA/SAMPLE.OPL"
+      ]
+    },
+    {
+      "offset": 14921107,
+      "zlib_size": 159441,
+      "output_size": 216176,
+      "sha256": "7cb220a72089e9ffef7a1a460e82f7cbc688b695cd3d426cc95c083d98b32500",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/SOUND-0.DAT",
+        "SYNDICAT/DATA/SOUND-0.DAT"
+      ]
+    },
+    {
+      "offset": 15080552,
+      "zlib_size": 254,
+      "output_size": 928,
+      "sha256": "f4c44a30d8d3f5d778cdf897823482aa5159e929e1b007c1c4dd882b79680448",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/SOUND-0.TAB",
+        "SYNDICAT/DATA/SOUND-0.TAB"
+      ]
+    },
+    {
+      "offset": 15080810,
+      "zlib_size": 350497,
+      "output_size": 357566,
+      "sha256": "42577df1761cb3bbc77aaadd8e0497dfd8f4367e08df8b49188302a316d1b0d2",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/SOUND-1.DAT",
+        "SYNDICAT/DATA/SOUND-1.DAT"
+      ]
+    },
+    {
+      "offset": 15431311,
+      "zlib_size": 140,
+      "output_size": 129,
+      "sha256": "e73b8a3737cc65348994c44dfd796714dfe1c087377a99f100ba4e89d29d6852",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/SOUND-1.TAB",
+        "SYNDICAT/DATA/SOUND-1.TAB"
+      ]
+    },
+    {
+      "offset": 15431455,
+      "zlib_size": 177631,
+      "output_size": 259696,
+      "sha256": "aa80fc80fbce4a137e0dd23e830f2e675974ce8957c3a9ae26d7a50d5dbfa0bc",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/SOUND-D.DAT"
+      ]
+    },
+    {
+      "offset": 15609090,
+      "zlib_size": 253,
+      "output_size": 928,
+      "sha256": "b9a9ab0d3f31225ea034ff9265d6febeebe4d852b2a6409cc4a44815facec590",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/SOUND-D.TAB"
+      ]
+    },
+    {
+      "offset": 15609347,
+      "zlib_size": 1915,
+      "output_size": 14566,
+      "sha256": "21088107f3d65af9a10a733fd21b5b9640144e4f53a4eb6908d4e95207be0d9c",
+      "prior_manifest_paths": [
+        "DATADISK/DATA/SYNGAME.XMI",
+        "SYNDICAT/DATA/SYNGAME.XMI"
+      ]
+    },
+    {
+      "offset": 53463290,
+      "zlib_size": 164816,
+      "output_size": 499257,
+      "sha256": "2871c82a2723edb98148d8e9bd88d0591beaedd2576a2d27aeb41c8f09bfb216",
+      "prior_manifest_paths": [
+        "SYNDICAT/GMAIN.EXE"
+      ]
+    },
+    {
+      "offset": 53628110,
+      "zlib_size": 172995,
+      "output_size": 518713,
+      "sha256": "bfbed760ab2def1fbe9f73588dc5a24747826c9b7660d615b02a8847d92bf078",
+      "prior_manifest_paths": [
+        "SYNDICAT/MAIN.EXE"
+      ]
+    },
+    {
+      "offset": 53801109,
+      "zlib_size": 164640,
+      "output_size": 499257,
+      "sha256": "a6d1037a2e0a108fe0159490c6d55ea1d6acc8395370ee306c17b4ec2792ac25",
+      "prior_manifest_paths": [
+        "SYNDICAT/SMAIN.EXE"
+      ]
+    },
+    {
+      "offset": 53965753,
+      "zlib_size": 7999,
+      "output_size": 8063,
+      "sha256": "46e01ba5e75e9e229847c0e470d9f73646e302692f747f92f34068c64a82e8a9",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME05.DAT"
+      ]
+    },
+    {
+      "offset": 53973756,
+      "zlib_size": 5469,
+      "output_size": 5493,
+      "sha256": "4341f9eda703835ec0212c2e13403658b434cb197ad369210ec6ab0c99e2752b",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME08.DAT"
+      ]
+    },
+    {
+      "offset": 53979229,
+      "zlib_size": 4254,
+      "output_size": 4245,
+      "sha256": "673c90672a47d15b26bc277d9d0c259393f66c7f7f7dbc6607b9d041ed0a19c8",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME14.DAT"
+      ]
+    },
+    {
+      "offset": 53983487,
+      "zlib_size": 4740,
+      "output_size": 4767,
+      "sha256": "8c54ed8c7e30d9ab03ef4d58083697048abbab391191ecfdcc15944243d4fd15",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME16.DAT"
+      ]
+    },
+    {
+      "offset": 53988231,
+      "zlib_size": 1530,
+      "output_size": 1537,
+      "sha256": "d49d8640fab61614c3b434a8a403f52f5b796b8787cc4f3743f2c5b518a2bdb1",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME17.DAT"
+      ]
+    },
+    {
+      "offset": 53989765,
+      "zlib_size": 3909,
+      "output_size": 3898,
+      "sha256": "4987ee3f8d6f7a72fcbe44238d65d22a4fdfae2548ea42980b5a8b984cbacc20",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME21.DAT"
+      ]
+    },
+    {
+      "offset": 53993678,
+      "zlib_size": 3705,
+      "output_size": 3748,
+      "sha256": "0516e3a9d394a0594a3a72dd13b2f7bd9a92fa78a4158b8b3d442487a3a9ca73",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME23.DAT"
+      ]
+    },
+    {
+      "offset": 53997387,
+      "zlib_size": 6144,
+      "output_size": 6180,
+      "sha256": "ef0e36983e852ef328557b9eb8e55ffa60108e638e82e631d6ab891a8abbcf72",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME24.DAT"
+      ]
+    },
+    {
+      "offset": 54003535,
+      "zlib_size": 2472,
+      "output_size": 2488,
+      "sha256": "d64eea8bb6231d344e12e5edb0efee6ce5bca12251ce9a3c57f0abc10265da15",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME26.DAT"
+      ]
+    },
+    {
+      "offset": 54006011,
+      "zlib_size": 4650,
+      "output_size": 4655,
+      "sha256": "a962eaac4c6d575f5d6a4d5f46a7075691f43830c9be05d459fcff9ec0832a09",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME29.DAT"
+      ]
+    },
+    {
+      "offset": 54010665,
+      "zlib_size": 6586,
+      "output_size": 6614,
+      "sha256": "4e0823ec4a13029f616dc1c3e1ed03b6073a1600adbc8d11dbbb7e31aa08b227",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME30.DAT"
+      ]
+    },
+    {
+      "offset": 54017255,
+      "zlib_size": 6605,
+      "output_size": 6622,
+      "sha256": "9aac9e0bdb56f4e3f9423faf94bdf002ad237532e8d91ec36430c295479fc252",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME32.DAT"
+      ]
+    },
+    {
+      "offset": 54023864,
+      "zlib_size": 9129,
+      "output_size": 9175,
+      "sha256": "9dbcbb59d67ed8966d9374d79611ca951eb2d8ab9f6f69e66a828185cd338d34",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME34.DAT"
+      ]
+    },
+    {
+      "offset": 54032997,
+      "zlib_size": 8468,
+      "output_size": 8486,
+      "sha256": "fab21dd02fe4f66afab7dc314d99b0dadf404233ddba77d20ff41503477a04f6",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME36.DAT"
+      ]
+    },
+    {
+      "offset": 54041469,
+      "zlib_size": 2956,
+      "output_size": 2945,
+      "sha256": "b655657ffc5a64d42c4ac68344b00fd5cba9e9cec842414cd77ea2eba2682fd6",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME37.DAT"
+      ]
+    },
+    {
+      "offset": 54044429,
+      "zlib_size": 9525,
+      "output_size": 9514,
+      "sha256": "ce2222eb7db7dab9ffa8be668719a419e6b58a394503b462c1280e957e68133f",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME39.DAT"
+      ]
+    },
+    {
+      "offset": 54053958,
+      "zlib_size": 5172,
+      "output_size": 5187,
+      "sha256": "86be8e306d580c817148747d601b6eaa335cc6b91ec8a6571632080ec59a4f0a",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME42.DAT"
+      ]
+    },
+    {
+      "offset": 54059134,
+      "zlib_size": 8430,
+      "output_size": 8419,
+      "sha256": "ebe7d9fa669c93a16470eeebe7f3645c8a957b3073c4dd0f07daba286c34ca2c",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME44.DAT"
+      ]
+    },
+    {
+      "offset": 54067568,
+      "zlib_size": 6880,
+      "output_size": 6900,
+      "sha256": "316ba9ce540f609946e8c6b73b0ced9961348cb12d04c60e9315cbd84042e0ef",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME46.DAT"
+      ]
+    },
+    {
+      "offset": 54074452,
+      "zlib_size": 6396,
+      "output_size": 6449,
+      "sha256": "4c488b65b58406d4cf439f28b79fbe35eb7a88a5ddcf8353994654b305d567b4",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME47.DAT"
+      ]
+    },
+    {
+      "offset": 54080852,
+      "zlib_size": 6773,
+      "output_size": 6792,
+      "sha256": "c89be65648b4ccd53c00dbec19ca86ed4d79178c2e6ed566a4864dc63ad86916",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME49.DAT"
+      ]
+    },
+    {
+      "offset": 54087629,
+      "zlib_size": 4364,
+      "output_size": 4353,
+      "sha256": "f00f3e76bee61db75e24952c812391bcb93f92592c31f55397a8fc9b70bfd27c",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME91.DAT"
+      ]
+    },
+    {
+      "offset": 54091997,
+      "zlib_size": 4301,
+      "output_size": 4296,
+      "sha256": "0be7eb81f2d5909780fdd5afb84cf8debc372c56e9f296be8442eaadac059e16",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME92.DAT"
+      ]
+    },
+    {
+      "offset": 54096302,
+      "zlib_size": 2667,
+      "output_size": 2656,
+      "sha256": "5c4bb6b20a9767dcf7ec2077f340d1d5b20695287f59eb0a464193c6d67e5f4e",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME93.DAT"
+      ]
+    },
+    {
+      "offset": 54098973,
+      "zlib_size": 4405,
+      "output_size": 4396,
+      "sha256": "545f324d3be734d4cbc8980dabd9dc5c9dab0018af0f40ff5c1f1c55ad3384b3",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME94.DAT"
+      ]
+    },
+    {
+      "offset": 54103382,
+      "zlib_size": 1704,
+      "output_size": 1693,
+      "sha256": "d794cf7f5d216ee72155e526a08b410bc05893e124148325a8e4fb7b2392fe72",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME95.DAT"
+      ]
+    },
+    {
+      "offset": 54105090,
+      "zlib_size": 2765,
+      "output_size": 2754,
+      "sha256": "df3c6f3265f835984595f2d9e91bc4a1703e3cf251b50ee9e8742a756b07721d",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/GAME96.DAT"
+      ]
+    },
+    {
+      "offset": 54107859,
+      "zlib_size": 120834,
+      "output_size": 121817,
+      "sha256": "76491311e87ad08033b45630d989eacb2495856b911edc29cb0def88118ba545",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/HSPR-0.DAT"
+      ]
+    },
+    {
+      "offset": 54228697,
+      "zlib_size": 116827,
+      "output_size": 355376,
+      "sha256": "f62606b5049cebd6a83d597e16a760372fb9441fdca331063b932f4d26bc292f",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/HSPR-1.DAT"
+      ]
+    },
+    {
+      "offset": 54345528,
+      "zlib_size": 20,
+      "output_size": 12,
+      "sha256": "81179fd980bf1781b578e59168ef798d5a5b76bc2fa123ce34e551ec88070c50",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/HSPR-1.INF"
+      ]
+    },
+    {
+      "offset": 54345552,
+      "zlib_size": 9090,
+      "output_size": 9139,
+      "sha256": "8879d0bce12267328619b43699ea92aac6af4084257766a63980a27a60cb8894",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MAP08.DAT"
+      ]
+    },
+    {
+      "offset": 54354646,
+      "zlib_size": 601,
+      "output_size": 1137,
+      "sha256": "b8321a0617878659c51466ab46bd9a9f10fef37860012aebd2cfeb4df75b4d1a",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS05.DAT"
+      ]
+    },
+    {
+      "offset": 54355251,
+      "zlib_size": 593,
+      "output_size": 1149,
+      "sha256": "0d12e8b496e22a43c4d7f54c6c4d74db9edf79f690dfce127666dc50cd8180c9",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS08.DAT"
+      ]
+    },
+    {
+      "offset": 54355848,
+      "zlib_size": 647,
+      "output_size": 1288,
+      "sha256": "6574e2456ff9c040e63abf4a7d4dc2331136e79d7f66a6d3e41075506f19d58d",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS101.DAT"
+      ]
+    },
+    {
+      "offset": 54356499,
+      "zlib_size": 630,
+      "output_size": 1292,
+      "sha256": "21a4c5305e1d5af78183b515edbbc8286bae1cd17860cdfafcf7ab48b9bfae79",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS105.DAT"
+      ]
+    },
+    {
+      "offset": 54357133,
+      "zlib_size": 668,
+      "output_size": 1332,
+      "sha256": "d8e51ea80f7bc62d63552f663b454b98e6889152a9e7425774d9410b291d9f1b",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS108.DAT"
+      ]
+    },
+    {
+      "offset": 54357805,
+      "zlib_size": 776,
+      "output_size": 1570,
+      "sha256": "29f6dc08de2b11ebde2a09c6260c72c5f0c07054153fd04e54e7410a9c399cde",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS111.DAT"
+      ]
+    },
+    {
+      "offset": 54358585,
+      "zlib_size": 829,
+      "output_size": 1645,
+      "sha256": "54621c44a28a72dc02e9231c3585a3bdb121500554e6e896387bf249854164b5",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS112.DAT"
+      ]
+    },
+    {
+      "offset": 54359418,
+      "zlib_size": 798,
+      "output_size": 1575,
+      "sha256": "ce90f3e50a01dc4e33ca5d4796552cd5da67984a0f0716f82d7dabdcd778a943",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS113.DAT"
+      ]
+    },
+    {
+      "offset": 54360220,
+      "zlib_size": 655,
+      "output_size": 1287,
+      "sha256": "83ee0f8986d7e9b5de204f4cb371e3708aa27a94cbb5c5572a106d839fcd24e5",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS114.DAT"
+      ]
+    },
+    {
+      "offset": 54360879,
+      "zlib_size": 588,
+      "output_size": 1111,
+      "sha256": "9e3501419d14a15f60c6661e9dbfaef467c610417fbd1f1ad546a45ee64617fb",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS115.DAT"
+      ]
+    },
+    {
+      "offset": 54361471,
+      "zlib_size": 891,
+      "output_size": 1811,
+      "sha256": "566f4a9e0aa7292310f498f6360101389319c3d42598ffedb7b05d698a6ec304",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS116.DAT"
+      ]
+    },
+    {
+      "offset": 54362366,
+      "zlib_size": 815,
+      "output_size": 1682,
+      "sha256": "59c182b4500b669cc65ef3f88ac5d6ae96cef732e56fba181382de015f663848",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS117.DAT"
+      ]
+    },
+    {
+      "offset": 54363185,
+      "zlib_size": 696,
+      "output_size": 1391,
+      "sha256": "987d5328cfcdb2b451c5c6599c08de189f0dfe0ba4f1a8669487092ad7c59e9d",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS121.DAT"
+      ]
+    },
+    {
+      "offset": 54363885,
+      "zlib_size": 878,
+      "output_size": 1905,
+      "sha256": "99f8d280980a79ca6fd93d6b6acda4510ed648b9a2787f6c9572b88306a38be9",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS123.DAT"
+      ]
+    },
+    {
+      "offset": 54364767,
+      "zlib_size": 698,
+      "output_size": 1421,
+      "sha256": "820f7a57743637de596e2e63b542f39f57a5076b413f60ed7235265f78499ef7",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS124.DAT"
+      ]
+    },
+    {
+      "offset": 54365469,
+      "zlib_size": 981,
+      "output_size": 2053,
+      "sha256": "7d4ef6775d68bc8bede148d2a6a7a5ef0f7125049ee2ecb9e5a2322b7450e887",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS125.DAT"
+      ]
+    },
+    {
+      "offset": 54366454,
+      "zlib_size": 672,
+      "output_size": 1390,
+      "sha256": "499da7af0ba160f03653ba5103d32aaef386b3a871931c6b9f3e3dc6d6df60eb",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS126.DAT"
+      ]
+    },
+    {
+      "offset": 54367130,
+      "zlib_size": 710,
+      "output_size": 1440,
+      "sha256": "5cc6e028a28cb8090b21ab39bd0408ee77bc5858b37760ff4525e44437251187",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS129.DAT"
+      ]
+    },
+    {
+      "offset": 54367844,
+      "zlib_size": 609,
+      "output_size": 1241,
+      "sha256": "69cb63fb8023b27b50eb2189390a30b851bc95e6160093b68ff9cc56b88592e3",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS130.DAT"
+      ]
+    },
+    {
+      "offset": 54368457,
+      "zlib_size": 796,
+      "output_size": 1655,
+      "sha256": "25e535227cb94203e19591a2410616b0ae4ba909b1fb9e4af5defa60721ac4c8",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS131.DAT"
+      ]
+    },
+    {
+      "offset": 54369257,
+      "zlib_size": 606,
+      "output_size": 1148,
+      "sha256": "e02ed6d913a3268a92c3fc5bd2338ca64b65d72ee084b2b92ccddc1645fed88d",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS132.DAT"
+      ]
+    },
+    {
+      "offset": 54369867,
+      "zlib_size": 656,
+      "output_size": 1334,
+      "sha256": "e3d6d166628b641dd9f68f0b5d17ff2cce1e8c38bed3b4eee2634b60596e0f83",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS133.DAT"
+      ]
+    },
+    {
+      "offset": 54370527,
+      "zlib_size": 636,
+      "output_size": 1279,
+      "sha256": "a274c367140d83181263e764531720c64c27109169ec9a7f859c45562e8375f4",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS134.DAT"
+      ]
+    },
+    {
+      "offset": 54371167,
+      "zlib_size": 714,
+      "output_size": 1461,
+      "sha256": "797132587080115b27b54bbfb4f7f1a91f949f27b1b4e1dc0ca7053ebecef594",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS135.DAT"
+      ]
+    },
+    {
+      "offset": 54371885,
+      "zlib_size": 970,
+      "output_size": 2083,
+      "sha256": "7dd16af11c9b0f7688cf304cea99b921687b9dedeb95b7da44d5509cdbbd6ceb",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS136.DAT"
+      ]
+    },
+    {
+      "offset": 54372859,
+      "zlib_size": 1475,
+      "output_size": 3300,
+      "sha256": "88817915c1f965a0ce2d57afd2c42db0d82486637dd97397219cb6cb458df0a1",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS137.DAT"
+      ]
+    },
+    {
+      "offset": 54374338,
+      "zlib_size": 591,
+      "output_size": 1148,
+      "sha256": "7a78b6bfa1caecdf66a826f1e9975cca6260119bc2e068c0d3921eaa4513e592",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS139.DAT"
+      ]
+    },
+    {
+      "offset": 54374933,
+      "zlib_size": 636,
+      "output_size": 1239,
+      "sha256": "d487fc251adbc5d199e6eb1d43e958afcccde7838f634d5cd39456dff0778370",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS14.DAT"
+      ]
+    },
+    {
+      "offset": 54375573,
+      "zlib_size": 507,
+      "output_size": 969,
+      "sha256": "052dd448fe722129d21180b16e71f5e78d05f6c085c6e8a05dd662d755e6ae7b",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS142.DAT"
+      ]
+    },
+    {
+      "offset": 54376084,
+      "zlib_size": 471,
+      "output_size": 921,
+      "sha256": "582f2a9ac02fc325f0273c30f2f68bb6879db5655d55c073aed4dc9457ea8f5d",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS144.DAT"
+      ]
+    },
+    {
+      "offset": 54376559,
+      "zlib_size": 579,
+      "output_size": 1163,
+      "sha256": "ad6bf3be39d1f4513861015b9fc901b9cbbf60255b28d41c312d64f3cb20f24b",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS146.DAT"
+      ]
+    },
+    {
+      "offset": 54377142,
+      "zlib_size": 495,
+      "output_size": 916,
+      "sha256": "38f60142018455e2af3b6c8a6a0c987510b73c32dcc79860a1914d8edaccbe9d",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS147.DAT"
+      ]
+    },
+    {
+      "offset": 54377641,
+      "zlib_size": 555,
+      "output_size": 1103,
+      "sha256": "524f72214302c2bbe95320760eba402b5b9e056dd3058af7947acb030ef346d6",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS149.DAT"
+      ]
+    },
+    {
+      "offset": 54378200,
+      "zlib_size": 276,
+      "output_size": 443,
+      "sha256": "e604b720f18c4778b6b94caad12d180b7a4b448f57484348ab90a90c87686f10",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS150.DAT"
+      ]
+    },
+    {
+      "offset": 54378480,
+      "zlib_size": 817,
+      "output_size": 1630,
+      "sha256": "fc3fe033772fd7692998a4d58fb93c7c46078766adf0d6f5534298867bcca626",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS16.DAT"
+      ]
+    },
+    {
+      "offset": 54379301,
+      "zlib_size": 779,
+      "output_size": 1540,
+      "sha256": "8f0a76e1105fdc95375171cdccf3104e913deb37fb1f1390d62696baca6e82a8",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS17.DAT"
+      ]
+    },
+    {
+      "offset": 54380084,
+      "zlib_size": 623,
+      "output_size": 1198,
+      "sha256": "7eae13f4d6f18beca2c2ca2cac1adad8e2558a8973ea41997b6b8cb451e472fb",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS205.DAT"
+      ]
+    },
+    {
+      "offset": 54380711,
+      "zlib_size": 682,
+      "output_size": 1283,
+      "sha256": "62f33261686ae327fccd0368d33d3bc3cef84e81c36a212c7edb942c66fe10b6",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS208.DAT"
+      ]
+    },
+    {
+      "offset": 54381397,
+      "zlib_size": 626,
+      "output_size": 1181,
+      "sha256": "a2905214addaa95d4c900cf121a00a282f85b47b36252c5208442858e0472b95",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS209.DAT"
+      ]
+    },
+    {
+      "offset": 54382027,
+      "zlib_size": 629,
+      "output_size": 1233,
+      "sha256": "ccb6c1fc202575c64037a7ac8bd35c772ee6c9acb6f2770ec105dc4ca8cb4946",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS21.DAT"
+      ]
+    },
+    {
+      "offset": 54382660,
+      "zlib_size": 811,
+      "output_size": 1584,
+      "sha256": "77a3e42a42b97cb566c32d2ad61350a8ad31a60adfb042e7aac563731b0ce2cf",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS213.DAT"
+      ]
+    },
+    {
+      "offset": 54383475,
+      "zlib_size": 707,
+      "output_size": 1373,
+      "sha256": "9dab0d2c487f2f2f04cdc2aad967391727c61ac672c3bb5a08e6e1dcc3e728ab",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS214.DAT"
+      ]
+    },
+    {
+      "offset": 54384186,
+      "zlib_size": 807,
+      "output_size": 1607,
+      "sha256": "29d849340717e3957631dfd3b550855e9c4b034b669475cfae810eb3659c14b4",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS216.DAT"
+      ]
+    },
+    {
+      "offset": 54384997,
+      "zlib_size": 885,
+      "output_size": 1782,
+      "sha256": "aaa1aff3a784cfb76da6d8f347e2d0ce0e33c080f6890cfa3b22dabca8edc9bd",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS217.DAT"
+      ]
+    },
+    {
+      "offset": 54385886,
+      "zlib_size": 711,
+      "output_size": 1349,
+      "sha256": "d76bde2bd432e371c2ceebbebbd50ae258279eec6bd0445bc6556c62fcd8091f",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS221.DAT"
+      ]
+    },
+    {
+      "offset": 54386601,
+      "zlib_size": 894,
+      "output_size": 1866,
+      "sha256": "0c6332684c4d56b0a934623b7a1bf66a7b448ae54e2bbd502c5811f90c9667b6",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS223.DAT"
+      ]
+    },
+    {
+      "offset": 54387499,
+      "zlib_size": 766,
+      "output_size": 1551,
+      "sha256": "08c78d70833275f272d4e78dc71c8c6d4e1a64a1116d928a6ab622f4bedceb93",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS224.DAT"
+      ]
+    },
+    {
+      "offset": 54388269,
+      "zlib_size": 945,
+      "output_size": 1869,
+      "sha256": "7d6f71a04f8ccdae6fe4f10e80b9140e386b783e9d9f79e16730361e7571711b",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS225.DAT"
+      ]
+    },
+    {
+      "offset": 54389218,
+      "zlib_size": 687,
+      "output_size": 1372,
+      "sha256": "9208f7eb01f503e90bbc12578f913ccd733c36c01e3a80b18715ce0bc74db94a",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS226.DAT"
+      ]
+    },
+    {
+      "offset": 54389909,
+      "zlib_size": 685,
+      "output_size": 1306,
+      "sha256": "0828d240fd329f61e151ce91d457ec55db8635e7ba8e61dc68887b12df83c6d0",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS229.DAT"
+      ]
+    },
+    {
+      "offset": 54390598,
+      "zlib_size": 827,
+      "output_size": 1757,
+      "sha256": "6a9bc59361d2ed55474c710a660110c68275bcbea18635aaa1bcfb0097a2d071",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS23.DAT"
+      ]
+    },
+    {
+      "offset": 54391429,
+      "zlib_size": 621,
+      "output_size": 1227,
+      "sha256": "bc4c65db4a896ec6669a93576bf3a64bb37ae5a552fe7af376012e6a94827f49",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS230.DAT"
+      ]
+    },
+    {
+      "offset": 54392054,
+      "zlib_size": 626,
+      "output_size": 1177,
+      "sha256": "357280dd4d1d3e1dd9a19efef1afdf382f9a0e082e710daee457de4b9495ee5f",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS232.DAT"
+      ]
+    },
+    {
+      "offset": 54392684,
+      "zlib_size": 714,
+      "output_size": 1400,
+      "sha256": "d51d4bf2475ee80750b52f2c9917c27eb57ddd14d15256663fd2d3613d702063",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS234.DAT"
+      ]
+    },
+    {
+      "offset": 54393402,
+      "zlib_size": 1012,
+      "output_size": 2076,
+      "sha256": "f87b15f7f9777f95e7f9ca9d5cab569896388b31910dc0ad4bed30383422ab1c",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS236.DAT"
+      ]
+    },
+    {
+      "offset": 54394418,
+      "zlib_size": 1164,
+      "output_size": 2477,
+      "sha256": "949abb9722f73824ae35c0c4688e6fbb6bfd7dce278103164db1c0154b2f49f5",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS237.DAT"
+      ]
+    },
+    {
+      "offset": 54395586,
+      "zlib_size": 600,
+      "output_size": 1150,
+      "sha256": "6ceb4d7e8abf34703a87f7584d4c94518090859fa48663650d6a45a31a4acb88",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS239.DAT"
+      ]
+    },
+    {
+      "offset": 54396190,
+      "zlib_size": 686,
+      "output_size": 1333,
+      "sha256": "553de9ecb7498f7c98f7804a46e3394c261e3bad16de17f46f58fde17269fb0a",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS24.DAT"
+      ]
+    },
+    {
+      "offset": 54396880,
+      "zlib_size": 535,
+      "output_size": 978,
+      "sha256": "a280a629af5c04ca8b6fa40d6d82123f18380bc71783892112d8561621b907e8",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS242.DAT"
+      ]
+    },
+    {
+      "offset": 54397419,
+      "zlib_size": 497,
+      "output_size": 930,
+      "sha256": "960e366288242d998cc88eb612f112c180f2ebb29a20df9719b23a2216942535",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS244.DAT"
+      ]
+    },
+    {
+      "offset": 54397920,
+      "zlib_size": 558,
+      "output_size": 1080,
+      "sha256": "5f6e365b6bc7b64a829ff014da408d28cbae60f1ff8042ef07efbf2625fcebfb",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS246.DAT"
+      ]
+    },
+    {
+      "offset": 54398482,
+      "zlib_size": 520,
+      "output_size": 951,
+      "sha256": "d76ef8c9990fe7619ce9df020b36abd04d8886658090d7f1b05e077f163cedd8",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS247.DAT"
+      ]
+    },
+    {
+      "offset": 54399006,
+      "zlib_size": 562,
+      "output_size": 1059,
+      "sha256": "eab924b8263e3b69cdf84d5b02b9010fa4edffc7f272ea317fedd57f1558f308",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS249.DAT"
+      ]
+    },
+    {
+      "offset": 54399572,
+      "zlib_size": 623,
+      "output_size": 1219,
+      "sha256": "3157d29f406a979b1ee439b6bdbf3cfe42b4fafde3cc37860bf5e204d4892ca4",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS26.DAT"
+      ]
+    },
+    {
+      "offset": 54400199,
+      "zlib_size": 649,
+      "output_size": 1235,
+      "sha256": "2be5dfe27dc84f6a9101bd3e6d47471d0fd1b20617bae6a58de57e2c7fe39813",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS29.DAT"
+      ]
+    },
+    {
+      "offset": 54400852,
+      "zlib_size": 564,
+      "output_size": 1087,
+      "sha256": "0d9161f2292764a21bbda23c09c7320df65e05dac8f382e3d6bcc6fdb3abf460",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS30.DAT"
+      ]
+    },
+    {
+      "offset": 54401420,
+      "zlib_size": 656,
+      "output_size": 1165,
+      "sha256": "537ec1e261dca84291bb70770219b0ddc47590ceaba70b809d092e80293e661b",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS305.DAT"
+      ]
+    },
+    {
+      "offset": 54402080,
+      "zlib_size": 724,
+      "output_size": 1391,
+      "sha256": "a190ddedfae0f098f24b94044776d2547a43d9f8dc6c005be62f9cdf2313fe7c",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS308.DAT"
+      ]
+    },
+    {
+      "offset": 54402808,
+      "zlib_size": 811,
+      "output_size": 1555,
+      "sha256": "f13bc6222614d8da7fc0a4f098a9a19297d622f4a9407d333ee469c62275b68c",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS314.DAT"
+      ]
+    },
+    {
+      "offset": 54403623,
+      "zlib_size": 931,
+      "output_size": 1796,
+      "sha256": "2c0e1537a827da337ffe6c4beedefa0739a70ea60902e048a2465ab1d0ecf854",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS316.DAT"
+      ]
+    },
+    {
+      "offset": 54404558,
+      "zlib_size": 952,
+      "output_size": 1940,
+      "sha256": "5e422db0a3f94f914100f73677320bbf28fd62ebe0aac1d73b893621ede0d9ad",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS317.DAT"
+      ]
+    },
+    {
+      "offset": 54405514,
+      "zlib_size": 564,
+      "output_size": 1054,
+      "sha256": "7793f31d99687c1b6f44b46f4ed35fe3ff4a3d2de8da56614dbeb77094dc883d",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS32.DAT"
+      ]
+    },
+    {
+      "offset": 54406082,
+      "zlib_size": 714,
+      "output_size": 1334,
+      "sha256": "fe1b01aec193ad23698644ad67dc00e4389d0c81bf9ffc068a1d5606c9307a41",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS321.DAT"
+      ]
+    },
+    {
+      "offset": 54406800,
+      "zlib_size": 990,
+      "output_size": 2080,
+      "sha256": "8bf9602b1f75f11b3a1338e7c8dcf14b436fc8f3c7b1c3a2c6a3344d0d852f4c",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS323.DAT"
+      ]
+    },
+    {
+      "offset": 54407794,
+      "zlib_size": 819,
+      "output_size": 1578,
+      "sha256": "8ffdc9fd6e938332f051ffaa3e6b66c187efa460630b8b868ab5fe80eb018d70",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS324.DAT"
+      ]
+    },
+    {
+      "offset": 54408617,
+      "zlib_size": 775,
+      "output_size": 1518,
+      "sha256": "98562226730d344f491a394497862d2ddcc96ab85e26d01a3086214341174284",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS326.DAT"
+      ]
+    },
+    {
+      "offset": 54409396,
+      "zlib_size": 713,
+      "output_size": 1373,
+      "sha256": "28b41fab332932e72c3e284eea9676cf56215da4d32d202b9d85c89d21748a97",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS329.DAT"
+      ]
+    },
+    {
+      "offset": 54410113,
+      "zlib_size": 618,
+      "output_size": 1230,
+      "sha256": "16923f5752ef3dde8f57e8eec657884096235638cf556c2d7d288f977cacacd0",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS33.DAT"
+      ]
+    },
+    {
+      "offset": 54410735,
+      "zlib_size": 624,
+      "output_size": 1210,
+      "sha256": "9206f4e418fa7d5b052478a76ac4a334ad8f6792d7010cfc452e85c7bad9764d",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS330.DAT"
+      ]
+    },
+    {
+      "offset": 54411363,
+      "zlib_size": 736,
+      "output_size": 1400,
+      "sha256": "260ba9052fe9ad8cb193da6a7facd3f5cb62224fe6c3617b87d38136cf87c245",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS332.DAT"
+      ]
+    },
+    {
+      "offset": 54412103,
+      "zlib_size": 747,
+      "output_size": 1425,
+      "sha256": "6f8b601dc9a6f7b5885b9cddec0d861de1ceb2cc459e78f52a5babd5b5401808",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS334.DAT"
+      ]
+    },
+    {
+      "offset": 54412854,
+      "zlib_size": 986,
+      "output_size": 1971,
+      "sha256": "ea76e8ade25b6ce937ab179d6dd235b5f177fcbd24f63f3d675a81f19cbc0585",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS336.DAT"
+      ]
+    },
+    {
+      "offset": 54413844,
+      "zlib_size": 1515,
+      "output_size": 3225,
+      "sha256": "ef646d9845f91edd9f8c85bd3ac66c6a9d02275f94ed180400fc3e771bf91063",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS337.DAT"
+      ]
+    },
+    {
+      "offset": 54415363,
+      "zlib_size": 600,
+      "output_size": 1131,
+      "sha256": "97dd77ccab41f412bbff344a68862909992ba830ac3a02cc7e212443a95c7cdd",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS339.DAT"
+      ]
+    },
+    {
+      "offset": 54415967,
+      "zlib_size": 646,
+      "output_size": 1261,
+      "sha256": "b59a2e3e1265599b29711b0221bd176bf2a8ffb9526582e51a1e921b5c6b034c",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS34.DAT"
+      ]
+    },
+    {
+      "offset": 54416617,
+      "zlib_size": 480,
+      "output_size": 853,
+      "sha256": "f87f49a3e9051e987332d8c581ef0d81550240273fc98bfd9f845fa9dbd829b3",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS342.DAT"
+      ]
+    },
+    {
+      "offset": 54417101,
+      "zlib_size": 574,
+      "output_size": 1086,
+      "sha256": "cb729f4cc71815d64d9cdc2683a2f810d67b11c8ed28bdccc007027834a97732",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS344.DAT"
+      ]
+    },
+    {
+      "offset": 54417679,
+      "zlib_size": 645,
+      "output_size": 1231,
+      "sha256": "fb458bdfb57486a1edc8b3ceeeb0678e1026d440de1fd375075d16a9363c5c32",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS346.DAT"
+      ]
+    },
+    {
+      "offset": 54418328,
+      "zlib_size": 524,
+      "output_size": 914,
+      "sha256": "e184b930cb73d42809e82507fd5170cbb14b742f12b452978b98ef1088197e78",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS347.DAT"
+      ]
+    },
+    {
+      "offset": 54418856,
+      "zlib_size": 704,
+      "output_size": 1325,
+      "sha256": "05c84d85fe52158a8061dfba0f00c1475990c9183c985e319bed127f313326ea",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS349.DAT"
+      ]
+    },
+    {
+      "offset": 54419564,
+      "zlib_size": 902,
+      "output_size": 1822,
+      "sha256": "33c6c360c99252c63541d134eb581eadf5dbafa2dfece52a57ed49eba753395e",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS36.DAT"
+      ]
+    },
+    {
+      "offset": 54420470,
+      "zlib_size": 1336,
+      "output_size": 2834,
+      "sha256": "02568514aaeb02d6a13f01d07c384e163556829da0b77b5e0881f592d9584dda",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS37.DAT"
+      ]
+    },
+    {
+      "offset": 54421810,
+      "zlib_size": 546,
+      "output_size": 1034,
+      "sha256": "7a241fd20fcee6ef89f83aa269a551a8ab0ddb664460c923fab0b34728a2a56a",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS39.DAT"
+      ]
+    },
+    {
+      "offset": 54422360,
+      "zlib_size": 550,
+      "output_size": 1040,
+      "sha256": "d7b63cab378f484de5e5aac2fc83aac3de7fd8c8e5071f792efe846a1882223e",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS405.DAT"
+      ]
+    },
+    {
+      "offset": 54422914,
+      "zlib_size": 557,
+      "output_size": 1075,
+      "sha256": "12f011832eb4bec9e9d10423d4bc1d96f7a0a7285dda47b5622539502e020b70",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS408.DAT"
+      ]
+    },
+    {
+      "offset": 54423475,
+      "zlib_size": 594,
+      "output_size": 1179,
+      "sha256": "75de0e2b52be145069afdaf799f6e65e0b1e50baa389502db0b9d84bfe0abfa9",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS414.DAT"
+      ]
+    },
+    {
+      "offset": 54424073,
+      "zlib_size": 767,
+      "output_size": 1542,
+      "sha256": "abba4eb835bb022678c822c9c31b5a9496603f68ac938443febb0eecf0724198",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS416.DAT"
+      ]
+    },
+    {
+      "offset": 54424844,
+      "zlib_size": 721,
+      "output_size": 1482,
+      "sha256": "f6a4407078be4a0286830b0dd440adc5dead0adbeec2dc11677e43113be0e266",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS417.DAT"
+      ]
+    },
+    {
+      "offset": 54425569,
+      "zlib_size": 465,
+      "output_size": 846,
+      "sha256": "03174ce435077bce74b184f2629129be720ddbd20703a4bdfcde370e37e84d00",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS42.DAT"
+      ]
+    },
+    {
+      "offset": 54426038,
+      "zlib_size": 586,
+      "output_size": 1102,
+      "sha256": "019fce8893c9e5c944967f988ad2b93089e8b0cd0216bd6cf700977313bdd62b",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS421.DAT"
+      ]
+    },
+    {
+      "offset": 54426628,
+      "zlib_size": 796,
+      "output_size": 1644,
+      "sha256": "fd7dc52b5328416cb57b7fc8e35588df46fd50517507767cf51c62ba7ff5a4dc",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS423.DAT"
+      ]
+    },
+    {
+      "offset": 54427428,
+      "zlib_size": 643,
+      "output_size": 1262,
+      "sha256": "3f3fc6112c0048bac703a950fa59ed119e8f28a4df70474a74df59eb15161887",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS424.DAT"
+      ]
+    },
+    {
+      "offset": 54428075,
+      "zlib_size": 579,
+      "output_size": 1141,
+      "sha256": "8e3a2f796cadc049a72a3f218b73f83d284150b396524aa3f7395a1b2bd1c399",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS426.DAT"
+      ]
+    },
+    {
+      "offset": 54428658,
+      "zlib_size": 589,
+      "output_size": 1165,
+      "sha256": "c77b17629784ecdcbb478da936854e48abedaecd9b3df2e1231967dcb65cbc2a",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS429.DAT"
+      ]
+    },
+    {
+      "offset": 54429251,
+      "zlib_size": 508,
+      "output_size": 1002,
+      "sha256": "bd60735eafd5ab21e223e5c7fb99a09506ea6a0821f1f5ba4514195bfa09e9ef",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS430.DAT"
+      ]
+    },
+    {
+      "offset": 54429763,
+      "zlib_size": 539,
+      "output_size": 1035,
+      "sha256": "a4a9a28c99833aed172c6e6b6021709cc3088e0996805dbda87420707f94f652",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS432.DAT"
+      ]
+    },
+    {
+      "offset": 54430306,
+      "zlib_size": 632,
+      "output_size": 1237,
+      "sha256": "eaf05518d7853d29eec852fd833b8e533d7cd7782ef1f00703f4ee08a681b823",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS434.DAT"
+      ]
+    },
+    {
+      "offset": 54430942,
+      "zlib_size": 844,
+      "output_size": 1766,
+      "sha256": "63aecf62587cc6f62601618125ed9a8b940b9dac13acb81196bbe6bdf9b1baea",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS436.DAT"
+      ]
+    },
+    {
+      "offset": 54431790,
+      "zlib_size": 1263,
+      "output_size": 2755,
+      "sha256": "6dbd0d1e994973e28d326676d31fb855878a21f566b6a3dc24b6f7941857d9c9",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS437.DAT"
+      ]
+    },
+    {
+      "offset": 54433057,
+      "zlib_size": 546,
+      "output_size": 1041,
+      "sha256": "57c7c8c1e00efe7a602b2a1e973a5e0d54cb81cc6c5f06b74bbfe461e424cbbe",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS439.DAT"
+      ]
+    },
+    {
+      "offset": 54433607,
+      "zlib_size": 433,
+      "output_size": 850,
+      "sha256": "b266b2ab1325b9ac880a0abf1f5b15c7e8345207c1f17e87149d19218bc4b9ef",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS44.DAT"
+      ]
+    },
+    {
+      "offset": 54434044,
+      "zlib_size": 451,
+      "output_size": 842,
+      "sha256": "5588728c4df26703b003a6b308713103f908a8fdf0f71d874398062276ae6616",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS442.DAT"
+      ]
+    },
+    {
+      "offset": 54434499,
+      "zlib_size": 442,
+      "output_size": 852,
+      "sha256": "a7fcc0772eab4c4bc5826ca1b1476e0df753fb03fb1c8707890102ff2f8ca92f",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS444.DAT"
+      ]
+    },
+    {
+      "offset": 54434945,
+      "zlib_size": 481,
+      "output_size": 943,
+      "sha256": "74ac42dd75dc76788e603ef5e80bc4963829136dd723d49ed0988a2822cb9e3b",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS446.DAT"
+      ]
+    },
+    {
+      "offset": 54435430,
+      "zlib_size": 463,
+      "output_size": 842,
+      "sha256": "5034332d6af3ffc663f188960cd932cdec393b8b7abd865ec81f3b65dcc91d8c",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS447.DAT"
+      ]
+    },
+    {
+      "offset": 54435897,
+      "zlib_size": 515,
+      "output_size": 1009,
+      "sha256": "56ef1f6c3cc4eecc745f9ac7922af6e9c4c3c5bf976cbb69c26b5d82ea501dbf",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS449.DAT"
+      ]
+    },
+    {
+      "offset": 54436416,
+      "zlib_size": 528,
+      "output_size": 1001,
+      "sha256": "b721cad5b1beb4daf85583a0b0bd316de12444ee889e5250412cdc38d45fb626",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS46.DAT"
+      ]
+    },
+    {
+      "offset": 54436948,
+      "zlib_size": 477,
+      "output_size": 854,
+      "sha256": "fa78682acf507c66f7a4eef42c0bec9f6156324360df71e91462931d3faaae46",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS47.DAT"
+      ]
+    },
+    {
+      "offset": 54437429,
+      "zlib_size": 543,
+      "output_size": 1046,
+      "sha256": "a4c051783d7b0512cc70bf8999a4a335d29e9d185c18748184c28c8989cfdd33",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MISS49.DAT"
+      ]
+    },
+    {
+      "offset": 54437976,
+      "zlib_size": 44554,
+      "output_size": 91454,
+      "sha256": "adc3431c9348055946aa76b119b39dce42f5e4a3fe0d773bda2476f63cec19c3",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MMULTI.DAT"
+      ]
+    },
+    {
+      "offset": 54482534,
+      "zlib_size": 32873,
+      "output_size": 72756,
+      "sha256": "6791fec5d600965c7e222dd14b6bfa576a3a32e2b922e975afdeaa69f4865cb1",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MMULTOUT.DAT"
+      ]
+    },
+    {
+      "offset": 54515411,
+      "zlib_size": 28533,
+      "output_size": 28707,
+      "sha256": "0afce017fb86d45cc48f053a15842b29b16f4029dcde093f90a9ad2df7d19c9b",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MSPR-0.DAT"
+      ]
+    },
+    {
+      "offset": 54543948,
+      "zlib_size": 3243,
+      "output_size": 3273,
+      "sha256": "54ce6802d0e64a87bf975e8ea0a7560df4a9242835d7424b82ef3563f4f376a8",
+      "prior_manifest_paths": [
+        "SYNDICAT/DATA/MSPR-0.TAB"
+      ]
+    }
+  ]
+}

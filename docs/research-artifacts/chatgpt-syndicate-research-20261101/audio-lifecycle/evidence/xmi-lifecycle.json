@@ -1,0 +1,152 @@
+{
+  "files": [
+    {
+      "name": "INTRO.XMI",
+      "sha256": "570bb41f9cbfceabed47fdb8828fb8bdaf512a23445946624a2dced171672940",
+      "size": 12170,
+      "streams": [
+        {
+          "file_payload_offset": 98,
+          "size": 12072,
+          "sha256": "02e04890269404b8162ce12d7b7049f02e5ad9b99058ec40eb785a04b91bc686",
+          "event_records": 3915,
+          "delay_records": 1184,
+          "delay_ticks_linear_pass": 13714,
+          "eot_offset": 12068,
+          "parsed_bytes": 12071,
+          "tail_size": 1,
+          "tail_all_zero": true,
+          "loops": [
+            {
+              "begin_offset": 10596,
+              "body_offset": 10599,
+              "end_offset": 12065,
+              "count": 0,
+              "end_value": 127,
+              "positive_delay_records": 100,
+              "delay_ticks_linear_body": 1372,
+              "unbounded_by_zero_count": true
+            }
+          ],
+          "lexical_issues": [],
+          "scope": "Bounded linear parse and lexical repeat census, not runtime reachability, timing or arbitrary branch execution."
+        }
+      ]
+    },
+    {
+      "name": "SYNGAME.XMI",
+      "sha256": "21088107f3d65af9a10a733fd21b5b9640144e4f53a4eb6908d4e95207be0d9c",
+      "size": 14566,
+      "streams": [
+        {
+          "file_payload_offset": 78,
+          "size": 1724,
+          "sha256": "931666af9652e0a169001bd440788ed333b702b0868f55d07fd74208e2dbd07f",
+          "event_records": 647,
+          "delay_records": 301,
+          "delay_ticks_linear_pass": 13829,
+          "eot_offset": 1721,
+          "parsed_bytes": 1724,
+          "tail_size": 0,
+          "tail_all_zero": true,
+          "loops": [
+            {
+              "begin_offset": 90,
+              "body_offset": 93,
+              "end_offset": 1717,
+              "count": 0,
+              "end_value": 127,
+              "positive_delay_records": 300,
+              "delay_ticks_linear_body": 13824,
+              "unbounded_by_zero_count": true
+            }
+          ],
+          "lexical_issues": [],
+          "scope": "Bounded linear parse and lexical repeat census, not runtime reachability, timing or arbitrary branch execution."
+        },
+        {
+          "file_payload_offset": 1844,
+          "size": 1252,
+          "sha256": "82f26f6701414321324caf2debc9fa5e6c1e55aaec83157af29963746fa51f51",
+          "event_records": 445,
+          "delay_records": 172,
+          "delay_ticks_linear_pass": 4406,
+          "eot_offset": 1249,
+          "parsed_bytes": 1252,
+          "tail_size": 0,
+          "tail_all_zero": true,
+          "loops": [
+            {
+              "begin_offset": 97,
+              "body_offset": 100,
+              "end_offset": 1246,
+              "count": 0,
+              "end_value": 127,
+              "positive_delay_records": 172,
+              "delay_ticks_linear_body": 4406,
+              "unbounded_by_zero_count": true
+            }
+          ],
+          "lexical_issues": [],
+          "scope": "Bounded linear parse and lexical repeat census, not runtime reachability, timing or arbitrary branch execution."
+        },
+        {
+          "file_payload_offset": 3154,
+          "size": 10386,
+          "sha256": "b051b35dd016d459f3fec50fdc5fadad7fef3cd22f3ffa208b1f47d97c4c4f71",
+          "event_records": 3339,
+          "delay_records": 1000,
+          "delay_ticks_linear_pass": 14400,
+          "eot_offset": 10382,
+          "parsed_bytes": 10385,
+          "tail_size": 1,
+          "tail_all_zero": true,
+          "loops": [
+            {
+              "begin_offset": 1046,
+              "body_offset": 1049,
+              "end_offset": 10379,
+              "count": 0,
+              "end_value": 127,
+              "positive_delay_records": 900,
+              "delay_ticks_linear_body": 12960,
+              "unbounded_by_zero_count": true
+            }
+          ],
+          "lexical_issues": [],
+          "scope": "Bounded linear parse and lexical repeat census, not runtime reachability, timing or arbitrary branch execution."
+        },
+        {
+          "file_payload_offset": 13578,
+          "size": 222,
+          "sha256": "2beceab633d3ad7e007144b84da685e0ac430f9f32786b6cc125747054bdba17",
+          "event_records": 64,
+          "delay_records": 12,
+          "delay_ticks_linear_pass": 864,
+          "eot_offset": 218,
+          "parsed_bytes": 221,
+          "tail_size": 1,
+          "tail_all_zero": true,
+          "loops": [],
+          "lexical_issues": [],
+          "scope": "Bounded linear parse and lexical repeat census, not runtime reachability, timing or arbitrary branch execution."
+        },
+        {
+          "file_payload_offset": 13844,
+          "size": 722,
+          "sha256": "a565561e32cb7fd04640e8067ede7e37522896a13f77c3334158668e1cea56f5",
+          "event_records": 223,
+          "delay_records": 54,
+          "delay_ticks_linear_pass": 696,
+          "eot_offset": 719,
+          "parsed_bytes": 722,
+          "tail_size": 0,
+          "tail_all_zero": true,
+          "loops": [],
+          "lexical_issues": [],
+          "scope": "Bounded linear parse and lexical repeat census, not runtime reachability, timing or arbitrary branch execution."
+        }
+      ]
+    }
+  ]
+}

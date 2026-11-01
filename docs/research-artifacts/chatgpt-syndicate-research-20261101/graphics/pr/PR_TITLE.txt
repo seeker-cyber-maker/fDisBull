@@ -1,0 +1,1 @@
+Document graphics caller contracts and diagnostic recovery friction
