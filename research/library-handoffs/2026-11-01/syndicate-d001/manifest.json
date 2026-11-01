@@ -1,0 +1,66 @@
+{
+  "format": "fdisbull-library-archive-intake-1",
+  "archive": "fDisBull_Syndicate_DELTA_D001.zip",
+  "bytes": 19490,
+  "sha256": "fe6a782f1d060f035a93c0738b06ea3449c43fbacab7addb86a23336629a84e5",
+  "source_url": "https://chatgpt.com/space/file/libfile_3383059a86e4819198b798ee601ad8c9",
+  "outer_members": 5,
+  "crc_passed": true,
+  "unsafe_path_or_symlink_count": 0,
+  "credential_pattern_hits": 0,
+  "private_root_member_count": 0,
+  "privacy_scope": "Bounded literal credential/path scan; private raw archives remain outside Git and releases. Selected source/report copies separately scanned.",
+  "members": [
+    {
+      "path": "DELTA.json",
+      "bytes": 856,
+      "sha256": "47049599e51f004370831d4df852064166f1f5a5c35ad43417cd74596cad75c6",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "RESULT_MANIFEST.json",
+      "bytes": 62808,
+      "sha256": "81629ea30ba8bede5dbeaa9d7f6bfad68f877a5d5bf58548bdd107b9f27a752b",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 402,
+      "sha256": "9e8ebefbd628e6f16c896d08608aeb79b8c6ef7092f82798c77d08c67fb810aa",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null
+    },
+    {
+      "path": "payload/audit/release-download-attempt-2026-11-01.json",
+      "bytes": 4410,
+      "sha256": "a40fdcf7e6e67e201e70e289b9382b4f03aafdf257dc4e5e91b9d538d6b55924",
+      "decision": "imported_exact",
+      "import_path": "original/audit/release-download-attempt-2026-11-01.json",
+      "import_sha256": "a40fdcf7e6e67e201e70e289b9382b4f03aafdf257dc4e5e91b9d538d6b55924"
+    },
+    {
+      "path": "payload/runtime-v029/DOWNLOAD_STATUS_2026-11-01.md",
+      "bytes": 2781,
+      "sha256": "f400e4c870d1408d4c556eaa7bce318447535b355543ec9ffbdbdcbb858f8e58",
+      "decision": "imported_exact",
+      "import_path": "original/runtime-v029/DOWNLOAD_STATUS_2026-11-01.md",
+      "import_sha256": "f400e4c870d1408d4c556eaa7bce318447535b355543ec9ffbdbdcbb858f8e58"
+    }
+  ],
+  "checksums": {
+    "SHA256SUMS": {
+      "entries": 4,
+      "all_match": true
+    }
+  },
+  "raw_gitlab_upload": {
+    "id": 1460793957,
+    "url": "/uploads/2dc7614437f09a30672608364d91f1fc/fDisBull_Syndicate_DELTA_D001.zip"
+  },
+  "raw_upload_readback": "byte-identical readback verified by publishing owner"
+}

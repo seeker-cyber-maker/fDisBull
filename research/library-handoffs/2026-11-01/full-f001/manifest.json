@@ -1,0 +1,4060 @@
+{
+  "format": "fdisbull-library-source-selection-1",
+  "source_url": "https://chatgpt.com/space/file/libfile_5c57f042dff081918f271805b22db481",
+  "archive_bytes": 2656225,
+  "archive_sha256": "53c85cb2ac29f7986cbee35c83ed059d34bebc92c8258756fb50fe49df63b8c9",
+  "archive_members": 325,
+  "extracted_bytes": 6716607,
+  "source_manifest_sha256": "df2b65423d9729b440d6190e4a2b171aa4b1abb131b3a61f874ed24a07cb0607",
+  "source_checksum_entries": 324,
+  "source_payload_manifest_entries": 323,
+  "selected_count": 19,
+  "files": [
+    {
+      "path": "00_START_HERE.md",
+      "bytes": 5345,
+      "sha256": "a48393f382bdaa984ce3d1577112b21546dc285c1b1859007346375282165353",
+      "decision": "imported_exact",
+      "import_path": "original/00_START_HERE.md",
+      "import_sha256": "a48393f382bdaa984ce3d1577112b21546dc285c1b1859007346375282165353",
+      "existing_git_locations": []
+    },
+    {
+      "path": "01_GITLAB_STATUS.md",
+      "bytes": 3122,
+      "sha256": "b4d5785a03904054fe4def515d3f046a69ae3f31bee9a157f5743892a1e2820b",
+      "decision": "imported_exact",
+      "import_path": "original/01_GITLAB_STATUS.md",
+      "import_sha256": "b4d5785a03904054fe4def515d3f046a69ae3f31bee9a157f5743892a1e2820b",
+      "existing_git_locations": []
+    },
+    {
+      "path": "02_CONTINUE_HERE.md",
+      "bytes": 4011,
+      "sha256": "7dcdf92f5ec6faa290fd394c125efcdc9d02c0bdc7c5b432c65146f814042250",
+      "decision": "imported_exact",
+      "import_path": "original/02_CONTINUE_HERE.md",
+      "import_sha256": "7dcdf92f5ec6faa290fd394c125efcdc9d02c0bdc7c5b432c65146f814042250",
+      "existing_git_locations": []
+    },
+    {
+      "path": "03_INCREMENTAL_HANDOFFS.md",
+      "bytes": 1807,
+      "sha256": "b00b9f10b45d60afb03f60f7271bfb5329a63c9bd94805e1fc188b8723b85641",
+      "decision": "imported_exact",
+      "import_path": "original/03_INCREMENTAL_HANDOFFS.md",
+      "import_sha256": "b00b9f10b45d60afb03f60f7271bfb5329a63c9bd94805e1fc188b8723b85641",
+      "existing_git_locations": []
+    },
+    {
+      "path": "04_MISSING_EXTERNAL_INPUTS.md",
+      "bytes": 1750,
+      "sha256": "120e0df6152bf7ebd20db44a32cb83bbf07a6efff4d1e24603645a9d69374ab6",
+      "decision": "imported_exact",
+      "import_path": "original/04_MISSING_EXTERNAL_INPUTS.md",
+      "import_sha256": "120e0df6152bf7ebd20db44a32cb83bbf07a6efff4d1e24603645a9d69374ab6",
+      "existing_git_locations": []
+    },
+    {
+      "path": "HANDOFF.json",
+      "bytes": 912,
+      "sha256": "7a0a844cbc84cf8ce72c1d6b8b1c34e92544503df0fbe20ba5be7ee3d53af188",
+      "decision": "imported_exact",
+      "import_path": "original/HANDOFF.json",
+      "import_sha256": "7a0a844cbc84cf8ce72c1d6b8b1c34e92544503df0fbe20ba5be7ee3d53af188",
+      "existing_git_locations": []
+    },
+    {
+      "path": "MANIFEST.json",
+      "bytes": 62322,
+      "sha256": "df2b65423d9729b440d6190e4a2b171aa4b1abb131b3a61f874ed24a07cb0607",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 40033,
+      "sha256": "a84e5ebc52ea7a6e4be6ee4a5794026ef8ac233eda9f1ccf9060ab1dd6b136e5",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "audit/browser-download-attempt.json",
+      "bytes": 1550,
+      "sha256": "62c1d65d95255a8b6d344b82070fddea21891631b8dac8f31001750a691cdd50",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "audit/gitlab-sync.json",
+      "bytes": 14554,
+      "sha256": "5e857057317206bca33fdf83a8332dc0238c82f28a91315a664fea60778b55cf",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "audit/main-doc-path-audit.json",
+      "bytes": 897,
+      "sha256": "db25369c58909b386be2566726daeb5d1aed65cdf47cae00d496be3dfc9d897f",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "history/archives/Syndicate_ASCII_Precision_2026-10-31.zip",
+      "bytes": 214855,
+      "sha256": "826ada3a4b0e6b90811f4d48c104e10604f2b9f19158a35b7f08d8f414125240",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "history/archives/Syndicate_Assets_Diagnostic_Recovery_2026-10-30.zip",
+      "bytes": 146106,
+      "sha256": "0614ece5ba4d3a8c5cee880dd5bde98644e34adbd7a824abef95edd0f0a88cfe",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "history/archives/Syndicate_Audio_Lifecycle_2026-10-31.zip",
+      "bytes": 22467,
+      "sha256": "f509ad43e50aca1f967be32167e32924295d9608a25f2c837fdf8523fd1db360",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "history/archives/Syndicate_Audio_Progress_2026-10-31.zip",
+      "bytes": 30174,
+      "sha256": "17c6202ccb2de454a6cd892ea1247634da8c2f5e6e135685f7c7aa5d74148c31",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "history/archives/Syndicate_Graphics_Contracts_2026-10-31.zip",
+      "bytes": 199579,
+      "sha256": "6777a92dcf9a1fb26e0f72bd77248db2d17ded987342f0bf2094a7af79247374",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "history/archives/Syndicate_LE_Dispatch_Continuation_2026-10-30.zip",
+      "bytes": 25980,
+      "sha256": "df8e9fcd77505fab8ceb30ebca71b31e4d63f99e20865421e40eb4ef14bd5c01",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "history/archives/Syndicate_Z_Scene_2026-10-31.zip",
+      "bytes": 183377,
+      "sha256": "6c8805cafcc4073a14950122a60b7da92df3b23a20088ae868826f0bfbaa6e3b",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "history/archives/fDisBull_Pending_PR_Diagnostic_Graphics_2026-10-31.zip",
+      "bytes": 31271,
+      "sha256": "67ccb082c00f6eeb315c511015da88aa7563c1ea53538b6250ab6bdf40bbea59",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "history/archives/fDisBull_Pending_PR_Diagnostic_Graphics_with_DOSBox_Update_2026-10-31.zip",
+      "bytes": 43494,
+      "sha256": "80705e4d948946439ed3d1cb818dcf063646ff548af9f7de5d09a436ccba5c94",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "history/archives/fDisBull_Pending_PR_Syndicate_ASCII_2026-10-31.zip",
+      "bytes": 150676,
+      "sha256": "724db515c81d3a8eb5887b7b4043985f2887b373cc0f7f342378b29a84a28aa0",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "history/archives/fDisBull_Pending_PR_Syndicate_Z_Scene_2026-10-31.zip",
+      "bytes": 119549,
+      "sha256": "cd7b4ba622800dff38efa1982d9c76d193e60a1e28b834b6a851fc467422beda",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "history/archives/fDisBull_Pending_PR_with_Audio_Lifecycle_2026-10-31.zip",
+      "bytes": 158512,
+      "sha256": "23ec49063329993624614ca7fa0b2abe6907146125b64420764256efacb44422",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "history/archives/fDisBull_Pending_PR_with_Audio_Progress_2026-10-31.zip",
+      "bytes": 102698,
+      "sha256": "fcfce71b0cdda9d906030818e79bd41b91c6d2c8a122f46b28c128f0c9ff6324",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/AUDIO_LIFECYCLE_ADDENDUM.md",
+      "bytes": 17219,
+      "sha256": "9f04a1ea073ce991b1d1382bf361b3a8009d28b6329e0cfb5edd3f8cc595e4d1",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/AUDIO_PROGRESS_ADDENDUM.md",
+      "bytes": 5341,
+      "sha256": "8a3a1ee9c7cbb4cd646233ca538bbfe49196aa1550bd5d1181e080ef5a44587f",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-progress/LOCAL_PR_ADDENDUM.md"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/CHECKSUMS.before-audio-update.sha256",
+      "bytes": 1447,
+      "sha256": "596b9b653468fcdced3b459fa6f61933a971a2991a8047765ca288b1c178f87f",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/CHECKSUMS.before-lifecycle-update.sha256",
+      "bytes": 2663,
+      "sha256": "845e3ff8193143262d7e2358243c992f100b1524784eee968d6f9423a14c8588",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/CHECKSUMS.sha256",
+      "bytes": 4667,
+      "sha256": "61932c52f93629607b4afaee469796e7a5716a9e7a3e2e57a8e66b347032faa0",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/DOSBOX_DRIVER_LOAD_ADDENDUM.md",
+      "bytes": 7987,
+      "sha256": "e6f5ffc140c37376767cc8a6cd685be6939c5c5733d10480c50f9b91ca1380d3",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/LOCAL_STATUS.before-audio-update.json",
+      "bytes": 2122,
+      "sha256": "d9ba6cbff025c2092f00995df548c23578f7f1d66d6ec4b2c45b31d6e59c2206",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/LOCAL_STATUS.before-lifecycle-update.json",
+      "bytes": 3223,
+      "sha256": "bc147d09d05f4ea3aef226490abac37d2c5ca71fe0a270a3df453f617f05201b",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/LOCAL_STATUS.json",
+      "bytes": 1334,
+      "sha256": "6aea7226e567853a72968eaef6593831ea2bd99ad97024b78247739647bb39fd",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/PR.before-audio-update.md",
+      "bytes": 6101,
+      "sha256": "0ea32f9021b37ac578b874ceabb6abfa087c6aae3f1094ac611fe277791ccd98",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/PR.before-driver-update.md",
+      "bytes": 5212,
+      "sha256": "d13066d6c5b31b4cfaf47e043bdc767a2f7fecdf061d39c1567645bb9eeca964",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/PR.before-lifecycle-update.md",
+      "bytes": 7154,
+      "sha256": "c6b7a3cf235235682851a9d32ec78bfba90ba58970f84ae7725adeeceb80b9aa",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/PR.md",
+      "bytes": 11111,
+      "sha256": "14dfe703d4965397adcc1c52092082b9d428c32942f1b13184766370d88f9d36",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/PUBLISH_PR.before-audio-update.sh",
+      "bytes": 182,
+      "sha256": "7142ed437c1f3d3858d3e5e4ed5f7a003a1ae234ba13d298ee1a09db4b9b7e53",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/PUBLISH_PR.before-driver-update.sh",
+      "bytes": 1457,
+      "sha256": "a7f2353ac334ee2031bd1730d4a62df200df669dc83f108ba1e83ba439703f9d",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/PUBLISH_PR.sh"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/PUBLISH_PR.before-lifecycle-update.sh",
+      "bytes": 216,
+      "sha256": "d8241db052f9b7c91cbedbcd27025f6a2270de064268aa65fa762d44d3f73e93",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/PUBLISH_PR.sh",
+      "bytes": 167,
+      "sha256": "8af42559a14533ab6d4b4b3a3c1467f7fca8aa24047a6d85baad142c9e38bf64",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/README.before-audio-update.md",
+      "bytes": 2619,
+      "sha256": "0cd2c936625867b72c88a24f01d2bd3e3f6b26284ada0713b08068a129fd87ca",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/README.before-lifecycle-update.md",
+      "bytes": 1897,
+      "sha256": "a5440870a79bc9df74957277041edb9b96ff524b486d38890f5956d61c548f63",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/README.md",
+      "bytes": 914,
+      "sha256": "05c035ec4a6f83aac9d66d4f6445f8b0b91c233d68b722e2597e8535b86aea92",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/audio-lifecycle-addendum.patch",
+      "bytes": 54383,
+      "sha256": "80ba1a8540472ecfce6beb93455fb9583a6c8928c81e1db3bf0c6f6119bb27f8",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-patches/audio-lifecycle-addendum.patch"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/audio-progress-addendum.patch",
+      "bytes": 74015,
+      "sha256": "7fec994514f6a6c32a9cbc16b21821ec02838224ddd146a5c939715cc73004df",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-patches/audio-progress-addendum.patch"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/diagnostic-graphics-friction.patch",
+      "bytes": 25578,
+      "sha256": "e02f7579abf2e88ce09662e6e3df8f993b3ab5561cd3258cdb84c6d160a6f7c6",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/diagnostic-graphics-friction.patch"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/evidence/audio-delivery-checks.json",
+      "bytes": 1122,
+      "sha256": "bf36bfbdedcc5d813cefb6c2a96abd5d7a53811109f4f61d7a7fb8565b5c6490",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-progress/evidence/delivery-checks.json"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/evidence/audio-progress-summary.json",
+      "bytes": 53991,
+      "sha256": "4b856f1009638864516a2b0c7258f592884674e6ff70aba8f3e9573d415527dd",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-progress/evidence/audio-progress-summary.json"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/evidence/dosbox-driver-loads.json",
+      "bytes": 25765,
+      "sha256": "9f4dd18b5668c1bc71d30c21383716c35debe755c14d704705d38244d51ebae3",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/evidence/lifecycle-delivery-checks.json",
+      "bytes": 168,
+      "sha256": "217fa93cc94563caa67d0e41de0ef01722c1b970243dbf6197a2d5dc90e53ef5",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/evidence/delivery-checks.json"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/evidence/pr-readiness.json",
+      "bytes": 729,
+      "sha256": "ab3ad69a98be794a4166e2d5d9fe1c5796d104644ce8156507cacc3da2e0b840",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/evidence/pr-readiness.json"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/pr/PR_BODY.md",
+      "bytes": 4490,
+      "sha256": "c9eee3ee5a8015f541c1b96263b7656f5ccafaf801ed21581aa0180d8442c538",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/pr/PR_BODY.md"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/pr/PR_BODY.with-addenda.md",
+      "bytes": 17830,
+      "sha256": "ea969408107644668fc640356a589e5ec4d2019abe72d7ffa07fd21436e5b287",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/pr/PR_TITLE.txt",
+      "bytes": 68,
+      "sha256": "eedeb28de1e46ed29151960b2f79789fc452e587d9855b803201b49796a27720",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/pr/PR_TITLE.txt"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/pr/docs/AUDIO_LIFECYCLE_2026-10-31.md",
+      "bytes": 17195,
+      "sha256": "a56418a92688c78831e446fdf4ab3ec76f1a083f14251a54b6a6b31cc746a2c9",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/pr/docs/AUDIO_PROGRESS_FRICTION_2026-10-31.md",
+      "bytes": 17846,
+      "sha256": "9e5e19a33510e4f48f236336bfae41cd1835fbfd4a2885574938627b96368c7f",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-audio-draft/pr/docs/DIAGNOSTIC_GRAPHICS_FRICTION_2026-10-31.md",
+      "bytes": 16056,
+      "sha256": "ad3ed5afb62ff881cbcc07b51e93712220b79abf5dc7b6227c9a0e86189ca3b5",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/pr/docs/DIAGNOSTIC_GRAPHICS_FRICTION_2026-10-31.md"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/pr/docs/evidence/audio-lifecycle-2026-10-31/lifecycle-summary.json",
+      "bytes": 11983,
+      "sha256": "1cd6f0377159db0d9ce6b6581f0af965018674e3a6a90721edd028ad43029b0d",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/evidence/lifecycle-summary.json"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/pr/docs/evidence/audio-lifecycle-2026-10-31/local-tool-checks.json",
+      "bytes": 531,
+      "sha256": "cf005c39f100ce15ee85f5150596bbbfd71d324f5c5056e7782a3bdc44c2f8ef",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/evidence/local-tool-checks.json"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/pr/docs/evidence/audio-lifecycle-2026-10-31/private-receipt-locators.json",
+      "bytes": 2326,
+      "sha256": "365f00803df8749cc621736d3b2ab1aff4994ffd9b53d927478338b5f34fd5ac",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/evidence/private-receipt-locators.json"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/pr/docs/evidence/audio-lifecycle-2026-10-31/status-projection-model.json",
+      "bytes": 706,
+      "sha256": "30f9f1ca889f60be43ed1728badcf83015759ca22c0f0f384172666b3c6d10d1",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/evidence/status-projection-model.json"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/pr/docs/evidence/audio-lifecycle-2026-10-31/tests/test_xmi_lifecycle.py",
+      "bytes": 5195,
+      "sha256": "e85b763ac69f81f99fdef2b95495611d38b97ca80d8cacccded81795bdd41a2b",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/tests/test_xmi_lifecycle.py"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/pr/docs/evidence/audio-lifecycle-2026-10-31/tools/check_status_projection.py",
+      "bytes": 2343,
+      "sha256": "20d29153892f2de39b7719c38e32c355cd194e0a4a31634a8d05357a020278ab",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/tools/check_status_projection.py"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/pr/docs/evidence/audio-lifecycle-2026-10-31/tools/xmi_lifecycle.py",
+      "bytes": 5034,
+      "sha256": "11b80907531aefc492d9ceb0dcd4adeb9a3128897f615ee29d6e288eeb3a6ebe",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/tools/xmi_lifecycle.py"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/pr/docs/evidence/audio-lifecycle-2026-10-31/xmi-lifecycle.json",
+      "bytes": 5251,
+      "sha256": "631a1ef0f8b0f634fd45b6a41acf4dbf72d923e234c0759415698c8b30153f23",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/evidence/xmi-lifecycle.json"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/pr/docs/evidence/audio-progress-2026-10-31/summary.json",
+      "bytes": 53991,
+      "sha256": "4b856f1009638864516a2b0c7258f592884674e6ff70aba8f3e9573d415527dd",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-progress/evidence/audio-progress-summary.json"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/pr/docs/evidence/diagnostic-graphics-2026-10-31/check_contract_models.py",
+      "bytes": 5473,
+      "sha256": "c7e25636f52d2c4fc07d57d32c4aa73dc6f3457702b5d19ce818fee974e625bd",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/tools/check_contract_models.py"
+        },
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/pr/docs/evidence/diagnostic-graphics-2026-10-31/check_contract_models.py"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-audio-draft/pr/docs/evidence/diagnostic-graphics-2026-10-31/model-checks.json",
+      "bytes": 2019,
+      "sha256": "4b66c025dc3b2dcea00f08e8423a990ec34a2c703ee946c234b0ae7b5cdca262",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/evidence/public-model-checks.json"
+        },
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/pr/docs/evidence/diagnostic-graphics-2026-10-31/model-checks.json"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-records/GITLAB_PUBLICATION_RECEIPT.json",
+      "bytes": 1717,
+      "sha256": "7ba23f752085d8e300a0d5f8bbfdfaeb6109c2e843459a25aea8e143433e47e6",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-records/HISTORICAL_DRAFTS/fdisbull-diagnostic-graphics-20261031/PR.md",
+      "bytes": 6101,
+      "sha256": "0ea32f9021b37ac578b874ceabb6abfa087c6aae3f1094ac611fe277791ccd98",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-records/HISTORICAL_DRAFTS/fdisbull-diagnostic-graphics-20261031-audio/PR.md",
+      "bytes": 7154,
+      "sha256": "c6b7a3cf235235682851a9d32ec78bfba90ba58970f84ae7725adeeceb80b9aa",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-records/HISTORICAL_DRAFTS/fdisbull-diagnostic-graphics-20261031-lifecycle/PR.md",
+      "bytes": 11111,
+      "sha256": "14dfe703d4965397adcc1c52092082b9d428c32942f1b13184766370d88f9d36",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-records/HISTORICAL_DRAFTS/fdisbull-syndicate-ascii-20261031/PR.md",
+      "bytes": 3459,
+      "sha256": "076ef0dc2417b97fdf0334ecc7102b3913f4f20939a28e80e8908dee69cd4cb0",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-records/HISTORICAL_DRAFTS/fdisbull-syndicate-z-scene-20261031/PR.md",
+      "bytes": 5742,
+      "sha256": "1f821df2c4badacb045d1a9cfc6db91b7d29ff23f29553e57a15caf4d4769115",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-records/fDisBull_Diagnostic_Graphics_Friction.patch",
+      "bytes": 25578,
+      "sha256": "e02f7579abf2e88ce09662e6e3df8f993b3ab5561cd3258cdb84c6d160a6f7c6",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/diagnostic-graphics-friction.patch"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/LOCAL_STATUS.json",
+      "bytes": 476,
+      "sha256": "9ffe4cd324cc0817013e5d359209d4aface108f53c879f2d9a76751eaa4a4fb9",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-scene-draft/PR.md",
+      "bytes": 3459,
+      "sha256": "076ef0dc2417b97fdf0334ecc7102b3913f4f20939a28e80e8908dee69cd4cb0",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-scene-draft/PR.previous-spatial.md",
+      "bytes": 5742,
+      "sha256": "1f821df2c4badacb045d1a9cfc6db91b7d29ff23f29553e57a15caf4d4769115",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-scene-draft/SHA256SUMS",
+      "bytes": 3110,
+      "sha256": "adede9ef10f1334adf7f828c707fcd786dcf45046cf8b97d2ed57459834e8a3a",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-scene-draft/baseline-spatial-z-scene.patch",
+      "bytes": 103729,
+      "sha256": "8229da63735c852d72fa980ab03487fe1de13f3ff1acef029085a3c93e97473c",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/docs/SYNDICATE_SPATIAL_Z_SCENE_2026-10-31.md",
+      "bytes": 19624,
+      "sha256": "02756851d5657d647626f84b45f7df038bda67541cd2e52a7fadffdf9bb08245",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "docs/SYNDICATE_SPATIAL_Z_SCENE_2026-10-31.md"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/ASCII_PRECISION_AND_ROUTING.md",
+      "bytes": 9462,
+      "sha256": "47619f49f1c8785e294ffacaa16a70ad2eb8b11247c4812fc36bd090e3041098",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/ASCII_PRECISION_AND_ROUTING.md"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/README.md",
+      "bytes": 2821,
+      "sha256": "8916ec5170904d0b560a761e31e4f6286975a955b14f610f6e5914e628fb8e76",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/README.md"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/evidence/ascii/gitlab-status.json",
+      "bytes": 2059,
+      "sha256": "2eeff0d989a65777f03b5b01082d90bcb88a1f3161abde895a65701a3c2a0e85",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/ascii/gitlab-status.json"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/evidence/ascii/tests.txt",
+      "bytes": 99,
+      "sha256": "96240512bacfe53de84a67b26b8fdfb8eaf882f3dd8f24d31e6333e179d02c5e",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/ascii/tests.txt"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/evidence/ascii/verification.json",
+      "bytes": 2719,
+      "sha256": "119cfdfd9268baf74d6c26809fe9b8f307c604cd873f173b4991e927ffb8ab4a",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/ascii/verification.json"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/evidence/cleanup.json",
+      "bytes": 487,
+      "sha256": "d87c3c55cfcba96a2e421af1b4274ad80ddffdf7c838154801ed654a71b93d35",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/cleanup.json"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/evidence/live-player-verification.json",
+      "bytes": 12521,
+      "sha256": "297846dba11604be2fe35e77c6ed0ac499b112d068f70a32a11a6935b198c50d",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/live-player-verification.json"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/evidence/preservation.json",
+      "bytes": 288,
+      "sha256": "3cb64c6701980a7a6e2b70b2defae90e9bfc8356dba93b9461e8116c0f0d5024",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/preservation.json"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/evidence/runtime-binding.json",
+      "bytes": 238,
+      "sha256": "188a0242f8453c3b15194737aefd154525ded47c5ef186cdfb33204d09846a11",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/runtime-binding.json"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/evidence/source-identities.json",
+      "bytes": 1112,
+      "sha256": "5bb6d5aafcd01204e8d0ea6285a2a5f759df6dd93328e8ce995959af2f8dd681",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/source-identities.json"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/evidence/unit-tests-final.txt",
+      "bytes": 98,
+      "sha256": "7192acea2d99f0da15f4f003e65a40fd0561fa055032d54b2643aa7ad940fc71",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/unit-tests-final.txt"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/tests/test_agent_map.py",
+      "bytes": 11168,
+      "sha256": "64b65791755e628bcac3c1b77a8ee4ee782cce57e65627a959267214ebce79f2",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tests/test_agent_map.py"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/tests/test_scene.py",
+      "bytes": 5931,
+      "sha256": "3f0d8e8f2b97c7ffc677ce20f4b15bc7e64a2b088bb51dbadd47cc2053f0ec2d",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tests/test_scene.py"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/tools/agent_map.py",
+      "bytes": 21913,
+      "sha256": "c37ad1d7304748ac27ebd462b3e83392c6c7c37047e6b5ae90be8af24b3815db",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/agent_map.py"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/tools/bind_scene.py",
+      "bytes": 4749,
+      "sha256": "c6e4bb8600ebd766551ad2c7a719a8f6e80d10a9227b3f47e2f8813f4c8ac04f",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/bind_scene.py"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/tools/build_map.py",
+      "bytes": 12127,
+      "sha256": "c045c8508d105f210857165016ef25bddb1ab351cbd0009e3833a6c65db82d08",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/build_map.py"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/tools/render_static_map.py",
+      "bytes": 3846,
+      "sha256": "e352649a35bb14d47ea6c5bd5b9e4c590164920d0518e47deb6444b73553f028",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/render_static_map.py"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/tools/session_controller.py",
+      "bytes": 2886,
+      "sha256": "4cee7ddceeaa33b8e22c0dfc036bb26b6f8d8d62b00415b7473cc57af9f09f95",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/session_controller.py"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/tools/syndicate_scene.py",
+      "bytes": 13970,
+      "sha256": "f091b0fd5cfb2371a585f554a26a762bbf22716c43d79bd90075d58d04677c1f",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/syndicate_scene.py"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/proposed/examples/syndicate_z_scene/tools/z_provider.py",
+      "bytes": 19614,
+      "sha256": "8824634a44178e87f1623746c578cd9604039ddc3e55e8e6b0ea7188b682b651",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/z_provider.py"
+        }
+      ]
+    },
+    {
+      "path": "publication/historical-scene-draft/spatial-z-ascii-full.patch",
+      "bytes": 155577,
+      "sha256": "d478b47b1dfa86797f0b4931b4e43bfece2d47ddc0baa6baf6c7d4f364608902",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "reports/Syndicate_ASCII_Precision_Report_2026-10-31.md",
+      "bytes": 9438,
+      "sha256": "790e452b2d41d522afe7b07e016ec73efbb706f09d64ba6021a51225c93bfb1c",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "reports/Syndicate_Assets_Diagnostic_Report.md",
+      "bytes": 19309,
+      "sha256": "30aa8c63e7ee2748f9224c7040c9e907491a2a6f20ea800b840e38c1aeefc513",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "reports/Syndicate_Audio_Lifecycle_Report_2026-10-31.md",
+      "bytes": 17114,
+      "sha256": "a592d8081def39dc31c0c0701f482876bfea81ec78ba310815f489f774eb07d1",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/REPORT.md"
+        }
+      ]
+    },
+    {
+      "path": "reports/Syndicate_Audio_Progress_Report_2026-10-31.md",
+      "bytes": 17835,
+      "sha256": "72a7af7d978e7735e5f20a6f8b5b37d43acee9b7c39bdecc6871f24056be42d3",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-progress/REPORT.md"
+        }
+      ]
+    },
+    {
+      "path": "reports/Syndicate_DOSBox_Driver_Loads_2026-10-31.json",
+      "bytes": 25765,
+      "sha256": "9f4dd18b5668c1bc71d30c21383716c35debe755c14d704705d38244d51ebae3",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "reports/Syndicate_DOSBox_Driver_Loads_2026-10-31.md",
+      "bytes": 7987,
+      "sha256": "e6f5ffc140c37376767cc8a6cd685be6939c5c5733d10480c50f9b91ca1380d3",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "reports/Syndicate_Graphics_Contracts_Report_2026-10-31.md",
+      "bytes": 20902,
+      "sha256": "1491cb47d1008bb5afec7cc8aef331378713c22b083500adf3353effb155f08c",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/REPORT.md"
+        }
+      ]
+    },
+    {
+      "path": "reports/Syndicate_LE_Dispatch_Report_2026-10-30.md",
+      "bytes": 15829,
+      "sha256": "7e8519f6eb1f82bb1245bcd2009d370f7938b70e1cab1378678dc0ebba036182",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/le-dispatch/REPORT.md"
+        }
+      ]
+    },
+    {
+      "path": "reports/Syndicate_Z_Scene_Report_2026-10-31.md",
+      "bytes": 19624,
+      "sha256": "02756851d5657d647626f84b45f7df038bda67541cd2e52a7fadffdf9bb08245",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "docs/SYNDICATE_SPATIAL_Z_SCENE_2026-10-31.md"
+        }
+      ]
+    },
+    {
+      "path": "research/asset-recovery/Knowledge_Pack.md",
+      "bytes": 2472,
+      "sha256": "bea8d2e245b8f82d249e302558d093b362fd593f072d79719169cce08dc6fae2",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/LICENSE-GPL-2.0.txt",
+      "bytes": 17984,
+      "sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/LICENSE-GPL-2.0.txt"
+        }
+      ]
+    },
+    {
+      "path": "research/asset-recovery/MANIFEST.json",
+      "bytes": 4488,
+      "sha256": "815bacdf9883c0840e213312ee55040370a5668c903e0e8bfaaa446a40e0a6dc",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/README.md",
+      "bytes": 4303,
+      "sha256": "0f8c82787942a66b9a5f42593ccb164afc2f5d1a04c1bad0a9bd3086b5e8327e",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/REPORT.md",
+      "bytes": 19309,
+      "sha256": "30aa8c63e7ee2748f9224c7040c9e907491a2a6f20ea800b840e38c1aeefc513",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/evidence/asset-format-audit-sanitized.json",
+      "bytes": 143848,
+      "sha256": "a079b7f0b525c3ce403d16012b390f8190ca4a4c95c0ae148d78644e2841c7ea",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/evidence/asset-links.json",
+      "bytes": 13499,
+      "sha256": "a658c8463373d482086f7a0f269d0fe3c6e2eff964d76126873bff6bac3bc289",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/evidence/code-extension.json",
+      "bytes": 6900,
+      "sha256": "a49b8266521a232fed40ee3fb83b9eef07d6e4c9f49c3833b0c215378c204339",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/evidence/decompressed.json",
+      "bytes": 341516,
+      "sha256": "5c381945d69e2d37c9e300f7530674c272bdc9c5510fa76b72abeb0109e64d29",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/evidence/asset-identities.json"
+        }
+      ]
+    },
+    {
+      "path": "research/asset-recovery/evidence/diagnostic-probe-summary.json",
+      "bytes": 81655,
+      "sha256": "1ae332b9f2a2d0b3b30be6c0605b0c73844bf3f2ab643f01b83ab03017938dd9",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/evidence/driver-analysis.json",
+      "bytes": 822,
+      "sha256": "3c46f2f607a0122133a7ff95ca64fa4de85e087e9ade76df0c4a080b3915739c",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/evidence/ending-prefix.json",
+      "bytes": 1080,
+      "sha256": "aacf06105377d06dc0f49bab4173050eaa4592f1f2224dde455b6d839cbf9878",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/evidence/final-analysis-audit.json",
+      "bytes": 527,
+      "sha256": "6536443383a12404b97a72f85ac10c821a2abeb048a72f8c77bc52fcaca6182d",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/evidence/lx-driver-mapping.json",
+      "bytes": 5750,
+      "sha256": "d09de6ab034a2267920ade0061a8bbdc97c2a919bd99640ff8d7fd67830b1d70",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/evidence/packaging-verification.json",
+      "bytes": 620,
+      "sha256": "44b9179c36ddedcd5748c4381863051c82023c6456f7684bb4e2226a5f4b1d68",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/evidence/publication-checks.json",
+      "bytes": 1451,
+      "sha256": "da6c8e584928aff27311e2bdc4b389d26ddcedcca505187c9a6f8246ec87a0e3",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/skill-patch/docs/DIAGNOSTIC_RECOVERY_STUDY_2026-10-30.md",
+      "bytes": 8520,
+      "sha256": "d0dbc1f8c581c32108b4a81d3c06481116ceab2c01bc01fa837dbddd47c6eee0",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/skill-patch/src/fdisbull/skills/fdisbull-investigate/SKILL.md",
+      "bytes": 7006,
+      "sha256": "d7ea34741ff0567ea1081d450bf4531eda6c1d34903c8f8d9b6e1a6e16698394",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/skill-patch/src/fdisbull/skills/fdisbull-investigate/references/methodology.md",
+      "bytes": 26067,
+      "sha256": "79b1020a31b31cb525dc294c467b45c3e8074972c55922758740e87d798aebf2",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/tools/audit_asset_links.py",
+      "bytes": 4130,
+      "sha256": "1d63f4338c258d0f349ff816657c443a640dda2ef209e7230781320ea0e0e548",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/tools/audit_assets.py",
+      "bytes": 6631,
+      "sha256": "edb2772556a064c3fdbfb8e89f7ee2d63696bb35963cff08fe8db864a1422838",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/tools/check_ending_prefix.py",
+      "bytes": 1651,
+      "sha256": "03b3bdf693f8b718a6c211eadb925433c77adc31162427cc8666481d96eddc06",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/tools/decode_resources.py",
+      "bytes": 2429,
+      "sha256": "e353dc39e0552dd3c8824da10f55b60e2d30ddcfd79edc1ba69104ca5cd9f356",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/tools/decode_resources.py"
+        }
+      ]
+    },
+    {
+      "path": "research/asset-recovery/tools/extra_probes.py",
+      "bytes": 1455,
+      "sha256": "27945858cc8e30d868c58c764e51dd77846915efdba2c136b4440ab379681f5f",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/tools/inspect_lx.py",
+      "bytes": 2955,
+      "sha256": "3c45978950e30345b412d56bb3f17f8c4448e60ea3aaaf25fa570aa5b409b927",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/tools/more_probes.py",
+      "bytes": 1397,
+      "sha256": "6b8038f2d2abab641957c7acce1e7f74d2c16be270b7618d9fb3df71a4d6428f",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/tools/prepare_private.py",
+      "bytes": 2061,
+      "sha256": "521d296e44d312ac34f4a4ca4cdab320ea5998b01327ef95c4709b511ae66343",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/tools/prepare_private.py"
+        }
+      ]
+    },
+    {
+      "path": "research/asset-recovery/tools/probe_cpu64.py",
+      "bytes": 6168,
+      "sha256": "580b81c641d52e33eaca86131014698fd74fdc7480718263c2ced000fed0d198",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/tools/probe_dispatch.py",
+      "bytes": 964,
+      "sha256": "cda8694da204798a8f4307ba12941954c045c4b2a641a0db9914b5e8ba1ff395",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/tools/probe_rnc.py",
+      "bytes": 979,
+      "sha256": "e628b3527ebe15b006d389b24a0d2fdfb7e4c2191cb35588e69bbceb615b2c0a",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/asset-recovery/tools/rnc1.py",
+      "bytes": 2663,
+      "sha256": "c5d94574b372c6b670e52eabefd14828bb709c7006477787fed621163e1173e3",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/tools/rnc1.py"
+        }
+      ]
+    },
+    {
+      "path": "research/asset-recovery/tools/slice_loader64.c",
+      "bytes": 726,
+      "sha256": "48909f636b74b8b27cd53bf48c2644feda37129feed1bc6efd59f20cc03358e8",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/tools/slice_loader64.c"
+        }
+      ]
+    },
+    {
+      "path": "research/asset-recovery/tools/test_readers.py",
+      "bytes": 1067,
+      "sha256": "fc7d80264713d2ee6e5c7f177e5d08056bf486ad20bea470a3575a0c4cd9382f",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/audio-lifecycle/CHECKSUMS.sha256",
+      "bytes": 1029,
+      "sha256": "15f0df6785bf23c26c6a5b8e8c6e652b39e5e88285392b2afcb6b6967d20531e",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/CHECKSUMS.sha256"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-lifecycle/README.md",
+      "bytes": 2049,
+      "sha256": "10c95c0a9459e984c4c88613546b0fcb0f285408624c47c59b6d120ccd6a3fcc",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/README.md"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-lifecycle/REPORT.md",
+      "bytes": 17114,
+      "sha256": "a592d8081def39dc31c0c0701f482876bfea81ec78ba310815f489f774eb07d1",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/REPORT.md"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-lifecycle/evidence/delivery-checks.json",
+      "bytes": 168,
+      "sha256": "217fa93cc94563caa67d0e41de0ef01722c1b970243dbf6197a2d5dc90e53ef5",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/evidence/delivery-checks.json"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-lifecycle/evidence/lifecycle-summary.json",
+      "bytes": 11983,
+      "sha256": "1cd6f0377159db0d9ce6b6581f0af965018674e3a6a90721edd028ad43029b0d",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/evidence/lifecycle-summary.json"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-lifecycle/evidence/local-tool-checks.json",
+      "bytes": 531,
+      "sha256": "cf005c39f100ce15ee85f5150596bbbfd71d324f5c5056e7782a3bdc44c2f8ef",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/evidence/local-tool-checks.json"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-lifecycle/evidence/private-receipt-locators.json",
+      "bytes": 2326,
+      "sha256": "365f00803df8749cc621736d3b2ab1aff4994ffd9b53d927478338b5f34fd5ac",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/evidence/private-receipt-locators.json"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-lifecycle/evidence/status-projection-model.json",
+      "bytes": 706,
+      "sha256": "30f9f1ca889f60be43ed1728badcf83015759ca22c0f0f384172666b3c6d10d1",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/evidence/status-projection-model.json"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-lifecycle/evidence/xmi-lifecycle.json",
+      "bytes": 5251,
+      "sha256": "631a1ef0f8b0f634fd45b6a41acf4dbf72d923e234c0759415698c8b30153f23",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/evidence/xmi-lifecycle.json"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-lifecycle/tests/test_xmi_lifecycle.py",
+      "bytes": 5195,
+      "sha256": "e85b763ac69f81f99fdef2b95495611d38b97ca80d8cacccded81795bdd41a2b",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/tests/test_xmi_lifecycle.py"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-lifecycle/tools/check_status_projection.py",
+      "bytes": 2343,
+      "sha256": "20d29153892f2de39b7719c38e32c355cd194e0a4a31634a8d05357a020278ab",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/tools/check_status_projection.py"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-lifecycle/tools/xmi_lifecycle.py",
+      "bytes": 5034,
+      "sha256": "11b80907531aefc492d9ceb0dcd4adeb9a3128897f615ee29d6e288eeb3a6ebe",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-lifecycle/tools/xmi_lifecycle.py"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-patches/audio-lifecycle-addendum.patch",
+      "bytes": 54383,
+      "sha256": "80ba1a8540472ecfce6beb93455fb9583a6c8928c81e1db3bf0c6f6119bb27f8",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-patches/audio-lifecycle-addendum.patch"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-patches/audio-progress-addendum.patch",
+      "bytes": 74015,
+      "sha256": "7fec994514f6a6c32a9cbc16b21821ec02838224ddd146a5c939715cc73004df",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-patches/audio-progress-addendum.patch"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-progress/CHECKSUMS.sha256",
+      "bytes": 874,
+      "sha256": "a089b516e1f4a1b32d024b36cf83801e6f2383339052ef2173c02922f34b6287",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-progress/CHECKSUMS.sha256"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-progress/LOCAL_PR_ADDENDUM.md",
+      "bytes": 5341,
+      "sha256": "8a3a1ee9c7cbb4cd646233ca538bbfe49196aa1550bd5d1181e080ef5a44587f",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-progress/LOCAL_PR_ADDENDUM.md"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-progress/README.md",
+      "bytes": 3266,
+      "sha256": "dc1fd9903429517bc3251ad920ebd1ba3a4d25171bac9e1beb08dbd93e85a232",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-progress/README.md"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-progress/REPORT.md",
+      "bytes": 17835,
+      "sha256": "72a7af7d978e7735e5f20a6f8b5b37d43acee9b7c39bdecc6871f24056be42d3",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-progress/REPORT.md"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-progress/evidence/audio-progress-summary.json",
+      "bytes": 53991,
+      "sha256": "4b856f1009638864516a2b0c7258f592884674e6ff70aba8f3e9573d415527dd",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-progress/evidence/audio-progress-summary.json"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-progress/evidence/delivery-checks.json",
+      "bytes": 1122,
+      "sha256": "bf36bfbdedcc5d813cefb6c2a96abd5d7a53811109f4f61d7a7fb8565b5c6490",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-progress/evidence/delivery-checks.json"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-progress/tools/fm_probe.py",
+      "bytes": 6630,
+      "sha256": "712d953ae60a7b18e757ad21d0048a68b3c33a9142ee271fe8a04014d59887ad",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-progress/tools/fm_probe.py"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-progress/tools/lx_reader.py",
+      "bytes": 1803,
+      "sha256": "d28bec29ce5460b3b75067eefc22b04f8ef98196a7259427d3b1d08934af9c68",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-progress/tools/lx_reader.py"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-progress/tools/prepare_fm_profile.py",
+      "bytes": 2858,
+      "sha256": "ae91a9083d7213faf3dbaba3c3cba65929a98a9e1f91c807896c3326a76f9739",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-progress/tools/prepare_fm_profile.py"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-progress/tools/repeat_delay.py",
+      "bytes": 1914,
+      "sha256": "1111f7ede5c7a0511f76812710585329c9bb252fdbb9b90909dbd06afc588461",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-progress/tools/repeat_delay.py"
+        }
+      ]
+    },
+    {
+      "path": "research/audio-progress/tools/run_cases.py",
+      "bytes": 2506,
+      "sha256": "7ff56fb4ccf6ae2bd8b0e44c92dab1ac920378b899e7212b98b407610ed8e0f9",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/audio-progress/tools/run_cases.py"
+        }
+      ]
+    },
+    {
+      "path": "research/dosbox-driver-loads/Syndicate_DOSBox_Driver_Loads_2026-10-31.json",
+      "bytes": 25765,
+      "sha256": "9f4dd18b5668c1bc71d30c21383716c35debe755c14d704705d38244d51ebae3",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/dosbox-driver-loads/Syndicate_DOSBox_Driver_Loads_2026-10-31.md",
+      "bytes": 7987,
+      "sha256": "e6f5ffc140c37376767cc8a6cd685be6939c5c5733d10480c50f9b91ca1380d3",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "research/early-le/Syndicate_LE_Whole_Binary_Scope.md",
+      "bytes": 28982,
+      "sha256": "71d20403af4478985758c82bd35c0608b4ee9f91c445f28ca6f0df6d4bb3b1b1",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/early-le/Syndicate_LE_Whole_Binary_Scope.md"
+        }
+      ]
+    },
+    {
+      "path": "research/early-le/independent/Independent_LE_Physical_Scope.md",
+      "bytes": 10164,
+      "sha256": "a494088b6a52d92be52ba9fca9fe56fd2719e063dc02b312fa1993c2a99f16db",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/early-le/independent/Independent_LE_Physical_Scope.md"
+        }
+      ]
+    },
+    {
+      "path": "research/early-le/independent/export_analysis_coverage.py",
+      "bytes": 18235,
+      "sha256": "fd0a78fc45c668fd5ddf671f2a13af349df0aebf89ed350bed6ebb2cb5de302d",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/early-le/independent/export_analysis_coverage.py"
+        }
+      ]
+    },
+    {
+      "path": "research/early-le/independent/scope_le.py",
+      "bytes": 19482,
+      "sha256": "944ddf1116db023ae4b25a02ddfda398380b24375b857a4dae75c1a9ae3db319",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/early-le/independent/scope_le.py"
+        }
+      ]
+    },
+    {
+      "path": "research/early-le/loader-audit/fixture-probe-results.json",
+      "bytes": 1488,
+      "sha256": "f5f1c52cf32bb6870d52b9fb2441708b8cdf2e9e1a049f2797ae1b901e4c39e2",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/early-le/loader-audit/fixture-probe-results.json"
+        }
+      ]
+    },
+    {
+      "path": "research/early-le/loader-audit/fixture-probe.py",
+      "bytes": 5142,
+      "sha256": "15420485938f0b67196c7f8ed02d4cabe963fc17a487b9b58bc0bfc0ac45f892",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/early-le/loader-audit/fixture-probe.py"
+        }
+      ]
+    },
+    {
+      "path": "research/early-le/loader-audit/indirect-scope-diagnostic.md",
+      "bytes": 5225,
+      "sha256": "29388df02657b5be52a044c6ef0f820a5554d1e8854787bf2c733c1e94f04eac",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/early-le/loader-audit/indirect-scope-diagnostic.md"
+        }
+      ]
+    },
+    {
+      "path": "research/early-le/loader-audit/loader-audit.md",
+      "bytes": 4850,
+      "sha256": "064b86880d5e576ec191f020a45f65f2dacc354691b52b6a86de729f813cb0dd",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/early-le/loader-audit/loader-audit.md"
+        }
+      ]
+    },
+    {
+      "path": "research/early-le/spec-references/Independent_Physical_Scope_Review.md",
+      "bytes": 3720,
+      "sha256": "16302560256409032cc00568d3e0f797d7d1bd4db8025581ea9addfd86d5a6f3",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/early-le/spec-references/Independent_Physical_Scope_Review.md"
+        }
+      ]
+    },
+    {
+      "path": "research/early-le/spec-references/LE_Format_References.md",
+      "bytes": 5890,
+      "sha256": "13cac8e26fbb665817380903c5a2f3fce9bcf69140f50805d173f172540f7909",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/early-le/spec-references/LE_Format_References.md"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/Knowledge_Pack.md",
+      "bytes": 2920,
+      "sha256": "7a0b492c25dd789eb6c37e5898c0e35a707225de23e55aec9222614fcdbd08da",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/Knowledge_Pack.md"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/LICENSE-GPL-2.0.txt",
+      "bytes": 17984,
+      "sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/LICENSE-GPL-2.0.txt"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/MANIFEST.json",
+      "bytes": 6022,
+      "sha256": "ac0d2f8a9298d5c370da0998df710156bb4ef4244a9ff5b1f9b874e8d438b032",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/MANIFEST.json"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/PUBLISH_PR.sh",
+      "bytes": 1457,
+      "sha256": "a7f2353ac334ee2031bd1730d4a62df200df669dc83f108ba1e83ba439703f9d",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/PUBLISH_PR.sh"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/README.md",
+      "bytes": 5140,
+      "sha256": "8d87f180e298ae7cd375a59d12fbc7be58977c8df99c89c3ef09a90d0060c9ff",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/README.md"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/REPORT.md",
+      "bytes": 20902,
+      "sha256": "1491cb47d1008bb5afec7cc8aef331378713c22b083500adf3353effb155f08c",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/REPORT.md"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/diagnostic-graphics-friction.patch",
+      "bytes": 25578,
+      "sha256": "e02f7579abf2e88ce09662e6e3df8f993b3ab5561cd3258cdb84c6d160a6f7c6",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/diagnostic-graphics-friction.patch"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/evidence/annotations.json",
+      "bytes": 2113,
+      "sha256": "d43e4b9ded744b5be80e5cf1aeaabd75636a5473daac3a5df5e5c4b68cde853d",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/evidence/annotations.json"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/evidence/asset-identities.json",
+      "bytes": 341516,
+      "sha256": "5c381945d69e2d37c9e300f7530674c272bdc9c5510fa76b72abeb0109e64d29",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/evidence/asset-identities.json"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/evidence/asset-recovery.json",
+      "bytes": 162047,
+      "sha256": "c8f7fb3eb8392f9244c16f2e786456670990f099a0b5d3c08d8609d61fd52b4e",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/evidence/asset-recovery.json"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/evidence/continuation-audit.json",
+      "bytes": 663,
+      "sha256": "0d4357d636782de0e6b26c129547e036235b0cc6723fa13d0384b99068b9d52c",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/evidence/continuation-audit.json"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/evidence/delivery-source-check.json",
+      "bytes": 159,
+      "sha256": "d6943230eaba22acac893e497f61f7ee94dcb09b9f8c9cd1aaf005728c4a8078",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/evidence/delivery-source-check.json"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/evidence/graphics-bound-proof.json",
+      "bytes": 11023,
+      "sha256": "e808077a6c395b1c87296e54c797d2d8dbab33372623696a0adfd224d90fa16f",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/evidence/graphics-bound-proof.json"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/evidence/graphics-discovery.json",
+      "bytes": 5395,
+      "sha256": "8bc82c6779a1773afffe787e7492129de819bde536b03410dff4f6bd726c5068",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/evidence/graphics-discovery.json"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/evidence/graphics-native-cases.json",
+      "bytes": 127253,
+      "sha256": "078cbb376207ef857c4b52a866562b92939b084ce734c01026b9ee88924050c4",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/evidence/graphics-native-cases.json"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/evidence/pr-readiness.json",
+      "bytes": 729,
+      "sha256": "ab3ad69a98be794a4166e2d5d9fe1c5796d104644ce8156507cacc3da2e0b840",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/evidence/pr-readiness.json"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/evidence/public-model-checks.json",
+      "bytes": 2019,
+      "sha256": "4b66c025dc3b2dcea00f08e8423a990ec34a2c703ee946c234b0ae7b5cdca262",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/evidence/public-model-checks.json"
+        },
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/pr/docs/evidence/diagnostic-graphics-2026-10-31/model-checks.json"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/evidence/replay-validation.json",
+      "bytes": 257,
+      "sha256": "a38c4d03ec522e4d76da6ff9e048db79f8a94d1b1c2edd649cecd83e0f77f781",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/evidence/replay-validation.json"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/evidence/resource-domains.json",
+      "bytes": 3741,
+      "sha256": "ce5f9fb30d79f0657f89755335a07fa6ff94bdd64df09c0c5acfb0b664430f59",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/evidence/resource-domains.json"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/evidence/sprite-native-cases.json",
+      "bytes": 36245,
+      "sha256": "f314c0389accaac3443e00b556ea7bdf451c5d28125ece1c909db93fc94e0eb4",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/evidence/sprite-native-cases.json"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/pr/PR_BODY.md",
+      "bytes": 4490,
+      "sha256": "c9eee3ee5a8015f541c1b96263b7656f5ccafaf801ed21581aa0180d8442c538",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/pr/PR_BODY.md"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/pr/PR_TITLE.txt",
+      "bytes": 68,
+      "sha256": "eedeb28de1e46ed29151960b2f79789fc452e587d9855b803201b49796a27720",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/pr/PR_TITLE.txt"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/pr/docs/DIAGNOSTIC_GRAPHICS_FRICTION_2026-10-31.md",
+      "bytes": 16056,
+      "sha256": "ad3ed5afb62ff881cbcc07b51e93712220b79abf5dc7b6227c9a0e86189ca3b5",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/pr/docs/DIAGNOSTIC_GRAPHICS_FRICTION_2026-10-31.md"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/pr/docs/evidence/diagnostic-graphics-2026-10-31/check_contract_models.py",
+      "bytes": 5473,
+      "sha256": "c7e25636f52d2c4fc07d57d32c4aa73dc6f3457702b5d19ce818fee974e625bd",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/tools/check_contract_models.py"
+        },
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/pr/docs/evidence/diagnostic-graphics-2026-10-31/check_contract_models.py"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/pr/docs/evidence/diagnostic-graphics-2026-10-31/model-checks.json",
+      "bytes": 2019,
+      "sha256": "4b66c025dc3b2dcea00f08e8423a990ec34a2c703ee946c234b0ae7b5cdca262",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/evidence/public-model-checks.json"
+        },
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/pr/docs/evidence/diagnostic-graphics-2026-10-31/model-checks.json"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/replay-plan.json",
+      "bytes": 16491,
+      "sha256": "2e6af6843ba41fd782e81d026627c35e73a5efa064bda6a3af1dbb4486d63d78",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/replay-plan.json"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/tools/check_contract_models.py",
+      "bytes": 5473,
+      "sha256": "c7e25636f52d2c4fc07d57d32c4aa73dc6f3457702b5d19ce818fee974e625bd",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/tools/check_contract_models.py"
+        },
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/pr/docs/evidence/diagnostic-graphics-2026-10-31/check_contract_models.py"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/tools/decode_resources.py",
+      "bytes": 2429,
+      "sha256": "e353dc39e0552dd3c8824da10f55b60e2d30ddcfd79edc1ba69104ca5cd9f356",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/tools/decode_resources.py"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/tools/graphics_matrix.py",
+      "bytes": 5093,
+      "sha256": "43e60528aaaeb3b3680ec2c0e64bb9ab28cd0b67c86b1cc19b0d289c6536cac7",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/tools/graphics_matrix.py"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/tools/prepare_private.py",
+      "bytes": 2061,
+      "sha256": "521d296e44d312ac34f4a4ca4cdab320ea5998b01327ef95c4709b511ae66343",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/tools/prepare_private.py"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/tools/probe_cpu64.py",
+      "bytes": 6536,
+      "sha256": "69c720dce2b1642cdfa52e8a476dac7f459b7d9897449acf3e840bedcc535b6d",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/tools/probe_cpu64.py"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/tools/qualify_graphics_bounds.py",
+      "bytes": 4693,
+      "sha256": "38f86e595c6cc0d8e9db3e951e344f22cc061ab0f207e7f1022bf9ebb9879112",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/tools/qualify_graphics_bounds.py"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/tools/recover_selected_assets.py",
+      "bytes": 2493,
+      "sha256": "50ca11ac40f129fddc1914e21f33f0197ad1af23ebf0ea8b68e1282fc447da55",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/tools/recover_selected_assets.py"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/tools/replay_candidates.py",
+      "bytes": 3984,
+      "sha256": "027a94f98153187f84368857986203e58e1d96d32dc5fd6efbdb89bf1402ef6a",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/tools/replay_candidates.py"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/tools/rnc1.py",
+      "bytes": 2663,
+      "sha256": "c5d94574b372c6b670e52eabefd14828bb709c7006477787fed621163e1173e3",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/tools/rnc1.py"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/tools/slice_loader64.c",
+      "bytes": 726,
+      "sha256": "48909f636b74b8b27cd53bf48c2644feda37129feed1bc6efd59f20cc03358e8",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/tools/slice_loader64.c"
+        }
+      ]
+    },
+    {
+      "path": "research/graphics/tools/sprite_matrix.py",
+      "bytes": 6158,
+      "sha256": "a469967d670cba182fd815b45f65e16b6f985b636639ae7787e9d9f0ffa30cf5",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/graphics/tools/sprite_matrix.py"
+        }
+      ]
+    },
+    {
+      "path": "research/le-dispatch/MANIFEST.json",
+      "bytes": 1954,
+      "sha256": "28b50e3fa0295584f7315ecab79aac6da9c646a6fe7078dce851e75f3d282383",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/le-dispatch/MANIFEST.json"
+        }
+      ]
+    },
+    {
+      "path": "research/le-dispatch/README.md",
+      "bytes": 3895,
+      "sha256": "57ee3d1ac7b8362d41f6d2d8e13c6f2924ba5599ad47b7e4673cdda8efb03e8a",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/le-dispatch/README.md"
+        }
+      ]
+    },
+    {
+      "path": "research/le-dispatch/REPORT.md",
+      "bytes": 15829,
+      "sha256": "7e8519f6eb1f82bb1245bcd2009d370f7938b70e1cab1378678dc0ebba036182",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/le-dispatch/REPORT.md"
+        }
+      ]
+    },
+    {
+      "path": "research/le-dispatch/boolean-binding-verification.json",
+      "bytes": 1597,
+      "sha256": "224df31fb08dc575de16bfc5ee1568bd2609ef9777f8379ad8c4700699b1fb9b",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/le-dispatch/boolean-binding-verification.json"
+        }
+      ]
+    },
+    {
+      "path": "research/le-dispatch/inspect_switch_bounds.py",
+      "bytes": 1598,
+      "sha256": "18fc6bad5a7d674c7bf59345990ba3f0edb7db01acb266c2a9447902a21c5c11",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/le-dispatch/inspect_switch_bounds.py"
+        }
+      ]
+    },
+    {
+      "path": "research/le-dispatch/replay-plan.json",
+      "bytes": 11984,
+      "sha256": "efd339585fe0c70e55c4273e977570eae08d3a7ed509282d4feafea7a5928f24",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/le-dispatch/replay-plan.json"
+        }
+      ]
+    },
+    {
+      "path": "research/le-dispatch/replay-resume-verification.json",
+      "bytes": 1180,
+      "sha256": "98f95b3072a1fcb0221bf65902194275198c6f96a1bfca1cc6c355efac1de704",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/le-dispatch/replay-resume-verification.json"
+        }
+      ]
+    },
+    {
+      "path": "research/le-dispatch/replay_candidates.py",
+      "bytes": 3969,
+      "sha256": "f4e7c6c547e5a4b22853dbf99bfb989c3329f3c1b9650bd2e926a1e6f529a94d",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/le-dispatch/replay_candidates.py"
+        }
+      ]
+    },
+    {
+      "path": "research/le-dispatch/semantic-findings.json",
+      "bytes": 3093,
+      "sha256": "e40c2021be66d33f8a247a2a9348e2136f73e83495829296628685dd311d328a",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/le-dispatch/semantic-findings.json"
+        }
+      ]
+    },
+    {
+      "path": "research/le-dispatch/startup-records.json",
+      "bytes": 1093,
+      "sha256": "707a88fb7d1c54848bdab035d1998c0e2bc93ca88e9c08ba54d1d529d1309771",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/le-dispatch/startup-records.json"
+        }
+      ]
+    },
+    {
+      "path": "research/le-dispatch/switch-model-tests-final.json",
+      "bytes": 1281,
+      "sha256": "69e67e7217bebff8c30577ff4aadec54ca70b706d01065373a2b69395593e5ac",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/le-dispatch/switch-model-tests-final.json"
+        }
+      ]
+    },
+    {
+      "path": "research/le-dispatch/switch_guard.py",
+      "bytes": 7082,
+      "sha256": "1522ae70152b302d505a11acfae36256fd51bf507c7a170cf0446f13624e7039",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/le-dispatch/switch_guard.py"
+        }
+      ]
+    },
+    {
+      "path": "research/le-dispatch/test_switch_guard.py",
+      "bytes": 2109,
+      "sha256": "1afc04e4dbd073a185683fb99ea8592bfb12bcf8d6912fe88067e17d80aedb62",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/le-dispatch/test_switch_guard.py"
+        }
+      ]
+    },
+    {
+      "path": "research/le-dispatch/verification.json",
+      "bytes": 31659,
+      "sha256": "c26cca4b4e8a5ffa11dbb3204ac4ecadb703f0ad8d1fe5654f77c4a5207e8f0e",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "draft-mr35",
+          "ref": "676487fca2d4cbe5e0bd93781a04aff5678da29c",
+          "path": "docs/research-artifacts/chatgpt-syndicate-research-20261101/le-dispatch/verification.json"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/REPORT.md",
+      "bytes": 6469,
+      "sha256": "7fd85ed8164ce457682fef5ca737baef13d6ff4ec645ed80efe2676dfeef7e7e",
+      "decision": "imported_exact",
+      "import_path": "original/v029-source-check-report.md",
+      "import_sha256": "7fd85ed8164ce457682fef5ca737baef13d6ff4ec645ed80efe2676dfeef7e7e",
+      "existing_git_locations": []
+    },
+    {
+      "path": "runtime-v029/source-check/REQUESTED_RUNTIME.json",
+      "bytes": 601,
+      "sha256": "271c058e513b24e1470e608fff703c638eb71c2821dda760e99b2449c07c62f9",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "runtime-v029/source-check/download/fdisbull-0.29.0-fetch-verify.py",
+      "bytes": 9579,
+      "sha256": "f3139b031f1abd4b6599af724ee616f164fe7c0546e3c2c8891addddfee6435c",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "runtime-v029/source-check/download/fdisbull-v0.29.0-release-inventory.json",
+      "bytes": 2575,
+      "sha256": "7aee64be744e3ee2e8cb34616c8215476c50798980c749eac78f7b6bf3915d40",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "runtime-v029/source-check/evidence/build-tag-comparison.json",
+      "bytes": 978,
+      "sha256": "421bc04b24e0a3afa47d973f1101fd351134f96160f7d27a622fdb65039f9074",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "runtime-v029/source-check/evidence/download-method-note.json",
+      "bytes": 460,
+      "sha256": "839ca3a0a5e72392de5c911e74aae4a642f1a068a2bb1dfaa98f6a3372830c7a",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "runtime-v029/source-check/evidence/packaged-runner-replay/result.json",
+      "bytes": 431,
+      "sha256": "d03ad61d56dd3657a0cfc1a9fcd91c14f4c0ce168672da8408c75fc9705653d3",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "runtime-v029/source-check/evidence/packaged-runner-replay/smoke.json",
+      "bytes": 7393,
+      "sha256": "1435380b694b4d9cab90275fb5c136228bccd8ef71d9cfcca702e6564580034e",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "runtime-v029/source-check/evidence/packaged-runner-replay/tests.txt",
+      "bytes": 6090,
+      "sha256": "cca2674cd856ee2016397022e772da219dd99503bcf407d6baff54b752b477e3",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "runtime-v029/source-check/evidence/player-smoke.json",
+      "bytes": 7662,
+      "sha256": "59d59e32d811b70498b55b03ac99385fb195a4682cb9cd36877a3e3cfcb400a3",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "runtime-v029/source-check/evidence/release-summary.json",
+      "bytes": 3043,
+      "sha256": "03d21e47fdfd74467a5de79fe0cc87c725d126c0836acba1fa1f2394ad5291c2",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "runtime-v029/source-check/evidence/scene-tests.txt",
+      "bytes": 6090,
+      "sha256": "7fd5fd539052c5d718302a7bf896c9eee4b4213d9b2900d9016234577fe2426b",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "runtime-v029/source-check/evidence/source-identity.json",
+      "bytes": 6162,
+      "sha256": "fe77e7fa6c7a13d476ad47b756135c0ce60f15c230280d3bed853eb3c81e1d37",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "runtime-v029/source-check/evidence/verification.json",
+      "bytes": 645,
+      "sha256": "fbdcb8dcca83be20bcae42625309bf9437f7782c9d7df43817d6cc27062ff121",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "runtime-v029/source-check/run_source_checks.py",
+      "bytes": 3359,
+      "sha256": "9016dae10c89dba14f7cf5eca2e94c8c1fb83f20f9d048b6169a97d0279e0cf4",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/ASCII_PRECISION_AND_ROUTING.md",
+      "bytes": 9462,
+      "sha256": "47619f49f1c8785e294ffacaa16a70ad2eb8b11247c4812fc36bd090e3041098",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/ASCII_PRECISION_AND_ROUTING.md"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/README.md",
+      "bytes": 2821,
+      "sha256": "8916ec5170904d0b560a761e31e4f6286975a955b14f610f6e5914e628fb8e76",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/README.md"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/evidence/ascii/gitlab-status.json",
+      "bytes": 2059,
+      "sha256": "2eeff0d989a65777f03b5b01082d90bcb88a1f3161abde895a65701a3c2a0e85",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/ascii/gitlab-status.json"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/evidence/ascii/tests.txt",
+      "bytes": 99,
+      "sha256": "96240512bacfe53de84a67b26b8fdfb8eaf882f3dd8f24d31e6333e179d02c5e",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/ascii/tests.txt"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/evidence/ascii/verification.json",
+      "bytes": 2719,
+      "sha256": "119cfdfd9268baf74d6c26809fe9b8f307c604cd873f173b4991e927ffb8ab4a",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/ascii/verification.json"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/evidence/cleanup.json",
+      "bytes": 487,
+      "sha256": "d87c3c55cfcba96a2e421af1b4274ad80ddffdf7c838154801ed654a71b93d35",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/cleanup.json"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/evidence/live-player-verification.json",
+      "bytes": 12521,
+      "sha256": "297846dba11604be2fe35e77c6ed0ac499b112d068f70a32a11a6935b198c50d",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/live-player-verification.json"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/evidence/preservation.json",
+      "bytes": 288,
+      "sha256": "3cb64c6701980a7a6e2b70b2defae90e9bfc8356dba93b9461e8116c0f0d5024",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/preservation.json"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/evidence/runtime-binding.json",
+      "bytes": 238,
+      "sha256": "188a0242f8453c3b15194737aefd154525ded47c5ef186cdfb33204d09846a11",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/runtime-binding.json"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/evidence/source-identities.json",
+      "bytes": 1112,
+      "sha256": "5bb6d5aafcd01204e8d0ea6285a2a5f759df6dd93328e8ce995959af2f8dd681",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/source-identities.json"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/evidence/unit-tests-final.txt",
+      "bytes": 98,
+      "sha256": "7192acea2d99f0da15f4f003e65a40fd0561fa055032d54b2643aa7ad940fc71",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/unit-tests-final.txt"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/tests/test_agent_map.py",
+      "bytes": 11168,
+      "sha256": "64b65791755e628bcac3c1b77a8ee4ee782cce57e65627a959267214ebce79f2",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tests/test_agent_map.py"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/tests/test_scene.py",
+      "bytes": 5931,
+      "sha256": "3f0d8e8f2b97c7ffc677ce20f4b15bc7e64a2b088bb51dbadd47cc2053f0ec2d",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tests/test_scene.py"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/tools/agent_map.py",
+      "bytes": 21913,
+      "sha256": "c37ad1d7304748ac27ebd462b3e83392c6c7c37047e6b5ae90be8af24b3815db",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/agent_map.py"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/tools/bind_scene.py",
+      "bytes": 4749,
+      "sha256": "c6e4bb8600ebd766551ad2c7a719a8f6e80d10a9227b3f47e2f8813f4c8ac04f",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/bind_scene.py"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/tools/build_map.py",
+      "bytes": 12127,
+      "sha256": "c045c8508d105f210857165016ef25bddb1ab351cbd0009e3833a6c65db82d08",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/build_map.py"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/tools/render_static_map.py",
+      "bytes": 3846,
+      "sha256": "e352649a35bb14d47ea6c5bd5b9e4c590164920d0518e47deb6444b73553f028",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/render_static_map.py"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/tools/session_controller.py",
+      "bytes": 2886,
+      "sha256": "4cee7ddceeaa33b8e22c0dfc036bb26b6f8d8d62b00415b7473cc57af9f09f95",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/session_controller.py"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/tools/syndicate_scene.py",
+      "bytes": 13970,
+      "sha256": "f091b0fd5cfb2371a585f554a26a762bbf22716c43d79bd90075d58d04677c1f",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/syndicate_scene.py"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/examples/syndicate_z_scene/tools/z_provider.py",
+      "bytes": 19614,
+      "sha256": "8824634a44178e87f1623746c578cd9604039ddc3e55e8e6b0ea7188b682b651",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/z_provider.py"
+        }
+      ]
+    },
+    {
+      "path": "runtime-v029/source-check/source-slice/player_source.py",
+      "bytes": 15669,
+      "sha256": "ec8e916c8b9c82d420b9675d560c8cbec60707ac48fb3196d74c867630def65c",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/ASCII_PRECISION_AND_ROUTING.md",
+      "bytes": 9438,
+      "sha256": "790e452b2d41d522afe7b07e016ec73efbb706f09d64ba6021a51225c93bfb1c",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/README.md",
+      "bytes": 5586,
+      "sha256": "db694ca09a1fe8c897956c99adb415f08718bb5a5e8e7cb7383b3ab1945df1a3",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/REPORT.md",
+      "bytes": 19624,
+      "sha256": "02756851d5657d647626f84b45f7df038bda67541cd2e52a7fadffdf9bb08245",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "docs/SYNDICATE_SPATIAL_Z_SCENE_2026-10-31.md"
+        }
+      ]
+    },
+    {
+      "path": "scene/SHA256SUMS",
+      "bytes": 3522,
+      "sha256": "9cf613e7261e46246de3bb18a069c459a7636857bffc96241a10374e24c8f956",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/evidence/ascii/gitlab-status.json",
+      "bytes": 2059,
+      "sha256": "2eeff0d989a65777f03b5b01082d90bcb88a1f3161abde895a65701a3c2a0e85",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/ascii/gitlab-status.json"
+        }
+      ]
+    },
+    {
+      "path": "scene/evidence/ascii/player-snapshot.txt",
+      "bytes": 9654,
+      "sha256": "bd6edcfff1bb132a954ed814c1ce5f01c7f2c498cc09823d0f9a4031a92964ce",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/evidence/ascii/tests.txt",
+      "bytes": 99,
+      "sha256": "96240512bacfe53de84a67b26b8fdfb8eaf882f3dd8f24d31e6333e179d02c5e",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/ascii/tests.txt"
+        }
+      ]
+    },
+    {
+      "path": "scene/evidence/ascii/verification.json",
+      "bytes": 2719,
+      "sha256": "119cfdfd9268baf74d6c26809fe9b8f307c604cd873f173b4991e927ffb8ab4a",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/ascii/verification.json"
+        }
+      ]
+    },
+    {
+      "path": "scene/evidence/cleanup.json",
+      "bytes": 487,
+      "sha256": "d87c3c55cfcba96a2e421af1b4274ad80ddffdf7c838154801ed654a71b93d35",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/cleanup.json"
+        }
+      ]
+    },
+    {
+      "path": "scene/evidence/friction.json",
+      "bytes": 1854,
+      "sha256": "ac8b288299082cea779150619f77f9663ecd92bf84a4d9518adba7c2cc60c8bf",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/evidence/initial-teleport-probes.json",
+      "bytes": 4392,
+      "sha256": "6951a3b6920d04863fb8d0f8faecb6fee69948692aa7b13bf6f31e48efb05944",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/evidence/live-player-verification.json",
+      "bytes": 12521,
+      "sha256": "297846dba11604be2fe35e77c6ed0ac499b112d068f70a32a11a6935b198c50d",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/live-player-verification.json"
+        }
+      ]
+    },
+    {
+      "path": "scene/evidence/map-js-check.json",
+      "bytes": 189,
+      "sha256": "95eec95c891b79faa7eaf000c97b5f9dc0ae6df435364c3b8c6351e8a717cce2",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/evidence/offline-player-transcript.txt",
+      "bytes": 1316,
+      "sha256": "c79a4aa6fb805ea0fd2cccb29f889424019b86e085ef8a9e765a75091f92d764",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/evidence/preservation.json",
+      "bytes": 288,
+      "sha256": "3cb64c6701980a7a6e2b70b2defae90e9bfc8356dba93b9461e8116c0f0d5024",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/preservation.json"
+        }
+      ]
+    },
+    {
+      "path": "scene/evidence/rebound-player-read.txt",
+      "bytes": 1532,
+      "sha256": "33e3844623bfa26cb342cdd45b12ee52c856593b3e190b40a2c3dd35acf75a36",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/evidence/runtime-binding.json",
+      "bytes": 238,
+      "sha256": "188a0242f8453c3b15194737aefd154525ded47c5ef186cdfb33204d09846a11",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/runtime-binding.json"
+        }
+      ]
+    },
+    {
+      "path": "scene/evidence/source-identities.json",
+      "bytes": 1112,
+      "sha256": "5bb6d5aafcd01204e8d0ea6285a2a5f759df6dd93328e8ce995959af2f8dd681",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/source-identities.json"
+        }
+      ]
+    },
+    {
+      "path": "scene/evidence/unit-tests-final.txt",
+      "bytes": 98,
+      "sha256": "7192acea2d99f0da15f4f003e65a40fd0561fa055032d54b2643aa7ad940fc71",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/evidence/unit-tests-final.txt"
+        }
+      ]
+    },
+    {
+      "path": "scene/public/car-approach-plan.json",
+      "bytes": 4756,
+      "sha256": "7e479c52d0609696b7e060a8c03a783c343ddd6503620f86a5196e051d05ecc4",
+      "decision": "imported_exact",
+      "import_path": "semantic-map/car-approach-plan.json",
+      "import_sha256": "7e479c52d0609696b7e060a8c03a783c343ddd6503620f86a5196e051d05ecc4",
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/public/map-model.json",
+      "bytes": 570301,
+      "sha256": "8c9fac48a57fd62b56550a8aa145b812f7602221dad76f49be9af2b2ded8c3c1",
+      "decision": "imported_exact",
+      "import_path": "semantic-map/map-model.json",
+      "import_sha256": "8c9fac48a57fd62b56550a8aa145b812f7602221dad76f49be9af2b2ded8c3c1",
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/public/map-summary.json",
+      "bytes": 2666,
+      "sha256": "5fe23178429d03f5ecb102ae7bcca0099c5c514bf69397577d37605f0e0ae654",
+      "decision": "imported_exact",
+      "import_path": "semantic-map/map-summary.json",
+      "import_sha256": "5fe23178429d03f5ecb102ae7bcca0099c5c514bf69397577d37605f0e0ae654",
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/public/mission-1-observation.json",
+      "bytes": 35912,
+      "sha256": "56f657dd2785eb4d8972591b8efcc9d50d618aa54adcb7bd523551aaa7118d02",
+      "decision": "imported_exact",
+      "import_path": "semantic-map/mission-1-observation.json",
+      "import_sha256": "56f657dd2785eb4d8972591b8efcc9d50d618aa54adcb7bd523551aaa7118d02",
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/public/mission-ascii.json",
+      "bytes": 12851,
+      "sha256": "fadfce198c32bdd079217bd9649b9edaede4426fcc8943176a40b26af97c6f1f",
+      "decision": "imported_exact",
+      "import_path": "semantic-map/mission-ascii.json",
+      "import_sha256": "fadfce198c32bdd079217bd9649b9edaede4426fcc8943176a40b26af97c6f1f",
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/public/mission-ascii.txt",
+      "bytes": 3452,
+      "sha256": "37cf723998cc2361f22c35cf7d6f3feb36e0b269e87b281a96bd3b3856f6d43b",
+      "decision": "imported_exact",
+      "import_path": "semantic-map/mission-ascii.txt",
+      "import_sha256": "37cf723998cc2361f22c35cf7d6f3feb36e0b269e87b281a96bd3b3856f6d43b",
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/public/mission-map.html",
+      "bytes": 579493,
+      "sha256": "99072bc1f37e074914a56e4de7e7fcde6fea89bc4b546d70355cec3b0a583871",
+      "decision": "imported_exact",
+      "import_path": "semantic-map/mission-map.html",
+      "import_sha256": "99072bc1f37e074914a56e4de7e7fcde6fea89bc4b546d70355cec3b0a583871",
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/public/mission-map.png",
+      "bytes": 109819,
+      "sha256": "ba232de48aaedcd25993f532a25d2ff2494f9f6bdda1a048cccc127a43e1d648",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/public/mission-map.svg",
+      "bytes": 166180,
+      "sha256": "e183186d37c44af21ed403067e98c822d6a4bd7c6d9ea76e8a08f05d09a858cb",
+      "decision": "imported_exact",
+      "import_path": "semantic-map/mission-map.svg",
+      "import_sha256": "e183186d37c44af21ed403067e98c822d6a4bd7c6d9ea76e8a08f05d09a858cb",
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/public/target-approach-plan.json",
+      "bytes": 4982,
+      "sha256": "d33b7c914bafa659a82c2658cfc489fc3403c1054287391c5049a3371085fb26",
+      "decision": "imported_exact",
+      "import_path": "semantic-map/target-approach-plan.json",
+      "import_sha256": "d33b7c914bafa659a82c2658cfc489fc3403c1054287391c5049a3371085fb26",
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/public/team-subtile-ascii.txt",
+      "bytes": 1531,
+      "sha256": "c7138a4bef48199ad1d27eab98574b9f9cdbe3f38e849dfeb933923c1ecb94ba",
+      "decision": "imported_exact",
+      "import_path": "semantic-map/team-subtile-ascii.txt",
+      "import_sha256": "c7138a4bef48199ad1d27eab98574b9f9cdbe3f38e849dfeb933923c1ecb94ba",
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/quick_views/Syndicate_Mission_ASCII_2026-10-31.txt",
+      "bytes": 3452,
+      "sha256": "37cf723998cc2361f22c35cf7d6f3feb36e0b269e87b281a96bd3b3856f6d43b",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/quick_views/Syndicate_Team_ASCII_Zoom_2026-10-31.txt",
+      "bytes": 1531,
+      "sha256": "c7138a4bef48199ad1d27eab98574b9f9cdbe3f38e849dfeb933923c1ecb94ba",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "scene/tests/test_agent_map.py",
+      "bytes": 11168,
+      "sha256": "64b65791755e628bcac3c1b77a8ee4ee782cce57e65627a959267214ebce79f2",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tests/test_agent_map.py"
+        }
+      ]
+    },
+    {
+      "path": "scene/tests/test_scene.py",
+      "bytes": 5931,
+      "sha256": "3f0d8e8f2b97c7ffc677ce20f4b15bc7e64a2b088bb51dbadd47cc2053f0ec2d",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tests/test_scene.py"
+        }
+      ]
+    },
+    {
+      "path": "scene/tools/agent_map.py",
+      "bytes": 21913,
+      "sha256": "c37ad1d7304748ac27ebd462b3e83392c6c7c37047e6b5ae90be8af24b3815db",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/agent_map.py"
+        }
+      ]
+    },
+    {
+      "path": "scene/tools/bind_scene.py",
+      "bytes": 4749,
+      "sha256": "c6e4bb8600ebd766551ad2c7a719a8f6e80d10a9227b3f47e2f8813f4c8ac04f",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/bind_scene.py"
+        }
+      ]
+    },
+    {
+      "path": "scene/tools/build_map.py",
+      "bytes": 12127,
+      "sha256": "c045c8508d105f210857165016ef25bddb1ab351cbd0009e3833a6c65db82d08",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/build_map.py"
+        }
+      ]
+    },
+    {
+      "path": "scene/tools/render_static_map.py",
+      "bytes": 3846,
+      "sha256": "e352649a35bb14d47ea6c5bd5b9e4c590164920d0518e47deb6444b73553f028",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/render_static_map.py"
+        }
+      ]
+    },
+    {
+      "path": "scene/tools/session_controller.py",
+      "bytes": 2886,
+      "sha256": "4cee7ddceeaa33b8e22c0dfc036bb26b6f8d8d62b00415b7473cc57af9f09f95",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/session_controller.py"
+        }
+      ]
+    },
+    {
+      "path": "scene/tools/syndicate_scene.py",
+      "bytes": 13970,
+      "sha256": "f091b0fd5cfb2371a585f554a26a762bbf22716c43d79bd90075d58d04677c1f",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/syndicate_scene.py"
+        }
+      ]
+    },
+    {
+      "path": "scene/tools/z_provider.py",
+      "bytes": 19614,
+      "sha256": "8824634a44178e87f1623746c578cd9604039ddc3e55e8e6b0ea7188b682b651",
+      "decision": "already_preserved",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": [
+        {
+          "state": "main",
+          "ref": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+          "path": "examples/syndicate_z_scene/tools/z_provider.py"
+        }
+      ]
+    },
+    {
+      "path": "tools/handoff_bundle.py",
+      "bytes": 11424,
+      "sha256": "7ba9a70c0c40c3e69668c699b2d05ed47e1ca7e2b931937351500bbd4ddfe5a0",
+      "decision": "imported_exact",
+      "import_path": "tools/handoff_bundle.py",
+      "import_sha256": "7ba9a70c0c40c3e69668c699b2d05ed47e1ca7e2b931937351500bbd4ddfe5a0",
+      "existing_git_locations": []
+    },
+    {
+      "path": "tools/test_handoff_bundle.py",
+      "bytes": 5264,
+      "sha256": "377a6d75d48f8c7232bb3eab77343215be1c042bd99abaa1462299790206a397",
+      "decision": "imported_exact",
+      "import_path": "tools/test_handoff_bundle.py",
+      "import_sha256": "377a6d75d48f8c7232bb3eab77343215be1c042bd99abaa1462299790206a397",
+      "existing_git_locations": []
+    },
+    {
+      "path": "verification/final-audio-parser-tests.txt",
+      "bytes": 2159,
+      "sha256": "2c5ac6ab88866c9c7b0e55ebaea81fd081fe463c8fb21689436bccf9a18702d3",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "verification/final-handoff-tools-tests.txt",
+      "bytes": 1677,
+      "sha256": "20a95b16da33a266c74de164e9fb3c710fc8577a3666617f1bdf94f28b4fc955",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "verification/final-source-check/result.json",
+      "bytes": 431,
+      "sha256": "184187b3a29b6ade2433f0bd763bbfe8e2ededa0d2bb2a7fd7001c246bda0874",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "verification/final-source-check/smoke.json",
+      "bytes": 7393,
+      "sha256": "1435380b694b4d9cab90275fb5c136228bccd8ef71d9cfcca702e6564580034e",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "verification/final-source-check/tests.txt",
+      "bytes": 6090,
+      "sha256": "2bed8a5f01a10fe61dc246a9ba38c67e0254b0ef36dedf79fde1f473c4026c7f",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "verification/final-v029-source-check/result.json",
+      "bytes": 430,
+      "sha256": "14ce8faf8810a4c5edb65cb57a82232f2f00c06401994c2ac2e67797ee49b384",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "verification/final-v029-source-check/smoke.json",
+      "bytes": 7393,
+      "sha256": "1435380b694b4d9cab90275fb5c136228bccd8ef71d9cfcca702e6564580034e",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "verification/final-v029-source-check/tests.txt",
+      "bytes": 6090,
+      "sha256": "70f3601a9b76c13987ef3115d4623606ca91eadd1e4e0ff74c01244babc6f759",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "verification/fresh-audio-parser-tests.txt",
+      "bytes": 2159,
+      "sha256": "a3a77cf266d6febb2c2cf65886586120972e5ac0a48148e719906c0e7d675456",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "verification/fresh-v029-scene-source-check/result.json",
+      "bytes": 431,
+      "sha256": "3beb060dda85462a66ad5ce6891f9bdc217e7a6fc198e88b3ea3adc4a2a06169",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "verification/fresh-v029-scene-source-check/smoke.json",
+      "bytes": 7393,
+      "sha256": "1435380b694b4d9cab90275fb5c136228bccd8ef71d9cfcca702e6564580034e",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "verification/fresh-v029-scene-source-check/tests.txt",
+      "bytes": 6090,
+      "sha256": "ff1331f349a1dfe0536394cbb1401afa4ffa3c0724df39523131075673b9282c",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    },
+    {
+      "path": "verification/handoff-tools-tests.txt",
+      "bytes": 1677,
+      "sha256": "11ceca85f602866cf5c14ae1ad0fdfa494b69ecaa38a6ba65b2c154d46119fad",
+      "decision": "private_original_archive_only",
+      "import_path": null,
+      "import_sha256": null,
+      "existing_git_locations": []
+    }
+  ],
+  "raw_gitlab_upload": {
+    "id": 1460786156,
+    "url": "/uploads/b7fe9c584040b5ccce8c341ce1d0e4c2/fDisBull_Syndicate_FULL_F001.zip"
+  },
+  "raw_upload_readback": "byte-identical readback verified by publishing owner"
+}

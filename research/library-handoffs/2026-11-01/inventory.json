@@ -1,0 +1,286 @@
+{
+  "format": "fdisbull-library-handoff-intake-1",
+  "date": "2026-11-01",
+  "main_base": "f173aa33d0cd12356ce13a3b23b567bd2b432156",
+  "complete_for_listed_retrieved_archives": true,
+  "all_originating_library_files_enumerated": false,
+  "archive_count": 12,
+  "archives": [
+    {
+      "id": "full-f001",
+      "archive": "fDisBull_Syndicate_FULL_F001.zip",
+      "bytes": 2656225,
+      "sha256": "53c85cb2ac29f7986cbee35c83ed059d34bebc92c8258756fb50fe49df63b8c9",
+      "source_url": "https://chatgpt.com/space/file/libfile_5c57f042dff081918f271805b22db481",
+      "inventory": "full-f001/manifest.json",
+      "privacy_audit": "bounded scan passed; original outside Git",
+      "raw_gitlab_upload": {
+        "id": 1460786156,
+        "url": "/uploads/b7fe9c584040b5ccce8c341ce1d0e4c2/fDisBull_Syndicate_FULL_F001.zip"
+      },
+      "raw_upload_readback": "byte-identical readback verified by publishing owner",
+      "installation_or_native_execution_this_intake": false
+    },
+    {
+      "id": "syndicate-d001",
+      "archive": "fDisBull_Syndicate_DELTA_D001.zip",
+      "bytes": 19490,
+      "sha256": "fe6a782f1d060f035a93c0738b06ea3449c43fbacab7addb86a23336629a84e5",
+      "source_url": "https://chatgpt.com/space/file/libfile_3383059a86e4819198b798ee601ad8c9",
+      "inventory": "syndicate-d001/manifest.json",
+      "privacy_audit": "passed for private original upload; selected source separate",
+      "raw_gitlab_upload": {
+        "id": 1460793957,
+        "url": "/uploads/2dc7614437f09a30672608364d91f1fc/fDisBull_Syndicate_DELTA_D001.zip"
+      },
+      "raw_upload_readback": "byte-identical readback verified by publishing owner",
+      "installation_or_native_execution_this_intake": false
+    },
+    {
+      "id": "v029-core",
+      "archive": "fDisBull_v029_Core_Installation_and_Receipts.zip",
+      "bytes": 895449,
+      "sha256": "f6a89309b1f676d872d91a6888fc9574bbcc150f229d2c84439a0cd8c5c422a9",
+      "source_url": "https://chatgpt.com/space/file/libfile_8fbcd44f99e8819191a5e9f0181475ff",
+      "inventory": "v029-core/manifest.json",
+      "privacy_audit": "passed for private original upload; selected source separate",
+      "raw_gitlab_upload": {
+        "id": 1460793961,
+        "url": "/uploads/a39a3ab83061ecfae9b03cb531413fe7/fDisBull_v029_Core_Installation_and_Receipts.zip"
+      },
+      "raw_upload_readback": "byte-identical readback verified by publishing owner",
+      "installation_or_native_execution_this_intake": false
+    },
+    {
+      "id": "v029-dependencies",
+      "archive": "fDisBull_v029_Dependency_Installation_Receipt.zip",
+      "bytes": 11252,
+      "sha256": "2e8172c8c3192cf5ef388d0f69514cac14cc38b44b0a62f47272e392093cef92",
+      "source_url": "https://chatgpt.com/space/file/libfile_fccc992e231881919544fda9b063e906",
+      "inventory": "v029-dependencies/manifest.json",
+      "privacy_audit": "passed for private original upload; selected source separate",
+      "raw_gitlab_upload": {
+        "id": 1460793964,
+        "url": "/uploads/155f924e6cbfa7a9104871a8ea8989d8/fDisBull_v029_Dependency_Installation_Receipt.zip"
+      },
+      "raw_upload_readback": "byte-identical readback verified by publishing owner",
+      "installation_or_native_execution_this_intake": false
+    },
+    {
+      "id": "partial-000",
+      "archive": "fDisBull_PARTIAL_HANDOFF_000_2026-11-01.zip",
+      "bytes": 8316,
+      "sha256": "930f177233c2ce9c3df81ac739a7d537acbe4b3bea0a8376d70ae36c1ef272b1",
+      "source_url": "https://chatgpt.com/space/file/libfile_b17b58cba3ac8191a0ed750555b0d94f",
+      "inventory": "partial-000/manifest.json",
+      "privacy_audit": "passed for private original upload; selected source separate",
+      "raw_gitlab_upload": {
+        "id": 1460793965,
+        "url": "/uploads/5f04cfb8f150dfef2f634e1a35102b35/fDisBull_PARTIAL_HANDOFF_000_2026-11-01.zip"
+      },
+      "raw_upload_readback": "byte-identical readback verified by publishing owner",
+      "installation_or_native_execution_this_intake": false
+    },
+    {
+      "id": "research-implementation",
+      "archive": "fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip",
+      "bytes": 15734119,
+      "sha256": "aa3627a4ac061fdccb9f816e0d8e685417275220e60dee119b8a9db655e8fdf2",
+      "source_url": "https://chatgpt.com/space/file/libfile_00a0666f275c8191bc891ea3d8b14686",
+      "inventory": "research-implementation/manifest.json",
+      "privacy_audit": "passed for private original upload; selected source separate",
+      "raw_gitlab_upload": {
+        "id": 1460793972,
+        "url": "/uploads/2441503b49f0370655255ec78ee90548/fDisBull_Research_and_Implementation_Handoff_2026-11-01.zip"
+      },
+      "raw_upload_readback": "byte-identical readback verified by publishing owner",
+      "installation_or_native_execution_this_intake": false
+    },
+    {
+      "id": "syndicate-consolidated",
+      "archive": "fDisBull_Syndicate_Consolidated_Handoff_2026-11-01.zip",
+      "bytes": 1736147,
+      "sha256": "1988090c5c18140213110d00593ed47b8d01955f8b551921f037b0d52353e978",
+      "source_url": "https://chatgpt.com/space/file/libfile_d5a307301794819183498c1daa948de2",
+      "inventory": "syndicate-consolidated/manifest.json",
+      "privacy_audit": "passed for private original upload; selected source separate",
+      "raw_gitlab_upload": {
+        "id": 1460794007,
+        "url": "/uploads/de791f9a2a4f6afccd8362da4ecdd13f/fDisBull_Syndicate_Consolidated_Handoff_2026-11-01.zip"
+      },
+      "raw_upload_readback": "byte-identical readback verified by publishing owner",
+      "installation_or_native_execution_this_intake": false
+    },
+    {
+      "id": "v029-source-check",
+      "archive": "fDisBull_Syndicate_Handoff_v029_Check_2026-11-01.zip",
+      "bytes": 1796361,
+      "sha256": "0f957f0ed76bf2b3f22b24f9c73634203f1f51af024edfc2f07f5f9af5cf26ba",
+      "source_url": "https://chatgpt.com/space/file/libfile_ceb35b47126c81918295b9f775655c42",
+      "inventory": "v029-source-check/manifest.json",
+      "privacy_audit": "passed for private original upload; selected source separate",
+      "raw_gitlab_upload": {
+        "id": 1460794011,
+        "url": "/uploads/813373627cb0e82924e471a8b7ab2e8d/fDisBull_Syndicate_Handoff_v029_Check_2026-11-01.zip"
+      },
+      "raw_upload_readback": "byte-identical readback verified by publishing owner",
+      "installation_or_native_execution_this_intake": false
+    },
+    {
+      "id": "release-intake",
+      "archive": "fDisBull_v0.29_Release_Intake_2026-11-01.zip",
+      "bytes": 4825,
+      "sha256": "36cbc643dcc6224123a4a0ef257c168077c36082e7e11897954e4bc45778db4e",
+      "source_url": "https://chatgpt.com/space/file/libfile_210f88b836148191b26ef80b0a31f148",
+      "inventory": "release-intake/manifest.json",
+      "privacy_audit": "passed for private original upload; selected source separate",
+      "raw_gitlab_upload": {
+        "id": 1460794012,
+        "url": "/uploads/c7ad20e522f904f02c73065943ab9aa3/fDisBull_v0.29_Release_Intake_2026-11-01.zip"
+      },
+      "raw_upload_readback": "byte-identical readback verified by publishing owner",
+      "installation_or_native_execution_this_intake": false
+    },
+    {
+      "id": "release-copy-tool-variant",
+      "archive": "fdisbull-0.29.0-tool(1).zip",
+      "bytes": 2649440,
+      "sha256": "ca0b76fdbf896862fd718dbbb70cc98b952783a5a9e82ed58669c2becf185c82",
+      "source_url": "https://chatgpt.com/space/file/libfile_39a8bf57283481919dc34e56281aba6a",
+      "inventory": "release-copies/tool-variant/manifest.json",
+      "canonical_gitlab_package": {
+        "package_id": 74791785,
+        "file_id": 381580949,
+        "file_name": "fdisbull-0.29.0-tool.zip",
+        "sha256": "4bb1b5227ce39a4b1095e15e20d8e52a3c603c634a2426c63aaaddbb551fbf26",
+        "bytes": 2650174
+      },
+      "matches_published_package": false,
+      "raw_gitlab_upload": {
+        "id": 1460807440,
+        "url": "/uploads/d0f3edd8166c4e11d7d5428d3270a9a8/fdisbull-0.29.0-tool_1_.zip"
+      },
+      "disposition": "Distinct source snapshot preserved privately; canonical published tool ZIP unchanged",
+      "installation_or_native_execution_this_intake": false,
+      "raw_upload_readback": "byte-identical readback verified by publishing owner"
+    },
+    {
+      "id": "release-copy-sdist",
+      "archive": "fdisbull-0.29.0.tar(1).gz",
+      "bytes": 2234060,
+      "sha256": "c839319fd153d9c2f6933afd9662a0c837889d2dc9a2fb80310e2c51d0ae65e8",
+      "source_url": "https://chatgpt.com/space/file/libfile_9889bc62b4f08191bcbe345961f78874",
+      "inventory": "release-copies/sdist/manifest.json",
+      "canonical_gitlab_package": {
+        "package_id": 74791785,
+        "file_id": 381580946,
+        "file_name": "fdisbull-0.29.0.tar.gz",
+        "sha256": "c839319fd153d9c2f6933afd9662a0c837889d2dc9a2fb80310e2c51d0ae65e8",
+        "bytes": 2234060
+      },
+      "matches_published_package": true,
+      "raw_gitlab_upload": null,
+      "disposition": "Already preserved byte-identically in canonical GitLab package; no duplicate upload",
+      "installation_or_native_execution_this_intake": false
+    },
+    {
+      "id": "release-copy-dependencies",
+      "archive": "fdisbull-0.29.0-linux-x86_64-dependencies.tar(2).gz",
+      "bytes": 50475916,
+      "sha256": "e45801015b0d8e0dc7a6396997e01bd2b5c7dc01bfec0cf18f692fa83ac48ce6",
+      "source_url": "https://chatgpt.com/space/file/libfile_0d1263abe63c819188222b730ee22a3e",
+      "inventory": "release-copies/dependencies/manifest.json",
+      "canonical_gitlab_package": {
+        "package_id": 74791804,
+        "file_id": 381581034,
+        "file_name": "0.29.0-linux-x86_64-dependencies.tar.gz",
+        "sha256": "e45801015b0d8e0dc7a6396997e01bd2b5c7dc01bfec0cf18f692fa83ac48ce6",
+        "bytes": 50475916
+      },
+      "matches_published_package": true,
+      "raw_gitlab_upload": null,
+      "disposition": "Already preserved byte-identically in canonical GitLab package; no duplicate upload",
+      "installation_or_native_execution_this_intake": false
+    }
+  ],
+  "existing_kq1_preservation": {
+    "mr": 37,
+    "head": "7e5b13acb1bed91faebba6e558acb627c3d1bc5d",
+    "raw_upload_id": 1460716279,
+    "archive_sha256": "52040dc1d6b0c25c64255c9e3af68e432b267ac5382a72aa1348d391b4521118",
+    "status": "draft/unmerged; original archive private, sanitized sources and macOS comparison preserved"
+  },
+  "remaining_gaps": [
+    "This bounded intake covers 15 identified Library files: nine handoff archives, three release copies and three standalone receipts/reports. It does not claim an exhaustive listing of unrelated Library files.",
+    "Native offline/source companion artifacts are accounted for by authenticated publisher metadata. This intake does not download or execute them, or infer new native installation qualification."
+  ],
+  "runtime_or_installation_executed_this_intake": false,
+  "archive_patches_applied": false,
+  "retrieved_handoff_archive_count": 9,
+  "retrieved_release_copy_count": 3,
+  "published_artifact_metadata_count": 10,
+  "published_artifact_metadata": "release-intake/publisher-package-files.json",
+  "private_original_upload_count": 10,
+  "canonical_publisher_alias_count": 2,
+  "standalone_files": [
+    {
+      "id": "standalone-f001-json-receipt",
+      "file": "fDisBull_Syndicate_FULL_F001_RECEIPT.json",
+      "bytes": 1011,
+      "sha256": "1d5e0a4ce51c9043a927d8eeb6ef8e3f5e93f4a945ff473be9ff8fc046a99115",
+      "source_url": "https://chatgpt.com/space/file/libfile_d19471652ae88191a29e21ac3f37886b",
+      "credential_pattern_hits": 0,
+      "native_or_installation_execution_this_intake": false,
+      "decision": "imported_exact",
+      "import_path": "fDisBull_Syndicate_FULL_F001_RECEIPT.json",
+      "import_sha256": "1d5e0a4ce51c9043a927d8eeb6ef8e3f5e93f4a945ff473be9ff8fc046a99115",
+      "git_preservation_path": "receipts/fDisBull_Syndicate_FULL_F001_RECEIPT.json",
+      "private_host_root_pattern_hits": 0,
+      "f001_identity_matches_independent_archive": true,
+      "historical_source_test_claim": {
+        "tests": 63,
+        "independently_rerun_this_intake": false,
+        "scope": "Direct player-source/authored-scene test; not installed/runtime acceptance"
+      }
+    },
+    {
+      "id": "standalone-f001-sha256-receipt",
+      "file": "fDisBull_Syndicate_FULL_F001.zip.sha256",
+      "bytes": 99,
+      "sha256": "81df3f30f809e96afb13f0a93441993a11797621e465d857fbb8ed34071e3fc9",
+      "source_url": "https://chatgpt.com/space/file/libfile_d0c5ff1038688191b1144bdfcce7d625",
+      "credential_pattern_hits": 0,
+      "native_or_installation_execution_this_intake": false,
+      "decision": "imported_exact",
+      "import_path": "fDisBull_Syndicate_FULL_F001.zip.sha256",
+      "import_sha256": "81df3f30f809e96afb13f0a93441993a11797621e465d857fbb8ed34071e3fc9",
+      "git_preservation_path": "receipts/fDisBull_Syndicate_FULL_F001.zip.sha256",
+      "private_host_root_pattern_hits": 0,
+      "f001_identity_matches_independent_archive": true
+    },
+    {
+      "id": "standalone-report",
+      "file": "REPORT(10).md",
+      "bytes": 4855,
+      "sha256": "09478f3fba5a141631023a3eafc2af5321e91db25f2d3541284151ff9fd0ca48",
+      "source_url": "https://chatgpt.com/space/file/libfile_c630ab7163c48191b1643bbe0a8ad7b2",
+      "credential_pattern_hits": 0,
+      "native_or_installation_execution_this_intake": false,
+      "decision": "archive_member_alias",
+      "private_host_root_pattern_hits": true,
+      "archive_id": "v029-core",
+      "archive_member": "REPORT.md",
+      "byte_identical_to_archive_member": true,
+      "raw_gitlab_upload": {
+        "id": 1460793961,
+        "url": "/uploads/a39a3ab83061ecfae9b03cb531413fe7/fDisBull_v029_Core_Installation_and_Receipts.zip"
+      },
+      "sanitized_report_path": "v029-core/historical-report.md",
+      "raw_report_copied_to_git": false
+    }
+  ],
+  "identified_library_file_count": 15,
+  "standalone_receipt_or_report_count": 3,
+  "git_preserved_standalone_source_files": 2,
+  "archive_member_alias_count": 1
+}

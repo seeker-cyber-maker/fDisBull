@@ -1,0 +1,498 @@
+{
+  "format": "syndicate-ascii-observation-1",
+  "overlay_id": "0ea9fd119233ed19",
+  "viewport": {
+    "source_state_sha256": "7e041f4416892d95dede2fbddc9f8ad0f585c432864a9b61b0448fa3d9870e72",
+    "map_number": 1,
+    "origin_raw": [
+      14080,
+      6400
+    ],
+    "step_raw": 256,
+    "width": 42,
+    "height": 22,
+    "z_layer": 2,
+    "y_direction": "increasing_down",
+    "map_identity": "ab76fb046d2d0ff19131c53344d4c128d33ca9addb41d0a7dbbb4a0e276cffef",
+    "cell_intervals": "half-open",
+    "commands_use": "exact raw coordinates and stable IDs"
+  },
+  "rows": [
+    ".......................??????????.........",
+    "..................?.?..??????.............",
+    ".......?????...........??????.............",
+    ".......?...?...........??????.............",
+    ".......?...?...........??????.............",
+    ".......?.!.?...???????....???.............",
+    ".......?...?...?.....?....???.............",
+    ".......??+??...?...g.???..???.............",
+    ".....?.........???+???....???.............",
+    "..........................???.............",
+    ".....v:::::::::::.........???.............",
+    "............????:.........???.............",
+    "............?..?:..?...?..???.............",
+    "............?..?:.........???.............",
+    "...............?::.......????.......**....",
+    "............?..?g:::::::::::::......*.....",
+    "............????...?...?.????:::::::@.....",
+    "..........................???.............",
+    "..???????.................???.............",
+    "..???????.................???.............",
+    "..??...??.................???.............",
+    "..??.c.??.......????......???....t*......."
+  ],
+  "entities": [
+    {
+      "id": "object-13",
+      "glyph": "t",
+      "category": "tree",
+      "mission_critical": false,
+      "overlay": "r21c34",
+      "position_raw": [
+        22924,
+        11828,
+        256
+      ],
+      "position_exact": "(89.546875, 46.203125, 2)",
+      "tile": [
+        89,
+        46,
+        2
+      ],
+      "subtile_raw": [
+        140,
+        52,
+        0
+      ]
+    },
+    {
+      "id": "object-14",
+      "glyph": "t",
+      "category": "tree",
+      "mission_critical": false,
+      "overlay": "r21c33",
+      "position_raw": [
+        22532,
+        11788,
+        256
+      ],
+      "position_exact": "(88.015625, 46.046875, 2)",
+      "tile": [
+        88,
+        46,
+        2
+      ],
+      "subtile_raw": [
+        4,
+        12,
+        0
+      ]
+    },
+    {
+      "id": "object-15",
+      "glyph": "t",
+      "category": "tree",
+      "mission_critical": false,
+      "overlay": "r21c34",
+      "position_raw": [
+        22968,
+        11880,
+        256
+      ],
+      "position_exact": "(89.71875, 46.40625, 2)",
+      "tile": [
+        89,
+        46,
+        2
+      ],
+      "subtile_raw": [
+        184,
+        104,
+        0
+      ]
+    },
+    {
+      "id": "object-17",
+      "glyph": "t",
+      "category": "tree",
+      "mission_critical": false,
+      "overlay": "r14c37",
+      "position_raw": [
+        23640,
+        10088,
+        256
+      ],
+      "position_exact": "(92.34375, 39.40625, 2)",
+      "tile": [
+        92,
+        39,
+        2
+      ],
+      "subtile_raw": [
+        88,
+        104,
+        0
+      ]
+    },
+    {
+      "id": "object-18",
+      "glyph": "t",
+      "category": "tree",
+      "mission_critical": false,
+      "overlay": "r14c37",
+      "position_raw": [
+        23768,
+        10072,
+        256
+      ],
+      "position_exact": "(92.84375, 39.34375, 2)",
+      "tile": [
+        92,
+        39,
+        2
+      ],
+      "subtile_raw": [
+        216,
+        88,
+        0
+      ]
+    },
+    {
+      "id": "object-19",
+      "glyph": "t",
+      "category": "tree",
+      "mission_critical": false,
+      "overlay": "r14c36",
+      "position_raw": [
+        23308,
+        9988,
+        256
+      ],
+      "position_exact": "(91.046875, 39.015625, 2)",
+      "tile": [
+        91,
+        39,
+        2
+      ],
+      "subtile_raw": [
+        12,
+        4,
+        0
+      ]
+    },
+    {
+      "id": "object-2",
+      "glyph": "+",
+      "category": "door",
+      "mission_critical": false,
+      "overlay": "r08c18",
+      "position_raw": [
+        18792,
+        8664,
+        256
+      ],
+      "position_exact": "(73.40625, 33.84375, 2)",
+      "tile": [
+        73,
+        33,
+        2
+      ],
+      "subtile_raw": [
+        104,
+        216,
+        0
+      ]
+    },
+    {
+      "id": "object-20",
+      "glyph": "t",
+      "category": "tree",
+      "mission_critical": false,
+      "overlay": "r14c36",
+      "position_raw": [
+        23536,
+        10160,
+        256
+      ],
+      "position_exact": "(91.9375, 39.6875, 2)",
+      "tile": [
+        91,
+        39,
+        2
+      ],
+      "subtile_raw": [
+        240,
+        176,
+        0
+      ]
+    },
+    {
+      "id": "object-3",
+      "glyph": "+",
+      "category": "door",
+      "mission_critical": false,
+      "overlay": "r07c09",
+      "position_raw": [
+        16480,
+        8416,
+        256
+      ],
+      "position_exact": "(64.375, 32.875, 2)",
+      "tile": [
+        64,
+        32,
+        2
+      ],
+      "subtile_raw": [
+        96,
+        224,
+        0
+      ]
+    },
+    {
+      "id": "person-0",
+      "glyph": "@",
+      "category": "agent",
+      "mission_critical": false,
+      "overlay": "r16c36",
+      "position_raw": [
+        23476,
+        10668,
+        256
+      ],
+      "position_exact": "(91.703125, 41.671875, 2)",
+      "tile": [
+        91,
+        41,
+        2
+      ],
+      "subtile_raw": [
+        180,
+        172,
+        0
+      ]
+    },
+    {
+      "id": "person-1",
+      "glyph": "A",
+      "category": "agent",
+      "mission_critical": false,
+      "overlay": "r16c36",
+      "position_raw": [
+        23420,
+        10516,
+        256
+      ],
+      "position_exact": "(91.484375, 41.078125, 2)",
+      "tile": [
+        91,
+        41,
+        2
+      ],
+      "subtile_raw": [
+        124,
+        20,
+        0
+      ]
+    },
+    {
+      "id": "person-10",
+      "glyph": "g",
+      "category": "guard",
+      "mission_critical": false,
+      "overlay": "r07c19",
+      "position_raw": [
+        19136,
+        8256,
+        256
+      ],
+      "position_exact": "(74.75, 32.25, 2)",
+      "tile": [
+        74,
+        32,
+        2
+      ],
+      "subtile_raw": [
+        192,
+        64,
+        0
+      ]
+    },
+    {
+      "id": "person-11",
+      "glyph": "g",
+      "category": "guard",
+      "mission_critical": false,
+      "overlay": "r15c16",
+      "position_raw": [
+        18240,
+        10304,
+        256
+      ],
+      "position_exact": "(71.25, 40.25, 2)",
+      "tile": [
+        71,
+        40,
+        2
+      ],
+      "subtile_raw": [
+        64,
+        64,
+        0
+      ]
+    },
+    {
+      "id": "person-13",
+      "glyph": "c",
+      "category": "civilian",
+      "mission_critical": false,
+      "overlay": "r21c05",
+      "position_raw": [
+        15552,
+        11968,
+        256
+      ],
+      "position_exact": "(60.75, 46.75, 2)",
+      "tile": [
+        60,
+        46,
+        2
+      ],
+      "subtile_raw": [
+        192,
+        192,
+        0
+      ]
+    },
+    {
+      "id": "person-2",
+      "glyph": "A",
+      "category": "agent",
+      "mission_critical": false,
+      "overlay": "r15c36",
+      "position_raw": [
+        23420,
+        10388,
+        256
+      ],
+      "position_exact": "(91.484375, 40.578125, 2)",
+      "tile": [
+        91,
+        40,
+        2
+      ],
+      "subtile_raw": [
+        124,
+        148,
+        0
+      ]
+    },
+    {
+      "id": "person-3",
+      "glyph": "A",
+      "category": "agent",
+      "mission_critical": false,
+      "overlay": "r15c36",
+      "position_raw": [
+        23404,
+        10260,
+        256
+      ],
+      "position_exact": "(91.421875, 40.078125, 2)",
+      "tile": [
+        91,
+        40,
+        2
+      ],
+      "subtile_raw": [
+        108,
+        20,
+        0
+      ]
+    },
+    {
+      "id": "person-8",
+      "glyph": "!",
+      "category": "civilian",
+      "mission_critical": true,
+      "overlay": "r05c09",
+      "position_raw": [
+        16448,
+        7872,
+        256
+      ],
+      "position_exact": "(64.25, 30.75, 2)",
+      "tile": [
+        64,
+        30,
+        2
+      ],
+      "subtile_raw": [
+        64,
+        192,
+        0
+      ]
+    },
+    {
+      "id": "vehicle-0",
+      "glyph": "v",
+      "category": "vehicle",
+      "mission_critical": false,
+      "overlay": "r10c05",
+      "position_raw": [
+        15496,
+        9144,
+        256
+      ],
+      "position_exact": "(60.53125, 35.71875, 2)",
+      "tile": [
+        60,
+        35,
+        2
+      ],
+      "subtile_raw": [
+        136,
+        184,
+        0
+      ]
+    }
+  ],
+  "stacks": [
+    {
+      "overlay": "r21c34",
+      "ids": [
+        "object-13",
+        "object-15"
+      ]
+    },
+    {
+      "overlay": "r14c37",
+      "ids": [
+        "object-17",
+        "object-18"
+      ]
+    },
+    {
+      "overlay": "r14c36",
+      "ids": [
+        "object-19",
+        "object-20"
+      ]
+    },
+    {
+      "overlay": "r16c36",
+      "ids": [
+        "person-0",
+        "person-1"
+      ]
+    },
+    {
+      "overlay": "r15c36",
+      "ids": [
+        "person-2",
+        "person-3"
+      ]
+    }
+  ],
+  "text": "Local map / ASCII overlay 0ea9fd119233ed19; z-layer=2; cell=1 tile\norigin_raw=(14080,6400) raw_step=256; display only; y increases downward\nfocus=person-0 raw=[23476, 10668, 256] world=(91.703125, 41.671875, 2)\n     000000000011111111112222222222333333333344\n     012345678901234567890123456789012345678901\n00 | .......................??????????.........\n01 | ..................?.?..??????.............\n02 | .......?????...........??????.............\n03 | .......?...?...........??????.............\n04 | .......?...?...........??????.............\n05 | .......?.!.?...???????....???.............\n06 | .......?...?...?.....?....???.............\n07 | .......??+??...?...g.???..???.............\n08 | .....?.........???+???....???.............\n09 | ..........................???.............\n10 | .....v:::::::::::.........???.............\n11 | ............????:.........???.............\n12 | ............?..?:..?...?..???.............\n13 | ............?..?:.........???.............\n14 | ...............?::.......????.......**....\n15 | ............?..?g:::::::::::::......*.....\n16 | ............????...?...?.????:::::::@.....\n17 | ..........................???.............\n18 | ..???????.................???.............\n19 | ..???????.................???.............\n20 | ..??...??.................???.............\n21 | ..??.c.??.......????......???....t*.......\n@ focus  A agent  c civilian  p police  g guard  v car  + door  ! target\nt tree  w window-class  i loose item  * stacked entities  : candidate route\n. candidate terrain  ? excluded/unresolved; neither is a walking certificate\nENTITY KEY: overlay | ID | exact world XYZ | raw XYZ | sub-tile raw XYZ\nr21c34 t object-13: (89.546875, 46.203125, 2) raw=[22924, 11828, 256] sub=[140, 52, 0]\nr21c33 t object-14: (88.015625, 46.046875, 2) raw=[22532, 11788, 256] sub=[4, 12, 0]\nr21c34 t object-15: (89.71875, 46.40625, 2) raw=[22968, 11880, 256] sub=[184, 104, 0]\nr14c37 t object-17: (92.34375, 39.40625, 2) raw=[23640, 10088, 256] sub=[88, 104, 0]\nr14c37 t object-18: (92.84375, 39.34375, 2) raw=[23768, 10072, 256] sub=[216, 88, 0]\nr14c36 t object-19: (91.046875, 39.015625, 2) raw=[23308, 9988, 256] sub=[12, 4, 0]\nr08c18 + object-2: (73.40625, 33.84375, 2) raw=[18792, 8664, 256] sub=[104, 216, 0]\nr14c36 t object-20: (91.9375, 39.6875, 2) raw=[23536, 10160, 256] sub=[240, 176, 0]\nr07c09 + object-3: (64.375, 32.875, 2) raw=[16480, 8416, 256] sub=[96, 224, 0]\nr16c36 @ person-0: (91.703125, 41.671875, 2) raw=[23476, 10668, 256] sub=[180, 172, 0]\nr16c36 A person-1: (91.484375, 41.078125, 2) raw=[23420, 10516, 256] sub=[124, 20, 0]\nr07c19 g person-10: (74.75, 32.25, 2) raw=[19136, 8256, 256] sub=[192, 64, 0]\nr15c16 g person-11: (71.25, 40.25, 2) raw=[18240, 10304, 256] sub=[64, 64, 0]\nr21c05 c person-13: (60.75, 46.75, 2) raw=[15552, 11968, 256] sub=[192, 192, 0]\nr15c36 A person-2: (91.484375, 40.578125, 2) raw=[23420, 10388, 256] sub=[124, 148, 0]\nr15c36 A person-3: (91.421875, 40.078125, 2) raw=[23404, 10260, 256] sub=[108, 20, 0]\nr05c09 ! person-8: (64.25, 30.75, 2) raw=[16448, 7872, 256] sub=[64, 192, 0]\nr10c05 v vehicle-0: (60.53125, 35.71875, 2) raw=[15496, 9144, 256] sub=[136, 184, 0]\nSTACKS: r21c34=object-13,object-15; r14c37=object-17,object-18; r14c36=object-19,object-20; r16c36=person-0,person-1; r15c36=person-2,person-3\n10 owned item records omitted from glyphs, retained in scene/inventory records.\nScope: global diagnostic snapshot, not line-of-sight visibility."
+}

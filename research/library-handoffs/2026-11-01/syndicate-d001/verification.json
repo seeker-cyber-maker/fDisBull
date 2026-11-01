@@ -1,0 +1,30 @@
+{
+  "format": "fdisbull-syndicate-derived-d001-1",
+  "parent_manifest_sha256": "df2b65423d9729b440d6190e4a2b171aa4b1abb131b3a61f874ed24a07cb0607",
+  "delta_sha256": "fe6a782f1d060f035a93c0738b06ea3449c43fbacab7addb86a23336629a84e5",
+  "verification": {
+    "status": "passed",
+    "id": "SYNDICATE-D001-20261101",
+    "parent": {
+      "id": "SYNDICATE-F001-20261101",
+      "manifest_sha256": "df2b65423d9729b440d6190e4a2b171aa4b1abb131b3a61f874ed24a07cb0607"
+    },
+    "added": 2,
+    "modified": 0,
+    "deleted": 0,
+    "unchanged": 323
+  },
+  "derived_verification": {
+    "status": "passed",
+    "id": "SYNDICATE-D001-20261101",
+    "file_count": 325,
+    "manifest_sha256": "81629ea30ba8bede5dbeaa9d7f6bfad68f877a5d5bf58548bdd107b9f27a752b",
+    "total_bytes": 6621443
+  },
+  "derived_physical_file_count": 327,
+  "original_file_count": 325,
+  "all_original_files_unchanged": true,
+  "deleted_original_files": 0,
+  "runtime_execution": false,
+  "scope": "Only two status/audit files added to a separate private derived copy; original extraction unchanged."
+}
