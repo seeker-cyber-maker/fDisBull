@@ -1,5 +1,7 @@
 # DinoPark scenes through the original-backed UDC
 
+The [park preparation follow-up](VERIFICATION-DINOPARK-PARK-PROBES-2026-11-01.md) qualifies the first guide, food order and running park with short readiness-driven waits and a shared deadline; standing unresolved-entry probes remain armed for later play.
+
 Continuation candidate on v0.24.0, 29 October 2026. PRs #18 and #19 are merged.
 This connects the DinoPark native scenes to the installed Z player through the
 original-backed DOS UDC. The current

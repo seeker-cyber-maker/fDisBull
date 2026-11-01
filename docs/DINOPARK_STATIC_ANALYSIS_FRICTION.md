@@ -1,5 +1,12 @@
 # DinoPark analysis friction and retained Z terminal replies
 
+The [park preparation and standing-probe follow-up](VERIFICATION-DINOPARK-PARK-PROBES-2026-11-01.md)
+qualifies hiring, food, park entry and three advances after correcting legacy
+settling waits. All 97 unresolved probes are verified armed in the retained live
+park. The PC union remains 47/201; all 13 asset candidates remain open. It also
+records Borland object-module retention evidence, the failed Guide attempt,
+private inventory-reply/routing friction and the explicit CACHE reserve decision.
+
 The [fence deadline and recovery follow-up](VERIFICATION-DINOPARK-FENCE-RECONCILIATION-2026-11-01.md)
 replaces fixed fence sleeps with retained phases and native commit evidence,
 adds pre-observation shared deadlines and a reusable deadline intersection,
