@@ -1,5 +1,7 @@
 # DinoPark scenes through the original-backed UDC
 
+The [park-exit recovery fix](VERIFICATION-DINOPARK-PARK-EXIT-RECOVERY-2026-11-01.md) adds a shared deadline, retained input evidence and guest-read-only Street reconciliation. Original-game normal and injected-failure trials qualify the exit and repeated readback recovery with all 97 probes armed; older held contexts and the separate return-to-park issue remain preserved.
+
 The [visitor continuation](VERIFICATION-DINOPARK-VISITORS-2026-11-01.md) adds 32 time advances through month rollover, separates numerical attendance from actor replenishment, and records the retained unknown park-to-street transition. Durable selective probes and stronger skill guidance are proposed separately in [GitLab !31](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/31).
 
 The [park preparation follow-up](VERIFICATION-DINOPARK-PARK-PROBES-2026-11-01.md) qualifies the first guide, food order and running park with short readiness-driven waits and a shared deadline; standing unresolved-entry probes remain armed for later play.
