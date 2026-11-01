@@ -103,8 +103,8 @@ STATE_EVIDENCE = {
     "$turn": "Turn loop R:0238:0092; Civ64 SCENES-PLAY 7.17.",
     "$year": "DGROUP:B220 absolute year; Civ64 SCENES-PLAY 5.2.",
     "$difficulty": "DGROUP:6B86 `_cur_tier`; civd GLOBALS.C:15 and NEWGAME.C:54-62 assign the five menu rows; Civ64 SCENES-PLAY 5.2 reads [6B86] as difficulty.",
-    "$competition": "DGROUP:D2F4 `_civ_total`; civd GLOBALS.C:113 and NEWGAME.C:73-76 clamp the menu result to 2..6 civilizations.",
-    "$players": "DGROUP:6B8A `_players`; civd GLOBALS.C:17 and NEWGAME.C:77 derive the active-civilization mask from `_civ_total`.",
+    "$competition": "DGROUP:D2F4 `_civ_total`; civd GLOBALS.C:113 and NEWGAME.C:73-76 map menu rows 7..3 to 6..2, clamped 2..6.",
+    "$players": "DGROUP:6B8A `_players`; civd GLOBALS.C:17 and NEWGAME.C:77 derive `255 >> (6 - civ_total)`; five competition rows write both fields.",
     "$rule_options": "DGROUP:E3C4 `_rule_options`; civd GLOBALS.C:186 and NEWGAME.C:82 set 15 at the start of a new game.",
     "$tribe": "Setup result recorded by Civ64 SCENES 9.3; the menu result binding is not modelled.",
     "$human_civ": "DGROUP:D7F0 player civilization; Civ64 SCENES-PLAY 7.19.",
@@ -424,18 +424,44 @@ SCREEN_SPECS = [
         [("O5:012E", "competition question")],
         [
             _object(
-                "competition-menu",
-                "Competition menu",
-                ["competition", "civilizations"],
-                "Number of civilizations; only the declared initial value is represented.",
+                "competition-seven",
+                "7 Civilizations",
+                ["7 civilizations", "seven civilizations", "seven"],
+                "Sets civ_total = 6 and players = 0xFF; civd NEWGAME.C menu row 0.",
+                "activate",
+                "choose-seven-civs",
             ),
             _object(
-                "competition-continue",
-                "Continue competition",
-                ["continue", "next"],
-                "Advances to the tribe question.",
+                "competition-six",
+                "6 Civilizations",
+                ["6 civilizations", "six civilizations", "six"],
+                "Sets civ_total = 5 and players = 0x7F; civd NEWGAME.C menu row 1.",
                 "activate",
-                "competition-continue",
+                "choose-six-civs",
+            ),
+            _object(
+                "competition-five",
+                "5 Civilizations",
+                ["5 civilizations", "five civilizations", "five"],
+                "Sets civ_total = 4 and players = 0x3F; civd NEWGAME.C menu row 2.",
+                "activate",
+                "choose-five-civs",
+            ),
+            _object(
+                "competition-four",
+                "4 Civilizations",
+                ["4 civilizations", "four civilizations", "four"],
+                "Sets civ_total = 3 and players = 0x1F; civd NEWGAME.C menu row 3.",
+                "activate",
+                "choose-four-civs",
+            ),
+            _object(
+                "competition-three",
+                "3 Civilizations",
+                ["3 civilizations", "three civilizations", "three"],
+                "Sets civ_total = 2 and players = 0x0F; civd NEWGAME.C menu row 4.",
+                "activate",
+                "choose-three-civs",
             ),
         ],
     ),
@@ -1273,11 +1299,53 @@ def build_programs() -> dict:
         ),
     )
     add(
-        "competition-continue",
+        "choose-seven-civs",
         _transition(
-            "competition-continue",
+            "choose-seven-civs",
             TRIBE,
-            "Competition choice recorded as declared state; tribe question.",
+            "7 Civilizations chosen: civ_total = 6, players = 0xFF; tribe question.",
+            ("$competition", 6),
+            ("$players", 255),
+        ),
+    )
+    add(
+        "choose-six-civs",
+        _transition(
+            "choose-six-civs",
+            TRIBE,
+            "6 Civilizations chosen: civ_total = 5, players = 0x7F; tribe question.",
+            ("$competition", 5),
+            ("$players", 127),
+        ),
+    )
+    add(
+        "choose-five-civs",
+        _transition(
+            "choose-five-civs",
+            TRIBE,
+            "5 Civilizations chosen: civ_total = 4, players = 0x3F; tribe question.",
+            ("$competition", 4),
+            ("$players", 63),
+        ),
+    )
+    add(
+        "choose-four-civs",
+        _transition(
+            "choose-four-civs",
+            TRIBE,
+            "4 Civilizations chosen: civ_total = 3, players = 0x1F; tribe question.",
+            ("$competition", 3),
+            ("$players", 31),
+        ),
+    )
+    add(
+        "choose-three-civs",
+        _transition(
+            "choose-three-civs",
+            TRIBE,
+            "3 Civilizations chosen: civ_total = 2, players = 0x0F; tribe question.",
+            ("$competition", 2),
+            ("$players", 15),
         ),
     )
     add(
@@ -1655,7 +1723,7 @@ def build_provenance(
         "limits": [
             "Partial scene graph and state projection, not a full game simulation.",
             "No DOS execution, VGA rendering, input decoding, AI, combat, technology, diplomacy, save parsing or economy model.",
-            "The five difficulty rows write `$difficulty` from DGROUP:6B86 `_cur_tier`; competition and tribe rows remain declared, and no setup binding has a live-screen observation.",
+            "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; the tribe rows remain declared and no setup binding has a live-screen observation.",
             "The game-over context is state-reachable for inspection; its trigger conditions are not modelled.",
             "Every screen boundary is resolved against a civd function; this is address resolution, not Windows-to-DOS byte equivalence.",
         ],

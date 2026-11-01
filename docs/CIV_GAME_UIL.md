@@ -13,7 +13,7 @@ screen inventory, civd for source-shaped state, and the pinned `CIV.EXE` atlas
 for address identity?
 
 The answer is a bounded **yes**: the committed scene is a valid
-`fdisbull-il-scene-1` document with 23 contexts, 85 objects and 35 programs.
+`fdisbull-il-scene-1` document with 23 contexts, 88 objects and 39 programs.
 It can be driven through the shared IL backend or Z text player. It is not a
 claim that the game's simulation, assets, input decoding or save format has
 been recovered.
@@ -89,7 +89,7 @@ provenance file.
 | `customize` | 2 | SCENES.md 7.4 | GAME.C | 6 | R:01A8:0591 `_game_menu` (inside) |
 | `birth` | 3 | SCENES.md 8 | WORLDGEN.C | 2 | O7:0012 `_make_world` (entry) |
 | `difficulty` | 4 | SCENES.md 9.1 | NEWGAME.C | 5 | O5:0031 `_new_game` (inside) |
-| `competition` | 5 | SCENES.md 9.2 | NEWGAME.C | 2 | O5:012E `_new_game` (inside) |
+| `competition` | 5 | SCENES.md 9.2 | NEWGAME.C | 5 | O5:012E `_new_game` (inside) |
 | `tribe` | 6 | SCENES.md 9.3 | NEWGAME.C | 2 | O5:0309 `_new_game` (inside) |
 | `leader-name` | 7 | SCENES.md 9.4-9.5, 10.4 | NAMES.C | 2 | O23:00D6 `_rename_leader` (entry), O23:0414 `_edit_line` (entry) |
 | `intro` | 8 | SCENES.md 9.6 | NEWGAME.C | 2 | O5:0657 `_new_game` (inside) |
@@ -124,8 +124,8 @@ carries every field and its evidence; the important groups are:
 | `$turn` | `u16` | `R:0238:0092` game loop | declared counter, not a full turn model |
 | `$year` | `i16` | DGROUP:B220; Civ64 SCENES-PLAY 5.2 | display state only |
 | `$difficulty` | `u8` | DGROUP:6B86 `_cur_tier`; civd GLOBALS.C:15, NEWGAME.C:54-62; Civ64 SCENES-PLAY 5.2 | source-bound 0..4; five menu rows write the field |
-| `$competition` | `u8` | DGROUP:D2F4 `_civ_total`; civd GLOBALS.C:113, NEWGAME.C:73-76 | source-bound clamp 2..6; no per-row action |
-| `$players` | `u8` | DGROUP:6B8A `_players`; civd GLOBALS.C:17, NEWGAME.C:77 | source-bound mask derived from `$competition` |
+| `$competition` | `u8` | DGROUP:D2F4 `_civ_total`; civd GLOBALS.C:113, NEWGAME.C:73-76 | source-bound 6..2; five menu rows write the field |
+| `$players` | `u8` | DGROUP:6B8A `_players`; civd GLOBALS.C:17, NEWGAME.C:77 | source-bound mask written with each competition row |
 | `$rule_options` | `u8` | DGROUP:E3C4 `_rule_options`; civd GLOBALS.C:186, NEWGAME.C:82 | source-bound constant 15 at new game |
 | `$tribe` | `u8` | Civ64 SCENES 9.3 | declared setup state; menu result binding not modelled |
 | `$human_civ` | `u8` | DGROUP:D7F0; Civ64 SCENES-PLAY 7.19 | declared player identity |
@@ -149,6 +149,14 @@ DGROUP:6B86. Civ64 `SCENES-PLAY 5.2` reads `[6B86]` as the difficulty level.
 The scene's five difficulty objects mirror rows 0..4 and each writes
 `$difficulty`; `test_difficulty_menu_binds_all_five_cur_tier_rows` drives all
 five through the shared IL backend.
+
+Competition is bound the same way. The five rows display 7..3 civilizations;
+civd `NEWGAME.C:73-76` maps row `r` to `_civ_total = clamp(6 - r, 2, 6)`, so
+`$competition` is the internal 6..2 count, not the displayed total.
+`NEWGAME.C:77` then writes `_players = 255 >> (6 - civ_total)`. The five scene
+objects write both `$competition` and `$players` (0xFF, 0x7F, 0x3F, 0x1F,
+0x0F); `test_competition_menu_binds_civ_total_and_players_mask` checks each
+pair and the transition to `tribe`.
 
 The scene deliberately does **not** load a save, render a map, execute a turn,
 run AI, resolve combat, advance technology or write a city record. Those are
@@ -196,10 +204,10 @@ The Z-player test uses the committed scene, not an in-memory rebuild.
 
 Observed on this host with the active fDisBull 0.28.0 interpreter:
 
-- `tests/test_civ_game_uil.py`: **7 passed**
+- `tests/test_civ_game_uil.py`: **8 passed**
 - CIV-focused set (`game UIL`, `city UIL`, `atlas`, `city trace`, `city overlay`):
-  **38 passed**
-- full repository suite: **2,242 passed, 152 skipped, 2 failed, 23 errors**.
+  **39 passed**
+- full repository suite: **2,243 passed, 152 skipped, 2 failed, 23 errors**.
   The failures/errors are the existing Apple-toolchain Linux ELF fixture
   boundary (`/usr/bin/gcc` is Apple clang; missing `-z ibtplt` and Linux
   metadata), not this scene.
@@ -211,9 +219,9 @@ remain static. No DOS screen was run for this slice.
 
 - Partial scene graph and state projection, not a full simulation.
 - No DOS execution, VGA rendering, palette/font/asset loading or input decoding.
-- The five difficulty rows are bound to `cur_tier`; competition and tribe menu
-  rows remain declared, and none of the setup bindings has a live-screen
-  observation.
+- Difficulty and competition rows are bound to `cur_tier`, `civ_total` and
+  `players`; the tribe rows remain declared, and none of the setup bindings has
+  a live-screen observation.
 - Unit next/previous/select, sell, buy, rename, text entry and report paging are
   only partially represented or absent. The detailed city fixture carries more
   source-modeled city behavior.
@@ -227,9 +235,8 @@ remain static. No DOS screen was run for this slice.
 
 ## Next probes
 
-1. Bind the five competition rows to `civ_total` and the derived `players`
-   mask, then check the clamp on the original code; the difficulty axis is now
-   source-bound.
+1. Bind the tribe rows to `civ_tribe_of` and `civnow`; difficulty and
+   competition are now source-bound.
 2. Bind the unit-list `next`/`previous`/`select` actions to the existing city
    fixture and to a live cursor read, rather than leaving the game scene with a
    single close action.

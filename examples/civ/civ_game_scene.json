@@ -1761,7 +1761,7 @@
     }
    ]
   },
-  "competition-continue": {
+  "choose-seven-civs": {
    "format": "fdisbull-il-1",
    "role": "uil",
    "variables": {
@@ -1875,22 +1875,614 @@
     }
    },
    "resources": {
-    "competition-continue-text": {
+    "choose-seven-civs-text": {
      "kind": "text",
-     "text": "Competition choice recorded as declared state; tribe question."
+     "text": "7 Civilizations chosen: civ_total = 6, players = 0xFF; tribe question."
     }
    },
    "body": [
     {
-     "id": "competition-continue-set-screen",
+     "id": "choose-seven-civs-set-screen",
      "op": "set",
      "var": "$screen",
      "value": 6
     },
     {
-     "id": "competition-continue-text",
+     "id": "choose-seven-civs-set-competition",
+     "op": "set",
+     "var": "$competition",
+     "value": 6
+    },
+    {
+     "id": "choose-seven-civs-set-players",
+     "op": "set",
+     "var": "$players",
+     "value": 255
+    },
+    {
+     "id": "choose-seven-civs-text",
      "op": "text",
-     "resource": "competition-continue-text"
+     "resource": "choose-seven-civs-text"
+    }
+   ]
+  },
+  "choose-six-civs": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "choose-six-civs-text": {
+     "kind": "text",
+     "text": "6 Civilizations chosen: civ_total = 5, players = 0x7F; tribe question."
+    }
+   },
+   "body": [
+    {
+     "id": "choose-six-civs-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 6
+    },
+    {
+     "id": "choose-six-civs-set-competition",
+     "op": "set",
+     "var": "$competition",
+     "value": 5
+    },
+    {
+     "id": "choose-six-civs-set-players",
+     "op": "set",
+     "var": "$players",
+     "value": 127
+    },
+    {
+     "id": "choose-six-civs-text",
+     "op": "text",
+     "resource": "choose-six-civs-text"
+    }
+   ]
+  },
+  "choose-five-civs": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "choose-five-civs-text": {
+     "kind": "text",
+     "text": "5 Civilizations chosen: civ_total = 4, players = 0x3F; tribe question."
+    }
+   },
+   "body": [
+    {
+     "id": "choose-five-civs-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 6
+    },
+    {
+     "id": "choose-five-civs-set-competition",
+     "op": "set",
+     "var": "$competition",
+     "value": 4
+    },
+    {
+     "id": "choose-five-civs-set-players",
+     "op": "set",
+     "var": "$players",
+     "value": 63
+    },
+    {
+     "id": "choose-five-civs-text",
+     "op": "text",
+     "resource": "choose-five-civs-text"
+    }
+   ]
+  },
+  "choose-four-civs": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "choose-four-civs-text": {
+     "kind": "text",
+     "text": "4 Civilizations chosen: civ_total = 3, players = 0x1F; tribe question."
+    }
+   },
+   "body": [
+    {
+     "id": "choose-four-civs-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 6
+    },
+    {
+     "id": "choose-four-civs-set-competition",
+     "op": "set",
+     "var": "$competition",
+     "value": 3
+    },
+    {
+     "id": "choose-four-civs-set-players",
+     "op": "set",
+     "var": "$players",
+     "value": 31
+    },
+    {
+     "id": "choose-four-civs-text",
+     "op": "text",
+     "resource": "choose-four-civs-text"
+    }
+   ]
+  },
+  "choose-three-civs": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "choose-three-civs-text": {
+     "kind": "text",
+     "text": "3 Civilizations chosen: civ_total = 2, players = 0x0F; tribe question."
+    }
+   },
+   "body": [
+    {
+     "id": "choose-three-civs-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 6
+    },
+    {
+     "id": "choose-three-civs-set-competition",
+     "op": "set",
+     "var": "$competition",
+     "value": 2
+    },
+    {
+     "id": "choose-three-civs-set-players",
+     "op": "set",
+     "var": "$players",
+     "value": 15
+    },
+    {
+     "id": "choose-three-civs-text",
+     "op": "text",
+     "resource": "choose-three-civs-text"
     }
    ]
   },
@@ -5707,28 +6299,86 @@
    "context": "difficulty"
   },
   {
-   "id": "competition-menu",
-   "label": "Competition menu",
+   "id": "competition-seven",
+   "label": "7 Civilizations",
    "aliases": [
-    "competition",
-    "civilizations"
+    "7 civilizations",
+    "seven civilizations",
+    "seven"
    ],
-   "description": "Number of civilizations; only the declared initial value is represented.",
-   "bindings": [],
-   "context": "competition"
-  },
-  {
-   "id": "competition-continue",
-   "label": "Continue competition",
-   "aliases": [
-    "continue",
-    "next"
-   ],
-   "description": "Advances to the tribe question.",
+   "description": "Sets civ_total = 6 and players = 0xFF; civd NEWGAME.C menu row 0.",
    "bindings": [
     {
      "verb": "activate",
-     "program": "competition-continue"
+     "program": "choose-seven-civs"
+    }
+   ],
+   "context": "competition"
+  },
+  {
+   "id": "competition-six",
+   "label": "6 Civilizations",
+   "aliases": [
+    "6 civilizations",
+    "six civilizations",
+    "six"
+   ],
+   "description": "Sets civ_total = 5 and players = 0x7F; civd NEWGAME.C menu row 1.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "choose-six-civs"
+    }
+   ],
+   "context": "competition"
+  },
+  {
+   "id": "competition-five",
+   "label": "5 Civilizations",
+   "aliases": [
+    "5 civilizations",
+    "five civilizations",
+    "five"
+   ],
+   "description": "Sets civ_total = 4 and players = 0x3F; civd NEWGAME.C menu row 2.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "choose-five-civs"
+    }
+   ],
+   "context": "competition"
+  },
+  {
+   "id": "competition-four",
+   "label": "4 Civilizations",
+   "aliases": [
+    "4 civilizations",
+    "four civilizations",
+    "four"
+   ],
+   "description": "Sets civ_total = 3 and players = 0x1F; civd NEWGAME.C menu row 3.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "choose-four-civs"
+    }
+   ],
+   "context": "competition"
+  },
+  {
+   "id": "competition-three",
+   "label": "3 Civilizations",
+   "aliases": [
+    "3 civilizations",
+    "three civilizations",
+    "three"
+   ],
+   "description": "Sets civ_total = 2 and players = 0x0F; civd NEWGAME.C menu row 4.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "choose-three-civs"
     }
    ],
    "context": "competition"

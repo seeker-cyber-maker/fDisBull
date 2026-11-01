@@ -1,7 +1,7 @@
 {
  "format": "fdisbull-civ-game-uil-provenance-1",
  "scene": "examples/civ/civ_game_scene.json",
- "scene_sha256": "f8684398abfbe9e21946c03e710066238667a86399ebba68f4f1f2ac7d782e10",
+ "scene_sha256": "d0864c1b54cd9855d464ef1ceeb4e96370f06a2afd03338aa017346b0068cfac",
  "edition": {
   "label": "pinned Civ 474.05 / Civ64 475.05 DOS root",
   "packed_sha256": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
@@ -256,7 +256,7 @@
    "civd": [
     "NEWGAME.C"
    ],
-   "objects": 2,
+   "objects": 5,
    "anchors": [
     {
      "address": "O5:012E",
@@ -936,13 +936,13 @@
    "name": "$competition",
    "type": "u8",
    "initial": 4,
-   "evidence": "DGROUP:D2F4 `_civ_total`; civd GLOBALS.C:113 and NEWGAME.C:73-76 clamp the menu result to 2..6 civilizations."
+   "evidence": "DGROUP:D2F4 `_civ_total`; civd GLOBALS.C:113 and NEWGAME.C:73-76 map menu rows 7..3 to 6..2, clamped 2..6."
   },
   {
    "name": "$players",
    "type": "u8",
    "initial": 63,
-   "evidence": "DGROUP:6B8A `_players`; civd GLOBALS.C:17 and NEWGAME.C:77 derive the active-civilization mask from `_civ_total`."
+   "evidence": "DGROUP:6B8A `_players`; civd GLOBALS.C:17 and NEWGAME.C:77 derive `255 >> (6 - civ_total)`; five competition rows write both fields."
   },
   {
    "name": "$rule_options",
@@ -1098,7 +1098,7 @@
  "limits": [
   "Partial scene graph and state projection, not a full game simulation.",
   "No DOS execution, VGA rendering, input decoding, AI, combat, technology, diplomacy, save parsing or economy model.",
-  "The five difficulty rows write `$difficulty` from DGROUP:6B86 `_cur_tier`; competition and tribe rows remain declared, and no setup binding has a live-screen observation.",
+  "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; the tribe rows remain declared and no setup binding has a live-screen observation.",
   "The game-over context is state-reachable for inspection; its trigger conditions are not modelled.",
   "Every screen boundary is resolved against a civd function; this is address resolution, not Windows-to-DOS byte equivalence."
  ]

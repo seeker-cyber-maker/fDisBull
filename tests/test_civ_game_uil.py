@@ -41,7 +41,7 @@ def _to_world(backend):
         ("activate", "title-new"),
         ("activate", "birth-continue"),
         ("activate", "difficulty-prince"),
-        ("activate", "competition-continue"),
+        ("activate", "competition-five"),
         ("activate", "tribe-continue"),
         ("activate", "name-accept"),
         ("activate", "intro-begin"),
@@ -55,8 +55,8 @@ def test_scene_has_bounded_screens_and_validates():
     assert scene["format"] == "fdisbull-il-scene-1"
     assert scene["partial"] is True
     assert len(scene["contexts"]) == 23
-    assert len(scene["objects"]) == 85
-    assert len(scene["programs"]) == 35
+    assert len(scene["objects"]) == 88
+    assert len(scene["programs"]) == 39
     context_ids = {context["id"] for context in scene["contexts"]}
     assert context_ids == set(SCREEN_NAMES.values()) | {"production", "units"}
     object_ids = {item["id"] for item in scene["objects"]}
@@ -91,6 +91,25 @@ def test_difficulty_menu_binds_all_five_cur_tier_rows():
         assert _act(backend, "activate", target)["status"] == "success"
         assert backend.state["$difficulty"] == level
         assert backend.observe()["context"]["id"] == "competition"
+
+
+def test_competition_menu_binds_civ_total_and_players_mask():
+    for target, civ_total, players in (
+        ("competition-seven", 6, 255),
+        ("competition-six", 5, 127),
+        ("competition-five", 4, 63),
+        ("competition-four", 3, 31),
+        ("competition-three", 2, 15),
+    ):
+        backend = ILSceneBackend(build_scene())
+        assert _act(backend, "activate", "title-new")["status"] == "success"
+        assert _act(backend, "activate", "birth-continue")["status"] == "success"
+        assert _act(backend, "activate", "difficulty-prince")["status"] == "success"
+        assert backend.observe()["context"]["id"] == "competition"
+        assert _act(backend, "activate", target)["status"] == "success"
+        assert backend.state["$competition"] == civ_total
+        assert backend.state["$players"] == players
+        assert backend.observe()["context"]["id"] == "tribe"
 
 
 def test_startup_flow_reaches_world_and_end_turn_advances_declared_state():
