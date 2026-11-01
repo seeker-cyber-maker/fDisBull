@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Volumes/CODEX/Codex_Projects/fDisBull/examples/dinopark/verify_newgame_profit.py", line 316, in <module>
+    main(parser.parse_args())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/CODEX/Codex_Projects/fDisBull/examples/dinopark/verify_newgame_profit.py", line 224, in main
+    assert result['cash'] == item['expected_cash'], (label, result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('recorded-011-economy', {'cash': 5000, 'loan': 5000, 'day': 0})

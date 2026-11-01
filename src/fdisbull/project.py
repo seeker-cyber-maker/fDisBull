@@ -75,9 +75,10 @@ from .incremental import IncrementalMixin, ADVANCED_DDL
 from .advanced import AdvancedMixin
 from .membership_view import MembershipMixin
 from .debugger import DebugProjectMixin, DEBUG_DDL
+from .proofs import ProofProjectMixin, PROOF_DDL
 
 
-class Project(DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
+class Project(ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
     def __init__(self, path):
         self.path = Path(path).resolve()
         if not self.path.is_file():
@@ -102,7 +103,7 @@ class Project(DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, Advanc
             self.meta = {k:json.loads(v) for k,v in meta.items() if k not in ("application","schema")}
             self.arch, self.bits = self.meta["arch"], self.meta["bits"]
             self.context = f"{self.arch}:{self.bits}:little"
-            self.db.executescript(DEBUG_DDL)
+            self.db.executescript(DEBUG_DDL+PROOF_DDL)
             self.db.execute("PRAGMA foreign_keys=ON")
             self.db.execute("PRAGMA busy_timeout=30000")
         except Exception:

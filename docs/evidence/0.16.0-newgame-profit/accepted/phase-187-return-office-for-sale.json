@@ -1,0 +1,98 @@
+{
+  "command": {
+    "op": "script",
+    "name": "return-office-for-sale",
+    "steps": [
+      {
+        "op": "click",
+        "x": 173,
+        "y": 187
+      },
+      {
+        "op": "run",
+        "guest_ms": 2500,
+        "timeout_ms": 10000,
+        "fast_forward": true
+      }
+    ]
+  },
+  "result": {
+    "format": "fdisbull-script-result-1",
+    "script_artifact": "a18125ad76134c6cb60ff09b7a4ff6e8",
+    "script_sha256": "f08b427a0b82def356e15af544a10b176b948dda027d465c8346a705f91c48cb",
+    "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+    "ok": true,
+    "error": null,
+    "completed_steps": 2,
+    "requested_steps": 2,
+    "host_elapsed_ms": 237.573,
+    "steps": [
+      {
+        "index": 0,
+        "op": "click",
+        "result": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 346,
+            "y": 187
+          },
+          "session_id": "ses-1",
+          "state_revision": 578
+        },
+        "ok": true
+      },
+      {
+        "index": 1,
+        "op": "run",
+        "result": {
+          "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+          "outcome": "guest_time",
+          "timed_out": false,
+          "requested_guest_ms": 2500,
+          "guest_elapsed_ms": 2545,
+          "host_elapsed_ms": 235.873,
+          "fast_forward": true,
+          "timing_after": {
+            "fast_forward": false,
+            "guest_ticks": 477436,
+            "session_id": "ses-1",
+            "state_revision": 581
+          },
+          "session": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 580,
+            "stop_reason": {
+              "kind": "pause"
+            }
+          },
+          "hook_hits": [],
+          "stop": {
+            "format": "fdisbull-debug-stop-1",
+            "trigger": "guest_time",
+            "native_kind": "pause",
+            "causing_instruction": null,
+            "resume_pc": null,
+            "instruction_completed": null,
+            "registers_stage": "stopped; stage unknown",
+            "context": "dos-cpu"
+          }
+        },
+        "ok": true
+      }
+    ],
+    "artifact": "fcc7062d0003420f94444080877ee837"
+  }
+}

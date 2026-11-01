@@ -1,0 +1,321 @@
+{
+  "command": {
+    "op": "script",
+    "name": "visit-new-park-office",
+    "steps": [
+      {
+        "op": "click",
+        "x": 201,
+        "y": 187
+      },
+      {
+        "op": "run",
+        "guest_ms": 8000,
+        "timeout_ms": 10000,
+        "fast_forward": true
+      },
+      {
+        "op": "click-frame",
+        "x": 175,
+        "y": 140,
+        "name": "new-office.png",
+        "grid_step": 8,
+        "hold_ms": 150
+      },
+      {
+        "op": "run",
+        "guest_ms": 8000,
+        "timeout_ms": 10000,
+        "fast_forward": true
+      }
+    ]
+  },
+  "result": {
+    "format": "fdisbull-script-result-1",
+    "script_artifact": "855997f91f3b4580a8eb5ae876592725",
+    "script_sha256": "029a16543695e42c544a76dcc27c907b196d4cdaed07a59569885c17565b29e5",
+    "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+    "ok": true,
+    "error": null,
+    "completed_steps": 4,
+    "requested_steps": 4,
+    "host_elapsed_ms": 1391.017,
+    "steps": [
+      {
+        "index": 0,
+        "op": "click",
+        "result": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 402,
+            "y": 187
+          },
+          "session_id": "ses-1",
+          "state_revision": 323
+        },
+        "ok": true
+      },
+      {
+        "index": 1,
+        "op": "run",
+        "result": {
+          "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+          "outcome": "guest_time",
+          "timed_out": false,
+          "requested_guest_ms": 8000,
+          "guest_elapsed_ms": 8015,
+          "host_elapsed_ms": 693.357,
+          "fast_forward": true,
+          "timing_after": {
+            "fast_forward": false,
+            "guest_ticks": 305376,
+            "session_id": "ses-1",
+            "state_revision": 326
+          },
+          "session": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 325,
+            "stop_reason": {
+              "kind": "pause"
+            }
+          },
+          "hook_hits": [],
+          "stop": {
+            "format": "fdisbull-debug-stop-1",
+            "trigger": "guest_time",
+            "native_kind": "pause",
+            "causing_instruction": null,
+            "resume_pc": null,
+            "instruction_completed": null,
+            "registers_stage": "stopped; stage unknown",
+            "context": "dos-cpu"
+          }
+        },
+        "ok": true
+      },
+      {
+        "index": 2,
+        "op": "click-frame",
+        "result": {
+          "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+          "x": 175,
+          "y": 140,
+          "mode_id": 5,
+          "frame": {
+            "artifact": "daa0dfa03f3949d6aff3c3f47047b11c",
+            "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+            "version": 1,
+            "name": "new-office.png",
+            "kind": "screenshot-grid",
+            "sha256": "d3390f1aeea56c7b781714701a9b25843d0b7ce5b2145b9baed0ead1ee1cf41a",
+            "size": 58326,
+            "metadata": {
+              "captured_ticks": 305368,
+              "double_height": true,
+              "double_width": true,
+              "format": "png",
+              "frame_id": 18960,
+              "height": 200,
+              "mode_id": 5,
+              "session_id": "ses-1",
+              "sha256": "d3390f1aeea56c7b781714701a9b25843d0b7ce5b2145b9baed0ead1ee1cf41a",
+              "source": "last_completed_guest_frame",
+              "source_bpp": 32,
+              "state_revision": 326,
+              "width": 320,
+              "coordinate_grid": {
+                "coordinate_space": "screenshot_pixels",
+                "origin": [
+                  0,
+                  0
+                ],
+                "max_coordinate": [
+                  319,
+                  199
+                ],
+                "step": 8,
+                "x_lines": [
+                  0,
+                  8,
+                  16,
+                  24,
+                  32,
+                  40,
+                  48,
+                  56,
+                  64,
+                  72,
+                  80,
+                  88,
+                  96,
+                  104,
+                  112,
+                  120,
+                  128,
+                  136,
+                  144,
+                  152,
+                  160,
+                  168,
+                  176,
+                  184,
+                  192,
+                  200,
+                  208,
+                  216,
+                  224,
+                  232,
+                  240,
+                  248,
+                  256,
+                  264,
+                  272,
+                  280,
+                  288,
+                  296,
+                  304,
+                  312
+                ],
+                "y_lines": [
+                  0,
+                  8,
+                  16,
+                  24,
+                  32,
+                  40,
+                  48,
+                  56,
+                  64,
+                  72,
+                  80,
+                  88,
+                  96,
+                  104,
+                  112,
+                  120,
+                  128,
+                  136,
+                  144,
+                  152,
+                  160,
+                  168,
+                  176,
+                  184,
+                  192
+                ],
+                "label_step": 32,
+                "x_labels": [
+                  0,
+                  32,
+                  64,
+                  96,
+                  128,
+                  160,
+                  192,
+                  224,
+                  256,
+                  288
+                ],
+                "y_labels": [
+                  0,
+                  32,
+                  64,
+                  96,
+                  128,
+                  160,
+                  192
+                ],
+                "target": [
+                  175,
+                  140
+                ],
+                "x_direction": "right",
+                "y_direction": "down",
+                "resized": false,
+                "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+                "source_artifact": "68d1e933e72b498783fe11bc608408fc",
+                "source_sha256": "f529ef1e133f83502e119a8c296538e26c8732c69df225ee15b3104d2730584e"
+              }
+            }
+          },
+          "click": {
+            "accepted": true,
+            "coordinate_space": "guest_frame_pixels",
+            "delivery": "queued",
+            "mouse": {
+              "buttons": 1,
+              "max_x": 639,
+              "max_y": 199,
+              "min_x": 0,
+              "min_y": 0,
+              "owned_buttons": 1,
+              "pending_release_buttons": 1,
+              "release_pending": true,
+              "screen_max_x": 640,
+              "screen_max_y": 200,
+              "x": 350,
+              "y": 140
+            },
+            "session_id": "ses-1",
+            "state_revision": 327
+          },
+          "frame_phase": "before_queued_click"
+        },
+        "ok": true
+      },
+      {
+        "index": 3,
+        "op": "run",
+        "result": {
+          "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+          "outcome": "guest_time",
+          "timed_out": false,
+          "requested_guest_ms": 8000,
+          "guest_elapsed_ms": 8140,
+          "host_elapsed_ms": 679.406,
+          "fast_forward": true,
+          "timing_after": {
+            "fast_forward": false,
+            "guest_ticks": 313516,
+            "session_id": "ses-1",
+            "state_revision": 330
+          },
+          "session": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 329,
+            "stop_reason": {
+              "kind": "pause"
+            }
+          },
+          "hook_hits": [],
+          "stop": {
+            "format": "fdisbull-debug-stop-1",
+            "trigger": "guest_time",
+            "native_kind": "pause",
+            "causing_instruction": null,
+            "resume_pc": null,
+            "instruction_completed": null,
+            "registers_stage": "stopped; stage unknown",
+            "context": "dos-cpu"
+          }
+        },
+        "ok": true
+      }
+    ],
+    "artifact": "ca4d31a448d447dfb3a48c82a8ad02e9"
+  }
+}

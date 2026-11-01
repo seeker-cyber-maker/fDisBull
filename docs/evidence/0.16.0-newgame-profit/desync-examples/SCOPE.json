@@ -1,0 +1,5 @@
+{
+  "scope": "Negative replay results, separate from the accepted NEW GAME and fresh readback. Includes rejected fixed routes, a host export-path error, a scene mask affected by sky/traffic, and an unknown parking hint captured for manual confirmation.",
+  "accepted_gameplay_claim": false,
+  "private_game_files_states_databases_included": false
+}

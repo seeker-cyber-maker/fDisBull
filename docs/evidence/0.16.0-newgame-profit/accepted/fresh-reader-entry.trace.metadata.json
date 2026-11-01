@@ -1,0 +1,47 @@
+{
+  "artifact": "0c9b4daa6ac14f4798e5129d0aa64456",
+  "run": "b1181f28e9ff449d98f39ef49a0c072f",
+  "version": 1,
+  "name": "fresh-reader-entry.trace.json",
+  "kind": "trace",
+  "sha256": "8ae4cc606ffae4a6d305312dccc24d061a715f8436278e03073dd8e1c1d7db49",
+  "size": 143209,
+  "metadata": {
+    "event_count": 128,
+    "complete": true,
+    "run": {
+      "run": "b1181f28e9ff449d98f39ef49a0c072f",
+      "outcome": "pause",
+      "timed_out": false,
+      "requested_guest_ms": null,
+      "guest_elapsed_ms": 0,
+      "host_elapsed_ms": 4.004,
+      "fast_forward": false,
+      "timing_after": {
+        "fast_forward": false,
+        "guest_ticks": 46422,
+        "session_id": "ses-1",
+        "state_revision": 27
+      },
+      "session": {
+        "session_id": "ses-1",
+        "state": "stopped",
+        "state_revision": 27,
+        "stop_reason": {
+          "kind": "pause"
+        }
+      },
+      "hook_hits": [],
+      "stop": {
+        "format": "fdisbull-debug-stop-1",
+        "trigger": "pause",
+        "native_kind": "pause",
+        "causing_instruction": null,
+        "resume_pc": null,
+        "instruction_completed": null,
+        "registers_stage": "stopped; stage unknown",
+        "context": "dos-cpu"
+      }
+    }
+  }
+}

@@ -8,6 +8,8 @@ An agent-first disassembler with a persistent SQLite analysis database, explicit
 
 Requires Python **3.12 or later**.
 
+The working tree is developing **0.20.0.dev0**: [typed movement macros](docs/SEMANTIC_INPUT_MACROS.md), early blocked-route detection, [game-space geometry and content readiness](docs/SCENE_NAVIGATION.md), and optional [bounded Z3 checks](docs/BOUNDED_PROOFS.md). This is an untagged source candidate; the published and shared installation remains 0.19.0. See [fresh verification and limits](docs/VERIFICATION-0.20.md).
+
 Version **0.19.0** adds guarded DOS filename aliases, persistent screenshot
 hooks, callback-safe DOSBox continuation and expanded investigation-skill
 references. See the [release notes](docs/RELEASE-0.19.0.md) for behavior and

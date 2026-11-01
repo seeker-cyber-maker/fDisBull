@@ -1,0 +1,19 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 42,
+      "y": 50,
+      "name": "coelo-pen-one.png",
+      "grid_step": 8,
+      "hold_ms": 150
+    },
+    {
+      "op": "run",
+      "guest_ms": 2000,
+      "timeout_ms": 5000,
+      "fast_forward": true
+    }
+  ]
+}

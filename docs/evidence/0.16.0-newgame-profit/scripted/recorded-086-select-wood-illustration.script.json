@@ -1,0 +1,19 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 60,
+      "y": 85,
+      "name": "wood-fence-tile.png",
+      "grid_step": 8,
+      "hold_ms": 200
+    },
+    {
+      "op": "run",
+      "guest_ms": 5000,
+      "timeout_ms": 7000,
+      "fast_forward": true
+    }
+  ]
+}

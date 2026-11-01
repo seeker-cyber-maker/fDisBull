@@ -1,0 +1,29 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click",
+      "x": 173,
+      "y": 187
+    },
+    {
+      "op": "run",
+      "guest_ms": 2000,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    },
+    {
+      "op": "click-frame",
+      "x": 295,
+      "y": 103,
+      "name": "food-stock-control.png",
+      "grid_step": 8
+    },
+    {
+      "op": "run",
+      "guest_ms": 1200,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    }
+  ]
+}

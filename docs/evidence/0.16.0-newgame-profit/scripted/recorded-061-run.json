@@ -1,0 +1,34 @@
+{
+  "run": "445b88fc2d404804980b60d74cd0b05c",
+  "outcome": "guest_time",
+  "timed_out": false,
+  "requested_guest_ms": 4000,
+  "guest_elapsed_ms": 4070,
+  "host_elapsed_ms": 346.648,
+  "fast_forward": true,
+  "timing_after": {
+    "fast_forward": false,
+    "guest_ticks": 123898,
+    "session_id": "ses-1",
+    "state_revision": 85
+  },
+  "session": {
+    "session_id": "ses-1",
+    "state": "stopped",
+    "state_revision": 84,
+    "stop_reason": {
+      "kind": "pause"
+    }
+  },
+  "hook_hits": [],
+  "stop": {
+    "format": "fdisbull-debug-stop-1",
+    "trigger": "guest_time",
+    "native_kind": "pause",
+    "causing_instruction": null,
+    "resume_pc": null,
+    "instruction_completed": null,
+    "registers_stage": "stopped; stage unknown",
+    "context": "dos-cpu"
+  }
+}

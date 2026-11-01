@@ -1,0 +1,55 @@
+{
+  "command": {
+    "op": "economy"
+  },
+  "result": {
+    "cash": {
+      "project_address": "0x45e3a",
+      "hex": "88130000",
+      "signed": 5000
+    },
+    "loan": {
+      "project_address": "0x4c1bb",
+      "hex": "88130000",
+      "signed": 5000
+    },
+    "day_counter": {
+      "project_address": "0x471cb",
+      "hex": "0000",
+      "signed": 0
+    },
+    "concessions": {
+      "project_address": "0x471a6",
+      "hex": "0000000000000000",
+      "signed": 0
+    },
+    "registers": {
+      "cpu_mode": "real",
+      "flags": "0x00007002",
+      "general": {
+        "eax": "0x00000003",
+        "ebp": "0x00001F10",
+        "ebx": "0x00000000",
+        "ecx": "0x00000054",
+        "edi": "0x00000001",
+        "edx": "0x00000034",
+        "esi": "0x00000002",
+        "esp": "0x00001EFC"
+      },
+      "instruction_pointer": "0x0000001D",
+      "segments": {
+        "cs": "0xC402",
+        "ds": "0x3844",
+        "es": "0x3844",
+        "fs": "0x0000",
+        "gs": "0x0000",
+        "ss": "0x4528"
+      },
+      "session_id": "ses-1",
+      "state_revision": 85,
+      "cs": "0xC402",
+      "ip": "0x0000001D",
+      "project_address": null
+    }
+  }
+}

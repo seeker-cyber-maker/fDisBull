@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/Volumes/CODEX/Codex_Projects/fDisBull/examples/dinopark/verify_newgame_profit.py", line 320, in <module>
+    main(parser.parse_args())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/CODEX/Codex_Projects/fDisBull/examples/dinopark/verify_newgame_profit.py", line 245, in main
+    settle_and_record(p,d)
+    ~~~~~~~~~~~~~~~~~^^^^^
+  File "/Volumes/CODEX/Codex_Projects/fDisBull/examples/dinopark/verify_newgame_profit.py", line 164, in settle_and_record
+    raise AssertionError(('Unexpected scene while waiting',observed))
+AssertionError: ('Unexpected scene while waiting', {'frame_id': 22444, 'scores': {'street': 0, 'office': 0, 'bank': 0, 'quarter_popup': 16, 'paid_popup': 14, 'name_prompt': 17, 'confirm_sale': 48}, 'matched': []})

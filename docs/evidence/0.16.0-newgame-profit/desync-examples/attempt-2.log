@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Volumes/CODEX/Codex_Projects/fDisBull/examples/dinopark/verify_newgame_profit.py", line 209, in <module>
+    main(parser.parse_args())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/CODEX/Codex_Projects/fDisBull/examples/dinopark/verify_newgame_profit.py", line 123, in main
+    assert result['loan'] == 0 and result['cash'] > 500, result
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'cash': 8395, 'loan': 4768, 'day': 15}

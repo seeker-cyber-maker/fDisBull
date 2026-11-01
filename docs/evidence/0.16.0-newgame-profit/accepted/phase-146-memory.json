@@ -1,0 +1,23 @@
+{
+  "command": {
+    "op": "memory",
+    "address": "4020:6f80",
+    "length": 128
+  },
+  "result": {
+    "address": {
+      "offset": "0x0003F3C0",
+      "space": "linear"
+    },
+    "byte_count": 128,
+    "data_base64": "bGQuYWJ0AAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAnAAAAAAB5EwAA8f///zgAAACIEwAAAAEAGgAAAB8cHx4fHh8fHh8eHx8AAAMEAgUH/wAGCAQA/wMABgEH/wQCCQEF/wIJ/wYI/3ZhcnM=",
+    "layer_generation": 1,
+    "overlay_valid": true,
+    "session_id": "ses-1",
+    "sha256": "43ed8506f2361222c67e8a1ce4eb16befe51ccf1f6a29513df74232974d0f50b",
+    "state_revision": 403,
+    "view": "ram",
+    "project_address": "0x47180",
+    "hex": "6c642e616274000000000000000001000000000000000000000000000000000000000000000000000000000000000000000027000000000079130000f1ffffff38000000881300000001001a0000001f1c1f1e1f1e1f1f1e1f1e1f1f00000304020507ff0006080400ff0300060107ff0402090105ff0209ff0608ff76617273"
+  }
+}

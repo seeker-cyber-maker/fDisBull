@@ -1,0 +1,17 @@
+{
+  "original_files": 192,
+  "copied_files": 184,
+  "existing_saved_games_excluded": [
+    "DINOSG.000",
+    "DINOSG.001",
+    "DINOSG.002",
+    "DINOSG.003",
+    "DINOSG.004",
+    "DINOSG.005",
+    "DINOSG.006",
+    "DINOSG.007"
+  ],
+  "native_states_imported": 0,
+  "exe_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+  "version": "0.16.0"
+}

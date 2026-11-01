@@ -1,0 +1,320 @@
+{
+  "command": {
+    "op": "script",
+    "name": "admission-price-dialog",
+    "steps": [
+      {
+        "op": "click",
+        "x": 160,
+        "y": 108
+      },
+      {
+        "op": "run",
+        "guest_ms": 500,
+        "timeout_ms": 10000,
+        "fast_forward": true
+      },
+      {
+        "op": "click-frame",
+        "x": 237,
+        "y": 28,
+        "name": "ticket-dialog-link.png",
+        "grid_step": 8
+      },
+      {
+        "op": "run",
+        "guest_ms": 1500,
+        "timeout_ms": 10000,
+        "fast_forward": true
+      }
+    ]
+  },
+  "result": {
+    "format": "fdisbull-script-result-1",
+    "script_artifact": "dece4113057d4a37bdf01d76c4f39805",
+    "script_sha256": "bc4c67f70a798f59e62b96cca0d8f2cd95ed79de32fc84c572f4c4ec730e3804",
+    "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+    "ok": true,
+    "error": null,
+    "completed_steps": 4,
+    "requested_steps": 4,
+    "host_elapsed_ms": 229.469,
+    "steps": [
+      {
+        "index": 0,
+        "op": "click",
+        "result": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 320,
+            "y": 108
+          },
+          "session_id": "ses-1",
+          "state_revision": 504
+        },
+        "ok": true
+      },
+      {
+        "index": 1,
+        "op": "run",
+        "result": {
+          "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+          "outcome": "guest_time",
+          "timed_out": false,
+          "requested_guest_ms": 500,
+          "guest_elapsed_ms": 510,
+          "host_elapsed_ms": 62.447,
+          "fast_forward": true,
+          "timing_after": {
+            "fast_forward": false,
+            "guest_ticks": 409921,
+            "session_id": "ses-1",
+            "state_revision": 507
+          },
+          "session": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 506,
+            "stop_reason": {
+              "kind": "pause"
+            }
+          },
+          "hook_hits": [],
+          "stop": {
+            "format": "fdisbull-debug-stop-1",
+            "trigger": "guest_time",
+            "native_kind": "pause",
+            "causing_instruction": null,
+            "resume_pc": null,
+            "instruction_completed": null,
+            "registers_stage": "stopped; stage unknown",
+            "context": "dos-cpu"
+          }
+        },
+        "ok": true
+      },
+      {
+        "index": 2,
+        "op": "click-frame",
+        "result": {
+          "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+          "x": 237,
+          "y": 28,
+          "mode_id": 5,
+          "frame": {
+            "artifact": "51a10ee6ee3e4b25911a43be18143090",
+            "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+            "version": 1,
+            "name": "ticket-dialog-link.png",
+            "kind": "screenshot-grid",
+            "sha256": "b27e622fefb09ce1c47dcd6232e11c14f03d7ce4d7c009aab51fcb16833ad1f2",
+            "size": 63332,
+            "metadata": {
+              "captured_ticks": 409910,
+              "double_height": true,
+              "double_width": true,
+              "format": "png",
+              "frame_id": 25426,
+              "height": 200,
+              "mode_id": 5,
+              "session_id": "ses-1",
+              "sha256": "b27e622fefb09ce1c47dcd6232e11c14f03d7ce4d7c009aab51fcb16833ad1f2",
+              "source": "last_completed_guest_frame",
+              "source_bpp": 32,
+              "state_revision": 507,
+              "width": 320,
+              "coordinate_grid": {
+                "coordinate_space": "screenshot_pixels",
+                "origin": [
+                  0,
+                  0
+                ],
+                "max_coordinate": [
+                  319,
+                  199
+                ],
+                "step": 8,
+                "x_lines": [
+                  0,
+                  8,
+                  16,
+                  24,
+                  32,
+                  40,
+                  48,
+                  56,
+                  64,
+                  72,
+                  80,
+                  88,
+                  96,
+                  104,
+                  112,
+                  120,
+                  128,
+                  136,
+                  144,
+                  152,
+                  160,
+                  168,
+                  176,
+                  184,
+                  192,
+                  200,
+                  208,
+                  216,
+                  224,
+                  232,
+                  240,
+                  248,
+                  256,
+                  264,
+                  272,
+                  280,
+                  288,
+                  296,
+                  304,
+                  312
+                ],
+                "y_lines": [
+                  0,
+                  8,
+                  16,
+                  24,
+                  32,
+                  40,
+                  48,
+                  56,
+                  64,
+                  72,
+                  80,
+                  88,
+                  96,
+                  104,
+                  112,
+                  120,
+                  128,
+                  136,
+                  144,
+                  152,
+                  160,
+                  168,
+                  176,
+                  184,
+                  192
+                ],
+                "label_step": 32,
+                "x_labels": [
+                  0,
+                  32,
+                  64,
+                  96,
+                  128,
+                  160,
+                  192,
+                  224,
+                  256,
+                  288
+                ],
+                "y_labels": [
+                  0,
+                  32,
+                  64,
+                  96,
+                  128,
+                  160,
+                  192
+                ],
+                "target": [
+                  237,
+                  28
+                ],
+                "x_direction": "right",
+                "y_direction": "down",
+                "resized": false,
+                "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+                "source_artifact": "64634719284b4f87a21eea2b38ccc870",
+                "source_sha256": "03f1edc516b74023fab3ab082f6b19d2f7ed10baf651d823e92027b8922b45b9"
+              }
+            }
+          },
+          "click": {
+            "accepted": true,
+            "coordinate_space": "guest_frame_pixels",
+            "delivery": "queued",
+            "mouse": {
+              "buttons": 1,
+              "max_x": 639,
+              "max_y": 199,
+              "min_x": 0,
+              "min_y": 0,
+              "owned_buttons": 1,
+              "pending_release_buttons": 1,
+              "release_pending": true,
+              "screen_max_x": 640,
+              "screen_max_y": 200,
+              "x": 474,
+              "y": 28
+            },
+            "session_id": "ses-1",
+            "state_revision": 508
+          },
+          "frame_phase": "before_queued_click"
+        },
+        "ok": true
+      },
+      {
+        "index": 3,
+        "op": "run",
+        "result": {
+          "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+          "outcome": "guest_time",
+          "timed_out": false,
+          "requested_guest_ms": 1500,
+          "guest_elapsed_ms": 1580,
+          "host_elapsed_ms": 152.54,
+          "fast_forward": true,
+          "timing_after": {
+            "fast_forward": false,
+            "guest_ticks": 411501,
+            "session_id": "ses-1",
+            "state_revision": 511
+          },
+          "session": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 510,
+            "stop_reason": {
+              "kind": "pause"
+            }
+          },
+          "hook_hits": [],
+          "stop": {
+            "format": "fdisbull-debug-stop-1",
+            "trigger": "guest_time",
+            "native_kind": "pause",
+            "causing_instruction": null,
+            "resume_pc": null,
+            "instruction_completed": null,
+            "registers_stage": "stopped; stage unknown",
+            "context": "dos-cpu"
+          }
+        },
+        "ok": true
+      }
+    ],
+    "artifact": "75f5ebd4f55d46df85c32670d52ad092"
+  }
+}

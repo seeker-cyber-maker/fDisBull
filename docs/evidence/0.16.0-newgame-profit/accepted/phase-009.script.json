@@ -1,0 +1,41 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click",
+      "x": 147,
+      "y": 110
+    },
+    {
+      "op": "run",
+      "guest_ms": 2000,
+      "timeout_ms": 5000,
+      "fast_forward": true
+    },
+    {
+      "op": "click-frame",
+      "x": 80,
+      "y": 160,
+      "name": "new-game-again.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 1800,
+      "timeout_ms": 5000,
+      "fast_forward": true
+    },
+    {
+      "op": "click",
+      "x": 160,
+      "y": 132
+    },
+    {
+      "op": "run",
+      "guest_ms": 4000,
+      "timeout_ms": 6000,
+      "fast_forward": true
+    }
+  ]
+}

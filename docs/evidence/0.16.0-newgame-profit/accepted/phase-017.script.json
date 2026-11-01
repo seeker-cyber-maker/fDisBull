@@ -1,0 +1,19 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 60,
+      "y": 132,
+      "name": "real-estate-door.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 3000,
+      "timeout_ms": 6000,
+      "fast_forward": true
+    }
+  ]
+}

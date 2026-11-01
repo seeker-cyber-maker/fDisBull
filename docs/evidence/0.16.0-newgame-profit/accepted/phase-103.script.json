@@ -1,0 +1,37 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "repeat",
+      "count": 19,
+      "steps": [
+        {
+          "op": "click",
+          "x": 44,
+          "y": 101,
+          "hold_ms": 80
+        },
+        {
+          "op": "run",
+          "guest_ms": 250,
+          "timeout_ms": 2000,
+          "fast_forward": true
+        }
+      ]
+    },
+    {
+      "op": "click-frame",
+      "x": 201,
+      "y": 187,
+      "name": "commit-food.png",
+      "grid_step": 8,
+      "hold_ms": 150
+    },
+    {
+      "op": "run",
+      "guest_ms": 6000,
+      "timeout_ms": 8000,
+      "fast_forward": true
+    }
+  ]
+}

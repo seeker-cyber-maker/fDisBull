@@ -8,11 +8,15 @@ import re
 import time
 
 from .debugger import bounded
+from .operation_budget import rpc_budget
 
 OPERATIONS = {
     'frame-probe':'frame_probe','scene-check':'scene_check','scene-assert':'scene_assert',
     'scene-click':'scene_click','scene-act':'scene_act','scene-wait':'scene_wait',
     'keyboard.press':'keyboard_press','keyboard.type':'keyboard_type','keyboard.state':'keyboard_state',
+    'keyboard.key-down':'keyboard_key_down','keyboard.key-up':'keyboard_key_up',
+    'macro':'macro','move':'move','proof-check':'proof_check','scene-navigation':'scene_navigation',
+    'bind-runtime-memory':'bind_runtime_memory','runtime-memory':'runtime_memory',
     'wait':'wait',
     'screenshot-hooks':'screenshot_hooks',
     'run':'run', 'click':'click', 'click-frame':'click_frame', 'screenshot':'screenshot', 'trace':'trace',
@@ -59,13 +63,23 @@ def validate_script(script):
                 elif op in OPERATIONS:
                     signature = inspect.signature(getattr(DebugSession,OPERATIONS[op]))
                     signature.bind(None,**params)
-                    if op in ('keyboard.press','keyboard.type') and not any(
-                            isinstance(v,str) and v.startswith('$') for v in params.values()):
+                    if op in ('keyboard.press','keyboard.type'):
                         from .keyboard_input import validate_keyboard
-                        validate_keyboard(**params)
+                        # Validate every literal independently. One result reference
+                        # must not hide a malformed static hold, gap or modifier.
+                        samples={'key':'a','text':'a','hold_ms':40,'gap_ms':40,'modifiers':[]}
+                        checked={k:(samples[k] if isinstance(v,str) and v.startswith('$') else v) for k,v in params.items()}
+                        validate_keyboard(**checked)
                     if op=='wait':
                         from .debug_wait import validate_wait
                         validate_wait(**params)
+                    if op=='move':
+                        from .movement import validate_movement, _call
+                        _call(params['start']);_call(params['stop'])
+                        validate_movement(**{k:v for k,v in params.items() if k not in ('macro_set','start','stop')})
+                    if op=='keyboard.key-down':
+                        from .keyboard_input import KEYS
+                        if params['key'] not in KEYS:raise ValueError('Unknown physical keyboard key')
                     if op=='screenshot-hooks' and params.get('configuration') is not None:
                         from .screenshot_hooks import validate_configuration
                         validate_configuration(params['configuration'])
@@ -80,17 +94,27 @@ def validate_script(script):
     return expanded
 
 
-def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_step=None):
+@rpc_budget
+def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_step=None, _bindings_out=None):
     bounded(timeout_ms,'timeout_ms',1,600000)
     steps = validate_script(script) # Reject malformed later steps before any guest mutation.
     if getattr(session,'script_operations',None) is not None:
         unsupported=[s['op'] for s in steps if s['op'] not in session.script_operations]
         if unsupported:
             raise ValueError('Unsupported operations for this backend: '+', '.join(sorted(set(unsupported))))
+    for step in steps:
+        if step['op']=='macro':
+            params={k:v for k,v in step.items() if k not in ('op','as','expect','timeout_ms')}
+            session._macro_plan(**params)
+        elif step['op']=='move':
+            for key in ('start','stop'):
+                call=step[key]
+                session._macro_plan(step['macro_set'],call['name'],call.get('args',{}))
     encoded = json.dumps(script,sort_keys=True,separators=(',',':'),allow_nan=False).encode()
     source = session._artifact('route.fdisbull.json','script',encoded,{'format':script['format']})
     started = time.monotonic(); deadline = started+timeout_ms/1000
     results = dict(bindings or {}); records = []; failure = None
+    owned_before=set(getattr(session,'_keyboard_leases',{}));keyboard_touched=False
 
     def resolve(value):
         if isinstance(value,str) and value.startswith('$'):
@@ -112,7 +136,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
-            if step['op'] in ('run','trace','wait','scene-wait','scene-click','scene-act'):
+            if step['op'] in ('run','trace','wait','scene-wait','scene-click','scene-act','macro','move','proof-check'):
                 requested=params.get('timeout_ms')
                 if requested is None:requested=remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)
@@ -121,10 +145,13 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
                     raise ValueError(f"Assertion failed: {params['value']!r} != {params['equals']!r}")
                 result = {'matched':True}
             else:
+                if step['op'].startswith('keyboard.') and step['op']!='keyboard.state':keyboard_touched=True
                 result = getattr(session,OPERATIONS[step['op']])(**params)
             record['result'] = result
             if step['op']=='wait' and not (result.get('complete') and result.get('matched')):
                 raise ValueError('Wait did not match: '+result.get('outcome','incomplete'))
+            if step['op'] in ('macro','move') and not result.get('ok'):
+                raise ValueError('Semantic input did not complete')
             if step['op']=='run':
                 expected = step.get('expect','guest_time' if 'guest_ms' in params else 'breakpoint')
                 if result['outcome'] != expected:
@@ -142,11 +169,16 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
         records.append(record)
         if failure:
             break
+    cleanup=None
+    if failure and (keyboard_touched or set(getattr(session,'_keyboard_leases',{}))-owned_before):
+        # A failed route must not leave input depressed or execute through a stop.
+        session.close();cleanup={'closed':True,'reason':'Failed script owned unreleased input'}
     report = {'format':'fdisbull-script-result-1','script_artifact':source['artifact'],
               'script_sha256':hashlib.sha256(encoded).hexdigest(),'run':session.run_id,
               'ok':failure is None,'error':failure,'completed_steps':sum(r['ok'] for r in records),
               'requested_steps':len(steps),'host_elapsed_ms':round((time.monotonic()-started)*1000,3),
-              'steps':records}
+              'steps':records,'input_cleanup':cleanup}
     evidence = session._artifact('route-result.json','script-result',json.dumps(report,indent=2).encode(),
                                  {'ok':report['ok'],'completed_steps':report['completed_steps']})
+    if _bindings_out is not None:_bindings_out.update(results)
     return {**report,'artifact':evidence['artifact']}

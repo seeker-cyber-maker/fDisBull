@@ -1,0 +1,18 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 189,
+      "y": 104,
+      "name": "small-feeder-price.png",
+      "grid_step": 8
+    },
+    {
+      "op": "run",
+      "guest_ms": 2500,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    }
+  ]
+}

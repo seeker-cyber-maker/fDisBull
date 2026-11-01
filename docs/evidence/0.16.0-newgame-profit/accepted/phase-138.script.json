@@ -1,0 +1,31 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 45,
+      "y": 101,
+      "name": "select-small-feeders.png",
+      "grid_step": 8
+    },
+    {
+      "op": "run",
+      "guest_ms": 1000,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    },
+    {
+      "op": "click-frame",
+      "x": 145,
+      "y": 187,
+      "name": "purchase-food-control.png",
+      "grid_step": 8
+    },
+    {
+      "op": "run",
+      "guest_ms": 2000,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    }
+  ]
+}

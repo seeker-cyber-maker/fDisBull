@@ -1,0 +1,19 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 44,
+      "y": 101,
+      "name": "small-feeder.png",
+      "grid_step": 8,
+      "hold_ms": 150
+    },
+    {
+      "op": "run",
+      "guest_ms": 1000,
+      "timeout_ms": 4000,
+      "fast_forward": true
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "command": {
+    "op": "table"
+  },
+  "result": {
+    "sha256": "901f80a6d89ecf7107561f2cfdf5fcf7ff864c7d3ad2a09edf70b8d3559b8b4e",
+    "entries": [
+      {
+        "rank": 1,
+        "name": "John Baronasaurus",
+        "value": 90000
+      },
+      {
+        "rank": 2,
+        "name": "Rebecca Coffmanadon",
+        "value": 80000
+      },
+      {
+        "rank": 3,
+        "name": "Kurt Pfeiferdactyl",
+        "value": 70000
+      },
+      {
+        "rank": 4,
+        "name": "Ivanasaurus Manley",
+        "value": 60000
+      },
+      {
+        "rank": 5,
+        "name": "Carolophysis Manley",
+        "value": 50000
+      },
+      {
+        "rank": 6,
+        "name": "Lauralophodon",
+        "value": 40000
+      },
+      {
+        "rank": 7,
+        "name": "Marius",
+        "value": 5232
+      },
+      {
+        "rank": 8,
+        "name": "Thomas Rex",
+        "value": 2500
+      },
+      {
+        "rank": 9,
+        "name": "Terry Dactyl",
+        "value": 1000
+      },
+      {
+        "rank": 10,
+        "name": "Dino Shore",
+        "value": 500
+      }
+    ]
+  }
+}

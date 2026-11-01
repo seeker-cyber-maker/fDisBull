@@ -1,0 +1,23 @@
+{
+  "command": {
+    "op": "memory",
+    "address": "4020:cce3",
+    "length": 21
+  },
+  "result": {
+    "address": {
+      "offset": "0x00045123",
+      "space": "linear"
+    },
+    "byte_count": 21,
+    "data_base64": "TmV3UHJvZml0MTYAAAAAAAAAAAAA",
+    "layer_generation": 1,
+    "overlay_valid": true,
+    "session_id": "ses-1",
+    "sha256": "059c2d3240d808dc342483a860c8a7f119fe92939763641e935798ce5b2c9d85",
+    "state_revision": 598,
+    "view": "ram",
+    "project_address": "0x4cee3",
+    "hex": "4e657750726f666974313600000000000000000000"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 252,
+      "y": 151,
+      "name": "sell-earned-park.png",
+      "grid_step": 8
+    },
+    {
+      "op": "run",
+      "guest_ms": 1000,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    }
+  ]
+}

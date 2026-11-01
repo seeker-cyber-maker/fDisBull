@@ -1,0 +1,18 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 160,
+      "y": 126,
+      "grid_step": 8,
+      "name": "ok.png"
+    },
+    {
+      "op": "run",
+      "timeout_ms": 5000,
+      "fast_forward": true,
+      "expect": "breakpoint"
+    }
+  ]
+}

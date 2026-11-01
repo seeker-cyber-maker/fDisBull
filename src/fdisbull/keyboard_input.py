@@ -38,3 +38,9 @@ class GuestKeyboard:
 
     def state(self):
         return self.session.keyboard_state()
+
+    def key_down(self,key):
+        return self.session.keyboard_key_down(key)
+
+    def key_up(self,lease):
+        return self.session.keyboard_key_up(lease)

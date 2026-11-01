@@ -1,0 +1,19 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 160,
+      "y": 111,
+      "name": "hunger-ack.png",
+      "hold_ms": 120,
+      "grid_step": 8
+    },
+    {
+      "op": "run",
+      "guest_ms": 6000,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    }
+  ]
+}

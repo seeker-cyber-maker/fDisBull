@@ -1,0 +1,19 @@
+{
+  "version": "0.16.0",
+  "run": "90431de924f54de7abb9b4d09aec8bb0",
+  "pid": 76307,
+  "backend_sha256": "315beb4e01c7d81a96209dd949c239675517af53102dd97bd0eb30bde7a0fdbb",
+  "native_state_restore_calls": 0,
+  "full_table_equal_to_written_disk": true,
+  "byte_count": 250,
+  "sha256": "1e6a8bf26b187faebf9242d1931d7a1eb84059a99fa858fbfcc476f0bf5741b5",
+  "observed_entry": {
+    "rank": 8,
+    "name": "NewProfit16",
+    "value": 3422
+  },
+  "runtime_address": "0x46f94",
+  "process_reaped": true,
+  "original_files_unchanged": 192,
+  "ok": true
+}

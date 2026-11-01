@@ -1,0 +1,19 @@
+{
+  "address": {
+    "offset": "0x00000527",
+    "segment": "0x2009",
+    "space": "segmented"
+  },
+  "breakpoint_id": "bp-2",
+  "kind": "execution",
+  "once": false,
+  "session_id": "ses-1",
+  "state_revision": 18,
+  "run": "acf68a75590d4ac79b2aa23d6c1ee9dc",
+  "version": 1,
+  "project_address": "0x28377",
+  "project_cs": "0x27E5",
+  "instruction_context": "x86:16:little:cs=27e5",
+  "runtime_bytes": "83c404",
+  "bytes_verified": true
+}

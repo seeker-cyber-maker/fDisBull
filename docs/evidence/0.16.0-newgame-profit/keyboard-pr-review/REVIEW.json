@@ -1,0 +1,16 @@
+{
+  "pr": "https://github.com/seeker-cyber-maker/fDisBull/pull/1",
+  "head": "120580f2203c071f9fb2616c177d0eb78e65f264",
+  "base": "8c0237521387772b4434c287413ae7e26e5df7c9",
+  "changed_files": [
+    "tests/test_keyboard.py"
+  ],
+  "additions": 70,
+  "production_changes": false,
+  "local_native_test_result": "17 passed in 7.25s",
+  "skips": 0,
+  "backend_sha256": "315beb4e01c7d81a96209dd949c239675517af53102dd97bd0eb30bde7a0fdbb",
+  "blocking_findings": [],
+  "claim_ceiling": "Synthetic BIOS keyboard restoration and framebuffer availability; no production fix or general graphics-fidelity claim.",
+  "test_file_sha256": "420e4cba32e2837471fe38078adc306588d3d9bccaeef09d97256d44e5d6405f"
+}

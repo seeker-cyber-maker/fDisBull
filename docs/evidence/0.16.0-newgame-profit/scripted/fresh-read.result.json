@@ -1,0 +1,447 @@
+{
+  "format": "fdisbull-script-result-1",
+  "script_artifact": "be8f859857cc4a67aeef451662f46ba3",
+  "script_sha256": "037cccd2f3869c4c1645e5eb7c0de62e0811c63dd2499014a4a53cbc61c2b462",
+  "run": "acf68a75590d4ac79b2aa23d6c1ee9dc",
+  "ok": true,
+  "error": null,
+  "completed_steps": 4,
+  "requested_steps": 4,
+  "host_elapsed_ms": 171.98,
+  "steps": [
+    {
+      "index": 0,
+      "op": "click-frame",
+      "result": {
+        "run": "acf68a75590d4ac79b2aa23d6c1ee9dc",
+        "x": 252,
+        "y": 151,
+        "mode_id": 5,
+        "frame": {
+          "artifact": "5d2ad1d3546c45a59501e844402622b7",
+          "run": "acf68a75590d4ac79b2aa23d6c1ee9dc",
+          "version": 1,
+          "name": "sell.png",
+          "kind": "screenshot-grid",
+          "sha256": "c89cd2bf4a52f3a7481503669b46b53f9fa1ecc64c94499d2d73bdcf10e34408",
+          "size": 63276,
+          "metadata": {
+            "captured_ticks": 45290,
+            "double_height": true,
+            "double_width": true,
+            "format": "png",
+            "frame_id": 2423,
+            "height": 200,
+            "mode_id": 5,
+            "session_id": "ses-1",
+            "sha256": "c89cd2bf4a52f3a7481503669b46b53f9fa1ecc64c94499d2d73bdcf10e34408",
+            "source": "last_completed_guest_frame",
+            "source_bpp": 32,
+            "state_revision": 18,
+            "width": 320,
+            "coordinate_grid": {
+              "coordinate_space": "screenshot_pixels",
+              "origin": [
+                0,
+                0
+              ],
+              "max_coordinate": [
+                319,
+                199
+              ],
+              "step": 8,
+              "x_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192,
+                200,
+                208,
+                216,
+                224,
+                232,
+                240,
+                248,
+                256,
+                264,
+                272,
+                280,
+                288,
+                296,
+                304,
+                312
+              ],
+              "y_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192
+              ],
+              "label_step": 32,
+              "x_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192,
+                224,
+                256,
+                288
+              ],
+              "y_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192
+              ],
+              "target": [
+                252,
+                151
+              ],
+              "x_direction": "right",
+              "y_direction": "down",
+              "resized": false,
+              "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+              "source_artifact": "a1561befc5534b0cb709560406a7644a",
+              "source_sha256": "d0baa55ae17a5d79779b5a60526f6a9f96d361dcd27a9230fd1f0aea4c7b1ad8"
+            }
+          }
+        },
+        "click": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 504,
+            "y": 151
+          },
+          "session_id": "ses-1",
+          "state_revision": 19
+        },
+        "frame_phase": "before_queued_click"
+      },
+      "ok": true
+    },
+    {
+      "index": 1,
+      "op": "run",
+      "result": {
+        "run": "acf68a75590d4ac79b2aa23d6c1ee9dc",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 1000,
+        "guest_elapsed_ms": 1045,
+        "host_elapsed_ms": 123.761,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 46343,
+          "session_id": "ses-1",
+          "state_revision": 22
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 21,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 2,
+      "op": "click-frame",
+      "result": {
+        "run": "acf68a75590d4ac79b2aa23d6c1ee9dc",
+        "x": 176,
+        "y": 110,
+        "mode_id": 5,
+        "frame": {
+          "artifact": "1823f7dddeeb4b6aadc25eef755deab6",
+          "run": "acf68a75590d4ac79b2aa23d6c1ee9dc",
+          "version": 1,
+          "name": "confirm.png",
+          "kind": "screenshot-grid",
+          "sha256": "df256109001fbd86a13054ec134c934aa8ba0f16572bd43bbda4f4b03cfb2076",
+          "size": 53402,
+          "metadata": {
+            "captured_ticks": 46331,
+            "double_height": true,
+            "double_width": true,
+            "format": "png",
+            "frame_id": 2491,
+            "height": 200,
+            "mode_id": 5,
+            "session_id": "ses-1",
+            "sha256": "df256109001fbd86a13054ec134c934aa8ba0f16572bd43bbda4f4b03cfb2076",
+            "source": "last_completed_guest_frame",
+            "source_bpp": 32,
+            "state_revision": 22,
+            "width": 320,
+            "coordinate_grid": {
+              "coordinate_space": "screenshot_pixels",
+              "origin": [
+                0,
+                0
+              ],
+              "max_coordinate": [
+                319,
+                199
+              ],
+              "step": 8,
+              "x_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192,
+                200,
+                208,
+                216,
+                224,
+                232,
+                240,
+                248,
+                256,
+                264,
+                272,
+                280,
+                288,
+                296,
+                304,
+                312
+              ],
+              "y_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192
+              ],
+              "label_step": 32,
+              "x_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192,
+                224,
+                256,
+                288
+              ],
+              "y_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192
+              ],
+              "target": [
+                176,
+                110
+              ],
+              "x_direction": "right",
+              "y_direction": "down",
+              "resized": false,
+              "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+              "source_artifact": "2d8dde4f17d640b9a27c5e2ec3a1a272",
+              "source_sha256": "422fbbdbef7de59b100630b595e4e76043497b3a80a17754dd0c7569c9443904"
+            }
+          }
+        },
+        "click": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 352,
+            "y": 110
+          },
+          "session_id": "ses-1",
+          "state_revision": 23
+        },
+        "frame_phase": "before_queued_click"
+      },
+      "ok": true
+    },
+    {
+      "index": 3,
+      "op": "run",
+      "result": {
+        "run": "acf68a75590d4ac79b2aa23d6c1ee9dc",
+        "outcome": "breakpoint",
+        "timed_out": false,
+        "requested_guest_ms": null,
+        "guest_elapsed_ms": 179,
+        "host_elapsed_ms": 23.169,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 46522,
+          "session_id": "ses-1",
+          "state_revision": 26
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 25,
+          "stop_reason": {
+            "address": {
+              "offset": "0x000003D8",
+              "segment": "0x2009",
+              "space": "segmented"
+            },
+            "breakpoint_id": "bp-1",
+            "kind": "breakpoint",
+            "project_address": "0x28228"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "breakpoint",
+          "native_kind": "breakpoint",
+          "causing_instruction": {
+            "offset": "0x000003D8",
+            "segment": "0x2009",
+            "space": "segmented"
+          },
+          "resume_pc": {
+            "offset": "0x000003D8",
+            "segment": "0x2009",
+            "space": "segmented"
+          },
+          "instruction_completed": false,
+          "registers_stage": "before-instruction",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    }
+  ],
+  "artifact": "a05ecf3657f2445da1821c67525fb788"
+}

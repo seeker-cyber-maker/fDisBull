@@ -1,0 +1,18 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 176,
+      "y": 110,
+      "grid_step": 8,
+      "name": "confirm-sale.png"
+    },
+    {
+      "op": "run",
+      "guest_ms": 3000,
+      "timeout_ms": 5000,
+      "fast_forward": true
+    }
+  ]
+}

@@ -1,0 +1,321 @@
+{
+  "command": {
+    "op": "script",
+    "name": "hire-guide-explicit",
+    "steps": [
+      {
+        "op": "click",
+        "x": 55,
+        "y": 160
+      },
+      {
+        "op": "run",
+        "guest_ms": 4000,
+        "timeout_ms": 6000,
+        "fast_forward": true
+      },
+      {
+        "op": "click-frame",
+        "x": 226,
+        "y": 125,
+        "name": "hire-guide-label.png",
+        "grid_step": 8,
+        "hold_ms": 300
+      },
+      {
+        "op": "run",
+        "guest_ms": 1500,
+        "timeout_ms": 5000,
+        "fast_forward": true
+      }
+    ]
+  },
+  "result": {
+    "format": "fdisbull-script-result-1",
+    "script_artifact": "752a746e29ad4317ae2f33538e6f3e81",
+    "script_sha256": "329861aedcfb0d4c3a14204615d5b9e213d5eff6cedc3492a7ef6d704af78271",
+    "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+    "ok": true,
+    "error": null,
+    "completed_steps": 4,
+    "requested_steps": 4,
+    "host_elapsed_ms": 610.59,
+    "steps": [
+      {
+        "index": 0,
+        "op": "click",
+        "result": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 110,
+            "y": 160
+          },
+          "session_id": "ses-1",
+          "state_revision": 156
+        },
+        "ok": true
+      },
+      {
+        "index": 1,
+        "op": "run",
+        "result": {
+          "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+          "outcome": "guest_time",
+          "timed_out": false,
+          "requested_guest_ms": 4000,
+          "guest_elapsed_ms": 4095,
+          "host_elapsed_ms": 428.392,
+          "fast_forward": true,
+          "timing_after": {
+            "fast_forward": false,
+            "guest_ticks": 182366,
+            "session_id": "ses-1",
+            "state_revision": 159
+          },
+          "session": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 158,
+            "stop_reason": {
+              "kind": "pause"
+            }
+          },
+          "hook_hits": [],
+          "stop": {
+            "format": "fdisbull-debug-stop-1",
+            "trigger": "guest_time",
+            "native_kind": "pause",
+            "causing_instruction": null,
+            "resume_pc": null,
+            "instruction_completed": null,
+            "registers_stage": "stopped; stage unknown",
+            "context": "dos-cpu"
+          }
+        },
+        "ok": true
+      },
+      {
+        "index": 2,
+        "op": "click-frame",
+        "result": {
+          "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+          "x": 226,
+          "y": 125,
+          "mode_id": 5,
+          "frame": {
+            "artifact": "a49b0c3101f84463ab6475bc94b73ba4",
+            "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+            "version": 1,
+            "name": "hire-guide-label.png",
+            "kind": "screenshot-grid",
+            "sha256": "e8d19d6d3ce514cf4e60e27acd0de75a723d798d778fb4bbdb4af84893c4b542",
+            "size": 57783,
+            "metadata": {
+              "captured_ticks": 182363,
+              "double_height": true,
+              "double_width": true,
+              "format": "png",
+              "frame_id": 10871,
+              "height": 200,
+              "mode_id": 5,
+              "session_id": "ses-1",
+              "sha256": "e8d19d6d3ce514cf4e60e27acd0de75a723d798d778fb4bbdb4af84893c4b542",
+              "source": "last_completed_guest_frame",
+              "source_bpp": 32,
+              "state_revision": 159,
+              "width": 320,
+              "coordinate_grid": {
+                "coordinate_space": "screenshot_pixels",
+                "origin": [
+                  0,
+                  0
+                ],
+                "max_coordinate": [
+                  319,
+                  199
+                ],
+                "step": 8,
+                "x_lines": [
+                  0,
+                  8,
+                  16,
+                  24,
+                  32,
+                  40,
+                  48,
+                  56,
+                  64,
+                  72,
+                  80,
+                  88,
+                  96,
+                  104,
+                  112,
+                  120,
+                  128,
+                  136,
+                  144,
+                  152,
+                  160,
+                  168,
+                  176,
+                  184,
+                  192,
+                  200,
+                  208,
+                  216,
+                  224,
+                  232,
+                  240,
+                  248,
+                  256,
+                  264,
+                  272,
+                  280,
+                  288,
+                  296,
+                  304,
+                  312
+                ],
+                "y_lines": [
+                  0,
+                  8,
+                  16,
+                  24,
+                  32,
+                  40,
+                  48,
+                  56,
+                  64,
+                  72,
+                  80,
+                  88,
+                  96,
+                  104,
+                  112,
+                  120,
+                  128,
+                  136,
+                  144,
+                  152,
+                  160,
+                  168,
+                  176,
+                  184,
+                  192
+                ],
+                "label_step": 32,
+                "x_labels": [
+                  0,
+                  32,
+                  64,
+                  96,
+                  128,
+                  160,
+                  192,
+                  224,
+                  256,
+                  288
+                ],
+                "y_labels": [
+                  0,
+                  32,
+                  64,
+                  96,
+                  128,
+                  160,
+                  192
+                ],
+                "target": [
+                  226,
+                  125
+                ],
+                "x_direction": "right",
+                "y_direction": "down",
+                "resized": false,
+                "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+                "source_artifact": "9fd21a13b4c84c07904036932dcc8903",
+                "source_sha256": "4f2d417fc3714c591be616c5b63298a91250161193dc341c59003abc4248af97"
+              }
+            }
+          },
+          "click": {
+            "accepted": true,
+            "coordinate_space": "guest_frame_pixels",
+            "delivery": "queued",
+            "mouse": {
+              "buttons": 1,
+              "max_x": 639,
+              "max_y": 199,
+              "min_x": 0,
+              "min_y": 0,
+              "owned_buttons": 1,
+              "pending_release_buttons": 1,
+              "release_pending": true,
+              "screen_max_x": 640,
+              "screen_max_y": 200,
+              "x": 452,
+              "y": 125
+            },
+            "session_id": "ses-1",
+            "state_revision": 160
+          },
+          "frame_phase": "before_queued_click"
+        },
+        "ok": true
+      },
+      {
+        "index": 3,
+        "op": "run",
+        "result": {
+          "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+          "outcome": "guest_time",
+          "timed_out": false,
+          "requested_guest_ms": 1500,
+          "guest_elapsed_ms": 1550,
+          "host_elapsed_ms": 160.136,
+          "fast_forward": true,
+          "timing_after": {
+            "fast_forward": false,
+            "guest_ticks": 183916,
+            "session_id": "ses-1",
+            "state_revision": 163
+          },
+          "session": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 162,
+            "stop_reason": {
+              "kind": "pause"
+            }
+          },
+          "hook_hits": [],
+          "stop": {
+            "format": "fdisbull-debug-stop-1",
+            "trigger": "guest_time",
+            "native_kind": "pause",
+            "causing_instruction": null,
+            "resume_pc": null,
+            "instruction_completed": null,
+            "registers_stage": "stopped; stage unknown",
+            "context": "dos-cpu"
+          }
+        },
+        "ok": true
+      }
+    ],
+    "artifact": "f0574b380da14c8583f39dd9211b0bae"
+  }
+}

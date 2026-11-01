@@ -1,0 +1,25 @@
+{
+  "command": {
+    "op": "breakpoint",
+    "address": "27e5:0379"
+  },
+  "result": {
+    "address": {
+      "offset": "0x00000379",
+      "segment": "0x2009",
+      "space": "segmented"
+    },
+    "breakpoint_id": "bp-5",
+    "kind": "execution",
+    "once": false,
+    "session_id": "ses-1",
+    "state_revision": 582,
+    "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+    "version": 1,
+    "project_address": "0x281c9",
+    "project_cs": "0x27E5",
+    "instruction_context": "x86:16:little:cs=27e5",
+    "runtime_bytes": "b8cf56",
+    "bytes_verified": true
+  }
+}

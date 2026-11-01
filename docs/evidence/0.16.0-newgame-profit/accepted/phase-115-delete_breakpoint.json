@@ -1,0 +1,12 @@
+{
+  "command": {
+    "op": "delete_breakpoint",
+    "breakpoint_id": "bp-2"
+  },
+  "result": {
+    "breakpoint_id": "bp-2",
+    "deleted": true,
+    "session_id": "ses-1",
+    "state_revision": 341
+  }
+}

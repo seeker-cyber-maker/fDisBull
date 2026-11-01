@@ -1,0 +1,34 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 252,
+      "y": 151,
+      "name": "sell.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 1000,
+      "timeout_ms": 15000,
+      "fast_forward": true,
+      "expect": "guest_time"
+    },
+    {
+      "op": "click-frame",
+      "x": 176,
+      "y": 110,
+      "name": "confirm.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "timeout_ms": 5000,
+      "fast_forward": true,
+      "expect": "breakpoint"
+    }
+  ]
+}

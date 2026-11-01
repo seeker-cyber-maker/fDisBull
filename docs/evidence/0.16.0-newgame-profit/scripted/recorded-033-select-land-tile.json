@@ -1,0 +1,288 @@
+{
+  "format": "fdisbull-script-result-1",
+  "script_artifact": "2be6ee1e20704e93aa37900dd5dceef3",
+  "script_sha256": "91ed5daf388355b8979397b8c7bdd1cb376d80d9eade26aaa9261d0d5865d0aa",
+  "run": "445b88fc2d404804980b60d74cd0b05c",
+  "ok": true,
+  "error": null,
+  "completed_steps": 4,
+  "requested_steps": 4,
+  "host_elapsed_ms": 422.092,
+  "steps": [
+    {
+      "index": 0,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 344,
+          "y": 187
+        },
+        "session_id": "ses-1",
+        "state_revision": 28
+      },
+      "ok": true
+    },
+    {
+      "index": 1,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 2000,
+        "guest_elapsed_ms": 2070,
+        "host_elapsed_ms": 188.991,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 56598,
+          "session_id": "ses-1",
+          "state_revision": 31
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 30,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 2,
+      "op": "click-frame",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "x": 60,
+        "y": 160,
+        "mode_id": 5,
+        "frame": {
+          "artifact": "837acd531bc94594ab5433a8ed16e996",
+          "run": "445b88fc2d404804980b60d74cd0b05c",
+          "version": 1,
+          "name": "desert-price-label.png",
+          "kind": "screenshot-grid",
+          "sha256": "7a3cbb19b25ef03972c0f8a8028e945aa266e8731c902bf91b2ab01ccaeff743",
+          "size": 20409,
+          "metadata": {
+            "captured_ticks": 56590,
+            "double_height": true,
+            "double_width": true,
+            "format": "png",
+            "frame_id": 3109,
+            "height": 200,
+            "mode_id": 5,
+            "session_id": "ses-1",
+            "sha256": "7a3cbb19b25ef03972c0f8a8028e945aa266e8731c902bf91b2ab01ccaeff743",
+            "source": "last_completed_guest_frame",
+            "source_bpp": 32,
+            "state_revision": 31,
+            "width": 320,
+            "coordinate_grid": {
+              "coordinate_space": "screenshot_pixels",
+              "origin": [
+                0,
+                0
+              ],
+              "max_coordinate": [
+                319,
+                199
+              ],
+              "step": 8,
+              "x_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192,
+                200,
+                208,
+                216,
+                224,
+                232,
+                240,
+                248,
+                256,
+                264,
+                272,
+                280,
+                288,
+                296,
+                304,
+                312
+              ],
+              "y_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192
+              ],
+              "label_step": 32,
+              "x_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192,
+                224,
+                256,
+                288
+              ],
+              "y_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192
+              ],
+              "target": [
+                60,
+                160
+              ],
+              "x_direction": "right",
+              "y_direction": "down",
+              "resized": false,
+              "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+              "source_artifact": "1645ea2057544b40a5728796d9492ae3",
+              "source_sha256": "014b10957cfbf84ca19d1a17bb9569441475f6acc0584aae136f253dde22333f"
+            }
+          }
+        },
+        "click": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 120,
+            "y": 160
+          },
+          "session_id": "ses-1",
+          "state_revision": 32
+        },
+        "frame_phase": "before_queued_click"
+      },
+      "ok": true
+    },
+    {
+      "index": 3,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 2500,
+        "guest_elapsed_ms": 2520,
+        "host_elapsed_ms": 222.508,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 59118,
+          "session_id": "ses-1",
+          "state_revision": 35
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 34,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    }
+  ],
+  "artifact": "711b15e4ecc24f59a9c242a593739ed0"
+}

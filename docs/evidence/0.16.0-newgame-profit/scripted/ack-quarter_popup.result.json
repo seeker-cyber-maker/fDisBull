@@ -1,0 +1,69 @@
+{
+  "format": "fdisbull-script-result-1",
+  "script_artifact": "0d19bffa11f04d82a8c763e54db2172b",
+  "script_sha256": "65d07d90cce81aad9b911f8379ac61abcaf9aa940044ff8f4920cb9aa40771d8",
+  "run": "445b88fc2d404804980b60d74cd0b05c",
+  "ok": true,
+  "error": null,
+  "completed_steps": 2,
+  "requested_steps": 2,
+  "host_elapsed_ms": 66.44,
+  "steps": [
+    {
+      "index": 0,
+      "op": "keyboard.press",
+      "result": {
+        "accepted": true,
+        "delivery": "queued",
+        "keyboard": {
+          "owned_keys": 0,
+          "pending_events": 2,
+          "queued_guest_ms": 42
+        },
+        "session_id": "ses-1",
+        "state_revision": 654
+      },
+      "ok": true
+    },
+    {
+      "index": 1,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 600,
+        "guest_elapsed_ms": 605,
+        "host_elapsed_ms": 64.203,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 411758,
+          "session_id": "ses-1",
+          "state_revision": 657
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 656,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    }
+  ],
+  "artifact": "f99f086f7e2148aaa6e2055842e9c475"
+}

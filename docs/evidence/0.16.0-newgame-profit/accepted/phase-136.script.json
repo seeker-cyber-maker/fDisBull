@@ -1,0 +1,51 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click",
+      "x": 160,
+      "y": 107
+    },
+    {
+      "op": "run",
+      "guest_ms": 1200,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    },
+    {
+      "op": "click",
+      "x": 201,
+      "y": 187
+    },
+    {
+      "op": "run",
+      "guest_ms": 6500,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    },
+    {
+      "op": "click-frame",
+      "x": 55,
+      "y": 65,
+      "name": "diner-revisit.png",
+      "grid_step": 8
+    },
+    {
+      "op": "run",
+      "guest_ms": 6500,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    },
+    {
+      "op": "click",
+      "x": 133,
+      "y": 54
+    },
+    {
+      "op": "run",
+      "guest_ms": 3500,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    }
+  ]
+}

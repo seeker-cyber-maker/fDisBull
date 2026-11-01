@@ -1,0 +1,62 @@
+{
+  "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+  "pid": 59072,
+  "process_reaped": true,
+  "original_files_unchanged": 192,
+  "private_changed_files": [
+    "TOPTEN.DAT"
+  ],
+  "private_missing_files": [],
+  "entries": [
+    {
+      "rank": 1,
+      "name": "John Baronasaurus",
+      "value": 90000
+    },
+    {
+      "rank": 2,
+      "name": "Rebecca Coffmanadon",
+      "value": 80000
+    },
+    {
+      "rank": 3,
+      "name": "Kurt Pfeiferdactyl",
+      "value": 70000
+    },
+    {
+      "rank": 4,
+      "name": "Ivanasaurus Manley",
+      "value": 60000
+    },
+    {
+      "rank": 5,
+      "name": "Carolophysis Manley",
+      "value": 50000
+    },
+    {
+      "rank": 6,
+      "name": "Lauralophodon",
+      "value": 40000
+    },
+    {
+      "rank": 7,
+      "name": "Marius",
+      "value": 5232
+    },
+    {
+      "rank": 8,
+      "name": "NewProfit16",
+      "value": 3422
+    },
+    {
+      "rank": 9,
+      "name": "Thomas Rex",
+      "value": 2500
+    },
+    {
+      "rank": 10,
+      "name": "Terry Dactyl",
+      "value": 1000
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 226,
+      "y": 148,
+      "name": "hire-guide-button.png",
+      "grid_step": 8,
+      "hold_ms": 150
+    },
+    {
+      "op": "run",
+      "guest_ms": 700,
+      "timeout_ms": 4000,
+      "fast_forward": true
+    },
+    {
+      "op": "click",
+      "x": 201,
+      "y": 187
+    },
+    {
+      "op": "run",
+      "guest_ms": 7000,
+      "timeout_ms": 9000,
+      "fast_forward": true
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click",
+      "x": 216,
+      "y": 187
+    },
+    {
+      "op": "run",
+      "guest_ms": 8000,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    },
+    {
+      "op": "click-frame",
+      "x": 55,
+      "y": 65,
+      "name": "dino-diner-door.png",
+      "grid_step": 8,
+      "hold_ms": 200
+    },
+    {
+      "op": "run",
+      "guest_ms": 8000,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    }
+  ]
+}

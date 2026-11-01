@@ -1,0 +1,36 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "repeat",
+      "count": 19,
+      "steps": [
+        {
+          "op": "click",
+          "x": 133,
+          "y": 108,
+          "hold_ms": 80
+        },
+        {
+          "op": "run",
+          "guest_ms": 220,
+          "timeout_ms": 5000,
+          "fast_forward": true
+        }
+      ]
+    },
+    {
+      "op": "click-frame",
+      "x": 201,
+      "y": 187,
+      "name": "confirm-food-purchase.png",
+      "grid_step": 8
+    },
+    {
+      "op": "run",
+      "guest_ms": 6000,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    }
+  ]
+}

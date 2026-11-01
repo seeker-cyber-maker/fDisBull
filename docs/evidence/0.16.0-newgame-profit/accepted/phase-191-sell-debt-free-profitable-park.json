@@ -1,0 +1,244 @@
+{
+  "command": {
+    "op": "script",
+    "name": "sell-debt-free-profitable-park",
+    "steps": [
+      {
+        "op": "click-frame",
+        "x": 252,
+        "y": 151,
+        "name": "sell-earned-park.png",
+        "grid_step": 8
+      },
+      {
+        "op": "run",
+        "guest_ms": 1000,
+        "timeout_ms": 10000,
+        "fast_forward": true
+      }
+    ]
+  },
+  "result": {
+    "format": "fdisbull-script-result-1",
+    "script_artifact": "04f16bdf28f14ba2b316e02023e131de",
+    "script_sha256": "0974da7f4b7d0c455a3d88ac515cf158042cc44b7c5b194aca3099966b5137f2",
+    "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+    "ok": true,
+    "error": null,
+    "completed_steps": 2,
+    "requested_steps": 2,
+    "host_elapsed_ms": 124.686,
+    "steps": [
+      {
+        "index": 0,
+        "op": "click-frame",
+        "result": {
+          "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+          "x": 252,
+          "y": 151,
+          "mode_id": 5,
+          "frame": {
+            "artifact": "5e3a61bcec7a49a6a065a6c12e6ad96a",
+            "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+            "version": 1,
+            "name": "sell-earned-park.png",
+            "kind": "screenshot-grid",
+            "sha256": "fd419aadf513ab563074a50c4320e63dea2a2b10bcdecb7ec377635e71daad4e",
+            "size": 63430,
+            "metadata": {
+              "captured_ticks": 477427,
+              "double_height": true,
+              "double_width": true,
+              "format": "png",
+              "frame_id": 29493,
+              "height": 200,
+              "mode_id": 5,
+              "session_id": "ses-1",
+              "sha256": "fd419aadf513ab563074a50c4320e63dea2a2b10bcdecb7ec377635e71daad4e",
+              "source": "last_completed_guest_frame",
+              "source_bpp": 32,
+              "state_revision": 582,
+              "width": 320,
+              "coordinate_grid": {
+                "coordinate_space": "screenshot_pixels",
+                "origin": [
+                  0,
+                  0
+                ],
+                "max_coordinate": [
+                  319,
+                  199
+                ],
+                "step": 8,
+                "x_lines": [
+                  0,
+                  8,
+                  16,
+                  24,
+                  32,
+                  40,
+                  48,
+                  56,
+                  64,
+                  72,
+                  80,
+                  88,
+                  96,
+                  104,
+                  112,
+                  120,
+                  128,
+                  136,
+                  144,
+                  152,
+                  160,
+                  168,
+                  176,
+                  184,
+                  192,
+                  200,
+                  208,
+                  216,
+                  224,
+                  232,
+                  240,
+                  248,
+                  256,
+                  264,
+                  272,
+                  280,
+                  288,
+                  296,
+                  304,
+                  312
+                ],
+                "y_lines": [
+                  0,
+                  8,
+                  16,
+                  24,
+                  32,
+                  40,
+                  48,
+                  56,
+                  64,
+                  72,
+                  80,
+                  88,
+                  96,
+                  104,
+                  112,
+                  120,
+                  128,
+                  136,
+                  144,
+                  152,
+                  160,
+                  168,
+                  176,
+                  184,
+                  192
+                ],
+                "label_step": 32,
+                "x_labels": [
+                  0,
+                  32,
+                  64,
+                  96,
+                  128,
+                  160,
+                  192,
+                  224,
+                  256,
+                  288
+                ],
+                "y_labels": [
+                  0,
+                  32,
+                  64,
+                  96,
+                  128,
+                  160,
+                  192
+                ],
+                "target": [
+                  252,
+                  151
+                ],
+                "x_direction": "right",
+                "y_direction": "down",
+                "resized": false,
+                "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+                "source_artifact": "d832c0635d9e4e8bbe1b320f90a81386",
+                "source_sha256": "bfd8019f9ebf6b048026b8051afc6799b06320d84725f27054cc56f7f983ffb7"
+              }
+            }
+          },
+          "click": {
+            "accepted": true,
+            "coordinate_space": "guest_frame_pixels",
+            "delivery": "queued",
+            "mouse": {
+              "buttons": 1,
+              "max_x": 639,
+              "max_y": 199,
+              "min_x": 0,
+              "min_y": 0,
+              "owned_buttons": 1,
+              "pending_release_buttons": 1,
+              "release_pending": true,
+              "screen_max_x": 640,
+              "screen_max_y": 200,
+              "x": 504,
+              "y": 151
+            },
+            "session_id": "ses-1",
+            "state_revision": 583
+          },
+          "frame_phase": "before_queued_click"
+        },
+        "ok": true
+      },
+      {
+        "index": 1,
+        "op": "run",
+        "result": {
+          "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+          "outcome": "guest_time",
+          "timed_out": false,
+          "requested_guest_ms": 1000,
+          "guest_elapsed_ms": 1005,
+          "host_elapsed_ms": 113.019,
+          "fast_forward": true,
+          "timing_after": {
+            "fast_forward": false,
+            "guest_ticks": 478441,
+            "session_id": "ses-1",
+            "state_revision": 586
+          },
+          "session": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 585,
+            "stop_reason": {
+              "kind": "pause"
+            }
+          },
+          "hook_hits": [],
+          "stop": {
+            "format": "fdisbull-debug-stop-1",
+            "trigger": "guest_time",
+            "native_kind": "pause",
+            "causing_instruction": null,
+            "resume_pc": null,
+            "instruction_completed": null,
+            "registers_stage": "stopped; stage unknown",
+            "context": "dos-cpu"
+          }
+        },
+        "ok": true
+      }
+    ],
+    "artifact": "a842c0646b53459bac3163c3b5600e96"
+  }
+}

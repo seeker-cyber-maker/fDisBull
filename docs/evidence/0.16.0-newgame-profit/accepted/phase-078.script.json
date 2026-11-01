@@ -1,0 +1,19 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 205,
+      "y": 105,
+      "name": "catalogue-cover.png",
+      "grid_step": 8,
+      "hold_ms": 150
+    },
+    {
+      "op": "run",
+      "guest_ms": 5000,
+      "timeout_ms": 7000,
+      "fast_forward": true
+    }
+  ]
+}

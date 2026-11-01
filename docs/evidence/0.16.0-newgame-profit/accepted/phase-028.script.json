@@ -1,0 +1,19 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 60,
+      "y": 100,
+      "name": "desert-acre.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 1000,
+      "timeout_ms": 4000,
+      "fast_forward": true
+    }
+  ]
+}

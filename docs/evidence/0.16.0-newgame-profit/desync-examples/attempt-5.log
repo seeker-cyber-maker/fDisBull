@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "/Volumes/CODEX/Codex_Projects/fDisBull/examples/dinopark/verify_newgame_profit.py", line 316, in <module>
+    main(parser.parse_args())
+    ~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/CODEX/Codex_Projects/fDisBull/examples/dinopark/verify_newgame_profit.py", line 241, in main
+    settle_and_record(p,d)
+    ~~~~~~~~~~~~~~~~~^^^^^
+  File "/Volumes/CODEX/Codex_Projects/fDisBull/examples/dinopark/verify_newgame_profit.py", line 149, in settle_and_record
+    observed=probe(p,d)
+  File "/Volumes/CODEX/Codex_Projects/fDisBull/examples/dinopark/verify_newgame_profit.py", line 110, in probe
+    p.debug_export(frame['artifact'], work/'scene-probe.png')
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.16.0-e1e3fb4/tool/fdisbull/debugger.py", line 184, in debug_export
+    with destination.open('xb') as stream:
+         ~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/tiga/.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileExistsError: [Errno 17] File exists: '/Users/tiga/Conversions/DinoParkTycoon/debugger-runs/newgame-profit-replay5-0.16.0-2026-10-26/private/scene-probe.png'

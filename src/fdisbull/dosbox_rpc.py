@@ -18,7 +18,7 @@ class DebuggerError(ValueError):
 class DOSBoxRPC:
     limit = 8 * 1024 * 1024
 
-    def __init__(self, executable, game_dir, *, on_spawn=None):
+    def __init__(self, executable, game_dir, *, on_spawn=None, window=False):
         if os.name != 'posix':
             raise DebuggerError('Inherited-pipe debugger currently requires macOS or Linux')
         executable = Path(executable).expanduser().resolve(strict=True)
@@ -50,7 +50,9 @@ class DOSBoxRPC:
             with (directory / 'emulator.log').open('wb') as log:
                 self.process = subprocess.Popen(
                     [str(executable), '--defaultconf', '--noautoexec', '--noconfig',
-                     '-set', 'render doublescan=false', '-set', 'cpu core=normal', '--agent-config', str(config)],
+                     '-set', 'render doublescan=false', '-set', 'cpu core=normal',
+                     *(['--agent-window'] if window else []),
+                     '--agent-config', str(config)],
                     cwd=directory, env=environment, stdin=subprocess.DEVNULL,
                     stdout=log, stderr=subprocess.STDOUT, pass_fds=(child_read,child_write))
             if on_spawn is not None:on_spawn(self.process)

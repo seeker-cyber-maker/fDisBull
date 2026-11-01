@@ -1,0 +1,12 @@
+{
+  "successful_run": "newgame-profit-replay9-0.16.0-2026-10-26",
+  "files": {
+    "examples/dinopark/verify_newgame_profit.py": "f86a5eddc26a55ddf7573b917756ce6ea3385241d45b2c010292e583a2ce34ab",
+    "examples/dinopark/routes/newgame-profit.json": "ac137fdc0b00a3f64a0747916c03a87bf6a621499dd698824eaaf9387c53b5a3",
+    "examples/dinopark/routes/newgame-pixel-patterns.json": "5b2acae80d3ddf6a83af9e76c1e4154f5466014be8dd310189fe8a197094c9a4"
+  },
+  "receipt": "scripted/VERIFICATION.json",
+  "native_pixel_endpoint_implemented": false,
+  "general_scene_framework_implemented": false,
+  "scope": "Native gameplay with unchanged delivered 0.16.0; task-local mask helper samples headless PNGs. Source and route hashes equal the successful runtime receipt."
+}

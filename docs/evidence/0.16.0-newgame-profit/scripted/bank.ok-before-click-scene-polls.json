@@ -1,0 +1,22 @@
+{
+  "polls": [
+    {
+      "frame_id": 25733,
+      "scores": {
+        "street": 0,
+        "office": 0,
+        "bank": 38,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "bank"
+      ]
+    }
+  ],
+  "guest_elapsed_ms": 0,
+  "ok": true
+}

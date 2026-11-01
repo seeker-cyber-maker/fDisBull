@@ -1,0 +1,245 @@
+{
+  "command": {
+    "op": "script",
+    "name": "new-game-title-selection",
+    "steps": [
+      {
+        "op": "click-frame",
+        "x": 80,
+        "y": 160,
+        "name": "new-game-selected.png",
+        "grid_step": 8,
+        "hold_ms": 80
+      },
+      {
+        "op": "run",
+        "guest_ms": 2500,
+        "timeout_ms": 6000,
+        "fast_forward": true
+      }
+    ]
+  },
+  "result": {
+    "format": "fdisbull-script-result-1",
+    "script_artifact": "8ccd73cec3d644a0a868e4bb3457a4c9",
+    "script_sha256": "25ab7c21bed06b4d5419c1b069bce4d2d49f32b92ba7d8e19bc3b26f7eaa173f",
+    "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+    "ok": true,
+    "error": null,
+    "completed_steps": 2,
+    "requested_steps": 2,
+    "host_elapsed_ms": 249.75,
+    "steps": [
+      {
+        "index": 0,
+        "op": "click-frame",
+        "result": {
+          "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+          "x": 80,
+          "y": 160,
+          "mode_id": 5,
+          "frame": {
+            "artifact": "95b63d26e8644ea38c4d76b4eecba93c",
+            "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+            "version": 1,
+            "name": "new-game-selected.png",
+            "kind": "screenshot-grid",
+            "sha256": "2c5566a647885bbfeed55f9258a9f72bb10e373d97b1b8fafef79aa959f035bc",
+            "size": 67020,
+            "metadata": {
+              "captured_ticks": 63539,
+              "double_height": true,
+              "double_width": true,
+              "format": "png",
+              "frame_id": 3551,
+              "height": 200,
+              "mode_id": 5,
+              "session_id": "ses-1",
+              "sha256": "2c5566a647885bbfeed55f9258a9f72bb10e373d97b1b8fafef79aa959f035bc",
+              "source": "last_completed_guest_frame",
+              "source_bpp": 32,
+              "state_revision": 50,
+              "width": 320,
+              "coordinate_grid": {
+                "coordinate_space": "screenshot_pixels",
+                "origin": [
+                  0,
+                  0
+                ],
+                "max_coordinate": [
+                  319,
+                  199
+                ],
+                "step": 8,
+                "x_lines": [
+                  0,
+                  8,
+                  16,
+                  24,
+                  32,
+                  40,
+                  48,
+                  56,
+                  64,
+                  72,
+                  80,
+                  88,
+                  96,
+                  104,
+                  112,
+                  120,
+                  128,
+                  136,
+                  144,
+                  152,
+                  160,
+                  168,
+                  176,
+                  184,
+                  192,
+                  200,
+                  208,
+                  216,
+                  224,
+                  232,
+                  240,
+                  248,
+                  256,
+                  264,
+                  272,
+                  280,
+                  288,
+                  296,
+                  304,
+                  312
+                ],
+                "y_lines": [
+                  0,
+                  8,
+                  16,
+                  24,
+                  32,
+                  40,
+                  48,
+                  56,
+                  64,
+                  72,
+                  80,
+                  88,
+                  96,
+                  104,
+                  112,
+                  120,
+                  128,
+                  136,
+                  144,
+                  152,
+                  160,
+                  168,
+                  176,
+                  184,
+                  192
+                ],
+                "label_step": 32,
+                "x_labels": [
+                  0,
+                  32,
+                  64,
+                  96,
+                  128,
+                  160,
+                  192,
+                  224,
+                  256,
+                  288
+                ],
+                "y_labels": [
+                  0,
+                  32,
+                  64,
+                  96,
+                  128,
+                  160,
+                  192
+                ],
+                "target": [
+                  80,
+                  160
+                ],
+                "x_direction": "right",
+                "y_direction": "down",
+                "resized": false,
+                "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+                "source_artifact": "485a44d033eb4f5bb09823d5397715cc",
+                "source_sha256": "37adbf4392752b968c16c8fd7cedf0ecaaa1f8857d26c5b88fb25064dab66d72"
+              }
+            }
+          },
+          "click": {
+            "accepted": true,
+            "coordinate_space": "guest_frame_pixels",
+            "delivery": "queued",
+            "mouse": {
+              "buttons": 1,
+              "max_x": 639,
+              "max_y": 199,
+              "min_x": 0,
+              "min_y": 0,
+              "owned_buttons": 1,
+              "pending_release_buttons": 1,
+              "release_pending": true,
+              "screen_max_x": 640,
+              "screen_max_y": 200,
+              "x": 160,
+              "y": 160
+            },
+            "session_id": "ses-1",
+            "state_revision": 51
+          },
+          "frame_phase": "before_queued_click"
+        },
+        "ok": true
+      },
+      {
+        "index": 1,
+        "op": "run",
+        "result": {
+          "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+          "outcome": "guest_time",
+          "timed_out": false,
+          "requested_guest_ms": 2500,
+          "guest_elapsed_ms": 2585,
+          "host_elapsed_ms": 238.288,
+          "fast_forward": true,
+          "timing_after": {
+            "fast_forward": false,
+            "guest_ticks": 66146,
+            "session_id": "ses-1",
+            "state_revision": 54
+          },
+          "session": {
+            "session_id": "ses-1",
+            "state": "stopped",
+            "state_revision": 53,
+            "stop_reason": {
+              "kind": "pause"
+            }
+          },
+          "hook_hits": [],
+          "stop": {
+            "format": "fdisbull-debug-stop-1",
+            "trigger": "guest_time",
+            "native_kind": "pause",
+            "causing_instruction": null,
+            "resume_pc": null,
+            "instruction_completed": null,
+            "registers_stage": "stopped; stage unknown",
+            "context": "dos-cpu"
+          }
+        },
+        "ok": true
+      }
+    ],
+    "artifact": "9cd59aac71e14fb09d515c1b28aa2536"
+  }
+}

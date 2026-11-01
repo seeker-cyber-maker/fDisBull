@@ -1,0 +1,447 @@
+{
+  "format": "fdisbull-script-result-1",
+  "script_artifact": "5b20226315444e73b36ad3b8e31d1662",
+  "script_sha256": "d89049945587f197a703739759904aefddf037f321ab113d3299d3da6a3eccc8",
+  "run": "b1181f28e9ff449d98f39ef49a0c072f",
+  "ok": true,
+  "error": null,
+  "completed_steps": 4,
+  "requested_steps": 4,
+  "host_elapsed_ms": 169.685,
+  "steps": [
+    {
+      "index": 0,
+      "op": "click-frame",
+      "result": {
+        "run": "b1181f28e9ff449d98f39ef49a0c072f",
+        "x": 252,
+        "y": 151,
+        "mode_id": 5,
+        "frame": {
+          "artifact": "c0102c2d3875471a9c3721e032279fdb",
+          "run": "b1181f28e9ff449d98f39ef49a0c072f",
+          "version": 1,
+          "name": "fresh-sell.png",
+          "kind": "screenshot-grid",
+          "sha256": "c89cd2bf4a52f3a7481503669b46b53f9fa1ecc64c94499d2d73bdcf10e34408",
+          "size": 63276,
+          "metadata": {
+            "captured_ticks": 45233,
+            "double_height": true,
+            "double_width": true,
+            "format": "png",
+            "frame_id": 2416,
+            "height": 200,
+            "mode_id": 5,
+            "session_id": "ses-1",
+            "sha256": "c89cd2bf4a52f3a7481503669b46b53f9fa1ecc64c94499d2d73bdcf10e34408",
+            "source": "last_completed_guest_frame",
+            "source_bpp": 32,
+            "state_revision": 18,
+            "width": 320,
+            "coordinate_grid": {
+              "coordinate_space": "screenshot_pixels",
+              "origin": [
+                0,
+                0
+              ],
+              "max_coordinate": [
+                319,
+                199
+              ],
+              "step": 8,
+              "x_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192,
+                200,
+                208,
+                216,
+                224,
+                232,
+                240,
+                248,
+                256,
+                264,
+                272,
+                280,
+                288,
+                296,
+                304,
+                312
+              ],
+              "y_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192
+              ],
+              "label_step": 32,
+              "x_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192,
+                224,
+                256,
+                288
+              ],
+              "y_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192
+              ],
+              "target": [
+                252,
+                151
+              ],
+              "x_direction": "right",
+              "y_direction": "down",
+              "resized": false,
+              "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+              "source_artifact": "fbb04ca5c0b94a769e2d08c2a452ac4c",
+              "source_sha256": "d0baa55ae17a5d79779b5a60526f6a9f96d361dcd27a9230fd1f0aea4c7b1ad8"
+            }
+          }
+        },
+        "click": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 504,
+            "y": 151
+          },
+          "session_id": "ses-1",
+          "state_revision": 19
+        },
+        "frame_phase": "before_queued_click"
+      },
+      "ok": true
+    },
+    {
+      "index": 1,
+      "op": "run",
+      "result": {
+        "run": "b1181f28e9ff449d98f39ef49a0c072f",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 1000,
+        "guest_elapsed_ms": 1020,
+        "host_elapsed_ms": 123.64,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 46256,
+          "session_id": "ses-1",
+          "state_revision": 22
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 21,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 2,
+      "op": "click-frame",
+      "result": {
+        "run": "b1181f28e9ff449d98f39ef49a0c072f",
+        "x": 176,
+        "y": 110,
+        "mode_id": 5,
+        "frame": {
+          "artifact": "367af73b7dff4eeea7876304bac55256",
+          "run": "b1181f28e9ff449d98f39ef49a0c072f",
+          "version": 1,
+          "name": "fresh-confirm-sale.png",
+          "kind": "screenshot-grid",
+          "sha256": "095744bcd90d2c6413841a24cca803574f5ee5be2e78ff2a7e6e5584f1a97fd1",
+          "size": 53341,
+          "metadata": {
+            "captured_ticks": 46246,
+            "double_height": true,
+            "double_width": true,
+            "format": "png",
+            "frame_id": 2482,
+            "height": 200,
+            "mode_id": 5,
+            "session_id": "ses-1",
+            "sha256": "095744bcd90d2c6413841a24cca803574f5ee5be2e78ff2a7e6e5584f1a97fd1",
+            "source": "last_completed_guest_frame",
+            "source_bpp": 32,
+            "state_revision": 22,
+            "width": 320,
+            "coordinate_grid": {
+              "coordinate_space": "screenshot_pixels",
+              "origin": [
+                0,
+                0
+              ],
+              "max_coordinate": [
+                319,
+                199
+              ],
+              "step": 8,
+              "x_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192,
+                200,
+                208,
+                216,
+                224,
+                232,
+                240,
+                248,
+                256,
+                264,
+                272,
+                280,
+                288,
+                296,
+                304,
+                312
+              ],
+              "y_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192
+              ],
+              "label_step": 32,
+              "x_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192,
+                224,
+                256,
+                288
+              ],
+              "y_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192
+              ],
+              "target": [
+                176,
+                110
+              ],
+              "x_direction": "right",
+              "y_direction": "down",
+              "resized": false,
+              "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+              "source_artifact": "08f44887d8f04750891cb13e8f62bcc9",
+              "source_sha256": "530ef42e06dbd92ea5cb8cf5a1259903041bb4a8844a3bc732faf9e46029dc1e"
+            }
+          }
+        },
+        "click": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 352,
+            "y": 110
+          },
+          "session_id": "ses-1",
+          "state_revision": 23
+        },
+        "frame_phase": "before_queued_click"
+      },
+      "ok": true
+    },
+    {
+      "index": 3,
+      "op": "run",
+      "result": {
+        "run": "b1181f28e9ff449d98f39ef49a0c072f",
+        "outcome": "breakpoint",
+        "timed_out": false,
+        "requested_guest_ms": null,
+        "guest_elapsed_ms": 166,
+        "host_elapsed_ms": 22.637,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 46422,
+          "session_id": "ses-1",
+          "state_revision": 26
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 25,
+          "stop_reason": {
+            "address": {
+              "offset": "0x000003D8",
+              "segment": "0x2009",
+              "space": "segmented"
+            },
+            "breakpoint_id": "bp-1",
+            "kind": "breakpoint",
+            "project_address": "0x28228"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "breakpoint",
+          "native_kind": "breakpoint",
+          "causing_instruction": {
+            "offset": "0x000003D8",
+            "segment": "0x2009",
+            "space": "segmented"
+          },
+          "resume_pc": {
+            "offset": "0x000003D8",
+            "segment": "0x2009",
+            "space": "segmented"
+          },
+          "instruction_completed": false,
+          "registers_stage": "before-instruction",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    }
+  ],
+  "artifact": "d8b0d08b740f468c9304e7aabf400184"
+}

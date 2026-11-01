@@ -1,0 +1,66 @@
+{
+  "command": {
+    "op": "run",
+    "timeout_ms": 2000,
+    "fast_forward": true
+  },
+  "result": {
+    "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+    "outcome": "breakpoint",
+    "timed_out": false,
+    "requested_guest_ms": null,
+    "guest_elapsed_ms": 72,
+    "host_elapsed_ms": 11.159,
+    "fast_forward": true,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 313588,
+      "session_id": "ses-1",
+      "state_revision": 338
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 337,
+      "stop_reason": {
+        "address": {
+          "offset": "0x0003E07D",
+          "space": "linear"
+        },
+        "breakpoint_id": "bp-4",
+        "data_access": {
+          "access": "w",
+          "address": "0x0003E07C",
+          "instruction": {
+            "offset": "0x00002866",
+            "segment": "0x3123",
+            "space": "segmented"
+          },
+          "length": 2,
+          "stop_timing": "after_access_before_next_instruction",
+          "project_instruction": "0x3b856"
+        },
+        "kind": "breakpoint",
+        "project_address": "0x45e3d"
+      }
+    },
+    "hook_hits": [],
+    "stop": {
+      "format": "fdisbull-debug-stop-1",
+      "trigger": "watchpoint",
+      "native_kind": "breakpoint",
+      "causing_instruction": {
+        "offset": "0x00002866",
+        "segment": "0x3123",
+        "space": "segmented"
+      },
+      "resume_pc": {
+        "offset": "0x0003E07D",
+        "space": "linear"
+      },
+      "instruction_completed": true,
+      "registers_stage": "after-instruction",
+      "context": "dos-cpu"
+    }
+  }
+}

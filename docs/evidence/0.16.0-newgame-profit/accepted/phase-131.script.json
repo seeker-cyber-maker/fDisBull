@@ -1,0 +1,31 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 173,
+      "y": 187,
+      "name": "leave-running-park.png",
+      "grid_step": 8
+    },
+    {
+      "op": "run",
+      "guest_ms": 8000,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    },
+    {
+      "op": "click-frame",
+      "x": 175,
+      "y": 140,
+      "name": "office-entry.png",
+      "grid_step": 8
+    },
+    {
+      "op": "run",
+      "guest_ms": 7000,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    }
+  ]
+}

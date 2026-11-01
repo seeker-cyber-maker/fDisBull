@@ -1,0 +1,16 @@
+{
+  "address": {
+    "offset": "0x0003F3D4",
+    "space": "linear"
+  },
+  "byte_count": 2,
+  "data_base64": "FAA=",
+  "layer_generation": 1,
+  "overlay_valid": true,
+  "session_id": "ses-1",
+  "sha256": "5aeca385d8b781825b07bbec7c858b7170426c88088935850bc13dd6402368a5",
+  "state_revision": 280,
+  "view": "ram",
+  "project_address": "0x47194",
+  "hex": "1400"
+}

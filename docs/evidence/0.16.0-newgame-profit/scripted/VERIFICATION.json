@@ -1,0 +1,55 @@
+{
+  "version": "0.16.0",
+  "python": "3.13.14 (main, Jul 18 2026, 16:56:45) [Clang 22.1.3 ]",
+  "module": "/Users/tiga/Conversions/DinoParkTycoon/fdisbull-deliveries/fdisbull-0.16.0-e1e3fb4/tool/fdisbull/__init__.py",
+  "script_sha256": "f86a5eddc26a55ddf7573b917756ce6ea3385241d45b2c010292e583a2ce34ab",
+  "journal_sha256": "ac137fdc0b00a3f64a0747916c03a87bf6a621499dd698824eaaf9387c53b5a3",
+  "game_exe_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+  "saved_games_copied": 0,
+  "native_state_restore_calls": 0,
+  "native_state_save_calls": 0,
+  "memory_write_calls": 0,
+  "register_write_calls": 0,
+  "code_layers": [],
+  "sessions": [
+    {
+      "run": "445b88fc2d404804980b60d74cd0b05c",
+      "pid": 80040,
+      "backend_sha256": "315beb4e01c7d81a96209dd949c239675517af53102dd97bd0eb30bde7a0fdbb",
+      "process_reaped": true
+    },
+    {
+      "run": "acf68a75590d4ac79b2aa23d6c1ee9dc",
+      "pid": 80158,
+      "backend_sha256": "315beb4e01c7d81a96209dd949c239675517af53102dd97bd0eb30bde7a0fdbb",
+      "process_reaped": true
+    }
+  ],
+  "debt_free_before_sale": {
+    "cash": 10506,
+    "loan": 0,
+    "day": 0
+  },
+  "entry": {
+    "rank": 7,
+    "name": "NewProfit16",
+    "value": 12243
+  },
+  "after_topten_sha256": "5d253805092a73973ff9b13c98b45e5f36db414c7879f56fe6b0268f95f545ba",
+  "fresh_guest_readback": {
+    "byte_count": 250,
+    "sha256": "5d253805092a73973ff9b13c98b45e5f36db414c7879f56fe6b0268f95f545ba",
+    "full_table_equal_to_written_disk": true,
+    "entry": {
+      "rank": 7,
+      "name": "NewProfit16",
+      "value": 12243
+    },
+    "runtime_address": "0x46f94"
+  },
+  "private_changed_files": [
+    "TOPTEN.DAT"
+  ],
+  "original_files_unchanged": 192,
+  "ok": true
+}

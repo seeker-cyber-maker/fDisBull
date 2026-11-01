@@ -1,0 +1,1373 @@
+{
+  "format": "fdisbull-dinopark-recorded-newgame-1",
+  "scope": "Confirmed recorded NEW GAME setup, followed by corrected food purchase before opening. Explicit purchase, guide and food checks precede bounded operating/scene checks. No prior saved park, code or memory edits.",
+  "commands": [
+    {
+      "phase": 0,
+      "command": {
+        "op": "run",
+        "guest_ms": 35000,
+        "timeout_ms": 15000,
+        "fast_forward": true
+      }
+    },
+    {
+      "phase": 20,
+      "command": {
+        "op": "script",
+        "name": "new-game-title-selection",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 80,
+            "y": 160,
+            "name": "new-game-selected.png",
+            "grid_step": 8,
+            "hold_ms": 80
+          },
+          {
+            "op": "run",
+            "guest_ms": 2500,
+            "timeout_ms": 6000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 21,
+      "command": {
+        "op": "screenshot",
+        "name": "new-loan-dialog"
+      }
+    },
+    {
+      "phase": 22,
+      "command": {
+        "op": "script",
+        "name": "acknowledge-starting-loan",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 160,
+            "y": 132,
+            "name": "loan-acknowledge.png",
+            "grid_step": 8,
+            "hold_ms": 80
+          },
+          {
+            "op": "run",
+            "guest_ms": 5000,
+            "timeout_ms": 7000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 23,
+      "command": {
+        "op": "screenshot",
+        "name": "after-loan-popup"
+      }
+    },
+    {
+      "phase": 24,
+      "command": {
+        "op": "script",
+        "name": "enter-real-estate-confirmed",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 60,
+            "y": 140,
+            "name": "real-estate-door-confirmed.png",
+            "grid_step": 8,
+            "hold_ms": 80
+          },
+          {
+            "op": "run",
+            "guest_ms": 2500,
+            "timeout_ms": 6000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 25,
+      "command": {
+        "op": "screenshot",
+        "name": "real-estate-interior"
+      }
+    },
+    {
+      "phase": 26,
+      "command": {
+        "op": "run",
+        "guest_ms": 5000,
+        "timeout_ms": 7000,
+        "fast_forward": true
+      }
+    },
+    {
+      "phase": 27,
+      "command": {
+        "op": "screenshot",
+        "name": "real-estate-loaded"
+      }
+    },
+    {
+      "phase": 28,
+      "command": {
+        "op": "script",
+        "name": "select-desert-acre",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 60,
+            "y": 100,
+            "name": "desert-acre.png",
+            "grid_step": 8,
+            "hold_ms": 80
+          },
+          {
+            "op": "run",
+            "guest_ms": 1000,
+            "timeout_ms": 4000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 29,
+      "command": {
+        "op": "screenshot",
+        "name": "desert-buy-dialog"
+      }
+    },
+    {
+      "phase": 30,
+      "command": {
+        "op": "script",
+        "name": "confirm-desert-purchase",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 145,
+            "y": 187,
+            "name": "land-purchase-control.png",
+            "grid_step": 8,
+            "hold_ms": 80
+          },
+          {
+            "op": "run",
+            "guest_ms": 3000,
+            "timeout_ms": 6000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 31,
+      "command": {
+        "op": "screenshot",
+        "name": "land-purchase-result"
+      }
+    },
+    {
+      "phase": 32,
+      "command": {
+        "op": "economy"
+      }
+    },
+    {
+      "phase": 33,
+      "command": {
+        "op": "script",
+        "name": "select-land-tile",
+        "steps": [
+          {
+            "op": "click",
+            "x": 172,
+            "y": 187
+          },
+          {
+            "op": "run",
+            "guest_ms": 2000,
+            "timeout_ms": 5000,
+            "fast_forward": true
+          },
+          {
+            "op": "click-frame",
+            "x": 60,
+            "y": 160,
+            "name": "desert-price-label.png",
+            "grid_step": 8,
+            "hold_ms": 500
+          },
+          {
+            "op": "run",
+            "guest_ms": 2500,
+            "timeout_ms": 5000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 34,
+      "command": {
+        "op": "screenshot",
+        "name": "desert-label-result"
+      }
+    },
+    {
+      "phase": 35,
+      "command": {
+        "op": "script",
+        "name": "purchase-first-desert-plot",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 42,
+            "y": 52,
+            "name": "desert-plot-one.png",
+            "grid_step": 8,
+            "hold_ms": 150
+          },
+          {
+            "op": "run",
+            "guest_ms": 1800,
+            "timeout_ms": 5000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 36,
+      "command": {
+        "op": "screenshot",
+        "name": "plot-one-purchased"
+      }
+    },
+    {
+      "phase": 37,
+      "command": {
+        "op": "economy"
+      }
+    },
+    {
+      "phase": 38,
+      "command": {
+        "op": "script",
+        "name": "commit-desert-land",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 201,
+            "y": 187,
+            "name": "confirm-land.png",
+            "grid_step": 8,
+            "hold_ms": 150
+          },
+          {
+            "op": "run",
+            "guest_ms": 6000,
+            "timeout_ms": 8000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 39,
+      "command": {
+        "op": "screenshot",
+        "name": "land-committed"
+      }
+    },
+    {
+      "phase": 40,
+      "command": {
+        "op": "economy"
+      },
+      "expected_cash": 4500
+    },
+    {
+      "phase": 41,
+      "command": {
+        "op": "script",
+        "name": "open-dino-market",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 160,
+            "y": 66,
+            "name": "dino-market-door.png",
+            "grid_step": 8,
+            "hold_ms": 100
+          },
+          {
+            "op": "run",
+            "guest_ms": 6000,
+            "timeout_ms": 8000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 42,
+      "command": {
+        "op": "screenshot",
+        "name": "dino-market"
+      }
+    },
+    {
+      "phase": 43,
+      "command": {
+        "op": "script",
+        "name": "buy-coelophysis",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 160,
+            "y": 87,
+            "name": "coelophysis.png",
+            "grid_step": 8,
+            "hold_ms": 100
+          },
+          {
+            "op": "run",
+            "guest_ms": 5000,
+            "timeout_ms": 7000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 44,
+      "command": {
+        "op": "screenshot",
+        "name": "place-first-dinosaur"
+      }
+    },
+    {
+      "phase": 45,
+      "command": {
+        "op": "script",
+        "name": "select-coelophysis-price",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 160,
+            "y": 103,
+            "name": "coelophysis-price.png",
+            "grid_step": 8,
+            "hold_ms": 200
+          },
+          {
+            "op": "run",
+            "guest_ms": 6000,
+            "timeout_ms": 8000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 46,
+      "command": {
+        "op": "screenshot",
+        "name": "coelophysis-selected"
+      }
+    },
+    {
+      "phase": 47,
+      "command": {
+        "op": "script",
+        "name": "dino-market-help",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 160,
+            "y": 187,
+            "name": "dino-help.png",
+            "grid_step": 8,
+            "hold_ms": 100
+          },
+          {
+            "op": "run",
+            "guest_ms": 2500,
+            "timeout_ms": 5000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 48,
+      "command": {
+        "op": "screenshot",
+        "name": "dino-market-instructions"
+      }
+    },
+    {
+      "phase": 49,
+      "command": {
+        "op": "script",
+        "name": "order-selected-dinosaur",
+        "steps": [
+          {
+            "op": "click",
+            "x": 169,
+            "y": 187
+          },
+          {
+            "op": "run",
+            "guest_ms": 1500,
+            "timeout_ms": 5000,
+            "fast_forward": true
+          },
+          {
+            "op": "click-frame",
+            "x": 216,
+            "y": 187,
+            "name": "order-coelophysis.png",
+            "grid_step": 8,
+            "hold_ms": 150
+          },
+          {
+            "op": "run",
+            "guest_ms": 5000,
+            "timeout_ms": 7000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 50,
+      "command": {
+        "op": "screenshot",
+        "name": "dinosaur-placement-map"
+      }
+    },
+    {
+      "phase": 51,
+      "command": {
+        "op": "script",
+        "name": "buy-selected-coelophysis",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 187,
+            "y": 187,
+            "name": "buy-selected-coelo.png",
+            "grid_step": 8,
+            "hold_ms": 150
+          },
+          {
+            "op": "run",
+            "guest_ms": 6000,
+            "timeout_ms": 8000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 52,
+      "command": {
+        "op": "screenshot",
+        "name": "coelo-placement"
+      }
+    },
+    {
+      "phase": 53,
+      "command": {
+        "op": "run",
+        "guest_ms": 8000,
+        "timeout_ms": 10000,
+        "fast_forward": true
+      }
+    },
+    {
+      "phase": 54,
+      "command": {
+        "op": "screenshot",
+        "name": "coelo-placement-ready"
+      }
+    },
+    {
+      "phase": 55,
+      "command": {
+        "op": "economy"
+      }
+    },
+    {
+      "phase": 56,
+      "command": {
+        "op": "script",
+        "name": "place-coelophysis-in-desert",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 42,
+            "y": 50,
+            "name": "coelo-pen-one.png",
+            "grid_step": 8,
+            "hold_ms": 150
+          },
+          {
+            "op": "run",
+            "guest_ms": 2000,
+            "timeout_ms": 5000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 57,
+      "command": {
+        "op": "screenshot",
+        "name": "coelo-in-pen"
+      }
+    },
+    {
+      "phase": 58,
+      "command": {
+        "op": "script",
+        "name": "commit-coelophysis",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 188,
+            "y": 187,
+            "name": "coelo-placement-ok.png",
+            "grid_step": 8,
+            "hold_ms": 150
+          },
+          {
+            "op": "run",
+            "guest_ms": 10000,
+            "timeout_ms": 12000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 59,
+      "command": {
+        "op": "screenshot",
+        "name": "dino-purchase-completed"
+      }
+    },
+    {
+      "phase": 60,
+      "command": {
+        "op": "economy"
+      },
+      "expected_cash": 3250
+    },
+    {
+      "phase": 61,
+      "command": {
+        "op": "run",
+        "guest_ms": 4000,
+        "timeout_ms": 6000,
+        "fast_forward": true
+      }
+    },
+    {
+      "phase": 62,
+      "command": {
+        "op": "screenshot",
+        "name": "after-dino-return"
+      }
+    },
+    {
+      "phase": 63,
+      "command": {
+        "op": "script",
+        "name": "hire-first-employee",
+        "steps": [
+          {
+            "op": "click",
+            "x": 216,
+            "y": 187
+          },
+          {
+            "op": "run",
+            "guest_ms": 8000,
+            "timeout_ms": 10000,
+            "fast_forward": true
+          },
+          {
+            "op": "click-frame",
+            "x": 263,
+            "y": 70,
+            "name": "employment-office.png",
+            "grid_step": 8,
+            "hold_ms": 150
+          },
+          {
+            "op": "run",
+            "guest_ms": 8000,
+            "timeout_ms": 10000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 64,
+      "command": {
+        "op": "screenshot",
+        "name": "employment-menu"
+      }
+    },
+    {
+      "phase": 65,
+      "command": {
+        "op": "script",
+        "name": "hire-one-tour-guide",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 55,
+            "y": 140,
+            "name": "tour-guide.png",
+            "grid_step": 8,
+            "hold_ms": 150
+          },
+          {
+            "op": "run",
+            "guest_ms": 1000,
+            "timeout_ms": 4000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 66,
+      "command": {
+        "op": "screenshot",
+        "name": "guide-selected"
+      }
+    },
+    {
+      "phase": 67,
+      "command": {
+        "op": "script",
+        "name": "hire-guide-price-control",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 55,
+            "y": 160,
+            "name": "guide-hire-price.png",
+            "grid_step": 8,
+            "hold_ms": 200
+          },
+          {
+            "op": "run",
+            "guest_ms": 1200,
+            "timeout_ms": 4000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 68,
+      "command": {
+        "op": "screenshot",
+        "name": "guide-hire-controls"
+      }
+    },
+    {
+      "phase": 69,
+      "command": {
+        "op": "script",
+        "name": "hire-and-confirm-tour-guide",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 226,
+            "y": 148,
+            "name": "hire-guide-button.png",
+            "grid_step": 8,
+            "hold_ms": 150
+          },
+          {
+            "op": "run",
+            "guest_ms": 700,
+            "timeout_ms": 4000,
+            "fast_forward": true
+          },
+          {
+            "op": "click",
+            "x": 201,
+            "y": 187
+          },
+          {
+            "op": "run",
+            "guest_ms": 7000,
+            "timeout_ms": 9000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 70,
+      "command": {
+        "op": "screenshot",
+        "name": "tour-guide-hired"
+      }
+    },
+    {
+      "phase": 71,
+      "command": {
+        "op": "memory",
+        "address": "4020:6f88",
+        "length": 12
+      }
+    },
+    {
+      "phase": 72,
+      "command": {
+        "op": "script",
+        "name": "hire-guide-explicit",
+        "steps": [
+          {
+            "op": "click",
+            "x": 55,
+            "y": 160
+          },
+          {
+            "op": "run",
+            "guest_ms": 4000,
+            "timeout_ms": 6000,
+            "fast_forward": true
+          },
+          {
+            "op": "click-frame",
+            "x": 226,
+            "y": 125,
+            "name": "hire-guide-label.png",
+            "grid_step": 8,
+            "hold_ms": 300
+          },
+          {
+            "op": "run",
+            "guest_ms": 1500,
+            "timeout_ms": 5000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 73,
+      "command": {
+        "op": "screenshot",
+        "name": "guide-count-check"
+      }
+    },
+    {
+      "phase": 74,
+      "command": {
+        "op": "script",
+        "name": "commit-guide-and-buy-fence",
+        "steps": [
+          {
+            "op": "click",
+            "x": 201,
+            "y": 187
+          },
+          {
+            "op": "run",
+            "guest_ms": 5000,
+            "timeout_ms": 7000,
+            "fast_forward": true
+          },
+          {
+            "op": "click",
+            "x": 201,
+            "y": 187
+          },
+          {
+            "op": "run",
+            "guest_ms": 7000,
+            "timeout_ms": 9000,
+            "fast_forward": true
+          },
+          {
+            "op": "click-frame",
+            "x": 270,
+            "y": 140,
+            "name": "general-store.png",
+            "grid_step": 8,
+            "hold_ms": 150
+          },
+          {
+            "op": "run",
+            "guest_ms": 8000,
+            "timeout_ms": 10000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 75,
+      "command": {
+        "op": "screenshot",
+        "name": "fence-store"
+      }
+    },
+    {
+      "phase": 76,
+      "command": {
+        "op": "memory",
+        "address": "4020:6f88",
+        "length": 12
+      }
+    },
+    {
+      "phase": 77,
+      "command": {
+        "op": "economy"
+      },
+      "expected_cash": 3250
+    },
+    {
+      "phase": 78,
+      "command": {
+        "op": "script",
+        "name": "open-fence-catalogue",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 205,
+            "y": 105,
+            "name": "catalogue-cover.png",
+            "grid_step": 8,
+            "hold_ms": 150
+          },
+          {
+            "op": "run",
+            "guest_ms": 5000,
+            "timeout_ms": 7000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 79,
+      "command": {
+        "op": "screenshot",
+        "name": "fence-catalogue"
+      }
+    },
+    {
+      "phase": 80,
+      "command": {
+        "op": "script",
+        "name": "turn-catalogue-cover",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 263,
+            "y": 165,
+            "name": "turn-cover.png",
+            "grid_step": 8,
+            "hold_ms": 150
+          },
+          {
+            "op": "run",
+            "guest_ms": 5000,
+            "timeout_ms": 7000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 81,
+      "command": {
+        "op": "screenshot",
+        "name": "fence-page"
+      }
+    },
+    {
+      "phase": 82,
+      "command": {
+        "op": "script",
+        "name": "fences-tab",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 160,
+            "y": 54,
+            "name": "fences-tab.png",
+            "grid_step": 8,
+            "hold_ms": 200
+          },
+          {
+            "op": "run",
+            "guest_ms": 5000,
+            "timeout_ms": 7000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 83,
+      "command": {
+        "op": "screenshot",
+        "name": "fences-tab-result"
+      }
+    },
+    {
+      "phase": 84,
+      "command": {
+        "op": "script",
+        "name": "select-wood-fence",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 110,
+            "y": 109,
+            "name": "wood-fence-price.png",
+            "grid_step": 8,
+            "hold_ms": 200
+          },
+          {
+            "op": "run",
+            "guest_ms": 5000,
+            "timeout_ms": 7000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 85,
+      "command": {
+        "op": "screenshot",
+        "name": "wood-fence-order"
+      }
+    },
+    {
+      "phase": 86,
+      "command": {
+        "op": "script",
+        "name": "select-wood-illustration",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 60,
+            "y": 85,
+            "name": "wood-fence-tile.png",
+            "grid_step": 8,
+            "hold_ms": 200
+          },
+          {
+            "op": "run",
+            "guest_ms": 5000,
+            "timeout_ms": 7000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 87,
+      "command": {
+        "op": "screenshot",
+        "name": "wood-fence-placement"
+      }
+    },
+    {
+      "phase": 88,
+      "command": {
+        "op": "script",
+        "name": "order-selected-wood-fence",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 216,
+            "y": 187,
+            "name": "wood-fence-order-ok.png",
+            "grid_step": 8,
+            "hold_ms": 200
+          },
+          {
+            "op": "run",
+            "guest_ms": 5000,
+            "timeout_ms": 7000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 89,
+      "command": {
+        "op": "screenshot",
+        "name": "wood-order-confirmation"
+      }
+    },
+    {
+      "phase": 90,
+      "command": {
+        "op": "script",
+        "name": "buy-wood-through-order-form",
+        "steps": [
+          {
+            "op": "click",
+            "x": 160,
+            "y": 54
+          },
+          {
+            "op": "run",
+            "guest_ms": 2000,
+            "timeout_ms": 5000,
+            "fast_forward": true
+          },
+          {
+            "op": "click",
+            "x": 60,
+            "y": 85
+          },
+          {
+            "op": "run",
+            "guest_ms": 1200,
+            "timeout_ms": 5000,
+            "fast_forward": true
+          },
+          {
+            "op": "click",
+            "x": 145,
+            "y": 187
+          },
+          {
+            "op": "run",
+            "guest_ms": 1000,
+            "timeout_ms": 5000,
+            "fast_forward": true
+          },
+          {
+            "op": "click-frame",
+            "x": 160,
+            "y": 188,
+            "name": "buy-one-wood.png",
+            "grid_step": 8,
+            "hold_ms": 300
+          },
+          {
+            "op": "run",
+            "guest_ms": 8000,
+            "timeout_ms": 10000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 91,
+      "command": {
+        "op": "screenshot",
+        "name": "wood-order-map"
+      }
+    },
+    {
+      "phase": 92,
+      "command": {
+        "op": "script",
+        "name": "fence-first-pen",
+        "steps": [
+          {
+            "op": "run",
+            "guest_ms": 2500,
+            "timeout_ms": 5000,
+            "fast_forward": true
+          },
+          {
+            "op": "click-frame",
+            "x": 42,
+            "y": 50,
+            "name": "wood-fence-pen.png",
+            "grid_step": 8,
+            "hold_ms": 200
+          },
+          {
+            "op": "run",
+            "guest_ms": 1800,
+            "timeout_ms": 5000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 93,
+      "command": {
+        "op": "screenshot",
+        "name": "wood-fence-selected-pen"
+      }
+    },
+    {
+      "phase": 94,
+      "command": {
+        "op": "script",
+        "name": "commit-wood-fence",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 216,
+            "y": 187,
+            "name": "wood-fence-placement-ok.png",
+            "grid_step": 8,
+            "hold_ms": 200
+          },
+          {
+            "op": "run",
+            "guest_ms": 12000,
+            "timeout_ms": 15000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 95,
+      "command": {
+        "op": "screenshot",
+        "name": "wood-fence-committed"
+      }
+    },
+    {
+      "phase": 96,
+      "command": {
+        "op": "economy"
+      },
+      "expected_cash": 2250
+    },
+    {
+      "phase": 97,
+      "command": {
+        "op": "script",
+        "name": "leave-store-for-dino-food",
+        "steps": [
+          {
+            "op": "click",
+            "x": 216,
+            "y": 187
+          },
+          {
+            "op": "run",
+            "guest_ms": 8000,
+            "timeout_ms": 10000,
+            "fast_forward": true
+          },
+          {
+            "op": "click-frame",
+            "x": 55,
+            "y": 65,
+            "name": "dino-diner-door.png",
+            "grid_step": 8,
+            "hold_ms": 200
+          },
+          {
+            "op": "run",
+            "guest_ms": 8000,
+            "timeout_ms": 10000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 98,
+      "command": {
+        "op": "screenshot",
+        "name": "dino-diner"
+      }
+    },
+    {
+      "phase": 99,
+      "command": {
+        "op": "script",
+        "name": "open-meat-menu",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 133,
+            "y": 54,
+            "name": "meat-tab.png",
+            "grid_step": 8,
+            "hold_ms": 150
+          },
+          {
+            "op": "run",
+            "guest_ms": 4000,
+            "timeout_ms": 6000,
+            "fast_forward": true
+          }
+        ]
+      }
+    },
+    {
+      "phase": 100,
+      "command": {
+        "op": "memory",
+        "address": "4020:6f88",
+        "length": 12
+      },
+      "expected_hex": "000000000000010000000000"
+    },
+    {
+      "phase": 101,
+      "command": {
+        "op": "script",
+        "name": "buy-food-before-opening",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 44,
+            "y": 101,
+            "name": "select-small-feeders.png",
+            "grid_step": 8,
+            "hold_ms": 80
+          },
+          {
+            "op": "run",
+            "guest_ms": 600,
+            "timeout_ms": 15000,
+            "fast_forward": true,
+            "expect": "guest_time"
+          },
+          {
+            "op": "repeat",
+            "count": 20,
+            "steps": [
+              {
+                "op": "click",
+                "x": 133,
+                "y": 108,
+                "hold_ms": 80
+              },
+              {
+                "op": "run",
+                "guest_ms": 220,
+                "timeout_ms": 15000,
+                "fast_forward": true,
+                "expect": "guest_time"
+              }
+            ]
+          },
+          {
+            "op": "click-frame",
+            "x": 201,
+            "y": 187,
+            "name": "confirm-food.png",
+            "grid_step": 8,
+            "hold_ms": 80
+          },
+          {
+            "op": "run",
+            "guest_ms": 6000,
+            "timeout_ms": 15000,
+            "fast_forward": true,
+            "expect": "guest_time"
+          }
+        ]
+      }
+    },
+    {
+      "phase": 102,
+      "command": {
+        "op": "memory",
+        "address": "4020:6f94",
+        "length": 2
+      },
+      "expected_hex": "1400"
+    },
+    {
+      "phase": 103,
+      "command": {
+        "op": "economy"
+      },
+      "expected_cash": 1750
+    },
+    {
+      "phase": 104,
+      "command": {
+        "op": "script",
+        "name": "open-fed-park",
+        "steps": [
+          {
+            "op": "click-frame",
+            "x": 201,
+            "y": 187,
+            "name": "park.png",
+            "grid_step": 8,
+            "hold_ms": 80
+          },
+          {
+            "op": "run",
+            "guest_ms": 8000,
+            "timeout_ms": 15000,
+            "fast_forward": true,
+            "expect": "guest_time"
+          },
+          {
+            "op": "click-frame",
+            "x": 173,
+            "y": 187,
+            "name": "return-street.png",
+            "grid_step": 8,
+            "hold_ms": 80
+          },
+          {
+            "op": "run",
+            "guest_ms": 3000,
+            "timeout_ms": 15000,
+            "fast_forward": true,
+            "expect": "guest_time"
+          }
+        ]
+      }
+    },
+    {
+      "phase": 105,
+      "command": {
+        "op": "screenshot",
+        "name": "operating-fed-park"
+      }
+    },
+    {
+      "phase": 106,
+      "command": {
+        "op": "trace",
+        "name": "fed-park-instructions",
+        "count": 128,
+        "timeout_ms": 10000
+      }
+    }
+  ]
+}

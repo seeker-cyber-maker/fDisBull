@@ -1,0 +1,57 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "run",
+      "guest_ms": 35000,
+      "timeout_ms": 15000,
+      "fast_forward": true,
+      "expect": "guest_time"
+    },
+    {
+      "op": "click-frame",
+      "x": 80,
+      "y": 160,
+      "name": "fresh-new-game.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 2500,
+      "timeout_ms": 15000,
+      "fast_forward": true,
+      "expect": "guest_time"
+    },
+    {
+      "op": "click-frame",
+      "x": 160,
+      "y": 132,
+      "name": "fresh-loan-ack.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 5000,
+      "timeout_ms": 15000,
+      "fast_forward": true,
+      "expect": "guest_time"
+    },
+    {
+      "op": "click-frame",
+      "x": 175,
+      "y": 140,
+      "name": "fresh-office.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 2500,
+      "timeout_ms": 15000,
+      "fast_forward": true,
+      "expect": "guest_time"
+    }
+  ]
+}

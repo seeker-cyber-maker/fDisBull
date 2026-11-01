@@ -1,0 +1,52 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click",
+      "x": 160,
+      "y": 54
+    },
+    {
+      "op": "run",
+      "guest_ms": 2000,
+      "timeout_ms": 5000,
+      "fast_forward": true
+    },
+    {
+      "op": "click",
+      "x": 60,
+      "y": 85
+    },
+    {
+      "op": "run",
+      "guest_ms": 1200,
+      "timeout_ms": 5000,
+      "fast_forward": true
+    },
+    {
+      "op": "click",
+      "x": 145,
+      "y": 187
+    },
+    {
+      "op": "run",
+      "guest_ms": 1000,
+      "timeout_ms": 5000,
+      "fast_forward": true
+    },
+    {
+      "op": "click-frame",
+      "x": 160,
+      "y": 188,
+      "name": "buy-one-wood.png",
+      "grid_step": 8,
+      "hold_ms": 300
+    },
+    {
+      "op": "run",
+      "guest_ms": 8000,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    }
+  ]
+}

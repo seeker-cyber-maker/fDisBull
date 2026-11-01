@@ -86,6 +86,18 @@ debugger stops and checkpoint/session restart. The [verification report](../../d
 uses an installed development wheel and rebuilt DOSBox backend. All original
 game files and private state/database output remain outside Git.
 
+## NEW GAME profit and persistent score
+
+The final scripted original-game 0.16.0 run earned a completed-month profit of
+$4,028, repaid its loan in full, and saved `NewProfit16` at rank 7 / $12,243. A fresh emulator
+and project read back the exact 250-byte table through the game's reader.
+See [verification and evidence](../../docs/VERIFICATION-DINOPARK-NEWGAME-PROFIT.md),
+[the saved route](routes/newgame-profit.json) and
+[verify_newgame_profit.py](verify_newgame_profit.py). Private original files,
+states and databases remain outside Git. The example's later scene checks are
+task-local pixel masks; the [general overlay/pixel-probe design](../../docs/SCENE_ACTIONS_PROPOSAL.md)
+is proposed separately.
+
 ## Editable DOSBox machine states
 
 `verify_states.py --executable PATH --game-dir DIR --output NEW_LOCAL_DIR` captures a native DOSBox state, restores it after emulator restart, forks it with checked RAM edits, reinjects the derivative, hits an execution breakpoint, captures a trace, verifies CPU data watches, and restores the unchanged parent. Native state bytes stay embedded in the local `.fdb`. This is distinct from loading a DinoPark `DINOSG` file through the menu; that menu route is used only to prepare the test fixture. See [state editing and scripting](../../docs/DEBUGGER_SCRIPTS.md).

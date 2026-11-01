@@ -1,0 +1,19 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 175,
+      "y": 140,
+      "grid_step": 8,
+      "name": "street.office.png",
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 1800,
+      "timeout_ms": 3000,
+      "fast_forward": true
+    }
+  ]
+}

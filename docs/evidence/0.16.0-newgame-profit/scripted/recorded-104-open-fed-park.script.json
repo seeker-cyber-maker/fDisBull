@@ -1,0 +1,35 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 201,
+      "y": 187,
+      "name": "park.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 8000,
+      "timeout_ms": 15000,
+      "fast_forward": true,
+      "expect": "guest_time"
+    },
+    {
+      "op": "click-frame",
+      "x": 173,
+      "y": 187,
+      "name": "return-street.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 3000,
+      "timeout_ms": 15000,
+      "fast_forward": true,
+      "expect": "guest_time"
+    }
+  ]
+}

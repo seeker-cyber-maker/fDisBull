@@ -1,0 +1,42 @@
+{
+  "command": {
+    "op": "run",
+    "guest_ms": 8000,
+    "timeout_ms": 10000,
+    "fast_forward": true
+  },
+  "result": {
+    "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+    "outcome": "guest_time",
+    "timed_out": false,
+    "requested_guest_ms": 8000,
+    "guest_elapsed_ms": 8020,
+    "host_elapsed_ms": 728.03,
+    "fast_forward": true,
+    "timing_after": {
+      "fast_forward": false,
+      "guest_ticks": 135956,
+      "session_id": "ses-1",
+      "state_revision": 120
+    },
+    "session": {
+      "session_id": "ses-1",
+      "state": "stopped",
+      "state_revision": 119,
+      "stop_reason": {
+        "kind": "pause"
+      }
+    },
+    "hook_hits": [],
+    "stop": {
+      "format": "fdisbull-debug-stop-1",
+      "trigger": "guest_time",
+      "native_kind": "pause",
+      "causing_instruction": null,
+      "resume_pc": null,
+      "instruction_completed": null,
+      "registers_stage": "stopped; stage unknown",
+      "context": "dos-cpu"
+    }
+  }
+}

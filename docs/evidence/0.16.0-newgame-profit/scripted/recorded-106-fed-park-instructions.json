@@ -1,0 +1,47 @@
+{
+  "artifact": "7e3b1f3aef9a42ff9c75a7a30de6bd59",
+  "run": "445b88fc2d404804980b60d74cd0b05c",
+  "version": 1,
+  "name": "recorded-106-fed-park-instructions.trace.json",
+  "kind": "trace",
+  "sha256": "fe51a904589cd79d0fef76713515d58c148c1b3108ba5e0265c585359b89c55c",
+  "size": 142714,
+  "metadata": {
+    "event_count": 128,
+    "complete": true,
+    "run": {
+      "run": "445b88fc2d404804980b60d74cd0b05c",
+      "outcome": "pause",
+      "timed_out": false,
+      "requested_guest_ms": null,
+      "guest_elapsed_ms": 0,
+      "host_elapsed_ms": 3.869,
+      "fast_forward": false,
+      "timing_after": {
+        "fast_forward": false,
+        "guest_ticks": 279048,
+        "session_id": "ses-1",
+        "state_revision": 289
+      },
+      "session": {
+        "session_id": "ses-1",
+        "state": "stopped",
+        "state_revision": 289,
+        "stop_reason": {
+          "kind": "pause"
+        }
+      },
+      "hook_hits": [],
+      "stop": {
+        "format": "fdisbull-debug-stop-1",
+        "trigger": "pause",
+        "native_kind": "pause",
+        "causing_instruction": null,
+        "resume_pc": null,
+        "instruction_completed": null,
+        "registers_stage": "stopped; stage unknown",
+        "context": "dos-cpu"
+      }
+    }
+  }
+}

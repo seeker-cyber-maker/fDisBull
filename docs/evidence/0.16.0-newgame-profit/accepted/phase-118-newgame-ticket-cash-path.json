@@ -1,0 +1,55 @@
+{
+  "command": {
+    "op": "trace",
+    "name": "newgame-ticket-cash-path",
+    "count": 128,
+    "timeout_ms": 10000
+  },
+  "result": {
+    "artifact": "e75e971c25a043158871b9788b55b936",
+    "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+    "version": 1,
+    "name": "phase-118-newgame-ticket-cash-path.trace.json",
+    "kind": "trace",
+    "sha256": "1c88e881cbee80099d963a672de94b73adf82a201e07c395b3078a4f13ee7f45",
+    "size": 142630,
+    "metadata": {
+      "event_count": 128,
+      "complete": true,
+      "run": {
+        "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+        "outcome": "pause",
+        "timed_out": false,
+        "requested_guest_ms": null,
+        "guest_elapsed_ms": 0,
+        "host_elapsed_ms": 4.236,
+        "fast_forward": false,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 313588,
+          "session_id": "ses-1",
+          "state_revision": 344
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 344,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "pause",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      }
+    }
+  }
+}

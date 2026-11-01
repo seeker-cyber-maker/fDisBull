@@ -1,0 +1,1732 @@
+{
+  "format": "fdisbull-script-result-1",
+  "script_artifact": "833e0215a0e84b748f40c37282dffa13",
+  "script_sha256": "c66093e3307f0e7aaaf5e07e9f95b6bb39b3744e3e4257d542e69443ed42a4a7",
+  "run": "445b88fc2d404804980b60d74cd0b05c",
+  "ok": true,
+  "error": null,
+  "completed_steps": 44,
+  "requested_steps": 44,
+  "host_elapsed_ms": 1204.484,
+  "steps": [
+    {
+      "index": 0,
+      "op": "click-frame",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "x": 44,
+        "y": 101,
+        "mode_id": 5,
+        "frame": {
+          "artifact": "1b9b86079a5946a4915efcf70d9d5d3b",
+          "run": "445b88fc2d404804980b60d74cd0b05c",
+          "version": 1,
+          "name": "select-small-feeders.png",
+          "kind": "screenshot-grid",
+          "sha256": "db8f272289e5484243cda88aebe19e0b76e45559300925095d86ab48e1126ba3",
+          "size": 24543,
+          "metadata": {
+            "captured_ticks": 255943,
+            "double_height": true,
+            "double_width": true,
+            "format": "png",
+            "frame_id": 15932,
+            "height": 200,
+            "mode_id": 5,
+            "session_id": "ses-1",
+            "sha256": "db8f272289e5484243cda88aebe19e0b76e45559300925095d86ab48e1126ba3",
+            "source": "last_completed_guest_frame",
+            "source_bpp": 32,
+            "state_revision": 192,
+            "width": 320,
+            "coordinate_grid": {
+              "coordinate_space": "screenshot_pixels",
+              "origin": [
+                0,
+                0
+              ],
+              "max_coordinate": [
+                319,
+                199
+              ],
+              "step": 8,
+              "x_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192,
+                200,
+                208,
+                216,
+                224,
+                232,
+                240,
+                248,
+                256,
+                264,
+                272,
+                280,
+                288,
+                296,
+                304,
+                312
+              ],
+              "y_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192
+              ],
+              "label_step": 32,
+              "x_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192,
+                224,
+                256,
+                288
+              ],
+              "y_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192
+              ],
+              "target": [
+                44,
+                101
+              ],
+              "x_direction": "right",
+              "y_direction": "down",
+              "resized": false,
+              "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+              "source_artifact": "9d63ef7504774798bdedd6666a804f48",
+              "source_sha256": "4d75e37abde2ec8d510b9875355aee0a277bfcd9355d8a0472ed4fcb498aa953"
+            }
+          }
+        },
+        "click": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 88,
+            "y": 101
+          },
+          "session_id": "ses-1",
+          "state_revision": 193
+        },
+        "frame_phase": "before_queued_click"
+      },
+      "ok": true
+    },
+    {
+      "index": 1,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 600,
+        "guest_elapsed_ms": 620,
+        "host_elapsed_ms": 62.618,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 256573,
+          "session_id": "ses-1",
+          "state_revision": 196
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 195,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 2,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 197
+      },
+      "ok": true
+    },
+    {
+      "index": 3,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 285,
+        "host_elapsed_ms": 30.872,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 256858,
+          "session_id": "ses-1",
+          "state_revision": 200
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 199,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 4,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 201
+      },
+      "ok": true
+    },
+    {
+      "index": 5,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 260,
+        "host_elapsed_ms": 28.121,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 257118,
+          "session_id": "ses-1",
+          "state_revision": 204
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 203,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 6,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 205
+      },
+      "ok": true
+    },
+    {
+      "index": 7,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 295,
+        "host_elapsed_ms": 30.13,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 257413,
+          "session_id": "ses-1",
+          "state_revision": 208
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 207,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 8,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 209
+      },
+      "ok": true
+    },
+    {
+      "index": 9,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 370,
+        "host_elapsed_ms": 38.62,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 257783,
+          "session_id": "ses-1",
+          "state_revision": 212
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 211,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 10,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 213
+      },
+      "ok": true
+    },
+    {
+      "index": 11,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 245,
+        "host_elapsed_ms": 26.65,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 258028,
+          "session_id": "ses-1",
+          "state_revision": 216
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 215,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 12,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 217
+      },
+      "ok": true
+    },
+    {
+      "index": 13,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 230,
+        "host_elapsed_ms": 24.443,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 258258,
+          "session_id": "ses-1",
+          "state_revision": 220
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 219,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 14,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 221
+      },
+      "ok": true
+    },
+    {
+      "index": 15,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 245,
+        "host_elapsed_ms": 25.607,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 258503,
+          "session_id": "ses-1",
+          "state_revision": 224
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 223,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 16,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 225
+      },
+      "ok": true
+    },
+    {
+      "index": 17,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 255,
+        "host_elapsed_ms": 26.868,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 258758,
+          "session_id": "ses-1",
+          "state_revision": 228
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 227,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 18,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 229
+      },
+      "ok": true
+    },
+    {
+      "index": 19,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 260,
+        "host_elapsed_ms": 26.197,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 259018,
+          "session_id": "ses-1",
+          "state_revision": 232
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 231,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 20,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 233
+      },
+      "ok": true
+    },
+    {
+      "index": 21,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 260,
+        "host_elapsed_ms": 27.702,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 259278,
+          "session_id": "ses-1",
+          "state_revision": 236
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 235,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 22,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 237
+      },
+      "ok": true
+    },
+    {
+      "index": 23,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 260,
+        "host_elapsed_ms": 25.797,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 259538,
+          "session_id": "ses-1",
+          "state_revision": 240
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 239,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 24,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 241
+      },
+      "ok": true
+    },
+    {
+      "index": 25,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 250,
+        "host_elapsed_ms": 26.715,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 259788,
+          "session_id": "ses-1",
+          "state_revision": 244
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 243,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 26,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 245
+      },
+      "ok": true
+    },
+    {
+      "index": 27,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 240,
+        "host_elapsed_ms": 26.033,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 260028,
+          "session_id": "ses-1",
+          "state_revision": 248
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 247,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 28,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 249
+      },
+      "ok": true
+    },
+    {
+      "index": 29,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 245,
+        "host_elapsed_ms": 25.272,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 260273,
+          "session_id": "ses-1",
+          "state_revision": 252
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 251,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 30,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 253
+      },
+      "ok": true
+    },
+    {
+      "index": 31,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 245,
+        "host_elapsed_ms": 25.131,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 260518,
+          "session_id": "ses-1",
+          "state_revision": 256
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 255,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 32,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 257
+      },
+      "ok": true
+    },
+    {
+      "index": 33,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 230,
+        "host_elapsed_ms": 25.093,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 260748,
+          "session_id": "ses-1",
+          "state_revision": 260
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 259,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 34,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 261
+      },
+      "ok": true
+    },
+    {
+      "index": 35,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 265,
+        "host_elapsed_ms": 27.272,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 261013,
+          "session_id": "ses-1",
+          "state_revision": 264
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 263,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 36,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 265
+      },
+      "ok": true
+    },
+    {
+      "index": 37,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 270,
+        "host_elapsed_ms": 28.024,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 261283,
+          "session_id": "ses-1",
+          "state_revision": 268
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 267,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 38,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 269
+      },
+      "ok": true
+    },
+    {
+      "index": 39,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 240,
+        "host_elapsed_ms": 24.829,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 261523,
+          "session_id": "ses-1",
+          "state_revision": 272
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 271,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 40,
+      "op": "click",
+      "result": {
+        "accepted": true,
+        "coordinate_space": "guest_frame_pixels",
+        "delivery": "queued",
+        "mouse": {
+          "buttons": 1,
+          "max_x": 639,
+          "max_y": 199,
+          "min_x": 0,
+          "min_y": 0,
+          "owned_buttons": 1,
+          "pending_release_buttons": 1,
+          "release_pending": true,
+          "screen_max_x": 640,
+          "screen_max_y": 200,
+          "x": 266,
+          "y": 108
+        },
+        "session_id": "ses-1",
+        "state_revision": 273
+      },
+      "ok": true
+    },
+    {
+      "index": 41,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 220,
+        "guest_elapsed_ms": 270,
+        "host_elapsed_ms": 27.312,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 261793,
+          "session_id": "ses-1",
+          "state_revision": 276
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 275,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    },
+    {
+      "index": 42,
+      "op": "click-frame",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "x": 201,
+        "y": 187,
+        "mode_id": 5,
+        "frame": {
+          "artifact": "6a76589343954c4caa0c8d6711ffd709",
+          "run": "445b88fc2d404804980b60d74cd0b05c",
+          "version": 1,
+          "name": "confirm-food.png",
+          "kind": "screenshot-grid",
+          "sha256": "650d2b3d6bb59b613be08572766aa73f560dbf3a5a2a17a9e0e4cb59b9a0e120",
+          "size": 25804,
+          "metadata": {
+            "captured_ticks": 261779,
+            "double_height": true,
+            "double_width": true,
+            "format": "png",
+            "frame_id": 16282,
+            "height": 200,
+            "mode_id": 5,
+            "session_id": "ses-1",
+            "sha256": "650d2b3d6bb59b613be08572766aa73f560dbf3a5a2a17a9e0e4cb59b9a0e120",
+            "source": "last_completed_guest_frame",
+            "source_bpp": 32,
+            "state_revision": 276,
+            "width": 320,
+            "coordinate_grid": {
+              "coordinate_space": "screenshot_pixels",
+              "origin": [
+                0,
+                0
+              ],
+              "max_coordinate": [
+                319,
+                199
+              ],
+              "step": 8,
+              "x_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192,
+                200,
+                208,
+                216,
+                224,
+                232,
+                240,
+                248,
+                256,
+                264,
+                272,
+                280,
+                288,
+                296,
+                304,
+                312
+              ],
+              "y_lines": [
+                0,
+                8,
+                16,
+                24,
+                32,
+                40,
+                48,
+                56,
+                64,
+                72,
+                80,
+                88,
+                96,
+                104,
+                112,
+                120,
+                128,
+                136,
+                144,
+                152,
+                160,
+                168,
+                176,
+                184,
+                192
+              ],
+              "label_step": 32,
+              "x_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192,
+                224,
+                256,
+                288
+              ],
+              "y_labels": [
+                0,
+                32,
+                64,
+                96,
+                128,
+                160,
+                192
+              ],
+              "target": [
+                201,
+                187
+              ],
+              "x_direction": "right",
+              "y_direction": "down",
+              "resized": false,
+              "labels": "x across top, y down left; native pixels, no aspect-ratio doubling",
+              "source_artifact": "27e7583d18f84ba6917006173b26d1b8",
+              "source_sha256": "7c2c2afc4a2e071759f4b1d3bffba73779af9883b6bae25c69bb4935a01db8fb"
+            }
+          }
+        },
+        "click": {
+          "accepted": true,
+          "coordinate_space": "guest_frame_pixels",
+          "delivery": "queued",
+          "mouse": {
+            "buttons": 1,
+            "max_x": 639,
+            "max_y": 199,
+            "min_x": 0,
+            "min_y": 0,
+            "owned_buttons": 1,
+            "pending_release_buttons": 1,
+            "release_pending": true,
+            "screen_max_x": 640,
+            "screen_max_y": 200,
+            "x": 402,
+            "y": 187
+          },
+          "session_id": "ses-1",
+          "state_revision": 277
+        },
+        "frame_phase": "before_queued_click"
+      },
+      "ok": true
+    },
+    {
+      "index": 43,
+      "op": "run",
+      "result": {
+        "run": "445b88fc2d404804980b60d74cd0b05c",
+        "outcome": "guest_time",
+        "timed_out": false,
+        "requested_guest_ms": 6000,
+        "guest_elapsed_ms": 6140,
+        "host_elapsed_ms": 532.208,
+        "fast_forward": true,
+        "timing_after": {
+          "fast_forward": false,
+          "guest_ticks": 267933,
+          "session_id": "ses-1",
+          "state_revision": 280
+        },
+        "session": {
+          "session_id": "ses-1",
+          "state": "stopped",
+          "state_revision": 279,
+          "stop_reason": {
+            "kind": "pause"
+          }
+        },
+        "hook_hits": [],
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "guest_time",
+          "native_kind": "pause",
+          "causing_instruction": null,
+          "resume_pc": null,
+          "instruction_completed": null,
+          "registers_stage": "stopped; stage unknown",
+          "context": "dos-cpu"
+        }
+      },
+      "ok": true
+    }
+  ],
+  "artifact": "2872fdd5dd6746ba8a541293ab6fa5fb"
+}

@@ -1,0 +1,55 @@
+{
+  "observed_at": "2026-10-27 00:22:57 UTC",
+  "head": "120580f2203c071f9fb2616c177d0eb78e65f264",
+  "checks": [
+    {
+      "name": "Unified DOS, boot and PE64 (installed wheel)",
+      "status": "in_progress",
+      "conclusion": null,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40422178843/job/121924468765"
+    },
+    {
+      "name": "Unified DOS, boot and PE64 (installed wheel)",
+      "status": "in_progress",
+      "conclusion": null,
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40422186099/job/121922227430"
+    },
+    {
+      "name": "Native debugger (stable-backend)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40422186099/job/121919053436"
+    },
+    {
+      "name": "Native debugger (layers-backend)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40422186099/job/121919053151"
+    },
+    {
+      "name": "test-and-package",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40422186138/job/121919052892"
+    },
+    {
+      "name": "Native debugger (stable-backend)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40422178843/job/121919030055"
+    },
+    {
+      "name": "test-and-package",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40422178850/job/121919029891"
+    },
+    {
+      "name": "Native debugger (layers-backend)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/seeker-cyber-maker/fDisBull/actions/runs/40422178843/job/121919029770"
+    }
+  ],
+  "scope": "Read-only snapshot; unified installed-wheel job still in progress at this observation."
+}

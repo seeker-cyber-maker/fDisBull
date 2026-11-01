@@ -1,0 +1,28 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "keyboard.type",
+      "text": "NewProfit16"
+    },
+    {
+      "op": "run",
+      "guest_ms": 1600,
+      "timeout_ms": 5000,
+      "fast_forward": true
+    },
+    {
+      "op": "keyboard.press",
+      "key": "o",
+      "modifiers": [
+        "ctrl"
+      ]
+    },
+    {
+      "op": "run",
+      "guest_ms": 300,
+      "timeout_ms": 5000,
+      "fast_forward": true
+    }
+  ]
+}

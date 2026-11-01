@@ -1,0 +1,72 @@
+{
+  "command": {
+    "op": "breakpoint",
+    "address": "4020:5c3a",
+    "access": "w",
+    "length": 4
+  },
+  "result": {
+    "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+    "access": "w",
+    "length": 4,
+    "breakpoints": [
+      {
+        "address": {
+          "offset": "0x0003E07A",
+          "space": "linear"
+        },
+        "breakpoint_id": "bp-1",
+        "kind": "w",
+        "once": false,
+        "session_id": "ses-1",
+        "state_revision": 332,
+        "project_address": "0x45e3a",
+        "access": "w",
+        "bytes_verified": false
+      },
+      {
+        "address": {
+          "offset": "0x0003E07B",
+          "space": "linear"
+        },
+        "breakpoint_id": "bp-2",
+        "kind": "w",
+        "once": false,
+        "session_id": "ses-1",
+        "state_revision": 333,
+        "project_address": "0x45e3b",
+        "access": "w",
+        "bytes_verified": false
+      },
+      {
+        "address": {
+          "offset": "0x0003E07C",
+          "space": "linear"
+        },
+        "breakpoint_id": "bp-3",
+        "kind": "w",
+        "once": false,
+        "session_id": "ses-1",
+        "state_revision": 334,
+        "project_address": "0x45e3c",
+        "access": "w",
+        "bytes_verified": false
+      },
+      {
+        "address": {
+          "offset": "0x0003E07D",
+          "space": "linear"
+        },
+        "breakpoint_id": "bp-4",
+        "kind": "w",
+        "once": false,
+        "session_id": "ses-1",
+        "state_revision": 335,
+        "project_address": "0x45e3d",
+        "access": "w",
+        "bytes_verified": false
+      }
+    ],
+    "stop_semantics": "after_data_access_before_next_instruction"
+  }
+}

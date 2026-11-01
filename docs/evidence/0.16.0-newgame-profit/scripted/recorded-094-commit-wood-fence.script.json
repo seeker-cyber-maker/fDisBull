@@ -1,0 +1,19 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 216,
+      "y": 187,
+      "name": "wood-fence-placement-ok.png",
+      "grid_step": 8,
+      "hold_ms": 200
+    },
+    {
+      "op": "run",
+      "guest_ms": 12000,
+      "timeout_ms": 15000,
+      "fast_forward": true
+    }
+  ]
+}

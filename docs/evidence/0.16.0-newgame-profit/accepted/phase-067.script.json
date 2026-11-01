@@ -1,0 +1,19 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 55,
+      "y": 160,
+      "name": "guide-hire-price.png",
+      "grid_step": 8,
+      "hold_ms": 200
+    },
+    {
+      "op": "run",
+      "guest_ms": 1200,
+      "timeout_ms": 4000,
+      "fast_forward": true
+    }
+  ]
+}

@@ -1,0 +1,2712 @@
+{
+  "ok": true,
+  "polls": [
+    {
+      "frame_id": 17338,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 2881,
+        "loan": 5000,
+        "day": 6
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 17400,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 2939,
+        "loan": 5000,
+        "day": 7
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 17463,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 3128,
+        "loan": 5000,
+        "day": 8
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 17528,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 3128,
+        "loan": 5000,
+        "day": 8
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 17591,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 3317,
+        "loan": 5000,
+        "day": 9
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 17655,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 3411,
+        "loan": 5000,
+        "day": 10
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 17718,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 3600,
+        "loan": 5000,
+        "day": 11
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 17779,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 3600,
+        "loan": 5000,
+        "day": 11
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 17850,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 3694,
+        "loan": 5000,
+        "day": 12
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 17916,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 3788,
+        "loan": 5000,
+        "day": 13
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 17982,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 3657,
+        "loan": 5000,
+        "day": 14
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 18043,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 3657,
+        "loan": 5000,
+        "day": 14
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 18108,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 3940,
+        "loan": 5000,
+        "day": 15
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 18173,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 4129,
+        "loan": 5000,
+        "day": 16
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 18238,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 4129,
+        "loan": 5000,
+        "day": 16
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 18304,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 4318,
+        "loan": 5000,
+        "day": 17
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 18369,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 4601,
+        "loan": 5000,
+        "day": 18
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 18430,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 4601,
+        "loan": 5000,
+        "day": 18
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 18490,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 4695,
+        "loan": 5000,
+        "day": 19
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 18553,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 4978,
+        "loan": 5000,
+        "day": 20
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 18611,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 5036,
+        "loan": 5000,
+        "day": 21
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 18682,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 5036,
+        "loan": 5000,
+        "day": 21
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 18741,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 5319,
+        "loan": 5000,
+        "day": 22
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 18805,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 5602,
+        "loan": 5000,
+        "day": 23
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 18868,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 5885,
+        "loan": 5000,
+        "day": 24
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 18931,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 5885,
+        "loan": 5000,
+        "day": 24
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 18994,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 6074,
+        "loan": 5000,
+        "day": 25
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 19055,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 6168,
+        "loan": 5000,
+        "day": 26
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 19117,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 6262,
+        "loan": 5000,
+        "day": 27
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 19173,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 6262,
+        "loan": 5000,
+        "day": 27
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 19236,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 6131,
+        "loan": 5000,
+        "day": 28
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 19306,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 6225,
+        "loan": 5000,
+        "day": 29
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 19377,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 6319,
+        "loan": 5000,
+        "day": 30
+      },
+      "month": 0
+    },
+    {
+      "frame_id": 19452,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 6437,
+        "loan": 4885,
+        "day": 0
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 19522,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 6437,
+        "loan": 4885,
+        "day": 0
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 19597,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 6531,
+        "loan": 4885,
+        "day": 1
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 19659,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 6720,
+        "loan": 4885,
+        "day": 2
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 19725,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 7003,
+        "loan": 4885,
+        "day": 3
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 19784,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 7003,
+        "loan": 4885,
+        "day": 3
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 19844,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 6967,
+        "loan": 4885,
+        "day": 4
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 19909,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 6967,
+        "loan": 4885,
+        "day": 4
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 19969,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 7250,
+        "loan": 4885,
+        "day": 5
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 20033,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 7533,
+        "loan": 4885,
+        "day": 6
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 20092,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 7533,
+        "loan": 4885,
+        "day": 6
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 20151,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 7722,
+        "loan": 4885,
+        "day": 7
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 20217,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 8005,
+        "loan": 4885,
+        "day": 8
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 20283,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 8005,
+        "loan": 4885,
+        "day": 8
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 20348,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 8288,
+        "loan": 4885,
+        "day": 9
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 20413,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 8382,
+        "loan": 4885,
+        "day": 10
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 20476,
+      "scores": {
+        "street": 23,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 8382,
+        "loan": 4885,
+        "day": 10
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 20540,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 8346,
+        "loan": 4885,
+        "day": 11
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 20604,
+      "scores": {
+        "street": 23,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 8346,
+        "loan": 4885,
+        "day": 11
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 20668,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 8535,
+        "loan": 4885,
+        "day": 12
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 20733,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 8724,
+        "loan": 4885,
+        "day": 13
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 20792,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 8724,
+        "loan": 4885,
+        "day": 13
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 20851,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 9007,
+        "loan": 4885,
+        "day": 14
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 20915,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 9007,
+        "loan": 4885,
+        "day": 14
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 20980,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 9290,
+        "loan": 4885,
+        "day": 15
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 21041,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 9479,
+        "loan": 4885,
+        "day": 16
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 21102,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 9573,
+        "loan": 4885,
+        "day": 17
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 21166,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 9573,
+        "loan": 4885,
+        "day": 17
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 21230,
+      "scores": {
+        "street": 23,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 9631,
+        "loan": 4885,
+        "day": 18
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 21292,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 9725,
+        "loan": 4885,
+        "day": 19
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 21352,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 9914,
+        "loan": 4885,
+        "day": 20
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 21413,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 9914,
+        "loan": 4885,
+        "day": 20
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 21476,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 10103,
+        "loan": 4885,
+        "day": 21
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 21540,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 10292,
+        "loan": 4885,
+        "day": 22
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 21602,
+      "scores": {
+        "street": 23,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 10481,
+        "loan": 4885,
+        "day": 23
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 21665,
+      "scores": {
+        "street": 23,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 10764,
+        "loan": 4885,
+        "day": 24
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 21728,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 10764,
+        "loan": 4885,
+        "day": 24
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 21789,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 10822,
+        "loan": 4885,
+        "day": 25
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 21852,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 11105,
+        "loan": 4885,
+        "day": 26
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 21917,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 11199,
+        "loan": 4885,
+        "day": 27
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 21974,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 11199,
+        "loan": 4885,
+        "day": 27
+      },
+      "month": 1
+    },
+    {
+      "frame_id": 22039,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 11128,
+        "loan": 4768,
+        "day": 0
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 22098,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 11317,
+        "loan": 4768,
+        "day": 1
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 22157,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 11317,
+        "loan": 4768,
+        "day": 1
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 22216,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 11600,
+        "loan": 4768,
+        "day": 2
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 22283,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 11600,
+        "loan": 4768,
+        "day": 2
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 22351,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 11694,
+        "loan": 4768,
+        "day": 3
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 22414,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 11563,
+        "loan": 4768,
+        "day": 4
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 22480,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 11563,
+        "loan": 4768,
+        "day": 4
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 22542,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 11752,
+        "loan": 4768,
+        "day": 5
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 22604,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 12035,
+        "loan": 4768,
+        "day": 6
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 22668,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 12035,
+        "loan": 4768,
+        "day": 6
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 22731,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 12224,
+        "loan": 4768,
+        "day": 7
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 22796,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 12413,
+        "loan": 4768,
+        "day": 8
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 22859,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 12696,
+        "loan": 4768,
+        "day": 9
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 22920,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 12696,
+        "loan": 4768,
+        "day": 9
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 22983,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 12790,
+        "loan": 4768,
+        "day": 10
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 23048,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 12659,
+        "loan": 4768,
+        "day": 11
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 23113,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 12659,
+        "loan": 4768,
+        "day": 11
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 23176,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 12848,
+        "loan": 4768,
+        "day": 12
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 23238,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 12848,
+        "loan": 4768,
+        "day": 12
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 23301,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 13037,
+        "loan": 4768,
+        "day": 13
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 23366,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 13320,
+        "loan": 4768,
+        "day": 14
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 23431,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 13320,
+        "loan": 4768,
+        "day": 14
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 23495,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 13414,
+        "loan": 4768,
+        "day": 15
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 23562,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 13508,
+        "loan": 4768,
+        "day": 16
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 23625,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 13508,
+        "loan": 4768,
+        "day": 16
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 23686,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 13602,
+        "loan": 4768,
+        "day": 17
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 23745,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 13566,
+        "loan": 4768,
+        "day": 18
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 23810,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 13566,
+        "loan": 4768,
+        "day": 18
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 23870,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 13660,
+        "loan": 4768,
+        "day": 19
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 23936,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 13754,
+        "loan": 4768,
+        "day": 20
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 23999,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 13754,
+        "loan": 4768,
+        "day": 20
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 24063,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 13943,
+        "loan": 4768,
+        "day": 21
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 24126,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 14132,
+        "loan": 4768,
+        "day": 22
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 24188,
+      "scores": {
+        "street": 23,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 14132,
+        "loan": 4768,
+        "day": 22
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 24248,
+      "scores": {
+        "street": 23,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 14226,
+        "loan": 4768,
+        "day": 23
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 24311,
+      "scores": {
+        "street": 23,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 14320,
+        "loan": 4768,
+        "day": 24
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 24373,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 14189,
+        "loan": 4768,
+        "day": 25
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 24440,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 14189,
+        "loan": 4768,
+        "day": 25
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 24506,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 14472,
+        "loan": 4768,
+        "day": 26
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 24569,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 14566,
+        "loan": 4768,
+        "day": 27
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 24633,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 14755,
+        "loan": 4768,
+        "day": 28
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 24698,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 14755,
+        "loan": 4768,
+        "day": 28
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 24761,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 15038,
+        "loan": 4768,
+        "day": 29
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 24820,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 15227,
+        "loan": 4768,
+        "day": 30
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 24886,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 15227,
+        "loan": 4768,
+        "day": 30
+      },
+      "month": 2
+    },
+    {
+      "frame_id": 24955,
+      "scores": {
+        "street": 0,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 32,
+        "paid_popup": 22,
+        "name_prompt": 18,
+        "confirm_sale": 48,
+        "parking_hint": 9
+      },
+      "matched": [
+        "quarter_popup"
+      ],
+      "economy": {
+        "cash": 15156,
+        "loan": 4650,
+        "day": 0
+      },
+      "month": 3
+    },
+    {
+      "frame_id": 25005,
+      "scores": {
+        "street": 19,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 32,
+        "paid_popup": 22,
+        "name_prompt": 18,
+        "confirm_sale": 48,
+        "parking_hint": 9
+      },
+      "matched": [
+        "quarter_popup"
+      ],
+      "economy": {
+        "cash": 15156,
+        "loan": 4650,
+        "day": 0
+      },
+      "month": 3
+    },
+    {
+      "frame_id": 25045,
+      "scores": {
+        "street": 24,
+        "office": 0,
+        "bank": 0,
+        "quarter_popup": 0,
+        "paid_popup": 0,
+        "name_prompt": 0,
+        "confirm_sale": 0,
+        "parking_hint": 0
+      },
+      "matched": [
+        "street"
+      ],
+      "economy": {
+        "cash": 15156,
+        "loan": 4650,
+        "day": 0
+      },
+      "month": 3
+    }
+  ],
+  "guest_elapsed_ms": 132710
+}

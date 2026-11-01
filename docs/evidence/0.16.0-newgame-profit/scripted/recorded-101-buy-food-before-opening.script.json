@@ -1,0 +1,54 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 44,
+      "y": 101,
+      "name": "select-small-feeders.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 600,
+      "timeout_ms": 15000,
+      "fast_forward": true,
+      "expect": "guest_time"
+    },
+    {
+      "op": "repeat",
+      "count": 20,
+      "steps": [
+        {
+          "op": "click",
+          "x": 133,
+          "y": 108,
+          "hold_ms": 80
+        },
+        {
+          "op": "run",
+          "guest_ms": 220,
+          "timeout_ms": 15000,
+          "fast_forward": true,
+          "expect": "guest_time"
+        }
+      ]
+    },
+    {
+      "op": "click-frame",
+      "x": 201,
+      "y": 187,
+      "name": "confirm-food.png",
+      "grid_step": 8,
+      "hold_ms": 80
+    },
+    {
+      "op": "run",
+      "guest_ms": 6000,
+      "timeout_ms": 15000,
+      "fast_forward": true,
+      "expect": "guest_time"
+    }
+  ]
+}

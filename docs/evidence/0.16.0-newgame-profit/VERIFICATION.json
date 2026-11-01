@@ -1,0 +1,110 @@
+{
+  "format": "fdisbull-newgame-profit-1",
+  "version": "0.16.0",
+  "release_source": "e1e3fb4913d6d8fae7893c2c9b8edf364d144953",
+  "backend_sha256": "315beb4e01c7d81a96209dd949c239675517af53102dd97bd0eb30bde7a0fdbb",
+  "original_exe_sha256": "2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c",
+  "completed_month_profit": 2681,
+  "cash_after_settlement": 6572,
+  "loan_after_settlement": 4650,
+  "cash_after_payoff": 1922,
+  "loan_after_payoff": 0,
+  "entry": {
+    "name": "NewProfit16",
+    "rank": 8,
+    "value": 3422
+  },
+  "saved_games_copied": 0,
+  "native_state_save_calls": 1,
+  "native_state_restore_calls": 0,
+  "state_bytes_exported": false,
+  "memory_write_calls": 0,
+  "register_write_calls": 0,
+  "code_layers": [],
+  "original_files_unchanged": 192,
+  "private_changed_files": [
+    "TOPTEN.DAT"
+  ],
+  "writer": {
+    "run": "32b07d5b21204609bc9d1cb9f9d261e5",
+    "pid": 59072,
+    "process_reaped": true,
+    "original_files_unchanged": 192,
+    "private_changed_files": [
+      "TOPTEN.DAT"
+    ],
+    "private_missing_files": [],
+    "entries": [
+      {
+        "rank": 1,
+        "name": "John Baronasaurus",
+        "value": 90000
+      },
+      {
+        "rank": 2,
+        "name": "Rebecca Coffmanadon",
+        "value": 80000
+      },
+      {
+        "rank": 3,
+        "name": "Kurt Pfeiferdactyl",
+        "value": 70000
+      },
+      {
+        "rank": 4,
+        "name": "Ivanasaurus Manley",
+        "value": 60000
+      },
+      {
+        "rank": 5,
+        "name": "Carolophysis Manley",
+        "value": 50000
+      },
+      {
+        "rank": 6,
+        "name": "Lauralophodon",
+        "value": 40000
+      },
+      {
+        "rank": 7,
+        "name": "Marius",
+        "value": 5232
+      },
+      {
+        "rank": 8,
+        "name": "NewProfit16",
+        "value": 3422
+      },
+      {
+        "rank": 9,
+        "name": "Thomas Rex",
+        "value": 2500
+      },
+      {
+        "rank": 10,
+        "name": "Terry Dactyl",
+        "value": 1000
+      }
+    ]
+  },
+  "fresh_readback": {
+    "version": "0.16.0",
+    "run": "90431de924f54de7abb9b4d09aec8bb0",
+    "pid": 76307,
+    "backend_sha256": "315beb4e01c7d81a96209dd949c239675517af53102dd97bd0eb30bde7a0fdbb",
+    "native_state_restore_calls": 0,
+    "full_table_equal_to_written_disk": true,
+    "byte_count": 250,
+    "sha256": "1e6a8bf26b187faebf9242d1931d7a1eb84059a99fa858fbfcc476f0bf5741b5",
+    "observed_entry": {
+      "rank": 8,
+      "name": "NewProfit16",
+      "value": 3422
+    },
+    "runtime_address": "0x46f94",
+    "process_reaped": true,
+    "original_files_unchanged": 192,
+    "ok": true
+  },
+  "scope": "Actual original NEW GAME, normal purchases, operating profit, full UI loan repayment, original sale/writer, independent fresh guest readback. Private state and databases excluded."
+}

@@ -1,0 +1,19 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click-frame",
+      "x": 160,
+      "y": 87,
+      "name": "coelophysis.png",
+      "grid_step": 8,
+      "hold_ms": 100
+    },
+    {
+      "op": "run",
+      "guest_ms": 5000,
+      "timeout_ms": 7000,
+      "fast_forward": true
+    }
+  ]
+}

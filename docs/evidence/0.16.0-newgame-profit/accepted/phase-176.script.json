@@ -1,0 +1,39 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "keyboard.press",
+      "key": "enter"
+    },
+    {
+      "op": "run",
+      "guest_ms": 1200,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    },
+    {
+      "op": "click",
+      "x": 175,
+      "y": 140
+    },
+    {
+      "op": "run",
+      "guest_ms": 2500,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    },
+    {
+      "op": "click-frame",
+      "x": 47,
+      "y": 117,
+      "name": "profit-confirmation.png",
+      "grid_step": 8
+    },
+    {
+      "op": "run",
+      "guest_ms": 1200,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    }
+  ]
+}

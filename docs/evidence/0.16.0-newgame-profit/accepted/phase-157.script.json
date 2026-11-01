@@ -1,0 +1,29 @@
+{
+  "format": "fdisbull-script-1",
+  "steps": [
+    {
+      "op": "click",
+      "x": 160,
+      "y": 108
+    },
+    {
+      "op": "run",
+      "guest_ms": 500,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    },
+    {
+      "op": "click-frame",
+      "x": 237,
+      "y": 28,
+      "name": "ticket-dialog-link.png",
+      "grid_step": 8
+    },
+    {
+      "op": "run",
+      "guest_ms": 1500,
+      "timeout_ms": 10000,
+      "fast_forward": true
+    }
+  ]
+}
