@@ -116,4 +116,3 @@ def test_composed_request_deadline_rejects_invalid_allowance(timeout):
     from types import SimpleNamespace
     from fdisbull.operation_budget import request_deadline
     with pytest.raises(ValueError):request_deadline(SimpleNamespace(),timeout)
-
