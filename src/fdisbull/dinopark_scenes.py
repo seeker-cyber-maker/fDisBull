@@ -430,7 +430,7 @@ def prepare_mart_first_page(text, *, budget=None):
 
 
 def definition(reference, title, predicate, selector, action, point, outcome):
-    return {'format': 'fdisbull-scene-1', 'reference': reference['artifact'],
+    document = {'format': 'fdisbull-scene-1', 'reference': reference['artifact'],
         'width': 320, 'height': 200, 'mode_id': reference['metadata']['mode_id'],
         'context': {'state': title, 'triggers': ['original guest navigation'],
                     'qualification': 'visual samples plus observed selector correlation; not universal control readiness'},
@@ -441,6 +441,11 @@ def definition(reference, title, predicate, selector, action, point, outcome):
                      'visible': predicate, 'ready': selector, 'enabled': selector,
                      'action': {'kind': 'click'}, 'outcome': outcome,
                      'guest_ms': 12000, 'timeout_ms': 10000}]}
+    if action == 'park.back':
+        # Returning to MALL loads original assets through registered observers,
+        # just like business entry. Bound loading without another queued press.
+        document['objects'][0]['timeout_ms'] = 40000
+    return document
 
 
 BUSINESS_ENTRIES = {
@@ -467,13 +472,45 @@ def mart_entry_object(reference, predicate, selector, patterns):
 
 
 def click_business(text, command, scene, name):
-    """Retain a successful click receipt before any later display/readback can fail."""
-    result = text.debug.scene_click(scene, name)
-    receipt = dict(result)
-    for field, value in (('scene_revision', scene), ('action_name', name), ('run', text.debug.run_id)):
-        receipt.setdefault(field, value)
-    text.event({'phase': 'navigation_input_result', 'command': command, 'result': receipt})
+    """Retain navigation input evidence even when destination observation raises."""
+    from .scenes import SceneError
+    def retain(result):
+        receipt = dict(result)
+        for field, value in (('scene_revision', scene), ('action_name', name), ('run', text.debug.run_id)):
+            receipt.setdefault(field, value)
+        text.event({'phase': 'navigation_input_result', 'command': command, 'result': receipt})
+    try:
+        result = text.debug.scene_click(scene, name)
+    except SceneError as error:
+        retain(error.result)
+        raise
+    retain(result)
     return result
+
+
+def qualify_street(text):
+    """Read and bind the original street destination without guest execution."""
+    frame, image = take_frame(text.project, text.debug, 'park-exit-street', hooks=False)
+    if not matches(image, text.patterns['shop_street']):
+        raise RuntimeError('Street destination not recognized; outcome unknown')
+    selector = {'memory': {'address': '4020:3c5c', 'length': 2,
+                          'hex': text.debug.memory('4020:3c5c', length=2)['hex']}}
+    predicate = pixel_predicate(text.patterns['shop_street'])
+    office = text.project.debug_scene_info(text.office)['definition']['match']
+    doc = definition(frame, 'street', predicate, selector,
+                     'street.office', [175, 140], office)
+    for view in BUSINESS_ENTRIES:
+        doc['objects'].append(business_entry_object(frame, predicate, selector, text.patterns, view))
+    version = text.debug.version['id']
+    original = text.project.debug_scene_info(text.street, version=version)
+    latest = text.project.debug_scene_info(original['name'], version=version)
+    if latest['scene'] != original['scene']:
+        raise RuntimeError('Street scene root changed; outcome unknown')
+    # Publication can commit before its return readback raises. Re-read the
+    # committed host head so a later read-only retry never forks a stale parent.
+    saved = text.project.debug_save_scene('street', doc, parent=latest['id'], version=version)
+    text.street, text.current = saved['id'], 'street'
+    return {'frame': frame, 'view': 'street', 'scene': saved}
 
 
 def qualify_business(text, view):
@@ -1428,6 +1465,18 @@ class TextScene:
                     'before': before, 'after': balances(self.debug), 'persistence': 'unknown'})
         return self.describe()
 
+    def leave_park(self):
+        from .dinopark_purchase import PurchaseBudget
+        with PurchaseBudget(label='Park exit').bind(self.debug):
+            self.event({'phase': 'intent', 'command': 'go street', 'scene': 'park',
+                        'input': 'not_yet_sent'})
+            self.last_action = click_business(self, 'go street', self.park, 'park.back')
+            qualified = qualify_street(self)
+            self.event({'phase': 'result', 'command': 'go street', 'scene': 'street',
+                        'result': self.last_action, 'frame': qualified['frame'],
+                        'persistence': 'live original destination; disk save separate'})
+            return self.describe()
+
     def buy_fence(self):
         from .dinopark_fence import buy
         return buy(self)
@@ -1819,6 +1868,8 @@ class TextScene:
             return self.leave_store()
         if self.current == 'dinomart' and command == 'go street':
             return self.leave_mart()
+        if self.current == 'park' and command == 'go street':
+            return self.leave_park()
         if self.current == 'street' and command in ('go dinomart', 'go store', 'go employment', 'go diner') and not self.land_bought:
             self.event({'phase': 'refused', 'command': command, 'input': 'not_sent',
                         'reason': 'location is closed before land purchase'})
@@ -1846,7 +1897,8 @@ class TextScene:
 
 def dispatch_local_action(text, command):
     """Use the same local action dispatcher for CLI and Z; route travel separately."""
-    if command.startswith('go ') and command != 'go park':
+    if command.startswith('go ') and command != 'go park' and not (
+            text.current == 'park' and command == 'go street'):
         return None
     return text.act(command)
 
@@ -2140,7 +2192,7 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                             rendered = text.describe()
                             receipt['street_after'] = street_frame
                         elif command == 'go dinomart':
-                            action = click_business(text, command, street['id'], 'street.mart')
+                            action = click_business(text, command, text.street, 'street.mart')
                             qualified = qualify_dinomart(text)
                             mart_frame, mart = qualified['frame'], qualified['scene']
                             text.vegasaurus_extinct = False
@@ -2150,7 +2202,7 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                             view, obj = {'go employment': ('employment', 'street.employment'),
                                          'go diner': ('dino_diner', 'street.diner'),
                                          'go store': ('general_store', 'street.store')}[command]
-                            action = click_business(text, command, street['id'], obj)
+                            action = click_business(text, command, text.street, obj)
                             qualify_business(text, view)
                             rendered = text.describe()
                         else:

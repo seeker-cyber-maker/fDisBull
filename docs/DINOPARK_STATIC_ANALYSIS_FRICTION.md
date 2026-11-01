@@ -1,5 +1,13 @@
 # DinoPark analysis friction and retained Z terminal replies
 
+The [park-exit deadline and read-only recovery fix](VERIFICATION-DINOPARK-PARK-EXIT-RECOVERY-2026-11-01.md)
+qualifies the normal original exit after month rollover and the final-source
+fault/reconciliation/retry path, with all 97 probes verified armed through the
+held states. It preserves committed scene heads and original queued inputs;
+the older held exit and a separate return-to-park failure remain retained.
+It also records the uploaded Library files missed by the Pages listing and the
+verified relocation of inactive test outputs that admitted the final native case.
+
 The [visitor-gate and month-rollover continuation](VERIFICATION-DINOPARK-VISITORS-2026-11-01.md)
 adds 32 ordinary time advances with the 97 probes armed and source-bound
 attendance/actor predicates. It records a new park-exit observer-budget failure,

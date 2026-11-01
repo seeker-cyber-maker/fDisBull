@@ -28,6 +28,8 @@ BUSINESS_NAVIGATION = {
     'go store': ('route-store', 'street.store', 'general_store'),
     'go diner': ('route-diner', 'street.diner', 'dino_diner'),
 }
+RECOVERABLE_NAVIGATION = {command: (*route, 'street') for command, route in BUSINESS_NAVIGATION.items()}
+RECOVERABLE_NAVIGATION['go street'] = ('route-street', 'park.back', 'street', 'park')
 PURCHASE_COMMITS = ('food_purchase_committed', 'vegasaurus_purchase_confirmed',
                     'coelophysis_purchase_confirmed', 'land_purchase_confirmed', 'fence_purchase_confirmed',
                     'guide_hire_confirmed')
@@ -588,18 +590,18 @@ class ZService:
         if not held or self.checkpoint_failed or not self.recovery_required:
             return False
         pending, failure = held['pending'], held['scene_failure']
-        route = BUSINESS_NAVIGATION.get(pending.get('command'))
+        route = RECOVERABLE_NAVIGATION.get(pending.get('command'))
         if route is None:
             return False
-        target, name, destination = route
+        target, name, destination, source = route
         action = pending.get('action', {})
         ticket = failure.get('input', {})
         return (held['session_token'] == self.session_token and
                 pending.get('session_token') == self.session_token and
                 {k:action.get(k) for k in ('verb','target','item')} ==
                     {'verb':'go','target':target,'item':None} and
-                held['source'] == self.text.current and self.text.current in ('street', destination) and
-                failure.get('scene_revision') == getattr(self.text,'street',None) and
+                held['source'] == self.text.current and self.text.current in (source, destination) and
+                failure.get('scene_revision') == getattr(self.text,source,None) and
                 failure.get('action_name') == name and
                 failure.get('before_observation') is not None and
                 ticket.get('accepted') is True and ticket.get('delivery') == 'queued' and
@@ -624,12 +626,13 @@ class ZService:
         held = self.held_action
         if recovery_id is not None and recovery_id != held['id']:
             return result
-        previous = self.text.current, self.text.mart, self.revision
-        destination = 'dinomart' if purchase else 'street' if land or fence else BUSINESS_NAVIGATION[held['pending']['command']][2]
+        previous = self.text.current, self.text.mart, self.revision, getattr(self.text,'street',None)
+        destination = 'dinomart' if purchase else 'street' if land or fence else RECOVERABLE_NAVIGATION[held['pending']['command']][2]
         previous_order = deepcopy(getattr(self.text,'dinosaur_order',None))
         previous_bought = getattr(self.text,'dinosaur_bought',False)
         previous_land = deepcopy(getattr(self.text,'land_order',None)),getattr(self.text,'land_bought',False)
         previous_fence=deepcopy(getattr(self.text,'fence_order',None)),getattr(self.text,'fence_bought',False)
+        qualified = None
         try:
             from .dinopark_purchase import PurchaseBudget, qualify_purchase
             with PurchaseBudget().bind(self.text.debug):
@@ -644,7 +647,8 @@ class ZService:
                 elif purchase:
                     qualified = qualify_purchase(self.text)
                 else:
-                    qualified = (load_scenes().qualify_dinomart(self.text) if destination == 'dinomart'
+                    qualified = (load_scenes().qualify_street(self.text) if destination == 'street'
+                                 else load_scenes().qualify_dinomart(self.text) if destination == 'dinomart'
                                  else load_scenes().qualify_business(self.text, destination))
                 self.revision += 1
                 observed = self.observe(recovering=True)
@@ -653,6 +657,9 @@ class ZService:
                     raise ValueError('Original destination is not qualified')
         except Exception:
             self.text.current, self.revision = previous[0], previous[2]
+            if (not purchase and not land and not fence and destination == 'street' and
+                    qualified is None):
+                self.text.street = previous[3]
             if fence:
                 proof=getattr(self.text,'fence_order',{}).get('proof')
                 self.text.fence_order,self.text.fence_bought=previous_fence
@@ -786,7 +793,7 @@ class ZService:
             witness = self.witness(observed)
             if witness is not None:
                 extra['witness'] = witness
-            elif (pending['command'] in ('buy coelophysis','buy desert plot','buy wood fence') or pending['command'] in BUSINESS_NAVIGATION or
+            elif (pending['command'] in ('buy coelophysis','buy desert plot','buy wood fence') or pending['command'] in RECOVERABLE_NAVIGATION or
                   status == 'success' and pending['command'] in PREPARATION_ACTIONS.values()) and not (refusal or text_refusal):
                 self.pending = pending
                 if self.action_error(RuntimeError('Original action following observation incomplete')):
@@ -937,8 +944,9 @@ class ZService:
                     raise ValueError('Invalid action')
                 bounded_action = ((action['verb'],action['target']) in PREPARATION_ACTIONS or
                                   action['verb'] == 'buy' and action['target'] in ('coelophysis','plot','wood-fence') or continuing or
-                                  action['verb'] == 'go' and action['target'] in
-                                  {route[0] for route in BUSINESS_NAVIGATION.values()})
+                                  action['verb'] == 'go' and (
+                                      action['target'] in {route[0] for route in BUSINESS_NAVIGATION.values()} or
+                                      action['target'] == 'route-street' and self.text.current == 'park'))
                 if bounded_action:
                     self._start_action_budget()
                 observation = self.observe()
@@ -1029,16 +1037,17 @@ class ZService:
                      e.get('command') == self.pending['command'] and
                      e.get('result', {}).get('status') == 'matched' and
                      e.get('result', {}).get('complete') is True and
-                     e.get('result', {}).get('scene_revision') == getattr(self.text, 'street', None) and
+                     e.get('result', {}).get('scene_revision') == getattr(self.text,
+                         RECOVERABLE_NAVIGATION.get(self.pending['command'], (None,None,None,'street'))[3], None) and
                      e.get('result', {}).get('action_name') ==
-                         BUSINESS_NAVIGATION.get(self.pending['command'], (None, None))[1] and
+                         RECOVERABLE_NAVIGATION.get(self.pending['command'], (None, None))[1] and
                      e.get('result', {}).get('run') == getattr(self.text.debug, 'run_id', None) and
                      e.get('result', {}).get('input', {}).get('accepted') is True and
                      e.get('result', {}).get('input', {}).get('delivery') == 'queued']
         effects = 'applied-confirmed' if confirmed else root['effects'] if root else 'unknown'
         message = ('The purchase is confirmed; its follow-up failed. Do not repeat the purchase.' if effects == 'applied-confirmed' else
                    'The original action did not reach a verified outcome. Do not retry blindly.')
-        if effects == 'applied-confirmed' and self.pending['command'] in BUSINESS_NAVIGATION:
+        if effects == 'applied-confirmed' and self.pending['command'] in RECOVERABLE_NAVIGATION:
             message = 'The navigation is confirmed; its follow-up failed. Do not repeat it.'
         if effects == 'applied-confirmed' and self.pending['command'] == 'hire tour guide':
             message = 'The guide hire is confirmed; its follow-up failed. Do not repeat it.'
@@ -1046,7 +1055,7 @@ class ZService:
             message += ' The provider is retained for reconciliation or checkpoint recovery; further action input is blocked.'
             if self.pending['command'] in ('buy coelophysis','continue dinosaur order','buy desert plot','continue land purchase','buy wood fence','continue fence order'):
                 message += ' Use look for the guarded order continuation, or reconcile to check completion; do not repeat the purchase.'
-            elif self.pending['command'] in BUSINESS_NAVIGATION:
+            elif self.pending['command'] in RECOVERABLE_NAVIGATION:
                 message += ' Use reconcile to check the original navigation; do not repeat the click.'
         path = self.work/('z-failure.json' if not self.failures else f'z-failure-{len(self.failures)+1:03d}.json')
         load_scenes().atomic_json(path, {'error_type':type(error).__name__, 'error':str(error),
