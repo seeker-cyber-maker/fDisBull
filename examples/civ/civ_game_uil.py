@@ -87,8 +87,9 @@ VARIABLES = {
     "$production": {"type": "i16", "initial": 0},
     "$chooser_open": {"type": "bool", "initial": False},
     "$unit_list_open": {"type": "bool", "initial": False},
-    "$unit_count": {"type": "u8", "initial": 0},
+    "$unit_count": {"type": "u8", "initial": 3},
     "$unit_cursor": {"type": "u8", "initial": 0},
+    "$unit_last": {"type": "u8", "initial": 2},
     "$city_cursor": {"type": "u8", "initial": 0},
     "$auto_build": {"type": "bool", "initial": False},
     "$report": {"type": "u8", "initial": 0},
@@ -117,8 +118,9 @@ STATE_EVIDENCE = {
     "$production": "DGROUP:70EC + city*1Ch + 09h; civd CITYMGT.C:1444 and reference/struct_city.md.",
     "$chooser_open": "UIL context flag for key c / R:0ADE:0421; Civ64 SCENES-PLAY 7.12.",
     "$unit_list_open": "UIL context flag for key a / 0A99:7785; Civ64 SCENES-PLAY 7.1.",
-    "$unit_count": "Declared unit-list length; not a committed DOS field.",
-    "$unit_cursor": "Declared unit-list cursor; not a committed DOS field.",
+    "$unit_count": "Representative garrison length 3; source fills local unit_count_i from the city garrison up to 18 at CITYMGT.C:1158-1165.",
+    "$unit_cursor": "Local choice_f; source clamps it to 0..unit_count_i-1 at CITYMGT.C:1515.",
+    "$unit_last": "Derived unit_count_i-1, the source clamp upper bound at CITYMGT.C:1515.",
     "$city_cursor": "The source stores the unit cursor at [0x70DC]; Civ64 SCENES-PLAY 7.1.",
     "$auto_build": "DGROUP:70EC + city*1Ch + 06h bit 10h; civd CITYMGT.C:1380-1381 toggles it with key A.",
     "$report": "UIL report selector; F1..F10 table at R:0403 3B7D..3BFF; Civ64 SCENES-PLAY 7.14.",
@@ -827,7 +829,31 @@ SCREEN_SPECS = [
                 "unit-list",
                 "Unit list",
                 ["list", "units"],
-                "Cursor and count are declared state; the detailed next/previous/select model is in the city fixture.",
+                "Cursor and count are declared state; source clamps choice_f to 0..unit_count_i-1.",
+            ),
+            _object(
+                "unit-next",
+                "Next unit",
+                ["next", "right"],
+                "Right arrow advances choice_f and clamps it to unit_count_i-1; CITYMGT.C:1500-1515.",
+                "next",
+                "unit-next-step",
+            ),
+            _object(
+                "unit-previous",
+                "Previous unit",
+                ["previous", "left"],
+                "Left arrow backs choice_f up and clamps at 0; CITYMGT.C:1503-1515.",
+                "previous",
+                "unit-previous-step",
+            ),
+            _object(
+                "unit-select",
+                "Select unit",
+                ["select", "choose"],
+                "Enter/Space stores the cursor and activates the unit; army-record effects are not modeled. CITYMGT.C:1516-1521.",
+                "select",
+                "unit-select",
             ),
             _object(
                 "unit-close",
@@ -1496,6 +1522,133 @@ def build_programs() -> dict:
         ),
     )
     add(
+        "unit-next-step",
+        _program(
+            "unit-next-step",
+            [
+                {
+                    "id": "require-open",
+                    "op": "require",
+                    "condition": _eq("$unit_list_open", True),
+                },
+                {
+                    "id": "advance",
+                    "op": "if",
+                    "condition": _not(
+                        {
+                            "op": "ge",
+                            "left": {"var": "$unit_cursor"},
+                            "right": {"var": "$unit_last"},
+                        }
+                    ),
+                    "then": [
+                        {
+                            "id": "unit-next-add",
+                            "op": "add",
+                            "var": "$unit_cursor",
+                            "value": 1,
+                        }
+                    ],
+                    "else": [],
+                },
+                {"id": "unit-next-text", "op": "text", "resource": "unit-next-text"},
+            ],
+            {
+                "unit-next-text": {
+                    "kind": "text",
+                    "text": "Next unit; cursor clamped to the last garrison slot.",
+                }
+            },
+        ),
+    )
+    add(
+        "unit-previous-step",
+        _program(
+            "unit-previous-step",
+            [
+                {
+                    "id": "require-open",
+                    "op": "require",
+                    "condition": _eq("$unit_list_open", True),
+                },
+                {
+                    "id": "retreat",
+                    "op": "if",
+                    "condition": {
+                        "op": "ge",
+                        "left": {"var": "$unit_cursor"},
+                        "right": 1,
+                    },
+                    "then": [
+                        {
+                            "id": "unit-previous-subtract",
+                            "op": "subtract",
+                            "var": "$unit_cursor",
+                            "value": 1,
+                        }
+                    ],
+                    "else": [],
+                },
+                {
+                    "id": "unit-previous-text",
+                    "op": "text",
+                    "resource": "unit-previous-text",
+                },
+            ],
+            {
+                "unit-previous-text": {
+                    "kind": "text",
+                    "text": "Previous unit; cursor clamped at 0.",
+                }
+            },
+        ),
+    )
+    add(
+        "unit-select",
+        _program(
+            "unit-select",
+            [
+                {
+                    "id": "require-open",
+                    "op": "require",
+                    "condition": _eq("$unit_list_open", True),
+                },
+                {
+                    "id": "require-one",
+                    "op": "require",
+                    "condition": {
+                        "op": "ge",
+                        "left": {"var": "$unit_count"},
+                        "right": 1,
+                    },
+                },
+                {
+                    "id": "store-cursor",
+                    "op": "set",
+                    "var": "$city_cursor",
+                    "value": {"var": "$unit_cursor"},
+                },
+                {
+                    "id": "close-list",
+                    "op": "set",
+                    "var": "$unit_list_open",
+                    "value": False,
+                },
+                {
+                    "id": "unit-select-text",
+                    "op": "text",
+                    "resource": "unit-select-text",
+                },
+            ],
+            {
+                "unit-select-text": {
+                    "kind": "text",
+                    "text": "Unit selected; army-record moves and goto reset are not modeled.",
+                }
+            },
+        ),
+    )
+    add(
         "close-units",
         _transition(
             "close-units",
@@ -1788,7 +1941,7 @@ def build_provenance(
         "limits": [
             "Partial scene graph and state projection, not a full game simulation.",
             "No DOS execution, VGA rendering, input decoding, AI, combat, technology, diplomacy, save parsing or economy model.",
-            "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; representative tribe rows 1 and 9 are bound; the city auto-build action toggles city status bit 10h. No setup or city action has a live-screen observation.",
+            "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; representative tribe rows 1 and 9 are bound; city auto-build toggles status bit 10h; unit-list next/previous clamp over a representative 3-unit garrison and select stores the cursor. No setup or city action has a live-screen observation.",
             "The game-over context is state-reachable for inspection; its trigger conditions are not modelled.",
             "Every screen boundary is resolved against a civd function; this is address resolution, not Windows-to-DOS byte equivalence.",
         ],

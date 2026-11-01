@@ -55,8 +55,8 @@ def test_scene_has_bounded_screens_and_validates():
     assert scene["format"] == "fdisbull-il-scene-1"
     assert scene["partial"] is True
     assert len(scene["contexts"]) == 23
-    assert len(scene["objects"]) == 90
-    assert len(scene["programs"]) == 41
+    assert len(scene["objects"]) == 93
+    assert len(scene["programs"]) == 44
     context_ids = {context["id"] for context in scene["contexts"]}
     assert context_ids == set(SCREEN_NAMES.values()) | {"production", "units"}
     object_ids = {item["id"] for item in scene["objects"]}
@@ -198,6 +198,31 @@ def test_city_auto_build_toggles_status_projection():
     assert _act(backend, "activate", "city-auto")["status"] == "success"
     assert backend.state["$auto_build"] is False
     assert backend.observe()["context"]["id"] == "city"
+
+
+def test_city_unit_list_cursor_clamps_and_stores_selection():
+    backend = ILSceneBackend(build_scene())
+    _to_world(backend)
+    assert _act(backend, "open", "world-city")["status"] == "success"
+    assert _act(backend, "open", "city-units")["status"] == "success"
+    assert backend.observe()["context"]["id"] == "units"
+    assert backend.state["$unit_count"] == 3
+    assert backend.state["$unit_last"] == 2
+    assert _act(backend, "next", "unit-next")["status"] == "success"
+    assert backend.state["$unit_cursor"] == 1
+    assert _act(backend, "next", "unit-next")["status"] == "success"
+    assert backend.state["$unit_cursor"] == 2
+    assert _act(backend, "next", "unit-next")["status"] == "success"
+    assert backend.state["$unit_cursor"] == 2
+    assert _act(backend, "select", "unit-select")["status"] == "success"
+    assert backend.state["$city_cursor"] == 2
+    assert backend.observe()["context"]["id"] == "city"
+    assert _act(backend, "open", "city-units")["status"] == "success"
+    assert _act(backend, "previous", "unit-previous")["status"] == "success"
+    assert backend.state["$unit_cursor"] == 0
+    assert _act(backend, "next", "unit-next")["status"] == "success"
+    assert _act(backend, "previous", "unit-previous")["status"] == "success"
+    assert backend.state["$unit_cursor"] == 0
 
 
 def test_game_over_context_is_state_reachable_and_new_game_resets():

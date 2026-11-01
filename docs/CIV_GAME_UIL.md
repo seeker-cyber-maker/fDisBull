@@ -13,7 +13,7 @@ screen inventory, civd for source-shaped state, and the pinned `CIV.EXE` atlas
 for address identity?
 
 The answer is a bounded **yes**: the committed scene is a valid
-`fdisbull-il-scene-1` document with 23 contexts, 90 objects and 41 programs.
+`fdisbull-il-scene-1` document with 23 contexts, 93 objects and 44 programs.
 It can be driven through the shared IL backend or Z text player. It is not a
 claim that the game's simulation, assets, input decoding or save format has
 been recovered.
@@ -96,7 +96,7 @@ provenance file.
 | `world` | 9 | SCENES-PLAY.md 1-6 | MAP.C, TURN.C, CONTROL.C, UNITS.C | 14 | R:1AEA:0008 `_reveal` (entry), R:1AEA:03BA `_seen_map` (entry), R:0238:0FEA `_draw_banner` (entry), R:0238:107E `_status_draw` (entry), R:0403:4060 `_uinit` (entry), R:0403:0676 `_ai_turn` (inside), R:0866:0AD6 `_blink_unit` (entry), R:0866:1D55 `_anim_unit` (entry), R:0866:1F69 `_pick_unit` (entry) |
 | `city` | 10 | SCENES-PLAY.md 7.1 | CITYMGT.C | 13 | R:0D12:0045 `_city_process` (entry), R:0D12:7045 `_draw_icon` (entry), R:0D12:710D `_tile_panel` (entry), R:0ADE:03EA `_kill` (entry), R:0ADE:0093 `_civ_economy` (inside), R:1459:0597 `_capunit` (inside) |
 | `production` | 10 | SCENES-PLAY.md 7.12 | ECONOMY.C | 2 | R:0ADE:0421 `_find_slot` (entry) |
-| `units` | 10 | SCENES-PLAY.md 7.1 | CITYMGT.C, CONTROL.C, UNITS.C | 2 | R:0403:4060 `_uinit` (entry), R:0866:1F69 `_pick_unit` (entry) |
+| `units` | 10 | SCENES-PLAY.md 7.1 | CITYMGT.C, CONTROL.C, UNITS.C | 5 | R:0403:4060 `_uinit` (entry), R:0866:1F69 `_pick_unit` (entry) |
 | `city-view` | 11 | SCENES-PLAY.md 7.2-7.3 | CITYVIEW.C | 2 | O19:0000 `_city_scene` (entry), O19:167B `_invasion_scene` (entry), O19:18C1 `_riot_anim` (entry), O19:1AE1 `_love_anim` (entry) |
 | `reports` | 12 | SCENES-PLAY.md 7.14 | ADVISORS.C, REPORTS.C, TURN.C | 7 | O14:0000 `_advisor_open` (entry), O14:186F `_city_rpt` (entry), O14:03AD `_mil_rpt` (entry), O14:014B `_sci_rpt` (entry), O14:07F1 `_trade_rpt` (entry), O12:0000 `_world_map` (entry) |
 | `pedia` | 13 | SCENES-PLAY.md 7.13 | PEDIA.C | 3 | O8:0000 `_civilopedia` (entry), O8:062A `_pedia_show` (entry) |
@@ -137,7 +137,7 @@ carries every field and its evidence; the important groups are:
 | `$production` | `i16` | DGROUP:70EC + city*1Ch + 09h; civd `struct_city.md`, CITYMGT.C:1444 | bounded to unit codes 0/1 in this scene |
 | `$auto_build` | `bool` | DGROUP:70EC + city*1Ch + 06h bit 10h; CITYMGT.C:1380-1381 | source-bound toggle; no live observation |
 | `$chooser_open`, `$unit_list_open` | `bool` | key `c` / key `a` contexts | UIL context flags |
-| `$unit_count`, `$unit_cursor`, `$city_cursor` | `u8` | city unit-list model; `[0x70DC]` | declared cursor state |
+| `$unit_count`, `$unit_cursor`, `$unit_last`, `$city_cursor` | `u8` | `unit_count_i` / `choice_f`; record at `[0x70DC]`; CITYMGT.C:1158-1165, 1515 | representative garrison 3; source clamps cursor 0..count-1 |
 | `$report` | `u8` | F1-F10 table `R:0403 3B7D..3BFF` | declared selector |
 | `$earth_world` | `bool` | DGROUP:D76A; Civ64 SCENES 7.3 | declared branch |
 | `$game_over` | `bool` | UIL end-state flag | authored |
@@ -171,6 +171,12 @@ The city auto-build object binds `$auto_build` to `townbuf[city].status` bit
 `0x10` (record offset `0x06`). The action toggles the bit and reports the new
 state; `test_city_auto_build_toggles_status_projection` checks both directions.
 City production is bound to record offset `0x09`.
+
+The unit list exposes `next`, `previous` and `select`. `next`/`previous` clamp
+the cursor to `0..unit_count_i-1` like `CITYMGT.C:1500-1515`; `select` stores
+the cursor and closes the list. The scene uses a representative three-unit
+garrison because `unit_count_i` is a local filled from `armydata`; the source
+army-record moves/status/goto writes are not modelled.
 
 The scene deliberately does **not** load a save, render a map, execute a turn,
 run AI, resolve combat, advance technology or write a city record. Those are
@@ -218,10 +224,10 @@ The Z-player test uses the committed scene, not an in-memory rebuild.
 
 Observed on this host with the active fDisBull 0.28.0 interpreter:
 
-- `tests/test_civ_game_uil.py`: **11 passed**
+- `tests/test_civ_game_uil.py`: **12 passed**
 - CIV-focused set (`game UIL`, `city UIL`, `atlas`, `city trace`, `city overlay`):
-  **42 passed**
-- full repository suite: **2,246 passed, 152 skipped, 2 failed, 23 errors**.
+  **43 passed**
+- full repository suite: **2,247 passed, 152 skipped, 2 failed, 23 errors**.
   The failures/errors are the existing Apple-toolchain Linux ELF fixture
   boundary (`/usr/bin/gcc` is Apple clang; missing `-z ibtplt` and Linux
   metadata), not this scene.
@@ -235,11 +241,12 @@ remain static. No DOS screen was run for this slice.
 - No DOS execution, VGA rendering, palette/font/asset loading or input decoding.
 - Difficulty and competition rows are bound to `cur_tier`, `civ_total` and
   `players`; tribe rows 1 and 9 are representative bindings; city auto-build
-  toggles status bit `0x10`. Other tribe rows, buy, rename and unit-list
-  controls remain declared, and no action has a live-screen observation.
-- Unit next/previous/select, sell, buy, rename, text entry and report paging are
-  only partially represented or absent. The detailed city fixture carries more
-  source-modeled city behavior.
+  toggles status bit `0x10`; unit-list navigation clamps over a representative
+  3-unit garrison. Other tribe rows, buy and rename remain declared, and no
+  action has a live-screen observation.
+- Unit-list navigation is cursor-only; select does not write army-record
+  moves/status/goto. Sell, buy, rename, text entry and report paging are absent.
+  The detailed city fixture carries more source-modeled city behavior.
 - Turn advance only increments declared counters; economy, AI, movement, combat,
   research, diplomacy and victory conditions are outside the model.
 - Game-over is state-reachable for inspection; its trigger conditions are not
@@ -252,8 +259,8 @@ remain static. No DOS screen was run for this slice.
 
 1. Model the remaining competition-dependent tribe rows; rows 1 and 9 are now
    representative bindings but the full dynamic menu is not generated.
-2. Bind city buy and the unit-list `next`/`previous`/`select` actions to the
-   existing city fixture and to a live cursor read.
+2. Bind city buy to the city fixture and replace the representative garrison
+   with a live cursor/count read.
 3. Add a matched live-screen or DOSBox observation for one setup row so the
    source-bound scene claim can become bounded-observed.
 4. Use the atlas's caller graph to add one bounded transition not yet modeled,
