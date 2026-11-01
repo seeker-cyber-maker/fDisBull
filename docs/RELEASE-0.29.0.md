@@ -1,7 +1,7 @@
 # 0.29.0 release candidate
 
-Status: published as GitLab tag `v0.29.0` and GitLab Release on 2026-11-01 at
-this commit. Hosted native CI and the macOS backend rebuild remain pending; this
+Status: published as GitLab tag `v0.29.0` (source
+`09a820952ad3f54d0d0707db0515a8010f7eceb1`) and GitLab Release on 2026-11-01. Hosted native CI and the macOS backend rebuild remain pending; this
 publication does not claim them. CI is not configured on the private GitLab
 copy; the Linux and native gates below remain open.
 

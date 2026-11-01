@@ -2,7 +2,8 @@
 
 ## 0.29.0 published on GitLab; local shared installation active
 
-`v0.29.0` is an annotated GitLab tag and GitLab Release at this commit. The
+`v0.29.0` is an annotated GitLab tag and GitLab Release at source
+`09a820952ad3f54d0d0707db0515a8010f7eceb1`. The
 local candidate was promoted at user direction; hosted Linux CI, the hosted
 native matrix and the macOS backend rebuild remain pending and are explicitly
 not claimed.
