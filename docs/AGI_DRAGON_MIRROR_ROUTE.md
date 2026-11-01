@@ -15,6 +15,12 @@ preserves the earlier incomplete runs separately. This qualifies the recorded
 segment; whole-game recovery, a winning campaign and arbitrary timing/RNG
 reliability remain outside its scope.
 
+A [separate boundary follow-up](AGI_BOUNDARY_EXCEPTIONS.md) automatically derives
+the water rule's last-row exception and confirms its two adjacent branch
+outcomes in independent restored-checkpoint tests. It preserves this fresh
+route and its sealed evidence. The scene/provenance hashes below identify the
+original export; the current exporter adds the boundary diagnostic.
+
 ## Observed route
 
 Coordinates below are AGI game units: a 160-by-168 picture grid with the actor's

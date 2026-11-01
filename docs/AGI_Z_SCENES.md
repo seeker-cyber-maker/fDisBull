@@ -122,3 +122,11 @@ simulate AGI's autonomous movement, air counters or enemy timing. The original
 source, native captures and generated scene/provenance stay private. Player
 qualification checks direct and separate-process use, all nine boundary states
 and inventories, stale/repeat refusal and in-memory checkpoint behavior.
+
+The exporter also automatically annotates the active dragon object/context
+with a [derived last-row exception](AGI_BOUNDARY_EXCEPTIONS.md). A reusable
+auditor derives terminal complement bands from declared point rectangles;
+the AGI adapter obtains the original predicate and matching negation from
+source. The diagnostic preserves all eight actions and 44 fields plus phase.
+Its independent restored-checkpoint pair is separate from the fresh route,
+and the scene does not gain arbitrary walking or a silently altered action.

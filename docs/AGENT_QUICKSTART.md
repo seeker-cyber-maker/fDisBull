@@ -290,6 +290,10 @@ and observe later score effects separately. A physical priority-plane flag is
 not a story-state label: the underwater example binds actual PIC52 baseline
 classes, swimming state and carried water. Its separate Z scene checks all
 44 modeled native fields plus phase; original-game timing remains outside it.
+The [boundary follow-up](AGI_BOUNDARY_EXCEPTIONS.md) derives thin complement
+bands from paired AGI position predicates. Keep source candidates, picture
+clearance and native reachability separate. Independent checkpoint forks
+confirm the dragon rule at rows 166/167; other points remain unqualified.
 For video-led route research, the [Robb TAS reconstruction](research/kq1-robb-9.89/ROUTE.md)
 keeps visible key highlights, inferred directions and unknown dispatch separate.
 Qualify those proposed actions in the original game before using them as evidence.

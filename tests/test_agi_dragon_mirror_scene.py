@@ -45,13 +45,24 @@ def case(tmp_path, monkeypatch):
         52: {0x4d: (92, 26), 0x58: (5, 3, 2)},
         51: {0x4d: (5, 3, 1), 0x37f: (92, 19), 0x381: (101, 24), 0x385: (5, 3, 8),
              0x45e: (101, 34), 0x460: (94, 26), 0x462: (7, 3, 2), 0x465: (5, 3, 7),
+             0x427: (13, 88), 0x429: (101, 33), 0x42b: (94, 26), 0x42d: (7, 3, 2),
+             0x430: (13, 91), 0x45c: (13, 88), 0x468: (43, 3, 1), 0x46b: (13, 91),
+             0x46d: (81, 3, 40, 137, 0, 21),
              0x473: (3, 75, 2), 0x3dd: (101, 7),
              0x32d: (255, 11, 0, 26, 104, 59, 127, 255, 0, 0),
-             0x432: (255, 253, 11, 0, 105, 96, 145, 166, 1, 75, 0, 255, 0, 0)},
+             0x3df: (255, 11, 0, 105, 96, 145, 166, 1, 75, 0, 255, 0x46, 0),
+             0x432: (255, 253, 11, 0, 105, 96, 145, 166, 1, 75, 0, 255, 0x6e, 0)},
         0: {0xf0d: (101, 10)},
     }
     for logic, entries in instructions.items():
         for offset, values in entries.items(): codes[logic][offset:offset+len(values)] = bytes(values)
+    # Authored scalar/OR action gates paired with the two position parents.
+    water_guard = bytes((255, 7, 88, 252, 14, 2, 42, 0, 43, 0,
+                         14, 3, 42, 0, 43, 0, 44, 0,
+                         14, 2, 45, 0, 44, 0, 252, 255))
+    for offset, skip in ((0x40b, 0x0b), (0x440, 0x1a)):
+        gate = water_guard+skip.to_bytes(2, 'little')
+        codes[51][offset:offset+len(gate)] = gate
     text = b'Authored unit-only response\0'
     encoded = bytes(value ^ b'Avis Durgan'[i % 11] for i, value in enumerate(text))
     directory = bytearray(b'\xff\xff\xff'*102); volume = bytearray()
@@ -66,6 +77,10 @@ def case(tmp_path, monkeypatch):
     picture=b'\xff';picdir=bytearray(b'\xff\xff\xff'*53)
     picdir[52*3:52*3+3]=len(volume).to_bytes(3,'big')
     volume+=b'\x12\x34\0'+len(picture).to_bytes(2,'little')+picture
+    # An authored single priority-0 pixel blocks one six-pixel baseline ray.
+    dragon_picture=bytes((0xf2, 0, 0xf6, 136, 166, 136, 166, 0xff))
+    picdir[51*3:51*3+3]=len(volume).to_bytes(3,'big')
+    volume+=b'\x12\x34\0'+len(dragon_picture).to_bytes(2,'little')+dragon_picture
     (source/'PICDIR').write_bytes(picdir)
     (source/'LOGDIR').write_bytes(directory); (source/'VOL.0').write_bytes(volume)
     resources = {str(n): load_logic(source/'LOGDIR', source, n, profile='2.917').resource_sha256
@@ -96,7 +111,7 @@ def case(tmp_path, monkeypatch):
             'control_direction':0,'window':0,'initializing':False,
             'quest_variables':{'68':240 if index==4 else 0,'69':2 if index==4 else 0,
                                '74':int(index>=7),'75':2 if index>=6 else 0,'94':int(index==4)},
-            'quest_flags':flags,'dragon_actor':{'drawn':index==5},
+            'quest_flags':flags,'dragon_actor':{'drawn':index==5,'x':46,'y':117,'width':23},
             'inventory_locations':{str(item):255 if carried[name] else 0 for name,item in exporter.ITEMS.items()},
             **{name+'_carried':value for name,value in carried.items()}}
 
@@ -182,7 +197,7 @@ def case(tmp_path, monkeypatch):
                   'object_sha256':exporter.OBJECT_SHA,'resources':resources},
         'runtime':{'policy':'physical','fresh_game':True,'interventions':[],'session_id':NATIVE['session_id']},
         'observations':observations,'actions':actions,'water_before':water_before,
-        'pictures':{'52':sha256(picture).hexdigest()},
+        'pictures':{'52':sha256(picture).hexdigest(),'51':sha256(dragon_picture).hexdigest()},
         'mirror_before':mirror_before,'repeat_controls':controls}
     return source,capture,lambda path:artifacts[path],artifacts
 
@@ -198,6 +213,8 @@ def test_authored_route_preserves_every_boundary_and_private_source(case):
     scene,evidence=exporter.build(source,capture,loader)
     backend=ILSceneBackend(scene);player=Player(backend)
     assert evidence['route_contract']['status']=='qualified-fresh-segment'
+    assert evidence['prior_native_boundary_witness'] is None
+    assert 'Historical DOS diagnostics' not in scene['contexts'][5]['description']
     assert evidence['route_contract']['qualification_witness']['fresh_game'] is True
     assert evidence['route_contract']['qualification_witness']['interventions']==[]
     assert len(evidence['edges'])==8 and len(evidence['observations'])==9
@@ -213,6 +230,66 @@ def test_authored_route_preserves_every_boundary_and_private_source(case):
     assert player.execute('take mirror')=='Rejected: Action refused.'
     assert 'Authored unit-only response' not in str(scene)+str(evidence)
     assert 'unit-item-' not in str(scene)+str(evidence)
+
+
+def test_build_automatically_surfaces_source_band_with_separate_pic_and_pose_limits(case):
+    source,capture,loader,_=case
+    scene,evidence=exporter.build(source,capture,loader)
+    analysis=evidence['spatial_predicate_analysis']
+    assert analysis['status']=='source_candidates_only' and analysis['complete'] is True
+    assert analysis['source']=={'logic':51,'resource_sha256':capture['source']['resources']['51']}
+    assert analysis['origin']==[131,136] and analysis['actor_width']==6
+    assert analysis['native_reachability']=='not_established_by_this_capture'
+    finding=analysis['findings'][0]
+    assert (finding['inside_if_offset'],finding['outside_if_offset'])==(0x3df,0x432)
+    assert finding['shared_scalar_context']['matches_supplied_state'] is True
+    assert finding['source_picture_sha256']==capture['pictures']['51']
+    assert finding['effects_complete'] is True
+    contrast=finding['action_contrasts'][0]
+    assert contrast['item']==26 and contrast['label']=='water'
+    assert [contrast[k]['linear_score_delta'] for k in ('inside','outside')]==[-2,5]
+    for side,offset,ident in (('inside',0x429,33),('outside',0x45e,34)):
+        prints=[op for op in contrast[side]['operations'] if op['operation']=='print']
+        assert [(op['source_offset'],op['arguments']) for op in prints]==[(offset,[ident])]
+    record=finding['bands'][0]
+    assert record['predicate_band']['row_runs']==[[167,105,146]]
+    assert record['predicate_band']['count']==41
+    assert record['predicate_band']['reachability']=={'status':'unknown'}
+    geometry=record['static_geometry']
+    assert geometry['origin_ray']['first_blocked']['origin']==[131,166]
+    assert geometry['proposal']['inside']==[130,166]
+    assert geometry['proposal']['outside']==[130,167]
+    assert geometry['proposal']['ray']['waypoints']==[[131,136],[130,136],[130,167]]
+    assert geometry['native_reachability']=='unknown'
+    metric=record['geometric_contrast']
+    assert [metric[k+'_distance'] for k in ('origin','inside','outside')]==[96,125,126]
+    assert 'not a throw-range predicate' in metric['scope']
+    for text in (scene['contexts'][5]['description'],scene['objects'][5]['description']):
+        assert '41 origins' in text and 'y=167' in text
+        assert 'Static proposal: (130, 167)' in text
+        assert 'Native reachability' in text
+    assert len(exporter.FIELDS)==44 and len(scene['programs'])==8
+    assert len(scene['programs']['douse-dragon']['variables'])==45
+
+
+def test_source_annotation_changes_neither_action_programs_nor_projection_guards(case,monkeypatch):
+    source,capture,loader,_=case
+    scene,_=exporter.build(source,capture,loader)
+    monkeypatch.setattr(exporter,'describe_posn_boundaries',lambda *a,**k:'Authored annotation control.')
+    control,_=exporter.build(source,capture,loader)
+    assert scene['programs']==control['programs']
+    assert scene['contexts'][5]['description']!=control['contexts'][5]['description']
+    assert scene['objects'][5]['description']!=control['objects'][5]['description']
+
+
+@pytest.mark.parametrize('fault',('missing','mismatch','actor_bool','actor_missing'))
+def test_automatic_analysis_requires_bound_picture_and_typed_reference_pose(case,fault):
+    source,capture,loader,_=case
+    if fault=='missing':del capture['pictures']['51']
+    elif fault=='mismatch':capture['pictures']['51']='0'*64
+    elif fault=='actor_bool':capture['observations']['dragon-before']['state']['dragon_actor']['x']=True
+    else:del capture['observations']['dragon-before']['state']['dragon_actor']['width']
+    with pytest.raises(ValueError):exporter.build(source,capture,loader)
 
 
 @pytest.mark.parametrize('phase',range(9))

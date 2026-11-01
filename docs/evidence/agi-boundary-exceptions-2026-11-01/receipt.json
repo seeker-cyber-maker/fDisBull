@@ -1,0 +1,91 @@
+{
+  "format": "fdisbull-agi-boundary-exceptions-verification-1",
+  "date": "2026-11-01",
+  "base_commit": "7264efa02fde09480fbaf0f8073ba13e27e4c510",
+  "native": {
+    "scope": "Two independent supported checkpoint forks; original branch and transaction effects, not a fresh route or completed retreat.",
+    "inside_origin": [
+      130,
+      166
+    ],
+    "inside_score": [
+      15,
+      13
+    ],
+    "outside_origin": [
+      130,
+      167
+    ],
+    "outside_score": [
+      15,
+      13,
+      20
+    ],
+    "trace_fetches_per_fork": 6,
+    "source_and_copy_files": 24,
+    "children_reaped": true,
+    "paired_summary_sha256": "4ff1eb638bdc9694da9b9d62844bc1d46569b8ac4724fed96412803bc5b7772f",
+    "picture_binding_sha256": "c4926cd763385fc24a0fc656e643646309a68fe0453f7a3863c73f4adc13a156"
+  },
+  "tests": {
+    "passed": 2227,
+    "skipped": 17,
+    "files": 55,
+    "python": "3.13.13",
+    "machine": "arm64",
+    "system": "Darwin",
+    "source_hashes_unchanged": true
+  },
+  "player": {
+    "version": "0.28.0",
+    "direct_and_separate_process": true,
+    "all_nine_phases": true,
+    "native_fields": 44,
+    "phase_variables": 45,
+    "in_memory_checkpoints_only": true
+  },
+  "artifacts": {
+    "scene_sha256": "c364ab45f91ce9275ea7660c706647b4967036a35d44cf933641ddbc256b7caa",
+    "provenance_sha256": "9d468f7d33729730cf4fdaabfb93e9a9df1ab13e645431b65360554805a615e7",
+    "independent_pair_audit_sha256": "056ffa51340a8b55706501df3631a4d5b5b64d07fefd2ba33a9f4f77cbc6c7f6",
+    "independent_pair_receipt_sha256": "a48002a13a0eec0670a8060bd00460103bb4b4942863ceafe7b3a718dabecedb",
+    "public_port_derivation_sha256": "da09ba0ff74ced49e7abb9e8c03698b779dae9abc1022175efde2ba94fc6b851"
+  },
+  "tested_source_sha256": {
+    "examples/agi/build_dragon_mirror_scene.py": "411f2318009fbb1ba55d11cc75e6c60a52cea8ea685d1101f79b36d7abdfbe53",
+    "examples/agi/dragon_boundary_witness.py": "1c58f09226c16e892e5edc054c8e11fb41b15603d0378c878920508bccda4e47",
+    "examples/agi/dragon_inside_probe.py": "40d881140fea450c0c2ab3372356bcab4dee88cd19460ebaec227a9f2d9a5915",
+    "examples/agi/dragon_probes.py": "baacb0487fbf9c763ce43b0e463de5cf2852383f40d269c876ceae87cfe9ec34",
+    "examples/agi/inventory_probe.py": "b7b059a46327419faddef20efdd8b0511b5f26fa1fabca878b4ddb33ad9bbff1",
+    "examples/agi/verify_dragon_boundary.py": "ef548a5cdd6288ec188708e381043b57d909bb101f4ca56342edf898f4fa591e",
+    "examples/agi/verify_dragon_mirror.py": "797ea3da5092db98f7af3b0eaeec4b537c1c383ccc397fa52f2b34b3dc6b1368",
+    "src/fdisbull/agi.py": "9b0815cfc861ceb0d157ab7a6744c39e414b5eead0a227b6c309a3144dc83fc7",
+    "src/fdisbull/agi_layout.py": "9c3c172715a6d60cfab0a882e6d2c35a1008ca4fa6e8ffc3f00076a9284fdff4",
+    "src/fdisbull/agi_picture.py": "0d1334fb7d4c94abaec4d2079efd386e1e9978f7b73c51b57ec83bb966e49b40",
+    "src/fdisbull/agi_spatial_predicates.py": "c9d6df1e0752367942fb206941393bee5223a973bc2c836d992a2d408931bc49",
+    "src/fdisbull/il_scenes.py": "ae2c8d62327877a86939d7fd58ee4d62a402dc14ff0d6766230de10cdfe3edfe",
+    "src/fdisbull/scene_boundaries.py": "d2a35456707ae404edec9029a2750ccf1eebb42eb5f8bd6979bcadb03548b41d",
+    "tests/test_agi_dragon_boundary.py": "9d4764e226d6e2493b29fcef4c62f8cb0ab0929b12049b0740eb2c31c893a634",
+    "tests/test_agi_dragon_boundary_witness.py": "4b7cc324c2b48053c608a3c3fdb1ba93a6601dac7634fb0d0716c9605cd3abdb",
+    "tests/test_agi_dragon_mirror_scene.py": "e79934b65087da8de43ddef1309aff3124f3ace41a39aba38753533490410a7f",
+    "tests/test_agi_spatial_predicates.py": "93504765b9aeb569ec393ee9ce1ddd95bde40214fbcafe3a49b66620d1b1e438",
+    "tests/test_scene_boundaries.py": "98a013bd68472e6724b17cc0f39718c4cbfe38ab71f3adcbc9b612044940ca51"
+  },
+  "limits": [
+    "Source-local paired ego posn recognizer; no general glitch discovery or whole-game equivalence.",
+    "Only two native positions qualified; other band origins remain unknown.",
+    "Dragon poses differ; no physical throw radius or single-variable physics claim.",
+    "Individual watched writer instruction completion stays unknown.",
+    "Portable public controller has import/filename-only differences from native-tested private controller and was not itself rerun natively.",
+    "No full-suite or ordinary/native Linux CI qualification.",
+    "No merge, release, tag or installation update."
+  ],
+  "exclusions": [
+    "Original game/story files",
+    "Native state blobs",
+    "Project databases",
+    "Raw captures and traces with instruction payloads",
+    "Generated scene/provenance",
+    "Third-party documents and media"
+  ]
+}

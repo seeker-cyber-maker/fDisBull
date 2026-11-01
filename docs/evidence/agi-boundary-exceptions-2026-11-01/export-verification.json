@@ -1,0 +1,12 @@
+{
+  "format": "fdisbull-boundary-final-export-check-1",
+  "complete": true,
+  "programs_unchanged": 8,
+  "variables_per_program": 45,
+  "source_analysis_complete": true,
+  "scene_sha256": "c364ab45f91ce9275ea7660c706647b4967036a35d44cf933641ddbc256b7caa",
+  "provenance_sha256": "9d468f7d33729730cf4fdaabfb93e9a9df1ab13e645431b65360554805a615e7",
+  "scene_byte_identical_to_installed_test_input": true,
+  "installed_check_receipt_sha256": "6c676da1059d4e40400ec85ea7104eb202aa4209cdf328c133042d3c761efca5",
+  "scope": "Final provenance adds PIC51 identity; runtime scene bytes are identical to the completed installed direct/process test input. No repeated player execution was needed."
+}

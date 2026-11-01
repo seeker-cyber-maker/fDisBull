@@ -245,6 +245,8 @@ The [dragon and magic mirror route](docs/AGI_DRAGON_MIRROR_ROUTE.md) starts a
 fresh game, uses water to clear the dragon, takes the mirror and returns to the
 surface. Original inventory writes and short traces support eight guarded
 text actions, with the preparation, failures and final evidence kept inspectable.
+Its [boundary analysis](docs/AGI_BOUNDARY_EXCEPTIONS.md) also exposes the dragon
+rule's last-row exception, with adjacent outcomes checked in the original game.
 A separate [reconstruction of Robb's short TAS](docs/research/kq1-robb-9.89/ROUTE.md)
 preserves the visible route and its unresolved inputs for another investigator.
 

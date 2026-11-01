@@ -12,9 +12,11 @@ import re
 
 from examples.agi.build_clip_scene import frame_evidence, json_artifact, require
 from examples.agi.build_gnome_giant_scene import clock, exact, message_evidence
+from examples.agi.dragon_boundary_witness import recorded_boundary_witness, describe_recorded_boundary
 from fdisbull.agi import load_logic
 from fdisbull.agi_layout import logic_layout
 from fdisbull.agi_picture import decode_picture, extract_v2_resource
+from fdisbull.agi_spatial_predicates import analyze_posn_boundaries, describe_posn_boundaries
 from fdisbull.il_scenes import ILSceneBackend
 
 OBJECT_SHA = '2d1b7a75bb443b4a340cb8d9a2842ff5c834d7d597ea2a1365b6a7a2dfb57985'
@@ -221,6 +223,22 @@ def underwater_baseline(source, capture, state):
             'scope': 'Source PIC baseline and supplied settled physical flag 0; underwater story state uses room/VIEW/v94/air.'}
 
 
+def spatial_analysis(source, capture, resource, raw, state):
+    """Automatically inspect source predicates; do not extend the fixed route."""
+    pictures = capture.get('pictures')
+    require(isinstance(pictures, dict) and isinstance(pictures.get('51'), str),
+            'missing dragon picture identity')
+    picture = extract_v2_resource(source/'PICDIR', source, 51)
+    require(picture['sha256'] == pictures['51'], 'dragon picture identity differs')
+    return analyze_posn_boundaries(resource.payload, logic_number=51,
+        origin=(state['x'], state['y']), actor_width=state['ego_width'],
+        priority_plane=decode_picture(picture['payload'])['priority'],
+        picture_sha256=picture['sha256'], allow_priority_one=state['ignore_blocks'],
+        reference_actor={key: raw['dragon_actor'].get(key) for key in ('x', 'y', 'width')},
+        variables=raw['quest_variables'], flags=raw['quest_flags'],
+        item_labels={number: name for name, number in ITEMS.items()})
+
+
 def inventory_binding(binding, item, records, native):
     record = records[item]
     require(exact(binding, {'source_sha256': OBJECT_SHA, 'stride': 3, 'item': item,
@@ -363,6 +381,13 @@ def build(source, capture, artifact_loader):
     states = [value['state'] for value in ordered]
     route_states(states)
     water_baseline = underwater_baseline(source, capture, states[4])
+    spatial = spatial_analysis(source, capture, resources[51],
+                               observations['dragon-before']['state'], states[5])
+    spatial_description = describe_posn_boundaries(spatial, focus_item=ITEMS['water'])
+    prior_boundary = recorded_boundary_witness(spatial, agi_sha256=identity['agi_sha256'],
+                                              object_sha256=OBJECT_SHA)
+    if prior_boundary is not None:
+        spatial_description += ' '+describe_recorded_boundary(prior_boundary)
     messages = []
     for i, action in enumerate(actions):
         require(action.get('complete') is True and action.get('messages_complete') is True,
@@ -471,10 +496,12 @@ def build(source, capture, artifact_loader):
         if target in ITEMS:
             obj['inventory_when'] = {'op': 'eq', 'left': {'var': '$'+target+'_carried'}, 'right': True}
         objects.append(obj)
+    objects[5]['description'] += ' '+spatial_description
     scene = {'format': 'fdisbull-il-scene-1', 'partial': True, 'programs': programs, 'objects': objects,
              'contexts': [{'id': 'phase-'+str(i), 'title': 'Partial dragon and mirror route',
                            'description': 'Authored projection; qualification scope is recorded separately.',
                            'when': {'op': 'eq', 'left': {'var': '$phase'}, 'right': i}} for i in range(9)]}
+    scene['contexts'][5]['description'] += ' '+spatial_description
     ILSceneBackend(scene)
     evidence = {'format': 'fdisbull-agi-dragon-mirror-z-evidence-1', 'route_contract': deepcopy(ROUTE_CONTRACT),
                 'source': {'agi_sha256': identity['agi_sha256'], 'object_sha256': OBJECT_SHA,
@@ -485,6 +512,8 @@ def build(source, capture, artifact_loader):
                 'projection_fields': list(FIELDS), 'observations': dict(zip(OBSERVATION_IDS, ordered)),
                 'extra_observations': extras, 'native_water': water, 'native_mirror': mirror,
                 'underwater_baseline': water_baseline,
+                'spatial_predicate_analysis': spatial,
+                'prior_native_boundary_witness': prior_boundary,
                 'repeat_controls': checked_controls,
                 'edges': [{'id': action['id'], 'before': action['before'], 'after': action['after'],
                            'messages': messages[i]} for i, action in enumerate(actions)],

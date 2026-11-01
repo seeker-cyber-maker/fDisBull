@@ -1,0 +1,134 @@
+{
+  "format": "fdisbull-sanitized-boundary-fetch-traces-1",
+  "traces": [
+    {
+      "name": "inside-02",
+      "raw_trace_sha256": "b5776c30f822627f4f4b23017ed264f5fefd3beaf3804a28aced3d942c06801f",
+      "event_count": 6,
+      "maximum_count": 128,
+      "complete": true,
+      "fetch_events": [
+        {
+          "sequence": 1,
+          "address": {
+            "offset": "0x000074BE",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 2,
+          "address": {
+            "offset": "0x000074C1",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 3,
+          "address": {
+            "offset": "0x000074C2",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 4,
+          "address": {
+            "offset": "0x000074C3",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 5,
+          "address": {
+            "offset": "0x000074C4",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 6,
+          "address": {
+            "offset": "0x000002FA",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        }
+      ],
+      "real_handler_return": {
+        "offset": 762,
+        "observed": true,
+        "source_cursor_offset": 1069,
+        "stack_verified": true
+      },
+      "individual_writer_instruction_completed": null
+    },
+    {
+      "name": "outside-01",
+      "raw_trace_sha256": "c67e9fd40c4652a76b4d85fa4d3419e5b7ab41b235ae5304bfc03f96fb877d2d",
+      "event_count": 6,
+      "maximum_count": 128,
+      "complete": true,
+      "fetch_events": [
+        {
+          "sequence": 1,
+          "address": {
+            "offset": "0x000074BE",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 2,
+          "address": {
+            "offset": "0x000074C1",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 3,
+          "address": {
+            "offset": "0x000074C2",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 4,
+          "address": {
+            "offset": "0x000074C3",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 5,
+          "address": {
+            "offset": "0x000074C4",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        },
+        {
+          "sequence": 6,
+          "address": {
+            "offset": "0x000002FA",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          }
+        }
+      ],
+      "real_handler_return": {
+        "offset": 762,
+        "observed": true,
+        "source_cursor_offset": 1122,
+        "stack_verified": true
+      },
+      "individual_writer_instruction_completed": null
+    }
+  ],
+  "scope": "Actual stored fetch addresses through original DROP handler return. Fetch observations do not assert instruction completion; score accesses and completed messages have separate evidence. Original instruction bytes, execution views and raw registers are omitted."
+}

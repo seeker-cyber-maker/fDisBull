@@ -158,6 +158,25 @@ Track an investigation decision alongside the object's context, for example:
 Confidence is not a score to maximize by collecting more prose. Prefer the
 smallest probe that can change the next decision; preserve counterexamples.
 
+## Investigate spatial predicate boundaries
+
+When an interaction looks physically implausible, inspect its actual source
+predicate before inventing a distance rule. Record whether it uses an actor
+origin, center, footprint or measured distance, its coordinate convention,
+and the scalar/modal context. For paired AGI `posn` and negated `posn` guards,
+`fdisbull.agi_spatial_predicates` can extract the narrow supported pattern;
+`fdisbull.scene_boundaries.audit_rectangle_boundary` derives bounded thin
+terminal complement bands using shared mask geometry.
+
+A source witness is not a path. Check picture clearance and live obstacles,
+then test adjacent positions through ordinary input in independent checkpoint
+forks if the first action consumes inventory. Preserve exact launch poses,
+NPC poses, original branch messages, writes, returns and failures. Keep unknown
+reachability explicit and do not call a terminal band an isolated component.
+Stop at the declared effect boundary; a score access does not prove a whole
+room cycle or completed animation. The KQ1 dragon example confirms two row
+166/167 branch outcomes while leaving the other 40 band origins unqualified.
+
 ## Adaptation provenance
 
 This skill paraphrases selected investigation principles from the user-provided
