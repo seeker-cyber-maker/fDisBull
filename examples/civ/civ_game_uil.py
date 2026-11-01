@@ -88,6 +88,8 @@ VARIABLES = {
     "$shield_box": {"type": "i16", "initial": 0},
     "$money": {"type": "i32", "initial": 1500},
     "$unit_cost": {"type": "u16", "initial": 10},
+    "$improvement_cost": {"type": "u16", "initial": 20},
+    "$improvement_index": {"type": "u8", "initial": 5},
     "$buy_price": {"type": "u32", "initial": 0},
     "$buy_temp": {"type": "u32", "initial": 0},
     "$chooser_open": {"type": "bool", "initial": False},
@@ -124,6 +126,8 @@ STATE_EVIDENCE = {
     "$shield_box": "DGROUP:70EC + city*1Ch + 0Eh; civd CITYMGT.C:1433 and reference/struct_city.md.",
     "$money": "money[selected_owner]; civd CITYMGT.C:1428-1434. Scene starts at 1500.",
     "$unit_cost": "utypes[production].cost; civd CITYMGT.C:1405. Scene uses a representative cost of 10.",
+    "$improvement_cost": "improvements[-production].cost; civd CITYMGT.C:1409. Scene uses a representative cost of 20.",
+    "$improvement_index": "-production for an improvement purchase; civd CITYMGT.C:1409-1412. Scene uses 5.",
     "$buy_price": "Rush price scratch_i; civd CITYMGT.C:1406-1415.",
     "$buy_temp": "Rush-price intermediate from scratch_i; civd CITYMGT.C:1407-1412.",
     "$chooser_open": "UIL context flag for key c / R:0ADE:0421; Civ64 SCENES-PLAY 7.12.",
@@ -760,6 +764,14 @@ SCREEN_SPECS = [
                 "city-buy-production",
             ),
             _object(
+                "city-buy-improvement",
+                "Buy improvement",
+                ["buy improvement", "rush improvement"],
+                "Improvement rush price doubles the clamped cost raw; wonders past index 21 double again. CITYMGT.C:1408-1415.",
+                "buy",
+                "city-buy-improvement",
+            ),
+            _object(
                 "city-auto",
                 "Automatic production",
                 ["auto", "automatic"],
@@ -820,6 +832,14 @@ SCREEN_SPECS = [
                 "Commits production code 1; supported by the bounded city fixture and runtime record read.",
                 "build",
                 "build-militia",
+            ),
+            _object(
+                "build-improvement",
+                "Representative improvement",
+                ["improvement", "building"],
+                "Sets production code -5 as a representative improvement index; the source chooser writes -improvement.",
+                "build",
+                "build-improvement",
             ),
         ],
         when=_and(
@@ -1514,6 +1534,16 @@ def build_programs() -> dict:
         ),
     )
     add(
+        "build-improvement",
+        _transition(
+            "build-improvement",
+            CITY,
+            "Representative improvement committed as production code -5.",
+            ("$production", -5),
+            ("$chooser_open", False),
+        ),
+    )
+    add(
         "city-buy-production",
         _program(
             "city-buy-production",
@@ -1637,6 +1667,142 @@ def build_programs() -> dict:
                 "city-buy-text": {
                     "kind": "text",
                     "text": "Unit rush purchased: shield_box set to 10*cost and the treasury charged.",
+                }
+            },
+        ),
+    )
+    add(
+        "city-buy-improvement",
+        _program(
+            "city-buy-improvement",
+            [
+                {
+                    "id": "improvement-cost",
+                    "op": "set",
+                    "var": "$buy_price",
+                    "value": {"var": "$improvement_cost"},
+                },
+                {
+                    "id": "improvement-cost-ten",
+                    "op": "multiply",
+                    "var": "$buy_price",
+                    "value": 10,
+                },
+                {
+                    "id": "improvement-raw",
+                    "op": "subtract",
+                    "var": "$buy_price",
+                    "value": {"var": "$shield_box"},
+                },
+                {
+                    "id": "improvement-clamp-low",
+                    "op": "if",
+                    "condition": _not(
+                        {"op": "ge", "left": {"var": "$buy_price"}, "right": 0}
+                    ),
+                    "then": [
+                        {
+                            "id": "improvement-zero",
+                            "op": "set",
+                            "var": "$buy_price",
+                            "value": 0,
+                        }
+                    ],
+                    "else": [],
+                },
+                {
+                    "id": "improvement-clamp-high",
+                    "op": "if",
+                    "condition": {
+                        "op": "ge",
+                        "left": {"var": "$buy_price"},
+                        "right": 1000,
+                    },
+                    "then": [
+                        {
+                            "id": "improvement-cap",
+                            "op": "set",
+                            "var": "$buy_price",
+                            "value": 999,
+                        }
+                    ],
+                    "else": [],
+                },
+                {
+                    "id": "improvement-double",
+                    "op": "multiply",
+                    "var": "$buy_price",
+                    "value": 2,
+                },
+                {
+                    "id": "improvement-wonder",
+                    "op": "if",
+                    "condition": {
+                        "op": "ge",
+                        "left": {"var": "$improvement_index"},
+                        "right": 22,
+                    },
+                    "then": [
+                        {
+                            "id": "improvement-wonder-double",
+                            "op": "multiply",
+                            "var": "$buy_price",
+                            "value": 2,
+                        }
+                    ],
+                    "else": [],
+                },
+                {
+                    "id": "improvement-empty-double",
+                    "op": "if",
+                    "condition": _eq("$shield_box", 0),
+                    "then": [
+                        {
+                            "id": "improvement-double-empty",
+                            "op": "multiply",
+                            "var": "$buy_price",
+                            "value": 2,
+                        }
+                    ],
+                    "else": [],
+                },
+                {
+                    "id": "improvement-guard",
+                    "op": "require",
+                    "condition": {
+                        "op": "ge",
+                        "left": {"var": "$money"},
+                        "right": {"var": "$buy_price"},
+                    },
+                },
+                {
+                    "id": "improvement-store-cost",
+                    "op": "set",
+                    "var": "$shield_box",
+                    "value": {"var": "$improvement_cost"},
+                },
+                {
+                    "id": "improvement-store-shields",
+                    "op": "multiply",
+                    "var": "$shield_box",
+                    "value": 10,
+                },
+                {
+                    "id": "improvement-charge",
+                    "op": "subtract",
+                    "var": "$money",
+                    "value": {"var": "$buy_price"},
+                },
+                {
+                    "id": "improvement-text",
+                    "op": "text",
+                    "resource": "city-buy-improvement-text",
+                },
+            ],
+            {
+                "city-buy-improvement-text": {
+                    "kind": "text",
+                    "text": "Improvement rushed: shield_box set to 10*cost and the treasury charged.",
                 }
             },
         ),
@@ -2081,7 +2247,7 @@ def build_provenance(
         "limits": [
             "Partial scene graph and state projection, not a full game simulation.",
             "No DOS execution, VGA rendering, input decoding, AI, combat, technology, diplomacy, save parsing or economy model.",
-            "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; representative tribe rows 1 and 9 are bound; city auto-build toggles status bit 10h; unit-list next/previous clamp over a representative 3-unit garrison and select stores the cursor; city buy computes the source unit rush price from a representative unit cost and commits shields. No setup or city action has a live-screen observation.",
+            "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; representative tribe rows 1 and 9 are bound; city auto-build toggles status bit 10h; unit-list next/previous clamp over a representative 3-unit garrison and select stores the cursor; city buy computes the source unit rush price from a representative unit cost and commits shields; an improvement branch doubles the clamped raw and again past index 21. No setup or city action has a live-screen observation.",
             "The game-over context is state-reachable for inspection; its trigger conditions are not modelled.",
             "Every screen boundary is resolved against a civd function; this is address resolution, not Windows-to-DOS byte equivalence.",
         ],

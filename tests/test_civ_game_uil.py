@@ -55,8 +55,8 @@ def test_scene_has_bounded_screens_and_validates():
     assert scene["format"] == "fdisbull-il-scene-1"
     assert scene["partial"] is True
     assert len(scene["contexts"]) == 23
-    assert len(scene["objects"]) == 93
-    assert len(scene["programs"]) == 45
+    assert len(scene["objects"]) == 95
+    assert len(scene["programs"]) == 47
     context_ids = {context["id"] for context in scene["contexts"]}
     assert context_ids == set(SCREEN_NAMES.values()) | {"production", "units"}
     object_ids = {item["id"] for item in scene["objects"]}
@@ -215,6 +215,25 @@ def test_city_buy_computes_rush_price_and_commits_shields():
     assert backend.state["$buy_price"] == 0
     assert backend.state["$shield_box"] == 100
     assert backend.state["$money"] == 100
+
+
+def test_city_buy_improvement_doubles_raw_and_commits_shields():
+    backend = ILSceneBackend(build_scene())
+    _to_world(backend)
+    assert _act(backend, "open", "world-city")["status"] == "success"
+    assert _act(backend, "activate", "city-change")["status"] == "success"
+    assert backend.observe()["context"]["id"] == "production"
+    assert _act(backend, "build", "build-improvement")["status"] == "success"
+    assert backend.state["$production"] == -5
+    assert backend.observe()["context"]["id"] == "city"
+    assert _act(backend, "buy", "city-buy-improvement")["status"] == "success"
+    assert backend.state["$buy_price"] == 800
+    assert backend.state["$shield_box"] == 200
+    assert backend.state["$money"] == 700
+    assert _act(backend, "buy", "city-buy-improvement")["status"] == "success"
+    assert backend.state["$buy_price"] == 0
+    assert backend.state["$shield_box"] == 200
+    assert backend.state["$money"] == 700
 
 
 def test_city_unit_list_cursor_clamps_and_stores_selection():

@@ -82,6 +82,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -238,6 +246,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -396,6 +412,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -552,6 +576,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -710,6 +742,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -866,6 +906,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -1024,6 +1072,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -1181,6 +1237,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -1337,6 +1401,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -1501,6 +1573,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -1663,6 +1743,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -1827,6 +1915,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -1990,6 +2086,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -2152,6 +2256,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -2322,6 +2434,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -2490,6 +2610,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -2660,6 +2788,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -2828,6 +2964,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -2998,6 +3142,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -3166,6 +3318,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -3336,6 +3496,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -3493,6 +3661,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -3649,6 +3825,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -3837,6 +4021,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -4012,6 +4204,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -4180,6 +4380,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -4350,6 +4558,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -4519,6 +4735,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -4608,6 +4832,183 @@
     }
    ]
   },
+  "build-improvement": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$shield_box": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$money": {
+     "type": "i32",
+     "initial": 1500
+    },
+    "$unit_cost": {
+     "type": "u16",
+     "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
+    "$buy_price": {
+     "type": "u32",
+     "initial": 0
+    },
+    "$buy_temp": {
+     "type": "u32",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 3
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_last": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "build-improvement-text": {
+     "kind": "text",
+     "text": "Representative improvement committed as production code -5."
+    }
+   },
+   "body": [
+    {
+     "id": "build-improvement-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 10
+    },
+    {
+     "id": "build-improvement-set-production",
+     "op": "set",
+     "var": "$production",
+     "value": -5
+    },
+    {
+     "id": "build-improvement-set-chooser_open",
+     "op": "set",
+     "var": "$chooser_open",
+     "value": false
+    },
+    {
+     "id": "build-improvement-text",
+     "op": "text",
+     "resource": "build-improvement-text"
+    }
+   ]
+  },
   "city-buy-production": {
    "format": "fdisbull-il-1",
    "role": "uil",
@@ -4687,6 +5088,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -4915,6 +5324,311 @@
     }
    ]
   },
+  "city-buy-improvement": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$shield_box": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$money": {
+     "type": "i32",
+     "initial": 1500
+    },
+    "$unit_cost": {
+     "type": "u16",
+     "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
+    "$buy_price": {
+     "type": "u32",
+     "initial": 0
+    },
+    "$buy_temp": {
+     "type": "u32",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 3
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_last": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "city-buy-improvement-text": {
+     "kind": "text",
+     "text": "Improvement rushed: shield_box set to 10*cost and the treasury charged."
+    }
+   },
+   "body": [
+    {
+     "id": "improvement-cost",
+     "op": "set",
+     "var": "$buy_price",
+     "value": {
+      "var": "$improvement_cost"
+     }
+    },
+    {
+     "id": "improvement-cost-ten",
+     "op": "multiply",
+     "var": "$buy_price",
+     "value": 10
+    },
+    {
+     "id": "improvement-raw",
+     "op": "subtract",
+     "var": "$buy_price",
+     "value": {
+      "var": "$shield_box"
+     }
+    },
+    {
+     "id": "improvement-clamp-low",
+     "op": "if",
+     "condition": {
+      "op": "not",
+      "condition": {
+       "op": "ge",
+       "left": {
+        "var": "$buy_price"
+       },
+       "right": 0
+      }
+     },
+     "then": [
+      {
+       "id": "improvement-zero",
+       "op": "set",
+       "var": "$buy_price",
+       "value": 0
+      }
+     ],
+     "else": []
+    },
+    {
+     "id": "improvement-clamp-high",
+     "op": "if",
+     "condition": {
+      "op": "ge",
+      "left": {
+       "var": "$buy_price"
+      },
+      "right": 1000
+     },
+     "then": [
+      {
+       "id": "improvement-cap",
+       "op": "set",
+       "var": "$buy_price",
+       "value": 999
+      }
+     ],
+     "else": []
+    },
+    {
+     "id": "improvement-double",
+     "op": "multiply",
+     "var": "$buy_price",
+     "value": 2
+    },
+    {
+     "id": "improvement-wonder",
+     "op": "if",
+     "condition": {
+      "op": "ge",
+      "left": {
+       "var": "$improvement_index"
+      },
+      "right": 22
+     },
+     "then": [
+      {
+       "id": "improvement-wonder-double",
+       "op": "multiply",
+       "var": "$buy_price",
+       "value": 2
+      }
+     ],
+     "else": []
+    },
+    {
+     "id": "improvement-empty-double",
+     "op": "if",
+     "condition": {
+      "op": "eq",
+      "left": {
+       "var": "$shield_box"
+      },
+      "right": 0
+     },
+     "then": [
+      {
+       "id": "improvement-double-empty",
+       "op": "multiply",
+       "var": "$buy_price",
+       "value": 2
+      }
+     ],
+     "else": []
+    },
+    {
+     "id": "improvement-guard",
+     "op": "require",
+     "condition": {
+      "op": "ge",
+      "left": {
+       "var": "$money"
+      },
+      "right": {
+       "var": "$buy_price"
+      }
+     }
+    },
+    {
+     "id": "improvement-store-cost",
+     "op": "set",
+     "var": "$shield_box",
+     "value": {
+      "var": "$improvement_cost"
+     }
+    },
+    {
+     "id": "improvement-store-shields",
+     "op": "multiply",
+     "var": "$shield_box",
+     "value": 10
+    },
+    {
+     "id": "improvement-charge",
+     "op": "subtract",
+     "var": "$money",
+     "value": {
+      "var": "$buy_price"
+     }
+    },
+    {
+     "id": "improvement-text",
+     "op": "text",
+     "resource": "city-buy-improvement-text"
+    }
+   ]
+  },
   "toggle-auto-build": {
    "format": "fdisbull-il-1",
    "role": "uil",
@@ -4994,6 +5708,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -5182,6 +5904,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -5356,6 +6086,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -5544,6 +6282,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -5725,6 +6471,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -5913,6 +6667,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -6083,6 +6845,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -6271,6 +7041,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -6457,6 +7235,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -6645,6 +7431,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -6831,6 +7625,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -7019,6 +7821,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -7205,6 +8015,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -7393,6 +8211,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -7580,6 +8406,14 @@
      "type": "u16",
      "initial": 10
     },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
+    },
     "$buy_price": {
      "type": "u32",
      "initial": 0
@@ -7742,6 +8576,14 @@
     "$unit_cost": {
      "type": "u16",
      "initial": 10
+    },
+    "$improvement_cost": {
+     "type": "u16",
+     "initial": 20
+    },
+    "$improvement_index": {
+     "type": "u8",
+     "initial": 5
     },
     "$buy_price": {
      "type": "u32",
@@ -8964,6 +9806,22 @@
    "context": "city"
   },
   {
+   "id": "city-buy-improvement",
+   "label": "Buy improvement",
+   "aliases": [
+    "buy improvement",
+    "rush improvement"
+   ],
+   "description": "Improvement rush price doubles the clamped cost raw; wonders past index 21 double again. CITYMGT.C:1408-1415.",
+   "bindings": [
+    {
+     "verb": "buy",
+     "program": "city-buy-improvement"
+    }
+   ],
+   "context": "city"
+  },
+  {
    "id": "city-auto",
    "label": "Automatic production",
    "aliases": [
@@ -9050,6 +9908,22 @@
     {
      "verb": "build",
      "program": "build-militia"
+    }
+   ],
+   "context": "production"
+  },
+  {
+   "id": "build-improvement",
+   "label": "Representative improvement",
+   "aliases": [
+    "improvement",
+    "building"
+   ],
+   "description": "Sets production code -5 as a representative improvement index; the source chooser writes -improvement.",
+   "bindings": [
+    {
+     "verb": "build",
+     "program": "build-improvement"
     }
    ],
    "context": "production"
