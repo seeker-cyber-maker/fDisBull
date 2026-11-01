@@ -357,7 +357,7 @@ def invoke(method, params, debugger=None):
     if not isinstance(params, dict):
         raise ValueError("params must be an object")
     p = dict(params)
-    if method in SOURCE_METHODS:
+    if method in SOURCE_METHODS and "catalog" in p:
         from .source_api import invoke as source_invoke
         return source_invoke(method, p)
     if method.startswith("uil-"):

@@ -18,6 +18,7 @@ from .code_layers import LayerProjectMixin, LayerSessionMixin, LAYER_DDL
 from .debug_experiments import ExperimentProjectMixin, ExperimentSessionMixin
 from .debug_rewind import RewindSessionMixin
 from .debug_timeline import FrameTimelineSessionMixin, timeline_locked, _require_released_mouse
+from .operation_budget import RpcAdmissionTimeout, run_cleanup_scope
 from .debug_cpu_deltas import CpuDeltaSessionMixin
 from .anchor_stones import AnchorStoneSessionMixin
 from .runtime_code import RuntimeCodeMixin, RUNTIME_DDL
@@ -394,20 +395,23 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
     def call(self, method, params=None):
         if self.closed:
             raise DebuggerError('Debugger session is closed')
-        self._cpu_delta_before_call(method,params)
-        rewind_before_call=getattr(self,'_rewind_before_call',None)
-        if rewind_before_call is not None:
-            rewind_before_call(method)
-        self._timeline_before_call(method)
+        for hook in ('_cpu_delta_before_call', '_rewind_before_call', '_timeline_before_call'):
+            callback = getattr(self, hook, None)
+            if callback is not None:
+                callback(method, params) if hook == '_cpu_delta_before_call' else callback(method)
         deadline=getattr(self,'_rpc_deadline',None)
         options={}
         if deadline is not None:
             remaining=int((deadline-time.monotonic())*1000)
-            if remaining<=0:raise TimeoutError('Shared debugger host-time budget expired')
-            options['timeout_ms']=min(15000,remaining)
+            admission=getattr(self,'_rpc_admission_ms',None) or 0
+            if remaining<=0 or remaining < admission:
+                raise RpcAdmissionTimeout('Shared debugger host-time budget expired before RPC dispatch')
+            options['timeout_ms']=min(getattr(self,'_rpc_timeout_cap_ms',None) or 15000,remaining)
         return self.rpc.call(method,{'session_id':self.session_id,**(params or {})},**options)
 
     def _event(self, operation, evidence):
+        if not hasattr(self, 'project'):
+            return
         for key in ('delta_experiment', 'timeline_experiment'):
             experiment = getattr(self, 'metadata', {}).get(key)
             if experiment is not None:
@@ -437,96 +441,144 @@ class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaS
                           timeout_ms=timeout_ms, fast_forward=fast_forward, max_polls=max_polls,
                           timeout_screenshot=timeout_screenshot)
 
-    def run(self, *, timeout_ms=10000, guest_ms=None, fast_forward=False, stop_on_hook=False):
-        bounded(timeout_ms,'timeout_ms',1,600000)
+    def run(
+        self, *, timeout_ms=10000, guest_ms=None, fast_forward=False, stop_on_hook=False
+    ):
+        bounded(timeout_ms, "timeout_ms", 1, 600000)
         if guest_ms is not None:
-            bounded(guest_ms,'guest_ms',1,3600000)
+            bounded(guest_ms, "guest_ms", 1, 3600000)
         if type(fast_forward) is not bool:
-            raise ValueError('fast_forward must be boolean')
+            raise ValueError("fast_forward must be boolean")
         if type(stop_on_hook) is not bool:
-            raise ValueError('stop_on_hook must be boolean')
+            raise ValueError("stop_on_hook must be boolean")
         before = self._timing()
         started = time.monotonic()
-        deadline = started + timeout_ms/1000
+        deadline = started + timeout_ms / 1000
         running = False
         result = None
-        outcome = 'timeout'
+        outcome = "timeout"
         hook_hits = []
         timing = before
         try:
             self._timing(fast_forward)
-            operation = self.call('execution.continue')
+            operation = self.call("execution.continue")
             running = True
             while True:
-                remaining = deadline-time.monotonic()
+                remaining = deadline - time.monotonic()
                 if remaining <= 0:
                     break
-                result = self.call('execution.wait',{'operation_id':operation['operation_id'],
-                    'timeout_ms':max(1,min(10 if fast_forward else 50,int(remaining*1000)))})
-                running = result.get('running',False)
+                result = self.call(
+                    "execution.wait",
+                    {
+                        "operation_id": operation["operation_id"],
+                        "timeout_ms": max(
+                            1, min(10 if fast_forward else 50, int(remaining * 1000))
+                        ),
+                    },
+                )
+                running = result.get("running", False)
                 if not running:
                     hook_hit = self._dispatch_hook(result)
                     if hook_hit is not None:
                         hook_hits.append(hook_hit)
                         if stop_on_hook:
-                            outcome = 'hook'
+                            outcome = "hook"
                             break
                         if time.monotonic() >= deadline:
                             break
-                        operation = self.call('execution.continue')
+                        operation = self.call("execution.continue")
                         running = True
                         continue
-                    kind = result.get('stop_reason',{}).get('kind','stopped')
-                    outcome = 'breakpoint' if kind=='breakpoint' else kind
+                    kind = result.get("stop_reason", {}).get("kind", "stopped")
+                    outcome = "breakpoint" if kind == "breakpoint" else kind
                     break
                 timing = self._timing()
-                if guest_ms is not None and timing['guest_ticks']-before['guest_ticks'] >= guest_ms:
-                    outcome = 'guest_time'
+                if (
+                    guest_ms is not None
+                    and timing["guest_ticks"] - before["guest_ticks"] >= guest_ms
+                ):
+                    outcome = "guest_time"
                     break
         finally:
             if not self.closed:
                 try:
-                    if running:
-                        try:
-                            pause = self.call('execution.pause')
-                            terminal_operation=pause['operation_id']
-                        except DebuggerError as error:
-                            if not str(error).endswith('(TARGET_NOT_RUNNING)'):raise
-                            # A real stop can win the race with our budget pause.
-                            # Observe the existing operation; never continue/replay.
-                            terminal_operation=operation['operation_id']
-                        result = self.call('execution.wait',{'operation_id':terminal_operation,'timeout_ms':3000})
-                        if result.get('running'):
-                            raise DebuggerError('Target failed to pause after bounded run')
-                        kind=result.get('stop_reason',{}).get('kind')
-                        if not kind:raise DebuggerError('Bounded run ended without a terminal stop reason')
-                        if kind!='pause':outcome=kind
-                    if result is None or result.get('state') != 'exited':
-                        timing = self._timing(before['fast_forward'])
+                    with run_cleanup_scope(self):
+                        if running:
+                            try:
+                                pause = self.call("execution.pause")
+                                terminal_operation = pause["operation_id"]
+                            except DebuggerError as error:
+                                if not str(error).endswith("(TARGET_NOT_RUNNING)"):
+                                    raise
+                                # A real stop can win the race with our budget pause.
+                                # Observe the existing operation; never continue/replay.
+                                terminal_operation = operation["operation_id"]
+                            result = self.call(
+                                "execution.wait",
+                                {
+                                    "operation_id": terminal_operation,
+                                    "timeout_ms": 3000,
+                                },
+                            )
+                            if result.get("running"):
+                                raise DebuggerError(
+                                    "Target failed to pause after bounded run"
+                                )
+                            kind = result.get("stop_reason", {}).get("kind")
+                            if not kind:
+                                raise DebuggerError(
+                                    "Bounded run ended without a terminal stop reason"
+                                )
+                            if kind != "pause":
+                                outcome = kind
+                        if result is None or result.get("state") != "exited":
+                            timing = self._timing(before["fast_forward"])
                 except BaseException:
                     self.close()
                     raise
-        evidence = {'run':self.run_id,'outcome':outcome,'timed_out':outcome=='timeout',
-                    'requested_guest_ms':guest_ms,'guest_elapsed_ms':timing['guest_ticks']-before['guest_ticks'],
-                    'host_elapsed_ms':round((time.monotonic()-started)*1000,3),
-                    'fast_forward':fast_forward,'timing_after':timing,'session':result}
-        evidence['hook_hits'] = hook_hits
-        if result and result.get('stop_reason',{}).get('address'):
-            result['stop_reason']['project_address'] = self.project_address(result['stop_reason']['address'])
-        if result and result.get('stop_reason',{}).get('data_access'):
-            access = result['stop_reason']['data_access']
-            access['project_instruction'] = self.project_address(access['instruction'])
+        evidence = {
+            "run": self.run_id,
+            "outcome": outcome,
+            "timed_out": outcome == "timeout",
+            "requested_guest_ms": guest_ms,
+            "guest_elapsed_ms": timing["guest_ticks"] - before["guest_ticks"],
+            "host_elapsed_ms": round((time.monotonic() - started) * 1000, 3),
+            "fast_forward": fast_forward,
+            "timing_after": timing,
+            "session": result,
+        }
+        evidence["hook_hits"] = hook_hits
+        if result and result.get("stop_reason", {}).get("address"):
+            result["stop_reason"]["project_address"] = self.project_address(
+                result["stop_reason"]["address"]
+            )
+        if result and result.get("stop_reason", {}).get("data_access"):
+            access = result["stop_reason"]["data_access"]
+            access["project_instruction"] = self.project_address(access["instruction"])
         from .debug_semantics import normalize_stop
+
         stopped_pc = None
-        if result and result.get('stop_reason',{}).get('data_access') and result.get('state') != 'exited':
+        if (
+            result
+            and result.get("stop_reason", {}).get("data_access")
+            and result.get("state") != "exited"
+        ):
             try:
                 registers = self.registers()
-                stopped_pc = {'space':'segmented','segment':registers['segments']['cs'],
-                              'offset':registers['instruction_pointer']}
+                stopped_pc = {
+                    "space": "segmented",
+                    "segment": registers["segments"]["cs"],
+                    "offset": registers["instruction_pointer"],
+                }
             except (DebuggerError, KeyError):
                 pass  # Preserve the stop evidence even if the post-stop PC is unavailable.
-        evidence['stop']=normalize_stop(self.metadata.get('backend','dosbox'),(result or {}).get('stop_reason',{}),outcome=outcome,stopped_pc=stopped_pc)
-        self._event('run',evidence)
+        evidence["stop"] = normalize_stop(
+            self.metadata.get("backend", "dosbox"),
+            (result or {}).get("stop_reason", {}),
+            outcome=outcome,
+            stopped_pc=stopped_pc,
+        )
+        self._event("run", evidence)
         return evidence
 
     def project_address(self, address):

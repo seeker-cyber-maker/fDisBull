@@ -263,7 +263,7 @@ def _objects(data):
     return {'objects': result, 'max_animated_objects': plain[2]}
 
 
-def logic_messages(payload):
+def _logic_messages_payload(payload):
     """Decode literal message templates in an uncompressed v2 logic payload.
 
 Offsets are relative to the payload, not a volume, native address or code PC.
@@ -454,3 +454,11 @@ def capture_view(viewdir, volume_dir, view, *, profile):
             'volume_sha256':sha256(data).hexdigest(),'resource_offset':offset,'resource_length':size}
 
 
+def logic_messages(payload):
+    """Decode messages from raw bytes or a bound resource object."""
+    if hasattr(payload, 'payload') and hasattr(payload, 'resource_sha256'):
+        rows = _logic_messages_payload(payload.payload)
+        return {payload.resource_sha256: {
+            str(row['number']): row['text'] for row in rows if row.get('text') is not None
+        }}
+    return _logic_messages_payload(payload)

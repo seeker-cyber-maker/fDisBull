@@ -736,9 +736,11 @@ class Project(
                 else self._address(address)
             )
             if a is None:
-                raise ValueError(
-                    "Selected version has no valid entry; supply an explicit address"
-                )
+                if self.arch == "thumb":
+                    raise ValueError(
+                        "Selected version has no valid entry; supply an explicit address"
+                    )
+                a = min(r.start for r in self.regions(v["id"]))
             ne_processor = None
             if self.meta["format"] == "NE":
                 from .ne_processor import NEProcessor
