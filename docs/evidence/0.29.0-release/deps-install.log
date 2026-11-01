@@ -1,0 +1,20 @@
+README.txt: OK
+install.sh: OK
+manifest.json: OK
+requirements.txt: OK
+wheels/capstone-5.0.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl: OK
+wheels/iced_x86-1.21.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl: OK
+wheels/lief-1.0.0-cp312-abi3-manylinux_2_28_x86_64.whl: OK
+wheels/pillow-12.3.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl: OK
+wheels/z3_solver-5.3.2.0-py3-none-manylinux_2_27_x86_64.whl: OK
+Looking in links: /tmp/dep-kit2/fdisbull-cp313-linux-x86_64-dependencies-ea2a9ca41c8a/wheels
+Processing ./wheels/capstone-5.0.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (from -r /tmp/dep-kit2/fdisbull-cp313-linux-x86_64-dependencies-ea2a9ca41c8a/requirements.txt (line 1))
+Processing ./wheels/iced_x86-1.21.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (from -r /tmp/dep-kit2/fdisbull-cp313-linux-x86_64-dependencies-ea2a9ca41c8a/requirements.txt (line 2))
+Processing ./wheels/lief-1.0.0-cp312-abi3-manylinux_2_28_x86_64.whl (from -r /tmp/dep-kit2/fdisbull-cp313-linux-x86_64-dependencies-ea2a9ca41c8a/requirements.txt (line 3))
+Processing ./wheels/pillow-12.3.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (from -r /tmp/dep-kit2/fdisbull-cp313-linux-x86_64-dependencies-ea2a9ca41c8a/requirements.txt (line 4))
+Processing ./wheels/z3_solver-5.3.2.0-py3-none-manylinux_2_27_x86_64.whl (from -r /tmp/dep-kit2/fdisbull-cp313-linux-x86_64-dependencies-ea2a9ca41c8a/requirements.txt (line 5))
+Installing collected packages: z3-solver, pillow, lief, iced-x86, capstone
+
+Successfully installed capstone-5.0.9 iced-x86-1.21.0 lief-1.0.0 pillow-12.3.0 z3-solver-5.3.2.0
+Offline dependencies installed; decoder and Z3 checks passed
+imports ok 5.3.2

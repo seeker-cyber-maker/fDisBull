@@ -1,0 +1,64 @@
+{
+  "format": "fdisbull-v0.29.0-publisher-inventory-1",
+  "status": "release-confirmed; package-binaries-not-downloaded-in-this-session",
+  "release": "https://gitlab.com/brewster-jennings-group/fdisbull/-/releases/v0.29.0",
+  "project": "brewster-jennings-group/fdisbull",
+  "project_id": 88349936,
+  "tag": "v0.29.0",
+  "tag_sha": "09a820952ad3f54d0d0707db0515a8010f7eceb1",
+  "package_build_source": "c03dc4f9d4b5b9d0b374f6423e21962bfb0b07c9",
+  "package_groups": [
+    {
+      "id": 74791804,
+      "name": "fdisbull-release-packages",
+      "version": "0.29.0-20261101",
+      "expected_count": 6,
+      "page": "https://gitlab.com/brewster-jennings-group/fdisbull/-/packages/74791804"
+    },
+    {
+      "id": 74791785,
+      "name": "fdisbull-tool-packages",
+      "version": "0.29.0-20261101",
+      "expected_count": 4,
+      "page": "https://gitlab.com/brewster-jennings-group/fdisbull/-/packages/74791785"
+    }
+  ],
+  "publisher_file_hashes": [
+    {
+      "file": "fdisbull-0.29.0-linux-x86_64-offline.tar.gz",
+      "sha256": "b6f43aa6933c8e4e12b643f1dead105d96e5ac0a0bb6c9671032c31fffd97a3f",
+      "bytes": 103013282
+    },
+    {
+      "file": "fdisbull-0.29.0-linux-x86_64-source-companion.tar",
+      "sha256": "f9560466383cbb4a8e1096434889d7009ae9fcca4b0d2511c25f4d61ea95d118",
+      "bytes": 106905600
+    },
+    {
+      "file": "fdisbull-0.29.0-linux-x86_64-dependencies.tar.gz",
+      "sha256": "e45801015b0d8e0dc7a6396997e01bd2b5c7dc01bfec0cf18f692fa83ac48ce6"
+    },
+    {
+      "file": "fdisbull-0.29.0-py3-none-any.whl",
+      "sha256": "0fbebc6142ecdb686c924f3c3d6f8ad0f3ed20b1453f378a9c8156e2cca538f6"
+    },
+    {
+      "file": "fdisbull-0.29.0.tar.gz",
+      "sha256": "c839319fd153d9c2f6933afd9662a0c837889d2dc9a2fb80310e2c51d0ae65e8"
+    }
+  ],
+  "required_misc_files": [
+    "SHA256SUMS",
+    "BUILD.json"
+  ],
+  "limits": [
+    "Only five artifact hashes can be independently confirmed from the source-tag release evidence; the SHA256SUMS file and authenticated package metadata supply the remaining identities",
+    "The package file name of the standalone-player wheel/tool ZIP/dependency checksum is discovered from GitLab API during download, not assumed here.",
+    "The signed-in in-app side browser is not exposed to the connected download tool; no package binary was retrieved in this chat."
+  ],
+  "source_repository_files": [
+    "docs/RELEASE-0.29.0.md",
+    "docs/evidence/0.29.0-release/record.json"
+  ],
+  "additional_release_asset": "dependency checksum file (filename discovered from authenticated package-file inventory)"
+}

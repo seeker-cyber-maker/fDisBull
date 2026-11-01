@@ -295,7 +295,7 @@ class Project(CommonUILMixin, TargetSourcesMixin, CodeBackingsMixin, ProofProjec
                 loader['file_mapping_count'] = len(loader.pop('file_mappings', []))
                 loader[model] = le
                 metadata['loader_metadata'] = loader
-            return {"project":str(self.path),**metadata,"entry":hx(self.meta["entry"]),"context":self.context,
+            return {"project":str(self.path),**metadata,"entry":hx(self.meta["entry"]) if self.meta["entry"] is not None else None,"context":self.context,
                     "storage":self.meta.get("storage","legacy-embedded"),"selected_source_sha256":self.source_sha256(v["id"]),"version":v,"counts":counts,"work":work,"regions":regions,"analysis":self.analysis_status(v['id'])}
 
     def _stored_analysis_status(self,version=None):
@@ -407,6 +407,8 @@ class Project(CommonUILMixin, TargetSourcesMixin, CodeBackingsMixin, ProofProjec
         with self.transaction():
             v = self.version(version)
             a = self.meta["entry"] if address is None else self._address(address)
+            if a is None:
+                a = min(r.start for r in self.regions(v["id"]))
             ne_processor = None
             if self.meta['format'] == 'NE':
                 from .ne_processor import NEProcessor

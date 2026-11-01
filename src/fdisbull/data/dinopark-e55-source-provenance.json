@@ -11,7 +11,7 @@
   "native_text_scene_class_ast_sha256": "e44f3ebee8431f93822434e7d264fcd59e680aa96f604a6b7c1ef1a5cfa5fbe2",
   "native_text_scene_class_ast_python": "3.13",
   "native_text_scene_class_source_sha256": "05a4b1d350fa033e2e178870a0a9b33b0b056d51963de405ed6537190f87436d",
-  "adapted_text_scene_class_source_sha256": "f717e7090dc2224ed8b3ca41ad57127fc57f7593f719824b9025f34d89fc8e25",
+  "adapted_text_scene_class_source_sha256": "c423a5ab648561a8b4cc68d7025ee667165235f738d9ff908a3452f5b746313d",
   "adapter_edits": [
     "Native save titles are allocated independently from renumbered disk slots.",
     "Coelophysis selection uses qualified catalogue navigation, static markers and original species/price fields.",
@@ -28,6 +28,13 @@
     "Use the original parking-advice thumb with qualified released movement. During a food draft, dismiss one positively recognized advisory and reconcile cash reservation plus pending/live food before deciding whether its increment applied; never repeat an unknown increment. UI qualification allows unrelated loan progression; protected commit proof is retained.",
     "After one notice input, poll only for a uniquely qualified destination for up to twelve extra500ms guest intervals; never treat a transitional frame or exhausted wait as completion.",
     "Share one-shot notice input and bounded destination continuation across park and food notices; confirm effects separately after original scene qualification.",
-    "Expose a known quarter/parking notice after the native food commit as a confirmed-effect return continuation; keep a paused provider in recovery-only mode on unqualified action failures, without repeating original input."
-  ]
+    "Expose a known quarter/parking notice after the native food commit as a confirmed-effect return continuation; keep a paused provider in recovery-only mode on unqualified action failures, without repeating original input.",
+    "For Z, bound Coelophysis phases by observed pixels, balances and released input under a 40-second host deadline; retain the original order ticket and qualify native cash, pen and expense before declaring commit. Read-only reconciliation never resumes the original action.",
+    "A held Coelophysis order exposes an explicit guarded continuation that resumes remaining phases, never repeats a delivered click, retains cumulative guest waits and the original recovery identity, and requires read-only reconciliation to certify the original buy.",
+    "Selected Coelophysis qualification keeps all 13 BUY anchors fixed and all 35 card anchors exact under one bounded horizontal translation; original species 4 and price 1250 remain required before BUY.",
+    "The qualified original first-plot purchase occupies native pen record 10; commit and retained-order guards use that observed record, rather than the earlier authored pen1 assumption.",
+    "First-selection qualification separately retains all 38 picked-card anchors and 10 fixed BUY-control anchors with a bounded eight-pixel card shift. Original price and BUY input points and post-price species/price guards are unchanged.",
+    "Picked-card qualification explicitly excludes the selected-price signature; shared control colors alone do not prove distinct enabled or disabled states."
+  ],
+  "bounded_purchase_helper_source_sha256": "1fde19aa4496dd4c19894886224858d9c4f71fe485ac9eeba399846000b63b3e"
 }

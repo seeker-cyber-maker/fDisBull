@@ -1,0 +1,47 @@
+{
+  "backend_receipt_sha256": "1796407c2abaa13762877fccae31353044fd244ca5452466de14f7e140e40b5e",
+  "backend_sha256": "2db1c812d8af64bb5c71f5a1cc1466511ac6212a919cd3e70b82ef1b8c7b3471",
+  "patch_manifest_sha256": "b75ca79372e67f411c3e7d804dba31c1453cc072dfe8410d05b7d1eca56bafc9",
+  "platform": "linux-x86_64",
+  "python": "3.13.5",
+  "source_commit": "f8dff0ce606cb0ca738c10bc2b8d649008bf8fba",
+  "source_companion": "fdisbull-0.29.0-linux-x86_64-source-companion.tar",
+  "source_companion_sha256": "f9560466383cbb4a8e1096434889d7009ae9fcca4b0d2511c25f4d61ea95d118",
+  "wheels": {
+    "capstone": {
+      "filename": "capstone-5.0.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "sha256": "273fd8d747d2e35c88f91450be51a603ecfaafb00d96d9f315dcb8689c86193e",
+      "version": "5.0.9"
+    },
+    "fdisbull": {
+      "filename": "fdisbull-0.29.0-py3-none-any.whl",
+      "sha256": "0fbebc6142ecdb686c924f3c3d6f8ad0f3ed20b1453f378a9c8156e2cca538f6",
+      "version": "0.29.0"
+    },
+    "fdisbull-player": {
+      "filename": "fdisbull_player-0.29.0-py3-none-any.whl",
+      "sha256": "6e5b4f48974de56ca1ba81779d3b903fcbb5269ff424d8f46b3f3d1d4a045c3c",
+      "version": "0.29.0"
+    },
+    "iced-x86": {
+      "filename": "iced_x86-1.21.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "sha256": "489789377bfc1fe432bd2a8a5780c9f3e7c35be2e6133b0de5432cd901cad32c",
+      "version": "1.21.0"
+    },
+    "lief": {
+      "filename": "lief-1.0.0-cp312-abi3-manylinux_2_28_x86_64.whl",
+      "sha256": "41ff868f5328fc8e5237a9e1f4718590e0ee9180c1422b3e4948b7116ba4517c",
+      "version": "1.0.0"
+    },
+    "pillow": {
+      "filename": "pillow-12.3.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "sha256": "0847a763afefb695bc912d7c131e7e0632d4edc1d8698f58ddabec8e46b8b6d3",
+      "version": "12.3.0"
+    },
+    "z3-solver": {
+      "filename": "z3_solver-5.3.2.0-py3-none-manylinux_2_27_x86_64.whl",
+      "sha256": "f17df07300228a383470d4b4e1ad9daf429dc94885996712a1844a8242803935",
+      "version": "5.3.2.0"
+    }
+  }
+}
