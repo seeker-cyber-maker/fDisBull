@@ -14,6 +14,7 @@ from collections import deque
 from PIL import Image
 import fdisbull
 from fdisbull.action_continuations import ActionContinuation
+from fdisbull.dinopark_purchase import bounded_preparation
 from fdisbull.project import Project
 
 EXPECTED_EXE = '2127315b475b560f8c0fe409769fd6d137e26d9390d2fafc7d03a60a266a827c'
@@ -1431,6 +1432,7 @@ class TextScene:
         from .dinopark_fence import buy
         return buy(self)
 
+    @bounded_preparation
     def hire_guide(self):
         if self.current != 'employment':
             return 'That action is not available in this scene.'
@@ -1443,21 +1445,38 @@ class TextScene:
         self.observe_resources({'guides': 0, 'small_feeders': 0}, 'before hire')
         self.observe_pending_guide(0, 'before hire')
         self.event({'phase': 'intent', 'command': 'hire tour guide', 'input': 'not_yet_sent', 'before': before})
-        self.shop_click((55, 140), 1000, 'select tour guide poster')
+        self.shop_click((55, 140), 250, 'select tour guide poster')
         view = self.observe_one_of(['guide_posters', 'guide_detail'], before, 'guide-poster')
         if view == 'guide_posters':
-            self.shop_click((55, 160), 2500, 'open tour guide details', hold_ms=200)
+            self.shop_click((55, 160), 250, 'open tour guide details', hold_ms=200)
             self.shop_observe('guide_detail', before, 'guide-detail', wait_slices=12)
         self.observe_pending_guide(0, 'guide detail')
-        self.shop_click((226, 148), 1200, 'stage tour guide hire')
+        self.shop_click((226, 148), 250, 'stage tour guide hire')
         self.shop_observe('guide_staged', before, 'guide-staged', wait_slices=12)
         self.observe_resources({'guides': 0, 'small_feeders': 0}, 'guide staged')
         self.observe_pending_guide(1, 'guide staged')
-        self.shop_click((201, 187), 5000, 'accept guide detail')
+        self.shop_click((201, 187), 250, 'accept guide detail')
         self.shop_observe('employment', before, 'guide-detail-accepted', wait_slices=12)
         self.observe_resources({'guides': 0, 'small_feeders': 0}, 'guide detail accepted')
         self.observe_pending_guide(1, 'guide detail accepted')
-        self.shop_click((201, 187), 7000, 'commit employment roster')
+        queued = self.shop_click((201, 187), None, 'commit employment roster')
+        run_guest(self.debug, 250)
+        # Native roster commitment precedes the first presentation read. A
+        # missing frame must not erase a completed original hire.
+        for attempt in range(13):
+            committed = self.observe_resources({'small_feeders':0}, 'guide commit candidate')
+            if balances(self.debug) != before:
+                raise RuntimeError('Guide commit balances remain unqualified')
+            if committed['guides'] == 1:
+                self.event({'phase':'guide_hire_confirmed','command':'hire tour guide',
+                            'before':before,'guides_before':0,'guides_after':1,
+                            'input':queued,'presentation':'not_yet_qualified'})
+                break
+            if committed['guides'] != 0:
+                raise RuntimeError('unexpected committed resources: guide roster; outcome unknown')
+            if attempt < 12:run_guest(self.debug, 500)
+        else:
+            raise RuntimeError('Guide roster commit remains unqualified')
         self.shop_observe('shop_street', before, 'guide-committed', wait_slices=12)
         self.observe_resources({'guides': 1, 'small_feeders': 0}, 'guide committed')
         self.debug.scene_assert(self.street, object='street.office')
@@ -1554,6 +1573,7 @@ class TextScene:
             self.food_advice_count += 1
             return True
 
+    @bounded_preparation
     def buy_food(self):
         if self.current != 'dino_diner':
             return 'That action is not available in this scene.'
@@ -1583,7 +1603,7 @@ class TextScene:
         self.food_advice_count = 0
         self.event({'phase': 'intent', 'command': 'buy 20 small feeders', 'input': 'not_yet_sent', 'before': before})
         if not menu_open:
-            opened = self.shop_click((133, 54), 4000, 'open meat menu')
+            opened = self.shop_click((133, 54), 250, 'open meat menu')
             try:
                 self.shop_observe('food_menu', {}, 'food-menu',
                                   wait_slices=12, interrupts=('parking_hint',))
@@ -1594,7 +1614,7 @@ class TextScene:
                             'purchase_input': 'not_sent', 'food_order_submitted': False})
                 return ('Parking advice interrupted the food menu before an order was submitted. '
                         'Use acknowledge notice, then inspect the available actions.')
-        self.shop_click((44, 101), 600, 'select small feeders', hold_ms=80)
+        self.shop_click((44, 101), 250, 'select small feeders', hold_ms=80)
         self.food_order_view('food-selected')
         selected_balances = balances(self.debug)
         if selected_balances['cash'] != selected_balances['working_cash']:
@@ -1634,7 +1654,7 @@ class TextScene:
     def finish_food_return(self, proof, before, start_food):
         """Keep a proven purchase separate from its modal-obscured destination."""
         try:
-            run_guest(self.debug, 6000)
+            run_guest(self.debug, 250)
             self.shop_observe('shop_street', {}, 'food-committed', wait_slices=12,
                               interrupts=('quarter_popup', 'parking_hint'))
             committed = balances(self.debug)
@@ -1668,6 +1688,7 @@ class TextScene:
                 f"Stock now: {final_resources['small_feeders']} (change while returning: {change:+d}). "
                 f"Cash: ${committed['cash']:,}. Guides: {final_resources['guides']}. You are on the street.")
 
+    @bounded_preparation
     def open_park(self):
         if self.current != 'street':
             return 'That action is not available in this scene.'
@@ -1681,7 +1702,7 @@ class TextScene:
         day_before = int.from_bytes(bytes.fromhex(self.debug.memory('4020:6fcb', length=2)['hex']), 'little')
         self.event({'phase': 'intent', 'command': 'open park', 'input': 'not_yet_sent',
                     'before': before, 'day_before': day_before})
-        self.shop_click((201, 187), 8000, 'enter park view', hold_ms=80)
+        self.shop_click((201, 187), 250, 'enter park view', hold_ms=80)
         for attempt in range(13):
             frame, image = take_frame(self.project, self.debug, 'park-running')
             day = int.from_bytes(bytes.fromhex(self.debug.memory('4020:6fcb', length=2)['hex']), 'little')

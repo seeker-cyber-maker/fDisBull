@@ -29,7 +29,10 @@ BUSINESS_NAVIGATION = {
     'go diner': ('route-diner', 'street.diner', 'dino_diner'),
 }
 PURCHASE_COMMITS = ('food_purchase_committed', 'vegasaurus_purchase_confirmed',
-                    'coelophysis_purchase_confirmed', 'land_purchase_confirmed', 'fence_purchase_confirmed')
+                    'coelophysis_purchase_confirmed', 'land_purchase_confirmed', 'fence_purchase_confirmed',
+                    'guide_hire_confirmed')
+PREPARATION_ACTIONS = {('hire','guide'):'hire tour guide', ('buy','feeders'):'buy 20 small feeders',
+                       ('open','route-park'):'open park'}
 SNAPSHOT_FIELDS = ('office', 'bank', 'street', 'mart', 'park', 'locations', 'current',
                    'land_bought', 'dinosaur_bought', 'fence_bought', 'guide_hired',
                    'food_bought', 'park_opened', 'notice_outcome_unknown', 'transaction_count',
@@ -783,7 +786,8 @@ class ZService:
             witness = self.witness(observed)
             if witness is not None:
                 extra['witness'] = witness
-            elif (pending['command'] in ('buy coelophysis','buy desert plot','buy wood fence') or pending['command'] in BUSINESS_NAVIGATION) and not (refusal or text_refusal):
+            elif (pending['command'] in ('buy coelophysis','buy desert plot','buy wood fence') or pending['command'] in BUSINESS_NAVIGATION or
+                  status == 'success' and pending['command'] in PREPARATION_ACTIONS.values()) and not (refusal or text_refusal):
                 self.pending = pending
                 if self.action_error(RuntimeError('Original action following observation incomplete')):
                     return
@@ -931,7 +935,8 @@ class ZService:
                 if (not isinstance(action,dict) or set(action) != {'verb','target','item','context_token'}
                         or not all(isinstance(action[k],str) for k in ('verb','target','context_token')) or action['item'] is not None):
                     raise ValueError('Invalid action')
-                bounded_action = (action['verb'] == 'buy' and action['target'] in ('coelophysis','plot','wood-fence') or continuing or
+                bounded_action = ((action['verb'],action['target']) in PREPARATION_ACTIONS or
+                                  action['verb'] == 'buy' and action['target'] in ('coelophysis','plot','wood-fence') or continuing or
                                   action['verb'] == 'go' and action['target'] in
                                   {route[0] for route in BUSINESS_NAVIGATION.values()})
                 if bounded_action:
@@ -1035,6 +1040,8 @@ class ZService:
                    'The original action did not reach a verified outcome. Do not retry blindly.')
         if effects == 'applied-confirmed' and self.pending['command'] in BUSINESS_NAVIGATION:
             message = 'The navigation is confirmed; its follow-up failed. Do not repeat it.'
+        if effects == 'applied-confirmed' and self.pending['command'] == 'hire tour guide':
+            message = 'The guide hire is confirmed; its follow-up failed. Do not repeat it.'
         if recoverable:
             message += ' The provider is retained for reconciliation or checkpoint recovery; further action input is blocked.'
             if self.pending['command'] in ('buy coelophysis','continue dinosaur order','buy desert plot','continue land purchase','buy wood fence','continue fence order'):

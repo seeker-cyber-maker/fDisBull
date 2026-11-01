@@ -4,6 +4,7 @@ from contextlib import contextmanager
 import secrets
 import struct
 import time
+from functools import wraps
 
 HOST_SECONDS = 40
 NATIVE_PURCHASE_PEN = 10  # Record index used by the qualified original first-plot interaction.
@@ -48,6 +49,15 @@ class PurchaseBudget:
         result = debug.run(guest_ms=ms, timeout_ms=self.timeout(), fast_forward=True)
         if result.get('outcome') != 'guest_time':
             raise RuntimeError('Coelophysis wait stopped: ' + str(result.get('outcome')))
+
+
+def bounded_preparation(function):
+    """Share one deadline across an original park-preparation interaction."""
+    @wraps(function)
+    def bounded(text,*args,**kwargs):
+        with PurchaseBudget(label='Park preparation').bind(text.debug):
+            return function(text,*args,**kwargs)
+    return bounded
 
 
 def native_state(debug):

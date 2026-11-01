@@ -11,7 +11,7 @@
   "native_text_scene_class_ast_sha256": "e44f3ebee8431f93822434e7d264fcd59e680aa96f604a6b7c1ef1a5cfa5fbe2",
   "native_text_scene_class_ast_python": "3.13",
   "native_text_scene_class_source_sha256": "05a4b1d350fa033e2e178870a0a9b33b0b056d51963de405ed6537190f87436d",
-  "adapted_text_scene_class_source_sha256": "aa420531624872044db9e5b7d7f4fc441ecc241a6254c8702adf61d8f36e3cdc",
+  "adapted_text_scene_class_source_sha256": "da3f9c70124817df47c8b1aa97ea790f3a31b5890878b97561a41ace8b1fe779",
   "adapter_edits": [
     "Native save titles are allocated independently from renumbered disk slots.",
     "Coelophysis selection uses qualified catalogue navigation, static markers and original species/price fields.",
@@ -36,7 +36,8 @@
     "First-selection qualification separately retains all 38 picked-card anchors and 10 fixed BUY-control anchors with a bounded eight-pixel card shift. Original price and BUY input points and post-price species/price guards are unchanged.",
     "Picked-card qualification explicitly excludes the selected-price signature; shared control colors alone do not prove distinct enabled or disabled states."
   ],
-  "bounded_purchase_helper_source_sha256": "92a8bf478ed7b8b9ae05f4b6dadd2d005c94e620fde499338860b3fe9ea808b4",
+  "bounded_purchase_helper_source_sha256": "48e3c34aebc46bf47464596280b72151218016e6a485e28f8d095d62a2529162",
   "bounded_land_helper_source_sha256": "a7766c8c053b4c25815f814ac913c87d2797d37703dc03c617838411900cfc24",
-  "bounded_fence_helper_source_sha256": "a5af2ed46b469272389008517764862ef46288b619a4c41fd446b2e1da0b5ed3"
+  "bounded_fence_helper_source_sha256": "a5af2ed46b469272389008517764862ef46288b619a4c41fd446b2e1da0b5ed3",
+  "bounded_preparation_change": "Shared host deadline; short settling quanta with existing readiness predicates; guide native commit retained before final witness."
 }
