@@ -4,7 +4,7 @@
 .setcpu "6502"
 .export _globe_clear, _globe_copy_projection, _globe_paint_terrain, _globe_hud_attributes
 .export _draw_sprite, _draw_objects
-.export _globe_clear_planes, _globe_clear_oam
+.export _globe_clear_planes, _globe_clear_oam, _globe_clear_terrain
 .export _globe_restore_terrain, _globe_save_terrain
 .export _terrain_staging_valid
 .import _display_plane, _display_palettes, _projection_cache
@@ -54,6 +54,50 @@ _globe_clear_planes:
     inx
     cpx #32
     bne @planes
+    rts
+; This checked-ROM Miniplanets profile paints the central 144 cells in
+; every one of its 256 projection pages. Only the complementary 112 cells
+; must be cleared before painting; menus and ending use the full clear.
+; The native checker verifies this coverage against every source page.
+.macro clear_terrain_run start, count
+    .repeat count, offset
+        sta _display_plane+start+offset
+        sta _display_palettes+start+offset
+    .endrepeat
+.endmacro
+_globe_clear_terrain:
+    lda #0
+    sta _terrain_staging_valid
+    clear_terrain_run 0, 7
+    clear_terrain_run 9, 7
+    clear_terrain_run 16, 4
+    clear_terrain_run 28, 4
+    clear_terrain_run 32, 3
+    clear_terrain_run 45, 3
+    clear_terrain_run 48, 2
+    clear_terrain_run 62, 2
+    clear_terrain_run 64, 2
+    clear_terrain_run 78, 2
+    clear_terrain_run 80, 2
+    clear_terrain_run 95, 1
+    clear_terrain_run 96, 1
+    clear_terrain_run 111, 1
+    clear_terrain_run 112, 1
+    clear_terrain_run 127, 1
+    clear_terrain_run 128, 2
+    clear_terrain_run 143, 1
+    clear_terrain_run 144, 2
+    clear_terrain_run 158, 2
+    clear_terrain_run 160, 2
+    clear_terrain_run 174, 2
+    clear_terrain_run 176, 3
+    clear_terrain_run 189, 3
+    clear_terrain_run 192, 4
+    clear_terrain_run 204, 4
+    clear_terrain_run 208, 6
+    clear_terrain_run 218, 6
+    clear_terrain_run 224, 16
+    clear_terrain_run 240, 16
     rts
 _globe_clear_oam:
     ; The renderer selects only physical OAM page $02 or $03. Absolute

@@ -6,7 +6,7 @@ from check_miniplanets_globe_fast import HARNESS as BASE
 
 MAIN=r'''
 extern u8 terrain_staging_valid;
-void globe_clear_planes(void);void globe_clear_oam(void);
+void globe_clear_planes(void);void globe_clear_terrain(void);void globe_clear_oam(void);
 u8 globe_restore_terrain(void);void globe_save_terrain(void);
 int main(void){
  int n;u16 block=0;unsigned long count=0,hits=0,total_hits=0,start,hit_cycles=0,miss_cycles=0,save_cycles=0;
@@ -22,7 +22,7 @@ int main(void){
   setup();terrain_staging_valid=0;globe_clear_oam();globe_copy_projection();
   start=cycles();restored=globe_restore_terrain();c=cycles()-start;
   if(restored){hits++;hit_cycles+=c;}
-  else {miss_cycles+=c;globe_clear_planes();globe_paint_terrain();start=cycles();globe_save_terrain();save_cycles+=cycles()-start;}
+  else {miss_cycles+=c;globe_clear_terrain();globe_paint_terrain();start=cycles();globe_save_terrain();save_cycles+=cycles()-start;}
   if(memcmp(expected.plane,display_plane,256)||memcmp(expected.palettes,display_palettes,256)||memcmp(expected.cache,projection_cache,256)||memcmp(expected.oam,(void*)0x200,512)||memcmp(world,input.map,256)){
    printf("MISMATCH %lu phase%u anim%u hit%u\n",count,input.phase,input.animation,restored);return 1;
   }
@@ -54,11 +54,16 @@ def main():
      if frame==17:mutable[(view*13)&255]^=0x40
      f.write(assets['projection'][view*256:(view+1)*256]);f.write(assets['terrain_frames'][frame]);f.write(mutable)
      f.write(bytes((((view*3)&15)*16,(view*7)&15,2+(view&1),0xa0+(view&31),(frame*31)&255,view,frame)))
- main=MAIN.replace('int main(void){', 'static u8 staged_plane[256],staged_palettes[256];\nint main(void){')
+ spans=[(5,7),(18,12),(34,12),(50,13),(65,14),(81,14),(97,14),(113,14),(129,14),(145,14),(161,14),(178,12),(194,12),(212,8)]
+ union={i for begin,length in spans for i in range(begin,begin+length)}
+ if len(union)!=174:raise ValueError('incorrect terrain union spans')
+ union_table=','.join('1' if i in union else '0' for i in range(256))
+ main=MAIN.replace('int main(void){', 'static const u8 terrain_union[256]={'+union_table+'};\nstatic u8 staged_plane[256],staged_palettes[256];\nint main(void){')
  main=main.replace('u8 restored;unsigned long c;', 'u8 restored,staging_before;unsigned long c,partial_hits=0,full_hits=0;u16 i;')
  main=main.replace('setup();terrain_staging_valid=0;globe_clear_oam();globe_copy_projection();', 'setup();memcpy(display_plane,staged_plane,256);memcpy(display_palettes,staged_palettes,256);globe_clear_oam();globe_copy_projection();staging_before=terrain_staging_valid;')
  main=main.replace('if(restored){hits++;hit_cycles+=c;}', 'if(restored){hits++;hit_cycles+=c;if(staging_before)partial_hits++;else full_hits++;}')
  inject = r"""
+  for(i=0;i<256;i++)if(!terrain_union[i] && (display_plane[i]||display_palettes[i])){printf("OUTSIDE UNION %lu byte%u\n",count,i);return 8;}
   /* A pause marker can dirty only the first row of a completed terrain. */
   if(count&1)for(i=5;i<11;i++){display_plane[i]=(u8)(0x80+i);display_palettes[i]=0;}
   /* Menu/ending clear and arbitrary diagnostic writes invalidate staging. */
@@ -87,6 +92,6 @@ def main():
  if not partial_hits or not full_hits:raise RuntimeError('missing restore path coverage')
  if source.read_bytes()!=source_bytes or renderer.read_bytes()!=renderer_bytes:raise RuntimeError('source changed during check')
  sha=lambda b:hashlib.sha256(b).hexdigest()
- receipt={'passed':True,'cases':count,'hits':hits,'partial_hits':partial_hits,'full_hits':full_hits,'misses':misses,'source_sha256':sha(source_bytes),'renderer_sha256':sha(renderer_bytes),'harness_sha256':sha(harness.encode()),'fixture_sha256':sha(fixture.read_bytes()),'program_sha256':sha((out/'check').read_bytes()),'hit_mean_cycles':sum(r[2] for r in rows)/hits,'miss_probe_mean_cycles':sum(r[3] for r in rows)/misses,'miss_save_mean_cycles':sum(r[4] for r in rows)/misses,'coverage':'8 maps, 256 views, 32 animation frames, changed/reverted world, pause row contamination, menu/ending plane clears, arbitrary writes with invalidation, full plane/palette/cache/OAM comparisons','limits':'synthetic sequences in sim65; game frequency, mapper, NMI and complete frame output require cartridge integration'}
+ receipt={'passed':True,'cases':count,'hits':hits,'partial_hits':partial_hits,'full_hits':full_hits,'misses':misses,'source_sha256':sha(source_bytes),'renderer_sha256':sha(renderer_bytes),'harness_sha256':sha(harness.encode()),'fixture_sha256':sha(fixture.read_bytes()),'program_sha256':sha((out/'check').read_bytes()),'hit_mean_cycles':sum(r[2] for r in rows)/hits,'miss_probe_mean_cycles':sum(r[3] for r in rows)/misses,'miss_save_mean_cycles':sum(r[4] for r in rows)/misses,'coverage':'8 maps, 256 views, 32 animation frames, changed/reverted world, pause row contamination, menu/ending plane clears, arbitrary writes with invalidation, full plane/palette/cache/OAM comparisons and outside-union zeros after terrain restoration','limits':'synthetic sequences in sim65; game frequency, mapper, NMI and complete frame output require cartridge integration'}
  (out/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n');print(json.dumps(receipt,indent=2))
 if __name__=='__main__':main()

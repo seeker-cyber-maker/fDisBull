@@ -12,6 +12,21 @@ CHECK=importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CHECK)
 
 
+def test_explicit_actor_bundle_must_contain_contracts(tmp_path):
+    with pytest.raises(ValueError,match='no contract-'):
+        CHECK.actor_contract_files(tmp_path)
+
+
+def test_actor_bundle_selects_direct_contracts_in_stable_order(tmp_path):
+    (tmp_path/'contract-2.json').write_text('{}')
+    (tmp_path/'contract-1.json').write_text('{}')
+    (tmp_path/'summary.json').write_text('{}')
+    nested=tmp_path/'nested'
+    nested.mkdir()
+    (nested/'contract-0.json').write_text('{}')
+    assert [p.name for p in CHECK.actor_contract_files(tmp_path)]==['contract-1.json','contract-2.json']
+
+
 def test_native_state_encoding_preserves_target_width_signedness_and_offsets():
     layout={'signed':{'offset':1,'length':2,'element_bits':16,'signed':True,'array_length':1},
             'bytes':{'offset':4,'length':2,'element_bits':8,'signed':False,'array_length':2},

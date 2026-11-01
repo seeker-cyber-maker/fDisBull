@@ -7,6 +7,7 @@
 .import _video_ready, _render_phase, _active_nt, _render_oam_page
 .import _irq_phase, _frame_buttons, _irq_audio
 .import _upload_count, _upload_cursor, _upload_target_nt, _upload_lo, _upload_hi
+.import _upload_chunk_end
 .import _audio_due_slots, _audio_served_slots, _audio_physical_entries
 .export _select_data, _banked_call
 .export _begin_state, _publish_state
@@ -446,14 +447,11 @@ upload_pending:
     jmp upload_complete
 upload_chunk:
     sta upload_first
-    ; At most seven <=16-byte jobs. Push targets in reverse order and RTS
-    ; through their fixed, unrolled ROM routines; no cc65 ZP is touched.
-    clc
-    adc #7
-    cmp _upload_count
-    bcc :+
-    lda _upload_count
-:
+    ; Main partitions the immutable plan by worst-case job cycles. This keeps
+    ; the seven-full-row time budget while allowing more short HUD/attribute
+    ; jobs. Push the bounded chunk in reverse order; no cc65 ZP is touched.
+    tax
+    lda _upload_chunk_end,x
     sta _upload_cursor
     tax
     lda #>(upload_return-1)
@@ -565,7 +563,26 @@ upload_region upload_attr0,_display_attributes+0,$23da,4
 upload_region upload_attr1,_display_attributes+4,$23e2,4
 upload_region upload_attr2,_display_attributes+8,$23ea,4
 upload_region upload_attr3,_display_attributes+12,$23f2,4
+; Compact normal-terrain jobs cover the union of every checked projection
+; phase, not the smaller intersection used by sparse clearing. Main selects
+; them only when both producer and target certify zero padding.
+upload_region upload_core0,_display_plane+5,$218d,7
+.segment "UPLOADFAST"
+upload_region upload_core1,_display_plane+18,$21aa,12
+upload_region upload_core2,_display_plane+34,$21ca,12
+upload_region upload_core3,_display_plane+50,$21ea,13
+upload_region upload_core4,_display_plane+65,$2209,14
+upload_region upload_core5,_display_plane+81,$2229,14
+upload_region upload_core6,_display_plane+97,$2249,14
+upload_region upload_core7,_display_plane+113,$2269,14
+upload_region upload_core8,_display_plane+129,$2289,14
+upload_region upload_core9,_display_plane+145,$22a9,14
+upload_region upload_core10,_display_plane+161,$22c9,14
+upload_region upload_core11,_display_plane+178,$22ea,12
+upload_region upload_core12,_display_plane+194,$230a,12
+upload_region upload_core13,_display_plane+212,$232c,8
 
+.segment "STARTUP"
 irq:
     pha
     txa

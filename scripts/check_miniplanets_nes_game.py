@@ -169,6 +169,13 @@ def run_host(core, cartridge, out, frames, watches, *, patches=(), inputs=(), im
     return receipt, json.loads((out/'ram_trace.json').read_text()), time.monotonic()-started
 
 
+def actor_contract_files(root):
+    files=sorted(Path(root).glob('contract-*.json'))
+    if not files:
+        raise ValueError('original actor bundle contains no contract-*.json; pass the direct batch directory')
+    return files
+
+
 def controlled_cases(program, rom, common_root=None, actor_roots=()):
     machine = GameMachine(program, {0:rom}, environment={'hv16':[0], 'sound_busy':[0]})
     zero = machine.snapshot()
@@ -219,7 +226,7 @@ def controlled_cases(program, rom, common_root=None, actor_roots=()):
                     args=[case.get('registers',{}).get(k,0) for k in fact.get('arguments',[])]
                     add('original_common/'+name+'/'+case['name'],name,state_from_ram(case,fields),args)
     for root in map(Path,actor_roots):
-        for file in sorted(root.glob('contract-*.json')):
+        for file in actor_contract_files(root):
             contract=json.loads(file.read_text())
             receipt_path=root/('native-'+file.stem.split('-')[-1])/'receipt.json'
             receipt=json.loads(receipt_path.read_text())

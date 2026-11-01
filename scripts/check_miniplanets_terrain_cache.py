@@ -6,7 +6,7 @@ from check_miniplanets_globe_fast import HARNESS as BASE
 
 MAIN=r'''
 extern u8 terrain_staging_valid;
-void globe_clear_planes(void);void globe_clear_oam(void);
+void globe_clear_planes(void);void globe_clear_terrain(void);void globe_clear_oam(void);
 u8 globe_restore_terrain(void);void globe_save_terrain(void);
 int main(void){
  int n;u16 block=0;unsigned long count=0,hits=0,total_hits=0,start,hit_cycles=0,miss_cycles=0,save_cycles=0;
@@ -22,7 +22,7 @@ int main(void){
   setup();terrain_staging_valid=0;globe_clear_oam();globe_copy_projection();
   start=cycles();restored=globe_restore_terrain();c=cycles()-start;
   if(restored){hits++;hit_cycles+=c;}
-  else {miss_cycles+=c;globe_clear_planes();globe_paint_terrain();start=cycles();globe_save_terrain();save_cycles+=cycles()-start;}
+  else {miss_cycles+=c;globe_clear_terrain();globe_paint_terrain();start=cycles();globe_save_terrain();save_cycles+=cycles()-start;}
   if(memcmp(expected.plane,display_plane,256)||memcmp(expected.palettes,display_palettes,256)||memcmp(expected.cache,projection_cache,256)||memcmp(expected.oam,(void*)0x200,512)||memcmp(world,input.map,256)){
    printf("MISMATCH %lu phase%u anim%u hit%u\n",count,input.phase,input.animation,restored);return 1;
   }

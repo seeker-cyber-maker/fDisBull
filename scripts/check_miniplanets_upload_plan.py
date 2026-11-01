@@ -18,30 +18,38 @@ typedef unsigned char u8;
 typedef unsigned int u16;
 u8 active_nt,display_plane[256],display_hud[24],display_attributes[16];
 extern u8 upload_count,upload_cursor,upload_target_nt,upload_lo[22],upload_hi[22];
-extern u8 upload_shadow0[296],upload_shadow1[296],stub_lo[22],stub_hi[22];
+extern u8 upload_chunk_end[22];
+extern u8 upload_shadow0[296],upload_shadow1[296],stub_lo[36],stub_hi[36];
 extern u8 upload_terrain_cached,upload_terrain_valid,upload_terrain_overlay;
+extern u8 upload_terrain_sparse,upload_sparse_valid;
 void prepare_upload(void);
-static u8 expected_shadow[2][296],expected_valid[2],staging[296],expected_terrain_valid;
+static u8 expected_shadow[2][296],expected_valid[2],staging[296],expected_terrain_valid,expected_sparse_valid;
 static unsigned long calls=0, planned=0;
 static unsigned int seed=0x6502;
 static u8 random_byte(void){seed^=seed<<7;seed^=seed>>9;seed^=seed<<8;return (u8)seed;}
-static u16 offset(u8 r){if(r<16)return (u16)r*16;if(r<18)return 256+(u16)(r-16)*12;return 280+(u16)(r-18)*4;}
-static u8 size(u8 r){if(r<16)return 16;if(r<18)return 12;return 4;}
+static const u8 span_offset[14]={5,18,34,50,65,81,97,113,129,145,161,178,194,212};
+static const u8 span_length[14]={7,12,12,13,14,14,14,14,14,14,14,12,12,8};
+static u16 offset(u8 r){if(r>=22)return span_offset[r-22];if(r<16)return (u16)r*16;if(r<18)return 256+(u16)(r-16)*12;return 280+(u16)(r-18)*4;}
+static u8 size(u8 r){if(r>=22)return span_length[r-22];if(r<16)return 16;if(r<18)return 12;return 4;}
 static void check(u8 target){
- u8 r,i,n=0,wanted[22];u16 start;u8 length,dirty;
- u8 cached=upload_terrain_cached,overlay=upload_terrain_overlay;
+ u8 r,i,n=0,wanted[22],cursor,end,region,compact;u16 start,cost;u8 length,dirty;
+ u8 cached=upload_terrain_cached,overlay=upload_terrain_overlay,sparse=upload_terrain_sparse;
+ compact=sparse && (expected_sparse_valid&(1<<target)) && expected_valid[target];
  active_nt=target^1;
  memcpy(display_plane,staging,256);memcpy(display_hud,staging+256,24);memcpy(display_attributes,staging+280,16);
- for(r=0;r<22;r++){
-  start=offset(r);length=size(r);dirty=!expected_valid[target];
+ for(r=0;r<(compact?20:22);r++){
+  region=compact?(r<14?22+r:r+2):r;
+  start=offset(region);length=size(region);dirty=!expected_valid[target];
   for(i=0;i<length;i++)if(expected_shadow[target][start+i]!=staging[start+i])dirty=1;
-  if(dirty){wanted[n++]=r;memcpy(expected_shadow[target]+start,staging+start,length);}
+  if(dirty){wanted[n++]=region;memcpy(expected_shadow[target]+start,staging+start,length);}
  }
  expected_valid[target]=1;
+ if(sparse)expected_sparse_valid|=(u8)(1<<target);
+ else expected_sparse_valid&=(u8)~(1<<target);
  if(cached)expected_terrain_valid|=(u8)(1<<target);
  else expected_terrain_valid&=(u8)~(1<<target);
- upload_cursor=0x91;prepare_upload();calls++;planned+=n;
- if(upload_terrain_valid!=expected_terrain_valid || upload_terrain_cached!=cached || upload_terrain_overlay!=overlay){
+ memset(upload_chunk_end,0xee,22);upload_cursor=0x91;prepare_upload();calls++;planned+=n;
+ if(upload_sparse_valid!=expected_sparse_valid || upload_terrain_sparse!=sparse || upload_terrain_valid!=expected_terrain_valid || upload_terrain_cached!=cached || upload_terrain_overlay!=overlay){
   printf("HINT call %lu valid %u/%u cached %u overlay %u\n",calls,upload_terrain_valid,expected_terrain_valid,upload_terrain_cached,upload_terrain_overlay);exit(5);
  }
  if(upload_target_nt!=target || upload_count!=n || upload_cursor!=0){
@@ -49,6 +57,17 @@ static void check(u8 target){
  }
  for(i=0;i<n;i++)if(upload_lo[i]!=stub_lo[wanted[i]] || upload_hi[i]!=stub_hi[wanted[i]]){
   printf("PLAN call %lu index %u region %u\n",calls,i,wanted[i]);exit(2);
+ }
+ /* Partition independently from the completed dirty-region list. Charge the
+    documented worst case, not the assembler's running-budget algorithm. */
+ cursor=0;
+ while(cursor<n){
+  cost=0;end=cursor;
+  while(end<n && cost+46+8*size(wanted[end])<=1218){cost+=46+8*size(wanted[end]);end++;}
+  if(end<=cursor || upload_chunk_end[cursor]!=end){
+   printf("CHUNK call %lu start %u end %u/%u cost %u\n",calls,cursor,upload_chunk_end[cursor],end,cost);exit(6);
+  }
+  cursor=end;
  }
  if(memcmp(upload_shadow0,expected_shadow[0],296)||memcmp(upload_shadow1,expected_shadow[1],296)){
   printf("SHADOW call %lu\n",calls);exit(3);
@@ -94,6 +113,30 @@ int main(void){
  upload_terrain_cached=0;for(i=0;i<296;i++)staging[i]^=0x3c;check(0);check(1);
  /* Restore the cached terrain after a nonterrain view on both targets. */
  upload_terrain_cached=1;for(i=0;i<296;i++)staging[i]^=0x3c;check(0);check(1);check(0);check(1);
+ /* Every available count combination of long, medium and short jobs.
+    A 22-job plan partitions 7+7+8, and short-only plans remain one chunk. */
+ upload_terrain_cached=0;upload_terrain_valid=0;expected_terrain_valid=0;
+ {u8 rows,huds,attrs,r;
+  for(rows=0;rows<=16;rows++)for(huds=0;huds<=2;huds++)for(attrs=0;attrs<=4;attrs++){
+   for(r=0;r<rows;r++)staging[offset(r)]^=0x49;
+   for(r=0;r<huds;r++)staging[offset(16+r)]^=0x37;
+   for(r=0;r<attrs;r++)staging[offset(18+r)]^=0x21;
+   check(0);check(1);check(0);check(1);
+  }
+ }
+ /* Certified zero padding across camera/world changes; pause deliberately
+    contaminates it, requiring a full fallback before compact jobs resume. */
+ for(j=0;j<64;j++){
+  memset(staging,0,256);
+  for(target=0;target<14;target++)for(i=0;i<span_length[target];i++)staging[span_offset[target]+i]=random_byte();
+  for(i=0;i<40;i++)staging[256+i]=random_byte();
+  upload_terrain_cached=0;upload_terrain_valid=0;expected_terrain_valid=0;
+  upload_terrain_sparse=1;upload_terrain_overlay=0;check(0);check(1);check(0);check(1);
+  for(i=0;i<16;i++)staging[i]^=0x3b;
+  upload_terrain_sparse=0;upload_terrain_overlay=1;check(0);check(1);
+  for(i=0;i<16;i++)staging[i]^=0x3b;
+  upload_terrain_sparse=1;upload_terrain_overlay=0;check(0);check(1);
+ }
  printf("PASS %lu %lu\n",calls,planned);return 0;
 }
 '''
@@ -113,7 +156,7 @@ def main() -> None:
         raise ValueError('choose a fresh output outside Git')
     out.mkdir(parents=True)
     source_bytes=source.read_bytes()
-    names=[*(f'upload_row{i}' for i in range(16)),*(f'upload_hud{i}' for i in range(2)),*(f'upload_attr{i}' for i in range(4))]
+    names=[*(f'upload_row{i}' for i in range(16)),*(f'upload_hud{i}' for i in range(2)),*(f'upload_attr{i}' for i in range(4)),*(f'upload_core{i}' for i in range(14))]
     stub='.setcpu "6502"\n.segment "RENDERFAST"\n'+''.join(f'.export {name}\n{name}: rts\n' for name in names)
     stub+='.export _stub_lo, _stub_hi\n_stub_lo: .byte '+','.join(f'<({name}-1)' for name in names)+'\n'
     stub+='_stub_hi: .byte '+','.join(f'>({name}-1)' for name in names)+'\n'
@@ -127,9 +170,9 @@ def main() -> None:
     if build.returncode:raise RuntimeError(build.stderr)
     run=subprocess.run([str(toolchain/'bin/sim65'),'-c',str(out/'check')],capture_output=True,text=True,timeout=120)
     (out/'run.txt').write_text(run.stdout+run.stderr)
-    if run.returncode or not run.stdout.startswith('PASS 2236 '):raise RuntimeError(run.stdout+run.stderr)
+    if run.returncode or not run.stdout.startswith('PASS 3768 '):raise RuntimeError(run.stdout+run.stderr)
     if source.read_bytes()!=source_bytes:raise RuntimeError('planner changed during check')
-    receipt={'passed':True,'calls':2236,'planner_sha256':sha(source_bytes),'harness_sha256':sha(HARNESS.encode()),'stubs_sha256':sha(stub.encode()),'program_sha256':sha((out/'check').read_bytes()),'sim65_output':run.stdout.strip(),'coverage':['cached hint on cold first use still forces both full nametables','cache hits with independent HUD changes, both overlay transitions and unchanged replays','producer cache miss invalidates both targets; menu/ending invalidates each target on use','no-change plans','each of 296 byte positions changed separately on both nametables','256 simultaneous full-buffer changes in alternating target order','exact ordered routine addresses, count, cursor, target, both complete shadows, staging preservation'],'limits':['sim65 planner procedure only; no PPU, mapper, NMI, or scheduler execution','assumes pending plan consumed before the next preparation; enforcement is a separate integration contract','authored deterministic vectors, not original game data']}
+    receipt={'passed':True,'calls':3768,'planner_sha256':sha(source_bytes),'harness_sha256':sha(HARNESS.encode()),'stubs_sha256':sha(stub.encode()),'program_sha256':sha((out/'check').read_bytes()),'sim65_output':run.stdout.strip(),'coverage':['cached hint on cold first use still forces both full nametables','cache hits with independent HUD changes, both overlay transitions and unchanged replays','producer cache miss invalidates both targets; menu/ending invalidates each target on use','no-change plans','each of 296 byte positions changed separately on both nametables','256 simultaneous full-buffer changes in alternating target order','exact ordered routine addresses, count, cursor, target, both complete shadows, staging preservation', 'independent greedy1218-cycle chunk boundaries for every available row/HUD/attribute job-count combination'],'limits':['sim65 planner procedure only; no PPU, mapper, NMI, or scheduler execution','assumes pending plan consumed before the next preparation; enforcement is a separate integration contract','authored deterministic vectors, not original game data']}
     (out/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
     print(json.dumps(receipt,indent=2))
 

@@ -20,7 +20,7 @@ static void select_data(u8 p){(void)p;}
 static void globe_copy_projection(void){}
 static u16 terrain_pointer(u8 p){return p;}
 static u8 globe_restore_terrain(void){return hit;}
-static void globe_clear_planes(void){clear_count++;}
+static void globe_clear_terrain(void){clear_count++;}
 static void globe_paint_terrain(void){paint_count++;}
 static void globe_save_terrain(void){save_count++;}
 '''

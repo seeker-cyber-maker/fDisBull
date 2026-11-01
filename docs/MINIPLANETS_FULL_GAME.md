@@ -1,10 +1,10 @@
 # Miniplanets full-game UIL and native NES profile
 
-The uncapped-rendering follow-up at the end is the latest qualified build.
-It removes the two-epoch drawing gate, reaching 32.24 completed globe swaps/s
-in the seeded orb-stage benchmark and 26.29 in the dense fireball stage.
-The moving-player test reaches 15.42 swaps/s. These are bounded measurements;
-60 Hz remains an optimization target. Earlier builds and receipts remain history.
+The moving-gameplay follow-up at the end is the latest qualified build.
+It improves the matched moving-player test from 15.42 to 18.26 completed globe
+swaps/s, with game updates near 43.68/s. Audio work, weighted upload scheduling
+and certified terrain spans preserve the checked outputs. These are bounded
+measurements; 60 Hz remains a target. Earlier builds and receipts remain history.
 
 This profile expands the source-bound Stage 1-1 experiment into the original
 55-stage game rules: all placed actor types, moving terrain, score, lives,
@@ -871,3 +871,212 @@ are recorded with the local and GitLab review receipts. The private source
 snapshot includes the new cache/hint checkers and sanitized evidence under
 distribution guards. This is a draft code update, with no integration merge,
 tag, package publication or system installation.
+
+## Moving gameplay: audio, cycle budgets and compact uploads (2026-10-31)
+
+This follow-up compares against the uncapped build at
+`b6fc1f17cbe1b1dfcf5705fd724ee0446ec7b872`, whose cartridge SHA-256 is
+`8da56a19cf65be2aae46a913584d72776df0da6819d9784ec577e3ca75c012e6`.
+The new tested cartridge is
+`1cf6e29d02c991af6bc9a8ced6668adb2a91a81b6c2318770d27379afb751db0`.
+The original Genesis cartridge and procedural UIL program are unchanged.
+There is still no software render cap. The sanitized
+[moving-optimization receipt](evidence/miniplanets-full-game-2026-10-31/moving-optimization.json)
+binds the sources, tools, cartridge and private evidence. Generated cartridges,
+ROM-derived art/tables, raw states, audio and traces remain private.
+
+### Outcome and comparison protocol
+
+The same assisted stage-0 movement schedule uses 58 ordinary button intervals,
+source-initialized game state and invulnerability. Both runs last 3,000 physical
+frames, with 100 warmup frames and 2,899 measured sample intervals at the pinned
+core's 60.0998265 Hz. The baseline is rerun, rather than inferred from an older
+summary. Rates use emulated hardware time; host execution throughput is excluded.
+Every observer forwards the core's handlers and is compared against its own
+uninstrumented control for byte-identical state, RAM, captured frame, audio and trace.
+
+| Moving workload | Previous uncapped build | New build |
+|---|---:|---:|
+| Game updates/s | 43.536 | 43.681 |
+| Completed coherent globe swaps/s | 15.424 | 18.264 |
+| Checked coherent flips | 744 | 881 |
+| Observed PPU data writes | 104,044 | 90,212 |
+
+Completed swaps improve 18.41%, with 13.29% fewer data writes over the same
+physical observation window. Game-update speed is almost unchanged. The new
+renderer produces more complete views while retaining nearly the same logical
+update rate; this is not a 60 fps result or a claim of faster game rules.
+A swap can repeat identical pixels, and host refresh is a separate quantity.
+
+The four seeded neutral-camera comparisons retain their earlier protocol:
+3,100 physical frames, 100 warmup frames and 2,999 measured intervals. Stage
+initialization, assistance and controls match between builds.
+
+| Stage / workload | Previous game updates/s | New game updates/s | Previous completed swaps/s | New completed swaps/s |
+|---|---:|---:|---:|---:|
+| 0 | 49.06 | 50.26 | 29.76 | 31.46 |
+| 40, eight maces | 29.02 | 30.10 | 28.40 | 28.90 |
+| 43, orbs | 41.06 | 42.24 | 32.24 | 32.67 |
+| 44, dense fireballs | 28.10 | 29.28 | 26.29 | 26.75 |
+
+These static-camera results are reported separately from movement. They are
+finite deterministic workloads without a confidence interval or all-level FPS
+claim. Neither table compares equal host frame numbers with Genesis execution;
+the original-CPU accuracy checks compare declared logical behavior separately.
+
+### Audio and terrain work
+
+The audio fast path specializes period copies for the eight fixed PSG channels
+and avoids redundant release arithmetic when a released channel is already at
+zero. The C renderer, logical sound model and ordered-write contract are retained.
+The same prior authored 512-state corpus drops from 6,254.47 to 6,124.61 mean cycles;
+the separately expanded corpus drops from 4,871.02 to 4,728.74. A matched released,
+zero-level case drops from 2,523 to 1,896 cycles. Both corpora and all 32,768 PSG
+level/attenuation pairs pass exact state and register comparisons. These are
+separate datasets, not interchangeable percentage estimates.
+
+A terrain miss no longer clears cells that the painter always overwrites.
+The intersection of all 256 checked projection phases contains 144 such cells;
+only the other 112 plane/palette cells need clearing. Menus and endings retain
+the full clear. In the same assembled 40,960-case harness, clear plus OAM setup
+falls from 4,290 to 2,398 mean cycles, saving 1,892 cycles per terrain miss.
+Plane, palette, projection cache and OAM outputs match the full-clear reference.
+A separate 65,536-case ownership sequence covers partial/full restores, camera,
+world, animation, pause, menu and diagnostic transitions.
+
+### Upload scheduling and padding certificates
+
+The main-thread planner partitions jobs by conservative CPU-instruction cost:
+`46 + 8 * payload_bytes`. This includes unrolled source loads/PPU stores,
+address setup, RTS and reverse-stack dispatch with indexed-page and branch-page
+crossings. Each chunk has a 1,218-cycle instruction budget, equal to the previous
+seven-full-row worst case. NMI consumes precomputed immutable chunk ends, so
+it does not perform budget arithmetic during blanking. Short HUD/attribute jobs
+share remaining space. A fully dirty fallback is still 22 jobs / 296 bytes,
+now grouped 7 / 7 / 8 over three data NMIs rather than four.
+
+Compact terrain jobs require a different geometric invariant from clearing.
+The **union** painted by any checked projection phase contains 174 cells on
+14 contiguous row spans. The other 82 positions are zero for an ordinary
+unpaused terrain view. A proposed 144-cell upload extent was rejected: those
+cells are the intersection, and the actual original stage-0 view paints outside
+it. The native union gate checks all 256 source projection pages and 40,960
+renders, including zero plane/palette bytes outside the union.
+
+The renderer certifies only ordinary unpaused terrain. Each nametable separately
+records whether its outside-union bytes are known zero. Compact jobs require
+both certificates and an initialized target. Cold or unqualified targets and changed, non-reusable pause/menu/ending or
+diagnostic views use full-row comparison. A repeated exact cached terrain view
+with the same pause overlay may skip terrain and attribute scans. Every
+non-sparse plan clears the relevant target padding certificate. The certificate survives camera/world changes
+because it describes padding, not the terrain content. Exact-terrain cache
+certificates remain separate. Full shadows, staging ownership, HUD comparison
+and final coherent plane/OAM commit remain unchanged.
+
+The compact path has at most 20 jobs / 214 payload bytes when all 174 terrain,
+24 HUD and 16 attribute bytes change. It may still require three data NMIs;
+ordinary movement often has fewer dirty HUD/attribute jobs and finishes in two.
+Exhaustive subset enumeration confirms at most ten jobs in a chunk. In the
+movement trace, 6,722 compact terrain jobs, 1,093 attribute jobs and 70 HUD jobs
+obey the budget; the largest observed chunk is ten jobs / 1,216 charged cycles.
+The native planner gate checks 3,768 calls, both full shadows and exact ordered
+routine addresses, plus independent greedy chunk boundaries and pause cleanup.
+A mutant that ignores target padding validity is detected on the first
+post-pause plan, and an oversized-budget mutant is rejected separately.
+
+The compact ROM routines need a fixed mapping during NMI. Thirteen routines
+occupy the unused tail of the permanently mapped sample bank after the existing
+DMC data and projection metadata; the first stays in startup code. The linked
+ranges are DMC `$C000–D83F`, metadata `$D840–DB45`, compact routines
+`$DB46–DFCB`. The sample bank has 52 bytes free. Its first 6,982 bytes, including
+all sample bytes and projection metadata, match the preceding build; all DMC
+sample extents end within the retained 6,208-byte DMC allocation. The linker
+rejects overlap/overflow. No mapper selection or sample content changes.
+
+### Deadline evidence and remaining costs
+
+The instruction budget does not itself bound DMC DMA stalls. The same hard
+native display deadline remains `[341,7161)` PPU dots from the FCEUmm frame
+boundary. Across the 881 movement flips and 5,978 seeded flips there are no
+observed late writes, active-table writes, content mismatches or runtime faults.
+Movement's latest write is at dot 6,477, leaving 684 dots, approximately 228 CPU
+cycles; the sampled minimum stack pointer is 0xA1 with no observed downward wrap.
+
+A forwarding observer recognizes the pinned core's four-read DMC fetch sequence.
+It detects 38,064 complete fetch signatures during the movement run, including 385 completions
+inside upload windows; 384 occur in windows containing compact terrain jobs. An additional assisted probe clears only the two
+completed-nametable validity bytes while a prior view is pending, forcing the
+next ordinary view to refresh fully. Pending job/staging buffers remain intact.
+The 22-job / 296-byte transfer runs over frames 539–541; DMC fetches overlap
+both full seven-row windows. Their latest writes retain 720 and 715 dots of
+margin. Controls remain byte-identical under the same declared intervention.
+These are finite pinned-emulator observations, not a physical-NES or universal
+worst-case timing proof. The eight synthetic upload cases also pass, including
+six full fallback transfers and two OAM-only commits; their debug mode pauses
+audio, so active audio/DMC evidence is reported separately.
+
+The matched movement profile, in cycles per physical frame, changes as follows:
+audio 12,599→12,019; renderer excluding planner 5,311→5,859;
+planner 1,887→1,830; NMI including DMA/uploads 1,260→1,227.
+More completed renders explain why total rendering work rises despite a cheaper
+clear operation. These dynamic categories do not measure equal numbers of
+renders or procedure calls, and hook attribution has the earlier deferred-cycle
+caveat. Audio still uses about 40% of the native CPU budget. Rendering and
+multi-frame transfers remain substantial constraints on reaching 60 fps.
+
+### Same accuracy gates and reproducibility
+
+Fresh original Genesis CPU runs pass 2,678 common cases / 146,905 instructions
+and 1,262 unique actor cases / 292,870 instructions, with 192 actual HV reads.
+The actor bridge expands 768 geometry inputs into separate X/Y procedure calls,
+so those 1,262 inputs become 2,030 native NES actor calls. All 19 fresh actor
+batches bind exact retained contract bytes, source/core hashes and completion
+receipts. The separate 55-stage / 479-actor, 6,044-frame flow check remains
+assisted UIL execution, not natural original-CPU completion.
+
+The final cartridge passes the same 4,822 complete-state cases across 79
+variables/arrays, plus 12,499 completed 34-field state/controller checks and
+288 replayed HV words. The normal count includes a longer feedback tail and
+therefore is not a matched coverage-count speed comparison. The feedback route
+reaches its goal at epoch 899 / host frame 1,215 and the next stage at epoch
+1,149 / host frame 1,574, followed by 2,200 neutral frames. The fixed host-timed
+route retains its DNF. All four normal stage windows last 3,300 host frames.
+The independent projection gate passes 33,282 native coordinate pairs.
+
+In 603 shared complete 616-byte game states against the prior cartridge,
+ready staging with equal render/logic epochs has identical plane, palette,
+attributes, projection cache, OAM count and selected OAM page. This is finite
+state-matched rendering evidence; it does not compare every intervening image.
+
+All 32 sound tracks plus mixed effects pass 270,752 mapped services and 1,161
+commands, matching 2,579,855 ordered APU writes. All five unchanged strict
+atomic-low-v2 cadence windows pass: after 100 warmup frames, each measures
+3,000 intervals, 6,000 service/due increments and 5,935 source ticks. The rate
+is 118.897490 Hz against the source's 118.899640 Hz. Endpoint debt is zero
+except one owed slot in stage 44; maximum observed debt is 2–5, late-call
+counts are 18–24, and late requests are zero. These pass the existing bounds;
+they do not establish zero latency or jitter. The mapper atomicity gate also
+passes its fixed cases while detecting both historical race counterexamples.
+
+An initial native invocation pointed to an actor parent directory containing
+no direct contract files and consequently ran only 2,792 cases. It is retained
+as a selector diagnostic. The checker now rejects an explicitly requested
+empty actor bundle; two regression checks cover that guard and direct-file
+selection. The final run uses the three correct fresh batch directories and
+replays all 4,822 cases with unchanged verification sources. The earlier
+failed fixed-bank link and rejected geometric/certificate hypotheses remain
+private diagnostics, not qualifying runs.
+
+The final affected suite passes 349 checks with the prepared native toolchain
+and private-ROM asset tests enabled. Source-package guards include the new
+sparse-hint/terrain-clear helpers and sanitized receipt. Package and installed
+reproduction receipts are recorded separately with the local review, so code
+qualification, packaging and provider publication remain distinct observations.
+
+With the same optional toolchain/ROM checks enabled, the full Mac suite reports
+2,780 passed, 142 skipped, 3 failed and 23 setup errors. The 26 failure/error
+case names match the preceding build's Linux/ELF and case-sensitive filesystem
+fixture problems; the full suite remains not green. A checker regression also
+verifies that only explicit `--dmc-evidence` enables the DMC read observer,
+regardless of an inherited environment variable; both flag modes pass bounded
+native deadline, coherence and neutrality checks.

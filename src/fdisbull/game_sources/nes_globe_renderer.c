@@ -5,7 +5,7 @@
 #include "game_api.h"
 extern const u8 ending_ids[48];
 extern const u8 tile_palette[35];
-extern u8 upload_terrain_cached,upload_terrain_valid,upload_terrain_overlay;
+extern u8 upload_terrain_cached,upload_terrain_valid,upload_terrain_overlay,upload_terrain_sparse;
 const u8 *terrain_pointer(u8 phase);
 u8 projection_bank(u8 phase);
 void select_data(u8 bank);
@@ -40,6 +40,7 @@ u16 globe_atlas_pointer;
 void globe_clear(void);
 void globe_clear_planes(void);
 void globe_clear_oam(void);
+void globe_clear_terrain(void);
 u8 globe_restore_terrain(void);
 void globe_save_terrain(void);
 void globe_copy_projection(void);
@@ -80,7 +81,7 @@ void draw_terrain(void) {
     upload_terrain_cached=globe_restore_terrain();
     if (upload_terrain_cached) return;
     upload_terrain_valid=0;
-    globe_clear_planes();
+    globe_clear_terrain();
     globe_paint_terrain();
     globe_save_terrain();
 }
@@ -212,6 +213,7 @@ void draw_menu(void) {
 void draw_game(void) {
     if (video_ready!=0) return;
     upload_terrain_cached=0;
+    upload_terrain_sparse=0;
     upload_terrain_overlay=ingame_status & 1;
     render_epoch=*(volatile u16*)0x7D2;
     render_oam_page=render_oam_page==2 ? 3 : 2;
@@ -219,7 +221,10 @@ void draw_game(void) {
     if (mode!=1 || ending_phase==3) globe_clear_planes();
     render_oam_index=0;oam_overflow=0;
     if (mode==1) {
-        if (ending_phase==3) draw_ending_planet();else draw_terrain();
+        if (ending_phase==3) draw_ending_planet();else {
+            draw_terrain();
+            if ((ingame_status & 1)==0) upload_terrain_sparse=1;
+        }
         draw_objects();
         if ((ingame_status & 1)!=0) put_text(5,0,"PAUSED");
     } else draw_menu();

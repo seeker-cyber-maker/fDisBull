@@ -67,6 +67,21 @@ af_psg_attenuation:
 :
 .endmacro
 
+.macro af_psg_envelope_tick CHANNEL, OFFSET
+    ; The eight host channels have a fixed source-to-PSG slot mapping. Fold
+    ; that arithmetic into the caller and use absolute I/O for the periods.
+    lda _audio_pulse_period+(CHANNEL*2)
+    sta _audio_psg_pulse_period+OFFSET
+    lda _audio_pulse_period+1+(CHANNEL*2)
+    sta _audio_psg_pulse_period+1+OFFSET
+    lda _audio_triangle_period+(CHANNEL*2)
+    sta _audio_psg_triangle_period+OFFSET
+    lda _audio_triangle_period+1+(CHANNEL*2)
+    sta _audio_psg_triangle_period+1+OFFSET
+    ldx #CHANNEL
+    jsr af_psg_envelope
+.endmacro
+
 .macro af_volume_channel CHANNEL
     .local no_effect_slot, mute, store
     ldx #CHANNEL
@@ -145,8 +160,7 @@ _audio_render_tick:
     lda _audio_sfx_phase
     bne :+
 .repeat 4, I
-    ldx #(27-I)
-    jsr af_psg_envelope
+    af_psg_envelope_tick (27-I), (((27-I)&3)*2)+(((27-I)&16)>>1)
 .endrepeat
 :
 .repeat 3, I
@@ -158,8 +172,7 @@ _audio_render_tick:
     lda _audio_sfx_phase
     bne :+
 .repeat 4, I
-    ldx #(11-I)
-    jsr af_psg_envelope
+    af_psg_envelope_tick (11-I), (((11-I)&3)*2)+(((11-I)&16)>>1)
 .endrepeat
 :
 .repeat 3, I
@@ -591,35 +604,22 @@ af_consume_counter:
 
 af_psg_envelope:
     ; Original square-PSG pitch output shares the /2 SFX/envelope clock.
-    stx af_index
-    txa
-    and #3
-    asl a
-    sta af_delta
-    txa
-    and #16
-    lsr a
-    ora af_delta
-    tay
-    txa
-    asl a
-    tax
-    lda _audio_pulse_period,x
-    sta _audio_psg_pulse_period,y
-    lda _audio_pulse_period+1,x
-    sta _audio_psg_pulse_period+1,y
-    lda _audio_triangle_period,x
-    sta _audio_psg_triangle_period,y
-    lda _audio_triangle_period+1,x
-    sta _audio_psg_triangle_period+1,y
-    ldx af_index
     lda _audio_envelope_phase,x
+    cmp #4
+    beq @release
     cmp #1
     beq @attack
     cmp #2
     beq @decay
     cmp #3
     beq @sustain
+    lda _audio_psg_rr,x
+    jmp @subtract
+@release:
+    ; Released/stopped PSG channels often sit at level zero. Every source
+    ; release step clamps that level back to zero, so avoid rate math.
+    lda _audio_psg_level,x
+    beq @zero_level
     lda _audio_psg_rr,x
     jmp @subtract
 @sustain:
@@ -661,6 +661,10 @@ af_psg_envelope:
     lsr a
     lsr a
     lsr a
+    sta _audio_envelope,x
+    rts
+@zero_level:
+    lda #0
     sta _audio_envelope,x
     rts
 

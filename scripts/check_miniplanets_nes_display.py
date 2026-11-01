@@ -25,6 +25,7 @@ def main():
  p.add_argument('--core',required=True);p.add_argument('--rom',required=True);p.add_argument('--output',required=True)
  p.add_argument('--frames',type=int,default=300);p.add_argument('--warmup',type=int,default=40)
  p.add_argument('--patches');p.add_argument('--inputs');p.add_argument('--watch');p.add_argument('--active-nt-offset',type=lambda s:int(s,0))
+ p.add_argument('--dmc-evidence',action='store_true',help='Observe pinned-core four-read DMC fetch signatures without changing reads')
  p.add_argument('--require-safe-display',action='store_true',help='Fail on timing/coherence/stack violations or missing observations')
  p.add_argument('--coherence-offsets',nargs=4,type=lambda s:int(s,0),metavar=('PLANE','HUD','ATTRS','OAM_PAGE'),help='SRAM offsets for immutable completed view')
  a=p.parse_args()
@@ -59,6 +60,9 @@ def main():
         cfg=json.loads(os.environ['DISPLAY_COHERENCE'])
         display_observer.coherence.argtypes=[C.c_void_p]*4+[C.c_uint32]*6
         display_observer.coherence(memory_slice(0,0,8192),memory_slice(2,0,2048),C.addressof((C.c_uint8*256).in_dll(lib,'SPRAM')),C.addressof((C.c_void_p*4).in_dll(lib,'vnapage')),*cfg)
+    if os.environ.get('DISPLAY_DMC'):
+        display_observer.dmc_setup.argtypes=[C.c_void_p]
+        display_observer.dmc_setup(C.addressof((C.c_void_p*65536).in_dll(lib,'ARead')))
     display_observer.stack_setup.argtypes=[C.c_void_p,C.c_void_p,C.c_uint32]
     display_observer.stack_setup(C.addressof(C.c_void_p.in_dll(lib,'MapIRQHook')),C.addressof(display_cpu)+DisplayCPU.S.offset,int(os.environ['DISPLAY_WARMUP']))
     display_observer.start_frame.argtypes=[C.c_uint32,C.c_int32]
@@ -72,6 +76,9 @@ def main():
         display_observer.coherence_result.argtypes=[C.c_int]
         display_observer.coherence_result.restype=C.c_uint32
         (out/'coherence.json').write_text(json.dumps([display_observer.coherence_result(i) for i in range(7)]))
+    if os.environ.get('DISPLAY_DMC'):
+        display_observer.dmc_dump.argtypes=[C.c_char_p]
+        if display_observer.dmc_dump(os.fsencode(str(out/'dmc-events.bin'))) < 0: raise RuntimeError('DMC observer failed or overflowed')
     display_observer.dump.argtypes=[C.c_char_p]
     if display_observer.dump(os.fsencode(str(out/'ppu-events.bin'))) < 0: raise RuntimeError('display observer failed or overflowed')
     trace_bytes = (json.dumps(""")
@@ -84,6 +91,8 @@ def main():
  for flag,name in [('--patches','patches'),('--inputs','inputs')]:
   if name in captured:common += [flag,str(captured[name])]
  env={**os.environ,'DISPLAY_OBSERVER':str(dylib.resolve()),'DISPLAY_WARMUP':str(a.warmup)}
+ env.pop('DISPLAY_DMC',None)
+ if a.dmc_evidence:env['DISPLAY_DMC']='1'
  if a.coherence_offsets:
   if a.active_nt_offset is None:raise ValueError('coherence requires active NT offset')
   offsets=[*a.coherence_offsets[:3],a.active_nt_offset,a.coherence_offsets[3]]
@@ -104,6 +113,21 @@ def main():
   if not 341<=dot<7161:
    v['outside']+=1
    if len(violations)<20:violations.append({'frame':f,'dot':dot,'address':key,'ppu_address':refresh})
+ dmc=None
+ if a.dmc_evidence:
+  dmcraw=(out/'observed'/'dmc-events.bin').read_bytes()
+  if len(dmcraw)%16:raise RuntimeError('truncated DMC event stream')
+  ppu_windows={}
+  for f,t,count,address,refresh,value,mask in struct.iter_unpack('<IIiHHBBxx',raw):
+   if f>=a.warmup and mask&0x18 and address in (0x2006,0x2007):
+    item=ppu_windows.setdefault(f,[t,t]);item[0]=min(item[0],t);item[1]=max(item[1],t)
+  fetched=[(f,t,count,address) for f,t,count,address in struct.iter_unpack('<IIiI',dmcraw) if f>=a.warmup]
+  overlap=[(f,t,address) for f,t,count,address in fetched if f in ppu_windows and ppu_windows[f][0]<=t<=ppu_windows[f][1]]
+  dmc={'fetch_signatures':len(fetched),'frames_with_fetches':len({x[0] for x in fetched}),
+       'fetches_during_upload_window':len(overlap),'frames_with_upload_overlap':len({x[0] for x in overlap}),
+       'first_upload_overlaps':[{'frame':f,'cpu_cycle':t,'address':address} for f,t,address in overlap[:5]],
+       'events_sha256':digest(out/'observed'/'dmc-events.bin'),
+       'scope':'lower-bound four consecutive same-address reads one CPU cycle apart; pinned FCEUmm DMCDMA signature. Overlap means fetch completion between first PPU address write and last PPU data write in same host frame; instruction-level timing.'}
  trace=json.loads((out/'observed'/'ram_trace.json').read_text())['frames'];swaps=None
  host_receipt=json.loads((out/'observed'/'receipt.json').read_text())
  fps=host_receipt['fps']; measured_intervals=a.frames-a.warmup-1
@@ -153,7 +177,7 @@ def main():
   if coherence and swaps is not None and abs(coherence['checked_flips']-swaps)>1:failures.append('checked and sampled flip counts disagree')
   if stack['instruction_samples']<=0 or not 0<stack['minimum_s']<255:failures.append('invalid stack samples')
   if stack['possible_downward_wraps']:failures.append('possible downward stack wrap')
- receipt={'input_identity_before':identity_before,'input_identity_after':after,'captured_input_identity_after':capture_after,'inputs_unchanged':immutable,'safe_display_required':a.require_safe_display,'safe_display_failures':failures,'generated_host_sha256':digest(host),'compiled_observer_sha256':digest(dylib),'stack':stack,'coherence':coherence,'format':'miniplanets-fceumm-display-1','rom_sha256':identity_before['rom']['sha256'],'core_sha256':CORE_SHA,'frames':a.frames,'warmup':a.warmup,
+ receipt={'dmc_evidence':dmc,'input_identity_before':identity_before,'input_identity_after':after,'captured_input_identity_after':capture_after,'inputs_unchanged':immutable,'safe_display_required':a.require_safe_display,'safe_display_failures':failures,'generated_host_sha256':digest(host),'compiled_observer_sha256':digest(dylib),'stack':stack,'coherence':coherence,'format':'miniplanets-fceumm-display-1','rom_sha256':identity_before['rom']['sha256'],'core_sha256':CORE_SHA,'frames':a.frames,'warmup':a.warmup,
   'timing':'NTSC PPU dots from FCEUmm frame boundary; instruction-end timestamps and start X.count phase; valid vblank [341,7161); pre-render excluded',
   'scope':'Writes to $2000-$2007 and $4014 while rendering enabled; DMA $2004 writes included. Scanline batching is accounted for; instruction-level accuracy, not bus-cycle exact.',
   'observer_neutrality':neutral,'registers':stats,'first_violations':violations,'sampled_nt_swaps':swaps,

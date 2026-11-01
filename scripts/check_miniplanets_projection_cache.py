@@ -31,6 +31,7 @@ static void globe_copy_projection(void){
 }
 static u8 globe_restore_terrain(void){return 0;}
 static void globe_clear_planes(void){memset(display_plane,0,256);memset(display_palettes,0,256);}
+static void globe_clear_terrain(void){globe_clear_planes();}
 static void globe_save_terrain(void){}
 static void globe_paint_terrain(void){
     unsigned i;for(i=0;i<256;i++){

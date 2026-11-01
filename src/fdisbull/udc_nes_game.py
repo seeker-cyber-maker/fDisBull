@@ -351,7 +351,7 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
     debug = ['#include "game_api.h"',
              '#pragma wrapped-call(push,banked_call,bank)','void prepare_upload(void);','#pragma wrapped-call(pop)',
              'extern volatile unsigned char video_ready,render_phase;',
-             'extern unsigned char upload_terrain_cached,terrain_staging_valid;',
+             'extern unsigned char upload_terrain_cached,terrain_staging_valid,upload_terrain_sparse;',
              'unsigned long debug_arg(unsigned char index);',
              'volatile unsigned long *debug_result=(volatile unsigned long*)0x7F0;',
              'void debug_dispatch(unsigned char id){unsigned int audio_i;switch(id){']
@@ -366,7 +366,7 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
                   'case 250:audio_init();*debug_result=0;break;',
                   'case 251:audio_request((unsigned char)debug_arg(0),(unsigned char)debug_arg(1));*debug_result=0;break;',
                   'case 252:for(audio_i=0;audio_i<(unsigned int)debug_arg(0) && audio_i<256;audio_i++)audio_tick();*debug_result=audio_i;break;',
-                  'case 253:if(video_ready==0){upload_terrain_cached=0;terrain_staging_valid=0;prepare_upload();render_phase=0;video_ready=1;*debug_result=0;}else *debug_result=0xFFFFFFFEUL;break;',
+                  'case 253:if(video_ready==0){upload_terrain_cached=0;terrain_staging_valid=0;upload_terrain_sparse=0;prepare_upload();render_phase=0;video_ready=1;*debug_result=0;}else *debug_result=0xFFFFFFFEUL;break;',
                   'default:*debug_result=0xFFFFFFFFUL;break;}}'))
     (work/'debug.c').write_text('\n'.join(debug))
     # The dispatch itself is banked too; it is absent from the ordinary game
@@ -429,7 +429,8 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
                    'DATA: load=FIXED,run=SRAM,type=rw,define=yes;',
                    'STARTUP: load=FIXED,type=ro;', 'CODE: load=FIXED,type=ro;',
                    'RODATA: load=FIXED,type=ro;', 'VECTORS: load=VECTOR,type=ro;',
-                   'DMC: load=SAMPLES,type=ro;','POINTDATA: load=SAMPLES,type=ro;',f'DEBUG: load=B{debug_bank:02d},type=ro;',
+                   'DMC: load=SAMPLES,type=ro;','POINTDATA: load=SAMPLES,type=ro;',
+                   'UPLOADFAST: load=SAMPLES,type=ro;',f'DEBUG: load=B{debug_bank:02d},type=ro;',
                    f'AUDIOFAST: load=B{placements[next(x for x in sizes if x.startswith("A"))]:02d},type=ro;'))
     memory.extend(('GAMEFAST: load=B00,type=ro;','GAMEFASTDATA: load=B00,type=ro;',
                    f'RENDERFAST: load=B{len(code_used)-1:02d},type=ro;'))
@@ -468,6 +469,13 @@ def build_nes_game(program, rom, output, *, cc65_root=None):
               'address_lowering':'8-bit byte offsets for reviewed in-bounds flat arrays up to256bytes; qualifiers retained',
               'renderer':assets['metrics'],'audio':{'tracks':len(audio['tracks']),'instruments':len(audio['instruments']),
               'dpcm_used_bytes':audio['dpcm_used_bytes'],'arrangement':audio['arrangement']},
+              'display_upload':{'version':3,'chunking':'greedy-in-order',
+                  'job_lengths':[16]*16+[12]*2+[4]*4,
+                  'terrain_spans':[[5,7],[18,12],[34,12],[50,13],[65,14],[81,14],[97,14],
+                                   [113,14],[129,14],[145,14],[161,14],[178,12],[194,12],[212,8]],
+                  'terrain_padding':'zero outside union; producer and target certificates required',
+                  'job_fixed_cycles':46,'job_byte_cycles':8,'chunk_budget_cycles':1218,
+                  'maximum_jobs_per_chunk':10,'full_dirty_data_frames':3},
               'toolchain':{name:{'sha256':digest} for name,digest in tool_hashes.items()},
               'runtime_resources':{'nes.lib':{'sha256':hashlib.sha256(runtime_library).hexdigest(),
                                             'length':len(runtime_library),'captured_path':'build/nes.lib'}},

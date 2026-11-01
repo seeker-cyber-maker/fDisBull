@@ -143,6 +143,37 @@ int main(void){
             puts("Audio restart ASM regression");return 13;
         }
     }
+    /* Source captures show the PSG slots commonly parked in release at zero.
+       Keep this exact edge state and its cost visible beside random coverage. */
+    for(i=0;i<32;i++){
+        audio_envelope_phase[i]=3;
+        audio_envelope[i]=0;
+        audio_psg_level[i]=0;
+        audio_psg_rr[i]=4;
+    }
+    for(i=8;i<12;i++){
+        audio_envelope_phase[i]=4;
+        audio_envelope[i]=15;
+        audio_pulse_period[i]=(u16)(80+i*13);
+        audio_triangle_period[i]=(u16)(120+i*17);
+    }
+    for(i=24;i<28;i++){
+        audio_envelope_phase[i]=4;
+        audio_envelope[i]=15;
+        audio_pulse_period[i]=(u16)(80+i*13);
+        audio_triangle_period[i]=(u16)(120+i*17);
+    }
+    audio_sfx_phase=0;
+    save(&before);memcpy(apu_before,(void*)0x4000,24);
+    start=cycles();audio_render_reference();cost=cycles()-start;
+    save(&expected);memcpy(apu_expected,(void*)0x4000,24);
+    restore(&before);memcpy((void*)0x4000,apu_before,24);
+    start=cycles();audio_render_tick();cost=cycles()-start;
+    save(&actual);
+    if(memcmp(&actual,&expected,sizeof(actual)) || memcmp((void*)0x4000,apu_expected,24)){
+        puts("PSG release-zero ASM regression");return 16;
+    }
+    printf("PSG_RELEASE_ZERO %lu\n",cost);
     for(test=0;test<512;test++){
         for(i=0;i<32;i++){
             audio_gate[i]=random8()&1;audio_envelope[i]=random8()&15;audio_pan[i]=192;
@@ -211,9 +242,10 @@ def verify(root,output):
     (output/'run.txt').write_text(run.stdout+run.stderr)
     if run.returncode:raise RuntimeError(run.stdout+run.stderr)
     line=next(row for row in run.stdout.splitlines() if row.startswith('PASS '));_,count,total,reference,maximum=line.split()
+    release_zero=next(row for row in run.stdout.splitlines() if row.startswith('PSG_RELEASE_ZERO ')).split()[1]
     receipt={'format':'fdisbull-audio-6502-check-1','cases':int(count),'psg_clock_latch_cases':2,'pcm_preemption_cases':9,'restart_cases':3,'source_hashes':hashes,
              'fast_mean_cycles':int(total)/int(count),'reference_mean_cycles':int(reference)/int(count),
-             'fast_max_cycles':int(maximum),'passed':True,
+             'fast_max_cycles':int(maximum),'psg_release_zero_cycles':int(release_zero),'passed':True,
              'claim':'actual 6502 instructions versus portable C on authored voice/envelope/PCM state; excludes bank/IRQ overhead and APU waveform parity'}
     if any(hashlib.sha256(p.read_bytes()).hexdigest()!=hashes[p.name] for p in (c,assembly)):raise RuntimeError('audio source changed during test')
     (output/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
