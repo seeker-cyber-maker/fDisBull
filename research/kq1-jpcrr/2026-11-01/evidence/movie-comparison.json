@@ -1,0 +1,12 @@
+{
+  "reference_movie_sha256": "3e38a0ee4a4ee48c98f31f554bfb3f1895289d4488ce7521e252f3893b555827",
+  "common_king_checkpoint_ns": 32035330750,
+  "common_prefix_key_edges": 1660,
+  "prefix_equal": true,
+  "complete_initialization_equal": true,
+  "first_post_boot_keyboard_event_ns": 3500698326,
+  "first_post_boot_key": "f (start of FAST command)",
+  "ordinary_keyboard_only": true,
+  "power_on_movies": true,
+  "metadata_attribution_reviewed": true
+}

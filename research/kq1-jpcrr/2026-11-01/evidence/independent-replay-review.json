@@ -1,0 +1,571 @@
+{
+  "format": "kq1-independent-final-replay-review-1",
+  "ok": true,
+  "errors": [],
+  "review_scope": "Read-only independent review; no emulator launched or controlled. Independent JRSR component/event parser; fresh full-file SHA-256 and bytewise capture comparisons. Existing JMD decoder reused solely to read native capture end/frame counts.",
+  "reference": {
+    "path": "reference-run/private-recovery/kq1-standard-tas-20261101/reference-movie/reference-original-bios.jrsr",
+    "fresh_sha256": "3e38a0ee4a4ee48c98f31f554bfb3f1895289d4488ce7521e252f3893b555827",
+    "all_initialization_rows": [
+      [
+        "BIOS",
+        "740f01be58103af0996220bdeb7c4d12"
+      ],
+      [
+        "VGABIOS",
+        "5555c682e62336cb37eb17c903322be1"
+      ],
+      [
+        "HDD",
+        "bd183c472bf2c054bfa944a768f10592"
+      ],
+      [
+        "DISK",
+        "0",
+        "f334bc4d5dc5f393feb0ca2d1e1cdc25"
+      ],
+      [
+        "DISKNAME",
+        "0",
+        "Floppy-FreeDOS (initial fda disk)"
+      ],
+      [
+        "FDA",
+        "0"
+      ],
+      [
+        "INITIALTIME",
+        "10000"
+      ],
+      [
+        "CPUDIVIDER",
+        "50"
+      ],
+      [
+        "MEMORYSIZE",
+        "4096"
+      ],
+      [
+        "BOOT",
+        "FLOPPY"
+      ],
+      [
+        "LOADMODULE",
+        "org.jpc.modules.BasicFPU"
+      ],
+      [
+        "LOADMODULE",
+        "org.jpc.modules.SoundCard"
+      ],
+      [
+        "FLUSHONMODIFY"
+      ],
+      [
+        "SVGATYPE",
+        "1"
+      ],
+      [
+        "VGATIMINGMETHOD",
+        "1"
+      ]
+    ]
+  },
+  "movies": [
+    {
+      "audit": "original-run/tas-evidence/KQ1-Robb-Route-63-complete-audit.json",
+      "movie": "original-run/tas-authoring-3/KQ1-Robb-Route-63-complete.jrsr",
+      "fresh_movie_sha256": "3d1d5c147d31c49154fcb46aeb8bf04b5e7676693bd020958b6d55df9cab263e",
+      "fresh_hash_matches_audit": true,
+      "all_15_initialization_rows_match_fresh_reference_in_order": true,
+      "all_reported_initialization_rows_match_fresh_movie_in_order": true,
+      "borrowed_24_boot_edges_match_reference": true,
+      "power_on_no_state_payload": true,
+      "ordinary_keyboard_only": true,
+      "keyboard_edges": 1672,
+      "last_keyboard_event_ns": 33323066766,
+      "held_keys_at_end": [],
+      "authorship_and_borrowed_prefix_attributed": true,
+      "authors": [
+        [
+          "AUTHORS",
+          "ChatGPT for TiGa",
+          "DrD2k9 (boot input prefix)"
+        ]
+      ],
+      "comments": [
+        [
+          "COMMENT",
+          "Independent Robb-route recreation using ordinary keyboard input. Reuses 24 boot-prefix key edges through 2.845504878 s from DrD2k9 submission 8484. Robb supplies route inspiration, not these exact inputs. Experimental evaluation; no record or TASVideos acceptance claim."
+        ]
+      ],
+      "audit_ok": true,
+      "audit_errors": []
+    },
+    {
+      "audit": "original-run/tas-evidence/KQ1-Robb-Route-63-endpoint-audit.json",
+      "movie": "original-run/tas-authoring-3/KQ1-Robb-Route-63-endpoint.jrsr",
+      "fresh_movie_sha256": "84fc96ea3207899ae03b661615b273ab7e7b4ebfbddab24adecbcf2459c0553d",
+      "fresh_hash_matches_audit": true,
+      "all_15_initialization_rows_match_fresh_reference_in_order": true,
+      "all_reported_initialization_rows_match_fresh_movie_in_order": true,
+      "borrowed_24_boot_edges_match_reference": true,
+      "power_on_no_state_payload": true,
+      "ordinary_keyboard_only": true,
+      "keyboard_edges": 1660,
+      "last_keyboard_event_ns": 32035146312,
+      "held_keys_at_end": [],
+      "authorship_and_borrowed_prefix_attributed": true,
+      "authors": [
+        [
+          "AUTHORS",
+          "ChatGPT for TiGa",
+          "DrD2k9 (boot input prefix)"
+        ]
+      ],
+      "comments": [
+        [
+          "COMMENT",
+          "Independent Robb-route recreation using ordinary keyboard input. Reuses 24 boot-prefix key edges through 2.845504878 s from DrD2k9 submission 8484. Robb supplies route inspiration, not these exact inputs. Experimental evaluation; no record or TASVideos acceptance claim."
+        ]
+      ],
+      "audit_ok": true,
+      "audit_errors": []
+    },
+    {
+      "audit": "original-run/tas-evidence/KQ1-Robb-Route-BOW-66-complete-audit.json",
+      "movie": "original-run/tas-authoring-3/KQ1-Robb-Route-BOW-66-complete.jrsr",
+      "fresh_movie_sha256": "3123ccb6f023e7ed0e71fbfd6b5ad33910ac60280712ccf1af3d845fa86c8e1e",
+      "fresh_hash_matches_audit": true,
+      "all_15_initialization_rows_match_fresh_reference_in_order": true,
+      "all_reported_initialization_rows_match_fresh_movie_in_order": true,
+      "borrowed_24_boot_edges_match_reference": true,
+      "power_on_no_state_payload": true,
+      "ordinary_keyboard_only": true,
+      "keyboard_edges": 1690,
+      "last_keyboard_event_ns": 32823005100,
+      "held_keys_at_end": [],
+      "authorship_and_borrowed_prefix_attributed": true,
+      "authors": [
+        [
+          "AUTHORS",
+          "ChatGPT for TiGa",
+          "DrD2k9 (boot input prefix)"
+        ]
+      ],
+      "comments": [
+        [
+          "COMMENT",
+          "Independent Robb-route recreation with ordinary BOW shortcut, score 66. Reuses 24 boot-prefix key edges through 2.845504878 s from DrD2k9 submission 8484. Robb supplies route inspiration, not these exact inputs. Experimental evaluation; no record or TASVideos acceptance claim."
+        ]
+      ],
+      "audit_ok": true,
+      "audit_errors": []
+    },
+    {
+      "audit": "original-run/tas-evidence/KQ1-Robb-Route-BOW-66-endpoint-audit.json",
+      "movie": "original-run/tas-authoring-3/KQ1-Robb-Route-BOW-66-endpoint.jrsr",
+      "fresh_movie_sha256": "de6be181fdfba0fd6584004cd24fa6b0f61fefff98b07b8a70a67b1cc4365727",
+      "fresh_hash_matches_audit": true,
+      "all_15_initialization_rows_match_fresh_reference_in_order": true,
+      "all_reported_initialization_rows_match_fresh_movie_in_order": true,
+      "borrowed_24_boot_edges_match_reference": true,
+      "power_on_no_state_payload": true,
+      "ordinary_keyboard_only": true,
+      "keyboard_edges": 1678,
+      "last_keyboard_event_ns": 32290010430,
+      "held_keys_at_end": [],
+      "authorship_and_borrowed_prefix_attributed": true,
+      "authors": [
+        [
+          "AUTHORS",
+          "ChatGPT for TiGa",
+          "DrD2k9 (boot input prefix)"
+        ]
+      ],
+      "comments": [
+        [
+          "COMMENT",
+          "Independent Robb-route recreation with ordinary BOW shortcut, score 66. Reuses 24 boot-prefix key edges through 2.845504878 s from DrD2k9 submission 8484. Robb supplies route inspiration, not these exact inputs. Experimental evaluation; no record or TASVideos acceptance claim."
+        ]
+      ],
+      "audit_ok": true,
+      "audit_errors": []
+    }
+  ],
+  "common_prefix": {
+    "through_ns_inclusive": 32035330750,
+    "all_four_movies_equal": true,
+    "edge_count_by_movie": {
+      "KQ1-Robb-Route-63-complete.jrsr": 1660,
+      "KQ1-Robb-Route-63-endpoint.jrsr": 1660,
+      "KQ1-Robb-Route-BOW-66-complete.jrsr": 1660,
+      "KQ1-Robb-Route-BOW-66-endpoint.jrsr": 1660
+    },
+    "last_common_edge": {
+      "timestamp_ns": 32035146312,
+      "scan_code": 76,
+      "edge": "release"
+    }
+  },
+  "borrowed_boot_prefix": {
+    "through_ns_inclusive": 2845504878,
+    "edge_count": 24,
+    "edges": [
+      {
+        "timestamp_ns": 2074379256,
+        "scan_code": 28,
+        "edge": "press"
+      },
+      {
+        "timestamp_ns": 2075045916,
+        "scan_code": 28,
+        "edge": "release"
+      },
+      {
+        "timestamp_ns": 2088645780,
+        "scan_code": 63,
+        "edge": "press"
+      },
+      {
+        "timestamp_ns": 2089312440,
+        "scan_code": 63,
+        "edge": "release"
+      },
+      {
+        "timestamp_ns": 2089979100,
+        "scan_code": 46,
+        "edge": "press"
+      },
+      {
+        "timestamp_ns": 2090645760,
+        "scan_code": 46,
+        "edge": "release"
+      },
+      {
+        "timestamp_ns": 2091312420,
+        "scan_code": 42,
+        "edge": "press"
+      },
+      {
+        "timestamp_ns": 2091979080,
+        "scan_code": 39,
+        "edge": "press"
+      },
+      {
+        "timestamp_ns": 2092645740,
+        "scan_code": 42,
+        "edge": "release"
+      },
+      {
+        "timestamp_ns": 2093312400,
+        "scan_code": 39,
+        "edge": "release"
+      },
+      {
+        "timestamp_ns": 2093979060,
+        "scan_code": 28,
+        "edge": "press"
+      },
+      {
+        "timestamp_ns": 2094645720,
+        "scan_code": 28,
+        "edge": "release"
+      },
+      {
+        "timestamp_ns": 2095312380,
+        "scan_code": 37,
+        "edge": "press"
+      },
+      {
+        "timestamp_ns": 2095979040,
+        "scan_code": 37,
+        "edge": "release"
+      },
+      {
+        "timestamp_ns": 2096645700,
+        "scan_code": 16,
+        "edge": "press"
+      },
+      {
+        "timestamp_ns": 2097312360,
+        "scan_code": 16,
+        "edge": "release"
+      },
+      {
+        "timestamp_ns": 2097979020,
+        "scan_code": 2,
+        "edge": "press"
+      },
+      {
+        "timestamp_ns": 2098645680,
+        "scan_code": 2,
+        "edge": "release"
+      },
+      {
+        "timestamp_ns": 2099312340,
+        "scan_code": 28,
+        "edge": "press"
+      },
+      {
+        "timestamp_ns": 2099979000,
+        "scan_code": 28,
+        "edge": "release"
+      },
+      {
+        "timestamp_ns": 2802038646,
+        "scan_code": 1,
+        "edge": "press"
+      },
+      {
+        "timestamp_ns": 2802705306,
+        "scan_code": 1,
+        "edge": "release"
+      },
+      {
+        "timestamp_ns": 2844838218,
+        "scan_code": 1,
+        "edge": "press"
+      },
+      {
+        "timestamp_ns": 2845504878,
+        "scan_code": 1,
+        "edge": "release"
+      }
+    ],
+    "f5_press_ns": 2088645780,
+    "f5_release_ns": 2089312440,
+    "c_drive_command_first_key_ns": 2089979100,
+    "kq1_command_first_key_ns": 2095312380,
+    "kq1_command_enter_press_ns": 2099312340,
+    "f5_precedes_c_drive_and_kq1_launch_keyboard_commands": true,
+    "interpretation": "Scan code 63 is F5; these two edges occur during DOS startup before the recorded C: and KQ1 command sequences. This is part of the attributed published boot prefix, not an in-game F5 intervention.",
+    "qualification": "Chronology is independently parsed from recorded keyboard edges. This review does not independently disassemble or observe execution of FreeDOS startup handling."
+  },
+  "runtime_replays": [
+    {
+      "name": "automatic-first",
+      "receipt_sha256": "08512d7fca19b75ed2b1e9e244d0500d4ab77ddcd2adca6aa6504d778089ac27",
+      "native_log_sha256": "d611d363df44c1b562246f98a4b6370709e396f1ffec2ba98966403582f37432",
+      "command_is_exact_stock_jar_only": true,
+      "script_only_library_rawdumper_pcrunner": true,
+      "command": [
+        "java",
+        "-Xmx512m",
+        "-Djava.awt.headless=true",
+        "-jar",
+        "original-run/tas-runtime/jpcrr-r11.2.jar",
+        "-autoexec",
+        "original-run/tas-replays/automatic-first/replay.jpcrrinit"
+      ],
+      "stock_release_identified_in_native_log": true,
+      "exit_code": 0,
+      "no_host_timeout": true,
+      "adaptive_inputs_false": true,
+      "no_error_like_log_lines": true,
+      "error_like_log_lines": [],
+      "recorded_critical_log_lines": [],
+      "recorded_movie_unchanged": true,
+      "recorded_jar_unchanged": true,
+      "fresh_movie_sha256": "3d1d5c147d31c49154fcb46aeb8bf04b5e7676693bd020958b6d55df9cab263e",
+      "fresh_movie_hash_matches_receipt": true,
+      "fresh_jar_sha256": "be63fea4c746ec3823432b7e2ef27b19b75a25a4bcbbc124f4683d99c4f4d314",
+      "fresh_jar_matches_official_and_receipt": true,
+      "capture": "original-run/tas-replays/automatic-first/capture.jmd",
+      "capture_bytes": 15828730,
+      "fresh_capture_sha256": "19eb9148a3d20f5d4550b5826bb77b6e7936e7496aa5ff803e5aecf29c4b0fa2",
+      "fresh_capture_hash_and_size_match_receipt": true,
+      "native_end_ns": 35000000000,
+      "native_end_matches_requested_35s": true,
+      "fresh_native_video_frame_count": 2450,
+      "video_frame_count_matches_log_and_receipt": true,
+      "elapsed_host_ns": 66869211883
+    },
+    {
+      "name": "automatic-repeat",
+      "receipt_sha256": "c4b09d9d4f764dcd0ea3b4830fa4ee6df3aec8ce7f295e79af12c0e5c307c8c2",
+      "native_log_sha256": "1f621cda24d414cb785ee1709263240cb2b87cebc06005d236ae6ac9df381a0a",
+      "command_is_exact_stock_jar_only": true,
+      "script_only_library_rawdumper_pcrunner": true,
+      "command": [
+        "java",
+        "-Xmx512m",
+        "-Djava.awt.headless=true",
+        "-jar",
+        "original-run/tas-runtime/jpcrr-r11.2.jar",
+        "-autoexec",
+        "original-run/tas-replays/automatic-repeat/replay.jpcrrinit"
+      ],
+      "stock_release_identified_in_native_log": true,
+      "exit_code": 0,
+      "no_host_timeout": true,
+      "adaptive_inputs_false": true,
+      "no_error_like_log_lines": true,
+      "error_like_log_lines": [],
+      "recorded_critical_log_lines": [],
+      "recorded_movie_unchanged": true,
+      "recorded_jar_unchanged": true,
+      "fresh_movie_sha256": "3d1d5c147d31c49154fcb46aeb8bf04b5e7676693bd020958b6d55df9cab263e",
+      "fresh_movie_hash_matches_receipt": true,
+      "fresh_jar_sha256": "be63fea4c746ec3823432b7e2ef27b19b75a25a4bcbbc124f4683d99c4f4d314",
+      "fresh_jar_matches_official_and_receipt": true,
+      "capture": "original-run/tas-replays/automatic-repeat/capture.jmd",
+      "capture_bytes": 15828730,
+      "fresh_capture_sha256": "19eb9148a3d20f5d4550b5826bb77b6e7936e7496aa5ff803e5aecf29c4b0fa2",
+      "fresh_capture_hash_and_size_match_receipt": true,
+      "native_end_ns": 35000000000,
+      "native_end_matches_requested_35s": true,
+      "fresh_native_video_frame_count": 2450,
+      "video_frame_count_matches_log_and_receipt": true,
+      "elapsed_host_ns": 66515641507
+    },
+    {
+      "name": "bow-first",
+      "receipt_sha256": "1c0e942f033bc35fa4c25fe5f47f51c731665056fae3647033bce902310bd6c2",
+      "native_log_sha256": "768bebebd7f18bc87e94f34c79548c0bfc3651071b3f61acf86e349154d4afef",
+      "command_is_exact_stock_jar_only": true,
+      "script_only_library_rawdumper_pcrunner": true,
+      "command": [
+        "java",
+        "-Xmx512m",
+        "-Djava.awt.headless=true",
+        "-jar",
+        "original-run/tas-runtime/jpcrr-r11.2.jar",
+        "-autoexec",
+        "original-run/tas-replays/bow-first/replay.jpcrrinit"
+      ],
+      "stock_release_identified_in_native_log": true,
+      "exit_code": 0,
+      "no_host_timeout": true,
+      "adaptive_inputs_false": true,
+      "no_error_like_log_lines": true,
+      "error_like_log_lines": [],
+      "recorded_critical_log_lines": [],
+      "recorded_movie_unchanged": true,
+      "recorded_jar_unchanged": true,
+      "fresh_movie_sha256": "3123ccb6f023e7ed0e71fbfd6b5ad33910ac60280712ccf1af3d845fa86c8e1e",
+      "fresh_movie_hash_matches_receipt": true,
+      "fresh_jar_sha256": "be63fea4c746ec3823432b7e2ef27b19b75a25a4bcbbc124f4683d99c4f4d314",
+      "fresh_jar_matches_official_and_receipt": true,
+      "capture": "original-run/tas-replays/bow-first/capture.jmd",
+      "capture_bytes": 15862773,
+      "fresh_capture_sha256": "b84c2571e3c5d8f3f22c848e2d4edcc062e2e6f4b82bfae9807ac403862f8269",
+      "fresh_capture_hash_and_size_match_receipt": true,
+      "native_end_ns": 35000000000,
+      "native_end_matches_requested_35s": true,
+      "fresh_native_video_frame_count": 2450,
+      "video_frame_count_matches_log_and_receipt": true,
+      "elapsed_host_ns": 67662908548
+    },
+    {
+      "name": "bow-repeat",
+      "receipt_sha256": "5b427a0a1d6703e025719694df2e928de9c4771ba1efcb23081d22439e7c09a8",
+      "native_log_sha256": "f730c21a175fe38fe990460211e50911e6bb8afd1324ffbf992b42044d65f8ed",
+      "command_is_exact_stock_jar_only": true,
+      "script_only_library_rawdumper_pcrunner": true,
+      "command": [
+        "java",
+        "-Xmx512m",
+        "-Djava.awt.headless=true",
+        "-jar",
+        "original-run/tas-runtime/jpcrr-r11.2.jar",
+        "-autoexec",
+        "original-run/tas-replays/bow-repeat/replay.jpcrrinit"
+      ],
+      "stock_release_identified_in_native_log": true,
+      "exit_code": 0,
+      "no_host_timeout": true,
+      "adaptive_inputs_false": true,
+      "no_error_like_log_lines": true,
+      "error_like_log_lines": [],
+      "recorded_critical_log_lines": [],
+      "recorded_movie_unchanged": true,
+      "recorded_jar_unchanged": true,
+      "fresh_movie_sha256": "3123ccb6f023e7ed0e71fbfd6b5ad33910ac60280712ccf1af3d845fa86c8e1e",
+      "fresh_movie_hash_matches_receipt": true,
+      "fresh_jar_sha256": "be63fea4c746ec3823432b7e2ef27b19b75a25a4bcbbc124f4683d99c4f4d314",
+      "fresh_jar_matches_official_and_receipt": true,
+      "capture": "original-run/tas-replays/bow-repeat/capture.jmd",
+      "capture_bytes": 15862773,
+      "fresh_capture_sha256": "b84c2571e3c5d8f3f22c848e2d4edcc062e2e6f4b82bfae9807ac403862f8269",
+      "fresh_capture_hash_and_size_match_receipt": true,
+      "native_end_ns": 35000000000,
+      "native_end_matches_requested_35s": true,
+      "fresh_native_video_frame_count": 2450,
+      "video_frame_count_matches_log_and_receipt": true,
+      "elapsed_host_ns": 67884776130
+    }
+  ],
+  "capture_pairs": [
+    {
+      "variant": "automatic",
+      "first": "original-run/tas-replays/automatic-first/capture.jmd",
+      "repeat": "original-run/tas-replays/automatic-repeat/capture.jmd",
+      "fresh_full_bytewise_equal": true,
+      "bytes_compared": 15828730,
+      "first_differing_offset": null,
+      "first_fresh_sha256": "19eb9148a3d20f5d4550b5826bb77b6e7936e7496aa5ff803e5aecf29c4b0fa2",
+      "repeat_fresh_sha256": "19eb9148a3d20f5d4550b5826bb77b6e7936e7496aa5ff803e5aecf29c4b0fa2"
+    },
+    {
+      "variant": "bow",
+      "first": "original-run/tas-replays/bow-first/capture.jmd",
+      "repeat": "original-run/tas-replays/bow-repeat/capture.jmd",
+      "fresh_full_bytewise_equal": true,
+      "bytes_compared": 15862773,
+      "first_differing_offset": null,
+      "first_fresh_sha256": "b84c2571e3c5d8f3f22c848e2d4edcc062e2e6f4b82bfae9807ac403862f8269",
+      "repeat_fresh_sha256": "b84c2571e3c5d8f3f22c848e2d4edcc062e2e6f4b82bfae9807ac403862f8269"
+    }
+  ],
+  "fresh_media_checks": [
+    {
+      "file": "original-run/tas-runtime/disklibrary/BIOS",
+      "fresh_sha256": "e199f1ea5dbaa79ca01b6144404863c1be67ba1a9b543b3e877d03ab7855802f",
+      "matches_recorded_sha256": true,
+      "matches_recorded_size": true
+    },
+    {
+      "file": "original-run/tas-runtime/disklibrary/BIOS-740f01be.image",
+      "fresh_sha256": "eeb3de497181659b52c813e99b5a7ddd35ba634092deb14cdb75f287e9e4806b",
+      "matches_recorded_sha256": true,
+      "matches_recorded_size": true
+    },
+    {
+      "file": "original-run/tas-runtime/disklibrary/FREEDOS",
+      "fresh_sha256": "5aa3a740c00b3022dbcf6cd40c3b1beb1937387508e0c9e7defb064e64a3a214",
+      "matches_recorded_sha256": true,
+      "matches_recorded_size": true
+    },
+    {
+      "file": "original-run/tas-runtime/disklibrary/KQ1",
+      "fresh_sha256": "aa19181ac1f1729ae5361e8924f4019e884418ce2b30098db9353882b121cd68",
+      "matches_recorded_sha256": true,
+      "matches_recorded_size": true
+    },
+    {
+      "file": "original-run/tas-runtime/disklibrary/VGABIOS",
+      "fresh_sha256": "6cb00671f321362fc4105089f0483b5d097fa5c4ff3d56323ba126339e525d18",
+      "matches_recorded_sha256": true,
+      "matches_recorded_size": true
+    },
+    {
+      "file": "original-run/tas-runtime/disklibrary/VGABIOS-5555c682.image",
+      "fresh_sha256": "cf6eb1de20f7497b0047cee3c0419336f3fe28b270abacd35b084d7613bd14c0",
+      "matches_recorded_sha256": true,
+      "matches_recorded_size": true
+    }
+  ],
+  "tools_reviewed": {
+    "run_stock_replay.py": "e9f687e820f004d5960403ae22c92f0771271a5d837241b05278c49ebf77c9db",
+    "audit_movie.py": "5fab4a0ff8e8653b5cc0c559d234537233a3f92e8b1b928cad6e3f51fb54253c",
+    "encoding/jmd_capture.py": "4fb856defe2688e4da1dddd06575f7ff0c765a0ad134e042a37fbe5ca9293299"
+  },
+  "limits": [
+    "Byte-identical JMD captures establish identical recorded audio/video, timestamps and container content for each repeated movie; they do not establish equality of every unobserved game or machine state.",
+    "This review does not independently identify a visual completion frame, score or gameplay start boundary; parent visual/timing evidence owns those claims.",
+    "Official TASVideos acceptance of these candidate movies has not been sought or established.",
+    "Host duration is process execution including JVM, emulation, capture and teardown; it is not the movie or gameplay duration.",
+    "The reference BIOS is the explicitly documented original 740f01be variant, not the later 21fa468b variant in the updated download.",
+    "run_stock_replay.py does not fail on a false unchanged-hash flag, and audit_movie.py asserts only selected initialization keys; this review explicitly checks both unchanged flags, fresh hashes and all initialization rows."
+  ]
+}
