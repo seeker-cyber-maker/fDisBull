@@ -1,0 +1,421 @@
+{
+  "format": "fdisbull-common-uil-verification-1",
+  "status": "bounded-local-qualified",
+  "date": "2026-11-01",
+  "integration_base": "b21b204d98550f5eaf61278771aec9b8db1b2924",
+  "scope": "source-model-output logic and local repository evidence; package gates are recorded separately",
+  "contains_original_target_payloads": false,
+  "source": {
+    "files": {
+      "src/fdisbull/common_uil.py": "c3fbff3cd1935a0613cc15e08c1fda109889c56ed3824c38b86ec0de134030a8",
+      "src/fdisbull/uil_catalog.py": "95da21609c0d12fe9f24977f594db046f6a7e3379658d8c2a49f19ab7669a13a",
+      "src/fdisbull/uil_codegen.py": "b9e6bac3a8c52718946717f5d45d57b4ffcfdb262f86a4de74316b4f1d32fe4a",
+      "src/fdisbull/uil_runtime.py": "7a08a3e384617eba06e4a98a5a7c203bf2624503c4156bb26b548347dc9ff446",
+      "src/fdisbull/interaction_il.py": "ef23fe8b94c3490dae139912bcd7bc2814b2fc51f012d4c84ad426e5059332ee",
+      "src/fdisbull/udl_blocks.py": "989a114fa3fb1a64878963200744643b55ae511d83d6545cdd301a9d7ca73c8d",
+      "src/fdisbull/proofs.py": "edd73a34f2fd67c6dba3295d9159ddeeeab69aedeeb307a5c20fb2f32ee68bed",
+      "tests/fixtures_common_uil.py": "54bc7c53e08f645e697ed4232c393923d8266232b85405e6c0ecf6abc5ad25f6",
+      "examples/uil_common/conformance.py": "a698fc4d4a61209e43b373754256a4bc4c8b899585b1cb1bba9b9ef62259655c"
+    },
+    "source_fingerprint_sha256": "67fa16320b90ca010881f2b022cf2712c2ed9b77b8db75f9118ac64ea251bef9",
+    "source_unchanged_during_run": true,
+    "generator_sha256": "b9e6bac3a8c52718946717f5d45d57b4ffcfdb262f86a4de74316b4f1d32fe4a",
+    "runtime_sha256": "7a08a3e384617eba06e4a98a5a7c203bf2624503c4156bb26b548347dc9ff446",
+    "python": "3.13.18 (main, Oct 25 2026, 18:31:23) [Clang 21.0.0 (clang-2100.3.34.2)]",
+    "node": "v22.22.3",
+    "package_versions": {
+      "capstone": "5.0.9",
+      "unicorn": "2.1.4",
+      "z3-solver": "5.3.2.0"
+    }
+  },
+  "private_receipt_hashes": {
+    "conformance/conformance.json": "21ed27a7a32ee30e86f1c8e2565d15f8503252feceb42a56d2b38fda6914209a",
+    "snake-actions.json": "beffbdf47d1b689111d4304f726ae6c4996271a861f982ed20aacb3e763d65a9",
+    "food-original-cpu.json": "54f8bd79c0bc9c108c5856d2e3782825b51739c35d6810e872c7ce267bf48810"
+  },
+  "synthetic": {
+    "program_sha256": "7c9de3dd53f4a2c2ad551bf5a7ec25e06fc86cfb2605195ed32e853d5ac9547f",
+    "realizations": 6,
+    "cases": 30,
+    "source_languages": [
+      "c-u16",
+      "python-u16",
+      "x86-16"
+    ],
+    "targets": [
+      "python",
+      "javascript"
+    ],
+    "observation": "complete outputs, owned frame, call identity and selection checks"
+  },
+  "food": {
+    "vectors": 2018,
+    "vectors_sha256": "d17dbc12184d03c6450d91b6bfa429cbefe6333ca4dd6c8e5aa0b1b8c6a1d8c3",
+    "common_program_sha256": "8ff155ffe39b2d08ef29ab823097d7e8063e5930c87babb36da8b91a659f0621",
+    "earlier_evaluator": {
+      "cases": 2018,
+      "program_sha256": "d312213073e87128e82933aed076d1f0cb1e9fe312b6e398c51b0b3d4bbf9724",
+      "result_sha256": "e73ba904f08034dfba4470710f83bf9bac78dc1ab34ce8ccaceb85d3e7c271d7",
+      "mismatches": 0
+    },
+    "earlier_source_head": "016ad75b854050110b02f3c96189c6a124ce5ae5",
+    "original_cpu_provider": "unicorn-x86-16",
+    "original_cpu_cases": 6054,
+    "original_cpu_mismatches": 0,
+    "sources": [
+      {
+        "edition": "474.01",
+        "cases": 2018,
+        "mismatches": 0,
+        "original_sha256": "21861cbb5eca78ddf22d7b84219b41a22a1d283c3f7b27f3d1bce98c30eb8e3b",
+        "source_span": {
+          "offset": 58662,
+          "size": 36,
+          "sha256": "cbaf3048ffe7b3add1e9864eea12ef3872b89e9ffa489e62fba4d1a84eeac374"
+        },
+        "implementation": {
+          "backend": "x86-16",
+          "origin": 5322
+        },
+        "adapter_sha256": "99980d0ad6a713badb2a15721fcbf3df0cbc1b9b95f2551e3e6b153f0ccb2c80",
+        "source_database_sha256": "2981445fa5767fb75a68c302c19117dbbbb6d685044b06e7bfa732323e91f4c0",
+        "original_and_database_unchanged": true,
+        "results_sha256": "e73ba904f08034dfba4470710f83bf9bac78dc1ab34ce8ccaceb85d3e7c271d7"
+      },
+      {
+        "edition": "474.03",
+        "cases": 2018,
+        "mismatches": 0,
+        "original_sha256": "31e35b01f4d00df81685dfcb81e6de196a3876bd2afff6e39cbbfd964f5852ad",
+        "source_span": {
+          "offset": 56784,
+          "size": 36,
+          "sha256": "ce352699d5a2443087917bf763b46f96cf27b9a7befe537d4ce44ea2345361b8"
+        },
+        "implementation": {
+          "backend": "x86-16",
+          "origin": 5332
+        },
+        "adapter_sha256": "88be8856fffd1c0fc2e0a83cb9c4bf8359be999af543729212b6c1442fe41637",
+        "source_database_sha256": "44f50dad4d14d1f7bf0a9de03ab0ad7390f7cc00ad711475e40d0e54315a62a6",
+        "original_and_database_unchanged": true,
+        "results_sha256": "e73ba904f08034dfba4470710f83bf9bac78dc1ab34ce8ccaceb85d3e7c271d7"
+      },
+      {
+        "edition": "474.05",
+        "cases": 2018,
+        "mismatches": 0,
+        "original_sha256": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
+        "source_span": {
+          "offset": 58858,
+          "size": 36,
+          "sha256": "ce352699d5a2443087917bf763b46f96cf27b9a7befe537d4ce44ea2345361b8"
+        },
+        "implementation": {
+          "backend": "x86-16",
+          "origin": 5342
+        },
+        "adapter_sha256": "88be8856fffd1c0fc2e0a83cb9c4bf8359be999af543729212b6c1442fe41637",
+        "source_database_sha256": "27f98eda4943d41aa30ce26cdd2f4a493eaca0efa8467b57e6bff0fb40113550",
+        "original_and_database_unchanged": true,
+        "results_sha256": "e73ba904f08034dfba4470710f83bf9bac78dc1ab34ce8ccaceb85d3e7c271d7"
+      }
+    ],
+    "claim": "fresh execution of identity-checked original 36-byte blocks in an isolated x86-16 CPU; same source arithmetic projection",
+    "limits": [
+      "not a whole DOS process or game playthrough",
+      "no fresh DOSBox/OS/backend execution",
+      "flags/timing and behavior outside the declared scalar projection are unqualified"
+    ]
+  },
+  "snake": {
+    "legacy_program_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+    "initial_sha256": "6512a8640bd7ab123681687a6d5dcb04fcc7a6aa598c662309586ffd1ace698e",
+    "functions": [
+      {
+        "function": "reset",
+        "status": "complete",
+        "steps": 1821,
+        "words": 70000,
+        "result_sha256": "6512a8640bd7ab123681687a6d5dcb04fcc7a6aa598c662309586ffd1ace698e",
+        "common_program_sha256": "6d9edd388ac3696b35925a225c38ccd8a07f552f5333163488b098ee8017974d",
+        "generated": [
+          {
+            "target": "python",
+            "artifacts": {
+              "program.py": "872cbbcd080f3ecd62b4fb1ed8b1da1977f2657083a7fd06379cb6b95eca83bb"
+            },
+            "result_sha256": "6512a8640bd7ab123681687a6d5dcb04fcc7a6aa598c662309586ffd1ace698e"
+          },
+          {
+            "target": "javascript",
+            "artifacts": {
+              "program.mjs": "9fb2722f80eb061d34a2686c12e346566773f0bac8a7f8e9b0944bca53d320e7"
+            },
+            "result_sha256": "6512a8640bd7ab123681687a6d5dcb04fcc7a6aa598c662309586ffd1ace698e"
+          }
+        ]
+      },
+      {
+        "function": "step",
+        "status": "complete",
+        "steps": 38,
+        "words": 70000,
+        "result_sha256": "0aa6402aa7120227754d9200e6b789f7223caaee5f5ebeee33ab03a372286f39",
+        "common_program_sha256": "8ecdb0ef74c3fccabf86e96dd6b3adbadd6994bf327523decd51b69160cd2197",
+        "generated": [
+          {
+            "target": "python",
+            "artifacts": {
+              "program.py": "c08084ba561b97b729e20941deb2978e9cff266e2ac06990e21b9d0bd2fe444d"
+            },
+            "result_sha256": "0aa6402aa7120227754d9200e6b789f7223caaee5f5ebeee33ab03a372286f39"
+          },
+          {
+            "target": "javascript",
+            "artifacts": {
+              "program.mjs": "6e465debc7fd9eb15cce4c1337ab699c4ffab01e11d6afb813611af94c47fec4"
+            },
+            "result_sha256": "0aa6402aa7120227754d9200e6b789f7223caaee5f5ebeee33ab03a372286f39"
+          }
+        ]
+      },
+      {
+        "function": "render",
+        "status": "complete",
+        "steps": 473827,
+        "words": 70000,
+        "result_sha256": "a6649274bccdb35db782d0c6f2a0e2a0d1b8590c7b12598a1f86c1e9c4cc2a1a",
+        "common_program_sha256": "648bba6949494cfea5aceda889f81c84f41832b78298742fee2c032159544b2d",
+        "generated": [
+          {
+            "target": "python",
+            "artifacts": {
+              "program.py": "8027e85629b1be6d993b233a4636b90f67e09a78260fe5d7957f35d0611071dd"
+            },
+            "result_sha256": "a6649274bccdb35db782d0c6f2a0e2a0d1b8590c7b12598a1f86c1e9c4cc2a1a"
+          },
+          {
+            "target": "javascript",
+            "artifacts": {
+              "program.mjs": "58883978f93a95cbb33e504827664b7c9ad72edb7c9d6196639537cbe6a5b62d"
+            },
+            "result_sha256": "a6649274bccdb35db782d0c6f2a0e2a0d1b8590c7b12598a1f86c1e9c4cc2a1a"
+          }
+        ]
+      }
+    ],
+    "normalized_action_cases": 31,
+    "action_common_program_sha256": "3a38c30119dc7edc04fae292bad9857eb7d4e64c71135801cb693e68a05f9b95",
+    "action_targets": [
+      {
+        "target": "python",
+        "cases": 31,
+        "mismatches": 0
+      },
+      {
+        "target": "javascript",
+        "cases": 31,
+        "mismatches": 0
+      }
+    ],
+    "action_cases": [
+      {
+        "case": "key-escape",
+        "result_sha256": "71d772b6ce9fd91eac224daa76e4beda27928edc93e0a588f2a1418d97d7fd09",
+        "mismatches": 0
+      },
+      {
+        "case": "key-space",
+        "result_sha256": "2bd111691c06d3ed68f46b67070e9a40bd54fdfc084a7c2902ba6925a26c9dcc",
+        "mismatches": 0
+      },
+      {
+        "case": "key-uppercase-pause",
+        "result_sha256": "59019eb003ec2ce7e12e68aa60c9c62c216db11e5dd6cc7e8618e4eb8887737a",
+        "mismatches": 0
+      },
+      {
+        "case": "key-single-step",
+        "result_sha256": "7ba24a4021f5a491ae340c0ac111e2df499ddd7aeabfc1beaf31bf53c59b5b1b",
+        "mismatches": 0
+      },
+      {
+        "case": "key-reset",
+        "result_sha256": "8e5fc88e869759a48b402afbdb37d4cd386f76607523d1fc605ae27ce7bee6fa",
+        "mismatches": 0
+      },
+      {
+        "case": "key-wasd-up",
+        "result_sha256": "44152b1da8f74cfd8bf273101d7e8b6782d6a81684ddccf31cc0275d3311da60",
+        "mismatches": 0
+      },
+      {
+        "case": "key-wasd-right",
+        "result_sha256": "3f56fb3aa0625860d61799738559f38095e1386c34eba8d72d7c4b206f298905",
+        "mismatches": 0
+      },
+      {
+        "case": "key-wasd-down",
+        "result_sha256": "9666567ba39fbedfce62c1ca19b0e845b0a538d8a8de226d09cb48d87ccc2cca",
+        "mismatches": 0
+      },
+      {
+        "case": "key-wasd-left",
+        "result_sha256": "ccb60e6a56b980886ae8c408561383eab49782dbf69c7293874464badceea596",
+        "mismatches": 0
+      },
+      {
+        "case": "key-scan-up",
+        "result_sha256": "4fe7879c648fecdd9a338977affd5bdab4115c861da3d107e5bc4b02c8dbf6f2",
+        "mismatches": 0
+      },
+      {
+        "case": "key-scan-right",
+        "result_sha256": "bdc95bb8e8e2c77cce85c0519f38d5d878d9295583fac874bbdd163280ac61a2",
+        "mismatches": 0
+      },
+      {
+        "case": "key-scan-down",
+        "result_sha256": "ca756981e5142fd5d20486ba45ec65e9312935d2757650b093c13c40eae4eb93",
+        "mismatches": 0
+      },
+      {
+        "case": "key-scan-left",
+        "result_sha256": "c8b740f47957e081d9a217917d80baeb51d9cd4c742876dd8c67d0882b59acc4",
+        "mismatches": 0
+      },
+      {
+        "case": "key-contradictory-escape-up",
+        "result_sha256": "57539f29bbb2f3718ae3f31ff305f295cc581a95f10371a49f21c6ef7e2bfd01",
+        "mismatches": 0
+      },
+      {
+        "case": "key-ignored",
+        "result_sha256": "a971b686b3e6b25f82112913b70753d17941def3addd80234384a2b8889c2cb3",
+        "mismatches": 0
+      },
+      {
+        "case": "pointer-up",
+        "result_sha256": "3080aa84819d3b10b846feef05409e0ec0a31f67ad60641e88598608b5b6e1a8",
+        "mismatches": 0
+      },
+      {
+        "case": "pointer-left",
+        "result_sha256": "316f2eb6922da38c583da1c80df27325b90a4ab2a0eb8d5da6b06e5977761350",
+        "mismatches": 0
+      },
+      {
+        "case": "pointer-right",
+        "result_sha256": "8e474efd7f120fc956602b65f7b03d80e134a534e8d888f5b24917abc4fb85e0",
+        "mismatches": 0
+      },
+      {
+        "case": "pointer-down",
+        "result_sha256": "cf36fe6dabe5a2ab3464c24db20662661f19a9eae81e7d7f9adfd207a4c30190",
+        "mismatches": 0
+      },
+      {
+        "case": "pointer-pause",
+        "result_sha256": "0c14467483e8390f6856b24ef1970d79658a1b11ad171d32c0ed300e0bb0a46d",
+        "mismatches": 0
+      },
+      {
+        "case": "pointer-step",
+        "result_sha256": "51d346882d1b6d544755357c1c0a4909c85de01f161b88f396aa96d66491f1b3",
+        "mismatches": 0
+      },
+      {
+        "case": "pointer-reset",
+        "result_sha256": "c5b26f465719b9b129616d4515d77414da8797b914a8c7f022524f731bf09654",
+        "mismatches": 0
+      },
+      {
+        "case": "pointer-outside",
+        "result_sha256": "af22aac875e485b78c8bcdb64201d2536e12b47c89820b9eb98ca8129163da49",
+        "mismatches": 0
+      },
+      {
+        "case": "pointer-held",
+        "result_sha256": "46d4a8fd0619ecba364706fb40d7780477435beebff73a7e7d9483f40fc3c8c4",
+        "mismatches": 0
+      },
+      {
+        "case": "pointer-release",
+        "result_sha256": "9a8f6b582aa60530a281b61ae29404de8c1339efda390d5abd4644f1ee96b1fc",
+        "mismatches": 0
+      },
+      {
+        "case": "pointer-absent",
+        "result_sha256": "92c3472e148887f26d0b0505d8dc787e9c7f98b759c6731d0fc16c2a58cc0e8e",
+        "mismatches": 0
+      },
+      {
+        "case": "clock-paused",
+        "result_sha256": "6816232e5cb00f1b528b8cfb7eea539e3ceeb48d9a11dd64bd88e6d243417536",
+        "mismatches": 0
+      },
+      {
+        "case": "clock-before-boundary",
+        "result_sha256": "5404267151971413da865dd3febc3a4d76e9672cd870ffb94fb4032567ac683d",
+        "mismatches": 0
+      },
+      {
+        "case": "clock-at-boundary",
+        "result_sha256": "b0a48de536e81b7e9d16b0cacb1eaa8426f7d8ae16e0c9b2849d3e3c4bdec237",
+        "mismatches": 0
+      },
+      {
+        "case": "clock-wrap",
+        "result_sha256": "fdef99451645312109c206aa6c996d311620c88f960be546105e84e2fe259cc0",
+        "mismatches": 0
+      },
+      {
+        "case": "clock-eats-food",
+        "result_sha256": "306913cd0ca82f727d849e25d6a6a81fe6a40e51b3a1dddbb516e0439285aa23",
+        "mismatches": 0
+      }
+    ],
+    "claim": "prepared canonical arena actions compared between legacy evaluator, common evaluator and standalone Python/JavaScript",
+    "limits": [
+      "no raw keyboard/mouse or host geometry qualification",
+      "no original DOS CPU execution",
+      "not a playthrough"
+    ]
+  },
+  "local_repository_suite": {
+    "command": "python -m pytest -q",
+    "passed": 2584,
+    "skipped": 124,
+    "failed": 3,
+    "errors": 23,
+    "log_sha256": "a0575c58068012f95f55ab4b6a1c3b48246e882661c48943713ff9fe11f7588b",
+    "failure_classification": "all failing cases reproduced on unchanged integration base on this macOS host",
+    "baseline_head": "b21b204d98550f5eaf61278771aec9b8db1b2924",
+    "baseline_log_sha256": "67e0a892c53acc14414d0af34454daf09932a20011da15dcd2e73290b652dde1",
+    "platform_limits": [
+      "Apple compiler cannot create the GNU/Linux ELF fixtures used by two failures and 23 fixture setup errors",
+      "case-insensitive filesystem cannot create the two distinct case-only resource filenames required by one ambiguity test"
+    ]
+  },
+  "independent_review": {
+    "scope": "contract, reference runtime, persistence, API/CLI, bundled guide and helper wrapper",
+    "findings_resolved": [
+      "strict epoch typing and pre-execution context capture",
+      "bounded call/event diagnostics",
+      "selected implementation resource preflight",
+      "canonical stored-record readback",
+      "array capabilities across unused import signatures"
+    ],
+    "contract_tests_after_final_fix": 25,
+    "bundled_guide_example": "one group, three implementations, complete, output zero"
+  },
+  "open_gates": [
+    "hosted CI and required native Linux CI",
+    "whole-game and original-process qualification",
+    "general instruction coverage beyond admitted register INC/ADD/ADC",
+    "physical host rendering/audio and keyboard/mouse execution",
+    "foreign-language ABI hosting and native pointer layouts"
+  ]
+}

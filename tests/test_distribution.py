@@ -74,6 +74,16 @@ REQUIRED_SOURCE_FILES += ('docs/evidence/integration-0261/verification.json',)
 REQUIRED_SOURCE_FILES += ('tests/fixtures/frame_capture.S',
                           'docs/verification/kq1-tas-2026-10-31.json')
 REQUIRED_SOURCE_FILES += ('src/fdisbull/capture_audit.py', 'tests/test_capture_audit.py')
+REQUIRED_SOURCE_FILES += ('tests/fixtures_common_uil.py',)
+REQUIRED_SOURCE_FILES += ('docs/evidence/common-uil-2026-11-01/verification.json',)
+REQUIRED_SOURCE_FILES += ('tests/fixtures_common_uil_native.py', 'docs/evidence/common-uil-native-2026-11-01/verification.json')
+DESKTOP_EVIDENCE_FILE = 'docs/evidence/common-uil-desktop-2026-11-01/verification.json'
+REQUIRED_SOURCE_FILES += (DESKTOP_EVIDENCE_FILE,)
+DESKTOP_RUNTIME_FILES = tuple('src/fdisbull/native_runtime/'+name for name in (
+    'memory-desktop.c', 'memory-desktop.h', 'memory-appkit.m', 'memory-x11.c', 'memory-win32.c'))
+REQUIRED_SOURCE_FILES += DESKTOP_RUNTIME_FILES + (
+    'src/fdisbull/uil_desktop.py', 'docs/COMMON_UIL_DESKTOP.md', 'tests/test_uil_desktop_cli.py',
+    'tests/test_uil_desktop.py', 'tests/test_uil_desktop_admission.py', 'tests/test_uil_native_arena_functions.py')
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):
@@ -160,3 +170,42 @@ def test_release_allowlists_include_only_the_public_udc_and_output_receipts():
                        if line.startswith('include docs/evidence/output-024/')}
     assert output_receipts == OUTPUT_EVIDENCE_FILES
     assert all((root/path).is_file() for path in OUTPUT_EVIDENCE_FILES)
+
+
+@pytest.mark.parametrize('required', DESKTOP_RUNTIME_FILES + ('src/fdisbull/uil_desktop.py',
+                          'docs/COMMON_UIL_DESKTOP.md', 'tests/test_uil_desktop_cli.py',
+                          'tests/test_uil_desktop_admission.py', DESKTOP_EVIDENCE_FILE))
+def test_distribution_check_requires_desktop_runtime_sources(tmp_path, required):
+    check = runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+    archive = tmp_path/'fdisbull-missing-desktop.zip'
+    source_archive(archive, tuple(path for path in REQUIRED_SOURCE_FILES if path != required))
+    with pytest.raises(ValueError, match=re.escape(required)):
+        check(archive)
+
+
+def test_desktop_runtime_templates_are_selected_for_each_package_type():
+    import tomllib
+    root = Path(__file__).resolve().parents[1]
+    release = runpy.run_path(str(root/'scripts/build_release.py'))['release_files'](root)
+    selected = {path.relative_to(root).as_posix() for path in release}
+    assert set(DESKTOP_RUNTIME_FILES) | {'src/fdisbull/uil_desktop.py',
+        'docs/COMMON_UIL_DESKTOP.md', 'tests/test_uil_desktop_cli.py'} <= selected
+    manifest = (root/'MANIFEST.in').read_text()
+    assert 'recursive-include src/fdisbull/native_runtime *.c *.h *.m' in manifest
+    package_data = tomllib.loads((root/'pyproject.toml').read_text())['tool']['setuptools']['package-data']['fdisbull']
+    assert {'native_runtime/*.c', 'native_runtime/*.h', 'native_runtime/*.m'} <= set(package_data)
+
+
+def test_desktop_release_evidence_selector_excludes_unreviewed_receipts(tmp_path):
+    root = Path(__file__).resolve().parents[1]
+    build = runpy.run_path(str(root/'scripts/build_release.py'))
+    for relative in (*build['ROOT_FILES'], *build['DOC_EXAMPLE_FILES'], DESKTOP_EVIDENCE_FILE):
+        path = tmp_path/relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text('')
+    private = tmp_path/Path(DESKTOP_EVIDENCE_FILE).with_name('raw-runtime.json')
+    private.write_text('private runtime observation')
+    selected = {path.relative_to(tmp_path).as_posix() for path in build['release_files'](tmp_path)}
+    assert DESKTOP_EVIDENCE_FILE in selected
+    assert private.relative_to(tmp_path).as_posix() not in selected
+    assert 'include '+DESKTOP_EVIDENCE_FILE in (root/'MANIFEST.in').read_text().splitlines()

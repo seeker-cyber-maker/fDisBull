@@ -80,9 +80,10 @@ from .advanced import AdvancedMixin
 from .membership_view import MembershipMixin
 from .debugger import DebugProjectMixin, DEBUG_DDL
 from .proofs import ProofProjectMixin, PROOF_DDL
+from .uil_store import CommonUILMixin
 
 
-class Project(TargetSourcesMixin, CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
+class Project(CommonUILMixin, TargetSourcesMixin, CodeBackingsMixin, ProofProjectMixin, DebugProjectMixin, DOSStateRefreshMixin, SharedLabelsMixin, AdvancedMixin, MembershipMixin, FileReferencesMixin, ExternalFilesMixin, TypeSystemMixin, IncrementalMixin, FactsMixin, MemoryMixin, CFGMixin, CallViewsMixin, BoundaryMixin, DOSMixin, AnalysisMixin):
 
     def __init__(self, path):
         self.path = Path(path).resolve()

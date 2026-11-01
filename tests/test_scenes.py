@@ -345,6 +345,7 @@ def test_bundled_investigation_skill_is_readable_without_project():
         "references/proofs.md",
         "references/workflows.md",
         "references/udl-uil-udc.md",
+        "references/common-uil.md",
         "references/recovery-research.md",
         "references/semantic-contracts.md",
         "references/formats-and-media.md",

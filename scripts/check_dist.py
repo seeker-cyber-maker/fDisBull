@@ -19,6 +19,10 @@ REQUIRED_TEST_HELPERS.add("tests/fixtures_z_scenes.py")
 REQUIRED_TEST_HELPERS.add("tests/test_media_modules.py")
 REQUIRED_TEST_HELPERS.add("tests/fixtures/frame_capture.S")
 REQUIRED_TEST_HELPERS.add("tests/test_capture_audit.py")
+REQUIRED_TEST_HELPERS.add("tests/fixtures_common_uil.py")
+REQUIRED_TEST_HELPERS.add("tests/fixtures_common_uil_native.py")
+REQUIRED_TEST_HELPERS.add("tests/test_uil_desktop_cli.py")
+REQUIRED_TEST_HELPERS |= {"tests/test_uil_desktop.py", "tests/test_uil_desktop_admission.py", "tests/test_uil_native_arena_functions.py"}
 REQUIRED_SOURCE_EVIDENCE = {"docs/evidence/output-024/" + name for name in
                             ("amplification.json", "dinopark-native.json", "dinopark-output.json", "tests.json")}
 REQUIRED_SOURCE_EVIDENCE |= {"docs/evidence/scene-recovery-2026-10-29/" + name for name in
@@ -29,6 +33,9 @@ REQUIRED_SOURCE_EVIDENCE |= {"docs/uil-rfcs/0002/" + name for name in
                            ("vectors.json", "replay-summary.json")}
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-026/verification.json")
 REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/integration-0261/verification.json")
+REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/common-uil-2026-11-01/verification.json")
+REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/common-uil-native-2026-11-01/verification.json")
+REQUIRED_SOURCE_EVIDENCE.add("docs/evidence/common-uil-desktop-2026-11-01/verification.json")
 REQUIRED_SOURCE_EVIDENCE.add("docs/verification/kq1-tas-2026-10-31.json")
 REQUIRED_PE_RESOURCES = {"wine_guest/agent.c", "wine_guest/init.sh", "wine_guest/broker.py", "wine_guest/selftest.c"}
 REQUIRED_PE_RESOURCES |= {"ida_guest/ui.c", "ida_guest/init.sh", "ida_guest/broker.py", "ida_guest/SDK-LICENSE.txt", "ida_wire.py", "ida_remote.py", "ida_trace.py"}
@@ -37,6 +44,10 @@ REQUIRED_KNOWLEDGE_RESOURCES = {"media.py", "capabilities.py", "capture_audit.py
 REQUIRED_KNOWLEDGE_RESOURCES |= {"data/dos-runtime-signatures.json", "data/MICROSOFT-DOS-LICENSE.txt"}
 REQUIRED_MACOS_RESOURCES = {"ghidra_arm64.py", "macos_lldb.py", "_macos_lldb_driver.py",
                             "data/FdisbullGhidraArm64.txt"}
+REQUIRED_NATIVE_RUNTIME_RESOURCES = {"uil_desktop.py"} | {
+    "native_runtime/" + name for name in
+    ("memory-desktop.c", "memory-desktop.h", "memory-appkit.m", "memory-x11.c", "memory-win32.c")}
+REQUIRED_KNOWLEDGE_RESOURCES |= REQUIRED_NATIVE_RUNTIME_RESOURCES
 REQUIRED_KNOWLEDGE_RESOURCES |= {"skills/fdisbull-investigate/SKILL.md", "skills/fdisbull-investigate/references/scenes.md",
                                  "skills/fdisbull-investigate/references/methodology.md",
                                  "skills/fdisbull-investigate/references/runtime-navigation.md",
@@ -124,6 +135,7 @@ def check_archive(path: Path) -> int:
         required |= {"AGENTS.md", "CLAUDE.md", "docs/AGENT_QUICKSTART.md", "docs/MACOS_ARM64_ANALYSIS.md",
                      "docs/CAPABILITIES.md", "docs/MACOS_APP_REPLICATION.md", "tests/test_capabilities.py"}
         required |= {"scripts/check_agent_skill.py"}
+        required |= {"docs/COMMON_UIL_DESKTOP.md"}
         required |= REQUIRED_SOURCE_EVIDENCE
         missing = required - relative
         if missing:

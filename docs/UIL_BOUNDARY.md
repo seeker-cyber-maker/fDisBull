@@ -1,8 +1,11 @@
 # Universal Interaction Language export boundary
 
-Design boundary, 27 October 2026. This document assigns responsibility for a
-future Universal Interaction Language (UIL) export. It does not claim that a
-UIL grammar, exporter, compiler, runtime or game conversion is implemented.
+Design boundary, 27 October 2026, with implementation scope clarified on
+1 November 2026. This document assigns responsibility for a future general UIL
+export. Bounded implemented profiles now exist, including the
+[common indexed contract](COMMON_UIL_CONTRACT.md), primitive interaction IL,
+Zork IR and partial intents. They do not establish an automatic whole-game
+recovery or one consumer supporting every profile.
 
 ## Purpose
 

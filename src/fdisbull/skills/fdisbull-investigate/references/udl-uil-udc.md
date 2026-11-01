@@ -16,6 +16,19 @@ general compiler manual.
 
 ## Keep the terms separate
 
+The additive `fdisbull-common-uil-1` profile uses indexed typed variables,
+constants, functions and imports. `uil-catalog` groups exact normalized models
+from admitted scalar/memory, restricted C/Python and decoded register instruction
+inputs. `uil-run` evaluates owned frames; `uil-compile` emits standalone
+Python/JavaScript and records actual selected shims. Presentation binds values
+and resources; orchestration selects implementations. `uil-fold`/`uil-expand`
+retain exact lower-level children; labels never substitute for matching model
+content. Source correspondence and native/host qualification remain separate.
+See source-checkout `docs/COMMON_UIL_CONTRACT.md` and the conformance study for
+schemas, public examples, original-kernel evidence and explicit limits. This
+profile does not rename or widen the legacy formats below.
+Read [common-uil.md](common-uil.md) for a complete installed-package example.
+
 - **UDL** is the source-to-shared-IL mapping role.
 - **UIL** is the candidate shared-IL program.
 - **UDC** is a target compiler definition that reads UIL and binds its declared
