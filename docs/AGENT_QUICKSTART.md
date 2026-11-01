@@ -529,6 +529,35 @@ behavioral compatibility that a header cannot establish. The
 [multicart contract and native checks](NES_MULTICART.md) describe the menu,
 bank switching, input handoff and tested emulator reset behavior.
 
+For a complete resource census and scene-element outline of a qualified DOS
+AGI 2.917 resource directory:
+
+```text
+fdisbull agi-scenes /private/game --profile 2.917 --stage outline
+fdisbull agi-scenes /private/game --profile 2.917 --stage resolve
+```
+
+The second stage adds conservative local value resolution. Use `--include-ir`
+and `--include-text` for private source investigation. It retains every LOGIC
+as low-level IR or an opaque source obligation; it is not an executable game
+model. Read [AGI scene census](AGI_SCENE_CENSUS.md) and the bundled
+`references/agi-scenes.md` before interpreting its coverage counts.
+
+For the separately qualified KQ1 initial-audience bow:
+
+```text
+fdisbull kq1-bow-intents /private/kq1 --output /private/bow.package.json.gz
+fdisbull kq1-bow-evaluate /private/bow.package.json.gz --state-file /private/before-bow.json
+```
+
+The second command executes named UIL rules and bound engine requests against
+a declared state. It does not operate a guest or supply animation timing.
+Follow [the interaction contract](KQ1_BOW_INTENT.md) for state qualification,
+completion events and explicit modal acknowledgements, and read
+[verification](VERIFICATION-KQ1-BOW-2026-10-30.md) for the distinction between
+source comparisons and selected native observations. Unknown contexts return
+`unrecovered`; the complete census remains low-level IR.
+
 ### Compare a source block with shared semantics
 
 For the supported 0.23 DOS profile, read `udl-uil-udc.md` before using

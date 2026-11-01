@@ -31,6 +31,7 @@ AGENT_SKILL_GUIDES = {
     "references/scene-recovery.md": "Recover UIL scenes from required elements, bounded source dependencies and explicit residuals",
     "references/source-and-concepts.md": "Intake pinned source, search concepts across editions, and preserve source/native claim boundaries",
     "references/formats-and-media.md": "Qualify containers, executable mappings, release differences and valid media reduction",
+    "references/agi-scenes.md": "Inventory AGI scene elements, resolve typed references and retain unqualified IR",
     "references/binary-claim-verification.md": "Prove or falsify stored-value, writer and behavior claims against the decoded original binary",
 }
 AGENT_SKILL_RESOURCES = tuple(AGENT_SKILL_GUIDES)
@@ -272,6 +273,9 @@ METHODS = {
     "function-patterns": "Candidate prologue/epilogue evidence; [version,limit,offset,scan_unexplored]",
     "managed": "Inspect .NET metadata or disassemble one CIL method; path or project,[token,max_instructions,version]",
     "agi-logic": "Read-only partial AGI 2.917 logic decoding; logdir, volume_dir, logic, profile, [max_instructions]",
+    "agi-scenes": "Read-only AGI scene census, not executable UIL; game_dir, profile, [stage,include_ir,include_text,max_updates,max_instructions,max_code_bytes]",
+    "kq1-bow-intents": "Export one source-bound court intent with UDL and retained IR; game_dir,output,[uil,udl]",
+    "kq1-bow-evaluate": "Evaluate court intent rules and engine requests; package,state or state_file,[event,event_file]; no native guest",
     "decoder-modules": "List explicitly registered trusted source decoder modules; no project required",
     "module-analyze": "Direct source analysis without native ASM; module,path,[volume_dir,logic,profile,address,max_instructions]",
     "module-lift": "Direct source-to-UDL/UIL projection; module,path,initial_state,[volume_dir,logic,profile,entry_offset,stop_offsets,stop_points,callee_entries,max_instructions,max_call_depth,control_flow,allow_opaque,effect_profile]",
@@ -666,6 +670,15 @@ def invoke(method, params, debugger=None):
         from .agi import inspect_logic
 
         return inspect_logic(**p)
+    if method == "agi-scenes":
+        from .agi_scenes import inspect_scenes
+        return inspect_scenes(**p)
+    if method == "kq1-bow-intents":
+        from .kq1_bow import export_bow
+        return export_bow(**p)
+    if method == "kq1-bow-evaluate":
+        from .court_adapter import evaluate_bow
+        return evaluate_bow(**p)
     if method=='disc-inspect':
         from .disc import inspect_disc_path
         return inspect_disc_path(**p)
@@ -1218,6 +1231,7 @@ def respond(request, default_project=None, debugger=None):
             'shadowrun-system-inspect',
             'shadowrun-systems',
         }
+        standalone = standalone or request["method"] in {"agi-scenes", "kq1-bow-intents", "kq1-bow-evaluate"}
         if default_project is not None and isinstance(params, dict) and not standalone:
             params = {"project": default_project, **params}
         result = invoke(request["method"], params, debugger)
@@ -2081,6 +2095,24 @@ def parser():
     c.add_argument("logic", type=int)
     c.add_argument("--profile", required=True, choices=["2.917"])
     c.add_argument("--max-instructions", type=int, default=1000)
+    c = sub.add_parser("agi-scenes", help=METHODS["agi-scenes"])
+    c.add_argument("game_dir")
+    c.add_argument("--profile", required=True, choices=["2.917"])
+    c.add_argument("--stage", choices=["outline", "resolve"], default="resolve")
+    c.add_argument("--include-ir", action="store_true")
+    c.add_argument("--include-text", action="store_true")
+    c.add_argument("--max-updates", type=int, default=200000)
+    c.add_argument("--max-instructions", type=int, default=100000)
+    c.add_argument("--max-code-bytes", type=int, default=1048576)
+    c = sub.add_parser("kq1-bow-intents", help=METHODS["kq1-bow-intents"])
+    c.add_argument("game_dir")
+    c.add_argument("--output", required=True)
+    c.add_argument("--uil")
+    c.add_argument("--udl")
+    c = sub.add_parser("kq1-bow-evaluate", help=METHODS["kq1-bow-evaluate"])
+    c.add_argument("package")
+    c.add_argument("--state-file", required=True)
+    c.add_argument("--event-file")
     c = sub.add_parser("debug-spatial-domain-audit", help=METHODS["debug-spatial-domain-audit"])
     c.add_argument("project")
     c.add_argument("revision")

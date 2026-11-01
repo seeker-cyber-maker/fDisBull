@@ -105,7 +105,8 @@ SOURCE_PATTERNS = (
     ("patches", "capstone-5.0.9-sh-profile-gating.patch"),
     ("scripts/rom_semantic_route", "*.java"),
     ("scripts/rom_semantic_route", "README.md"),
-    ("scripts", "*.py"),
+    ("docs/evidence/agi-scenes-2026-10-30", "verification.json"),
+    ("docs/evidence/kq1-bow-2026-10-30", "verification.json"),    ("scripts", "*.py"),
     ("scripts", "miniplanets_display_observer.c"),
 )
 

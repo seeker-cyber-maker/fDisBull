@@ -41,3 +41,12 @@ and [the KQ1 structural verification](VERIFICATION-AGI-COMPACT-2026-10-31.md).
 The separate [effect profile](AGI_EFFECTS.md) adds bounded object/resource model
 operations and explicit host suspension; it does not turn static decoding into
 original-engine execution.
+
+## Whole-resource scene census
+
+Use the separate [AGI scene census](AGI_SCENE_CENSUS.md) to inventory all present
+LOGIC resources, message/vocabulary/inventory data, typed scene references and
+unresolved dependencies before qualifying complete interactions. Its `outline`
+stage collects source structure; `resolve` adds bounded local value analysis.
+The existing `agi-logic` API and its partial-decoder contract remain unchanged.
+The census retains structural low-level IR and accepts no executable UIL.

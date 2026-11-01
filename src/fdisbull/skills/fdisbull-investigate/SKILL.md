@@ -149,6 +149,10 @@ user asks a narrower question.
 | Does an actor, item, action or text view preserve meaning? | `references/semantic-contracts.md` |
 | Which route, spatial policy or assisted intervention is supported? | `references/runtime-navigation.md` |
 
+For a qualified DOS AGI resource set, use
+[references/agi-scenes.md](references/agi-scenes.md) to inventory scene elements
+and unresolved references before qualifying complete interactions.
+
 ## Choose a useful probe
 
 For a genuine fork, record one active question, target/context, hypothesis,

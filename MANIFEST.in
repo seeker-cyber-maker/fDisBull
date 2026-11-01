@@ -43,6 +43,8 @@ include docs/uil-rfcs/0002/replay-summary.json
 include docs/evidence/integration-026/verification.json
 include docs/evidence/integration-0261/verification.json
 include docs/evidence/common-uil-2026-11-01/verification.json
+include docs/evidence/agi-scenes-2026-10-30/verification.json
+include docs/evidence/kq1-bow-2026-10-30/verification.json
 include docs/evidence/common-uil-native-2026-11-01/verification.json
 include docs/evidence/common-uil-desktop-2026-11-01/verification.json
 include docs/evidence/source-search-pilot/verification.json
@@ -71,6 +73,8 @@ include patches/capstone-5.0.9-sh-profile-gating.patch
 include scripts/rom_semantic_route/DecompileAuthoredSh2.java
 include scripts/rom_semantic_route/README.md
 include scripts/miniplanets_display_observer.c
+include docs/evidence/agi-scenes-2026-10-30/verification.json
+include docs/evidence/kq1-bow-2026-10-30/verification.json
 include docs/evidence/spatial-2026-10-29/verification.json
 include docs/evidence/zork-2026-10-29/verification.json
 include docs/evidence/zork-uil-2026-10-29/verification.json
