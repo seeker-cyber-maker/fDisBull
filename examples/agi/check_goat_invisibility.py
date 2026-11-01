@@ -283,14 +283,24 @@ def main():
     args = parser.parse_args()
     output = args.output.resolve()
     checkout = Path(__file__).resolve().parents[2]
-    require(output != checkout and checkout not in output.parents, 'Keep source receipts outside Git')
+    roots=(args.logdir.resolve().parent,args.volume_dir.resolve())
+    try:
+        require(output != checkout and checkout not in output.parents, 'Keep source receipts outside Git')
+        require(not args.output.exists() and not args.output.is_symlink(), 'Use a fresh output receipt')
+        require(all(output != root and root not in output.parents for root in roots),
+                'Keep output receipts outside source directories')
+    except ValueError as exc:
+        print(json.dumps(dict(status='refused',complete=False,reason=str(exc))))
+        return 2
     try:
         report = analyze(args.logdir, args.volume_dir, args.profile, args.steps)
     except (ValueError, OSError) as exc:
         report = dict(format='fdisbull-agi-goat-invisibility-check-1', status='refused',
                       complete=False, reason=str(exc))
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(report, indent=2) + '\n')
+    # Exclusive creation also protects an existing file introduced after admission.
+    with output.open('x') as stream:
+        stream.write(json.dumps(report, indent=2) + '\n')
     print(json.dumps(dict(status=report['status'], complete=report['complete'],
                          output=str(output), sha256=sha256(output.read_bytes()).hexdigest())))
     return 0 if report['complete'] else 2

@@ -1,5 +1,7 @@
 """Authored source-layout and solver checks, without original game fixtures."""
 from hashlib import sha256
+import json
+import sys
 from types import SimpleNamespace
 
 import pytest
@@ -151,3 +153,67 @@ def test_solver_bound_is_explicit_and_fail_closed(steps):
     pytest.importorskip('z3')
     with pytest.raises(ValueError, match='steps must be 2..64'):
         check.solve_flags(steps)
+
+
+def cli_inputs(tmp_path):
+    directory = tmp_path / 'directory'; directory.mkdir()
+    volumes = tmp_path / 'volumes'; volumes.mkdir()
+    logdir = directory / 'LOGDIR'; logdir.write_bytes(b'authored LOGDIR bytes to preserve')
+    volume = volumes / 'VOL.0'; volume.write_bytes(b'authored volume bytes to preserve')
+    receipts = tmp_path / 'receipts'; receipts.mkdir()
+    previous = receipts / 'previous.json'; previous.write_bytes(b'{"sealed":"authored prior receipt"}\n')
+    return logdir, volumes, volume, previous
+
+
+def tree_bytes(root):
+    return {p.relative_to(root).as_posix(): p.read_bytes() if p.is_file() else None
+            for p in root.rglob('*')}
+
+
+@pytest.mark.parametrize('destination', ['logdir', 'volume-file', 'logdir-tree', 'volume-tree', 'existing-receipt'])
+def test_cli_destination_refusal_preserves_inputs_and_prior_receipts_without_analysis(
+        tmp_path, monkeypatch, capsys, destination):
+    logdir, volumes, volume, previous = cli_inputs(tmp_path)
+    output = {'logdir': logdir, 'volume-file': volume,
+              'logdir-tree': logdir.parent / 'new' / 'report.json',
+              'volume-tree': volumes / 'new' / 'report.json',
+              'existing-receipt': previous}[destination]
+    before = tree_bytes(tmp_path)
+    analyzed = []
+    def forbidden(*args, **kwargs):
+        analyzed.append(True)
+        pytest.fail('Destination admission must reject before reading or analyzing source')
+    monkeypatch.setattr(check, 'analyze', forbidden)
+    monkeypatch.setattr(sys, 'argv', ['check_goat_invisibility', '--logdir', str(logdir),
+        '--volume-dir', str(volumes), '--output', str(output)])
+
+    result = check.main()
+
+    assert result == 2 and analyzed == []
+    response = json.loads(capsys.readouterr().out)
+    assert response['status'] == 'refused' and response['complete'] is False
+    assert isinstance(response.get('reason'), str) and response['reason']
+    assert tree_bytes(tmp_path) == before
+
+
+def test_cli_fresh_destination_outside_source_still_writes_requested_receipt(tmp_path, monkeypatch, capsys):
+    logdir, volumes, volume, previous = cli_inputs(tmp_path)
+    source_before = (logdir.read_bytes(), volume.read_bytes(), previous.read_bytes())
+    output = tmp_path / 'new-receipts' / 'report.json'
+    report = {'format': 'authored-cli-check', 'status': 'verified-under-assumptions', 'complete': True}
+    calls = []
+    def analyze(*args):
+        calls.append(args)
+        return report
+    monkeypatch.setattr(check, 'analyze', analyze)
+    monkeypatch.setattr(sys, 'argv', ['check_goat_invisibility', '--logdir', str(logdir),
+        '--volume-dir', str(volumes), '--output', str(output)])
+
+    assert check.main() == 0
+
+    assert calls == [(logdir, volumes, '2.917', 8)]
+    assert json.loads(output.read_text()) == report
+    response = json.loads(capsys.readouterr().out)
+    assert response['status'] == 'verified-under-assumptions' and response['complete'] is True
+    assert response['sha256'] == sha256(output.read_bytes()).hexdigest()
+    assert (logdir.read_bytes(), volume.read_bytes(), previous.read_bytes()) == source_before
