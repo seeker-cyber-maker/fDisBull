@@ -22,6 +22,7 @@ AGENT_SKILL_GUIDES = {
     "references/reconstruction.md": "First-use recovery recipe: original-to-UIL-to-target gates, discriminating probes and resumable evidence",
     "references/proofs.md": "Build explicit bounded Z3 models and report their assumptions and scope",
     "references/workflows.md": "Choose static analysis, native debugging, scene or text-player entry points",
+    "references/analysis-approach.md": "Choose what to analyze next using evidence, dependencies, information gain and cost",
     "references/udl-uil-udc.md": "Qualify direct AGI components, source blocks, retained Zork IR, recovered intents and scene rules, and original-backed DOS compilation",
     "references/common-uil.md": "Compose indexed typed UIL, semantic catalogs, recoverable blocks and standalone selected output",
     "references/recovery-research.md": "Qualify research, retain reusable meanings and compare recovery depth and cost",

@@ -653,7 +653,6 @@ REQUIRED_SOURCE_FILES += tuple(path for path in (
     'src/fdisbull/macos_capture.py',
     'src/fdisbull/macos_lldb.py',
     'src/fdisbull/macos_session.py',
-    'src/fdisbull/native_runtime/',
     'src/fdisbull/skills/fdisbull-investigate/references/reconstruction.md',
     'src/fdisbull/skills/fdisbull-investigate/references/scene-recovery.md',
     'src/fdisbull/skills/fdisbull-investigate/references/source-and-concepts.md',
@@ -681,6 +680,21 @@ REQUIRED_SOURCE_FILES += tuple(path for path in (
     'tests/test_uil_desktop_cli.py',
     'tests/test_uil_native_arena_functions.py',
     'tests/web_shell_checks.mjs',
+) if path not in REQUIRED_SOURCE_FILES)
+
+REQUIRED_SOURCE_FILES = tuple(
+    path for path in REQUIRED_SOURCE_FILES
+    if not path.startswith(("examples/", "experimental/", "history/", "build/", "dist/"))
+)
+
+
+REQUIRED_SOURCE_FILES += tuple(path for path in (
+    'src/fdisbull/uil_desktop.py',
+    'src/fdisbull/native_runtime/memory-desktop.c',
+    'src/fdisbull/native_runtime/memory-desktop.h',
+    'src/fdisbull/native_runtime/memory-appkit.m',
+    'src/fdisbull/native_runtime/memory-x11.c',
+    'src/fdisbull/native_runtime/memory-win32.c',
 ) if path not in REQUIRED_SOURCE_FILES)
 def source_archive(path,files=REQUIRED_SOURCE_FILES):
     with zipfile.ZipFile(path,'w') as output:

@@ -14,7 +14,9 @@ EXCLUDED_SUFFIXES = {".fdb", ".db", ".sqlite", ".sqlite3", ".sav", ".state", ".e
 EXCLUDED_SUFFIXES |= {".nes", ".rom", ".gen", ".smd", ".iso", ".cue", ".wav", ".pcm",
                       ".lut", ".4bpp", ".slz", ".sona", ".swav", ".spat", ".tfi", ".chr"}
 PLAYER_MODULES = {"__init__.py", "__main__.py", "player.py", "runtime.py", "live.py", "word16.py",
-                  "game_intents.py", "intent_runtime.py", "batch.py"}
+                  "game_intents.py", "intent_runtime.py", "batch.py",
+                  "scene_intents.py", "scene_bindings.py", "scene_runtime.py",
+                  "door_intents.py", "door_bindings.py"}
 REQUIRED_PLAYER_SOURCE = {"player/pyproject.toml"} | {"player/fdisbull_player/" + name for name in PLAYER_MODULES}
 REQUIRED_TEST_HELPERS = {"tests/fixtures_formats.py", "tests/fixtures_macho.py", "tests/ida_rpc_vectors.json", "tests/dosbox_zip_empty_write.cpp"}
 REQUIRED_TEST_HELPERS.add("tests/fixtures_z_scenes.py")
