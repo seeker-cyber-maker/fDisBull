@@ -364,6 +364,34 @@ execution contract. Read [scene-recovery.md](scene-recovery.md) for the procedur
 that starts from required scene elements; its proposed analysis steps do not add
 a general slicing pass or change the installed exporter's prerequisites.
 
+## Native console UDC profile
+
+`console-udc-targets` lists a shared unsigned eight/16-bit UIL subset for NES
+and Genesis. `console-udc` accepts `path`, `target`, `output` and optional
+`display_variable`; output must be a new private directory outside Git. Both
+targets generate native instructions, console startup and a controller loop.
+Compilation validates structure and bounds and reports `executed: false`.
+Runtime qualification remains a separate receipt. The source-checkout
+`docs/CONSOLE_UDC.md` records real emulator checks and an actual bounded Genesis
+machine-code → UIL → NES route with explicit RAM bindings. That initial lifter
+accepts a straight-line generated function pattern, not arbitrary game code.
+
+The separate `fdisbull.udl_genesis.lift_native` profile accepts a bounded native
+RAM function with explicit source range, RAM bindings and address-register
+assumptions. It handles selected byte/word arithmetic, tests and forward branches;
+unknown effects fail closed. Source-checkout `docs/GENESIS_ROM_TO_NES.md` records
+a real Miniplanets function tested against controlled execution of the original
+ROM and native NES output. This is a RAM-state projection, not a whole-game port
+or evidence that ordinary gameplay naturally reached the function.
+
+`fdisbull.udl_miniplanets.lift_level` specializes the exact official REV04 ROM's
+first level into standard UIL with immutable tables, plus separate NES scene
+metadata. Pass both to `write_console_rom`, or replay saved inputs with
+`console-udc --target nes --scene scene.json`. This is reviewed source-bound
+recovery, not generic 68000 decompilation. Source-checkout
+`docs/MINIPLANETS_NES_LEVEL.md` records playable controls, original CPU checks and
+aligned natural Genesis/NES replays, plus rendering/reset and score/time exclusions.
+
 ## Read a proof narrowly
 
 `udl-verify` uses the optional Z3 dependency to compare a source block model with

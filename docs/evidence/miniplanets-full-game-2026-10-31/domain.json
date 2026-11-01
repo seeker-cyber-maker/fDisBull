@@ -1,0 +1,21 @@
+{
+  "format": "miniplanets-source-bound-domain-1",
+  "scope": "Declared caller/state assumptions for the finite source-bound game profile; not a proof of whole-state or whole-game equivalence.",
+  "assumptions": [
+    "Stage indices are 0..54; time/life setting indices are 0..4.",
+    "Player/world coordinates and actor data are source-width bytes; Subpixel is the recovered 0..255 output of UpdateSubpixel.",
+    "Score, NextLife, lives and remaining seconds are valid packed BCD; source score is six digits capped at 999999.",
+    "World tile IDs are 0..34 and object types are 0..27.",
+    "Actor slot arguments are 0..47; each switch following-slot count stays within the 48-slot pool.",
+    "AddObject finds a free slot. Full-pool behavior is an explicit capacity fault adaptation, not parity for the original unbounded RAM traversal.",
+    "Environmental HV/status inputs must be identical to claim a deterministic comparison. Boot RAM noise uses an explicit seed adapter.",
+    "All original data are bound to the exact qualified ROM hash."
+  ],
+  "excluded_from_component_claim": [
+    "ordinary reachability of seeded states",
+    "unbounded malformed-object behavior",
+    "formal equivalence for every allowed state",
+    "all levels completed through ordinary controller play",
+    "pixel/timbre equivalence across different console hardware"
+  ]
+}

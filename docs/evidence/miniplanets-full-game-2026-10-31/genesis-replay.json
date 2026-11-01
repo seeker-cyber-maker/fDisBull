@@ -1,0 +1,149 @@
+{
+  "format": "fdisbull-genesis-uil-replay-evidence-1",
+  "date": "2026-10-31",
+  "profile": "miniplanets-remix-rev04",
+  "source_rom": {
+    "size": 524288,
+    "sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7"
+  },
+  "game_program_sha256": "198484bd9fe39d16f48d6785adcebe172b29b00511af1d77942088f7497e591b",
+  "native_outputs": {
+    "nes": {
+      "sha256": "1cf6e29d02c991af6bc9a8ced6668adb2a91a81b6c2318770d27379afb751db0"
+    },
+    "genesis": {
+      "size": 2097152,
+      "sha256": "7c6a55fb7f5b55449cd009b6824d4d010abe8a814b972b35fec59f999660464f"
+    }
+  },
+  "native_genesis": {
+    "core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+    "controlled_cases": 4822,
+    "state_fields": 79,
+    "full_state_returns_hv_events_faults": "passed",
+    "original_witness_batches_bound_to_complete_contracts": 36,
+    "controlled_receipt": {
+      "sha256": "fa46dbcf457b38b57282557c2bd2c0e46dc11784f04156f420063eaf59ed27c4",
+      "size": 102201
+    },
+    "normal": {
+      "completed_ticks": 676,
+      "state_fields": 79,
+      "independent_controller_checks": 676,
+      "controller_mapping_gaps": [],
+      "hv_words_replayed": 0,
+      "first_epoch": 1,
+      "last_epoch": 676,
+      "scope": "normal native publications compared with UIL; ambiguous input-frame mapping remains unknown",
+      "assistance": "ordinary scheduled controller input; no RAM writes",
+      "trace_sha256": "1de1979969f8fb40264b8c33cb0b9dca0aa35c685c178648ef6938290105fa23"
+    },
+    "normal_receipt": {
+      "sha256": "21cef4adcdd823e1120ece6f9cd88e3265747187a79551bb5a847e883e8fe693",
+      "size": 3946
+    },
+    "inputs_unchanged": true
+  },
+  "reference_modules": {
+    "presentation": {
+      "file": {
+        "sha256": "a0e92c437f53d08f7defcb544c7a86c4419eab1a366d4a350f06846e2c9d4225",
+        "size": 42760
+      },
+      "canonical_sha256": "73dbe90e996a86af2320c12b9d905c3c0ae498d7bb24c1d0e48efdea9e4b3c3b",
+      "format": "fdisbull-game-il-2",
+      "executable_typed_tree": true
+    },
+    "psg": {
+      "file": {
+        "sha256": "24f04ee0c4c038ead308f51978b35c1a4d21563ebddc933b0cca74450bbef98f",
+        "size": 26042
+      },
+      "canonical_sha256": "24f04ee0c4c038ead308f51978b35c1a4d21563ebddc933b0cca74450bbef98f",
+      "format": "fdisbull-game-il-2",
+      "executable_typed_tree": true
+    }
+  },
+  "checks": {
+    "presentation": {
+      "sequential_native_planner_cases": 480,
+      "native_clear_cases": 32,
+      "receipt": {
+        "sha256": "71ca3c61232feeda1ce21250b8d153ec1d1d876164baf3f1c4afcedbe4d36662",
+        "size": 1421
+      },
+      "status": true
+    },
+    "psg": {
+      "uil_c_native_assembly_cases": 128,
+      "receipt": {
+        "sha256": "07dcb0c8ef3b6989842906d15fd7c0c30c56faa5f0c7178362684df01cc1b5f5",
+        "size": 997
+      },
+      "status": true
+    },
+    "genesis_renderer_host": {
+      "staging_cases": 50000,
+      "vdp_mmio_cases": 1000,
+      "receipt": {
+        "sha256": "c0c6ae5fbc0b73a5e73dbfd90835850be7bbc8cf7ed734b90b4beebfd217d46f",
+        "size": 1116
+      },
+      "status": true
+    },
+    "genesis_audio": {
+      "register_sentinels": [
+        "D2-D7",
+        "A2-A6"
+      ],
+      "wrapper_checks": [
+        "init",
+        "get-status",
+        "stop-all",
+        "play-bgm",
+        "play-sfx"
+      ],
+      "mismatches": 0,
+      "native_smoke": {
+        "sha256": "ff7361980bb9899c379fd56b49bdbd408d7b71d57b7f7f895d7932babd8891bb",
+        "size": 679
+      },
+      "source_binding": {
+        "sha256": "1f5b2f27845993b8710d9b9c6873c8bd2f41642d3532f051197b7460c2c767d2",
+        "size": 2568
+      },
+      "priority_zero_smoke": {
+        "sha256": "413afbca447d951d1d840a050ae060e5e9cc6dd0e2b0bf1ebbeab094537d6eb4",
+        "size": 588
+      },
+      "limits": "retained original driver; nonzero PCM/status, not waveform equivalence"
+    }
+  },
+  "replay": {
+    "targets": [
+      "nes",
+      "genesis"
+    ],
+    "nes_existing_output_bytes_preserved": true,
+    "genesis_actual_build_and_replay_bytes_match": true,
+    "trusted_tools_only": true,
+    "captured_toolchain_bytes_genesis": 66002044,
+    "captured_genesis_payload_files": 989,
+    "qualification_claims_verified_by_inspection": false,
+    "external_host_dependencies_verified_by_inspection": false,
+    "macos_arm64_dependencies": 5,
+    "cross_host_portability": "not established",
+    "final_packaging_and_reproduction_receipts": "preserved separately with local PR56 update; no recursive archive identity claim"
+  },
+  "limits": [
+    "Reviewed source-bound rewrite, not arbitrary whole-ROM semantic recovery",
+    "Native Genesis game rules are generated from procedural UIL",
+    "Adapted quantized VDP presentation, not original pixel parity",
+    "Original Sona API/Z80 driver and original address prefix are retained native intrinsics; old game code remains in inert prefix",
+    "No comprehensive retained-code instruction-fetch qualification",
+    "Original game bytes/assets, compiler captures, states, traces and media remain private",
+    "All-stage natural completion, physical hardware and whole-game formal equivalence remain unproved",
+    "NES timing evidence comes from identical previous ROM bytes; no new 60 Hz result",
+    "Full macOS suite has pre-existing Linux/ELF/case-sensitive fixture failures; reported separately"
+  ]
+}

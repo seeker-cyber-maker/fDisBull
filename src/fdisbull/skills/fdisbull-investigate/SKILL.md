@@ -90,7 +90,10 @@ When this copy provides `capabilities`, use it before selecting a native
 decoder, debugger, C diagnostic or UIL path. It reports code scope and dependency
 detection without running tools. `runtime_validation: not_run` is not an
 acceptance result; `doctor` and explicitly authorized native probes are separate.
-A package version alone does not establish release inclusion. For archives,
+A package version alone does not establish release inclusion. Treat advertised
+architecture or mode names as candidates until a small representative operation
+succeeds in the actual backend; use the capability-failure decision table in
+`references/analysis-approach.md` when it does not. For archives,
 executable mappings or media reduction, read
 [references/formats-and-media.md](references/formats-and-media.md).
 For source or cross-edition concept searches, read
@@ -126,6 +129,25 @@ front end before choosing an ASM scaffold. AGI `module-analyze` and the narrow
 profile, source occurrence and required initial-state witness; a direct decoder
 does not imply a complete interpreter or scene recovery. Read
 the source-backed semantics reference below for the qualification gates.
+
+## Decide what to analyze next
+
+When the outcome is broad or the next useful question is unclear, read
+[references/analysis-approach.md](references/analysis-approach.md). Start with
+identity and a scoped topology/state inventory, then select a dependency that
+can change the requested outcome. A “Pac-Man-like” moving-actor/placed-item
+view can be a useful intermediate observation; it does not imply pickup,
+combat, NPC behavior or original-game reachability. Qualify interactions and
+Z/text projection as separate capabilities. Skip unrelated stages when the
+user asks a narrower question.
+
+| Next question | Read next |
+| --- | --- |
+| What should be investigated, and why now? | `references/analysis-approach.md` |
+| Which installed interface can answer it? | `references/workflows.md` |
+| Which observations and causal links justify it? | `references/methodology.md` |
+| Does an actor, item, action or text view preserve meaning? | `references/semantic-contracts.md` |
+| Which route, spatial policy or assisted intervention is supported? | `references/runtime-navigation.md` |
 
 ## Choose a useful probe
 

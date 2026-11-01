@@ -1,0 +1,12 @@
+{
+  "format": "fdisbull-shadowrun-field-combat-qualification-1",
+  "rom_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+  "authoring_sha256": "adcb1b52befa86af0862b780889e04339ec4abee8a90c3bf8b07d8b74a267bb8",
+  "cases": 1536,
+  "trace_sha256": "6b0d02846eb89f82b7e8cfc2855ba79eabca40a89fc316562fdf500c638b0450",
+  "effect_cases": 1152,
+  "effect_trace_sha256": "cda10a850dea6f81d04dbf976450bcfb1956b4b378c1870c15c2890eb8322784",
+  "scope": "controlled field-action stat leaf at $55C80 and intermediate effect gate $559CE; prior helper and downstream effects excluded",
+  "root_repeat_summary_sha256": "f540b6127615f7f7b21bd6da1d77ea3e59f3fa3a7a1880e2583df4c9ff526429"
+}

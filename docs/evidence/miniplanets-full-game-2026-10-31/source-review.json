@@ -1,0 +1,91 @@
+{
+  "format": "fdisbull-miniplanets-source-review-1",
+  "scope": [
+    "src/fdisbull/game_il.py",
+    "src/fdisbull/udl_miniplanets_full.py",
+    "src/fdisbull/udc_nes_game.py",
+    "src/fdisbull/cli.py",
+    "src/fdisbull/console_udc.py"
+  ],
+  "corrected_findings": [
+    {
+      "issue": "increment/decrement array lvalue was evaluated twice",
+      "authored_expression": "data[index++]++",
+      "before": {
+        "data": [
+          4,
+          9
+        ],
+        "index": 2
+      },
+      "independent_native_6502": {
+        "data": [
+          5,
+          8
+        ],
+        "index": 1
+      },
+      "correction": "resolve the lvalue once, then read and update the captured cell"
+    },
+    {
+      "issue": "local static/extern storage did not have C89 lifetime/linkage semantics",
+      "authored_case": "take(){static u8 n;return ++n;} called twice",
+      "before_returns": [
+        1,
+        1
+      ],
+      "independent_native_6502_returns": [
+        1,
+        2
+      ],
+      "correction": "reject unsupported procedure-local static/extern storage during validation; static global storage and function linkage remain supported"
+    },
+    {
+      "issue": "authoring source was parsed and hashed through separate file reads",
+      "correction": "capture each unit once as bytes; decode and hash that same capture",
+      "regression": "a private authored source file is replaced immediately after its first read; the exported hash must still identify the bytes parsed"
+    },
+    {
+      "issue": "external nes.lib was linked without capturing/hash-binding it",
+      "correction": "capture once into the private build, link the captured copy and record its length/SHA256",
+      "verified_runtime_resource": {
+        "sha256": "b9bf755f5d0a487e7b8b1a9e869b3f8a57652aff83df42d85c99af579248a70d",
+        "length": 1533247,
+        "captured_path": "build/nes.lib"
+      }
+    }
+  ],
+  "validation": {
+    "focused_interpreter_source_capture_and_game_tests": 26,
+    "compiler_cli_distribution_tests": 129,
+    "unqualified_tree_rejected": true,
+    "wrong_console_target_rejected": true,
+    "injected_midbuild_failure_destination_absent": true,
+    "injected_midbuild_failure_staging_removed": true,
+    "generic_fixes_qualified_programs_unchanged": {
+      "efficient": {
+        "program_sha256": "198484bd9fe39d16f48d6785adcebe172b29b00511af1d77942088f7497e591b",
+        "tree_sha256": "4dedfae8da10f4cb137572e9c65e971c1b84a0fee8f25d12386a4a6480cb023c",
+        "emitted_c_sha256": "425b83d33b8c10076b95897a269b2a62c3124b25c4f4cbf971fefd3fe85aaf80"
+      },
+      "baseline": {
+        "program_sha256": "0b194e7576ba9025ab151a9f75de9febd23defb06c01cc71923e3d9fde7b6879",
+        "tree_sha256": "ea68b9d5e6a8b5327999a0da46661cfb6a026de2d6825226305a54273779ce04",
+        "emitted_c_sha256": "f76db658961e7758bb8fa688a436b248c5b2c258f2b0361750573fff6aff69a0"
+      }
+    },
+    "first_two_generic_fixes_native_rebuild_byte_identical_to_r13": "bce5c3924c398e89d10e85a0da5bcb3715cb89b1cf19b018facc833c716d1d97",
+    "r14_cartridge_sha256": "aecdb39cb4b112de6de64069aab8deb397640cf684ac6942cb4c8e79ac48663e"
+  },
+  "source_hashes": {
+    "src/fdisbull/game_il.py": "05dafe6347f890c221bfb897155919cd7e6e7d5c045e7d88190c7662b24d990b",
+    "src/fdisbull/udl_miniplanets_full.py": "a11e3013b50f93e5cabcf835b8bd0f77a0321025653ec80f70c69f17b209239c",
+    "tests/test_game_il.py": "858fd0d055c6254973fc65c39380710e3ff4bae6c62e1c24ff6d65f30d9a7658",
+    "tests/test_miniplanets_source_capture.py": "104664030c07826b526f2c1d4d3fa86a6e860448c1aa1ef84fb0dd02c673a3d2"
+  },
+  "limits": [
+    "This review and finite regression evidence do not prove arbitrary C89 programs or whole-game equivalence.",
+    "The native backend admits only the exact reviewed efficient/baseline procedure bodies and qualified original-ROM binding.",
+    "Raw original inputs, native cartridges and detailed traces remain outside Git."
+  ]
+}

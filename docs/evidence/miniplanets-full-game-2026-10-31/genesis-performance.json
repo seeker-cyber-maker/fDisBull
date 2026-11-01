@@ -1,0 +1,661 @@
+{
+  "format": "fdisbull-genesis-performance-evidence-1",
+  "identities": {
+    "source_rom_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+    "program_sha256": "198484bd9fe39d16f48d6785adcebe172b29b00511af1d77942088f7497e591b",
+    "core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+    "baseline_rom_sha256": "7c6a55fb7f5b55449cd009b6824d4d010abe8a814b972b35fec59f999660464f",
+    "candidate_rom_sha256": "09d3c5b5e8e908c296072d1ef2850dee08228b07f77342b0cfc711afe6a8c534",
+    "renderer_sha256": "fe6554bc231ee3f066f450a290d2da2b0638d8117afecf2493bde31c65af64b4",
+    "backend_sha256": "1a51918db27c307238a7bd369f6289c911fe4e64f20b9e5dbb977785d904ff85",
+    "performance_checker_sha256": "954530c7307b0510aa2ac64678053c35320ec741ad21718e7e4504d32328d0ef",
+    "stage_checker_sha256": "1d88de9b7c0894f7f60d277088e785d028bb8632772ba67e43d8166169986535",
+    "helper_sha256": "7ea05c7a3529e572dbaccd199deb0025a9b60de685a1c2cc4cb729b19047306f",
+    "copy_checker_sha256": "49cb4343100a0d20262036ecc2dc967fa29bd4a9dde6b0144c5698dd066cb0a8"
+  },
+  "core_fps": 59.92274340431231,
+  "ordinary": {
+    "protocol": "Same input schedule over 1200 emulated frames; frames 260 through 1199 measured. Start taps at 150-159 and 220-229; Right 400-579; Up 650-749; A 850-869. Inputs are host-frame based, so logical states evolve at each build cadence.",
+    "measurement_frames": 940,
+    "baseline": {
+      "logic_epoch_delta": 469,
+      "logic_sample_intervals": 939,
+      "logic_updates_per_second": 29.9294639580644,
+      "fault_frames": [],
+      "frames_with_writes": 470,
+      "complete_batches": 470,
+      "complete_batches_per_second": 29.961371702156153,
+      "batch_size_distribution": {
+        "296": 470
+      },
+      "complete_batch_mismatches": 0,
+      "first_line_distribution": {
+        "226": 470
+      },
+      "last_line_distribution": {
+        "72": 284,
+        "73": 120,
+        "74": 66
+      },
+      "minimum_staged_sprite_y": 132
+    },
+    "candidate": {
+      "logic_epoch_delta": 939,
+      "logic_sample_intervals": 939,
+      "logic_updates_per_second": 59.92274340431231,
+      "fault_frames": [],
+      "frames_with_writes": 940,
+      "complete_batches": 940,
+      "complete_batches_per_second": 59.92274340431231,
+      "batch_size_distribution": {
+        "296": 940
+      },
+      "complete_batch_mismatches": 0,
+      "first_line_distribution": {
+        "226": 940
+      },
+      "last_line_distribution": {
+        "14": 572,
+        "15": 343,
+        "16": 25
+      },
+      "minimum_staged_sprite_y": 132
+    }
+  },
+  "synthetic_48_actor_stress": {
+    "protocol": "48 type-1 actors inserted via explicitly assisted, manifest-relocated RAM patches at host frame 300; 300 subsequent emulated frames measured. This is a constructed stress state, not an original stage.",
+    "baseline": {
+      "logic_epoch_delta": 149,
+      "logic_sample_intervals": 299,
+      "logic_updates_per_second": 29.8611664456272,
+      "fault_frames": [],
+      "frames_with_writes": 150,
+      "complete_batches": 150,
+      "complete_batches_per_second": 29.961371702156153,
+      "batch_size_distribution": {
+        "296": 1,
+        "488": 149
+      },
+      "complete_batch_mismatches": 0,
+      "first_line_distribution": {
+        "226": 150
+      },
+      "last_line_distribution": {
+        "72": 1,
+        "96": 149
+      },
+      "minimum_staged_sprite_y": 144
+    },
+    "candidate": {
+      "logic_epoch_delta": 149,
+      "logic_sample_intervals": 299,
+      "logic_updates_per_second": 29.8611664456272,
+      "fault_frames": [],
+      "frames_with_writes": 150,
+      "complete_batches": 150,
+      "complete_batches_per_second": 29.961371702156153,
+      "batch_size_distribution": {
+        "296": 1,
+        "488": 149
+      },
+      "complete_batch_mismatches": 0,
+      "first_line_distribution": {
+        "226": 150
+      },
+      "last_line_distribution": {
+        "14": 1,
+        "38": 149
+      },
+      "minimum_staged_sprite_y": 144
+    }
+  },
+  "assisted_original_stages": {
+    "protocol": "UIL game_boot, set stage, start_game and begin_stage(0); pause normal loop, apply all 79 fields, clear publication ring and epoch, read back while paused, then release; intro skipped; same controller schedule Stage indices 40, 43, 44; pause host frame 220, seed and clear ring/epoch frame 240, verify pause and all fields before release frame 260; measure frames 280 through 599. Both builds receive the same input schedule; moving holds Right during frames 320 through 519. Stage audio state is not seeded.",
+    "results": [
+      {
+        "stage": 40,
+        "stage_name_bcd": 85,
+        "original_actor_count": 10,
+        "build": "baseline",
+        "scenario": "neutral",
+        "seed_fields_read_back": 79,
+        "complete_batches": 160,
+        "presentation_rate": 29.961371702156153,
+        "logic_rate": 29.86744890685159,
+        "fault_frames": [],
+        "vram_mismatches": 0,
+        "write_counts": {
+          "300": 81,
+          "304": 3,
+          "308": 74,
+          "312": 2
+        },
+        "final_scanlines": {
+          "72": 49,
+          "73": 69,
+          "74": 42
+        },
+        "minimum_staged_sprite_y": 91,
+        "measurement_frames": 320,
+        "logic_epoch_delta": 159,
+        "logic_sample_intervals": 319,
+        "complete_batch_mismatches": 0
+      },
+      {
+        "stage": 40,
+        "stage_name_bcd": 85,
+        "original_actor_count": 10,
+        "build": "baseline",
+        "scenario": "moving",
+        "seed_fields_read_back": 79,
+        "complete_batches": 160,
+        "presentation_rate": 29.961371702156153,
+        "logic_rate": 29.86744890685159,
+        "fault_frames": [],
+        "vram_mismatches": 0,
+        "write_counts": {
+          "300": 21,
+          "304": 43,
+          "308": 92,
+          "312": 4
+        },
+        "final_scanlines": {
+          "72": 12,
+          "73": 94,
+          "74": 54
+        },
+        "minimum_staged_sprite_y": 91,
+        "measurement_frames": 320,
+        "logic_epoch_delta": 159,
+        "logic_sample_intervals": 319,
+        "complete_batch_mismatches": 0
+      },
+      {
+        "stage": 40,
+        "stage_name_bcd": 85,
+        "original_actor_count": 10,
+        "build": "candidate",
+        "scenario": "neutral",
+        "seed_fields_read_back": 79,
+        "complete_batches": 320,
+        "presentation_rate": 59.92274340431231,
+        "logic_rate": 59.92274340431231,
+        "fault_frames": [],
+        "vram_mismatches": 0,
+        "write_counts": {
+          "300": 150,
+          "304": 5,
+          "308": 160,
+          "312": 5
+        },
+        "final_scanlines": {
+          "15": 155,
+          "16": 165
+        },
+        "minimum_staged_sprite_y": 91,
+        "measurement_frames": 320,
+        "logic_epoch_delta": 319,
+        "logic_sample_intervals": 319,
+        "complete_batch_mismatches": 0
+      },
+      {
+        "stage": 40,
+        "stage_name_bcd": 85,
+        "original_actor_count": 10,
+        "build": "candidate",
+        "scenario": "moving",
+        "seed_fields_read_back": 79,
+        "complete_batches": 319,
+        "presentation_rate": 59.73548483117383,
+        "logic_rate": 59.73489781370318,
+        "fault_frames": [],
+        "vram_mismatches": 0,
+        "write_counts": {
+          "300": 25,
+          "304": 254,
+          "308": 39,
+          "312": 1
+        },
+        "final_scanlines": {
+          "15": 279,
+          "16": 40
+        },
+        "minimum_staged_sprite_y": 91,
+        "measurement_frames": 320,
+        "logic_epoch_delta": 318,
+        "logic_sample_intervals": 319,
+        "complete_batch_mismatches": 0
+      },
+      {
+        "stage": 43,
+        "stage_name_bcd": 88,
+        "original_actor_count": 11,
+        "build": "baseline",
+        "scenario": "neutral",
+        "seed_fields_read_back": 79,
+        "complete_batches": 160,
+        "presentation_rate": 29.961371702156153,
+        "logic_rate": 29.86744890685159,
+        "fault_frames": [],
+        "vram_mismatches": 0,
+        "write_counts": {
+          "308": 31,
+          "312": 96,
+          "316": 33
+        },
+        "final_scanlines": {
+          "73": 20,
+          "74": 119,
+          "75": 21
+        },
+        "minimum_staged_sprite_y": 105,
+        "measurement_frames": 320,
+        "logic_epoch_delta": 159,
+        "logic_sample_intervals": 319,
+        "complete_batch_mismatches": 0
+      },
+      {
+        "stage": 43,
+        "stage_name_bcd": 88,
+        "original_actor_count": 11,
+        "build": "baseline",
+        "scenario": "moving",
+        "seed_fields_read_back": 79,
+        "complete_batches": 160,
+        "presentation_rate": 29.961371702156153,
+        "logic_rate": 29.86744890685159,
+        "fault_frames": [],
+        "vram_mismatches": 0,
+        "write_counts": {
+          "308": 124,
+          "312": 15,
+          "316": 21
+        },
+        "final_scanlines": {
+          "73": 73,
+          "74": 78,
+          "75": 9
+        },
+        "minimum_staged_sprite_y": 91,
+        "measurement_frames": 320,
+        "logic_epoch_delta": 159,
+        "logic_sample_intervals": 319,
+        "complete_batch_mismatches": 0
+      },
+      {
+        "stage": 43,
+        "stage_name_bcd": 88,
+        "original_actor_count": 11,
+        "build": "candidate",
+        "scenario": "neutral",
+        "seed_fields_read_back": 79,
+        "complete_batches": 320,
+        "presentation_rate": 59.92274340431231,
+        "logic_rate": 59.92274340431231,
+        "fault_frames": [],
+        "vram_mismatches": 0,
+        "write_counts": {
+          "308": 31,
+          "312": 146,
+          "316": 78,
+          "320": 65
+        },
+        "final_scanlines": {
+          "16": 177,
+          "17": 143
+        },
+        "minimum_staged_sprite_y": 105,
+        "measurement_frames": 320,
+        "logic_epoch_delta": 319,
+        "logic_sample_intervals": 319,
+        "complete_batch_mismatches": 0
+      },
+      {
+        "stage": 43,
+        "stage_name_bcd": 88,
+        "original_actor_count": 11,
+        "build": "candidate",
+        "scenario": "moving",
+        "seed_fields_read_back": 79,
+        "complete_batches": 319,
+        "presentation_rate": 59.73548483117383,
+        "logic_rate": 59.73489781370318,
+        "fault_frames": [],
+        "vram_mismatches": 0,
+        "write_counts": {
+          "304": 13,
+          "308": 158,
+          "312": 134,
+          "316": 14
+        },
+        "final_scanlines": {
+          "15": 13,
+          "16": 292,
+          "17": 14
+        },
+        "minimum_staged_sprite_y": 96,
+        "measurement_frames": 320,
+        "logic_epoch_delta": 318,
+        "logic_sample_intervals": 319,
+        "complete_batch_mismatches": 0
+      },
+      {
+        "stage": 44,
+        "stage_name_bcd": 89,
+        "original_actor_count": 28,
+        "build": "baseline",
+        "scenario": "neutral",
+        "seed_fields_read_back": 79,
+        "complete_batches": 160,
+        "presentation_rate": 29.961371702156153,
+        "logic_rate": 29.86744890685159,
+        "fault_frames": [],
+        "vram_mismatches": 0,
+        "write_counts": {
+          "332": 54,
+          "336": 104,
+          "344": 2
+        },
+        "final_scanlines": {
+          "76": 28,
+          "77": 58,
+          "78": 4,
+          "79": 12,
+          "80": 34,
+          "81": 24
+        },
+        "minimum_staged_sprite_y": 90,
+        "measurement_frames": 320,
+        "logic_epoch_delta": 159,
+        "logic_sample_intervals": 319,
+        "complete_batch_mismatches": 0
+      },
+      {
+        "stage": 44,
+        "stage_name_bcd": 89,
+        "original_actor_count": 28,
+        "build": "baseline",
+        "scenario": "moving",
+        "seed_fields_read_back": 79,
+        "complete_batches": 160,
+        "presentation_rate": 29.961371702156153,
+        "logic_rate": 29.86744890685159,
+        "fault_frames": [],
+        "vram_mismatches": 0,
+        "write_counts": {
+          "324": 116,
+          "328": 1,
+          "332": 42,
+          "340": 1
+        },
+        "final_scanlines": {
+          "75": 37,
+          "76": 42,
+          "77": 18,
+          "78": 14,
+          "79": 31,
+          "80": 15,
+          "81": 2,
+          "82": 1
+        },
+        "minimum_staged_sprite_y": 90,
+        "measurement_frames": 320,
+        "logic_epoch_delta": 159,
+        "logic_sample_intervals": 319,
+        "complete_batch_mismatches": 0
+      },
+      {
+        "stage": 44,
+        "stage_name_bcd": 89,
+        "original_actor_count": 28,
+        "build": "candidate",
+        "scenario": "neutral",
+        "seed_fields_read_back": 79,
+        "complete_batches": 319,
+        "presentation_rate": 59.73548483117383,
+        "logic_rate": 59.73489781370318,
+        "fault_frames": [],
+        "vram_mismatches": 0,
+        "write_counts": {
+          "332": 128,
+          "336": 186,
+          "340": 1,
+          "344": 4
+        },
+        "final_scanlines": {
+          "19": 176,
+          "20": 67,
+          "21": 72,
+          "22": 4
+        },
+        "minimum_staged_sprite_y": 90,
+        "measurement_frames": 320,
+        "logic_epoch_delta": 318,
+        "logic_sample_intervals": 319,
+        "complete_batch_mismatches": 0
+      },
+      {
+        "stage": 44,
+        "stage_name_bcd": 89,
+        "original_actor_count": 28,
+        "build": "candidate",
+        "scenario": "moving",
+        "seed_fields_read_back": 79,
+        "complete_batches": 318,
+        "presentation_rate": 59.548226258035356,
+        "logic_rate": 59.54705222309405,
+        "fault_frames": [],
+        "vram_mismatches": 0,
+        "write_counts": {
+          "320": 16,
+          "324": 244,
+          "328": 2,
+          "332": 53,
+          "336": 1,
+          "340": 2
+        },
+        "final_scanlines": {
+          "17": 6,
+          "18": 137,
+          "19": 120,
+          "20": 51,
+          "21": 4
+        },
+        "minimum_staged_sprite_y": 90,
+        "measurement_frames": 320,
+        "logic_epoch_delta": 317,
+        "logic_sample_intervals": 319,
+        "complete_batch_mismatches": 0
+      }
+    ]
+  },
+  "display_timing": {
+    "first_write_scanline_ordinary": 226,
+    "last_write_scanline_ordinary_candidate": [
+      14,
+      16
+    ],
+    "last_write_scanline_synthetic_candidate": 38,
+    "hud_top_y": 64,
+    "globe_top_y": 96,
+    "minimum_candidate_staged_sprite_y_assisted_stages": 90,
+    "limits": "Observed line numbers are core observations; the last write is in active scanlines. Tile and sprite fetch timing, FIFO completion, emulator scheduling versus hardware, and visible tearing are not established by these coordinates."
+  },
+  "validation_scope": [
+    "Complete data-word batches in one emulated frame are compared with the terrain, HUD, and sprite staging captured at first write; split batches are not compared.",
+    "An independent host check compared 50000 renderer states with the retained NES C reference, and another checked 1000 complete modeled VDP cases.",
+    "For the final candidate separate control and forwarded-write observations matched frame, RAM, audio and trace; serialized states differed by 110 bytes. Independent controls from an earlier run also differed (110 bytes), so full observer neutrality remains unknown.",
+    "This is an adapted presentation, not original Genesis pixel or waveform parity, physical hardware timing, input-only full-game completion, or 60 fps for every stage."
+  ],
+  "normal_oracle": {
+    "host_frames": 1800,
+    "completed_ticks": 1749,
+    "compared_state_fields": 79,
+    "independent_controller_checks": 1749,
+    "controller_mapping_gaps": 0,
+    "assistance": "ordinary scheduled input; no RAM writes",
+    "hv_words_replayed": 0,
+    "root_confirmation_receipt": {
+      "sha256": "fc129c661f3fa1d9aa939275d415d830c1ab9946026ae1106534fd2c069e9e24",
+      "size": 102680
+    }
+  },
+  "correctness_history": "An earlier all-O2 diagnostic candidate failed publication at epoch 102 even though the live next_life state was correct. The final candidate uses explicit scalar stores and an authored native copy helper with distinct source and destination registers; the 79-field normal oracle passed. Controlled game qualification is reported separately.",
+  "native_copy_validation": {
+    "cases": 1044,
+    "lengths": "0..260",
+    "source_destination_parities": "all four",
+    "full_destination_and_source_checked": true,
+    "contract": "non-overlapping copy, not memmove",
+    "diagnostic_rom_sha256": "ee701dc49c78b535cfecf953dea053c2fc24cc5764dfb6a71ffca71c32cdd36c"
+  },
+  "original_backed_qualification": {
+    "controlled_cases": 4822,
+    "state_fields": 79,
+    "returns_hv_events_faults": "passed",
+    "original_case_contracts_revalidated": true,
+    "inputs_unchanged": true,
+    "receipt": {
+      "sha256": "fc129c661f3fa1d9aa939275d415d830c1ab9946026ae1106534fd2c069e9e24",
+      "size": 102680
+    }
+  },
+  "seeded_stage_semantics": {
+    "protocol": "Diagnostic pause before seed; all79fields initialized, publication ring and epoch cleared; ordinary input after release, recorded HV/sound inputs replayed in UIL. Assisted stage choice, not natural reachability.",
+    "cases": [
+      {
+        "stage": 40,
+        "scenario": "moving",
+        "seed_sha256": "6a85ee819e969300b8be5dd060c58ffed081f49e0b4365862a732c5a2f8e8438",
+        "checks": {
+          "completed_ticks": 339,
+          "state_fields": 79,
+          "independent_controller_checks": 339,
+          "controller_mapping_gaps": [],
+          "hv_words_replayed": 0,
+          "first_epoch": 1,
+          "last_epoch": 339,
+          "scope": "normal native publications compared with UIL; ambiguous input-frame mapping remains unknown"
+        },
+        "receipt": {
+          "sha256": "f64307a4a97723de9d48812b389a4da71f532668696f917387f02e1e84e22386",
+          "size": 3329
+        }
+      },
+      {
+        "stage": 40,
+        "scenario": "neutral",
+        "seed_sha256": "6a85ee819e969300b8be5dd060c58ffed081f49e0b4365862a732c5a2f8e8438",
+        "checks": {
+          "completed_ticks": 340,
+          "state_fields": 79,
+          "independent_controller_checks": 340,
+          "controller_mapping_gaps": [],
+          "hv_words_replayed": 0,
+          "first_epoch": 1,
+          "last_epoch": 340,
+          "scope": "normal native publications compared with UIL; ambiguous input-frame mapping remains unknown"
+        },
+        "receipt": {
+          "sha256": "3e0e4e394bca902b4120a98210490e3044d95e348f745e7fe00747db8fb9f80c",
+          "size": 3330
+        }
+      },
+      {
+        "stage": 43,
+        "scenario": "moving",
+        "seed_sha256": "428f82ccbcd9d7a558d46b757a3837b3e81d200b376522c1f831f08f061a1529",
+        "checks": {
+          "completed_ticks": 339,
+          "state_fields": 79,
+          "independent_controller_checks": 339,
+          "controller_mapping_gaps": [],
+          "hv_words_replayed": 48,
+          "first_epoch": 1,
+          "last_epoch": 339,
+          "scope": "normal native publications compared with UIL; ambiguous input-frame mapping remains unknown"
+        },
+        "receipt": {
+          "sha256": "4f777d713aaa3bda860aed48528e04b753bd050c02e275377268f87ac210f4e5",
+          "size": 3330
+        }
+      },
+      {
+        "stage": 43,
+        "scenario": "neutral",
+        "seed_sha256": "428f82ccbcd9d7a558d46b757a3837b3e81d200b376522c1f831f08f061a1529",
+        "checks": {
+          "completed_ticks": 340,
+          "state_fields": 79,
+          "independent_controller_checks": 340,
+          "controller_mapping_gaps": [],
+          "hv_words_replayed": 44,
+          "first_epoch": 1,
+          "last_epoch": 340,
+          "scope": "normal native publications compared with UIL; ambiguous input-frame mapping remains unknown"
+        },
+        "receipt": {
+          "sha256": "81059ce3e3fb6f66b8f1c0db74b693fdfb88da8fda493e6cf15f4c63eeab8b7c",
+          "size": 3331
+        }
+      },
+      {
+        "stage": 44,
+        "scenario": "moving",
+        "seed_sha256": "cf3eaaa575aa2a76c4791ada5375e129e8a764fd2dfff8d0c8b9db05e1289108",
+        "checks": {
+          "completed_ticks": 338,
+          "state_fields": 79,
+          "independent_controller_checks": 338,
+          "controller_mapping_gaps": [],
+          "hv_words_replayed": 0,
+          "first_epoch": 1,
+          "last_epoch": 338,
+          "scope": "normal native publications compared with UIL; ambiguous input-frame mapping remains unknown"
+        },
+        "receipt": {
+          "sha256": "b48520b111fa23bbae93bd4ced2dfaea43f35c31ebf37d4161544e0b58cb6724",
+          "size": 3329
+        }
+      },
+      {
+        "stage": 44,
+        "scenario": "neutral",
+        "seed_sha256": "cf3eaaa575aa2a76c4791ada5375e129e8a764fd2dfff8d0c8b9db05e1289108",
+        "checks": {
+          "completed_ticks": 339,
+          "state_fields": 79,
+          "independent_controller_checks": 339,
+          "controller_mapping_gaps": [],
+          "hv_words_replayed": 0,
+          "first_epoch": 1,
+          "last_epoch": 339,
+          "scope": "normal native publications compared with UIL; ambiguous input-frame mapping remains unknown"
+        },
+        "receipt": {
+          "sha256": "35cf2f26eb162ca4f6b750c254fc0c2f0ec336c59ce895d3ae1bca116e6bec1d",
+          "size": 3330
+        }
+      }
+    ],
+    "total_completed_ticks": 2035,
+    "total_hv_words": 92,
+    "verifier": {
+      "sha256": "8e9a819e9ee76717a20f3010d9c42446e6a852e67083d584e2054a51b66aa22e",
+      "size": 5424
+    },
+    "shared_oracle": {
+      "sha256": "bd1b1ebc9b81801195fc024cf943204fc73781173220a936a62cc9518f5d0ff5",
+      "size": 26126
+    }
+  },
+  "failed_intermediate": {
+    "cartridge_sha256": "3249567aa85ad80b4b5771e7b5a7f923ea6c6fc58d7e11ed4dea8499bc089b5e",
+    "status": "excluded",
+    "reason": "Published next_life shifted at epoch102 despite correct live state; normal fullstate gate failed.",
+    "receipt": {
+      "sha256": "ab86742c656aaaf52048ad28e2e04869d3794de69d1ca8d2d4c216220a915682",
+      "size": 102289
+    }
+  }
+}

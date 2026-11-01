@@ -1,0 +1,29 @@
+{
+  "actual_non_green": 26,
+  "baseline_comparison_sha256": "ef81232bfbace1dd30e27111c79c443fd45cbdcdac6bed42de2d1be2e23ff40f",
+  "baseline_matches": true,
+  "baseline_non_green": 26,
+  "capstone_distribution": "5.0.9",
+  "capstone_official_wheel_sha256": "fc269c5082e17d7f9f265cd6980e2fdc6ab572df913951d76db0357e06b8001d",
+  "changed_source_paths": [],
+  "counts": {
+    "errors": 23,
+    "failures": 3,
+    "passed": 3894,
+    "skipped": 142,
+    "tests": 4062
+  },
+  "exit_code": 1,
+  "format": "fdisbull-shadowrun-snes-suite-comparison-1",
+  "junit_sha256": "f81d298aa5faf1168c069d4d891185e441f212d126d6252cf5e70fe8f38fa8ca",
+  "log_sha256": "067ccc3521d960f06574d47c5d965a2cdd98164a11a3c01bb1d456d288049408",
+  "missing": [],
+  "private_receipt_sha256": "47cac4cb9ca6e057471ab0ad30da7a99b910ff99cc1725b29ae9b8f7fe209dfb",
+  "scope": "Frozen src, tests, scripts and packaging config; documentation excluded because it was being authored.",
+  "source_file_count": 933,
+  "source_inventory_after_sha256": "bb35cdb8032e74d5931b774fb26a537e8b3d4bec49fda4b32a00fe030d27dc55",
+  "source_inventory_before_sha256": "bb35cdb8032e74d5931b774fb26a537e8b3d4bec49fda4b32a00fe030d27dc55",
+  "source_unchanged": true,
+  "storage": "Additional <=1.5GB bounded CODEX tests/packages explicitly authorized with20GBminimum; initial CACHE1.3GBsuite gate rejected.",
+  "unexpected": []
+}

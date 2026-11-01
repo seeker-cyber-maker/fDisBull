@@ -1,0 +1,1294 @@
+{
+  "format": "miniplanets-native6502-game-1",
+  "status": "completed-with-route-dnf",
+  "cartridge_sha256": "aecdb39cb4b112de6de64069aab8deb397640cf684ac6942cb4c8e79ac48663e",
+  "program_sha256": "198484bd9fe39d16f48d6785adcebe172b29b00511af1d77942088f7497e591b",
+  "source_rom_sha256": "e8aee1b9fedca87b638a7624709d7f6e1a2aff8a5222083346d1cd63963acbe7",
+  "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+  "toolchain": {
+    "cc65": {
+      "sha256": "f23e2fb0af1061ceeac7fb7e12e577e6d8c5dd9986b5506bbeccadae1a89f559"
+    },
+    "ca65": {
+      "sha256": "c690abcad36611fb66c7368ad6bd5a8462bcba683ab03b2e9023d6792ed645c7"
+    },
+    "ld65": {
+      "sha256": "6fc158543f86712729d160d5c951cbf2e3b31c05ea94df15a3164e8c8bd61c68"
+    },
+    "od65": {
+      "sha256": "08b7168660b527289fd72a647c5c8e8b4c15e69b102d8044a5dc4aabc474a816"
+    }
+  },
+  "runtime_resources": {
+    "nes.lib": {
+      "sha256": "b9bf755f5d0a487e7b8b1a9e869b3f8a57652aff83df42d85c99af579248a70d",
+      "length": 1533247,
+      "captured_path": "build/nes.lib"
+    }
+  },
+  "tree_sha256": "4dedfae8da10f4cb137572e9c65e971c1b84a0fee8f25d12386a4a6480cb023c",
+  "matches_current_authoring_tree": true,
+  "authoring_units": {
+    "miniplanets_actors.c": "62380335e51cb08159f34507993961e37cc2f60a7d724cca6567072e1b6e642b",
+    "miniplanets_full.c": "5d0e171b074b784887df27e06ca122cb99147fc13d8fcae84724bd526017bc58"
+  },
+  "verification_sources": {
+    "scripts/check_miniplanets_nes_game.py": "a2c2644e9ab8e072d1657d82f829cebdeda0729681dce374e2518b5f0d7ebf17",
+    "scripts/check_console_udc.py": "6a67b1d5534348fd1acba4b94583dd8f74b4b8da71cd821c7b40e3a4e831f0e6",
+    "src/fdisbull/game_il.py": "05dafe6347f890c221bfb897155919cd7e6e7d5c045e7d88190c7662b24d990b"
+  },
+  "manifest_sha256": "687dbdb390a31c218af1979ff46a61e4568fc613d80973946a0303cf11f51c30",
+  "qualification_ceiling": "Finite actual-core comparisons and measured rates; no whole-game formal equivalence or automatic arbitrary-ROM translation.",
+  "component_counts": {
+    "update_subpixel": 257,
+    "add_score": 251,
+    "run_objects": 334,
+    "rand16": 1,
+    "begin_stage": 55,
+    "game_frame": 55,
+    "run_player": 1252,
+    "run_tally": 120,
+    "run_ending": 108,
+    "update_password_dial": 197,
+    "update_clear_all": 135,
+    "update_credits_text": 180,
+    "update_level_timer": 180,
+    "init_objects": 4,
+    "add_object": 9,
+    "mace_x": 768,
+    "mace_y": 768,
+    "run_raft": 100,
+    "detonate_bomb": 48
+  },
+  "component_cases": 4822,
+  "maximum_command_completion_host_frames": 8,
+  "inputs_unchanged": true,
+  "verification_sources_unchanged": true,
+  "gates": {
+    "complete_state_components": "passed",
+    "normal_completed_state_shadow": "passed",
+    "feedback_goal_and_next_stage": "passed",
+    "fixed_host_frame_route": "dnf"
+  },
+  "private_summary_sha256": "11ba65fbda50fc981a985547a6fe21f1d069cc171512faa8231bf05102a9200b",
+  "component_batches": [
+    {
+      "batch": 0,
+      "checked": 64,
+      "trace_sha256": "6ddc8e41b3152c8faa1a3248146c67029e413f7e971fcc21872167347a33e864",
+      "patch_trace_sha256": "120f79312129fb55e5e95b950495d6b0c0580baf5196541419706b54b568c2ad",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5863227080044453
+    },
+    {
+      "batch": 1,
+      "checked": 64,
+      "trace_sha256": "ac51d08abd8c5636cd4b48b26cfbd704089f1d93c8d4102239d5c78a6bad2096",
+      "patch_trace_sha256": "9b611cd493c43362379d04f99f67835cd624b9edb2e2473c84ab777ac799f8ae",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5977838750040974
+    },
+    {
+      "batch": 2,
+      "checked": 64,
+      "trace_sha256": "a4d9050f35afd5f62270515e044ba5b13de90c65c60df3f7cdfcdc7bc9649d18",
+      "patch_trace_sha256": "197ac8e99a6e6656b6890c34476229e6d05b9908748351f37e0c241142e95c6e",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.572703707999608
+    },
+    {
+      "batch": 3,
+      "checked": 64,
+      "trace_sha256": "c15c7edd198d2c520fbbed179b3432704225718e4c96423232c9bd1ef0253a84",
+      "patch_trace_sha256": "8e0f06656d21eb500f656193c28d35da9f98330d9c87b7dc9c59592c2f404653",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5707643329951679
+    },
+    {
+      "batch": 4,
+      "checked": 64,
+      "trace_sha256": "88f3e9478638190fa0f40b40cb08ec90945c774da19b2947b195b87dee06c5ca",
+      "patch_trace_sha256": "68924dc63f0a5dcdfb6015ae1b0436dca6ba19be1131a099a8255dc340ecb074",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5714957080053864
+    },
+    {
+      "batch": 5,
+      "checked": 64,
+      "trace_sha256": "0a1c9bbc24bb52d415b8a69c03834b6b1cd92e13591a8c511144f030f9584af5",
+      "patch_trace_sha256": "7859d1cf2b9e6f46c2deddbc60907e2be1e6c8ce8bf11fdf9ae1cddf9381560f",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5708965829981025
+    },
+    {
+      "batch": 6,
+      "checked": 64,
+      "trace_sha256": "d37da56023eff63a988c666de07c2c70cd2458604eb99bce4e35043091678440",
+      "patch_trace_sha256": "b859679d775c96d81a1fb0ff01e8ba05f8dd9bf7c38856c39d9fd4c3df0c402c",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5752318339946214
+    },
+    {
+      "batch": 7,
+      "checked": 64,
+      "trace_sha256": "1eb023d979309b7571e2f145eae7caae6c92b86bf914498be3222a76f9a724f2",
+      "patch_trace_sha256": "0c3f0a17cc8d3979bfa3f3187349d0327d42596823672948de37315c1127042e",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5907837089980603
+    },
+    {
+      "batch": 8,
+      "checked": 64,
+      "trace_sha256": "8c34359f589d6bb428bd2b8b90060bca4500aabd972873fc5dc57f88cf8158af",
+      "patch_trace_sha256": "86f0b02f1a76ec7dbce333f58b0893d9b4bc9e2092837f6f789eab28098cbf62",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5820088339969516
+    },
+    {
+      "batch": 9,
+      "checked": 64,
+      "trace_sha256": "85cc4fabc999d41d4dfd9709f400821c612ad293c6ab18c0eff954254ce1bac2",
+      "patch_trace_sha256": "f91bf549296d5ed3aaec2ed2e3c3bebb60662160f200918a460c6778e82aff66",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.6396063330030302
+    },
+    {
+      "batch": 10,
+      "checked": 64,
+      "trace_sha256": "1ee9b4e58b4abc78f402b95f8595ee947228279ddd9b240abfbf0b374fb2ddaf",
+      "patch_trace_sha256": "59295665e09a2924768592fe8298ea4b0c6e532e1a74aff9d13f18208e6d9d33",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.576598167004704
+    },
+    {
+      "batch": 11,
+      "checked": 64,
+      "trace_sha256": "70bab1a973c9df1850af13e2f6da858e3cc444f0e5a1a6df8509df15571a0da7",
+      "patch_trace_sha256": "4216295654be3ca6b8410629260d34258d4610c228fdd5ecfb9200556b8748ee",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5800485419968027
+    },
+    {
+      "batch": 12,
+      "checked": 64,
+      "trace_sha256": "8cb1f5e709be525f1b16839c6650dcb5290e560d903291ec41b80eec6f4b1bd5",
+      "patch_trace_sha256": "bd77551a36579902607a2a93f77b52bdb0c7e551052b88e589cf106196cfc4a1",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5818805000017164
+    },
+    {
+      "batch": 13,
+      "checked": 64,
+      "trace_sha256": "ade2da748819ecb5b84d60aac0ef99de22739016b0edf5bf21735e9ed9690150",
+      "patch_trace_sha256": "cbd27294c45a15a24f3ef5364efd55ef6ece8da0dcc24e805b056f84a7acdd5b",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5743665420013713
+    },
+    {
+      "batch": 14,
+      "checked": 64,
+      "trace_sha256": "bc04973bc6f08c131cfe36f8ce999ed134a904a617e8d92f9a6862d614fdbbb2",
+      "patch_trace_sha256": "1202b63369cca1a6f14813c36fc07b3f391cbfedbb5bdc9f09a0b536b1972010",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5998184999989462
+    },
+    {
+      "batch": 15,
+      "checked": 64,
+      "trace_sha256": "5ca32eee1dcdf996a1783f1d645cb6a18bb0b1605ff9723b48d8482489aae985",
+      "patch_trace_sha256": "5c0d9f82a2ce6d2714e3c71ed277108b5b4f5c7f5e0d25b03132abf97e40b5de",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5741766249993816
+    },
+    {
+      "batch": 16,
+      "checked": 64,
+      "trace_sha256": "be7afc413b6bd1d13c317e15197f5f3197af39bc6ed412fdc4c7c5a71f964a8b",
+      "patch_trace_sha256": "10971bc2e0fb1701e23953ee915af94939fff25819e03bda2480545143b23a98",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5760720839971327
+    },
+    {
+      "batch": 17,
+      "checked": 64,
+      "trace_sha256": "49df52550f73ff0307c20858c8644c11dbdebd2bef5c85cb57ac0e2a1f38a522",
+      "patch_trace_sha256": "54c8687fdb3c81b012b83ab797d845aa3b0fb892146cf4fc5afcc85cc7e05ac0",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5805611249961657
+    },
+    {
+      "batch": 18,
+      "checked": 64,
+      "trace_sha256": "c87e6b070b676b710ae276fc44c11d5f03c4cc5f35b5070529e68cd43183bde3",
+      "patch_trace_sha256": "8be522e7f45c645f3474d79cc9f8eb89ff7e4076b94c397735422fef5124366f",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5759638330055168
+    },
+    {
+      "batch": 19,
+      "checked": 64,
+      "trace_sha256": "4f924109b808b883dfc18c16691b9b135e19f889599cb0ee30209ed339a9b6cc",
+      "patch_trace_sha256": "7b0bbc149ec9a22d13aaa2d54d76f4484db87c08c653f0d4b63f6f5e668036dd",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.569919834000757
+    },
+    {
+      "batch": 20,
+      "checked": 64,
+      "trace_sha256": "417e6ce9765b3f9687a8aef09f3c1eb7829a3c43578733591a0d99c8cad1acd5",
+      "patch_trace_sha256": "534daeba74f2a6567732087d7ae410dc287b5809fb3ed3b0b42ef19cccd95ff1",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5804147090020706
+    },
+    {
+      "batch": 21,
+      "checked": 64,
+      "trace_sha256": "bec85cbe410cd2a0aa2f8b8d0546cbd02f8a5743fa5bbcad61b2e386a95452bc",
+      "patch_trace_sha256": "bca5ebc82ecd9fa2550c2bd3dab692a38357b7f4308fffa0dbf53b4c11ebaf0e",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5827393340005074
+    },
+    {
+      "batch": 22,
+      "checked": 64,
+      "trace_sha256": "fde25f582d108114855a32ab01aa6929acf03f80e01cf9e3fe172996d5e5739f",
+      "patch_trace_sha256": "0499600128e6449be662f9ab59964d4e88750d34291e8537d137d09706c9eba2",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5974778340023477
+    },
+    {
+      "batch": 23,
+      "checked": 64,
+      "trace_sha256": "40c9a91957ee46e3c528fb83b21ca4012be85093041df43b43cc84d36b3f219f",
+      "patch_trace_sha256": "c6368173806ff7c6a5e783cf19961f9c8573a4622be82bf1641af503929c415d",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5873226250041625
+    },
+    {
+      "batch": 24,
+      "checked": 64,
+      "trace_sha256": "a2392fcca07404feabafef1d9bf7a713da13a13d2aa80aadeb3a706f35c46f1e",
+      "patch_trace_sha256": "2c8ec9cbf4a8efd71fd72783cb9d59a09abe627fdb2e54197aa8afb10cc6d238",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5858190829967498
+    },
+    {
+      "batch": 25,
+      "checked": 64,
+      "trace_sha256": "9d399590dfd651950a2d18a4bf2ce1f41cc7d09045b1f6bf79e12bffbd370564",
+      "patch_trace_sha256": "22a081353c8c0d9ad01750b226c7c1c11a13110296c3b8e8079d8d7c09dfb32a",
+      "host_frames": 1576,
+      "elapsed_seconds": 1.2502070420014206
+    },
+    {
+      "batch": 26,
+      "checked": 64,
+      "trace_sha256": "7ca4c4ed7a454113ae9056ce538d1f30cfb78070e8b2362de4b90e5418498529",
+      "patch_trace_sha256": "b9283c17390a6a3ef64190619ffa605c122772f8de95b335816cdbb3592e099a",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.6153697090048809
+    },
+    {
+      "batch": 27,
+      "checked": 64,
+      "trace_sha256": "91206dfa3ccb1cbe0cc0f12c2d882445c4349fd03d25bfcd034c02136cbdbb8c",
+      "patch_trace_sha256": "fa6d294576cce6273511bf92dd1cd98f5ec54620a1df04d7555d9fe520e38166",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5796614999999292
+    },
+    {
+      "batch": 28,
+      "checked": 64,
+      "trace_sha256": "5a1c5e99dfdedf2a45e08d6df49d9644254e0fc8f10f224fdb9f9d31587327ac",
+      "patch_trace_sha256": "661ed12f64967ffc07e07b036cc793a0cc3f1d08584c845462c66d807d4f1d45",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5820222909969743
+    },
+    {
+      "batch": 29,
+      "checked": 64,
+      "trace_sha256": "67e1ecafa6de87db85c31a1900aee59d8fca196ad426fb47e69928ab2ebd8db9",
+      "patch_trace_sha256": "4b6757ae9e7a58b6d1fae59ec40930c6201c3cdb4d0e929a54475e3ef5c734f3",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5800679579988355
+    },
+    {
+      "batch": 30,
+      "checked": 64,
+      "trace_sha256": "131730613e86ea4719dee12557b24e21fc319ff78453c8a080528b47242045a0",
+      "patch_trace_sha256": "60c61c1970a793508020310155115355d3a09c6c6cec1339f647a6d0e30167c7",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5824392499998794
+    },
+    {
+      "batch": 31,
+      "checked": 64,
+      "trace_sha256": "2ee8dece7646d2ee1b5331fe8b3bbe0f3563f3681e9e00e18775ef11404fc3e5",
+      "patch_trace_sha256": "617f978886c172f37e32f268172f4f50b9971f59f7842f1542a819fc6ea8ee88",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5934654590018908
+    },
+    {
+      "batch": 32,
+      "checked": 64,
+      "trace_sha256": "ac0d0a663859660631a32461b6d866414645bd7f0a012bcb8c605c23a7afd5bd",
+      "patch_trace_sha256": "f6f5ff4414299d66bdf7510b7974c9edc33fd80d352dc59f912093db5f7217f5",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5844614169982378
+    },
+    {
+      "batch": 33,
+      "checked": 64,
+      "trace_sha256": "ecf60f499f830fc39f096b32daf9866def144fcedba297193295765a5a356d12",
+      "patch_trace_sha256": "272f1880b1b983247794f4e8989e73f6a13a039fc55f8230d4813350fef7862c",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5788740829957533
+    },
+    {
+      "batch": 34,
+      "checked": 64,
+      "trace_sha256": "a5b706348c3cd1e56ab2106992c7dd8513ada28b349b3bd6f0ab2223dbaf74b3",
+      "patch_trace_sha256": "c4cafe4a3682ab4d1b911b4f44700e8c65eec2ef0cc50c15eda7659672ab1077",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5776230409974232
+    },
+    {
+      "batch": 35,
+      "checked": 64,
+      "trace_sha256": "ae3f9d4f66e77c3097449afec96f98033094ad7008993c0582dcc8a845d90341",
+      "patch_trace_sha256": "22942de9e86614fefd862a44fbc0d3d65ea8814e41e34873e346631af899c4e3",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.6831480410037329
+    },
+    {
+      "batch": 36,
+      "checked": 64,
+      "trace_sha256": "110799cc2a36ea79ff7bfcda08b1a421c87f0654ba809768806c343d6d865d26",
+      "patch_trace_sha256": "d99d3cda957d05b6463d6b12ef013cb53b97133affa64259b80d2be46264825e",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.6039419579974492
+    },
+    {
+      "batch": 37,
+      "checked": 64,
+      "trace_sha256": "7b5b479ab14984b3a62c743fc3e4b9a504d254b2d258838cfe82efec4fa9df15",
+      "patch_trace_sha256": "8bfd70137fac6d3b43ad7360f48fe86c99fce036573cd0987050d948b209ecd7",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5798112920019776
+    },
+    {
+      "batch": 38,
+      "checked": 64,
+      "trace_sha256": "0f7ba181cbf3e42d0dc9366e9efed91a7afeb0f63d37c6cfa527e902fe2c9347",
+      "patch_trace_sha256": "ed38dfc31eca7b06ca95ff52cb3f025f67a05181f0eab30f4c803f0ec807a444",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.6585544160043355
+    },
+    {
+      "batch": 39,
+      "checked": 64,
+      "trace_sha256": "b50fa323687e0e941badc4ec50445591319bd83b57d067893881ec52370cda1c",
+      "patch_trace_sha256": "2621fef4dafbb04652d75642bd8b85d9580dfaa3095a52178238e19c5f5b5887",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5877587919967482
+    },
+    {
+      "batch": 40,
+      "checked": 64,
+      "trace_sha256": "b9d83d6ccddd9e1807212b2f4940c3a79a420bc64fa42f39b1cb1ba11a087afd",
+      "patch_trace_sha256": "3829085877b542bb47c2be7ef5898bb136643eea4ae5a84b2f7a050f833344ae",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5812605419996544
+    },
+    {
+      "batch": 41,
+      "checked": 64,
+      "trace_sha256": "35f14f2d02a3e2aa6dff842900f71d0c6dca93213d46ed8e15306d3d69b30db9",
+      "patch_trace_sha256": "8718d56973cf3c66212a7524934f1c2b279d7a20ef6894d4340755bb047c232f",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5887685420020716
+    },
+    {
+      "batch": 42,
+      "checked": 64,
+      "trace_sha256": "787024d6fd85dcc098691e3c8ab99a81a7ed8958d635a7bfa2d0cd965c7769f9",
+      "patch_trace_sha256": "d3a5022b6d772e9c37aa0f5b5ed6e72c38e6c28cb5dbd9000ce7c4469bb2474d",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5980824169964762
+    },
+    {
+      "batch": 43,
+      "checked": 64,
+      "trace_sha256": "e52c4d2dc1b7fad22547336e69ee35dc8e8f80e8439661df6a4c27bba89582c0",
+      "patch_trace_sha256": "e5aead58b1f5838af00e8b9e3ceed85b31700461e197ebd369d56fc0094978b7",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5834391669995966
+    },
+    {
+      "batch": 44,
+      "checked": 64,
+      "trace_sha256": "c2dcd67dbdfefd03c544bc2d9d2fc9d6d36fda0ea2ac3638d1e86f25fc23bfcc",
+      "patch_trace_sha256": "34bbc2d115b49329c890c94fabee7b89a252785ccdc9779f4625ac4365a6a727",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5745649579985184
+    },
+    {
+      "batch": 45,
+      "checked": 64,
+      "trace_sha256": "dff8e3c386e6296d4e660f5391b5aba9ad10515f3328c867ed1f7e462c2bdd9c",
+      "patch_trace_sha256": "a351e6c931aa2193caea8fbe3282cc49f146bb47aeb38d888c0fad024877d6e0",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5764162080013193
+    },
+    {
+      "batch": 46,
+      "checked": 64,
+      "trace_sha256": "a54337f0a96bbb85fccdc9c9d72f49b0a1a235bfcf9d7a58003a6f1eb11c071b",
+      "patch_trace_sha256": "4a8449a41fb5a324dbb7da9759db1539e256d4cc5900145fb63505451ac10cf5",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.6072119160016882
+    },
+    {
+      "batch": 47,
+      "checked": 64,
+      "trace_sha256": "400ac151e7b4b323082f5e60a21585cb6cd9324896d9bc71439dc1d4372eec01",
+      "patch_trace_sha256": "07ef11f4e936951da706d0ca678ec496cea06f3863d402f59bd7516b29f12ccd",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.6130195840014494
+    },
+    {
+      "batch": 48,
+      "checked": 64,
+      "trace_sha256": "0267fee48cdc70c1c760fed7d6cd2bb8e2570bf8dffc33f6a0dae4f28c9d933f",
+      "patch_trace_sha256": "5a6bb2ed5d2f7c97a96d0b992af73e67ba0a117c3dadd8531820b936a666fe93",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.575494582997635
+    },
+    {
+      "batch": 49,
+      "checked": 64,
+      "trace_sha256": "f4f302b3f1da122f3dda2d9471c337ffba930fc06da089283b58f12dc1a5fff3",
+      "patch_trace_sha256": "002f2ba671decc7a301a7d1e2ebde119f3653981983fe3647829aa9e7f5d80c0",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5776620410033502
+    },
+    {
+      "batch": 50,
+      "checked": 64,
+      "trace_sha256": "c556375381559011943defe16f41858cac37facc222546d388cd33eec2af50f4",
+      "patch_trace_sha256": "4b648abb8b3474334ed47b9883d5f0104902f458dd80d2519eaa7ee6a399a7d3",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5765845420028199
+    },
+    {
+      "batch": 51,
+      "checked": 64,
+      "trace_sha256": "af30377be457a076dec37e2b3bf8832ffeea18947307a4e7a530c77939668d99",
+      "patch_trace_sha256": "4fc98d8e308e48ea16ea898d0a02c082d758cf022e27a9bb5ce70312b4ecef84",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5780098750037723
+    },
+    {
+      "batch": 52,
+      "checked": 64,
+      "trace_sha256": "b276c20a0c004a1419218afd352f20178501de5eeabbcea5164b81041aa5ce34",
+      "patch_trace_sha256": "ab2d9dfbf8176203de88e6221ece743da29d16459b4ffb33a79d4bc891e41f8b",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5814739589986857
+    },
+    {
+      "batch": 53,
+      "checked": 64,
+      "trace_sha256": "157d3a89e052c9e984ab0372990e56b7bb5a63b78bcee24cba9cfae439405538",
+      "patch_trace_sha256": "64c06b9ec148339ac3734d4850fda7822fb482f10a4ce96f91cfe8a2bd3519ec",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.582454624993261
+    },
+    {
+      "batch": 54,
+      "checked": 64,
+      "trace_sha256": "9e05880f2040389defb2df85d8aacfd9cc73e8acf1d755f5b07b7d5153c01cbb",
+      "patch_trace_sha256": "63df6407639622283bd8eb6b3859821d60058c02d6b46c6115802bc915b0f213",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5835071669935132
+    },
+    {
+      "batch": 55,
+      "checked": 64,
+      "trace_sha256": "c28af4101ff9ac4b72b5917239d23b56d03df901fa71cc22e40cf659000bc900",
+      "patch_trace_sha256": "05cc23efd241436ebbfeaaaa1ee7f30f1b386e95ee41c2c0377756b87a85ab77",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.6098513750039274
+    },
+    {
+      "batch": 56,
+      "checked": 64,
+      "trace_sha256": "afbd43f8f65a36d3e35a9e6c14ea318fd1eef965b98824ea88413bb16d86f87b",
+      "patch_trace_sha256": "3d54f8901aec28754b2df8f7618f490d86c32f81515697b93b31af33db2e0c40",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5735083749968908
+    },
+    {
+      "batch": 57,
+      "checked": 64,
+      "trace_sha256": "3d3f135243065eacc657bed7d6fefb07993d3f904d5d8e2117ff75093d1c9df8",
+      "patch_trace_sha256": "2c98b6f3d45e9ab3ed51831e19113c251738241cf6768b1abe1c05d22b4c2254",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5825473339937162
+    },
+    {
+      "batch": 58,
+      "checked": 64,
+      "trace_sha256": "d9c1d056ec15a88c8203bc9f22071dc29e29e91258bb12da19480c7a447c8763",
+      "patch_trace_sha256": "ef0b99226228b72760be5ad0865356706efa062da3be6e08e797ca7f6294a91b",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.583898875003797
+    },
+    {
+      "batch": 59,
+      "checked": 64,
+      "trace_sha256": "15eae949ea33671ebacdc915731403724331be77d28e4db59e5a6d88ed003b22",
+      "patch_trace_sha256": "c4b277ae37b6e9ca6d10c5e17a02560fbd7268abe4b230d18e8fd7a1187386c8",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5978757920020144
+    },
+    {
+      "batch": 60,
+      "checked": 64,
+      "trace_sha256": "5a1b2b0c543c18cac65862e745c738a66032003526b13211dcc7295f617d50d2",
+      "patch_trace_sha256": "767576074e226881a4f1d0b77b610e470d56bca4b408c62b6cd71388f8f3410f",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5854446250014007
+    },
+    {
+      "batch": 61,
+      "checked": 64,
+      "trace_sha256": "1fae4598de00e4689aad8f489c8a3521f91fd33f579d068b65392dec483f853a",
+      "patch_trace_sha256": "c1ca0bd2b0f1422685dba828e5d22e2a53f9017f822f4bbff1484bcbddca2c83",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.6250190420032595
+    },
+    {
+      "batch": 62,
+      "checked": 64,
+      "trace_sha256": "32ada7648491f826fe0c5606298ad13cf3cef518c07a646ba94d3ec825a1e003",
+      "patch_trace_sha256": "5700aa36fda7e51dedf5b257f8e1bd42ddeaba881ed791a3cf3787100db42798",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5868562909963657
+    },
+    {
+      "batch": 63,
+      "checked": 64,
+      "trace_sha256": "c786dfed8cfedc85f412b36c275bf2551182a620e0c1e096f2a9f5d554aa1cfb",
+      "patch_trace_sha256": "b1f443708da82c9e2301f0dbc5a809b0f323ce4217aca82cee9b6ececa5a98fb",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5817657920051715
+    },
+    {
+      "batch": 64,
+      "checked": 64,
+      "trace_sha256": "666e879c2e6d957567977c19eab518b5e91cd51ab487ad5cf61aad402a6f9b4f",
+      "patch_trace_sha256": "383650f6bbf9970894b5e7f38e6743f775ecf7e452e8b268a1ae8fbcfa08aac9",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5872309999977006
+    },
+    {
+      "batch": 65,
+      "checked": 64,
+      "trace_sha256": "30f42ba270d8667890f0adff63710911bb23d5fb071898a590f10cf543c216e6",
+      "patch_trace_sha256": "34e7a3cf05a4531ab775b093dfc8b4ab3c5c1d2df66baa3d28526a556774325a",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5919453329988755
+    },
+    {
+      "batch": 66,
+      "checked": 64,
+      "trace_sha256": "b020ca03e058d17284a06278b2981f5f5c7ce9845138d1195dda74c91b910ae3",
+      "patch_trace_sha256": "aac33732081dae3dcc437627db81b9a130f151d8672c0108f6c0cac1d8a1912c",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5798642079971614
+    },
+    {
+      "batch": 67,
+      "checked": 64,
+      "trace_sha256": "65da61958842025d1a1e42ac74e6b6b5cf4b44d70cd058e6518f2b34d2edc99f",
+      "patch_trace_sha256": "bc9940f8db662f35d0f9696a16bb3a5efab432275f09ecc8d682b503db31e9fc",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5809249589947285
+    },
+    {
+      "batch": 68,
+      "checked": 64,
+      "trace_sha256": "c6147d90b87a1320a3c1f84fae25008cd6b8e57053c00aedb24170a7c4f724a7",
+      "patch_trace_sha256": "f1846b58f739cd69813a8bfdeef17f9df7ff315571d872fccbb756123463b3f6",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5723371659987606
+    },
+    {
+      "batch": 69,
+      "checked": 64,
+      "trace_sha256": "e4bbf7de649fd1f97d153deb0fccddd209d612cada87ff683bea2b1388ca18c3",
+      "patch_trace_sha256": "75f15738680357d5c2d06a60a6f7998e9d4fe1c5d31e2335a6e328e60a45741b",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.6018708339979639
+    },
+    {
+      "batch": 70,
+      "checked": 64,
+      "trace_sha256": "bf118959c89ac6f38030de52ce2b922e3a80c735c75fb69707d7fa119d9e6d46",
+      "patch_trace_sha256": "c7fe447e887a992866427ce822d4147c5377ae4c6df72558c93d0bf84af65e63",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5756958339989069
+    },
+    {
+      "batch": 71,
+      "checked": 64,
+      "trace_sha256": "78ac1867345c05971f4cfd4afda647f389c0bd1c8289df3b51b6c947ff9e07a5",
+      "patch_trace_sha256": "be2b2755efacf49b376588882f0c85ec7c8b558e29201d4746873d4106f2c2f8",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5966128329964704
+    },
+    {
+      "batch": 72,
+      "checked": 64,
+      "trace_sha256": "27ea4c7e87f0b124f16346901330ee6e5efe7ebe3a0e7e9233939782de58f855",
+      "patch_trace_sha256": "db9dc421da3d4f3d054c1fd7c898d4bb2ab546657493175ecdf4b5626b7e7ebe",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.603679915999237
+    },
+    {
+      "batch": 73,
+      "checked": 64,
+      "trace_sha256": "efed5027d9db951e9b6a6f16c15980e3cfe8ad2fa713c53f795a5ac2110fe6ce",
+      "patch_trace_sha256": "4af2ddd36f7ed5b5a7029b2234eb6ebfcfff04ae8c3d283c69237f9072c6c256",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5839551249955548
+    },
+    {
+      "batch": 74,
+      "checked": 64,
+      "trace_sha256": "c754149e3099dc54880897a8bc7818323ad55c3a6b8b33256ea714bdbd564f85",
+      "patch_trace_sha256": "7ba29d2b89140382fe60d3d9de7c4fc21bb10377dc559dbc347d0bdc51882ce4",
+      "host_frames": 1576,
+      "elapsed_seconds": 0.5868355839993455
+    },
+    {
+      "batch": 75,
+      "checked": 22,
+      "trace_sha256": "33516056cdcc3d9e2024f250f0a5f7cd189ac88ff7709dbe670344572d7c9ec3",
+      "patch_trace_sha256": "7ea06426d2ae8c530c898acaf726765f67b9261743ba7aba16041320229a336e",
+      "host_frames": 568,
+      "elapsed_seconds": 0.32419687500078
+    }
+  ],
+  "component_state_scope": "All79 game globals/flat arrays, scalar return, consumed HV cursor, emitted-event count and last event are compared after each dispatched procedure; debug mode and state seeds are assistance.",
+  "normal_projection_scope": "34 game fields per completed seqlocked publication; independently associated scheduled controller input, strict increasing consumed-NMI frames, actual captured HV values and fault-free initialized runtime.",
+  "normal_sessions": [
+    {
+      "name": "input_only_first_level_route",
+      "host_frames": 1564,
+      "elapsed_wall_seconds": 1.0420559580015833,
+      "assistance": "none: ordinary boot and scheduled controller input; no memory patches",
+      "route_host_frame_multiplier": 1,
+      "route_start_host_frame": 600,
+      "observed_level_loaded_host_frame": 467,
+      "first_observed_key_host_frame": null,
+      "first_observed_win_host_frame": null,
+      "first_observed_death_host_frame": null,
+      "route_completed": false,
+      "observations": [
+        {
+          "host_frame": 149,
+          "logic_epoch": 126,
+          "mode": 0,
+          "stage": 0,
+          "stage_name": 0,
+          "player_x": 0,
+          "player_y": 0,
+          "player_jump": 0,
+          "player_win": 0,
+          "player_die": 0,
+          "keys_left": 0,
+          "score": 0,
+          "lives": 0,
+          "time_secs": 0
+        },
+        {
+          "host_frame": 450,
+          "logic_epoch": 421,
+          "mode": 8,
+          "stage": 0,
+          "stage_name": 17,
+          "player_x": 0,
+          "player_y": 0,
+          "player_jump": 0,
+          "player_win": 0,
+          "player_die": 0,
+          "keys_left": 0,
+          "score": 0,
+          "lives": 5,
+          "time_secs": 0
+        },
+        {
+          "host_frame": 600,
+          "logic_epoch": 504,
+          "mode": 1,
+          "stage": 0,
+          "stage_name": 17,
+          "player_x": 0,
+          "player_y": 255,
+          "player_jump": 0,
+          "player_win": 0,
+          "player_die": 0,
+          "keys_left": 1,
+          "score": 0,
+          "lives": 5,
+          "time_secs": 89
+        },
+        {
+          "host_frame": 1563,
+          "logic_epoch": 963,
+          "mode": 1,
+          "stage": 0,
+          "stage_name": 17,
+          "player_x": 59,
+          "player_y": 191,
+          "player_jump": 0,
+          "player_win": 0,
+          "player_die": 0,
+          "keys_left": 1,
+          "score": 0,
+          "lives": 5,
+          "time_secs": 82
+        }
+      ],
+      "state_scope": "live SRAM sampled after host frames; not a completed-state equality comparison",
+      "trace_sha256": "d6273acd1299222a35b9451cce607b2490dccbd215082a26f4a38b586f2dc3ff",
+      "images": [
+        {
+          "frame": 149,
+          "path": "frame-000149.png",
+          "width": 256,
+          "height": 240,
+          "rgb_sha256": "bdc1eea1fa73a8cc5a699dd2325ecb6dc41b504d90373e1ba8dfad414ba9bc78",
+          "png_sha256": "0b5fd47db56f0f928073edbf439762e3153d9d518cd8a6ed79e0e763882bbc1d"
+        },
+        {
+          "frame": 450,
+          "path": "frame-000450.png",
+          "width": 256,
+          "height": 240,
+          "rgb_sha256": "09f8b3e9115ed5e54e83981d19376dea195ae99708ee7d6efb42a64cc6622e25",
+          "png_sha256": "509afdcf2f188973d1375c5847f017992d78636496a995bcda49035163e7bf98"
+        },
+        {
+          "frame": 600,
+          "path": "frame-000600.png",
+          "width": 256,
+          "height": 240,
+          "rgb_sha256": "b73b1340dc52974f08d1e7d006dd95bfe1052b130e5c142aedc346af2548e033",
+          "png_sha256": "cce894bca9013391376dee6bf543ad8b813d9fa1266a8b35f53f055249b8efe7"
+        },
+        {
+          "frame": 1563,
+          "path": "frame-001563.png",
+          "width": 256,
+          "height": 240,
+          "rgb_sha256": "6953b77836556265a6352e731e23b3604e20e952093aa289bbcf48ad480d43d4",
+          "png_sha256": "68f1dfaf57df0a83e431ef1a046ddcc481a0ffbdc194475eb2621511931aeb1b"
+        }
+      ],
+      "audio": {
+        "path": "audio.wav",
+        "channels": 2,
+        "bits_per_sample": 16,
+        "byte_order": "little-endian signed PCM",
+        "sample_rate": 48000,
+        "stereo_frames": 1249070,
+        "sample_count": 2498140,
+        "nonzero_samples": 2489846,
+        "peak": 12530,
+        "peak_normalized": 0.38238525390625,
+        "rms": 2191.017421556781,
+        "rms_normalized": 0.06686454533559512,
+        "pcm_sha256": "a562e5cc9bc72c2bed80dd82c830283d060dc52a0a360b56a2328bc2c075295b",
+        "wav_sha256": "b5bc30a8fd2ac928eb4e1cf2c5587e2281dd9dd28bceeac18ab22c248ae228d6",
+        "single_callback_frames": 0,
+        "batch_callback_frames": 1249070
+      },
+      "core_receipt_sha256": "fa9e51132d919ed31c022a9807c0a70560561dc91a88b15ce387e9d38515a511",
+      "completed_state_shadow": {
+        "completed_projection_ticks_checked": 963,
+        "independent_controller_checks": 963,
+        "controller_mapping_gaps": [],
+        "projection_fields": 34,
+        "controller_lag_from_sampled_nmi_host_frame": 0,
+        "strictly_increasing_sampled_nmi_frames": true,
+        "initialized_runtime_fault_free": true,
+        "first_epoch": 1,
+        "last_epoch": 963,
+        "recorded_hv_words_replayed": 0,
+        "scope": "completed versioned publication vs actual UIL; controller checked independently where the NMI-to-host mapping is unique",
+        "source": "even per-slot sequence and exact expected epoch; live working SRAM is not the oracle"
+      },
+      "logic_rate": {
+        "host_start": 600,
+        "host_end": 1563,
+        "host_frames_elapsed": 963,
+        "logic_updates": 459,
+        "logic_updates_per_second": 28.645711706114238,
+        "host_fps": 60.099826520671044,
+        "rejected_torn_epoch_samples": 0,
+        "timing": "emulated hardware time from core AV info; wall speed recorded separately"
+      },
+      "dnf_reason": "The fixed host-frame route did not complete the level; its host-frame budget is not a logical-update budget."
+    },
+    {
+      "name": "steady_stage_0",
+      "stage_index": 0,
+      "original_objects": 1,
+      "mace_objects": 0,
+      "orange_orb_objects": 0,
+      "assistance": "Original level state seeded from UIL; Muteki=255 keeps the no-input benchmark alive; ordinary native loop/audio/rendering enabled.",
+      "elapsed_wall_seconds": 1.8572752920008497,
+      "logic_rate": {
+        "host_start": 100,
+        "host_end": 3300,
+        "host_frames_elapsed": 3200,
+        "logic_updates": 1730,
+        "logic_updates_per_second": 32.491468712737785,
+        "host_fps": 60.099826520671044,
+        "rejected_torn_epoch_samples": 0,
+        "timing": "emulated hardware time from core AV info; wall speed recorded separately"
+      },
+      "final_observed_stage": 0,
+      "trace_sha256": "cc320d58cc7701fdd5b3bd8d9be2614ccc347afc0980babffce23bf30f5c2126",
+      "images": [
+        {
+          "frame": 100,
+          "path": "frame-000100.png",
+          "width": 256,
+          "height": 240,
+          "rgb_sha256": "9efedf8d2f4e24ba1a881fba31591a9ee985a3e1914ef63798dd67079cc4aa9c",
+          "png_sha256": "068ba0d903cd7e8c4c27484f12c68639854f35628d6c3f6202c20733ac8793be"
+        },
+        {
+          "frame": 3300,
+          "path": "frame-003300.png",
+          "width": 256,
+          "height": 240,
+          "rgb_sha256": "211adc7006038c0e9575239d2ecb9efe0a6aaed7fcd5522c4e773e493af91c30",
+          "png_sha256": "ff2dc159c85af51b1c59a7ecbc24e085ef4ac025402adb874cc7d43bf7ff71d4"
+        }
+      ],
+      "audio": {
+        "path": "audio.wav",
+        "channels": 2,
+        "bits_per_sample": 16,
+        "byte_order": "little-endian signed PCM",
+        "sample_rate": 48000,
+        "stereo_frames": 2636305,
+        "sample_count": 5272610,
+        "nonzero_samples": 5240760,
+        "peak": 20440,
+        "peak_normalized": 0.623779296875,
+        "rms": 2273.9635272482024,
+        "rms_normalized": 0.06939585959619758,
+        "pcm_sha256": "0a8be489d84c8b5260091577d3b7357915953ea9f0bdbf997a374ccdc84cc8b6",
+        "wav_sha256": "ddb2a2cb0b7791b1aa726c64dca55025ad637d1f4f3222d25073a2a1f921e7b0",
+        "single_callback_frames": 0,
+        "batch_callback_frames": 2636305
+      },
+      "core_receipt_sha256": "c4bdbc585c9891a3810d3e01453cdd3f56fdd1d84efc04eaec1a57a73b4b3496",
+      "completed_state_shadow": {
+        "completed_projection_ticks_checked": 1767,
+        "independent_controller_checks": 1767,
+        "controller_mapping_gaps": [],
+        "projection_fields": 34,
+        "controller_lag_from_sampled_nmi_host_frame": 0,
+        "strictly_increasing_sampled_nmi_frames": true,
+        "initialized_runtime_fault_free": true,
+        "first_epoch": 1,
+        "last_epoch": 1767,
+        "recorded_hv_words_replayed": 0,
+        "scope": "completed versioned publication vs actual UIL; controller checked independently where the NMI-to-host mapping is unique",
+        "source": "even per-slot sequence and exact expected epoch; live working SRAM is not the oracle"
+      }
+    },
+    {
+      "name": "steady_stage_40",
+      "stage_index": 40,
+      "original_objects": 10,
+      "mace_objects": 8,
+      "orange_orb_objects": 0,
+      "assistance": "Original level state seeded from UIL; Muteki=255 keeps the no-input benchmark alive; ordinary native loop/audio/rendering enabled.",
+      "elapsed_wall_seconds": 1.8402131670009112,
+      "logic_rate": {
+        "host_start": 100,
+        "host_end": 3300,
+        "host_frames_elapsed": 3200,
+        "logic_updates": 881,
+        "logic_updates_per_second": 16.54623348897225,
+        "host_fps": 60.099826520671044,
+        "rejected_torn_epoch_samples": 0,
+        "timing": "emulated hardware time from core AV info; wall speed recorded separately"
+      },
+      "final_observed_stage": 40,
+      "trace_sha256": "a31af43d4691faa5b0a611e1c5ba3ba337394600c763ec3f3d12b57f0833e35d",
+      "images": [
+        {
+          "frame": 100,
+          "path": "frame-000100.png",
+          "width": 256,
+          "height": 240,
+          "rgb_sha256": "67dc8b18f6f2bca6ff5484f22a60321f011b9251776ea2e59670af1c0f89ffae",
+          "png_sha256": "0f86490287747f7caa00087fbc027bbd9f92d90474fab8eb851db0fdbaf4f8b3"
+        },
+        {
+          "frame": 3300,
+          "path": "frame-003300.png",
+          "width": 256,
+          "height": 240,
+          "rgb_sha256": "5b8c408a7bc2f8eba3a9c76a5797966d138847ad0f241cbf2097047370b5efdf",
+          "png_sha256": "e82b98d710aeca9417092d8477a0127f92746119b2e999a84ae64d2e3e52a3e3"
+        }
+      ],
+      "audio": {
+        "path": "audio.wav",
+        "channels": 2,
+        "bits_per_sample": 16,
+        "byte_order": "little-endian signed PCM",
+        "sample_rate": 48000,
+        "stereo_frames": 2636304,
+        "sample_count": 5272608,
+        "nonzero_samples": 5240518,
+        "peak": 15886,
+        "peak_normalized": 0.48480224609375,
+        "rms": 2664.6590646802347,
+        "rms_normalized": 0.08131894118286849,
+        "pcm_sha256": "d6fb032912d37d494eeebcb0b1ceb012c2cd0f4b93a04f186699d56507e0f6e7",
+        "wav_sha256": "0bd555400673716b0402ad434e8ba1ba41e4e395dd2055e8e50d18bdbbaef7dc",
+        "single_callback_frames": 0,
+        "batch_callback_frames": 2636304
+      },
+      "core_receipt_sha256": "ffce9bb6257f9f09faab1df45a39a109014d2196fcb7fe5bf9a18efbcc8b1b1d",
+      "completed_state_shadow": {
+        "completed_projection_ticks_checked": 900,
+        "independent_controller_checks": 900,
+        "controller_mapping_gaps": [],
+        "projection_fields": 34,
+        "controller_lag_from_sampled_nmi_host_frame": 0,
+        "strictly_increasing_sampled_nmi_frames": true,
+        "initialized_runtime_fault_free": true,
+        "first_epoch": 1,
+        "last_epoch": 900,
+        "recorded_hv_words_replayed": 0,
+        "scope": "completed versioned publication vs actual UIL; controller checked independently where the NMI-to-host mapping is unique",
+        "source": "even per-slot sequence and exact expected epoch; live working SRAM is not the oracle"
+      }
+    },
+    {
+      "name": "steady_stage_43",
+      "stage_index": 43,
+      "original_objects": 11,
+      "mace_objects": 0,
+      "orange_orb_objects": 1,
+      "assistance": "Original level state seeded from UIL; Muteki=255 keeps the no-input benchmark alive; ordinary native loop/audio/rendering enabled.",
+      "elapsed_wall_seconds": 1.9425244579979335,
+      "logic_rate": {
+        "host_start": 100,
+        "host_end": 3300,
+        "host_frames_elapsed": 3200,
+        "logic_updates": 1066,
+        "logic_updates_per_second": 20.02075470969854,
+        "host_fps": 60.099826520671044,
+        "rejected_torn_epoch_samples": 0,
+        "timing": "emulated hardware time from core AV info; wall speed recorded separately"
+      },
+      "final_observed_stage": 43,
+      "trace_sha256": "5775ae39f26a5db2b31cd3574ef046d06b0eecc9fe489b68322a107a919c902b",
+      "images": [
+        {
+          "frame": 100,
+          "path": "frame-000100.png",
+          "width": 256,
+          "height": 240,
+          "rgb_sha256": "dd9c38c40117e093276c662d6069c897f775d19e9e3dbd968098fc850f852da8",
+          "png_sha256": "eac425f0941fe5526fffffece6bd0a450fe6107086428c5006a269d3aa8d362f"
+        },
+        {
+          "frame": 3300,
+          "path": "frame-003300.png",
+          "width": 256,
+          "height": 240,
+          "rgb_sha256": "4af6efe927b000413412cf519acae4a7a80f4516f9f11eea5c6828e043bb5439",
+          "png_sha256": "fd22e4bb6f3712b212352ce0d2e29198b3cfe1ec065dd10a1495d9e98965446a"
+        }
+      ],
+      "audio": {
+        "path": "audio.wav",
+        "channels": 2,
+        "bits_per_sample": 16,
+        "byte_order": "little-endian signed PCM",
+        "sample_rate": 48000,
+        "stereo_frames": 2636303,
+        "sample_count": 5272606,
+        "nonzero_samples": 5240520,
+        "peak": 16024,
+        "peak_normalized": 0.489013671875,
+        "rms": 2671.285258519808,
+        "rms_normalized": 0.08152115657103906,
+        "pcm_sha256": "fad9ffa15ad44be4b14e93ef52629fdb4feb639640b2a79393b908aef5f58369",
+        "wav_sha256": "da9f58afd4e9eac25ccb5cc3aba55d4d572b6ba67212d5c1979e384db48868d1",
+        "single_callback_frames": 0,
+        "batch_callback_frames": 2636303
+      },
+      "core_receipt_sha256": "e13c0ac774895e99a9844b57421419841c1dc3aec1908ee5d99abae4ff6941f0",
+      "completed_state_shadow": {
+        "completed_projection_ticks_checked": 1089,
+        "independent_controller_checks": 1089,
+        "controller_mapping_gaps": [],
+        "projection_fields": 34,
+        "controller_lag_from_sampled_nmi_host_frame": 0,
+        "strictly_increasing_sampled_nmi_frames": true,
+        "initialized_runtime_fault_free": true,
+        "first_epoch": 1,
+        "last_epoch": 1089,
+        "recorded_hv_words_replayed": 140,
+        "scope": "completed versioned publication vs actual UIL; controller checked independently where the NMI-to-host mapping is unique",
+        "source": "even per-slot sequence and exact expected epoch; live working SRAM is not the oracle"
+      }
+    },
+    {
+      "name": "steady_stage_44",
+      "stage_index": 44,
+      "original_objects": 28,
+      "mace_objects": 0,
+      "orange_orb_objects": 0,
+      "assistance": "Original level state seeded from UIL; Muteki=255 keeps the no-input benchmark alive; ordinary native loop/audio/rendering enabled.",
+      "elapsed_wall_seconds": 1.926342749997275,
+      "logic_rate": {
+        "host_start": 100,
+        "host_end": 3300,
+        "host_frames_elapsed": 3200,
+        "logic_updates": 509,
+        "logic_updates_per_second": 9.559628655944238,
+        "host_fps": 60.099826520671044,
+        "rejected_torn_epoch_samples": 0,
+        "timing": "emulated hardware time from core AV info; wall speed recorded separately"
+      },
+      "final_observed_stage": 44,
+      "trace_sha256": "da34f4dc337a986a792cafacf11bb9332ca13bf684a63c50d78ad4f21c30edde",
+      "images": [
+        {
+          "frame": 100,
+          "path": "frame-000100.png",
+          "width": 256,
+          "height": 240,
+          "rgb_sha256": "7da9ffe8b58e6be266fc6ca2239851a113f4ecedf15b3a518b46df9242fafc01",
+          "png_sha256": "aad6bbc92f9194852911da978fad1cf69b031587b1fa8a1d105b6ba565083dea"
+        },
+        {
+          "frame": 3300,
+          "path": "frame-003300.png",
+          "width": 256,
+          "height": 240,
+          "rgb_sha256": "f0680c6e4e299709c27f7c7a1012e40c74aa7f1d6389beeeef763e640450d356",
+          "png_sha256": "73a1bf17c78c8e119fa78c2f2d1d44be5697b787a6bf35be5f46c37af7300276"
+        }
+      ],
+      "audio": {
+        "path": "audio.wav",
+        "channels": 2,
+        "bits_per_sample": 16,
+        "byte_order": "little-endian signed PCM",
+        "sample_rate": 48000,
+        "stereo_frames": 2636303,
+        "sample_count": 5272606,
+        "nonzero_samples": 5212326,
+        "peak": 20255,
+        "peak_normalized": 0.618133544921875,
+        "rms": 4499.689715897381,
+        "rms_normalized": 0.13731963244315737,
+        "pcm_sha256": "f10447a6af3afabe9980c289fc41b2ffdfc7e240357d846a796a22ccde7be2d2",
+        "wav_sha256": "35f706e6f2bc81170ec1e59e3455b22d12124e251a6d3bec235bccd5c4d126ff",
+        "single_callback_frames": 0,
+        "batch_callback_frames": 2636303
+      },
+      "core_receipt_sha256": "a684fbe8d08a66d530d549f340aa5075e97ff2e51b3cacf3f67b72cfade1e3cf",
+      "completed_state_shadow": {
+        "completed_projection_ticks_checked": 521,
+        "independent_controller_checks": 521,
+        "controller_mapping_gaps": [],
+        "projection_fields": 34,
+        "controller_lag_from_sampled_nmi_host_frame": 0,
+        "strictly_increasing_sampled_nmi_frames": true,
+        "initialized_runtime_fault_free": true,
+        "first_epoch": 1,
+        "last_epoch": 521,
+        "recorded_hv_words_replayed": 0,
+        "scope": "completed versioned publication vs actual UIL; controller checked independently where the NMI-to-host mapping is unique",
+        "source": "even per-slot sequence and exact expected epoch; live working SRAM is not the oracle"
+      }
+    },
+    {
+      "name": "read_only_feedback_first_level_route",
+      "result": {
+        "completed": true,
+        "reason": "goal observed in completed projection",
+        "logical_steps_observed": 1923,
+        "goal_epoch": 902,
+        "goal_host_frame": 1806,
+        "final_phase": "route",
+        "final_segment": 11,
+        "next_stage_transition": {
+          "epoch": 1152,
+          "host_frame": 2393,
+          "observed": {
+            "input_buttons": 0,
+            "joy_hold": 0,
+            "joy_press": 0,
+            "mode": 1,
+            "stage": 1,
+            "stage_name": 18,
+            "player_x": 0,
+            "player_y": 0,
+            "player_angle": 2,
+            "player_action": 0,
+            "player_jump": 16,
+            "player_spring": 0,
+            "player_win": 0,
+            "player_die": 0,
+            "keys_left": 2,
+            "ingame_status": 0,
+            "end_game": 0,
+            "time_secs": 96,
+            "time_frames": 60,
+            "lives": 5,
+            "score": 18176,
+            "anim": 0,
+            "subpixel": 228,
+            "rng_seed": 0,
+            "shake_timer": 0,
+            "ending_phase": 0,
+            "ending_timer": 0,
+            "current_sfx": 0,
+            "sfx_to_play": 0,
+            "current_bgm": 1,
+            "bgm_to_play": 0,
+            "ending_fade": 0,
+            "clear_phase": 0,
+            "clear_timer": 0,
+            "sound_busy_input": 0,
+            "input_frame": 2366
+          }
+        },
+        "post_transition_host_frames": 1500,
+        "assistance": "Read-only completed-state feedback; ordinary controller buttons only; no RAM writes."
+      },
+      "route_completed": true,
+      "host_frames": 3894,
+      "elapsed_wall_seconds": 2.189754624996567,
+      "completed_state_shadow": {
+        "completed_projection_ticks_checked": 1923,
+        "independent_controller_checks": 1923,
+        "controller_mapping_gaps": [],
+        "projection_fields": 34,
+        "controller_lag_from_sampled_nmi_host_frame": 0,
+        "strictly_increasing_sampled_nmi_frames": true,
+        "initialized_runtime_fault_free": true,
+        "first_epoch": 1,
+        "last_epoch": 1923,
+        "recorded_hv_words_replayed": 0,
+        "scope": "completed versioned publication vs actual UIL; controller checked independently where the NMI-to-host mapping is unique",
+        "source": "even per-slot sequence and exact expected epoch; live working SRAM is not the oracle"
+      },
+      "controller_policy_sha256": "b81bd646f4c10fa47b29d3f7ae7f81f58141d5876a39db9facb00464730aac4d",
+      "controller_observations_sha256": "34365003e7a6d86cde1073438c9af828f53194341d3ed5e57ae3ccfdcb9c395a",
+      "controller_callback_masks_sha256": "9c115ca21cc237563c590f26a2f0bb530348c723f23e5cfceded580309538800",
+      "assistance": "Read-only completed-state feedback; ordinary controller buttons only; no RAM writes.",
+      "trace_sha256": "f8ebae0fd46b354d9a87d19f01c3a908bc90b1fcadc255ab4597668e66629658",
+      "images": [
+        {
+          "frame": 149,
+          "path": "frame-000149.png",
+          "width": 256,
+          "height": 240,
+          "rgb_sha256": "9efedf8d2f4e24ba1a881fba31591a9ee985a3e1914ef63798dd67079cc4aa9c",
+          "png_sha256": "068ba0d903cd7e8c4c27484f12c68639854f35628d6c3f6202c20733ac8793be"
+        },
+        {
+          "frame": 999,
+          "path": "frame-000999.png",
+          "width": 256,
+          "height": 240,
+          "rgb_sha256": "6c68241858434809e0f7cfb809c042daa506c2e344fb4bcbcd9e6685cbb41644",
+          "png_sha256": "7bf8850d0318eaf9b4f1522a8d158abf500f3d5908e4ae5ca34afc3646cf82cb"
+        }
+      ],
+      "audio": {
+        "path": "audio.wav",
+        "channels": 2,
+        "bits_per_sample": 16,
+        "byte_order": "little-endian signed PCM",
+        "sample_rate": 48000,
+        "stereo_frames": 3109896,
+        "sample_count": 6219792,
+        "nonzero_samples": 6210966,
+        "peak": 12530,
+        "peak_normalized": 0.38238525390625,
+        "rms": 2309.581965375916,
+        "rms_normalized": 0.07048284806445056,
+        "pcm_sha256": "9e63b8e7126e721ecfc4793049ba39db36bc6908ef71a82395f299ec53d543fb",
+        "wav_sha256": "e6fe76819758a464173d54ae8aec84b0d60fc818b7acaa06c0b7dc230f0523d3",
+        "single_callback_frames": 0,
+        "batch_callback_frames": 3109896
+      },
+      "final_image_sha256": "620ac41f0c644e50beab172caf99a32042205075dfb86659dde31e8e2b0878f3",
+      "core_receipt_sha256": "8c49116057736ce23d9e46722746f25d97242a489fa7be814e34037b1f5ddd59"
+    }
+  ],
+  "normal_totals": {
+    "projected_ticks": 7163,
+    "independent_controller_checks": 7163,
+    "recorded_hv_words_replayed": 140,
+    "state_differences": 0,
+    "controller_mapping_gaps": 0,
+    "runtime_faults_after_initialized_publication": 0
+  },
+  "assumptions_and_limits": [
+    "Exact hash-bound Miniplanets ROM and reviewed source domain; not a generic arbitrary-ROM decompilation result.",
+    "All55 stage loads and first-frame states qualify through assisted procedure dispatch; this is not a natural play-through of all55 levels.",
+    "The four3301host-frame no-input benchmarks seed real level state and set Muteki255 to keep the player alive. Clock and rendering then execute through the ordinary loop.",
+    "Reported logic Hz is completed game updates per emulated console second; the host can emulate faster than real time. These rates do not meet60Hz and the densest measured stage is9.559628655944238Hz.",
+    "The fixed784-host-frame movement schedule remains a valid DNF. A separate read-only feedback controller sends only ordinary buttons, completes key/goal/tally/next-stage, then remains neutral1500hostframes.",
+    "Normal comparison covers the34-field published projection; complete79-variable comparisons are controlled component cases.",
+    "HV and sound-busy observations are explicit environment inputs; finalr14 records and replays140HV words.",
+    "Actual core/ROM/toolchain/runtime-resource hashes, all private traces and historical failures remain separately retained. No whole-game formal proof, physical NES hardware qualification, pixel identity or original FM timbre claim."
+  ],
+  "separate_evidence": {
+    "audio_cadence": "normal-audio-tempo.json",
+    "bank_race_regression": "bank-race.json",
+    "intrinsic_vectors": "phase-intrinsic.json",
+    "original_genesis_common_components": "common.json",
+    "original_genesis_actor_components": "actors.json",
+    "reference_flow": "reference-flow.json"
+  },
+  "integration_bridge": {
+    "merged_main_commit": "90e748c8bc6a4f068f9136f4d4ec989672421a03",
+    "qualified_game_source_commit": "8da093332e29289d01f591deb752b99e3da0f3ba",
+    "unchanged_game_compiler_profile_resource_files": 25,
+    "fresh_merged_source_rebuild_passed": true,
+    "same_entire_rom_sha256": "aecdb39cb4b112de6de64069aab8deb397640cf684ac6942cb4c8e79ac48663e",
+    "same_uil_program_sha256": "198484bd9fe39d16f48d6785adcebe172b29b00511af1d77942088f7497e591b",
+    "runtime_library_sha256": "b9bf755f5d0a487e7b8b1a9e869b3f8a57652aff83df42d85c99af579248a70d",
+    "full_macos_suite": {
+      "passed": 2756,
+      "skipped": 142,
+      "failed": 3,
+      "errors": 23,
+      "scope": "Unchanged Linux ELF fixture assumptions and one unchanged case-sensitive media ambiguity fixture remain failing on this Mac."
+    },
+    "scope": "Source integration and exact-image rebuild; native component/play/audio evidence above retains its original inputs and observations."
+  }
+}

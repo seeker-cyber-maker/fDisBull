@@ -88,6 +88,7 @@ It reads no project and does not register or install a skill into an agent's
 own discovery directory. Fetch a single resource when needed:
 
 ```text
+fdisbull agent-skill --reference references/analysis-approach.md
 fdisbull agent-skill --reference references/workflows.md
 fdisbull agent-skill --reference references/scenes.md
 fdisbull agent-skill --reference references/runtime-navigation.md
@@ -117,6 +118,16 @@ request cannot keep a live emulator attached.
 The full skill may exceed the inline response budget and return an output
 artifact reference. Prefer the index and one selected guide for routine work;
 use the output retrieval commands below when a complete export is needed.
+The analysis-approach guide helps choose what to investigate next, including
+actor, item, interaction and text-projection dependencies.
+For the preserved Genesis-to-NES research and its native ARM64 successor, see
+[the handoff](GENESIS_NES_RESEARCH_HANDOFF.md) and
+[native Shadowrun output](SHADOWRUN_MACOS_ARM64.md). Select
+`shadowrun-ai-build --target macos-arm64` for the same bounded model on a Mac.
+For the separately recovered SNES opening-scene movement study, see
+[SNES native transfer](SHADOWRUN_SNES_MACOS.md). Its `shadowrun-snes-build`
+command uses the exact caller-owned SNES ROM, WRAM and save-RAM capture; it is
+a prepared source-specific profile, not a whole-ROM conversion command.
 The semantic-contract guide connects intent, effects, time and projection loss;
 the scene-recovery guide starts UIL extraction from required scene elements and
 bounded source dependencies. The formats/media guide covers input mapping and
@@ -205,6 +216,8 @@ native symbols, resolved variables or equivalent code.
 
 ```text
 fdisbull identify /path/to/program
+fdisbull rom-inspect /path/to/console-cartridge-or-sega-data-track
+fdisbull disc-inspect /path/to/disc.cue
 fdisbull inspect /path/to/program
 fdisbull import /path/to/program /path/to/analysis.fdb
 fdisbull analyze /path/to/analysis.fdb --max-instructions 10000
@@ -468,6 +481,52 @@ policy in the adapter; routine saved scripts continue to use their existing API.
 For video-led route research, the [Robb TAS reconstruction](research/kq1-robb-9.89/ROUTE.md)
 keeps visible key highlights, inferred directions and unknown dispatch separate.
 Qualify those proposed actions in the original game before using them as evidence.
+
+### Compare console instruction proposals
+
+Use `rom-inspect` / `disc-inspect` for container facts first. When a payload's
+load mapping has independent evidence, `rom-disasm` can decode a bounded SH-2
+range with Capstone, Ghidra or saturn-recomp. Supply the address mapping file
+offset zero; keep extracted files and returned instruction bytes private.
+`--mode word-scan` tests aligned words independently, including data hypotheses.
+Neither mode discovers executable code or updates a native project. See
+[ROM-to-ASM](ROM_ASM.md) for external engine setup, the shared output contract,
+the Civilization Saturn comparison and the known Capstone CPU-profile issue.
+
+### Generate a bounded native console cartridge
+
+`console-udc-targets` lists the common NES/Genesis UIL profile. Compile an
+authored script with `console-udc script.uil.json --target nes --output
+/private/new-cartridge --display-variable '$x'`; change only `--target genesis`
+for a Genesis cartridge. Outputs must be new directories outside Git.
+Both modules emit native CPU and console startup code. See
+[console UDC](CONSOLE_UDC.md) for the supported arithmetic/condition subset,
+workload limits and real emulator results, including a bounded Genesis ROM →
+UIL → NES test. This does not automatically recover a commercial game's UIL.
+
+For the reviewed full Miniplanets profile, `rom-game-lift ORIGINAL_ROM --output
+/private/new-uil` exports procedural game/audio UIL. `console-udc
+/private/new-uil/program.uil.json --target nes --region ORIGINAL_ROM
+--cc65-root /private/tools/cc65 --output /private/new-game` compiles the same
+rules into a banked NES cartridge. See the [full-game contract and measured
+qualification](MINIPLANETS_FULL_GAME.md); original data remains external and
+this source-bound profile is separate from arbitrary ROM decompilation.
+For a locked game/audio/presentation/PSG export with repeatable native builds,
+use `genesis-replay-export ORIGINAL_ROM --target nes --cc65-root TOOLS --output
+/private/new-bundle`. Select `--target genesis --m68k-root TOOLS` to compile
+the full procedural game back to Genesis. `genesis-replay-source` reports
+whether an intake has a reviewed semantic profile; parsing alone is insufficient.
+See [Genesis UIL replay](GENESIS_UIL_REPLAY.md) for build/replay commands,
+tool trust and the target-specific validation limits.
+
+For a post-compilation two-game NES cartridge, discover
+`nes-multicart-profiles` and inspect candidates with
+`nes-multicart-inspect CARTRIDGE`. Use `nes-multicart-build GAME1 GAME2
+--authored-compatible --output /private/new-multicart` only for authored
+NROM games satisfying the declared mapper restrictions. The flag asserts
+behavioral compatibility that a header cannot establish. The
+[multicart contract and native checks](NES_MULTICART.md) describe the menu,
+bank switching, input handoff and tested emulator reset behavior.
 
 ### Compare a source block with shared semantics
 

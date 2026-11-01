@@ -1,0 +1,2 @@
+# Unified-diff context intentionally prefixes upstream tabs with one space.
+*.patch -whitespace

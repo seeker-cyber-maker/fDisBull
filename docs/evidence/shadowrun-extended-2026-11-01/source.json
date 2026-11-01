@@ -1,0 +1,329 @@
+{
+  "format": "fdisbull-shadowrun-extended-source-evidence-1",
+  "status": "bounded_original_component_comparisons_passed",
+  "source_rom_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+  "initial_boundary": {
+    "frame": 6124,
+    "cause": "The prepared moving-origin hostile negative pose was 0x8058 while the earlier bounded helper admitted only 0x8054.",
+    "scope": "Original assisted actor setup; supported pose continuations do not imply general hostile AI."
+  },
+  "component_comparisons": {
+    "moving-pose-58-02": {
+      "receipt_sha256": "523f4545b2aa8c0916af6b277e7101cde3fa0c12f6e1d6d4d9676577296f0f97",
+      "status": "passed",
+      "matched_frames": 21,
+      "source_frames": [
+        6124,
+        6144
+      ],
+      "authoring_sha256": "927254a275b1a7e96460837d7c90c8a8ee64c1e16a3b76d78ad84bc663602c39",
+      "scope": "assisted constructed hostile moving-origin negative pose and source service expiry; audio, graphics and selected-target metadata excluded"
+    },
+    "moving-pose-58-zero-01": {
+      "receipt_sha256": "2e6939a14724e5e99629d0a38585904627d7417dd44021ed125c82265c5b0a33",
+      "status": "passed",
+      "matched_frames": 6,
+      "source_frames": [
+        6211,
+        6216
+      ],
+      "authoring_sha256": "927254a275b1a7e96460837d7c90c8a8ee64c1e16a3b76d78ad84bc663602c39",
+      "scope": "assisted constructed hostile moving-origin negative pose and source service expiry; audio, graphics and selected-target metadata excluded"
+    },
+    "moving-idle-18-01": {
+      "receipt_sha256": "b61ef263fc2abfe593d519f76465cf538ab3e084b7355e14ca0e45825a59498d",
+      "status": "passed",
+      "matched_frames": 20,
+      "source_frames": [
+        6145,
+        6164
+      ],
+      "authoring_sha256": "bae57c6db1c20cf40ee6f8848a9df8d54b998cd2859cb6923366d093bca195c5",
+      "scope": "assisted constructed hostile moving-origin idle between services; audio, graphics and selected-target metadata excluded"
+    },
+    "moving-idle-18-zero-01": {
+      "receipt_sha256": "72f04dee762040182508048492977faab57c5caf7c0d5c3f324f08d915d299dd",
+      "status": "passed",
+      "matched_frames": 20,
+      "source_frames": [
+        6217,
+        6236
+      ],
+      "authoring_sha256": "bae57c6db1c20cf40ee6f8848a9df8d54b998cd2859cb6923366d093bca195c5",
+      "scope": "assisted constructed hostile moving-origin idle between services; audio, graphics and selected-target metadata excluded"
+    },
+    "moving-relaunch-repeat-02": {
+      "receipt_sha256": "88e2846baacd1bbc0d8fa92190bc3103e755c9aaf97cecaa38a1c314162bf8da",
+      "status": "passed",
+      "matched_frames": 1,
+      "authoring_sha256": "1fa6a61d229388ed6b3cbad4b3fdb96d5c792e986ee9df2f455efd586c0c3be1",
+      "scope": "prepared moving-origin repeated hostile relaunch with no HP change; source scheduler/shot and projectile RNG separate"
+    },
+    "moving-relaunch-zero-02": {
+      "receipt_sha256": "645a62963fd3f5fbc7671c8c269a845183d1d6f7e721213555c07fab85a7e756",
+      "status": "passed",
+      "matched_frames": 1,
+      "authoring_sha256": "1fa6a61d229388ed6b3cbad4b3fdb96d5c792e986ee9df2f455efd586c0c3be1",
+      "scope": "prepared moving-origin repeated hostile relaunch with no HP change; source scheduler/shot and projectile RNG separate"
+    },
+    "moving-relaunch-repeat-chain-01": {
+      "receipt_sha256": "6b21146e73c2139ed4071602030fc4d90d1b43e0774983808e8d4e2b5beacdd1",
+      "status": "passed",
+      "authoring_sha256": [
+        "8aa8a93d033365443af653e75a05ba715e3a23640445b1cbd859a6cd17973c65",
+        "debe50b4a467f176f08751be43edf01cddbe02ecc00586a87d53646f3d534dd3",
+        "8ffb2ea9ae3012e9be94231b132b72b616ecf1681e0f699262dcd1f6e403aa52",
+        "ee34d2dd11013567e6ab8158f0142dd27e8bbdbc13720dfa4083cc2dacf53968",
+        "24e6afe7ea669e3869f74b69c3d8b2bc5c766881c0785ee01169342ea14e48a5"
+      ],
+      "scope": "assisted source-constructed moving-origin hostile relaunch and same-frame player impact; player position after its source movement supplied; no natural encounter claim"
+    },
+    "hostile-expiry-cycle-02": {
+      "receipt_sha256": "bdd8ee59701fc3c4c1f9ab080a143839f3bb9d3d3b744e4fdb38aeeebd5668f3",
+      "status": "passed",
+      "source_transition": [
+        6050,
+        6051
+      ],
+      "authoring_sha256": "9f7766f3bd5fdf621850972939c96304782995d3a0b7804315f4cfc057f075de",
+      "scope": "assisted ordinary retreat, source player/actor positions supplied to projectile collision; zero-effect lifetime expiry and one sprite pass, future burst separate"
+    },
+    "hostile-expiry-cycle-effect1-01": {
+      "receipt_sha256": "c7f4b74dd7fa0d8a39c3402dfc51de6d1d2124a5c427d90ac532dd1a5b319aad",
+      "status": "passed",
+      "source_transition": [
+        6066,
+        6067
+      ],
+      "authoring_sha256": "9f7766f3bd5fdf621850972939c96304782995d3a0b7804315f4cfc057f075de",
+      "scope": "assisted ordinary retreat, source player/actor positions supplied to projectile collision; effect-1 lifetime expiry and one sprite pass, future burst separate"
+    },
+    "hostile-retreat-attack-01": {
+      "receipt_sha256": "5a42489f43c75a76109f108e51d489bcdd61d22d9e65cfb39cdf8303a8328378",
+      "status": "passed",
+      "matched_frames": 1,
+      "authoring_sha256": "5951f9dac65c9864af49c4024cdde65bd465500588e7b10e4b946c6c9f3cad70",
+      "scope": "prepared moving hostile launch and player-hit actor pose, frame6093; source scheduler/shot and projectile RNG separate"
+    },
+    "hostile-retreat-shot-01": {
+      "receipt_sha256": "c3e4a54faa9179117c2184abca0e79a550edd1cf5242a82888febe95cbc7d46a",
+      "status": "passed",
+      "authoring_sha256": [
+        "8aa8a93d033365443af653e75a05ba715e3a23640445b1cbd859a6cd17973c65",
+        "debe50b4a467f176f08751be43edf01cddbe02ecc00586a87d53646f3d534dd3",
+        "8ffb2ea9ae3012e9be94231b132b72b616ecf1681e0f699262dcd1f6e403aa52",
+        "ee34d2dd11013567e6ab8158f0142dd27e8bbdbc13720dfa4083cc2dacf53968",
+        "24e6afe7ea669e3869f74b69c3d8b2bc5c766881c0785ee01169342ea14e48a5"
+      ],
+      "scope": "assisted source-constructed moving hostile launch and same-frame player impact; player position after its source movement supplied; no natural encounter claim"
+    },
+    "player-combat-wall-01": {
+      "receipt_sha256": "2f6b39326918a912b402b131174b9b6c4e1d3407df396bcea542626911b5e6bb",
+      "status": "passed",
+      "matched_frames": 1,
+      "source_frames": [
+        6071,
+        6072
+      ],
+      "authoring_sha256": "1e602088b48d3987b1713ccaa0fdbb8cc50da21b5acf56a584862cce9189541d",
+      "scope": "assisted constructed hostile with ordinary LEFT-to-UP controller turn; captured party northward two-corner wall stop; final sprite flag clear separate"
+    },
+    "player-combat-slide-02": {
+      "receipt_sha256": "b562b12937c21ddb98bbbe06b0fb1b7bee6b269d092fbc06507846ff1e1430e3",
+      "status": "passed",
+      "source_transition": [
+        6104,
+        6105
+      ],
+      "authoring_sha256": "9f0c41bdce1f2a75c739fbb9df8ad6a7ddbc2f711463af9b8f9ce951dae9b7a3",
+      "scope": "assisted constructed hostile, expired LEFT reaction admission and north-wall west slide plus party sprite clock; walking sprite speed28 supplied from source actor service"
+    },
+    "player-combat-slide-continued-02": {
+      "receipt_sha256": "040948c5685581ea4d48d02e3c3503aac98819db69b17a0509ee16b1bd32b1b1",
+      "status": "passed",
+      "matched_frames": 3,
+      "source_frames": [
+        6106,
+        6108
+      ],
+      "authoring_sha256": "9f0c41bdce1f2a75c739fbb9df8ad6a7ddbc2f711463af9b8f9ce951dae9b7a3",
+      "scope": "assisted constructed hostile with ordinary LEFT-to-UP controller turn; captured party north-wall diagonal west slide; sprite service separate"
+    },
+    "courtyard-waypoint-idle-01": {
+      "receipt_sha256": "be03c1aa8dd8d1e8ecd4cb7fb7c8cf8b7b534691128376a81d6961d8643377c7",
+      "status": "passed",
+      "source_transition": [
+        6203,
+        6204
+      ],
+      "authoring_sha256": "14e1bfc0847a467c22970d38d9ef378fad128025326e62123d88c1e930185414",
+      "scope": "unpatched calm scene actor0 near-waypoint source service, waypoint service followed by B45C idle callback; sprite clock separate"
+    },
+    "enemy-east-slide-final-01": {
+      "receipt_sha256": "1ee75cba0e8e3e223ab0c8470da88ff10116a6a8a5c853984ffd9b3dc4464d13",
+      "status": "passed",
+      "source_frames": [
+        6389,
+        6390
+      ],
+      "authoring_sha256": "38b9cfe141cb4fa286376d77217fb10fa5fc5f164440ba7c41c6afcec4516c64",
+      "scope": "unpatched courtyard actor1 clear proposal followed by eastward terrain fallback; other cases refused"
+    },
+    "enemy-east-slide-repeated-01": {
+      "receipt_sha256": "aa2976390239d05f956079c063f08280c184a7229b968f0376dffa7868a6e9a9",
+      "status": "passed",
+      "source_frames": [
+        6391,
+        6392,
+        6393,
+        6394,
+        6395
+      ],
+      "authoring_sha256": "38b9cfe141cb4fa286376d77217fb10fa5fc5f164440ba7c41c6afcec4516c64",
+      "scope": "unpatched courtyard actor1 clear proposal followed by eastward terrain fallback; other cases refused"
+    },
+    "enemy-east-slide-exit-02": {
+      "receipt_sha256": "9e9cb6f3fc8436946b2b468fbd83c4d62f63596f2ce5220cc0914302332340b3",
+      "status": "passed",
+      "source_frames": [
+        6396
+      ],
+      "authoring_sha256": "eebc183768ef16020217afea89f3e4bb088d8b232d96a6c281d8d5a3212c8063",
+      "scope": "unpatched courtyard actor1 eastward slide exit on clear terrain; other cases refused"
+    },
+    "down-recovery-check-01": {
+      "receipt_sha256": "51ef70cb89e6fd32306feece25b0e42aadb92e41b0a8cee0c0ecf609d10fa5cc",
+      "status": "passed",
+      "source_transition": [
+        6062,
+        6063
+      ],
+      "authoring_sha256": "db194408798a562cd9cacc1e56e5c80c3f5300f4f3854eb630609e7eba85232f",
+      "scope": "assisted constructed hostile, expired DOWN reaction admission and clear combat walk plus party sprite clock; walking sprite speed supplied from source actor service"
+    },
+    "enemy-outer-slide": {
+      "receipt_sha256": "6e59e42403229adb2f8cfd1788928057809162a4299140a1fa67222fecf96553",
+      "status": "passed",
+      "matched": 2,
+      "authoring_sha256": "eafa4ff5fc7fd7e83c3d85918531d3ca6b2731d8ec61555bcfc6b872b6dd9e0a",
+      "native_trace_sha256": "f58a1e379fd29ff458fc40938d4dbe17ef96f2cae350d014a27fa729cfade35d",
+      "scope": "captured unpatched east-slide actor prefix; callback and collision handled separately"
+    }
+  },
+  "original_captures": {
+    "moving-long-original-01": {
+      "capture_sha256": "ffa86ee7286c0ec90c4bbea71000a76bbce4ab24aef7ba6c5730ee71d8045fbe",
+      "native_receipt_sha256": "79b3f619540c6bfee1708b2c2b9692333820c49431e220d4ed006dc84fb2785b"
+    },
+    "moving-repeated-original-01": {
+      "capture_sha256": "5af7e095ef74563403c54e4d2b6ec81dde13d7998e0aeed220b7e429da7fecf6",
+      "native_receipt_sha256": "bf46c5d63d61eae97061502167008a3eb1c0d52bb9d7291d920859c89f06e4b1"
+    },
+    "retreat-original-01": {
+      "capture_sha256": "7a94567c364850eddcb6ec494b107274a34fd7a6c0bda30f8b2db91a1379e7ff",
+      "native_receipt_sha256": "0f3c88c9f6d62f39a5b01176c7e166a33b0e70f513af564e6a4e8969deaf1e70"
+    },
+    "retreat-relaunch-original-01": {
+      "capture_sha256": "f6d365ad0207af012f8c945e2f7de844ddd69cd380382920500ab5ec604c729c",
+      "native_receipt_sha256": "21ec6fc5774c90bbd2b3ba5821fc7111bda2bc806e9310e5cdad6aafd1b45d27"
+    },
+    "down-long-original-01": {
+      "capture_sha256": "1bf6d4b52212bea68233c595ad4b45db0e45361d46010f8d816f6b51f5feecfd",
+      "native_receipt_sha256": "1849286cde8036a9d9fd058850cdf0381af4bd74eff894bb64b92cea9093c035"
+    },
+    "down-recovery-original-01": {
+      "capture_sha256": "ad25a9b74d2efb76a1ab7db70f5817191281b66f64a34f9253fe3b66f4ed52bb",
+      "native_receipt_sha256": "fef5e64d4c289738c07e41b1cce16d839c795db559c04bc0ebe1ac6510c04a0f"
+    },
+    "courtyard-original-01": {
+      "capture_sha256": "7ee8be20afafffb774aa6e91b7342b63845808c651f6e2b65a6da6cd9482cc8e",
+      "native_receipt_sha256": "b54d52417567b97590cea958215b36abb0cd26b4a9c4d59c967db055d93086eb"
+    },
+    "courtyard-boundary-original-01": {
+      "capture_sha256": "282523587a0482819048e570326708d6e7b96ea038a74541169469d98fa13e12",
+      "native_receipt_sha256": "5d85e63e8b171b1e2643700e1d719b177030f3c37ceac0cf6bb48c1dbd58ce60"
+    },
+    "courtyard-boundary-6389-original-01": {
+      "capture_sha256": "c035ad13ea74d1fe4d6a89a8aca9df2df46d4502e1e767793fcec84567c00dc9",
+      "native_receipt_sha256": "d3e3c707d952f5e76da7d28cb55c9c5431026f0b0576268c5beeec7999b0e3d4"
+    },
+    "courtyard-boundary-6391-original-01": {
+      "capture_sha256": "6d9a26a81e1e1b0c11e2803e774254d9a55229ac072d356c7c30cc8fc8d6378a",
+      "native_receipt_sha256": "fdfbe3c1cdbd66959c040581bf10b4fa324aa23b97c7696a72a0494337e10a84"
+    },
+    "left-long-original-01": {
+      "capture_sha256": "fb51d5aaf2688a964237d6032807f6c4760e04cf0dac041dee0a96056af3cb05",
+      "native_receipt_sha256": "dd679d8ecd6aa56e2a786e16d83ae0388e0efd7470d1bf58ae795c83996fa610"
+    },
+    "offense-original-01": {
+      "capture_sha256": "399edebe3ee9e7d425fddc6868ee067a762f071ee18127bc76eabef41aecc7c7",
+      "native_receipt_sha256": "06128c7812c9fcbbc5e1e7b52aa698375225d160e6af0dd3184a499c3e910efe"
+    }
+  },
+  "timer_gate": {
+    "defect": "The model reset an expired player action timer while directional movement continued.",
+    "original_source": "Source AD4E\u2013AD7E checks input heading; a directional heading bypasses ABFC, while no direction enters that helper. Dense original LEFT frames 6033\u20136038 show 3, 2, 1, 0, FFFF, FFFF.",
+    "limit": "The source addresses and observed controlled paths do not imply all input combinations are modeled."
+  },
+  "route_scope": {
+    "unpatched_courtyard": "Unpatched scene-2 source capture: ordinary LEFT, UP, RIGHT, DOWN, LEFT, UP input intervals through frame 6450; component checks qualify waypoint/idle, east-wall slide and clear exit. Whole-route native parity belongs to the independently reported native receipt.",
+    "assisted_retreat": "Prepared hostile plus ordinary LEFT/UP/LEFT retreat; model terminal frame 6116, original sparse checkpoints first observe HP zero at 6120. Exact-frame terminal parity is not established.",
+    "assisted_down_survivor": "Prepared hostile, LEFT then held DOWN; original player HP 3 at observed frame 6300. Model refuses hostile service at frame 6093; source observations do not qualify exact launch/LOS or subsequent pursuit.",
+    "other_original_controls": "Continuous LEFT reaches observed HP zero by 6120; the firing route reaches observed HP zero by 6250. Both use assisted hostile setup."
+  },
+  "source_files_sha256": {
+    "scripts/check_shadowrun_courtyard_waypoint.py": "90bcc5aaf5fb0ace7ae0cd50189b4bbd6238553444d90eedd7878cd2c6ec3b6d",
+    "scripts/check_shadowrun_courtyard_waypoint_idle.py": "db97d4b636a9aa5e93b5865ddb83094a2f77d566365ce25bd13b17043d317f9b",
+    "scripts/check_shadowrun_enemy_east_slide.py": "1586275289d955956983feaf42bb18f69805a16b14451451d935ec51829cc142",
+    "scripts/check_shadowrun_enemy_east_slide_continued.py": "fe9b075f428abd25e0194f702c2a28e6ee8f8f9c70882e02dfb884b0e595808f",
+    "scripts/check_shadowrun_enemy_east_slide_exit.py": "bd3d9e40800811f4ef0cfe2719bc8b2dcd623b092a0546ca31fbbf4bec64d2ca",
+    "scripts/check_shadowrun_enemy_east_slide_repeated.py": "989496bf5d26e664ead3e4bfb636e28870d26a5892ee6b2fad345f7402e029aa",
+    "scripts/check_shadowrun_enemy_outer_slide.py": "6d96f0987a8aa6a03d35403cdeef3f92f304593b42e014e6dc96a18b70acc452",
+    "scripts/check_shadowrun_hostile_expiry_cycle.py": "d672472b24276b137a2f0b46b047e146c07ab9cea50e8d0e821a9bac39574825",
+    "scripts/check_shadowrun_hostile_expiry_cycle_effect1.py": "855dc5104c5ef18f8c4b335d8622f2990c55de15c81b161c09f47a88c99cefef",
+    "scripts/check_shadowrun_hostile_moving_idle_18.py": "f39908534021b9384e6c9c51c26377c3ff52bab4e9f6193387160492f6386240",
+    "scripts/check_shadowrun_hostile_moving_idle_18_zero.py": "02aca94137811fd76f0f243ef30a5a59e8e403d5b2b8c9036148b1f7e6e890f7",
+    "scripts/check_shadowrun_hostile_moving_pose_58.py": "265db37a145d7508cb5e8488ca0c50b863e9c4577b49fa6feb9f4c10d9da0e64",
+    "scripts/check_shadowrun_hostile_moving_pose_58_zero.py": "b7a721b8f43430641704b98a3010427171e1d440dfee56554241a9b73a58cade",
+    "scripts/check_shadowrun_hostile_moving_relaunch.py": "a2636acab5fb71fef4e3daedfbf4df2c664afbd989b6bf8b6299372c21632f5e",
+    "scripts/check_shadowrun_hostile_moving_relaunch_chain.py": "1beaa89e0aa9bc2018dbd7a989e8f4c18b434111a08abeddfbf64104c78ccaf1",
+    "scripts/check_shadowrun_hostile_moving_relaunch_repeat.py": "ef909a63d20b0bc61d18bf64dc8f936e24e30bfadbe7fb9c2195ec96b7c579e3",
+    "scripts/check_shadowrun_hostile_moving_relaunch_repeat_chain.py": "7abbc9b557667109da18e4558bd9151696dc070eb427e0f2445656f9bf705879",
+    "scripts/check_shadowrun_hostile_moving_relaunch_repeat_zero.py": "28bdcd10b2851b73b77d487939781f0399624ed1b84ec7abb6e8ad1072000b9c",
+    "scripts/check_shadowrun_hostile_retreat_attack.py": "7b9d292b2c0d49b21a45eb00d8ff1c6448f5d09845365accad6054ea5ac0b184",
+    "scripts/check_shadowrun_hostile_retreat_shot.py": "f063b990dfb9a967942c5444f099f0b771866bbecd5d8125e2dee9aa83dea4d1",
+    "scripts/check_shadowrun_player_combat_slide.py": "8dfac94d94599790f46088ae916aaaf3390ec8b05f27e38213321a95d686acf8",
+    "scripts/check_shadowrun_player_combat_slide_continued.py": "9defe2e9fa60aae6b276c7aed3b93c7e2a5c19b4885405524f2922c0c8a23f77",
+    "scripts/check_shadowrun_player_combat_wall.py": "6257f74c3f0fb69e2b2921e909563ed70e33a401d686c744a64fc921a7ded1c2",
+    "scripts/check_shadowrun_player_reaction_direction_down.py": "ccc72a91510f535d4c1c051afe52acdf42d51b83f9260cc06d289b1d4bf84153",
+    "scripts/probe_shadowrun_enemy_east_slide_continued.py": "6263e164e8e5149c635b5df83d0253c55284a89a6c650199e4b7e8bfa4c46b73",
+    "scripts/probe_shadowrun_enemy_outer_slide.py": "1beeed562739eccd01e5656e3639134bfe2a46d20d333d08896c67004355e11b",
+    "src/fdisbull/game_sources/shadowrun_enemy_east_slide.c": "38b9cfe141cb4fa286376d77217fb10fa5fc5f164440ba7c41c6afcec4516c64",
+    "src/fdisbull/game_sources/shadowrun_enemy_east_slide_exit.c": "eebc183768ef16020217afea89f3e4bb088d8b232d96a6c281d8d5a3212c8063",
+    "src/fdisbull/game_sources/shadowrun_enemy_outer_slide.c": "eafa4ff5fc7fd7e83c3d85918531d3ca6b2731d8ec61555bcfc6b872b6dd9e0a",
+    "src/fdisbull/game_sources/shadowrun_hostile_expiry_cycle.c": "9f7766f3bd5fdf621850972939c96304782995d3a0b7804315f4cfc057f075de",
+    "src/fdisbull/game_sources/shadowrun_hostile_moving_attack_reentry.c": "5951f9dac65c9864af49c4024cdde65bd465500588e7b10e4b946c6c9f3cad70",
+    "src/fdisbull/game_sources/shadowrun_hostile_moving_idle_18.c": "bae57c6db1c20cf40ee6f8848a9df8d54b998cd2859cb6923366d093bca195c5",
+    "src/fdisbull/game_sources/shadowrun_hostile_moving_pose_58.c": "927254a275b1a7e96460837d7c90c8a8ee64c1e16a3b76d78ad84bc663602c39",
+    "src/fdisbull/game_sources/shadowrun_hostile_moving_relaunch_repeat.c": "1fa6a61d229388ed6b3cbad4b3fdb96d5c792e986ee9df2f455efd586c0c3be1",
+    "src/fdisbull/game_sources/shadowrun_player_combat_slide.c": "9f0c41bdce1f2a75c739fbb9df8ad6a7ddbc2f711463af9b8f9ce951dae9b7a3",
+    "src/fdisbull/game_sources/shadowrun_player_combat_wall.c": "1e602088b48d3987b1713ccaa0fdbb8cc50da21b5acf56a584862cce9189541d",
+    "src/fdisbull/game_sources/shadowrun_player_reaction_direction_down.c": "db194408798a562cd9cacc1e56e5c80c3f5300f4f3854eb630609e7eba85232f",
+    "src/fdisbull/game_sources/shadowrun_player_reaction_direction_expired.c": "fd7a2a19363499ac87c2f7d05eff3cf14bb77750bbe87a1c76b2c5f7af6db2cc",
+    "src/fdisbull/shadowrun_enemy_east_slide.py": "a8991e6ee46689e75f62a83a9f0c3c56699c8fdeaaf02d83c23c99b9e3125e3d",
+    "src/fdisbull/shadowrun_enemy_outer_slide.py": "f6dfb04186c2c699752739116734a5463082d1af2f12361edec3710a57e98803",
+    "src/fdisbull/shadowrun_hostile_expiry_cycle.py": "94b56c842769a734613c9a79bc75e76a74f57dc4616be48a6a8cda2d653fec7d",
+    "src/fdisbull/shadowrun_hostile_moving_attack_reentry.py": "829a79659db41065e630c1dee46b9ba8d331f8bbf744f61d4b1888363cfa041f",
+    "src/fdisbull/shadowrun_hostile_moving_idle_18.py": "70187396584cb33a141f09286f1296f10245f6a920820926af8678226ba274d8",
+    "src/fdisbull/shadowrun_hostile_moving_pose_58.py": "825ff0c2d266cb7b1b73008c001bee01f67c9776db605d030d40fe1fa9c82483",
+    "src/fdisbull/shadowrun_hostile_moving_relaunch_repeat.py": "f4f091e4509a45ea1895ad74652cdf36131adf7cdc1fbf8d9dd71fe23b5ad8ea",
+    "src/fdisbull/shadowrun_player_combat_slide.py": "2c8d87275ae0248503162c654be14aebe4684373fc92e7e32beb62bb06109900",
+    "src/fdisbull/shadowrun_player_combat_wall.py": "e2a915889237dda27fdadeeb7c01d1b236c5018394e898c029ea8e0dab70343b",
+    "src/fdisbull/shadowrun_player_reaction_direction_down.py": "3eee30f11fb3674b3d102d51c241e2ab6ae06bcdc141b5480e92dc34c5a79e34"
+  },
+  "limitations": [
+    "Component checks do not establish whole-game, AI, audio, graphics, input timing or unobserved branch parity.",
+    "Original ROM bytes, RAM, assets and local private artifact paths are excluded."
+  ]
+}

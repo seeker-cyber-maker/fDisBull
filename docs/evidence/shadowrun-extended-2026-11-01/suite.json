@@ -1,0 +1,26 @@
+{
+  "format": "fdisbull-shadowrun-extended-suite-evidence-1",
+  "status": "completed_with_known_baseline_failures",
+  "exit_code": 1,
+  "counts": {
+    "tests": 3997,
+    "failures": 3,
+    "errors": 23,
+    "skipped": 142,
+    "passed": 3829
+  },
+  "baseline_cases": 26,
+  "observed_non_green_cases": 26,
+  "baseline_matches": true,
+  "unexpected": [],
+  "missing": [],
+  "baseline_comparison_sha256": "ef81232bfbace1dd30e27111c79c443fd45cbdcdac6bed42de2d1be2e23ff40f",
+  "source_inventory_file_count": 2478,
+  "source_inventory_before_sha256": "1001ec9b207c5c2ef848515315df75a9aeac077f34ab80da6b92cfd201ff6c58",
+  "source_inventory_after_sha256": "1001ec9b207c5c2ef848515315df75a9aeac077f34ab80da6b92cfd201ff6c58",
+  "source_unchanged": true,
+  "changed_source_paths": [],
+  "junit_sha256": "75603cf0ea1648f5237063e2b6fd698dd84aeea5f2647f8f1d3827b331a99557",
+  "log_sha256": "22789c64f5c64d8e40fba7da0d66bb14bb813755f78244c048cdd9d2f9122bd5",
+  "storage": "Completed on CODEX after CACHE admission was rejected; explicit destination reserve 20000000000 bytes."
+}

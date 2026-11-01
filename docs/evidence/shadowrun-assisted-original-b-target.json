@@ -1,0 +1,39 @@
+{
+  "format": "fdisbull-shadowrun-original-b-target-check-1",
+  "complete": true,
+  "rom_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "core_sha256": "27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268",
+  "native_receipt_sha256": "e233cce9f4fd07511dd0124036bc9a36aa4168af8119f7d2380603f3d32faf6a",
+  "capture_receipt_sha256": "c69331a2e47163ec5ea4b56638cb196739b4f28c76be83414d305283efb87f5e",
+  "frame_ram_sha256": {
+    "5999": "b5872bdca05e98203f81cd5bdfdd4dd82d8a9f516ee694be01a15d1ba0ce0417",
+    "6000": "c440241df647f614de6bc44cc8265d79cf55d914092df6bc7147335ced19db6c",
+    "6001": "604585c43de55c2991d4d71b7de374a4c1dda3f9cd55538d812bd62ea43b3b04"
+  },
+  "program_sha256": "e997f8107d7dad11bb79f7b438ac7c527ad5e4c773ba977335b02dd74d5becca",
+  "assistance": "player/camera fields injected at frame 6000; no target fields injected",
+  "input": {
+    "button": "B",
+    "start": 6001,
+    "end": 6003,
+    "source_pad_word": 4112
+  },
+  "pre_target": 0,
+  "post_target": 16712960,
+  "matched_selected_slot": 1,
+  "contacts_before_and_after": [
+    271,
+    268
+  ],
+  "post_camera": [
+    17024,
+    11072
+  ],
+  "flag_low": 16,
+  "backlink": 16711936,
+  "player_field_43": 0,
+  "marker_immediate_model": 32777,
+  "marker_observed_post_frame": 32776,
+  "marker_note": "different observation phases; intervening original frame effects not attributed by this check",
+  "scope": "assisted prepared original run: B input and selected target fields; bounded selector and post-frame projection comparison; not NPC AI parity"
+}

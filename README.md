@@ -52,6 +52,8 @@ legacy migration and remaining export limits.
 | Reuse a reviewed structure in another analysis project | [Portable type catalogs](docs/TYPE_CATALOGS.md) |
 | Understand an executable without running it | [Disassembly and analysis](#disassemble-and-analyze) |
 | Investigate a macOS ARM64 executable with source-bound Ghidra and LLDB probes | [macOS ARM64 analysis](docs/MACOS_ARM64_ANALYSIS.md) |
+| Identify NES, SNES or Sega cartridges and inspect a Sega data-track header | [Console media parsing](docs/CONSOLE_MEDIA_PARSING.md) |
+| Inventory CUE/BIN tracks and primary ISO 9660 files without running them | [Disc parsing](docs/CUE_ISO_PARSING.md) |
 | Observe a DOS game or a Windows PE64 program | [Debug the original program](#debug-the-original-program) |
 | Compare a hypothesis, a checkpoint or a temporary patch | [Layers, states and experiments](#layers-states-and-experiments) |
 | Give an agent reliable scene context and navigation | [Scenes, maps and interaction policies](#scenes-maps-and-interaction-policies) |
@@ -377,6 +379,78 @@ those definitions, and uses pre-resolved rule links in place of the original
 table-to-stack dispatch. UDL keeps the source correspondence. Special exit and
 room handler bodies, the parser and most arrival/background behavior remain
 explicit residual IR; recovering their entry points does not recover their intent.
+
+Console media can be inspected without running a game. A separate bounded
+ROM-to-assembly interface offers Capstone, Ghidra and saturn-recomp for explicitly
+mapped Saturn SH-2 bytes. Results retain source identity and unknown words;
+decoding does not establish that a region is executable code. See
+[console parsing](docs/CONSOLE_MEDIA_PARSING.md) and
+[ROM-to-assembly modules and comparison](docs/ROM_ASM.md).
+
+Native NES and Genesis compiler modules can also turn a small shared UIL
+program into runnable cartridges. Both have been checked in real emulator
+cores, including one bounded Genesis machine-code → UIL → NES experiment.
+See [console UDC](docs/CONSOLE_UDC.md) for the supported profile and results.
+
+A source-bound Miniplanets profile includes all 55 stages, moving hazards and
+terrain, score, lives, timer, menus, ending and an NES soundtrack arrangement.
+Its NES presentation uses the original globe projection with adapted graphics.
+Game rules are compared with original Genesis instructions and native NES play;
+the documentation records the tested scope and measured running speed.
+The full-game cartridge remains experimental. The latest moving-player NES
+benchmark reaches about 43.68 game updates and 18.26 completed globe swaps per
+second, with adapted graphics and sound. All 55 stages load; natural completion
+of every stage has not been verified.
+See the [full-game build and controls](docs/MINIPLANETS_FULL_GAME.md).
+The [repeatable Genesis UIL workflow](docs/GENESIS_UIL_REPLAY.md) captures the
+reviewed game, audio, display-planner and PSG representations and builds either
+NES or a new native Genesis cartridge. The Genesis rules passed the same 4,822
+original-backed cases; its display is adapted and its audio retains the original
+Sona hardware driver. Larger ROMs need their own recovered semantic profile.
+The [Genesis performance follow-up](docs/GENESIS_PERFORMANCE.md) reaches about
+59.92 completed display uploads per second in the bounded ordinary test and
+59.55–59.92 in three assisted later-stage tests, while retaining all 79 state
+fields in verification. A constructed 48-actor stress scene still runs at
+about 29.96 uploads per second.
+The [NES multicart prototype](docs/NES_MULTICART.md) packages two compatible
+generated NES games behind a bank-switching menu. The accompanying analysis
+examines the supplied mapper-227 “1200-in-1” and mapper-66 Mario/Duck Hunt
+cartridges; the advertised number is not a verified count of distinct games.
+The [Shadowrun opening experiment](docs/SHADOWRUN_UIL_OPENING.md) builds a
+bounded NES scene from the reviewed Genesis version, with movement, wall
+collisions, a following camera and a projected motel conversation. Its
+prepared starting state and captured graphics keep the scope explicit;
+general dialogue and the rest of the game remain unrecovered.
+The [full-game recovery work](docs/SHADOWRUN_FULL_GAME_PROGRESS.md) adds tested
+UIL components and a separate animated walking probe. A full playable NES
+conversion, including sound, is still incomplete.
+The [playable field experiment](docs/SHADOWRUN_PLAYABLE_FIELD.md) adds persistent
+scene-2 movement beyond the captured graphics, a symbolic city display, captured
+pistol and armor equipment, targeting, firing and damage. Its ordinary walk-and-fire
+route matches sampled original player, target, ammo and HP effects; NPCs remain
+frozen and projectile handling is adapted. An assisted placement mode and a
+separate text and interactive city view support investigation of the large map.
+These are bounded prepared-state profiles, not a full Shadowrun conversion.
+The [Pac-Man-like actor stage](docs/SHADOWRUN_AI_EXPERIMENT.md) adds a separate
+assisted arena with source-derived actor movement, enemy target selection,
+burst fire, player damage and recovery. Original captures, the shared UIL model
+and native NES execution are compared separately. The test presets use a
+source-constructed armed actor; ordinary encounter reachability, unrestricted
+AI, original graphics/audio and normal-speed play remain unverified.
+The active [macOS ARM64 output](docs/SHADOWRUN_MACOS_ARM64.md) compiles the same
+Genesis-bound UIL into a local window with keyboard controls. The NES route is
+preserved as [research with a handoff](docs/GENESIS_NES_RESEARCH_HANDOFF.md),
+possible for bounded slices but not recommended as the primary Genesis target.
+Native speed and source coverage are verified separately.
+The [actor-stage extension](docs/SHADOWRUN_MACOS_EXTENDED.md) adds source-backed
+menu navigation and a separate captured courtyard with player movement and
+three moving civilians. Original comparison windows and remaining combat
+boundaries are recorded alongside the native model checks.
+The separate [Mario debugging study](docs/MARIO_MINUS_WORLD.md) reproduces the
+minus-world warp in the supplied cartridge and traces the incorrect table
+selection that produces it.
+The earlier [flat first-level experiment](docs/MINIPLANETS_NES_LEVEL.md) remains
+available with its separate contract and results.
 
 ## The bounded UDC pipeline
 

@@ -1,0 +1,24 @@
+--- a/arch/SH/SHDisassembler.c
++++ b/arch/SH/SHDisassembler.c
+@@ -171,8 +171,8 @@
+ 	for(; list->no >= 0; list++) {
+ 		if (no != list->no)
+ 			continue;
+-		if (((level >= 0) && (level < list->level)) ||
+-		    ((level < 0) && (-(level) != list->level)))
++		if (((list->level >= 0) && (level < list->level)) ||
++		    ((list->level < 0) && (level != -(list->level))))
+ 			continue;
+ 		if ((list->cp == none) ||
+ 		    ((list->cp == shfpu) && (mode & CS_MODE_SHFPU)) ||
+@@ -191,8 +191,8 @@
+ 	for(; list->no >= 0; list++) {
+ 		if (no != list->no)
+ 			continue;
+-		if (((level >= 0) && (level < list->level)) ||
+-		    ((level < 0) && (-(level) != list->level)))
++		if (((list->level >= 0) && (level < list->level)) ||
++		    ((list->level < 0) && (level != -(list->level))))
+ 			continue;
+ 		if ((list->cp == none) ||
+ 		    ((list->cp == shfpu) && (mode & CS_MODE_SHFPU)) ||
