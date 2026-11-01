@@ -21,6 +21,17 @@ authoring histories refer to the complete private ZIP. Those materials are
 excluded from this Git import. Historical test and completion statements remain
 attributed to that evaluation rather than freshly reproduced by this import.
 
+## Fresh macOS replay and comparison
+
+[Fresh macOS/ARM64 results](comparison/REPORT.md) confirm both completed movies
+twice with captures byte-identical to the original evaluation, and compare warm
+input loops, recent-state returns and RNG safeguards with frozen fDisBull MR !30.
+[Numeric measurements](comparison/measurements.json) retain exact figures and
+private-receipt hashes; [controller reproduction notes](comparison/CONTROLLER_RECIPE.md)
+identify required private inputs and distinguish measured controllers from the
+portable source derivatives. These fresh results are separate from the original
+Linux/Java 17 report below.
+
 ## Included material and boundaries
 
 - `tools/`: Python/Java source and its original documentation.
