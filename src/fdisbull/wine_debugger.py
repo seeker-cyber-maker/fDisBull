@@ -25,7 +25,7 @@ class PEDebugSession(ExperimentSessionMixin,PELayerSessionMixin,PEExecutionMixin
     backend_name='wine-qemu'
     script_operations={'run','click','click-frame','screenshot','trace','breakpoint',
         'delete-breakpoint','registers','memory','write-memory','status','assert',
-        'layer-stack','layer-enable','layer-patch','code','capture-code','branch','save-state','load-state','write-registers'}
+        'layer-stack','layer-enable','layer-patch','code','capture-code','branch','save-state','load-state','save-anchor-stone','load-anchor-stone','write-registers'}
     # Share artifact persistence, offline grids, and declarative script execution.
     _artifact=DebugSession._artifact
     _event=DebugSession._event

@@ -18,6 +18,7 @@ from .code_layers import LayerProjectMixin, LayerSessionMixin, LAYER_DDL
 from .debug_experiments import ExperimentProjectMixin, ExperimentSessionMixin
 from .debug_rewind import RewindSessionMixin
 from .debug_cpu_deltas import CpuDeltaSessionMixin
+from .anchor_stones import AnchorStoneSessionMixin
 from .runtime_code import RuntimeCodeMixin, RUNTIME_DDL
 from .scenes import SceneProjectMixin, SceneSessionMixin, SCENE_DDL
 from .screenshot_hooks import ScreenshotHookProjectMixin, ScreenshotHookSessionMixin, DDL as SCREENSHOT_HOOK_DDL
@@ -144,6 +145,10 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
         return {'version':v,'scripts':[dict(r) for r in self.db.execute(
             'SELECT id,version,name,created,sha256 FROM debug_scripts WHERE version=? ORDER BY rowid',(v,))]}
 
+    def debug_anchor_stone_info(self, artifact):
+        """Inspect an Anchor Stone without changing legacy artifact formats."""
+        return self.debug_state_info(artifact)
+
     def debug_state_info(self, artifact):
         import zipfile
         row = self.db.execute('SELECT a.*,r.version FROM debug_artifacts a JOIN debug_runs r ON r.id=a.run WHERE a.id=?',
@@ -255,7 +260,7 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
         return self._debug_artifact(row['run'],name,'screenshot-grid',rendered,metadata)
 
 
-class DebugSession(CpuDeltaSessionMixin, RewindSessionMixin, SpatialSessionMixin, TextProjectionSessionMixin, AssistedTravelSessionMixin, ProgressiveSceneSessionMixin, MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
+class DebugSession(AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionMixin, SpatialSessionMixin, TextProjectionSessionMixin, AssistedTravelSessionMixin, ProgressiveSceneSessionMixin, MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
     @property
     def script_operations(self):
         from .debug_script import OPERATIONS
@@ -936,6 +941,7 @@ class DebugWorkspace:
                    'debug-screenshot-hooks':'screenshot_hooks',
                    'debug-memory':'memory','debug-write-memory':'write_memory','debug-write-registers':'write_registers','debug-save-state':'save_state','debug-load-state':'load_state','debug-script':'script',
                    'debug-contexts':'contexts','debug-pause':'pause','debug-resume':'resume'}
+        methods.update({'debug-save-anchor-stone':'save_anchor_stone','debug-load-anchor-stone':'load_anchor_stone'})
         methods.update({'debug-layer-stack':'layers','debug-layer-enable':'layer_enable','debug-layer-patch':'layer_patch',
                         'debug-code':'code','debug-capture-code':'capture_code','debug-branch':'branch',
                         'debug-cave':'cave','debug-hook':'hook','debug-hooks':'hooks','debug-delete-hook':'delete_hook'})

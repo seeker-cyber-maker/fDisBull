@@ -24,6 +24,7 @@ OPERATIONS = {
     'run':'run', 'click':'click', 'click-frame':'click_frame', 'screenshot':'screenshot', 'trace':'trace',
     'breakpoint':'breakpoint', 'delete-breakpoint':'delete_breakpoint',
     'save-state':'save_state', 'load-state':'load_state',
+    'save-anchor-stone':'save_anchor_stone', 'load-anchor-stone':'load_anchor_stone',
     'rewind-start':'rewind_start', 'rewind-status':'rewind_status',
     'rewind-record':'rewind_record', 'rewind':'rewind',
     'delta-start':'cpu_delta_start', 'delta-status':'cpu_delta_status',

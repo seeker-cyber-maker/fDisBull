@@ -12,6 +12,7 @@ import zipfile
 
 from .dosbox_rpc import DebuggerError
 from .external_files import _file_name
+from .anchor_stones import AnchorStoneSessionMixin
 
 FORMAT='fdisbull-qemu-native-1'
 REGISTERS={'rax','rbx','rcx','rdx','rsi','rdi','rbp','rsp','r8','r9','r10','r11','r12','r13','r14','r15','rip','rflags'}
@@ -126,7 +127,7 @@ def apply_edits(debug,memory,registers):
     debug._event('state-edits',evidence);return evidence
 
 
-class PEStateSessionMixin:
+class PEStateSessionMixin(AnchorStoneSessionMixin):
     def _state_host(self):
         self._layer_setup()
         return {'breakpoints':self.breakpoints,'watchpoints':self.watchpoints,'active':self._layers,

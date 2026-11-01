@@ -1,10 +1,14 @@
-# Experimental exposed-CPU and selected-RAM deltas
+# Delta rewind: experimental exposed-CPU and selected-RAM changes
 
 This prototype records net changes to exposed real-mode registers and explicitly
 selected project-mapped RAM between the same next-fetch boundaries used by
 [MR !14 checkpoint history](DEBUGGER_REWIND.md). It stores changed register
 before/after values and changed RAM runs, not a full native state at every step.
-One full native recovery anchor is retained when the history starts.
+One full native **Anchor Stone** is retained for recovery when the history starts.
+An Anchor Stone jumps directly to a saved native context; delta rewind follows
+recorded changes. The name comes from TiGa's Blob to General game; see
+[Anchor Stones and the compatibility names](ANCHOR_STONES.md). Existing receipt
+keys such as `anchor` keep their wire format and refer to this Anchor Stone.
 
 This is a narrower restoration contract than a native checkpoint. Unselected
 RAM, hidden CPU/FPU state, device state, timers, pending events and external

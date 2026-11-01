@@ -71,6 +71,12 @@ screenshots and traces are stored in the project and can be exported later;
 exporting an existing artifact is different from claiming a fresh capture.
 Checkpoint restore does not roll back mounted host files or external services.
 
+A full native saved state is an **Anchor Stone**, named for TiGa's Blob to General
+game. Use `debug-save-anchor-stone`, `debug-load-anchor-stone` and offline
+`debug-anchor-stone-info` for direct save/load/inspection. Existing state API names
+remain compatible. Delta rewind follows recorded changes instead; its current
+unit is a debugger next-fetch step, not a video frame. See `docs/ANCHOR_STONES.md`.
+
 For a short native DOS debugging history, use `debug-rewind-start`, advance with
 `debug-rewind-record`, inspect `debug-rewind-status`, then `debug-rewind` a
 declared count. This records bounded next-fetch intervals with native states;

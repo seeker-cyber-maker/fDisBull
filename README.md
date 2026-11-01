@@ -150,11 +150,13 @@ alongside earlier views, but a capture does not by itself prove those bytes ran.
 See [code layers](docs/CODE_LAYERS.md), [saved experiments](docs/DEBUGGER_EXPERIMENTS.md),
 [debugger scripts](docs/DEBUGGER_SCRIPTS.md) and [runtime code](docs/RUNTIME_CODE.md).
 
-For short debugging histories, [checkpoint-backed rewind](docs/DEBUGGER_REWIND.md)
-records recent steps and lets an agent return to an earlier recorded boundary.
+For short debugging histories, [Anchor Stone history](docs/DEBUGGER_REWIND.md)
+records full native states and lets an agent jump to an earlier recorded boundary.
 
-An [experimental CPU/RAM delta mode](docs/CPU_RAM_DELTAS.md) measures smaller
-selected-state histories with an explicit full-state recovery requirement.
+Full native saved states are called [Anchor Stones](docs/ANCHOR_STONES.md), a nod
+to TiGa's Blob to General game. Load a stone to jump directly to its saved context.
+[Delta rewind](docs/CPU_RAM_DELTAS.md) walks through recorded changes; its current
+experimental selected-state mode requires full native recovery before execution.
 
 ## Scenes, maps and interaction policies
 

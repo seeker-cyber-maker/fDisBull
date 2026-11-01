@@ -1,9 +1,13 @@
 """Selected CPU/RAM delta contracts on an explicitly selected native backend."""
 import base64
+import json
+import subprocess
+import sys
 
 import pytest
 
 from fdisbull.cli import METHODS
+from fdisbull.cli import invoke, parser
 from fdisbull.debug_script import validate_script
 from fdisbull.debugger import DebugWorkspace
 from test_rewind_native import native, observed
@@ -73,16 +77,35 @@ def test_real_whole_selected_range_guard_detects_unchanged_byte_tamper(native):
 
 
 def test_real_successful_direct_native_load_clears_partial_guard(native):
-    _,debug,_=native
+    project,debug,_=native
     initial=observed(debug)
+    workspace=DebugWorkspace();workspace.sessions[debug.run_id]=debug
+    stone=workspace.invoke('debug-save-anchor-stone',project.path,{'run':debug.run_id})
+    canonical=invoke('debug-anchor-stone-info',{'project':str(project.path),'artifact':stone['artifact']})
+    assert canonical==project.debug_state_info(stone['artifact'])
+    assert project.debug_anchor_stone_info(stone['artifact'])==canonical
+    args=parser().parse_args(['debug-anchor-stone-info',str(project.path),stone['artifact']])
+    assert args.artifact==stone['artifact']
+    offline=subprocess.run([sys.executable,'-m','fdisbull','debug-anchor-stone-info',str(project.path),stone['artifact']],
+                           capture_output=True,text=True,check=True)
+    assert json.loads(offline.stdout)['result']==canonical
+    assert canonical['metadata']['format']=='dosbox-x-native'
+    debug.trace(count=2,fast_forward=True)
+    debug.load_state(stone['artifact'])
+    assert observed(debug)==initial
     started=debug.cpu_delta_start([{'address':'1000:0000','length':512}])
     debug.cpu_delta_record(count=3)
     debug.cpu_delta_rewind()
     assert debug.cpu_delta_status()['frozen']
-    debug.load_state(started['anchor']['artifact'])
+    with pytest.raises(ValueError): debug.save_anchor_stone()
+    workspace.invoke('debug-load-anchor-stone',project.path,{'run':debug.run_id,'artifact':started['anchor']['artifact']})
     assert observed(debug)==initial
     assert not debug.cpu_delta_status()['frozen']
-    debug.trace(count=2,fast_forward=True)
+    result=debug.script({'format':'fdisbull-script-1','steps':[
+        {'op':'save-anchor-stone','as':'stone'}, {'op':'trace','count':2},
+        {'op':'load-anchor-stone','artifact':'$stone.artifact'}]})
+    assert result['ok'],result
+    assert observed(debug)==initial
 
 
 def test_real_delta_script_and_no_automatic_resume(native):
