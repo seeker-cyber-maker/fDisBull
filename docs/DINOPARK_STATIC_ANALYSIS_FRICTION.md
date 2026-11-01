@@ -1,5 +1,13 @@
 # DinoPark analysis friction and retained Z terminal replies
 
+The [visitor-gate and month-rollover continuation](VERIFICATION-DINOPARK-VISITORS-2026-11-01.md)
+adds 32 ordinary time advances with the 97 probes armed and source-bound
+attendance/actor predicates. It records a new park-exit observer-budget failure,
+an authoritative queued input absent from the outer error trace, and retained
+read-only recovery. BUS.ACT/PEOPLE.ACT and all 97/13 cases remain open.
+[GitLab !31](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/31)
+proposes durable selective probes and strengthens the bundled skill guidance.
+
 The [park preparation and standing-probe follow-up](VERIFICATION-DINOPARK-PARK-PROBES-2026-11-01.md)
 qualifies hiring, food, park entry and three advances after correcting legacy
 settling waits. All 97 unresolved probes are verified armed in the retained live

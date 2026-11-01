@@ -1,5 +1,7 @@
 # DinoPark scenes through the original-backed UDC
 
+The [visitor continuation](VERIFICATION-DINOPARK-VISITORS-2026-11-01.md) adds 32 time advances through month rollover, separates numerical attendance from actor replenishment, and records the retained unknown park-to-street transition. Durable selective probes and stronger skill guidance are proposed separately in [GitLab !31](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/31).
+
 The [park preparation follow-up](VERIFICATION-DINOPARK-PARK-PROBES-2026-11-01.md) qualifies the first guide, food order and running park with short readiness-driven waits and a shared deadline; standing unresolved-entry probes remain armed for later play.
 
 Continuation candidate on v0.24.0, 29 October 2026. PRs #18 and #19 are merged.
