@@ -52,6 +52,15 @@ databases and raw private deliveries out of Git and tool packages. Use a
 private workspace outside the checkout for runtime inputs and UDC outputs.
 Export authored scripts and sanitized verification evidence separately.
 
+The user explicitly authorizes a narrow freeware exception: the supplied
+Tic-tac-toe, Five Dice and Snake games, their generated variants and title-specific
+source/reference modules may be tracked under `fixtures/freeware-games/`, with
+`fixtures/freeware-games.zip` as the companion delivery. Preserve their included
+license/provenance notices, original bytes, variant identities and hash inventory.
+This exception does not cover other games, emulator states, project databases,
+external object stores or unrelated private deliveries. These fixtures remain
+separate from tool-only wheels, source distributions and tool source ZIPs.
+
 Use the repository's test/build commands. A release commit needs ordinary and
 required-native Linux CI on its exact SHA before tagging. Publishing a release
 or changing a system installation is a separate user-authorized action.
@@ -76,7 +85,8 @@ or monitoring services without a separate user request.
 
 ## Game files and target identity
 
-Do not upload original or modified game binaries, assets, story images, saves,
+Outside the narrow freeware fixture exception above, do not upload original
+or modified game binaries, assets, story images, saves,
 emulator states or byte-containing databases/archives to GitHub or packages.
 Semantic UIL/game representations are allowed pending sanitation; embedded
 original files are not. Read [external targets](docs/EXTERNAL_TARGETS.md).

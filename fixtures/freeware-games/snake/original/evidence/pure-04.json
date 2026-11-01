@@ -1,0 +1,112 @@
+{
+  "format": "fdisbull-snake-pure-validation-1",
+  "executable_sha256": "f8b672501f85d2b3feae0fb8acae626cbff96b8f3e4fccee6a3eb1746031d9be",
+  "vectors_sha256": "d1ebb2b48a4da538643ab18d0cbf9c282eb203f38ff599078f274c36fb16cffa",
+  "source_sha256": "64649c533e4943a15f433c79ac871ed69c3f505ed55984e3d12148669159662e",
+  "engine": "Unicorn 2.1.4",
+  "cases": [
+    {
+      "id": "normal-right",
+      "passed": true,
+      "register_contract": true,
+      "os_interrupts": 0
+    },
+    {
+      "id": "turn-up",
+      "passed": true,
+      "register_contract": true,
+      "os_interrupts": 0
+    },
+    {
+      "id": "turn-down",
+      "passed": true,
+      "register_contract": true,
+      "os_interrupts": 0
+    },
+    {
+      "id": "turn-left",
+      "passed": true,
+      "register_contract": true,
+      "os_interrupts": 0
+    },
+    {
+      "id": "reverse-ignored",
+      "passed": true,
+      "register_contract": true,
+      "os_interrupts": 0
+    },
+    {
+      "id": "eat-and-grow",
+      "passed": true,
+      "register_contract": true,
+      "os_interrupts": 0
+    },
+    {
+      "id": "wall-top",
+      "passed": true,
+      "register_contract": true,
+      "os_interrupts": 0
+    },
+    {
+      "id": "wall-right",
+      "passed": true,
+      "register_contract": true,
+      "os_interrupts": 0
+    },
+    {
+      "id": "wall-bottom",
+      "passed": true,
+      "register_contract": true,
+      "os_interrupts": 0
+    },
+    {
+      "id": "wall-left",
+      "passed": true,
+      "register_contract": true,
+      "os_interrupts": 0
+    },
+    {
+      "id": "vacating-tail-permitted",
+      "passed": true,
+      "register_contract": true,
+      "os_interrupts": 0
+    },
+    {
+      "id": "body-collision",
+      "passed": true,
+      "register_contract": true,
+      "os_interrupts": 0
+    },
+    {
+      "id": "dead-is-frozen",
+      "passed": true,
+      "register_contract": true,
+      "os_interrupts": 0
+    },
+    {
+      "id": "full-board-victory",
+      "passed": true,
+      "register_contract": true,
+      "os_interrupts": 0
+    },
+    {
+      "id": "won-is-frozen",
+      "passed": true,
+      "register_contract": true,
+      "os_interrupts": 0
+    },
+    {
+      "id": "food-scan-skips-occupied",
+      "passed": true,
+      "register_contract": true,
+      "os_interrupts": 0
+    },
+    {
+      "id": "food-scan-wraps",
+      "passed": true,
+      "register_contract": true,
+      "os_interrupts": 0
+    }
+  ],
+  "scope": "Real compiled step bytes; independently authored specification cases; constructed states, not ordinary-play reachability"
+}
