@@ -4,6 +4,7 @@ from contextlib import contextmanager
 import secrets
 import struct
 import time
+from functools import wraps
 
 HOST_SECONDS = 40
 NATIVE_PURCHASE_PEN = 10  # Record index used by the qualified original first-plot interaction.
@@ -26,13 +27,14 @@ def recovery_budget(text):
 
 
 class PurchaseBudget:
-    def __init__(self):
+    def __init__(self, *, label='Coelophysis'):
+        self.label = label
         self.deadline = _clock() + HOST_SECONDS
 
     def timeout(self):
         remaining = self.deadline - _clock()
         if remaining <= 5:
-            raise TimeoutError('Coelophysis phase deadline; provider must stay paused for reconciliation')
+            raise TimeoutError(self.label + ' phase deadline; provider must stay paused for reconciliation')
         return min(15000, max(1, int((remaining - 1) * 1000)))
 
     @contextmanager
@@ -47,6 +49,15 @@ class PurchaseBudget:
         result = debug.run(guest_ms=ms, timeout_ms=self.timeout(), fast_forward=True)
         if result.get('outcome') != 'guest_time':
             raise RuntimeError('Coelophysis wait stopped: ' + str(result.get('outcome')))
+
+
+def bounded_preparation(function):
+    """Share one deadline across an original park-preparation interaction."""
+    @wraps(function)
+    def bounded(text,*args,**kwargs):
+        with PurchaseBudget(label='Park preparation').bind(text.debug):
+            return function(text,*args,**kwargs)
+    return bounded
 
 
 def native_state(debug):
