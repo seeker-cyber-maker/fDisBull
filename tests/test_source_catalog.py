@@ -1,6 +1,9 @@
 """Source-assisted retrieval stays separate from native facts and qualification."""
 import hashlib
+import json
 import sqlite3
+import subprocess
+import sys
 
 import pytest
 
@@ -246,3 +249,17 @@ def test_ranking_ties_do_not_depend_on_unrelated_snapshot_metadata(tmp_path, inp
                    for r in catalog.search('unused', mode='hybrid', model=model, vector=[1, 0],
                                            snapshots=[s])['items']] for s in snapshots]
         assert orders[0] == orders[1] == orders[2]
+
+
+def test_cli_source_info_catalog_form(tmp_path):
+    path = tmp_path / 'c.sqlite'
+    with SourceCatalog.create(path):
+        pass
+    result = subprocess.run(
+        [sys.executable, '-m', 'fdisbull', 'source-info', '--catalog', str(path)],
+        capture_output=True, text=True, timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+    body = json.loads(result.stdout)
+    assert body['ok'] is True
+    assert body['result']['format'] == 'fdisbull-source-catalog-1'

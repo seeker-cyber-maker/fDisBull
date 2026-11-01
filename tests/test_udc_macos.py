@@ -1,5 +1,7 @@
 """Native macOS arm64 realization of one shared-UIL plan."""
 
+import ctypes
+import hashlib
 import json
 import platform
 import shutil
@@ -15,7 +17,8 @@ from fdisbull.udc_layers import (
     register_layer,
     select_layers,
 )
-from fdisbull.udc_macos import OBSERVATION_FORMAT, build_macos_shell
+from fdisbull.game_il import author_program
+from fdisbull.udc_macos import OBSERVATION_FORMAT, build_macos, build_macos_shell
 
 NATIVE = sys.platform == "darwin" and platform.machine() == "arm64"
 CLANG = shutil.which("clang")
@@ -218,3 +221,43 @@ def test_macos_shell_refuses_missing_adapter_and_reused_destination(tmp_path):
     with pytest.raises(ValueError, match="new"):
         build_macos_shell(plan, modules, destination, service_adapters=ADAPTER)
     assert (destination / "keep").read_text() == "x"
+
+
+@requires_native
+def test_legacy_native_builder_compiles_links_and_loads(tmp_path):
+    rom = b"\x00"
+    program = author_program(
+        "typedef unsigned char u8; u8 last; void frame(u8 input){ last=input; }",
+        regions=[{"id": 0, "length": len(rom), "sha256": hashlib.sha256(rom).hexdigest()}],
+    )
+    output = tmp_path / "native-core"
+    build = build_macos(program, {"last": 0}, output, clang=CLANG, entry="frame")
+    assert build["format"] == "fdisbull-macos-native-1"
+    assert build["macho_cputype"] == "arm64"
+    assert build["macho_filetype"] == "dylib"
+    artifact = output / "libfdisbull_native.dylib"
+    assert hashlib.sha256(artifact.read_bytes()).hexdigest() == build["dylib_sha256"]
+    assert json.loads((output / "receipt.json").read_text())["dylib_sha256"] == build["dylib_sha256"]
+
+    library = ctypes.CDLL(str(artifact))
+    library.fdisbull_create.argtypes = [ctypes.c_char_p, ctypes.POINTER(ctypes.c_void_p)]
+    library.fdisbull_create.restype = ctypes.c_int
+    library.fdisbull_step.argtypes = [ctypes.c_void_p, ctypes.c_uint8]
+    library.fdisbull_step.restype = ctypes.c_int
+    library.fdisbull_state_get.argtypes = [
+        ctypes.c_void_p, ctypes.c_char_p, ctypes.c_uint32, ctypes.POINTER(ctypes.c_int64)
+    ]
+    library.fdisbull_state_get.restype = ctypes.c_int
+    library.fdisbull_destroy.argtypes = [ctypes.c_void_p]
+    library.fdisbull_destroy.restype = None
+    rom_path = tmp_path / "rom.bin"
+    rom_path.write_bytes(rom)
+    context = ctypes.c_void_p()
+    assert library.fdisbull_create(str(rom_path).encode(), ctypes.byref(context)) == 0
+    try:
+        assert library.fdisbull_step(context, 7) == 0
+        value = ctypes.c_int64()
+        assert library.fdisbull_state_get(context, b"last", 0, ctypes.byref(value)) == 0
+        assert value.value == 7
+    finally:
+        library.fdisbull_destroy(context)
