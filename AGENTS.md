@@ -104,3 +104,15 @@ Build a usable local agent-first disassembler. Native decoders provide instructi
 - Do not substitute a mock disassembly, web landing page, decompiler framework, or runtime harness for the working tool.
 - Keep `README.md` limitations and verification aligned with the final packaged source. macOS is unverified until actually run there.
 - Use `python -m pytest -q` from this directory. Demonstrate restart, patch isolation, and real image exports for changes to those seams.
+
+## Contribution handoff
+
+For an authorized contribution, follow [agent contribution and file handoff](docs/AGENT_HANDOFF.md).
+Use a stable originating chat/task ID, a unique branch and the intended stack
+parent. Return a read-back draft GitLab MR URL, exact branch/head and target/base,
+tests, limitations and verified attachment links to the originating chat.
+Commit inspected authored source; attach sanitized reports separately. Preserve
+existing MR targets and other agents' work. Use `scripts/gitlab_handoff.py` for
+offline preview and, with existing API access, resumable publication. Chat agents
+without write/upload access export the documented handoff and report it pending.
+Never invent access, successful uploads, commit identities or completed MRs.
