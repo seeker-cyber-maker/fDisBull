@@ -254,6 +254,11 @@ and mouse input. Game logic and drawing can independently select Wasm or WebGPU
 while keeping the same UIL. The known-source fixture is recovered with source
 assistance and compared with original instruction executions, guest inputs and
 complete frames. See the [browser conversion contract and measured limits](docs/UDC_MEMORY_BROWSER.md).
+The same recovered game also compiles into native 32-bit and 16-bit Windows
+shells with selectable RNG blocks and Windows graphics/input adapters. See the
+[native desktop guide](docs/UDC_MEMORY_DESKTOP.md) and [Win16 guide](docs/UDC_MEMORY_WIN16.md)
+for the finite DOS-reference comparisons and the tested runtime boundaries.
+
 Original programs, fonts and generated game bundles remain private inputs.
 
 The 0.23 source introduces an original-backed DOS compiler definition (UDC):

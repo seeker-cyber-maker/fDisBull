@@ -1,7 +1,7 @@
-"""Emit the unchanged private Snake source model for native Win64 or Linux x64.
+"""Emit the unchanged private Snake source model for native desktop/Win16 targets.
 
 Compile its explicit recipe in the selected native/cross environment, then seal
-with udc_memory_desktop.seal_memory_desktop_shell. Execution remains separate.
+with the matching desktop or Win16 sealer. Execution remains separate.
 """
 from pathlib import Path
 import hashlib
@@ -36,8 +36,13 @@ def prepare(previous,output,*,target):
     output.mkdir(parents=True,mode=0o700);copy=output/'snake-native.fdb'
     with sqlite3.connect(database.as_uri()+'?mode=ro',uri=True) as source,sqlite3.connect(copy) as dest:source.backup(dest)
     with Project(copy) as project:
-        native=emit_memory_desktop_shell(project,build['selections'],manifest['plan'],initial,output/'native',target=target,
-            cuts=manifest['source_cut_document'],regions=manifest['regions']['document'])
+        if target=='windows-x86-16':
+            from fdisbull.udc_memory_win16_shell import emit_memory_win16_shell
+            native=emit_memory_win16_shell(project,build['selections'],manifest['plan'],initial,output/'native',
+                cuts=manifest['source_cut_document'],regions=manifest['regions']['document'])
+        else:
+            native=emit_memory_desktop_shell(project,build['selections'],manifest['plan'],initial,output/'native',target=target,
+                cuts=manifest['source_cut_document'],regions=manifest['regions']['document'])
     with Project(copy) as project:
         assert project.db.execute('PRAGMA integrity_check').fetchone()[0]=='ok'
         for selection in build['selections'].values():
@@ -55,5 +60,5 @@ if __name__=='__main__':
     import argparse
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('previous',type=Path);parser.add_argument('output',type=Path)
-    parser.add_argument('--target',required=True,choices=['windows-x64','linux-x64'])
+    parser.add_argument('--target',required=True,choices=['windows-x86-16','windows-x86','windows-x64','linux-x64'])
     args=parser.parse_args();print(json.dumps(prepare(args.previous,args.output,target=args.target)))

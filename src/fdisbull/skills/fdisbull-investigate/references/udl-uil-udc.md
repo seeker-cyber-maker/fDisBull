@@ -321,7 +321,7 @@ Capture descriptor3 observations only in the explicit analysis profile, validate
 complete frames and bind the executable/process identity before making claims.
 Source-checkout docs/UDC_LINUX_AND_C.md records the actual pilot and limits.
 
-## Win64 and Linux bounded-memory desktop realization
+## Windows x86/x64 and Linux bounded-memory desktop realization
 
 The same memory UIL, cuts and selectable region contracts can emit native
 Win32/GDI and Linux x86-64/X11 shells with `emit-memory-desktop-shell` or
@@ -337,5 +337,37 @@ actual live core; final closed observations use a labelled owned snapshot.
 Qualify full state, frame bytes and native surfaces on the same original inputs,
 including wrong-adapter/refusal counterexamples. Programmatic window messages or
 X server queue events do not establish physical hardware/global hit-testing.
-Win64 execution under Wine does not qualify Microsoft Windows OS execution.
+`windows-x86` admits I386/PE32 and uses i686 MinGW; `windows-x64` retains
+AMD64/PE32+ and its x64 compiler. Both use Win32 services with different pointer
+ABIs. Windows execution under Wine does not qualify Microsoft Windows OS execution.
 Source-checkout docs/UDC_MEMORY_DESKTOP.md documents APIs, recipes and limits.
+
+## Win16 segmented memory shell
+
+The same canonical memory UIL, cuts and selectable region contracts can emit
+genuine Windows NE artifacts through `emit-memory-win16-shell` or
+`build-memory-win16-shell`. The Python module is
+`fdisbull.udc_memory_win16_shell`; separate compile/seal methods admit a real
+Open Watcom build. Confirm all method names in the selected runtime before use.
+This target uses generated C89 blocks and the Win16 ABI, not an x64 executable
+with a different label.
+
+Logical indices and arithmetic remain u32. A 70,000-word arena occupies nine
+pages of at most 32 KiB, retaining all 280,000 logical bytes. Far-pointer offsets
+and native 16-bit `size_t` never replace logical indexing. The cooperative owner
+stages pages, captures region choices and checks budgets/guards/footprints
+before committing declared ranges. Selector changes do not reseed or rewrite
+state; an alternative RNG is an explicitly different variant.
+
+The native host uses `_lread`/`_lwrite` for far-buffer streams and streams RGBA
+and GDI strips within segment bounds. Actual buffered-stdio corruption in the
+qualified compiler/runtime combination required this adapter; successful byte
+counts did not prove correct contents. Check complete bytes on both file and
+graphics seams. Chrome is CP1252, callbacks are far Pascal instance thunks,
+pointer carriers are signed16 and fractional clock division is retained.
+
+Source recipes, compiler/NE admission, native API observations and original
+DOS/UIL/composed comparisons remain separate. Authored NE/GDI/input checks in
+Wine 11 new WoW64 do not qualify original Windows 3.x, physical hardware or
+whole-game behavior. Source-checkout docs/UDC_MEMORY_WIN16.md documents the
+Python/JSON APIs, SDK recipe, storage and current limits.

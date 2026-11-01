@@ -1,21 +1,26 @@
-# Native Win64 and Linux graphics/input over memory UIL
+# Native Windows x86/x64 and Linux graphics/input over memory UIL
 
 The desktop profile realizes the same bounded-memory UDL/UIL, exact cuts and
 selectable regions used by the browser and macOS pilots. It emits native
-x86-64 code with a Win32/GDI shell or an X11 shell. Game rules, rendering and
-input interpretation remain in UIL; the host supplies OS services and owns
+x86-32 or x86-64 code with a Win32/GDI shell, or x86-64 code with an X11 shell.
+Game rules, rendering and input interpretation remain in UIL; the host supplies OS services and owns
 presentation, input translation and time.
 
 | Platform | Artifact | Profile | Native services |
 | --- | --- | --- | --- |
-| `windows-x64` | AMD64 PE, GUI subsystem | `windows-x64-memory-win32-1` | Win32 messages, combo boxes, GDI DIBs |
+| `windows-x86` | I386 PE32, GUI subsystem | `windows-x86-memory-win32-1` | Win32 messages, combo boxes, GDI DIBs |
+| `windows-x64` | AMD64 PE32+, GUI subsystem | `windows-x64-memory-win32-1` | Win32 messages, combo boxes, GDI DIBs |
 | `linux-x64` | x86-64 ELF executable | `linux-x64-memory-x11-1` | X server events, XKB physical names, XImage/Pixmap |
+
+Both Windows desktop targets use the Win32 API; their executable formats and
+pointer ABIs differ. The [Win16 NE profile](UDC_MEMORY_WIN16.md) uses a separate
+segmented storage adapter while retaining the same logical memory UIL.
 
 The canonical program and source selection identities are retained. Persisted
 Wasm/WebGPU layers remain source provenance. Each generated native realization
 has its actual target, source digest and function identity. These profiles use
 the platform C ABI; byte identity between machine-code blocks compiled for the
-two ABIs is not asserted.
+different ABIs is not asserted.
 
 ## Build and execution gates
 
@@ -44,12 +49,19 @@ build = build_memory_desktop_shell(
 )
 ```
 
-A Windows recipe uses MinGW and links a GUI application plus a console study
-probe. A Linux recipe links Xlib and the platform C runtime. The application
+A Windows recipe uses the matching MinGW compiler and links a GUI application
+plus a console study probe. A Linux recipe links Xlib and the platform C runtime. The application
 embeds its core object; the separately emitted library supports analysis.
 Configuration is compiled from the validated plan and byte-hash-bound to the
 core. No configuration parser, browser, UIL interpreter or original executable
 is required at game runtime.
+
+Select `target="windows-x86"` for the i686 recipe, whose default compiler is
+`i686-w64-mingw32-gcc`; `windows-x64` retains
+`x86_64-w64-mingw32-gcc`. An explicit `c_compiler` may name a versioned matching
+driver when a separately prepared SDK has no generic compiler alias. Admission
+checks I386/PE32 for the former and AMD64/PE32+ for the latter; an x64 executable
+cannot stand in for the requested 32-bit artifact.
 
 `native-shell.json` distinguishes `source-only` and `compiled` stages and keeps
 `native_execution: false`. Artifact admission establishes the declared file
@@ -158,11 +170,28 @@ changes during a study.
 
 Original machine-code checks, retained DOS native observations, headless native
 blocks and OS input/view adapters are distinct gates. The local study runs Linux
-under QEMU and Win64 APIs through Wine/QEMU, with networking disabled. Those
+under QEMU and Windows APIs through Wine/QEMU, with networking disabled. Those
 results do not qualify Microsoft Windows OS execution, physical hardware,
 global window hit-testing or all-input/whole-binary equivalence.
 
-The [sanitized milestone receipt](evidence/snake-desktop-x64/verification.json)
+The existing [x64 milestone receipt](evidence/snake-desktop-x64/verification.json)
 records the finite comparisons, exact identities and separate environment
 qualification. Generated applications, original font data, byte-retaining
 projects and full observations remain private outside Git.
+
+`tests/test_memory_win32_i686.py` separately compiles the established authored
+adapter fixture as genuine I386/PE32 and checks its GDI pixels, key/modifier and
+focus handling, mouse capture/buttons, selectors, timer, terminal snapshots,
+refusal and viewport lifecycle. An explicit `FDISBULL_WIN32_VM_CLIENT` can select
+an owned local offline guest; `FDISBULL_WIN32_CC` names its real compiler. The
+x64 tests keep their own compiler/runtime selection. These native fixture tests
+qualify the adapter boundary; full Snake/original fidelity needs its separate
+state, frame and outcome comparisons.
+
+The subsequent [Win32/Win16 milestone](evidence/snake-win16-win32/verification.json)
+qualifies the I386/PE32 profile against the same recovered Snake UDL/UIL and
+recorded DOS corpus:342 original-RNG cases,342 alternate cases,69 carried core and 69
+native GDI/input observations per RNG, and three 26-step RNG routes. The
+segmented NE profile is documented separately in the [Win16 guide](UDC_MEMORY_WIN16.md).
+The local runtime is Wine11; these results do not qualify Microsoft Windows
+installations or physical hardware.

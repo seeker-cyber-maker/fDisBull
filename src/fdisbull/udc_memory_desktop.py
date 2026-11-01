@@ -20,17 +20,20 @@ from .udc_memory_shell import resolve_memory_shell
 
 TARGETS = {
     'windows-x64': {'target':'windows-x64-memory-1','profile':'windows-x64-memory-win32-1',
-        'adapter':'memory-win32.c','compiler':'x86_64-w64-mingw32-gcc',
+        'architecture':'x86-64','adapter':'memory-win32.c','compiler':'x86_64-w64-mingw32-gcc',
+        'library':'memory-runtime.dll','application':'program.exe','probe':'probe.exe'},
+    'windows-x86': {'target':'windows-x86-memory-1','profile':'windows-x86-memory-win32-1',
+        'architecture':'x86-32','adapter':'memory-win32.c','compiler':'i686-w64-mingw32-gcc',
         'library':'memory-runtime.dll','application':'program.exe','probe':'probe.exe'},
     'linux-x64': {'target':'linux-x64-memory-1','profile':'linux-x64-memory-x11-1',
-        'adapter':'memory-x11.c','compiler':'gcc',
+        'architecture':'x86-64','adapter':'memory-x11.c','compiler':'gcc',
         'library':'memory-runtime.so','application':'program','probe':'probe'},
 }
 FORMAT='fdisbull-memory-desktop-shell-1'
 
 
 def _owner(target):
-    if target=='windows-x64':
+    if TARGETS[target]['adapter']=='memory-win32.c':
         return ['#include <windows.h>',
             'static DWORD fdb_owner_id; __attribute__((constructor)) static void fdb_capture_owner(void) { fdb_owner_id=GetCurrentThreadId(); }',
             'static int fdb_owner_thread(void) { return GetCurrentThreadId()==fdb_owner_id; }']
@@ -121,7 +124,7 @@ def _commands(target):
 
 
 def emit_memory_desktop_shell(project,selections,plan,initial,destination,*,target,cuts=None,regions=None):
-    if type(target) is not str or target not in TARGETS:raise ValueError('choose windows-x64 or linux-x64')
+    if type(target) is not str or target not in TARGETS:raise ValueError('choose windows-x86, windows-x64 or linux-x64')
     prepared=resolve_memory_shell(project,selections,plan,initial,cuts=cuts,regions=regions)
     if prepared['program']['memory']['words']>4_194_304:raise ValueError('desktop arena budget exceeded')
     event_indices=[prepared['plan']['events'][k] for k in ('kind','ascii','scan','x','y','buttons','clock')]
@@ -143,7 +146,7 @@ def emit_memory_desktop_shell(project,selections,plan,initial,destination,*,targ
         payloads[name]=files('fdisbull').joinpath('native_runtime/'+name).read_bytes()
     commands=_commands(target)
     manifest={'format':FORMAT,'stage':'source-only','target':spec['target'],'platform':target,'profile':spec['profile'],
-        'architecture':'x86-64','program':prepared['program'],'execution_program':prepared['execution_program'],
+        'architecture':spec['architecture'],'program':prepared['program'],'execution_program':prepared['execution_program'],
         'module_uil_sha256':digest(prepared['program']),
         'module_udl_sha256':digest({**prepared['program'],'role':'udl'}),'execution_uil_sha256':digest(prepared['execution_program']),
         'plan':prepared['plan'],'plan_sha256':digest(prepared['plan']),'source_selections':prepared['source_selections'],
@@ -175,6 +178,7 @@ def _admit_build(destination):
     spec=TARGETS[platform]
     if any(manifest.get(k)!=spec[k] for k in ('target','profile','application','library','probe')):
         raise ValueError('desktop artifact paths/profile differ')
+    if manifest.get('architecture')!=spec['architecture']:raise ValueError('desktop architecture differs')
     if manifest.get('commands')!=_commands(platform):raise ValueError('desktop compiler recipe differs')
     expected={'memory-runtime.h','memory-runtime.c','config.json','initial.json',
         'memory-host-config.h','memory-desktop-probe.c','memory-desktop.h','memory-desktop.c',spec['adapter']}
@@ -213,12 +217,16 @@ def seal_memory_desktop_shell(destination,*,compiler_evidence=None):
         else:
             with source_receipt.open('xb') as stream:stream.write(source_bytes)
     import lief
+    spec=TARGETS[manifest['platform']]
     for name in (manifest['library'],manifest['application'],manifest['probe']):
         path=destination/name
-        if manifest['platform']=='windows-x64':
+        if spec['adapter']=='memory-win32.c':
             image=lief.PE.parse(str(path))
-            if image is None or image.header.machine!=lief.PE.Header.MACHINE_TYPES.AMD64:
-                raise ValueError('desktop output is not AMD64 PE')
+            machine='I386' if spec['architecture']=='x86-32' else 'AMD64'
+            if image is None or image.header.machine!=getattr(lief.PE.Header.MACHINE_TYPES,machine):
+                raise ValueError('desktop output is not '+machine+' PE')
+            if spec['architecture']=='x86-32' and image.optional_header.magic!=lief.PE.PE_TYPE.PE32:
+                raise ValueError('desktop Win32 output must use PE32')
             is_dll=bool(int(image.header.characteristics)&0x2000)
             if is_dll!=(name==manifest['library']):raise ValueError('desktop PE DLL/executable kind differs')
             if name==manifest['application'] and int(image.optional_header.subsystem)!=2:

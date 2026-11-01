@@ -94,3 +94,5 @@ include docs/evidence/snake-nested-step/verification.json
 include docs/evidence/snake-rng/verification.json
 include docs/evidence/snake-macos-arm64/verification.json
 include docs/evidence/snake-desktop-x64/verification.json
+
+include docs/evidence/snake-win16-win32/verification.json

@@ -38,6 +38,9 @@ REVIEWED_SOURCE_RECIPES |= {'examples/recovery/civd_browser_shell.py',
 REVIEWED_SOURCE_RECIPES |= {'examples/recovery/snake_model.py','examples/recovery/snake_original.py',
     'examples/recovery/snake_browser.py','examples/recovery/run_snake_browser.mjs','examples/recovery/snake_browser_study.mjs'}
 REQUIRED_SOURCE_EVIDENCE |= REVIEWED_SOURCE_RECIPES
+REVIEWED_SOURCE_RECIPES |= {'examples/recovery/snake_desktop.py',
+    'examples/recovery/verify_snake_desktop.py','examples/recovery/snake_macos.py',
+    'examples/recovery/verify_snake_macos.py','examples/recovery/verify_snake_appkit.py'}
 REQUIRED_SOURCE_EVIDENCE.add('docs/evidence/civd-food-web/verification.json')
 REQUIRED_SOURCE_EVIDENCE |= {'docs/evidence/civd-browser-shell/verification.json','tests/web_shell_checks.mjs'}
 REQUIRED_SOURCE_EVIDENCE |= {'docs/evidence/snake-browser/verification.json','tests/memory_shell_checks.mjs'}

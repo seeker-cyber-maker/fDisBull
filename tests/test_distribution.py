@@ -153,6 +153,18 @@ def test_release_allowlists_include_only_the_public_udc_and_output_receipts():
     selected = {path.relative_to(root).as_posix() for path in build['release_files'](root)}
     assert {path for path in selected if path.startswith('docs/evidence/udc-2026-10-29/')} == UDC_EVIDENCE_FILES
 
+    # Installed source recipes need their real native adapters and portable recipes.
+    assert {
+        'src/fdisbull/native_runtime/memory-win32.c',
+        'src/fdisbull/native_runtime/memory-win16.c',
+        'src/fdisbull/native_runtime/memory-win16-common.c',
+        'src/fdisbull/native_runtime/memory-win16.h',
+        'src/fdisbull/native_runtime/memory-appkit.m',
+        'examples/recovery/snake_desktop.py',
+        'examples/recovery/verify_snake_desktop.py',
+        'docs/UDC_MEMORY_WIN16.md',
+    } <= selected
+
     manifest_lines = (root/'MANIFEST.in').read_text().splitlines()
     manifest_receipts = {line.removeprefix('include ') for line in manifest_lines
                          if line.startswith('include docs/evidence/udc-2026-10-29/')}

@@ -11,6 +11,11 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 ROOT_FILES = ("README.md", "AGENTS.md", "CLAUDE.md", "pyproject.toml", "MANIFEST.in", "player/pyproject.toml")
 DOC_EXAMPLE_FILES = (
+    'examples/recovery/snake_desktop.py',
+    'examples/recovery/verify_snake_desktop.py',
+    'examples/recovery/snake_macos.py',
+    'examples/recovery/verify_snake_macos.py',
+    'examples/recovery/verify_snake_appkit.py',
     'examples/recovery/snake_model.py',
     'examples/recovery/snake_original.py',
     'examples/recovery/snake_browser.py',
@@ -38,6 +43,14 @@ DOC_EXAMPLE_FILES = (
     "docs/uil-rfcs/0002/replay-summary.json",
 )
 SOURCE_PATTERNS = (
+    ("src/fdisbull/native_runtime", "*.c"),
+    ("src/fdisbull/native_runtime", "*.h"),
+    ("src/fdisbull/native_runtime", "*.m"),
+    ("docs/evidence/snake-win16-win32", "verification.json"),
+    ("docs/evidence/snake-desktop-x64", "verification.json"),
+    ("docs/evidence/snake-macos-arm64", "verification.json"),
+    ("docs/evidence/snake-rng", "verification.json"),
+    ("docs/evidence/snake-nested-step", "verification.json"),
     ("docs/evidence/snake-browser", "verification.json"),
     ("tests", "memory_shell_checks.mjs"),
     ("docs/evidence/civd-browser-shell", "verification.json"),

@@ -1,5 +1,9 @@
 """Agent JSON surface for persistent snippet and implementation records."""
 METHODS={
+ 'build-memory-win16-shell':'Emit and compile Windows NE blocks and paged Win16 shell; selections,plan,initial,destination,[cuts,regions,c_compiler,linker]; build only',
+ 'emit-memory-win16-shell':'Emit a source-only segmented C89 Windows NE recipe; selections,plan,initial,destination,[cuts,regions]; no compilation/execution',
+ 'compile-memory-win16-shell':'Compile a private Win16 source recipe with separate Open Watcom SDK; destination,[c_compiler,linker]; no execution',
+ 'seal-memory-win16-shell':'Bind Windows NE executable/segment facts and artifact hashes; destination,[compiler_evidence]; no execution/fidelity claim',
  'build-memory-desktop-shell':'Compile native Win64/Win32 or Linux x86-64/X11 blocks and shell; selections,plan,initial,destination,target,[cuts,regions,c_compiler]; build only',
  'emit-memory-desktop-shell':'Emit a source-only native desktop recipe; selections,plan,initial,destination,target,[cuts,regions]; compilation and execution separate',
  'compile-memory-desktop-shell':'Compile an admitted private desktop source recipe; destination,[c_compiler]; does not execute outputs',
@@ -42,6 +46,10 @@ METHODS={
 
 def invoke(project,method,params):
  from . import udc_layers
+ if method in ('build-memory-win16-shell','emit-memory-win16-shell','compile-memory-win16-shell','seal-memory-win16-shell'):
+  from . import udc_memory_win16_shell
+  function=getattr(udc_memory_win16_shell,method.replace('-','_'))
+  return function(project,**params) if method.startswith(('build-','emit-')) else function(**params)
  if method in ('build-memory-desktop-shell','emit-memory-desktop-shell','compile-memory-desktop-shell','seal-memory-desktop-shell'):
   from . import udc_memory_desktop
   return getattr(udc_memory_desktop,method.replace('-','_'))(project,**params) if method.startswith(('build-','emit-')) else getattr(udc_memory_desktop,method.replace('-','_'))(**params)

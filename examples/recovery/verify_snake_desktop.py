@@ -1,10 +1,10 @@
-"""Qualify native Win64/Linux Snake blocks and platform adapters.
+"""Qualify native Windows x86/x64, Win16 NE and Linux Snake artifacts.
 
 Use the exact private original/RNG study from the earlier qualified pilot. This
 recipe compares independent DOS witnesses with native output; it does not use a
 second UIL interpreter as a source oracle. Original-RNG expectations come from
 DOS witnesses; deliberately different LFSR expectations come from the declared
-variant reference. Programmatic Win32/X11 event paths,
+variant reference. Programmatic Windows/X11 event paths,
 owned native surfaces, physical hardware and Microsoft Windows execution are
 separate claims. An explicit runner can transport bytes into a local test VM.
 """
@@ -94,7 +94,7 @@ def verify(bundle, study_path, destination, *, runner_path=None):
         digest(manifest['program']) != CANONICAL_UIL or manifest['module_uil_sha256'] != CANONICAL_UIL or
         manifest['module_udl_sha256'] != UDL or digest({**manifest['program'], 'role': 'udl'}) != UDL):
         raise ValueError('Qualified study or canonical UDL/UIL identity differs')
-    if manifest.get('stage') != 'compiled' or manifest.get('platform') not in ('windows-x64', 'linux-x64'):
+    if manifest.get('stage') != 'compiled' or manifest.get('platform') not in ('windows-x86', 'windows-x86-16', 'windows-x64', 'linux-x64'):
         raise ValueError('A sealed native desktop build is required')
     for field in ('application', 'probe'):
         name = manifest[field]
@@ -106,10 +106,15 @@ def verify(bundle, study_path, destination, *, runner_path=None):
                 raise ValueError('Expected little-endian x86-64 ELF')
         else:
             if raw[:2] != b'MZ' or len(raw) < 64:
-                raise ValueError('Expected x86-64 PE')
+                raise ValueError('Expected native Windows image')
             pe = struct.unpack_from('<I', raw, 60)[0]
-            if raw[pe:pe+4] != b'PE\0\0' or struct.unpack_from('<H', raw, pe+4)[0] != 0x8664:
-                raise ValueError('Expected AMD64 PE')
+            if manifest['platform']=='windows-x86-16':
+                if raw[pe:pe+2]!=b'NE' or raw[pe+54]!=2 or struct.unpack_from('<H',raw,pe+12)[0]&0x8000:
+                    raise ValueError('Expected Windows NE executable')
+            else:
+                machine,magic=(0x14c,0x10b) if manifest['platform']=='windows-x86' else (0x8664,0x20b)
+                if raw[pe:pe+4]!=b'PE\0\0' or struct.unpack_from('<H',raw,pe+4)[0]!=machine or struct.unpack_from('<H',raw,pe+24)[0]!=magic:
+                    raise ValueError('Expected matching Windows PE architecture')
     destination.mkdir(parents=True, mode=0o700)
     (destination/'selected-native-shell.json').write_bytes(manifest_bytes)
     runner_identity = {'type': 'local-process'}
@@ -144,7 +149,7 @@ def verify(bundle, study_path, destination, *, runner_path=None):
         'application_sha256': manifest['artifacts'][manifest['application']],
         'probe_sha256': manifest['artifacts'][manifest['probe']],
         'cases': {}, 'core_carried': {}, 'adapters': {}, 'outcomes': {}, 'seed_probes': [], 'runs': [],
-        'scope': 'Generated x86-64 processes versus original-RNG DOS witnesses and explicitly different LFSR references; declared logical events, native responder paths and owned native surfaces; physical hardware and Microsoft Windows OS require separate evidence'}
+        'scope': 'Generated '+manifest['architecture']+' processes versus original-RNG DOS witnesses and explicitly different LFSR references; declared logical events, native responder paths and owned native surfaces; physical hardware and Microsoft Windows OS require separate evidence'}
 
     def execute(mode, commands, label, *, clock=services['last_tick']):
         incoming = encode_study(manifest, commands, clock=clock,

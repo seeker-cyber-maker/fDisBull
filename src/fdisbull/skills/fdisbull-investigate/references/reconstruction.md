@@ -117,6 +117,13 @@ gate, not execution. A model equivalence proof qualifies supplied models only.
 Native smoke tests starting at zero are insufficient to test retained state.
 Use negative controls: a deliberately wrong rule or adapter must be detected.
 
+For concrete memory-shell backends, read the
+[desktop and Win16 realization contracts](udl-uil-udc.md#win16-segmented-memory-shell).
+The Win16 route preserves the full logical u32 arena through paged storage;
+compiler success does not qualify segmented file transfer, GDI or input.
+Its source-checkout guide is `docs/UDC_MEMORY_WIN16.md`. Keep the selected
+runtime's method inventory authoritative when a skill is newer than the install.
+
 ## 8. Compose, persist and hand off
 
 Check the larger requested boundary before promoting the result: callers,

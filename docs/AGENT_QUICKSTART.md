@@ -21,10 +21,17 @@ For a native macOS ARM64 window over the same memory UIL, see
 AppKit adapters have separate execution and input/view qualification gates;
 source selection target metadata remains provenance.
 
-For Win64/Win32 and Linux x86-64/X11 shells over that same memory UIL, see
+For Windows x86/Win64 and Linux x86-64/X11 shells over that same memory UIL, see
 [native desktop reconstruction](UDC_MEMORY_DESKTOP.md). Source emission,
 compilation, immutable artifact admission and native input/view qualification
 are separate gates; Wine execution does not qualify Microsoft Windows itself.
+
+For a genuine Win16 NE shell, see [segmented memory reconstruction](UDC_MEMORY_WIN16.md).
+It retains the same logical u32 arena, cuts and selectable RNG regions through
+paged storage, C89 blocks, native far-buffer file transfer and streamed GDI/RGBA.
+Use its explicit emit/compile/seal route and qualify source, artifact, native
+boundary and original/composed behavior separately. A supported Wine 11 route
+does not establish original Windows 3.x or whole-game compatibility.
 
 ## Discover commands and bundled skills
 
