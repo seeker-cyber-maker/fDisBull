@@ -20,6 +20,10 @@ bounded counter reset/topology handling and independent diagnostic baselines.
 Fresh checks passed: 39 deterministic core, 9 native sampler, 48 real NSMenu and
 settings, 26 renderer/diagnostic. Separate processes verified saved interval,
 mode/theme values and checkmarks using isolated temporary preference suites.
+A live Japanese acceptance then opened the authored replica's real status menu
+through fDisBull's reversible session, verified all seven root labels, and
+confirmed the menu closed; only the replica was launched and no preference or
+login setting was written.
 
 A hash-pinned source renderer oracle found 126 mismatched frames before the
 color fix and 0 afterward, across 336 authored frames: all modes/themes/appearances
@@ -119,6 +123,8 @@ python Tests/compare_captures.py --original /private/original-session --replica 
 Live input is a separate explicit [native session](MACOS_REVERSIBLE_CAPTURE.md).
 The initial candidate's unknown first/reset/topology baseline intentionally differed
 from upstream's initial-zero accumulation/since-boot first ratio. Font identity,
-full pixels, synchronized counters, Japanese localization, login-helper
-equivalence and restart persistence remain unqualified. No original bug has
-been causally diagnosed or patched by this experiment.
+full original pixels, synchronized counters, original live Japanese
+localization, login-helper equivalence and actual relogin remain unqualified;
+the replica-only Japanese menu is qualified by
+[the live acceptance](../experimental/macos/cpuinfo-replica/evidence/live-language-followup.json).
+No original bug has been causally diagnosed or patched by this experiment.

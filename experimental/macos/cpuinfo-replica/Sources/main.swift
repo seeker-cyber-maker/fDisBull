@@ -178,7 +178,19 @@ struct FixtureInput: Decodable {
 @main
 struct CpuinfoReplica {
     @MainActor static func main() throws {
-        let arguments = Array(CommandLine.arguments.dropFirst())
+        var arguments = Array(CommandLine.arguments.dropFirst())
+        // AppKit consumes these standard localization arguments, but they
+        // remain visible in CommandLine.arguments. They are not app options.
+        let localizationOptions = ["-AppleLanguages", "-NSLanguages", "-AppleLocale"]
+        var argumentIndex = 0
+        while argumentIndex < arguments.count {
+            if localizationOptions.contains(arguments[argumentIndex]) {
+                arguments.remove(at: argumentIndex)
+                if argumentIndex < arguments.count { arguments.remove(at: argumentIndex) }
+            } else {
+                argumentIndex += 1
+            }
+        }
         func option(_ name: String) -> String? {
             guard let index = arguments.firstIndex(of: name), index + 1 < arguments.count else { return nil }
             return arguments[index + 1]

@@ -11,15 +11,26 @@ Build and verify:
 ./test.sh
 ```
 
-The app is `build/Cpuinfo Replica.app`. The build does not launch or install it.
+`./test.sh` rebuilds the app before its render checks, so a stale build can
+neither hide nor create a pixel failure. The app is
+`build/Cpuinfo Replica.app`. The build does not launch or install it.
 It was explicitly launched after verification for the user's comparison with
 the original. Start at Login changes registration only after an explicit menu
 selection; it was not enabled or exercised during this work.
 
 The menu offers the original intervals, per-core toggle, overall image/text
 modes, themes, Activity Monitor and Quit. English/Japanese labels follow macOS
-bundle language selection; tests inject language explicitly without changing
-preferences. The overall menu prevents disabling the last visible mode.
+bundle language selection; headless tests inject language explicitly without
+changing preferences. A separate live acceptance opens the real status menu in
+Japanese through fDisBull's reversible session, verifies the labels, closes the
+menu it opened, and stops only this replica:
+
+```sh
+python3 Tests/check_live_language.py
+```
+
+That check writes no preference or login setting and prints sanitized JSON
+evidence. The overall menu prevents disabling the last visible mode.
 Settings use the original key names through UserDefaults in a separate domain.
 The replica never imports or writes the original's settings.
 
@@ -55,7 +66,8 @@ The source is cpuinfo v1.7.0, revision
 `d7f9e846909f9775e1d6d03214796dbaff4d5492`,
 [published by Yusuke Shibata](https://github.com/yusukeshib/cpuinfo/tree/v1.7.0).
 Binary correspondence is unproved. [NOTICE.md](NOTICE.md) retains MIT attribution.
-[PARITY.md](PARITY.md) and [evidence/parity-followup.json](evidence/parity-followup.json)
+[PARITY.md](PARITY.md), [evidence/parity-followup.json](evidence/parity-followup.json)
+and [evidence/live-language-followup.json](evidence/live-language-followup.json)
 separate implementation, static source tests, native observations and unknowns.
 
 fDisBull revalidated original identity and stored instruction backings, and

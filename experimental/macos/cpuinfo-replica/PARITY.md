@@ -4,7 +4,8 @@ Original: cpuinfo 1.7.0 build 237, bundle `io.fata.shibata.cpuinfo`, SHA-256
 `ebc5e15fe3b3867c8e72bab1956d584cc640ecce0196243c50757bc3ad1c53f7`.
 Behavioral source assistance is pinned to revision
 `d7f9e846909f9775e1d6d03214796dbaff4d5492`. Its binary correspondence remains
-unproved. [Follow-up verification](evidence/parity-followup.json) records the
+unproved. [Follow-up verification](evidence/parity-followup.json) and
+[live Japanese acceptance](evidence/live-language-followup.json) record the
 current scope; earlier evidence remains intact and refers to earlier sources.
 
 | Surface | Current behavior and verification | Remaining boundary |
@@ -16,7 +17,7 @@ current scope; earlier evidence remains intact and refers to earlier sources.
 | Color | Calibrated RGB now matches source. Earlier renderer had 126/336 mismatches; fixed renderer has 0. A same-display native screenshot also matched opaque green/orange pixels in both running apps. | Red was not observed in that live sample; CPU fills reflect different sampling times. |
 | Fonts | Source uses menuBarFont(systemFontSize), 36x20pt text box at y2. Both routines produced identical text pixels; current font is AppleSystemUIFont 13pt. Menus use native menu font. | Original app live text mode was not changed/tested. |
 | Menus | Seven root rows match order/enabled state/relative frames; native menus 218x200pt. Submenus/checkmarks/actions exercised headlessly through real NSMenu items. Image/Text cannot both be disabled, matching original bindings. Earlier invalid saved states recover to Image. | Native hidden-submenu appearance remains source/test qualified. |
-| Localization | English and Japanese labels/intervals match source XIBs. Stable identifiers keep actions/checkmarks independent of translated titles. Both tested without changing app/global language preferences. | No live Japanese UI was opened. |
+| Localization | English and Japanese labels/intervals match source XIBs. Stable identifiers keep actions/checkmarks independent of translated titles. Both tested without changing app/global language preferences. The authored replica's real status menu was then opened in Japanese through fDisBull's reversible session: all seven root labels matched and the opened menu was confirmed closed. | The installed original's live Japanese UI was not opened. |
 | Preferences | Same UserDefaults keys as source, separate app domain. Actual menu actions wrote interval, modes and theme; a new process verified values and checkmarks. Temporary test suites removed. | Original settings were never imported or mutated. |
 | Start at Login | Modern SMAppService.mainApp registration on explicit selection; original uses bundled helper. | Registration and actual relogin remain unexercised; no login settings changed. |
 | Activity Monitor/Quit | Native AppKit actions remain implemented. | Not live-exercised during this follow-up. |
