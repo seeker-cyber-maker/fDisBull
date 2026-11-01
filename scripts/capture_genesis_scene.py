@@ -16,16 +16,44 @@ ROOT = Path(__file__).resolve().parents[1]
 CORE_SHA = '27bc2ef8ca07c775f022ae90be381b2a2a500245c9c7e362356ba3077b25c268'
 
 
+def trace_ranges(values, *, memory=False):
+    """Parse bounded numeric filters; generated observers never evaluate text."""
+    if len(values) > 16:
+        raise ValueError('at most 16 trace ranges per kind')
+    result = []
+    for value in values:
+        try:
+            fields = value.split(':')
+            if len(fields) != 2:
+                raise ValueError
+            start, end = (int(n, 0) for n in fields)
+        except (TypeError, ValueError) as exc:
+            raise ValueError('trace ranges require numeric start:exclusive-end') from exc
+        if not (0xff0000 if memory else 0) <= start < end <= 0x1000000:
+            raise ValueError('trace range outside the selected address domain')
+        result.append((start, end))
+    return result
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     for name in ('rom', 'core', 'output', 'inputs'):
         p.add_argument('--' + name, required=True, type=Path)
+    p.add_argument('--patches', type=Path, help='explicit assisted finite memory interventions for testing')
     p.add_argument('--frames', type=int, default=1800)
     p.add_argument('--captures', default='299,599,899,1199,1499,1799')
     p.add_argument('--trace-start', type=int, help='optional frame to observe work-RAM writes')
     p.add_argument('--trace-end', type=int)
+    p.add_argument('--trace-pc-range', action='append', default=[],
+                   help='observed writer-PC start:exclusive-end; replaces the default filter')
+    p.add_argument('--trace-memory-range', action='append', default=[],
+                   help='observed work-RAM start:exclusive-end; combines with writer-PC filters')
     a = p.parse_args()
     captures = [int(n) for n in a.captures.split(',')]
+    pc_ranges = trace_ranges(a.trace_pc_range)
+    memory_ranges = trace_ranges(a.trace_memory_range, memory=True)
+    if (pc_ranges or memory_ranges) and a.trace_start is None:
+        raise ValueError('custom filters require a finite trace interval')
     if not 1 <= a.frames <= 10000 or not 1 <= len(captures) <= 64 or any(
             n < 0 or n >= a.frames for n in captures) or len(set(captures)) != len(captures):
         raise ValueError('invalid finite capture budget')
@@ -38,6 +66,8 @@ def main():
         raise ValueError('choose a new private directory outside Git')
     paths = {'rom': a.rom.resolve(), 'core': a.core.resolve(),
              'inputs': a.inputs.resolve(), 'host': ROOT / 'scripts/check_console_udc.py'}
+    if a.patches is not None:
+        paths['patches'] = a.patches.resolve()
     sha = lambda b: hashlib.sha256(b).hexdigest()
     identities = {k: {'sha256': sha(v.read_bytes()), 'size': v.stat().st_size}
                   for k, v in paths.items()}
@@ -111,6 +141,12 @@ def main():
 '''
         if host.count('    frames_ran=0\n') != 1:
             raise ValueError('host setup point changed')
+        if pc_ranges or memory_ranges:
+            start = setup.index('                if (\n')
+            end = setup.index('                    if len(ram_write_events)', start)
+            condition = ('any(lo <= pc < hi for lo,hi in ' + repr(pc_ranges) + ') or '
+                         'any(lo <= (address&0xffffff) < hi for lo,hi in ' + repr(memory_ranges) + ')')
+            setup = setup[:start] + '                if ' + condition + ':\n' + setup[end:]
         host = host.replace('    frames_ran=0\n', setup)
         run_anchor = '        lib.retro_run()\n'
         run_inject = '''        if i==TRACE_START:
@@ -129,6 +165,8 @@ def main():
                '--rom', str(paths['rom']), '--system', 'genesis', '--frames', str(a.frames),
                '--inputs', str(paths['inputs']), '--frame-images', ','.join(map(str, captures)),
                '--output', str(out / 'native'), '--capture-audio']
+    if a.patches is not None:
+        command.extend(['--patches', str(paths['patches'])])
     run = subprocess.run(command, capture_output=True, text=True, timeout=300)
     (out / 'run.log').write_text(run.stdout + run.stderr)
     if run.returncode:
@@ -143,8 +181,11 @@ def main():
              for f in out.rglob('*') if f.is_file()}
     receipt = {'format': 'fdisbull-private-genesis-scenes-1', 'inputs': identities,
                'frames': a.frames, 'captures': captures, 'files': files,
-               'assistance': 'ordinary controller schedule; no memory patches',
+               'assistance': ('ordinary controller schedule; no memory patches' if a.patches is None else
+                              'assisted finite memory interventions before declared frames'),
                'ram_write_observer': {'start': a.trace_start, 'end': a.trace_end,
+                                      'custom_pc_ranges': pc_ranges,
+                                      'custom_memory_ranges': memory_ranges,
                                       'neutrality': 'not established by capture alone'},
                'scope': 'captured original state; no scene/rule interpretation established'}
     (out / 'capture.json').write_text(json.dumps(receipt, indent=2) + '\n')

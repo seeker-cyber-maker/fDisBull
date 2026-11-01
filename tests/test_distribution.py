@@ -223,6 +223,88 @@ CONSOLE_GAME_EVIDENCE += (
     'combat', 'dialogue-world-qualification', 'dialogue-world', 'field-combat', 'hp', 'inventory',
     'verification', 'native-nes', 'animation',
 ))
+CONSOLE_GAME_RESOURCES += (
+    'src/fdisbull/game_sources/shadowrun_debug_place.c',
+    'src/fdisbull/game_sources/shadowrun_field_action.c',
+    'src/fdisbull/game_sources/shadowrun_field_motion.c',
+    'src/fdisbull/game_sources/shadowrun_linked_actors.c',
+    'src/fdisbull/game_sources/shadowrun_linked_heading.c',
+    'src/fdisbull/game_sources/shadowrun_linked_motion.c',
+    'src/fdisbull/game_sources/shadowrun_linked_spawn.c',
+    'src/fdisbull/game_sources/shadowrun_nes_play.c',
+    'src/fdisbull/game_sources/shadowrun_play.c',
+    'src/fdisbull/game_sources/shadowrun_play_actors.c',
+    'src/fdisbull/game_sources/shadowrun_play_shot.c',
+    'src/fdisbull/game_sources/shadowrun_projectile_lifecycle.c',
+    'src/fdisbull/game_sources/shadowrun_targeting.c',
+    'src/fdisbull/shadowrun_city.py',
+    'src/fdisbull/shadowrun_city_view.py',
+    'src/fdisbull/shadowrun_field_combat.py',
+    'src/fdisbull/shadowrun_linked_actors.py',
+    'src/fdisbull/shadowrun_linked_heading.py',
+    'src/fdisbull/shadowrun_nes_play.py',
+    'src/fdisbull/shadowrun_play.py',
+    'src/fdisbull/shadowrun_projectile_lifecycle.py',
+    'src/fdisbull/shadowrun_targeting.py',
+    'src/fdisbull/shadowrun_z.py',
+)
+CONSOLE_GAME_HELPERS += (
+    'scripts/check_shadowrun_captured_combat.py',
+    'scripts/check_shadowrun_original_route.py',
+    'scripts/check_shadowrun_play_natural_original.py',
+    'scripts/check_shadowrun_field_action.py',
+    'scripts/check_shadowrun_field_actor.py',
+    'scripts/check_shadowrun_field_actor_nes.py',
+    'scripts/check_shadowrun_field_motion.py',
+    'scripts/check_shadowrun_field_nes.py',
+    'scripts/check_shadowrun_field_target.py',
+    'scripts/check_shadowrun_linked_actor.py',
+    'scripts/check_shadowrun_linked_actors.py',
+    'scripts/check_shadowrun_linked_heading.py',
+    'scripts/check_shadowrun_linked_motion.py',
+    'scripts/check_shadowrun_linked_spawn.py',
+    'scripts/check_shadowrun_play_armor.py',
+    'scripts/check_shadowrun_play_combat.py',
+    'scripts/check_shadowrun_play_debug.py',
+    'scripts/check_shadowrun_play_directions.py',
+    'scripts/check_shadowrun_play_equipment.py',
+    'scripts/check_shadowrun_play_reequip.py',
+    'scripts/check_shadowrun_play_repeat.py',
+    'scripts/check_shadowrun_play_right.py',
+    'scripts/check_shadowrun_play_route.py',
+    'scripts/check_shadowrun_play_scheduler.py',
+    'scripts/check_shadowrun_play_shot.py',
+    'scripts/check_shadowrun_play_target.py',
+    'scripts/check_shadowrun_play_weapon.py',
+    'scripts/check_shadowrun_projectile_animation.py',
+    'scripts/check_shadowrun_projectile_lifecycle.py',
+    'scripts/check_shadowrun_target_b_capture.py',
+    'scripts/check_shadowrun_target_camera.py',
+    'scripts/check_shadowrun_targeting.py',
+    'scripts/check_shadowrun_z_play.py',
+    'tests/test_genesis_scene_trace.py',
+    'tests/test_shadowrun_city.py',
+    'tests/test_shadowrun_city_view.py',
+    'tests/test_shadowrun_field_action.py',
+    'tests/test_shadowrun_linked_actors.py',
+    'tests/test_shadowrun_linked_heading.py',
+    'tests/test_shadowrun_play.py',
+    'tests/test_shadowrun_projectile_lifecycle.py',
+    'tests/test_shadowrun_targeting.py',
+)
+CONSOLE_GAME_EVIDENCE += (
+    'docs/SHADOWRUN_CITY_Z.md',
+    'docs/SHADOWRUN_PLAYABLE_FIELD.md',
+    'docs/evidence/shadowrun-play-2026-11-01/source-field.json',
+    'docs/evidence/shadowrun-play-2026-11-01/nes-play.json',
+    'docs/evidence/shadowrun-play-2026-11-01/city-z.json',
+    'docs/evidence/shadowrun-play-2026-11-01/suite.json',
+    'docs/evidence/shadowrun-play-2026-11-01/verification.json',
+    'docs/SHADOWRUN_NES_PLAY.md',
+    'docs/SHADOWRUN_PREPARED_FIELD_ACTION.md',
+    'docs/SHADOWRUN_TARGETING.md',
+    'docs/evidence/shadowrun-assisted-original-b-target.json',
+)
 REQUIRED_SOURCE_FILES += CONSOLE_GAME_RESOURCES + CONSOLE_GAME_HELPERS + CONSOLE_GAME_EVIDENCE
 
 
@@ -357,3 +439,20 @@ def test_release_allowlists_include_only_the_public_udc_and_output_receipts():
     assert all((root/path).is_file() for path in OUTPUT_EVIDENCE_FILES)
     assert set(CONSOLE_GAME_RESOURCES + CONSOLE_GAME_HELPERS + CONSOLE_GAME_EVIDENCE) <= selected
     assert all((root / path).is_file() for path in CONSOLE_GAME_RESOURCES + CONSOLE_GAME_HELPERS + CONSOLE_GAME_EVIDENCE)
+
+
+def test_shadowrun_play_evidence_selection_covers_flat_and_release_receipts():
+    root = Path(__file__).resolve().parents[1]
+    build = runpy.run_path(str(root / 'scripts/build_release.py'))
+    checker = runpy.run_path(str(root / 'scripts/check_dist.py'))
+    flat = 'docs/evidence/shadowrun-assisted-original-b-target.json'
+    directory = 'docs/evidence/shadowrun-play-2026-11-01'
+    manifest = (root / 'MANIFEST.in').read_text().splitlines()
+    assert 'include ' + flat in manifest
+    assert 'recursive-include ' + directory + ' *.json' in manifest
+    assert ('docs/evidence', 'shadowrun-assisted-original-b-target.json') in build['SOURCE_PATTERNS']
+    assert (directory, '*.json') in build['SOURCE_PATTERNS']
+    assert flat in checker['REQUIRED_SOURCE_EVIDENCE']
+    selected = {path.relative_to(root).as_posix() for path in build['release_files'](root)}
+    assert flat in selected
+    assert {p.relative_to(root).as_posix() for p in (root / directory).rglob('*.json') if p.is_file()} <= selected

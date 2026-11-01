@@ -83,6 +83,8 @@ SOURCE_PATTERNS = (
     ("docs/evidence/mario-minus-world-2026-11-01", "*.json"),
     ("docs/evidence/shadowrun-uil-2026-11-01", "*.json"),
     ("docs/evidence/shadowrun-full-2026-11-01", "*.json"),
+    ("docs/evidence", "shadowrun-assisted-original-b-target.json"),
+    ("docs/evidence/shadowrun-play-2026-11-01", "*.json"),
     ("patches", "capstone-5.0.9-sh-profile-gating.patch"),
     ("scripts/rom_semantic_route", "*.java"),
     ("scripts/rom_semantic_route", "README.md"),

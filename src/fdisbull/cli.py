@@ -231,6 +231,8 @@ METHODS = {
     "genesis-replay-inspect": "Check private replay payload integrity without executing tools or trusting qualification claims; path",
     "genesis-replay-build": "Replay a registered bundle with exact original ROM and explicit trusted target compiler; path,output,rom_path,[target,cc65_root,m68k_root]",
     'shadowrun-systems': 'List recovered Shadowrun procedural components and whole-game gaps; no parameters',
+    'shadowrun-play-build': 'Build the bounded scene-2 NES play profile; path,rom_path,capture,cc65_root,output',
+    'shadowrun-city-export': 'Export a private investigator city snapshot as JSON, text and interactive HTML; rom_path,snapshot,output',
     'shadowrun-system-export': 'Export one registered source-bound component as UIL; rom_path,system,output',
     'shadowrun-system-inspect': 'Validate a private Shadowrun component bundle; path',
     'shadowrun-system-build-check': 'Compile finite scalar UIL cases to a headless NES check cartridge; path,rom_path,procedure,cases_path,cc65_root,output',
@@ -417,6 +419,13 @@ def invoke(method, params, debugger=None):
                  'genesis-replay-inspect':udc_genesis.inspect_translation_bundle,
                  'genesis-replay-build':udc_genesis.replay_translation}.get(method)
         if handler is not None:return handler(**p)
+    if method=='shadowrun-play-build':
+        from .shadowrun_nes_play import build_play
+        path=p.pop('path')
+        return build_play(path,**p)
+    if method=='shadowrun-city-export':
+        from .shadowrun_city_view import export_city
+        return export_city(**p)
     if method=='shadowrun-systems' or method.startswith('shadowrun-system-'):
         from . import shadowrun_systems
         if method=='shadowrun-systems':
@@ -619,7 +628,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('shadowrun-systems','shadowrun-system-export','shadowrun-system-inspect','shadowrun-system-build-check','shadowrun-opening-animation-build','media-modules','media-inspect','media-extract','agent-skill','identify','inspect','rom-inspect','rom-disasm','disc-inspect','console-udc','console-udc-targets','rom-game-lift','genesis-replay-profiles','genesis-replay-source','genesis-replay-export','genesis-replay-inspect','genesis-replay-build','shadowrun-opening-profiles','shadowrun-opening-export','shadowrun-opening-inspect','shadowrun-opening-build','nes-multicart-profiles','nes-multicart-inspect','nes-multicart-build','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('shadowrun-play-build','shadowrun-city-export','shadowrun-systems','shadowrun-system-export','shadowrun-system-inspect','shadowrun-system-build-check','shadowrun-opening-animation-build','media-modules','media-inspect','media-extract','agent-skill','identify','inspect','rom-inspect','rom-disasm','disc-inspect','console-udc','console-udc-targets','rom-game-lift','genesis-replay-profiles','genesis-replay-source','genesis-replay-export','genesis-replay-inspect','genesis-replay-build','shadowrun-opening-profiles','shadowrun-opening-export','shadowrun-opening-inspect','shadowrun-opening-build','nes-multicart-profiles','nes-multicart-inspect','nes-multicart-build','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         result=invoke(request["method"],params,debugger)
@@ -853,6 +862,13 @@ def parser():
     c.add_argument('--target',choices=['nes','genesis'],default='nes')
     c.add_argument('--cc65-root');c.add_argument('--m68k-root')
     sub.add_parser('shadowrun-systems',help=METHODS['shadowrun-systems'])
+    c=sub.add_parser('shadowrun-play-build',help=METHODS['shadowrun-play-build'])
+    c.add_argument('path');c.add_argument('--rom',dest='rom_path',required=True);c.add_argument('--capture',required=True)
+    c.add_argument('--cc65-root',required=True);c.add_argument('--output',required=True)
+    c=sub.add_parser('shadowrun-city-export',help=METHODS['shadowrun-city-export'])
+    c.add_argument('rom_path');c.add_argument('--snapshot',required=True);c.add_argument('--output',required=True)
+    c=sub.add_parser('shadowrun-z',help='Serve a prepared Shadowrun model through the text-player protocol')
+    c.add_argument('rom_path');c.add_argument('--snapshot',required=True);c.add_argument('--policy',choices=['physical','assisted'],default='physical')
     c=sub.add_parser('shadowrun-system-export',help=METHODS['shadowrun-system-export'])
     c.add_argument('rom_path');c.add_argument('--system',required=True);c.add_argument('--output',required=True)
     c=sub.add_parser('shadowrun-system-inspect',help=METHODS['shadowrun-system-inspect'])
@@ -1243,6 +1259,17 @@ def main(argv=None):
 
 def _dispatch(args):
     command = args.pop("command")
+    if command == 'shadowrun-z':
+        from .shadowrun_city_view import open_runtime
+        from .shadowrun_z import ShadowrunZBackend
+        from .text_projection import serve_stream
+        try:
+            backend=ShadowrunZBackend(open_runtime(args['rom_path'],snapshot=args['snapshot']),policy=args['policy'])
+            serve_stream(backend,sys.stdin,sys.stdout)
+            return 0
+        except (ValueError,OSError,KeyError,TypeError) as error:
+            print(json.dumps({'complete':False,'status':'refused','reason':str(error)}),flush=True)
+            return 1
     if command == 'media-extract':
         args['max_output_bytes'] = args.pop('media_max_output_bytes')
     if command.startswith(('udc-','udl-')) and not command.startswith('udc-native-'):

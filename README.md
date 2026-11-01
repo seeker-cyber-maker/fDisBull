@@ -298,10 +298,17 @@ The [Shadowrun opening experiment](docs/SHADOWRUN_UIL_OPENING.md) builds a
 bounded NES scene from the reviewed Genesis version, with movement, wall
 collisions, a following camera and a projected motel conversation. Its
 prepared starting state and captured graphics keep the scope explicit;
-general dialogue, combat and the rest of the game remain unrecovered.
+general dialogue and the rest of the game remain unrecovered.
 The [full-game recovery work](docs/SHADOWRUN_FULL_GAME_PROGRESS.md) adds tested
 UIL components and a separate animated walking probe. A full playable NES
 conversion, including sound, is still incomplete.
+The [playable field experiment](docs/SHADOWRUN_PLAYABLE_FIELD.md) adds persistent
+scene-2 movement beyond the captured graphics, a symbolic city display, captured
+pistol and armor equipment, targeting, firing and damage. Its ordinary walk-and-fire
+route matches sampled original player, target, ammo and HP effects; NPCs remain
+frozen and projectile handling is adapted. An assisted placement mode and a
+separate text and interactive city view support investigation of the large map.
+These are bounded prepared-state profiles, not a full Shadowrun conversion.
 The separate [Mario debugging study](docs/MARIO_MINUS_WORLD.md) reproduces the
 minus-world warp in the supplied cartridge and traces the incorrect table
 selection that produces it.
