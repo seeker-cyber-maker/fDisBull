@@ -113,6 +113,12 @@ full native CI matrix and hosted runs remain separate gates.
   SHA-256 above; installed-kit acceptance passed on Python 3.13.5.
 - Focused native backend suite on the rebuilt kit binary: **60 passed, 0
   failed** in 45.05s.
+- Fresh shared macOS prefix: Python 3.13.18, core/player 0.29.0, genuine
+  decoding, managed-analysis and Z3 dependencies; installed gate **818 passed,
+  0 failed, 0 errors, 0 skipped**. The 3,221-entry payload verified before and
+  after activation, the selector points at
+  `releases/0.29.0-c03dc4f`, and all three installed doctors restored native
+  state. The player passed a two-process save/resume smoke.
 - Installed-wheel smoke: `fdisbull --version` reports `0.29.0`; `capabilities`
   loads from the wheel.
 - 0.28.0's focused and full-suite results are historical evidence for its own
@@ -128,8 +134,8 @@ full native CI matrix and hosted runs remain separate gates.
 - The experimental full Miniplanets NES port (PR #56): it remains based on the
   0.27.0 baseline and needs an explicit rebase, private-ROM/toolchain
   qualification and its own full-suite pass.
-- Hosted CI and a published GitLab tag. A fresh shared macOS installation is
-  prepared locally only; it makes no publication claim.
+- Hosted CI and a published GitLab tag. The shared macOS installation is active
+  locally; it makes no publication claim.
 - The full hosted native CI matrix. The local backend rebuild and installed-kit
   acceptance passed, but the workflow matrix has not been rerun on hosted
   runners.
@@ -147,5 +153,6 @@ full native CI matrix and hosted runs remain separate gates.
    capability catalog and native resource files.
 4. Reuse the offline dependency bundle and rerun the full native offline kit
    build and installed acceptance in hosted native CI; the local build passed.
-5. Rebuild both native macOS backends and run installed-wheel acceptance.
+5. Rebuild both native macOS backends and repeat installed-wheel acceptance;
+   the active local prefix reuses the 0.28.0 backend by an APFS clone.
 6. Decide the tag (`v0.29.0`) only after the above pass on the same commit.

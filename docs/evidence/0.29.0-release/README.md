@@ -1,8 +1,8 @@
 # 0.29.0 release-candidate evidence
 
-Candidate source: `release/0.29.0` at `0844127c266280ed466f777c47af3470b129a8e1`
-(tree `f28134c0c2f47a3df290d11f1ce500a88d8177f8`), followed by evidence and
-artifact rebuild commits on the same branch. The rebuilt wheel has the same
+Candidate source: `release/0.29.0` at `c03dc4f9d4b5b9d0b374f6423e21962bfb0b07c9`,
+with the local code cut built at `f8dff0c` and later evidence-only commits on the
+same branch. The rebuilt wheel has the same
 196 entries and bytes as the earlier wheel; its archive hash differs because it
 was rebuilt. The source distribution has 712 tool-only entries. Hashes identify the local
 artifact build at the tooling cut; the final tag must rebuild both archives from
@@ -34,6 +34,17 @@ merged with `integration` at `b21b204` (clean merge).
 | `offline-kit-install.log` | Python 3.13.5 no-index install of the full kit |
 | `offline-kit-acceptance.json` | Installed-kit Z3, keyboard, memory, restore, player and restart acceptance |
 | `native-focused.log` | Focused native debugger, DOS exit/COM, keyboard and ZIP tests using the rebuilt backend |
+| `shared-prefix/staged-verification.json` | Fresh shared-prefix verifier result before activation |
+| `shared-prefix/installed-qualification.xml` | Installed-package pytest receipt, 818 tests |
+| `shared-prefix/installed-qualification.log` | Installed-package pytest log |
+| `shared-prefix/installed-player-smoke.json` | Two-process installed player save/resume receipt |
+| `shared-prefix/doctor-dos/receipt.json` | Installed DOSBox doctor |
+| `shared-prefix/doctor-dos-qemu/receipt.json` | Installed DOS-in-QEMU doctor |
+| `shared-prefix/doctor-wine/receipt.json` | Installed Wine-in-QEMU doctor |
+| `shared-prefix/doctor-global-dos/receipt.json` | Global-alias DOSBox doctor after activation |
+| `shared-prefix/activation-postflight.json` | Complete active-prefix verification |
+| `shared-prefix/post-activation.json` | Selector, aliases, runtime, installation and global doctor facts |
+| `shared-prefix/rollback-preflight.json` | Guarded rollback plan for 0.28.0 |
 
 ## Qualification
 
@@ -70,13 +81,27 @@ merged with `integration` at `b21b204` (clean merge).
   restore, post-restore input, player resume and project restart all true.
 - Focused native suite using the rebuilt backend: **60 passed, 0 failed** in
   45.05s across debugger, DOS guest exit/COM, keyboard and ZIP stream tests.
+- Fresh shared prefix `/Users/Shared/fDisBull/releases/0.29.0-c03dc4f`:
+  Python 3.13.18, core/player 0.29.0 with genuine decoding, managed-analysis and
+  Z3 dependencies. Installed-package gate: **818 passed, 0 failed, 0 errors,
+  0 skipped** in 119.56s. The complete 3,221-entry payload verified before and
+  after activation; `current` selects it and `INSTALLATION.json` records
+  `active_verified`.
+- Installed doctors: DOSBox, DOS-in-QEMU and Wine-in-QEMU all passed with
+  `native_state_restored: true`; the global DOSBox alias passed the same doctor.
+- Installed player: two fresh processes restored `hall`/`key` state and
+  preserved private checkpoint permissions. The global player alias loads.
+- Rollback preflight reports a ready guarded path to
+  `releases/0.28.0-d06bffb` with 3,195 entries; no rollback was applied.
 
 ## Limits
 
 This packet is local host evidence. The Linux result comes from a local Apple
 container, not hosted Linux CI. The full native kit was rebuilt and accepted
-locally, but the hosted native test matrix has not been rerun. This packet does
-not supply installed-wheel acceptance on a fresh shared prefix, a Git tag, a
-GitLab/GitHub release, or a publication claim. The macOS three failures and 23
-errors remain environment-specific and must be resolved or explicitly accepted
-by the remaining release gates.
+locally, but the hosted native test matrix has not been rerun. The shared
+prefix was installed and activated on this macOS host; its backend was inherited
+from the 0.28.0 prefix by an APFS clone. This packet does not supply a Git tag,
+a GitLab/GitHub release, or a publication claim, and it does not establish
+portability to another host. The macOS three failures and 23 errors remain
+environment-specific and must be resolved or explicitly accepted by the
+remaining release gates.

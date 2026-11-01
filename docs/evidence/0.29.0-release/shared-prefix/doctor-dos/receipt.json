@@ -1,0 +1,236 @@
+{
+  "format": "fdisbull-doctor-1",
+  "version": "0.29.0",
+  "backend": "dosbox",
+  "status": "passed",
+  "python": "3.13.18",
+  "platform": "darwin",
+  "architecture": "arm64",
+  "checks": [
+    {
+      "name": "genuine dependencies and native decoding",
+      "status": "passed"
+    },
+    {
+      "name": "backend inputs",
+      "status": "passed"
+    },
+    {
+      "name": "launch authored target",
+      "status": "passed"
+    },
+    {
+      "name": "execution breakpoint",
+      "status": "passed"
+    },
+    {
+      "name": "execution overlay",
+      "status": "passed"
+    },
+    {
+      "name": "native save",
+      "status": "passed"
+    },
+    {
+      "name": "screenshot",
+      "status": "passed"
+    },
+    {
+      "name": "click with coordinate frame",
+      "status": "passed"
+    },
+    {
+      "name": "data watch",
+      "status": "passed"
+    },
+    {
+      "name": "bounded instruction trace",
+      "status": "passed"
+    },
+    {
+      "name": "native restore",
+      "status": "passed"
+    },
+    {
+      "name": "offline temporal interpretation",
+      "status": "passed"
+    },
+    {
+      "name": "restart and export stored evidence",
+      "status": "passed"
+    }
+  ],
+  "native_state_restored": true,
+  "artifacts": {
+    "frame.png": {
+      "sha256": "235add48bc0ecb23d08eed87926af09b4ad8b52cc3be4e86b6614f62daae41f0",
+      "bytes": 4142
+    },
+    "click.png": {
+      "sha256": "a48d1e72c477828382d7b771f2ef9ed9ec55cb454a5edad070812fd3bbe3edb3",
+      "bytes": 4578
+    },
+    "trace.json": {
+      "sha256": "b67010b1f12a266b7f537d99a0cafabe861f2ef8d66022bffbfd0e079a4c4cf1",
+      "bytes": 106591
+    }
+  },
+  "scope": "Authored disposable target; finite debugger acceptance; no game compatibility or timing parity claim",
+  "dependencies": {
+    "capstone": {
+      "status": "available",
+      "version": "5.0.7"
+    },
+    "iced_x86": {
+      "status": "available",
+      "version": null
+    },
+    "lief": {
+      "status": "available",
+      "version": "1.0.0-d05b3499b"
+    },
+    "PIL": {
+      "status": "available",
+      "version": "12.3.0"
+    }
+  },
+  "input_sha256": {
+    "executable": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60"
+  },
+  "authored_target_sha256": "2b1c3760c9c83ddbc477f9a41575803faceb9e43b8425c894503b090c6573546",
+  "capabilities": {
+    "address_spaces": [
+      "segmented",
+      "linear",
+      "physical"
+    ],
+    "breakpoints": {
+      "data_access": "normal_core_real_mode_byte_addresses",
+      "memory_change": true,
+      "memory_change_address_spaces": [
+        "segmented",
+        "linear"
+      ]
+    },
+    "code_layers": "normal_core_real_mode_guarded_fetch_v1",
+    "debugger": true,
+    "input": {
+      "absolute_mouse": true,
+      "click_timing": "guest_emulated_milliseconds",
+      "coordinate_space": "guest_frame_pixels",
+      "driver": "builtin_dos_int33_only",
+      "keyboard": "ibm_pc_controller_us_ascii_v1",
+      "keyboard_held_leases": true
+    },
+    "lifecycle": {
+      "dos_guest_exit": true
+    },
+    "limits": {
+      "max_memory_read_bytes": 65536,
+      "max_message_bytes": 8388608,
+      "max_trace_events": 10000
+    },
+    "protocol_version": "1.0",
+    "register_edit": true,
+    "save_states": true,
+    "timing": {
+      "fast_forward": true,
+      "guest_clock": "PIC_Ticks_milliseconds"
+    },
+    "trace": {
+      "cpu": true
+    },
+    "video": {
+      "controlled_window": true,
+      "format": "png",
+      "headless": true,
+      "pixel_probe": true,
+      "screenshot": true,
+      "source": "last_completed_guest_frame"
+    }
+  },
+  "observation_contract": {
+    "format": "fdisbull-debug-semantics-1",
+    "backend": "dosbox",
+    "execution_breakpoint_stage": "before-instruction",
+    "watchpoint_stage": "after-access; instruction completion unknown",
+    "trace_registers_stage": "before-instruction",
+    "trace_completion": "fetch-observed; completion unknown",
+    "timing": "guest ticks supported",
+    "address_context": "real-mode CS plus linear address",
+    "guest_exit_reporting": "Requires lifecycle.dos_guest_exit; selected DOS PSP after process cleanup; distinct from debugger/session shutdown"
+  },
+  "temporal_promotion": {
+    "version": 2,
+    "parent": 1,
+    "artifact": "a2a88bbd713a4dad9874452a7c67c284",
+    "sha256": "2ff997651ccd2b09565c3cbfcc50bc21629448e04a093a38aa36371414899be3",
+    "analysis": {
+      "version": 2,
+      "decoded": 16,
+      "attempted": 19,
+      "data_processed": 2,
+      "new_facts": 41,
+      "pending": 0,
+      "pending_code": 0,
+      "pending_data": 0,
+      "pending_seeds": 0,
+      "pending_segment_scans": 0,
+      "entry_complete": true,
+      "stable": true,
+      "budget_exhausted": false,
+      "assumptions": [
+        "Static minimum allocation; no PSP memory fabricated.",
+        "Call fallthrough preserves DS/SS/BP/SP by conventional DOS C calling convention; general registers and ES are unknown.",
+        "Deferred relocation candidates may assume startup DS (or the unique observed DS); candidate provenance is retained.",
+        "Stability covers implemented static rules; unresolved indirect/dynamic code remains explicit."
+      ]
+    },
+    "temporal": {
+      "version": 2,
+      "temporal": true,
+      "active_layers": [
+        "1de473a7942d45819e3029d044cff325"
+      ],
+      "address": 65554,
+      "artifact": "a2a88bbd713a4dad9874452a7c67c284",
+      "artifact_sha256": "d3019f5755f406ac582eb8640eb78293d42ec90be426e5d011705e628290fbd7",
+      "edits": [],
+      "execution_proven": false,
+      "generation": 2,
+      "identity": {
+        "arch": "x86",
+        "backend": "dosbox",
+        "backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+        "bits": 16,
+        "captured_at": "2026-11-01T13:51:25.125405+00:00",
+        "cpu_mode": "real",
+        "delta": -32192,
+        "layer_hashes": {
+          "1de473a7942d45819e3029d044cff325": "782c5b7362553af78799c64bff7f5449e9c13b22fc05640de2fc0d49da11d156"
+        },
+        "project_base": "0x10000",
+        "project_cs": 4096,
+        "run": "1f16731fef4e4b83bd081f5aa6e615db",
+        "runtime_base": "0x8240",
+        "runtime_cs": 2084,
+        "runtime_inputs": {},
+        "source_sha256": "2b1c3760c9c83ddbc477f9a41575803faceb9e43b8425c894503b090c6573546",
+        "source_version": 1,
+        "source_version_sha256": "1ac1bb4ada2c5f37bbc933e1a1654e52c33a87ea1e9de3c844d25ab598adc71d"
+      },
+      "kind": "runtime-capture",
+      "normalized_sha256": "26a15c863949ed6b968a7152e91bcb62e3c5b1d8d2e7e0f2a80e5b331ad5f4fe",
+      "parent": 1,
+      "project_cs": 4096,
+      "raw_sha256": "26a15c863949ed6b968a7152e91bcb62e3c5b1d8d2e7e0f2a80e5b331ad5f4fe",
+      "relocations": [],
+      "run": "1f16731fef4e4b83bd081f5aa6e615db",
+      "scope": "Captured span normalized into project space; all other bytes inherited and unobserved",
+      "size": 4,
+      "source_version": 1,
+      "source_version_sha256": "1ac1bb4ada2c5f37bbc933e1a1654e52c33a87ea1e9de3c844d25ab598adc71d",
+      "view": "execute"
+    }
+  }
+}

@@ -1,32 +1,14 @@
 {
-  "format": "fdisbull-release-candidate-evidence-1",
-  "version": "0.29.0",
-  "branch": "release/0.29.0",
-  "commit": "0844127c266280ed466f777c47af3470b129a8e1",
-  "tree": "f28134c0c2f47a3df290d11f1ce500a88d8177f8",
-  "base_commit": "d06bffb6dce58de09021aaddfac36e46299ab4df",
-  "base_branch": "release/0.28.0",
-  "merged_integration_commit": "b21b204",
   "artifact_build_note": "Wheel and sdist hashes identify the local tooling-cut build; the final tag must rebuild from the final tree.",
   "artifacts": {
-    "wheel": {
-      "file": "fdisbull-0.29.0-py3-none-any.whl",
-      "sha256": "0fbebc6142ecdb686c924f3c3d6f8ad0f3ed20b1453f378a9c8156e2cca538f6",
-      "check_dist_entries": 196
-    },
-    "sdist": {
-      "file": "fdisbull-0.29.0.tar.gz",
-      "sha256": "c839319fd153d9c2f6933afd9662a0c837889d2dc9a2fb80310e2c51d0ae65e8",
-      "check_dist_entries": 712
-    },
     "offline_dependencies": {
-      "file": "fdisbull-0.29.0-linux-x86_64-dependencies.tar.gz",
-      "sha256": "e45801015b0d8e0dc7a6396997e01bd2b5c7dc01bfec0cf18f692fa83ac48ce6",
-      "fingerprint": "ea2a9ca41c8a06ffa2a0c3439b971c7952f1c5c0cd54df65159e732da6b588eb",
-      "target": "cp313-linux-x86_64",
       "extras": [
         "proof"
       ],
+      "file": "fdisbull-0.29.0-linux-x86_64-dependencies.tar.gz",
+      "fingerprint": "ea2a9ca41c8a06ffa2a0c3439b971c7952f1c5c0cd54df65159e732da6b588eb",
+      "sha256": "e45801015b0d8e0dc7a6396997e01bd2b5c7dc01bfec0cf18f692fa83ac48ce6",
+      "target": "cp313-linux-x86_64",
       "wheels": {
         "capstone": "5.0.9",
         "iced-x86": "1.21.0",
@@ -36,83 +18,141 @@
       }
     },
     "offline_kit": {
-      "file": "fdisbull-0.29.0-linux-x86_64-offline.tar.gz",
-      "sha256": "b6f43aa6933c8e4e12b643f1dead105d96e5ac0a0bb6c9671032c31fffd97a3f",
-      "bytes": 103013282,
-      "source_companion": "fdisbull-0.29.0-linux-x86_64-source-companion.tar",
-      "source_companion_sha256": "f9560466383cbb4a8e1096434889d7009ae9fcca4b0d2511c25f4d61ea95d118",
-      "source_companion_bytes": 106905600,
       "backend_sha256": "2db1c812d8af64bb5c71f5a1cc1466511ac6212a919cd3e70b82ef1b8c7b3471",
+      "bytes": 103013282,
+      "file": "fdisbull-0.29.0-linux-x86_64-offline.tar.gz",
       "patch_sha256": "9146ef4c61c28e1091955cfb5fa611b37633cc71df796fa4c1a603276b862c3b",
-      "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
-      "source_commit": "f8dff0ce606cb0ca738c10bc2b8d649008bf8fba",
       "python": "3.13.5",
+      "sha256": "b6f43aa6933c8e4e12b643f1dead105d96e5ac0a0bb6c9671032c31fffd97a3f",
+      "source_commit": "f8dff0ce606cb0ca738c10bc2b8d649008bf8fba",
+      "source_companion": "fdisbull-0.29.0-linux-x86_64-source-companion.tar",
+      "source_companion_bytes": 106905600,
+      "source_companion_sha256": "f9560466383cbb4a8e1096434889d7009ae9fcca4b0d2511c25f4d61ea95d118",
+      "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
       "wheels": 7
+    },
+    "sdist": {
+      "check_dist_entries": 712,
+      "file": "fdisbull-0.29.0.tar.gz",
+      "sha256": "c839319fd153d9c2f6933afd9662a0c837889d2dc9a2fb80310e2c51d0ae65e8"
+    },
+    "wheel": {
+      "check_dist_entries": 196,
+      "file": "fdisbull-0.29.0-py3-none-any.whl",
+      "sha256": "0fbebc6142ecdb686c924f3c3d6f8ad0f3ed20b1453f378a9c8156e2cca538f6"
     }
   },
+  "base_branch": "release/0.28.0",
+  "base_commit": "d06bffb6dce58de09021aaddfac36e46299ab4df",
+  "branch": "release/0.29.0",
+  "claims_boundary": "Local host evidence only. The three failures and 23 errors are environment-specific macOS results, not Linux CI acceptance. The full native kit was rebuilt and accepted locally; the fresh shared prefix was installed and activated on this macOS host. The hosted native CI matrix, tag and publication have not been produced.",
+  "commit": "c03dc4f9d4b5b9d0b374f6423e21962bfb0b07c9",
+  "format": "fdisbull-release-candidate-evidence-1",
+  "merged_integration_commit": "b21b204",
+  "not_included": [
+    "KQ1/AGI stacked draft work",
+    "reversible macOS sessions",
+    "Miniplanets NES port (PR #56)",
+    "CPUInfo replica application",
+    "Linux hosted CI and native macOS backend rebuilds",
+    "hosted native CI matrix rerun"
+  ],
+  "publication": {
+    "published": false,
+    "pushed": false,
+    "tag": null
+  },
   "qualification": {
+    "base_three_failures_reproduced": true,
     "focused_world_model": {
-      "passed": 8,
-      "failed": 0
-    },
-    "full_macos": {
-      "passed": 2596,
-      "skipped": 127,
-      "failed": 3,
-      "errors": 23,
-      "seconds": 108.57,
-      "environment": "z3-solver and managed extras available"
+      "failed": 0,
+      "passed": 8
     },
     "full_linux_container": {
-      "passed": 2600,
-      "skipped": 156,
-      "failed": 0,
-      "errors": 0,
-      "seconds": 251.48,
       "container": "fdisbull-linux",
+      "errors": 0,
+      "failed": 0,
+      "gcc": "14.2.0",
       "image": "docker.io/library/python:3.13-slim",
-      "platform": "linux/amd64 via Rosetta",
-      "os": "Debian GNU/Linux 13",
-      "python": "3.13.18",
       "node": "20.19.2",
-      "gcc": "14.2.0"
+      "os": "Debian GNU/Linux 13",
+      "passed": 2600,
+      "platform": "linux/amd64 via Rosetta",
+      "python": "3.13.18",
+      "seconds": 251.48,
+      "skipped": 156
     },
-    "base_three_failures_reproduced": true,
+    "full_macos": {
+      "environment": "z3-solver and managed extras available",
+      "errors": 23,
+      "failed": 3,
+      "passed": 2596,
+      "seconds": 108.57,
+      "skipped": 127
+    },
     "installed_wheel_smoke": {
-      "version": "0.29.0",
       "capabilities_loaded": true,
-      "offline_dependency_install": true
+      "offline_dependency_install": true,
+      "version": "0.29.0"
+    },
+    "native_focused": {
+      "backend": "fdisbull-0.29.0-linux-x86_64-offline/bin/dosbox",
+      "failed": 0,
+      "passed": 60,
+      "seconds": 45.05,
+      "skipped": 0
     },
     "offline_dependencies": {
-      "fresh_venv_install": true,
       "decoder_imports": true,
-      "z3_equivalence_and_counterexample": true,
-      "reuse_status": "reuse",
-      "reuse_bytes_identical": true,
+      "fresh_venv_install": true,
       "kit_dependency_merge_smoke": {
-        "wheel_count": 7,
-        "duplicate_wheels": false
-      }
+        "duplicate_wheels": false,
+        "wheel_count": 7
+      },
+      "reuse_bytes_identical": true,
+      "reuse_status": "reuse",
+      "z3_equivalence_and_counterexample": true
     },
     "offline_kit_acceptance": {
       "installed": true,
-      "package_version": "0.29.0",
-      "player_version": "0.29.0",
-      "z3_equivalence_and_counterexample": true,
       "keyboard": true,
       "memory": true,
       "native_restore": true,
-      "post_restore_input": true,
+      "package_version": "0.29.0",
       "player_live_resume": true,
+      "player_version": "0.29.0",
+      "post_restore_input": true,
       "project_restart": true,
-      "screenshot_recorded": true
+      "screenshot_recorded": true,
+      "z3_equivalence_and_counterexample": true
     },
-    "native_focused": {
-      "passed": 60,
-      "failed": 0,
-      "skipped": 0,
-      "seconds": 45.05,
-      "backend": "fdisbull-0.29.0-linux-x86_64-offline/bin/dosbox"
+    "shared_prefix": {
+      "activated": true,
+      "active_verified": true,
+      "doctors": {
+        "dosbox": "passed",
+        "dosbox_qemu": "passed",
+        "global_dosbox": "passed",
+        "native_state_restored": true,
+        "wine_qemu": "passed"
+      },
+      "installation": "/Users/Shared/fDisBull/releases/0.29.0-c03dc4f",
+      "installed_gate": {
+        "errors": 0,
+        "failed": 0,
+        "passed": 818,
+        "seconds": 119.56,
+        "skipped": 0,
+        "tests": 818
+      },
+      "payload_entries": 3221,
+      "player_smoke": {
+        "new_processes": 2,
+        "private_permissions": true,
+        "restore": "restored"
+      },
+      "python": "3.13.18",
+      "rollback": "ready; not applied"
     }
   },
   "scope": [
@@ -120,18 +160,6 @@
     "Civilization I read-only world snapshot example",
     "Z world language and Zork I room/exit map"
   ],
-  "not_included": [
-    "KQ1/AGI stacked draft work",
-    "reversible macOS sessions",
-    "Miniplanets NES port (PR #56)",
-    "CPUInfo replica application",
-    "Linux hosted CI, native backend rebuilds and shared-prefix promotion",
-    "hosted native CI matrix rerun"
-  ],
-  "publication": {
-    "tag": null,
-    "published": false,
-    "pushed": false
-  },
-  "claims_boundary": "Local host evidence only. The three failures and 23 errors are environment-specific macOS results, not Linux CI acceptance. The full native kit was rebuilt and accepted locally; the hosted native CI matrix has not been rerun."
+  "tree": "f28134c0c2f47a3df290d11f1ce500a88d8177f8",
+  "version": "0.29.0"
 }
