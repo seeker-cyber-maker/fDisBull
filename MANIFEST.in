@@ -1,7 +1,7 @@
 include README.md AGENTS.md CLAUDE.md pyproject.toml MANIFEST.in player/pyproject.toml
 include player/fdisbull_player/*.py
 recursive-include src/fdisbull *.py *.c *.sh
-recursive-include src/fdisbull/game_sources *.c *.s *.S *.cfg
+recursive-include src/fdisbull/game_sources *.c *.m *.s *.S *.cfg
 include src/fdisbull/game_sources/LICENSE.txt
 recursive-include src/fdisbull/ghidra_scripts *.java
 recursive-include src/fdisbull/data *.json *.txt
@@ -19,6 +19,7 @@ include docs/evidence/shadowrun-ai-2026-11-01/skill.json
 include docs/evidence/shadowrun-ai-2026-11-01/verification.json
 include docs/evidence/shadowrun-ai-2026-11-01/suite.json
 include docs/evidence/shadowrun-ai-2026-11-01/z.json
+include docs/evidence/shadowrun-macos-2026-11-01/verification.json
 include docs/CLOUD-0.27.0-MANIFEST.json
 prune docs/uil-rfcs/0001
 include docs/uil-rfcs/0001/README.md

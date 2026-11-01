@@ -23,3 +23,16 @@ def test_projectless_profile_discovery_preserves_assisted_scope():
     assert set(arena['presets']) == {'stationary', 'moving'}
     assert 'assisted' in ' '.join(arena['limits'])
     assert arena['model_entry'] == 'shadowrun_arena_frame'
+
+
+@pytest.mark.parametrize('options,reason', [
+    ({'target': 'unknown'}, 'target'),
+    ({'target': 'nes'}, 'requires --cc65-root'),
+    ({'target': 'macos-arm64', 'cc65_root': 'irrelevant'}, 'applies to the NES'),
+])
+def test_invalid_target_options_refuse_before_output(tmp_path, options, reason):
+    output = tmp_path / 'result'
+    with pytest.raises(ValueError, match=reason):
+        build('nonexistent-manifest', rom_path='nonexistent-rom',
+              capture='nonexistent-capture', output=output, **options)
+    assert not output.exists()

@@ -234,7 +234,7 @@ METHODS = {
     'shadowrun-systems': 'List recovered Shadowrun procedural components and whole-game gaps; no parameters',
     'shadowrun-play-build': 'Build the bounded scene-2 NES play profile; path,rom_path,capture,cc65_root,output',
     'shadowrun-ai-profiles': 'List source-bound Shadowrun actor/combat profiles and their limits',
-    'shadowrun-ai-build': 'Build a private Shadowrun AI NES profile; path,rom_path,capture,cc65_root,output,profile,preset',
+    'shadowrun-ai-build': 'Build a private Shadowrun AI NES or native macOS ARM64 profile; path,rom_path,capture,output,[cc65_root,profile,preset,target]',
     'shadowrun-city-export': 'Export a private investigator city snapshot as JSON, text and interactive HTML; rom_path,snapshot,output',
     'shadowrun-system-export': 'Export one registered source-bound component as UIL; rom_path,system,output',
     'shadowrun-system-inspect': 'Validate a private Shadowrun component bundle; path',
@@ -877,9 +877,10 @@ def parser():
     sub.add_parser('shadowrun-ai-profiles',help=METHODS['shadowrun-ai-profiles'])
     c=sub.add_parser('shadowrun-ai-build',help=METHODS['shadowrun-ai-build'])
     c.add_argument('path');c.add_argument('--rom',dest='rom_path',required=True);c.add_argument('--capture',required=True)
-    c.add_argument('--cc65-root',required=True);c.add_argument('--output',required=True)
+    c.add_argument('--cc65-root');c.add_argument('--output',required=True)
     c.add_argument('--profile',choices=['assisted-arena'],default='assisted-arena')
     c.add_argument('--preset',choices=['stationary','moving'],default='stationary')
+    c.add_argument('--target',choices=['nes','macos-arm64'],default='nes')
     c=sub.add_parser('shadowrun-city-export',help=METHODS['shadowrun-city-export'])
     c.add_argument('rom_path');c.add_argument('--snapshot',required=True);c.add_argument('--output',required=True)
     c.add_argument('--profile',choices=['static','assisted-arena'],default='static')

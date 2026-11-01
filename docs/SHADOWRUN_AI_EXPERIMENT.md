@@ -1,5 +1,10 @@
 # Shadowrun Pac-Man-like actor stage
 
+This document records the preserved NES experiment. The user selected
+[native macOS ARM64](SHADOWRUN_MACOS_ARM64.md) as the active output; the
+[NES research handoff](GENESIS_NES_RESEARCH_HANDOFF.md) keeps its results and
+resume boundaries available.
+
 This source-bound experiment adds moving actors and an armed actor's combat
 loop to a prepared Shadowrun NES scene. “Pac-Man-like” names the intermediate
 analysis stage: restoring positions, movement, placed facts and mechanical

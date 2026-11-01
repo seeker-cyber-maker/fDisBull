@@ -68,6 +68,10 @@ artifact reference. Prefer the index and one selected guide for routine work;
 use the output retrieval commands below when a complete export is needed.
 The analysis-approach guide helps choose what to investigate next, including
 actor, item, interaction and text-projection dependencies.
+For the preserved Genesis-to-NES research and its native ARM64 successor, see
+[the handoff](GENESIS_NES_RESEARCH_HANDOFF.md) and
+[native Shadowrun output](SHADOWRUN_MACOS_ARM64.md). Select
+`shadowrun-ai-build --target macos-arm64` for the same bounded model on a Mac.
 The semantic-contract guide connects intent, effects, time and projection loss;
 the formats/media guide covers input mapping and qualified media reduction.
 

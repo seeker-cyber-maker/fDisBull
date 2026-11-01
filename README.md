@@ -315,6 +315,11 @@ burst fire, player damage and recovery. Original captures, the shared UIL model
 and native NES execution are compared separately. The test presets use a
 source-constructed armed actor; ordinary encounter reachability, unrestricted
 AI, original graphics/audio and normal-speed play remain unverified.
+The active [macOS ARM64 output](docs/SHADOWRUN_MACOS_ARM64.md) compiles the same
+Genesis-bound UIL into a local window with keyboard controls. The NES route is
+preserved as [research with a handoff](docs/GENESIS_NES_RESEARCH_HANDOFF.md),
+possible for bounded slices but not recommended as the primary Genesis target.
+Native speed and source coverage are verified separately.
 The separate [Mario debugging study](docs/MARIO_MINUS_WORLD.md) reproduces the
 minus-world warp in the supplied cartridge and traces the incorrect table
 selection that produces it.
