@@ -1,8 +1,9 @@
 # 0.29.0 release candidate
 
-Status: local release candidate on `release/0.29.0`. Not published, not tagged.
-CI is not configured on the private GitLab copy; publication still requires the
-Linux and native gates below.
+Status: published as GitLab tag `v0.29.0` and GitLab Release on 2026-11-01 at
+this commit. Hosted native CI and the macOS backend rebuild remain pending; this
+publication does not claim them. CI is not configured on the private GitLab
+copy; the Linux and native gates below remain open.
 
 This candidate is `release/0.28.0` merged with the current `integration` line.
 It therefore carries the unpublished 0.28.0 candidate scope and adds the two
@@ -158,4 +159,7 @@ full native CI matrix and hosted runs remain separate gates.
 6. Install and activate the fresh local prefix, then run
    `python scripts/check_local_install.py --version 0.29.0 --commit <commit>`;
    a release is not locally complete until that check passes.
-7. Decide the tag (`v0.29.0`) only after the above pass on the same commit.
+7. `v0.29.0` was tagged and published at user direction on 2026-11-01; gates
+   1-5 remain open and are explicitly not claimed by this publication. The tag
+   fixes the source commit; package artifacts are the previously verified
+   build outputs.
