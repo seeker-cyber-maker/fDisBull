@@ -108,6 +108,31 @@ REQUIRED_TEST_HELPERS |= {
     "tests/test_psg_il.py",
 }
 REQUIRED_CONSOLE_RESOURCES |= {"nes_multicart.py", "game_sources/genesis_game_copy.s"}
+REQUIRED_CONSOLE_RESOURCES |= {
+    "mario_minus_world.py", "udl_shadowrun.py", "udc_nes_shadowrun.py",
+    "shadowrun_camera.py", "shadowrun_interaction.py", "shadowrun_scene_assets.py",
+    "shadowrun_replay.py",
+} | {"game_sources/shadowrun_" + name + ".c" for name in
+     ("input", "heading", "direction", "move", "player_move", "player_walk",
+      "collision", "collision_resolve", "walk", "opening", "camera", "interaction",
+      "nes_opening", "nes_atlas", "opening_camera", "opening_stoker", "player_fallback")}
+REQUIRED_TEST_HELPERS |= {
+    "scripts/check_mario_minus_world.py", "scripts/capture_genesis_scene.py",
+    "scripts/check_shadowrun_interaction.py", "scripts/check_shadowrun_camera.py",
+    "scripts/check_shadowrun_camera_frames.py", "scripts/check_shadowrun_player_cases.py",
+    "scripts/check_shadowrun_opening_route.py", "tests/test_shadowrun_camera.py",
+    "tests/test_mario_minus_world.py", "tests/test_shadowrun_movement.py",
+    "tests/test_shadowrun_scene_assets.py", "tests/test_shadowrun_interaction.py",
+    "tests/test_udl_shadowrun.py",
+    "tests/test_shadowrun_replay.py",
+    "tests/test_shadowrun_route_check.py",
+}
+REQUIRED_SOURCE_EVIDENCE |= {
+    "docs/MARIO_MINUS_WORLD.md", "docs/SHADOWRUN_INTERACTION.md",
+    "docs/SHADOWRUN_SOURCE_RESEARCH.md", "docs/SHADOWRUN_UIL_OPENING.md",
+    "docs/evidence/mario-minus-world-2026-11-01/verification.json",
+} | {"docs/evidence/shadowrun-uil-2026-11-01/" + name + ".json" for name in
+     ("verification", "camera", "assets", "interaction", "source-research")}
 REQUIRED_TEST_HELPERS |= {
     "scripts/check_genesis_copy.py", "scripts/check_genesis_performance.py",
     "scripts/check_genesis_stage_performance.py", "scripts/check_genesis_seeded_states.py",

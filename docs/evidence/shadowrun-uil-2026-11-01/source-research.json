@@ -1,0 +1,129 @@
+{
+  "schema": "fdisbull-shadowrun-source-research-evidence-v1",
+  "status": "research-only; original-runtime qualification pending",
+  "target": {
+    "console": "Sega Genesis / Mega Drive",
+    "label": "Shadow Run (U) [!]",
+    "size_bytes": 2097152,
+    "sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+    "sha1": "A06A281D39E845BFF446A541B2FF48E1D93143C2",
+    "crc32": "FBB92909",
+    "rom_header": {
+      "signature": "SEGA",
+      "console": "SEGA GENESIS",
+      "copyright": "(C)SEGA 1994.JAN",
+      "domestic_title": "SHADOWRUN",
+      "overseas_title": "SHADOWRUN",
+      "product": "GM MK-1352 -00",
+      "region": "U",
+      "rom_range_start": 0,
+      "rom_range_end_inclusive": 2097151,
+      "ram_range_start": 16711680,
+      "ram_range_end_inclusive": 16777215,
+      "stored_checksum": "0x6BAF",
+      "computed_checksum": "0x6BAF",
+      "checksum_range": "0x200..0x1FFFFF",
+      "checksum_matches": true
+    },
+    "authenticity_and_rights": "Hash/header/checksum establish byte identity and structural consistency only; they do not establish publisher provenance, ownership, or reuse rights."
+  },
+  "identity_comparison": {
+    "matched_known_canonical_identity": true,
+    "comparison_basis": "The exact SHA-1 and CRC-32 match the canonical USA ROM identity listed by shadowrun-defragged README at its inspected revision; the independently computed local SHA-256 is recorded above.",
+    "canonical_sha1": "A06A281D39E845BFF446A541B2FF48E1D93143C2",
+    "canonical_crc32": "FBB92909",
+    "known_canonical_source": "https://github.com/benfoxworthy/shadowrun-defragged/blob/main/README.md",
+    "caveat": "This is a byte-identity comparison to that project\u2019s declared canonical source, not proof of authenticity or rights."
+  },
+  "local_structure_checks": {
+    "scene_table_entry_offset": "0x323A",
+    "scene_table_entry_2_value": "0x172C80",
+    "scene2_profile_collision_table_pointer_offset": "0x172CA6",
+    "scene2_profile_collision_table_pointer": "0x172DAA",
+    "scene2_profile_event_table_pointer_offset": "0x172CCE",
+    "scene2_profile_event_table_pointer": "0x172CDC",
+    "scene2_record91_offset": "0x173138",
+    "scene2_record91_bounds": {
+      "x_min": "0x03C0",
+      "x_max": "0x03DF",
+      "y_min": "0x0280",
+      "y_max": "0x029F"
+    },
+    "scene2_record91_collision_value": "0x00C2",
+    "scene2_record92_offset": "0x173142",
+    "scene2_record92_collision_value": "0x00CB",
+    "scene2_record89_offset": "0x173124",
+    "scene2_record90_offset": "0x17312E",
+    "scene2_record89_90_collision_value": "0x00C0",
+    "scene2_event_table_row0_offset": "0x172CDC",
+    "scene2_event_table_row0_value": "0x14"
+  },
+  "reconstruction_source": {
+    "repository": "adamaxis/srx",
+    "commit": "bfa3908a26952cf0fbdb682dab1ee1ec5ba19e3b",
+    "readme_url": "https://github.com/adamaxis/srx/blob/bfa3908a26952cf0fbdb682dab1ee1ec5ba19e3b/README.md",
+    "license_status": "No license file appears in the pinned repository root; the GitHub license endpoint returned 404. Do not assume the code or derived assets are licensed for reuse.",
+    "no_rom_or_asset_copied": true,
+    "text_documents_sha256": {
+      "graphics-resource-inventory.tsv": "e0d51e2acb0ee68f678fba1131254d79fecc6f497248b5ff87a3078e63f33a5f",
+      "resource-catalog.tsv": "2e73cdbf6777bf9ff674911a263b1616ebec0fee2f5958bdac3030e23ffb7382",
+      "rom-native-audit.md": "ce045a0c71bf5c923b4c220b68c414adf66c1321339d7d6f2b06dca77f7e7169",
+      "screen-system-audit.md": "169579b5421d8e10e6c667fb64b4d6393d1f5a6994c852651e1c661fe0ac821d",
+      "field-map-scene-profiles.tsv": "c965dab1bc6d582d9378640ab6a7dd1099195477daecfd34aa6714edd1f23bb6",
+      "field-map-trigger-profile.md": "82c262cdf8be94996b6b3ec2837763567619a25d37f6cd367f2b4c2924e68caa",
+      "field-map-trigger-records.tsv": "83c5e92ab67d4028240a29bb48ef9ac80ab78451811a5120506dca58a02e16cb",
+      "rom-conversion-audit.tsv": "0316a50b22152cf0241676aedacf895bb38b54b5d61c1e69b181c6028d21bcfb",
+      "reconstruction-exploratory-analysis.md": "a0045403fea38316ca3903a98308254ac2c8cc9dae42702636913d11d04b2f9d",
+      "architecture-map.md": "12d4940f82f9b15052bda0ff46ae476ae301e50a39f9914aa51edbd6a4be0acf"
+    }
+  },
+  "opening_path": {
+    "source_reported": "Title/start options -> Choose Archetype -> timed new-game opening -> field scene ID 2. The three Joshua choices in the source audit are Samurai, Decker, and Gator Shaman; choosing one copies its 0x100-byte template into live record 0xFF0100 via source routine 0x42B0. The timed opening tables/routines are identified as 0x5ADD0/0x5ADF0 and 0x59C5E/0x59D7C/0x5AA96/0x5AD1A.",
+    "first_field_scene_numeric_id": 2,
+    "place_name_qualification": "The pinned source project calls this the Redmond Barrens startup map by comparing scene-2 trigger coordinates with a separate public map; the ROM stores numeric IDs and does not contain this place name in the scene table.",
+    "startup_encounter_source_claim": "The source audit says the completed opening leaves FFE18B set and the post-warmup continuation opens Stoker\u2019s arrival dialogue at scene-2 record 91. This is a source/conversion-project claim; this task did not independently observe the original cartridge\u2019s live sequence.",
+    "native_scope": "No original-ROM runtime probe or full original-versus-reconstruction visual comparison was performed by this research pass; root owns the original native probe."
+  },
+  "scene_resources": {
+    "numeric_scene_id": 2,
+    "scene_table_entry_offset": "0x323A",
+    "scene_profile_address": "0x172C80",
+    "collision_table_pointer_address": "0x172CA6",
+    "collision_table_address": "0x172DAA",
+    "event_table_pointer_address": "0x172CCE",
+    "event_table_address": "0x172CDC",
+    "profile_evidence": "Local reads of the selected ROM resolved these pointer values; they match the pinned source profile table.",
+    "source_extraction_paths": [
+      "decompilation/assets/records/field/scenes/scene-02/terrain-layer-a.bin",
+      "decompilation/assets/records/field/scenes/scene-02/terrain-layer-b.bin",
+      "decompilation/assets/records/field/scenes/scene-02/terrain-stream.bin",
+      "decompilation/assets/records/field/scenes/scene-02/descriptor.bin",
+      "decompilation/assets/records/field/scenes/scene-02/terrain-collision-rectangles.bin",
+      "decompilation/assets/records/field/scenes/scene-02/event-table.bin"
+    ],
+    "source_decoder_boundaries": [
+      "scene-profile table at 0x3232 selects records",
+      "field scene entry/load paths include 0x03074/0x03084 and 0x0313A",
+      "terrain stream decoding references 0x01610; collision record iteration references 0x0EE10"
+    ],
+    "source_first_interactions": {
+      "record_91": "0x00C2 at 0x173138; source project assigns the Stoker arrival dialogue override",
+      "record_92": "0x00CB at 0x173142; source project assigns the Ares service override",
+      "records_89_90": "0x00C0 at 0x173124 and 0x17312E; row 0 at 0x172CDC selects numeric scene 0x14"
+    },
+    "resource_composition": "The inventory describes scene terrain as separately decoded layers, stream/descriptor/collision/event data and actor assets. It is not one full-screen image. The intro is likewise assembled from background planes, sprite lists, overlays and timed SAT groups."
+  },
+  "movement_source_crosswalk": {
+    "0x195C_and_0x19D2": "decompilation/ghidra_conversion/src/field/field_movement_input_conversion.cpp; normalized D-pad heading decode; partial conversion.",
+    "0x0BABC": "decompilation/ghidra_conversion/src/field/field_movement_input_conversion.cpp; heading to eight-way ordinal; partial conversion.",
+    "0xB530": "gameplay/scripts/actor_ai.lua approach_heading plus typed reference helper in decompilation/ghidra_conversion/src/entities/entity_coordinate_conversion.cpp; source step advances heading by 0x0800, snaps within one step; NPC collision route remains open.",
+    "reuse_license": "No root LICENSE found at pinned commit; GitHub license endpoint 404. No assumption of reuse permission."
+  },
+  "claims_and_limits": {
+    "locally_observed": "Exact file length, SHA-256/SHA-1/CRC-32, parsed Genesis header/checksum, and the numeric pointers/record values listed above.",
+    "source_reported": "Opening progression, scene-2 place-name crosswalk, source function labels, sprite/map extract paths, and documented input interaction routes.",
+    "inference": "Scene 2 is the best initial interactive segment to target for an opening-playable-area reconstruction, subject to native observation and a source-faithful visual/resource audit.",
+    "unknown": "Publisher authenticity/rights; whether the pinned third-party reconstruction is complete/currently behaviorally faithful; exact scene-entry visual/timing on original hardware; any physical Genesis behavior."
+  },
+  "source_research_note": "docs/SHADOWRUN_SOURCE_RESEARCH.md"
+}

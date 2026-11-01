@@ -294,6 +294,14 @@ The [NES multicart prototype](docs/NES_MULTICART.md) packages two compatible
 generated NES games behind a bank-switching menu. The accompanying analysis
 examines the supplied mapper-227 “1200-in-1” and mapper-66 Mario/Duck Hunt
 cartridges; the advertised number is not a verified count of distinct games.
+The [Shadowrun opening experiment](docs/SHADOWRUN_UIL_OPENING.md) builds a
+bounded NES scene from the reviewed Genesis version, with movement, wall
+collisions, a following camera and a projected motel conversation. Its
+prepared starting state and captured graphics keep the scope explicit;
+general dialogue, combat and the rest of the game remain unrecovered.
+The separate [Mario debugging study](docs/MARIO_MINUS_WORLD.md) reproduces the
+minus-world warp in the supplied cartridge and traces the incorrect table
+selection that produces it.
 The earlier [flat first-level experiment](docs/MINIPLANETS_NES_LEVEL.md) remains
 available with its separate contract and results.
 

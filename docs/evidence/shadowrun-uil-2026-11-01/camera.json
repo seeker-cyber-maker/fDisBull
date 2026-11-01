@@ -1,0 +1,37 @@
+{
+  "format": "fdisbull-shadowrun-camera-evidence-1",
+  "date": "2026-11-01",
+  "source_sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+  "program_sha256": "21cb2e510ed5bc6ab7e851ff9618c81f679472f4e2feb2b70ae310b2cf37c176",
+  "controlled_native_cases": 320,
+  "controlled_native_mismatches": 0,
+  "native_receipt_sha256": "927d02a69ee016424b4a2cd65e153c6ef128a971aeeaca54b3f46016f5154f4d",
+  "frame_comparisons": [
+    {
+      "receipt_sha256": "6f42850e1fbb3244b50f1a38a9119db2c0184e8435eb97fe11342a42fd56cf8b",
+      "cases": 61,
+      "mismatches": 0,
+      "sparse_gaps_not_compared": 1
+    },
+    {
+      "receipt_sha256": "238409f04ec8451234332d56b5d073810694e428fde3702c7050ae27d6509c7b",
+      "cases": 61,
+      "mismatches": 0,
+      "sparse_gaps_not_compared": 1
+    },
+    {
+      "receipt_sha256": "6f02db8db865463c4e97f03268cc30a78b186094a150a9484b96b141e30626fe",
+      "cases": 39,
+      "mismatches": 0,
+      "sparse_gaps_not_compared": 2
+    }
+  ],
+  "authoring_sha256": "91a2cc8152d9f57695e7d20e6206bba2ebac55b1d7f32040a9da322bbfed4aa0",
+  "method": "Compare source camera after committed current player state and current read-only freeze/mode/bounds inputs, retaining prior camera/scroll/hysteresis. Controlled native cases stay inside one stream cell; frame comparisons include actual original streaming calls.",
+  "limitations": [
+    "controlled component cases are not ordinary gameplay reachability",
+    "source scripted camera mode3 refused",
+    "Genesis tile-stream helper effects replaced by separately qualified target atlas",
+    "event request must propagate same-tick busy freeze before camera call"
+  ]
+}

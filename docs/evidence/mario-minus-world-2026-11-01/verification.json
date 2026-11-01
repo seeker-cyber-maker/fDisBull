@@ -1,0 +1,116 @@
+{
+  "format": "fdisbull-mario-minus-world-evidence-1",
+  "source_hashes": {
+    "src/fdisbull/mario_minus_world.py": "5b0d67aa34a222e8c9f3e4d1ff46b105afe86a52bb5563e069b05d38be1c247b",
+    "scripts/check_mario_minus_world.py": "0969103370553b3d1f6569f54bc3a8fb7a31a60a66be756c7edd6ee5b84c0241",
+    "tests/test_mario_minus_world.py": "13b95095e60d4f1bb4e869454544729238e7f59f353d29f9618f2d0b5605e59a"
+  },
+  "diagnostic": {
+    "format": "fdisbull-mario-minus-world-diagnostic-1",
+    "status": "passed",
+    "source": {
+      "source_sha256": "23ec3f6bb68f8774070ce936869e7f62ac3490449f58e62d6ed33a0fb385d456",
+      "mapper": 66,
+      "mapped_prg_bank": 0,
+      "scope": "exact ROM and selected code windows; not publisher authenticity"
+    },
+    "core_sha256": "5d1db7d31c0dc810ad44888d7a00ea1b77897f9d0d883ec81954694cbfb6fc60",
+    "observer_neutral": true,
+    "conditions": {
+      "checkpoint": "assisted level/page seed",
+      "position": "assisted player placement",
+      "stale_control": "experimental patch to 1",
+      "normal_control": "game produced 4",
+      "world_and_area": "not patched"
+    },
+    "native": {
+      "stale_world_index": 35,
+      "stale_table_value": 36,
+      "stale_area_pointer": 1,
+      "normal_world_index": 3,
+      "normal_area_pointer": 34,
+      "frame": 900
+    },
+    "natural_upstream": {
+      "control_write_pc": 47026,
+      "old": 0,
+      "value": 1,
+      "frame": 1048,
+      "control_patched": false,
+      "outcome": "normal exit pipe; wall clip not demonstrated"
+    },
+    "connected_clip": {
+      "assistance": "level/page checkpoint and large-Mario seed only",
+      "no_subsequent_state_patches": true,
+      "control_write_frame": 1048,
+      "wall_frame": 1230,
+      "pipe_world_write_frame": 1421,
+      "world_display_frame": 1500,
+      "underwater_frame": 1900,
+      "observer_neutral": true
+    },
+    "assisted_underwater_return": {
+      "checkpoint_page": 11,
+      "extra_player_position_patch": true,
+      "exit_engine_frame": 1919,
+      "reinitialize_frame": 1971,
+      "world_index": 35,
+      "area_number": 0,
+      "area_pointer": 1,
+      "returned_page": 0,
+      "observer_neutral": true,
+      "scope": "one return; not a proof of infinite repetition or unassisted traversal"
+    },
+    "observed_frames": {
+      "diagnostic_world_minus_one": 1000,
+      "diagnostic_underwater": 1250
+    },
+    "limitations": [
+      "not an unassisted full-game run",
+      "one assisted return observed; infinite repetition not proven"
+    ]
+  },
+  "native_read_write_chain": [
+    {
+      "pc": "df22",
+      "read": "87f6",
+      "value": "24",
+      "x": "04"
+    },
+    {
+      "pc": "df26",
+      "write": "075f",
+      "value": "23"
+    },
+    {
+      "pc": "df29",
+      "read": "9cd7",
+      "value": "33"
+    },
+    {
+      "pc": "df2c",
+      "read": "9cef",
+      "value": "01"
+    },
+    {
+      "pc": "df2f",
+      "write": "0750",
+      "value": "01"
+    }
+  ],
+  "references": [
+    "https://6502disassembly.com/nes-smb/SuperMarioBros.html"
+  ],
+  "limitations": [
+    "connected clip starts from assisted page-9 and large-Mario seeds",
+    "pipe control comparison additionally uses assisted position and control seed",
+    "one underwater return uses assisted page and position seeds, not infinite repetition",
+    "private original ROM omitted"
+  ],
+  "independent_repeat": {
+    "summary_sha256": "221331b4071ac65d1a4be8c433afea1e2f82288ca072644f9cc687d8ed9426f0",
+    "status": "passed",
+    "variants": 9,
+    "scope": "same assisted conditions, original unmodified cartridge and pinned core"
+  }
+}

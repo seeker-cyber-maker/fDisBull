@@ -195,6 +195,18 @@ def compile_console_path(path: str | Path, *, scene_path: str | Path | None = No
             raise ValueError('Genesis replay requires the exact --region cartridge')
         return replay_translation(path,rom_path=region_path,target=target,
                                   cc65_root=cc65_root,m68k_root=m68k_root,**kwargs)
+    if isinstance(program,dict) and program.get('format')=='fdisbull-shadowrun-opening-replay-1':
+        target=kwargs.pop('target',None)
+        output=kwargs.pop('output',None)
+        if (target!='nes' or scene_path is not None or kwargs.pop('display_variable',None) is not None
+                or m68k_root is not None):
+            raise ValueError('Shadowrun opening replay is a registered NES-only profile')
+        if region_path is None or cc65_root is None or output is None:
+            raise ValueError('Shadowrun opening replay requires --region, --cc65-root and --output')
+        if kwargs:
+            raise ValueError('Unexpected Shadowrun opening compiler options')
+        from .shadowrun_replay import build_opening
+        return build_opening(path,rom_path=region_path,cc65_root=cc65_root,output=output)
     if isinstance(program,dict) and program.get('format')=='fdisbull-game-il-2':
         target=kwargs.pop('target',None)
         if target not in TARGETS or scene_path is not None or kwargs.pop('display_variable',None) is not None:
@@ -239,5 +251,10 @@ def console_targets():
             'genesis-replay': {'target':'nes','format':'fdisbull-genesis-replay-1',
                 'additional_target':'genesis',
                 'source_platform':'genesis','semantic_modules':['game','audio','presentation','psg'],
-                'source_contract':'registered identity-bound source/model/lowering; explicit trusted tools and original ROM required'}},
+                'source_contract':'registered identity-bound source/model/lowering; explicit trusted tools and original ROM required'},
+            'shadowrun-opening': {'target':'nes','format':'fdisbull-shadowrun-opening-replay-1',
+                'source_platform':'genesis','source_profile':'shadowrun-genesis-opening-stoker-assisted-v1',
+                'interaction':'assisted captured opening and guarded Stoker request/UI projection',
+                'source_contract':'one exact ROM, provenance-bound RAM/VDP snapshot and bounded observed atlas; explicit cc65 and original ROM required',
+                'whole_game_automatic_lifting':False}},
         'scope': 'native compilation of an explicit UIL subset; not a complete source-console lifter or hardware conversion'}

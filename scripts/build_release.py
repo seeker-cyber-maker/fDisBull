@@ -80,6 +80,8 @@ SOURCE_PATTERNS = (
     ("docs/evidence/miniplanets-full-game-2026-10-31", "*.json"),
     ("docs/evidence/nes-multicart-2026-10-31", "verification.json"),
     ("docs/evidence/console-intake-2026-10-31", "intake.json"),
+    ("docs/evidence/mario-minus-world-2026-11-01", "*.json"),
+    ("docs/evidence/shadowrun-uil-2026-11-01", "*.json"),
     ("patches", "capstone-5.0.9-sh-profile-gating.patch"),
     ("scripts/rom_semantic_route", "*.java"),
     ("scripts/rom_semantic_route", "README.md"),
