@@ -640,6 +640,7 @@ class TextScene:
         self.last_continuation = None
         self.bounded_purchases = False
         self.dinosaur_order = None
+        self.land_order = None
 
     def save_preflight(self, name):
         try:
@@ -1115,35 +1116,8 @@ class TextScene:
         raise RuntimeError('view not uniquely recognized: ' + label + '; outcome unknown')
 
     def buy_land(self):
-        if self.current != 'street':
-            return 'That action is not available in this scene.'
-        before = balances(self.debug)
-        if self.land_bought or (before['cash'], before['loan'], before['working_cash']) != (5000, 5000, 5000):
-            self.event({'phase': 'refused', 'command': 'buy desert plot', 'input': 'not_sent',
-                        'reason': 'unqualified land or balances', 'before': before})
-            return 'This land purchase is not qualified for the current state; no input was sent.'
-        self.debug.scene_assert(self.street, object='street.office')
-        self.event({'phase': 'intent', 'command': 'buy desert plot', 'before': before, 'input': 'not_yet_sent'})
-        unchanged = {'cash': 5000, 'loan': 5000, 'working_cash': 5000}
-        self.shop_click((60, 140), 7500, 'enter real estate')
-        self.shop_observe('estate', unchanged, 'land-estate')
-        self.shop_click((60, 100), 1000, 'select desert')
-        self.shop_observe('choice', unchanged, 'land-choice')
-        self.shop_click((145, 187), 3000, 'open inventory')
-        self.shop_observe('inventory', unchanged, 'land-inventory', wait_slices=24)
-        self.shop_click((172, 187), 5000, 'close inventory')
-        self.shop_observe('plot', unchanged, 'land-map')
-        self.shop_click((42, 52), 1800, 'select desert plot')
-        staged = {'cash': 5000, 'loan': 5000, 'working_cash': 4500}
-        self.shop_observe('plot_staged', staged, 'land-staged')
-        self.shop_click((201, 187), 6000, 'confirm land')
-        committed = {'cash': 4500, 'loan': 5000, 'working_cash': 4500}
-        self.shop_observe('shop_street', committed, 'land-committed')
-        self.debug.scene_assert(self.street, object='street.office')
-        self.land_bought = True
-        self.event({'phase': 'result', 'command': 'buy desert plot', 'before': before,
-                    'after': committed, 'persistence': 'unknown'})
-        return 'Desert plot purchased for $500. Cash: $4,500. You are on the street.'
+        from .dinopark_land import buy
+        return buy(self)
 
     def mart_observe(self, view, label, *, wait_slices=12):
         for attempt in range(wait_slices + 1):
@@ -1816,6 +1790,9 @@ class TextScene:
             return self.describe()
         if command in ('borrow', 'repay'):
             return self.transact(command)
+        if command == 'continue land purchase':
+            from .dinopark_land import resume
+            return resume(self)
         if command == 'buy desert plot':
             return self.buy_land()
         if command == 'buy coelophysis':
