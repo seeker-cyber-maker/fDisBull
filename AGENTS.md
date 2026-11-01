@@ -56,6 +56,12 @@ Use the repository's test/build commands. A release commit needs ordinary and
 required-native Linux CI on its exact SHA before tagging. Publishing a release
 or changing a system installation is a separate user-authorized action.
 
+After each release candidate is packaged, install and activate a fresh shared
+prefix locally, then run
+`python scripts/check_local_install.py --version <version> --commit <commit>`
+from the source tree. A release is not locally complete until the active
+payload, version, commit and selector all verify.
+
 ## CI coordination
 
 Read [CI triggers and status coordination](docs/CI_COORDINATION.md) before
