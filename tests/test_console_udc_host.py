@@ -79,6 +79,23 @@ def test_selected_images_use_zero_based_frames():
     assert HOST.frame_numbers(' 2,0 ', 3) == [0, 2]
 
 
+def test_snes_trace_bus_filters_use_exclusive_end_and_24_bit_bounds():
+    assert HOST.snes_range(None) == (0,0)
+    assert HOST.snes_range('0x800d34:0x800ee0') == (0x800d34,0x800ee0)
+    for invalid in ('0:0','-1:2','0:0x1000001','1','2:1','x:2'):
+        with pytest.raises(ValueError):
+            HOST.snes_range(invalid)
+
+
+def test_snes_joypad_ids_include_all_twelve_standard_buttons():
+    assert HOST.controller_buttons('snes') == {
+        'B':0, 'Y':1, 'SELECT':2, 'START':3, 'UP':4, 'DOWN':5,
+        'LEFT':6, 'RIGHT':7, 'A':8, 'X':9, 'L':10, 'R':11,
+    }
+    assert HOST.controller_buttons('genesis')['A']==1
+    assert HOST.controller_buttons('nes')['A']==8
+
+
 @pytest.mark.parametrize(('fmt', 'word', 'size'), [(0, 0x7C00, 2), (1, 0xFF0000, 4), (2, 0xF800, 2)])
 def test_pixel_formats_preserve_existing_rgb_contract(fmt, word, size):
     raw = word.to_bytes(size, sys.byteorder)

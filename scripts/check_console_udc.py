@@ -297,6 +297,32 @@ class AVInfo(C.Structure):
     _fields_ = [('geometry', Geometry), ('timing', Timing)]
 
 
+class SnesTraceEvent(C.Structure):
+    _fields_ = [(name,C.c_uint32) for name in
+                ('kind','pc','address','value','a','x','y','s','d','p','db','opcode')]
+
+
+def snes_range(value):
+    if value is None:
+        return (0,0)
+    parts=value.split(':')
+    if len(parts)!=2:
+        raise ValueError('SNES trace range requires start:exclusive-end')
+    lo,hi=(int(part,0) for part in parts)
+    if not 0<=lo<hi<=0x1000000:
+        raise ValueError('SNES trace range outside 24-bit bus')
+    return lo,hi
+
+
+def controller_buttons(system):
+    buttons={'UP':4,'DOWN':5,'LEFT':6,'RIGHT':7,'START':3,'B':0}
+    if system=='nes': buttons.update({'A':8,'SELECT':2})
+    elif system=='snes': buttons.update({'A':8,'X':9,'Y':1,'L':10,'R':11,'SELECT':2})
+    elif system=='genesis': buttons.update({'A':1,'C':8})
+    else: raise ValueError('unsupported controller system')
+    return buttons
+
+
 def worker(args):
     core_path = Path(args.core).resolve()
     rom_path = Path(args.rom).resolve()
@@ -309,8 +335,7 @@ def worker(args):
     inputs = json.loads(Path(args.inputs).read_text()) if args.inputs else []
     if not isinstance(inputs, list):
         raise ValueError('inputs must be a list of {start,end,buttons} objects')
-    buttons = {'UP': 4, 'DOWN': 5, 'LEFT': 6, 'RIGHT': 7, 'START': 3, 'B': 0}
-    buttons.update({'A': 8, 'SELECT': 2} if args.system == 'nes' else {'A': 1, 'C': 8})
+    buttons = controller_buttons(args.system)
     if args.input_map:
         buttons = {k.upper(): v for k, v in json.loads(Path(args.input_map).read_text()).items()}
     if any(not isinstance(v, int) or isinstance(v, bool) or not 0 <= v < 16 for v in buttons.values()):
@@ -324,6 +349,9 @@ def worker(args):
         validate_feedback_session(feedback.policy,system=args.system,rom_sha256=sha(rom),
                                   inputs=inputs,patches=patches,buttons=buttons)
     selected_frames = set(frame_numbers(args.frame_images, args.frames))
+    ram_frames = set(frame_numbers(args.frame_ram, args.frames))
+    if len(ram_frames) > 64:
+        raise ValueError('at most 64 full RAM snapshots')
     by_frame = {}
     for patch in patches:
         by_frame.setdefault(patch['frame'], []).append(patch)
@@ -440,6 +468,20 @@ def worker(args):
     trace = []
     patch_trace = []
     images = []
+    ram_images = []
+    snes_trace=[]
+    if args.snes_trace_frames:
+        if args.system!='snes': raise ValueError('SNES trace requires SNES')
+        start,end=(int(x) for x in args.snes_trace_frames.split(':'))
+        if not 0<=start<end<=args.frames or end-start>120: raise ValueError('SNES trace limited to 120 frames')
+        pc_lo,pc_hi=snes_range(args.snes_trace_pc)
+        wr_lo,wr_hi=snes_range(args.snes_trace_write)
+        if pc_hi==wr_hi==0: raise ValueError('SNES trace requires a PC or write filter')
+        configure=lib.fdisbull_snes_trace_config
+        configure.argtypes=[C.c_uint32]*5
+        lib.fdisbull_snes_trace_count.restype=C.c_uint32
+        lib.fdisbull_snes_trace_dropped.restype=C.c_uint32
+        lib.fdisbull_snes_trace_events.restype=C.POINTER(SnesTraceEvent)
     frames_ran=0
     for i in range(args.frames):
         current[0] = i
@@ -457,8 +499,24 @@ def worker(args):
                 raise RuntimeError('memory patch readback differs from requested bytes')
             patch_trace.append({**patch, 'before_hex': before.hex(), 'after_hex': actual.hex(),
                                 'data_sha256': sha(data)})
+        if args.snes_trace_frames and start<=i<end:
+            configure(pc_lo,pc_hi,wr_lo,wr_hi,65536)
         lib.retro_run()
+        if args.snes_trace_frames and start<=i<end:
+            count=lib.fdisbull_snes_trace_count();dropped=lib.fdisbull_snes_trace_dropped()
+            events=lib.fdisbull_snes_trace_events()
+            snes_trace.append({'frame':i,'dropped':dropped,'events':[
+                {name:getattr(events[j],name) for name,_ in SnesTraceEvent._fields_} for j in range(count)]})
+            configure(0,0,0,0,0)
         frames_ran=i+1
+        if i in ram_frames:
+            n=lib.retro_get_memory_size(2)
+            if not 0 < n <= 2*1024*1024:
+                raise ValueError('system RAM snapshot exceeds bounded size')
+            data=C.string_at(memory_slice(2,0,n),n)
+            name=f'ram-{i:06d}.bin'
+            (out/name).write_bytes(data)
+            ram_images.append({'frame':i,'file':name,'size':n,'sha256':sha(data)})
         if audio_errors:
             raise RuntimeError(audio_errors[0])
         if watches:
@@ -483,6 +541,12 @@ def worker(args):
     trace_bytes = (json.dumps({'phase': 'after retro_run; frame is zero-based', 'watches': watches, 'frames': trace}, separators=(',', ':')) + '\n').encode()
     if watches:
         (out / 'ram_trace.json').write_bytes(trace_bytes)
+    snes_trace_hash=None
+    if args.snes_trace_frames:
+        trace_data=(json.dumps({'scope':'CPU opcode and successful direct bus stores; no DMA/MMIO completeness claim',
+            'last_opcode_pc_for_writes':True,'frames':snes_trace},separators=(',',':'))+'\n').encode()
+        (out/'snes_trace.json').write_bytes(trace_data)
+        snes_trace_hash=sha(trace_data)
     if frame[0] is None:
         raise RuntimeError('core produced no video frame')
     raw, width, height, pitch, fmt = frame[0]
@@ -518,6 +582,9 @@ def worker(args):
         raise RuntimeError('feedback policy changed during session')
     receipt = {'input_map': buttons, 'input_descriptors': descriptors, 'watches': watches, 'ram_trace_sha256': sha(trace_bytes) if watches else None, 'system': args.system, 'core_path': str(core_path), 'core_sha256': core_hash, 'core_name': info.library_name.decode(), 'core_version': info.library_version.decode(), 'rom_sha256': sha(rom), 'frames': frames_ran if feedback else args.frames, 'inputs': inputs, 'pixel_format': ['0RGB1555', 'XRGB8888', 'RGB565'][fmt], 'width': width, 'height': height, 'fps': av.timing.fps, 'sample_rate': av.timing.sample_rate, 'frame_rgb_sha256': sha(rgb), 'frame_png_sha256': sha((out / 'frame.png').read_bytes()), 'system_ram_size': size, 'system_ram_sha256': sha(memory), 'system_ram_byte_order': 'raw core bytes; address mapping not validated', 'state_size': len(snapshot), 'state_sha256': sha(snapshot) if snapshot else None, 'core_options': 'defaults; no frontend overrides'}
     receipt.update({'save_ram_size': len(save_memory), 'save_ram_sha256': sha(save_memory) if save_memory else None,
+                    'frame_ram':ram_images,
+                    'snes_trace_sha256':snes_trace_hash,
+                    'snes_trace_filters':{'frames':args.snes_trace_frames,'pc':args.snes_trace_pc,'write':args.snes_trace_write} if snes_trace_hash else None,
                     'save_ram_byte_order': 'raw core bytes; address mapping not validated',
                     'audio_capture': captured_audio, 'frame_images': images,
                     'frame_images_phase': 'after retro_run; frame is zero-based',
@@ -544,7 +611,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--core', required=True)
     parser.add_argument('--rom', required=True)
-    parser.add_argument('--system', required=True, choices=['nes', 'genesis'])
+    parser.add_argument('--system', required=True, choices=['nes', 'genesis', 'snes'])
     parser.add_argument('--frames', required=True, type=int)
     parser.add_argument('--inputs', help='JSON list of start/end exclusive frame ranges and Libretro button names')
     parser.add_argument('--input-map', help='JSON mapping semantic button names to Libretro IDs')
@@ -553,6 +620,10 @@ def main():
     parser.add_argument('--patches', help='JSON finite memory writes: frame, memory_id (0 or2), offset, data_hex; applied before the named frame')
     parser.add_argument('--capture-audio', action='store_true', help='Capture actual stereo PCM16 callbacks to audio.wav with audio statistics')
     parser.add_argument('--frame-images', help='Comma-separated zero-based frames to save after retro_run')
+    parser.add_argument('--frame-ram', help='At most 64 zero-based frames for private complete system RAM snapshots')
+    parser.add_argument('--snes-trace-frames', help='Bounded frame start:exclusive-end (at most 120)')
+    parser.add_argument('--snes-trace-pc', help='24-bit opcode address start:exclusive-end')
+    parser.add_argument('--snes-trace-write', help='24-bit direct bus write address start:exclusive-end')
     parser.add_argument('--output', required=True)
     parser.add_argument('--timeout', type=float, default=60)
     parser.add_argument('--worker', action='store_true', help=argparse.SUPPRESS)
@@ -561,6 +632,8 @@ def main():
         parser.error('frames must be 1..10000 and timeout 0..600 seconds')
     try:
         frame_numbers(args.frame_images, args.frames)
+        if len(frame_numbers(args.frame_ram, args.frames)) > 64:
+            raise ValueError('at most 64 full RAM snapshots')
     except ValueError as exc:
         parser.error(str(exc))
     output = Path(args.output).resolve()

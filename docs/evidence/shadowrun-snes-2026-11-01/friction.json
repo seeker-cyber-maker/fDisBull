@@ -1,0 +1,35 @@
+{
+  "approach_sha256": "b5c68515597002ba7f37573a881dde38bb90707f8b6d607994077cc2293c1fd4",
+  "capstone_distribution": "5.0.9",
+  "dependency_receipt_sha256": "4913f4cc9ca356248deb16839373d9c596b70cea1260c4dbe06cf3c7258dc3e1",
+  "format": "fdisbull-shadowrun-snes-friction-1",
+  "forward_test": "independent Luna read only raw intake/decoder/observer evidence; correction incorporated",
+  "guidance": [
+    "recheck edition/archive identity before declaring missing input",
+    "qualify observer neutrality and actual mode/address conventions",
+    "bind every read dependency; preserve unmodeled dynamics",
+    "test press/release/turn and withheld sequences",
+    "compare each model to its own exact source edition; transfer process not presumed lineage"
+  ],
+  "native_api_version": [
+    5,
+    0,
+    1280
+  ],
+  "observed": [
+    "archive retained without expected raw member path",
+    "OpenEmu plugin lacked PC/write API; BSNES installed x86 only",
+    "Capstone plain65816 constructor rejected; setting mode afterward also rejected",
+    "bank80 WRAM mirrors and little-endian captures differ from Genesis conventions",
+    "collision WRAM and save-RAM rotation enlarged explicit read set",
+    "native compiler hardcoded Genesis entry and single immutable region",
+    "held input alone omitted release and later unknown actor-flag transitions",
+    "Genesis scene label leaked; stored SNES imagery establishes morgue",
+    "fresh Luna skill reader confused process transfer with cross-game behavioral parity"
+  ],
+  "official_wheel_sha256": "fc269c5082e17d7f9f265cd6980e2fdc6ab572df913951d76db0357e06b8001d",
+  "skill_creator_validation": "passed",
+  "skill_entry_sha256": "d3e599729cc345bb0b4d40ce8903518a5b55aa9a626d4afbe0332406acbc860e",
+  "skill_retrieval": "2 passed",
+  "upstream_binding_string": "5.0.7"
+}

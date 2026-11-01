@@ -51,6 +51,9 @@ coverage ledger linking each material claim to evidence, unresolved alternatives
 and the next discriminator. Deepen the causal chain until those claims are
 supported; unrelated exhaustive decoding is not a substitute. Check the installed
 methods and backend capabilities before using guidance from a newer proposal.
+Treat advertised architecture or mode names as candidates until a small
+representative operation succeeds in the actual backend. Use the capability
+failure decision table in `references/analysis-approach.md` when it does not.
 For archives, executable mappings or media reduction, read
 [references/formats-and-media.md](references/formats-and-media.md).
 

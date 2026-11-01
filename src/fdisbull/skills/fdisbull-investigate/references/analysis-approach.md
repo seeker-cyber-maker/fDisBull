@@ -13,6 +13,8 @@ may start in the middle of this guide; do not make unrelated recovery a gate.
 - [Map dependencies before choosing work](#map-dependencies-before-choosing-work)
 - [Move from scene facts to interactions](#move-from-scene-facts-to-interactions)
 - [Rank candidate questions and choose a probe](#rank-candidate-questions-and-choose-a-probe)
+- [Respond to a capability mismatch](#respond-to-a-capability-mismatch)
+- [Transfer an investigation to another target](#transfer-an-investigation-to-another-target)
 - [Branch, stop and refuse explicitly](#branch-stop-and-refuse-explicitly)
 - [Worked decision examples](#worked-decision-examples)
 - [Choose the next reference](#choose-the-next-reference)
@@ -145,6 +147,60 @@ After each result, update the graph and pick again. A failed or low-information
 probe is evidence for reconsidering the plan, not a reason to repeat it without
 a changed discriminator. See `methodology.md` for causal and
 independence boundaries.
+
+## Respond to a capability mismatch
+
+Record what failed, how the failure was recognized, the next cheapest probe
+that distinguishes the alternatives, and the condition for stopping or
+changing approach. Preserve the backend identity and exact error alongside the
+result. Do not turn an advertised feature into a working capability without
+testing the operation and configuration needed by the claim.
+
+| Observation | Next discriminator | Stop or branch |
+| --- | --- | --- |
+| A parser identifies a format or header. | Check whether it actually supplies the required runtime mapping, checksum, entry context or decoder; test the relevant operation on a small known input. | Treat identification as intake evidence only; do not infer execution or address translation. |
+| A library exposes an architecture or mode constant. | Instantiate that exact mode in the installed native library, then decode a short synthetic example with independently known expected boundaries and operands; repeat for each required mode. | An error or wrong boundary rules out that configuration, not every version or backend. Keep unsupported modes unknown. |
+| Installed tools offer a related processor or version. | Inventory the exact language and its state/addressing model, then compare a discriminating instruction against an independent reference. | Do not substitute a related processor when instruction widths or semantics differ. Use a verified existing alternative, or record the capability gap. |
+| A static decode changes with hidden context or addressing. | Capture or otherwise qualify the entry mode, bank and relevant state; decode one short region with those inputs and compare to a source execution trace. | If entry state or mapping is unknown, retain alternatives and do not extend the decode as a fact. |
+
+For example, when an installed decoder advertises several width modes but
+one mode fails at construction, first verify that exact error and test a
+small known instruction in the remaining modes. A successful neighboring mode
+does not establish the failed one. Check whether a different already-available
+backend supports the missing mode before proposing a new adapter or installation.
+Keep any resulting workaround separately qualified; stop before interpreting
+target code that depends on unresolved instruction lengths.
+
+## Transfer an investigation to another target
+
+- **Re-establish identity and intake.** A shared title is a lead, not evidence
+  of a shared implementation, scene name, control scheme or address layout.
+  Check the existing manifest and archive members and verify their identities
+  before declaring a raw input missing; reuse the qualified source without
+  silently substituting another edition. Recheck scene labels against this
+  target's evidence. Carry forward an available claim ledger and observable
+  contract, but do not require common source lineage or ask for it when the
+  current target is clear. Transfer the investigation process, not an assumed
+  common implementation or equal controls; compare each recovered model to its
+  own exact source edition and reuse harnesses or gates only after qualification.
+- **Qualify the observer at the needed boundary.** If the existing backend
+  cannot expose the writer, choose an available observer that can capture the
+  instruction-start address, relevant processor context, memory address space
+  and writes. Verify its version and compare it with the baseline on a selected
+  route before trusting its newly instrumented trace. Establish address mirrors
+  and byte ordering from that backend and target; do not assume the old
+  platform's conventions or claim coverage of
+  events the observer cannot see.
+- **Follow the actual read set into the model.** When a source operation reads
+  geometry, saved data or other state, make each dependency an explicit,
+  identity-bound input. Check the entry point and every memory region the
+  native backend can access. A captured static region supports only that
+  context; preserve mutable or unobserved updates as unknown or unsupported.
+- **Test a complete control sequence.** A held direction alone may conceal
+  release, reversal or turn behavior. Compare ordinary press, release and turn
+  cases and an independent held-out sequence from a known start; examine the
+  first mismatch. If later actor fields leave the qualified domain, keep the
+  supported coordinate observations while refusing dependent claims.
 
 ## Branch, stop and refuse explicitly
 

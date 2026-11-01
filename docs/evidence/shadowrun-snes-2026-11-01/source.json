@@ -1,0 +1,64 @@
+{
+  "authoring_sha256": "22521537b3e1dab393d712fcc6742499e31faa43887e20607c69bf117d1bae58",
+  "capture_frame": 2999,
+  "checksum_complement_valid": true,
+  "checksum_matches_header": true,
+  "date": "2026-11-01",
+  "format": "fdisbull-shadowrun-snes-source-evidence-1",
+  "frame_phase": "zero-based post-retro_run",
+  "full_checksum_hex": "F834",
+  "observer": {
+    "baseline_core_sha256": "89fe8f7602428dbe532a19f098075182619c576383f177e641b19eb1f5fa19e8",
+    "cpu_bus_filter": [
+      8391988,
+      8392416
+    ],
+    "final_equal": {
+      "frame_png_sha256": true,
+      "frame_rgb_sha256": true,
+      "state_sha256": true,
+      "system_ram_sha256": true
+    },
+    "format": "snes9x-observer-neutrality-1",
+    "frame_phase": "zero-based, after retro_run",
+    "observer_core_sha256": "1617d549840551e9faa6864c0c36a8ee9608c8aee6eba90cccb1a620a0dd48be",
+    "observer_frame_interval": [
+      3000,
+      3004
+    ],
+    "pc_attribution": "last instruction entry; DMA/MMIO shortcut writes excluded",
+    "registers": "preinstruction A,X,Y,S,D,DB,P; P bit8 is E, bit5 M and bit4 X",
+    "rom_sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+    "source_commit": "fae2fea08f74180759ef540ee94259213f503480",
+    "source_url": "https://github.com/libretro/snes9x",
+    "trace_dropped": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "trace_event_counts": [
+      20,
+      20,
+      20,
+      20
+    ],
+    "trace_sha256": "10a56c21375d53c9a7e7ffd6d09fb5dbddf0416ac472173310e6c60d72642a32",
+    "wram_equal": true,
+    "wram_sample_frames": [
+      2999,
+      3000,
+      3001,
+      3002,
+      3003,
+      3020
+    ]
+  },
+  "program_sha256": "0d4145ecdeb8fb33080605324a3e83bd685b75fe4e621e40e8ac65e6a43cdb46",
+  "save_ram_phase": "exported at run end; model rotation separately observed in frame3000 CPU trace",
+  "save_ram_sha256": "5eef00d9bf324987decb0aae450a28a73b8ceb2a61cdf5360440f41eddc97130",
+  "scope": "prepared single-actor opening morgue, static captured collision geometry; no full-world or render equivalence",
+  "source_bytes": 1048576,
+  "source_sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+  "wram_sha256": "0032d4c7e01fce638a8ef653be6ab94871d7aa51ce48bb65d5d7b1444f791211"
+}

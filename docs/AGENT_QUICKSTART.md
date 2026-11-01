@@ -72,6 +72,10 @@ For the preserved Genesis-to-NES research and its native ARM64 successor, see
 [the handoff](GENESIS_NES_RESEARCH_HANDOFF.md) and
 [native Shadowrun output](SHADOWRUN_MACOS_ARM64.md). Select
 `shadowrun-ai-build --target macos-arm64` for the same bounded model on a Mac.
+For the separately recovered SNES opening-scene movement study, see
+[SNES native transfer](SHADOWRUN_SNES_MACOS.md). Its `shadowrun-snes-build`
+command uses the exact caller-owned SNES ROM, WRAM and save-RAM capture; it is
+a prepared source-specific profile, not a whole-ROM conversion command.
 The semantic-contract guide connects intent, effects, time and projection loss;
 the formats/media guide covers input mapping and qualified media reduction.
 

@@ -85,3 +85,100 @@ def test_call_depth_bound():
     rejected=program(128)
     with pytest.raises(ValueError,match='128-frame limit'):
         _Compiler(rejected,GameMachine(rejected).snapshot())
+
+
+@pytest.mark.parametrize('status_name,explicit', [('snes_tick_status',False),('boundary',True)])
+def test_source_specific_entry_and_atomic_boundary(tmp_path,status_name,explicit):
+    raw=b'authored source adapter test'
+    rom=tmp_path/'source.rom';rom.write_bytes(raw)
+    program=author_program('''
+        typedef unsigned char u8; typedef unsigned int u16;
+        u16 position=65534U; u8 STATUS;
+        void snes_tick(u8 pad) { position+=pad; if(pad==7) STATUS=2; }
+    '''.replace('STATUS',status_name),
+        [{'id':0,'length':len(raw),'sha256':hashlib.sha256(raw).hexdigest()}])
+    machine=GameMachine(program,{0:raw})
+    options={'entry':'snes_tick'}
+    if explicit:options['unsupported_status']=status_name
+    out=tmp_path/'native'
+    receipt=build_macos(program,machine.snapshot(),out,**options)
+    assert receipt['entry']=='snes_tick' and receipt['unsupported_status']==status_name
+    assert receipt['logical_input_bits']==8
+    lib=ctypes.CDLL(str(out/'libfdisbull_native.dylib'))
+    pointer=ctypes.c_void_p
+    lib.fdisbull_create.argtypes=[ctypes.c_char_p,ctypes.POINTER(pointer)]
+    lib.fdisbull_step.argtypes=[pointer,ctypes.c_uint8]
+    lib.fdisbull_destroy.argtypes=[pointer]
+    lib.fdisbull_state_get.argtypes=[pointer,ctypes.c_char_p,ctypes.c_uint32,ctypes.POINTER(ctypes.c_int64)]
+    context=pointer()
+    assert lib.fdisbull_create(str(rom).encode(),ctypes.byref(context))==0
+    def get(name):
+        value=ctypes.c_int64()
+        assert lib.fdisbull_state_get(context,name.encode(),0,ctypes.byref(value))==0
+        return value.value
+    try:
+        for pad in (1,3,255):
+            assert lib.fdisbull_step(context,pad)==0
+            machine.call('snes_tick',pad)
+            assert get('position')==machine.snapshot()['position']
+        before=(get('position'),get(status_name))
+        assert lib.fdisbull_step(context,7)==1
+        assert (get('position'),get(status_name))==before
+    finally:
+        lib.fdisbull_destroy(context)
+
+
+def test_entry_contract_validation():
+    from fdisbull.udc_macos import _Compiler
+    source='typedef unsigned char u8; u8 boundary[2]; void step(void) {}'
+    program=author_program(source)
+    seed=GameMachine(program).snapshot()
+    with pytest.raises(ValueError,match='requires entry procedure'):
+        _Compiler(program,seed,entry='missing')
+    with pytest.raises(ValueError,match='one integer logical pad'):
+        _Compiler(program,seed,entry='step')
+    valid=author_program('typedef unsigned char u8; u8 boundary[2]; void step(u8 pad) {}')
+    seed=GameMachine(valid).snapshot()
+    for status in ('missing','boundary'):
+        with pytest.raises(ValueError,match='scalar global'):
+            _Compiler(valid,seed,entry='step',unsupported_status=status)
+
+
+def test_hash_bound_extra_region_and_transactional_bounds(tmp_path):
+    raw=b'caller original';geometry=b'\x34\x12\x78\x56'
+    bindings=[{'id':i,'length':len(data),'sha256':hashlib.sha256(data).hexdigest()}
+              for i,data in ((0,raw),(1,geometry))]
+    program=author_program('''
+        typedef unsigned char u8; typedef unsigned int u16;
+        u16 value; void scene_tick(u8 pad) {
+            value=(u16)rom8(1,0)|((u16)rom8(1,1)<<8);
+            if(pad) value=rom16(1,3);
+        }
+    ''',bindings)
+    machine=GameMachine(program,{0:raw,1:geometry})
+    from fdisbull.udc_macos import _Compiler
+    for extras in ({},{2:geometry},{1:b'wrong'},{1:geometry,0:raw}):
+        with pytest.raises(ValueError,match='immutable region'):
+            _Compiler(program,machine.snapshot(),entry='scene_tick',immutable_regions=extras)
+    out=tmp_path/'native'
+    receipt=build_macos(program,machine.snapshot(),out,entry='scene_tick',immutable_regions={1:geometry})
+    assert receipt['immutable_regions']==[
+        {**bindings[0],'storage':'caller-ROM'}, {**bindings[1],'storage':'private-embedded'}]
+    rom=tmp_path/'source.rom';rom.write_bytes(raw)
+    lib=ctypes.CDLL(str(out/'libfdisbull_native.dylib'))
+    pointer=ctypes.c_void_p
+    lib.fdisbull_create.argtypes=[ctypes.c_char_p,ctypes.POINTER(pointer)]
+    lib.fdisbull_step.argtypes=[pointer,ctypes.c_uint8]
+    lib.fdisbull_state_get.argtypes=[pointer,ctypes.c_char_p,ctypes.c_uint32,ctypes.POINTER(ctypes.c_int64)]
+    lib.fdisbull_destroy.argtypes=[pointer]
+    ctx=pointer();assert lib.fdisbull_create(str(rom).encode(),ctypes.byref(ctx))==0
+    try:
+        assert lib.fdisbull_step(ctx,0)==0
+        machine.call('scene_tick',0)
+        value=ctypes.c_int64()
+        assert lib.fdisbull_state_get(ctx,b'value',0,ctypes.byref(value))==0
+        assert value.value==machine.snapshot()['value']==0x1234
+        assert lib.fdisbull_step(ctx,1)==2
+        assert lib.fdisbull_state_get(ctx,b'value',0,ctypes.byref(value))==0 and value.value==0x1234
+    finally:
+        lib.fdisbull_destroy(ctx)

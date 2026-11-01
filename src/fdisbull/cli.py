@@ -235,6 +235,7 @@ METHODS = {
     'shadowrun-play-build': 'Build the bounded scene-2 NES play profile; path,rom_path,capture,cc65_root,output',
     'shadowrun-ai-profiles': 'List source-bound Shadowrun actor/combat profiles and their limits',
     'shadowrun-ai-build': 'Build a private Shadowrun AI NES or native macOS ARM64 profile; path,rom_path,capture,output,[cc65_root,profile,preset,target]',
+    'shadowrun-snes-build': 'Build the private prepared SNES opening scene as a native ARM64 movement study; rom_path,ram,save_ram,output',
     'shadowrun-city-export': 'Export a private investigator city snapshot as JSON, text and interactive HTML; rom_path,snapshot,output',
     'shadowrun-system-export': 'Export one registered source-bound component as UIL; rom_path,system,output',
     'shadowrun-system-inspect': 'Validate a private Shadowrun component bundle; path',
@@ -422,6 +423,9 @@ def invoke(method, params, debugger=None):
                  'genesis-replay-inspect':udc_genesis.inspect_translation_bundle,
                  'genesis-replay-build':udc_genesis.replay_translation}.get(method)
         if handler is not None:return handler(**p)
+    if method=='shadowrun-snes-build':
+        from .shadowrun_snes_macos import build
+        return build(**p)
     if method.startswith('shadowrun-ai-'):
         from . import shadowrun_ai
         if method=='shadowrun-ai-profiles':
@@ -637,7 +641,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('shadowrun-ai-profiles','shadowrun-ai-build','shadowrun-play-build','shadowrun-city-export','shadowrun-systems','shadowrun-system-export','shadowrun-system-inspect','shadowrun-system-build-check','shadowrun-opening-animation-build','media-modules','media-inspect','media-extract','agent-skill','identify','inspect','rom-inspect','rom-disasm','disc-inspect','console-udc','console-udc-targets','rom-game-lift','genesis-replay-profiles','genesis-replay-source','genesis-replay-export','genesis-replay-inspect','genesis-replay-build','shadowrun-opening-profiles','shadowrun-opening-export','shadowrun-opening-inspect','shadowrun-opening-build','nes-multicart-profiles','nes-multicart-inspect','nes-multicart-build','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('shadowrun-snes-build','shadowrun-ai-profiles','shadowrun-ai-build','shadowrun-play-build','shadowrun-city-export','shadowrun-systems','shadowrun-system-export','shadowrun-system-inspect','shadowrun-system-build-check','shadowrun-opening-animation-build','media-modules','media-inspect','media-extract','agent-skill','identify','inspect','rom-inspect','rom-disasm','disc-inspect','console-udc','console-udc-targets','rom-game-lift','genesis-replay-profiles','genesis-replay-source','genesis-replay-export','genesis-replay-inspect','genesis-replay-build','shadowrun-opening-profiles','shadowrun-opening-export','shadowrun-opening-inspect','shadowrun-opening-build','nes-multicart-profiles','nes-multicart-inspect','nes-multicart-build','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         result=invoke(request["method"],params,debugger)
@@ -875,6 +879,10 @@ def parser():
     c.add_argument('path');c.add_argument('--rom',dest='rom_path',required=True);c.add_argument('--capture',required=True)
     c.add_argument('--cc65-root',required=True);c.add_argument('--output',required=True)
     sub.add_parser('shadowrun-ai-profiles',help=METHODS['shadowrun-ai-profiles'])
+    c=sub.add_parser('shadowrun-snes-build',help=METHODS['shadowrun-snes-build'])
+    c.add_argument('--rom',dest='rom_path',required=True)
+    c.add_argument('--ram',required=True);c.add_argument('--save-ram',required=True)
+    c.add_argument('--output',required=True)
     c=sub.add_parser('shadowrun-ai-build',help=METHODS['shadowrun-ai-build'])
     c.add_argument('path');c.add_argument('--rom',dest='rom_path',required=True);c.add_argument('--capture',required=True)
     c.add_argument('--cc65-root');c.add_argument('--output',required=True)
