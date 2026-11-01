@@ -84,6 +84,8 @@ class PEDebugSession(WineCpuDeltaSessionMixin,ExperimentSessionMixin,PELayerSess
                 'runtime_inputs':self.rpc.inputs,'files':[{'path':f['path'],'sha256':f['sha256']} for f in uploads],
                 'target_pid':launched['pid'],'qemu_pid':self.rpc.process.pid}
             if 'remote_server' in launched:self.metadata['remote_server']=launched['remote_server']
+            if saved is not None and saved['metadata'].get('delta_experiment') is not None:
+                self.metadata['delta_experiment']=saved['metadata']['delta_experiment']
             self.metadata['guest_runtime']={key:self.rpc.hello[key] for key in
                 ('wine_version','guest_kernel','agent_binary_sha256','resources')}
             if saved is not None:self._load_state_host(saved['host'])

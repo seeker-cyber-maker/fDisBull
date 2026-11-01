@@ -403,6 +403,9 @@ class DebugSession(AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionM
         return self.rpc.call(method,{'session_id':self.session_id,**(params or {})},**options)
 
     def _event(self, operation, evidence):
+        experiment = getattr(self, 'metadata', {}).get('delta_experiment')
+        if experiment is not None:
+            evidence = dict(evidence, delta_experiment=experiment)
         with self.project.transaction(True):
             self.project.db.execute('INSERT INTO debug_events(run,created,operation,evidence) VALUES (?,?,?,?)',
                                     (self.run_id,stamp(),operation,self.project._external_text(json.dumps(evidence))))
@@ -675,7 +678,7 @@ class DebugSession(AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionM
             return DebugSession._load_native_state(self,artifact)
         with self._cpu_delta_full_load():
             result = self._load_native_state(artifact)
-            self._cpu_delta_loaded()
+            self._cpu_delta_loaded(self.metadata.get('delta_experiment'))
         return result
 
     def _load_native_state(self, artifact):
@@ -707,6 +710,9 @@ class DebugSession(AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionM
                       framebuffer='invalidated_until_next_completed_frame')
         self._keyboard_leases={}
         self._invalidate_runtime_bindings()
+        self.metadata.pop('delta_experiment', None)
+        if metadata.get('delta_experiment') is not None:
+            self.metadata['delta_experiment'] = metadata['delta_experiment']
         self._event('load-state',result)
         return result
 
@@ -821,6 +827,9 @@ class DebugSession(AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionM
         return result
 
     def _artifact(self, name, kind, data, metadata):
+        experiment = getattr(self, 'metadata', {}).get('delta_experiment')
+        if experiment is not None:
+            metadata = dict(metadata, delta_experiment=experiment)
         return self.project._debug_artifact(self.run_id,name,kind,data,metadata)
 
     def screenshot(self, name='screenshot.png', *, grid=False, grid_step=32, hooks=True):

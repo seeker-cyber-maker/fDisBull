@@ -198,7 +198,7 @@ class PEStateSessionMixin(AnchorStoneSessionMixin):
                 return self._load_native_state(artifact)
             with self._cpu_delta_full_load():
                 result=self._load_native_state(artifact)
-                self._cpu_delta_loaded()
+                self._cpu_delta_loaded(self.metadata.get('delta_experiment'))
                 return result
 
     def _load_native_state(self,artifact):

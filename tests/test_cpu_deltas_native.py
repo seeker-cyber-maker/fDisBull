@@ -122,3 +122,29 @@ def test_real_delta_script_and_no_automatic_resume(native):
         {'op':'delta-recover'}]},timeout_ms=20000)
     assert result['ok'],result
     assert observed(debug)==initial
+
+
+def test_real_policy_preserves_declared_bytes_continues_and_keeps_anchor_recovery(native):
+    _, debug, _ = native
+    initial = observed(debug)
+    debug.cpu_delta_start([{'address': '1000:0000', 'length': 512}])
+    debug.cpu_delta_record(count=6)
+    current = debug.memory('1000:0100', length=2)['hex']
+    assert current == '0001'
+    result = debug.cpu_delta_rewind(count=6, policy={
+        'name': 'preserve-declared-counter',
+        'preserve_memory': [{'address': '1000:0100', 'length': 2}],
+        'allow_partial_resume': True})
+    assert result['execution_allowed'] and not result['resume_safe']
+    assert debug.memory('1000:0100', length=2)['hex'] == current
+    assert int(debug.registers()['instruction_pointer'], 16) == 0
+    debug.trace(count=2, fast_forward=True)
+    assert int(debug.registers()['instruction_pointer'], 16) == 1
+    derived = debug.save_anchor_stone()
+    assert derived['metadata']['delta_experiment']['policy']['name'] == 'preserve-declared-counter'
+    debug.load_anchor_stone(derived['artifact'])
+    assert debug.cpu_delta_status()['experiment'] is not None
+    assert not debug.cpu_delta_status()['resume_safe']
+    debug.cpu_delta_recover()
+    assert observed(debug) == initial
+    assert debug.cpu_delta_status()['experiment'] is None

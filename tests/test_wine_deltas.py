@@ -189,13 +189,13 @@ class Session(PEDebugSession):
         (directory / (sha + '.mig.gz')).write_bytes(native)
         result = self._artifact(name, 'state', data, metadata)
         result['native_size'] = len(native)
-        self.saved[result['artifact']] = deepcopy((self.cpu, self.ram))
+        self.saved[result['artifact']] = deepcopy((self.cpu, self.ram, self.metadata))
         return result
 
     def _load_native_state(self, artifact):
         if self.load_error:
             raise self.load_error
-        self.cpu, self.ram = deepcopy(self.saved[artifact])
+        self.cpu, self.ram, self.metadata = deepcopy(self.saved[artifact])
         return dict(artifact=artifact, registers=self.registers(), state='stopped')
 
     def close(self):

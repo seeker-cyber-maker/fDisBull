@@ -39,6 +39,8 @@ def qualify_capture(session, observed):
             cs = runtime >> 4
         identity.update(runtime_cs=cs, project_cs=cs-session.runtime_load+session.dos['load_segment'])
     identity['layer_hashes']={i:session.project.debug_layer_info(i)['sha256'] for i in observed['active_layers']}
+    if session.metadata.get('delta_experiment') is not None:
+        identity['delta_experiment'] = deepcopy(session.metadata['delta_experiment'])
     return {**observed, 'format': 'fdisbull-runtime-code-1', 'identity': identity,
             'capture_registers': registers, 'execution_proven': False}
 

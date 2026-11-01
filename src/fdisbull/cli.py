@@ -166,7 +166,7 @@ METHODS = {
     'debug-delta-start': 'Experimental delta rewind with one full native Anchor Stone; run,ranges,[max_steps,max_bytes]',
     'debug-delta-status': 'Inspect selected-state delta scope, cursor, costs and execution guard; run',
     'debug-delta-record': 'Record selected CPU/RAM changes at DOS next-fetch or Wine completed-instruction boundaries; run,[count,timeout_ms]',
-    'debug-delta-rewind': 'Undo selected CPU/RAM deltas and block execution until native recovery; run,[count]',
+    'debug-delta-rewind': 'Undo selected CPU/RAM deltas; optional policy preserves declared state and explicitly permits experimental partial continuation; run,[count,policy]',
     'debug-delta-recover': 'Load the recovery Anchor Stone and clear the partial-state guard; run',
     'debug-script': 'Execute bounded menu/debug script; run,[script,script_id,timeout_ms]',
     'debug-save-script': 'Save an immutable version-bound script; name,script,[version]',

@@ -1,5 +1,6 @@
 """Opt-in real PE delta undo, cached-machine refusal and native recovery."""
 import hashlib
+import json
 from pathlib import Path
 
 import pytest
@@ -76,9 +77,32 @@ def test_real_pe_delta_undo_freezes_both_contexts_and_recovers_full_anchor(tmp_p
             assert projection(debug, exports['counter']) == initial
             assert old_process.poll() is not None and debug.rpc.process.pid != old_process.pid
             assert debug.capture_code(exports['write_only'], length=8)['artifact']
-            assert debug.script({'format': 'fdisbull-script-1', 'steps': [
+            scripted = debug.script({'format': 'fdisbull-script-1', 'steps': [
                 {'op': 'delta-start', 'ranges': [{'address': exports['counter'], 'length': 4}]},
-                {'op': 'delta-record'}, {'op': 'delta-rewind'}, {'op': 'delta-recover'}]})['ok']
+                {'op': 'delta-record'},
+                # The authored counter is a stand-in for an agent-declared RNG group.
+                {'op': 'delta-rewind', 'policy': {'name': 'preserve-counter',
+                    'preserve_memory': [{'address': exports['counter'], 'length': 4}],
+                    'allow_partial_resume': True}},
+                {'op': 'memory', 'address': exports['counter'], 'length': 4},
+                {'op': 'delta-status'},
+                {'op': 'save-anchor-stone', 'as': 'derived'},
+                {'op': 'capture-code', 'address': exports['write_only'], 'length': 8},
+                {'op': 'trace', 'count': 1},
+                {'op': 'load-anchor-stone', 'artifact': '$derived.artifact'},
+                {'op': 'delta-status'},
+                {'op': 'delta-recover'}]}, timeout_ms=240000)
+            assert scripted['ok'], scripted
+            assert scripted['steps'][3]['result']['hex'] == '11000000'
+            branch = scripted['steps'][4]['result']
+            assert branch['execution_allowed'] and not branch['resume_safe'] and not branch['valid']
+            derived = scripted['steps'][5]['result']
+            captured = scripted['steps'][6]['result']
+            doc = json.loads(bytes(project.db.execute('SELECT data FROM debug_artifacts WHERE id=?',
+                (captured['artifact'],)).fetchone()['data']))
+            assert doc['identity']['delta_experiment']['policy']['name'] == 'preserve-counter'
+            assert scripted['steps'][9]['result']['experiment'] == branch['experiment']
+            assert debug.cpu_delta_status()['experiment'] is None
             assert projection(debug, exports['counter']) == initial
             debug.trace(count=1)
             assert projection(debug, exports['counter'])[1] == '11000000'
@@ -94,4 +118,12 @@ def test_real_pe_delta_undo_freezes_both_contexts_and_recovers_full_anchor(tmp_p
         with Image.open(exported['output']) as image:
             assert image.size == (320, 200)
             image.verify()
+        assert reopened.debug_anchor_stone_info(derived['artifact'])['metadata']['delta_experiment'] == branch['experiment']
+        with reopened.debugger(qemu, source.parent, kernel=kernel, initramfs=runtime,
+                               files=[source.name], version=1, state=derived['artifact']) as restored:
+            status = restored.cpu_delta_status()
+            assert status['experiment'] == branch['experiment']
+            assert status['execution_allowed'] and not status['resume_safe']
+            assert projection(restored, exports['counter'])[1] == '11000000'
+            restored.trace(count=1)
     assert hashlib.sha256(source.read_bytes()).hexdigest() == original_hash

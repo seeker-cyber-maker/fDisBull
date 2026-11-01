@@ -9,7 +9,10 @@ The name is a reference to the Anchor Stones in TiGa's **Blob to General** game.
 The experimental implementations record exposed registers and selected RAM:
 DOS uses next-fetch boundaries; Wine/QEMU uses completed instructions of one
 pinned Windows thread. These are recorded debugger steps, not synchronized
-video frames. Both remain partial and require full native recovery before resume.
+video frames. Both remain partial. By default, full native recovery is required
+before resume. An explicit [experimental rewind policy](CPU_RAM_DELTAS.md#agent-specified-rewind-policies)
+can preserve declared current state and permit continuation from a mixed state;
+that permission does not certify a complete historical machine context.
 
 | Method | User-facing meaning | Current API |
 | --- | --- | --- |
@@ -67,4 +70,6 @@ not measure Wine/QEMU migration latency. Backend compatibility
 and mounted-file identity checks still apply; host files are not rolled back.
 After partial delta rewind, loading a valid full Anchor Stone clears the partial
 state guard through the existing verified native-load path. Merely renaming an
-operation never bypasses that guard or enables an unsupported backend.
+operation never bypasses that guard or enables an unsupported backend. A policy
+with `allow_partial_resume:true` is a separate explicit experiment permission;
+its result still reports `resume_safe:false` and retains partial-state provenance.

@@ -81,6 +81,9 @@ def validate_script(script):
                     if op=='delta-start':
                         from .debug_cpu_deltas import validate_ranges
                         validate_ranges(params['ranges'],allow_references=True)
+                    if op=='delta-rewind' and 'policy' in params:
+                        from .debug_cpu_deltas import validate_policy
+                        validate_policy(params['policy'],allow_references=True)
                     if op in ('keyboard.press','keyboard.type'):
                         from .keyboard_input import validate_keyboard
                         # Validate every literal independently. One result reference
@@ -117,6 +120,10 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
     bounded(timeout_ms,'timeout_ms',1,600000)
     steps = validate_script(script) # Reject malformed later steps before any guest mutation.
     for step in steps:
+        if step['op']=='delta-rewind' and 'policy' in step:
+            from .debug_cpu_deltas import validate_policy
+            validate_policy(step['policy'],registers=getattr(session,'_delta_registers',None),
+                            allow_references=True)
         if step['op']=='delta-start' and 'max_bytes' in step:
             value=step['max_bytes']
             if not (isinstance(value,str) and value.startswith('$')):

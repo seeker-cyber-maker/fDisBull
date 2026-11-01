@@ -97,6 +97,40 @@ def validate_ranges(ranges, *, allow_references=False):
         raise ValueError('Combined CPU delta RAM ranges exceed 65536 bytes')
 
 
+def validate_policy(policy, *, registers=None, allow_references=False):
+    """Validate declared preservation; labels do not discover target semantics."""
+    def reference(value):
+        return allow_references and isinstance(value, str) and value.startswith('$')
+    if policy is None or reference(policy):
+        return
+    allowed = {'name', 'preserve_registers', 'preserve_memory', 'allow_partial_resume'}
+    if not isinstance(policy, dict) or set(policy) - allowed:
+        raise ValueError('Rewind policy requires name, preserve_registers, preserve_memory or allow_partial_resume')
+    if len(_encoded(policy)) > 32768:
+        raise ValueError('Rewind policy exceeds 32 KiB')
+    name = policy.get('name', 'experiment')
+    if not reference(name) and (not isinstance(name, str) or not name.strip() or len(name) > 128):
+        raise ValueError('Rewind policy name must be 1..128 characters')
+    resume = policy.get('allow_partial_resume', False)
+    if not reference(resume) and type(resume) is not bool:
+        raise ValueError('allow_partial_resume must be boolean')
+    names = policy.get('preserve_registers', [])
+    if not reference(names):
+        if not isinstance(names, list) or len(names) > 32:
+            raise ValueError('preserve_registers requires a list of exposed register names')
+        seen = set()
+        for name in names:
+            if reference(name):
+                continue
+            if (not isinstance(name, str) or not name or name in seen
+                    or registers is not None and name not in registers):
+                raise ValueError('Unknown or duplicate preserved register')
+            seen.add(name)
+    memory = policy.get('preserve_memory', [])
+    if memory != []:
+        validate_ranges(memory, allow_references=allow_references)
+
+
 class CpuDeltaSessionMixin:
     _delta_registers = REGISTERS
     _delta_read_only = READ_ONLY
@@ -194,12 +228,15 @@ class CpuDeltaSessionMixin:
         finally:
             self._cpu_delta_load_depth -= 1
 
-    def _cpu_delta_loaded(self):
+    def _cpu_delta_loaded(self, experiment=None):
         self._cpu_delta_invalidate('full native checkpoint loaded')
+        self.metadata.pop('delta_experiment', None)
+        if experiment is not None:
+            self.metadata['delta_experiment'] = deepcopy(experiment)
         history = getattr(self, '_cpu_delta_history', None)
         if history is not None:
             history['frozen'] = False
-            history['partial_restored'] = False
+            history['partial_restored'] = experiment is not None
 
     @contextmanager
     def _cpu_delta_owned(self):
@@ -290,7 +327,7 @@ class CpuDeltaSessionMixin:
             if self._cpu_delta_anchor_manifest(anchor) != manifest or self._disk_manifest() != manifest:
                 raise ValueError('Mounted game files changed while capturing CPU delta anchor')
             history = dict(id=uuid.uuid4().hex, identity=self._cpu_delta_identity(), valid=True,
-                invalid_reason=None, frozen=False, partial_restored=False, cursor=0, entries=[],
+                invalid_reason=None, frozen=False, partial_restored=bool(self.metadata.get('delta_experiment')), cursor=0, entries=[],
                 captures_used=0, delta_bytes_used=0, anchor_bytes_used=size,
                 anchor={key: anchor[key] for key in ('artifact', 'sha256', 'size', 'native_size') if key in anchor},
                 disk_manifest=deepcopy(manifest), ranges=normalized, max_steps=max_steps, max_bytes=max_bytes)
@@ -310,24 +347,28 @@ class CpuDeltaSessionMixin:
 
     def cpu_delta_status(self):
         history = getattr(self, '_cpu_delta_history', None)
+        experiment = deepcopy(self.metadata.get('delta_experiment'))
         result = dict(format=FORMAT, run=self.run_id, active=history is not None and not self.closed,
             valid=False, unit=self._delta_unit, instruction_completion=self._delta_instruction_completion,
             scope=self._delta_scope,
             full_machine_restored=False, devices_restored=False, unselected_ram='unknown',
             hidden_cpu_state='unknown', disk_restore=False, survives_live_session=False,
             budget_scope='cumulative native anchor plus delta JSON payloads; traces separately retained',
-            implementation='net differences; no native write journal or deterministic replay')
+            implementation='net differences; no native write journal or deterministic replay',
+            experiment=experiment, experimental_resume=bool(experiment and experiment['policy']['allow_partial_resume']))
         if history is None:
             return dict(result, history=None, cursor=0, available_back=0, retained_steps=0,
                 captures_used=0, delta_bytes_used=0, anchor_bytes_used=0, total_bytes_used=0,
-                anchor=None, frozen=False, partial_restored=False, resume_safe=not self.closed,
+                anchor=None, frozen=False, partial_restored=experiment is not None,
+                execution_allowed=not self.closed, resume_safe=not self.closed and experiment is None,
                 invalid_reason='not_started')
         result.update(history=history['id'], valid=history['valid'] and not self.closed,
             invalid_reason='session_closed' if self.closed else history['invalid_reason'],
             cursor=history['cursor'], available_back=history['cursor'] if history['valid'] and not self.closed else 0,
             retained_steps=len(history['entries']), captures_used=history['captures_used'],
             frozen=history['frozen'], partial_restored=history['partial_restored'],
-            resume_safe=not history['frozen'] and not self.closed)
+            execution_allowed=not history['frozen'] and not self.closed,
+            resume_safe=not history['frozen'] and not self.closed and experiment is None)
         for key in ('anchor', 'ranges', 'anchor_bytes_used', 'delta_bytes_used', 'max_steps',
                     'max_bytes', 'per_step_reservation_bytes', 'anchor_elapsed_ms'):
             result[key] = deepcopy(history[key])
@@ -449,14 +490,32 @@ class CpuDeltaSessionMixin:
         self._event('cpu-delta-record', result)
         return result
 
-    def cpu_delta_rewind(self, count=1):
+    def _cpu_delta_policy(self, policy, history):
+        validate_policy(policy, registers=self._delta_registers)
+        if policy is None:
+            return None
+        ranges = policy.get('preserve_memory', [])
+        normalized = self._cpu_delta_ranges(ranges) if ranges else []
+        for item in normalized:
+            address = int(item['address'], 16)
+            if not any(int(r['address'], 16) <= address and address + item['length'] <=
+                       int(r['address'], 16) + r['length'] for r in history['ranges']):
+                raise ValueError('Preserved memory must fit inside a recorded RAM range')
+        return dict(name=policy.get('name', 'experiment'),
+                    preserve_registers=list(policy.get('preserve_registers', [])),
+                    preserve_memory=normalized, allow_partial_resume=policy.get('allow_partial_resume', False))
+
+    def cpu_delta_rewind(self, count=1, *, policy=None):
         _bounded(count, 'count', 1, 128)
+        validate_policy(policy, registers=self._delta_registers)
         history = self._cpu_delta_require()
         if count > history['cursor']:
             raise ValueError('CPU delta rewind count exceeds the available past')
+        policy = self._cpu_delta_policy(policy, history)
         target = history['cursor'] - count
         started = time.monotonic()
         attempted = False
+        restored = False
         with self._cpu_delta_owned():
             try:
                 self._cpu_delta_admit()
@@ -466,6 +525,21 @@ class CpuDeltaSessionMixin:
                     raise ValueError('CPU delta expected-after CPU or selected RAM mismatch')
                 self._cpu_delta_require()
                 target_cpu, target_ram = selected
+                preserved = dict(registers={}, memory=[])
+                if policy is not None:
+                    for name in policy['preserve_registers']:
+                        target_cpu[name] = observed[0][name]
+                        preserved['registers'][name] = observed[0][name]
+                    for item in policy['preserve_memory']:
+                        address = int(item['address'], 16)
+                        for number, region in enumerate(history['ranges']):
+                            offset = address - int(region['address'], 16)
+                            if 0 <= offset and offset + item['length'] <= region['length']:
+                                data = observed[1][number][offset:offset + item['length']]
+                                target_ram[number] = (target_ram[number][:offset] + data
+                                                      + target_ram[number][offset + len(data):])
+                                preserved['memory'].append(dict(item, sha256=_sha(data)))
+                                break
                 self._cpu_delta_prepare_restore(observed[0], target_cpu)
                 for change in _runs(observed[1], target_ram):
                     attempted = True
@@ -479,8 +553,30 @@ class CpuDeltaSessionMixin:
                 if self._cpu_delta_observe(history) != selected:
                     raise ValueError('CPU delta complete selected-state readback mismatch')
                 self._cpu_delta_require()
+                restored = True
                 history['cursor'] = target
                 history['frozen'] = history['partial_restored'] = True
+                if policy is not None:
+                    experiment = dict(format='fdisbull-delta-experiment-1', policy=deepcopy(policy),
+                        history=history['id'], source_cursor=target + count, target_cursor=target,
+                        anchor=deepcopy(history['anchor']), preserved=preserved,
+                        observed=_fingerprint(*observed), restored=_fingerprint(target_cpu, target_ram),
+                        full_machine_restored=False, resume_safe=False)
+                    prior = self.metadata.get('delta_experiment')
+                    if prior is not None:
+                        experiment['parent_sha256'] = _sha(_encoded(prior))
+                    self.metadata['delta_experiment'] = experiment
+                    self._cpu_delta_invalidate('explicit rewind policy applied; start a new recording before appending')
+                result = dict(format=FORMAT, run=self.run_id, rewound_count=count, cursor=target,
+                    partial_restored=True, full_machine_restored=False, devices_restored=False, resume_safe=False,
+                    execution_allowed=bool(policy and policy['allow_partial_resume']),
+                    experiment=deepcopy(self.metadata.get('delta_experiment')),
+                    host_elapsed_ms=round((time.monotonic() - started) * 1000, 3))
+                # Commit the policy evidence while still frozen. A failed receipt
+                # must never grant execution from an undocumented mixed state.
+                self._event('cpu-delta-rewind', result)
+                if policy is not None and policy['allow_partial_resume']:
+                    history['frozen'] = False
             except BaseException as error:
                 try:
                     self._cpu_delta_invalidate('undo failed: ' + type(error).__name__)
@@ -489,7 +585,7 @@ class CpuDeltaSessionMixin:
                     # logging. A failed receipt must not replace the root error.
                     pass
                 finally:
-                    if attempted:
+                    if attempted or restored:
                         try:
                             self.close()
                         except BaseException:
@@ -497,11 +593,7 @@ class CpuDeltaSessionMixin:
                             # failure even if process cleanup also reports one.
                             pass
                 raise
-        result = dict(format=FORMAT, run=self.run_id, rewound_count=count, cursor=target,
-            partial_restored=True, full_machine_restored=False, devices_restored=False, resume_safe=False,
-            history=self.cpu_delta_status(), host_elapsed_ms=round((time.monotonic() - started) * 1000, 3))
-        self._event('cpu-delta-rewind', result)
-        return result
+        return dict(result, history=self.cpu_delta_status())
 
     def cpu_delta_recover(self):
         # Current CPU mode may be unsupported after an unsuccessful forward trace.

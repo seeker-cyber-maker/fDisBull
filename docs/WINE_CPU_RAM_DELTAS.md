@@ -61,13 +61,16 @@ rollback or resume.
 
 A successful undo is still **partial**. Hidden CPU/FPU/SIMD state, other threads,
 unselected memory, guest services, devices, timers and files are not rewound.
-Normal execution, input, new snapshots, screenshots and ordinary edits are
+By default, normal execution, input, new snapshots, screenshots and ordinary edits are
 refused until full native recovery. A previously obtained outer-machine handle
 cannot bypass the guard. Read-only selected-register/RAM/status inspection and
 further guarded undo remain available. A clean refusal leaves recovery possible.
 Runtime code snapshots (`capture-code`), including scripted captures, are also
 refused before any observation or artifact creation; ordinary code inspection
 remains available. Capture becomes available again after full native recovery.
+The explicit experimental policy below can instead permit continuation and
+captures from a deliberately mixed state; that permission does not certify a
+complete historical machine context.
 
 `delta-recover` or a successful compatible `load_anchor_stone` restores the full
 native context and leaves the target stopped. Failed recovery retains the guard.
@@ -75,6 +78,44 @@ The native manifest and sidecar hashes, actual runtime files, staged input
 identities and restored registers are checked; changing a runtime file on disk
 cannot silently substitute a different VM during recovery. Histories belong to
 one live session; project restart preserves artifacts, not a resumable delta cursor.
+
+## Preserve selected current state during rewind
+
+The shared [agent-specified policy](CPU_RAM_DELTAS.md#agent-specified-rewind-policies)
+is also available for Wine through `cpu_delta_rewind(..., policy=...)`, the
+`debug-delta-rewind` JSON method and the `delta-rewind` script operation. For
+example, after recording a target's relevant RAM:
+
+```json
+{"op":"delta-rewind","count":2,"policy":{
+  "name":"preserve-rng",
+  "preserve_memory":[{"address":"0x140003010","length":8}],
+  "preserve_registers":[],
+  "allow_partial_resume":true
+}}
+```
+
+Use actual project addresses for a target's identified RNG state. Wine ranges
+must be flat, contained in the history's selected writable, non-executable
+main-image RAM, and nonoverlapping. `preserve_registers` names exposed x86-64
+registers; the pinned thread ID is identity evidence and is never a register
+edit. This is no generic RNG adapter: incomplete or incorrectly identified RNG
+state remains the caller's experiment assumption.
+
+Undo checks the full current projection before writing and verifies the mixed
+result, including preserved values, afterward. Any policy invalidates the old
+delta chain while retaining its full recovery Anchor Stone. An explicit
+`allow_partial_resume:true` permits later execution and capture, leaves the
+target stopped on return, and reports `execution_allowed:true` alongside
+`resume_safe:false` and `partial_restored:true`. The `experiment` receipt/status
+object retains the policy, preserved register values, hashes of preserved memory
+and full projection fingerprints; subsequent captures retain that provenance.
+Without that flag, the mixed result remains frozen until full native recovery.
+Starting another recording requires a new history and recovery Anchor Stone.
+
+This enables agent-directed input experiments; it does not qualify full-machine
+rewind, deterministic TAS replay or safe continuation for an arbitrary game.
+Wine counts remain completed instructions rather than video frames.
 
 ## Budgets and comparison
 

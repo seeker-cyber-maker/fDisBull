@@ -29,7 +29,7 @@ Use the existing foreground debugger owner and live `run` identifier.
 | `debug-delta-start` | `cpu_delta_start` | Validate explicit RAM ranges and capture one native recovery anchor |
 | `debug-delta-record` | `cpu_delta_record` | Advance and record net selected-state changes |
 | `debug-delta-status` | `cpu_delta_status` | Inspect scope, cursor, budgets and partial-state guard |
-| `debug-delta-rewind` | `cpu_delta_rewind` | Apply guarded reverse deltas without guest execution |
+| `debug-delta-rewind` | `cpu_delta_rewind` | Apply guarded reverse deltas; optionally preserve declared current state with an experimental policy |
 | `debug-delta-recover` | `cpu_delta_recover` | Restore the complete native anchor; no automatic resume |
 
 The matching route operations are `delta-start`, `delta-record`, `delta-status`,
@@ -65,11 +65,14 @@ The native writes are multiple RPCs, not an atomic native transaction. A partial
 apply or failed readback closes the session; it is never automatically resumed
 or rolled back.
 
-After undo, the response explicitly reports partial selected-state restoration,
+By default, undo explicitly reports partial selected-state restoration,
 with `full_machine_restored:false`. Normal execution, new recording, input,
 screenshots and new native snapshots are blocked. Further delta undo and
 read-only register/RAM/status inspection remain available. Starting a new
-history cannot bypass this guard.
+history cannot bypass this default guard. An explicit
+[experimental policy](#agent-specified-rewind-policies) can permit continuation
+from an intentionally mixed state; it does not make that state a complete
+historical machine context.
 
 `delta-recover` restores the original full native anchor and leaves the target
 stopped. A successful explicit compatible native `load_state` also clears the
@@ -83,6 +86,67 @@ conservative encoded-size reservation is checked before each forward interval;
 only actual retained payload bytes are charged. Trace and audit artifacts retain
 their separate existing limits. Histories are live-session owned, and immutable
 artifacts remain retained when a history ends.
+
+## Agent-specified rewind policies
+
+`cpu_delta_rewind(count=1, policy=None)` accepts an optional policy for input
+experiments. The agent can rewind the recorded CPU/RAM projection while keeping
+declared registers or memory at their values immediately before undo. For
+example, an agent that has identified a game's complete RNG state can preserve
+that state while returning the selected gameplay state to an earlier boundary.
+There is no automatic RNG discovery or frame detection: counts remain DOS
+next-fetch intervals or Wine completed-instruction intervals.
+
+```json
+{"op":"delta-rewind","count":2,"policy":{
+  "name":"preserve-rng",
+  "preserve_memory":[{"address":"1000:0100","length":4}],
+  "allow_partial_resume":true
+}}
+```
+
+The address is illustrative and must lie within the RAM ranges selected when
+the history started. Calling a memory range `rng` does not establish its role;
+the caller supplies target-specific evidence. A generator can have several
+state words, cached values and an index, including values held in registers.
+
+| Policy key | Meaning |
+| --- | --- |
+| `name` | A 1–128 character experiment name; defaults to `experiment` |
+| `preserve_registers` | Unique exposed register names whose current values are retained; defaults to `[]` |
+| `preserve_memory` | Nonoverlapping address/length ranges contained in recorded RAM ranges; defaults to `[]` |
+| `allow_partial_resume` | Explicit boolean enabling experimental continuation; defaults to `false` |
+
+Policy validation finishes before the first native write. Preserved memory
+uses the selected backend's address rules and the existing range/size limits.
+The encoded policy is limited to 32 KiB.
+An unknown register, range outside the recorded projection, overlap, malformed
+policy or identity/hash mismatch is refused. The complete current projection is
+still checked, and the complete resulting projection is read back, including
+the values deliberately preserved. Uncertain native application still closes
+the session.
+
+Supplying a policy ends the current delta chain: its earlier fingerprints do
+not describe the deliberately mixed result. The original full Anchor Stone
+remains available through `delta-recover`. A policy with
+`allow_partial_resume:false` leaves the partial-state guard active. With
+`allow_partial_resume:true`, the operation returns stopped but permits subsequent
+execution, input and captures for the experiment. The receipt and status retain
+`partial_restored:true`, `full_machine_restored:false` and `resume_safe:false`;
+`execution_allowed:true` records the explicit permission rather than a safety
+or whole-machine equivalence claim. Policy details, preserved register values
+and hashes of preserved memory are retained in the `experiment` receipt/status
+object and subsequent capture provenance. The experiment also records the
+history/cursors, recovery anchor and full observed/resulting projection hashes.
+Continuation is permitted only after complete readback and the experiment
+receipt have succeeded.
+
+After experimental continuation is enabled, start a new history to record the
+next branch; it captures a new full Anchor Stone from that current context.
+Recover the previous Anchor Stone before starting a new history if that earlier
+recovery point must remain the active recovery target. Preserved historical
+artifacts remain retained. An input trial's success does not qualify the policy
+for another target or establish deterministic TAS replay.
 
 ## Comparison procedure
 
@@ -136,10 +200,12 @@ Individual start/record medians need not sum to the median of measured totals.
 Delta undo is not a consistent restore-latency improvement. It performs less
 restoration work, but pays for guarded multi-RPC writes and chain/readback
 validation. Its benefit here is collecting and retaining a short selected-state
-history. It cannot continue from that historical partial state: recovery jumps
-back to the full anchor, or an explicitly loaded full checkpoint supplies a
-different complete boundary. General resumable rewind still needs qualified
-device/hidden-state handling or deterministic reconstruction from a full anchor.
+history. The measured runs use the default frozen mode: recovery jumps back to
+the full anchor, or an explicitly loaded full checkpoint supplies a different
+complete boundary. The explicit policy mode permits intentional partial-state
+experiments; these timings do not measure it or establish coherent whole-machine
+continuation. General resumable rewind still needs qualified device/hidden-state
+handling or deterministic reconstruction from a full anchor.
 
 The small three-trial, 512-byte RAM fixture does not establish throughput for
 larger windows or real games. Selected-memory scanning and mounted-file hashing
