@@ -119,6 +119,11 @@ Checkpoint-backed rewind is useful when selecting earlier points during a short
 recorded investigation. Long histories would need a different storage strategy,
 such as an independently qualified delta log or checkpoint/replay mechanism.
 
+The separate [experimental CPU/RAM delta prototype](CPU_RAM_DELTAS.md) measures
+net changes to exposed registers and selected RAM. Its partial undo blocks normal
+execution until a full native checkpoint is recovered; it does not replace this
+guide's full native checkpoint semantics.
+
 For the broader terminology, GDB distinguishes
 [reverse execution](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Reverse-Execution.html)
 from its [process record/replay mechanisms](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Process-Record-and-Replay.html).

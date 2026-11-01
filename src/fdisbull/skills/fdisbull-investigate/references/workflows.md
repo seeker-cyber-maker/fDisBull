@@ -80,6 +80,13 @@ states rather than replaying instructions; use ordinary `debug-load-state` when
 the checkpoint is already known. See `docs/DEBUGGER_REWIND.md` for limits and the
 local comparison procedure. Other execution backends are outside this first scope.
 
+The experimental `debug-delta-*` methods record net exposed-register and declared
+RAM changes with one full recovery anchor. They are selected-state diagnostics,
+not full machine rewind or a native write journal. Delta undo blocks execution,
+capture and snapshots until explicit native recovery. Inspect `debug-delta-status`
+and read `docs/CPU_RAM_DELTAS.md` before using it; do not infer restored devices,
+hidden CPU state, unselected RAM or resumable historical execution.
+
 A DOS data watch confirms the observed access boundary, not whole-instruction
 completion. Starting with 0.26, normalized DOS watch stops report
 `instruction_completed=null` and `registers_stage="after-access"`. A REP copy

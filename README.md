@@ -153,6 +153,9 @@ See [code layers](docs/CODE_LAYERS.md), [saved experiments](docs/DEBUGGER_EXPERI
 For short debugging histories, [checkpoint-backed rewind](docs/DEBUGGER_REWIND.md)
 records recent steps and lets an agent return to an earlier recorded boundary.
 
+An [experimental CPU/RAM delta mode](docs/CPU_RAM_DELTAS.md) measures smaller
+selected-state histories with an explicit full-state recovery requirement.
+
 ## Scenes, maps and interaction policies
 
 Scenes connect named controls, masks, predicates and supporting screenshots to

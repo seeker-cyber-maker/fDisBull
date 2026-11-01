@@ -17,6 +17,7 @@ from .external_files import _file_name
 from .code_layers import LayerProjectMixin, LayerSessionMixin, LAYER_DDL
 from .debug_experiments import ExperimentProjectMixin, ExperimentSessionMixin
 from .debug_rewind import RewindSessionMixin
+from .debug_cpu_deltas import CpuDeltaSessionMixin
 from .runtime_code import RuntimeCodeMixin, RUNTIME_DDL
 from .scenes import SceneProjectMixin, SceneSessionMixin, SCENE_DDL
 from .screenshot_hooks import ScreenshotHookProjectMixin, ScreenshotHookSessionMixin, DDL as SCREENSHOT_HOOK_DDL
@@ -254,7 +255,7 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
         return self._debug_artifact(row['run'],name,'screenshot-grid',rendered,metadata)
 
 
-class DebugSession(RewindSessionMixin, SpatialSessionMixin, TextProjectionSessionMixin, AssistedTravelSessionMixin, ProgressiveSceneSessionMixin, MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
+class DebugSession(CpuDeltaSessionMixin, RewindSessionMixin, SpatialSessionMixin, TextProjectionSessionMixin, AssistedTravelSessionMixin, ProgressiveSceneSessionMixin, MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
     @property
     def script_operations(self):
         from .debug_script import OPERATIONS
@@ -386,6 +387,7 @@ class DebugSession(RewindSessionMixin, SpatialSessionMixin, TextProjectionSessio
     def call(self, method, params=None):
         if self.closed:
             raise DebuggerError('Debugger session is closed')
+        self._cpu_delta_before_call(method,params)
         self._rewind_before_call(method)
         deadline=getattr(self,'_rpc_deadline',None)
         options={}
@@ -664,6 +666,14 @@ class DebugSession(RewindSessionMixin, SpatialSessionMixin, TextProjectionSessio
         return self._artifact(name,'state',data,metadata)
 
     def load_state(self, artifact):
+        if getattr(self,'_cpu_delta_history',None) is None:
+            return DebugSession._load_native_state(self,artifact)
+        with self._cpu_delta_full_load():
+            result = self._load_native_state(artifact)
+            self._cpu_delta_loaded()
+        return result
+
+    def _load_native_state(self, artifact):
         row = self.project.db.execute("""SELECT a.*,r.version FROM debug_artifacts a
             JOIN debug_runs r ON r.id=a.run WHERE a.id=?""",(artifact,)).fetchone()
         if row is None or row['kind'] != 'state' or row['version'] != self.version['id']:
@@ -933,6 +943,9 @@ class DebugWorkspace:
                         'debug-restore-experiment':'restore_experiment','debug-compare-experiment':'compare_experiment'})
         methods.update({'debug-rewind-start':'rewind_start','debug-rewind-status':'rewind_status',
                         'debug-rewind-record':'rewind_record','debug-rewind':'rewind'})
+        methods.update({'debug-delta-start':'cpu_delta_start','debug-delta-status':'cpu_delta_status',
+                        'debug-delta-record':'cpu_delta_record','debug-delta-rewind':'cpu_delta_rewind',
+                        'debug-delta-recover':'cpu_delta_recover'})
         methods.update({'debug-frame-probe':'frame_probe','debug-scene-check':'scene_check',
                         'debug-scene-assert':'scene_assert','debug-scene-click':'scene_click','debug-scene-act':'scene_act','debug-scene-wait':'scene_wait'})
         methods.update({'debug-keyboard-down':'keyboard_key_down','debug-keyboard-up':'keyboard_key_up',

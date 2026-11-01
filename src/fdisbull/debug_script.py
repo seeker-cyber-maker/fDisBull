@@ -26,6 +26,9 @@ OPERATIONS = {
     'save-state':'save_state', 'load-state':'load_state',
     'rewind-start':'rewind_start', 'rewind-status':'rewind_status',
     'rewind-record':'rewind_record', 'rewind':'rewind',
+    'delta-start':'cpu_delta_start', 'delta-status':'cpu_delta_status',
+    'delta-record':'cpu_delta_record', 'delta-rewind':'cpu_delta_rewind',
+    'delta-recover':'cpu_delta_recover',
     'layer-stack':'layers', 'layer-enable':'layer_enable', 'layer-patch':'layer_patch',
     'code':'code', 'capture-code':'capture_code', 'branch':'branch', 'cave':'cave', 'hook':'hook',
     'hooks':'hooks', 'delete-hook':'delete_hook',
@@ -67,7 +70,7 @@ def validate_script(script):
                 elif op in OPERATIONS:
                     signature = inspect.signature(getattr(DebugSession,OPERATIONS[op]))
                     signature.bind(None,**params)
-                    if op in ('rewind-start','rewind-record','rewind'):
+                    if op in ('rewind-start','rewind-record','rewind','delta-start','delta-record','delta-rewind'):
                         limits={'max_steps':(1,128),'max_bytes':(1,256*1024*1024),
                                 'count':(1,128),'timeout_ms':(1,600000)}
                         for key,value in params.items():
@@ -146,7 +149,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
-            if step['op'] in ('run','trace','rewind-record','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
+            if step['op'] in ('run','trace','rewind-record','delta-record','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
                 requested=params.get('timeout_ms')
                 if requested is None:requested=remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)
