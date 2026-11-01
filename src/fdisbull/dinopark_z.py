@@ -632,6 +632,7 @@ class ZService:
         previous_bought = getattr(self.text,'dinosaur_bought',False)
         previous_land = deepcopy(getattr(self.text,'land_order',None)),getattr(self.text,'land_bought',False)
         previous_fence=deepcopy(getattr(self.text,'fence_order',None)),getattr(self.text,'fence_bought',False)
+        qualified = None
         try:
             from .dinopark_purchase import PurchaseBudget, qualify_purchase
             with PurchaseBudget().bind(self.text.debug):
@@ -656,7 +657,9 @@ class ZService:
                     raise ValueError('Original destination is not qualified')
         except Exception:
             self.text.current, self.revision = previous[0], previous[2]
-            self.text.street = previous[3]
+            if (not purchase and not land and not fence and destination == 'street' and
+                    qualified is None):
+                self.text.street = previous[3]
             if fence:
                 proof=getattr(self.text,'fence_order',{}).get('proof')
                 self.text.fence_order,self.text.fence_bought=previous_fence

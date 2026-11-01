@@ -120,14 +120,15 @@ def test_street_qualification_is_read_only_and_refreshes_control_selectors(monke
         assert (address, length) == ('4020:3c5c', 2)
         calls.append('memory')
         return {'hex': '3412'}
-    def store(name, doc, *, parent):
+    def store(name, doc, *, parent, **kw):
         assert name == 'street' and parent == 'old-street'
         saved.append(doc)
         return {'id': 'fresh-street'}
     text = SimpleNamespace(street='old-street', office='office', current='park',
-        debug=SimpleNamespace(memory=memory), patterns={'shop_street': {}},
+        debug=SimpleNamespace(memory=memory, version={'id': 1}), patterns={'shop_street': {}},
         project=SimpleNamespace(debug_save_scene=store,
-            debug_scene_info=lambda scene: {'definition': {'match': {'constant': True}}}))
+            debug_scene_info=lambda scene, **kw: {'id': 'old-street', 'name': 'street',
+                'scene': 'street-root', 'definition': {'match': {'constant': True}}}))
     frame = {'artifact': 'fresh-frame', 'metadata': {'mode_id': 'current-mode'}}
     def capture(project, debug, name, *, hooks):
         assert hooks is False
@@ -187,3 +188,58 @@ def test_park_and_composed_business_routes_share_a_budget_before_observation(
     assert text.debug._rpc_deadline == deadline
     service._end_action_budget()
     assert text.debug._rpc_deadline is None
+
+
+def test_post_publication_witness_failure_can_reconcile_again_without_stale_parent(
+        tmp_path, monkeypatch):
+    service, text, calls = parked_service(tmp_path, monkeypatch)
+    head = ['old-street']
+    def qualify(selected):
+        assert selected.street == head[0], 'Scene revision changed during save'
+        head[0] = 'next-' + head[0]
+        selected.street, selected.current = head[0], 'street'
+        return {'frame': 'fresh-frame', 'view': 'street'}
+    module = bridge.load_scenes()
+    module.qualify_street = qualify
+    monkeypatch.setattr(bridge, 'load_scenes', lambda: module)
+    reads = [0]
+    def registers():
+        reads[0] += 1
+        if reads[0] == 1:
+            raise RuntimeError('witness unavailable after street revision publication')
+        return {'state_revision': 7916}
+    text.debug.registers = registers
+    root = service.held_action['id']
+    diagnostic = (tmp_path/'z-failure.json').read_bytes()
+    assert not service.reconcile(root)['complete']
+    assert service.held_action['id'] == root and text.current == 'park'
+    assert service.reconcile(root)['complete']
+    assert text.street == head[0] and (tmp_path/'z-failure.json').read_bytes() == diagnostic
+
+
+def test_street_publisher_commit_then_readback_failure_uses_committed_head_on_retry(monkeypatch):
+    head = ['street-r0']
+    def info(key, **kw):
+        return {'id': head[0] if key == 'street' else key, 'scene': 'street-root',
+                'name': 'street', 'definition': {'match': {'constant': True}}}
+    def save(name, doc, *, parent, **kw):
+        assert parent == head[0], 'Scene revision changed during save'
+        head[0] = 'next-' + head[0]
+        if head[0] == 'next-street-r0':
+            raise RuntimeError('scene publication committed; return readback failed')
+        return {'id': head[0]}
+    text = SimpleNamespace(current='park', street='street-r0', office='office',
+        patterns={'shop_street': {}}, debug=SimpleNamespace(version={'id': 1},
+            memory=lambda *a, **kw: {'hex': '3412'}),
+        project=SimpleNamespace(debug_scene_info=info, debug_save_scene=save))
+    monkeypatch.setattr(scenes, 'take_frame', lambda *a, **kw: (
+        {'artifact': 'frame', 'metadata': {'mode_id': 'mode'}}, 'image'))
+    monkeypatch.setattr(scenes, 'matches', lambda *a: True)
+    monkeypatch.setattr(scenes, 'pixel_predicate', lambda *a: {'constant': True})
+    for _, _, views in scenes.BUSINESS_ENTRIES.values():
+        text.patterns.update({v: {} for v in views})
+    with pytest.raises(RuntimeError, match='publication committed'):
+        scenes.qualify_street(text)
+    assert text.current == 'park' and text.street == 'street-r0'
+    assert scenes.qualify_street(text)['scene']['id'] == head[0]
+    assert text.current == 'street' and head[0] == 'next-next-street-r0'

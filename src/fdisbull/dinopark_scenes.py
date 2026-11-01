@@ -501,7 +501,14 @@ def qualify_street(text):
                      'street.office', [175, 140], office)
     for view in BUSINESS_ENTRIES:
         doc['objects'].append(business_entry_object(frame, predicate, selector, text.patterns, view))
-    saved = text.project.debug_save_scene('street', doc, parent=text.street)
+    version = text.debug.version['id']
+    original = text.project.debug_scene_info(text.street, version=version)
+    latest = text.project.debug_scene_info(original['name'], version=version)
+    if latest['scene'] != original['scene']:
+        raise RuntimeError('Street scene root changed; outcome unknown')
+    # Publication can commit before its return readback raises. Re-read the
+    # committed host head so a later read-only retry never forks a stale parent.
+    saved = text.project.debug_save_scene('street', doc, parent=latest['id'], version=version)
     text.street, text.current = saved['id'], 'street'
     return {'frame': frame, 'view': 'street', 'scene': saved}
 
