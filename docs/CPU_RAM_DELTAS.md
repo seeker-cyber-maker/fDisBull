@@ -1,5 +1,9 @@
 # Delta rewind: experimental exposed-CPU and selected-RAM changes
 
+This page describes native DOSBox. [Windows/Wine delta rewind](WINE_CPU_RAM_DELTAS.md)
+uses the same history and recovery safeguards with selected-thread x86-64
+registers, writable main-image RAM, and completed-instruction intervals.
+
 This prototype records net changes to exposed real-mode registers and explicitly
 selected project-mapped RAM between the same next-fetch boundaries used by
 [MR !14 checkpoint history](DEBUGGER_REWIND.md). It stores changed register
@@ -48,8 +52,8 @@ All ranges are explicit, nonoverlapping, ordinary mapped DOS RAM, at most
 64 ranges and 64 KiB total. Video/ROM mappings are excluded. The supported CPU
 projection is eight 32-bit GPRs, six 16-bit segments, 16-bit EIP and FLAGS, plus
 real-mode admission. Native save-state and structured register-edit support
-are required. Other execution backends and static Cortex-M analysis are outside
-this prototype.
+are required. Wine/QEMU has a separate adapter and contract linked above;
+DOSBox-in-QEMU, IDA and static Cortex-M analysis are outside this DOS prototype.
 
 ## A partial undo cannot silently become a machine rewind
 

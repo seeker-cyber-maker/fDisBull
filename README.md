@@ -157,6 +157,7 @@ Full native saved states are called [Anchor Stones](docs/ANCHOR_STONES.md), a no
 to TiGa's Blob to General game. Load a stone to jump directly to its saved context.
 [Delta rewind](docs/CPU_RAM_DELTAS.md) walks through recorded changes; its current
 experimental selected-state mode requires full native recovery before execution.
+It supports native DOSBox and [Windows x86-64 through Wine/QEMU](docs/WINE_CPU_RAM_DELTAS.md).
 
 ## Scenes, maps and interaction policies
 

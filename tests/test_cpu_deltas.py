@@ -207,6 +207,21 @@ def test_delta_range_references_defer_only_dynamic_values():
         assert debug.cpu_delta_status()['ranges'] == [{'address': '0x10000', 'length': 8}]
 
 
+def test_dos_script_rejects_wine_only_byte_budget_before_execution():
+    from fdisbull.debug_script import execute_script, validate_script
+    script = {'format': 'fdisbull-script-1', 'steps': [
+        {'op': 'trace', 'count': 2},
+        {'op': 'delta-start', 'ranges': RANGES, 'max_bytes': 512 * 1024**2}]}
+    assert validate_script(script)  # Backend-independent storage can author PE routes.
+    debug = Session()
+    initial = deepcopy((debug.cpu, debug.ram))
+    with pytest.raises(ValueError, match='max_bytes'):
+        execute_script(debug, script)
+    assert (debug.cpu, debug.ram) == initial
+    assert debug.calls == [] and debug.trace_calls == 0
+    assert debug.project.db.execute('SELECT COUNT(*) FROM debug_artifacts').fetchone()[0] == 0
+
+
 def test_records_only_net_deltas_and_composes_multiple_reverse_intervals():
     debug = Session()
     initial = deepcopy((debug.cpu, debug.ram))

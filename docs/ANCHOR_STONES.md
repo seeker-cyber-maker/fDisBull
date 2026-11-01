@@ -6,10 +6,10 @@ by the selected backend. It does not walk through intermediate recorded steps.
 The name is a reference to the Anchor Stones in TiGa's **Blob to General** game.
 
 **Delta rewind** follows recorded changes between earlier and later states.
-The current experimental implementation records exposed real-mode registers and
-selected RAM at debugger next-fetch boundaries. Those are recorded debugger
-steps, not synchronized video frames. Its partial-state and recovery limits
-remain unchanged.
+The experimental implementations record exposed registers and selected RAM:
+DOS uses next-fetch boundaries; Wine/QEMU uses completed instructions of one
+pinned Windows thread. These are recorded debugger steps, not synchronized
+video frames. Both remain partial and require full native recovery before resume.
 
 | Method | User-facing meaning | Current API |
 | --- | --- | --- |
@@ -49,7 +49,7 @@ prepared QEMU x86-64 runtime runs Windows PE64 programs through Wine.
 | Target/backend | Anchor Stones | Delta rewind |
 | --- | --- | --- |
 | DOS x86 in native DOSBox | Native saved machine context | Experimental real-mode exposed registers and selected RAM |
-| Windows x86-64 PE through Wine/QEMU | Whole-VM migration state and debugger context | Unsupported |
+| Windows x86-64 PE through Wine/QEMU | Whole-VM migration state and debugger context | Experimental selected-thread registers and writable main-image RAM |
 | DOSBox inside QEMU | Existing native state path with runtime identity checks | Unsupported |
 | IDA/Wine/QEMU | Explicitly refused; native states remain unqualified | Unsupported |
 | Native macOS/ARM64 executable | No native target execution backend | Unsupported |
@@ -58,6 +58,8 @@ Mac host checks do not qualify a native Windows host. Static Mach-O/ARM64
 analysis does not supply a live debugger or rewind backend. Wine/QEMU states
 require their private sidecar and matching runtime inputs; they do not restore
 host files. See [PE64 native checkpoints](WINE_DEBUGGER.md).
+The [Wine delta contract](WINE_CPU_RAM_DELTAS.md) gives the Windows-specific
+admission, thread, flags, memory and native-sidecar budget rules.
 
 Loading is a direct restore, not a zero-time guarantee. The measured native
 restore cost was around 17 ms on the small local DOSBox benchmark; this does

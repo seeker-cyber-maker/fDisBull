@@ -100,7 +100,10 @@ def machine_operation(function):
     @wraps(function)
     def invoke(self,*args,**kwargs):
         if not self.vm.lock.acquire(timeout=10):raise TimeoutError('Machine context is busy')
-        try:return function(self,*args,**kwargs)
+        try:
+            guard=getattr(self.vm,'operation_guard',None)
+            if guard is not None:guard(function.__name__)
+            return function(self,*args,**kwargs)
         except BaseException:
             if self.vm.gdb is not None and self.vm.gdb.socket is None:self.vm.close()
             raise

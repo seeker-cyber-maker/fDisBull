@@ -98,6 +98,58 @@ def validate_ranges(ranges, *, allow_references=False):
 
 
 class CpuDeltaSessionMixin:
+    _delta_registers = REGISTERS
+    _delta_read_only = READ_ONLY
+    _delta_frozen_read_only = FROZEN_READ_ONLY
+    _delta_max_bytes = 256 * 1024 * 1024
+    _delta_unit = 'next-fetch interval'
+    _delta_instruction_completion = 'unknown'
+    _delta_scope = 'selected conventional RAM and exposed real-mode registers'
+
+    def _cpu_delta_cpu(self, snapshot):
+        return _cpu(snapshot)
+
+    def _cpu_delta_pc(self, cpu):
+        return _pc_of(cpu)
+
+    def _cpu_delta_value(self, name, value):
+        value = integer(value)
+        if value > (0xffff if name in NARROW else 0xffffffff):
+            raise ValueError('CPU delta register width mismatch')
+        return value
+
+    def _cpu_delta_anchor_size(self, anchor):
+        return anchor.get('size')
+
+    def _cpu_delta_anchor_manifest(self, anchor):
+        return anchor.get('metadata', {}).get('disk_manifest')
+
+    def _cpu_delta_save_anchor(self, max_bytes):
+        return self.save_state('cpu-delta-recovery.sav', max_bytes=max_bytes)
+
+    def _cpu_delta_check_anchor(self, history, row):
+        metadata = json.loads(row['metadata'])
+        if (metadata.get('disk_manifest') != history['disk_manifest']
+                or self._cpu_delta_cpu(metadata.get('registers')) != history['initial_cpu']):
+            raise ValueError('CPU delta recovery anchor metadata mismatch')
+
+    def _cpu_delta_trace_step(self, before_cpu, timeout_ms):
+        trace = self.trace('cpu-delta-fetch.json', count=2,
+                           timeout_ms=timeout_ms, fast_forward=True)
+        return trace, self._rewind_trace(trace, self._cpu_delta_pc(before_cpu))
+
+    def _cpu_delta_prepare_restore(self, current, target):
+        """Backend-specific preflight must finish before the first write."""
+
+    def _cpu_delta_write_memory(self, history, change):
+        address = int(history['ranges'][change['range']]['address'], 16) + self.delta + change['offset']
+        return self.call('memory.write', dict(address=dict(space='linear', offset=f'0x{address:08X}'),
+            expected_sha256=_sha(bytes.fromhex(change['before_hex'])),
+            data_base64=base64.b64encode(bytes.fromhex(change['after_hex'])).decode()))
+
+    def _cpu_delta_write_register(self, name, value):
+        return self.call('state.set_register', dict(register=name.upper(), value=value))
+
     def _cpu_delta_native(self):
         if self.closed:
             raise ValueError('Debugger session is closed')
@@ -123,9 +175,9 @@ class CpuDeltaSessionMixin:
         if getattr(self, '_cpu_delta_busy', False) or getattr(self, '_cpu_delta_load_depth', 0):
             return
         history = getattr(self, '_cpu_delta_history', None)
-        if history is not None and history['frozen'] and method not in FROZEN_READ_ONLY:
+        if history is not None and history['frozen'] and method not in self._delta_frozen_read_only:
             raise ValueError('CPU delta partial state is frozen; load a full native checkpoint before execution or capture')
-        if method not in READ_ONLY:
+        if method not in self._delta_read_only:
             self._cpu_delta_invalidate('unrecorded RPC: ' + str(method))
 
     @contextmanager
@@ -205,7 +257,7 @@ class CpuDeltaSessionMixin:
         return result
 
     def _cpu_delta_observe(self, history):
-        cpu = _cpu(self.registers())
+        cpu = self._cpu_delta_cpu(self.registers())
         ram = []
         for item in history['ranges']:
             observed = self.memory(item['address'], length=item['length'])
@@ -217,7 +269,7 @@ class CpuDeltaSessionMixin:
 
     def cpu_delta_start(self, ranges, *, max_steps=16, max_bytes=67108864):
         _bounded(max_steps, 'max_steps', 1, 128)
-        _bounded(max_bytes, 'max_bytes', 1, 256 * 1024 * 1024)
+        _bounded(max_bytes, 'max_bytes', 1, self._delta_max_bytes)
         self._cpu_delta_native()
         old = getattr(self, '_cpu_delta_history', None)
         if old is not None and old['frozen']:
@@ -226,23 +278,24 @@ class CpuDeltaSessionMixin:
         started = time.monotonic()
         with self._cpu_delta_owned():
             self._cpu_delta_admit()
-            _cpu(self.registers())
+            self._cpu_delta_cpu(self.registers())
             self._cpu_delta_invalidate('new CPU delta history started')
-            self._rewind_invalidate('CPU delta history started')
+            if hasattr(self, '_rewind_invalidate'):
+                self._rewind_invalidate('CPU delta history started')
             manifest = self._disk_manifest()
-            anchor = self.save_state('cpu-delta-recovery.sav', max_bytes=max_bytes)
-            size = anchor.get('size')
+            anchor = self._cpu_delta_save_anchor(max_bytes)
+            size = self._cpu_delta_anchor_size(anchor)
             if type(size) is not int or not 1 <= size <= max_bytes:
                 raise ValueError('CPU delta recovery anchor violated its byte budget')
-            if anchor.get('metadata', {}).get('disk_manifest') != manifest or self._disk_manifest() != manifest:
+            if self._cpu_delta_anchor_manifest(anchor) != manifest or self._disk_manifest() != manifest:
                 raise ValueError('Mounted game files changed while capturing CPU delta anchor')
             history = dict(id=uuid.uuid4().hex, identity=self._cpu_delta_identity(), valid=True,
                 invalid_reason=None, frozen=False, partial_restored=False, cursor=0, entries=[],
                 captures_used=0, delta_bytes_used=0, anchor_bytes_used=size,
-                anchor={key: anchor[key] for key in ('artifact', 'sha256', 'size')},
+                anchor={key: anchor[key] for key in ('artifact', 'sha256', 'size', 'native_size') if key in anchor},
                 disk_manifest=deepcopy(manifest), ranges=normalized, max_steps=max_steps, max_bytes=max_bytes)
             cpu, ram = self._cpu_delta_observe(history)
-            if cpu != _cpu(anchor['metadata']['registers']):
+            if cpu != self._cpu_delta_cpu(anchor['metadata']['registers']):
                 raise ValueError('CPU changed while capturing CPU delta recovery anchor')
             history['initial_cpu'], history['initial_ram'] = cpu, ram
             # Worst case: isolated changed bytes with JSON keys, two hex bytes,
@@ -258,8 +311,8 @@ class CpuDeltaSessionMixin:
     def cpu_delta_status(self):
         history = getattr(self, '_cpu_delta_history', None)
         result = dict(format=FORMAT, run=self.run_id, active=history is not None and not self.closed,
-            valid=False, unit='next-fetch interval', instruction_completion='unknown',
-            scope='selected conventional RAM and exposed real-mode registers',
+            valid=False, unit=self._delta_unit, instruction_completion=self._delta_instruction_completion,
+            scope=self._delta_scope,
             full_machine_restored=False, devices_restored=False, unselected_ram='unknown',
             hidden_cpu_state='unknown', disk_restore=False, survives_live_session=False,
             budget_scope='cumulative native anchor plus delta JSON payloads; traces separately retained',
@@ -308,14 +361,12 @@ class CpuDeltaSessionMixin:
         parent = history['anchor']['sha256']
         for entry in history['entries'][:history['cursor']]:
             document = self._cpu_delta_document(history, entry, parent)
-            if document['before'] != _fingerprint(cpu, ram) or document['before_pc'] != _pc_of(cpu):
+            if document['before'] != _fingerprint(cpu, ram) or document['before_pc'] != self._cpu_delta_pc(cpu):
                 raise ValueError('CPU delta before-state chain mismatch')
             for name, change in document['registers'].items():
-                if name not in REGISTERS or cpu[name] != change['before']:
+                if name not in self._delta_registers or cpu[name] != change['before']:
                     raise ValueError('CPU delta register chain mismatch')
-                value = integer(change['after'])
-                if value > (0xffff if name in NARROW else 0xffffffff):
-                    raise ValueError('CPU delta register width mismatch')
+                value = self._cpu_delta_value(name, change['after'])
                 cpu[name] = value
             for change in document['memory']:
                 number, offset = change['range'], change['offset']
@@ -325,7 +376,7 @@ class CpuDeltaSessionMixin:
                         or ram[number][offset:offset + len(old)] != old):
                     raise ValueError('CPU delta RAM chain mismatch')
                 ram[number] = ram[number][:offset] + new + ram[number][offset + len(old):]
-            if (document['after'] != _fingerprint(cpu, ram) or document['after_pc'] != _pc_of(cpu)):
+            if (document['after'] != _fingerprint(cpu, ram) or document['after_pc'] != self._cpu_delta_pc(cpu)):
                 raise ValueError('CPU delta after-state chain mismatch')
             if entry['index'] == target:
                 selected = deepcopy(cpu), list(ram)
@@ -358,11 +409,9 @@ class CpuDeltaSessionMixin:
                     if deadline <= 0:
                         raise TimeoutError('CPU delta recording host-time budget expired before execution')
                     history['captures_used'] += 1
-                    trace = self.trace('cpu-delta-fetch.json', count=2,
-                        timeout_ms=max(1, int(deadline * 1000)), fast_forward=True)
-                    after_pc = self._rewind_trace(trace, _pc_of(before_cpu))
+                    trace, after_pc = self._cpu_delta_trace_step(before_cpu, max(1, int(deadline * 1000)))
                     after_cpu, after_ram = self._cpu_delta_observe(history)
-                    if _pc_of(after_cpu) != after_pc:
+                    if self._cpu_delta_pc(after_cpu) != after_pc:
                         raise ValueError('CPU delta final PC differs from validated trace')
                     self._cpu_delta_require()
                     parent = history['entries'][history['cursor'] - 1]['delta']['sha256'] if history['cursor'] else history['anchor']['sha256']
@@ -372,7 +421,7 @@ class CpuDeltaSessionMixin:
                     document = dict(format=FORMAT, identity=history['identity'], history=history['id'],
                         index=history['cursor'] + 1, parent_sha256=parent, ranges=history['ranges'],
                         before=_fingerprint(before_cpu, before_ram), after=_fingerprint(after_cpu, after_ram),
-                        before_pc=_pc_of(before_cpu), after_pc=after_pc,
+                        before_pc=self._cpu_delta_pc(before_cpu), after_pc=after_pc,
                         registers=changes, memory=memory, trace_artifact=trace['artifact'],
                         trace_sha256=trace['sha256'])
                     data = _encoded(document)
@@ -417,18 +466,16 @@ class CpuDeltaSessionMixin:
                     raise ValueError('CPU delta expected-after CPU or selected RAM mismatch')
                 self._cpu_delta_require()
                 target_cpu, target_ram = selected
+                self._cpu_delta_prepare_restore(observed[0], target_cpu)
                 for change in _runs(observed[1], target_ram):
                     attempted = True
                     history['frozen'] = history['partial_restored'] = True
-                    address = int(history['ranges'][change['range']]['address'], 16) + self.delta + change['offset']
-                    self.call('memory.write', dict(address=dict(space='linear', offset=f'0x{address:08X}'),
-                        expected_sha256=_sha(bytes.fromhex(change['before_hex'])),
-                        data_base64=base64.b64encode(bytes.fromhex(change['after_hex'])).decode()))
-                for name in sorted(REGISTERS):
+                    self._cpu_delta_write_memory(history, change)
+                for name in sorted(self._delta_registers):
                     if observed[0][name] != target_cpu[name]:
                         attempted = True
                         history['frozen'] = history['partial_restored'] = True
-                        self.call('state.set_register', dict(register=name.upper(), value=target_cpu[name]))
+                        self._cpu_delta_write_register(name, target_cpu[name])
                 if self._cpu_delta_observe(history) != selected:
                     raise ValueError('CPU delta complete selected-state readback mismatch')
                 self._cpu_delta_require()
@@ -467,10 +514,11 @@ class CpuDeltaSessionMixin:
                 or _sha(bytes(row['data'])) != history['anchor']['sha256']):
             self._cpu_delta_invalidate('recovery anchor hash/identity mismatch')
             raise ValueError('CPU delta recovery anchor hash/identity mismatch')
-        metadata = json.loads(row['metadata'])
-        if metadata.get('disk_manifest') != history['disk_manifest'] or _cpu(metadata.get('registers')) != history['initial_cpu']:
+        try:
+            self._cpu_delta_check_anchor(history, row)
+        except BaseException:
             self._cpu_delta_invalidate('recovery anchor metadata mismatch')
-            raise ValueError('CPU delta recovery anchor metadata mismatch')
+            raise
         with self._cpu_delta_owned():
             restore = self.load_state(history['anchor']['artifact'])
         result = dict(format=FORMAT, run=self.run_id, anchor=deepcopy(history['anchor']), restore=restore,

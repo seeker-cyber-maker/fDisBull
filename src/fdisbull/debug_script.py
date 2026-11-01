@@ -74,6 +74,7 @@ def validate_script(script):
                     if op in ('rewind-start','rewind-record','rewind','delta-start','delta-record','delta-rewind'):
                         limits={'max_steps':(1,128),'max_bytes':(1,256*1024*1024),
                                 'count':(1,128),'timeout_ms':(1,600000)}
+                        if op=='delta-start':limits['max_bytes']=(1,2*1024**3)
                         for key,value in params.items():
                             if key in limits and not (isinstance(value,str) and value.startswith('$')):
                                 bounded(value,key,*limits[key])
@@ -115,6 +116,11 @@ def validate_script(script):
 def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_step=None, _bindings_out=None):
     bounded(timeout_ms,'timeout_ms',1,600000)
     steps = validate_script(script) # Reject malformed later steps before any guest mutation.
+    for step in steps:
+        if step['op']=='delta-start' and 'max_bytes' in step:
+            value=step['max_bytes']
+            if not (isinstance(value,str) and value.startswith('$')):
+                bounded(value,'max_bytes',1,getattr(session,'_delta_max_bytes',256*1024**2))
     if getattr(session,'script_operations',None) is not None:
         unsupported=[s['op'] for s in steps if s['op'] not in session.script_operations]
         if unsupported:

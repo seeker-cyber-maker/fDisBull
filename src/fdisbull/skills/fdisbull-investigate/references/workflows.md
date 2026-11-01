@@ -92,6 +92,12 @@ not full machine rewind or a native write journal. Delta undo blocks execution,
 capture and snapshots until explicit native recovery. Inspect `debug-delta-status`
 and read `docs/CPU_RAM_DELTAS.md` before using it; do not infer restored devices,
 hidden CPU state, unselected RAM or resumable historical execution.
+Wine/QEMU also supports bounded selected-thread x86-64 deltas: one completed
+instruction per interval, writable non-executable main-image RAM only, no active
+layers/breakpoints, and no resume/capture after undo until full recovery. Native
+sidecar bytes count toward the 2 GiB default budget; DOS's limits are unchanged.
+See `docs/WINE_CPU_RAM_DELTAS.md`. IDA and native ARM64 target debugging remain
+outside this delta contract.
 
 A DOS data watch confirms the observed access boundary, not whole-instruction
 completion. Starting with 0.26, normalized DOS watch stops report

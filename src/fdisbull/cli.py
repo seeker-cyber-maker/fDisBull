@@ -165,7 +165,7 @@ METHODS = {
     'debug-rewind': 'Jump to an earlier full Anchor Stone in legacy history; run,[count]',
     'debug-delta-start': 'Experimental delta rewind with one full native Anchor Stone; run,ranges,[max_steps,max_bytes]',
     'debug-delta-status': 'Inspect selected-state delta scope, cursor, costs and execution guard; run',
-    'debug-delta-record': 'Record net exposed-register/selected-RAM changes between next-fetch boundaries; run,[count,timeout_ms]',
+    'debug-delta-record': 'Record selected CPU/RAM changes at DOS next-fetch or Wine completed-instruction boundaries; run,[count,timeout_ms]',
     'debug-delta-rewind': 'Undo selected CPU/RAM deltas and block execution until native recovery; run,[count]',
     'debug-delta-recover': 'Load the recovery Anchor Stone and clear the partial-state guard; run',
     'debug-script': 'Execute bounded menu/debug script; run,[script,script_id,timeout_ms]',
