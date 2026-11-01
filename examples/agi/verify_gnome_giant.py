@@ -47,8 +47,8 @@ class QuestRun(CaveRun):
         s = super().state()
         v = read(self.d,self.ds+9,256); f = read(self.d,self.ds+0x109,32)
         flag = lambda n: bool(f[n//8] & (0x80 >> (n % 8)))
-        s['quest_variables'] = {str(n):v[n] for n in (30,31,62,66,70,71,80,83,84,85,86)}
-        s['quest_flags'] = {str(n):flag(n) for n in (20,21,22,23,84,85,102,104,148,154,156,169,205)}
+        s['quest_variables'] = {str(n):v[n] for n in (1,30,31,62,63,64,66,70,71,80,83,84,85,86)}
+        s['quest_flags'] = {str(n):flag(n) for n in (20,21,22,23,24,25,26,73,79,84,85,102,104,148,154,156,169,205)}
         s['player_control'] = int.from_bytes(read(self.d,self.ds+0x139,2),'little')
         table=int.from_bytes(read(self.d,self.ds+0x963,2),'little')
         s['quest_actors']={}
@@ -277,6 +277,45 @@ class QuestRun(CaveRun):
             (s['ego']['x'],s['ego']['y'])==point and self._idle(), 'original stair entry',15000)
         self.quest_safe(room,19)
 
+    def admit_room68(self):
+        """Select a source-qualified visit using ordinary retreats and reentry.
+
+        Hidden actor pixels alone do not establish an empty visit. In this
+        exact source, f23 marks the dwarf initialization branch. Its random
+        selector is sampled once on entry; no initialization is admitted only
+        after the original entry motion has completed. Each rejected visit
+        has a known outcome before another ordinary room transition is sent.
+        """
+        expected='779fcbf87c2c07318e24289fdf5d5619e5615e09e972543fa456d7a62bba4469'
+        visits=self.report.setdefault('room68_visits',[])
+        require(not visits and self.resources[68].resource_sha256==expected,
+                'Room 68 visit source or controller differs')
+        for attempt in range(1,17):
+            s=self.quest_safe(68,19);v=s['quest_variables'];f=s['quest_flags']
+            require(self._idle() and not s['initializing'] and not s['window'] and
+                    s['player_control']==1 and s['ego']=={'x':95,'y':159,'direction':0,'drawn':True}
+                    and f['148'] is True and v['1']==67 and s['key_carried'] and not s['chest_carried']
+                    and type(v['62']) is int and 0<=v['62']<=250
+                    and type(v['70']) is int and 0<=v['70']<=45 and type(f['23']) is bool,
+                    'Room 68 entry is not reconciled')
+            empty=f['23'] is False and v['62']>=150 and v['70']==0 and s['quest_actors']['1']['drawn'] is False
+            selected=f['23'] is True and v['62']<150
+            require(empty or selected,'Room 68 source decision contradicts its observed state')
+            record={'attempt':attempt,'source_logic_sha256':expected,'state':deepcopy(s),
+                    'guest_ms':self.guest_elapsed,'admitted':empty,
+                    'scope':'Source-linked host admission; not a native conditional-handler trace.'}
+            visits.append(record)
+            if empty:return
+            require(attempt<16,'Room 68 no-initialization visit budget exhausted')
+            # These dry baseline origins lead to the source's y=166 room exit.
+            # The guest still decides actual movement and transition success.
+            self.precise(x=94);self.precise(y=165)
+            self.press('down',20,hold_ms=1,gap_ms=1)
+            self.stair_ready(67,(119,42))
+            record['retreat_state']=deepcopy(self.quest_safe(67,19))
+            self.press('up',20,hold_ms=1,gap_ms=1)
+            self.stair_ready(68,(95,159))
+
     def climb(self):
         self.quest_safe(19,19);start=len(self.inputs),len(self.messages)
         self.command('open door')
@@ -292,6 +331,7 @@ class QuestRun(CaveRun):
             self.quest_safe(room,19);self.static_path(*goal)
             self.press('up',20,hold_ms=1,gap_ms=1)
             self.stair_ready(next_room,entry)
+            if next_room==68:self.admit_room68()
         self.static_path(2,94);self.move('left',room=59)
         self.quest_safe(59,19);self.static_path(2,110);self.move('left',room=58)
         self.quest_safe(58,19)

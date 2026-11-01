@@ -54,6 +54,92 @@ def authored_run(tmp_path):
     return run
 
 
+def room68_run(tmp_path, selectors=(200,)):
+    run=authored_run(tmp_path)
+    run.current.update(room=68,score=19,key_carried=True,initializing=False,window=0,
+                       player_control=1,ego={'x':95,'y':159,'direction':0,'drawn':True},
+                       quest_actors={'1':{'drawn':False}})
+    run.current['quest_flags'].update({'148':True,'23':selectors[0]<150})
+    run.current['quest_variables'].update({'1':67,'62':selectors[0],'70':0})
+    run.resources={68:SimpleNamespace(resource_sha256='779fcbf87c2c07318e24289fdf5d5619e5615e09e972543fa456d7a62bba4469')}
+    run._idle=lambda:True
+    remaining=iter(selectors[1:])
+    def precise(**targets):
+        run.events.append(('precise',targets));run.current['ego'].update(targets)
+    run.precise=precise
+    def stair_ready(room,point):
+        run.events.append(('stair-ready',room,point));run.current['room']=room
+        run.current['ego'].update(x=point[0],y=point[1])
+        if room==68:
+            value=next(remaining)
+            run.current['quest_variables'].update({'1':67,'62':value,'70':0})
+            run.current['quest_flags']['23']=value<150
+    run.stair_ready=stair_ready
+    return run
+
+
+def test_room68_empty_visit_requires_no_input(tmp_path):
+    run=room68_run(tmp_path);run.admit_room68()
+    assert run.events==[] and run.report['room68_visits'][0]['admitted'] is True
+    assert len(run.report['room68_visits'])==1
+
+
+def test_hidden_eligible_dwarf_is_retired_through_observed_room_transitions(tmp_path):
+    run=room68_run(tmp_path,(132,200));run.admit_room68()
+    assert [v['admitted'] for v in run.report['room68_visits']]==[False,True]
+    assert run.events==[('precise',{'x':94}),('precise',{'y':165}),
+        ('press','down',20,{'hold_ms':1,'gap_ms':1}),('stair-ready',67,(119,42)),
+        ('press','up',20,{'hold_ms':1,'gap_ms':1}),('stair-ready',68,(95,159))]
+    assert run.report['room68_visits'][0]['retreat_state']['room']==67
+    assert run.current['score']==19 and run.current['shield_carried']
+
+
+@pytest.mark.parametrize('fault',['source','repeat','random_bool','random_range','timer_bool','timer_range',
+    'contradictory_flag','scheduled_timer','drawn','wrong_previous','position','direction','control',
+    'initializing','window','entry_callback','keyboard','key','chest','shield'])
+def test_room68_inconsistent_entry_is_preserved_without_input(tmp_path,fault):
+    run=room68_run(tmp_path)
+    if fault=='source':run.resources[68].resource_sha256='0'*64
+    if fault=='repeat':run.report['room68_visits']=[{'prior':True}]
+    if fault=='random_bool':run.current['quest_variables']['62']=True
+    if fault=='random_range':run.current['quest_variables']['62']=251
+    if fault=='timer_bool':run.current['quest_variables']['70']=False
+    if fault=='timer_range':run.current['quest_variables']['70']=46
+    if fault=='contradictory_flag':run.current['quest_flags']['23']=True
+    if fault=='scheduled_timer':run.current['quest_variables']['70']=4
+    if fault=='drawn':run.current['quest_actors']['1']['drawn']=True
+    if fault=='wrong_previous':run.current['quest_variables']['1']=69
+    if fault=='position':run.current['ego']['x']=96
+    if fault=='direction':run.current['ego']['direction']=3
+    if fault=='control':run.current['player_control']=0
+    if fault=='initializing':run.current['initializing']=True
+    if fault=='window':run.current['window']=1
+    if fault=='entry_callback':run.current['quest_flags']['148']=False
+    if fault=='keyboard':run._idle=lambda:False
+    if fault=='key':run.current['key_carried']=False
+    if fault=='chest':run.current['chest_carried']=True
+    if fault=='shield':run.current['shield_carried']=False
+    before=deepcopy(run.current)
+    with pytest.raises(RuntimeError):run.admit_room68()
+    assert run.events==[] and run.current==before
+
+
+def test_room68_visit_budget_is_finite_and_does_not_start_a_seventeenth_visit(tmp_path):
+    run=room68_run(tmp_path,(132,)*16)
+    with pytest.raises(RuntimeError,match='budget exhausted'):run.admit_room68()
+    assert len(run.report['room68_visits'])==16
+    assert sum(event[0]=='stair-ready' and event[1]==68 for event in run.events)==15
+    assert not any(v['admitted'] for v in run.report['room68_visits'])
+
+
+def test_room68_uncertain_retreat_does_not_send_reentry(tmp_path):
+    run=room68_run(tmp_path,(132,200))
+    def uncertain(**targets):raise RuntimeError('retreat not observed')
+    run.precise=uncertain
+    with pytest.raises(RuntimeError,match='not observed'):run.admit_room68()
+    assert len(run.report['room68_visits'])==1 and run.events==[]
+
+
 def test_active_probe_receives_stop_and_inactive_delegates(monkeypatch,tmp_path):
     run=authored_run(tmp_path);calls=[];stop={'authored':'stop'}
     monkeypatch.setattr(module.CaveRun,'handle_stop',lambda self,out:calls.append(('inherited',out)) or 'parent')
