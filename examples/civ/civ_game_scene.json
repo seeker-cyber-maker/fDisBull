@@ -2631,6 +2631,151 @@
     }
    ]
   },
+  "choose-tribe-9": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "choose-tribe-9-text": {
+     "kind": "text",
+     "text": "Second-group row 9 chosen: civnow = 1, civ_tribe_of[1] = 9; leader name."
+    }
+   },
+   "body": [
+    {
+     "id": "choose-tribe-9-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 7
+    },
+    {
+     "id": "choose-tribe-9-set-human_civ",
+     "op": "set",
+     "var": "$human_civ",
+     "value": 1
+    },
+    {
+     "id": "choose-tribe-9-set-tribe",
+     "op": "set",
+     "var": "$tribe",
+     "value": 9
+    },
+    {
+     "id": "choose-tribe-9-text",
+     "op": "text",
+     "resource": "choose-tribe-9-text"
+    }
+   ]
+  },
   "name-continue": {
    "format": "fdisbull-il-1",
    "role": "uil",
@@ -6402,7 +6547,7 @@
     "tribe",
     "civilization"
    ],
-   "description": "Tribe choice; only row 1 of the first group is bound.",
+   "description": "Tribe choice; representative rows 1 and 9 are bound.",
    "bindings": [],
    "context": "tribe"
   },
@@ -6418,6 +6563,23 @@
     {
      "verb": "activate",
      "program": "choose-tribe-1"
+    }
+   ],
+   "context": "tribe"
+  },
+  {
+   "id": "tribe-row-9",
+   "label": "First second-group row",
+   "aliases": [
+    "second group",
+    "tribe 9",
+    "tribe row 9"
+   ],
+   "description": "Sets civnow = 1 and civ_tribe_of[1] = 9 for the first alternate-tribe row.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "choose-tribe-9"
     }
    ],
    "context": "tribe"

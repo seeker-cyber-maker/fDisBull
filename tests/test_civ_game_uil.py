@@ -55,8 +55,8 @@ def test_scene_has_bounded_screens_and_validates():
     assert scene["format"] == "fdisbull-il-scene-1"
     assert scene["partial"] is True
     assert len(scene["contexts"]) == 23
-    assert len(scene["objects"]) == 88
-    assert len(scene["programs"]) == 39
+    assert len(scene["objects"]) == 89
+    assert len(scene["programs"]) == 40
     context_ids = {context["id"] for context in scene["contexts"]}
     assert context_ids == set(SCREEN_NAMES.values()) | {"production", "units"}
     object_ids = {item["id"] for item in scene["objects"]}
@@ -122,6 +122,19 @@ def test_first_tribe_row_binds_civnow_and_tribe():
     assert _act(backend, "activate", "tribe-row-1")["status"] == "success"
     assert backend.state["$human_civ"] == 1
     assert backend.state["$tribe"] == 1
+    assert backend.observe()["context"]["id"] == "leader-name"
+
+
+def test_second_tribe_group_row_binds_alternate_tribe():
+    backend = ILSceneBackend(build_scene())
+    assert _act(backend, "activate", "title-new")["status"] == "success"
+    assert _act(backend, "activate", "birth-continue")["status"] == "success"
+    assert _act(backend, "activate", "difficulty-prince")["status"] == "success"
+    assert _act(backend, "activate", "competition-five")["status"] == "success"
+    assert backend.observe()["context"]["id"] == "tribe"
+    assert _act(backend, "activate", "tribe-row-9")["status"] == "success"
+    assert backend.state["$human_civ"] == 1
+    assert backend.state["$tribe"] == 9
     assert backend.observe()["context"]["id"] == "leader-name"
 
 

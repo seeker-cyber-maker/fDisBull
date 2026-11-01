@@ -478,7 +478,7 @@ SCREEN_SPECS = [
                 "tribe-menu",
                 "Tribe menu",
                 ["tribe", "civilization"],
-                "Tribe choice; only row 1 of the first group is bound.",
+                "Tribe choice; representative rows 1 and 9 are bound.",
             ),
             _object(
                 "tribe-row-1",
@@ -487,6 +487,14 @@ SCREEN_SPECS = [
                 "Sets civnow = 1 and civ_tribe_of[1] = 1 for the representative first row.",
                 "activate",
                 "choose-tribe-1",
+            ),
+            _object(
+                "tribe-row-9",
+                "First second-group row",
+                ["second group", "tribe 9", "tribe row 9"],
+                "Sets civnow = 1 and civ_tribe_of[1] = 9 for the first alternate-tribe row.",
+                "activate",
+                "choose-tribe-9",
             ),
         ],
     ),
@@ -1359,6 +1367,16 @@ def build_programs() -> dict:
         ),
     )
     add(
+        "choose-tribe-9",
+        _transition(
+            "choose-tribe-9",
+            LEADER_NAME,
+            "Second-group row 9 chosen: civnow = 1, civ_tribe_of[1] = 9; leader name.",
+            ("$human_civ", 1),
+            ("$tribe", 9),
+        ),
+    )
+    add(
         "name-continue",
         _transition("name-continue", INTRO, "Name field accepted; introduction text."),
     )
@@ -1725,7 +1743,7 @@ def build_provenance(
         "limits": [
             "Partial scene graph and state projection, not a full game simulation.",
             "No DOS execution, VGA rendering, input decoding, AI, combat, technology, diplomacy, save parsing or economy model.",
-            "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; only representative tribe row 1 is bound, and no setup binding has a live-screen observation.",
+            "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; representative tribe rows 1 and 9 are bound, and no setup binding has a live-screen observation.",
             "The game-over context is state-reachable for inspection; its trigger conditions are not modelled.",
             "Every screen boundary is resolved against a civd function; this is address resolution, not Windows-to-DOS byte equivalence.",
         ],

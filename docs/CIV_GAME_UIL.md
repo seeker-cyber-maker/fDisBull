@@ -13,7 +13,7 @@ screen inventory, civd for source-shaped state, and the pinned `CIV.EXE` atlas
 for address identity?
 
 The answer is a bounded **yes**: the committed scene is a valid
-`fdisbull-il-scene-1` document with 23 contexts, 88 objects and 39 programs.
+`fdisbull-il-scene-1` document with 23 contexts, 89 objects and 40 programs.
 It can be driven through the shared IL backend or Z text player. It is not a
 claim that the game's simulation, assets, input decoding or save format has
 been recovered.
@@ -90,7 +90,7 @@ provenance file.
 | `birth` | 3 | SCENES.md 8 | WORLDGEN.C | 2 | O7:0012 `_make_world` (entry) |
 | `difficulty` | 4 | SCENES.md 9.1 | NEWGAME.C | 5 | O5:0031 `_new_game` (inside) |
 | `competition` | 5 | SCENES.md 9.2 | NEWGAME.C | 5 | O5:012E `_new_game` (inside) |
-| `tribe` | 6 | SCENES.md 9.3 | NEWGAME.C | 2 | O5:0309 `_new_game` (inside) |
+| `tribe` | 6 | SCENES.md 9.3 | NEWGAME.C | 3 | O5:0309 `_new_game` (inside) |
 | `leader-name` | 7 | SCENES.md 9.4-9.5, 10.4 | NAMES.C | 2 | O23:00D6 `_rename_leader` (entry), O23:0414 `_edit_line` (entry) |
 | `intro` | 8 | SCENES.md 9.6 | NEWGAME.C | 2 | O5:0657 `_new_game` (inside) |
 | `world` | 9 | SCENES-PLAY.md 1-6 | MAP.C, TURN.C, CONTROL.C, UNITS.C | 14 | R:1AEA:0008 `_reveal` (entry), R:1AEA:03BA `_seen_map` (entry), R:0238:0FEA `_draw_banner` (entry), R:0238:107E `_status_draw` (entry), R:0403:4060 `_uinit` (entry), R:0403:0676 `_ai_turn` (inside), R:0866:0AD6 `_blink_unit` (entry), R:0866:1D55 `_anim_unit` (entry), R:0866:1F69 `_pick_unit` (entry) |
@@ -127,8 +127,8 @@ carries every field and its evidence; the important groups are:
 | `$competition` | `u8` | DGROUP:D2F4 `_civ_total`; civd GLOBALS.C:113, NEWGAME.C:73-76 | source-bound 6..2; five menu rows write the field |
 | `$players` | `u8` | DGROUP:6B8A `_players`; civd GLOBALS.C:17, NEWGAME.C:77 | source-bound mask written with each competition row |
 | `$rule_options` | `u8` | DGROUP:E3C4 `_rule_options`; civd GLOBALS.C:186, NEWGAME.C:82 | source-bound constant 15 at new game |
-| `$tribe` | `u8` | DGROUP:D7F4 `_civ_tribe_of`; civd NEWGAME.C:141 | representative row 1 writes 1; other rows declared |
-| `$human_civ` | `u8` | DGROUP:D7EE `_civnow`; civd NEWGAME.C:113-117; Civ64 SCENES-PLAY 7.19 | representative row 1 writes slot 1 |
+| `$tribe` | `u8` | DGROUP:D7F4 `_civ_tribe_of`; civd NEWGAME.C:141 | representative rows 1 and 9 write 1 and 9; other rows declared |
+| `$human_civ` | `u8` | DGROUP:D7EE `_civnow`; civd NEWGAME.C:113-117; Civ64 SCENES-PLAY 7.19 | representative rows 1 and 9 write slot 1 |
 | `$treasury` | `i32` | DGROUP:B1D6[civ]; Civ64 SCENES-PLAY 5.2 | declared economy state |
 | `$tax_rate`, `$science_rate`, `$luxury_rate` | `u8` | DGROUP:DF0E/B210 and `10-tax-science`; Civ64 SCENES-PLAY 7.20 | declared rates |
 | `$view_x`, `$view_y` | `u8` | DGROUP:D4CC/D75E; Civ64 SCENES-PLAY 3 | viewport projection |
@@ -158,12 +158,14 @@ objects write both `$competition` and `$players` (0xFF, 0x7F, 0x3F, 0x1F,
 0x0F); `test_competition_menu_binds_civ_total_and_players_mask` checks each
 pair and the transition to `tribe`.
 
-One representative tribe row is bound. With `$competition = 4`, `NEWGAME.C`
-builds first-group rows 1..5; row 0 maps to `civnow = 1` and
-`civ_tribe_of[1] = 1`. The scene binds that row as `$human_civ = 1` and
-`$tribe = 1`; `test_first_tribe_row_binds_civnow_and_tribe` checks the state
-and the transition to `leader-name`. The remaining rows depend on the
-competition count and are not modelled.
+Two representative tribe rows are bound. With `$competition = 4`, `NEWGAME.C`
+builds first-group rows 1..5 and second-group rows 9..13. Row 0 maps to
+`civnow = 1` and `civ_tribe_of[1] = 1`; row 5 (the first second-group row) maps
+to `civnow = 1` and `civ_tribe_of[1] = 9` after the `civnow & 7` and
+`civnow + 8` branch. The scene binds both as `$human_civ = 1` with
+`$tribe = 1` and `$tribe = 9`; the two tests check state and the transition to
+`leader-name`. The remaining rows depend on the competition count and are not
+modelled.
 
 The scene deliberately does **not** load a save, render a map, execute a turn,
 run AI, resolve combat, advance technology or write a city record. Those are
@@ -211,10 +213,10 @@ The Z-player test uses the committed scene, not an in-memory rebuild.
 
 Observed on this host with the active fDisBull 0.28.0 interpreter:
 
-- `tests/test_civ_game_uil.py`: **9 passed**
+- `tests/test_civ_game_uil.py`: **10 passed**
 - CIV-focused set (`game UIL`, `city UIL`, `atlas`, `city trace`, `city overlay`):
-  **40 passed**
-- full repository suite: **2,244 passed, 152 skipped, 2 failed, 23 errors**.
+  **41 passed**
+- full repository suite: **2,245 passed, 152 skipped, 2 failed, 23 errors**.
   The failures/errors are the existing Apple-toolchain Linux ELF fixture
   boundary (`/usr/bin/gcc` is Apple clang; missing `-z ibtplt` and Linux
   metadata), not this scene.
@@ -227,8 +229,8 @@ remain static. No DOS screen was run for this slice.
 - Partial scene graph and state projection, not a full simulation.
 - No DOS execution, VGA rendering, palette/font/asset loading or input decoding.
 - Difficulty and competition rows are bound to `cur_tier`, `civ_total` and
-  `players`; tribe row 1 is a representative binding, the other tribe rows
-  remain declared, and no setup binding has a live-screen observation.
+  `players`; tribe rows 1 and 9 are representative bindings, the other tribe
+  rows remain declared, and no setup binding has a live-screen observation.
 - Unit next/previous/select, sell, buy, rename, text entry and report paging are
   only partially represented or absent. The detailed city fixture carries more
   source-modeled city behavior.
@@ -242,8 +244,8 @@ remain static. No DOS screen was run for this slice.
 
 ## Next probes
 
-1. Model the competition-dependent tribe menu rows and bind the second group
-   (tribes 9..15), rather than stopping at representative row 1.
+1. Model the remaining competition-dependent tribe rows; rows 1 and 9 are now
+   representative bindings but the full dynamic menu is not generated.
 2. Bind the unit-list `next`/`previous`/`select` actions to the existing city
    fixture and to a live cursor read, rather than leaving the game scene with a
    single close action.
