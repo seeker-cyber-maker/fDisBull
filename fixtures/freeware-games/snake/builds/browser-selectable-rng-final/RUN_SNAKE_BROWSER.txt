@@ -1,0 +1,32 @@
+Snake · selectable original / LFSR16 generator
+
+Serve the extracted folder locally with Python3:
+  python3 -m http.server 8000 --bind 127.0.0.1
+Then open http://localhost:8000/ in a browser supporting WebAssembly.
+WebGPU is optional; its backend control is disabled if unavailable.
+
+Click the canvas. Arrows/WASD turn, N steps, Space/P pauses, R resets, Esc quits.
+The game starts paused. Use Random generator to choose Original LCG or LFSR16.
+The separate generator-backend control selects Wasm or WebGPU independently.
+Selecting a generator keeps the current seed, body, score and existing food.
+The choice applies when the next meal calls the RNG. Reload starts with Original.
+
+Original matches the accepted DOS fixture behavior on the finite corpus. LFSR16
+is an explicitly declared behavior variant. The same recovered canonical UIL
+and original executable remain unchanged. The generated execution view and each
+implementation have separate honest identities; no equivalence is claimed for
+the alternative recurrence.
+
+Try the same route from reset under each generator:
+- N21 times, then Down,N,N,Left,N,Up,N,Right,N.
+- Original eats again at move23, reaches length5/score2 and dies at move26.
+- LFSR has length4/score1 and survives move26 by moving into its vacating tail.
+
+Try changing from Original to LFSR after N4: current food stays at389 and seed
+stays10589. Follow the route to move23: its next RNG call produces seed41134,
+then food334. No restart or reseed is needed.
+
+This is a private derived game bundle containing model and observed font data.
+Keep it out of GitHub/public tool packages. It contains no original EXE or FDB.
+See verification.json and LOCAL_REVIEW.md in the surrounding study delivery for
+finite test results, scope and original-CPU adapter details.

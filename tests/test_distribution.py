@@ -106,6 +106,23 @@ def test_distribution_check_rejects_game_state_and_database_files(tmp_path,unwan
         check(archive)
 
 
+@pytest.mark.parametrize('unwanted',[
+    'fixtures/freeware-games/tic-tac-toe/ATTT.COM',
+    'fixtures/freeware-games/snake/linux/program',
+    'fixtures/freeware-games/snake/index.html',
+    'fixtures/freeware-games/README.md',
+    'fixtures/freeware-games.zip',
+])
+def test_review_freeware_exception_never_enters_tool_distribution(tmp_path,unwanted):
+    check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
+    archive=tmp_path/'fdisbull-review-fixtures-tool.zip';source_archive(archive)
+    assert check(archive)==len(REQUIRED_SOURCE_FILES)
+    with zipfile.ZipFile(archive,'a') as output:
+        output.writestr('fdisbull-test/'+unwanted,b'review-only corpus content')
+    with pytest.raises(ValueError,match='Excluded directory'):
+        check(archive)
+
+
 def test_distribution_check_requires_methodology_reference(tmp_path):
     check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']
     archive=tmp_path/'fdisbull-missing-methodology.zip'

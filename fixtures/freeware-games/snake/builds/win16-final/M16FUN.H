@@ -1,0 +1,9 @@
+FdbBlockResult fdb16_n0(Fdb16Arena*);
+FdbBlockResult fdb16_n1(Fdb16Arena*);
+FdbBlockResult fdb16_n2(Fdb16Arena*);
+FdbBlockResult fdb16_n3(Fdb16Arena*);
+FdbBlockResult fdb16_n4(Fdb16Arena*);
+FdbBlockResult fdb16_n5(Fdb16Arena*);
+FdbBlockResult fdb16_n6(Fdb16Arena*);
+FdbBlockResult fdb16_n7(Fdb16Arena*);
+FdbBlockResult fdb16_n8(Fdb16Arena*);

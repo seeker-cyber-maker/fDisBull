@@ -1,0 +1,74 @@
+{
+  "LICENSE.txt": {
+    "bytes": 464,
+    "sha256": "59a66f50f3e35ccdbc85c9dcd57823dee87030e1857133d3a9ba90aa58dc4ef6"
+  },
+  "README.md": {
+    "bytes": 1657,
+    "sha256": "5d7cd2c099126fdcb25c72ed585268491a403dda76a180c0c84a970a9606d13e"
+  },
+  "evidence/initial.png": {
+    "bytes": 6057,
+    "sha256": "9ce7c6c1fb6d35dffcc6ecfd15ff93b983ce4e9eadcb731a8b4d4422b7e764fb"
+  },
+  "evidence/intake.json": {
+    "bytes": 5620,
+    "sha256": "846f6941cbe2a9c38f06fec2e2e6f24c6a1ad525035f30652ce97e841db259bd"
+  },
+  "evidence/native-05.json": {
+    "bytes": 25099,
+    "sha256": "93973017a4c23f5e0f1f13eaaab1608d82596e94d6f9fabecad1010f32957da1"
+  },
+  "evidence/pure-04.json": {
+    "bytes": 2574,
+    "sha256": "a0ade427ebdcef724def8cb795200dc7b4a8fcbd9c5932bf60a77ea52b974568"
+  },
+  "learner/LICENSE.txt": {
+    "bytes": 464,
+    "sha256": "59a66f50f3e35ccdbc85c9dcd57823dee87030e1857133d3a9ba90aa58dc4ef6"
+  },
+  "learner/README.txt": {
+    "bytes": 1757,
+    "sha256": "78211f6040a50904add9a2237fd96874329f81a79e4392b2c88f4cacea1d8c65"
+  },
+  "learner/SHA256SUMS": {
+    "bytes": 76,
+    "sha256": "ed2b89e35bb2b5bd630b2cbf414e4b030ae8f327233b1869434ded736957cdbf"
+  },
+  "learner/SNAKE.EXE": {
+    "bytes": 3851,
+    "sha256": "f8b672501f85d2b3feae0fb8acae626cbff96b8f3e4fccee6a3eb1746031d9be"
+  },
+  "oracle/BUILD-IDENTITY.json": {
+    "bytes": 1942,
+    "sha256": "2f34e7cb27bc232cd127c0dacc785134d05056e816968b691a52a4e0ccbb6c77"
+  },
+  "oracle/CONTRACT.md": {
+    "bytes": 4854,
+    "sha256": "4ecc15dc4047d85b01c444429ded6c4a9574ef2e5b5c543269fa0c8d3b9639ec"
+  },
+  "oracle/PORTING.md": {
+    "bytes": 3902,
+    "sha256": "a01e5484e2e1143ab3c90f04110d2c35a5a9bd204b17cfba8dc065b7d87729b5"
+  },
+  "oracle/SNAKE.ASM": {
+    "bytes": 17810,
+    "sha256": "64649c533e4943a15f433c79ac871ed69c3f505ed55984e3d12148669159662e"
+  },
+  "oracle/SNAKE.MAP": {
+    "bytes": 1590,
+    "sha256": "1a72757fc86cf64043d987fde0d01c60bdeaa33c1e8a2c7bdab12e7e7572ec28"
+  },
+  "oracle/build.py": {
+    "bytes": 3326,
+    "sha256": "fcdc5f2504c4920e13c2894796befe191268a4d35b342ed97fb3db144b995ed2"
+  },
+  "oracle/vectors.json": {
+    "bytes": 50237,
+    "sha256": "d1ebb2b48a4da538643ab18d0cbf9c282eb203f38ff599078f274c36fb16cffa"
+  },
+  "oracle/verify.py": {
+    "bytes": 13835,
+    "sha256": "f2ad2e3f0758fc495e0efe92902bf6ccb3c1dd39b6c786396e08e0972e77385e"
+  }
+}

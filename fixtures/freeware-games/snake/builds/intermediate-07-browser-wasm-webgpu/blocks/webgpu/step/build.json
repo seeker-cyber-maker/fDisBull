@@ -1,0 +1,22 @@
+{
+  "format": "fdisbull-web-memory-block-1",
+  "target": "webgpu-wgsl-memory-1",
+  "function": "step",
+  "module_uil_sha256": "a2b8887d968ce6418b0e5ed0b91c631809c010d69f1b727f3cfcc998530cc720",
+  "execution": false,
+  "source_to_uil": false,
+  "abi": {
+    "format": "fdisbull-web-memory-abi-1",
+    "memory_words": 70000,
+    "word": "u32-le",
+    "max_steps": 4000000,
+    "status": {
+      "complete": 0,
+      "refused": 1
+    }
+  },
+  "artifacts": {
+    "block.wgsl": "b89f721b92939ed8113fb892500577cb3fd8bb71b8e72fbbba07fb5305cb2a15"
+  },
+  "scope": "one bounded-memory function; no services; atomic public arena result; original fidelity checked separately"
+}

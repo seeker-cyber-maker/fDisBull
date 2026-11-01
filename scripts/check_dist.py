@@ -9,7 +9,8 @@ from pathlib import Path, PurePosixPath
 import tarfile
 import zipfile
 
-EXCLUDED_DIRECTORIES = {"examples", "history", "experimental", "build", "dist", ".git", "__pycache__"}
+EXCLUDED_DIRECTORIES = {"examples", "history", "experimental", "build", "dist", ".git", "__pycache__",
+                        "freeware-games", "freeware-games.zip"}
 EXCLUDED_SUFFIXES = {".fdb", ".db", ".sqlite", ".sqlite3", ".sav", ".state", ".exe", ".com", ".dll", ".bin", ".dat", ".so", ".dylib", ".o", ".pyc"}
 PLAYER_MODULES = {"__init__.py", "__main__.py", "player.py", "runtime.py", "live.py", "word16.py",
                   "game_intents.py", "intent_runtime.py", "batch.py"}
