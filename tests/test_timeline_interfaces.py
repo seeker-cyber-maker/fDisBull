@@ -43,7 +43,7 @@ def test_borrowed_operations_remain_reentrant_under_the_existing_backend_lock(ba
 def test_frame_script_accepts_explicit_edges_points_and_preservation_policy():
     steps = validate_script({'format': 'fdisbull-script-1', 'steps': [
         {'op': 'frame-advance', 'frames': 1},
-        {'op': 'timeline-start', 'max_frames': 32},
+        {'op': 'timeline-start', 'max_frames': 32, 'storage_mode': 'delta', 'keyframe_interval': 8},
         {'op': 'timeline-advance', 'frames': 4, 'inputs': [
             {'frame': 0, 'edges': [{'key': 'kp5', 'pressed': True}]},
             {'frame': 1, 'edges': [{'key': 'kp5', 'pressed': False}]}]},
@@ -67,6 +67,10 @@ class NoSideEffects:
     {'op': 'timeline-start', 'max_frames': 0},
     {'op': 'timeline-start', 'max_captures': 65537},
     {'op': 'timeline-start', 'max_bytes': 1},
+    {'op': 'timeline-start', 'storage_mode': 'invalid'},
+    {'op': 'timeline-start', 'keyframe_interval': 0},
+    {'op': 'timeline-start', 'keyframe_interval': 129},
+    {'op': 'timeline-start', 'keyframe_interval': True},
     {'op': 'timeline-pin', 'name': '../escape.sav'},
     {'op': 'timeline-image', 'name': ''},
     {'op': 'frame-inputs', 'edges': [{'key': 'a', 'pressed': 1}]},
