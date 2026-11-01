@@ -12,7 +12,7 @@ import plistlib
 info={"CFBundleIdentifier":"local.codex.cpuinfo-replica","CFBundleName":"Cpuinfo Replica",
       "CFBundleDisplayName":"Cpuinfo Replica","CFBundleExecutable":"CpuinfoReplica",
       "CFBundlePackageType":"APPL","CFBundleShortVersionString":"0.1.0","CFBundleVersion":"1",
-      "CFBundleDevelopmentRegion":"en","CFBundleLocalizations":["en","ja"],
+      "CFBundleDevelopmentRegion":"en",
       "LSUIElement":True,"LSMinimumSystemVersion":"14.0","NSHighResolutionCapable":True,
       "NSHumanReadableCopyright":"2026 Cpuinfo Replica contributors; behavior references Yusuke Shibata's MIT cpuinfo"}
 Path('build/Cpuinfo Replica.app/Contents/Info.plist').write_bytes(plistlib.dumps(info))

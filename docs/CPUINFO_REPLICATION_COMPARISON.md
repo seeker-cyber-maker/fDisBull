@@ -8,23 +8,18 @@ reversible native capture. It does not claim automatic native-to-UIL recovery.
 
 ## Current parity follow-up
 
-The current authored snapshot is canonical `3ff292ad389c2b13347110dde15409f7be088390`;
-its production Sources match the observed app built before the documentation
-commit. The initial comparison below is historical, scoped to its older heads.
+The authored Sources in this branch are the current scope. Hash-pinned snapshot
+identities in earlier receipts predate the removal of incidental Japanese
+strings. The initial comparison below is historical, scoped to its older heads.
 
 The follow-up fixes calibrated RGB colors, prevents disabling both overall
-modes, adds English/Japanese labels with stable action identifiers, and matches
+modes, adds stable action identifiers and English labels, and matches
 the public source's zero-start and selected-mode sampling histories. It keeps
 bounded counter reset/topology handling and independent diagnostic baselines.
 
-Fresh checks passed: 39 deterministic core, 9 native sampler, 48 real NSMenu and
+Fresh checks passed: 39 deterministic core, 9 native sampler, 25 real NSMenu and
 settings, 26 renderer/diagnostic. Separate processes verified saved interval,
 mode/theme values and checkmarks using isolated temporary preference suites.
-A live Japanese acceptance then opened the authored replica's real status menu
-through fDisBull's reversible session, verified all seven root labels, and
-confirmed the menu closed; only the replica was launched and no preference or
-login setting was written.
-
 A hash-pinned source renderer oracle found 126 mismatched frames before the
 color fix and 0 afterward, across 336 authored frames: all modes/themes/appearances
 at 1x/2x/3x. It confirms AppleSystemUIFont 13pt and text geometry under the same
@@ -123,8 +118,7 @@ python Tests/compare_captures.py --original /private/original-session --replica 
 Live input is a separate explicit [native session](MACOS_REVERSIBLE_CAPTURE.md).
 The initial candidate's unknown first/reset/topology baseline intentionally differed
 from upstream's initial-zero accumulation/since-boot first ratio. Font identity,
-full original pixels, synchronized counters, original live Japanese
-localization, login-helper equivalence and actual relogin remain unqualified;
-the replica-only Japanese menu is qualified by
-[the live acceptance](../experimental/macos/cpuinfo-replica/evidence/live-language-followup.json).
-No original bug has been causally diagnosed or patched by this experiment.
+full original pixels, synchronized counters, login-helper equivalence and
+actual relogin remain unqualified. Japanese localization was removed from the
+scope as an incidental original artifact, not a parity target. No original bug
+has been causally diagnosed or patched by this experiment.

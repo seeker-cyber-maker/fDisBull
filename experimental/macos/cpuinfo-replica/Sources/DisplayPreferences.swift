@@ -32,34 +32,20 @@ enum MenuRole: String {
 }
 
 struct MenuStrings {
-    let language: String
-    init(language: String = Bundle.main.preferredLocalizations.first ?? "en") {
-        self.language = language.lowercased().hasPrefix("ja") ? "ja" : "en"
-    }
     func title(_ role: MenuRole) -> String {
-        switch (language, role) {
-        case ("ja", .login): return "ログイン時に開始"
-        case ("ja", .interval): return "更新間隔"
-        case ("ja", .view): return "表示"
-        case ("ja", .image): return "アイコン"
-        case ("ja", .text): return "テキスト"
-        case ("ja", .theme): return "テーマ"
-        case ("ja", .cores): return "コアを個別に表示"
-        case ("ja", .activity): return "アクティビティモニタを開く"
-        case ("ja", .quit): return "終了"
-        case (_, .login): return "Start at Login"
-        case (_, .interval): return "Update Interval"
-        case (_, .view): return "View Mode"
-        case (_, .image): return "Image"
-        case (_, .text): return "Text"
-        case (_, .theme): return "Theme"
-        case (_, .cores): return "Show cores individually"
-        case (_, .activity): return "Open Activity Monitor"
-        case (_, .quit): return "Quit"
+        switch role {
+        case .login: return "Start at Login"
+        case .interval: return "Update Interval"
+        case .view: return "View Mode"
+        case .image: return "Image"
+        case .text: return "Text"
+        case .theme: return "Theme"
+        case .cores: return "Show cores individually"
+        case .activity: return "Open Activity Monitor"
+        case .quit: return "Quit"
         }
     }
     func interval(_ index: Int) -> String {
-        let value = ["0.1", "0.2", "0.5", "1.0", "5", "10", "30"][index]
-        return value + (language == "ja" ? "秒" : "sec")
+        ["0.1", "0.2", "0.5", "1.0", "5", "10", "30"][index] + "sec"
     }
 }

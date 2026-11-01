@@ -19,18 +19,9 @@ the original. Start at Login changes registration only after an explicit menu
 selection; it was not enabled or exercised during this work.
 
 The menu offers the original intervals, per-core toggle, overall image/text
-modes, themes, Activity Monitor and Quit. English/Japanese labels follow macOS
-bundle language selection; headless tests inject language explicitly without
-changing preferences. A separate live acceptance opens the real status menu in
-Japanese through fDisBull's reversible session, verifies the labels, closes the
-menu it opened, and stops only this replica:
-
-```sh
-python3 Tests/check_live_language.py
-```
-
-That check writes no preference or login setting and prints sanitized JSON
-evidence. The overall menu prevents disabling the last visible mode.
+modes, themes, Activity Monitor and Quit. The replica is English-only: Japanese
+labels were incidental to the original and are deliberately not a parity target.
+The overall menu prevents disabling the last visible mode.
 Settings use the original key names through UserDefaults in a separate domain.
 The replica never imports or writes the original's settings.
 

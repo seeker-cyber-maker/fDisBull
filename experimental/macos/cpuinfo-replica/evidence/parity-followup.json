@@ -1,17 +1,12 @@
 {
-  "kind": "cpuinfo-parity-followup-verification",
-  "upstream_revision": "d7f9e846909f9775e1d6d03214796dbaff4d5492",
-  "checks": {
-    "core": 39,
-    "native_selected_sampler": 9,
-    "menu_and_settings": 48,
-    "renderer_and_diagnostic": 26,
-    "authored_renderer_comparisons": 336
-  },
   "all_checks_passed": true,
   "authored_renderer": {
-    "before_mismatches": 126,
     "after_mismatches": 0,
+    "before_mismatches": 126,
+    "candidate_sources": {
+      "Sources/CPUCore.swift": "31e0b19826429fac817e1687eb35eafdfc4bdd5d1056f402e95d392b1666333f",
+      "Sources/MeterRenderer.swift": "743d5f0faa000dbb84f8c300b3cc0c648a091d2c0a4b3a72c1bbe3b1d64dc913"
+    },
     "font": {
       "ascender": 12.568359375,
       "descender": -2.7421875,
@@ -20,21 +15,23 @@
       "name": ".AppleSystemUIFont",
       "size": 13
     },
-    "upstream_sha256": "aef57f386d664e392b5cfab683b5dbf28dfdbfb124ae19d03c3ea17fbb391a10",
-    "candidate_sources": {
-      "Sources/CPUCore.swift": "31e0b19826429fac817e1687eb35eafdfc4bdd5d1056f402e95d392b1666333f",
-      "Sources/MeterRenderer.swift": "743d5f0faa000dbb84f8c300b3cc0c648a091d2c0a4b3a72c1bbe3b1d64dc913"
-    },
-    "scope": "authored static frames; upstream bitmap-context instrumentation; no original process pixels"
+    "scope": "authored static frames; upstream bitmap-context instrumentation; no original process pixels",
+    "upstream_sha256": "aef57f386d664e392b5cfab683b5dbf28dfdbfb124ae19d03c3ea17fbb391a10"
   },
+  "capture_tool_source_commit": "e1b6f164bdc139262d340395b203246c948d01bd",
+  "checks": {
+    "authored_renderer_comparisons": 336,
+    "core": 39,
+    "menu_and_settings": 25,
+    "native_selected_sampler": 9,
+    "renderer_and_diagnostic": 26
+  },
+  "kind": "cpuinfo-parity-followup-verification",
   "live_comparison": {
-    "status": "matched_observed_subset",
-    "visible_rows": 7,
     "core_bars": 10,
     "falsifier": {
       "wrong_visible_menu_label": "detected"
     },
-    "same_display": true,
     "matching_opaque_colors": {
       "green": [
         23,
@@ -47,23 +44,27 @@
         42
       ]
     },
-    "scope": "same screenshot/display, different sampling times; red not observed"
+    "same_display": true,
+    "scope": "same screenshot/display, different sampling times; red not observed",
+    "status": "matched_observed_subset",
+    "visible_rows": 7
   },
-  "localization": "English and Japanese real NSMenu labels/actions tested with isolated suites; no language preferences changed",
-  "settings": "actual NSMenu actions persisted to unique test suite, checked by separate executable process, suite removed",
-  "safety": "original process and binary preserved; original preference presence/values untouched; no login registration change",
+  "localization": "Removed from scope; the replica is English-only and localization is not a parity target.",
   "remaining": [
     "actual login/relogin acceptance",
     "physical mixed-scale display capture",
     "original live text-mode pixels",
     "same-count CPU reordering"
   ],
+  "safety": "original process and binary preserved; original preference presence/values untouched; no login registration change",
+  "scope_note": "Menu and settings count reflects the English-only scope after removing incidental Japanese UI cases; source hashes were refreshed for this scope.",
+  "settings": "actual NSMenu actions persisted to unique test suite, checked by separate executable process, suite removed",
   "sources": {
     "Sources/CPUCore.swift": "31e0b19826429fac817e1687eb35eafdfc4bdd5d1056f402e95d392b1666333f",
-    "Sources/DisplayPreferences.swift": "532745b98047400c4ed422a763bc5bc0956cc455f74e5c759e8a7a3b8958a28d",
+    "Sources/DisplayPreferences.swift": "d468283d8a5a46e3fecbcf44dfa2c7590f6983a0d512a57ac9b52a59ea0fa2ee",
     "Sources/MachSampler.swift": "04f2316598fbbf81997e5b07771b933d0574ac6bf367b26ca9b765dbdcce90ae",
     "Sources/MeterRenderer.swift": "743d5f0faa000dbb84f8c300b3cc0c648a091d2c0a4b3a72c1bbe3b1d64dc913",
     "Sources/main.swift": "a5df3a312be40bc879398e34592099c368eb47bd2d7a181b25ddfa24e2ae7af2"
   },
-  "capture_tool_source_commit": "e1b6f164bdc139262d340395b203246c948d01bd"
+  "upstream_revision": "d7f9e846909f9775e1d6d03214796dbaff4d5492"
 }
