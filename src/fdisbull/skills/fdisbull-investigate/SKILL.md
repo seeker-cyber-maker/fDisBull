@@ -101,6 +101,19 @@ The methodology reference describes the coverage, retry and handoff procedure.
 
 ## Match evidence to the claim
 
+For continuing investigation, strongly prefer keeping standing execution probes
+on plausible unknown code and candidate functions while the program is used
+normally. Rarely activated code can reveal its purpose long after targeted tests
+stop. Select value watchpoints when a concrete field, pointer, table slot or
+transition could resolve an unknown; do not blanket-watch null padding, filler
+or arbitrary zero bytes. A logical field currently holding zero can still matter.
+Record a reason and an overhead budget for each selected probe, or why it was
+deferred. Read the standing-probe procedure in the methodology reference linked
+above. Preserve the definitions
+across sessions, verify actual bindings in each live run, and prioritize analysis
+when a first natural hit provides new context. Saved definitions alone are not
+armed breakpoints, and no hits do not establish unused code.
+
 Use the authorized ordinary interface to establish what was received and what
 the program did. Separate input delivery, consumption, action completion,
 display and persistence. A visible control is not necessarily ready or enabled;
