@@ -4,3 +4,8 @@ experimental/dosbox-x/**/headless-agent.patch -whitespace
 experimental/dosbox-x/headless-agent.patch -whitespace
 examples/dinopark/evidence/** -whitespace
 src/fdisbull/data/MICROSOFT-DOS-LICENSE.txt -whitespace
+
+# Archived generated game snapshots remain raw-viewable; compare manifest hashes.
+fixtures/freeware-games/snake/builds/** -diff
+fixtures/freeware-games/snake/source-snapshots/** -diff
+fixtures/freeware-games.zip -diff
