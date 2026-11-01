@@ -416,10 +416,10 @@ def from_memory_uil(program, function_name):
 
 
 def from_asm_instruction(code, *, bits=16, flags='explicit', registers=None, source=None):
-    """Lift exactly one register INC/ADD/ADC using actual native operand facts.
+    """Lift one register MOV/INC/ADD/ADC using actual native operand facts.
 
     Explicit output order is destination, CF, PF, AF, ZF, SF, OF. INC preserves
-    incoming CF. ADC always consumes incoming CF, including projected mode.
+    incoming CF. MOV preserves all six declared flags. ADC always consumes CF.
     The contract is isolated register views, not alias/memory/ABI/CPU parity.
     """
     import capstone
@@ -431,11 +431,33 @@ def from_asm_instruction(code, *, bits=16, flags='explicit', registers=None, sou
     decoded = list(decoder.disasm(code, 0))
     if len(decoded) != 1 or decoded[0].size != len(code): raise ValueError('native decoder must cover exactly one instruction')
     ins = decoded[0]; operands = ins.operands
-    if ins.mnemonic not in ('inc', 'add', 'adc') or any(p and p != 0x66 for p in ins.prefix): raise ValueError('unsupported native instruction/prefix')
+    if ins.mnemonic not in ('mov', 'inc', 'add', 'adc') or any(p and p != 0x66 for p in ins.prefix): raise ValueError('unsupported native instruction/prefix')
     if len(operands) != (1 if ins.mnemonic == 'inc' else 2) or operands[0].type != x86_const.X86_OP_REG or operands[0].size not in (1, 2, 4, 8): raise ValueError('register destination required')
     width = operands[0].size * 8; typ = f'u{width}'
     dest = ins.reg_name(operands[0].reg)
-    if not re.fullmatch(r'(?:[abcd][lh]|[abcd]x|[sd]i|[sb]p|e(?:[abcd]x|[sd]i|[sb]p)|r(?:[abcd]x|[sd]i|[sb]p|[89]|1[0-5])(?:[bwd])?|[sb]pl|[sd]il|r(?:[89]|1[0-5])[bwd])', dest): raise ValueError('unsupported register view')
+    register_pattern = r'(?:[abcd][lh]|[abcd]x|[sd]i|[sb]p|e(?:[abcd]x|[sd]i|[sb]p)|r(?:[abcd]x|[sd]i|[sb]p|[89]|1[0-5])(?:[bwd])?|[sb]pl|[sd]il|r(?:[89]|1[0-5])[bwd])'
+    if not re.fullmatch(register_pattern, dest): raise ValueError('unsupported register view')
+    if ins.mnemonic == 'mov':
+        if operands[1].type != x86_const.X86_OP_REG or operands[1].size != operands[0].size:
+            raise ValueError('MOV fallback requires same-width register views')
+        src = ins.reg_name(operands[1].reg)
+        if not re.fullmatch(register_pattern, src):
+            raise ValueError('MOV source must be an ordinary register view')
+        if registers is not None and registers != [src]:
+            raise ValueError('declared register ports disagree with native decode')
+        variables = [{'type': typ}] if src == dest else [{'type': typ}, {'type': typ}]
+        src_slot = 0 if src == dest else 1
+        b = _Builder(variables, [src_slot], [0])
+        names = ['cf', 'pf', 'af', 'zf', 'sf', 'of'] if flags == 'explicit' else []
+        for _ in names:
+            slot = b.variable('bool')
+            b.function['inputs'].append(slot); b.function['outputs'].append(slot)
+        b.function['body'] = [{'op': 'set', 'dst': 0, 'value': {'var': src_slot}}]
+        metadata = {'decoder': 'capstone', 'bits': bits, 'mnemonic': 'mov',
+                    'inputs': [src] + names, 'outputs': [dest] + names, 'flags': flags,
+                    'scope': 'isolated same-width register copy; all declared flags preserved; other aliases, memory, traps, ABI and timing excluded'}
+        return _with_source(_result(b.function, b.constants, f'x86-{bits}', metadata,
+            'native-decoder-backed register transfer model; native execution separately qualified'), source, code)
     names = [dest]
     source_operand = None
     if len(operands) == 2:

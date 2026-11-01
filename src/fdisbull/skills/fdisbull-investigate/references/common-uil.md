@@ -70,9 +70,10 @@ likewise needs a declared behavior variant, not a false equivalence claim.
   shims copy arguments/results and preserve caller values outside result slots.
 - Local call graphs are acyclic; imported implementations are closed. Unknown
   fields/capabilities, stale identities and unsupported source operations refuse.
-- The native fallback admits one fully decoded register INC/ADD/ADC in the
+- The native fallback admits one fully decoded register MOV/INC/ADD/ADC in the
   stated mode. Explicit flag outputs are the default; INC preserves carry and
-  ADC always consumes it. Other registers/aliases, memory, traps, OS services
+  ADC always consumes it. MOV preserves all declared flags. Other aliases,
+  memory, traps, OS services
   and timing are not silently supplied.
 - `uil-fold` retains a function's exact children plus before/after digests.
   `uil-expand` restores them exactly. A group label grants no execution or
@@ -110,3 +111,45 @@ Source-checkout `docs/COMMON_UIL_CONTRACT.md` specifies all fields and limits;
 `docs/COMMON_UIL_CONFORMANCE.md` records food/Snake/synthetic evidence. Keep
 private initial arenas, resources, generated programs and raw target projects
 outside Git and tool packages unless separately authorized and reviewed.
+
+## Native modules and nested component choices
+
+`uil-compile` also accepts `macos-arm64`, `linux-x64` and `windows-x64` targets.
+Use `uil-link` first to inspect the deterministic native lock. Source-only
+emission can be followed by `uil-build` in a prepared environment, or `uil-seal`
+for externally compiled files. These gates do not execute the resulting image.
+Compiler temporaries must stay in the generated directory's owned `tmp` folder.
+
+The native lock binds target, ABI, ownership, numeric profile, effects and exact
+intrinsic versions/types. Known built-in C and native-assembly arithmetic
+providers are selected by deterministic rules. Unknown, missing, ambiguous,
+conflicting, stale or cyclic requirements refuse; a module demanding
+`sound.play@2` cannot fall back to the planned version-1 service.
+
+Per-function and per-selected-implementation requirements can specify
+`"arithmetic":"portable-c"` or `"native-asm"`. A `components` map overrides
+individual `add/sub/mul/and/or/xor` children. For example,
+`{"components":{"add":"portable-c","mul":"native-asm"}}` retains the parent
+meaning and UIL while changing its native children. Actual operation counters
+and import markers qualify which children ran; a label alone is insufficient.
+Other operations currently use the fixed C core.
+
+`uil-components` accepts module/provider documents and describes a bounded
+cascading choice graph. Generic declarations grant no code authority; native
+emission independently admits the built-in providers. An authored
+show-image→decode/blit→atomic graph demonstrates the structure, not a working
+image codec. Keep decoder/device behavior unknown until separately qualified.
+
+Scalar value numbering removes temporary physical copies from straight-line
+lowering, retaining immutable source values, every logical charge and all final
+slots/flags. A later source-slot overwrite cannot change an earlier copy.
+Unadmitted control/array shapes keep ordinary lowering. Source children and
+copy mappings remain available, and no UIL document is rewritten.
+
+Native probes currently admit numeric/bool/resource slots and fixed arrays;
+text-typed slots refuse. Effects remain bounded pending plans. Their call ledger
+observes exact implementation identity/status/arity rather than full import
+argument snapshots; full entry state and outputs are retained. Qualify original
+instructions, full models, native execution and physical windows/devices as
+distinct edges. The source guide `docs/COMMON_UIL_NATIVE.md` records the APIs,
+owned ABI, runtime protocol, component contracts and evidence boundaries.

@@ -49,6 +49,7 @@ legacy migration and remaining export limits.
 | Run a qualified DinoPark park through the original game | [DinoPark in Z](docs/DINOPARK_Z.md) |
 | Test a small recovered block against its original DOS backing | [The bounded UDC pipeline](#the-bounded-udc-pipeline) |
 | Combine source blocks under a typed indexed UIL and emit a new standalone program | [Common UIL contract](docs/COMMON_UIL_CONTRACT.md) · [Conformance examples](docs/COMMON_UIL_CONFORMANCE.md) |
+| Resolve nested block requirements and realize common UIL as native code | [Native UIL and component linking](docs/COMMON_UIL_NATIVE.md) |
 
 Agents can start with [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) and the
 [agent quickstart](docs/AGENT_QUICKSTART.md). The bundled investigation skill is

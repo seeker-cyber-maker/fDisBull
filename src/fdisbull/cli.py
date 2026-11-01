@@ -48,7 +48,11 @@ METHODS = {
     'uil-check':'Validate indexed common UIL or a complete package; program,[presentation,catalog,orchestration] or package; no execution',
     'uil-catalog':'Compile a list of UDL descriptors into exact semantic groups; blocks; unsupported languages remain explicit',
     'uil-run':'Execute bounded indexed UIL with typed copies and planned effects; program,presentation,[catalog,orchestration,inputs,max_steps]',
-    'uil-compile':'Generate standalone Python/JavaScript with selected blocks, shims and presentation; program,presentation,catalog,orchestration,output,[target]',
+    'uil-compile':'Generate Python/JavaScript or build a typed native realization; program,presentation,catalog,orchestration,output,[target,arithmetic,module_requirements,c_compiler,source_only]',
+    'uil-link':'Resolve native module/intrinsic requirements deterministically; program,presentation,catalog,orchestration,target,[arithmetic,module_requirements]',
+    'uil-components':'Describe nested typed module/provider choices without execution; modules,providers,target,[pins]',
+    'uil-build':'Compile and seal an existing native source realization; output,[c_compiler]',
+    'uil-seal':'Seal externally compiled native artifacts against retained sources; output,[compiler_evidence]',
     'uil-fold':'Retain a function child graph in a recoverable higher-level block; program,function,semantic_id',
     'uil-expand':'Recover the exact lower-level program from a pinned fold receipt; program,recovery',
     'uil-store':'Persist an immutable common UIL package; project,name,package,[version,parent,author]',
@@ -545,7 +549,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('uil-check','uil-catalog','uil-run','uil-compile','uil-fold','uil-expand','capture-audit','media-modules','media-inspect','media-extract','agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('uil-check','uil-catalog','uil-run','uil-compile','uil-link','uil-components','uil-build','uil-seal','uil-fold','uil-expand','capture-audit','media-modules','media-inspect','media-extract','agent-skill','identify','inspect','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         result=invoke(request["method"],params,debugger)
@@ -640,16 +644,25 @@ def parser():
     c.add_argument('--parent'); c.add_argument('--source'); c.add_argument('--source-name',default='story')
     c=sub.add_parser('il-info',help='Read an immutable IL revision and verify its attached source evidence')
     c.add_argument('project'); c.add_argument('revision'); c.add_argument('--version',type=int)
-    for name in ('uil-check','uil-run','uil-compile'):
+    for name in ('uil-check','uil-run','uil-compile','uil-link'):
         c=sub.add_parser(name,help=METHODS[name]);c.add_argument('program')
         c.add_argument('--presentation',required=name!='uil-check')
-        c.add_argument('--catalog',required=name=='uil-compile')
-        c.add_argument('--orchestration',required=name=='uil-compile')
+        c.add_argument('--catalog',required=name in ('uil-compile','uil-link'))
+        c.add_argument('--orchestration',required=name in ('uil-compile','uil-link'))
         if name=='uil-run':
             c.add_argument('--inputs',help='JSON file with the indexed entry input list')
             c.add_argument('--max-steps',type=int,default=4000000)
         if name=='uil-compile':
-            c.add_argument('--output',required=True);c.add_argument('--target',choices=('python','javascript'),default='python')
+            c.add_argument('--output',required=True)
+            c.add_argument('--c-compiler');c.add_argument('--source-only',action='store_true')
+        if name in ('uil-compile','uil-link'):
+            c.add_argument('--target',choices=('python','javascript','macos-arm64','linux-x64','windows-x64') if name=='uil-compile' else ('macos-arm64','linux-x64','windows-x64'),required=name=='uil-link',default='python' if name=='uil-compile' else None)
+            c.add_argument('--arithmetic',choices=('portable-c','native-asm'),default='portable-c')
+            c.add_argument('--module-requirements',help='JSON file of exact per-module intrinsic/component requirements')
+    c=sub.add_parser('uil-build',help=METHODS['uil-build']);c.add_argument('output');c.add_argument('--c-compiler')
+    c=sub.add_parser('uil-seal',help=METHODS['uil-seal']);c.add_argument('output');c.add_argument('--compiler-evidence')
+    c=sub.add_parser('uil-components',help=METHODS['uil-components']);c.add_argument('modules');c.add_argument('providers')
+    c.add_argument('--target',required=True,choices=('macos-arm64','linux-x64','windows-x64'));c.add_argument('--pins')
     c=sub.add_parser('uil-catalog',help=METHODS['uil-catalog']);c.add_argument('blocks')
     c=sub.add_parser('uil-fold',help=METHODS['uil-fold']);c.add_argument('program');c.add_argument('function',type=int);c.add_argument('semantic_id')
     c=sub.add_parser('uil-expand',help=METHODS['uil-expand']);c.add_argument('program');c.add_argument('recovery')

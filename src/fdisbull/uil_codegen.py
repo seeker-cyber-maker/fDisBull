@@ -502,12 +502,20 @@ def _source(program, presentation, resolved, plan, identities, target, trace_lim
     return '\n'.join(emitter.lines)+'\n'
 
 
-def compile_program(program, presentation, catalog, orchestration, output_dir, target='python'):
+def compile_program(program, presentation, catalog, orchestration, output_dir, target='python', *,
+                    arithmetic='portable-c', module_requirements=None, c_compiler=None, source_only=False):
     """Emit a deterministic, standalone source realization in a new private root.
 
     Compilation here is UIL-to-source lowering. Executing the emitted source is
     a separate qualification gate; no host effects are performed by it.
     """
+    if target in ('macos-arm64', 'linux-x64', 'windows-x64'):
+        from .uil_native import build_native_program
+        return build_native_program(program, presentation, catalog, orchestration, output_dir, target,
+                                    arithmetic=arithmetic, module_requirements=module_requirements,
+                                    c_compiler=c_compiler, source_only=source_only)
+    if arithmetic != 'portable-c' or module_requirements is not None or c_compiler is not None or source_only is not False:
+        raise ValueError('native module requirements/compiler options need a native target')
     from .common_uil import digest, validate_program, validate_presentation, validate_realization
     from .uil_catalog import validate_catalog
     from .uil_runtime import TRACE_LIMITS

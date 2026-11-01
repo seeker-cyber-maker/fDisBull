@@ -119,6 +119,44 @@ def test_native_unknown_memory_prefix_and_multiple_instructions_refuse(code):
     with pytest.raises(ValueError): from_asm_instruction(bytes.fromhex(code))
 
 
+@pytest.mark.parametrize('bits,code,value', [(16, '89d8', 65535), (32, '89d8', 4294967295),
+                                          (64, '4889d8', 18446744073709551615)])
+def test_native_mov_preserves_all_declared_flags_and_copy_value(bits, code, value):
+    item = from_asm_instruction(bytes.fromhex(code), bits=bits)
+    flags = [True, False, True, False, True, False]
+    result = run(item, [value, *flags])
+    assert result['outputs'] == [value, *flags]
+    assert result['steps'] == 1
+    assert item['source']['mnemonic'] == 'mov'
+    assert item['source']['inputs'][0] == {16: 'bx', 32: 'ebx', 64: 'rbx'}[bits]
+
+
+def test_native_mov_memory_and_immediate_are_not_guessed():
+    for code in ('8b00', 'b80100', '0f20c0', '8cd8'):
+        with pytest.raises(ValueError):
+            from_asm_instruction(bytes.fromhex(code))
+
+
+@pytest.mark.parametrize('bits,code', [(16, '89d8'), (32, '89d8'), (64, '4889d8')])
+def test_mov_model_agrees_with_actual_instruction_execution(bits, code):
+    unicorn = pytest.importorskip('unicorn')
+    from unicorn import x86_const as r
+    mode = {16: unicorn.UC_MODE_16, 32: unicorn.UC_MODE_32, 64: unicorn.UC_MODE_64}[bits]
+    dst = {16: r.UC_X86_REG_AX, 32: r.UC_X86_REG_EAX, 64: r.UC_X86_REG_RAX}[bits]
+    src = {16: r.UC_X86_REG_BX, 32: r.UC_X86_REG_EBX, 64: r.UC_X86_REG_RBX}[bits]
+    positions = [0, 2, 4, 6, 7, 11]
+    model = from_asm_instruction(bytes.fromhex(code), bits=bits)
+    for value, flags in ((0, [False] * 6), ((1 << bits) - 1, [True] * 6)):
+        cpu = unicorn.Uc(unicorn.UC_ARCH_X86, mode)
+        cpu.mem_map(0x1000, 4096); cpu.mem_write(0x1000, bytes.fromhex(code))
+        cpu.reg_write(src, value)
+        cpu.reg_write(r.UC_X86_REG_EFLAGS, 0x202 | sum(int(f) << p for f, p in zip(flags, positions)))
+        cpu.emu_start(0x1000, 0x1000 + len(bytes.fromhex(code)), count=1)
+        status = cpu.reg_read(r.UC_X86_REG_EFLAGS)
+        observed = [cpu.reg_read(dst), *[bool(status & (1 << p)) for p in positions]]
+        assert run(model, [value, *flags])['outputs'] == observed
+
+
 def test_scalar_adapter_preserves_nonzero_defaults_and_checked_assignment():
     legacy = {'format': 'fdisbull-il-1', 'role': 'uil', 'resources': {},
               'variables': {'$x': {'type': 'u32', 'initial': 9}, '$y': {'type': 'u8', 'initial': 2}},

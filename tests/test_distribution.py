@@ -71,6 +71,7 @@ REQUIRED_SOURCE_FILES += ('tests/fixtures/frame_capture.S',
 REQUIRED_SOURCE_FILES += ('src/fdisbull/capture_audit.py', 'tests/test_capture_audit.py')
 REQUIRED_SOURCE_FILES += ('tests/fixtures_common_uil.py',)
 REQUIRED_SOURCE_FILES += ('docs/evidence/common-uil-2026-11-01/verification.json',)
+REQUIRED_SOURCE_FILES += ('tests/fixtures_common_uil_native.py', 'docs/evidence/common-uil-native-2026-11-01/verification.json')
 
 
 def source_archive(path,files=REQUIRED_SOURCE_FILES):

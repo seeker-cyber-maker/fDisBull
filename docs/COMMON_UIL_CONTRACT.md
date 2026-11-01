@@ -13,6 +13,11 @@ mixed-source blocks, checks food arithmetic, and imports Snake-shaped and
 full private Snake models. Source correspondence, model equivalence, emitted
 code, original CPU execution and host interaction remain separate gates.
 
+The [native realization extension](COMMON_UIL_NATIVE.md) connects this same
+profile to macOS ARM64, Linux x86-64 and Win64 computation backends. Its separate
+typed link lock resolves nested module requirements and per-operation C/assembly
+choices deterministically; it does not put target ABI choices in UIL.
+
 ## The three documents
 
 | Document | Responsibility |
@@ -23,9 +28,10 @@ code, original CPU execution and host interaction remain separate gates.
 
 For this contract, presentation means concrete program/data realization rather
 than UI decoration. A string or sound has a resource-table index in UIL and a
-concrete value in presentation. Python/JavaScript own the actual object and
-array locations; UIL has no arbitrary host-memory-write authority. A future
-native pointer/layout ABI needs a separately admitted layout profile. Supplying
+concrete value in presentation. Each admitted backend owns the actual object,
+array and frame locations; UIL has no arbitrary host-memory-write authority.
+Native typed-frame adapters use a separate pinned ABI; general native pointer
+layouts need a separately admitted profile. Supplying
 an unsupported memory layout is refused rather than ignored.
 
 Function identity has two levels. Local functions use indices in the program's
@@ -142,7 +148,7 @@ outside JSON's safe-number range. Input values are validated before narrowing.
 - `c-u16`: the existing restricted uint16 register statement reader.
 - `python-u16`: parsed masked uint16 assignments; no eval/exec or arbitrary
   Python execution. Unmasked `ax += 1` is not a wrapping-u16 definition.
-- `x86-16`: actual bytes for exactly one decoded register `INC`, `ADD` or `ADC`;
+- `x86-16`: actual bytes for one decoded register `MOV`, `INC`, `ADD` or `ADC`;
   explicit `bits` also admits decoder modes 32/64 and 8/16/32/64-bit register
   operands. Other instructions, prefixes, memory operands and incomplete decodes
   refuse. The input selector name is historical; metadata records actual mode.
@@ -152,7 +158,7 @@ outside JSON's safe-number range. Input values are validated before narrowing.
 
 Instruction fallback uses Capstone's actual complete decode and operand facts.
 By default it exposes the destination plus CF/PF/AF/ZF/SF/OF. INC preserves
-incoming carry. ADC consumes carry even when flag outputs are explicitly
+incoming carry, and MOV preserves all six declared flags. ADC consumes carry even when flag outputs are explicitly
 projected away. Register views are isolated typed ports: whole-register aliases,
 memory, traps, ABI, timing and OS/device services are outside this profile.
 This is a working bounded instruction fallback, not arbitrary DOS-to-ARM64
