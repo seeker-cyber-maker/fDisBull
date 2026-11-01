@@ -44,6 +44,7 @@ GAMEFAQS_SKILL_FILES = tuple('src/fdisbull/skills/write-gamefaqs-guide/'+name fo
     'references/engine-source-examples.md',
 ))
 REQUIRED_SOURCE_FILES += GAMEFAQS_SKILL_FILES
+REQUIRED_SOURCE_FILES += ('src/fdisbull/data/dinopark-e55-terminal.json',)
 UDC_EVIDENCE_FILES = {
     'docs/evidence/udc-2026-10-29/dino.json',
     'docs/evidence/udc-2026-10-29/zork.json',
@@ -209,3 +210,27 @@ def test_desktop_release_evidence_selector_excludes_unreviewed_receipts(tmp_path
     assert DESKTOP_EVIDENCE_FILE in selected
     assert private.relative_to(tmp_path).as_posix() not in selected
     assert 'include '+DESKTOP_EVIDENCE_FILE in (root/'MANIFEST.in').read_text().splitlines()
+
+
+@pytest.mark.parametrize('kind', ['source', 'wheel'])
+def test_distribution_check_requires_dinopark_terminal_resource(tmp_path, kind):
+    check = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'scripts/check_dist.py'))['check_archive']
+    resource = 'data/dinopark-e55-terminal.json'
+    if kind == 'source':
+        members = {'fdisbull-test/' + path for path in REQUIRED_SOURCE_FILES}
+        required = 'fdisbull-test/src/fdisbull/' + resource
+    else:
+        members = {path.removeprefix('src/') for path in REQUIRED_SOURCE_FILES
+                   if path.startswith('src/fdisbull/')}
+        members.add('fdisbull-0.dist-info/METADATA')
+        required = 'fdisbull/' + resource
+    archive = tmp_path / ('fdisbull-resource.whl' if kind == 'wheel' else 'fdisbull-resource.zip')
+    with zipfile.ZipFile(archive, 'w') as output:
+        for member in sorted(members):
+            output.writestr(member, '')
+    assert check(archive) == len(members)
+    with zipfile.ZipFile(archive, 'w') as output:
+        for member in sorted(members - {required}):
+            output.writestr(member, '')
+    with pytest.raises(ValueError, match=re.escape(resource)):
+        check(archive)

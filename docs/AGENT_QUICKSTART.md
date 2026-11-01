@@ -15,10 +15,11 @@ original files. Hash equality is byte identity, not publisher authenticity.
 
 ## Discover commands and bundled skills
 
-For repository CI, first read [CI coordination](CI_COORDINATION.md). One named
-owner refreshes a shared, dated status receipt at most every five minutes;
-other agents read the receipt instead of polling GitHub separately. The finite
-`scripts/ci_status.py` helper defaults to cache-only operation.
+For repository CI and dual-mirror updates (Local Git + GitLab), first read
+[CI coordination](CI_COORDINATION.md). GitHub (`origin`) is permanently retired;
+keep local Git and GitLab (`brewster-jennings-group/fdisbull`) synchronized,
+and use `scripts/ci_status.py --host gitlab.com --repo brewster-jennings-group/fdisbull`
+in cache-only mode by default.
 
 ```text
 fdisbull --version
