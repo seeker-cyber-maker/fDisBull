@@ -1,5 +1,16 @@
 # DinoPark analysis friction and retained Z terminal replies
 
+The [fence deadline and recovery follow-up](VERIFICATION-DINOPARK-FENCE-RECONCILIATION-2026-11-01.md)
+replaces fixed fence sleeps with retained phases and native commit evidence,
+adds pre-observation shared deadlines and a reusable deadline intersection,
+and corrects observer allowance renewal. Two original-game runs qualify the first
+fence slice; repeated read-only reconciliation preserves the first provider.
+The additional registered-observer scene policy passes the original Employment
+transition through 479 passive stops while retaining full evidence off-reply.
+It distinguishes the remaining caller,
+producer-domain, configuration and coverage gaps from unfinished body decoding.
+Raw inputs and live contexts remain private.
+
 The [land purchase recovery follow-up](VERIFICATION-DINOPARK-LAND-RECONCILIATION-2026-11-01.md)
 qualifies the original first plot and two read-only reconciliation attempts,
 separates draft from committed allocation, and excludes cursor regions from

@@ -180,6 +180,14 @@ remain cumulative, and uncertain execution does not authorize continuation.
 See the [land recovery verification](VERIFICATION-DINOPARK-LAND-RECONCILIATION-2026-11-01.md)
 for the bounded first-plot contract and original-game cursor recognition finding.
 
+A held wood-fence order offers `continue fence order` for later phases of its
+original twelve-input sequence. The confirmation ticket and native fence effect
+survive failures during inspection or return. A shared 40-second deadline starts
+before observation; composed observers must preserve the incoming deadline.
+After the Street return qualifies, `reconcile` certifies the original
+`buy wood fence` without new input, execution or restore. See the
+[fence verification and tracing blockers](VERIFICATION-DINOPARK-FENCE-RECONCILIATION-2026-11-01.md).
+
 The JSON-line backend accepts `{"op":"reconcile"}` and an optional
 `recovery_id` selecting the already-held attempt. A successful result carries
 `read_only: true`, the original canonical action and a fresh destination witness.
