@@ -1,12 +1,12 @@
 # fDisBull
 
-The **0.28.0** release candidate adds a projectless analysis-capability
-catalog, source-backed macOS ARM64 Mach-O/Ghidra/LLDB investigation, coordinated
-CI status reads, DinoPark Coelophysis purchase reconciliation and Miles AIL 2
-driver recognition. See the [release notes](docs/RELEASE-0.28.0.md) for scope,
-qualification and gates. The latest published release is
+The **0.29.0** release candidate carries the unpublished 0.28.0 candidate scope
+and adds read-only Civilization I world snapshots plus the Z world language and
+a full Zork I room/exit map. See the
+[release notes](docs/RELEASE-0.29.0.md) for scope, qualification and gates. The
+latest published release is
 [0.27.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.27.0);
-0.28.0 is not published yet.
+0.29.0 is not published yet.
 
 Give an agent a program to explore—and a place to keep what it learns.
 fDisBull connects disassembly, headless debugging, scene-aware controls and
