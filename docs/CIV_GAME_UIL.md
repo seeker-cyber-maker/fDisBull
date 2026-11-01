@@ -1,0 +1,228 @@
+# Civilization game-level UIL scene
+
+Status: **partial, source-linked scene graph and state projection; not a
+playable whole-game reconstruction**.
+
+Slice ID: `CIV-GAME-UIL-001`
+
+## Question
+
+Can the DOS game's screen boundaries, navigation actions and visible state be
+represented once as executable UIL, using Civ64's DOS scene records for the
+screen inventory, civd for source-shaped state, and the pinned `CIV.EXE` atlas
+for address identity?
+
+The answer is a bounded **yes**: the committed scene is a valid
+`fdisbull-il-scene-1` document with 23 contexts, 82 objects and 31 programs.
+It can be driven through the shared IL backend or Z text player. It is not a
+claim that the game's simulation, assets, input decoding or save format has
+been recovered.
+
+## Files
+
+| File | Role |
+| --- | --- |
+| `examples/civ/civ_game_uil.py` | deterministic builder, atlas resolver and headless validator |
+| `examples/civ/civ_game_scene.json` | committed `fdisbull-il-scene-1` scene |
+| `examples/civ/civ_game_scene.provenance.json` | screen/source/address index, state evidence and limits |
+| `tests/test_civ_game_uil.py` | scene, transition, evidence and Z-player checks |
+
+The existing city fixture remains the detailed city slice:
+[`CIV_CITY_UI_SLICE.md`](CIV_CITY_UI_SLICE.md) and
+[`CIV_CITY_UIL_UDC.md`](CIV_CITY_UIL_UDC.md). The game scene carries only the
+city controls needed to move between the city, its production chooser, its
+unit list and the city view.
+
+## Edition and authority boundary
+
+| Authority | Use here | Boundary |
+| --- | --- | --- |
+| Packed DOS `CIV.EXE`, SHA-256 `22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a` | exact target identity | civd labels it 474.05; Civ64's DOS documentation labels the same bytes 475.05. The existing `CIV-EDITION-001` conflict remains open. |
+| Generated `CIV_UNP.EXE`, SHA-256 `aa63aa396cfa62519b131ee6c0a231bed02bb9aefce26b955608b5815a569e57` | byte-identical unpacked source for the atlas | not a runtime observation and not copied into the repository |
+| civd `d9214fcd36aa6003d28aae60c3974b665f752280` | function names, records and source-shaped behavior | reconstructed source; names and declarations remain claims |
+| Civ64 `4e46572d727544722d90c24dc2ce51a9c6d22f15` | DOS scene inventory, geometry and interaction roles | **DOS listing**; Windows counterparts are kept separate |
+| `examples/civ/civ_exe_atlas.json` | resolves every screen anchor to a civd function and source file | address resolution only; Windows/PE64 byte equivalence remains 0/21 |
+
+## Scene graph
+
+```mermaid
+flowchart LR
+  T[title] --> L[load]
+  T --> C[customize]
+  T --> H[hall]
+  T --> B[birth]
+  C --> B
+  B --> D[difficulty]
+  D --> K[competition]
+  K --> R[tribe]
+  R --> N[leader-name]
+  N --> I[intro]
+  I --> W[world]
+  W --> CITY[city]
+  CITY --> P[production]
+  CITY --> U[units]
+  CITY --> V[city-view]
+  W --> REP[reports]
+  W --> PED[pedia]
+  W --> DIP[diplomacy]
+  W --> S[spaceship]
+  W --> NEWS[newspaper]
+  W --> PAL[palace]
+  W --> AUD[audience]
+  W --> G[game-over]
+```
+
+Dashed/omitted links are deliberate. `game-over` is represented for
+inspection but its trigger conditions are outside the model. The diagram is a
+navigation aid, not evidence that every original control has a binding.
+
+## Screen inventory and address resolution
+
+All **51** recorded screen anchors resolve to a civd function: **43 at a
+function entry and 8 inside a function**. The full per-anchor record is in the
+provenance file.
+
+| Context | `$screen` | Civ64 section | civd source | Objects | Resolved anchors |
+| --- | ---: | --- | --- | ---: | --- |
+| `title` | 0 | SCENES.md 4.4-6 | GAME.C | 4 | R:01A8:0486 `_game_menu` (entry) |
+| `load` | 1 | SCENES.md 7.2 | SAVE.C | 2 | O11:0000 `_load_game` (entry) |
+| `customize` | 2 | SCENES.md 7.4 | GAME.C | 6 | R:01A8:0591 `_game_menu` (inside) |
+| `birth` | 3 | SCENES.md 8 | WORLDGEN.C | 2 | O7:0012 `_make_world` (entry) |
+| `difficulty` | 4 | SCENES.md 9.1 | NEWGAME.C | 2 | O5:0031 `_new_game` (inside) |
+| `competition` | 5 | SCENES.md 9.2 | NEWGAME.C | 2 | O5:012E `_new_game` (inside) |
+| `tribe` | 6 | SCENES.md 9.3 | NEWGAME.C | 2 | O5:0309 `_new_game` (inside) |
+| `leader-name` | 7 | SCENES.md 9.4-9.5, 10.4 | NAMES.C | 2 | O23:00D6 `_rename_leader` (entry), O23:0414 `_edit_line` (entry) |
+| `intro` | 8 | SCENES.md 9.6 | NEWGAME.C | 2 | O5:0657 `_new_game` (inside) |
+| `world` | 9 | SCENES-PLAY.md 1-6 | MAP.C, TURN.C, CONTROL.C, UNITS.C | 14 | R:1AEA:0008 `_reveal` (entry), R:1AEA:03BA `_seen_map` (entry), R:0238:0FEA `_draw_banner` (entry), R:0238:107E `_status_draw` (entry), R:0403:4060 `_uinit` (entry), R:0403:0676 `_ai_turn` (inside), R:0866:0AD6 `_blink_unit` (entry), R:0866:1D55 `_anim_unit` (entry), R:0866:1F69 `_pick_unit` (entry) |
+| `city` | 10 | SCENES-PLAY.md 7.1 | CITYMGT.C | 12 | R:0D12:0045 `_city_process` (entry), R:0D12:7045 `_draw_icon` (entry), R:0D12:710D `_tile_panel` (entry), R:0ADE:03EA `_kill` (entry), R:0ADE:0093 `_civ_economy` (inside), R:1459:0597 `_capunit` (inside) |
+| `production` | 10 | SCENES-PLAY.md 7.12 | ECONOMY.C | 2 | R:0ADE:0421 `_find_slot` (entry) |
+| `units` | 10 | SCENES-PLAY.md 7.1 | CITYMGT.C, CONTROL.C, UNITS.C | 2 | R:0403:4060 `_uinit` (entry), R:0866:1F69 `_pick_unit` (entry) |
+| `city-view` | 11 | SCENES-PLAY.md 7.2-7.3 | CITYVIEW.C | 2 | O19:0000 `_city_scene` (entry), O19:167B `_invasion_scene` (entry), O19:18C1 `_riot_anim` (entry), O19:1AE1 `_love_anim` (entry) |
+| `reports` | 12 | SCENES-PLAY.md 7.14 | ADVISORS.C, REPORTS.C, TURN.C | 7 | O14:0000 `_advisor_open` (entry), O14:186F `_city_rpt` (entry), O14:03AD `_mil_rpt` (entry), O14:014B `_sci_rpt` (entry), O14:07F1 `_trade_rpt` (entry), O12:0000 `_world_map` (entry) |
+| `pedia` | 13 | SCENES-PLAY.md 7.13 | PEDIA.C | 3 | O8:0000 `_civilopedia` (entry), O8:062A `_pedia_show` (entry) |
+| `diplomacy` | 14 | SCENES-PLAY.md 7.9-7.10 | AUDIENCE.C, DIPLOMAC.C | 3 | O6:1D2B `_load_leader` (entry), R:1517:04A1 `_set_government` (entry) |
+| `spaceship` | 15 | SCENES-PLAY.md 7.16 | SPACESHP.C | 3 | O18:0000 `_spaceship_open` (entry), O18:0F83 `_spaceship_build` (entry) |
+| `hall` | 16 | SCENES.md 7.5, SCENES-PLAY.md 7.17 | FAME.C | 2 | O3:002B `_fame_load` (entry), O3:00D7 `_show_fame` (entry) |
+| `game-over` | 17 | SCENES-PLAY.md 7.17 | TURN.C, REPLAY.C | 2 | R:0238:0092 `_game_turn` (entry), O9:0DDE `_conquest_replay` (entry) |
+| `newspaper` | 18 | SCENES-PLAY.md 7.7 | NEWS.C | 2 | O21:0000 `_news_box` (entry) |
+| `palace` | 19 | SCENES-PLAY.md 7.8 | PALACE.C | 2 | O17:0000 `_palace_view` (entry) |
+| `audience` | 20 | SCENES-PLAY.md 7.9 | AUDIENCE.C | 2 | O6:1D2B `_load_leader` (entry) |
+
+Function names are civd's; the scene does not treat them as proof that the
+full DOS screen behavior is reconstructed. For example, the atlas name
+`_reveal` is retained for `R:1AEA:0008` even though Civ64's role is the map
+redraw entry.
+
+## State projection
+
+The scene has one typed state shared by all programs. The provenance file
+carries every field and its evidence; the important groups are:
+
+| Field | Type | Evidence | Status |
+| --- | --- | --- | --- |
+| `$screen` | `u8` | UIL scene selector; no DOS symbol | authored |
+| `$turn` | `u16` | `R:0238:0092` game loop | declared counter, not a full turn model |
+| `$year` | `i16` | DGROUP:B220; Civ64 SCENES-PLAY 5.2 | display state only |
+| `$difficulty`, `$competition`, `$tribe` | `u8` | Civ64 SCENES 9.1-9.3 | declared setup state; menu result binding not modelled |
+| `$human_civ` | `u8` | DGROUP:D7F0; Civ64 SCENES-PLAY 7.19 | declared player identity |
+| `$treasury` | `i32` | DGROUP:B1D6[civ]; Civ64 SCENES-PLAY 5.2 | declared economy state |
+| `$tax_rate`, `$science_rate`, `$luxury_rate` | `u8` | DGROUP:DF0E/B210 and `10-tax-science`; Civ64 SCENES-PLAY 7.20 | declared rates |
+| `$view_x`, `$view_y` | `u8` | DGROUP:D4CC/D75E; Civ64 SCENES-PLAY 3 | viewport projection |
+| `$selected_city` | `u8` | selector into DGROUP:70EC records | declared index |
+| `$selected_unit` | `u16` | selector into DGROUP:81D4 records | declared index |
+| `$production` | `i16` | city production field; civd `struct_city.md` | bounded to unit codes 0/1 in this scene |
+| `$chooser_open`, `$unit_list_open` | `bool` | key `c` / key `a` contexts | UIL context flags |
+| `$unit_count`, `$unit_cursor`, `$city_cursor` | `u8` | city unit-list model; `[0x70DC]` | declared cursor state |
+| `$auto_build` | `bool` | city automatic-production display | declared state |
+| `$report` | `u8` | F1-F10 table `R:0403 3B7D..3BFF` | declared selector |
+| `$earth_world` | `bool` | DGROUP:D76A; Civ64 SCENES 7.3 | declared branch |
+| `$game_over` | `bool` | UIL end-state flag | authored |
+
+The scene deliberately does **not** load a save, render a map, execute a turn,
+run AI, resolve combat, advance technology or write a city record. Those are
+separate slices.
+
+## Entity index
+
+| Entity | Evidence |
+| --- | --- |
+| Map | 80x50 world; 15x12 viewport; terrain/unit/improvement page map in Civ64 SCENES-PLAY 1.1 and 2 |
+| City | 128 records of 28 bytes at DGROUP:70EC; civd `reference/struct_city.md`; Civ64 SCENES-PLAY 2.3 |
+| Unit | `DGROUP:81D4 + civ*600h + unit*0Ch`; civd `reference/struct_unit.md`; Civ64 SCENES-PLAY 2.2 |
+| Civilization | DGROUP:D7F0 player civilization; Civ64 SCENES-PLAY 7.19 |
+
+## Reusable rule slices
+
+The game scene links to, but does not duplicate, the qualified slices:
+
+- [city shield step and buy contract](CIV_CITY_UIL_UDC.md#bounded-udc-module)
+- [buy price, guard and commit](CIV_CITY_UIL_UDC.md#buy-price-guard-and-commit-module)
+- [pathfinding trace](CIV_PATHFINDING_TRACE.md)
+- [city input dispatch and static trace](CIV_CITY_STATIC_TRACE.md)
+
+A navigation scene is not a rule engine. Binding a control to a state field
+does not prove the original screen's display value or the rule's committed
+code path.
+
+## Executable checks
+
+```bash
+PYTHONPATH=src python examples/civ/civ_game_uil.py --check \
+  --atlas examples/civ/civ_exe_atlas.json \
+  --civd-src /path/to/civd/src
+
+PYTHONPATH=src python -m pytest -q tests/test_civ_game_uil.py
+
+PYTHONPATH=src:player python -m fdisbull_player \
+  --backend-command "python -m fdisbull.il_scenes examples/civ/civ_game_scene.json"
+```
+
+The first command checks the scene against the shared IL validator and rejects
+any unresolved anchor. The tests walk the startup path, city subcontexts, all
+world overlays, the end-turn counter and the state-reachable game-over context.
+The Z-player test uses the committed scene, not an in-memory rebuild.
+
+Observed on this host with the active fDisBull 0.28.0 interpreter:
+
+- `tests/test_civ_game_uil.py`: **6 passed**
+- CIV-focused set (`game UIL`, `city UIL`, `atlas`, `city trace`, `city overlay`):
+  **37 passed**
+- full repository suite: **2,241 passed, 152 skipped, 2 failed, 23 errors**.
+  The failures/errors are the existing Apple-toolchain Linux ELF fixture
+  boundary (`/usr/bin/gcc` is Apple clang; missing `-z ibtplt` and Linux
+  metadata), not this scene.
+
+The scene is validated against the shared interpreter, but the evidence claims
+remain static. No DOS screen was run for this slice.
+
+## Limits and non-claims
+
+- Partial scene graph and state projection, not a full simulation.
+- No DOS execution, VGA rendering, palette/font/asset loading or input decoding.
+- Setup choices are represented as one declared initial value; individual menu
+  selections are not bound.
+- Unit next/previous/select, sell, buy, rename, text entry and report paging are
+  only partially represented or absent. The detailed city fixture carries more
+  source-modeled city behavior.
+- Turn advance only increments declared counters; economy, AI, movement, combat,
+  research, diplomacy and victory conditions are outside the model.
+- Game-over is state-reachable for inspection; its trigger conditions are not
+  modelled.
+- Address resolution is not Windows-to-DOS byte equivalence. See
+  [`CIV_DOS_CIV64_CROSSWALK.md`](CIV_DOS_CIV64_CROSSWALK.md).
+- The edition conflict between civd's 474.05 and Civ64's 475.05 remains open.
+
+## Next probes
+
+1. Bind one setup menu result to its actual DGROUP field with a live or
+   original-code observation; the scene currently records only the declared
+   initial value.
+2. Bind the unit-list `next`/`previous`/`select` actions to the existing city
+   fixture and to a live cursor read, rather than leaving the game scene with a
+   single close action.
+3. Use the atlas's caller graph to add one bounded transition not yet modeled,
+   such as the production chooser returning through `_city_process` after a
+   commit.
+4. Keep the scene at `partial: true` until a matching-edition backend supplies
+   a baseline, one controlled action and a committed state change bound to the
+   same record.

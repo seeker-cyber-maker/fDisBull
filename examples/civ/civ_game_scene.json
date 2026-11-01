@@ -1,0 +1,5724 @@
+{
+ "format": "fdisbull-il-scene-1",
+ "partial": true,
+ "programs": {
+  "new-game": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "new-game-text": {
+     "kind": "text",
+     "text": "Birth begins; the new-game setup follows world generation."
+    }
+   },
+   "body": [
+    {
+     "id": "new-game-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 3
+    },
+    {
+     "id": "new-game-text",
+     "op": "text",
+     "resource": "new-game-text"
+    }
+   ]
+  },
+  "enter-load": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "enter-load-text": {
+     "kind": "text",
+     "text": "Load game: drive prompt and ten fixed save slots."
+    }
+   },
+   "body": [
+    {
+     "id": "enter-load-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 1
+    },
+    {
+     "id": "enter-load-text",
+     "op": "text",
+     "resource": "enter-load-text"
+    }
+   ]
+  },
+  "load-world": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "load-world-text": {
+     "kind": "text",
+     "text": "Loaded game enters the world map; save parsing is not modelled."
+    }
+   },
+   "body": [
+    {
+     "id": "load-world-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 9
+    },
+    {
+     "id": "load-world-text",
+     "op": "text",
+     "resource": "load-world-text"
+    }
+   ]
+  },
+  "load-cancel": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "load-cancel-text": {
+     "kind": "text",
+     "text": "Returned to the title menu."
+    }
+   },
+   "body": [
+    {
+     "id": "load-cancel-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 0
+    },
+    {
+     "id": "load-cancel-text",
+     "op": "text",
+     "resource": "load-cancel-text"
+    }
+   ]
+  },
+  "enter-customize": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "enter-customize-text": {
+     "kind": "text",
+     "text": "Customize world: land mass, temperature, climate and age."
+    }
+   },
+   "body": [
+    {
+     "id": "enter-customize-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 2
+    },
+    {
+     "id": "enter-customize-text",
+     "op": "text",
+     "resource": "enter-customize-text"
+    }
+   ]
+  },
+  "customize-world": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "customize-world-text": {
+     "kind": "text",
+     "text": "Custom parameters enter Birth; selected values are not modelled."
+    }
+   },
+   "body": [
+    {
+     "id": "customize-world-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 3
+    },
+    {
+     "id": "customize-world-text",
+     "op": "text",
+     "resource": "customize-world-text"
+    }
+   ]
+  },
+  "customize-cancel": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "customize-cancel-text": {
+     "kind": "text",
+     "text": "Returned to the title menu."
+    }
+   },
+   "body": [
+    {
+     "id": "customize-cancel-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 0
+    },
+    {
+     "id": "customize-cancel-text",
+     "op": "text",
+     "resource": "customize-cancel-text"
+    }
+   ]
+  },
+  "birth-continue": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "birth-continue-text": {
+     "kind": "text",
+     "text": "Birth finished; difficulty question."
+    }
+   },
+   "body": [
+    {
+     "id": "birth-continue-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 4
+    },
+    {
+     "id": "birth-continue-text",
+     "op": "text",
+     "resource": "birth-continue-text"
+    }
+   ]
+  },
+  "difficulty-continue": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "difficulty-continue-text": {
+     "kind": "text",
+     "text": "Difficulty choice recorded as declared state; competition question."
+    }
+   },
+   "body": [
+    {
+     "id": "difficulty-continue-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 5
+    },
+    {
+     "id": "difficulty-continue-text",
+     "op": "text",
+     "resource": "difficulty-continue-text"
+    }
+   ]
+  },
+  "competition-continue": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "competition-continue-text": {
+     "kind": "text",
+     "text": "Competition choice recorded as declared state; tribe question."
+    }
+   },
+   "body": [
+    {
+     "id": "competition-continue-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 6
+    },
+    {
+     "id": "competition-continue-text",
+     "op": "text",
+     "resource": "competition-continue-text"
+    }
+   ]
+  },
+  "tribe-continue": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "tribe-continue-text": {
+     "kind": "text",
+     "text": "Tribe choice recorded as declared state; leader name."
+    }
+   },
+   "body": [
+    {
+     "id": "tribe-continue-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 7
+    },
+    {
+     "id": "tribe-continue-text",
+     "op": "text",
+     "resource": "tribe-continue-text"
+    }
+   ]
+  },
+  "name-continue": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "name-continue-text": {
+     "kind": "text",
+     "text": "Name field accepted; introduction text."
+    }
+   },
+   "body": [
+    {
+     "id": "name-continue-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 8
+    },
+    {
+     "id": "name-continue-text",
+     "op": "text",
+     "resource": "name-continue-text"
+    }
+   ]
+  },
+  "intro-begin": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "intro-begin-text": {
+     "kind": "text",
+     "text": "Play begins at the world map."
+    }
+   },
+   "body": [
+    {
+     "id": "intro-begin-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 9
+    },
+    {
+     "id": "intro-begin-text",
+     "op": "text",
+     "resource": "intro-begin-text"
+    }
+   ]
+  },
+  "toggle-hall": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "toggle-hall-first-text": {
+     "kind": "text",
+     "text": "Title menu."
+    },
+    "toggle-hall-second-text": {
+     "kind": "text",
+     "text": "Hall of Fame entries."
+    }
+   },
+   "body": [
+    {
+     "id": "toggle-hall-branch",
+     "op": "if",
+     "condition": {
+      "op": "eq",
+      "left": {
+       "var": "$screen"
+      },
+      "right": 0
+     },
+     "then": [
+      {
+       "id": "toggle-hall-set-screen-then",
+       "op": "set",
+       "var": "$screen",
+       "value": 16
+      },
+      {
+       "id": "toggle-hall-text-then",
+       "op": "text",
+       "resource": "toggle-hall-second-text"
+      }
+     ],
+     "else": [
+      {
+       "id": "toggle-hall-set-screen-else",
+       "op": "set",
+       "var": "$screen",
+       "value": 0
+      },
+      {
+       "id": "toggle-hall-text-else",
+       "op": "text",
+       "resource": "toggle-hall-first-text"
+      }
+     ]
+    }
+   ]
+  },
+  "enter-city": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "enter-city-text": {
+     "kind": "text",
+     "text": "City screen; city 0 is the declared selector."
+    }
+   },
+   "body": [
+    {
+     "id": "enter-city-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 10
+    },
+    {
+     "id": "enter-city-set-selected_city",
+     "op": "set",
+     "var": "$selected_city",
+     "value": 0
+    },
+    {
+     "id": "enter-city-set-chooser_open",
+     "op": "set",
+     "var": "$chooser_open",
+     "value": false
+    },
+    {
+     "id": "enter-city-set-unit_list_open",
+     "op": "set",
+     "var": "$unit_list_open",
+     "value": false
+    },
+    {
+     "id": "enter-city-text",
+     "op": "text",
+     "resource": "enter-city-text"
+    }
+   ]
+  },
+  "leave-city": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "leave-city-text": {
+     "kind": "text",
+     "text": "Returned to the world map."
+    }
+   },
+   "body": [
+    {
+     "id": "leave-city-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 9
+    },
+    {
+     "id": "leave-city-set-chooser_open",
+     "op": "set",
+     "var": "$chooser_open",
+     "value": false
+    },
+    {
+     "id": "leave-city-set-unit_list_open",
+     "op": "set",
+     "var": "$unit_list_open",
+     "value": false
+    },
+    {
+     "id": "leave-city-text",
+     "op": "text",
+     "resource": "leave-city-text"
+    }
+   ]
+  },
+  "open-production": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "open-production-text": {
+     "kind": "text",
+     "text": "Production chooser: key c / R:0ADE:0421."
+    }
+   },
+   "body": [
+    {
+     "id": "open-production-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 10
+    },
+    {
+     "id": "open-production-set-chooser_open",
+     "op": "set",
+     "var": "$chooser_open",
+     "value": true
+    },
+    {
+     "id": "open-production-set-unit_list_open",
+     "op": "set",
+     "var": "$unit_list_open",
+     "value": false
+    },
+    {
+     "id": "open-production-text",
+     "op": "text",
+     "resource": "open-production-text"
+    }
+   ]
+  },
+  "build-settlers": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "build-settlers-text": {
+     "kind": "text",
+     "text": "Settlers committed as production code 0."
+    }
+   },
+   "body": [
+    {
+     "id": "build-settlers-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 10
+    },
+    {
+     "id": "build-settlers-set-production",
+     "op": "set",
+     "var": "$production",
+     "value": 0
+    },
+    {
+     "id": "build-settlers-set-chooser_open",
+     "op": "set",
+     "var": "$chooser_open",
+     "value": false
+    },
+    {
+     "id": "build-settlers-text",
+     "op": "text",
+     "resource": "build-settlers-text"
+    }
+   ]
+  },
+  "build-militia": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "build-militia-text": {
+     "kind": "text",
+     "text": "Militia committed as production code 1."
+    }
+   },
+   "body": [
+    {
+     "id": "build-militia-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 10
+    },
+    {
+     "id": "build-militia-set-production",
+     "op": "set",
+     "var": "$production",
+     "value": 1
+    },
+    {
+     "id": "build-militia-set-chooser_open",
+     "op": "set",
+     "var": "$chooser_open",
+     "value": false
+    },
+    {
+     "id": "build-militia-text",
+     "op": "text",
+     "resource": "build-militia-text"
+    }
+   ]
+  },
+  "open-units": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "open-units-text": {
+     "kind": "text",
+     "text": "City unit list opened with cursor 0."
+    }
+   },
+   "body": [
+    {
+     "id": "open-units-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 10
+    },
+    {
+     "id": "open-units-set-unit_list_open",
+     "op": "set",
+     "var": "$unit_list_open",
+     "value": true
+    },
+    {
+     "id": "open-units-set-chooser_open",
+     "op": "set",
+     "var": "$chooser_open",
+     "value": false
+    },
+    {
+     "id": "open-units-set-unit_cursor",
+     "op": "set",
+     "var": "$unit_cursor",
+     "value": 0
+    },
+    {
+     "id": "open-units-text",
+     "op": "text",
+     "resource": "open-units-text"
+    }
+   ]
+  },
+  "close-units": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "close-units-text": {
+     "kind": "text",
+     "text": "Unit cursor stored at [0x70DC]; returned to the city."
+    }
+   },
+   "body": [
+    {
+     "id": "close-units-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 10
+    },
+    {
+     "id": "close-units-set-city_cursor",
+     "op": "set",
+     "var": "$city_cursor",
+     "value": {
+      "var": "$unit_cursor"
+     }
+    },
+    {
+     "id": "close-units-set-unit_list_open",
+     "op": "set",
+     "var": "$unit_list_open",
+     "value": false
+    },
+    {
+     "id": "close-units-text",
+     "op": "text",
+     "resource": "close-units-text"
+    }
+   ]
+  },
+  "toggle-city-view": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "toggle-city-view-first-text": {
+     "kind": "text",
+     "text": "City screen."
+    },
+    "toggle-city-view-second-text": {
+     "kind": "text",
+     "text": "City view; assets and animation are outside this scene."
+    }
+   },
+   "body": [
+    {
+     "id": "toggle-city-view-branch",
+     "op": "if",
+     "condition": {
+      "op": "eq",
+      "left": {
+       "var": "$screen"
+      },
+      "right": 10
+     },
+     "then": [
+      {
+       "id": "toggle-city-view-set-screen-then",
+       "op": "set",
+       "var": "$screen",
+       "value": 11
+      },
+      {
+       "id": "toggle-city-view-text-then",
+       "op": "text",
+       "resource": "toggle-city-view-second-text"
+      }
+     ],
+     "else": [
+      {
+       "id": "toggle-city-view-set-screen-else",
+       "op": "set",
+       "var": "$screen",
+       "value": 10
+      },
+      {
+       "id": "toggle-city-view-text-else",
+       "op": "text",
+       "resource": "toggle-city-view-first-text"
+      }
+     ]
+    }
+   ]
+  },
+  "toggle-reports": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "toggle-reports-first-text": {
+     "kind": "text",
+     "text": "World map."
+    },
+    "toggle-reports-second-text": {
+     "kind": "text",
+     "text": "Reports and advisors."
+    }
+   },
+   "body": [
+    {
+     "id": "toggle-reports-branch",
+     "op": "if",
+     "condition": {
+      "op": "eq",
+      "left": {
+       "var": "$screen"
+      },
+      "right": 9
+     },
+     "then": [
+      {
+       "id": "toggle-reports-set-screen-then",
+       "op": "set",
+       "var": "$screen",
+       "value": 12
+      },
+      {
+       "id": "toggle-reports-text-then",
+       "op": "text",
+       "resource": "toggle-reports-second-text"
+      }
+     ],
+     "else": [
+      {
+       "id": "toggle-reports-set-screen-else",
+       "op": "set",
+       "var": "$screen",
+       "value": 9
+      },
+      {
+       "id": "toggle-reports-text-else",
+       "op": "text",
+       "resource": "toggle-reports-first-text"
+      }
+     ]
+    }
+   ]
+  },
+  "toggle-pedia": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "toggle-pedia-first-text": {
+     "kind": "text",
+     "text": "World map."
+    },
+    "toggle-pedia-second-text": {
+     "kind": "text",
+     "text": "Civilopedia."
+    }
+   },
+   "body": [
+    {
+     "id": "toggle-pedia-branch",
+     "op": "if",
+     "condition": {
+      "op": "eq",
+      "left": {
+       "var": "$screen"
+      },
+      "right": 9
+     },
+     "then": [
+      {
+       "id": "toggle-pedia-set-screen-then",
+       "op": "set",
+       "var": "$screen",
+       "value": 13
+      },
+      {
+       "id": "toggle-pedia-text-then",
+       "op": "text",
+       "resource": "toggle-pedia-second-text"
+      }
+     ],
+     "else": [
+      {
+       "id": "toggle-pedia-set-screen-else",
+       "op": "set",
+       "var": "$screen",
+       "value": 9
+      },
+      {
+       "id": "toggle-pedia-text-else",
+       "op": "text",
+       "resource": "toggle-pedia-first-text"
+      }
+     ]
+    }
+   ]
+  },
+  "toggle-diplomacy": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "toggle-diplomacy-first-text": {
+     "kind": "text",
+     "text": "World map."
+    },
+    "toggle-diplomacy-second-text": {
+     "kind": "text",
+     "text": "Diplomacy and audience."
+    }
+   },
+   "body": [
+    {
+     "id": "toggle-diplomacy-branch",
+     "op": "if",
+     "condition": {
+      "op": "eq",
+      "left": {
+       "var": "$screen"
+      },
+      "right": 9
+     },
+     "then": [
+      {
+       "id": "toggle-diplomacy-set-screen-then",
+       "op": "set",
+       "var": "$screen",
+       "value": 14
+      },
+      {
+       "id": "toggle-diplomacy-text-then",
+       "op": "text",
+       "resource": "toggle-diplomacy-second-text"
+      }
+     ],
+     "else": [
+      {
+       "id": "toggle-diplomacy-set-screen-else",
+       "op": "set",
+       "var": "$screen",
+       "value": 9
+      },
+      {
+       "id": "toggle-diplomacy-text-else",
+       "op": "text",
+       "resource": "toggle-diplomacy-first-text"
+      }
+     ]
+    }
+   ]
+  },
+  "toggle-spaceship": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "toggle-spaceship-first-text": {
+     "kind": "text",
+     "text": "World map."
+    },
+    "toggle-spaceship-second-text": {
+     "kind": "text",
+     "text": "Spaceship."
+    }
+   },
+   "body": [
+    {
+     "id": "toggle-spaceship-branch",
+     "op": "if",
+     "condition": {
+      "op": "eq",
+      "left": {
+       "var": "$screen"
+      },
+      "right": 9
+     },
+     "then": [
+      {
+       "id": "toggle-spaceship-set-screen-then",
+       "op": "set",
+       "var": "$screen",
+       "value": 15
+      },
+      {
+       "id": "toggle-spaceship-text-then",
+       "op": "text",
+       "resource": "toggle-spaceship-second-text"
+      }
+     ],
+     "else": [
+      {
+       "id": "toggle-spaceship-set-screen-else",
+       "op": "set",
+       "var": "$screen",
+       "value": 9
+      },
+      {
+       "id": "toggle-spaceship-text-else",
+       "op": "text",
+       "resource": "toggle-spaceship-first-text"
+      }
+     ]
+    }
+   ]
+  },
+  "toggle-newspaper": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "toggle-newspaper-first-text": {
+     "kind": "text",
+     "text": "World map."
+    },
+    "toggle-newspaper-second-text": {
+     "kind": "text",
+     "text": "Newspaper."
+    }
+   },
+   "body": [
+    {
+     "id": "toggle-newspaper-branch",
+     "op": "if",
+     "condition": {
+      "op": "eq",
+      "left": {
+       "var": "$screen"
+      },
+      "right": 9
+     },
+     "then": [
+      {
+       "id": "toggle-newspaper-set-screen-then",
+       "op": "set",
+       "var": "$screen",
+       "value": 18
+      },
+      {
+       "id": "toggle-newspaper-text-then",
+       "op": "text",
+       "resource": "toggle-newspaper-second-text"
+      }
+     ],
+     "else": [
+      {
+       "id": "toggle-newspaper-set-screen-else",
+       "op": "set",
+       "var": "$screen",
+       "value": 9
+      },
+      {
+       "id": "toggle-newspaper-text-else",
+       "op": "text",
+       "resource": "toggle-newspaper-first-text"
+      }
+     ]
+    }
+   ]
+  },
+  "toggle-palace": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "toggle-palace-first-text": {
+     "kind": "text",
+     "text": "World map."
+    },
+    "toggle-palace-second-text": {
+     "kind": "text",
+     "text": "Palace."
+    }
+   },
+   "body": [
+    {
+     "id": "toggle-palace-branch",
+     "op": "if",
+     "condition": {
+      "op": "eq",
+      "left": {
+       "var": "$screen"
+      },
+      "right": 9
+     },
+     "then": [
+      {
+       "id": "toggle-palace-set-screen-then",
+       "op": "set",
+       "var": "$screen",
+       "value": 19
+      },
+      {
+       "id": "toggle-palace-text-then",
+       "op": "text",
+       "resource": "toggle-palace-second-text"
+      }
+     ],
+     "else": [
+      {
+       "id": "toggle-palace-set-screen-else",
+       "op": "set",
+       "var": "$screen",
+       "value": 9
+      },
+      {
+       "id": "toggle-palace-text-else",
+       "op": "text",
+       "resource": "toggle-palace-first-text"
+      }
+     ]
+    }
+   ]
+  },
+  "toggle-audience": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "toggle-audience-first-text": {
+     "kind": "text",
+     "text": "World map."
+    },
+    "toggle-audience-second-text": {
+     "kind": "text",
+     "text": "Leader audience."
+    }
+   },
+   "body": [
+    {
+     "id": "toggle-audience-branch",
+     "op": "if",
+     "condition": {
+      "op": "eq",
+      "left": {
+       "var": "$screen"
+      },
+      "right": 9
+     },
+     "then": [
+      {
+       "id": "toggle-audience-set-screen-then",
+       "op": "set",
+       "var": "$screen",
+       "value": 20
+      },
+      {
+       "id": "toggle-audience-text-then",
+       "op": "text",
+       "resource": "toggle-audience-second-text"
+      }
+     ],
+     "else": [
+      {
+       "id": "toggle-audience-set-screen-else",
+       "op": "set",
+       "var": "$screen",
+       "value": 9
+      },
+      {
+       "id": "toggle-audience-text-else",
+       "op": "text",
+       "resource": "toggle-audience-first-text"
+      }
+     ]
+    }
+   ]
+  },
+  "end-turn": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "end-turn-text": {
+     "kind": "text",
+     "text": "Turn and year counters advanced; economy, AI and unit resets are outside the model."
+    }
+   },
+   "body": [
+    {
+     "id": "end-turn-add-turn",
+     "op": "add",
+     "var": "$turn",
+     "value": 1
+    },
+    {
+     "id": "end-turn-add-year",
+     "op": "add",
+     "var": "$year",
+     "value": 1
+    },
+    {
+     "id": "end-turn-text",
+     "op": "text",
+     "resource": "end-turn-text"
+    }
+   ]
+  },
+  "new-game-after-end": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 2
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "new-game-after-end-text": {
+     "kind": "text",
+     "text": "Game-over state cleared; returned to the title menu."
+    }
+   },
+   "body": [
+    {
+     "id": "new-game-after-end-set-screen",
+     "op": "set",
+     "var": "$screen",
+     "value": 0
+    },
+    {
+     "id": "new-game-after-end-set-game_over",
+     "op": "set",
+     "var": "$game_over",
+     "value": false
+    },
+    {
+     "id": "new-game-after-end-set-turn",
+     "op": "set",
+     "var": "$turn",
+     "value": 1
+    },
+    {
+     "id": "new-game-after-end-set-year",
+     "op": "set",
+     "var": "$year",
+     "value": -4000
+    },
+    {
+     "id": "new-game-after-end-text",
+     "op": "text",
+     "resource": "new-game-after-end-text"
+    }
+   ]
+  }
+ },
+ "contexts": [
+  {
+   "id": "title",
+   "title": "Title menu",
+   "description": "DOS title menu over the logo; five entries. Civ64 SCENES.md 6; civd GAME.C _game_menu.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 0
+   }
+  },
+  {
+   "id": "load",
+   "title": "Load a saved game",
+   "description": "Drive prompt and ten fixed CIVIL0..9.SVE slots. Civ64 SCENES.md 7.2; civd SAVE.C _load_game.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 1
+   }
+  },
+  {
+   "id": "customize",
+   "title": "Customize world",
+   "description": "CUSTOM.PIC with land-mass, temperature, climate and age questions. Civ64 SCENES.md 7.4; civd GAME.C _game_menu.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 2
+   }
+  },
+  {
+   "id": "birth",
+   "title": "Birth - world generation",
+   "description": "Eight picture scenes and STORY.TXT events. Civ64 SCENES.md 8; civd WORLDGEN.C _make_world.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 3
+   }
+  },
+  {
+   "id": "difficulty",
+   "title": "Difficulty level",
+   "description": "DIFFS.PIC portraits and five levels. Civ64 SCENES.md 9.1; civd NEWGAME.C _new_game.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 4
+   }
+  },
+  {
+   "id": "competition",
+   "title": "Level of competition",
+   "description": "Civilization count menu. Civ64 SCENES.md 9.2; civd NEWGAME.C _new_game.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 5
+   }
+  },
+  {
+   "id": "tribe",
+   "title": "Pick your tribe",
+   "description": "Tribe records and portraits. Civ64 SCENES.md 9.3; civd NEWGAME.C _new_game.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 6
+   }
+  },
+  {
+   "id": "leader-name",
+   "title": "Your name",
+   "description": "White text-entry box. Civ64 SCENES.md 9.4-9.5 and 10.4; civd NAMES.C _rename_leader/_edit_line.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 7
+   }
+  },
+  {
+   "id": "intro",
+   "title": "Introduction text",
+   "description": "KING.TXT *INIT text with the leader, tribe and starting advances. Civ64 SCENES.md 9.6; civd NEWGAME.C _new_game.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 8
+   }
+  },
+  {
+   "id": "world",
+   "title": "World map - play screen",
+   "description": "15x12 viewport, minimap, status and unit panels. Civ64 SCENES-PLAY.md 1-6; civd MAP.C/TURN.C/CONTROL.C/UNITS.C.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 9
+   }
+  },
+  {
+   "id": "city",
+   "title": "City screen",
+   "description": "Info/Happy/Map/View city screen. Civ64 SCENES-PLAY.md 7.1; civd CITYMGT.C _city_process.",
+   "when": {
+    "op": "and",
+    "conditions": [
+     {
+      "op": "eq",
+      "left": {
+       "var": "$screen"
+      },
+      "right": 10
+     },
+     {
+      "op": "not",
+      "condition": {
+       "op": "eq",
+       "left": {
+        "var": "$chooser_open"
+       },
+       "right": true
+      }
+     },
+     {
+      "op": "not",
+      "condition": {
+       "op": "eq",
+       "left": {
+        "var": "$unit_list_open"
+       },
+       "right": true
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "production",
+   "title": "City production chooser",
+   "description": "What shall we build? Civ64 SCENES-PLAY.md 7.12; civd ECONOMY.C _find_slot.",
+   "when": {
+    "op": "and",
+    "conditions": [
+     {
+      "op": "eq",
+      "left": {
+       "var": "$screen"
+      },
+      "right": 10
+     },
+     {
+      "op": "eq",
+      "left": {
+       "var": "$chooser_open"
+      },
+      "right": true
+     },
+     {
+      "op": "not",
+      "condition": {
+       "op": "eq",
+       "left": {
+        "var": "$unit_list_open"
+       },
+       "right": true
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "units",
+   "title": "City unit list",
+   "description": "Unit cursor opened by key a. Civ64 SCENES-PLAY.md 7.1; civd CITYMGT.C.",
+   "when": {
+    "op": "and",
+    "conditions": [
+     {
+      "op": "eq",
+      "left": {
+       "var": "$screen"
+      },
+      "right": 10
+     },
+     {
+      "op": "eq",
+      "left": {
+       "var": "$unit_list_open"
+      },
+      "right": true
+     },
+     {
+      "op": "not",
+      "condition": {
+       "op": "eq",
+       "left": {
+        "var": "$chooser_open"
+       },
+       "right": true
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "city-view",
+   "title": "City view",
+   "description": "19x12 city view; new wonder dissolve and animations. Civ64 SCENES-PLAY.md 7.2-7.3; civd CITYVIEW.C _city_scene.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 11
+   }
+  },
+  {
+   "id": "reports",
+   "title": "Reports and advisors",
+   "description": "O14 report frame with F1-F10 pages. Civ64 SCENES-PLAY.md 7.14; civd ADVISORS.C/REPORTS.C.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 12
+   }
+  },
+  {
+   "id": "pedia",
+   "title": "Civilopedia",
+   "description": "Index and entry lookup. Civ64 SCENES-PLAY.md 7.13; civd PEDIA.C _civilopedia/_pedia_show.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 13
+   }
+  },
+  {
+   "id": "diplomacy",
+   "title": "Diplomacy and audience",
+   "description": "Leader audience and government change. Civ64 SCENES-PLAY.md 7.9-7.10; civd AUDIENCE.C/DIPLOMAC.C.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 14
+   }
+  },
+  {
+   "id": "spaceship",
+   "title": "Spaceship",
+   "description": "Spaceship screen and launch surface. Civ64 SCENES-PLAY.md 7.16; civd SPACESHP.C.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 15
+   }
+  },
+  {
+   "id": "hall",
+   "title": "Hall of Fame",
+   "description": "FAME.DTA entries. Civ64 SCENES.md 7.5 and SCENES-PLAY.md 7.17; civd FAME.C.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 16
+   }
+  },
+  {
+   "id": "game-over",
+   "title": "Game over",
+   "description": "End checks and ending screens. Civ64 SCENES-PLAY.md 7.17; civd TURN.C _game_turn/REPLAY.C.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 17
+   }
+  },
+  {
+   "id": "newspaper",
+   "title": "Newspaper",
+   "description": "Newspaper page with headline and torn edge. Civ64 SCENES-PLAY.md 7.7; civd NEWS.C _news_box.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 18
+   }
+  },
+  {
+   "id": "palace",
+   "title": "Palace",
+   "description": "Palace view and improvement scene. Civ64 SCENES-PLAY.md 7.8; civd PALACE.C _palace_view.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 19
+   }
+  },
+  {
+   "id": "audience",
+   "title": "Leader audience",
+   "description": "Throne room/leader screen. Civ64 SCENES-PLAY.md 7.9; civd AUDIENCE.C _load_leader.",
+   "when": {
+    "op": "eq",
+    "left": {
+     "var": "$screen"
+    },
+    "right": 20
+   }
+  }
+ ],
+ "objects": [
+  {
+   "id": "title-new",
+   "label": "Start a New Game",
+   "aliases": [
+    "new game",
+    "start"
+   ],
+   "description": "Starts world generation, then the new-game setup.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "new-game"
+    }
+   ],
+   "context": "title"
+  },
+  {
+   "id": "title-load",
+   "label": "Load a Saved Game",
+   "aliases": [
+    "load",
+    "saved game"
+   ],
+   "description": "Opens the drive/slot loader.",
+   "bindings": [
+    {
+     "verb": "open",
+     "program": "enter-load"
+    }
+   ],
+   "context": "title"
+  },
+  {
+   "id": "title-customize",
+   "label": "Customize World",
+   "aliases": [
+    "customize",
+    "custom world"
+   ],
+   "description": "Opens the four world-parameter questions.",
+   "bindings": [
+    {
+     "verb": "open",
+     "program": "enter-customize"
+    }
+   ],
+   "context": "title"
+  },
+  {
+   "id": "title-hall",
+   "label": "View Hall of Fame",
+   "aliases": [
+    "hall",
+    "hall of fame"
+   ],
+   "description": "Reads FAME.DTA and shows six entries.",
+   "bindings": [
+    {
+     "verb": "open",
+     "program": "toggle-hall"
+    }
+   ],
+   "context": "title"
+  },
+  {
+   "id": "load-slot",
+   "label": "Load first slot",
+   "aliases": [
+    "slot",
+    "first slot",
+    "load game"
+   ],
+   "description": "Declared slot 0; the save-file parser is outside this scene.",
+   "bindings": [
+    {
+     "verb": "open",
+     "program": "load-world"
+    }
+   ],
+   "context": "load"
+  },
+  {
+   "id": "load-cancel",
+   "label": "Cancel load",
+   "aliases": [
+    "cancel",
+    "back"
+   ],
+   "description": "Returns to the title menu.",
+   "bindings": [
+    {
+     "verb": "exit",
+     "program": "load-cancel"
+    }
+   ],
+   "context": "load"
+  },
+  {
+   "id": "custom-land",
+   "label": "Land mass",
+   "aliases": [
+    "land",
+    "land mass"
+   ],
+   "description": "World parameter DGROUP:7EF6; the selected item is not modelled.",
+   "bindings": [],
+   "context": "customize"
+  },
+  {
+   "id": "custom-temperature",
+   "label": "Temperature",
+   "aliases": [
+    "temperature",
+    "temp"
+   ],
+   "description": "World parameter DGROUP:7EF8; the selected item is not modelled.",
+   "bindings": [],
+   "context": "customize"
+  },
+  {
+   "id": "custom-climate",
+   "label": "Climate",
+   "aliases": [
+    "climate"
+   ],
+   "description": "World parameter DGROUP:7EFA; the selected item is not modelled.",
+   "bindings": [],
+   "context": "customize"
+  },
+  {
+   "id": "custom-age",
+   "label": "Age",
+   "aliases": [
+    "age"
+   ],
+   "description": "World parameter DGROUP:7EFC; the selected item is not modelled.",
+   "bindings": [],
+   "context": "customize"
+  },
+  {
+   "id": "custom-begin",
+   "label": "Begin world",
+   "aliases": [
+    "begin",
+    "continue"
+   ],
+   "description": "Enters Birth with the declared parameters.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "customize-world"
+    }
+   ],
+   "context": "customize"
+  },
+  {
+   "id": "custom-cancel",
+   "label": "Cancel customize",
+   "aliases": [
+    "cancel",
+    "back"
+   ],
+   "description": "Returns to the title menu; the DOS path has no cancel, so this is an authored navigation aid.",
+   "bindings": [
+    {
+     "verb": "exit",
+     "program": "customize-cancel"
+    }
+   ],
+   "context": "customize"
+  },
+  {
+   "id": "birth-story",
+   "label": "World-generation story",
+   "aliases": [
+    "story",
+    "birth"
+   ],
+   "description": "Picture/text sequence; timing and assets are outside this scene.",
+   "bindings": [],
+   "context": "birth"
+  },
+  {
+   "id": "birth-continue",
+   "label": "Continue after Birth",
+   "aliases": [
+    "continue",
+    "next"
+   ],
+   "description": "Moves to the difficulty question.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "birth-continue"
+    }
+   ],
+   "context": "birth"
+  },
+  {
+   "id": "difficulty-menu",
+   "label": "Difficulty menu",
+   "aliases": [
+    "difficulty",
+    "level"
+   ],
+   "description": "Five portrait levels; only the declared initial value is represented.",
+   "bindings": [],
+   "context": "difficulty"
+  },
+  {
+   "id": "difficulty-continue",
+   "label": "Continue difficulty",
+   "aliases": [
+    "continue",
+    "next"
+   ],
+   "description": "Advances to the competition question.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "difficulty-continue"
+    }
+   ],
+   "context": "difficulty"
+  },
+  {
+   "id": "competition-menu",
+   "label": "Competition menu",
+   "aliases": [
+    "competition",
+    "civilizations"
+   ],
+   "description": "Number of civilizations; only the declared initial value is represented.",
+   "bindings": [],
+   "context": "competition"
+  },
+  {
+   "id": "competition-continue",
+   "label": "Continue competition",
+   "aliases": [
+    "continue",
+    "next"
+   ],
+   "description": "Advances to the tribe question.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "competition-continue"
+    }
+   ],
+   "context": "competition"
+  },
+  {
+   "id": "tribe-menu",
+   "label": "Tribe menu",
+   "aliases": [
+    "tribe",
+    "civilization"
+   ],
+   "description": "Tribe choice; only the declared initial value is represented.",
+   "bindings": [],
+   "context": "tribe"
+  },
+  {
+   "id": "tribe-continue",
+   "label": "Continue tribe",
+   "aliases": [
+    "continue",
+    "next"
+   ],
+   "description": "Advances to leader naming.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "tribe-continue"
+    }
+   ],
+   "context": "tribe"
+  },
+  {
+   "id": "leader-name",
+   "label": "Leader name field",
+   "aliases": [
+    "name",
+    "leader"
+   ],
+   "description": "Thirteen-character edit field; text entry is not executed by this scene.",
+   "bindings": [],
+   "context": "leader-name"
+  },
+  {
+   "id": "name-accept",
+   "label": "Accept name",
+   "aliases": [
+    "accept",
+    "continue"
+   ],
+   "description": "Advances to the introduction text.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "name-continue"
+    }
+   ],
+   "context": "leader-name"
+  },
+  {
+   "id": "intro-text",
+   "label": "Opening text",
+   "aliases": [
+    "intro",
+    "introduction"
+   ],
+   "description": "The selected starting advances and tune are outside this scene.",
+   "bindings": [],
+   "context": "intro"
+  },
+  {
+   "id": "intro-begin",
+   "label": "Begin play",
+   "aliases": [
+    "begin",
+    "continue",
+    "play"
+   ],
+   "description": "Enters the world map.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "intro-begin"
+    }
+   ],
+   "context": "intro"
+  },
+  {
+   "id": "world-map",
+   "label": "World map",
+   "aliases": [
+    "map",
+    "viewport"
+   ],
+   "description": "15 columns x 12 rows of 16x16 squares; terrain/unit/city layers are not rendered.",
+   "bindings": [],
+   "context": "world"
+  },
+  {
+   "id": "minimap",
+   "label": "Minimap",
+   "aliases": [
+    "minimap",
+    "small map"
+   ],
+   "description": "80x50 world overview with the view rectangle.",
+   "bindings": [],
+   "context": "world"
+  },
+  {
+   "id": "status-panel",
+   "label": "Status panel",
+   "aliases": [
+    "status",
+    "economy"
+   ],
+   "description": "Population, year, research and treasury/rate projection.",
+   "bindings": [],
+   "context": "world"
+  },
+  {
+   "id": "unit-panel",
+   "label": "Unit panel",
+   "aliases": [
+    "unit panel",
+    "units"
+   ],
+   "description": "Active-unit name, moves, home city and stack.",
+   "bindings": [],
+   "context": "world"
+  },
+  {
+   "id": "menu-bar",
+   "label": "Menu bar",
+   "aliases": [
+    "menu"
+   ],
+   "description": "GAME, ORDERS, ADVISORS, WORLD, CIVILOPEDIA drop-downs.",
+   "bindings": [],
+   "context": "world"
+  },
+  {
+   "id": "world-city",
+   "label": "Open city",
+   "aliases": [
+    "city",
+    "open city"
+   ],
+   "description": "Enters the selected city screen.",
+   "bindings": [
+    {
+     "verb": "open",
+     "program": "enter-city"
+    }
+   ],
+   "context": "world"
+  },
+  {
+   "id": "world-reports",
+   "label": "Reports",
+   "aliases": [
+    "reports",
+    "advisors"
+   ],
+   "description": "F1-F10 report frame and pages.",
+   "bindings": [
+    {
+     "verb": "open",
+     "program": "toggle-reports"
+    }
+   ],
+   "context": "world"
+  },
+  {
+   "id": "world-pedia",
+   "label": "Civilopedia",
+   "aliases": [
+    "pedia",
+    "civilopedia"
+   ],
+   "description": "Index and entry lookup.",
+   "bindings": [
+    {
+     "verb": "open",
+     "program": "toggle-pedia"
+    }
+   ],
+   "context": "world"
+  },
+  {
+   "id": "world-diplomacy",
+   "label": "Diplomacy",
+   "aliases": [
+    "diplomacy",
+    "audience"
+   ],
+   "description": "Leader audience and government change.",
+   "bindings": [
+    {
+     "verb": "open",
+     "program": "toggle-diplomacy"
+    }
+   ],
+   "context": "world"
+  },
+  {
+   "id": "world-spaceship",
+   "label": "Spaceship",
+   "aliases": [
+    "spaceship",
+    "ship"
+   ],
+   "description": "Spaceship screen and launch surface.",
+   "bindings": [
+    {
+     "verb": "open",
+     "program": "toggle-spaceship"
+    }
+   ],
+   "context": "world"
+  },
+  {
+   "id": "world-newspaper",
+   "label": "Newspaper",
+   "aliases": [
+    "newspaper",
+    "news"
+   ],
+   "description": "Newspaper page with headline and continuation cue.",
+   "bindings": [
+    {
+     "verb": "open",
+     "program": "toggle-newspaper"
+    }
+   ],
+   "context": "world"
+  },
+  {
+   "id": "world-palace",
+   "label": "Palace",
+   "aliases": [
+    "palace"
+   ],
+   "description": "Palace improvement and view scene.",
+   "bindings": [
+    {
+     "verb": "open",
+     "program": "toggle-palace"
+    }
+   ],
+   "context": "world"
+  },
+  {
+   "id": "world-audience",
+   "label": "Leader audience",
+   "aliases": [
+    "audience",
+    "leader"
+   ],
+   "description": "Throne-room/leader screen.",
+   "bindings": [
+    {
+     "verb": "open",
+     "program": "toggle-audience"
+    }
+   ],
+   "context": "world"
+  },
+  {
+   "id": "world-end-turn",
+   "label": "End turn",
+   "aliases": [
+    "end turn",
+    "turn"
+   ],
+   "description": "Advances the declared turn/year counters; economy, AI and unit resets are outside the model.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "end-turn"
+    }
+   ],
+   "context": "world"
+  },
+  {
+   "id": "city-header",
+   "label": "City header",
+   "aliases": [
+    "header",
+    "title"
+   ],
+   "description": "City name and population; name catalog is outside the fixture.",
+   "bindings": [],
+   "context": "city"
+  },
+  {
+   "id": "city-resources",
+   "label": "City resources",
+   "aliases": [
+    "resources",
+    "income"
+   ],
+   "description": "Food, shields, trade, luxury, tax and science rows.",
+   "bindings": [],
+   "context": "city"
+  },
+  {
+   "id": "city-radius",
+   "label": "City radius",
+   "aliases": [
+    "radius",
+    "tiles"
+   ],
+   "description": "21-square worked map; tile assets are not rendered.",
+   "bindings": [],
+   "context": "city"
+  },
+  {
+   "id": "city-buildings",
+   "label": "Buildings and wonders",
+   "aliases": [
+    "buildings",
+    "wonders"
+   ],
+   "description": "Improvement list, MORE paging and wonder precedence.",
+   "bindings": [],
+   "context": "city"
+  },
+  {
+   "id": "city-production",
+   "label": "Production box",
+   "aliases": [
+    "production",
+    "shields"
+   ],
+   "description": "Selected unit/improvement and stored shields.",
+   "bindings": [],
+   "context": "city"
+  },
+  {
+   "id": "city-tabs",
+   "label": "City tabs",
+   "aliases": [
+    "tabs",
+    "info",
+    "happy",
+    "map",
+    "view"
+   ],
+   "description": "INFO/HAPPY/MAP/VIEW tabs; detailed tab text is in the city fixture.",
+   "bindings": [],
+   "context": "city"
+  },
+  {
+   "id": "city-units",
+   "label": "City units",
+   "aliases": [
+    "units",
+    "unit list"
+   ],
+   "description": "Unit panel/cursor; opens the bounded unit-list context.",
+   "bindings": [
+    {
+     "verb": "open",
+     "program": "open-units"
+    }
+   ],
+   "context": "city"
+  },
+  {
+   "id": "city-change",
+   "label": "Change production",
+   "aliases": [
+    "change",
+    "build"
+   ],
+   "description": "Opens the production chooser (key c).",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "open-production"
+    }
+   ],
+   "context": "city"
+  },
+  {
+   "id": "city-buy",
+   "label": "Buy production",
+   "aliases": [
+    "buy",
+    "purchase"
+   ],
+   "description": "Buy price/guard/commit are recovered in the separate buy contract; not exercised here.",
+   "bindings": [],
+   "context": "city"
+  },
+  {
+   "id": "city-rename",
+   "label": "Rename city",
+   "aliases": [
+    "rename",
+    "name"
+   ],
+   "description": "Text entry and city-name storage are outside this scene.",
+   "bindings": [],
+   "context": "city"
+  },
+  {
+   "id": "city-view",
+   "label": "City view",
+   "aliases": [
+    "view city",
+    "city view"
+   ],
+   "description": "Calls O19:0000(city, -1); opens the full-screen city view.",
+   "bindings": [
+    {
+     "verb": "open",
+     "program": "toggle-city-view"
+    }
+   ],
+   "context": "city"
+  },
+  {
+   "id": "city-exit",
+   "label": "Exit city",
+   "aliases": [
+    "exit",
+    "leave city"
+   ],
+   "description": "Returns to the world map.",
+   "bindings": [
+    {
+     "verb": "exit",
+     "program": "leave-city"
+    }
+   ],
+   "context": "city"
+  },
+  {
+   "id": "build-settlers",
+   "label": "Settlers",
+   "aliases": [
+    "settlers",
+    "build settlers"
+   ],
+   "description": "Commits production code 0; supported by the bounded city fixture and runtime record read.",
+   "bindings": [
+    {
+     "verb": "build",
+     "program": "build-settlers"
+    }
+   ],
+   "context": "production"
+  },
+  {
+   "id": "build-militia",
+   "label": "Militia",
+   "aliases": [
+    "militia",
+    "build militia"
+   ],
+   "description": "Commits production code 1; supported by the bounded city fixture and runtime record read.",
+   "bindings": [
+    {
+     "verb": "build",
+     "program": "build-militia"
+    }
+   ],
+   "context": "production"
+  },
+  {
+   "id": "unit-list",
+   "label": "Unit list",
+   "aliases": [
+    "list",
+    "units"
+   ],
+   "description": "Cursor and count are declared state; the detailed next/previous/select model is in the city fixture.",
+   "bindings": [],
+   "context": "units"
+  },
+  {
+   "id": "unit-close",
+   "label": "Close unit list",
+   "aliases": [
+    "close",
+    "exit"
+   ],
+   "description": "Stores the cursor at [0x70DC] and returns to the city.",
+   "bindings": [
+    {
+     "verb": "exit",
+     "program": "close-units"
+    }
+   ],
+   "context": "units"
+  },
+  {
+   "id": "city-view-scene",
+   "label": "City view scene",
+   "aliases": [
+    "scene",
+    "houses"
+   ],
+   "description": "Assets, palette, seeded grid and animation timing are outside this scene.",
+   "bindings": [],
+   "context": "city-view"
+  },
+  {
+   "id": "city-view-exit",
+   "label": "Exit city view",
+   "aliases": [
+    "exit",
+    "back"
+   ],
+   "description": "Returns to the city screen.",
+   "bindings": [
+    {
+     "verb": "exit",
+     "program": "toggle-city-view"
+    }
+   ],
+   "context": "city-view"
+  },
+  {
+   "id": "report-frame",
+   "label": "Report frame",
+   "aliases": [
+    "frame",
+    "header"
+   ],
+   "description": "Title, realm, leader and year header.",
+   "bindings": [],
+   "context": "reports"
+  },
+  {
+   "id": "report-city",
+   "label": "City status",
+   "aliases": [
+    "city status",
+    "cities"
+   ],
+   "description": "O14:186F; rows and paging are not rendered.",
+   "bindings": [],
+   "context": "reports"
+  },
+  {
+   "id": "report-military",
+   "label": "Military status",
+   "aliases": [
+    "military",
+    "losses"
+   ],
+   "description": "O14:03AD/061F.",
+   "bindings": [],
+   "context": "reports"
+  },
+  {
+   "id": "report-science",
+   "label": "Science report",
+   "aliases": [
+    "science",
+    "research"
+   ],
+   "description": "O14:014B.",
+   "bindings": [],
+   "context": "reports"
+  },
+  {
+   "id": "report-trade",
+   "label": "Trade report",
+   "aliases": [
+    "trade",
+    "economy"
+   ],
+   "description": "O14:07F1.",
+   "bindings": [],
+   "context": "reports"
+  },
+  {
+   "id": "report-world",
+   "label": "World map report",
+   "aliases": [
+    "world map",
+    "map report"
+   ],
+   "description": "O12:0000; 4x4 terrain tiles.",
+   "bindings": [],
+   "context": "reports"
+  },
+  {
+   "id": "report-back",
+   "label": "Close reports",
+   "aliases": [
+    "exit",
+    "back"
+   ],
+   "description": "Returns to the world map.",
+   "bindings": [
+    {
+     "verb": "exit",
+     "program": "toggle-reports"
+    }
+   ],
+   "context": "reports"
+  },
+  {
+   "id": "pedia-index",
+   "label": "Civilopedia index",
+   "aliases": [
+    "index"
+   ],
+   "description": "Advances, units and terrain tables.",
+   "bindings": [],
+   "context": "pedia"
+  },
+  {
+   "id": "pedia-entry",
+   "label": "Civilopedia entry",
+   "aliases": [
+    "entry",
+    "article"
+   ],
+   "description": "BLURB text and picture cells are outside this scene.",
+   "bindings": [],
+   "context": "pedia"
+  },
+  {
+   "id": "pedia-back",
+   "label": "Close Civilopedia",
+   "aliases": [
+    "exit",
+    "back"
+   ],
+   "description": "Returns to the world map.",
+   "bindings": [
+    {
+     "verb": "exit",
+     "program": "toggle-pedia"
+    }
+   ],
+   "context": "pedia"
+  },
+  {
+   "id": "audience-scene",
+   "label": "Leader audience",
+   "aliases": [
+    "audience",
+    "leader"
+   ],
+   "description": "Throne room/leader picture path; dialogue and attitudes are outside this scene.",
+   "bindings": [],
+   "context": "diplomacy"
+  },
+  {
+   "id": "government-change",
+   "label": "Government change",
+   "aliases": [
+    "government",
+    "cabinet"
+   ],
+   "description": "New Cabinet display; government rules are not modelled.",
+   "bindings": [],
+   "context": "diplomacy"
+  },
+  {
+   "id": "diplomacy-back",
+   "label": "Leave diplomacy",
+   "aliases": [
+    "exit",
+    "back"
+   ],
+   "description": "Returns to the world map.",
+   "bindings": [
+    {
+     "verb": "exit",
+     "program": "toggle-diplomacy"
+    }
+   ],
+   "context": "diplomacy"
+  },
+  {
+   "id": "spaceship-scene",
+   "label": "Spaceship scene",
+   "aliases": [
+    "ship",
+    "parts"
+   ],
+   "description": "Part grid, stats and star field are not rendered.",
+   "bindings": [],
+   "context": "spaceship"
+  },
+  {
+   "id": "spaceship-build",
+   "label": "Build spaceship",
+   "aliases": [
+    "build",
+    "launch"
+   ],
+   "description": "Build/launch rules are outside this scene.",
+   "bindings": [],
+   "context": "spaceship"
+  },
+  {
+   "id": "spaceship-back",
+   "label": "Leave spaceship",
+   "aliases": [
+    "exit",
+    "back"
+   ],
+   "description": "Returns to the world map.",
+   "bindings": [
+    {
+     "verb": "exit",
+     "program": "toggle-spaceship"
+    }
+   ],
+   "context": "spaceship"
+  },
+  {
+   "id": "hall-entries",
+   "label": "Hall entries",
+   "aliases": [
+    "entries",
+    "fame"
+   ],
+   "description": "Six entries from FAME.DTA; file parsing is outside this scene.",
+   "bindings": [],
+   "context": "hall"
+  },
+  {
+   "id": "hall-back",
+   "label": "Close Hall of Fame",
+   "aliases": [
+    "exit",
+    "back"
+   ],
+   "description": "Returns to the title menu.",
+   "bindings": [
+    {
+     "verb": "exit",
+     "program": "toggle-hall"
+    }
+   ],
+   "context": "hall"
+  },
+  {
+   "id": "game-over-text",
+   "label": "Game-over ending",
+   "aliases": [
+    "ending",
+    "game over"
+   ],
+   "description": "Trigger conditions are outside this scene; the context is state-reachable for inspection.",
+   "bindings": [],
+   "context": "game-over"
+  },
+  {
+   "id": "game-over-new",
+   "label": "New game after ending",
+   "aliases": [
+    "new game",
+    "restart"
+   ],
+   "description": "Resets the declared scene state to the title menu.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "new-game-after-end"
+    }
+   ],
+   "context": "game-over"
+  },
+  {
+   "id": "newspaper-page",
+   "label": "Newspaper page",
+   "aliases": [
+    "news",
+    "headline"
+   ],
+   "description": "Headline text and torn-edge art are outside this scene.",
+   "bindings": [],
+   "context": "newspaper"
+  },
+  {
+   "id": "newspaper-back",
+   "label": "Continue from newspaper",
+   "aliases": [
+    "continue",
+    "exit"
+   ],
+   "description": "Returns to the world map.",
+   "bindings": [
+    {
+     "verb": "exit",
+     "program": "toggle-newspaper"
+    }
+   ],
+   "context": "newspaper"
+  },
+  {
+   "id": "palace-view",
+   "label": "Palace view",
+   "aliases": [
+    "palace",
+    "castle"
+   ],
+   "description": "Section composition and assets are not rendered.",
+   "bindings": [],
+   "context": "palace"
+  },
+  {
+   "id": "palace-back",
+   "label": "Leave palace",
+   "aliases": [
+    "exit",
+    "back"
+   ],
+   "description": "Returns to the world map.",
+   "bindings": [
+    {
+     "verb": "exit",
+     "program": "toggle-palace"
+    }
+   ],
+   "context": "palace"
+  },
+  {
+   "id": "audience-view",
+   "label": "Audience view",
+   "aliases": [
+    "audience",
+    "leader"
+   ],
+   "description": "Leader portrait, expression and lower text strip; dialogue is outside this scene.",
+   "bindings": [],
+   "context": "audience"
+  },
+  {
+   "id": "audience-back",
+   "label": "Leave audience",
+   "aliases": [
+    "exit",
+    "back"
+   ],
+   "description": "Returns to the world map.",
+   "bindings": [
+    {
+     "verb": "exit",
+     "program": "toggle-audience"
+    }
+   ],
+   "context": "audience"
+  }
+ ]
+}
