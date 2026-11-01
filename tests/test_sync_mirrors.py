@@ -1,4 +1,4 @@
-"""Verify dual-mirror synchronization and GitLab CI pipeline-suppression rules."""
+"""Verify two-way mirror reconciliation and GitLab CI pipeline-suppression rules."""
 import importlib.util
 from pathlib import Path
 import subprocess
@@ -21,10 +21,8 @@ def test_build_push_commands_suppresses_gitlab_ci_on_topic_branches():
         include_tags=True,
         ci_on_main=False,
     )
-    # Every push when ci_on_main=False includes -o ci.skip on GitLab
     assert all(cmd[:4] == ["git", "push", "-o", "ci.skip"] for cmd in cmds)
 
-    # Even when ci_on_main=True, topic branches STILL include -o ci.skip
     cmds_ci_main = mirror.build_push_commands(
         remote="gitlab",
         is_gitlab=True,
@@ -41,6 +39,36 @@ def test_build_push_commands_suppresses_gitlab_ci_on_topic_branches():
         "gitlab",
         "refs/heads/codex/common-uil-contract-20261101:refs/heads/codex/common-uil-contract-20261101",
     ]
+
+
+def test_reconcile_with_remote_fast_forwards_behind_local_branch_and_skips_synced(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q", "-b", "main", str(repo)], check=True)
+    subprocess.run(["git", "-C", str(repo), "config", "user.name", "Test"], check=True)
+    subprocess.run(["git", "-C", str(repo), "config", "user.email", "test@example.com"], check=True)
+    (repo / "README.md").write_text("v1\n")
+    subprocess.run(["git", "-C", str(repo), "add", "README.md"], check=True)
+    subprocess.run(["git", "-C", str(repo), "commit", "-q", "-m", "v1"], check=True)
+    sha1 = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"], text=True).strip()
+
+    (repo / "README.md").write_text("v2\n")
+    subprocess.run(["git", "-C", str(repo), "commit", "-q", "-am", "v2"], check=True)
+    sha2 = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"], text=True).strip()
+
+    # Set local branch behind remote tracking ref (simulating pr-local/56-miniplanets-display-20261031)
+    subprocess.run(["git", "-C", str(repo), "update-ref", "refs/heads/topic-behind", sha1], check=True)
+    subprocess.run(["git", "-C", str(repo), "update-ref", "refs/remotes/gitlab/topic-behind", sha2], check=True)
+    subprocess.run(["git", "-C", str(repo), "update-ref", "refs/remotes/gitlab/main", sha2], check=True)
+
+    plan = mirror.reconcile_with_remote(repo, "gitlab", dry_run=False)
+    assert "main" in plan["already_synced"]
+    assert "topic-behind" in plan["fast_forwarded_local"]
+    assert plan["to_push"] == []
+    updated_sha = subprocess.check_output(
+        ["git", "-C", str(repo), "rev-parse", "refs/heads/topic-behind"], text=True
+    ).strip()
+    assert updated_sha == sha2
 
 
 def test_sync_mirrors_refuses_retired_github_remote(tmp_path):
