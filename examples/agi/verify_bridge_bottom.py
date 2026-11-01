@@ -58,12 +58,28 @@ class BottomRun(ClipRun):
         return s
 
     def observe(self,name):
-        s=self.state();item=self.frame(name+'.png')
-        value={'id':name,'guest_ms':self.guest_elapsed,'state':s,
+        # Only settled visual boundaries request another completed frame.
+        # Moving/water stops remain readonly: never resume them for an image.
+        fresh=name in ('row-start','west-exit')
+        previous=self.fast_forward
+        if fresh:self.fast_forward=False
+        controller=self._transport()
+        def capture_frame():
+            item=self.frame(name+'.png')
+            return {'path':name+'.png','sha256':item['sha256'],'metadata':item['metadata']}
+        try:
+            captured=controller.capture_frame_state(capture_frame,
+                require_fresh=fresh,
+                guest_ms=1000,slice_ms=20,max_polls=64)
+        finally:
+            self.guest_elapsed=controller.guest_elapsed;self.fast_forward=previous
+        value={'id':name,'guest_ms':self.guest_elapsed,'state':captured.get('state_after'),
                'input_count':len(self.inputs),'message_count':len(self.messages),
-               'frame':{'path':name+'.png','sha256':item['sha256'],'metadata':item['metadata']},
-               'frame_scope':'last completed guest frame; freshness relative to this read is not asserted'}
+               'frame':captured.get('frame'),'frame_state':captured,
+               'frame_scope':'paused state bracket; freshness '+captured['freshness']+
+                    '; atomic frame/CPU equivalence is not asserted'}
         self.bottom_observations.append(value)
+        require(captured['complete'],'Frame/state observation incomplete: '+str(captured['issues']))
         return value
 
     def prefix(self):
@@ -77,7 +93,9 @@ class BottomRun(ClipRun):
         s=self.safe_state();require(s['room']==39 and s['ego']['direction']==0,'Bridge entry did not settle')
         self.observe('bridge-entry')
         # PIC-derived dry approach; ordinary arrows, hazards not changed.
-        for axis,target in (('x',129),('y',60),('x',126),('y',61),('x',122),('y',62),('x',110),('y',166)):
+        # Declare a two-column approach range, retaining the actual result and
+        # the original dry-state guards. The row discriminator remains exact.
+        for axis,target in (('x',[129,130]),('y',60),('x',126),('y',61),('x',122),('y',62),('x',110),('y',166)):
             self.precise(**{axis:target})
         s=self.safe_state();require(s['room']==39 and s['ego']['x']==110 and s['ego']['y']==166 and
                 not s['ego']['direction'] and s['ignore_blocks'] and self._idle(), 'Approach did not settle safely')

@@ -54,12 +54,16 @@ class MushroomRun(ClipRun):
         return s
 
     def safe_state(self):
-        s=self.state();self.samples.append({'guest_ms':self.guest_elapsed,'state':s})
+        s=self.state();self._safe_observation(s)
+        return s
+
+    def _safe_observation(self,s):
+        self.samples.append({'guest_ms':self.guest_elapsed,'state':s})
         require(not s['in_water'] and not s['swimming'] and not s['dead'],'Mushroom route entered water/death')
         require(not any(s[k] for k in('bridge_active','troll_removed','troll_paid')) and
             s['score'] in ((0,1) if self.pickup_active else (0,)),'Unexpected score or troll outcome')
         require(s['ego_width']==6 and s['ego_view']==0 and s['step_size']==1,'Walking footprint changed')
-        return s
+        return True
 
     def static_path(self,x,y):
         s=self.safe_state();room=s['room'];resource=self.resources[room]

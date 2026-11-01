@@ -35,7 +35,7 @@ class GoatRun:
         self.journal=[];self.messages=[];self.inputs=[];self.observations={};self.actions=[]
         checkout=Path(__file__).resolve().parents[2]
         report['implementation_sha256']={name:sha256((checkout/name).read_bytes()).hexdigest() for name in
-            ('examples/agi/verify_goat.py','src/fdisbull/native_controller.py','src/fdisbull/scene_receipts.py',
+            ('examples/agi/verify_goat.py','src/fdisbull/native_controller.py','src/fdisbull/frame_coherence.py','src/fdisbull/scene_receipts.py',
              'src/fdisbull/agi_print.py','src/fdisbull/agi_host.py','src/fdisbull/agi_dos.py','src/fdisbull/agi_resources.py')}
         self.deadline=time.monotonic()+self.wall_budget_ms/1000;self.guest_elapsed=0;self.bp=None
         self._arm()

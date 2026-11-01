@@ -107,3 +107,12 @@ See the [sampled observation trace](evidence/agi-bridge-bottom-2026-11-01/observ
 and [verification receipt](evidence/agi-bridge-bottom-2026-11-01/receipt.json).
 The [scene-building notes](SCENE_BUILDING_FRICTIONS.md) separate implemented
 behavior from proposed improvements. No release or fDisBull installation change is made.
+
+The [alignment/coherence follow-up](evidence/native-alignment-coherence-2026-11-01/README.md)
+repeats the candidate and adjacent-row control with shared bounded coordinate
+alignment. All 43 alignment legs complete, including a declared approach range
+whose actual endpoint is retained. New completed frames are requested only at
+settled row-start/exit boundaries; moving and water observations stay readonly.
+Every accepted frame has a paused state bracket, with atomic frame/CPU
+equivalence explicitly unknown. The exported player payload remains identical;
+its earlier compatibility checks are reused, not reported as a new player run.

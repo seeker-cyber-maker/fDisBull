@@ -45,13 +45,14 @@ class BoundedNativeController:
         self.guest_budget_ms, self.wall_budget_ms = total_guest_ms, total_timeout_ms
         self.clock = clock;self.deadline = clock()+total_timeout_ms/1000
         self.guest_elapsed = 0;self.fast_forward = fast_forward
-        self.blocked_reason = None;self.waits = []
+        self.blocked_reason = None;self.waits = [];self.alignments = [];self.frame_captures = []
         self.last_observation = None;self.last_keyboard_state = None
 
     def status(self):
         return {'guest_elapsed_ms': self.guest_elapsed, 'guest_budget_ms': self.guest_budget_ms,
                 'wall_budget_ms': self.wall_budget_ms, 'blocked_reason': self.blocked_reason,
                 'input_count': len(self.inputs), 'waits': deepcopy(self.waits),
+                'alignments': deepcopy(self.alignments), 'frame_captures': deepcopy(self.frame_captures),
                 'last_observation': deepcopy(self.last_observation),
                 'last_keyboard_state': deepcopy(self.last_keyboard_state)}
 
@@ -169,6 +170,148 @@ class BoundedNativeController:
         _positive(ms, 'Text execution budget')
         return self._input('type:'+text,
                            lambda: self.session.keyboard_type(text, hold_ms=hold_ms, gap_ms=gap_ms), ms)
+
+    def capture_frame_state(self, capture_frame, **options):
+        """Bracket a completed frame with paused state; freshness is optional.
+
+        See :mod:`fdisbull.frame_coherence`. A stable bracket does not make
+        the last rendered frame an instruction-exact snapshot of memory.
+        """
+        from .frame_coherence import capture_frame_state
+        return capture_frame_state(self, capture_frame, **options)
+
+    def align(self, targets, *, position, start, stop, settled, label='coordinate',
+              guard=None, context=None, budget=20000, slice_ms=10,
+              max_polls=2000, max_still_polls=150):
+        """Reach an exact coordinate or inclusive range through one input leg.
+
+        The adapter interprets positions, admits safe states and supplies
+        ordinary start/stop inputs. Only an axis or unit diagonal is chosen;
+        this is not pathfinding. Unspecified axes must remain unchanged.
+        Overshoot, drift, a changed context or an unresolved stop is retained
+        and refused, with no reversal, retry or recovery input afterward.
+        All callback execution must use this controller and account progress.
+        """
+        if not isinstance(targets, dict) or not targets or set(targets)-{'x','y'}:
+            raise ValueError('Alignment needs x/y targets')
+        ranges={}
+        for axis, value in targets.items():
+            bounds=value if isinstance(value,(list,tuple)) else (value,value)
+            if len(bounds)!=2 or any(type(v) not in (int,float) or not math.isfinite(v) for v in bounds) or bounds[0]>bounds[1]:
+                raise ValueError('Alignment targets must be finite scalars or inclusive ranges')
+            ranges[axis]=list(bounds)
+        if (any(not callable(fn) for fn in (position,start,stop,settled)) or
+                any(fn is not None and not callable(fn) for fn in (guard,context)) or
+                not isinstance(label,str) or not label):
+            raise ValueError('Alignment needs a label and callable adapters')
+        _positive(budget,'Alignment guest budget');_positive(slice_ms,'Alignment slice')
+        if any(type(n) is not int or not 1<=n<=10000 for n in (max_polls,max_still_polls)):
+            raise ValueError('Alignment poll bounds must be integers from 1 to 10000')
+        self._active();guest_start=self.guest_elapsed
+        end=min(guest_start+budget,self.guest_budget_ms)
+        record={'format':'fdisbull-native-alignment-1','label':label,'targets':ranges,
+                'guest_start':guest_start,'guest_budget_ms':end-guest_start,
+                'slice_ms':slice_ms,'max_polls':max_polls,'max_still_polls':max_still_polls,
+                'samples':[],'last_observation':None,'start_attempted':False,
+                'stop_attempted':False,'complete':False}
+        self.alignments.append(record);self.journal.append({'kind':'alignment','record':record})
+        route_budget=self.guest_budget_ms
+        # Callback inputs and owned-stop observers use the same limits. Do not
+        # let a long input callback queue more execution than this leg admits.
+        self.guest_budget_ms=end
+
+        def bounded():
+            if self.blocked_reason is not None:
+                raise NativeControlError('Controller stopped: '+self.blocked_reason)
+            if self.clock()>=self.deadline:
+                raise NativeControlError('Alignment wall budget exhausted')
+            if self.guest_elapsed>end:
+                raise NativeControlError('Alignment exceeded its measured guest budget')
+
+        def sample():
+            bounded()
+            if len(record['samples'])>=max_polls:
+                raise NativeControlError('Alignment poll bound exhausted')
+            state=self.read_state();self.last_observation=deepcopy(state)
+            record['last_observation']=deepcopy(state)
+            p=position(state)
+            if (not isinstance(p,dict) or any(k not in p or type(p[k]) not in (int,float)
+                    or not math.isfinite(p[k]) for k in ('x','y'))):
+                raise NativeControlError('Alignment position is unavailable or nonfinite')
+            p={k:p[k] for k in ('x','y')}
+            record['samples'].append({'position':p,'guest_ms':self.guest_elapsed})
+            bounded()
+            if guard is not None and guard(state) is not True:
+                raise NativeControlError('Alignment safety guard did not qualify the state')
+            if context is not None:
+                current=deepcopy(context(state))
+                if current is None:raise NativeControlError('Alignment context is unavailable')
+                if 'context' not in record:record['context']=current
+                elif current!=record['context']:
+                    raise NativeControlError('Alignment context changed')
+            bounded()
+            return state,p
+
+        def in_goal(p):return all(lo<=p[k]<=hi for k,(lo,hi) in ranges.items())
+        def is_settled(state):
+            value=settled(state);bounded()
+            if type(value) is not bool:raise NativeControlError('Alignment settlement must be a boolean')
+            return value
+
+        try:
+            state,origin=sample();record['initial_position']=deepcopy(origin)
+            signs={k:((origin[k]<ranges[k][0])-(origin[k]>ranges[k][1])) if k in ranges else 0 for k in ('x','y')}
+            record['direction']=deepcopy(signs)
+            def validate_leg(p):
+                for k in ('x','y'):
+                    if signs[k]==0 and (any(signs.values()) or k not in ranges) and p[k]!=origin[k]:
+                        raise NativeControlError('Alignment drifted on a stationary axis')
+                    if signs[k] and (p[k]-origin[k])*signs[k]<0:
+                        raise NativeControlError('Alignment moved opposite to its declared direction')
+                    if k in ranges and ((signs[k]>0 and p[k]>ranges[k][1]) or (signs[k]<0 and p[k]<ranges[k][0])):
+                        raise NativeControlError('Alignment overshoot')
+                if all(signs.values()) and (p['x']-origin['x'])*signs['x']!=(p['y']-origin['y'])*signs['y']:
+                    raise NativeControlError('Alignment deviated from its unit-diagonal leg')
+            if not in_goal(origin):
+                # There must be an intersection along a straight unit-speed leg.
+                intervals=[(lo-origin[k],hi-origin[k]) if signs[k]>0 else
+                           (origin[k]-hi,origin[k]-lo) for k,(lo,hi) in ranges.items() if signs[k]]
+                if max(lo for lo,hi in intervals)>min(hi for lo,hi in intervals):
+                    raise NativeControlError('Alignment requires separate straight or unit-diagonal legs')
+                if len(record['samples'])>=max_polls:
+                    raise NativeControlError('Alignment poll bound exhausted before start')
+                record['start_attempted']=True
+                record['start_result']=deepcopy(start((signs['x'],signs['y'])))
+                bounded();state,p=sample()
+            else:p=origin
+            last=None;still=0
+            while True:
+                validate_leg(p)
+                if in_goal(p):
+                    if not is_settled(state):
+                        if self.guest_elapsed>=end or len(record['samples'])>=max_polls:
+                            raise NativeControlError('Alignment has no remaining budget to settle')
+                        record['stop_attempted']=True
+                        record['stop_result']=deepcopy(stop())
+                        bounded();state,p=sample()
+                        validate_leg(p)
+                    if not in_goal(p) or not is_settled(state):
+                        raise NativeControlError('Alignment did not settle inside its declared goal')
+                    record.update(complete=True,final_position=deepcopy(p),settled=True,
+                                  guest_elapsed_ms=self.guest_elapsed-guest_start)
+                    return state
+                point=tuple(p.values());still=still+1 if point==last else 0;last=point
+                if still>=max_still_polls:raise NativeControlError('Alignment stalled')
+                if self.guest_elapsed>=end:raise NativeControlError('Alignment did not complete within budget')
+                if len(record['samples'])>=max_polls:raise NativeControlError('Alignment poll bound exhausted before execution')
+                (self.input_advance or self.advance)(min(slice_ms,end-self.guest_elapsed))
+                state,p=sample()
+        except BaseException as error:
+            record.update(error=str(error),guest_elapsed_ms=self.guest_elapsed-guest_start)
+            record['last_controller_observation']=deepcopy(self.last_observation)
+            self._block(error);raise
+        finally:
+            self.guest_budget_ms=route_budget
 
     def wait(self, predicate, label, budget=3000, *, slice_ms=50):
         if not callable(predicate) or not isinstance(label, str) or not label:

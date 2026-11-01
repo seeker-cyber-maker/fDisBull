@@ -41,40 +41,37 @@ class ClipRun(GoatRun):
         return state
 
     def safe_state(self):
-        s=self.state();self.samples.append({'guest_ms':self.guest_elapsed,'state':s})
+        s=self.state();self._safe_observation(s)
+        return s
+
+    def _safe_observation(self,s):
+        """Apply this route's source/footprint guards to one supplied state."""
+        self.samples.append({'guest_ms':self.guest_elapsed,'state':s})
         require(not s['in_water'] and not s['swimming'] and not s['dead'],'Clip route entered water or death')
         require(not s['bridge_active'] and not s['troll_removed'] and not s['troll_paid']
                 and s['score']==0,'Clip route activated or resolved the troll encounter')
         require(s['ego_width']==6 and s['ego_view']==0 and s['step_size']==1,'Unqualified walking footprint or step size')
-        return s
+        return True
 
     def precise(self,*,x=None,y=None):
-        """One axis or a unit diagonal, sampled without changing guest state."""
+        """Exact values or declared ranges along one axis or unit diagonal."""
         previous=self.fast_forward;self.fast_forward=False
         try:return self._precise(x=x,y=y)
         finally:self.fast_forward=previous
 
     def _precise(self,*,x=None,y=None):
-        self.ready();start=self.safe_state();a=start['ego'];targets={k:v for k,v in (('x',x),('y',y)) if v is not None}
-        require(bool(targets),'Missing waypoint')
-        dx=0 if x is None else x-a['x'];dy=0 if y is None else y-a['y']
-        if dx==dy==0:return start
-        require(not (dx and dy) or abs(dx)==abs(dy),'Only straight or equal-axis diagonal waypoints')
-        sx=(dx>0)-(dx<0);sy=(dy>0)-(dy<0)
-        key={(0,-1):'up',(1,-1):'pageup',(1,0):'right',(1,1):'pagedown',
-             (0,1):'down',(-1,1):'end',(-1,0):'left',(-1,-1):'home'}[(sx,sy)]
-        self.press(key,20,hold_ms=1,gap_ms=1);end=self.guest_elapsed+20000;last=None;still=0
-        while self.guest_elapsed<end:
-            s=self.safe_state();p=s['ego'];require(s['room']==start['room'],'Waypoint changed room unexpectedly')
-            if all(p[k]==v for k,v in targets.items()):
-                self.neutral();final=self.safe_state()
-                require(all(final['ego'][k]==v for k,v in targets.items()),'Waypoint did not settle precisely')
-                return final
-            require((not sx or (p['x']-x)*sx<=0) and (not sy or (p['y']-y)*sy<=0),'Waypoint overshoot')
-            point=(p['x'],p['y']);still=still+1 if point==last else 0;last=point
-            require(still<150,'Precise route blocked')
-            self.advance(10)
-        raise RuntimeError('Precise waypoint budget exhausted')
+        self.ready();targets={k:v for k,v in (('x',x),('y',y)) if v is not None}
+        keys={(0,-1):'up',(1,-1):'pageup',(1,0):'right',(1,1):'pagedown',
+              (0,1):'down',(-1,1):'end',(-1,0):'left',(-1,-1):'home'}
+        controller=self._transport()
+        try:
+            return controller.align(targets,position=lambda s:{k:s['ego'][k] for k in ('x','y')},
+                start=lambda direction:self.press(keys[direction],20,hold_ms=1,gap_ms=1),
+                stop=self.neutral,settled=lambda s:not s['ego']['direction'] and
+                    not s['control_direction'] and self._idle(),
+                guard=self._safe_observation,context=lambda s:s['room'],
+                label='AGI waypoint',budget=20000,slice_ms=10)
+        finally:self.guest_elapsed=controller.guest_elapsed
 
     def observe_clip(self,name):
         previous=self.d.screenshot(name+'-initial.png',hooks=False)['metadata'];self.advance(50)

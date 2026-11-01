@@ -87,6 +87,43 @@ delivery, unsafe state or exhausted budget. Preserve the returned observations
 and already observed effects before cleanup; an incomplete response is not
 evidence that the action rolled back, and it does not authorize a replay.
 
+Source checkouts with `control.align` can share one bounded ordinary-input axis
+or unit-diagonal leg. Supply `x`/`y` scalars or inclusive ranges and adapter
+callbacks for position, ordinary start/stop and boolean settlement. The adapter
+owns source safety, coordinate units and room/domain context; unspecified axes
+must remain unchanged. Use a range when every point in it satisfies the relevant
+source/geometry contract. Local guest, poll and stall caps retain actual sampled
+positions and also constrain callback/owned-stop execution through the same
+controller. Overshoot, drift, changed context or unknown stops latch the attempt;
+the helper never automatically reverses, retries, teleports or restores.
+
+`control.capture_frame_state` shares a read-only stopped-status / state / stored
+frame / state / stopped-status bracket. Its default does not execute the guest.
+Use `require_fresh=True` only at a meaningful visual boundary; cheap status polls
+can wait for a newer frame through the owner/controller, under its existing
+execution admission and stop checks. A full `baseline_frame` carries session,
+mode and frame ID; a bare `baseline_frame_id` is a caller-asserted ordinal in the
+pinned session/mode. An already fresh frame needs no advance, and equality at
+the global guest cap reached by an admitted freshness slice permits only its
+final read-only bracket. Strict initial admission prevents a new operation on
+an already exhausted controller. Do not resume a foreign stop or an unsafe
+water/failure state for a picture.
+
+Retain both state reads, identity checks and frame metadata. An optional
+`state_projector` compares selected material fields without discarding the raw
+observations. Missing or mismatched evidence remains incomplete. Stable
+bracketing is not atomic frame/CPU equivalence or UI readiness:
+`metadata.captured_ticks` is render time, while `metadata.state_revision` is the
+capture RPC revision, never the render-CPU revision. A stale timeout returns its
+last status without an automatic extra capture/advance; caller-owned diagnostic
+capture can preserve the failure. Exceptions retain partial evidence and latch
+the controller. The new bounded KQ1 candidate/control pair qualifies this
+source slice, including 43 completed alignment legs and three required-fresh
+captures. Other engines/routes remain separate. The SDK default brackets a
+frame probe with two explicit paused-status reads; video metadata alone cannot
+establish that execution is stopped. Keep prior-frame identities in their
+owned live run and invalidate them on restoration or context replacement.
+
 Describe expected transition stages as well as final invariants. A known west
 border flag can precede a room change; the room number can change before the
 original interpreter finishes drawing the actor. Admit such a stage only in

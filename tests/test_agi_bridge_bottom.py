@@ -1,7 +1,40 @@
 """Authored stopping tests; no native game or assets."""
 from copy import deepcopy
+from types import SimpleNamespace
 import pytest
 from examples.agi.verify_bridge_bottom import BottomRun, classify
+
+
+@pytest.mark.parametrize('name,fresh',[('row-start',True),('west-exit',True),
+                                     ('over-water',False),('control-water',False)])
+def test_frame_wrapper_only_requests_guest_progress_at_settled_boundaries(name,fresh):
+    run=object.__new__(BottomRun);run.fast_forward=True;run.guest_elapsed=0
+    run.inputs=[];run.messages=[];run.bottom_observations=[];seen=[]
+    metadata={'source':'last_completed_guest_frame','frame_id':5,'mode_id':1}
+    run.frame=lambda filename:dict(sha256='a'*64,metadata=metadata)
+    run.d=SimpleNamespace(frame_probe=lambda points:seen.append(points))
+    def capture(frame,**kwargs):
+        assert 'status_reader' not in kwargs
+        seen.append((kwargs['require_fresh'],run.fast_forward));item=frame()
+        return dict(complete=True,state_after=state(),frame=item,issues=[],
+                    freshness='confirmed' if fresh else 'not_requested')
+    controller=SimpleNamespace(guest_elapsed=123,capture_frame_state=capture)
+    run._transport=lambda:controller
+    result=run.observe(name)
+    assert seen==[(fresh,not fresh)] and run.fast_forward is True
+    assert run.guest_elapsed==123 and result['frame']['path']==name+'.png'
+    assert result['frame_state']['complete'] and run.bottom_observations==[result]
+
+
+def test_incomplete_frame_bracket_is_retained_before_route_refusal():
+    run=object.__new__(BottomRun);run.fast_forward=False;run.guest_elapsed=0
+    run.inputs=[];run.messages=[];run.bottom_observations=[]
+    captured=dict(complete=False,state_after=state(),frame=None,issues=['missing frame'],freshness='not_observed')
+    run.d=SimpleNamespace(call=lambda method:None)
+    run._transport=lambda:SimpleNamespace(guest_elapsed=20,capture_frame_state=lambda *a,**k:captured)
+    with pytest.raises(RuntimeError,match='Frame/state observation incomplete'):run.observe('row-start')
+    assert run.bottom_observations[0]['frame_state']==captured
+    assert run.guest_elapsed==20 and run.fast_forward is False
 
 
 def state(**changes):

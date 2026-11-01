@@ -60,6 +60,115 @@ hooks and guest errors do not become pending room transitions.
 records and last known state/keyboard observations. These are observations, not
 a certificate of readiness or game completion.
 
+## Align one bounded input leg
+
+`control.align(targets, *, position, start, stop, settled, guard=None,
+context=None, label="coordinate", budget=20000, slice_ms=10,
+max_polls=2000, max_still_polls=150)` shares sampled coordinate alignment.
+The [new KQ1 pair](evidence/native-alignment-coherence-2026-11-01/README.md)
+qualifies this source slice with exact goals and one declared approach range.
+Other games, ranges and backend adapters still need their own material checks.
+
+Targets are finite `x`/`y` scalars or inclusive two-value ranges. The helper
+chooses one axis or a unit diagonal whose path intersects those targets;
+unspecified axes must remain unchanged. It does not plan around obstacles or
+split a turn into several legs. The adapter owns coordinate units, source
+safety, room/domain admission and the ordinary start/stop inputs.
+
+```python
+state = control.align(
+    {"x": [129, 130]},
+    position=lambda s: {"x": s["x"], "y": s["y"]},
+    start=lambda direction: start_ordinary_direction(control, direction),
+    stop=lambda: stop_ordinary_motion(control),
+    settled=lambda s: s["direction"] == 0 and s["control"] == 0,
+    guard=source_safe_state,
+    context=lambda s: (s["session_id"], s["room"], s["view"]),
+    budget=2_000, slice_ms=10,
+)
+```
+
+These callback names illustrate an adapter binding, not a qualified route.
+`position(state)` supplies both axes, `start((dx, dy))` receives the chosen
+direction, `stop()` supplies the ordinary stop, and `settled(state)` must return
+a boolean. An optional `guard(state)` must return exactly `True`; a supplied
+`context(state)` must remain equal throughout the leg. All callback and owned
+stop execution must pass through this controller and account measured progress.
+The leg's local guest cap also applies to that execution, alongside the global
+guest and wall limits. Python callbacks are not forcibly interrupted.
+
+The journal's `fdisbull-native-alignment-1` record retains actual sampled
+positions and guest progress, start/stop attempts, the last observation and
+completion or failure. A source-supported range can avoid an expensive exact
+coordinate proof where the particular pixel is immaterial. Overshoot, drift,
+stalled progress, changed context, unsafe state or an unresolved stop retains
+the attempt and latches the controller. There is no automatic reversal, retry,
+teleport, restore or recovery input. An initially settled goal needs no input.
+
+## Bracket a frame and state without claiming atomicity
+
+`control.capture_frame_state(capture_frame, *, status_reader=None,
+state_projector=None, require_fresh=False, baseline_frame_id=None,
+baseline_frame=None, expected_session_id=None, guest_ms=1000, slice_ms=20,
+max_polls=64)` wraps `fdisbull.frame_coherence.capture_frame_state`.
+The same new KQ1 pair exercises the default SDK adapter, paused brackets and
+freshness at three settled visual boundaries across the two sessions.
+
+At a meaningful settled visual boundary, the helper reads a stopped-status /
+state / stored-frame / state / stopped-status bracket. It binds the controller's
+session, mode, frame ID and capture revision, retaining each returned value.
+`state_projector` may select the material state fields to compare while the
+full before/after observations remain available. Missing observations or
+identity/state mismatches return `complete: false`; a stable bracket remains
+non-atomic and does not prove that the image depicts the exact CPU state or
+that an interface is ready.
+
+The default SDK adapter combines `session.status`, `frame_probe([])` and a
+second `session.status`. The probe supplies frame metadata without a PNG;
+it does not supply the paused-state fact. Both status reads must explicitly
+say stopped, and all three responses must agree on session and revision.
+Every raw part is journaled before another read can fail. A custom
+`status_reader` may supply an equivalent flat binding for another adapter.
+
+```python
+observation = control.capture_frame_state(
+    capture_qualified_frame,
+    require_fresh=True,
+    baseline_frame={
+        "session_id": previous_session,
+        "mode_id": previous_mode,
+        "frame_id": previous_frame_id,
+    },
+    expected_session_id=previous_session,
+    guest_ms=1_000, slice_ms=20, max_polls=64,
+)
+```
+
+`capture_frame` returns a frame reference, SHA-256 and native metadata with
+`source: last_completed_guest_frame`. With the default `require_fresh=False`,
+the bracket requests no execution. When freshness is required, cheap status
+polls precede capture; an already newer frame needs no advance. Without a
+baseline, the initial status supplies it. A full `baseline_frame` binds prior
+session, mode and ordinal; a bare `baseline_frame_id` is explicitly the caller's
+assertion that the ordinal belongs to the currently pinned session and mode.
+All required execution still goes through the owner/controller and its
+admission/stop checks. Starting the operation uses strict controller admission;
+an already exhausted controller cannot start a new capture operation. If an
+admitted freshness slice reaches exactly the global cap, its final read-only
+bracket may complete, but no next native slice is permitted.
+Protocol session IDs are scoped to their backend server. Keep a baseline in
+its owned live run; invalidate it after restoration or context replacement.
+An ID comparison does not authenticate an independently supplied record.
+
+Use freshness only when a new appearance or presentation boundary matters,
+rather than capturing on every movement poll. Never resume a foreign stop or
+an unsafe water/failure state just to obtain a picture. A stale-frame timeout
+returns an incomplete record with its last status, without an automatic extra
+capture or execution. The caller may retain a diagnostic frame under its own
+failure-capture policy. Exceptions retain partial results, latch the controller
+and re-raise. `metadata.captured_ticks` describes render time;
+`metadata.state_revision` is the capture RPC revision, not a render-CPU revision.
+
 ## Assemble one evidence snapshot
 
 ```python
@@ -122,3 +231,23 @@ For the original gameplay example, see [the bottom-row route](AGI_BRIDGE_BOTTOM.
 The [shared-component verification](evidence/shared-native-scenes-2026-11-01/README.md)
 records the new native pair, completed scene receipt and exact test scope.
 The local source changes do not update installed packages or release a version.
+
+## Supplied JPC-RR evidence and its limits
+
+The user-supplied `KQ1-JPC-RR-TAS-Evaluation-2026-11-01.zip` is a separate
+evidence source: 20,755,106 bytes, SHA-256
+`52040dc1d6b0c25c64255c9e3af68e432b267ac5382a72aa1348d391b4521118`.
+A read-only inspection matched all eleven explicitly named analysis resources
+to the selected local originals and checked selected movie/capture hashes,
+four supplied stock-playback records and landmark PNG/RGB hashes. It did not
+independently replay the movies or rerun the native-frame scan.
+
+The authoring records retain checkpoint loads and discarded timing trials;
+the supplied playback records describe separate fixed power-on movies.
+Their recorded crossing is room 41 `(154,90)` to room 40 `(154,44)`, not a
+room 39 bottom bridge clip. No room 39 state record was found in the two scoped
+authoring event logs. The useful methodological lessons are bounded alignment,
+explicit checkpoint lineage and separate frame freshness; this package does
+not qualify the new helpers or establish Robb's original input schedule,
+hidden-state equivalence or a universal timing rule. Original archive contents
+remain private and are not bundled with the tool.
