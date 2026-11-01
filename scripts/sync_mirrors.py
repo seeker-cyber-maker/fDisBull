@@ -6,17 +6,17 @@ GitLab (`gitlab`) as equal representations while keeping GitHub (`origin`)
 permanently retired.
 
 Key behaviors:
-1. Fetches remote-tracking branches (`git fetch --no-tags <remote>`) first so
-   any branch that exists only on GitLab or has newer commits on GitLab (such as
-   `pr-local/56-miniplanets-display-20261031`) fast-forwards local `refs/heads/*`
-   instead of failing with a non-fast-forward push rejection.
+1. Phase 1 (Fetch & Reconcile across all remotes): Fetches remote-tracking
+   branches and canonical tags (`git fetch --tags --force <remote>`) across all
+   remotes first, fast-forwarding behind local branches and importing remote-only
+   branches into local `refs/heads/*` before any push commands are built.
 2. Preserves diverged branch tips on both sides under `refs/heads/<remote>-archive/*`
    and `refs/heads/local-archive/*` so zero commits are ever lost or overwritten.
-3. Pushes only branches that are missing or behind on the remote, always passing
-   `-o ci.skip` on topic/archive branches for GitLab so mirroring never triggers
-   CI pipeline storms during the 30-day GitLab trial.
-4. Continues across all branch batches and tags even if an individual ref fails,
-   retrying failed batches per-ref so one ref never blocks the rest.
+3. Phase 2 (Push to all remotes): Pushes only branches that are missing or behind
+   on each remote, ensuring branches imported from `gitlab` also propagate to
+   `local-hub` (and vice versa) in a single run. Always passes `-o ci.skip` on
+   topic/archive branches for GitLab so mirroring never triggers CI pipeline
+   storms during the 30-day GitLab trial.
 """
 from __future__ import annotations
 
@@ -195,23 +195,43 @@ def sync_mirrors(
     ci_on_main: bool = False,
     dry_run: bool = False,
 ) -> dict[str, object]:
-    results: dict[str, object] = {}
+    remote_meta: dict[str, dict[str, object]] = {}
+
+    # Phase 1: Validate all remotes, fetch branches & canonical tags, and reconcile into local refs/heads/*
     for remote in remotes:
         url = verify_remote_not_retired(repo_dir, remote)
         is_gitlab = "gitlab" in url.lower() or remote == DEFAULT_GITLAB_REMOTE
-
         fetch_ok = True
         fetch_error = None
         if not dry_run:
-            # Fetch remote branches & tags first so local knows what is ahead/behind on remote
-            f_proc = _git(repo_dir, "fetch", "--tags", remote, check=False)
+            f_proc = _git(repo_dir, "fetch", "--tags", "--force", remote, check=False)
             if f_proc.returncode != 0:
-                # Retry without --tags in case a tag collides
                 f_proc2 = _git(repo_dir, "fetch", "--no-tags", remote, check=False)
                 fetch_ok = f_proc2.returncode == 0
                 if not fetch_ok:
                     fetch_error = (f_proc2.stderr or f_proc.stderr).strip()
+        initial_plan = reconcile_with_remote(
+            repo_dir,
+            remote,
+            selected_branches=branches,
+            dry_run=dry_run,
+        )
+        remote_meta[remote] = {
+            "url": url,
+            "is_gitlab": is_gitlab,
+            "fetch_ok": fetch_ok,
+            "fetch_error": fetch_error,
+            "fast_forwarded_local": list(initial_plan["fast_forwarded_local"]),
+            "imported_from_remote": list(initial_plan["imported_from_remote"]),
+            "diverged_archived": list(initial_plan["diverged_archived"]),
+        }
 
+    # Phase 2: Re-compute push plans after all remotes have contributed to local refs/heads/*, then push
+    results: dict[str, object] = {}
+    for remote in remotes:
+        meta = remote_meta[remote]
+        url = str(meta["url"])
+        is_gitlab = bool(meta["is_gitlab"])
         plan = reconcile_with_remote(
             repo_dir,
             remote,
@@ -231,9 +251,9 @@ def sync_mirrors(
                 "status": "dry_run",
                 "already_synced_count": len(plan["already_synced"]),
                 "to_push_count": len(plan["to_push"]),
-                "fast_forwarded_local": plan["fast_forwarded_local"],
-                "imported_from_remote": plan["imported_from_remote"],
-                "diverged_archived": plan["diverged_archived"],
+                "fast_forwarded_local": meta["fast_forwarded_local"],
+                "imported_from_remote": meta["imported_from_remote"],
+                "diverged_archived": meta["diverged_archived"],
                 "commands": cmds,
             }
             continue
@@ -244,20 +264,18 @@ def sync_mirrors(
             proc = subprocess.run(cmd, cwd=repo_dir, capture_output=True, text=True)
             executed.append({"command": cmd, "returncode": proc.returncode})
             if proc.returncode != 0:
-                # If a multi-branch batch failed, retry each refspec individually so one ref never blocks others
                 refspecs = [arg for arg in cmd if arg.startswith("refs/heads/")]
                 if len(refspecs) > 1:
                     prefix = [arg for arg in cmd if not arg.startswith("refs/heads/")]
                     for spec in refspecs:
                         sub = subprocess.run([*prefix, spec], cwd=repo_dir, capture_output=True, text=True)
                         if sub.returncode != 0:
-                            # Re-fetch and reconcile that single branch in case remote advanced concurrently
                             b_name = spec.split(":", 1)[0].removeprefix("refs/heads/")
                             _git(repo_dir, "fetch", "--no-tags", remote, f"refs/heads/{b_name}:refs/remotes/{remote}/{b_name}", check=False)
                             sub_plan = reconcile_with_remote(repo_dir, remote, selected_branches=[b_name], dry_run=False)
                             if sub_plan["fast_forwarded_local"] or sub_plan["diverged_archived"]:
-                                plan["fast_forwarded_local"].extend(sub_plan["fast_forwarded_local"])
-                                plan["diverged_archived"].extend(sub_plan["diverged_archived"])
+                                meta["fast_forwarded_local"].extend(sub_plan["fast_forwarded_local"])
+                                meta["diverged_archived"].extend(sub_plan["diverged_archived"])
                                 for arch_b in sub_plan["to_push"]:
                                     subprocess.run([*prefix, f"refs/heads/{arch_b}:refs/heads/{arch_b}"], cwd=repo_dir, capture_output=True, text=True)
                             else:
@@ -267,14 +285,14 @@ def sync_mirrors(
 
         results[remote] = {
             "url": url,
-            "fetch_ok": fetch_ok,
-            "fetch_error": fetch_error,
+            "fetch_ok": meta["fetch_ok"],
+            "fetch_error": meta["fetch_error"],
             "status": "ok" if not errors else "partial_or_error",
             "already_synced_count": len(plan["already_synced"]),
             "pushed_branch_count": len(plan["to_push"]),
-            "fast_forwarded_local": plan["fast_forwarded_local"],
-            "imported_from_remote": plan["imported_from_remote"],
-            "diverged_archived": plan["diverged_archived"],
+            "fast_forwarded_local": meta["fast_forwarded_local"],
+            "imported_from_remote": meta["imported_from_remote"],
+            "diverged_archived": meta["diverged_archived"],
             "commands_run": len(executed),
             "errors": errors,
         }
