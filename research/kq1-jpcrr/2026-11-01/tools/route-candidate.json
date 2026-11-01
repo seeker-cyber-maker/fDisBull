@@ -1,0 +1,4218 @@
+{
+  "format": "kq1-stock-tas-authoring-candidate-1",
+  "status": "proposed_unexecuted_in_stock_emulator",
+  "not_a_fixed_input_movie": true,
+  "source_request_sha256": "c16c0bc96066c4e3ae789c00735660975c6d4062c090f02a14b32b9592bb1a9d",
+  "starting_contract": {
+    "room": 1,
+    "ego": [
+      110,
+      100
+    ],
+    "score": 0,
+    "inventory": [],
+    "view": 0,
+    "game_speed": 2,
+    "qualification": "This is the prior ready-state boundary. Stock BIOS/DOS/game launch and intro input must be newly authored from a known boot image; no DOSBox savestate may be imported."
+  },
+  "coordinate_space": "Original AGI logical ego baseline coordinates; not screen pixels.",
+  "timing_policy": "No old milliseconds are promoted to stock emulator event timestamps. Qualify own clock/edge granularity and engine sampling; then retain fixed tool-native movie events.",
+  "global_guards": [
+    "Source build hashes match.",
+    "No original failure flag63.",
+    "Inventory and score effects verified after relevant modal/animation continuation.",
+    "Accept no unplanned room transition, footprint change or movement overshoot.",
+    "Pause authoring and preserve failed attempt on divergence; playback must never adapt."
+  ],
+  "steps": [
+    {
+      "id": 0,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "up",
+        "room": 16
+      },
+      "source": {
+        "session": ".",
+        "request": 1,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 1,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 15
+      },
+      "source": {
+        "session": ".",
+        "request": 1,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 2,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "down",
+        "room": 2
+      },
+      "source": {
+        "session": ".",
+        "request": 1,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 3,
+      "kind": "plan_walk_to",
+      "args": {
+        "x": 1,
+        "y": 140
+      },
+      "source": {
+        "session": ".",
+        "request": 2,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original base-picture candidate with native dynamic-collision qualification required; no fDisBull runtime dependency implied."
+    },
+    {
+      "id": 4,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 3
+      },
+      "source": {
+        "session": ".",
+        "request": 2,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 5,
+      "kind": "plan_walk_to",
+      "args": {
+        "x": 140,
+        "y": 134
+      },
+      "source": {
+        "session": ".",
+        "request": 2,
+        "action": null
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Proposed corrected approach. Replaces known blocked southern approach; not yet run as a fresh combined leg."
+    },
+    {
+      "id": 6,
+      "kind": "walk_to",
+      "args": {
+        "y": 125
+      },
+      "source": {
+        "session": ".",
+        "request": 3,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 7,
+      "kind": "walk_to",
+      "args": {
+        "x": 133
+      },
+      "source": {
+        "session": ".",
+        "request": 3,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 8,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "move rock"
+      },
+      "source": {
+        "session": ".",
+        "request": 3,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 9,
+      "kind": "wait_effect",
+      "args": {
+        "condition": "Rock actor reached its moved position and f62 is set before GET KNIFE.",
+        "old_requested_guest_ms": 2000
+      },
+      "source": {
+        "session": ".",
+        "request": 3,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Old requested delay is provenance, not a stock-TAS duration. Record the actual new completion edge."
+    },
+    {
+      "id": 10,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "get knife"
+      },
+      "source": {
+        "session": ".",
+        "request": 3,
+        "action": 6
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 11,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "right",
+        "room": 2
+      },
+      "source": {
+        "session": ".",
+        "request": 4,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 12,
+      "kind": "walk_to",
+      "args": {
+        "y": 69
+      },
+      "source": {
+        "session": ".",
+        "request": 4,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Goal replaces coarse sampled movement; stock stopping must be calibrated."
+    },
+    {
+      "id": 13,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "right",
+        "room": 1
+      },
+      "source": {
+        "session": ".",
+        "request": 4,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 14,
+      "kind": "plan_walk_to",
+      "args": {
+        "x": 151,
+        "y": 51
+      },
+      "source": {
+        "session": ".",
+        "request": 4,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original base-picture candidate with native dynamic-collision qualification required; no fDisBull runtime dependency implied."
+    },
+    {
+      "id": 15,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "up",
+        "room": 16
+      },
+      "source": {
+        "session": ".",
+        "request": 4,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 16,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "up",
+        "room": 17
+      },
+      "source": {
+        "session": ".",
+        "request": 4,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 17,
+      "kind": "walk_to",
+      "args": {
+        "y": 140
+      },
+      "source": {
+        "session": ".",
+        "request": 4,
+        "action": 6
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Goal replaces coarse sampled movement; stock stopping must be calibrated."
+    },
+    {
+      "id": 18,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "right",
+        "room": 24
+      },
+      "source": {
+        "session": ".",
+        "request": 4,
+        "action": 7
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 19,
+      "kind": "walk_to",
+      "args": {
+        "x": 45
+      },
+      "source": {
+        "session": ".",
+        "request": 4,
+        "action": 8
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Goal replaces coarse sampled movement; stock stopping must be calibrated."
+    },
+    {
+      "id": 20,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "get clover"
+      },
+      "source": {
+        "session": ".",
+        "request": 4,
+        "action": 9
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 21,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 17
+      },
+      "source": {
+        "session": ".",
+        "request": 5,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 22,
+      "kind": "walk_to",
+      "args": {
+        "x": 151
+      },
+      "source": {
+        "session": ".",
+        "request": 5,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 23,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "down",
+        "room": 16
+      },
+      "source": {
+        "session": ".",
+        "request": 5,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 24,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "down",
+        "room": 1
+      },
+      "source": {
+        "session": ".",
+        "request": 5,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 25,
+      "kind": "walk_to",
+      "args": {
+        "y": 100
+      },
+      "source": {
+        "session": ".",
+        "request": 5,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Goal replaces coarse sampled movement; stock stopping must be calibrated."
+    },
+    {
+      "id": 26,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "right",
+        "room": 8
+      },
+      "source": {
+        "session": ".",
+        "request": 5,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 27,
+      "kind": "walk_to",
+      "args": {
+        "x": 70
+      },
+      "source": {
+        "session": ".",
+        "request": 5,
+        "action": 6
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Goal replaces coarse sampled movement; stock stopping must be calibrated."
+    },
+    {
+      "id": 28,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "down",
+        "room": 41
+      },
+      "source": {
+        "session": ".",
+        "request": 5,
+        "action": 7
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 29,
+      "kind": "walk_to",
+      "args": {
+        "x": 76
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 1,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 30,
+      "kind": "walk_to",
+      "args": {
+        "x": 153
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 2,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 31,
+      "kind": "walk_to",
+      "args": {
+        "y": 90
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 2,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 32,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "right",
+        "room": 42
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 2,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 33,
+      "kind": "walk_to",
+      "args": {
+        "x": 70
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 2,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 34,
+      "kind": "walk_to",
+      "args": {
+        "y": 51
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 2,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 35,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "up",
+        "room": 7
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 2,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 36,
+      "kind": "walk_to",
+      "args": {
+        "x": 153
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 2,
+        "action": 6
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Goal replaces coarse sampled movement; stock stopping must be calibrated."
+    },
+    {
+      "id": 37,
+      "kind": "walk_to",
+      "args": {
+        "y": 140
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 2,
+        "action": 7
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Goal replaces coarse sampled movement; stock stopping must be calibrated."
+    },
+    {
+      "id": 38,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "right",
+        "room": 6
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 2,
+        "action": 8
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 39,
+      "kind": "walk_to",
+      "args": {
+        "x": 30
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 2,
+        "action": 9
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 40,
+      "kind": "walk_to",
+      "args": {
+        "y": 130
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 2,
+        "action": 10
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 41,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "get bag"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 2,
+        "action": 11
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 42,
+      "kind": "walk_to",
+      "args": {
+        "y": 140
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 3,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 43,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 7
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 3,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 44,
+      "kind": "walk_to",
+      "args": {
+        "x": 70
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 3,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 45,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "down",
+        "room": 42
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 3,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 46,
+      "kind": "walk_to",
+      "args": {
+        "y": 90
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 3,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 47,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 41
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 3,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 48,
+      "kind": "walk_to",
+      "args": {
+        "x": 154
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 3,
+        "action": 6
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 49,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "down",
+        "room": 40
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 3,
+        "action": 7
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 50,
+      "kind": "walk_to",
+      "args": {
+        "y": 100
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 3,
+        "action": 8
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 51,
+      "kind": "walk_to",
+      "args": {
+        "x": 40
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 3,
+        "action": 9
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 52,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "hi"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 3,
+        "action": 10
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 53,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "get key"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 3,
+        "action": 11
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 54,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "get key"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 3,
+        "action": 12
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 55,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "get key"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 3,
+        "action": 13
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 56,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "get key"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 3,
+        "action": 14
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 57,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 33
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 4,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 58,
+      "kind": "walk_to",
+      "args": {
+        "x": 154
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 4,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 59,
+      "kind": "walk_to",
+      "args": {
+        "y": 87
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 4,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 60,
+      "kind": "walk_to",
+      "args": {
+        "y": 55
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 4,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 61,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "up",
+        "room": 48
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 4,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 62,
+      "kind": "plan_walk_to",
+      "args": {
+        "x": 129,
+        "y": 140
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 4,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original base-picture candidate with native dynamic-collision qualification required; no fDisBull runtime dependency implied."
+    },
+    {
+      "id": 63,
+      "kind": "walk_to",
+      "args": {
+        "x": 62
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 5,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 64,
+      "kind": "walk_to",
+      "args": {
+        "y": 145
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 5,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 65,
+      "kind": "walk_to",
+      "args": {
+        "x": 36
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 5,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 66,
+      "kind": "walk_to",
+      "args": {
+        "y": 146
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 5,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 67,
+      "kind": "walk_to",
+      "args": {
+        "x": 1
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 5,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 68,
+      "kind": "walk_to",
+      "args": {
+        "y": 150
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 5,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 69,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 47
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 5,
+        "action": 6
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 70,
+      "kind": "plan_walk_to",
+      "args": {
+        "x": 94,
+        "y": 90
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 5,
+        "action": 7
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original base-picture candidate with native dynamic-collision qualification required; no fDisBull runtime dependency implied."
+    },
+    {
+      "id": 71,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "get mushroom"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 5,
+        "action": 8
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 72,
+      "kind": "walk_to",
+      "args": {
+        "x": 153
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 6,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 73,
+      "kind": "walk_to",
+      "args": {
+        "y": 150
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 6,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 74,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "right",
+        "room": 48
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 6,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 75,
+      "kind": "walk_to",
+      "args": {
+        "x": 75
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 6,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 76,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "down",
+        "room": 33
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 6,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 77,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "up",
+        "room": 48
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 6,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 78,
+      "kind": "walk_to",
+      "args": {
+        "y": 129
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 6,
+        "action": 6
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 79,
+      "kind": "ordinary_key_pulse",
+      "args": {
+        "key": "up",
+        "old_requested_ms": 150,
+        "old_hold_ms": 1,
+        "old_gap_ms": 1
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 6,
+        "action": 8
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Reauthor as tool-native key edges. AGI movement is latched; key release alone does not stop it."
+    },
+    {
+      "id": 80,
+      "kind": "wait_effect",
+      "args": {
+        "condition": "Room73 landing/recovery complete: VIEW0, f98 clear and original player control restored.",
+        "old_requested_guest_ms": 8000
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 6,
+        "action": 9
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Old requested delay is provenance, not a stock-TAS duration. Record the actual new completion edge."
+    },
+    {
+      "id": 81,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "open bag"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 7,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 82,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "down",
+        "room": 74
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 7,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 83,
+      "kind": "walk_to",
+      "args": {
+        "y": 115
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 7,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 84,
+      "kind": "walk_to",
+      "args": {
+        "x": 2
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 7,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 85,
+      "kind": "pretype",
+      "args": {
+        "text": "give bag"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 7,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Prepare parser line without Enter. Preserve it across subsequent room travel."
+    },
+    {
+      "id": 86,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 75
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 7,
+        "action": 6
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 87,
+      "kind": "walk_to",
+      "args": {
+        "x": 119
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 8,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 88,
+      "kind": "walk_to",
+      "args": {
+        "x": 89
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 9,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 89,
+      "kind": "walk_to",
+      "args": {
+        "x": 82
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 10,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 90,
+      "kind": "submit_pretyped",
+      "args": {},
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 11,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Enter only after the associated source acceptance guard is true."
+    },
+    {
+      "id": 91,
+      "kind": "wait_effect",
+      "args": {
+        "condition": "For first wait: rat removed/f138. For second wait: room76 entered and ready after OPEN DOOR.",
+        "old_requested_guest_ms": 2000
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 11,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Old requested delay is provenance, not a stock-TAS duration. Record the actual new completion edge."
+    },
+    {
+      "id": 92,
+      "kind": "walk_to",
+      "args": {
+        "x": 45
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 11,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 93,
+      "kind": "walk_to",
+      "args": {
+        "y": 125
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 11,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 94,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "open door"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 11,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 95,
+      "kind": "wait_effect",
+      "args": {
+        "condition": "For first wait: rat removed/f138. For second wait: room76 entered and ready after OPEN DOOR.",
+        "old_requested_guest_ms": 3000
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 11,
+        "action": 6
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Old requested delay is provenance, not a stock-TAS duration. Record the actual new completion edge."
+    },
+    {
+      "id": 96,
+      "kind": "walk_to",
+      "args": {
+        "x": 109
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 12,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 97,
+      "kind": "walk_to",
+      "args": {
+        "y": 165
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 12,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 98,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "down",
+        "room": 77
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 12,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 99,
+      "kind": "walk_to",
+      "args": {
+        "y": 95
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 12,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 100,
+      "kind": "walk_to",
+      "args": {
+        "x": 104
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 12,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 101,
+      "kind": "walk_to",
+      "args": {
+        "y": 109
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 12,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 102,
+      "kind": "ordinary_key_pulse",
+      "args": {
+        "key": "down",
+        "old_requested_ms": 250,
+        "old_hold_ms": 1,
+        "old_gap_ms": 1
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 12,
+        "action": 6
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Reauthor as tool-native key edges. AGI movement is latched; key release alone does not stop it."
+    },
+    {
+      "id": 103,
+      "kind": "stop_movement",
+      "args": {},
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 12,
+        "action": 7
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Tap the currently latched direction, unless a modal owns input; verify direction0 afterward."
+    },
+    {
+      "id": 104,
+      "kind": "walk_to",
+      "args": {
+        "y": 128
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 13,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 105,
+      "kind": "walk_to",
+      "args": {
+        "x": 121
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 13,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 106,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "get shield"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 13,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 107,
+      "kind": "walk_to",
+      "args": {
+        "x": 35
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 13,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 108,
+      "kind": "walk_to",
+      "args": {
+        "x": 2,
+        "y": 95
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 13,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 109,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 78
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 13,
+        "action": 6
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 110,
+      "kind": "walk_to",
+      "args": {
+        "x": 141
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 14,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 111,
+      "kind": "walk_to",
+      "args": {
+        "x": 108,
+        "y": 97
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 14,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 112,
+      "kind": "walk_to",
+      "args": {
+        "x": 30
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 14,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 113,
+      "kind": "walk_to",
+      "args": {
+        "x": 14,
+        "y": 81
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 14,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 114,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "eat mushroom"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 14,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 115,
+      "kind": "walk_to",
+      "args": {
+        "x": 2
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 14,
+        "action": 6
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 116,
+      "kind": "ordinary_key_pulse",
+      "args": {
+        "key": "left",
+        "old_requested_ms": 150,
+        "old_hold_ms": 1,
+        "old_gap_ms": 1
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 14,
+        "action": 7
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Reauthor as tool-native key edges. AGI movement is latched; key release alone does not stop it."
+    },
+    {
+      "id": 117,
+      "kind": "wait_effect",
+      "args": {
+        "condition": "Room36 reached, regrowth complete: VIEW0, width6, f120 clear, v82=0.",
+        "old_requested_guest_ms": 3000
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 14,
+        "action": 8
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Old requested delay is provenance, not a stock-TAS duration. Record the actual new completion edge."
+    },
+    {
+      "id": 118,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "down",
+        "room": 29
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 15,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 119,
+      "kind": "walk_to",
+      "args": {
+        "x": 153
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 16,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 120,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "right",
+        "room": 30
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 16,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 121,
+      "kind": "walk_to",
+      "args": {
+        "x": 4
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 17,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 122,
+      "kind": "walk_to",
+      "args": {
+        "x": 34,
+        "y": 81
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 17,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 123,
+      "kind": "walk_to",
+      "args": {
+        "y": 155
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 17,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 124,
+      "kind": "walk_to",
+      "args": {
+        "x": 45,
+        "y": 166
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 17,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 125,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "down",
+        "room": 19
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 17,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 126,
+      "kind": "walk_to",
+      "args": {
+        "y": 86
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 19,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 127,
+      "kind": "walk_to",
+      "args": {
+        "x": 55,
+        "y": 96
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 19,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 128,
+      "kind": "walk_to",
+      "args": {
+        "x": 99
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 19,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 129,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "open door key"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 19,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 130,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "open door"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 19,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 131,
+      "kind": "wait_effect",
+      "args": {
+        "condition": "Tree door opening animation completed; v66=2 alone is insufficient.",
+        "old_requested_guest_ms": 2000
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 19,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Old requested delay is provenance, not a stock-TAS duration. Record the actual new completion edge."
+    },
+    {
+      "id": 132,
+      "kind": "stop_movement",
+      "args": {},
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 21,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Tap the currently latched direction, unless a modal owns input; verify direction0 afterward."
+    },
+    {
+      "id": 133,
+      "kind": "walk_to",
+      "args": {
+        "x": 105
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 21,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 134,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "up",
+        "room": 66
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 21,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 135,
+      "kind": "walk_to",
+      "args": {
+        "y": 153
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 22,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 136,
+      "kind": "walk_to",
+      "args": {
+        "x": 40,
+        "y": 134
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 22,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 137,
+      "kind": "walk_to",
+      "args": {
+        "x": 41
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 22,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 138,
+      "kind": "walk_to",
+      "args": {
+        "x": 42,
+        "y": 133
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 22,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 139,
+      "kind": "walk_to",
+      "args": {
+        "x": 45
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 22,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 140,
+      "kind": "walk_to",
+      "args": {
+        "x": 132,
+        "y": 46
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 22,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 141,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "up",
+        "room": 67
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 22,
+        "action": 6
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 142,
+      "kind": "walk_to",
+      "args": {
+        "x": 120,
+        "y": 41
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 23,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 143,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "up",
+        "room": 68
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 23,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 144,
+      "kind": "conditional_authoring_loop",
+      "args": {
+        "condition": "On ascending entry to room68, if f23 is set, inspect original thief state; conservative fallback is retreat and reenter. Continue only after a no-thief state is qualified.",
+        "fallback": [
+          {
+            "kind": "walk_to",
+            "args": {
+              "x": 94,
+              "y": 160
+            }
+          },
+          {
+            "kind": "walk_until_room",
+            "args": {
+              "key": "down",
+              "room": 67
+            }
+          },
+          {
+            "kind": "walk_to",
+            "args": {
+              "x": 120,
+              "y": 41
+            }
+          },
+          {
+            "kind": "walk_until_room",
+            "args": {
+              "key": "up",
+              "room": 68
+            }
+          }
+        ],
+        "attempt_budget": 16
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 23,
+        "action": null
+      },
+      "stock_emulator_validated": false,
+      "qualification": "The prior four retreats are not copied as an RNG prediction. Actual inputs selected in the stock emulator must be recorded into its movie; stop if budget exhausted."
+    },
+    {
+      "id": 145,
+      "kind": "walk_to",
+      "args": {
+        "x": 97
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 29,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 146,
+      "kind": "walk_to",
+      "args": {
+        "x": 125,
+        "y": 131
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 29,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 147,
+      "kind": "walk_to",
+      "args": {
+        "y": 123
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 29,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 148,
+      "kind": "walk_to",
+      "args": {
+        "x": 43,
+        "y": 41
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 29,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 149,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "up",
+        "room": 69
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 29,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 150,
+      "kind": "walk_to",
+      "args": {
+        "x": 140
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 30,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 151,
+      "kind": "walk_to",
+      "args": {
+        "x": 80,
+        "y": 94
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 30,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 152,
+      "kind": "walk_to",
+      "args": {
+        "x": 4
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 30,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 153,
+      "kind": "walk_to",
+      "args": {
+        "x": 2,
+        "y": 96
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 30,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 154,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "end",
+        "room": 59
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 30,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 155,
+      "kind": "walk_to",
+      "args": {
+        "x": 1
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 31,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 156,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 58
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 31,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 157,
+      "kind": "wait_effect",
+      "args": {
+        "condition": "Giant sleep branch committed: v86=1, f205 set, score33. Original sleep output must resume.",
+        "old_requested_guest_ms": 78000
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 32,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Old requested delay is provenance, not a stock-TAS duration. Record the actual new completion edge."
+    },
+    {
+      "id": 158,
+      "kind": "walk_to",
+      "args": {
+        "x": 77
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 33,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 159,
+      "kind": "walk_to",
+      "args": {
+        "x": 40,
+        "y": 150
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 33,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 160,
+      "kind": "walk_to",
+      "args": {
+        "y": 153
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 34,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observed correction from (40,150), where first pickup was refused at distance32; successful original distance was29."
+    },
+    {
+      "id": 161,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "get chest"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 34,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Require original distance<=30 and sleeping giant; then verify item2/score41/treasure count2."
+    },
+    {
+      "id": 162,
+      "kind": "walk_to",
+      "args": {
+        "x": 110
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 35,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 163,
+      "kind": "walk_to",
+      "args": {
+        "x": 153,
+        "y": 110
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 35,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 164,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "right",
+        "room": 59
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 35,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 165,
+      "kind": "walk_to",
+      "args": {
+        "x": 134
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 36,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 166,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "right",
+        "room": 69
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 36,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 167,
+      "kind": "walk_to",
+      "args": {
+        "x": 72
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 37,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 168,
+      "kind": "walk_to",
+      "args": {
+        "x": 75,
+        "y": 94
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 37,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 169,
+      "kind": "walk_to",
+      "args": {
+        "x": 82
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 37,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 170,
+      "kind": "walk_to",
+      "args": {
+        "x": 143,
+        "y": 155
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 37,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 171,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "pagedown",
+        "room": 68
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 37,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 172,
+      "kind": "walk_to",
+      "args": {
+        "y": 43
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 38,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 173,
+      "kind": "walk_to",
+      "args": {
+        "x": 122,
+        "y": 121
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 38,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 174,
+      "kind": "walk_to",
+      "args": {
+        "y": 122
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 38,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 175,
+      "kind": "walk_to",
+      "args": {
+        "x": 125,
+        "y": 125
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 38,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 176,
+      "kind": "walk_to",
+      "args": {
+        "y": 135
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 38,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 177,
+      "kind": "walk_to",
+      "args": {
+        "x": 95,
+        "y": 165
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 38,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 178,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "end",
+        "room": 67
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 38,
+        "action": 6
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 179,
+      "kind": "walk_to",
+      "args": {
+        "x": 116
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 39,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 180,
+      "kind": "walk_to",
+      "args": {
+        "x": 7,
+        "y": 151
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 39,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 181,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "end",
+        "room": 66
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 39,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 182,
+      "kind": "walk_to",
+      "args": {
+        "x": 128
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 40,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 183,
+      "kind": "walk_to",
+      "args": {
+        "x": 116,
+        "y": 59
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 40,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 184,
+      "kind": "walk_to",
+      "args": {
+        "x": 115
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 40,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 185,
+      "kind": "walk_to",
+      "args": {
+        "x": 39,
+        "y": 135
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 40,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 186,
+      "kind": "walk_to",
+      "args": {
+        "y": 137
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 40,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 187,
+      "kind": "walk_to",
+      "args": {
+        "x": 35,
+        "y": 141
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 40,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 188,
+      "kind": "walk_to",
+      "args": {
+        "y": 144
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 40,
+        "action": 6
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 189,
+      "kind": "walk_to",
+      "args": {
+        "x": 34,
+        "y": 145
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 40,
+        "action": 7
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 190,
+      "kind": "walk_to",
+      "args": {
+        "y": 148
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 40,
+        "action": 8
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 191,
+      "kind": "walk_to",
+      "args": {
+        "x": 33,
+        "y": 149
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 40,
+        "action": 9
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 192,
+      "kind": "walk_to",
+      "args": {
+        "y": 151
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 40,
+        "action": 10
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 193,
+      "kind": "walk_to",
+      "args": {
+        "x": 32,
+        "y": 152
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 40,
+        "action": 11
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 194,
+      "kind": "walk_to",
+      "args": {
+        "y": 154
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 40,
+        "action": 12
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 195,
+      "kind": "walk_to",
+      "args": {
+        "x": 22,
+        "y": 164
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 40,
+        "action": 13
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 196,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "end",
+        "room": 19
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 40,
+        "action": 14
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 197,
+      "kind": "walk_to",
+      "args": {
+        "x": 39
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 41,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 198,
+      "kind": "walk_to",
+      "args": {
+        "x": 1,
+        "y": 140
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 41,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 199,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 20
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 41,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 200,
+      "kind": "walk_to",
+      "args": {
+        "x": 148
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 42,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 201,
+      "kind": "walk_to",
+      "args": {
+        "x": 122,
+        "y": 166
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 42,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 202,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "down",
+        "room": 13
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 42,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 203,
+      "kind": "walk_to",
+      "args": {
+        "x": 51
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 43,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 204,
+      "kind": "walk_to",
+      "args": {
+        "x": 1,
+        "y": 100
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 43,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 205,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 12
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 43,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 206,
+      "kind": "walk_to",
+      "args": {
+        "x": 85
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 44,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 207,
+      "kind": "walk_to",
+      "args": {
+        "x": 65,
+        "y": 120
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 44,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 208,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "cut rope"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 44,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 209,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "lower rope"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 44,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 210,
+      "kind": "wait_effect",
+      "args": {
+        "condition": "Lowered-rope animation completed and original rope/crank cycling stopped.",
+        "old_requested_guest_ms": 2000
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 44,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Old requested delay is provenance, not a stock-TAS duration. Record the actual new completion edge."
+    },
+    {
+      "id": 211,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "climb rope"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 45,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 212,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "down",
+        "room": 49
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 46,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 213,
+      "kind": "walk_to",
+      "args": {
+        "y": 114
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 47,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 214,
+      "kind": "ordinary_key_pulse",
+      "args": {
+        "key": "down",
+        "old_requested_ms": 6500,
+        "old_hold_ms": null,
+        "old_gap_ms": null
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 47,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Reauthor as tool-native key edges. AGI movement is latched; key release alone does not stop it."
+    },
+    {
+      "id": 215,
+      "kind": "stop_movement",
+      "args": {},
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 47,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Tap the currently latched direction, unless a modal owns input; verify direction0 afterward."
+    },
+    {
+      "id": 216,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "dive"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 48,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 217,
+      "kind": "pretype",
+      "args": {
+        "text": "toss water"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 49,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Prepare parser line without Enter. Preserve it across subsequent room travel."
+    },
+    {
+      "id": 218,
+      "kind": "walk_to",
+      "args": {
+        "y": 69
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 49,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 219,
+      "kind": "walk_to",
+      "args": {
+        "x": 33,
+        "y": 111
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 49,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 220,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "end",
+        "room": 51
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 49,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 221,
+      "kind": "walk_to",
+      "args": {
+        "x": 104
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 50,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 222,
+      "kind": "submit_pretyped",
+      "args": {},
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 50,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Enter only after the associated source acceptance guard is true."
+    },
+    {
+      "id": 223,
+      "kind": "wait_effect",
+      "args": {
+        "condition": "Water success committed (score54, v75=2, water26 absent); subsequent retreat/boulder animation progresses under original code.",
+        "old_requested_guest_ms": 3000
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 50,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Old requested delay is provenance, not a stock-TAS duration. Record the actual new completion edge."
+    },
+    {
+      "id": 224,
+      "kind": "walk_to",
+      "args": {
+        "x": 70
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 51,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 225,
+      "kind": "walk_to",
+      "args": {
+        "x": 59,
+        "y": 127
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 51,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 226,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "get mirror"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 51,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 227,
+      "kind": "walk_to",
+      "args": {
+        "x": 31
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 52,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Known traversable prefix toward the boulder. Stops before the blocked target; new exact-stop qualification required."
+    },
+    {
+      "id": 228,
+      "kind": "walk_to",
+      "args": {
+        "x": 21,
+        "y": 137
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 54,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 229,
+      "kind": "walk_to",
+      "args": {
+        "x": 2
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 54,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 230,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 50
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 54,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 231,
+      "kind": "walk_to",
+      "args": {
+        "x": 16
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 55,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 232,
+      "kind": "walk_to",
+      "args": {
+        "x": 2,
+        "y": 147
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 55,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 233,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 22
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 55,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 234,
+      "kind": "walk_to",
+      "args": {
+        "x": 136
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 56,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observed prefix before friendly-condor modal interrupted the next leg. Global modal handling must preserve input intent."
+    },
+    {
+      "id": 235,
+      "kind": "walk_to",
+      "args": {
+        "x": 127,
+        "y": 92
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 57,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 236,
+      "kind": "walk_to",
+      "args": {
+        "y": 109
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 57,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 237,
+      "kind": "walk_to",
+      "args": {
+        "x": 70,
+        "y": 166
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 57,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 238,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "down",
+        "room": 11
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 57,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 239,
+      "kind": "walk_to",
+      "args": {
+        "y": 51
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 58,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 240,
+      "kind": "walk_to",
+      "args": {
+        "x": 103,
+        "y": 84
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 58,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 241,
+      "kind": "walk_to",
+      "args": {
+        "y": 129
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 58,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 242,
+      "kind": "walk_to",
+      "args": {
+        "x": 100,
+        "y": 132
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 58,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 243,
+      "kind": "walk_to",
+      "args": {
+        "x": 92
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 58,
+        "action": null
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Known traversable prefix only; corrected route observes priority-one fence blocking."
+    },
+    {
+      "id": 244,
+      "kind": "walk_to",
+      "args": {
+        "y": 140
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 60,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 245,
+      "kind": "walk_to",
+      "args": {
+        "x": 88,
+        "y": 144
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 60,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 246,
+      "kind": "walk_to",
+      "args": {
+        "x": 87
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 60,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 247,
+      "kind": "walk_to",
+      "args": {
+        "x": 74,
+        "y": 157
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 60,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 248,
+      "kind": "walk_to",
+      "args": {
+        "x": 11
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 60,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 249,
+      "kind": "walk_to",
+      "args": {
+        "x": 2,
+        "y": 166
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 60,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 250,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 10
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 60,
+        "action": 6
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 251,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "down",
+        "room": 7
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 61,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 252,
+      "kind": "walk_to",
+      "args": {
+        "x": 29
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 62,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 253,
+      "kind": "walk_to",
+      "args": {
+        "x": 19,
+        "y": 60
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 62,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 254,
+      "kind": "walk_to",
+      "args": {
+        "x": 4
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 62,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 255,
+      "kind": "walk_to",
+      "args": {
+        "x": 3,
+        "y": 61
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 62,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 256,
+      "kind": "walk_to",
+      "args": {
+        "x": 2
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 62,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 257,
+      "kind": "walk_to",
+      "args": {
+        "x": 1,
+        "y": 60
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 62,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 258,
+      "kind": "walk_to",
+      "args": {
+        "y": 47
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 62,
+        "action": 6
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 259,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 8
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 62,
+        "action": 7
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 260,
+      "kind": "walk_to",
+      "args": {
+        "x": 24
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 63,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 261,
+      "kind": "walk_to",
+      "args": {
+        "x": 2,
+        "y": 69
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 63,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 262,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 1
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 63,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 263,
+      "kind": "walk_to",
+      "args": {
+        "y": 83
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 64,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 264,
+      "kind": "walk_to",
+      "args": {
+        "x": 89,
+        "y": 146
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 64,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 265,
+      "kind": "walk_to",
+      "args": {
+        "x": 83
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 64,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 266,
+      "kind": "walk_to",
+      "args": {
+        "x": 82,
+        "y": 147
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 64,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 267,
+      "kind": "walk_to",
+      "args": {
+        "x": 81
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 64,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 268,
+      "kind": "walk_to",
+      "args": {
+        "x": 80,
+        "y": 148
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 64,
+        "action": 5
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 269,
+      "kind": "walk_to",
+      "args": {
+        "x": 3
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 64,
+        "action": 6
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 270,
+      "kind": "walk_to",
+      "args": {
+        "x": 1,
+        "y": 150
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 64,
+        "action": 7
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 271,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 2
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 64,
+        "action": 8
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 272,
+      "kind": "walk_to",
+      "args": {
+        "x": 131
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 65,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 273,
+      "kind": "walk_to",
+      "args": {
+        "x": 109,
+        "y": 128
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 65,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 274,
+      "kind": "type_and_submit",
+      "args": {
+        "text": "open door"
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 65,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Original parser input. Dismiss only observed blocking output; verify committed effects, not queue acceptance."
+    },
+    {
+      "id": 275,
+      "kind": "wait_effect",
+      "args": {
+        "condition": "Both castle door animation and sound completed, then original transition to room55.",
+        "old_requested_guest_ms": 5000
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 65,
+        "action": 4
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Old requested delay is provenance, not a stock-TAS duration. Record the actual new completion edge."
+    },
+    {
+      "id": 276,
+      "kind": "walk_to",
+      "args": {
+        "y": 75
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 66,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 277,
+      "kind": "walk_to",
+      "args": {
+        "x": 79,
+        "y": 71
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 66,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 278,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "up",
+        "room": 54
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 66,
+        "action": 2
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    },
+    {
+      "id": 279,
+      "kind": "walk_to",
+      "args": {
+        "x": 45
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 67,
+        "action": 0
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 280,
+      "kind": "walk_to",
+      "args": {
+        "x": 2,
+        "y": 120
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 67,
+        "action": 1
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Coordinate goal only. Requalify stock-emulator input phase and footprint; no fixed event duration is recovered."
+    },
+    {
+      "id": 281,
+      "kind": "walk_until_room",
+      "args": {
+        "key": "left",
+        "room": 53
+      },
+      "source": {
+        "session": "resume-20261101T043028Z-a3fe98ee",
+        "request": 67,
+        "action": 3
+      },
+      "stock_emulator_validated": false,
+      "qualification": "Observe actual post-transition placement before the next leg; original budget is not an input deadline."
+    }
+  ],
+  "reference_finish": {
+    "room": 53,
+    "score": 63,
+    "treasure_count_v74": 3,
+    "carried_items": [
+      2,
+      19,
+      21
+    ],
+    "output": {
+      "logic": 53,
+      "message_id": 25
+    },
+    "action": "Allow original automatic ending; retain first visible matching finish frame."
+  },
+  "bow_finish_variant": {
+    "steps": [
+      {
+        "kind": "walk_to",
+        "args": {
+          "x": 93
+        }
+      },
+      {
+        "kind": "walk_to",
+        "args": {
+          "x": 86,
+          "y": 113
+        }
+      },
+      {
+        "kind": "type_and_submit",
+        "args": {
+          "text": "bow"
+        }
+      }
+    ],
+    "guards": [
+      "v74=3",
+      "v30=0",
+      "f25 clear",
+      "f79 clear",
+      "outer x18..86/y80..113 minus inner x18..67/y80..107"
+    ],
+    "completion": [
+      "Original bow animation finished.",
+      "Original message4 dismissed.",
+      "Original message25 first visible; score66 and treasures retained."
+    ],
+    "qualification": "Separate alternate ending. Geometry is derived from the prior Normal entry152,120; recompute from the stock observed entry. Do not compare against a different baseline clock/start."
+  },
+  "explicit_adaptations": [
+    "Correct rock approach proposed.",
+    "Skip known blocked tree-door Up at99,96; shift to105,96.",
+    "Replace historical thief retry count with observed stock-game branch decisions.",
+    "Skip known distance32 chest refusal; approach40,153.",
+    "Stop at boulder prefix31,127 and use observed lower detour.",
+    "Handle condor modal as input ownership interruption.",
+    "Replace wrong-policy fence attempt with known safe prefix and corrected detour."
+  ],
+  "speed_profiles": {
+    "prior_receiving_route": {
+      "v10": 2,
+      "v88": 2,
+      "meaning": "Observed full progression used Normal; most fine-control legs were qualified only there."
+    },
+    "video_style_candidate": {
+      "initial_command": "FAST",
+      "v10": 0,
+      "v88": 0,
+      "normal_speed_segments": [
+        "river-edge alignment and crossing",
+        "well dive preparation"
+      ],
+      "qualification": "Observed video includes these menu changes, but the complete exact schedule is unknown. This is a separate authoring profile and all stopping/entry phases require stock-emulator calibration."
+    }
+  }
+}

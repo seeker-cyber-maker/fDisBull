@@ -1,0 +1,1623 @@
+{
+  "format": "fdisbull-sanitized-research-import-1",
+  "date": "2026-11-01",
+  "base_commit": "498c0887f8d15ca3b2fb3dc8994d2de24e144273",
+  "original_archive": {
+    "name": "KQ1-JPC-RR-TAS-Evaluation-2026-11-01.zip",
+    "bytes": 20755106,
+    "sha256": "52040dc1d6b0c25c64255c9e3af68e432b267ac5382a72aa1348d391b4521118",
+    "member_count": 159,
+    "uncompressed_bytes": 78695133,
+    "gitlab_project_id": 88349936,
+    "upload_id": 1460716279,
+    "upload_link": "/uploads/09b2a5aedeb7b2c84b578d82d14aaeeb/KQ1-JPC-RR-TAS-Evaluation-2026-11-01.zip",
+    "upload_readback": "Publishing agent reported and verified byte-identical readback; exact ZIP is outside Git."
+  },
+  "scope": "Imported source, semantic input movies and sanitized evidence; original results remain attributed Linux/Java17 evidence. No guest replay is established by this import.",
+  "imported_count": 31,
+  "excluded_count": 128,
+  "license_and_attribution": "No LICENSE/COPYING/NOTICE in original archive. Preserve movie headers crediting DrD2k9 boot prefix and Robb route inspiration; no blanket redistribution-license claim.",
+  "missing_historical_test_sources": [
+    "test_audit_movie.py",
+    "test_jmd_capture.py",
+    "test_pcm_audio.py"
+  ],
+  "new_import_files": [
+    "README.md",
+    "checks/verify_import.py",
+    "checks/verification.json",
+    "provenance/import-manifest.json"
+  ],
+  "archive_members": [
+    {
+      "source_path": "README.md",
+      "bytes": 1685,
+      "sha256": "35e0cba735c391de56a3b2b03fc9fabd5b185bad5ee16630d5e0d910d3d1d565",
+      "zip_crc32": "5084b2b9",
+      "import_path": "original/README.md",
+      "import_sha256": "35e0cba735c391de56a3b2b03fc9fabd5b185bad5ee16630d5e0d910d3d1d565",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "REPORT.md",
+      "bytes": 14117,
+      "sha256": "d27e0d582bb7d5214dfd1982bf0245360ac04833140b9c6cdf46838e8ba3d990",
+      "zip_crc32": "ac4731d1",
+      "import_path": "original/REPORT.md",
+      "import_sha256": "d27e0d582bb7d5214dfd1982bf0245360ac04833140b9c6cdf46838e8ba3d990",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "SHA256SUMS",
+      "bytes": 17871,
+      "sha256": "fe76e83e7685b5016445412ef3b544d7cfbc6811343659cc527217b9ad3ef35b",
+      "zip_crc32": "df7a011e",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Original full-archive checksum file; its own identity and all member identities are recorded here."
+    },
+    {
+      "source_path": "authoring-history/continuation/001-inspect-rope.response.json",
+      "bytes": 14825,
+      "sha256": "f920b10f01da24274e60b78d6d404e80731e7059c41409a6e88cf5932ce00582",
+      "zip_crc32": "4fe6982c",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/002-well-dive.response.json",
+      "bytes": 13997,
+      "sha256": "c7df8a4fe4cba3ad674b0a9fdf39237b45f7d57f6f789db6a1559e0260dd11bb",
+      "zip_crc32": "1f063574",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/003-mirror-and-castle.response.json",
+      "bytes": 13804,
+      "sha256": "00f6c0d083c09c15b49a56a5a0ecea5dc7e03ebc28273dda967fb748d27d330c",
+      "zip_crc32": "f4de58db",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/004-room7-inspect.response.json",
+      "bytes": 4779,
+      "sha256": "f61a9723170225259505042a6f393a8df42a8599b8902f30ec306f7be2dc3bb5",
+      "zip_crc32": "e95054dd",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/005-room7-align-and-return.response.json",
+      "bytes": 38093,
+      "sha256": "720d96d4803107fb3771d941d7b439c942c971ada2ea0e59702de7848ed228b0",
+      "zip_crc32": "47bf8c7d",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/006-automatic-king-landmark.response.json",
+      "bytes": 15646,
+      "sha256": "e93a6f4a20e3dc349f737ffad0ddc3df309889740bc1807140d9c4ee3b6ce7e2",
+      "zip_crc32": "4e582d9a",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/007-automatic-full-ending.response.json",
+      "bytes": 15396,
+      "sha256": "f04f01ccd6e9a81b26c061c29caa5d0d8143daa7f79faca5692a5525b96d219e",
+      "zip_crc32": "cde7a482",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/008-complete-ending.response.json",
+      "bytes": 76559,
+      "sha256": "96b45346385e9461429af2ee1d27414d63ddc04b2d57b990d4820082dd9f677b",
+      "zip_crc32": "d381ce57",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/009-bow-comparison.response.json",
+      "bytes": 79290,
+      "sha256": "5e7d992395d89ae2b792666191c62b1017c277766f0cec91824a4433a2c5e3fd",
+      "zip_crc32": "5cac0be1",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/010-bow-complete-ending.response.json",
+      "bytes": 71647,
+      "sha256": "5f69e41f523e2d2c9c6c566b3731d762ab05733a37b128ce3a970dcc865fd668",
+      "zip_crc32": "03646003",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/011-close-authoring.response.json",
+      "bytes": 4625,
+      "sha256": "9c6e9c24fdada3f6eb23932bbe845ecba19a2aac11aee58837d551d6f71995fc",
+      "zip_crc32": "d17ee2c7",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/events.jsonl",
+      "bytes": 753488,
+      "sha256": "a5308f87f149201cac5c6ac692578ba261ea25a34a528e36806d8ac48d4cff9c",
+      "zip_crc32": "46f172b9",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/requests/001-inspect-rope.json",
+      "bytes": 138,
+      "sha256": "6934cb62a43717795373bbe61f8b57a42ee16e8deac4a004fcf95c2bdc0b77a9",
+      "zip_crc32": "03ce9be0",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/requests/002-well-dive.json",
+      "bytes": 313,
+      "sha256": "4fbba1f02b346ad7b3158b420d3bf13443ef96b0686f311d8f2d7fdf01b8f22e",
+      "zip_crc32": "17e5ab07",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/requests/003-mirror-and-castle.json",
+      "bytes": 189,
+      "sha256": "9b9cc40270daf7f92ff8d3b1bb9423a38bd6cf9e5f83f5f4dd16a264c893c098",
+      "zip_crc32": "417d847e",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/requests/004-room7-inspect.json",
+      "bytes": 77,
+      "sha256": "0ef81d5a18021b926f2c17710eec6608a2cf1ea70b202785e95db74e7ada8c42",
+      "zip_crc32": "2f4844da",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/requests/005-room7-align-and-return.json",
+      "bytes": 389,
+      "sha256": "63586ef90ef85efd287e74afeb8ac913de6249f7a5315796dca92ff6b4b46bb3",
+      "zip_crc32": "601c364c",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/requests/006-automatic-king-landmark.json",
+      "bytes": 938,
+      "sha256": "fa8fb24c344bfdb8e416fd6804ff1bad2085f5a8001ae14c6367e0452a90ae84",
+      "zip_crc32": "bd596ae0",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/requests/007-automatic-full-ending.json",
+      "bytes": 214,
+      "sha256": "ba8c7c504f6a546addbc08da2e5105a7b7abd7eae4dee2ef70840205a26a169e",
+      "zip_crc32": "bb96fefa",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/requests/008-complete-ending.json",
+      "bytes": 3838,
+      "sha256": "dcf358d4900f5c851020a397d740d327e9eea6fcf760757277ec84779005d7fe",
+      "zip_crc32": "58babd5c",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/requests/009-bow-comparison.json",
+      "bytes": 1940,
+      "sha256": "8b9128a310a05bcde44fd550e4a6472c975fe67c0f4131773bd59e24c9575903",
+      "zip_crc32": "89004aff",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/requests/010-bow-complete-ending.json",
+      "bytes": 3692,
+      "sha256": "cd337f33cca12058755a241a147998405450456f334627b3cf34dc944c90679d",
+      "zip_crc32": "2a85012d",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/continuation/requests/011-close-authoring.json",
+      "bytes": 32,
+      "sha256": "01eb6b34e0f58ab41d299870edd1fdc95f86e344feee1ffc43f94548d22e8ef2",
+      "zip_crc32": "d06e0cd8",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/001-first-rooms.response.json",
+      "bytes": 13039,
+      "sha256": "2332c773502287d2164782796b7643cd3dbe1f82be1c7d0ea15e2e18bb92e7d6",
+      "zip_crc32": "5d7a13ea",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/002-first-precise.response.json",
+      "bytes": 17278,
+      "sha256": "36a9ae0563340b27f7926774c62b1c67b10d047ba83dffe15fa97c31a7b5c907",
+      "zip_crc32": "a2cfa14a",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/003-planned-rock-approach.response.json",
+      "bytes": 7779,
+      "sha256": "3f39329d8eea39db9f5f95b9ed0d73bd3bd69f93b836d78c7732fb6375fce9e2",
+      "zip_crc32": "ed5cbc49",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/004-center-stop-probe.response.json",
+      "bytes": 19740,
+      "sha256": "d4cc95671751190b5fccc2ac56c3af934ae8d758e1d4048f1d5efdc5765e0dc3",
+      "zip_crc32": "55b8e3d4",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/005-center-planned-rock.response.json",
+      "bytes": 159080,
+      "sha256": "039fda2a12bf0cf76a4932ca417f8e2181f43e9120379c14be613168deed9ac0",
+      "zip_crc32": "4a33fd9c",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/006-preparation.response.json",
+      "bytes": 4396,
+      "sha256": "44646acff1ed1a8233ca41252f2bd575cb635cd9acb3e3f8ecfad26d33ad64ca",
+      "zip_crc32": "1d5094de",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/007-preparation.response.json",
+      "bytes": 5041,
+      "sha256": "7d0eab6b0a5bd0da558c1656f666c0cf4da2a33e981bacb74a614fa4042b9801",
+      "zip_crc32": "314b9028",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/008-gnome.response.json",
+      "bytes": 4865,
+      "sha256": "e9ac783add1f1c9f2c3b54d7260474972285db4437666ed4ae29aca64d421b9b",
+      "zip_crc32": "2ce50cef",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/009-gnome-fixed-modal.response.json",
+      "bytes": 6182,
+      "sha256": "1e1522253b6598d0fe594f628213e1c5bbf7c4fe09112ac2a410190a81a7bf82",
+      "zip_crc32": "ace0f37d",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/010-gnome-entry-settle.response.json",
+      "bytes": 6122,
+      "sha256": "2997b242b62db0a7545f48349a6dc3d22724c3d6f5d0a46a015741a051d75504",
+      "zip_crc32": "d3da41a8",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/011-gnome-parser-cycle.response.json",
+      "bytes": 11132,
+      "sha256": "a8584e2246993d529587ab7910b852f2584c5e80f903f92d296b976fb7d05d49",
+      "zip_crc32": "9927ad30",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/012-mushroom-caves.response.json",
+      "bytes": 6005,
+      "sha256": "d304657a9a0adc9f232f9db633a8c44b2fb715902b874114286d9a14f0dbd048",
+      "zip_crc32": "4a6b31b2",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/013-landing-history.response.json",
+      "bytes": 24718,
+      "sha256": "a59b4e2581aab0acd51634cf5c81b052022e02998cf52eaca37d37bf26bb10dc",
+      "zip_crc32": "c5b8e793",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/014-rat-cave.response.json",
+      "bytes": 6474,
+      "sha256": "b6b8c5e26e10abcdeca904282043aa3353e2447485768b11eddec41ae4b64549",
+      "zip_crc32": "a6a49639",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/015-rat-distance.response.json",
+      "bytes": 12863,
+      "sha256": "1e3bbcfc9de93e6bd8a2a07ec68881ea07b21c806510211a8035376dd574e24e",
+      "zip_crc32": "3b4837b7",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/016-shield-and-chest.response.json",
+      "bytes": 6615,
+      "sha256": "9039fe801e18baf666ff2734900abf37655acf370d21c3eefce4e7a6704dc835",
+      "zip_crc32": "ed65cda0",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/017-tree-and-giant.response.json",
+      "bytes": 8470,
+      "sha256": "20e9a18543e6eb23deaf7fab81f7dbc3697a6a634bccc6e65a76ec3708cb52cc",
+      "zip_crc32": "5008bfe5",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/018-output-interrupted-navigation.response.json",
+      "bytes": 6320,
+      "sha256": "e13e3359756614ccd64faaadb20400dbe3da7698077f6608401d5181fa5d2215",
+      "zip_crc32": "0ed68808",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/019-tree-giant-progress.response.json",
+      "bytes": 5627,
+      "sha256": "cb5c050aff76effe87140df3b203dc14adb5ca92f81ee0e75910b60856509814",
+      "zip_crc32": "b23ccbfa",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/020-chest.response.json",
+      "bytes": 21357,
+      "sha256": "e188ef02459bc260e27ed7cde51dbd283c6cf98a215f87cecae824595666caaf",
+      "zip_crc32": "2f3c667d",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/021-chest-native-distance-and-well.response.json",
+      "bytes": 7090,
+      "sha256": "ca1b8fbbbae03a9641c9870dc5f9ad342749d19255f2e61ff901ba7e2adb9e57",
+      "zip_crc32": "ca98f5f8",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/events.jsonl",
+      "bytes": 3095344,
+      "sha256": "77e1d8980e3090381ce3d9965fe6969f541f59f2fe44dafeeee5e7cf12628357",
+      "zip_crc32": "e8ef3745",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/001-first-rooms.json",
+      "bytes": 346,
+      "sha256": "9a2cbce9ede39448c87495bb67fbab405863122d3758b0e77c46cb73051ecbe5",
+      "zip_crc32": "eca94a2a",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/002-first-precise.json",
+      "bytes": 216,
+      "sha256": "867f508cd7f8b435a9b5852849cbfb381c93c01b4b01272c541f559b38da7214",
+      "zip_crc32": "3c1c7fe3",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/003-planned-rock-approach.json",
+      "bytes": 382,
+      "sha256": "59d51815bc30ffed10e39946219cd1208f3d72753fe2fa556406992446f55bd5",
+      "zip_crc32": "64bf174b",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/004-center-stop-probe.json",
+      "bytes": 541,
+      "sha256": "acbeedf2319a631c732f4c2f250a109bcc209ccf41952493ebacadcb87bddf82",
+      "zip_crc32": "40d12f68",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/005-center-planned-rock.json",
+      "bytes": 382,
+      "sha256": "59d51815bc30ffed10e39946219cd1208f3d72753fe2fa556406992446f55bd5",
+      "zip_crc32": "64bf174b",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/006-preparation.json",
+      "bytes": 159,
+      "sha256": "0f4d65f3b15db7bec7ca157c587f657a9929fc0aab6b78819f23fd4ae3ca504c",
+      "zip_crc32": "bb9d4485",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/007-preparation.json",
+      "bytes": 180,
+      "sha256": "83db5bb3caa41bd255050d5f16b444854d61d7b9e352f2dc7e60aea8c70fd6b2",
+      "zip_crc32": "60667738",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/008-gnome.json",
+      "bytes": 160,
+      "sha256": "8d7843a8b5b908f9bf7aaa834aa18440898081dc3627a4a95d4098bfd6bb2706",
+      "zip_crc32": "29cb048d",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/009-gnome-fixed-modal.json",
+      "bytes": 160,
+      "sha256": "8d7843a8b5b908f9bf7aaa834aa18440898081dc3627a4a95d4098bfd6bb2706",
+      "zip_crc32": "29cb048d",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/010-gnome-entry-settle.json",
+      "bytes": 160,
+      "sha256": "8d7843a8b5b908f9bf7aaa834aa18440898081dc3627a4a95d4098bfd6bb2706",
+      "zip_crc32": "29cb048d",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/011-gnome-parser-cycle.json",
+      "bytes": 213,
+      "sha256": "80456a9edb430bfa567532f0e848318974beec6151e942de3aff4478852396bc",
+      "zip_crc32": "a127b7ef",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/012-mushroom-caves.json",
+      "bytes": 169,
+      "sha256": "fbed17dce80b19b6ed4e278790746cf210fc22aada2401def329888986f55f67",
+      "zip_crc32": "7c7bc752",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/013-landing-history.json",
+      "bytes": 311,
+      "sha256": "a9cb39edd6ad8151b25313968fb5af1ade7f0f529c84d944c9a27b4922bb7c6e",
+      "zip_crc32": "d9b8894f",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/014-rat-cave.json",
+      "bytes": 159,
+      "sha256": "f7797dd145909a25a5b5aa0de9f673fb4ed016678200cbdcff22ec4ee7403368",
+      "zip_crc32": "bbe1fa02",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/015-rat-distance.json",
+      "bytes": 266,
+      "sha256": "af568d019893af54ce0764b15c976cee8973ff15207c86a3c1cd16ad2af2f978",
+      "zip_crc32": "45009935",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/016-shield-and-chest.json",
+      "bytes": 157,
+      "sha256": "6095d4a191bfa1261e0c25f65a01a604c8eadb98a1eb71f344bad503e9046afe",
+      "zip_crc32": "ac221b5e",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/017-tree-and-giant.json",
+      "bytes": 158,
+      "sha256": "e942743d6107a3e0584920cc49e32c4192579d40182c031ac03a633ee08f77e5",
+      "zip_crc32": "d4cef602",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/018-output-interrupted-navigation.json",
+      "bytes": 158,
+      "sha256": "e942743d6107a3e0584920cc49e32c4192579d40182c031ac03a633ee08f77e5",
+      "zip_crc32": "d4cef602",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/019-tree-giant-progress.json",
+      "bytes": 158,
+      "sha256": "8920f97a07b4fdb032275b675f4ce0532bc7c2727abb441eee214fcfa5f62228",
+      "zip_crc32": "75bad1f8",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/020-chest.json",
+      "bytes": 158,
+      "sha256": "1a91abad577c58e353bd2220d8378cb14eebad746999f7ae312fc97a83f711ab",
+      "zip_crc32": "1d4bc718",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "authoring-history/previous/requests/021-chest-native-distance-and-well.json",
+      "bytes": 378,
+      "sha256": "d6f05b1eceb1995f2a916dbaf2c8b4d7920d1d678c89bed2aede2c27184a264f",
+      "zip_crc32": "92ff2217",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw authoring requests/responses and memory/state observations; excluded from Git."
+    },
+    {
+      "source_path": "captures/automatic.jmd",
+      "bytes": 15828730,
+      "sha256": "19eb9148a3d20f5d4550b5826bb77b6e7936e7496aa5ff803e5aecf29c4b0fa2",
+      "zip_crc32": "32461d3b",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private native audio/video capture; excluded from Git."
+    },
+    {
+      "source_path": "captures/bow.jmd",
+      "bytes": 15862773,
+      "sha256": "b84c2571e3c5d8f3f22c848e2d4edcc062e2e6f4b82bfae9807ac403862f8269",
+      "zip_crc32": "c48d8053",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private native audio/video capture; excluded from Git."
+    },
+    {
+      "source_path": "captures/reference-control.jmd",
+      "bytes": 9785709,
+      "sha256": "3cce89f97ad0177b4411d1a9bb5e6f3b5212bda26affa4ec262e9097af7ef62f",
+      "zip_crc32": "26636529",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private native audio/video capture; excluded from Git."
+    },
+    {
+      "source_path": "encoding/automatic/encoding.json",
+      "bytes": 513458,
+      "sha256": "b17a1a7f8f638a79dbb94cc9fa8e34c12883906c8c0d36a3bade74237daad15b",
+      "zip_crc32": "fa685cd6",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw encoding/audio packet evidence and media indexes; excluded from Git."
+    },
+    {
+      "source_path": "encoding/automatic/ffprobe.json",
+      "bytes": 2061740,
+      "sha256": "6f4d0fdaac7c45e13769561bead854c8766f73b153b97ae05d1b600f53be254b",
+      "zip_crc32": "44f0e666",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw encoding/audio packet evidence and media indexes; excluded from Git."
+    },
+    {
+      "source_path": "encoding/automatic/index.json",
+      "bytes": 1401563,
+      "sha256": "fcd0bed7a5d2415d2b16510f242004f3cbf8a3c56e1361426206ba646c0808fa",
+      "zip_crc32": "ed981d09",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw encoding/audio packet evidence and media indexes; excluded from Git."
+    },
+    {
+      "source_path": "encoding/automatic-audio/audio-render.json",
+      "bytes": 3393,
+      "sha256": "75360c8fa188f49718cc2919faa78cbace5da7bcd1367d23a0c75f04a0f3f08b",
+      "zip_crc32": "b7bed44b",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw encoding/audio packet evidence and media indexes; excluded from Git."
+    },
+    {
+      "source_path": "encoding/automatic-audio/mux-audio-ffprobe.json",
+      "bytes": 485943,
+      "sha256": "ccd04dce6dd319e66694f105777a67f8f56b1c6c6a34442a75f742f50a86f93a",
+      "zip_crc32": "8cb9fb84",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw encoding/audio packet evidence and media indexes; excluded from Git."
+    },
+    {
+      "source_path": "encoding/automatic-audio/mux-video-ffprobe.json",
+      "bytes": 965908,
+      "sha256": "f6c7ca6a42b1ffb5e7bdfcd664c1312ca64c8f1a4eee4d7c353b3662e6690f49",
+      "zip_crc32": "bfba4833",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw encoding/audio packet evidence and media indexes; excluded from Git."
+    },
+    {
+      "source_path": "encoding/automatic-audio/native-audio-events.json",
+      "bytes": 4760757,
+      "sha256": "f8e3dbac339f7cbaacedbf664238269312dbb8395d786679687a5ea799a6fa34",
+      "zip_crc32": "cc3ad763",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw encoding/audio packet evidence and media indexes; excluded from Git."
+    },
+    {
+      "source_path": "encoding/bow/encoding.json",
+      "bytes": 513416,
+      "sha256": "3b8492a9363ab4c2c7d3837bdcc44c685ad6b706b8777fd8b81c0f6c8eea1f5c",
+      "zip_crc32": "5ea0b8cf",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw encoding/audio packet evidence and media indexes; excluded from Git."
+    },
+    {
+      "source_path": "encoding/bow/ffprobe.json",
+      "bytes": 2061736,
+      "sha256": "1bba2f383ef86988fb7a3e37846fae4b5c9826a6a3f731ffc220352a9579a064",
+      "zip_crc32": "4111ad48",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw encoding/audio packet evidence and media indexes; excluded from Git."
+    },
+    {
+      "source_path": "encoding/bow/index.json",
+      "bytes": 1401557,
+      "sha256": "53f3b0a0ef1b6e050f1238d91d0302e87cf365ec5e353c072deeb2f9bfb53d09",
+      "zip_crc32": "e578776b",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw encoding/audio packet evidence and media indexes; excluded from Git."
+    },
+    {
+      "source_path": "encoding/bow-audio/audio-render.json",
+      "bytes": 3339,
+      "sha256": "81a750b40df513b3fe92b660a143fa91d58357c544401cbd290af96b6cd69107",
+      "zip_crc32": "41d38b2a",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw encoding/audio packet evidence and media indexes; excluded from Git."
+    },
+    {
+      "source_path": "encoding/bow-audio/mux-audio-ffprobe.json",
+      "bytes": 485943,
+      "sha256": "1fc8ebdc939bc3fc7ea7ab7575867f8e47452d7673e73c89bd5b20875ec5c1eb",
+      "zip_crc32": "3c7a73f8",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw encoding/audio packet evidence and media indexes; excluded from Git."
+    },
+    {
+      "source_path": "encoding/bow-audio/mux-video-ffprobe.json",
+      "bytes": 965916,
+      "sha256": "acf277bd38204df21c704c837e83b86cc6f88e284e4fb78446ce62f2153a9603",
+      "zip_crc32": "52b7a9fd",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw encoding/audio packet evidence and media indexes; excluded from Git."
+    },
+    {
+      "source_path": "encoding/bow-audio/native-audio-events.json",
+      "bytes": 5219983,
+      "sha256": "cc05e1f59f52f4a964d2f649fff2cb5272233412b39e830d24c4ea52fbdfba59",
+      "zip_crc32": "c63cfb5a",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw encoding/audio packet evidence and media indexes; excluded from Git."
+    },
+    {
+      "source_path": "evidence/KQ1-Robb-Route-63-complete-audit.json",
+      "bytes": 593703,
+      "sha256": "b4d6df01b4ed61cdf0f5bbc5249190997829dc3bb18c0a3ef58f7184b1a27c60",
+      "zip_crc32": "77b7e336",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Detailed original input audit with old absolute roots; inputs remain in movies and fresh compact import checks cover structure."
+    },
+    {
+      "source_path": "evidence/KQ1-Robb-Route-63-endpoint-audit.json",
+      "bytes": 589482,
+      "sha256": "2d6a5fdcdcbc9f46dc30d1009dc763c056bf792b653b902b59549e805cbf46d9",
+      "zip_crc32": "9c3582e2",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Detailed original input audit with old absolute roots; inputs remain in movies and fresh compact import checks cover structure."
+    },
+    {
+      "source_path": "evidence/KQ1-Robb-Route-BOW-66-complete-audit.json",
+      "bytes": 600053,
+      "sha256": "b362d3634f5b3b9606991acd0e50e544d253c76ad0b9314f5c0f667a1114322f",
+      "zip_crc32": "75002e34",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Detailed original input audit with old absolute roots; inputs remain in movies and fresh compact import checks cover structure."
+    },
+    {
+      "source_path": "evidence/KQ1-Robb-Route-BOW-66-endpoint-audit.json",
+      "bytes": 595831,
+      "sha256": "311fd62f58bd34941cd22d7c17efb1c5149e2df55b58f4f8a7ae19dcfd80d000",
+      "zip_crc32": "7cde3858",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Detailed original input audit with old absolute roots; inputs remain in movies and fresh compact import checks cover structure."
+    },
+    {
+      "source_path": "evidence/automatic-stock-final.png",
+      "bytes": 5686,
+      "sha256": "40ba04d6c7852c4e9377aa7e624e1421991cb0073f73075abe601d961935c676",
+      "zip_crc32": "96fcaf5f",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "evidence/continuation-changes.json",
+      "bytes": 1208,
+      "sha256": "785c6d4867e89e0189900b3e835e7140dec5ec7dbbcdf5167f60716982c7e484",
+      "zip_crc32": "9bcbcce6",
+      "import_path": "evidence/continuation-changes.json",
+      "import_sha256": "785c6d4867e89e0189900b3e835e7140dec5ec7dbbcdf5167f60716982c7e484",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "evidence/continuation-tool-changes.patch",
+      "bytes": 1868,
+      "sha256": "b8c53b00a87451ac5e85dff063558a8929e3ed7717355b853ec9e91be5358963",
+      "zip_crc32": "ac920682",
+      "import_path": "evidence/continuation-tool-changes.patch",
+      "import_sha256": "b8c53b00a87451ac5e85dff063558a8929e3ed7717355b853ec9e91be5358963",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "evidence/continuation.json",
+      "bytes": 2007,
+      "sha256": "5a176796ae818f2c9c28cd311226cf6b14ea9b5a85e6132790abeee64092a9f1",
+      "zip_crc32": "03065a20",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Historical operational handoff with stale approval/session state and cloud roots; excluded."
+    },
+    {
+      "source_path": "evidence/independent-replay-review.json",
+      "bytes": 21679,
+      "sha256": "61f575cca37b96f279bd73095aa3a436faf0e98d4acd033f6c4f6d34e62896e3",
+      "zip_crc32": "06dc558c",
+      "import_path": "evidence/independent-replay-review.json",
+      "import_sha256": "438f34cadaf9e27f52186bd9002ac4e5faac9faa3622f04051f7e89dd772d577",
+      "decision": "imported_transformed",
+      "transformation_or_exclusion": "Replace original cloud absolute roots with original-run/ and reference-run/ provenance labels; retain remaining recorded fields."
+    },
+    {
+      "source_path": "evidence/independent-replay-review.md",
+      "bytes": 3802,
+      "sha256": "73c2173f1e35d73697b2e8d3c5237fd27a4913e0bddfd1305ec767b9f860e894",
+      "zip_crc32": "40cf10a3",
+      "import_path": "evidence/independent-replay-review.md",
+      "import_sha256": "73c2173f1e35d73697b2e8d3c5237fd27a4913e0bddfd1305ec767b9f860e894",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "evidence/input-identities.json",
+      "bytes": 3651,
+      "sha256": "154aa2423ce0b7f6ac5b13309233e9532986312c0394e99701cd1356e4b9cf72",
+      "zip_crc32": "e339cf60",
+      "import_path": "evidence/input-identities.json",
+      "import_sha256": "154aa2423ce0b7f6ac5b13309233e9532986312c0394e99701cd1356e4b9cf72",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "evidence/movie-comparison.json",
+      "bytes": 450,
+      "sha256": "14a0f3dc4b1873c521f3847ac91b9773eb6cfa9b356b6cdf062cdf0ac1362047",
+      "zip_crc32": "a744b434",
+      "import_path": "evidence/movie-comparison.json",
+      "import_sha256": "14a0f3dc4b1873c521f3847ac91b9773eb6cfa9b356b6cdf062cdf0ac1362047",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "evidence/timing-summary.json",
+      "bytes": 2402,
+      "sha256": "d5ce1fcfa411e7d1a826201001b341b15d77b4a20d9b4bc5f96d317ff5ec6a00",
+      "zip_crc32": "84536255",
+      "import_path": "evidence/timing-summary.json",
+      "import_sha256": "d5ce1fcfa411e7d1a826201001b341b15d77b4a20d9b4bc5f96d317ff5ec6a00",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "landmarks/automatic/final_credits-match.png",
+      "bytes": 5686,
+      "sha256": "40ba04d6c7852c4e9377aa7e624e1421991cb0073f73075abe601d961935c676",
+      "zip_crc32": "96fcaf5f",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "landmarks/automatic/final_credits-predecessor.png",
+      "bytes": 5450,
+      "sha256": "80004cfc9884fbb71dd1a07665cc7ab7648bad73ec6072c0032b294471a8d161",
+      "zip_crc32": "808d9310",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "landmarks/automatic/king_steps_aside-match.png",
+      "bytes": 4816,
+      "sha256": "fb5b84be3fc8fd6daea7c50eff00ea5a30f723c12c630f5f759310c089a40523",
+      "zip_crc32": "4119bf91",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "landmarks/automatic/king_steps_aside-predecessor.png",
+      "bytes": 4784,
+      "sha256": "1087995a00e2a8327a8d7d231195c7f30fbde34c90140d868c35d5c3e96b9fb3",
+      "zip_crc32": "ee1c8839",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "landmarks/automatic/landmarks.json",
+      "bytes": 4491,
+      "sha256": "ed411b6005f2ccc6590b0b8d4ffe0b1a668c1034cff04de1ff2b52acff5e8ea0",
+      "zip_crc32": "23807488",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "landmarks/automatic/visual-review.json",
+      "bytes": 1803,
+      "sha256": "8baaacdcead1b67abb793a657f5c2bc623902451f2d3b46d50279c3f0511f1ad",
+      "zip_crc32": "fe79a954",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "landmarks/bow/final_credits-match.png",
+      "bytes": 5686,
+      "sha256": "e51cd5865c3511188c54204590175abda5efaabd2c9af539497a8f5a0fdac794",
+      "zip_crc32": "21b47562",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "landmarks/bow/final_credits-predecessor.png",
+      "bytes": 4573,
+      "sha256": "3c87aca635f870300f5c600435b5993416f30cf35c02419a99f8f0a3040fa9b5",
+      "zip_crc32": "63684988",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "landmarks/bow/king_steps_aside-match.png",
+      "bytes": 4733,
+      "sha256": "98b7e5f31877ba25e8b34e7f2d05c7480f7513de86a1529188f54ce268e38cdd",
+      "zip_crc32": "c8250e56",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "landmarks/bow/king_steps_aside-predecessor.png",
+      "bytes": 4486,
+      "sha256": "ac45819807c361d55c58aa4ffb3e4bc960155ad99ef4efd292271a6f11b454b6",
+      "zip_crc32": "196126f3",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "landmarks/bow/landmarks.json",
+      "bytes": 4485,
+      "sha256": "d7b9d2a59629e67b851438d051de57cd832202be83162de5a350007b71ae9ca6",
+      "zip_crc32": "4d9f624e",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "landmarks/bow/visual-review.json",
+      "bytes": 1775,
+      "sha256": "6932261c19d75239cb24363f1ebba0884ced14ebf858610d5b95f1dfb5bf4432",
+      "zip_crc32": "bc331c04",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "landmarks/reference/final_credits-match.png",
+      "bytes": 5684,
+      "sha256": "a94e2ab542d6ccaff96bf73d540c1c5132bc35dfac17e9023377d56824004687",
+      "zip_crc32": "ed5e98b5",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "landmarks/reference/final_credits-predecessor.png",
+      "bytes": 3453,
+      "sha256": "161fcb7c9023c9a4e44828eb386a63a3f2401b4c8e3077904f4b5c9d4079ee02",
+      "zip_crc32": "d287d5a8",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "landmarks/reference/king_steps_aside-match.png",
+      "bytes": 4724,
+      "sha256": "1885b6ddd8c4a121d1fc132bc83142b0327c81735ef8d2913a0e4c650d832e56",
+      "zip_crc32": "a2381049",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "landmarks/reference/king_steps_aside-predecessor.png",
+      "bytes": 4810,
+      "sha256": "65667338058f3095a5ce79811bcca3ab71b748429d2bb079b0450afbc026a9f9",
+      "zip_crc32": "1ecafe0a",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "landmarks/reference/landmarks.json",
+      "bytes": 4524,
+      "sha256": "ad9e3182c6a21030c39fb0af1a8336a70fa3bf29f152ba969359f70571e06d45",
+      "zip_crc32": "5d019b1d",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "landmarks/reference/prior-evidence-comparison.json",
+      "bytes": 770,
+      "sha256": "bfbf5115472f113199d78713af1727b86494d2842b102f512389c729f8fb59a2",
+      "zip_crc32": "e826adb3",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Private screenshots and related visual evidence; excluded from Git."
+    },
+    {
+      "source_path": "movies/KQ1-Robb-Route-63-complete.jrsr",
+      "bytes": 149052,
+      "sha256": "3d1d5c147d31c49154fcb46aeb8bf04b5e7676693bd020958b6d55df9cab263e",
+      "zip_crc32": "bdc0a00f",
+      "import_path": "movies/KQ1-Robb-Route-63-complete.jrsr",
+      "import_sha256": "3d1d5c147d31c49154fcb46aeb8bf04b5e7676693bd020958b6d55df9cab263e",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "movies/KQ1-Robb-Route-63-endpoint.jrsr",
+      "bytes": 148223,
+      "sha256": "84fc96ea3207899ae03b661615b273ab7e7b4ebfbddab24adecbcf2459c0553d",
+      "zip_crc32": "d6fcaee3",
+      "import_path": "movies/KQ1-Robb-Route-63-endpoint.jrsr",
+      "import_sha256": "84fc96ea3207899ae03b661615b273ab7e7b4ebfbddab24adecbcf2459c0553d",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "movies/KQ1-Robb-Route-BOW-66-complete.jrsr",
+      "bytes": 150360,
+      "sha256": "3123ccb6f023e7ed0e71fbfd6b5ad33910ac60280712ccf1af3d845fa86c8e1e",
+      "zip_crc32": "d870f1f4",
+      "import_path": "movies/KQ1-Robb-Route-BOW-66-complete.jrsr",
+      "import_sha256": "3123ccb6f023e7ed0e71fbfd6b5ad33910ac60280712ccf1af3d845fa86c8e1e",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "movies/KQ1-Robb-Route-BOW-66-endpoint.jrsr",
+      "bytes": 149530,
+      "sha256": "de6be181fdfba0fd6584004cd24fa6b0f61fefff98b07b8a70a67b1cc4365727",
+      "zip_crc32": "0c1727bd",
+      "import_path": "movies/KQ1-Robb-Route-BOW-66-endpoint.jrsr",
+      "import_sha256": "de6be181fdfba0fd6584004cd24fa6b0f61fefff98b07b8a70a67b1cc4365727",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "provenance/ADDITIONAL-VIDEO-REFERENCE.md",
+      "bytes": 3532,
+      "sha256": "c6a52a7be990bced5b7e60a72498d2f7d162b1eaabecedd35151b1738dae430f",
+      "zip_crc32": "5e014345",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Third-party reference movie, detailed source/video analysis or raw reference receipt; kept in original private archive."
+    },
+    {
+      "source_path": "provenance/VIDEO-ROUTE-REFERENCE.md",
+      "bytes": 19494,
+      "sha256": "b086effc1a711b3665fecbb3b6077070b7b4c0398de75497eed1952deb4610f4",
+      "zip_crc32": "26e1db85",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Third-party reference movie, detailed source/video analysis or raw reference receipt; kept in original private archive."
+    },
+    {
+      "source_path": "provenance/download-receipts.json",
+      "bytes": 1106,
+      "sha256": "4f38d6197bbe34ab6c1d3b5baee448aa0d10248f2251f3af25e4f0fbacf6ef14",
+      "zip_crc32": "01758b3f",
+      "import_path": "provenance/download-receipts.json",
+      "import_sha256": "4f38d6197bbe34ab6c1d3b5baee448aa0d10248f2251f3af25e4f0fbacf6ef14",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "provenance/original-bios-variant.json",
+      "bytes": 763,
+      "sha256": "c3b99de86ab6bd1f5194cb0bacf3e3056a168ed906975b760060acc1c67c177e",
+      "zip_crc32": "a54716e0",
+      "import_path": "provenance/original-bios-variant.json",
+      "import_sha256": "c3b99de86ab6bd1f5194cb0bacf3e3056a168ed906975b760060acc1c67c177e",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "provenance/reference-movie-audit.json",
+      "bytes": 268651,
+      "sha256": "92ae885c4ca4ac05cb18d269951a06da6fa83b9dc23d570cc02b0a7d9582343a",
+      "zip_crc32": "63b0c4c3",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Third-party reference movie, detailed source/video analysis or raw reference receipt; kept in original private archive."
+    },
+    {
+      "source_path": "provenance/reference-original-bios.jrsr",
+      "bytes": 70511,
+      "sha256": "3e38a0ee4a4ee48c98f31f554bfb3f1895289d4488ce7521e252f3893b555827",
+      "zip_crc32": "df5c6d76",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Third-party reference movie, detailed source/video analysis or raw reference receipt; kept in original private archive."
+    },
+    {
+      "source_path": "provenance/reference-replay-result.json",
+      "bytes": 1465,
+      "sha256": "9bd56468c18027543251c4317950c3fef5214010aecd45ec95389a575098eb6f",
+      "zip_crc32": "44610946",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Third-party reference movie, detailed source/video analysis or raw reference receipt; kept in original private archive."
+    },
+    {
+      "source_path": "provenance/robb-endgame-contracts.md",
+      "bytes": 22111,
+      "sha256": "8d9ea4db62ad530baa544975f99361cbf14ecc25d84b3e31972ce207fd8cafec",
+      "zip_crc32": "b5f24e0a",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Third-party reference movie, detailed source/video analysis or raw reference receipt; kept in original private archive."
+    },
+    {
+      "source_path": "replays/automatic-first/native.log",
+      "bytes": 191059,
+      "sha256": "d611d363df44c1b562246f98a4b6370709e396f1ffec2ba98966403582f37432",
+      "zip_crc32": "a68e8be5",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw native logs and run control files; excluded from Git."
+    },
+    {
+      "source_path": "replays/automatic-first/replay-result.json",
+      "bytes": 1276,
+      "sha256": "08512d7fca19b75ed2b1e9e244d0500d4ab77ddcd2adca6aa6504d778089ac27",
+      "zip_crc32": "00b35a35",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw native logs and run control files; excluded from Git."
+    },
+    {
+      "source_path": "replays/automatic-first/replay.jpcrrinit",
+      "bytes": 316,
+      "sha256": "fa7132582aaefe4eafac5cacd3a7a5c0f11ab64c6e23296e1c3ebf4a12269a86",
+      "zip_crc32": "dfdf9b0d",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw native logs and run control files; excluded from Git."
+    },
+    {
+      "source_path": "replays/automatic-repeat/native.log",
+      "bytes": 191060,
+      "sha256": "1f621cda24d414cb785ee1709263240cb2b87cebc06005d236ae6ac9df381a0a",
+      "zip_crc32": "ecb5fc9b",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw native logs and run control files; excluded from Git."
+    },
+    {
+      "source_path": "replays/automatic-repeat/replay-result.json",
+      "bytes": 1278,
+      "sha256": "c4b09d9d4f764dcd0ea3b4830fa4ee6df3aec8ce7f295e79af12c0e5c307c8c2",
+      "zip_crc32": "b4d417c6",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw native logs and run control files; excluded from Git."
+    },
+    {
+      "source_path": "replays/automatic-repeat/replay.jpcrrinit",
+      "bytes": 317,
+      "sha256": "6a56c24851f5728c8bd2f708e560f1a8ba61f433f61a420d821cb956554b464c",
+      "zip_crc32": "93238e65",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw native logs and run control files; excluded from Git."
+    },
+    {
+      "source_path": "replays/bow-first/native.log",
+      "bytes": 191545,
+      "sha256": "768bebebd7f18bc87e94f34c79548c0bfc3651071b3f61acf86e349154d4afef",
+      "zip_crc32": "20512684",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw native logs and run control files; excluded from Git."
+    },
+    {
+      "source_path": "replays/bow-first/replay-result.json",
+      "bytes": 1268,
+      "sha256": "1c0e942f033bc35fa4c25fe5f47f51c731665056fae3647033bce902310bd6c2",
+      "zip_crc32": "50829d44",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw native logs and run control files; excluded from Git."
+    },
+    {
+      "source_path": "replays/bow-first/replay.jpcrrinit",
+      "bytes": 314,
+      "sha256": "5a3507df877e9833f8739208b561be00bce3063104e861050917fd6346a9b219",
+      "zip_crc32": "5650993b",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw native logs and run control files; excluded from Git."
+    },
+    {
+      "source_path": "replays/bow-repeat/native.log",
+      "bytes": 191543,
+      "sha256": "f730c21a175fe38fe990460211e50911e6bb8afd1324ffbf992b42044d65f8ed",
+      "zip_crc32": "c5273a62",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw native logs and run control files; excluded from Git."
+    },
+    {
+      "source_path": "replays/bow-repeat/replay-result.json",
+      "bytes": 1270,
+      "sha256": "5b427a0a1d6703e025719694df2e928de9c4771ba1efcb23081d22439e7c09a8",
+      "zip_crc32": "8535d6d0",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw native logs and run control files; excluded from Git."
+    },
+    {
+      "source_path": "replays/bow-repeat/replay.jpcrrinit",
+      "bytes": 315,
+      "sha256": "f76a80ef9ce4426d9f4ed188cb823ab9f8efeb480d269520e19feda250d8a25f",
+      "zip_crc32": "8e97aef8",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Raw native logs and run control files; excluded from Git."
+    },
+    {
+      "source_path": "tools/audit_movie.py",
+      "bytes": 23361,
+      "sha256": "5fab4a0ff8e8653b5cc0c559d234537233a3f92e8b1b928cad6e3f51fb54253c",
+      "zip_crc32": "db42c055",
+      "import_path": "tools/audit_movie.py",
+      "import_sha256": "5fab4a0ff8e8653b5cc0c559d234537233a3f92e8b1b928cad6e3f51fb54253c",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "tools/authoring/README.md",
+      "bytes": 17323,
+      "sha256": "3947ebf69a4b593cf6fb2c807b73e7c1c46b938e4cc508285aae96f3c79c89ba",
+      "zip_crc32": "049f4204",
+      "import_path": "tools/authoring/README.md",
+      "import_sha256": "3947ebf69a4b593cf6fb2c807b73e7c1c46b938e4cc508285aae96f3c79c89ba",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "tools/authoring/client.py",
+      "bytes": 3311,
+      "sha256": "b770d97035d0427d1b2ec9c8ec8c832612e025ea5277a893d22799b305293bca",
+      "zip_crc32": "285d401e",
+      "import_path": "tools/authoring/client.py",
+      "import_sha256": "b770d97035d0427d1b2ec9c8ec8c832612e025ea5277a893d22799b305293bca",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "tools/authoring/src/kq1tas/HeadlessAuthor.java",
+      "bytes": 20410,
+      "sha256": "0015f8493b23219ea9f6b6bd7d69257245646aa144deaa35ccc544c96a0d6da5",
+      "zip_crc32": "5ec8acd6",
+      "import_path": "tools/authoring/src/kq1tas/HeadlessAuthor.java",
+      "import_sha256": "0015f8493b23219ea9f6b6bd7d69257245646aa144deaa35ccc544c96a0d6da5",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "tools/drive_route.py",
+      "bytes": 28729,
+      "sha256": "498939eb2c0288dcc41abe70f3526a4564e8c82a38bf3fa68abd22c68692e8b6",
+      "zip_crc32": "22250ed2",
+      "import_path": "tools/drive_route.py",
+      "import_sha256": "498939eb2c0288dcc41abe70f3526a4564e8c82a38bf3fa68abd22c68692e8b6",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "tools/encoding/README.md",
+      "bytes": 8960,
+      "sha256": "5234e79140d233dc88405e58acf09a520c2c9711f79f85ef5443c7b2bfcedb87",
+      "zip_crc32": "0715fea6",
+      "import_path": "tools/encoding/README.md",
+      "import_sha256": "5234e79140d233dc88405e58acf09a520c2c9711f79f85ef5443c7b2bfcedb87",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "tools/encoding/jmd_capture.py",
+      "bytes": 23854,
+      "sha256": "4fb856defe2688e4da1dddd06575f7ff0c765a0ad134e042a37fbe5ca9293299",
+      "zip_crc32": "b1f79854",
+      "import_path": "tools/encoding/jmd_capture.py",
+      "import_sha256": "4fb856defe2688e4da1dddd06575f7ff0c765a0ad134e042a37fbe5ca9293299",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "tools/encoding/pcm-audio-README.md",
+      "bytes": 5601,
+      "sha256": "cdea4c936fa423ee667041c8008b20d17139a59ce3c1d429ef419fbc18981ef9",
+      "zip_crc32": "f7320dd9",
+      "import_path": "tools/encoding/pcm-audio-README.md",
+      "import_sha256": "cdea4c936fa423ee667041c8008b20d17139a59ce3c1d429ef419fbc18981ef9",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "tools/encoding/pcm_audio.py",
+      "bytes": 16072,
+      "sha256": "955c49c213a13e5656e4674db9f2bfdad8ac1e194146fd7d1ca2d938e377b863",
+      "zip_crc32": "dc67bde9",
+      "import_path": "tools/encoding/pcm_audio.py",
+      "import_sha256": "955c49c213a13e5656e4674db9f2bfdad8ac1e194146fd7d1ca2d938e377b863",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "tools/movie-audit-README.md",
+      "bytes": 6091,
+      "sha256": "cdd91d60d00655954d84bf2ba2b5bb087210cb5563afe01271369a99cdab1ab2",
+      "zip_crc32": "10f97567",
+      "import_path": "tools/movie-audit-README.md",
+      "import_sha256": "cdd91d60d00655954d84bf2ba2b5bb087210cb5563afe01271369a99cdab1ab2",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "tools/replay_batch.py",
+      "bytes": 1318,
+      "sha256": "81ebcae144e2f2a40669799e35448500533c956d64b4281cdb97880d471076a5",
+      "zip_crc32": "2a7f7418",
+      "import_path": "tools/replay_batch.py",
+      "import_sha256": "1f6610c875f6109b3a9bfd155a17fe289d20867750f429a56556d1c053e48411",
+      "decision": "imported_transformed",
+      "transformation_or_exclusion": "Use explicit runtime/library/output options and delivered movie layout; add guarded dry-run without Java or output creation."
+    },
+    {
+      "source_path": "tools/route-candidate.json",
+      "bytes": 120098,
+      "sha256": "144e2e4633a8fa3fd48a9ed7952866cac68a4e387a6e5605d5bd42ff48ee5bad",
+      "zip_crc32": "0794b159",
+      "import_path": "tools/route-candidate.json",
+      "import_sha256": "144e2e4633a8fa3fd48a9ed7952866cac68a4e387a6e5605d5bd42ff48ee5bad",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "tools/route_support.py",
+      "bytes": 44261,
+      "sha256": "5e23fe4ef928413340c38272b6abef6f86de4879d683ebfaa0127a104d7e6053",
+      "zip_crc32": "90c2d64e",
+      "import_path": "tools/route_support.py",
+      "import_sha256": "823e3a8f64256ebfe9956da02a4f3252aafcb57ac1738d6234ec628daf4a7ed4",
+      "decision": "imported_transformed",
+      "transformation_or_exclusion": "Replace 43 original executable-byte witnesses (196 bytes) with lengths and SHA-256; preserve complete/match semantics and remove raw expected/observed output."
+    },
+    {
+      "source_path": "tools/run_stock_replay.py",
+      "bytes": 4495,
+      "sha256": "e9f687e820f004d5960403ae22c92f0771271a5d837241b05278c49ebf77c9db",
+      "zip_crc32": "3770c4bd",
+      "import_path": "tools/run_stock_replay.py",
+      "import_sha256": "e9f687e820f004d5960403ae22c92f0771271a5d837241b05278c49ebf77c9db",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "tools/scan_landmarks.py",
+      "bytes": 8569,
+      "sha256": "722f6fde058218f2962646ca3d803cf635cdd91b8175775f3e84ed474acff80a",
+      "zip_crc32": "4e59b50c",
+      "import_path": "tools/scan_landmarks.py",
+      "import_sha256": "c22d123ca0cf5bdc5f0f298a49123b8ebb48d507ac5798767fbafecb97c7797f",
+      "decision": "imported_transformed",
+      "transformation_or_exclusion": "Require explicit private endpoint and credits reference paths; remove old workspace defaults."
+    },
+    {
+      "source_path": "tools/send_request.py",
+      "bytes": 1395,
+      "sha256": "c240a6cb93563a5029909b04724eddab364bcd89e71bed9f4c2c4937a994f342",
+      "zip_crc32": "85fd3ad6",
+      "import_path": "tools/send_request.py",
+      "import_sha256": "c240a6cb93563a5029909b04724eddab364bcd89e71bed9f4c2c4937a994f342",
+      "decision": "imported_exact",
+      "transformation_or_exclusion": null
+    },
+    {
+      "source_path": "video/KQ1-JPC-RR-Automatic-63-Points.mp4",
+      "bytes": 3584006,
+      "sha256": "ba5545a7c3f47a52d3728c1adae7af79b0052e465f47e648a9e4222de9dbac57",
+      "zip_crc32": "d8e052a0",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Game-derived video; excluded from Git."
+    },
+    {
+      "source_path": "video/KQ1-JPC-RR-BOW-66-Points.mp4",
+      "bytes": 3592411,
+      "sha256": "b9ec974b4889320573dc8f4a7b8aeae3f4af8c4ff00a2c64a4e2143a070c886f",
+      "zip_crc32": "c585d5d3",
+      "import_path": null,
+      "import_sha256": null,
+      "decision": "excluded",
+      "transformation_or_exclusion": "Game-derived video; excluded from Git."
+    }
+  ]
+}

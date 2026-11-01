@@ -1,0 +1,108 @@
+{
+  "format": "kq1-tas-input-identities-1",
+  "disklibrary_files": [
+    {
+      "file": "BIOS",
+      "bytes": 131100,
+      "sha256": "e199f1ea5dbaa79ca01b6144404863c1be67ba1a9b543b3e877d03ab7855802f"
+    },
+    {
+      "file": "BIOS-740f01be.image",
+      "bytes": 131100,
+      "sha256": "eeb3de497181659b52c813e99b5a7ddd35ba634092deb14cdb75f287e9e4806b"
+    },
+    {
+      "file": "FREEDOS",
+      "bytes": 1412144,
+      "sha256": "5aa3a740c00b3022dbcf6cd40c3b1beb1937387508e0c9e7defb064e64a3a214"
+    },
+    {
+      "file": "KQ1",
+      "bytes": 448131,
+      "sha256": "aa19181ac1f1729ae5361e8924f4019e884418ce2b30098db9353882b121cd68"
+    },
+    {
+      "file": "VGABIOS",
+      "bytes": 38428,
+      "sha256": "6cb00671f321362fc4105089f0483b5d097fa5c4ff3d56323ba126339e525d18"
+    },
+    {
+      "file": "VGABIOS-5555c682.image",
+      "bytes": 32796,
+      "sha256": "cf6eb1de20f7497b0047cee3c0419336f3fe28b270abacd35b084d7613bd14c0"
+    }
+  ],
+  "jar_sha256": "be63fea4c746ec3823432b7e2ef27b19b75a25a4bcbbc124f4683d99c4f4d314",
+  "reference_submission": "https://tasvideos.org/8484S",
+  "official_jar_archive_url": "https://files.tasvideos.org/emulatordownloads/tastools/jpcrr-r11.2-precompiled.zip",
+  "bios_note": "Uses documented original 740f01be BIOS variant, not the later 21fa468b BIOS-updated downloaded reference.",
+  "analysis_resource_files": [
+    {
+      "file": "AGI",
+      "bytes": 39424,
+      "md5": "4771062c7f64bf64c185178613fd665a",
+      "sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74"
+    },
+    {
+      "file": "AGIDATA.OVL",
+      "bytes": 8192,
+      "md5": "d83459a8643dfc67b4629ec4afe64e13",
+      "sha256": "f7ca256c1c0ab12509d695baabdd44a3c5e72a570b08118d3ead995a47f4c383"
+    },
+    {
+      "file": "LOGDIR",
+      "bytes": 315,
+      "md5": "10ad66e2ecbd66951534a50aedcd0128",
+      "sha256": "18d53ac02a5457494f03352c36a4a4c2eb8251df70fff8dae6dc3d5b41d55b38"
+    },
+    {
+      "file": "OBJECT",
+      "bytes": 331,
+      "md5": "6eca02fa540337308529ff13e9e764aa",
+      "sha256": "2d1b7a75bb443b4a340cb8d9a2842ff5c834d7d597ea2a1365b6a7a2dfb57985"
+    },
+    {
+      "file": "PICDIR",
+      "bytes": 255,
+      "md5": "d468936618bed024ea453a315aba1958",
+      "sha256": "7a2181429c473c5983547f115869c1a948249d986d0176f5fa30b605510cc3c9"
+    },
+    {
+      "file": "SNDDIR",
+      "bytes": 144,
+      "md5": "cf37ab2f6af09afee3598b92c9a42983",
+      "sha256": "fd5d50fd0eac57168e3cd070b7cf0d7040a26d303415f5318142a0695959563d"
+    },
+    {
+      "file": "VIEWDIR",
+      "bytes": 432,
+      "md5": "ac7048eceb628c07f452ecd1662d7b3d",
+      "sha256": "1b36ab1ccaa118870ee7d6d651359912e79f35f3acc71858e4b668e3b34e2a04"
+    },
+    {
+      "file": "VOL.0",
+      "bytes": 48472,
+      "md5": "8ec91effac02ba476f823f065ca10172",
+      "sha256": "7f10c63737b4da8cf1633ba7c317ffc84a4bbc4eca10b39d2e349b18636bb5e2"
+    },
+    {
+      "file": "VOL.1",
+      "bytes": 200630,
+      "md5": "77c3be070fc9bf9c69952ed56821efe1",
+      "sha256": "7c3a0c86c8ad1b028dc3d56cafb30a925690f243d70f2e7b2ac6f0dc802b00d0"
+    },
+    {
+      "file": "VOL.2",
+      "bytes": 90891,
+      "md5": "b33d0a9938c095da1a69b5ee3c9209d4",
+      "sha256": "b6e321821a0d90809d985f57b279c2f155a6972482c4811c4a737987042a53cf"
+    },
+    {
+      "file": "WORDS.TOK",
+      "bytes": 3144,
+      "md5": "50e00d15fa3e25b512c19608119111cf",
+      "sha256": "41d863172326c712c0aebadf12fc63b049ff5d892743f4ee990004c344eb3780"
+    }
+  ],
+  "analysis_resource_scope": "Eleven supplied resources used for source/route analysis; the complete played disk is identified independently by its JPC HDD identity and file SHA-256."
+}
