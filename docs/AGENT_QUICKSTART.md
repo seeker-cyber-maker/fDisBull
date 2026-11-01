@@ -276,6 +276,12 @@ The [leprechaun-cave follow-up](AGI_LEPRECHAUN_ROUTE.md) adds preparation,
 range-sensitive parser input, the original shield writes and handler return,
 and the game's shrink/regrowth sequence. Its exporter requires complete
 observations and exposes the carried inventory in the separate player.
+The [gnome/key and chest segment](AGI_GNOME_GIANT_ROUTE.md) adds a reusable
+native-checkpoint continuation, an explicit origin receipt and eight guarded
+text actions. Keep the prepared checkpoint, full single-session observations,
+source-bound writes/returns and player verification as separate gates. A
+scratch variable can be stale: the chest example observes the original
+distance operation inside the command before continuing its effects.
 For video-led route research, the [Robb TAS reconstruction](research/kq1-robb-9.89/ROUTE.md)
 keeps visible key highlights, inferred directions and unknown dispatch separate.
 Qualify those proposed actions in the original game before using them as evidence.

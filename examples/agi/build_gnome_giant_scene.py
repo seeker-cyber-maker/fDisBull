@@ -24,14 +24,25 @@ DISTANCE_AGI_SHA = '5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934
 DISTANCE_HANDLER_SHA = '1948a0f4a7f843c374a0a80216cc781e9fbf73cf97de2cf42d0d4ada2d422bc9'
 ACTION_IDS = ('reach-gnome', 'wrong-names', 'take-key', 'reach-tree', 'unlock-tree',
               'climb-to-clouds', 'wait-for-sleep', 'take-chest')
-# Only this contract supplies route coordinates. Tighten its None coordinates
-# from a final native receipt; the room-only form is not a native route claim.
+# Only this contract supplies route coordinates. Native05 qualified the first
+# seven anchors after one quest-start checkpoint load. The last two remain
+# dynamic: the stopped giant's source predicate, not a fixed pose, admits GET.
 ROUTE_CONTRACT = {
-    'status': 'pending-native-qualification',
-    'anchors': ((36, None, None), (40, None, None), (40, None, None),
-                (40, None, None), (19, None, None), (19, None, None),
-                (58, None, None), (58, None, None), (58, None, None)),
+    'status': 'qualified-checkpoint-segment',
+    'anchors': ((36, 88, 131), (40, 50, 120), (40, 50, 120),
+                (40, 50, 120), (19, 110, 105), (19, 110, 105),
+                (58, 151, 110), (58, None, None), (58, None, None)),
     'scores': (14, 14, 14, 17, 17, 19, 19, 26, 34),
+    'qualification_witness': {
+        'name': 'Native05',
+        'capture_sha256': '0c840eb1bf94a563a3ab6442594a557ce037a007c55980bcc1f25395a059bf6e',
+        'producer': 'examples/agi/resume_gnome_giant.py',
+        'producer_sha256': '64ae79177334bd88f9df0fd5416d2c7be68167879fa2adc6ce0974a1a538023d',
+        'collector_sha256': '288836be2c73e88b8a6027bdb679d7803313e0533b44a272400a3b8853e7c6dc',
+        'fresh_game': False,
+        'scope': 'All eight normal-input actions in one session after one supported quest-start checkpoint load; no cold-boot qualification.',
+    },
+    'fresh_input_admission': 'Fresh-origin evidence remains supported by the validator; this witness qualifies only the checkpointed segment.',
     'dynamic_source_predicate_anchors': (7, 8),
     'same_ego_pairs': ((7, 8),),
     'dynamic_witness': 'Phase 7 derived sleeping-actor distance, command-time original distance write/return, and phase 8 complete native chest pickup proof.',

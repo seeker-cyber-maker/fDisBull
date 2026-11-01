@@ -237,6 +237,10 @@ recorded journey through the separate text player.
 The [clover-and-diamonds cave route](docs/AGI_LEPRECHAUN_ROUTE.md) follows
 ordinary game input through a moving rat, the shield pickup and the small
 opening, then turns the recorded journey into seven guarded text actions.
+The [gnome/key and giant's chest follow-up](docs/AGI_GNOME_GIANT_ROUTE.md)
+continues from a verified native checkpoint through the original game's
+riddle, tree and clouds. Its eight guarded text actions retain the recorded
+inventory, score and source evidence in the separate player.
 A separate [reconstruction of Robb's short TAS](docs/research/kq1-robb-9.89/ROUTE.md)
 preserves the visible route and its unresolved inputs for another investigator.
 

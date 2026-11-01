@@ -747,16 +747,25 @@ def test_sleeping_giant_accepts_nonfixed_source_distance_pose(case, dx, dy):
     assert evidence['native_distance']['native_result'] == expected
 
 
-def test_pending_room_contract_can_tighten_a_single_anchor(case, monkeypatch):
+@pytest.mark.parametrize('phase', range(7))
+@pytest.mark.parametrize('coordinate', ('x', 'y'))
+def test_qualified_fixed_route_anchor_rejects_changed_pose(case, phase, coordinate):
     source, capture, loader, _, _ = case
-    contract = deepcopy(exporter.ROUTE_CONTRACT)
-    contract['anchors'] = list(contract['anchors'])
-    p = capture['observations']['o0']['state']['ego']
-    contract['anchors'][0] = (36, p['x'], p['y'])
-    monkeypatch.setattr(exporter, 'ROUTE_CONTRACT', contract)
-    exporter.build(source, capture, loader)
-    p['x'] += 1
+    capture['observations'][f'o{phase}']['state']['ego'][coordinate] += 1
     with pytest.raises(ValueError, match='route anchor'): exporter.build(source, capture, loader)
+
+
+def test_route_contract_scopes_native_witness_to_checkpoint_segment(case):
+    source, capture, loader, _, _ = case
+    _, evidence = exporter.build(source, capture, loader)
+    contract = evidence['route_contract']
+    assert contract['status'] == 'qualified-checkpoint-segment'
+    assert all(x is not None and y is not None for _, x, y in contract['anchors'][:7])
+    assert all(x is None and y is None for _, x, y in contract['anchors'][7:])
+    assert contract['qualification_witness']['fresh_game'] is False
+    # A fresh unit-test capture remains admissible, without changing the
+    # checkpoint-only scope of the separate supplied native witness.
+    assert evidence['origin']['fresh_game'] is True
 
 
 def test_cli_writes_private_scene_and_artifact_escape_is_refused(case, tmp_path):

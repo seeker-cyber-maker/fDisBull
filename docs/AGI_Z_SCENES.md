@@ -75,3 +75,26 @@ The text actions are `use hole`, `use bag`, `use tunnel`, `use rat`, `use throne
 issue native calls or run an AGI interpreter. The final scene still needs its
 private original inputs at build time. Exported scene text is authored, and
 checkpoint checks cover in-memory restoration and token invalidation.
+
+## A checkpointed gnome, tree and chest segment
+
+The [gnome/key and giant's chest example](AGI_GNOME_GIANT_ROUTE.md) starts from
+the prepared shield checkpoint at score 14. Its resume command copies the
+project, performs one supported native restore, verifies the saved CPU and
+initial state, and records all eight actions in a single subsequent session.
+The capture declares `fresh_game: false` and its checkpoint-load intervention;
+no observations from different runs are spliced.
+
+The exporter binds the donor capture/result, checkpoint hash and time, CPU,
+source identities, completed messages, inventory writers, original handler
+returns and command-time distance observation. It rejects missing or
+contradictory evidence. It emits `use trail`, `use gnome`, `take key`,
+`use tree`, `use door`, `use stairs`, `use giant` and `take chest` into the
+separate player, guarding all 40 projected state fields plus the phase.
+
+This is an authored partial projection of observed outcomes. Movement and
+NPC timers remain outside that model. The native segment uses original
+keyboard input after the declared restore; the text actions update the
+projection. A separate cold-start attempt failed in the rat preparation and
+remains a failed observation. Model checkpoint checks cover in-memory restore
+and token invalidation, with no inherited checkpoint in a fresh process.
