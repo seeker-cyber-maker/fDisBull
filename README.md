@@ -250,6 +250,9 @@ rule's last-row exception, with adjacent outcomes checked in the original game.
 The [coordinate-domain audit](docs/SCENE_COORDINATE_DOMAINS.md) keeps world,
 viewport and collision bounds distinct, flags object overhangs and retains
 designer notes for expected scrolling margins.
+The [bottom-row bridge route](docs/AGI_BRIDGE_BOTTOM.md) now has a fresh-game
+witness, an adjacent water control and a two-action scene for the separate
+player, with the original game files unchanged.
 A separate [reconstruction of Robb's short TAS](docs/research/kq1-robb-9.89/ROUTE.md)
 preserves the visible route and its unresolved inputs for another investigator.
 

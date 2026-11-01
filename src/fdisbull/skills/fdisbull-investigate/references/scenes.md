@@ -3,9 +3,11 @@
 ## Contents
 
 - [Observe and reuse scenes](#observe-and-reuse-scenes)
+- [Build a bounded scene efficiently](#build-a-bounded-scene-efficiently)
 - [Define objects and predicates](#define-objects-and-predicates)
 - [Calibrate content and readiness](#calibrate-content-and-readiness)
 - [Retain action and failure evidence](#retain-action-and-failure-evidence)
+- [Investigate spatial predicate boundaries](#investigate-spatial-predicate-boundaries)
 - [Keep world, viewport and collision domains separate](#keep-world-viewport-and-collision-domains-separate)
 - [Adaptation provenance](#adaptation-provenance)
 
@@ -48,6 +50,57 @@ scene.assert_current()
 scene.object("office.bank").exists()  # Visible only; not a readiness assertion.
 scene.click("office.bank")        # All prerequisites + bounded postcondition.
 ```
+
+## Build a bounded scene efficiently
+
+Start with one intended interaction or short contiguous route, its policy and
+the observation that would distinguish success from the nearest failure. Check
+for existing qualified captures and source bindings first. For interpreted games,
+use the actual interpreter and source resource where available; picture and
+collision masks can propose a route or adjacent control, but do not establish
+that either is physically reachable. Do not expand a partial scene into a
+whole-game claim.
+
+Use ordinary inputs for a gameplay claim. Record the delivered input and the
+relevant before/after state in order, including enough identity and source
+provenance to associate each edge with the stable run. Hash source, resources
+and backend once per stable run or reusable qualified binding; recheck when the
+identity, byte version, backend or restored context can have changed. This does
+not replace any per-stop binding or freshness check required by the selected
+native protocol.
+
+Use bounded memory or sparse-pixel polls for routine progress and preserve the
+actual guest time returned. Request a fresh stored frame when appearance or
+frame timing is material; a last-completed frame is not automatically fresh or
+atomic with a separate memory read. Stop on a foreign or unknown stop, uncertain
+delivery, unsafe state or exhausted budget. Preserve the returned observations
+and already observed effects before cleanup; an incomplete response is not
+evidence that the action rolled back, and it does not authorize a replay.
+
+Describe expected transition stages as well as final invariants. A known west
+border flag can precede a room change; the room number can change before the
+original interpreter finishes drawing the actor. Admit such a stage only in
+its qualified route context and bounded budget. Keep a foreign debugger stop
+separate from an expected game-state transition. For intermediate waypoints,
+use a source-supported range when an exact sample is immaterial. Preserve exact
+coordinates where the pixel or predicate boundary is the discriminator.
+
+Author a separate player projection from the supported source and observed
+edges. Guard actions with their phase and relevant state so stale or repeated
+actions cannot silently reuse an old result. Bind evidence for consequential
+transitions to the source identity and observations that support them, and fail
+closed when missing evidence would change the claim. Keep source candidates,
+native witnesses and modeled scene effects separately labeled. Test the actual
+player with the authored content, including a relevant refusal and checkpoint
+restore if persistence is in scope; do not equate an in-memory checkpoint with
+a durable one.
+
+Choose verification in proportion to the change and claim: one meaningful
+positive and a discriminating control may settle a bounded behavior. Reuse
+unchanged source checks and completed results rather than repeating successful
+runs, full suites or unrelated probes without a new risk or requirement. This
+does not waive required safety gates, protocol checks or project-mandated checks.
+
 
 ## Define objects and predicates
 

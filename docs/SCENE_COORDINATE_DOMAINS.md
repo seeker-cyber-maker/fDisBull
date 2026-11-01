@@ -162,6 +162,11 @@ bottom-row candidates at `y=167`, `x=5..86`, against an all-water inward row166.
 Those bottom-row walking routes remain unqualified by the recovered records;
 the prepared exploratory controller was never launched.
 
+The later [bottom-row follow-up](AGI_BRIDGE_BOTTOM.md) newly qualifies one fresh
+ordinary-input corridor along y167 into room40, with the adjacent y166 water
+control. That evidence is separate from the recovered archives described here;
+it does not qualify all82 candidate starting origins.
+
 AGI's 168-row picture and the whole 200-row screenshot are separate domains.
 In the inspected stored mode, picture row167 maps to display row175. It must
 not be described as a row below the full screenshot. Source/local coordinates,

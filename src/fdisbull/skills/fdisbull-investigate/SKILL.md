@@ -63,6 +63,14 @@ independent questions over pinned evidence; one controller owns a live guest's
 input, execution and restoration. Shared derivation is not independent evidence.
 The methodology reference describes the coverage, retry and handoff procedure.
 
+For scene building, keep one behavior question active and choose evidence for
+the intended claim before collecting it. Bind a stable run's source and backend
+identities once, then use cheap bounded state or pixel observations for route
+progress where the protocol permits. Capture a fresh frame or trace when it
+answers a visual or causal question, not on every movement poll. Reuse a
+qualified source check within its actual scope; revalidate after a change or
+restore. See the scene reference for projection and failure boundaries.
+
 ## Match evidence to the claim
 
 Use the authorized ordinary interface to establish what was received and what

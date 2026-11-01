@@ -1,0 +1,255 @@
+{
+  "format": "fdisbull-agi-bridge-bottom-observation-trace-1",
+  "scope": "Sampled state observations and source priorities, not an instruction trace or an atomic full-state snapshot. Separate fresh sessions.",
+  "candidate": [
+    {
+      "id": "bridge-entry",
+      "guest_ms": 54662,
+      "state": {
+        "room": 39,
+        "score": 0,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "in_water": false,
+        "swimming": 0,
+        "dead": false,
+        "bridge_active": false,
+        "troll_paid": false,
+        "troll_removed": false,
+        "edge": 0,
+        "initializing": false,
+        "control_direction": 0,
+        "ignore_blocks": true,
+        "ego": {
+          "x": 113,
+          "y": 44,
+          "direction": 0,
+          "drawn": true
+        }
+      },
+      "frame_sha256": "a57521cf66a860c3fdd0d6301c68440f6650ac050b00f92a86a5dbe499f92b69"
+    },
+    {
+      "id": "east-bank",
+      "guest_ms": 71833,
+      "state": {
+        "room": 39,
+        "score": 0,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "in_water": false,
+        "swimming": 0,
+        "dead": false,
+        "bridge_active": false,
+        "troll_paid": false,
+        "troll_removed": false,
+        "edge": 0,
+        "initializing": false,
+        "control_direction": 0,
+        "ignore_blocks": true,
+        "ego": {
+          "x": 110,
+          "y": 166,
+          "direction": 0,
+          "drawn": true
+        }
+      },
+      "frame_sha256": "9c1c0c327c7525ed3bbd039ef3bac4266e463d1b46adf3489102c970bc69fde4"
+    },
+    {
+      "id": "row-start",
+      "guest_ms": 72174,
+      "state": {
+        "room": 39,
+        "score": 0,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "in_water": false,
+        "swimming": 0,
+        "dead": false,
+        "bridge_active": false,
+        "troll_paid": false,
+        "troll_removed": false,
+        "edge": 0,
+        "initializing": false,
+        "control_direction": 0,
+        "ignore_blocks": true,
+        "ego": {
+          "x": 110,
+          "y": 167,
+          "direction": 0,
+          "drawn": true
+        }
+      },
+      "frame_sha256": "614a1c8f27c2ce65be620719a6499f8d6590370a81770eb39429ef633f3be62d"
+    },
+    {
+      "id": "over-water",
+      "guest_ms": 75219,
+      "state": {
+        "room": 39,
+        "score": 0,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "in_water": false,
+        "swimming": 0,
+        "dead": false,
+        "bridge_active": false,
+        "troll_paid": false,
+        "troll_removed": false,
+        "edge": 0,
+        "initializing": false,
+        "control_direction": 7,
+        "ignore_blocks": true,
+        "ego": {
+          "x": 79,
+          "y": 167,
+          "direction": 7,
+          "drawn": true
+        }
+      },
+      "frame_sha256": "5e00a761c5a78e4f978268e0bb94ab30191ada59b08ee9b54e1a972a9e550744"
+    },
+    {
+      "id": "west-exit",
+      "guest_ms": 84224,
+      "state": {
+        "room": 40,
+        "score": 0,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "in_water": false,
+        "swimming": 0,
+        "dead": false,
+        "bridge_active": false,
+        "troll_paid": false,
+        "troll_removed": false,
+        "edge": 0,
+        "initializing": false,
+        "control_direction": 0,
+        "ignore_blocks": true,
+        "ego": {
+          "x": 151,
+          "y": 167,
+          "direction": 0,
+          "drawn": true
+        }
+      },
+      "frame_sha256": "fc9bc476b58379ad8595e16b40e3af05661a2f4fe88344ef9e714dab06fba19a"
+    }
+  ],
+  "matched_candidate": {
+    "guest_ms": 74559,
+    "state": {
+      "room": 39,
+      "score": 0,
+      "ego_width": 6,
+      "ego_view": 0,
+      "step_size": 1,
+      "in_water": false,
+      "swimming": 0,
+      "dead": false,
+      "bridge_active": false,
+      "troll_paid": false,
+      "troll_removed": false,
+      "edge": 0,
+      "initializing": false,
+      "control_direction": 7,
+      "ignore_blocks": true,
+      "ego": {
+        "x": 86,
+        "y": 167,
+        "direction": 7,
+        "drawn": true
+      }
+    }
+  },
+  "control": {
+    "result": "adjacent-row-water-observed",
+    "state": {
+      "room": 39,
+      "score": 0,
+      "ego_width": 6,
+      "ego_view": 0,
+      "step_size": 1,
+      "in_water": true,
+      "swimming": 0,
+      "dead": false,
+      "bridge_active": false,
+      "troll_paid": false,
+      "troll_removed": false,
+      "edge": 0,
+      "initializing": false,
+      "control_direction": 7,
+      "ignore_blocks": true,
+      "ego": {
+        "x": 86,
+        "y": 166,
+        "direction": 7,
+        "drawn": true
+      }
+    },
+    "guest_ms": 74466
+  },
+  "source_priorities": {
+    "x86_y167": [
+      15,
+      15,
+      15,
+      15,
+      15,
+      15
+    ],
+    "x86_y166": [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+    ]
+  },
+  "frames": [
+    {
+      "path": "bottom-row.png",
+      "sha256": "5e00a761c5a78e4f978268e0bb94ab30191ada59b08ee9b54e1a972a9e550744",
+      "chunks": [
+        "IHDR",
+        "IDAT",
+        "IEND"
+      ],
+      "source_run": "candidate-167-03",
+      "source_file": "over-water.png",
+      "scope": "Unedited last-completed guest frame; not an atomic rendering of the separately sampled state."
+    },
+    {
+      "path": "west-exit.png",
+      "sha256": "fc9bc476b58379ad8595e16b40e3af05661a2f4fe88344ef9e714dab06fba19a",
+      "chunks": [
+        "IHDR",
+        "IDAT",
+        "IEND"
+      ],
+      "source_run": "candidate-167-03",
+      "source_file": "west-exit.png",
+      "scope": "Unedited last-completed guest frame; not an atomic rendering of the separately sampled state."
+    },
+    {
+      "path": "adjacent-row.png",
+      "sha256": "4e01bb72703b3da300137a751ce927fddcdab3783aa937962ee5417444798552",
+      "chunks": [
+        "IHDR",
+        "IDAT",
+        "IEND"
+      ],
+      "source_run": "control-166-03",
+      "source_file": "control-water.png",
+      "scope": "Unedited last-completed guest frame; not an atomic rendering of the separately sampled state."
+    }
+  ]
+}

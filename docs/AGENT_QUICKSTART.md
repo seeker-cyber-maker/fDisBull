@@ -299,6 +299,9 @@ For off-screen objects and scrolling margins, use the
 with the scene/map, then call `debug-scene-domain-audit` or
 `debug-spatial-domain-audit`. Expected mechanisms retain layout notices and
 never grant movement or teleport authority.
+The [bottom-row bridge follow-up](AGI_BRIDGE_BOTTOM.md) shows a complete bounded
+source-candidate → ordinary-input witness → standalone scene workflow, including
+expected border/room-initialization stages and the one-row-higher control.
 For video-led route research, the [Robb TAS reconstruction](research/kq1-robb-9.89/ROUTE.md)
 keeps visible key highlights, inferred directions and unknown dispatch separate.
 Qualify those proposed actions in the original game before using them as evidence.
