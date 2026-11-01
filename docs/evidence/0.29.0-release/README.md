@@ -1,8 +1,8 @@
 # 0.29.0 release-candidate evidence
 
 Candidate source: `release/0.29.0` at `c03dc4f9d4b5b9d0b374f6423e21962bfb0b07c9`,
-with the local code cut built at `f8dff0c` and later evidence-only commits on the
-same branch. The rebuilt wheel has the same
+with the local code cut built at `f8dff0c`; evidence and installation-check
+commits follow on the same branch (evidence head `2ce9791`). The rebuilt wheel has the same
 196 entries and bytes as the earlier wheel; its archive hash differs because it
 was rebuilt. The source distribution has 712 tool-only entries. Hashes identify the local
 artifact build at the tooling cut; the final tag must rebuild both archives from
