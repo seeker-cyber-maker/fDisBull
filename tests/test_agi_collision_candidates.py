@@ -167,6 +167,51 @@ def test_edge_seams_require_mixed_edge_and_all_water_inner_baselines(rows, edge,
                for item in result['candidates'])
 
 
+def test_dry_bottom_baseline_adjacent_to_all_water_is_a_static_seam():
+    result = module.edge_water_seams(picture([[4] * 8, [3] * 8, [15] * 8]),
+                                     image_width=8, image_height=3, width=6)
+
+    bottom = [item for item in result['candidates'] if item['edge'] == 'bottom']
+    assert result['complete'] is True
+    assert [(item['x'], item['y'], item['inner_x'], item['inner_y'], item['status'])
+            for item in bottom] == [(x, 2, x, 1, 'static_edge_seam') for x in range(3)]
+
+
+def test_dry_bottom_with_priority_one_obeys_explicit_policy():
+    rows = [[3] * 6, [15, 15, 1, 15, 15, 15]]
+    blocked = module.edge_water_seams(picture(rows), image_width=6, image_height=2)
+    admitted = module.edge_water_seams(picture(rows), image_width=6, image_height=2,
+                                       allow_priority_one=True)
+    assert not any(item['edge'] == 'bottom' for item in blocked['candidates'])
+    assert any(item['edge'] == 'bottom' for item in admitted['candidates'])
+
+
+@pytest.mark.parametrize('blocked_pixel', [0, 2])
+def test_dry_bottom_with_unconditional_control_pixel_stays_blocked(blocked_pixel):
+    rows = [[3] * 6, [15, 15, blocked_pixel, 15, 15, 15]]
+    result = module.edge_water_seams(picture(rows), image_width=6, image_height=2,
+                                     allow_priority_one=True)
+    assert not any(item['edge'] == 'bottom' for item in result['candidates'])
+
+
+def test_dry_bottom_candidate_cap_reports_partial_without_overflow():
+    rows = [[3] * 8, [15] * 8]
+    result = module.edge_water_seams(picture(rows), image_width=8, image_height=2,
+                                     width=6, max_candidates=1)
+    assert len(result['candidates']) == 1
+    assert result['complete'] is False
+    assert result['examined'] == 10
+
+
+def test_dry_bottom_candidate_cap_exactly_fitting_is_complete():
+    result = module.edge_water_seams(picture([[3] * 8, [15] * 8]),
+                                     image_width=8, image_height=2,
+                                     width=6, max_candidates=3)
+    assert len(result['candidates']) == 3
+    assert result['complete'] is True
+    assert result['examined'] == 10
+
+
 @pytest.mark.parametrize('edge_value', [0, 1, 2])
 def test_blocked_or_conditional_edge_pixels_are_not_water_seams(edge_value):
     rows = [[4] * 7, [3, 3, 3, 3, 3, 3, edge_value], [4] * 7]

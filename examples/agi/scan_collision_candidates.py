@@ -161,7 +161,11 @@ def extract_water_guards(payload, *, logic_number=0):
 
 def edge_water_seams(plane, *, image_width=160, image_height=168, width=6,
                      allow_priority_one=False, max_candidates=256):
-    """Find mixed edge baselines with an immediately inward all-water control."""
+    """Find passable edge baselines with an inward all-water baseline.
+
+    An edge can be fully dry or mixed. Results describe static picture geometry,
+    not a reachable route or an observed native water-test outcome.
+    """
     _geometry(plane, image_width, image_height, width, allow_priority_one)
     _integer(max_candidates, 1, 4096, 'candidate budget')
     origins = image_width - width + 1
@@ -178,7 +182,7 @@ def edge_water_seams(plane, *, image_width=160, image_height=168, width=6,
     for edge, x, y, inner_x, inner_y in checks:
         outer = _baseline(plane, x, y, image_width, width, allow_priority_one)
         inner = _baseline(plane, inner_x, inner_y, image_width, width, allow_priority_one)
-        if outer['passable'] and outer['mixed_water'] and inner['all_water']:
+        if outer['passable'] and inner['all_water']:
             if len(candidates) < max_candidates:
                 candidates.append(dict(edge=edge, x=x, y=y, inner_x=inner_x,
                                        inner_y=inner_y, status='static_edge_seam'))

@@ -247,6 +247,9 @@ surface. Original inventory writes and short traces support eight guarded
 text actions, with the preparation, failures and final evidence kept inspectable.
 Its [boundary analysis](docs/AGI_BOUNDARY_EXCEPTIONS.md) also exposes the dragon
 rule's last-row exception, with adjacent outcomes checked in the original game.
+The [coordinate-domain audit](docs/SCENE_COORDINATE_DOMAINS.md) keeps world,
+viewport and collision bounds distinct, flags object overhangs and retains
+designer notes for expected scrolling margins.
 A separate [reconstruction of Robb's short TAS](docs/research/kq1-robb-9.89/ROUTE.md)
 preserves the visible route and its unresolved inputs for another investigator.
 

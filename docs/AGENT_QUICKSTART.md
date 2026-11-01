@@ -294,6 +294,11 @@ The [boundary follow-up](AGI_BOUNDARY_EXCEPTIONS.md) derives thin complement
 bands from paired AGI position predicates. Keep source candidates, picture
 clearance and native reachability separate. Independent checkpoint forks
 confirm the dragon rule at rows 166/167; other points remain unqualified.
+For off-screen objects and scrolling margins, use the
+[coordinate-domain audit](SCENE_COORDINATE_DOMAINS.md). Store its descriptor
+with the scene/map, then call `debug-scene-domain-audit` or
+`debug-spatial-domain-audit`. Expected mechanisms retain layout notices and
+never grant movement or teleport authority.
 For video-led route research, the [Robb TAS reconstruction](research/kq1-robb-9.89/ROUTE.md)
 keeps visible key highlights, inferred directions and unknown dispatch separate.
 Qualify those proposed actions in the original game before using them as evidence.

@@ -42,6 +42,21 @@ class SpatialProjectMixin:
     def debug_spatial_map_info(self, revision, *, version=None):
         return load_spatial_map(self, revision, version=version)
 
+    def debug_spatial_domain_audit(self, revision, *, version=None, max_checks=4096):
+        """Audit a stored map's declarations without changing its safe masks."""
+        from .scene_domains import audit_coordinate_domains
+        from .scene_geometry import integer
+        integer(max_checks,1,8192)
+        info=load_spatial_map(self,revision,version=version)
+        result=dict(format='fdisbull-stored-spatial-domain-audit-1',map_revision=info['id'],
+                    map_sha256=info['sha256'],historical_only=True,live_state_verified=False,
+                    navigation_authority='none')
+        descriptor=info['document'].get('coordinate_domains')
+        if descriptor is None:
+            return dict(result,status='not_defined',complete=False,audit=None)
+        audit=audit_coordinate_domains(descriptor,max_checks=max_checks)
+        return dict(result,status='audited',complete=audit['complete'],audit=audit)
+
     def debug_spatial_check(self, revision, point, *, conditions=None, version=None):
         doc = load_spatial_map(self, revision, version=version)['document']
         return spatial_check(doc, point, conditions=conditions)

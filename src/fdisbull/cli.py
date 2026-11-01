@@ -50,6 +50,7 @@ METHODS = {
     'output-export':'Export retained JSON to a new private file outside Git; artifact,output',
     'debug-save-spatial-map':'Save an immutable source-bound room map; name,document,[parent,version,author]',
     'debug-spatial-map-info':'Read a pinned room-map revision; revision,[version]',
+    'debug-spatial-domain-audit':'Audit stored world/room/viewport extents without changing navigation; revision,[version,max_checks]',
     'debug-spatial-check':'Check actor footprint against known safe masks; revision,point,[conditions,version]',
     'debug-spatial-candidates':'Propose clear anchors in game units; revision,[zone,origin,limit,clearance,conditions,version]',
     'debug-spatial-route':'Plan a bounded cardinal route through known clear cells; revision,start,goal,[conditions,maxnodes,version]',
@@ -86,6 +87,7 @@ METHODS = {
     'debug-save-scene':'Save a versioned scene manifest with persistent objects and screenshot evidence; name,definition,[parent,version,author]',
     'debug-scenes':'List current scene revisions; [version]',
     'debug-scene-info':'Read a scene manifest, evidence and persistent object identities; scene,[version]',
+    'debug-scene-domain-audit':'Audit stored object extents and expected margins; scene,[version,max_checks]',
     'debug-scene-overlay':'Render shared masks with names or numbers and a legend; scene,[artifact,name,grid_step,version,labels]',
     'debug-scene-observation':'Read one retained full or compact historical observation; observation,[compact]',
     'debug-export-scenes':'Export compatible scene definitions and clean PNG evidence only; scenes,output,[version]',
@@ -391,10 +393,10 @@ def invoke(method, params, debugger=None):
     project = p.pop("project",None)
     if not project:
         raise ValueError("project path is required")
-    scene_offline=('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations',
+    scene_offline=('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-domain-audit','debug-scene-overlay','debug-scene-observations',
                    'debug-scene-observation','debug-export-scenes','debug-import-scenes',
                    'debug-save-workflow','debug-workflow-info','debug-workflow-receipts','debug-save-text-projection','debug-text-projection-info',
-                   'debug-save-spatial-map','debug-spatial-map-info','debug-spatial-check','debug-spatial-candidates','debug-spatial-route','debug-spatial-overlay')
+                   'debug-save-spatial-map','debug-spatial-map-info','debug-spatial-domain-audit','debug-spatial-check','debug-spatial-candidates','debug-spatial-route','debug-spatial-overlay')
     macro_offline=('debug-define-macros','debug-macro-sets','debug-macro-info','debug-export-macros','debug-import-macros')
     if method in scene_offline+macro_offline:
         if 'definition_file' in p:
@@ -628,14 +630,15 @@ def parser():
     g.add_argument('--reference',help='Read one allowlisted file from the selected skill; use --index for paths')
     g.add_argument('--index',action='store_true',help='List guide purposes without fetching any guide contents')
     g.add_argument('--list',action='store_true',help='List bundled skills without fetching their contents')
-    for name in ('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-overlay','debug-scene-observations',
+    for name in ('debug-save-scene','debug-scenes','debug-scene-info','debug-scene-domain-audit','debug-scene-overlay','debug-scene-observations',
                  'debug-scene-observation','debug-export-scenes','debug-import-scenes'):
         c=sub.add_parser(name,help=METHODS[name]);c.add_argument('project')
         if name not in ('debug-scene-observations','debug-scene-observation'):c.add_argument('--version',type=int)
         if name=='debug-save-scene':
             c.add_argument('name');c.add_argument('definition_file');c.add_argument('--parent');c.add_argument('--author',default='agent')
-        elif name in ('debug-scene-info','debug-scene-overlay'):
+        elif name in ('debug-scene-info','debug-scene-domain-audit','debug-scene-overlay'):
             c.add_argument('scene')
+            if name=='debug-scene-domain-audit':c.add_argument('--max-checks',type=int,default=4096)
             if name=='debug-scene-overlay':
                 c.add_argument('--artifact');c.add_argument('--name',default='scene-overlay.png');c.add_argument('--grid-step',type=int,default=8)
                 c.add_argument('--labels',choices=['names','numbers'],default='names')
@@ -646,6 +649,9 @@ def parser():
         elif name=='debug-export-scenes':
             c.add_argument('output');c.add_argument('scenes',nargs='+')
         elif name=='debug-import-scenes':c.add_argument('bundle')
+    c=sub.add_parser('debug-spatial-domain-audit',help=METHODS['debug-spatial-domain-audit'])
+    c.add_argument('project');c.add_argument('revision');c.add_argument('--version',type=int)
+    c.add_argument('--max-checks',type=int,default=4096)
     sub.add_parser('dos-services',help=METHODS['dos-services'])
     c=sub.add_parser('omf-catalog',help=METHODS['omf-catalog'])
     c.add_argument('path');c.add_argument('--abi',default='x86_16_cdecl_near')

@@ -117,6 +117,32 @@ def test_clip_player_route_and_in_memory_checkpoint(tmp_path):
     assert all('path' not in item for item in evidence['observations'].values())
 
 
+def test_layout_notice_discovers_dry_bottom_seam_without_changing_actions(tmp_path):
+    source, capture, _, _, loader, _ = fixture(tmp_path)
+    baseline, _ = exporter.build(source, capture, loader())
+    # Authored priority-only water stripe at y166; y167 remains ordinary dry.
+    picture = bytes((0xf2, 3, 0xf6, 5, 166, 91, 166, 0xff))
+    volume = source/'VOL.0'; offset = volume.stat().st_size
+    with volume.open('ab') as stream:
+        stream.write(b'\x12\x34\0'+len(picture).to_bytes(2, 'little')+picture)
+    directory = bytearray((source/'PICDIR').read_bytes())
+    directory[39*3:39*3+3] = offset.to_bytes(3, 'big')
+    (source/'PICDIR').write_bytes(directory)
+    capture['picture']['sha256'] = sha256(picture).hexdigest()
+    scene, evidence = exporter.build(source, capture, loader())
+    assert scene['programs'] == baseline['programs']
+    assert len(scene['objects']) == len(baseline['objects']) == 3
+    bottom = [value for value in evidence['edge_seams']['candidates'] if value['edge'] == 'bottom']
+    assert len(bottom) == 82 and {value['y'] for value in bottom} == {167}
+    assert {value['x'] for value in bottom} == set(range(5, 87))
+    assert 'walking routes remain unqualified' in scene['contexts'][1]['description']
+    assert 'walking routes remain unqualified' in scene['objects'][1]['description']
+    assert evidence['coordinate_domains']['objects'][0]['render'] is None
+    collision = next(value for value in evidence['layout_audit']['relations']
+                     if value['part'] == 'collision' and value['domain'] == 'room')
+    assert collision['relation'] == 'contained' and collision['absolute_bounds'] == [85, 100, 91, 101]
+
+
 @pytest.mark.parametrize('observation', ['o0', 'o1', 'o2', 'o3'])
 @pytest.mark.parametrize('field, value', [('score', 1), ('ego_width', 3), ('ego_view', 93), ('step_size', 2),
     ('in_water', True), ('swimming', 1), ('dead', True), ('bridge_active', True), ('troll_removed', True), ('troll_paid', True)])

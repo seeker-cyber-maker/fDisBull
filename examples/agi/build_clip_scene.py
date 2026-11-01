@@ -16,6 +16,8 @@ from fdisbull.agi_picture import decode_picture, extract_v2_resource
 from fdisbull.agi_resources import logic_messages
 from fdisbull.il_scenes import ILSceneBackend
 from fdisbull.processor import Location
+from fdisbull.scene_domains import audit_coordinate_domains
+from examples.agi.scan_collision_candidates import edge_water_seams
 
 
 ACTION_IDS = ('approach-corner', 'cross-gap', 'leave-bridge')
@@ -143,7 +145,7 @@ def build(source, capture, artifact_loader):
     extracted = extract_v2_resource(source / 'PICDIR', source, 39)
     picture_sha = digest(extracted['payload'])
     require(picture_sha == extracted['sha256'] == picture.get('sha256'), 'picture resource identity mismatch')
-    decode_picture(extracted['payload'])
+    decoded_picture = decode_picture(extracted['payload'])
     observations = capture.get('observations')
     actions = capture.get('actions')
     require(isinstance(observations, dict) and isinstance(actions, list) and len(actions) == 3 and
@@ -214,6 +216,27 @@ def build(source, capture, artifact_loader):
         require((state['room'], state['x'], state['y']) == point, 'clip waypoint differs')
     require(states[-1]['room'] == 40 and 149 <= states[-1]['x'] <= 154, 'clip exit differs')
     predicate = predicate_evidence(actions[1].get('native_predicate'), artifact_loader, resource)
+    # The picture viewport is in AGI units. It is not the full native frame;
+    # neither an unknown sprite extent nor an edge seam grants a walking route.
+    coordinate_domains = {
+        'format': 'fdisbull-coordinate-domains-1',
+        'space': {'name': 'agi-room-39', 'unit': 'agi-picture-unit'},
+        'bounds': {'world': None, 'room': [0, 0, 160, 168],
+                   'collision': [0, 0, 160, 168], 'viewport': [0, 0, 160, 168]},
+        'objects': [{'id': 'ego', 'role': 'actor', 'pose': [states[0]['x'], states[0]['y']],
+                     'render': None, 'collision': [0, 0, states[0]['ego_width'], 1]}],
+        'expectations': [], 'alerts': True,
+        'provenance': {'source_picture_sha256': picture_sha,
+                       'observation_frame_sha256': checked_observations[observation_ids[0]]['frame']['sha256'],
+                       'evidence_status': 'source-grid-and-supplied-observation',
+                       'scope': 'Logical picture viewport and land collision baseline; full frame transform, sprite rectangle and world bounds are not inferred.'},
+    }
+    layout_audit = audit_coordinate_domains(coordinate_domains)
+    edge_seams = edge_water_seams(decoded_picture['priority'], width=states[0]['ego_width'],
+                                  allow_priority_one=True, max_candidates=1024)
+    edge_seams['scope'] = ('Static passable edge baselines adjacent to all-water baselines. '
+                           'Priority-one allowance is declared; live blockers, borders, '
+                           'reachability and bottom-row traversal are not qualified by this capture.')
     variables = {'$phase': {'type': 'u8', 'initial': 0}, **{
         '$'+key: {'type': 'bool' if key in BOOLEAN_FIELDS else 'u8', 'initial': states[0][key]} for key in FIELDS}}
     texts = ('The recorded approach reaches the corner at (72, 88).',
@@ -239,10 +262,19 @@ def build(source, capture, artifact_loader):
              'objects': [{'id': target, 'context': 'phase-'+str(index), 'label': target, 'aliases': [],
                           'description': 'The next recorded movement.', 'bindings': [{'verb': 'use', 'program': ACTION_IDS[index]}]}
                          for index, target in enumerate(('corner', 'gap', 'route'))], 'partial': True}
+    bottom = [candidate for candidate in edge_seams['candidates'] if candidate['edge'] == 'bottom']
+    if bottom:
+        notice = ('Source layout notice: '+str(len(bottom))+' bottom-edge baseline candidates '
+                  'are adjacent to water. Their walking routes remain unqualified; '
+                  'this projection retains only its recorded corner crossing.')
+        scene['contexts'][1]['description'] += ' '+notice
+        scene['objects'][1]['description'] += ' '+notice
     ILSceneBackend(scene)
     provenance = {'format': 'fdisbull-agi-bridge-clip-z-evidence-1', 'source': deepcopy(identity),
         'capture_sha256': digest(json.dumps(capture, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()),
         'picture': {'room': 39, 'sha256': picture_sha, 'length': len(extracted['payload'])},
+        'coordinate_domains': coordinate_domains, 'layout_audit': layout_audit,
+        'edge_seams': edge_seams,
         'observations': deepcopy(checked_observations),
         'edges': [{'id': action['id'], 'before': action['before'], 'after': action['after'],
                    'messages': [message_bindings[index]] if message_bindings[index] else [],

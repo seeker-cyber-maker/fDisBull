@@ -6,6 +6,7 @@
 - [Define objects and predicates](#define-objects-and-predicates)
 - [Calibrate content and readiness](#calibrate-content-and-readiness)
 - [Retain action and failure evidence](#retain-action-and-failure-evidence)
+- [Keep world, viewport and collision domains separate](#keep-world-viewport-and-collision-domains-separate)
 - [Adaptation provenance](#adaptation-provenance)
 
 ## Observe and reuse scenes
@@ -176,6 +177,35 @@ reachability explicit and do not call a terminal band an isolated component.
 Stop at the declared effect boundary; a score access does not prove a whole
 room cycle or completed animation. The KQ1 dragon example confirms two row
 166/167 branch outcomes while leaving the other 40 band origins unqualified.
+
+## Keep world, viewport and collision domains separate
+
+Use optional `coordinate_domains` metadata and the offline
+`debug-scene-domain-audit` / `debug-spatial-domain-audit` methods to inspect
+signed object extents before clipping. Declare the common space/unit, world,
+room, collision coverage and viewport independently. Keep a baseline collision
+footprint separate from rendered sprite bounds; leave missing transforms,
+footprints and camera information unknown. The summary counts examined
+comparisons, not qualified movement, and can be selected through output handles.
+
+Expected off-screen data uses explicit scoped margin rules. Disable anomaly
+flags per rule or with `alerts:false` while retaining layout notices. A platform
+name does not establish a scrolling mechanism, and expected margins never
+enlarge a safe mask or authorize teleportation. Imported metadata and screenshots
+remain historical until fresh observations bind the context again.
+
+Check both mixed and fully dry border baselines beside an inward hazard. KQ1's
+recorded x154 water-walk touches the picture's right edge; it is not an object
+past the viewport. A bounds-only containment result does not settle terrain
+passability. Keep source seam candidates, native observations and inferred
+mechanisms separate. A row inside a game picture is not automatically a row
+outside the full screenshot.
+
+World inventories can seed this work without inventing their missing rules.
+Preserve exact coordinates, stacked identities and elevation layers. Distinguish
+declared diagnostic anchors, static candidates, observed placements and
+qualified interactions. A scene/camera glyph or world census does not supply
+collision geometry or a safe teleport destination by itself.
 
 ## Adaptation provenance
 
