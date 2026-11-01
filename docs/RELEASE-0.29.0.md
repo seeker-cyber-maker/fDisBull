@@ -62,6 +62,29 @@ post-0.28 world-model examples.
 - Original binaries, private object stores, ROMs, captures, save pairs and full
   screenshots remain outside Git.
 
+## Linux offline dependencies
+
+`scripts/offline_dependencies.py` builds a Linux x86-64 / Python 3.13 wheel
+bundle for the core runtime plus the `proof` extra. See the
+[offline dependency guide](OFFLINE_DEPENDENCIES.md) for build, diff and reuse
+commands. It contains third-party wheels only: Capstone 5.0.9, iced-x86 1.21.0,
+LIEF 1.0.0, Pillow 12.3.0 and Z3 5.3.2.0. The 0.29.0 bundle has fingerprint
+`ea2a9ca41c8a06ffa2a0c3439b971c7952f1c5c0cd54df65159e732da6b588eb` and
+SHA-256 `e45801015b0d8e0dc7a6396997e01bd2b5c7dc01bfec0cf18f692fa83ac48ce6`.
+
+A fresh no-index install from the bundle passed the decoder imports and Z3
+equivalence/counterexample check. Re-checking the same constraints reports
+`status: reuse` and copies the archive byte-for-byte. A later release should use
+`--previous` and `--require-reuse`; a changed constraint produces an explicit
+`rebuild` diff instead of silently downloading a new compatible version. The
+same archive was merged through `build_offline_kit.py --dependency-bundle` in a
+kit smoke build, producing the seven-wheel set without duplication.
+
+The full native offline kit is not rebuilt for 0.29.0: the DOSBox-X overlay
+changed after 0.26.1, so it needs a fresh backend/source-companion build and
+native acceptance. This dependency bundle is reusable, but it is not a
+substitute for that gate.
+
 ## Qualification at this cut
 
 - Focused world-model suite: 8 passed.
@@ -72,11 +95,14 @@ post-0.28 world-model examples.
   release acceptance for those lanes.
 - Full suite in a local Apple Linux container (`linux/amd64` under Rosetta,
   Debian 13, Python 3.13.18, Node 20.19.2, GCC 14.2.0):
-  **2,593 passed, 156 skipped, 0 failed, 0 errors** in 156.39s. This is local
+  **2,600 passed, 156 skipped, 0 failed, 0 errors** in 251.48s. This is local
   container evidence, not hosted Linux CI.
 - Distribution build: `fdisbull-0.29.0-py3-none-any.whl` and
-  `fdisbull-0.29.0.tar.gz`; `check_dist.py` reports 196 and 708 tool-only
+  `fdisbull-0.29.0.tar.gz`; `check_dist.py` reports 196 and 712 tool-only
   entries respectively.
+- Offline dependency bundle: five wheels, 49 MB, fingerprint and SHA-256 above;
+  fresh venv install and byte-identical reuse passed. Full native kit remains
+  pending.
 - Installed-wheel smoke: `fdisbull --version` reports `0.29.0`; `capabilities`
   loads from the wheel.
 - 0.28.0's focused and full-suite results are historical evidence for its own
@@ -94,6 +120,9 @@ post-0.28 world-model examples.
   qualification and its own full-suite pass.
 - Hosted CI and a published GitLab tag. A fresh shared macOS installation is
   prepared locally only; it makes no publication claim.
+- The full 0.29.0 native Linux offline kit. The dependency bundle and kit
+  integration are qualified, but the changed DOSBox-X overlay still needs a
+  backend/source-companion rebuild and native acceptance.
 - The CPUInfo replica comparison, which is separate app work rather than a core
   fDisBull release item.
 
@@ -106,5 +135,7 @@ post-0.28 world-model examples.
    Linux CI; keep the environment-only macOS failures separate.
 3. Build the wheel and source ZIP with `check_dist`; verify packaged skills,
    capability catalog and native resource files.
-4. Rebuild both native macOS backends and run installed-wheel acceptance.
-5. Decide the tag (`v0.29.0`) only after the above pass on the same commit.
+4. Build or reuse the offline dependency bundle, then build the full native
+   offline kit after the backend rebuild and run its installed acceptance.
+5. Rebuild both native macOS backends and run installed-wheel acceptance.
+6. Decide the tag (`v0.29.0`) only after the above pass on the same commit.

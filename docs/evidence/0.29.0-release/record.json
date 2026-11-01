@@ -7,16 +7,31 @@
   "base_commit": "d06bffb6dce58de09021aaddfac36e46299ab4df",
   "base_branch": "release/0.28.0",
   "merged_integration_commit": "b21b204",
+  "artifact_build_note": "Wheel and sdist hashes identify the local tooling-cut build; the final tag must rebuild from the final tree.",
   "artifacts": {
     "wheel": {
       "file": "fdisbull-0.29.0-py3-none-any.whl",
-      "sha256": "4642cbafad4860dc0abb2602237ad84f471fccd167e6e2e0fdc008cd567aaebd",
+      "sha256": "0fbebc6142ecdb686c924f3c3d6f8ad0f3ed20b1453f378a9c8156e2cca538f6",
       "check_dist_entries": 196
     },
     "sdist": {
       "file": "fdisbull-0.29.0.tar.gz",
-      "sha256": "9a8f1015fcf65ecb49d024f04350b56e023fdf0af909a27376eeeb078cf57302",
-      "check_dist_entries": 708
+      "sha256": "c839319fd153d9c2f6933afd9662a0c837889d2dc9a2fb80310e2c51d0ae65e8",
+      "check_dist_entries": 712
+    },
+    "offline_dependencies": {
+      "file": "fdisbull-0.29.0-linux-x86_64-dependencies.tar.gz",
+      "sha256": "e45801015b0d8e0dc7a6396997e01bd2b5c7dc01bfec0cf18f692fa83ac48ce6",
+      "fingerprint": "ea2a9ca41c8a06ffa2a0c3439b971c7952f1c5c0cd54df65159e732da6b588eb",
+      "target": "cp313-linux-x86_64",
+      "extras": ["proof"],
+      "wheels": {
+        "capstone": "5.0.9",
+        "iced-x86": "1.21.0",
+        "lief": "1.0.0",
+        "pillow": "12.3.0",
+        "z3-solver": "5.3.2.0"
+      }
     }
   },
   "qualification": {
@@ -33,11 +48,11 @@
       "environment": "z3-solver and managed extras available"
     },
     "full_linux_container": {
-      "passed": 2593,
+      "passed": 2600,
       "skipped": 156,
       "failed": 0,
       "errors": 0,
-      "seconds": 156.39,
+      "seconds": 251.48,
       "container": "fdisbull-linux",
       "image": "docker.io/library/python:3.13-slim",
       "platform": "linux/amd64 via Rosetta",
@@ -49,7 +64,19 @@
     "base_three_failures_reproduced": true,
     "installed_wheel_smoke": {
       "version": "0.29.0",
-      "capabilities_loaded": true
+      "capabilities_loaded": true,
+      "offline_dependency_install": true
+    },
+    "offline_dependencies": {
+      "fresh_venv_install": true,
+      "decoder_imports": true,
+      "z3_equivalence_and_counterexample": true,
+      "reuse_status": "reuse",
+      "reuse_bytes_identical": true,
+      "kit_dependency_merge_smoke": {
+        "wheel_count": 7,
+        "duplicate_wheels": false
+      }
     }
   },
   "scope": [
@@ -62,12 +89,13 @@
     "reversible macOS sessions",
     "Miniplanets NES port (PR #56)",
     "CPUInfo replica application",
-    "Linux CI, native backend rebuilds and shared-prefix promotion"
+    "full 0.29.0 native Linux offline kit (backend rebuild pending)",
+    "Linux hosted CI, native backend rebuilds and shared-prefix promotion"
   ],
   "publication": {
     "tag": null,
     "published": false,
     "pushed": false
   },
-  "claims_boundary": "Local host evidence only. The three failures and 23 errors are environment-specific macOS results, not Linux CI acceptance."
+  "claims_boundary": "Local host evidence only. The three failures and 23 errors are environment-specific macOS results, not Linux CI acceptance. The dependency bundle is reusable third-party wheel evidence, not a full native offline kit."
 }

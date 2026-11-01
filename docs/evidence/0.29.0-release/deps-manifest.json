@@ -1,0 +1,58 @@
+{
+  "entrypoint": "install.sh",
+  "extras": [
+    "proof"
+  ],
+  "fingerprint": "ea2a9ca41c8a06ffa2a0c3439b971c7952f1c5c0cd54df65159e732da6b588eb",
+  "format": "fdisbull-offline-dependencies-1",
+  "requirements": [
+    "capstone==5.0.9",
+    "iced-x86==1.21.0",
+    "lief==1.0.0",
+    "pillow>=10.4,<13",
+    "z3-solver==5.3.2.0"
+  ],
+  "requirements_file": "requirements.txt",
+  "target": {
+    "platform": "linux-x86_64",
+    "python": "3.13",
+    "python_tag": "cp313"
+  },
+  "wheels": {
+    "capstone": {
+      "filename": "capstone-5.0.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "name": "capstone",
+      "sha256": "273fd8d747d2e35c88f91450be51a603ecfaafb00d96d9f315dcb8689c86193e",
+      "size": 1485316,
+      "version": "5.0.9"
+    },
+    "iced-x86": {
+      "filename": "iced_x86-1.21.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "name": "iced-x86",
+      "sha256": "489789377bfc1fe432bd2a8a5780c9f3e7c35be2e6133b0de5432cd901cad32c",
+      "size": 949386,
+      "version": "1.21.0"
+    },
+    "lief": {
+      "filename": "lief-1.0.0-cp312-abi3-manylinux_2_28_x86_64.whl",
+      "name": "lief",
+      "sha256": "41ff868f5328fc8e5237a9e1f4718590e0ee9180c1422b3e4948b7116ba4517c",
+      "size": 3674893,
+      "version": "1.0.0"
+    },
+    "pillow": {
+      "filename": "pillow-12.3.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "name": "pillow",
+      "sha256": "0847a763afefb695bc912d7c131e7e0632d4edc1d8698f58ddabec8e46b8b6d3",
+      "size": 6937129,
+      "version": "12.3.0"
+    },
+    "z3-solver": {
+      "filename": "z3_solver-5.3.2.0-py3-none-manylinux_2_27_x86_64.whl",
+      "name": "z3-solver",
+      "sha256": "f17df07300228a383470d4b4e1ad9daf429dc94885996712a1844a8242803935",
+      "size": 37738288,
+      "version": "5.3.2.0"
+    }
+  }
+}
