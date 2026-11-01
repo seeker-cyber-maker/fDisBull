@@ -36,7 +36,8 @@
     "First-selection qualification separately retains all 38 picked-card anchors and 10 fixed BUY-control anchors with a bounded eight-pixel card shift. Original price and BUY input points and post-price species/price guards are unchanged.",
     "Picked-card qualification explicitly excludes the selected-price signature; shared control colors alone do not prove distinct enabled or disabled states.",
     "Park exit shares one finite host deadline, permits instrumented loading up to 40 seconds, retains the original queued-input receipt on observation failure, and qualifies the street from read-only frame and selector reads.",
-    "Return to the park retains the original single queued press and continuous 8000ms guest interval under a shared 40-second host deadline. Read-only park reconciliation checks a uniquely recognized park, rejects recognized notices, and follows the committed park scene head."
+    "Return to the park retains the original single queued press and continuous 8000ms guest interval under a shared 40-second host deadline. Read-only park reconciliation checks a uniquely recognized park, rejects recognized notices, and follows the committed park scene head.",
+    "After a native save load into a new project, Park qualification can create its first host scene or follow a first publication that committed before return readback failed. Existing Park roots retain same-root/version checks."
   ],
   "bounded_purchase_helper_source_sha256": "48e3c34aebc46bf47464596280b72151218016e6a485e28f8d095d62a2529162",
   "bounded_land_helper_source_sha256": "a7766c8c053b4c25815f814ac913c87d2797d37703dc03c617838411900cfc24",

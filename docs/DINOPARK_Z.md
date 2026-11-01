@@ -1,6 +1,8 @@
 # DinoPark scenes through the original-backed UDC
 
-The [park-exit recovery fix](VERIFICATION-DINOPARK-PARK-EXIT-RECOVERY-2026-11-01.md) adds a shared deadline, retained input evidence and guest-read-only Street reconciliation. Original-game normal and injected-failure trials qualify the exit and repeated readback recovery with all 97 probes armed; older held contexts and the separate return-to-park issue remain preserved.
+The [return-to-park recovery fix](VERIFICATION-DINOPARK-PARK-RETURN-RECOVERY-2026-11-01.md) retains the original return input under a shared deadline and adds guest-read-only Park reconciliation, including retry after host scene publication or witness failure. A source-bound native-save case qualifies normal return, repeated read-only recovery and all 97 probes armed; fresh-load first-scene publication is included.
+
+The [park-exit recovery fix](VERIFICATION-DINOPARK-PARK-EXIT-RECOVERY-2026-11-01.md) adds a shared deadline, retained input evidence and guest-read-only Street reconciliation. Original-game normal and injected-failure trials qualify the exit and repeated readback recovery with all 97 probes armed; older held contexts, including the earlier unknown return, remain preserved.
 
 The [visitor continuation](VERIFICATION-DINOPARK-VISITORS-2026-11-01.md) adds 32 time advances through month rollover, separates numerical attendance from actor replenishment, and records the retained unknown park-to-street transition. Durable selective probes and stronger skill guidance are proposed separately in [GitLab !31](https://gitlab.com/brewster-jennings-group/fdisbull/-/merge_requests/31).
 
@@ -164,6 +166,17 @@ the destination; it does not advance an unfinished transition. The
 [Employment verification](VERIFICATION-DINOPARK-EMPLOYMENT-RECONCILIATION-2026-11-01.md)
 records normal entry/return, two witness failures, the successful original-action
 certificate, all eight locations and the remaining legacy-action limitations.
+
+The qualified Park-to-Street exit and Street-to-Park return also offer
+`reconcile` after an unknown queued navigation. The return retains its original
+80 ms press and continuous 8,000 ms guest interval under a shared 40-second
+deadline beginning before initial observation. Recovery requires the original
+run, source revision, before-observation and queued input. It checks the current
+Park frame and selector without execution, input or restore. A recognized
+quarter notice or parking advisory stays an explicit notice continuation;
+it is not certified as Park arrival. A read-only retry follows the committed
+host scene head after a publication/readback failure. This does not reload
+code into an older provider or recover its retained guest automatically.
 
 A held Coelophysis order retains its delivered input receipts. Use `look` to
 obtain its current guarded actions. When offered, `continue dinosaur order`

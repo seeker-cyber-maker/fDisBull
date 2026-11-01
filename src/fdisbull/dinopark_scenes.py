@@ -524,11 +524,18 @@ def qualify_park(text):
     doc = definition(frame, 'park', pixel_predicate(text.patterns['park_view']), selector,
                      'park.back', [173, 187], pixel_predicate(text.patterns['street_view']))
     version = text.debug.version['id']
-    original = text.project.debug_scene_info(text.park, version=version)
-    latest = text.project.debug_scene_info(original['name'], version=version)
-    if latest['scene'] != original['scene']:
-        raise RuntimeError('Park scene root changed; outcome unknown')
-    saved = text.project.debug_save_scene('park', doc, parent=latest['id'], version=version)
+    if text.park is None:
+        # Native save loading restores qualifications into a new project, not
+        # scene IDs. A failed first publication may already have committed.
+        heads = [s for s in text.project.debug_scenes(version=version)['scenes'] if s['name'] == 'park']
+        parent = heads[0]['id'] if heads else None
+    else:
+        original = text.project.debug_scene_info(text.park, version=version)
+        latest = text.project.debug_scene_info(original['name'], version=version)
+        if latest['scene'] != original['scene']:
+            raise RuntimeError('Park scene root changed; outcome unknown')
+        parent = latest['id']
+    saved = text.project.debug_save_scene('park', doc, parent=parent, version=version)
     text.park, text.current, text.pending_park_entry = saved['id'], 'park', False
     return {'frame': frame, 'view': 'park', 'scene': saved}
 

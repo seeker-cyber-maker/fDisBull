@@ -141,6 +141,30 @@ def test_return_preserves_recognized_notice_continuations(monkeypatch, notice):
     assert len(calls) == 2
 
 
+def test_actual_return_run_error_retains_provider_and_uses_its_original_ticket(tmp_path, monkeypatch):
+    text, calls, ticket = return_text(monkeypatch, run_fails=True)
+    text.mart, text.vegasaurus_extinct = None, False
+    text.debug.call = lambda method: {'state': 'stopped'}
+    text.debug.registers = lambda: {'state_revision': 8888}
+    service = bridge.ZService(tmp_path, io.StringIO(), io.StringIO())
+    service.ready(text)
+    text.event = service.event
+    service.pending = {'command': 'go park', 'session_token': service.session_token,
+        'action': {'verb': 'go', 'target': 'route-park', 'item': None, 'context_token': 'before'},
+        'events': [], 'messages': []}
+    with pytest.raises(TimeoutError) as error:
+        text.revisit_park()
+    assert service.action_error(error.value)
+    held = deepcopy(service.held_action)
+    assert held['scene_failure']['input'] == ticket
+    assert held['scene_failure']['before_observation'] == 'before'
+    assert held['effects'] == 'unknown' and service.recovery_required
+    diagnostic = (tmp_path/'z-failure.json').read_bytes()
+    assert service.reconcile(held['id'])['complete']
+    assert len(calls) == 2  # Only the original press and failed run, no replay.
+    assert (tmp_path/'z-failure.json').read_bytes() == diagnostic
+
+
 @pytest.mark.parametrize('view', ['park', 'quarter_popup', 'parking_hint', 'unknown'])
 def test_park_qualifier_is_read_only_and_uses_committed_head(monkeypatch, view):
     head, docs, captures = ['park-r0'], [], []
@@ -195,3 +219,36 @@ def test_return_witness_failure_can_retry_after_park_publication(tmp_path, monke
     assert service.held_action == held and text.current == 'street' and text.park == 'park-r1'
     assert service.reconcile(root)['complete']
     assert (tmp_path/'z-failure.json').read_bytes() == diagnostic
+
+
+@pytest.mark.parametrize('publication_readback_fails', [False, True])
+def test_loaded_native_park_can_publish_its_first_scene_and_retry(monkeypatch, publication_readback_fails):
+    # Native save loading restores qualifications, not scene IDs from another project.
+    head, parents = [None], []
+    def info(key, **kw):
+        assert key is not None, 'A loaded park has no prior scene revision'
+        return {'id': head[0], 'scene': 'park-root', 'name': 'park'}
+    def listing(**kw):
+        assert kw == {'version': 1}
+        return {'scenes': [] if head[0] is None else [info('park')]}
+    def save(name, doc, *, parent, version):
+        assert (name, parent, version) == ('park', head[0], 1)
+        parents.append(parent)
+        head[0] = 'park-r1' if head[0] is None else 'park-r2'
+        if publication_readback_fails and len(parents) == 1:
+            raise RuntimeError('first scene committed, return readback failed')
+        return {'id': head[0]}
+    text = SimpleNamespace(current='street', park=None, pending_park_entry=False,
+        patterns={k: k for k in ('park_view','street_view','quarter_popup','parking_hint')},
+        debug=SimpleNamespace(version={'id': 1}, memory=lambda *a, **kw: {'hex': '3412'}),
+        project=SimpleNamespace(debug_scene_info=info, debug_scenes=listing, debug_save_scene=save))
+    monkeypatch.setattr(scenes, 'take_frame', lambda *a, **kw: (
+        {'artifact': 'frame', 'metadata': {'mode_id': 'mode'}}, 'image'))
+    monkeypatch.setattr(scenes, 'matches', lambda image, pattern: pattern == 'park_view')
+    monkeypatch.setattr(scenes, 'pixel_predicate', lambda *a: {'constant': True})
+    if publication_readback_fails:
+        with pytest.raises(RuntimeError, match='first scene committed'): scenes.qualify_park(text)
+        assert text.park is None and text.current == 'street'
+    result = scenes.qualify_park(text)
+    assert result['scene']['id'] == text.park == head[0] and text.current == 'park'
+    assert parents == ([None, 'park-r1'] if publication_readback_fails else [None])
