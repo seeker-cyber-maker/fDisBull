@@ -22,6 +22,7 @@ other agents read the receipt instead of polling GitHub separately. The finite
 
 ```text
 fdisbull --version
+fdisbull capabilities
 fdisbull methods
 fdisbull agent-skill --list
 fdisbull agent-skill --index
@@ -30,7 +31,13 @@ fdisbull agent-skill --skill write-gamefaqs-guide --index
 fdisbull agent-skill --skill write-gamefaqs-guide --reference SKILL.md
 ```
 
-`methods` prints the JSON method names and their parameter summaries.
+`capabilities` reports the imported copy's bounded analysis, debugger, C and
+UIL support, provider hashes and dependency detection without launching tools
+or targets. It is unreleased in this source. Read [capabilities](CAPABILITIES.md)
+before treating dependency presence as working support. `doctor` is a separate
+explicit runtime acceptance test. `methods` prints the JSON method names and
+their parameter summaries; some language operations are CLI-only and appear
+in the capability report with `cli:` interface names.
 `agent-skill --list` returns the small skill catalogue. Use `--skill` to select
 one, then `--index` to list its references and their purposes without fetching
 their text. Choose a reference and retrieve it with `--reference`.
@@ -128,6 +135,22 @@ For DOS COM files, select `--image com` explicitly when importing. A suffix
 alone does not establish the file format. Analysis limits may leave work
 pending; inspect status and do not call a budget stop complete. `render` exports
 from saved project state without operating a GUI.
+
+For a macOS ARM64 executable, select the `arm64` Mach-O slice explicitly and
+keep the FDB and original file private. The 0.29.0 candidate includes exact ARM64
+`code-backings`, source-bound `ghidra-arm64` instruction/C diagnostics and a
+one-stop `macos-observe` LLDB launch. Read
+[macOS ARM64 analysis](MACOS_ARM64_ANALYSIS.md) for commands, source hashes,
+static/runtime address separation and the still-unimplemented app-level UIL
+export.
+
+Miles AIL 2 driver libraries (often `.ADV`) are recognized by validated bytes
+and expose named exports and a bounded descriptor candidate. They import
+automatically or with `--image ail`; addresses remain module-relative and no
+runtime driver is installed. Use `dos-services --vector 0x66 --ax 0x688` to
+describe a DIGPAK call, or `--ax 0x702` for MIDPAK. Stored DOS disassembly uses
+the same names when AX is known, retaining unverified-handler and unknown-outcome
+qualifications. See [DOS audio drivers](DOS_AUDIO_DRIVERS.md).
 
 ### Observe a real DOS target
 

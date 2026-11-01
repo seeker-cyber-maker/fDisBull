@@ -72,6 +72,37 @@ def _register(name, registers):
 def describe_interrupt(vector, registers=None):
     """Describe only a known selector; ambiguous/missing selectors stay unknown."""
     registers=registers or {}
+    if vector==0x66:
+        from .audio_services import DIGPAK, MIDPAK, REFERENCE, SAMPLE_DESCRIPTOR
+        function=_register('ax',registers)
+        if function is None:
+            hi,lo=_register('ah',registers),_register('al',registers)
+            if type(hi) is int and type(lo) is int and 0<=hi<=255 and 0<=lo<=255:
+                function=hi*256+lo
+        family='digpak' if function in DIGPAK else 'midpak' if function in MIDPAK else 'audio_multiplex'
+        contract=DIGPAK.get(function) or MIDPAK.get(function)
+        result=dict(vector='0x66',function=hex(function) if type(function) is int else None,
+            family=family,known=contract is not None,name=contract[0] if contract else None,
+            source=REFERENCE+(f'66{function:04x}.html' if contract else 'index.html'),
+            evidence='documented API selected by pre-instruction register facts; candidate handler contract',
+            runtime_observed=False,handler_verified=False,outcome='unknown',terminates=False,
+            inputs={},outputs={},memory_effects=[],memory_effects_complete=False,
+            contract_details='documented subset; unspecified registers remain unmodeled',
+            assumptions=['INT66 implements DIGPAK/MIDPAK; custom handlers can use the same vector and selectors.',
+                'Installed driver/version and capability support must be verified separately.',
+                'A service name does not establish execution, success, playback or completion.'])
+        if contract:
+            if function==0x692:
+                result['source']='https://github.com/jratcliff63367/digpak/blob/master/SHELL.ASM'
+            result['inputs']={r:dict(role=role,value=_register(r,registers)) for r,role in contract[1].items()}
+            result['outputs']=dict(contract[2])
+            if function in (0x688,0x68a,0x68b,0x694,0x695):
+                result['argument_layouts']={'ds:si':deepcopy(SAMPLE_DESCRIPTOR)}
+            if function in (0x688,0x68b,0x694,0x695,0x702,0x703,0x70b):
+                result['completion_evidence']='Bound request/return plus matching playback state or callback; filename reads alone are insufficient.'
+        else:
+            result['reason']='unknown, ambiguous or unimplemented full AX selector'
+        return result
     function=_register('ah',registers)
     entry=_DOS.get(function) if vector==0x21 else _BIOS.get((vector,function))
     family='dos' if vector in (0x20,0x21) else 'bios' if vector in (0x10,0x16,0x1a) else None
@@ -100,5 +131,7 @@ def service_catalog():
     entries=[describe_interrupt(0x21,{'ah':function}) for function in _DOS]
     entries.extend(describe_interrupt(vector,{'ah':function}) for vector,function in _BIOS)
     entries.append(describe_interrupt(0x20))
+    from .audio_services import DIGPAK, MIDPAK
+    entries.extend(describe_interrupt(0x66,{'ax':function}) for function in (*DIGPAK,*MIDPAK))
     return dict(format='fdisbull-dos-services-1',entries=deepcopy(entries),
-                scope='Explicit documented subset; no automatic interrupt-handler verification')
+                scope='Explicit DOS/BIOS/DIGPAK/MIDPAK documented subset; no automatic interrupt-handler verification')

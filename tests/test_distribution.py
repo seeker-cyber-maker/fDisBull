@@ -7,7 +7,10 @@ import zipfile
 import pytest
 
 
-REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scripts/check_agent_skill.py',
+REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','docs/MACOS_ARM64_ANALYSIS.md',
+                       'docs/CAPABILITIES.md','docs/MACOS_APP_REPLICATION.md',
+                       'src/fdisbull/capabilities.py','tests/test_capabilities.py',
+                       'scripts/check_agent_skill.py',
                        'player/pyproject.toml','player/fdisbull_player/__init__.py',
                        'player/fdisbull_player/__main__.py','player/fdisbull_player/player.py','player/fdisbull_player/runtime.py','player/fdisbull_player/live.py','player/fdisbull_player/word16.py',
                        'player/fdisbull_player/game_intents.py','player/fdisbull_player/intent_runtime.py','player/fdisbull_player/batch.py',
@@ -22,6 +25,8 @@ REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scrip
                        'src/fdisbull/dos_qemu.py','src/fdisbull/dos_runtime.py','src/fdisbull/qemu_machine.py',
                        'src/fdisbull/gdb_rpc.py','src/fdisbull/guest_assets.py',
                        'src/fdisbull/data/dos-runtime-signatures.json','src/fdisbull/data/MICROSOFT-DOS-LICENSE.txt',
+                       'src/fdisbull/ghidra_arm64.py','src/fdisbull/macos_lldb.py',
+                       'src/fdisbull/_macos_lldb_driver.py','src/fdisbull/data/FdisbullGhidraArm64.txt',
                        'src/fdisbull/skills/fdisbull-investigate/SKILL.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/scenes.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/methodology.md',
@@ -110,7 +115,9 @@ def test_distribution_check_requires_runtime_navigation_reference(tmp_path):
 
 
 @pytest.mark.parametrize('required',[
-    'AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md',
+    'AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','docs/MACOS_ARM64_ANALYSIS.md',
+    'docs/CAPABILITIES.md','docs/MACOS_APP_REPLICATION.md',
+    'src/fdisbull/capabilities.py','tests/test_capabilities.py',
     'src/fdisbull/skills/fdisbull-investigate/references/workflows.md',
     'src/fdisbull/skills/fdisbull-investigate/references/udl-uil-udc.md',
     'src/fdisbull/skills/fdisbull-investigate/references/semantic-contracts.md',
@@ -118,6 +125,7 @@ def test_distribution_check_requires_runtime_navigation_reference(tmp_path):
     'src/fdisbull/skills/fdisbull-investigate/references/media-modules.md',
     'src/fdisbull/media.py',
     'tests/test_media_modules.py',
+    'src/fdisbull/data/FdisbullGhidraArm64.txt',
 ])
 def test_distribution_check_requires_agent_onboarding_resources(tmp_path,required):
     check=runpy.run_path(str(Path(__file__).resolve().parents[1]/'scripts/check_dist.py'))['check_archive']

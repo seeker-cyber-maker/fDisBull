@@ -1,12 +1,12 @@
 # fDisBull
 
-This checkout contains the **0.27.0 cloud release candidate**: private external
-target storage, recovery reconciliation, reusable media adapters, structural
-type sharing and bounded Win16 NE analysis. See the
-[candidate notes](docs/RELEASE-0.27.0.md) for scope and gates. The latest
-published release at this cut is
-[0.26.1](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.26.1).
-Publication, environment promotion and installation are separate steps.
+The **0.29.0** release candidate carries the unpublished 0.28.0 candidate scope
+and adds read-only Civilization I world snapshots plus the Z world language and
+a full Zork I room/exit map. See the
+[release notes](docs/RELEASE-0.29.0.md) for scope, qualification and gates. The
+latest published release is
+[0.27.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.27.0);
+0.29.0 is not published yet.
 
 Give an agent a program to explore—and a place to keep what it learns.
 fDisBull connects disassembly, headless debugging, scene-aware controls and
@@ -36,9 +36,11 @@ legacy migration and remaining export limits.
 
 | I want to… | Start here |
 | --- | --- |
+| Check this copy's decoder, debugger, decompiler and UIL scope without running a target | [`capabilities`](docs/CAPABILITIES.md) |
 | Extract a GOG DOS installer on macOS or Linux without Wine | [Native GOG unpacking](docs/GOG_UNPACKING.md) |
 | Reuse a reviewed structure in another analysis project | [Portable type catalogs](docs/TYPE_CATALOGS.md) |
 | Understand an executable without running it | [Disassembly and analysis](#disassemble-and-analyze) |
+| Investigate a macOS ARM64 executable with source-bound Ghidra and LLDB probes | [macOS ARM64 analysis](docs/MACOS_ARM64_ANALYSIS.md) |
 | Observe a DOS game or a Windows PE64 program | [Debug the original program](#debug-the-original-program) |
 | Compare a hypothesis, a checkpoint or a temporary patch | [Layers, states and experiments](#layers-states-and-experiments) |
 | Give an agent reliable scene context and navigation | [Scenes, maps and interaction policies](#scenes-maps-and-interaction-policies) |
@@ -57,6 +59,12 @@ and their boundaries; they do not turn an inferred result into observed fact.
 The [definitions and contract roadmap](docs/DEFINITIONS_AND_ROADMAP.md) brings
 the language, interface, scene and proof proposals together and shows which
 parts are working, partial or still proposed.
+
+This source also adds an unreleased, read-only `fdisbull capabilities` report.
+It distinguishes implemented code, detected dependencies and runtime validation;
+it does not infer release contents from the package version. The
+[macOS app replication case study](docs/MACOS_APP_REPLICATION.md) records the
+remaining investigation features and the authored UIL model's limits.
 
 The 0.25.0 source lets you preserve a qualified Zork story as executable IR,
 recover a small action as game-level rules, and keep playing through the
@@ -97,6 +105,12 @@ evidence. Install `.[managed]` for optional .NET metadata and CIL inspection.
 See the [user guide](docs/USER_GUIDE.md), [API](docs/API.md) and
 [platform support](docs/PLATFORMS.md) for more options.
 
+Miles AIL music drivers can be recognized and inspected directly, including
+their exported functions and device descriptions. DOS disassembly also names
+documented DIGPAK/MIDPAK audio calls. See [DOS audio drivers](docs/DOS_AUDIO_DRIVERS.md)
+for commands and the limits of static recognition; execution and hardware
+support require separate original-runtime evidence.
+
 ## Disassemble and analyze
 
 Import x86 16/32/64 or ARM64 programs in supported DOS MZ, COM, PE, ELF,
@@ -116,6 +130,11 @@ supported 32-bit LE objects and internal fixups for the existing x86 analyzer.
 The [Win16 NE view](docs/NE_LOADING.md) loads supported Windows16 segments with
 logical addresses and symbolic fixups. The [Colonization comparison](docs/COLONIZATION_FOOD_EQUIVALENCIES.md)
 shows how related DOS and Windows code can guide an investigation.
+
+For Mach-O ARM64, `code-backings` retains exact source-file offsets and bytes
+for selected native blocks. Optional Ghidra and one-stop LLDB probes are
+described in [macOS ARM64 analysis](docs/MACOS_ARM64_ANALYSIS.md). Native facts,
+diagnostic C and runtime observations do not constitute a UIL translation.
 
 ## Debug the original program
 

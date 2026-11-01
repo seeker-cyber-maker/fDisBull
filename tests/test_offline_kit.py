@@ -16,7 +16,8 @@ def wheel(path, name, version):
         if name == 'fdisbull':
             guard_spec = importlib.util.spec_from_file_location('distribution_guard', Path(__file__).resolve().parents[1] / 'scripts/check_dist.py')
             guard = importlib.util.module_from_spec(guard_spec); guard_spec.loader.exec_module(guard)
-            for item in {'__init__.py'} | guard.REQUIRED_PE_RESOURCES | guard.REQUIRED_KNOWLEDGE_RESOURCES:
+            for item in ({'__init__.py'} | guard.REQUIRED_PE_RESOURCES |
+                         guard.REQUIRED_KNOWLEDGE_RESOURCES | guard.REQUIRED_MACOS_RESOURCES):
                 z.writestr('fdisbull/'+item, '')
         if name == 'fdisbull-player':
             for module in ('__init__.py','__main__.py','player.py','runtime.py','live.py','word16.py',

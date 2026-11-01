@@ -26,6 +26,7 @@ from .progressive_scenes import ProgressiveSceneProjectMixin, ProgressiveSceneSe
 from .assisted_travel import AssistedTravelSessionMixin
 from .text_projection import TextProjectionProjectMixin, TextProjectionSessionMixin
 from .spatial import SpatialProjectMixin, SpatialSessionMixin, validate_mode
+from .operation_budget import RpcAdmissionTimeout, run_cleanup_scope
 
 
 DEBUG_DDL = '''
@@ -389,8 +390,9 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
         options={}
         if deadline is not None:
             remaining=int((deadline-time.monotonic())*1000)
-            if remaining<=0:raise TimeoutError('Shared debugger host-time budget expired')
-            options['timeout_ms']=min(15000,remaining)
+            if remaining<=0 or remaining < (getattr(self,'_rpc_admission_ms',None) or 0):
+                raise RpcAdmissionTimeout('Shared debugger host-time budget expired before RPC dispatch')
+            options['timeout_ms']=min(getattr(self,'_rpc_timeout_cap_ms',None) or 15000,remaining)
         return self.rpc.call(method,{'session_id':self.session_id,**(params or {})},**options)
 
     def _event(self, operation, evidence):
@@ -468,23 +470,24 @@ class DebugSession(SpatialSessionMixin, TextProjectionSessionMixin, AssistedTrav
         finally:
             if not self.closed:
                 try:
-                    if running:
-                        try:
-                            pause = self.call('execution.pause')
-                            terminal_operation=pause['operation_id']
-                        except DebuggerError as error:
-                            if not str(error).endswith('(TARGET_NOT_RUNNING)'):raise
-                            # A real stop can win the race with our budget pause.
-                            # Observe the existing operation; never continue/replay.
-                            terminal_operation=operation['operation_id']
-                        result = self.call('execution.wait',{'operation_id':terminal_operation,'timeout_ms':3000})
-                        if result.get('running'):
-                            raise DebuggerError('Target failed to pause after bounded run')
-                        kind=result.get('stop_reason',{}).get('kind')
-                        if not kind:raise DebuggerError('Bounded run ended without a terminal stop reason')
-                        if kind!='pause':outcome=kind
-                    if result is None or result.get('state') != 'exited':
-                        timing = self._timing(before['fast_forward'])
+                    with run_cleanup_scope(self):
+                        if running:
+                            try:
+                                pause = self.call('execution.pause')
+                                terminal_operation=pause['operation_id']
+                            except DebuggerError as error:
+                                if not str(error).endswith('(TARGET_NOT_RUNNING)'):raise
+                                # A real stop can win the race with our budget pause.
+                                # Observe the existing operation; never continue/replay.
+                                terminal_operation=operation['operation_id']
+                            result = self.call('execution.wait',{'operation_id':terminal_operation,'timeout_ms':3000})
+                            if result.get('running'):
+                                raise DebuggerError('Target failed to pause after bounded run')
+                            kind=result.get('stop_reason',{}).get('kind')
+                            if not kind:raise DebuggerError('Bounded run ended without a terminal stop reason')
+                            if kind!='pause':outcome=kind
+                        if result is None or result.get('state') != 'exited':
+                            timing = self._timing(before['fast_forward'])
                 except BaseException:
                     self.close()
                     raise

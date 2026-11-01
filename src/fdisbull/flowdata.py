@@ -409,7 +409,7 @@ def _guard(state, semantic, edge, source):
     return result, evidence
 
 
-def _call_effects(state, semantic, edge, abi, source):
+def _call_effects(state, semantic, edge, abi, source, register_names=()):
     if semantic.get('flow') not in ('call', 'indirect_call'):
         return state
     # A call edge enters the callee before its effects. A continuation edge
@@ -422,7 +422,12 @@ def _call_effects(state, semantic, edge, abi, source):
     sp = semantic.get('stack_pointer')
     clobbers = abi.get('caller_clobbers', abi.get('clobbers')) if abi is not None else None
     if clobbers is None:
-        clobbers = [name for name in state['registers'] if name != sp]
+        # Unknown values still have identities. Killing only concrete/symbolic
+        # values already stored in registers leaves stale frozen identities at
+        # joins, and can make call loops alternate forever between join names.
+        # Include registers read later, even if no value has been seen yet.
+        clobbers = (set(register_names) | set(state['registers']) |
+                    set(state.get('symbols', {}))) - {sp}
     for name in clobbers:
         state['registers'].pop(name, None)
         state['bounds'].pop(name, None)
@@ -449,6 +454,8 @@ def _call_effects(state, semantic, edge, abi, source):
             state['registers'][sp] = _simplify('add', state['registers'][sp], _const(adjustment + cleanup))
         else:
             state['registers'].pop(sp, None)
+    if sp and not explicit_adjustment and not (known_cleanup and isinstance(adjustment, int)):
+        state['symbols'][sp] = f'call:{source}:{sp}'
     return state
 
 
@@ -484,6 +491,25 @@ def analyze_flow(nodes, edges, entry_id, semantics_by_id, initial=None, read_mem
     if len(normalized) > 1000000:
         raise ValueError('edge budget exceeded')
     entry = _state(initial, semantics_by_id.get(entry_id, {}).get('stack_pointer'))
+    register_names = set(entry['registers']) | set(entry.get('symbols', {}))
+    pending = list(semantics_by_id.values())
+    visited = set()
+    while pending:
+        value = pending.pop()
+        if isinstance(value, (dict, list, tuple)):
+            if id(value) in visited:
+                continue
+            visited.add(id(value))
+        if isinstance(value, dict):
+            if value.get('op') == 'reg' and isinstance(value.get('name'), str):
+                register_names.add(value['name'])
+            for key in ('register', 'stack_pointer', 'frame_pointer'):
+                if isinstance(value.get(key), str):
+                    register_names.add(value[key])
+            register_names.update(value.get('clobbers', []))
+            pending.extend(value.values())
+        elif isinstance(value, (list, tuple)):
+            pending.extend(value)
     contributions = {node: {} for node in ids}
     contributions[entry_id][-1] = entry
     in_states, out_states, edge_states = {entry_id: entry}, {}, {}
@@ -501,14 +527,14 @@ def analyze_flow(nodes, edges, entry_id, semantics_by_id, initial=None, read_mem
             unresolved.append(dict(kind='missing_semantics', source=node))
             continue
         after = _transfer(before, semantic, node, read_memory)
-        out_states[node] = (_call_effects(after, semantic, {'kind': 'fallthrough'}, abi, node)
+        out_states[node] = (_call_effects(after, semantic, {'kind': 'fallthrough'}, abi, node, register_names)
                             if semantic.get('flow') in ('call', 'indirect_call') and
                             not any(e.get('kind') in ('call', 'indirect_call', 'callee') for e in outgoing[node])
                             else after)
         for edge in outgoing[node]:
             propagated, evidence = _guard(after, semantic, edge, node)
             if propagated is not None:
-                propagated = _call_effects(propagated, semantic, edge, abi, node)
+                propagated = _call_effects(propagated, semantic, edge, abi, node, register_names)
             index, target = edge['_index'], edge['target']
             edge_states[index] = dict(source=node, target=target, kind=edge.get('kind'), taken=edge.get('taken'),
                                       feasible=propagated is not None, state=deepcopy(propagated), guard=evidence)
@@ -516,8 +542,14 @@ def analyze_flow(nodes, edges, entry_id, semantics_by_id, initial=None, read_mem
                 contributions[target].pop(index, None)
             else:
                 contributions[target][index] = propagated
-            joined = _join(list(contributions[target].values()), target, widened[target])
             old = in_states.get(target)
+            # A may-state includes earlier loop iterations too. Retain its
+            # uncertainty: replacing it with only the latest contributions can
+            # alternate equal and conflicting symbolic identities forever.
+            incoming = list(contributions[target].values())
+            if old is not None:
+                incoming.insert(0, old)
+            joined = _join(incoming, target, widened[target])
             if joined != old:
                 changes[target] += 1
                 if changes[target] > 8 and old and joined:

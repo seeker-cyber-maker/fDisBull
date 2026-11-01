@@ -167,6 +167,78 @@ def test_loop_converges_without_inventing_an_ever_growing_stack_offset():
     assert 'top' not in result['in_states']['loop']['registers']
 
 
+def test_unknown_calls_in_a_loop_converge_after_register_values_are_lost():
+    semantics = {'entry': instruction(), 'guard': instruction(flow='call'),
+                 'setup': instruction(), 'loop': instruction(), 'poll': instruction(flow='call'),
+                 'exit': instruction()}
+    edges = [edge('entry', 'setup'), edge('entry', 'guard'), edge('guard', 'setup'),
+             edge('setup', 'loop'), edge('loop', 'poll'), edge('poll', 'loop'), edge('poll', 'exit')]
+    result = analyze_flow(list(semantics), edges, 'entry', semantics,
+                          initial={'data': 0x1000}, max_steps=100)
+    assert result['stable'] and not result['budget_exhausted']
+    assert result['steps'] < 30
+    assert 'data' not in result['in_states']['exit']['registers']
+
+
+def test_unknown_call_changes_identity_of_registers_without_known_values():
+    semantics = {'before': instruction([('saved', r('unassigned'), 32)]),
+                 'call': instruction(flow='call'),
+                 'after': instruction([('observed', r('unassigned'), 32)])}
+    result = analyze_flow(list(semantics), [edge('before', 'call'), edge('call', 'after')],
+                          'before', semantics)
+    old = result['in_states']['call']['registers']['saved']
+    new = result['out_states']['after']['registers']['observed']
+    assert old != new
+
+
+def test_declared_callee_clobbers_preserve_other_unknown_register_identities():
+    semantics = {'before': instruction([('saved', r('preserved'), 32),
+                                       ('old_volatile', r('volatile'), 32)]),
+                 'call': instruction(flow='call'),
+                 'after': instruction([('observed', r('preserved'), 32),
+                                      ('new_volatile', r('volatile'), 32)])}
+    result = analyze_flow(list(semantics), [edge('before', 'call'), edge('call', 'after')],
+                          'before', semantics, abi={'caller_clobbers': ['volatile']})
+    old = result['in_states']['call']['registers']
+    new = result['out_states']['after']['registers']
+    assert old['saved'] == new['observed']
+    assert old['old_volatile'] != new['new_volatile']
+
+
+def test_counter_loop_keeps_join_uncertainty_when_call_path_arrives_later():
+    semantics = {name: instruction() for name in
+                 ('entry', 'guard', 'call', 'init', 'head', 'branch', 'body', 'increment', 'exit')}
+    semantics['entry']['comparison'] = {'left': r('flag'), 'right': c(0), 'bits': 16}
+    semantics['guard']['branch_condition'] = {'source': 'comparison', 'predicate': 'eq'}
+    semantics['call']['flow'] = 'call'
+    semantics['init']['assignments'] = [{'register': 'counter', 'value': c(0), 'bits': 16}]
+    semantics['head']['comparison'] = {
+        'left': r('counter'),
+        'right': {'op': 'load', 'address': op('add', r('base'), c(2)), 'width': 2}, 'bits': 16}
+    semantics['branch']['branch_condition'] = {'source': 'comparison', 'predicate': 'lt_s'}
+    semantics['body']['memory'] = [{'access': 'write', 'address': r('pointer'), 'width': 2, 'value': c(0)}]
+    semantics['increment']['assignments'] = [
+        {'register': 'counter', 'value': op('add', r('counter'), c(1)), 'bits': 16}]
+    edges = [edge('entry', 'guard'), edge('guard', 'init', 'conditional'),
+             edge('guard', 'call'), edge('call', 'init'), edge('init', 'head', 'jump'),
+             edge('head', 'branch'), edge('branch', 'body', 'conditional'),
+             edge('branch', 'exit'), edge('body', 'increment'), edge('increment', 'head', 'jump')]
+    result = analyze_flow(list(semantics), edges, 'entry', semantics, initial={'base': 100},
+                          read_memory=lambda address, width: (3).to_bytes(width, 'little'), max_steps=100)
+    assert result['stable'] and result['steps'] < 50
+    assert 'base' not in result['in_states']['exit']['registers']
+
+
+def test_register_inventory_tolerates_shared_or_cyclic_unused_metadata():
+    metadata = {}
+    metadata['self'] = metadata
+    semantics = {'call': instruction(flow='call', metadata=metadata),
+                 'after': instruction([('result', r('unknown'), 16)], metadata=metadata)}
+    result = analyze_flow(list(semantics), [edge('call', 'after')], 'call', semantics)
+    assert result['stable']
+    assert result['out_states']['after']['registers']['result']['symbol'] != 'entry:unknown'
+
+
 def test_budget_stop_is_partial_and_external_edges_remain_explicit():
     semantics = {'a': instruction(), 'b': instruction(), 'c': instruction()}
     result = analyze_flow(list(semantics), [edge('a', 'b'), edge('b', 'c'), edge('a', 'external')],

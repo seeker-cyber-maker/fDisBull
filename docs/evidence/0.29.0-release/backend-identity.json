@@ -1,0 +1,8 @@
+{
+  "source_commit": "f8dff0ce606cb0ca738c10bc2b8d649008bf8fba",
+  "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+  "backend_sha256": "2db1c812d8af64bb5c71f5a1cc1466511ac6212a919cd3e70b82ef1b8c7b3471",
+  "patch_sha256": "9146ef4c61c28e1091955cfb5fa611b37633cc71df796fa4c1a603276b862c3b",
+  "profile": "experimental/dosbox-x/layers",
+  "acceptance_tests": []
+}
