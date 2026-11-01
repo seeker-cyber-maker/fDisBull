@@ -30,6 +30,7 @@ BUSINESS_NAVIGATION = {
 }
 RECOVERABLE_NAVIGATION = {command: (*route, 'street') for command, route in BUSINESS_NAVIGATION.items()}
 RECOVERABLE_NAVIGATION['go street'] = ('route-street', 'park.back', 'street', 'park')
+RECOVERABLE_NAVIGATION['go park'] = ('route-park', 'street.park', 'park', 'street')
 PURCHASE_COMMITS = ('food_purchase_committed', 'vegasaurus_purchase_confirmed',
                     'coelophysis_purchase_confirmed', 'land_purchase_confirmed', 'fence_purchase_confirmed',
                     'guide_hire_confirmed')
@@ -626,7 +627,9 @@ class ZService:
         held = self.held_action
         if recovery_id is not None and recovery_id != held['id']:
             return result
-        previous = self.text.current, self.text.mart, self.revision, getattr(self.text,'street',None)
+        previous = (self.text.current, self.text.mart, self.revision,
+                    getattr(self.text,'street',None), getattr(self.text,'park',None),
+                    getattr(self.text,'pending_park_entry',False))
         destination = 'dinomart' if purchase else 'street' if land or fence else RECOVERABLE_NAVIGATION[held['pending']['command']][2]
         previous_order = deepcopy(getattr(self.text,'dinosaur_order',None))
         previous_bought = getattr(self.text,'dinosaur_bought',False)
@@ -648,6 +651,7 @@ class ZService:
                     qualified = qualify_purchase(self.text)
                 else:
                     qualified = (load_scenes().qualify_street(self.text) if destination == 'street'
+                                 else load_scenes().qualify_park(self.text) if destination == 'park'
                                  else load_scenes().qualify_dinomart(self.text) if destination == 'dinomart'
                                  else load_scenes().qualify_business(self.text, destination))
                 self.revision += 1
@@ -660,6 +664,10 @@ class ZService:
             if (not purchase and not land and not fence and destination == 'street' and
                     qualified is None):
                 self.text.street = previous[3]
+            if not purchase and not land and not fence and destination == 'park':
+                if qualified is None:
+                    self.text.park = previous[4]
+                self.text.pending_park_entry = previous[5]
             if fence:
                 proof=getattr(self.text,'fence_order',{}).get('proof')
                 self.text.fence_order,self.text.fence_bought=previous_fence
@@ -793,7 +801,8 @@ class ZService:
             witness = self.witness(observed)
             if witness is not None:
                 extra['witness'] = witness
-            elif (pending['command'] in ('buy coelophysis','buy desert plot','buy wood fence') or pending['command'] in RECOVERABLE_NAVIGATION or
+            elif (pending['command'] in ('buy coelophysis','buy desert plot','buy wood fence') or
+                  pending['command'] in RECOVERABLE_NAVIGATION and not park_pause or
                   status == 'success' and pending['command'] in PREPARATION_ACTIONS.values()) and not (refusal or text_refusal):
                 self.pending = pending
                 if self.action_error(RuntimeError('Original action following observation incomplete')):
@@ -946,6 +955,7 @@ class ZService:
                                   action['verb'] == 'buy' and action['target'] in ('coelophysis','plot','wood-fence') or continuing or
                                   action['verb'] == 'go' and (
                                       action['target'] in {route[0] for route in BUSINESS_NAVIGATION.values()} or
+                                      action['target'] == 'route-park' or
                                       action['target'] == 'route-street' and self.text.current == 'park'))
                 if bounded_action:
                     self._start_action_budget()
