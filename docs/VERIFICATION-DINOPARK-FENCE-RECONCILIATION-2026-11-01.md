@@ -220,13 +220,13 @@ land source guard withheld one press; the supported continuation completed the
 same original purchase. This is retained as recovery friction, not a second
 land purchase. Coelophysis setup then completed in the same guest.
 
-The fence command succeeded normally with all twelve inputs queued once,
+The fence command succeeded normally in 24.448 seconds with all twelve inputs queued once,
 $3,250 -> $2,250 cash/working cash, $5,000 loan unchanged and pen 10's semantic
 fence/species/count changing -1/4/1 -> 0/4/1. The other nine semantic tuples
 were unchanged. The confirmation ticket remained separate from later return
 inputs, and the original frame/native-effect qualifier succeeded.
 
-The following Employment navigation succeeded with one queued navigation
+The following Employment navigation succeeded in 20.212 seconds with one queued navigation
 input and a fresh Employment witness. Its wait consumed 479 explicitly
 registered passive hook stops over 4,585 measured guest milliseconds. The parent
 walked all 479 stored observation links, checked native breakpoint outcomes,
@@ -268,3 +268,20 @@ Source and sanitized findings are delivered to local PR #41 and private GitLab
 Git. Existing PR history and prior sealed evidence are preserved. The MR retains
 its draft/conflict integration gate; this is neither a release qualification nor
 a merge. No package or installation is produced.
+
+Luna's finalized derivations add 22 raw caller snapshots (361 retained total),
+31 filename-argument snapshots (937 total), and 403 original-matching read
+prefixes (15,976 total), with zero recorded correlation/prefix mismatches.
+The filename origins now partition as 877 encoded-far and 60 PUSH-CS/near-CALL
+forms, with zero unclassified within this bounded scope. Twenty-two capture/run
+receipts remain linked. These enrich the caller/producer evidence without
+adding a new PC to the 47/201 union or closing a remaining candidate.
+
+Instrumentation still has a measurable cost: the Employment transition's 479
+passive stops took 20.212 host seconds. A future buffered passive-observer API
+could reduce per-stop round trips while preserving identity, deadlines and raw
+evidence. External collector output routing also needs an explicit supported
+option so new capture phases can select an admitted storage pool without
+moving a live project. These are recommendations, not delivered native-backend
+features. Exact filename negatives also leave alias/embedded-resource questions
+open unless the corresponding producer/consumer is recovered.
