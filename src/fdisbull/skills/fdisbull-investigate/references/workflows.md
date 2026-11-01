@@ -72,6 +72,26 @@ screenshots and traces are stored in the project and can be exported later;
 exporting an existing artifact is different from claiming a fresh capture.
 Checkpoint restore does not roll back mounted host files or external services.
 
+A full native saved state is an **Anchor Stone**, named for TiGa's Blob to General
+game. Use `debug-save-anchor-stone`, `debug-load-anchor-stone` and offline
+`debug-anchor-stone-info` for direct save/load/inspection. Existing state API names
+remain compatible. Delta rewind follows recorded changes instead; its unit is
+a DOS next-fetch interval or Wine completed instruction, not a video frame.
+See `docs/ANCHOR_STONES.md`.
+
+For native DOS input retries, a backend advertising `frame_timeline` supports
+`debug-timeline-start`, `debug-timeline-advance` and `debug-timeline-rewind`.
+This automatically caches full states and completed-frame images, with physical
+keyboard make/break edges scheduled before selected frames. It is a bounded
+live cache, not an instruction-delta history. `debug-timeline-pin` persists a
+cached point as an Anchor Stone without recapturing it. An explicit preservation
+policy can retain identified current conventional RAM, such as RNG, while
+marking the result as an experimental mixed state. Ordinary queued input or
+unrecorded execution invalidates this history. Frame cadence depends on the
+guest mode; use its completion receipt, not a guessed 60 Hz or a guest-ms wait.
+See `docs/FRAME_INPUT_TIMELINE.md` for bounds, dirty-input cancellation, recovery
+and the manual/automatic/combined comparison. Other backends remain unsupported.
+
 For a short native DOS debugging history, use `debug-rewind-start`, advance with
 `debug-rewind-record`, inspect `debug-rewind-status`, then `debug-rewind` a
 declared count. This records bounded next-fetch intervals with native states;
@@ -80,6 +100,35 @@ cursor, and capture/byte budgets include discarded branches. It restores existin
 states rather than replaying instructions; use ordinary `debug-load-state` when
 the checkpoint is already known. See `docs/DEBUGGER_REWIND.md` for limits and the
 local comparison procedure. Other execution backends are outside this first scope.
+
+The experimental `debug-delta-*` methods record net exposed-register and declared
+RAM changes with one full recovery anchor. They are selected-state diagnostics,
+not full machine rewind or a native write journal. Default delta undo blocks execution,
+capture and snapshots until explicit native recovery. Inspect `debug-delta-status`
+and read `docs/CPU_RAM_DELTAS.md` before using it; do not infer restored devices,
+hidden CPU state, unselected RAM or resumable historical execution.
+Wine/QEMU also supports bounded selected-thread x86-64 deltas: one completed
+instruction per interval, writable non-executable main-image RAM only, no active
+layers/breakpoints, and default no resume/capture after undo until full recovery. Native
+sidecar bytes count toward the 2 GiB default budget; DOS's limits are unchanged.
+See `docs/WINE_CPU_RAM_DELTAS.md`. IDA and native ARM64 target debugging remain
+outside this delta contract.
+
+For an intentional input experiment, `delta-rewind` also accepts `policy` with
+an experiment `name`, `preserve_registers`, `preserve_memory` address/length
+ranges, and the explicit boolean `allow_partial_resume`. Preserved ranges must
+fit the recorded projection; target-specific RNG identity is caller evidence,
+not automatically discovered by the recorder. The complete selected projection
+and resulting preserved values are checked before/after undo. Any policy ends
+the old chain and retains its recovery Anchor Stone. Only
+`allow_partial_resume:true` permits later execution/capture; the result remains
+`partial_restored:true` and `resume_safe:false`, with `execution_allowed:true`
+describing the explicit experiment permission. A new history captures a new
+recovery Anchor Stone before further recording. The `experiment` receipt/status
+object retains the policy, preserved register values, memory hashes and full
+projection fingerprints; subsequent captures retain that provenance. Read
+`docs/CPU_RAM_DELTAS.md` for the schema and recovery lifecycle; do not describe
+an accepted partial experiment as deterministic TAS replay or machine parity.
 
 A DOS data watch confirms the observed access boundary, not whole-instruction
 completion. Starting with 0.26, normalized DOS watch stops report

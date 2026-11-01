@@ -118,6 +118,7 @@ jobs:
           set -euo pipefail
           python -m pytest -q --require-native $FDISBULL_NATIVE_TESTS \
             tests/test_frame_cache_contract.py tests/test_frame_capture_native.py tests/test_capture_audit.py \
+            tests/test_cpu_deltas.py tests/test_cpu_deltas_native.py tests/test_debug_rewind.py tests/test_rewind_native.py \
             tests/test_output_artifacts.py tests/test_output_limits.py tests/test_output_cli.py \
             tests/test_agent_skill_gate.py tests/test_agent_discovery.py \
             tests/test_il_scenes.py tests/test_z_process_backend.py tests/test_dinopark_z_bridge.py \
@@ -318,7 +319,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -m pytest -q -s tests/test_wine_debugger.py tests/test_wine_advanced.py tests/test_wine_doctor.py tests/test_udc_shell.py tests/test_udc_selected_shell.py -o pythonpath= \
+          python -m pytest -q -s tests/test_wine_debugger.py tests/test_wine_advanced.py tests/test_wine_doctor.py tests/test_wine_deltas.py tests/test_wine_deltas_native.py tests/test_udc_shell.py tests/test_udc_selected_shell.py -o pythonpath= \
             --junitxml=native-evidence/pe/tests.xml 2>&1 | tee native-evidence/pe/tests.log
       - name: Require real DOS-in-QEMU and boot-context acceptance
         shell: bash

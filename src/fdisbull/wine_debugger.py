@@ -17,15 +17,17 @@ from .wine_rpc import WineQemuRPC
 from .wine_layers import PELayerSessionMixin
 from .wine_execution import PEExecutionMixin
 from .wine_state import PEStateSessionMixin,get_state,file_hash
+from .wine_deltas import WineCpuDeltaSessionMixin, pe_delta_locked
 from .debug_experiments import ExperimentSessionMixin
 
 
-class PEDebugSession(ExperimentSessionMixin,PELayerSessionMixin,PEExecutionMixin,PEStateSessionMixin):
+class PEDebugSession(WineCpuDeltaSessionMixin,ExperimentSessionMixin,PELayerSessionMixin,PEExecutionMixin,PEStateSessionMixin):
     rpc_type=WineQemuRPC
     backend_name='wine-qemu'
     script_operations={'run','click','click-frame','screenshot','trace','breakpoint',
         'delete-breakpoint','registers','memory','write-memory','status','assert',
-        'layer-stack','layer-enable','layer-patch','code','capture-code','branch','save-state','load-state','write-registers'}
+        'layer-stack','layer-enable','layer-patch','code','capture-code','branch','save-state','load-state','save-anchor-stone','load-anchor-stone','write-registers',
+        'delta-start','delta-record','delta-status','delta-rewind','delta-recover'}
     # Share artifact persistence, offline grids, and declarative script execution.
     _artifact=DebugSession._artifact
     _event=DebugSession._event
@@ -45,6 +47,7 @@ class PEDebugSession(ExperimentSessionMixin,PELayerSessionMixin,PEExecutionMixin
             raise ValueError('Wine launch requires the original unpatched x86-64 PE version; select version=1 explicitly')
         bounded(boot_timeout_ms,'boot_timeout_ms',1000,600000)
         directory=Path(game_dir).expanduser().resolve(strict=True)
+        self.game_dir=directory
         target=project.meta['filename']
         if not directory.is_dir() or not re.fullmatch(r'[A-Za-z0-9_. -]{1,128}\.exe',target,re.I):
             raise ValueError('PE target must be an ordinary EXE filename inside game_dir')
@@ -65,6 +68,7 @@ class PEDebugSession(ExperimentSessionMixin,PELayerSessionMixin,PEExecutionMixin
                 if [{'path':f['path'],'sha256':f['sha256']} for f in uploads]!=saved['metadata']['files']:
                     raise ValueError('Native state program inputs mismatch')
             self.rpc=self.rpc_type(executable,kernel,initramfs,boot_timeout_ms=boot_timeout_ms,restore=native)
+            self._cpu_delta_bind_rpc(self.rpc)
             if saved is None:
                 launched=self.rpc.call('session.start',{'target':target,'entry_rva':project.meta['entry']-self.static_base,
                     'files':uploads,**getattr(self,'engine_start',{})},timeout_ms=300000)
@@ -80,13 +84,15 @@ class PEDebugSession(ExperimentSessionMixin,PELayerSessionMixin,PEExecutionMixin
                 'runtime_inputs':self.rpc.inputs,'files':[{'path':f['path'],'sha256':f['sha256']} for f in uploads],
                 'target_pid':launched['pid'],'qemu_pid':self.rpc.process.pid}
             if 'remote_server' in launched:self.metadata['remote_server']=launched['remote_server']
+            if saved is not None and saved['metadata'].get('delta_experiment') is not None:
+                self.metadata['delta_experiment']=saved['metadata']['delta_experiment']
             self.metadata['guest_runtime']={key:self.rpc.hello[key] for key in
                 ('wine_version','guest_kernel','agent_binary_sha256','resources')}
             if saved is not None:self._load_state_host(saved['host'])
             regs=self.registers()
             if saved is None and regs['project_address']!=hex(project.meta['entry']):raise DebuggerError('Observed PE entry differs from project entry')
             if saved is not None:
-                for field in ('rip','rflags','general'):
+                for field in ('rip','rflags','general','thread'):
                     if regs[field]!=saved['metadata']['registers'][field]:raise DebuggerError('Native restored registers differ: '+field)
             with project.transaction(True):
                 project.db.execute('INSERT INTO debug_runs VALUES (?,?,?,?,?,?)',(self.run_id,self.version['id'],stamp(),None,'stopped',json.dumps(self.metadata)))
@@ -112,8 +118,15 @@ class PEDebugSession(ExperimentSessionMixin,PELayerSessionMixin,PEExecutionMixin
                         struct.pack_into('<Q',data,offset,(value+self.delta)&((1<<64)-1));break
                 else:raise DebuggerError('PE relocation lies outside mapped bytes')
 
+    @pe_delta_locked
     def call(self, method, params=None, *, timeout_ms=30000):
         if self.closed:raise DebuggerError('Debugger session is closed')
+        self._cpu_delta_before_call(method,params)
+        deadline=getattr(self,'_rpc_deadline',None)
+        if deadline is not None:
+            remaining=int((deadline-time.monotonic())*1000)
+            if remaining<=0:raise TimeoutError('Shared debugger host-time budget expired')
+            timeout_ms=min(timeout_ms,remaining)
         if method=='layers.configure':return self._configure_pe_layers(params)
         return self.rpc.call(method,params,timeout_ms=timeout_ms)
 
@@ -122,6 +135,16 @@ class PEDebugSession(ExperimentSessionMixin,PELayerSessionMixin,PEExecutionMixin
         if not any(r.start<=value and value+length<=(r.start+len(r.data)) and (r.executable or not executable) for r in self.regions):
             raise ValueError('Address range is outside the selected PE mapped region')
         return value
+
+    @pe_delta_locked
+    def layers(self,active=None,*,conflict='stop'):
+        if active is not None:self._cpu_delta_before_call('layers.configure')
+        return super().layers(active,conflict=conflict)
+
+    @pe_delta_locked
+    def capture_code(self,address,*,cs=None,length=64,view='execute',name='code-view.json'):
+        self._cpu_delta_before_call('code')
+        return super().capture_code(address,cs=cs,length=length,view=view,name=name)
 
     def project_address(self,runtime):
         runtime=int(runtime,16) if isinstance(runtime,str) else runtime

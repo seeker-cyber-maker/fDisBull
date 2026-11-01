@@ -188,12 +188,29 @@ METHODS = {
     "debug-memory": "Read project-mapped runtime bytes; run,address,[cs,length]",
     "debug-write-memory": "Guarded PE64 runtime edit with readback; run,address,data_hex,expected_hex",
     "debug-write-registers": "Guarded PE64 general-register edits; run,registers",
-    "debug-save-state": "Store native emulator state in the project; run,[name,max_bytes]",
-    "debug-load-state": "Restore a compatible project state during a run; run,artifact",
-    "debug-rewind-start": "Start bounded native DOS checkpoint-backed next-fetch history; run,[max_steps,max_bytes]",
-    "debug-rewind-status": "Inspect the live rewind cursor, saved points, budgets and validity; run",
-    "debug-rewind-record": "Capture before each bounded next-fetch interval and advance; run,[count,timeout_ms]",
-    "debug-rewind": "Restore an earlier recorded next-fetch boundary; run,[count]",
+    "debug-save-state": "Compatibility name for saving a full native Anchor Stone; run,[name,max_bytes]",
+    "debug-load-state": "Compatibility name for loading an Anchor Stone; run,artifact",
+    "debug-rewind-start": "Start bounded native DOS Anchor Stone history; run,[max_steps,max_bytes]",
+    "debug-rewind-status": "Inspect the live Anchor Stone history cursor, budgets and validity; run",
+    "debug-rewind-record": "Capture an Anchor Stone before each bounded next-fetch interval and advance; run,[count,timeout_ms]",
+    "debug-rewind": "Jump to an earlier full Anchor Stone in legacy history; run,[count]",
+    "debug-save-anchor-stone": "Save a full native Anchor Stone; run,[name,max_bytes]",
+    "debug-load-anchor-stone": "Jump directly to a compatible Anchor Stone; run,artifact",
+    "debug-anchor-stone-info": "Inspect a saved Anchor Stone offline; artifact",
+    "debug-delta-start": "Experimental delta rewind with one full native Anchor Stone; run,ranges,[max_steps,max_bytes]",
+    "debug-delta-status": "Inspect selected-state delta scope, cursor, costs and execution guard; run",
+    "debug-delta-record": "Record selected CPU/RAM changes at DOS next-fetch or Wine completed-instruction boundaries; run,[count,timeout_ms]",
+    "debug-delta-rewind": "Undo selected CPU/RAM deltas; optional policy preserves declared state and explicitly permits experimental partial continuation; run,[count,policy]",
+    "debug-delta-recover": "Load the recovery Anchor Stone and clear the partial-state guard; run",
+    "debug-frame-advance": "Advance native DOS completed renderer frames without recording; run,[frames,timeout_ms]",
+    "debug-frame-inputs": "Apply physical keyboard edges at a stopped frame boundary; run,edges",
+    "debug-timeline-start": "Start bounded automatic full-state and input frame history; run,[max_frames,max_bytes,max_state_bytes,max_image_bytes,max_captures]",
+    "debug-timeline-status": "Inspect live frame history, cursor, input log, retained bytes and validity; run",
+    "debug-timeline-advance": "Advance and automatically capture each native frame, with optional frame input edges; run,[frames,inputs,timeout_ms]",
+    "debug-timeline-rewind": "Restore a recent full frame state; explicit policy can preserve declared runtime RAM as an experiment; run,[frames,policy]",
+    "debug-timeline-stop": "Stop automatic recording and release its live cache; run",
+    "debug-timeline-pin": "Persist the current cached frame as a durable Anchor Stone without recapture; run,[name]",
+    "debug-timeline-image": "Export the current cached guest PNG, including after rewind; run,[name]",
     "debug-script": "Execute bounded menu/debug script; run,[script,script_id,timeout_ms]",
     "debug-save-script": "Save an immutable version-bound script; name,script,[version]",
     "debug-scripts": "List saved scripts; [version]",
@@ -816,6 +833,7 @@ def invoke(method, params, debugger=None):
         "debug-save-script",
         "debug-scripts",
         "debug-state-info",
+        "debug-anchor-stone-info",
         "debug-fork-state",
         "debug-layer",
         "debug-layer-info",
@@ -1820,6 +1838,7 @@ def parser():
         "debug-save-script",
         "debug-scripts",
         "debug-state-info",
+        "debug-anchor-stone-info",
         "debug-fork-state",
         "debug-experiments",
         "debug-experiment-info",
@@ -1829,7 +1848,7 @@ def parser():
     ):
         c = sub.add_parser(name, help=METHODS[name])
         c.add_argument("project")
-        if name in ("debug-state-info", "debug-experiment-info"):
+        if name in ("debug-state-info", "debug-anchor-stone-info", "debug-experiment-info"):
             c.add_argument("artifact")
         elif name == "debug-trace-view":
             c.add_argument("artifact")

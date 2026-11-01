@@ -216,8 +216,22 @@ alongside earlier views, but a capture does not by itself prove those bytes ran.
 See [code layers](docs/CODE_LAYERS.md), [saved experiments](docs/DEBUGGER_EXPERIMENTS.md),
 [debugger scripts](docs/DEBUGGER_SCRIPTS.md) and [runtime code](docs/RUNTIME_CODE.md).
 
-For short debugging histories, [checkpoint-backed rewind](docs/DEBUGGER_REWIND.md)
-records recent steps and lets an agent return to an earlier recorded boundary.
+For short debugging histories, [Anchor Stone history](docs/DEBUGGER_REWIND.md)
+records full native states and lets an agent jump to an earlier recorded boundary.
+
+The [automatic frame/input timeline](docs/FRAME_INPUT_TIMELINE.md) keeps recent
+native DOS frames ready for rewind and input branching. It uses full states
+first, with optional durable Anchor Stone pins. This requires the separately
+built frame-capable backend; its live cache does not survive closing the session.
+
+Full native saved states are called [Anchor Stones](docs/ANCHOR_STONES.md), a nod
+to TiGa's Blob to General game. Load a stone to jump directly to its saved context.
+[Delta rewind](docs/CPU_RAM_DELTAS.md) walks through recorded changes. Its default
+selected-state mode requires full native recovery before execution. An explicit
+[experimental policy](docs/CPU_RAM_DELTAS.md#agent-specified-rewind-policies) lets an
+agent preserve declared current state, such as identified RNG memory, and opt
+into continuing an input experiment from that mixed state.
+It supports native DOSBox and [Windows x86-64 through Wine/QEMU](docs/WINE_CPU_RAM_DELTAS.md).
 
 ## Scenes, maps and interaction policies
 

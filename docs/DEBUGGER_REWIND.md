@@ -1,9 +1,11 @@
-# Bounded checkpoint-backed debugger rewind
+# Anchor Stone history: full native saved states
 
-Rewind adds an owned history and a backward cursor to the existing native DOS
-checkpoint mechanism. It captures a checkpoint before each requested forward
-step, then restores the selected checkpoint when asked to go back. Restoring
-does not become intrinsically faster because it is called rewind.
+An **Anchor Stone** is a full native saved state, named after the concept in
+TiGa's Blob to General game. MR !14 adds an owned history and backward cursor to
+these stones: it captures one before each requested forward step and jumps
+directly to the selected stone when asked to go back. Its legacy `debug-rewind-*`
+API names remain compatible. This is distinct from [delta rewind](CPU_RAM_DELTAS.md),
+which records changes. See the [naming and direct save/load APIs](ANCHOR_STONES.md).
 
 This first implementation records **next-fetch intervals** in a live native
 DOSBox session. Each interval requests two fetch observations and stops at the
@@ -118,6 +120,13 @@ For a known checkpoint, direct load is simpler and was slightly faster here.
 Checkpoint-backed rewind is useful when selecting earlier points during a short
 recorded investigation. Long histories would need a different storage strategy,
 such as an independently qualified delta log or checkpoint/replay mechanism.
+
+The separate [experimental CPU/RAM delta prototype](CPU_RAM_DELTAS.md) measures
+net changes to exposed registers and selected RAM. Its default partial undo
+blocks normal execution until a full native checkpoint is recovered. An explicit
+[rewind policy](CPU_RAM_DELTAS.md#agent-specified-rewind-policies) can permit input
+experiments from deliberately mixed state while retaining partial-state
+provenance; it does not replace this guide's full native checkpoint semantics.
 
 For the broader terminology, GDB distinguishes
 [reverse execution](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Reverse-Execution.html)

@@ -20,7 +20,7 @@ REQUIRED_SOURCE_FILES=('AGENTS.md','CLAUDE.md','docs/AGENT_QUICKSTART.md','scrip
                        'src/fdisbull/ida_guest/ui.c','src/fdisbull/ida_guest/SDK-LICENSE.txt','src/fdisbull/ida_trace.py',
                        'src/fdisbull/dos_guest/__init__.py','src/fdisbull/dos_guest/init.sh','src/fdisbull/dos_guest/broker.py',
                        'src/fdisbull/dos_qemu.py','src/fdisbull/dos_runtime.py','src/fdisbull/qemu_machine.py',
-                       'src/fdisbull/gdb_rpc.py','src/fdisbull/guest_assets.py',
+                       'src/fdisbull/gdb_rpc.py','src/fdisbull/guest_assets.py','src/fdisbull/wine_deltas.py',
                        'src/fdisbull/data/dos-runtime-signatures.json','src/fdisbull/data/MICROSOFT-DOS-LICENSE.txt',
                        'src/fdisbull/skills/fdisbull-investigate/SKILL.md',
                        'src/fdisbull/skills/fdisbull-investigate/references/scenes.md',

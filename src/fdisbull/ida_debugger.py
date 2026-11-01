@@ -33,7 +33,8 @@ class IDAQemuRPC(WineQemuRPC):
 class IDAPEDebugSession(PEDebugSession):
     rpc_type = IDAQemuRPC
     backend_name = 'ida-wine-qemu'
-    script_operations = PEDebugSession.script_operations - {'branch','save-state','load-state'}
+    script_operations = PEDebugSession.script_operations - {'branch','save-state','load-state','save-anchor-stone','load-anchor-stone',
+        'delta-start','delta-record','delta-status','delta-rewind','delta-recover'}
 
     def __init__(self, project, executable, game_dir, *, remote_server, state=None, **kwargs):
         if state is not None:

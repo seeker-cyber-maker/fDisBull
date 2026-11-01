@@ -59,6 +59,7 @@ std::uint8_t* scalerSourceCacheBuffer = cache;
 unsigned int scalerSourceCacheBufferSize = sizeof(cache);
 const std::size_t max_agent_frame_bytes = 16u * 1024u * 1024u;
 bool agent_frame_capture_enabled = true, agent_frame_valid = false;
+bool agent_frame_step_armed = false, agent_frame_step_completed = false;
 std::uint64_t agent_frame_sequence = 0, agent_mode_sequence = 9, PIC_Ticks = 41;
 FrameSnapshot agent_frame;
 
@@ -75,6 +76,8 @@ void reset_source() {
     scalerSourceCacheBufferSize = sizeof(cache);
     agent_frame_capture_enabled = true;
     agent_frame_valid = false;
+    agent_frame_step_armed = false;
+    agent_frame_step_completed = false;
     agent_frame = FrameSnapshot();
 }
 void pixel(std::size_t n, unsigned r, unsigned g, unsigned b) {
@@ -184,6 +187,19 @@ int main() {
         CaptureCompletedAgentFrame();
         assert(!agent_frame_valid && agent_frame_sequence == sequence);
     }
+
+    // A requested frame step is signalled only after complete source pixels
+    // exist. A partial cache must not release a waiter for a real frame.
+    reset_source();
+    agent_frame_step_armed = true;
+    render.scale.cacheRead = cache + 4;
+    const auto before_step = agent_frame_sequence;
+    CaptureCompletedAgentFrame();
+    assert(!agent_frame_step_completed && agent_frame_sequence == before_step);
+    render.scale.cacheRead = cache + 8;
+    CaptureCompletedAgentFrame();
+    assert(agent_frame_valid && agent_frame_step_completed);
+    assert(agent_frame_sequence == before_step + 1);
 }
 '''
     cpp = tmp_path / "frame_cache_contract.cpp"
