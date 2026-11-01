@@ -1,0 +1,165 @@
+{
+  "actions": [
+    {
+      "install": {
+        "action": "supportData",
+        "arguments": {
+          "saveGameData": true,
+          "target": "{app}/saves",
+          "type": "folder"
+        }
+      },
+      "languages": [
+        "*"
+      ],
+      "name": "createFolder"
+    },
+    {
+      "install": {
+        "action": "supportData",
+        "arguments": {
+          "saveGameData": true,
+          "target": "{app}/vga/saves",
+          "type": "folder"
+        }
+      },
+      "languages": [
+        "*"
+      ],
+      "name": "createFolder"
+    },
+    {
+      "install": {
+        "action": "supportData",
+        "arguments": {
+          "overwrite": true,
+          "source": "{supportDir}/app/sq1.ini",
+          "target": "{app}/sq1.ini",
+          "type": "file"
+        }
+      },
+      "languages": [
+        "*"
+      ],
+      "name": "copyConfig"
+    },
+    {
+      "install": {
+        "action": "supportData",
+        "arguments": {
+          "overwrite": true,
+          "source": "{supportDir}/app/sq1_vga.ini",
+          "target": "{app}/sq1_vga.ini",
+          "type": "file"
+        }
+      },
+      "languages": [
+        "*"
+      ],
+      "name": "copyConfig"
+    },
+    {
+      "install": {
+        "action": "setIni",
+        "arguments": {
+          "filename": "{app}\\sq1.ini",
+          "keyName": "path",
+          "keyType": "string",
+          "keyValue": "{app}",
+          "section": "sq1",
+          "utf8": false
+        }
+      },
+      "languages": [
+        "*"
+      ],
+      "name": "ini1"
+    },
+    {
+      "install": {
+        "action": "setIni",
+        "arguments": {
+          "filename": "{app}\\sq1_vga.ini",
+          "keyName": "path",
+          "keyType": "string",
+          "keyValue": "{app}\\vga",
+          "section": "sq1sci",
+          "utf8": false
+        }
+      },
+      "languages": [
+        "*"
+      ],
+      "name": "ini1"
+    },
+    {
+      "install": {
+        "action": "setIni",
+        "arguments": {
+          "filename": "{app}\\sq1.ini",
+          "keyName": "savepath",
+          "keyType": "string",
+          "keyValue": "{app}\\saves",
+          "section": "sq1",
+          "utf8": false
+        }
+      },
+      "languages": [
+        "*"
+      ],
+      "name": "ini2"
+    },
+    {
+      "install": {
+        "action": "setIni",
+        "arguments": {
+          "filename": "{app}\\sq1_vga.ini",
+          "keyName": "savepath",
+          "keyType": "string",
+          "keyValue": "{app}\\vga\\saves",
+          "section": "sq1sci",
+          "utf8": false
+        }
+      },
+      "languages": [
+        "*"
+      ],
+      "name": "ini2"
+    },
+    {
+      "install": {
+        "action": "setIni",
+        "arguments": {
+          "filename": "{app}\\sq1.ini",
+          "keyName": "updates_check",
+          "keyType": "string",
+          "keyValue": "0",
+          "section": "scummvm",
+          "utf8": false
+        }
+      },
+      "languages": [
+        "*"
+      ],
+      "name": "ini3"
+    },
+    {
+      "install": {
+        "action": "setIni",
+        "arguments": {
+          "filename": "{app}\\sq1_vga.ini",
+          "keyName": "updates_check",
+          "keyType": "string",
+          "keyValue": "0",
+          "section": "scummvm",
+          "utf8": false
+        }
+      },
+      "languages": [
+        "*"
+      ],
+      "name": "ini3"
+    }
+  ],
+  "productId": "1207661413"
+}

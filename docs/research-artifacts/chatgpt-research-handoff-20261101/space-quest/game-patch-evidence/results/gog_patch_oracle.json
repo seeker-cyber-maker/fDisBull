@@ -1,0 +1,404 @@
+{
+  "expanded_target_bytes": 5845403,
+  "historical_file_status": "addition/replacement/unchanged classification unresolved without predecessor bytes",
+  "inputs": {
+    "new_installer": {
+      "name": "setup_space_quest_1_-_the_sarien_encounter_2.2_gog_v2_(88857).exe",
+      "sha256": "99dc2a147e55d49c77e0dd83084118601fb1a2e958cb06dad34a064087beeb94",
+      "size": 450025368
+    },
+    "patch": {
+      "name": "patch_space_quest_1_-_the_sarien_encounter_2.2_galaxy_hotfix_(20261)_to_2.2_GOG_v2_(88857).exe",
+      "sha256": "7b3ae423b768c1176229ad0c43260c677de615a17f6e8cedb75509ac3fa2815c",
+      "size": 9531080
+    }
+  },
+  "native_execution": false,
+  "old_installer_obtained": false,
+  "payload_kind": "36 complete zlib replacement payloads, checksum-verified",
+  "support_actions": {
+    "actions": [
+      {
+        "install": {
+          "action": "supportData",
+          "arguments": {
+            "saveGameData": true,
+            "target": "{app}/saves",
+            "type": "folder"
+          }
+        },
+        "languages": [
+          "*"
+        ],
+        "name": "createFolder"
+      },
+      {
+        "install": {
+          "action": "supportData",
+          "arguments": {
+            "saveGameData": true,
+            "target": "{app}/vga/saves",
+            "type": "folder"
+          }
+        },
+        "languages": [
+          "*"
+        ],
+        "name": "createFolder"
+      },
+      {
+        "install": {
+          "action": "supportData",
+          "arguments": {
+            "overwrite": true,
+            "source": "{supportDir}/app/sq1.ini",
+            "target": "{app}/sq1.ini",
+            "type": "file"
+          }
+        },
+        "languages": [
+          "*"
+        ],
+        "name": "copyConfig"
+      },
+      {
+        "install": {
+          "action": "supportData",
+          "arguments": {
+            "overwrite": true,
+            "source": "{supportDir}/app/sq1_vga.ini",
+            "target": "{app}/sq1_vga.ini",
+            "type": "file"
+          }
+        },
+        "languages": [
+          "*"
+        ],
+        "name": "copyConfig"
+      },
+      {
+        "install": {
+          "action": "setIni",
+          "arguments": {
+            "filename": "{app}\\sq1.ini",
+            "keyName": "path",
+            "keyType": "string",
+            "keyValue": "{app}",
+            "section": "sq1",
+            "utf8": false
+          }
+        },
+        "languages": [
+          "*"
+        ],
+        "name": "ini1"
+      },
+      {
+        "install": {
+          "action": "setIni",
+          "arguments": {
+            "filename": "{app}\\sq1_vga.ini",
+            "keyName": "path",
+            "keyType": "string",
+            "keyValue": "{app}\\vga",
+            "section": "sq1sci",
+            "utf8": false
+          }
+        },
+        "languages": [
+          "*"
+        ],
+        "name": "ini1"
+      },
+      {
+        "install": {
+          "action": "setIni",
+          "arguments": {
+            "filename": "{app}\\sq1.ini",
+            "keyName": "savepath",
+            "keyType": "string",
+            "keyValue": "{app}\\saves",
+            "section": "sq1",
+            "utf8": false
+          }
+        },
+        "languages": [
+          "*"
+        ],
+        "name": "ini2"
+      },
+      {
+        "install": {
+          "action": "setIni",
+          "arguments": {
+            "filename": "{app}\\sq1_vga.ini",
+            "keyName": "savepath",
+            "keyType": "string",
+            "keyValue": "{app}\\vga\\saves",
+            "section": "sq1sci",
+            "utf8": false
+          }
+        },
+        "languages": [
+          "*"
+        ],
+        "name": "ini2"
+      },
+      {
+        "install": {
+          "action": "setIni",
+          "arguments": {
+            "filename": "{app}\\sq1.ini",
+            "keyName": "updates_check",
+            "keyType": "string",
+            "keyValue": "0",
+            "section": "scummvm",
+            "utf8": false
+          }
+        },
+        "languages": [
+          "*"
+        ],
+        "name": "ini3"
+      },
+      {
+        "install": {
+          "action": "setIni",
+          "arguments": {
+            "filename": "{app}\\sq1_vga.ini",
+            "keyName": "updates_check",
+            "keyType": "string",
+            "keyValue": "0",
+            "section": "scummvm",
+            "utf8": false
+          }
+        },
+        "languages": [
+          "*"
+        ],
+        "name": "ini3"
+      }
+    ],
+    "productId": "1207661413"
+  },
+  "target_count": 36,
+  "targets": [
+    {
+      "matches_full_installer": true,
+      "path": "vga/433.V56",
+      "sha256": "4b495b853cc0b80a36d31b79f6c09d3e9aa07f1c2f0ad6305d45a8444471a4bf",
+      "size": 2703
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/533.V56",
+      "sha256": "b5029b8c4858500592d8f27983f9f0a65b3aaf951148bcac449c1344ba25dd8a",
+      "size": 1960
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/ADL.DRV",
+      "sha256": "e86554c1b746ab95bf7354dffc2ec557d9b91b1ed718f810022b8c14d44629fa",
+      "size": 8070
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/CMS.DRV",
+      "sha256": "1e9aa0853e7c0a355d17406bf2dcb5dea3c18132fbff1c91f2664ca9b430387a",
+      "size": 3741
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/IBMKBD.DRV",
+      "sha256": "da40f2f97d9a9cafa80d511da28264fdc1f6791e7752799f26eef381e16f3e61",
+      "size": 537
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/IBMPS1.DRV",
+      "sha256": "23ce1f956d2ca026d3989ae3f879fb03af3c07cf4d00c3cebf34352ada963140",
+      "size": 4364
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/INSTALL.EXE",
+      "sha256": "e50d513675f5a307de4bd5cc84804d6f8acb44e821a2ee90afd81c861907f15c",
+      "size": 39723
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/INSTALL.HLP",
+      "sha256": "453f37bab2ce0de3b53cc568f2954e53aa16553d610f5345badcffcb05adf90b",
+      "size": 8565
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/INSTALL.SCR",
+      "sha256": "76851243a1f8b4913306fbfa0d738282c2dfc60656a0f0ea57015ee6ac8080a9",
+      "size": 2844
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/INSTALL.TXT",
+      "sha256": "c89301426641c613ad65103053a858e6ac54dee0708ff444b2573774925dacb8",
+      "size": 4189
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/INTERP.TXT",
+      "sha256": "5ed368a38f20d7646b09266311a598f7275b4a4a4ddcaee2cb8adc5f6be908c7",
+      "size": 1636
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/JOYSTICK.DRV",
+      "sha256": "cbf2c98b7bdced90dac636db969a4f963e40eb8525ff18f4d7075b4e989113dc",
+      "size": 607
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/MT32.DRV",
+      "sha256": "048a2e5a121968287b127eb8d78df42469cfe0ecdd2725c799277733efb25f17",
+      "size": 1976
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/MTBLAST.DRV",
+      "sha256": "cbb814d775ae3d771d1642a2a6368d9d2854b3f39abf7823dd0a99d7c17a1362",
+      "size": 3688
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/PROAUDIO.DRV",
+      "sha256": "444fa992fed30d1f6c8ca3faa2afdea9e292e89df40203237e2541ea65f217a6",
+      "size": 11942
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/README",
+      "sha256": "7d5dc70a61014fb64f44ab8ef8875a2cbf878db72d1fdb5861fa69e3f3171bda",
+      "size": 1078
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/RESOURCE.000",
+      "sha256": "84664c44d911f3da106f52490bf37490d30cfe906ef08a966f794670dc2b7bb9",
+      "size": 1016436
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/RESOURCE.001",
+      "sha256": "4f14b988edb43ba73e710db7c8e76ad77f92266aa38c422dcea515b8d238e9ed",
+      "size": 1038757
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/RESOURCE.002",
+      "sha256": "13b6212085699bdfd83c85c42e318c47a543cd4ca78e58ac449c38402bd2b6f5",
+      "size": 1169831
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/RESOURCE.003",
+      "sha256": "8645232ddc5bb1110637f1fd8f2e6d4d17a0c27a73946d00f4ca5ba0f3fd7c9f",
+      "size": 1213262
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/RESOURCE.004",
+      "sha256": "ed02a7d4dada586994ed658acd96ce8fddfb1a9320232c15a7392ad570238b35",
+      "size": 1203051
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/RESOURCE.CFG",
+      "sha256": "5abe61c9ee390aea2fab36767439bf82c6202ab9fcbd2ccd524b7b77ff1a2779",
+      "size": 173
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/RESOURCE.MAP",
+      "sha256": "b39d7965bb3413c01286525077be3aedde47fcd17b891ba16baea772416261d5",
+      "size": 5913
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/SCIDHUV.EXE",
+      "sha256": "3e85e5a23dce88cd457dddce7b85f42ecb16346e966fa4345fe635990af8ff9a",
+      "size": 62238
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/SNDBLAST.DRV",
+      "sha256": "623eeaece12e847599ec5d86f5dc61a686af29bd6b3a300000f0d6aa1810d0c6",
+      "size": 9768
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/SQ1GMPAT",
+      "sha256": "738d50abe1a2bc194b3f8daa816b1f97d180621d30e2d5753f9f7fc0385191c8",
+      "size": 1301
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/SQ1RS.BAT",
+      "sha256": "faa047f4a37ba6faf0fe63aed28bc948db1272587d9ab0c03eea3ccb92f510a0",
+      "size": 31
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/STD.DRV",
+      "sha256": "15a683cffb88c8aa0da2c70dbad5c121072a77ae24dba273f3da7510481d9361",
+      "size": 1461
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/TANDY3V.DRV",
+      "sha256": "b81b3ac929addd19354486258aca189b499bf50f91219a89e31bfc812024b5a8",
+      "size": 3950
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/TANDY3VD.DRV",
+      "sha256": "570a38ca566e8b2e0c81d5ccbd2f917ec007f640e9f7d145e7d5079f9e72affd",
+      "size": 4498
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/VERSION",
+      "sha256": "c348a507b0168157722a68d16161142f9e104c8f5e7b8deb8d703311c63597c1",
+      "size": 7
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/VGA320.DRV",
+      "sha256": "e7d2bb1816a2b49f0f8c1ace91519060d0bf61239ff79fe1ad49499f4647461a",
+      "size": 4461
+    },
+    {
+      "matches_full_installer": true,
+      "path": "vga/VGA320BW.DRV",
+      "sha256": "9b58e7e66aed3502598e5f2079d058bf6149732ed3d51eb326c013a81ebb1fe3",
+      "size": 4369
+    },
+    {
+      "matches_full_installer": true,
+      "path": "goggame-1207661413.hashdb",
+      "sha256": "4bf47875c18a280c1da2db059a32ff29c9a7e335ace3ed38f3f924c0a2abd9d7",
+      "size": 1910
+    },
+    {
+      "matches_full_installer": true,
+      "path": "goggame-1207661413.info",
+      "sha256": "98ca6569f6dc90e9886ff2e2cff1df82631305170465d02e29b7ff73e98cb1c9",
+      "size": 1765
+    },
+    {
+      "matches_full_installer": true,
+      "path": "goggame-1207661413.script",
+      "sha256": "b999ed2a3ae59aac7bd68de87871d177cfc51d0d603e801e7a2620f1876e6a48",
+      "size": 4598
+    }
+  ],
+  "wrapper_control_flow": "not fully decompiled; manifest and support JSON inspected, not an executed installation"
+}

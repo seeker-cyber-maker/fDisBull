@@ -1,0 +1,143 @@
+{
+  "after_sha256": "01994acf68410137555705b63c891aa53e05efa6f01babcb48c6020ad2f8baff",
+  "before_sha256": "306d41f57c8f94febc310fa0d79ab4efda99859381e1937dc672ce955f3e327e",
+  "changed_offsets": [
+    8713,
+    8714,
+    8715
+  ],
+  "declared_written_offsets": [
+    8713,
+    8714,
+    8715
+  ],
+  "effect": "The false conditional edge to offset 0xf000 is replaced with an unconditional zero-displacement continuation.",
+  "id": "generator_branch",
+  "offset": 8712,
+  "original_size": 11566,
+  "script": 45,
+  "selected_spans": [
+    {
+      "after_effects": {
+        "acc": [
+          "eq",
+          [
+            "input",
+            "stack_top_in"
+          ],
+          [
+            "input",
+            "acc_in"
+          ]
+        ],
+        "events": [
+          [
+            "unconditional_edge",
+            8716,
+            8713
+          ]
+        ],
+        "prev": [
+          "input",
+          "acc_in"
+        ],
+        "stack": []
+      },
+      "after_instruction_count": 2,
+      "asm_edits": [
+        [
+          "replace",
+          1,
+          2,
+          1,
+          2
+        ]
+      ],
+      "before_effects": {
+        "acc": [
+          "eq",
+          [
+            "input",
+            "stack_top_in"
+          ],
+          [
+            "input",
+            "acc_in"
+          ]
+        ],
+        "events": [
+          [
+            "conditional_edge",
+            [
+              "not",
+              [
+                "eq",
+                [
+                  "input",
+                  "stack_top_in"
+                ],
+                [
+                  "input",
+                  "acc_in"
+                ]
+              ]
+            ],
+            61440,
+            8713
+          ]
+        ],
+        "prev": [
+          "input",
+          "acc_in"
+        ],
+        "stack": []
+      },
+      "before_instruction_count": 2,
+      "byte_changes": [
+        [
+          1,
+          48,
+          50
+        ],
+        [
+          2,
+          244,
+          0
+        ],
+        [
+          3,
+          205,
+          0
+        ]
+      ],
+      "size": 4,
+      "start": 8712,
+      "unordered_instruction_bag_equal": false
+    }
+  ],
+  "signature": [
+    26,
+    48,
+    244,
+    205
+  ],
+  "slices": [
+    [
+      0,
+      4
+    ]
+  ],
+  "source_profile": "v2.2.0",
+  "upstream_patch": "sq1vgaPatchUlenceFlatsGeneratorGlitch",
+  "upstream_signature": "sq1vgaSignatureUlenceFlatsGeneratorGlitch",
+  "writes": [
+    [
+      1,
+      [
+        50,
+        0,
+        0
+      ]
+    ]
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "buildId": "59441489525262901",
+  "gameId": "1207661413",
+  "playTasks": [
+    {
+      "arguments": "-c \"..\\sq1.ini\" sq1",
+      "category": "game",
+      "isPrimary": true,
+      "languages": [
+        "*"
+      ],
+      "name": "Space Quest 1 - The Sarien Encounter",
+      "path": "ScummVM\\scummvm.exe",
+      "type": "FileTask",
+      "workingDir": "ScummVM"
+    },
+    {
+      "arguments": "-c \"..\\sq1_vga.ini\" sq1sci",
+      "category": "tool",
+      "languages": [
+        "*"
+      ],
+      "name": "Space Quest 1 - The Sarien Encounter (VGA)",
+      "path": "ScummVM\\scummvm.exe",
+      "type": "FileTask",
+      "workingDir": "ScummVM"
+    }
+  ]
+}
