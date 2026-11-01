@@ -1,5 +1,11 @@
 # Repeatable Genesis source → UIL → native console builds
 
+The [Genesis performance follow-up](GENESIS_PERFORMANCE.md) supersedes the
+first Genesis output and its speed measurements below. It keeps the same
+procedural UIL and original-backed accuracy contract, with a faster renderer
+and a verified native state-copy helper. The first-output hashes remain
+historical evidence.
+
 The Genesis UDC facade now exports an identity-bound replay bundle and compiles
 the reviewed full Miniplanets procedural game to either NES or a new Genesis
 cartridge. Game rules are emitted from the same typed UIL tree on both targets.

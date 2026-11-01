@@ -230,6 +230,9 @@ METHODS = {
     "genesis-replay-export": "Capture semantic UIL and a locked NES or Genesis build in a new private bundle; path,output,[target,cc65_root,m68k_root,variant,procedures]",
     "genesis-replay-inspect": "Check private replay payload integrity without executing tools or trusting qualification claims; path",
     "genesis-replay-build": "Replay a registered bundle with exact original ROM and explicit trusted target compiler; path,output,rom_path,[target,cc65_root,m68k_root]",
+    "nes-multicart-profiles": "List bounded NES packaging UDC profiles and compatibility requirements",
+    "nes-multicart-inspect": "Inspect NES cartridge mapper and bank geometry without assuming a game count; path",
+    "nes-multicart-build": "Package two compatible authored NROM cartridges behind a bank-switching menu; inputs,output,authored_compatible",
     "rom-disasm": "Decode bounded, explicitly mapped SH-2 bytes with interchangeable engines; path,base_address,[backend,offset,length,max_instructions,mode,ghidra_home,saturn_recomp_root,timeout]",
     "disc-inspect": "Parse bounded CUE/BIN or ISO primary filesystem metadata; path,[mode,max_entries,max_directory_bytes,max_depth]",
     "info": "Parsed container summary; [version]",
@@ -387,6 +390,14 @@ def invoke(method, params, debugger=None):
     if method=='rom-game-lift':
         from .udl_miniplanets_full import lift_game_path
         return lift_game_path(**p)
+    if method.startswith('nes-multicart-'):
+        from . import nes_multicart
+        if method=='nes-multicart-profiles':
+            if p:raise ValueError('nes-multicart-profiles accepts no parameters')
+            return nes_multicart.multicart_profiles()
+        handler={'nes-multicart-inspect':nes_multicart.inspect_multicart_path,
+                 'nes-multicart-build':nes_multicart.build_multicart}.get(method)
+        if handler is not None:return handler(**p)
     if method.startswith('genesis-replay-'):
         from . import udc_genesis
         if method=='genesis-replay-profiles':
@@ -569,7 +580,7 @@ def respond(request, default_project=None, debugger=None):
             raise ValueError("request must be an object with method and optional params/id")
         request_id=validate_request_id(request.get('id'))
         params = request.get("params",{})
-        standalone=request['method'] in ('media-modules','media-inspect','media-extract','agent-skill','identify','inspect','rom-inspect','rom-disasm','disc-inspect','console-udc','console-udc-targets','rom-game-lift','genesis-replay-profiles','genesis-replay-source','genesis-replay-export','genesis-replay-inspect','genesis-replay-build','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
+        standalone=request['method'] in ('media-modules','media-inspect','media-extract','agent-skill','identify','inspect','rom-inspect','rom-disasm','disc-inspect','console-udc','console-udc-targets','rom-game-lift','genesis-replay-profiles','genesis-replay-source','genesis-replay-export','genesis-replay-inspect','genesis-replay-build','nes-multicart-profiles','nes-multicart-inspect','nes-multicart-build','help','decoder-check','doctor','dos-services','omf-catalog','gog-list','gog-unpack','agi-logic','zmachine-disasm','zmachine-analyze','output-info','output-read','output-select','output-export') or request['method']=='managed' and isinstance(params,dict) and 'path' in params
         if default_project is not None and isinstance(params,dict) and not standalone:
             params = {"project":default_project,**params}
         result=invoke(request["method"],params,debugger)
@@ -802,6 +813,14 @@ def parser():
     c.add_argument('--rom',dest='rom_path',required=True)
     c.add_argument('--target',choices=['nes','genesis'],default='nes')
     c.add_argument('--cc65-root');c.add_argument('--m68k-root')
+    sub.add_parser('nes-multicart-profiles',help=METHODS['nes-multicart-profiles'])
+    c=sub.add_parser('nes-multicart-inspect',help=METHODS['nes-multicart-inspect'])
+    c.add_argument('path')
+    c=sub.add_parser('nes-multicart-build',help=METHODS['nes-multicart-build'])
+    c.add_argument('inputs',nargs='+')
+    c.add_argument('--output',required=True)
+    c.add_argument('--authored-compatible',action='store_true',
+                   help='assert these authored NROM games use no PRG-ROM writes or cartridge RAM')
     c=sub.add_parser('rom-disasm',help=METHODS['rom-disasm'])
     c.add_argument('path')
     c.add_argument('--base-address',type=lambda s:int(s,0),required=True,help='explicit address mapping source file offset zero')

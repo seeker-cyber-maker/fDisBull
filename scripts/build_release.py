@@ -78,6 +78,8 @@ SOURCE_PATTERNS = (
     ("docs/evidence/genesis-rom-route-2026-10-30", "verification.json"),
     ("docs/evidence/miniplanets-nes-level-2026-10-31", "verification.json"),
     ("docs/evidence/miniplanets-full-game-2026-10-31", "*.json"),
+    ("docs/evidence/nes-multicart-2026-10-31", "verification.json"),
+    ("docs/evidence/console-intake-2026-10-31", "intake.json"),
     ("patches", "capstone-5.0.9-sh-profile-gating.patch"),
     ("scripts/rom_semantic_route", "*.java"),
     ("scripts/rom_semantic_route", "README.md"),

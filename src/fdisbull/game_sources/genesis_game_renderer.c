@@ -22,10 +22,10 @@ extern volatile u16 genesis_render_epoch;
 
 /* Public staging allows a native diagnostic to compare the complete adapter
  * state without reading VDP registers. Each sprite has x,y,tile,palette. */
-u8 genesis_plane[256];
-u8 genesis_palettes[256];
+u8 genesis_plane[256] __attribute__((aligned(4)));
+u8 genesis_palettes[256] __attribute__((aligned(4)));
 u8 genesis_hud[24];
-u8 genesis_sprites[252];
+u8 genesis_sprites[252] __attribute__((aligned(4)));
 u8 genesis_sprite_count;
 u8 genesis_sprite_overflow;
 
@@ -100,21 +100,22 @@ static void genesis_draw_terrain(void) {
     u8 tile;
     u8 palette;
     u8 shape;
-    u32 src;
-    u32 pattern;
+    const u8 *projection=genesis_projection+(u32)phase*256UL+256;
+    const u8 *frame=genesis_terrain+(u32)((u8)anim & 31)*1260UL;
+    const u8 *pattern;
+    u8 map_y=player_y & 240;
+    u8 map_x=player_x>>4;
     for(i=0;i<64;i=i+1) {
-        src=(u32)phase*256UL+(u16)(63-i)*4U;
-        pos=genesis_projection[src];
-        mapoff=genesis_projection[src+1];
-        shape=genesis_projection[src+2];
-        mapindex=(u8)(((mapoff+(player_y & 240)) & 240)|((mapoff+(player_x>>4)) & 15));
+        projection-=4;
+        pos=projection[0];mapoff=projection[1];shape=projection[2];
+        mapindex=(u8)(((mapoff+map_y) & 240)|((mapoff+map_x) & 15));
         tile=world[mapindex];if(tile>=35)tile=0;
-        pattern=(u32)((u8)anim & 31)*1260UL+(u16)tile*36U+shape;
+        pattern=frame+(u16)tile*36U+shape;
         palette=genesis_tile_palette[tile];
-        genesis_plane[pos]=genesis_terrain[pattern];
-        genesis_plane[(u16)pos+1]=genesis_terrain[pattern+1];
-        genesis_plane[(u16)pos+16]=genesis_terrain[pattern+2];
-        genesis_plane[(u16)pos+17]=genesis_terrain[pattern+3];
+        genesis_plane[pos]=pattern[0];
+        genesis_plane[(u16)pos+1]=pattern[1];
+        genesis_plane[(u16)pos+16]=pattern[2];
+        genesis_plane[(u16)pos+17]=pattern[3];
         genesis_palettes[pos]=palette;genesis_palettes[(u16)pos+1]=palette;
         genesis_palettes[(u16)pos+16]=palette;genesis_palettes[(u16)pos+17]=palette;
     }
@@ -211,8 +212,12 @@ static void genesis_make_hud(void) {
 /* Stage without hardware writes for deterministic adapter verification. */
 void genesis_render_stage(void) {
     u16 i;
-    for(i=0;i<256;i++){genesis_plane[i]=0;genesis_palettes[i]=0;}
-    for(i=0;i<252;i++)genesis_sprites[i]=255;
+    typedef u32 alias_u32 __attribute__((may_alias));
+    alias_u32 *plane=(alias_u32*)genesis_plane;
+    alias_u32 *palettes=(alias_u32*)genesis_palettes;
+    alias_u32 *sprites=(alias_u32*)genesis_sprites;
+    for(i=0;i<64;i++){plane[i]=0;palettes[i]=0;}
+    for(i=0;i<63;i++)sprites[i]=0xffffffffUL;
     genesis_sprite_count=0;genesis_sprite_overflow=0;
     if(mode==1){
         if(ending_phase==3)genesis_ending();else genesis_draw_terrain();
@@ -224,16 +229,18 @@ void genesis_render_stage(void) {
 /* Caller schedules this at a VBlank boundary. No approximation is made to
  * game state; finite VDP timing and visible-output checks remain separate. */
 void genesis_present(void) {
-    u8 row,col,index,sample;
+    u8 row,col,index;
     u16 at,attr;
+    const u8 *tile=genesis_plane;
+    const u8 *palette=genesis_palettes+17;
     for(row=0;row<16;row++){
         genesis_vram_write((u16)(0xc000U+(12U+row)*128U+12U*2U));
-        for(col=0;col<16;col++){
-            index=(u8)(row*16+col);
-            sample=(u8)(((row & 0xfe)+1)*16+(col & 0xfe)+1);
-            attr=(u16)(genesis_palettes[sample] & 3)<<13;
-            VDP_DATA16=attr | genesis_plane[index];
+        for(col=0;col<16;col+=2){
+            attr=(u16)(palette[col] & 3)<<13;
+            VDP_DATA16=attr | *tile++;
+            VDP_DATA16=attr | *tile++;
         }
+        if((row & 1) && row<15)palette+=32;
     }
     genesis_vram_write((u16)(0xc000U+8U*128U+8U*2U));
     for(col=0;col<24;col++)VDP_DATA16=genesis_hud[col];

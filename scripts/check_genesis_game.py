@@ -158,7 +158,7 @@ def sampled_state(row, manifest, base, length):
     return decode_fields(raw, relative)
 
 
-def publication_records(trace, manifest):
+def publication_records(trace, manifest, *, start_frame=0):
     pub = manifest['publication']
     if (pub['base'] != 0 or pub['slots'] != 4 or pub['stride'] != 704):
         raise ValueError('unsupported publication geometry')
@@ -171,7 +171,7 @@ def publication_records(trace, manifest):
             raise ValueError('publication field type differs from native state layout: ' + name)
     expected = 1
     result = []
-    for row in trace['frames']:
+    for row in trace['frames'][start_frame:]:
         raw = normalise_watched(row, 'publication', 0, 4 * 704)
         for _ in range(4):
             packet = raw[(expected % 4)*704:(expected % 4 + 1)*704]
@@ -197,8 +197,8 @@ def publication_records(trace, manifest):
     return result
 
 
-def shadow_publications(program, rom, manifest, receipt, trace):
-    records = publication_records(trace, manifest)
+def shadow_publications(program, rom, manifest, receipt, trace, *, initial_state=None, start_frame=0):
+    records = publication_records(trace, manifest, start_frame=start_frame)
     if not records:
         raise AssertionError('no completed native publications')
     first = records[0]['host_frame']
@@ -206,7 +206,12 @@ def shadow_publications(program, rom, manifest, receipt, trace):
         if debug_bytes(row)[31]:
             raise AssertionError(f"native runtime fault {debug_bytes(row)[31]} at host frame {row['frame']}")
     machine = GameMachine(program, {0: rom}, environment={'hv16': [0], 'sound_busy': [0]})
-    machine.call('game_boot')
+    if initial_state is None:
+        machine.call('game_boot')
+    else:
+        if set(initial_state) != set(machine.snapshot()):
+            raise ValueError('seed must bind every UIL state field')
+        machine.set_state(initial_state)
     counters = {}
     for row in trace['frames']:
         value = int.from_bytes(debug_bytes(row)[:2], 'big')

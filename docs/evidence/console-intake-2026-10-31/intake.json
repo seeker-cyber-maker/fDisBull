@@ -1,0 +1,601 @@
+{
+  "report_format": "fdisbull-private-console-intake-summary-1",
+  "date": "2026-10-31",
+  "scope": "Private byte-preserving intake of four supplied archives. This public record contains no cartridge payloads, source absolute paths, emulator states, or analysis databases.",
+  "identity_caveat": "Archive and member filenames are supplied labels, not verified publisher, language, region, revision, good-dump, or hack claims. Hashes establish byte identity only, not authenticity, rights, compatibility, or execution behavior.",
+  "archives": [
+    {
+      "filename_label": "Shadowrun.zip",
+      "bytes": 676525,
+      "sha256": "2163a4ec63483b060094914df6c5570fe7e8eca5b96537ce937a4c4b88118a13",
+      "member_count": 1
+    },
+    {
+      "filename_label": "Shadowrun_Genesis_EN.zip",
+      "bytes": 10873143,
+      "sha256": "fb33a11e480491def477c1b076e35da236b1f6f9d8f0efb144029e3fa048ffc4",
+      "member_count": 11
+    },
+    {
+      "filename_label": "1200-in-1 (J) [p1].zip",
+      "bytes": 324038,
+      "sha256": "6ddfa9ea615abce21b13caa126bb9bdaaad8b6c7de0026fa01db2ef1fa3350ec",
+      "member_count": 1
+    },
+    {
+      "filename_label": "Super Mario Bros. _ Duck Hunt.zip",
+      "bytes": 47282,
+      "sha256": "f2e6b5b714895eec006e635882c9e7ef39cfd78bf3838394db239afccdc9d23b",
+      "member_count": 1
+    }
+  ],
+  "targets": [
+    {
+      "target_id": "shadowrun-snes-usa-2026-10-31",
+      "payload_count": 1,
+      "total_bytes": 1048576,
+      "members": [
+        {
+          "filename_label": "Shadowrun (USA).sfc",
+          "bytes": 1048576,
+          "sha256": "e6bc0a595d5c7c4bc0bbb61ffe35a70288a77eb78544ed74682d489a9e6f07f4",
+          "crc32": "3f34dff0",
+          "cartridge_inspection": {
+            "platform": "SNES",
+            "format": "SNES ROM",
+            "structurally_valid": true,
+            "loadable": false,
+            "header_offset": 32704,
+            "warnings": [
+              "ROM checksum was not verified; only the header checksum/complement pair was checked."
+            ],
+            "header_metadata": {
+              "title": "SHADOWRUN",
+              "layout": "LoROM",
+              "map_mode": 48,
+              "chipset": 2,
+              "region": 1,
+              "version": 0,
+              "reset_vector": 58188,
+              "declared_rom_size": 1048576,
+              "observed_rom_size": 1048576,
+              "checksum_complement": 1995,
+              "checksum": 63540,
+              "checksum_verified": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "target_id": "shadowrun-genesis-variants-2026-10-31",
+      "payload_count": 11,
+      "total_bytes": 22151168,
+      "members": [
+        {
+          "filename_label": "Shadow Run (J) [!].bin",
+          "bytes": 2097152,
+          "sha256": "590e62f743c7f6149d79af0977714c2a2aa94648e904fdce82e272408390de48",
+          "crc32": "d32199f7",
+          "cartridge_inspection": {
+            "platform": "Sega Genesis / Mega Drive",
+            "format": "sega-genesis",
+            "structurally_valid": true,
+            "loadable": false,
+            "header_offset": 256,
+            "warnings": [],
+            "header_metadata": {
+              "signature": "SEGA",
+              "domestic_title": "SHADOWRUN",
+              "overseas_title": "SHADOWRUN",
+              "product": "GM MK-1352 -00",
+              "region": "J",
+              "rom_start": 0,
+              "rom_end": 2097151,
+              "ram_start": 16711680,
+              "ram_end": 16777215,
+              "initial_stack_pointer": 16777208,
+              "reset_vector": 566,
+              "vector_plausibility": {
+                "reset_in_declared_rom": true,
+                "stack_nonzero_even": true
+              },
+              "checksum": {
+                "stored": 27567,
+                "computed": 27567,
+                "matches": true,
+                "range_start": 512,
+                "range_end_exclusive": 2097152
+              }
+            }
+          }
+        },
+        {
+          "filename_label": "Shadow Run (J) [b1].bin",
+          "bytes": 1179648,
+          "sha256": "c007507324510ef2aae5576b8c2ec66995adec18a366f331d7ba0848f7aaccee",
+          "crc32": "5f3f0646",
+          "cartridge_inspection": {
+            "platform": "Sega Genesis / Mega Drive",
+            "format": "sega-genesis",
+            "structurally_valid": false,
+            "loadable": false,
+            "header_offset": 256,
+            "warnings": [
+              "Declared ROM extent is invalid or incomplete",
+              "Genesis checksum not computed: declared ROM range is unavailable or unsuitable"
+            ],
+            "header_metadata": {
+              "signature": "SEGA",
+              "domestic_title": "SHADOWRUN",
+              "overseas_title": "SHADOWRUN",
+              "product": "GM MK-1352 -00",
+              "region": "J",
+              "rom_start": 0,
+              "rom_end": 2097151,
+              "ram_start": 16711680,
+              "ram_end": 16777215,
+              "initial_stack_pointer": 16777208,
+              "reset_vector": 566,
+              "vector_plausibility": {
+                "reset_in_declared_rom": true,
+                "stack_nonzero_even": true
+              },
+              "checksum": {
+                "stored": 27567,
+                "computed": null,
+                "matches": null,
+                "range_start": 512,
+                "range_end_exclusive": 2097152
+              }
+            }
+          }
+        },
+        {
+          "filename_label": "Shadow Run (U) [!].bin",
+          "bytes": 2097152,
+          "sha256": "92a614491fc3ea12a6df32459cce08b48574b7b814e244c07eb860dc5c6edb7e",
+          "crc32": "fbb92909",
+          "cartridge_inspection": {
+            "platform": "Sega Genesis / Mega Drive",
+            "format": "sega-genesis",
+            "structurally_valid": true,
+            "loadable": false,
+            "header_offset": 256,
+            "warnings": [],
+            "header_metadata": {
+              "signature": "SEGA",
+              "domestic_title": "SHADOWRUN",
+              "overseas_title": "SHADOWRUN",
+              "product": "GM MK-1352 -00",
+              "region": "U",
+              "rom_start": 0,
+              "rom_end": 2097151,
+              "ram_start": 16711680,
+              "ram_end": 16777215,
+              "initial_stack_pointer": 16777208,
+              "reset_vector": 566,
+              "vector_plausibility": {
+                "reset_in_declared_rom": true,
+                "stack_nonzero_even": true
+              },
+              "checksum": {
+                "stored": 27567,
+                "computed": 27567,
+                "matches": true,
+                "range_start": 512,
+                "range_end_exclusive": 2097152
+              }
+            }
+          }
+        },
+        {
+          "filename_label": "Shadow Run (U) [b1].bin",
+          "bytes": 2097152,
+          "sha256": "1251b59e0afda9ff47ffa61ff074c12aaa08b9e56a63fc4650f5cec639f6d5be",
+          "crc32": "2d29fd9d",
+          "cartridge_inspection": {
+            "platform": "Sega Genesis / Mega Drive",
+            "format": "sega-genesis",
+            "structurally_valid": true,
+            "loadable": false,
+            "header_offset": 256,
+            "warnings": [],
+            "header_metadata": {
+              "signature": "SEGA",
+              "domestic_title": "SHADOWRUN",
+              "overseas_title": "SHADOWRUN",
+              "product": "GM MK-1352 -00",
+              "region": "U",
+              "rom_start": 0,
+              "rom_end": 2097151,
+              "ram_start": 16711680,
+              "ram_end": 16777215,
+              "initial_stack_pointer": 16777208,
+              "reset_vector": 566,
+              "vector_plausibility": {
+                "reset_in_declared_rom": true,
+                "stack_nonzero_even": true
+              },
+              "checksum": {
+                "stored": 68,
+                "computed": 68,
+                "matches": true,
+                "range_start": 512,
+                "range_end_exclusive": 2097152
+              }
+            }
+          }
+        },
+        {
+          "filename_label": "Shadow Run (U) [b2].bin",
+          "bytes": 2097152,
+          "sha256": "770b713cc3402e07d66a7a82bfbaf113ffd29b696bb8c3a6ed45dd6c75a910be",
+          "crc32": "6c0aeb57",
+          "cartridge_inspection": {
+            "platform": "Sega Genesis / Mega Drive",
+            "format": "sega-genesis",
+            "structurally_valid": true,
+            "loadable": false,
+            "header_offset": 256,
+            "warnings": [
+              "Genesis checksum mismatch over the declared ROM range"
+            ],
+            "header_metadata": {
+              "signature": "SEGA",
+              "domestic_title": "SHADOWRUN",
+              "overseas_title": "SHADOWRUN",
+              "product": "GM MK-1352 -00",
+              "region": "U",
+              "rom_start": 0,
+              "rom_end": 2097151,
+              "ram_start": 16711680,
+              "ram_end": 16777215,
+              "initial_stack_pointer": 16777208,
+              "reset_vector": 566,
+              "vector_plausibility": {
+                "reset_in_declared_rom": true,
+                "stack_nonzero_even": true
+              },
+              "checksum": {
+                "stored": 27567,
+                "computed": 27823,
+                "matches": false,
+                "range_start": 512,
+                "range_end_exclusive": 2097152
+              }
+            }
+          }
+        },
+        {
+          "filename_label": "Shadow Run (U) [b3].bin",
+          "bytes": 2097152,
+          "sha256": "763fc049321be635da87d7c3625a97f3dad9dbf030abc4767dfd96ef97f2d994",
+          "crc32": "aa9bef7a",
+          "cartridge_inspection": {
+            "platform": "Sega Genesis / Mega Drive",
+            "format": "sega-genesis",
+            "structurally_valid": true,
+            "loadable": false,
+            "header_offset": 256,
+            "warnings": [
+              "Genesis checksum mismatch over the declared ROM range"
+            ],
+            "header_metadata": {
+              "signature": "SEGA",
+              "domestic_title": "SHADOWRUN",
+              "overseas_title": "SHADOWRUN",
+              "product": "GM MK-1352 -00",
+              "region": "U",
+              "rom_start": 0,
+              "rom_end": 2097151,
+              "ram_start": 16711680,
+              "ram_end": 16777215,
+              "initial_stack_pointer": 16777208,
+              "reset_vector": 566,
+              "vector_plausibility": {
+                "reset_in_declared_rom": true,
+                "stack_nonzero_even": true
+              },
+              "checksum": {
+                "stored": 27567,
+                "computed": 16688,
+                "matches": false,
+                "range_start": 512,
+                "range_end_exclusive": 2097152
+              }
+            }
+          }
+        },
+        {
+          "filename_label": "Shadow Run (U) [h1].bin",
+          "bytes": 2097152,
+          "sha256": "1b62746c2f725d5aeab38ba1d22ef64b83df2d5909a027496ed34cc629e5b643",
+          "crc32": "b6ea8760",
+          "cartridge_inspection": {
+            "platform": "Sega Genesis / Mega Drive",
+            "format": "sega-genesis",
+            "structurally_valid": true,
+            "loadable": false,
+            "header_offset": 256,
+            "warnings": [],
+            "header_metadata": {
+              "signature": "SEGA",
+              "domestic_title": "SHADOWRUN",
+              "overseas_title": "SHADOWRUN",
+              "product": "GM MK-1352 -00",
+              "region": "U",
+              "rom_start": 0,
+              "rom_end": 2097151,
+              "ram_start": 16711680,
+              "ram_end": 16777215,
+              "initial_stack_pointer": 16777208,
+              "reset_vector": 566,
+              "vector_plausibility": {
+                "reset_in_declared_rom": true,
+                "stack_nonzero_even": true
+              },
+              "checksum": {
+                "stored": 39341,
+                "computed": 39341,
+                "matches": true,
+                "range_start": 512,
+                "range_end_exclusive": 2097152
+              }
+            }
+          }
+        },
+        {
+          "filename_label": "Shadow Run (U) [h2].bin",
+          "bytes": 2097152,
+          "sha256": "28abb6cbe9a2ca36be346388818188c039e93ad1b9f53b171ffacc398d1640a3",
+          "crc32": "f787a85d",
+          "cartridge_inspection": {
+            "platform": "Sega Genesis / Mega Drive",
+            "format": "sega-genesis",
+            "structurally_valid": true,
+            "loadable": false,
+            "header_offset": 256,
+            "warnings": [
+              "Genesis checksum mismatch over the declared ROM range"
+            ],
+            "header_metadata": {
+              "signature": "SEGA",
+              "domestic_title": "Dumped By TSD",
+              "overseas_title": "SHADOWRUN",
+              "product": "GM MK-1352 -00",
+              "region": "U",
+              "rom_start": 0,
+              "rom_end": 2097151,
+              "ram_start": 16711680,
+              "ram_end": 16777215,
+              "initial_stack_pointer": 16777208,
+              "reset_vector": 566,
+              "vector_plausibility": {
+                "reset_in_declared_rom": true,
+                "stack_nonzero_even": true
+              },
+              "checksum": {
+                "stored": 39341,
+                "computed": 68,
+                "matches": false,
+                "range_start": 512,
+                "range_end_exclusive": 2097152
+              }
+            }
+          }
+        },
+        {
+          "filename_label": "Shadow Run (U) [h3].bin",
+          "bytes": 2097152,
+          "sha256": "f40c4a408b9831bf2c171c9ab7166c9641006fd7f29f6caf8e05a389fcf0b18c",
+          "crc32": "a2c59700",
+          "cartridge_inspection": {
+            "platform": "Sega Genesis / Mega Drive",
+            "format": "sega-genesis",
+            "structurally_valid": true,
+            "loadable": false,
+            "header_offset": 256,
+            "warnings": [
+              "A declared address range is inverted"
+            ],
+            "header_metadata": {
+              "signature": "SEGA",
+              "domestic_title": "Dumped By TSD",
+              "overseas_title": "SHADOWRUN",
+              "product": "GM MK-1352 -00",
+              "region": "U",
+              "rom_start": 0,
+              "rom_end": 2097151,
+              "ram_start": 553582592,
+              "ram_end": 16777215,
+              "initial_stack_pointer": 16777208,
+              "reset_vector": 566,
+              "vector_plausibility": {
+                "reset_in_declared_rom": true,
+                "stack_nonzero_even": true
+              },
+              "checksum": {
+                "stored": 68,
+                "computed": 68,
+                "matches": true,
+                "range_start": 512,
+                "range_end_exclusive": 2097152
+              }
+            }
+          }
+        },
+        {
+          "filename_label": "Shadow Run (U) [h4].bin",
+          "bytes": 2097152,
+          "sha256": "0a65d76abfe7180d2f8e75027c744c93cc0cb50b712a026b9d257f228f6c87d5",
+          "crc32": "2c5d2dfa",
+          "cartridge_inspection": {
+            "platform": "Sega Genesis / Mega Drive",
+            "format": "sega-genesis",
+            "structurally_valid": true,
+            "loadable": false,
+            "header_offset": 256,
+            "warnings": [
+              "Genesis checksum mismatch over the declared ROM range"
+            ],
+            "header_metadata": {
+              "signature": "SEGA",
+              "domestic_title": "SHADOWRUN",
+              "overseas_title": "SHADOWRUN",
+              "product": "GM MK-1352 -00",
+              "region": "J\u0000UE\u0000J",
+              "rom_start": 0,
+              "rom_end": 2097151,
+              "ram_start": 16711680,
+              "ram_end": 16777215,
+              "initial_stack_pointer": 16777208,
+              "reset_vector": 566,
+              "vector_plausibility": {
+                "reset_in_declared_rom": true,
+                "stack_nonzero_even": true
+              },
+              "checksum": {
+                "stored": 27567,
+                "computed": 27341,
+                "matches": false,
+                "range_start": 512,
+                "range_end_exclusive": 2097152
+              }
+            }
+          }
+        },
+        {
+          "filename_label": "Shadow Run (U) [h5].bin",
+          "bytes": 2097152,
+          "sha256": "b5f0e130539b60ea0f5718ed426bd67a40fdac2f3e285cf4b08a5e517f8694ce",
+          "crc32": "3bab3b0a",
+          "cartridge_inspection": {
+            "platform": "Sega Genesis / Mega Drive",
+            "format": "sega-genesis",
+            "structurally_valid": true,
+            "loadable": false,
+            "header_offset": 256,
+            "warnings": [
+              "Genesis checksum mismatch over the declared ROM range"
+            ],
+            "header_metadata": {
+              "signature": "SEGA",
+              "domestic_title": "SHADOWRUN",
+              "overseas_title": "SHADOWRUN",
+              "product": "GM MK-1352 -00",
+              "region": "U",
+              "rom_start": 0,
+              "rom_end": 2097151,
+              "ram_start": 16711680,
+              "ram_end": 16777215,
+              "initial_stack_pointer": 16777208,
+              "reset_vector": 566,
+              "vector_plausibility": {
+                "reset_in_declared_rom": true,
+                "stack_nonzero_even": true
+              },
+              "checksum": {
+                "stored": 27567,
+                "computed": 39341,
+                "matches": false,
+                "range_start": 512,
+                "range_end_exclusive": 2097152
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "target_id": "1200-in-1-nes-j-p1-2026-10-31",
+      "payload_count": 1,
+      "total_bytes": 524304,
+      "members": [
+        {
+          "filename_label": "1200-in-1 (J) [p1].nes",
+          "bytes": 524304,
+          "sha256": "a6cc62f11d6d872e9b0f3105089f31ea8a3d0c0593d24fa3adf73e4d62bfd78e",
+          "crc32": "6c78df22",
+          "cartridge_inspection": {
+            "platform": "NES",
+            "format": "iNES",
+            "structurally_valid": true,
+            "loadable": false,
+            "header_offset": 0,
+            "warnings": [],
+            "header_metadata": {
+              "mapper": 227,
+              "mapper_low_nibble": 3,
+              "mapper_high_nibble_raw": 14,
+              "submapper": null,
+              "trainer_present": false,
+              "battery": false,
+              "four_screen": false,
+              "prg_rom_size": 524288,
+              "chr_rom_size": 0,
+              "legacy_header_polluted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "target_id": "super-mario-bros-duck-hunt-nes-usa-2026-10-31",
+      "payload_count": 1,
+      "total_bytes": 81936,
+      "members": [
+        {
+          "filename_label": "Super Mario Bros. + Duck Hunt (USA).nes",
+          "bytes": 81936,
+          "sha256": "23ec3f6bb68f8774070ce936869e7f62ac3490449f58e62d6ed33a0fb385d456",
+          "crc32": "666ee28e",
+          "cartridge_inspection": {
+            "platform": "NES",
+            "format": "iNES",
+            "structurally_valid": true,
+            "loadable": false,
+            "header_offset": 0,
+            "warnings": [],
+            "header_metadata": {
+              "mapper": 66,
+              "mapper_low_nibble": 2,
+              "mapper_high_nibble_raw": 4,
+              "submapper": null,
+              "trainer_present": false,
+              "battery": false,
+              "four_screen": false,
+              "prg_rom_size": 65536,
+              "chr_rom_size": 16384,
+              "legacy_header_polluted": false
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "cross_archive_duplicate_member_groups": [],
+  "program_archive_registry": {
+    "archive_name": "fDisBull-target-executables.zip (private; not included in repository or Python distribution)",
+    "archive_bytes": 32688050,
+    "archive_sha256": "b2e134060a00cab7f0722e8497fff990ea97d6fc185384e126b9ebb3acf7e1d1",
+    "program_count": 198,
+    "target_count": 42,
+    "prior_programs_preserved": 185,
+    "new_complete_cartridges_registered": 13,
+    "incomplete_genesis_member_in_program_archive": false,
+    "roster_check": "passed"
+  },
+  "limits": [
+    "The fDisBull cartridge parser reports container/header structure only; loadable is false for all listed cartridges.",
+    "The SNES result verifies a plausible LoROM header and complementary header checksum pair only; it does not compute the full ROM checksum or prove CPU mapping.",
+    "Genesis checksums are compared to each file header declared extent when fully present. A mismatch is retained as supplied; no checksum repair or normalization occurred.",
+    "The NES mapper numbers are header fields, not mapper implementation or multicart menu recovery.",
+    "No cartridge was executed, no emulator behavior or game equivalence was qualified, and no source bytes were bound to an FDB project.",
+    "One Genesis member is structurally incomplete against its own declared 2 MiB extent and remains in private intake as supplied."
+  ],
+  "private_inventory_sha256": "52f112b11f7f02cf9f0d7da733c1b66b71f4b34fdf5fac22780cff1fe84a7e93",
+  "source_archives_private_directory": "external private target package; exact path only in private receipt",
+  "private_receipt_reference": "External private target-package receipt: receipts/console-intake-2026-10-31.json",
+  "private_receipt_sha256": "807005c293de1f3217c9219cbec84873cf2f36938c353373b1e1dbdb19bcd8d3"
+}

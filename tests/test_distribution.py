@@ -156,6 +156,22 @@ CONSOLE_GAME_EVIDENCE += (
     'docs/evidence/miniplanets-full-game-2026-10-31/genesis-replay.json',
     'docs/evidence/miniplanets-full-game-2026-10-31/genesis-presentation.json',
 )
+CONSOLE_GAME_RESOURCES += (
+    'src/fdisbull/nes_multicart.py', 'src/fdisbull/game_sources/genesis_game_copy.s',
+)
+CONSOLE_GAME_HELPERS += (
+    'scripts/check_genesis_copy.py', 'scripts/check_genesis_performance.py',
+    'scripts/check_genesis_stage_performance.py', 'scripts/check_genesis_seeded_states.py',
+    'scripts/check_nes_multicart.py', 'tests/test_nes_multicart.py',
+    'tests/test_nes_multicart_cli.py', 'tests/test_nes_multicart_review.py',
+)
+CONSOLE_GAME_EVIDENCE += (
+    'docs/GENESIS_PERFORMANCE.md', 'docs/NES_MULTICART.md',
+    'docs/CONSOLE_INTAKE_2026_10_31.md',
+    'docs/evidence/miniplanets-full-game-2026-10-31/genesis-performance.json',
+    'docs/evidence/nes-multicart-2026-10-31/verification.json',
+    'docs/evidence/console-intake-2026-10-31/intake.json',
+)
 REQUIRED_SOURCE_FILES += CONSOLE_GAME_RESOURCES + CONSOLE_GAME_HELPERS + CONSOLE_GAME_EVIDENCE
 
 

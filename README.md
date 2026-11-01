@@ -285,6 +285,15 @@ reviewed game, audio, display-planner and PSG representations and builds either
 NES or a new native Genesis cartridge. The Genesis rules passed the same 4,822
 original-backed cases; its display is adapted and its audio retains the original
 Sona hardware driver. Larger ROMs need their own recovered semantic profile.
+The [Genesis performance follow-up](docs/GENESIS_PERFORMANCE.md) reaches about
+59.92 completed display uploads per second in the bounded ordinary test and
+59.55–59.92 in three assisted later-stage tests, while retaining all 79 state
+fields in verification. A constructed 48-actor stress scene still runs at
+about 29.96 uploads per second.
+The [NES multicart prototype](docs/NES_MULTICART.md) packages two compatible
+generated NES games behind a bank-switching menu. The accompanying analysis
+examines the supplied mapper-227 “1200-in-1” and mapper-66 Mario/Duck Hunt
+cartridges; the advertised number is not a verified count of distinct games.
 The earlier [flat first-level experiment](docs/MINIPLANETS_NES_LEVEL.md) remains
 available with its separate contract and results.
 

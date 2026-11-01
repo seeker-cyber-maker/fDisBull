@@ -1,5 +1,9 @@
 # Miniplanets full-game UIL and native console profiles
 
+The latest [Genesis performance results](GENESIS_PERFORMANCE.md) compare the
+new target with its initial build using unchanged game UIL and the same
+original-backed state contract. NES output remains unchanged.
+
 The [repeatable Genesis UIL workflow](GENESIS_UIL_REPLAY.md) is the latest
 compilation follow-up. It adds a locked replay bundle and a full procedural
 Genesis target alongside the existing NES target. The NES ROM remains byte

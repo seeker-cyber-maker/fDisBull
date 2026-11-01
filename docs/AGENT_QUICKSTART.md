@@ -316,6 +316,15 @@ whether an intake has a reviewed semantic profile; parsing alone is insufficient
 See [Genesis UIL replay](GENESIS_UIL_REPLAY.md) for build/replay commands,
 tool trust and the target-specific validation limits.
 
+For a post-compilation two-game NES cartridge, discover
+`nes-multicart-profiles` and inspect candidates with
+`nes-multicart-inspect CARTRIDGE`. Use `nes-multicart-build GAME1 GAME2
+--authored-compatible --output /private/new-multicart` only for authored
+NROM games satisfying the declared mapper restrictions. The flag asserts
+behavioral compatibility that a header cannot establish. The
+[multicart contract and native checks](NES_MULTICART.md) describe the menu,
+bank switching, input handoff and tested emulator reset behavior.
+
 ### Compare a source block with shared semantics
 
 For the supported 0.23 DOS profile, read `udl-uil-udc.md` before using

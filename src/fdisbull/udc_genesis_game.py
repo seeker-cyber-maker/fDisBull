@@ -21,9 +21,9 @@ from .udc_nes_game import _api
 
 SOURCE_DIR=Path(__file__).with_name('game_sources')
 ADAPTERS=('genesis_game_platform.c','genesis_game_start.s','genesis_game_renderer.c',
-          'genesis_game_audio.c','genesis_game_audio.S')
+          'genesis_game_audio.c','genesis_game_audio.S','genesis_game_copy.s')
 FLAGS=('-m68000','-mshort','-funsigned-char','-fwrapv','-fno-builtin',
-       '-ffreestanding','-fno-pic','-fno-pie','-fno-common','-Os',
+       '-ffreestanding','-fno-pic','-fno-pie','-fno-common','-O2',
        '-ffunction-sections','-fdata-sections','-Wno-unknown-pragmas')
 TOOLS=('gcc','as','ld','nm','objcopy','readelf')
 sha=lambda raw:hashlib.sha256(raw).hexdigest()
@@ -139,8 +139,10 @@ def build_genesis_game(program,rom,output,*,m68k_root):
                                    'RESULT=(u32)'+expression+';')+'break;')
     debug.extend(('default:RESULT=0xffffffffUL;*(volatile u8*)0xff1f1fUL=2;break;','}}'))
     (work/'debug.c').write_text('\n'.join(debug))
-    publication=['#include "game_api.h"','void genesis_publish_state(void){',
-                 'u16 i;u8 n;volatile u8 *p;const u8 *s;',
+    publication=['#include "game_api.h"',
+                 'void genesis_copy_bytes(volatile u8 *,const volatile u8 *,u16);',
+                 'void genesis_publish_state(void){',
+                 'u8 n;volatile u8 *p;const u8 *s;',
                  'u16 epoch=*(volatile u16*)0xff1f02UL;',
                  'p=(volatile u8*)(0xff0000UL+(u32)(epoch&3)*704UL);',
                  'p[0]=(u8)(p[0]+1);p[1]=1;p[2]=(u8)(epoch>>8);p[3]=(u8)epoch;',
@@ -148,10 +150,14 @@ def build_genesis_game(program,rom,output,*,m68k_root):
                  'p[6]=input_buttons;p[7]=*(volatile u8*)0xff1f1dUL;',
                  'p[8]=*(volatile u8*)0xff1f24UL;']
     for name,item in info.items():
-        publication.extend((f's=(const u8*)&{name};',
-                            f'for(i=0;i<{item["length"]};i++)p[16+{item["packed_offset"]}+i]=s[i];'))
+        publication.append(f's=(const u8*)&{name};')
+        if item['length']<=4:
+            publication.extend(f'p[{16+item["packed_offset"]+i}]=s[{i}];'
+                               for i in range(item['length']))
+        else:
+            publication.append(f'genesis_copy_bytes(p+{16+item["packed_offset"]},s,{item["length"]});')
     publication.extend(('n=p[7];if(n>32)n=32;',
-                        f'for(i=0;i<(u16)n*2;i++)p[{16+state_size}+i]=*((volatile u8*)0xff1e00UL+i);',
+                        f'genesis_copy_bytes(p+{16+state_size},(const volatile u8*)0xff1e00UL,(u16)n*2);',
                         'p[0]=(u8)(p[0]+1);','}'))
     (work/'publication.c').write_text('\n'.join(publication))
     linker='''MEMORY { ROM (rx) : ORIGIN = 0, LENGTH = 4M
