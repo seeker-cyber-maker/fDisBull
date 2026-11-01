@@ -697,6 +697,8 @@ REQUIRED_SOURCE_FILES += tuple(path for path in (
     'src/fdisbull/native_runtime/memory-x11.c',
     'src/fdisbull/native_runtime/memory-win32.c',
 ) if path not in REQUIRED_SOURCE_FILES)
+DESKTOP_EVIDENCE_FILE = 'docs/evidence/common-uil-desktop-2026-11-01/verification.json'
+
 def source_archive(path,files=REQUIRED_SOURCE_FILES):
     with zipfile.ZipFile(path,'w') as output:
         for required in files:output.writestr('fdisbull-test/'+required,'')
