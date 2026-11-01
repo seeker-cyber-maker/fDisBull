@@ -75,6 +75,28 @@ def _runs(before, after):
     return result
 
 
+def validate_ranges(ranges, *, allow_references=False):
+    """Check range structure/budgets before execution; mapping is session-owned."""
+    def reference(value):
+        return allow_references and isinstance(value, str) and value.startswith('$')
+
+    if reference(ranges):
+        return
+    if not isinstance(ranges, list) or not 1 <= len(ranges) <= 64:
+        raise ValueError('CPU deltas require 1..64 explicit RAM ranges')
+    total = 0
+    for item in ranges:
+        if reference(item):
+            continue
+        if not isinstance(item, dict) or set(item) not in ({'address', 'length'}, {'address', 'length', 'cs'}):
+            raise ValueError('A CPU delta range requires address, length, and optional cs')
+        if not reference(item['length']):
+            _bounded(item['length'], 'range length', 1, 65536)
+            total += item['length']
+    if total > 65536:
+        raise ValueError('Combined CPU delta RAM ranges exceed 65536 bytes')
+
+
 class CpuDeltaSessionMixin:
     def _cpu_delta_native(self):
         if self.closed:
@@ -166,14 +188,9 @@ class CpuDeltaSessionMixin:
                 raise ValueError('CPU deltas require no pending or held keyboard input')
 
     def _cpu_delta_ranges(self, ranges):
-        if not isinstance(ranges, list) or not 1 <= len(ranges) <= 64:
-            raise ValueError('CPU deltas require 1..64 explicit RAM ranges')
+        validate_ranges(ranges)
         result = []
-        total = 0
         for item in ranges:
-            if not isinstance(item, dict) or set(item) not in ({'address', 'length'}, {'address', 'length', 'cs'}):
-                raise ValueError('A CPU delta range requires address, length, and optional cs')
-            _bounded(item['length'], 'range length', 1, 65536)
             address, _ = self.project._dos_parse_address(item['address'], item.get('cs'))
             end = address + item['length']
             if address < self.static_base or end > self.static_base + self.module_size:
@@ -185,9 +202,6 @@ class CpuDeltaSessionMixin:
                    for old in result):
                 raise ValueError('CPU delta RAM ranges overlap')
             result.append(dict(address=hex(address), length=item['length']))
-            total += item['length']
-        if total > 65536:
-            raise ValueError('Combined CPU delta RAM ranges exceed 65536 bytes')
         return result
 
     def _cpu_delta_observe(self, history):

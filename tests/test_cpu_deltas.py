@@ -173,6 +173,40 @@ class Session(CpuDeltaSessionMixin, RewindSessionMixin):
 RANGES = [{'address': '1000:0000', 'length': 8}]
 
 
+@pytest.mark.parametrize('ranges', [
+    [], {}, [RANGES[0]] * 65, [None], [{'address': '1000:0000'}],
+    [{'address': '1000:0000', 'length': True}],
+    [{'address': '1000:0000', 'length': 0}],
+    [{'address': '1000:0000', 'length': 65537}],
+    [{'address': '1000:0000', 'length': 32769}] * 2,
+    [{'address': '$position', 'length': 0}],
+    ['$range', {'address': '1000:0000', 'length': 0}],
+])
+def test_invalid_later_literal_delta_ranges_reject_before_script_execution(ranges):
+    from fdisbull.debug_script import execute_script
+    debug = Session()
+    before = deepcopy((debug.cpu, debug.ram))
+    with pytest.raises(ValueError, match='CPU delta|range length'):
+        execute_script(debug, {'format': 'fdisbull-script-1', 'steps': [
+            {'op': 'trace', 'count': 2}, {'op': 'delta-start', 'ranges': ranges}]})
+    assert (debug.cpu, debug.ram) == before
+    assert debug.trace_calls == 0 and debug.calls == []
+    assert debug.project.db.execute('SELECT COUNT(*) FROM debug_artifacts').fetchone()[0] == 0
+
+
+def test_delta_range_references_defer_only_dynamic_values():
+    from fdisbull.debug_script import execute_script, validate_script
+    for ranges in ('$ranges', ['$range'], [{'address': '$position', 'length': '$length'}]):
+        assert validate_script({'format': 'fdisbull-script-1', 'steps': [
+            {'op': 'delta-start', 'ranges': ranges}]})
+        debug = Session()
+        result = execute_script(debug, {'format': 'fdisbull-script-1', 'steps': [
+            {'op': 'delta-start', 'ranges': ranges}]}, bindings={
+                'ranges': RANGES, 'range': RANGES[0], 'position': '1000:0000', 'length': 8})
+        assert result['ok'], result
+        assert debug.cpu_delta_status()['ranges'] == [{'address': '0x10000', 'length': 8}]
+
+
 def test_records_only_net_deltas_and_composes_multiple_reverse_intervals():
     debug = Session()
     initial = deepcopy((debug.cpu, debug.ram))

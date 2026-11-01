@@ -32,6 +32,11 @@ def test_real_delta_projection_freezes_until_native_recovery(native):
     def invoke(method,**params):
         return workspace.invoke(method,project.path,{'run':debug.run_id,**params})
     initial=observed(debug)
+    with pytest.raises(ValueError,match='CPU deltas require'):
+        debug.script({'format':'fdisbull-script-1','steps':[
+            {'op':'trace','count':2}, {'op':'delta-start','ranges':[]}]})
+    assert observed(debug)==initial
+    assert not project.debug_artifacts()['artifacts']
     started=invoke('debug-delta-start',ranges=[{'address':'1000:0000','length':512}],max_steps=12)
     assert started['anchor']['artifact']
     states=[]

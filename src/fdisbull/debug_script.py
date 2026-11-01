@@ -77,6 +77,9 @@ def validate_script(script):
                         for key,value in params.items():
                             if key in limits and not (isinstance(value,str) and value.startswith('$')):
                                 bounded(value,key,*limits[key])
+                    if op=='delta-start':
+                        from .debug_cpu_deltas import validate_ranges
+                        validate_ranges(params['ranges'],allow_references=True)
                     if op in ('keyboard.press','keyboard.type'):
                         from .keyboard_input import validate_keyboard
                         # Validate every literal independently. One result reference

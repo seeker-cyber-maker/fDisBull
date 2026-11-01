@@ -40,8 +40,28 @@ Anchor Stones. It remains available, and should not be mistaken for the separate
 delta recorder. See [Anchor Stone history](DEBUGGER_REWIND.md) and
 [experimental delta rewind](CPU_RAM_DELTAS.md).
 
+## Host and target support
+
+The host running fDisBull and the target being debugged are separate choices.
+On macOS/ARM64, the prepared ARM64 DOSBox backend runs DOS x86 targets; the
+prepared QEMU x86-64 runtime runs Windows PE64 programs through Wine.
+
+| Target/backend | Anchor Stones | Delta rewind |
+| --- | --- | --- |
+| DOS x86 in native DOSBox | Native saved machine context | Experimental real-mode exposed registers and selected RAM |
+| Windows x86-64 PE through Wine/QEMU | Whole-VM migration state and debugger context | Unsupported |
+| DOSBox inside QEMU | Existing native state path with runtime identity checks | Unsupported |
+| IDA/Wine/QEMU | Explicitly refused; native states remain unqualified | Unsupported |
+| Native macOS/ARM64 executable | No native target execution backend | Unsupported |
+
+Mac host checks do not qualify a native Windows host. Static Mach-O/ARM64
+analysis does not supply a live debugger or rewind backend. Wine/QEMU states
+require their private sidecar and matching runtime inputs; they do not restore
+host files. See [PE64 native checkpoints](WINE_DEBUGGER.md).
+
 Loading is a direct restore, not a zero-time guarantee. The measured native
-restore cost was around 17 ms on the small local benchmark. Backend compatibility
+restore cost was around 17 ms on the small local DOSBox benchmark; this does
+not measure Wine/QEMU migration latency. Backend compatibility
 and mounted-file identity checks still apply; host files are not rolled back.
 After partial delta rewind, loading a valid full Anchor Stone clears the partial
 state guard through the existing verified native-load path. Merely renaming an
