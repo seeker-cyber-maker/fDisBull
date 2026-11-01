@@ -80,10 +80,17 @@ equivalence/counterexample check. Re-checking the same constraints reports
 same archive was merged through `build_offline_kit.py --dependency-bundle` in a
 kit smoke build, producing the seven-wheel set without duplication.
 
-The full native offline kit is not rebuilt for 0.29.0: the DOSBox-X overlay
-changed after 0.26.1, so it needs a fresh backend/source-companion build and
-native acceptance. This dependency bundle is reusable, but it is not a
-substitute for that gate.
+The full 0.29.0 native kit was rebuilt from upstream DOSBox-X baseline
+`029bd65c` plus the current 33-file layers overlay. The heavy-debug backend has
+SHA-256 `2db1c812d8af64bb5c71f5a1cc1466511ac6212a919cd3e70b82ef1b8c7b3471`;
+the source companion has SHA-256
+`f9560466383cbb4a8e1096434889d7009ae9fcca4b0d2511c25f4d61ea95d118`; the kit
+has SHA-256
+`b6f43aa6933c8e4e12b643f1dead105d96e5ac0a0bb6c9671032c31fffd97a3f`. Its
+fresh Python 3.13.5 no-index install and installed-kit acceptance passed:
+Z3 equivalence/counterexample, BIOS keyboard, memory readback, screenshot,
+native restore, post-restore input, player resume and project restart. The
+full native CI matrix and hosted runs remain separate gates.
 
 ## Qualification at this cut
 
@@ -101,8 +108,9 @@ substitute for that gate.
   `fdisbull-0.29.0.tar.gz`; `check_dist.py` reports 196 and 712 tool-only
   entries respectively.
 - Offline dependency bundle: five wheels, 49 MB, fingerprint and SHA-256 above;
-  fresh venv install and byte-identical reuse passed. Full native kit remains
-  pending.
+  fresh venv install and byte-identical reuse passed.
+- Full native offline kit: rebuilt backend and source companion, seven wheels,
+  SHA-256 above; installed-kit acceptance passed on Python 3.13.5.
 - Installed-wheel smoke: `fdisbull --version` reports `0.29.0`; `capabilities`
   loads from the wheel.
 - 0.28.0's focused and full-suite results are historical evidence for its own
@@ -120,9 +128,9 @@ substitute for that gate.
   qualification and its own full-suite pass.
 - Hosted CI and a published GitLab tag. A fresh shared macOS installation is
   prepared locally only; it makes no publication claim.
-- The full 0.29.0 native Linux offline kit. The dependency bundle and kit
-  integration are qualified, but the changed DOSBox-X overlay still needs a
-  backend/source-companion rebuild and native acceptance.
+- The full hosted native CI matrix. The local backend rebuild and installed-kit
+  acceptance passed, but the workflow matrix has not been rerun on hosted
+  runners.
 - The CPUInfo replica comparison, which is separate app work rather than a core
   fDisBull release item.
 
@@ -135,7 +143,7 @@ substitute for that gate.
    Linux CI; keep the environment-only macOS failures separate.
 3. Build the wheel and source ZIP with `check_dist`; verify packaged skills,
    capability catalog and native resource files.
-4. Build or reuse the offline dependency bundle, then build the full native
-   offline kit after the backend rebuild and run its installed acceptance.
+4. Reuse the offline dependency bundle and rerun the full native offline kit
+   build and installed acceptance in hosted native CI; the local build passed.
 5. Rebuild both native macOS backends and run installed-wheel acceptance.
 6. Decide the tag (`v0.29.0`) only after the above pass on the same commit.

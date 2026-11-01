@@ -26,6 +26,13 @@ merged with `integration` at `b21b204` (clean merge).
 | `deps-install.log` | Fresh no-index dependency install and Z3/import check |
 | `offline-dependencies-sha256.txt` | Dependency archive hash |
 | `offline-wheel-smoke.log` | Rebuilt 0.29.0 wheel installed into the offline dependency venv |
+| `backend-build.log` | DOSBox-X heavy-debug build log from the pinned baseline and overlay |
+| `backend-identity.json` | Backend hash, source commit, patch hash and upstream baseline |
+| `source-companion.json` | Source companion builder result |
+| `offline-kit-manifest.json` | Full kit source, backend, companion and seven-wheel hashes |
+| `offline-kit-sha256.txt` | Full kit and source companion hashes |
+| `offline-kit-install.log` | Python 3.13.5 no-index install of the full kit |
+| `offline-kit-acceptance.json` | Installed-kit Z3, keyboard, memory, restore, player and restart acceptance |
 
 ## Qualification
 
@@ -52,14 +59,21 @@ merged with `integration` at `b21b204` (clean merge).
   Fresh venv install passed; `check` reports `reuse` with all hashes intact.
   `build_offline_kit.py --dependency-bundle` merged it into a seven-wheel kit
   smoke build.
+- Full native offline kit: DOSBox-X heavy-debug backend rebuilt from upstream
+  `029bd65c` plus the 33-file layers overlay; backend
+  `2db1c812d8af64bb5c71f5a1cc1466511ac6212a919cd3e70b82ef1b8c7b3471`, source
+  companion `f9560466383cbb4a8e1096434889d7009ae9fcca4b0d2511c25f4d61ea95d118`,
+  kit `b6f43aa6933c8e4e12b643f1dead105d96e5ac0a0bb6c9671032c31fffd97a3f`.
+  Python 3.13.5 no-index install passed; installed acceptance reports Z3
+  equivalence/counterexample, BIOS keyboard, memory, screenshot, native
+  restore, post-restore input, player resume and project restart all true.
 
 ## Limits
 
 This packet is local host evidence. The Linux result comes from a local Apple
-container, not hosted Linux CI. The dependency bundle is reusable evidence,
-but the full native offline kit remains pending because the DOSBox-X overlay
-changed after 0.26.1. This packet does not supply native backend rebuilds,
-installed-wheel acceptance on a fresh shared prefix, a Git tag, a
+container, not hosted Linux CI. The full native kit was rebuilt and accepted
+locally, but the hosted native test matrix has not been rerun. This packet does
+not supply installed-wheel acceptance on a fresh shared prefix, a Git tag, a
 GitLab/GitHub release, or a publication claim. The macOS three failures and 23
 errors remain environment-specific and must be resolved or explicitly accepted
 by the remaining release gates.

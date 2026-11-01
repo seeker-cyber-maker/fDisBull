@@ -24,7 +24,9 @@
       "sha256": "e45801015b0d8e0dc7a6396997e01bd2b5c7dc01bfec0cf18f692fa83ac48ce6",
       "fingerprint": "ea2a9ca41c8a06ffa2a0c3439b971c7952f1c5c0cd54df65159e732da6b588eb",
       "target": "cp313-linux-x86_64",
-      "extras": ["proof"],
+      "extras": [
+        "proof"
+      ],
       "wheels": {
         "capstone": "5.0.9",
         "iced-x86": "1.21.0",
@@ -32,6 +34,20 @@
         "pillow": "12.3.0",
         "z3-solver": "5.3.2.0"
       }
+    },
+    "offline_kit": {
+      "file": "fdisbull-0.29.0-linux-x86_64-offline.tar.gz",
+      "sha256": "b6f43aa6933c8e4e12b643f1dead105d96e5ac0a0bb6c9671032c31fffd97a3f",
+      "bytes": 103013282,
+      "source_companion": "fdisbull-0.29.0-linux-x86_64-source-companion.tar",
+      "source_companion_sha256": "f9560466383cbb4a8e1096434889d7009ae9fcca4b0d2511c25f4d61ea95d118",
+      "source_companion_bytes": 106905600,
+      "backend_sha256": "2db1c812d8af64bb5c71f5a1cc1466511ac6212a919cd3e70b82ef1b8c7b3471",
+      "patch_sha256": "9146ef4c61c28e1091955cfb5fa611b37633cc71df796fa4c1a603276b862c3b",
+      "upstream_commit": "029bd65c5dcc7cdc7f2e14e35278620d9707d969",
+      "source_commit": "f8dff0ce606cb0ca738c10bc2b8d649008bf8fba",
+      "python": "3.13.5",
+      "wheels": 7
     }
   },
   "qualification": {
@@ -77,6 +93,19 @@
         "wheel_count": 7,
         "duplicate_wheels": false
       }
+    },
+    "offline_kit_acceptance": {
+      "installed": true,
+      "package_version": "0.29.0",
+      "player_version": "0.29.0",
+      "z3_equivalence_and_counterexample": true,
+      "keyboard": true,
+      "memory": true,
+      "native_restore": true,
+      "post_restore_input": true,
+      "player_live_resume": true,
+      "project_restart": true,
+      "screenshot_recorded": true
     }
   },
   "scope": [
@@ -89,13 +118,13 @@
     "reversible macOS sessions",
     "Miniplanets NES port (PR #56)",
     "CPUInfo replica application",
-    "full 0.29.0 native Linux offline kit (backend rebuild pending)",
-    "Linux hosted CI, native backend rebuilds and shared-prefix promotion"
+    "Linux hosted CI, native backend rebuilds and shared-prefix promotion",
+    "hosted native CI matrix rerun"
   ],
   "publication": {
     "tag": null,
     "published": false,
     "pushed": false
   },
-  "claims_boundary": "Local host evidence only. The three failures and 23 errors are environment-specific macOS results, not Linux CI acceptance. The dependency bundle is reusable third-party wheel evidence, not a full native offline kit."
+  "claims_boundary": "Local host evidence only. The three failures and 23 errors are environment-specific macOS results, not Linux CI acceptance. The full native kit was rebuilt and accepted locally; the hosted native CI matrix has not been rerun."
 }
