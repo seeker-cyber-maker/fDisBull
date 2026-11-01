@@ -233,4 +233,3 @@ def test_absolute_world_mosaic_uses_unwrapped_camera_coordinates():
                                           screen_crop_width=16, mask_sprites=False)
     assert clipped.coverage[0] == 0
     assert clipped.coverage[15] == 0
-
