@@ -3936,6 +3936,169 @@
     }
    ]
   },
+  "toggle-auto-build": {
+   "format": "fdisbull-il-1",
+   "role": "uil",
+   "variables": {
+    "$screen": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$turn": {
+     "type": "u16",
+     "initial": 1
+    },
+    "$year": {
+     "type": "i16",
+     "initial": -4000
+    },
+    "$difficulty": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$competition": {
+     "type": "u8",
+     "initial": 4
+    },
+    "$players": {
+     "type": "u8",
+     "initial": 63
+    },
+    "$rule_options": {
+     "type": "u8",
+     "initial": 15
+    },
+    "$tribe": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$human_civ": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$treasury": {
+     "type": "i32",
+     "initial": 0
+    },
+    "$tax_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$science_rate": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$luxury_rate": {
+     "type": "u8",
+     "initial": 10
+    },
+    "$selected_city": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$selected_unit": {
+     "type": "u16",
+     "initial": 0
+    },
+    "$production": {
+     "type": "i16",
+     "initial": 0
+    },
+    "$chooser_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_list_open": {
+     "type": "bool",
+     "initial": false
+    },
+    "$unit_count": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$unit_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$city_cursor": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$auto_build": {
+     "type": "bool",
+     "initial": false
+    },
+    "$report": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_x": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$view_y": {
+     "type": "u8",
+     "initial": 0
+    },
+    "$earth_world": {
+     "type": "bool",
+     "initial": false
+    },
+    "$game_over": {
+     "type": "bool",
+     "initial": false
+    }
+   },
+   "resources": {
+    "toggle-auto-build-enabled-text": {
+     "kind": "text",
+     "text": "Automatic production enabled: status bit 0x10 set."
+    },
+    "toggle-auto-build-disabled-text": {
+     "kind": "text",
+     "text": "Automatic production disabled: status bit 0x10 cleared."
+    }
+   },
+   "body": [
+    {
+     "id": "toggle-auto-build-branch",
+     "op": "if",
+     "condition": {
+      "op": "eq",
+      "left": {
+       "var": "$auto_build"
+      },
+      "right": true
+     },
+     "then": [
+      {
+       "id": "toggle-auto-build-set-auto_build-then",
+       "op": "set",
+       "var": "$auto_build",
+       "value": false
+      },
+      {
+       "id": "toggle-auto-build-text-then",
+       "op": "text",
+       "resource": "toggle-auto-build-disabled-text"
+      }
+     ],
+     "else": [
+      {
+       "id": "toggle-auto-build-set-auto_build-else",
+       "op": "set",
+       "var": "$auto_build",
+       "value": true
+      },
+      {
+       "id": "toggle-auto-build-text-else",
+       "op": "text",
+       "resource": "toggle-auto-build-enabled-text"
+      }
+     ]
+    }
+   ]
+  },
   "open-units": {
    "format": "fdisbull-il-1",
    "role": "uil",
@@ -6946,6 +7109,22 @@
    ],
    "description": "Buy price/guard/commit are recovered in the separate buy contract; not exercised here.",
    "bindings": [],
+   "context": "city"
+  },
+  {
+   "id": "city-auto",
+   "label": "Automatic production",
+   "aliases": [
+    "auto",
+    "automatic"
+   ],
+   "description": "Toggles townbuf[city].status bit 0x10; civd CITYMGT.C:1380-1381.",
+   "bindings": [
+    {
+     "verb": "activate",
+     "program": "toggle-auto-build"
+    }
+   ],
    "context": "city"
   },
   {

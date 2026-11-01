@@ -114,13 +114,13 @@ STATE_EVIDENCE = {
     "$luxury_rate": "Derived as 10 - tax - science; Civ64 SCENES-PLAY 7.20.",
     "$selected_city": "UIL selector into the 128 city records at DGROUP:70EC; no direct DOS symbol.",
     "$selected_unit": "UIL selector into DGROUP:81D4 + civ*600h + unit*0Ch; Civ64 SCENES-PLAY 2.2.",
-    "$production": "City record production field; civd CITYMGT.C and reference/struct_city.md.",
+    "$production": "DGROUP:70EC + city*1Ch + 09h; civd CITYMGT.C:1444 and reference/struct_city.md.",
     "$chooser_open": "UIL context flag for key c / R:0ADE:0421; Civ64 SCENES-PLAY 7.12.",
     "$unit_list_open": "UIL context flag for key a / 0A99:7785; Civ64 SCENES-PLAY 7.1.",
     "$unit_count": "Declared unit-list length; not a committed DOS field.",
     "$unit_cursor": "Declared unit-list cursor; not a committed DOS field.",
     "$city_cursor": "The source stores the unit cursor at [0x70DC]; Civ64 SCENES-PLAY 7.1.",
-    "$auto_build": "City-screen automatic-production display state; civd CITYMGT.C.",
+    "$auto_build": "DGROUP:70EC + city*1Ch + 06h bit 10h; civd CITYMGT.C:1380-1381 toggles it with key A.",
     "$report": "UIL report selector; F1..F10 table at R:0403 3B7D..3BFF; Civ64 SCENES-PLAY 7.14.",
     "$view_x": "DGROUP:D4CC viewport x; Civ64 SCENES-PLAY 3.",
     "$view_y": "DGROUP:D75E viewport y; Civ64 SCENES-PLAY 3.",
@@ -746,6 +746,14 @@ SCREEN_SPECS = [
                 "Buy price/guard/commit are recovered in the separate buy contract; not exercised here.",
             ),
             _object(
+                "city-auto",
+                "Automatic production",
+                ["auto", "automatic"],
+                "Toggles townbuf[city].status bit 0x10; civd CITYMGT.C:1380-1381.",
+                "activate",
+                "toggle-auto-build",
+            ),
+            _object(
                 "city-rename",
                 "Rename city",
                 ["rename", "name"],
@@ -1204,6 +1212,34 @@ def _toggle(
     )
 
 
+def _toggle_bool(name: str, var: str, enabled_text: str, disabled_text: str) -> dict:
+    enabled_key = f"{name}-enabled-text"
+    disabled_key = f"{name}-disabled-text"
+    body = [
+        {
+            "id": f"{name}-branch",
+            "op": "if",
+            "condition": _eq(var, True),
+            "then": [
+                _set_block(name, var, False, "-then"),
+                _text_block(name, disabled_key, "-then"),
+            ],
+            "else": [
+                _set_block(name, var, True, "-else"),
+                _text_block(name, enabled_key, "-else"),
+            ],
+        }
+    ]
+    return _program(
+        name,
+        body,
+        {
+            enabled_key: {"kind": "text", "text": enabled_text},
+            disabled_key: {"kind": "text", "text": disabled_text},
+        },
+    )
+
+
 def build_programs() -> dict:
     programs = {}
 
@@ -1440,6 +1476,15 @@ def build_programs() -> dict:
         ),
     )
     add(
+        "toggle-auto-build",
+        _toggle_bool(
+            "toggle-auto-build",
+            "$auto_build",
+            "Automatic production enabled: status bit 0x10 set.",
+            "Automatic production disabled: status bit 0x10 cleared.",
+        ),
+    )
+    add(
         "open-units",
         _transition(
             "open-units",
@@ -1543,7 +1588,7 @@ def build_programs() -> dict:
         ),
     )
 
-    if not 1 <= len(programs) <= 40:
+    if not 1 <= len(programs) <= 48:
         raise ValueError(f"program count {len(programs)} exceeds the scene budget")
     return programs
 
@@ -1743,7 +1788,7 @@ def build_provenance(
         "limits": [
             "Partial scene graph and state projection, not a full game simulation.",
             "No DOS execution, VGA rendering, input decoding, AI, combat, technology, diplomacy, save parsing or economy model.",
-            "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; representative tribe rows 1 and 9 are bound, and no setup binding has a live-screen observation.",
+            "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; representative tribe rows 1 and 9 are bound; the city auto-build action toggles city status bit 10h. No setup or city action has a live-screen observation.",
             "The game-over context is state-reachable for inspection; its trigger conditions are not modelled.",
             "Every screen boundary is resolved against a civd function; this is address resolution, not Windows-to-DOS byte equivalence.",
         ],

@@ -55,8 +55,8 @@ def test_scene_has_bounded_screens_and_validates():
     assert scene["format"] == "fdisbull-il-scene-1"
     assert scene["partial"] is True
     assert len(scene["contexts"]) == 23
-    assert len(scene["objects"]) == 89
-    assert len(scene["programs"]) == 40
+    assert len(scene["objects"]) == 90
+    assert len(scene["programs"]) == 41
     context_ids = {context["id"] for context in scene["contexts"]}
     assert context_ids == set(SCREEN_NAMES.values()) | {"production", "units"}
     object_ids = {item["id"] for item in scene["objects"]}
@@ -186,6 +186,18 @@ def test_city_subcontexts_and_all_world_overlays_round_trip():
         assert backend.observe()["context"]["id"] == context
         assert _act(backend, "exit", close)["status"] == "success", close
         assert backend.observe()["context"]["id"] == "world"
+
+
+def test_city_auto_build_toggles_status_projection():
+    backend = ILSceneBackend(build_scene())
+    _to_world(backend)
+    assert _act(backend, "open", "world-city")["status"] == "success"
+    assert backend.state["$auto_build"] is False
+    assert _act(backend, "activate", "city-auto")["status"] == "success"
+    assert backend.state["$auto_build"] is True
+    assert _act(backend, "activate", "city-auto")["status"] == "success"
+    assert backend.state["$auto_build"] is False
+    assert backend.observe()["context"]["id"] == "city"
 
 
 def test_game_over_context_is_state_reachable_and_new_game_resets():

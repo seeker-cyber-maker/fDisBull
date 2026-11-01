@@ -88,7 +88,7 @@ Conditions: eq, bit_test, not, and.
 Limits: 64 KiB, 1,024 nodes/conditions, depth 32.
 There are no generic calls, loops, indexed state/object collections or autonomous processes. Switching legacy role `udl` to `uil` only changes metadata.
 
-The pure scene envelope `fdisbull-il-scene-1` admits 40 programs, 64 contexts, 256 objects, 1 MiB.
+The pure scene envelope `fdisbull-il-scene-1` admits 48 programs, 64 contexts, 256 objects, 1 MiB.
 One authoritative backend owns state; one context must match. Public metadata omits private state/program/evidence; partial coverage remains explicit.
 The player adds no game semantics. Media/input remain pending host plans in v1.
 The scene service supplies only in-memory checkpoints, not durable saves.

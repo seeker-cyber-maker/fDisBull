@@ -58,7 +58,7 @@ class ILSceneBackend:
             _fields(doc, ('format', 'programs', 'contexts', 'objects', 'partial'))
             if doc['format'] != 'fdisbull-il-scene-1' or type(doc['partial']) is not bool:
                 raise ValueError('Invalid scene format')
-            if not isinstance(doc['programs'], dict) or not 1 <= len(doc['programs']) <= 40:
+            if not isinstance(doc['programs'], dict) or not 1 <= len(doc['programs']) <= 48:
                 raise ValueError('Invalid scene programs')
             self.programs, self.sources = {}, {}
             for name, program in doc['programs'].items():
