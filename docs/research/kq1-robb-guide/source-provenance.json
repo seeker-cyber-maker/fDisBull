@@ -1,0 +1,132 @@
+{
+  "schema": "authored-document-research-provenance-v1",
+  "research_date": "2026-11-01",
+  "video": {
+    "url": "https://www.youtube.com/watch?v=KPlKetNSAtE",
+    "video_id": "KPlKetNSAtE",
+    "title": "The Insanity of King's Quest Speedruns",
+    "uploader": "OneShortEye",
+    "channel_id": "UC2P1bJ-udK3UhVX2QvnkS9g",
+    "upload_date": "2024-04-30",
+    "duration_seconds": 1630,
+    "description_guide_link": "https://www.speedrun.com/kings_quest_quest_for_the_crown/guides/sy3ri",
+    "document_mention": {
+      "url": "https://youtu.be/KPlKetNSAtE?t=756",
+      "cue_start_seconds": 756.633,
+      "scope": "Narration introduces an eleven-page illustrated route document."
+    },
+    "captions": {
+      "language": "en",
+      "kind": "manual",
+      "cue_count": 526,
+      "first_cue_seconds": 0.016,
+      "last_cue_end_seconds": 1624.466,
+      "complete_timing_coverage_under_fetcher_check": true,
+      "audio_independently_reviewed": false,
+      "raw_caption_sha256": "7e5a3091943d5735efe73ce24882e43853c0aa2644edc0fd476c1111765febe1",
+      "normalized_caption_json_sha256": "a97a04a455d55bd3d8dd0e5f7c2b796a4e717007af00ff950c823258fefbadb4"
+    },
+    "retained_metadata_sha256": "3a535cf1fbfe787b0128ae7463a5938f529be9d8944511c20f6b67d66d39aa71"
+  },
+  "guide_landing_page": {
+    "url": "https://www.speedrun.com/kings_quest_quest_for_the_crown/guides/sy3ri",
+    "title": "Robb's KQ1 guide for SCM route",
+    "listed_publisher": "OneShortEye",
+    "attributed_author": "UtmRobb",
+    "attributed_written_date": "June 2022",
+    "historical_notice": "The page presents the document as historical and points readers to SantaClaus's guides for current routes.",
+    "read_method": "Public web-tool text after following the guide-index link; a separate direct HTML request returned HTTP 403."
+  },
+  "document": {
+    "public_view_url": "https://www.dropbox.com/scl/fi/zj2sxqvgx4qiuh47om3ep/SCM-route-guide-3.pdf?rlkey=p27ac0zdfrlqihuguixi81nxl&st=7x9tvhkg&dl=0",
+    "public_download_url": "https://www.dropbox.com/scl/fi/zj2sxqvgx4qiuh47om3ep/SCM-route-guide-3.pdf?rlkey=p27ac0zdfrlqihuguixi81nxl&st=7x9tvhkg&dl=1",
+    "public_share_query_scope": "The rlkey and st values are part of the supplied public share link, not account credentials.",
+    "filename": "SCM-route-guide-3.pdf",
+    "front_matter_title": "KQ1 guide for SCM route",
+    "front_matter_author": "runner Robb",
+    "front_matter_written_date": "2022-06-28",
+    "pages": 11,
+    "size_bytes": 407436,
+    "sha256": "50fba9d91d0026e1a7969329a4d593ba2235817f25cc9c9e5c50954db8ba3722",
+    "public_download_verified_without_authentication": true,
+    "included_in_repository": false
+  },
+  "guide_profile": {
+    "dosbox": "ECE r4319",
+    "machine": "tandy",
+    "basic_cycles": 60000,
+    "harder_variation_cycles": 63000,
+    "treasure_order": ["shield", "chest", "mirror"],
+    "input_list_assumptions": "Favorable encounters and giant RNG; personal practice estimates are not native success guarantees.",
+    "payment_variant": "walnut",
+    "pdf_pages": [1, 2, 3]
+  },
+  "claim_locators": [
+    {
+      "id": "gnome-key",
+      "kind": "attributed guide and narration lead",
+      "claim": "The gnome segment combines HI, GET KEY and F3 repetitions; narration explains the three-wrong-guess fallback key.",
+      "pdf_pages": [1],
+      "pdf_section": "1, segments 5-6",
+      "video_url": "https://youtu.be/KPlKetNSAtE?t=263",
+      "native_verification_by_this_research": false
+    },
+    {
+      "id": "gnome-fast-stop",
+      "kind": "attributed runner technique",
+      "claim": "Return then 6 on successive frames aims to stop toward the gnome screen's left side.",
+      "pdf_pages": [8],
+      "pdf_section": "3.5",
+      "video_url": "https://youtu.be/KPlKetNSAtE?t=917",
+      "native_verification_by_this_research": false
+    },
+    {
+      "id": "giant-fast-stop-and-chest",
+      "kind": "attributed runner technique",
+      "claim": "Return then 4 aims to stop toward the right of the giant screen, followed by the chest interaction.",
+      "pdf_pages": [2, 8],
+      "pdf_sections": ["1, segments 14-15", "3.4"],
+      "video_url": "https://youtu.be/KPlKetNSAtE?t=940",
+      "native_verification_by_this_research": false
+    },
+    {
+      "id": "giant-shield-and-sleep",
+      "kind": "attributed narration lead",
+      "claim": "The narration describes shield protection, the giant sleeping and subsequent chest pickup; sleeping position affects the approach.",
+      "video_url": "https://youtu.be/KPlKetNSAtE?t=373",
+      "native_verification_by_this_research": false
+    },
+    {
+      "id": "fast-stop-timing",
+      "kind": "attributed narration lead",
+      "claim": "The narration describes Return followed by the already-selected direction within 0.05 seconds as a fast stop.",
+      "video_url": "https://youtu.be/KPlKetNSAtE?t=933",
+      "native_verification_by_this_research": false
+    }
+  ],
+  "later_tas_comparison": {
+    "video_url": "https://www.youtube.com/watch?v=DgW6hNJZjxQ",
+    "title": "Kings Quest 1 TAS speedrun in 9.89 (no audio)",
+    "upload_date": "2022-12-16",
+    "reported_cycles": 157600,
+    "observed_payment_variant": "bag/diamonds",
+    "authored_route_reference": "../kq1-robb-9.89/ROUTE.md",
+    "scope": "A separate later recorded run. The historical guide is not its exact input file or a native qualification of that run."
+  },
+  "public_comment_check": {
+    "sample_limit": 20,
+    "comments_retrieved": 20,
+    "pinned_uploader_comment_found": true,
+    "pinned_uploader_content": "sponsorship text, without the document link",
+    "scope": "Bounded public sample, not a complete comment census. The description supplies the document link."
+  },
+  "acquisition_scope": {
+    "authenticated_session_used": false,
+    "cookies_used": false,
+    "video_or_audio_downloaded": false,
+    "public_document_downloaded_privately": true,
+    "dependency_installation": false,
+    "native_gameplay_performed_for_research": false,
+    "raw_source_availability": "Original PDF, metadata and captions are retained privately; only authored prose, identifiers and hashes are included here."
+  }
+}
