@@ -600,14 +600,17 @@ class SceneHandle:
         # match the containing scene. Observe only that explicit predicate.
         try:
             outcome=self._wait_outcome(obj['outcome'],baseline=before.get('baseline'),**budgets())
-        except SceneError as error:
+        except Exception as error:
             # Preserve the single queued input even when its destination wait
             # fails. A later observation must never have to replay the action
             # to discover whether an input was submitted.
-            failed=dict(error.result,scene_revision=self.revision,action_object=obj['id'],
+            observed = (error.result if isinstance(error, SceneError) else
+                        dict(status='observation-failed', complete=False, run=self.session.run_id,
+                             error_type=type(error).__name__, error=str(error)))
+            failed=dict(observed,scene_revision=self.revision,action_object=obj['id'],
                         action_name=obj['name'],before_observation=checked['observation'],
                         input=queued,handlers=handlers,
-                        outcome_observation=error.result.get('observation'))
+                        outcome_observation=observed.get('observation'))
             raise SceneError(self._store(failed)) from error
         outcome['guest_elapsed_ms']+=elapsed
         outcome.update(action_object=obj['id'],outcome_phase=obj.get('outcome_phase','unspecified'),before_observation=checked['observation'],input=queued,handlers=handlers)

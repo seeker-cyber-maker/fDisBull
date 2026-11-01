@@ -22,6 +22,12 @@ NAVIGATION = {'office': 'office', 'bank': 'bank', 'street': 'street', 'dinomart'
 TITLES = {'office': 'Park office', 'bank': 'Bank', 'street': 'Park street', 'dinomart': 'DinoMart',
           'general_store': 'General Store', 'employment': 'Employment office',
           'dino_diner': 'Dino Diner', 'park': 'Park'}
+BUSINESS_NAVIGATION = {
+    'go dinomart': ('route-dinomart', 'street.mart', 'dinomart'),
+    'go employment': ('route-employment', 'street.employment', 'employment'),
+    'go store': ('route-store', 'street.store', 'general_store'),
+    'go diner': ('route-diner', 'street.diner', 'dino_diner'),
+}
 PURCHASE_COMMITS = ('food_purchase_committed', 'vegasaurus_purchase_confirmed',
                     'coelophysis_purchase_confirmed')
 SNAPSHOT_FIELDS = ('office', 'bank', 'street', 'mart', 'park', 'locations', 'current',
@@ -478,16 +484,19 @@ class ZService:
         if not held or self.checkpoint_failed or not self.recovery_required:
             return False
         pending, failure = held['pending'], held['scene_failure']
+        route = BUSINESS_NAVIGATION.get(pending.get('command'))
+        if route is None:
+            return False
+        target, name, destination = route
         action = pending.get('action', {})
         ticket = failure.get('input', {})
         return (held['session_token'] == self.session_token and
                 pending.get('session_token') == self.session_token and
-                pending.get('command') == 'go dinomart' and
                 {k:action.get(k) for k in ('verb','target','item')} ==
-                    {'verb':'go','target':'route-dinomart','item':None} and
-                held['source'] == self.text.current == 'street' and
+                    {'verb':'go','target':target,'item':None} and
+                held['source'] == self.text.current and self.text.current in ('street', destination) and
                 failure.get('scene_revision') == getattr(self.text,'street',None) and
-                failure.get('action_name') == 'street.mart' and
+                failure.get('action_name') == name and
                 failure.get('before_observation') is not None and
                 ticket.get('accepted') is True and ticket.get('delivery') == 'queued' and
                 (not getattr(self.text.debug,'run_id',None) or
@@ -510,6 +519,7 @@ class ZService:
         if recovery_id is not None and recovery_id != held['id']:
             return result
         previous = self.text.current, self.text.mart, self.revision
+        destination = 'dinomart' if purchase else BUSINESS_NAVIGATION[held['pending']['command']][2]
         previous_order = deepcopy(getattr(self.text,'dinosaur_order',None))
         previous_bought = getattr(self.text,'dinosaur_bought',False)
         try:
@@ -520,15 +530,17 @@ class ZService:
                 if purchase:
                     qualified = qualify_purchase(self.text)
                 else:
-                    qualified = load_scenes().qualify_dinomart(self.text)
+                    qualified = (load_scenes().qualify_dinomart(self.text) if destination == 'dinomart'
+                                 else load_scenes().qualify_business(self.text, destination))
                 self.revision += 1
                 observed = self.observe(recovering=True)
                 witness = self.witness(observed)
-                if witness is None or observed['context']['id'] != 'dinomart':
+                if witness is None or observed['context']['id'] != destination:
                     raise ValueError('Original destination is not qualified')
         except Exception:
-            self.text.current, self.text.mart, self.revision = previous
+            self.text.current, self.revision = previous[0], previous[2]
             if purchase:
+                self.text.mart = previous[1]
                 proof = getattr(self.text,'dinosaur_order',{}).get('proof')
                 self.text.dinosaur_order = previous_order
                 if proof:
@@ -549,7 +561,7 @@ class ZService:
                 'recovery_required':False,'action':action,'witness':witness,
                 'message':('Original Coelophysis purchase verified: one dinosaur placed, $1,250 charged. '
                            'Cash: $3,250. No input was replayed.' if purchase else
-                           'Original DinoMart destination verified; navigation was not replayed.')}
+                           'Original ' + TITLES[destination] + ' destination verified; navigation was not replayed.')}
 
     def witness(self, observation):
         context = observation.get('context', {})
@@ -644,11 +656,11 @@ class ZService:
             witness = self.witness(observed)
             if witness is not None:
                 extra['witness'] = witness
-            elif pending['command'] == 'buy coelophysis' and not (refusal or text_refusal):
+            elif (pending['command'] == 'buy coelophysis' or pending['command'] in BUSINESS_NAVIGATION) and not (refusal or text_refusal):
                 self.pending = pending
-                if self.action_error(RuntimeError('Coelophysis following observation incomplete')):
+                if self.action_error(RuntimeError('Original action following observation incomplete')):
                     return
-                raise RuntimeError('Original purchase follow-up is unavailable')
+                raise RuntimeError('Original action follow-up is unavailable')
         self.send({'status':status, 'complete':status != 'incomplete',
                    'message':self.public_message(messages or 'No verified completion was recorded.'),
                    'effects':effects, **extra})
@@ -788,15 +800,17 @@ class ZService:
                 if (not isinstance(action,dict) or set(action) != {'verb','target','item','context_token'}
                         or not all(isinstance(action[k],str) for k in ('verb','target','context_token')) or action['item'] is not None):
                     raise ValueError('Invalid action')
-                bounded_purchase = action['verb'] == 'buy' and action['target'] == 'coelophysis' or continuing
-                if bounded_purchase:
+                bounded_action = (action['verb'] == 'buy' and action['target'] == 'coelophysis' or continuing or
+                                  action['verb'] == 'go' and action['target'] in
+                                  {route[0] for route in BUSINESS_NAVIGATION.values()})
+                if bounded_action:
                     self._start_action_budget()
                 observation = self.observe()
                 if not observation['complete']:
                     self._end_action_budget()
-                    self.send({'complete':bounded_purchase,
-                               'status':'rejected' if bounded_purchase else 'incomplete',
-                               'effects':'none-confirmed' if bounded_purchase else 'unknown',
+                    self.send({'complete':bounded_action,
+                               'status':'rejected' if bounded_action else 'incomplete',
+                               'effects':'none-confirmed' if bounded_action else 'unknown',
                                'message':'Original scene observation incomplete; no input sent.'});continue
                 if action['context_token'] != observation['context']['token']:
                     self._end_action_budget()
@@ -858,13 +872,10 @@ class ZService:
         if self.pending is None:
             return False
         try:
-            if self.pending['command'] in ('buy coelophysis', 'continue dinosaur order'):
-                from .dinopark_purchase import recovery_budget
-                with recovery_budget(self.text):
-                    if self.text.debug.call('session.status').get('state') != 'stopped':
-                        return False
-            elif self.text.debug.call('session.status').get('state') != 'stopped':
-                return False
+            from .dinopark_purchase import recovery_budget
+            with recovery_budget(self.text):
+                if self.text.debug.call('session.status').get('state') != 'stopped':
+                    return False
         except Exception:
             return False
         self.recovery_required = True
@@ -877,14 +888,28 @@ class ZService:
             self.send({'complete':False,'status':'stopped','message':'Original-backed service stopped; inspect private evidence.'})
             return
         root = (self.held_action if self.pending['command'] == 'continue dinosaur order' else None)
-        confirmed = [e for e in self.pending['events'] if e.get('phase') in PURCHASE_COMMITS]
+        confirmed = [e for e in self.pending['events'] if e.get('phase') in PURCHASE_COMMITS or
+                     e.get('phase') == 'navigation_input_result' and
+                     e.get('command') == self.pending['command'] and
+                     e.get('result', {}).get('status') == 'matched' and
+                     e.get('result', {}).get('complete') is True and
+                     e.get('result', {}).get('scene_revision') == getattr(self.text, 'street', None) and
+                     e.get('result', {}).get('action_name') ==
+                         BUSINESS_NAVIGATION.get(self.pending['command'], (None, None))[1] and
+                     e.get('result', {}).get('run') == getattr(self.text.debug, 'run_id', None) and
+                     e.get('result', {}).get('input', {}).get('accepted') is True and
+                     e.get('result', {}).get('input', {}).get('delivery') == 'queued']
         effects = 'applied-confirmed' if confirmed else root['effects'] if root else 'unknown'
         message = ('The purchase is confirmed; its follow-up failed. Do not repeat the purchase.' if effects == 'applied-confirmed' else
                    'The original action did not reach a verified outcome. Do not retry blindly.')
+        if effects == 'applied-confirmed' and self.pending['command'] in BUSINESS_NAVIGATION:
+            message = 'The navigation is confirmed; its follow-up failed. Do not repeat it.'
         if recoverable:
             message += ' The provider is retained for reconciliation or checkpoint recovery; further action input is blocked.'
             if self.pending['command'] in ('buy coelophysis','continue dinosaur order'):
                 message += ' Use look for the guarded order continuation, or reconcile to check completion; do not repeat the purchase.'
+            elif self.pending['command'] in BUSINESS_NAVIGATION:
+                message += ' Use reconcile to check the original navigation; do not repeat the click.'
         path = self.work/('z-failure.json' if not self.failures else f'z-failure-{len(self.failures)+1:03d}.json')
         load_scenes().atomic_json(path, {'error_type':type(error).__name__, 'error':str(error),
             'pending':self.pending,'confirmed_effects':confirmed,'recovery_required':recoverable})
@@ -893,6 +918,10 @@ class ZService:
                               'diagnostic':path.name,'restored_by':None})
         if recoverable:
             scene_failure = getattr(error,'result',{})
+            if not isinstance(scene_failure, dict) or not scene_failure.get('input'):
+                scene_failure = next((e['result'] for e in reversed(self.pending['events'])
+                                      if e.get('phase') == 'navigation_input_result' and
+                                      e.get('command') == self.pending['command']), {})
             if root is not None:
                 root.update(effects=effects, dinosaur_order=deepcopy(self.text.dinosaur_order),
                             last_failure_index=index)

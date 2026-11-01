@@ -442,15 +442,57 @@ def definition(reference, title, predicate, selector, action, point, outcome):
                      'guest_ms': 12000, 'timeout_ms': 10000}]}
 
 
-def mart_entry_object(reference, predicate, selector, patterns):
-    obj = definition(reference, 'street', predicate, selector, 'street.mart', [160, 66],
-                     {'any': [pixel_predicate(patterns['mart']),
-                              pixel_predicate(patterns['after'])]})['objects'][0]
-    # Loading the catalogue reads several original assets. Native observation
+BUSINESS_ENTRIES = {
+    'dinomart': ('street.mart', [160, 66], ('mart', 'after')),
+    'employment': ('street.employment', [270, 66], ('employment',)),
+    'dino_diner': ('street.diner', [55, 65], ('dino_diner', 'food_menu', 'food_selected')),
+    'general_store': ('street.store', [270, 140], ('general_store', 'fence_tab', 'fence_selected')),
+}
+
+
+def business_entry_object(reference, predicate, selector, patterns, view):
+    name, point, views = BUSINESS_ENTRIES[view]
+    outcome = {'any': [pixel_predicate(patterns[v]) for v in views]}
+    obj = definition(reference, 'street', predicate, selector, name, point, outcome)['objects'][0]
+    # Loading a business reads several original assets. Native observation
     # hooks can consume host time while only a few guest seconds have elapsed.
     # Keep both budgets finite and below the player's 60-second request bound.
     obj['timeout_ms'] = 40000
     return obj
+
+
+def mart_entry_object(reference, predicate, selector, patterns):
+    return business_entry_object(reference, predicate, selector, patterns, 'dinomart')
+
+
+def click_business(text, command, scene, name):
+    """Retain a successful click receipt before any later display/readback can fail."""
+    result = text.debug.scene_click(scene, name)
+    receipt = dict(result)
+    for field, value in (('scene_revision', scene), ('action_name', name), ('run', text.debug.run_id)):
+        receipt.setdefault(field, value)
+    text.event({'phase': 'navigation_input_result', 'command': command, 'result': receipt})
+    return result
+
+
+def qualify_business(text, view):
+    """Publish a fresh destination from host reads only, including scene re-entry."""
+    if view == 'dinomart':
+        return qualify_dinomart(text)
+    _, _, views = BUSINESS_ENTRIES[view]
+    frame, image = take_frame(text.project, text.debug, view + '-entry', hooks=False)
+    if not any(matches(image, text.patterns[v]) for v in views):
+        raise RuntimeError('Location not recognized; outcome unknown: ' + view)
+    selector = {'memory': {'address': '4020:3c5c', 'length': 2,
+                          'hex': text.debug.memory('4020:3c5c', length=2)['hex']}}
+    street = text.project.debug_scene_info(text.street)['definition']['match']
+    target, point = ((view + '.catalogue', [205, 105]) if view == 'general_store'
+                     else (view + '.back', [173, 187]))
+    predicate = {'any': [pixel_predicate(text.patterns[v]) for v in views]}
+    doc = definition(frame, view, predicate, selector, target, point, street)
+    saved = text.project.debug_save_scene(view, doc, parent=text.locations.get(view))
+    text.locations[view], text.current = saved['id'], view
+    return {'frame': frame, 'view': view, 'scene': saved}
 
 
 def qualify_dinomart(text):
@@ -2119,18 +2161,9 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                                                     'street.office', [175, 140], office_pred)
                             street_doc['objects'].append(mart_entry_object(
                                 street_frame, street_pred, street_selector, patterns))
-                            for obj, point, view in [('street.employment', [270, 66], 'employment'),
-                                                     ('street.diner', [55, 65], 'dino_diner'),
-                                                     ('street.store', [270, 140], 'general_store')]:
-                                outcome = pixel_predicate(patterns[view])
-                                if view == 'general_store':
-                                    outcome = {'any': [outcome, pixel_predicate(patterns['fence_tab']),
-                                                       pixel_predicate(patterns['fence_selected'])]}
-                                elif view == 'dino_diner':
-                                    outcome = {'any': [outcome, pixel_predicate(patterns['food_menu']),
-                                                       pixel_predicate(patterns['food_selected'])]}
-                                street_doc['objects'].append(definition(street_frame, 'street', street_pred, street_selector,
-                                    obj, point, outcome)['objects'][0])
+                            for view in ('employment', 'dino_diner', 'general_store'):
+                                street_doc['objects'].append(business_entry_object(
+                                    street_frame, street_pred, street_selector, patterns, view))
                             street = project.debug_save_scene('street', street_doc)
                             text.street, text.current = street['id'], 'street'
                             event({'phase': 'street_guard_live_qualified', 'frame': street_frame,
@@ -2139,7 +2172,7 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                             rendered = text.describe()
                             receipt['street_after'] = street_frame
                         elif command == 'go dinomart':
-                            action = debug.scene_click(street['id'], 'street.mart')
+                            action = click_business(text, command, street['id'], 'street.mart')
                             qualified = qualify_dinomart(text)
                             mart_frame, mart = qualified['frame'], qualified['scene']
                             text.vegasaurus_extinct = False
@@ -2149,24 +2182,8 @@ def run_session(argv=None, *, command_reader=None, output=None, on_ready=None, o
                             view, obj = {'go employment': ('employment', 'street.employment'),
                                          'go diner': ('dino_diner', 'street.diner'),
                                          'go store': ('general_store', 'street.store')}[command]
-                            action = debug.scene_click(street['id'], obj)
-                            location_frame, location_image = take_frame(project, debug, view + '-entry')
-                            if view == 'general_store':
-                                views = [view, 'fence_tab', 'fence_selected']
-                            elif view == 'dino_diner':
-                                views = [view, 'food_menu', 'food_selected']
-                            else:
-                                views = [view]
-                            if not any(matches(location_image, patterns[v]) for v in views):
-                                raise RuntimeError('location not recognized: ' + view)
-                            location_selector = {'memory': {'address': '4020:3c5c', 'length': 2,
-                                'hex': debug.memory('4020:3c5c', length=2)['hex']}}
-                            target, point = (view + '.catalogue', [205, 105]) if view == 'general_store' else (view + '.back', [173, 187])
-                            view_predicate = {'any': [pixel_predicate(patterns[v]) for v in views]} if len(views) > 1 else pixel_predicate(patterns[view])
-                            doc = definition(location_frame, view, view_predicate,
-                                             location_selector, target, point, street_pred)
-                            saved = project.debug_save_scene(view, doc, parent=text.locations.get(view))
-                            text.locations[view], text.current = saved['id'], view
+                            action = click_business(text, command, street['id'], obj)
+                            qualify_business(text, view)
                             rendered = text.describe()
                         else:
                             rendered = text.act(command)
