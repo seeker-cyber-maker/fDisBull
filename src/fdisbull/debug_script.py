@@ -30,6 +30,10 @@ OPERATIONS = {
     'delta-start':'cpu_delta_start', 'delta-status':'cpu_delta_status',
     'delta-record':'cpu_delta_record', 'delta-rewind':'cpu_delta_rewind',
     'delta-recover':'cpu_delta_recover',
+    'frame-advance':'advance_frames', 'frame-inputs':'frame_inputs',
+    'timeline-start':'timeline_start', 'timeline-status':'timeline_status',
+    'timeline-advance':'timeline_advance', 'timeline-rewind':'timeline_rewind',
+    'timeline-stop':'timeline_stop', 'timeline-pin':'timeline_pin', 'timeline-image':'timeline_image',
     'layer-stack':'layers', 'layer-enable':'layer_enable', 'layer-patch':'layer_patch',
     'code':'code', 'capture-code':'capture_code', 'branch':'branch', 'cave':'cave', 'hook':'hook',
     'hooks':'hooks', 'delete-hook':'delete_hook',
@@ -84,6 +88,32 @@ def validate_script(script):
                     if op=='delta-rewind' and 'policy' in params:
                         from .debug_cpu_deltas import validate_policy
                         validate_policy(params['policy'],allow_references=True)
+                    if op.startswith('timeline-') or op in ('frame-advance','frame-inputs'):
+                        from .debug_timeline import validate_edges, validate_schedule, validate_timeline_policy
+                        limits={'frames':(0,4096) if op=='timeline-rewind' else (1,128),
+                                'max_frames':(1,4096),'max_captures':(1,65536),
+                                'max_bytes':(1,256*1024*1024),
+                                'max_state_bytes':(1,256*1024*1024),
+                                'max_image_bytes':(1,16*1024*1024),
+                                'timeout_ms':(1,600000)}
+                        for key,value in params.items():
+                            if key in limits and not (isinstance(value,str) and value.startswith('$')):
+                                bounded(value,key,*limits[key])
+                        if op=='frame-inputs':validate_edges(params['edges'],allow_references=True)
+                        if op=='timeline-advance' and params.get('inputs') is not None:
+                            validate_schedule(params['inputs'],params.get('frames',1),allow_references=True)
+                        if op=='timeline-rewind' and params.get('policy') is not None:
+                            validate_timeline_policy(params['policy'],allow_references=True)
+                        if op in ('timeline-pin','timeline-image') and 'name' in params:
+                            if not (isinstance(params['name'],str) and params['name'].startswith('$')):
+                                from .external_files import _file_name
+                                _file_name(params['name'])
+                        if op=='timeline-start':
+                            sizes=[params.get('max_state_bytes',8*1024**2),
+                                   params.get('max_image_bytes',2*1024**2),
+                                   params.get('max_bytes',64*1024**2)]
+                            if all(type(value) is int for value in sizes) and sum(sizes[:2])>sizes[2]:
+                                raise ValueError('Frame timeline byte budget cannot reserve one state and image')
                     if op in ('keyboard.press','keyboard.type'):
                         from .keyboard_input import validate_keyboard
                         # Validate every literal independently. One result reference
@@ -132,6 +162,12 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
         unsupported=[s['op'] for s in steps if s['op'] not in session.script_operations]
         if unsupported:
             raise ValueError('Unsupported operations for this backend: '+', '.join(sorted(set(unsupported))))
+    frame_operations = {'frame-advance','frame-inputs','timeline-start','timeline-advance',
+                        'timeline-rewind','timeline-pin','timeline-image'}
+    if any(step['op'] in frame_operations for step in steps):
+        capabilities = getattr(getattr(session,'rpc',None),'capabilities',{})
+        if not isinstance(capabilities,dict) or not capabilities.get('frame_timeline'):
+            raise ValueError('Frame/timeline script operations require backend frame_timeline capability')
     for step in steps:
         if step['op']=='macro':
             params={k:v for k,v in step.items() if k not in ('op','as','expect','timeout_ms')}
@@ -166,7 +202,7 @@ def execute_script(session, script, *, timeout_ms=60000, bindings=None, _after_s
             if remaining <= 0:
                 raise TimeoutError('Script host-time budget expired')
             params = resolve({k:v for k,v in step.items() if k not in ('op','as','expect')})
-            if step['op'] in ('run','trace','rewind-record','delta-record','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
+            if step['op'] in ('run','trace','rewind-record','delta-record','frame-advance','timeline-advance','timeline-rewind','wait','scene-wait','scene-click','scene-act','macro','move','proof-check','spatial-action'):
                 requested=params.get('timeout_ms')
                 if requested is None:requested=remaining
                 params['timeout_ms'] = min(requested,remaining,60000 if step['op'].startswith('scene-') else remaining)

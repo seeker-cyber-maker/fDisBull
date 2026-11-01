@@ -18,6 +18,7 @@ that permission does not certify a complete historical machine context.
 | --- | --- | --- |
 | Anchor Stone | Save a full native point, or jump directly back to it | `debug-save-anchor-stone`, `debug-load-anchor-stone`, `debug-anchor-stone-info` |
 | Delta rewind | Walk backward through recorded CPU/RAM changes | `debug-delta-start`, `debug-delta-record`, `debug-delta-rewind`, `debug-delta-status` |
+| Automatic frame timeline | Retain recent full native frames and inputs; branch from a recent point | `debug-timeline-start`, `debug-timeline-advance`, `debug-timeline-rewind`, `debug-timeline-pin` |
 
 Python callers use `debug.save_anchor_stone()`,
 `debug.load_anchor_stone(artifact)` and `project.debug_anchor_stone_info(artifact)`.

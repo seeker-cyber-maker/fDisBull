@@ -2,6 +2,7 @@ import hashlib
 import json
 from copy import deepcopy
 from io import BytesIO
+from types import SimpleNamespace
 import pytest
 from PIL import Image
 
@@ -80,6 +81,7 @@ def test_state_load_keeps_session_policy():
         def execute(self,*a): return self
         def fetchone(self): return self.row
     class Fake(SpatialSessionMixin):
+        rpc = SimpleNamespace(capabilities={})
         load_state=DebugSession.load_state
         def __init__(self):
             self.version={'id':1}; self.events=[]; self.metadata={k:'same' for k in ('source_sha256','version_sha256','emulator_sha256','runtime_load_segment','runtime_profile','game_dir')}; self.project=type('P',(),{})(); self.project.db=Rows()

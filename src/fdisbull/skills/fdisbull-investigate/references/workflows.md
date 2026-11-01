@@ -78,6 +78,19 @@ remain compatible. Delta rewind follows recorded changes instead; its unit is
 a DOS next-fetch interval or Wine completed instruction, not a video frame.
 See `docs/ANCHOR_STONES.md`.
 
+For native DOS input retries, a backend advertising `frame_timeline` supports
+`debug-timeline-start`, `debug-timeline-advance` and `debug-timeline-rewind`.
+This automatically caches full states and completed-frame images, with physical
+keyboard make/break edges scheduled before selected frames. It is a bounded
+live cache, not an instruction-delta history. `debug-timeline-pin` persists a
+cached point as an Anchor Stone without recapturing it. An explicit preservation
+policy can retain identified current conventional RAM, such as RNG, while
+marking the result as an experimental mixed state. Ordinary queued input or
+unrecorded execution invalidates this history. Frame cadence depends on the
+guest mode; use its completion receipt, not a guessed 60 Hz or a guest-ms wait.
+See `docs/FRAME_INPUT_TIMELINE.md` for bounds, dirty-input cancellation, recovery
+and the manual/automatic/combined comparison. Other backends remain unsupported.
+
 For a short native DOS debugging history, use `debug-rewind-start`, advance with
 `debug-rewind-record`, inspect `debug-rewind-status`, then `debug-rewind` a
 declared count. This records bounded next-fetch intervals with native states;

@@ -153,6 +153,11 @@ See [code layers](docs/CODE_LAYERS.md), [saved experiments](docs/DEBUGGER_EXPERI
 For short debugging histories, [Anchor Stone history](docs/DEBUGGER_REWIND.md)
 records full native states and lets an agent jump to an earlier recorded boundary.
 
+The [automatic frame/input timeline](docs/FRAME_INPUT_TIMELINE.md) keeps recent
+native DOS frames ready for rewind and input branching. It uses full states
+first, with optional durable Anchor Stone pins. This requires the separately
+built frame-capable backend; its live cache does not survive closing the session.
+
 Full native saved states are called [Anchor Stones](docs/ANCHOR_STONES.md), a nod
 to TiGa's Blob to General game. Load a stone to jump directly to its saved context.
 [Delta rewind](docs/CPU_RAM_DELTAS.md) walks through recorded changes. Its default

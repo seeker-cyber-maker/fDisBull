@@ -17,6 +17,7 @@ from .external_files import _file_name
 from .code_layers import LayerProjectMixin, LayerSessionMixin, LAYER_DDL
 from .debug_experiments import ExperimentProjectMixin, ExperimentSessionMixin
 from .debug_rewind import RewindSessionMixin
+from .debug_timeline import FrameTimelineSessionMixin, timeline_locked
 from .debug_cpu_deltas import CpuDeltaSessionMixin
 from .anchor_stones import AnchorStoneSessionMixin
 from .runtime_code import RuntimeCodeMixin, RUNTIME_DDL
@@ -260,7 +261,7 @@ class DebugProjectMixin(SpatialProjectMixin, TextProjectionProjectMixin, Progres
         return self._debug_artifact(row['run'],name,'screenshot-grid',rendered,metadata)
 
 
-class DebugSession(AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionMixin, SpatialSessionMixin, TextProjectionSessionMixin, AssistedTravelSessionMixin, ProgressiveSceneSessionMixin, MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
+class DebugSession(FrameTimelineSessionMixin, AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionMixin, SpatialSessionMixin, TextProjectionSessionMixin, AssistedTravelSessionMixin, ProgressiveSceneSessionMixin, MovementSessionMixin, MacroSessionMixin, RuntimeObservationMixin, ScreenshotHookSessionMixin, SceneSessionMixin, ExperimentSessionMixin, LayerSessionMixin):
     @property
     def script_operations(self):
         from .debug_script import OPERATIONS
@@ -389,11 +390,13 @@ class DebugSession(AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionM
     def write_registers(self,registers):
         raise ValueError('Direct guarded register editing is currently a PE64 operation; use a DOS state fork')
 
+    @timeline_locked
     def call(self, method, params=None):
         if self.closed:
             raise DebuggerError('Debugger session is closed')
         self._cpu_delta_before_call(method,params)
         self._rewind_before_call(method)
+        self._timeline_before_call(method)
         deadline=getattr(self,'_rpc_deadline',None)
         options={}
         if deadline is not None:
@@ -403,9 +406,10 @@ class DebugSession(AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionM
         return self.rpc.call(method,{'session_id':self.session_id,**(params or {})},**options)
 
     def _event(self, operation, evidence):
-        experiment = getattr(self, 'metadata', {}).get('delta_experiment')
-        if experiment is not None:
-            evidence = dict(evidence, delta_experiment=experiment)
+        for key in ('delta_experiment', 'timeline_experiment'):
+            experiment = getattr(self, 'metadata', {}).get(key)
+            if experiment is not None:
+                evidence = dict(evidence, **{key: experiment})
         with self.project.transaction(True):
             self.project.db.execute('INSERT INTO debug_events(run,created,operation,evidence) VALUES (?,?,?,?)',
                                     (self.run_id,stamp(),operation,self.project._external_text(json.dumps(evidence))))
@@ -638,12 +642,19 @@ class DebugSession(AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionM
             entries.append({'path':str(path.relative_to(self.game_dir)),'sha256':hashlib.sha256(path.read_bytes()).hexdigest()})
         return entries
 
+    @timeline_locked
     def save_state(self, name='checkpoint.sav', *, max_bytes=None):
+        _file_name(name)
+        checkpoint = DebugSession._capture_native_checkpoint(self, max_bytes=max_bytes)
+        return self._artifact(name, 'state', checkpoint['data'], checkpoint['metadata'])
+
+    @timeline_locked
+    def _capture_native_checkpoint(self, *, max_bytes=None):
+        """Capture a complete private payload, independent of durable artifacts."""
         if max_bytes is not None:
             bounded(max_bytes,'max_bytes',1,256*1024*1024)
         if getattr(self, '_spatial_guard_active', False) or getattr(self, '_spatial_guard_failed', False):
             raise ValueError('Cannot checkpoint a temporary or unrestored spatial guard')
-        _file_name(name)
         if not self.rpc.capabilities.get('save_states'):
             raise DebuggerError('DOSBox build lacks native state operations')
         if self.call('input.mouse.state').get('mouse',{}).get('release_pending'):
@@ -661,7 +672,9 @@ class DebugSession(AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionM
             raise ValueError('Native project checkpoints currently require real mode')
         with tempfile.TemporaryDirectory(prefix='fdisbull-state-') as directory:
             path = Path(directory)/'state.sav'
-            self.call('state.save',{'path':str(path)})
+            saved = self.call('state.save',{'path':str(path)})
+            if path.stat().st_size > (max_bytes or 256*1024*1024):
+                raise ValueError('Native state exceeds remaining rewind byte budget')
             data = path.read_bytes()
         if max_bytes is not None and len(data)>max_bytes:
             raise ValueError('Native state exceeds remaining rewind byte budget')
@@ -669,10 +682,13 @@ class DebugSession(AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionM
             raise DebuggerError('Mounted game files changed while capturing state')
         metadata = {**self.metadata,'registers':registers,'disk_manifest':before,
                     'format':'dosbox-x-native','disk_restore':False,'code_layers':layer_state}
+        if self.rpc.capabilities.get('frame_timeline'):
+            metadata['frame_keys'] = saved.get('frame_keys', [])
         if hasattr(self,'_state_provenance'):
             metadata['derivation'] = self._state_provenance
-        return self._artifact(name,'state',data,metadata)
+        return dict(data=data, sha256=hashlib.sha256(data).hexdigest(), metadata=metadata)
 
+    @timeline_locked
     def load_state(self, artifact):
         if getattr(self,'_cpu_delta_history',None) is None:
             return DebugSession._load_native_state(self,artifact)
@@ -687,17 +703,39 @@ class DebugSession(AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionM
         if row is None or row['kind'] != 'state' or row['version'] != self.version['id']:
             raise ValueError('State must belong to the selected project version')
         metadata = json.loads(row['metadata']); data = bytes(row['data'])
-        if hashlib.sha256(data).hexdigest()!=row['sha256']:
+        result = DebugSession._restore_native_checkpoint(self,
+            dict(data=data, sha256=row['sha256'], metadata=metadata))
+        result['artifact'] = artifact
+        self._event('load-state',result)
+        return result
+
+    @timeline_locked
+    def _restore_native_checkpoint(self, checkpoint):
+        """Restore and verify a full native payload, including frame input ownership."""
+        metadata = checkpoint['metadata']; data = checkpoint['data']
+        if hashlib.sha256(data).hexdigest()!=checkpoint['sha256']:
             raise ValueError('Stored state hash mismatch')
         for field in ('source_sha256','version_sha256','emulator_sha256','runtime_load_segment','runtime_profile','game_dir'):
             if metadata.get(field) != self.metadata.get(field):
                 raise ValueError('State compatibility mismatch: '+field)
         if metadata['disk_manifest'] != self._disk_manifest():
             raise ValueError('Mounted game files differ from state; restore the matching files first')
-        with tempfile.TemporaryDirectory(prefix='fdisbull-state-') as directory:
+        frame_keys = metadata.get('frame_keys', [])
+        from .keyboard_input import KEYS
+        if (not isinstance(frame_keys, list) or any(not isinstance(key, str) or key not in KEYS for key in frame_keys)
+                or len(set(frame_keys)) != len(frame_keys)):
+            raise ValueError('Invalid saved frame input ownership')
+        if frame_keys and not self.rpc.capabilities.get('frame_timeline'):
+            raise ValueError('Backend cannot restore saved frame input ownership')
+        with FrameTimelineSessionMixin._timeline_full_load(self), tempfile.TemporaryDirectory(prefix='fdisbull-state-') as directory:
             path = Path(directory)/'state.sav'; path.write_bytes(data)
             try:
-                result = self.call('state.load',{'path':str(path)})
+                params = {'path':str(path)}
+                if self.rpc.capabilities.get('frame_timeline'):
+                    params['frame_keys'] = frame_keys
+                result = self.call('state.load',params)
+                if self.rpc.capabilities.get('frame_timeline') and result.get('frame_keys') != frame_keys:
+                    raise DebuggerError('Restored frame input ownership differs from saved state')
                 registers = self.registers()
                 for field in ('general','segments','instruction_pointer','flags'):
                     if registers.get(field) != metadata['registers'].get(field):
@@ -706,16 +744,18 @@ class DebugSession(AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionM
             except BaseException:
                 self.close() # A partially failed native restore must never be resumed.
                 raise
-        result.update(artifact=artifact,sha256=row['sha256'],registers=registers,
+        result.update(sha256=checkpoint['sha256'],registers=registers,
                       framebuffer='invalidated_until_next_completed_frame')
         self._keyboard_leases={}
         self._invalidate_runtime_bindings()
-        self.metadata.pop('delta_experiment', None)
-        if metadata.get('delta_experiment') is not None:
-            self.metadata['delta_experiment'] = metadata['delta_experiment']
-        self._event('load-state',result)
+        for key in ('delta_experiment', 'timeline_experiment'):
+            self.metadata.pop(key, None)
+            if metadata.get(key) is not None:
+                self.metadata[key] = metadata[key]
+        FrameTimelineSessionMixin._timeline_loaded(self)
         return result
 
+    @timeline_locked
     def script(self, script=None, *, script_id=None, timeout_ms=60000):
         from .debug_script import execute_script
         if (script is None)==(script_id is None):
@@ -827,9 +867,10 @@ class DebugSession(AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionM
         return result
 
     def _artifact(self, name, kind, data, metadata):
-        experiment = getattr(self, 'metadata', {}).get('delta_experiment')
-        if experiment is not None:
-            metadata = dict(metadata, delta_experiment=experiment)
+        for key in ('delta_experiment', 'timeline_experiment'):
+            experiment = getattr(self, 'metadata', {}).get(key)
+            if experiment is not None:
+                metadata = dict(metadata, **{key: experiment})
         return self.project._debug_artifact(self.run_id,name,kind,data,metadata)
 
     def screenshot(self, name='screenshot.png', *, grid=False, grid_step=32, hooks=True):
@@ -896,10 +937,23 @@ class DebugSession(AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionM
         return self._artifact(name,'trace',json.dumps(result,indent=2).encode(),
                               {'event_count':len(events),'complete':result['complete'],'run':run})
 
+    @timeline_locked
     def close(self):
         if self.closed:
             return
         result = {'state':'interrupted'}
+        cleanup_error = interrupted = None
+        def failed(phase, error):
+            nonlocal cleanup_error
+            result.setdefault('cleanup_errors', []).append(
+                {'phase':phase,'type':type(error).__name__,'message':str(error)})
+            if cleanup_error is None:
+                cleanup_error = error
+        def cleanup(phase, function):
+            try:
+                return function()
+            except BaseException as error:
+                failed(phase, error)
         try:
             operation = self.call('session.stop')
             result = self.call('execution.wait',{'operation_id':operation['operation_id'],'timeout_ms':3000})
@@ -907,21 +961,43 @@ class DebugSession(AnchorStoneSessionMixin, CpuDeltaSessionMixin, RewindSessionM
                 result = {'state':'interrupted','reason':'stop deadline expired'}
         except Exception as error:
             result = {'state':'interrupted','error':str(error)}
+        except BaseException as error:
+            interrupted = error
+            result = {'state':'interrupted','error':str(error)}
         finally:
-            self.rpc.close()
-            self.closed = True
-            self._keyboard_leases={}
-            self._invalidate_runtime_bindings()
-            if self._launch_alias is not None:
-                result['launch_alias_cleanup'] = self._launch_alias.close()
-            result['process_reaped'] = self.rpc.process.poll() is not None
             try:
-                self._event('close',result)
-                with self.project.transaction(True):
-                    self.project.db.execute('UPDATE debug_runs SET ended=? WHERE id=?',(stamp(),self.run_id))
+                cleanup('rpc.close', lambda: self.rpc.close())
             finally:
-                if self in self.project._live_debuggers:
-                    self.project._live_debuggers.remove(self)
+                # The live cache and ownership must not outlive even a failed
+                # transport/process cleanup. Further calls are terminal.
+                self.closed = True
+                self._frame_timeline = None
+                self._keyboard_leases={}
+            cleanup('runtime-bindings', lambda: self._invalidate_runtime_bindings())
+            if getattr(self, '_launch_alias', None) is not None:
+                result['launch_alias_cleanup'] = cleanup('launch-alias', self._launch_alias.close)
+            process = getattr(self.rpc, 'process', None)
+            result['process_reaped'] = None
+            if process is not None:
+                try:
+                    result['process_reaped'] = process.poll() is not None
+                except BaseException as error:
+                    failed('process-status', error)
+            try:
+                cleanup('close-receipt', lambda: self._event('close',result))
+                def record_ended():
+                    with self.project.transaction(True):
+                        self.project.db.execute('UPDATE debug_runs SET ended=? WHERE id=?',(stamp(),self.run_id))
+                cleanup('run-ended', record_ended)
+            finally:
+                def remove_owner():
+                    if self in self.project._live_debuggers:
+                        self.project._live_debuggers.remove(self)
+                cleanup('live-registry', remove_owner)
+        if interrupted is not None:
+            raise interrupted
+        if cleanup_error is not None:
+            raise cleanup_error
 
 
 class DebugWorkspace:
@@ -961,6 +1037,11 @@ class DebugWorkspace:
         methods.update({'debug-delta-start':'cpu_delta_start','debug-delta-status':'cpu_delta_status',
                         'debug-delta-record':'cpu_delta_record','debug-delta-rewind':'cpu_delta_rewind',
                         'debug-delta-recover':'cpu_delta_recover'})
+        methods.update({'debug-frame-advance':'advance_frames','debug-frame-inputs':'frame_inputs',
+                        'debug-timeline-start':'timeline_start','debug-timeline-status':'timeline_status',
+                        'debug-timeline-advance':'timeline_advance','debug-timeline-rewind':'timeline_rewind',
+                        'debug-timeline-stop':'timeline_stop','debug-timeline-pin':'timeline_pin',
+                        'debug-timeline-image':'timeline_image'})
         methods.update({'debug-frame-probe':'frame_probe','debug-scene-check':'scene_check',
                         'debug-scene-assert':'scene_assert','debug-scene-click':'scene_click','debug-scene-act':'scene_act','debug-scene-wait':'scene_wait'})
         methods.update({'debug-keyboard-down':'keyboard_key_down','debug-keyboard-up':'keyboard_key_up',

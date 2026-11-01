@@ -1,13 +1,14 @@
-diff -ruN a/client/python/dosbox_agent/__init__.py b/client/python/dosbox_agent/__init__.py
---- a/client/python/dosbox_agent/__init__.py	2026-10-20 12:05:03.000000000 -0400
-+++ b/client/python/dosbox_agent/__init__.py	2026-10-27 17:48:37.128867672 -0400
+diff --git a/client/python/dosbox_agent/__init__.py b/client/python/dosbox_agent/__init__.py
+index 933d423..679ac9d 100644
+--- a/client/python/dosbox_agent/__init__.py
++++ b/client/python/dosbox_agent/__init__.py
 @@ -1,4 +1,4 @@
 -from .client import AgentClient
 +from .client import AgentClient, PipeTransport
  from .errors import (
      AddressNotMappedError,
      AgentConnectionError,
-@@ -43,7 +43,7 @@
+@@ -43,7 +43,7 @@ __all__ = [
      "AgentProtocolError", "AgentRpcError", "Breakpoint", "BreakpointNotFoundError",
      "CapabilityUnavailableError", "CommandRejectedError", "CursorExpiredError", "DiagnosticCommandResult",
      "InvalidBinaryLengthError", "MemoryAddress", "MemoryPreconditionFailedError", "MemoryRead", "MemoryWrite",
@@ -16,10 +17,11 @@ diff -ruN a/client/python/dosbox_agent/__init__.py b/client/python/dosbox_agent/
      "RequestIdConflictError", "RequestTooLargeError", "Session", "SessionBusyError", "SessionNotFoundError",
      "StopReason", "TargetExitedError", "TargetNotStoppedError", "TargetRunningError", "TraceEvent",
      "TracePage", "WaitResult",
-diff -ruN a/client/python/dosbox_agent/client.py b/client/python/dosbox_agent/client.py
---- a/client/python/dosbox_agent/client.py	2026-10-20 12:05:03.000000000 -0400
-+++ b/client/python/dosbox_agent/client.py	2026-10-27 17:48:37.129017909 -0400
-@@ -6,6 +6,10 @@
+diff --git a/client/python/dosbox_agent/client.py b/client/python/dosbox_agent/client.py
+index 552858c..b4313d4 100644
+--- a/client/python/dosbox_agent/client.py
++++ b/client/python/dosbox_agent/client.py
+@@ -6,6 +6,10 @@ import ctypes
  from ctypes import wintypes
  import json
  import os
@@ -30,7 +32,7 @@ diff -ruN a/client/python/dosbox_agent/client.py b/client/python/dosbox_agent/cl
  from pathlib import Path
  import time
  from collections.abc import Mapping
-@@ -170,12 +174,243 @@
+@@ -170,12 +174,243 @@ class NamedPipeTransport:
          self._handle = None
  
  
@@ -276,7 +278,7 @@ diff -ruN a/client/python/dosbox_agent/client.py b/client/python/dosbox_agent/cl
          self._next_request_id = 1
  
      @classmethod
-@@ -203,9 +438,9 @@
+@@ -203,9 +438,9 @@ class AgentClient:
          # it writes the JSON-RPC response. Reserve local IPC time so a valid
          # terminal response is not mistaken for a transport failure at that edge.
          request_transport = self._transport
@@ -288,7 +290,7 @@ diff -ruN a/client/python/dosbox_agent/client.py b/client/python/dosbox_agent/cl
          try:
              response_text = request_transport.request(
                  payload,
-@@ -450,8 +685,12 @@
+@@ -450,8 +685,12 @@ def load_config(path: str | Path) -> AgentConfig:
              details.append("unexpected=" + ",".join(sorted(unexpected)))
          raise ValueError("invalid agent config: " + " ".join(details))
      transport = values["transport"]
@@ -303,10 +305,11 @@ diff -ruN a/client/python/dosbox_agent/client.py b/client/python/dosbox_agent/cl
      profile = values.get("profile", "production")
      if profile not in {"production", "test"}:
          raise ValueError("profile must be production or test")
-diff -ruN a/client/python/tests/test_client.py b/client/python/tests/test_client.py
---- a/client/python/tests/test_client.py	2026-10-20 12:05:03.000000000 -0400
-+++ b/client/python/tests/test_client.py	2026-10-27 17:48:37.129105581 -0400
-@@ -94,7 +94,7 @@
+diff --git a/client/python/tests/test_client.py b/client/python/tests/test_client.py
+index 2cb854d..b9d075e 100644
+--- a/client/python/tests/test_client.py
++++ b/client/python/tests/test_client.py
+@@ -94,7 +94,7 @@ class AgentClientTests(unittest.TestCase):
                  "\n".join((
                      "transport=named_pipe",
                      r"endpoint=\\.\pipe\client-test",
@@ -315,7 +318,7 @@ diff -ruN a/client/python/tests/test_client.py b/client/python/tests/test_client
                      "dosbox_workdir=runtime",
                      "profile=test",
                      "request_timeout_ms=50",
-@@ -117,7 +117,7 @@
+@@ -117,7 +117,7 @@ class AgentClientTests(unittest.TestCase):
                  "\n".join((
                      "transport=named_pipe",
                      r"endpoint=\\.\pipe\client-test",
@@ -324,9 +327,11 @@ diff -ruN a/client/python/tests/test_client.py b/client/python/tests/test_client
                      "dosbox_workdir=runtime",
                      "request_timeout_ms=50",
                      "max_message_bytes=64",
-diff -ruN a/client/python/tests/test_pipe_transport.py b/client/python/tests/test_pipe_transport.py
---- a/client/python/tests/test_pipe_transport.py	1969-12-31 19:00:00.000000000 -0500
-+++ b/client/python/tests/test_pipe_transport.py	2026-10-27 17:48:37.129201245 -0400
+diff --git a/client/python/tests/test_pipe_transport.py b/client/python/tests/test_pipe_transport.py
+new file mode 100644
+index 0000000..5160e08
+--- /dev/null
++++ b/client/python/tests/test_pipe_transport.py
 @@ -0,0 +1,255 @@
 +"""Real inherited-pipe RPC tests; no local socket service is required."""
 +from __future__ import annotations
@@ -583,9 +588,11 @@ diff -ruN a/client/python/tests/test_pipe_transport.py b/client/python/tests/tes
 +
 +if __name__ == "__main__":
 +    unittest.main()
-diff -ruN a/client/python/tests/test_unix_transport.py b/client/python/tests/test_unix_transport.py
---- a/client/python/tests/test_unix_transport.py	1969-12-31 19:00:00.000000000 -0500
-+++ b/client/python/tests/test_unix_transport.py	2026-10-27 17:48:37.129246272 -0400
+diff --git a/client/python/tests/test_unix_transport.py b/client/python/tests/test_unix_transport.py
+new file mode 100644
+index 0000000..aed1ff4
+--- /dev/null
++++ b/client/python/tests/test_unix_transport.py
 @@ -0,0 +1,233 @@
 +"""Real local IPC tests for the POSIX debugger transport and client."""
 +from __future__ import annotations
@@ -820,10 +827,11 @@ diff -ruN a/client/python/tests/test_unix_transport.py b/client/python/tests/tes
 +
 +if __name__ == '__main__':
 +    unittest.main()
-diff -ruN a/include/agent/agent_bridge.h b/include/agent/agent_bridge.h
+diff --git a/include/agent/agent_bridge.h b/include/agent/agent_bridge.h
+index e11bf5a..ca0c8ce 100644
 --- a/include/agent/agent_bridge.h
 +++ b/include/agent/agent_bridge.h
-@@ -31,6 +31,7 @@
+@@ -31,6 +31,7 @@ private:
  };
  
  typedef std::function<void(std::uint16_t segment, std::uint32_t instruction_pointer)> DebuggerStopListener;
@@ -831,7 +839,7 @@ diff -ruN a/include/agent/agent_bridge.h b/include/agent/agent_bridge.h
  
  EmulationThreadQueue& AGENT_EmulationQueue();
  void AGENT_BridgeAttachToCurrentThread();
-@@ -38,6 +39,8 @@
+@@ -38,6 +39,8 @@ std::size_t AGENT_BridgePump();
  void AGENT_BridgeShutdown();
  void AGENT_SetDebuggerStopListener(DebuggerStopListener listener);
  void AGENT_NotifyDebuggerStopped(std::uint16_t segment, std::uint32_t instruction_pointer);
@@ -840,10 +848,11 @@ diff -ruN a/include/agent/agent_bridge.h b/include/agent/agent_bridge.h
  bool AGENT_RunQueueSelfTest(std::string* error);
  
  } // namespace dosbox_agent
-diff -ruN a/include/agent/agent_protocol.h b/include/agent/agent_protocol.h
---- a/include/agent/agent_protocol.h	2026-10-20 12:05:03.000000000 -0400
-+++ b/include/agent/agent_protocol.h	2026-10-27 17:48:37.129366984 -0400
-@@ -11,7 +11,8 @@
+diff --git a/include/agent/agent_protocol.h b/include/agent/agent_protocol.h
+index 3c4d612..7ee69b1 100644
+--- a/include/agent/agent_protocol.h
++++ b/include/agent/agent_protocol.h
+@@ -11,7 +11,8 @@ namespace dosbox_agent {
  
  enum class AgentTransport {
      NamedPipe,
@@ -853,10 +862,11 @@ diff -ruN a/include/agent/agent_protocol.h b/include/agent/agent_protocol.h
  };
  
  struct AgentConfig {
-diff -ruN a/include/agent/agent_server.h b/include/agent/agent_server.h
+diff --git a/include/agent/agent_server.h b/include/agent/agent_server.h
+index 6f920d3..61ec3a2 100644
 --- a/include/agent/agent_server.h
 +++ b/include/agent/agent_server.h
-@@ -41,6 +41,8 @@
+@@ -41,6 +41,8 @@ private:
      static void CompleteTargetTerminationOnEmulationThread(const std::shared_ptr<Impl>& impl,
                                                             const std::string& session_id,
                                                             const std::string& operation_id);
@@ -865,10 +875,11 @@ diff -ruN a/include/agent/agent_server.h b/include/agent/agent_server.h
      static void OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
                                    std::uint64_t generation,
                                    std::uint16_t segment,
-diff -ruN a/include/agent/debugger_adapter.h b/include/agent/debugger_adapter.h
+diff --git a/include/agent/debugger_adapter.h b/include/agent/debugger_adapter.h
+index d1abe84..be8e2c2 100644
 --- a/include/agent/debugger_adapter.h
 +++ b/include/agent/debugger_adapter.h
-@@ -63,7 +63,7 @@
+@@ -63,7 +63,7 @@ enum class StepMode {
  
  enum class BreakpointKind {
      Execution,
@@ -877,7 +888,7 @@ diff -ruN a/include/agent/debugger_adapter.h b/include/agent/debugger_adapter.h
  };
  
  struct NativeBreakpoint {
-@@ -80,6 +80,7 @@
+@@ -80,6 +80,7 @@ public:
      bool IsShellReady() const;
      bool IsReadyForTargetStart() const;
      std::uint64_t EntryBreakpointSequence() const;
@@ -885,15 +896,19 @@ diff -ruN a/include/agent/debugger_adapter.h b/include/agent/debugger_adapter.h
      bool Continue(std::string* error) const;
      bool Pause(std::string* error) const;
      bool StartTargetAtEntry(const std::string& command,
-diff -ruN a/include/agent/input_adapter.h b/include/agent/input_adapter.h
---- a/include/agent/input_adapter.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/include/agent/input_adapter.h	2026-10-27 17:48:37.166706054 -0400
-@@ -0,0 +1,68 @@
+diff --git a/include/agent/input_adapter.h b/include/agent/input_adapter.h
+new file mode 100644
+index 0000000..6b3a9b7
+--- /dev/null
++++ b/include/agent/input_adapter.h
+@@ -0,0 +1,77 @@
 +#ifndef DOSBOX_AGENT_INPUT_ADAPTER_H
 +#define DOSBOX_AGENT_INPUT_ADAPTER_H
 +
 +#include <cstdint>
 +#include <string>
++#include <vector>
++#include <utility>
 +
 +namespace dosbox_agent {
 +
@@ -942,6 +957,8 @@ diff -ruN a/include/agent/input_adapter.h b/include/agent/input_adapter.h
 +    std::uint32_t pending_events = 0;
 +    std::uint32_t owned_keys = 0;
 +    std::uint32_t duration_ms = 0;
++    std::uint32_t frame_edge_capacity = 0;
++    std::vector<std::string> frame_keys;
 +};
 +// Emulation thread only. Named physical keys and US-layout ASCII typing use
 +// the emulated keyboard controller, never BIOS-buffer or guest-memory writes.
@@ -951,16 +968,23 @@ diff -ruN a/include/agent/input_adapter.h b/include/agent/input_adapter.h
 +                         AgentKeyboardState* state, std::string* error);
 +void AGENT_KeyboardGetState(AgentKeyboardState* state);
 +void AGENT_KeyboardResetInput();
++bool AGENT_KeyboardFrameEdges(const std::vector<std::pair<std::string,bool>>& edges,
++                              AgentKeyboardState* state, std::string* error);
++bool AGENT_KeyboardFrameKeys(const std::vector<std::string>& names, bool restore,
++                             std::string* error);
++bool AGENT_KeyboardCheckpointReady(std::string* error);
 +bool AGENT_KeyboardLease(const std::string& key, const std::string& lease,
 +                         bool down, AgentKeyboardState* state, std::string* error);
 +
 +} // namespace dosbox_agent
 +
 +#endif
-diff -ruN a/include/agent/video_adapter.h b/include/agent/video_adapter.h
---- a/include/agent/video_adapter.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/include/agent/video_adapter.h	2026-10-27 17:48:37.129481106 -0400
-@@ -0,0 +1,35 @@
+diff --git a/include/agent/video_adapter.h b/include/agent/video_adapter.h
+new file mode 100644
+index 0000000..a5b3e3f
+--- /dev/null
++++ b/include/agent/video_adapter.h
+@@ -0,0 +1,40 @@
 +#ifndef DOSBOX_AGENT_VIDEO_ADAPTER_H
 +#define DOSBOX_AGENT_VIDEO_ADAPTER_H
 +
@@ -988,6 +1012,11 @@ diff -ruN a/include/agent/video_adapter.h b/include/agent/video_adapter.h
 +// it fails until a complete frame exists for the current video mode.
 +void AGENT_EnableFrameCapture(bool enabled);
 +bool AGENT_GetFrameSnapshot(FrameSnapshot* frame, std::string* error);
++// One completed renderer frame, stopped before the next guest fetch.
++bool AGENT_ArmFrameStep(std::string* error);
++bool AGENT_FrameStepStopRequested();
++bool AGENT_FrameStepCompleted();
++void AGENT_CancelFrameStep();
 +bool AGENT_IsHeadless();
 +bool AGENT_IsSession();
 +// Call on the emulation thread before starting the target.
@@ -996,10 +1025,11 @@ diff -ruN a/include/agent/video_adapter.h b/include/agent/video_adapter.h
 +} // namespace dosbox_agent
 +
 +#endif
-diff -ruN a/include/debug.h b/include/debug.h
---- a/include/debug.h	2026-10-20 12:05:03.000000000 -0400
-+++ b/include/debug.h	2026-10-27 17:48:37.129526564 -0400
-@@ -33,12 +33,21 @@
+diff --git a/include/debug.h b/include/debug.h
+index f4ee552..c9e2b80 100644
+--- a/include/debug.h
++++ b/include/debug.h
+@@ -33,12 +33,21 @@ Bitu DEBUG_EnableDebugger(void);
  #if C_DEBUG
  bool DEBUG_AgentStep(bool over, bool* continued);
  bool DEBUG_AgentResumeAfterTerminate(void);
@@ -1021,10 +1051,11 @@ diff -ruN a/include/debug.h b/include/debug.h
  void DEBUG_AgentClearLastBreakpoint(void);
  bool DEBUG_AgentBeginOutputCapture(void);
  std::string DEBUG_AgentEndOutputCapture(void);
-diff -ruN a/include/paging.h b/include/paging.h
---- a/include/paging.h	2026-10-20 12:05:03.000000000 -0400
-+++ b/include/paging.h	2026-10-27 17:48:37.129561837 -0400
-@@ -436,15 +436,25 @@
+diff --git a/include/paging.h b/include/paging.h
+index e7e6974..990eccb 100644
+--- a/include/paging.h
++++ b/include/paging.h
+@@ -436,15 +436,25 @@ static INLINE PhysPt64 PAGING_GetPhysicalAddress64(const LinearPt linAddr) {
  	return ((PhysPt64)(paging.tlb.phys_page[linAddr>>12]&PHYSPAGE_ADDR)<<(PhysPt64)12)|(linAddr&0xfff);
  }
  
@@ -1050,7 +1081,7 @@ diff -ruN a/include/paging.h b/include/paging.h
  	if ((address & 0xfff)<0xfff) {
  		const HostPt tlb_addr=get_tlb_read(address);
  		if (tlb_addr) return host_readw(tlb_addr+address);
-@@ -453,6 +463,9 @@
+@@ -453,6 +463,9 @@ static INLINE uint16_t mem_readw_inline(const LinearPt address) {
  }
  
  static INLINE uint32_t mem_readd_inline(const LinearPt address) {
@@ -1060,7 +1091,7 @@ diff -ruN a/include/paging.h b/include/paging.h
  	if ((address & 0xfff)<0xffd) {
  		const HostPt tlb_addr=get_tlb_read(address);
  		if (tlb_addr) return host_readd(tlb_addr+address);
-@@ -461,12 +474,18 @@
+@@ -461,12 +474,18 @@ static INLINE uint32_t mem_readd_inline(const LinearPt address) {
  }
  
  static INLINE void mem_writeb_inline(const LinearPt address,const uint8_t val) {
@@ -1079,7 +1110,7 @@ diff -ruN a/include/paging.h b/include/paging.h
  	if ((address & 0xfffu)<0xfffu) {
  		const HostPt tlb_addr=get_tlb_write(address);
  		if (tlb_addr) host_writew(tlb_addr+address,val);
-@@ -475,6 +494,9 @@
+@@ -475,6 +494,9 @@ static INLINE void mem_writew_inline(const LinearPt address,const uint16_t val)
  }
  
  static INLINE void mem_writed_inline(const LinearPt address,const uint32_t val) {
@@ -1089,9 +1120,10 @@ diff -ruN a/include/paging.h b/include/paging.h
  	if ((address & 0xfffu)<0xffdu) {
  		const HostPt tlb_addr=get_tlb_write(address);
  		if (tlb_addr) host_writed(tlb_addr+address,val);
-diff -ruN a/src/agent/Makefile.am b/src/agent/Makefile.am
---- a/src/agent/Makefile.am	2026-10-20 12:05:03.000000000 -0400
-+++ b/src/agent/Makefile.am	2026-10-27 17:48:37.129645533 -0400
+diff --git a/src/agent/Makefile.am b/src/agent/Makefile.am
+index 437b7c3..fd601cd 100644
+--- a/src/agent/Makefile.am
++++ b/src/agent/Makefile.am
 @@ -1,4 +1,6 @@
 -AM_CPPFLAGS = -I$(top_srcdir)/include
 +# Agent translation units gate their entire implementation on configure defines.
@@ -1100,10 +1132,11 @@ diff -ruN a/src/agent/Makefile.am b/src/agent/Makefile.am
  
  noinst_LIBRARIES = libagent.a
  
-diff -ruN a/src/agent/bridge/agent_bridge.cpp b/src/agent/bridge/agent_bridge.cpp
+diff --git a/src/agent/bridge/agent_bridge.cpp b/src/agent/bridge/agent_bridge.cpp
+index d087ecc..e285d95 100644
 --- a/src/agent/bridge/agent_bridge.cpp
 +++ b/src/agent/bridge/agent_bridge.cpp
-@@ -130,6 +130,7 @@
+@@ -130,6 +130,7 @@ namespace {
  
  std::mutex debugger_stop_listener_mutex;
  DebuggerStopListener debugger_stop_listener;
@@ -1111,7 +1144,7 @@ diff -ruN a/src/agent/bridge/agent_bridge.cpp b/src/agent/bridge/agent_bridge.cp
  
  } // namespace
  
-@@ -147,6 +148,7 @@
+@@ -147,6 +148,7 @@ void AGENT_BridgeShutdown()
  {
      AGENT_EmulationQueue().Shutdown();
      AGENT_SetDebuggerStopListener(DebuggerStopListener());
@@ -1119,12 +1152,10 @@ diff -ruN a/src/agent/bridge/agent_bridge.cpp b/src/agent/bridge/agent_bridge.cp
  }
  
  void AGENT_SetDebuggerStopListener(DebuggerStopListener listener)
-@@ -165,6 +167,22 @@
-     }
-     if (listener)
+@@ -167,6 +169,22 @@ void AGENT_NotifyDebuggerStopped(const std::uint16_t segment,
          listener(segment, instruction_pointer);
-+}
-+
+ }
+ 
 +void AGENT_SetGuestExitListener(GuestExitListener listener)
 +{
 +    std::lock_guard<std::mutex> lock(debugger_stop_listener_mutex);
@@ -1139,13 +1170,16 @@ diff -ruN a/src/agent/bridge/agent_bridge.cpp b/src/agent/bridge/agent_bridge.cp
 +        listener = guest_exit_listener;
 +    }
 +    if (listener) listener(psp, parent, code, resident);
- }
- 
++}
++
  bool AGENT_RunQueueSelfTest(std::string* error)
-diff -ruN a/src/agent/debugger/debugger_adapter.cpp b/src/agent/debugger/debugger_adapter.cpp
+ {
+     if (error == NULL)
+diff --git a/src/agent/debugger/debugger_adapter.cpp b/src/agent/debugger/debugger_adapter.cpp
+index 465f7e7..4b00a6e 100644
 --- a/src/agent/debugger/debugger_adapter.cpp
 +++ b/src/agent/debugger/debugger_adapter.cpp
-@@ -241,8 +241,7 @@
+@@ -241,8 +241,7 @@ bool DebuggerAdapter::Continue(std::string* error) const
  
  #if C_DEBUG
      DEBUG_AgentClearLastBreakpoint();
@@ -1155,7 +1189,7 @@ diff -ruN a/src/agent/debugger/debugger_adapter.cpp b/src/agent/debugger/debugge
          return true;
  
      if (error != NULL)
-@@ -253,6 +252,11 @@
+@@ -253,6 +252,11 @@ bool DebuggerAdapter::Continue(std::string* error) const
  #endif
  }
  
@@ -1167,7 +1201,7 @@ diff -ruN a/src/agent/debugger/debugger_adapter.cpp b/src/agent/debugger/debugge
  bool DebuggerAdapter::Pause(std::string* error) const
  {
      if (!RequireAvailable(error) || !RequireEmulationThread(error))
-@@ -491,6 +495,17 @@
+@@ -491,6 +495,17 @@ bool DebuggerAdapter::CreateBreakpoint(const BreakpointKind kind,
                  *error = "Debugger rejected the execution breakpoint";
              return false;
          }
@@ -1185,10 +1219,11 @@ diff -ruN a/src/agent/debugger/debugger_adapter.cpp b/src/agent/debugger/debugge
      } else {
  #if C_HEAVY_DEBUG
          if (once) {
-diff -ruN a/src/agent/protocol/agent_protocol.cpp b/src/agent/protocol/agent_protocol.cpp
---- a/src/agent/protocol/agent_protocol.cpp	2026-10-20 12:05:03.000000000 -0400
-+++ b/src/agent/protocol/agent_protocol.cpp	2026-10-27 17:48:37.129772394 -0400
-@@ -569,6 +569,8 @@
+diff --git a/src/agent/protocol/agent_protocol.cpp b/src/agent/protocol/agent_protocol.cpp
+index a315ca1..4f17576 100644
+--- a/src/agent/protocol/agent_protocol.cpp
++++ b/src/agent/protocol/agent_protocol.cpp
+@@ -569,6 +569,8 @@ bool AGENT_LoadConfigFile(const std::string& path,
          parsed.transport = AgentTransport::NamedPipe;
      else if (values["transport"] == "unix_socket")
          parsed.transport = AgentTransport::UnixSocket;
@@ -1197,7 +1232,7 @@ diff -ruN a/src/agent/protocol/agent_protocol.cpp b/src/agent/protocol/agent_pro
      else {
          *error = "Unsupported agent transport: " + values["transport"];
          return false;
-@@ -636,6 +638,7 @@
+@@ -636,6 +638,7 @@ const char* AGENT_TransportName(const AgentTransport transport)
      switch (transport) {
      case AgentTransport::NamedPipe: return "named_pipe";
      case AgentTransport::UnixSocket: return "unix_socket";
@@ -1205,7 +1240,8 @@ diff -ruN a/src/agent/protocol/agent_protocol.cpp b/src/agent/protocol/agent_pro
      }
      return "unknown";
  }
-diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cpp
+diff --git a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cpp
+index 29363cf..92d26aa 100644
 --- a/src/agent/server/agent_server.cpp
 +++ b/src/agent/server/agent_server.cpp
 @@ -5,6 +5,12 @@
@@ -1241,20 +1277,23 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
  namespace dosbox_agent {
  namespace {
  
-@@ -447,7 +459,12 @@
+@@ -445,9 +457,14 @@ static bool IsKnownMethod(const std::string& method)
+            method == "session.stop" ||
+            method == "execution.continue" ||
             method == "execution.pause" ||
-            method == "execution.step" ||
+-           method == "execution.step" ||
++           method == "execution.step" || method == "frame.step" ||
             method == "execution.wait" ||
 +           method == "execution.timing" || method == "state.save" || method == "state.load" || method == "state.set_register" ||
             method == "state.get_registers" ||
 +           method == "video.screenshot" || method == "video.probe" ||
-+           method == "input.keyboard.press" || method == "input.keyboard.type" || method == "input.keyboard.state" || method == "input.keyboard.down" || method == "input.keyboard.up" ||
++           method == "input.keyboard.press" || method == "input.keyboard.type" || method == "input.keyboard.state" || method == "input.keyboard.down" || method == "input.keyboard.up" || method == "input.keyboard.frame_edges" ||
 +           method == "input.mouse.move" || method == "input.mouse.click" ||
 +           method == "input.mouse.button" || method == "input.mouse.state" ||
             method == "memory.read" ||
             method == "memory.write" ||
             method == "breakpoints.create" ||
-@@ -506,6 +523,7 @@
+@@ -506,6 +523,7 @@ public:
      };
  
      struct AdapterOperation {
@@ -1262,7 +1301,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
          std::mutex mutex;
          std::condition_variable completed;
          bool done = false;
-@@ -518,6 +536,13 @@
+@@ -518,6 +536,14 @@ public:
          NativeBreakpoint breakpoint;
          std::string raw_output;
          std::vector<TraceSample> trace_samples;
@@ -1273,10 +1312,11 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
 +        std::uint64_t guest_ticks = 0;
 +        bool fast_forward = false;
 +        bool timing_changed = false;
++        bool frame_step_completed = false;
          bool trace_active = false;
          std::size_t trace_event_count = 0;
      };
-@@ -553,6 +578,11 @@
+@@ -553,6 +579,12 @@ public:
          std::string last_stop_breakpoint_id;
          MemoryAddress last_stop_breakpoint_address;
          bool has_last_stop_breakpoint_address = false;
@@ -1284,11 +1324,12 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
 +        JsonValue guest_exit;
 +        std::uint16_t target_psp = 0;
 +        std::map<std::string, std::uint16_t> saved_state_psps;
++        std::deque<std::string> saved_state_psp_order;
 +        bool stop_requested = false;
          std::string failure_message;
          std::uint64_t state_revision = 0;
          std::uint64_t next_operation = 1;
-@@ -601,6 +631,7 @@
+@@ -601,6 +633,7 @@ public:
      virtual std::uint64_t SubmitAfter(std::uint32_t delay_ms, Command command) = 0;
      virtual bool IsReadyForTargetStart() const = 0;
      virtual std::uint64_t EntryBreakpointSequence() const = 0;
@@ -1296,7 +1337,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
      virtual bool Continue(std::string* error) const = 0;
      virtual bool Pause(std::string* error) const = 0;
      virtual bool StartTargetAtEntry(const std::string& command,
-@@ -658,6 +689,7 @@
+@@ -658,6 +691,7 @@ public:
      signature override { DebuggerAdapter adapter; return adapter.method args; }
      AGENT_RUNTIME_FORWARD(IsReadyForTargetStart, bool IsReadyForTargetStart() const, ())
      AGENT_RUNTIME_FORWARD(EntryBreakpointSequence, std::uint64_t EntryBreakpointSequence() const, ())
@@ -1304,7 +1345,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
      AGENT_RUNTIME_FORWARD(Continue, bool Continue(std::string* error) const, (error))
      AGENT_RUNTIME_FORWARD(Pause, bool Pause(std::string* error) const, (error))
      AGENT_RUNTIME_FORWARD(StartTargetAtEntry, bool StartTargetAtEntry(const std::string& command, const std::vector<std::string>& arguments, const std::string& workdir, std::string* error) const, (command, arguments, workdir, error))
-@@ -692,6 +724,7 @@
+@@ -692,6 +726,7 @@ public:
  
      bool IsReadyForTargetStart() const override { return true; }
      std::uint64_t EntryBreakpointSequence() const override { return 0; }
@@ -1312,7 +1353,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
  
      bool Continue(std::string*) const override { return true; }
  
-@@ -941,6 +974,9 @@
+@@ -941,6 +976,9 @@ static JsonValue StopReason(const AgentServer::Impl::Session& session)
  {
      JsonValue stop = Object();
      Add(&stop, "kind", String(session.last_stop_kind));
@@ -1322,13 +1363,10 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
      if (!session.last_stop_breakpoint_id.empty())
          Add(&stop, "breakpoint_id", String(session.last_stop_breakpoint_id));
      if (session.has_last_stop_breakpoint_address) {
-@@ -1182,18 +1218,140 @@
-            session->completed_response_bytes > kCompletedResponseCacheByteLimit) {
-         session->completed_response_bytes -= session->completed_requests.front().bytes;
-         session->completed_requests.pop_front();
-+    }
-+}
-+
+@@ -1185,15 +1223,143 @@ static void CacheResponse(AgentServer::Impl::Session* session,
+     }
+ }
+ 
 +static void PngU32(std::vector<std::uint8_t>* out, std::uint32_t value)
 +{
 +    for (int shift = 24; shift >= 0; shift -= 8) out->push_back((value >> shift) & 255);
@@ -1404,10 +1442,10 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
 +    for (char c : value->text) {
 +        if (c < '0' || c > '9' || *result > ((std::numeric_limits<std::uint64_t>::max)() - (c-'0')) / 10) return false;
 +        *result = *result * 10 + (c-'0');
-     }
++    }
 +    return true;
- }
- 
++}
++
 +// State files are bounded to the project native-state artifact limit. A hash
 +// binds an in-session save to the selected PSP, even if a child was active.
 +static std::string StateFileHash(const std::string& path)
@@ -1428,6 +1466,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
      Add(&result, "protocol_version", String("1.0"));
 +    JsonValue lifecycle = Object();
 +    Add(&lifecycle, "dos_guest_exit", JsonValue::Bool(true));
++    Add(&lifecycle, "state_identity_cache_limit", Number(8192));
 +    Add(&result, "lifecycle", lifecycle);
  #if C_DEBUG
      Add(&result, "debugger", JsonValue::Bool(true));
@@ -1447,6 +1486,11 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
 +#endif
 +    Add(&result, "video", video);
 +    Add(&result, "save_states", JsonValue::Bool(true));
++#if C_DEBUG && C_HEAVY_DEBUG
++    Add(&result, "frame_timeline", JsonValue::Bool(true));
++#else
++    Add(&result, "frame_timeline", JsonValue::Bool(false));
++#endif
 +    Add(&result, "register_edit", JsonValue::Bool(true));
 +    JsonValue timing = Object();
 +    Add(&timing, "fast_forward", JsonValue::Bool(true));
@@ -1463,7 +1507,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
      JsonValue trace = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&trace, "cpu", JsonValue::Bool(true));
-@@ -1204,6 +1362,7 @@
+@@ -1204,6 +1370,7 @@ static std::string Capabilities(const AgentConfig& config)
      JsonValue breakpoints = Object();
  #ifdef C_HEAVY_DEBUG
      Add(&breakpoints, "memory_change", JsonValue::Bool(true));
@@ -1471,7 +1515,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
  #else
      Add(&breakpoints, "memory_change", JsonValue::Bool(false));
  #endif
-@@ -1282,6 +1441,9 @@
+@@ -1282,6 +1449,9 @@ bool AgentServer::Start(const AgentConfig& config, std::string* error)
      AGENT_SetDebuggerStopListener([state, generation](const std::uint16_t segment, const std::uint32_t instruction_pointer) {
          OnDebuggerStopped(state, generation, segment, instruction_pointer);
      });
@@ -1481,7 +1525,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
  
      if (!impl->transport->Start(config, [state](const std::string& request) {
              return HandleJsonRpcImpl(state, request);
-@@ -1291,6 +1453,7 @@
+@@ -1291,6 +1461,7 @@ bool AgentServer::Start(const AgentConfig& config, std::string* error)
          impl->started = false;
          impl->stopping = false;
          AGENT_SetDebuggerStopListener(DebuggerStopListener());
@@ -1489,7 +1533,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
          return false;
      }
      return true;
-@@ -1330,6 +1493,9 @@
+@@ -1330,6 +1501,9 @@ bool AgentServer::StartForTest(const AgentConfig& config, std::string* error)
      AGENT_SetDebuggerStopListener([state, generation](const std::uint16_t segment, const std::uint32_t instruction_pointer) {
          OnDebuggerStopped(state, generation, segment, instruction_pointer);
      });
@@ -1499,7 +1543,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
      return true;
  }
  
-@@ -1355,6 +1521,7 @@
+@@ -1355,6 +1529,7 @@ void AgentServer::Stop()
      // The callback may already have been copied by the emulation thread. It
      // holds shared state and observes stopping, rather than touching this.
      AGENT_SetDebuggerStopListener(DebuggerStopListener());
@@ -1507,13 +1551,13 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
      if (transport)
          transport->Stop();
  
-@@ -1752,6 +1919,410 @@
-                     Add(&result, "stop_reason", StopReason(*session));
-                     response = AGENT_MakeJsonRpcResult(parsed.id, result);
+@@ -1754,6 +1929,460 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                  }
-+            }
-+        }
+             }
+         }
 +    } else if (parsed.method.compare(0,15,"input.keyboard.")==0) {
++        const bool frame_edges=parsed.method=="input.keyboard.frame_edges";
++        std::vector<std::pair<std::string,bool>> edges;
 +        const bool typing=parsed.method=="input.keyboard.type";
 +        const bool query=parsed.method=="input.keyboard.state";
 +        const bool down=parsed.method=="input.keyboard.down";
@@ -1521,7 +1565,16 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
 +        const bool press=parsed.method=="input.keyboard.press";
 +        std::string key,text,modifiers,lease;
 +        std::uint32_t hold_ms=40,gap_ms=40;
-+        bool valid=(query || up || GetString(parsed.params,typing?"text":"key",typing?&text:&key)) && (query || up || down || press || typing);
++        bool valid=frame_edges || ((query || up || GetString(parsed.params,typing?"text":"key",typing?&text:&key)) && (query || up || down || press || typing));
++        if(frame_edges) {
++            const JsonValue* list=parsed.params.Find("edges");
++            valid=list && list->type==JsonType::Array && list->array.size()<=256;
++            if(valid) for(const auto& edge:list->array) {
++                std::string edge_key;const JsonValue* pressed=edge.Find("pressed");
++                if(edge.type!=JsonType::Object || edge.object.size()!=2 || !GetString(edge,"key",&edge_key) || !pressed || pressed->type!=JsonType::Bool) { valid=false;break; }
++                edges.emplace_back(edge_key,pressed->boolean);
++            }
++        }
 +        if(down || up) {
 +            valid=valid && GetString(parsed.params,"lease",&lease) && lease.size()==32;
 +            for(const auto c:lease) if(!((c>='0' && c<='9') || (c>='a' && c<='f'))) valid=false;
@@ -1533,15 +1586,18 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
 +        if(parsed.params.Find("gap_ms")) valid=valid && GetUnsignedInteger(*parsed.params.Find("gap_ms"),&gap_ms);
 +        if(!valid || hold_ms<1 || hold_ms>1000 || gap_ms<1 || gap_ms>1000 || (typing && !modifiers.empty())) {
 +            response=InvalidParams(parsed.id,"Invalid keyboard parameters");
++        } else if(frame_edges && session->state!=Impl::SessionState::Stopped) {
++            response=SessionError(parsed.id,kErrorTargetRunning,"Frame input requires stopped target","TARGET_NOT_STOPPED",session);
 +        } else if(session->state!=Impl::SessionState::Running && session->state!=Impl::SessionState::Stopped) {
 +            response=SessionError(parsed.id,kErrorCapabilityUnavailable,"Target is not active","TARGET_EXITED",session);
 +        } else {
 +            const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
 +            const std::string session_id=session->id;
-+            if(SubmitEmulationCommandLocked(impl,[operation,typing,query,down,up,key,text,modifiers,hold_ms,gap_ms,lease,session_id](const std::uint64_t) {
++            if(SubmitEmulationCommandLocked(impl,[operation,typing,query,down,up,key,text,modifiers,hold_ms,gap_ms,lease,session_id,frame_edges,edges](const std::uint64_t) {
 +                std::string error; AgentKeyboardState keyboard;
 +                bool ok=true;
-+                if(query) AGENT_KeyboardGetState(&keyboard);
++                if(frame_edges) ok=AGENT_KeyboardFrameEdges(edges,&keyboard,&error);
++                else if(query) AGENT_KeyboardGetState(&keyboard);
 +                else if(down || up) ok=AGENT_KeyboardLease(key,session_id+":"+lease,down,&keyboard,&error);
 +                else ok=AGENT_KeyboardQueue(key,text,modifiers,typing,hold_ms,gap_ms,&keyboard,&error);
 +                std::lock_guard<std::mutex> guard(operation->mutex);
@@ -1555,16 +1611,19 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
 +                    std::unique_lock<std::mutex> guard(operation->mutex);
 +                    return operation->completed.wait_for(guard,std::chrono::milliseconds(timeout_ms),[operation](){return operation->done;});
 +                };
-+                pending.finish=[impl,session_id,response_id,operation,query]() {
++                pending.finish=[impl,session_id,response_id,operation,query,frame_edges]() {
 +                    if(!operation->success) return Error(response_id,kErrorCapabilityUnavailable,operation->error,"COMMAND_REJECTED");
 +                    if(!impl->session || impl->session->id!=session_id) return Error(response_id,kErrorSessionNotFound,"Session was not found","SESSION_NOT_FOUND");
 +                    if(!query) ++impl->session->state_revision;
 +                    JsonValue result=SessionResult(*impl->session),keyboard=Object();
 +                    Add(&keyboard,"pending_events",Number(operation->keyboard.pending_events));
 +                    Add(&keyboard,"owned_keys",Number(operation->keyboard.owned_keys));
++                    Add(&keyboard,"frame_edge_capacity",Number(operation->keyboard.frame_edge_capacity));
 +                    Add(&keyboard,"queued_guest_ms",Number(operation->keyboard.duration_ms));
++                    JsonValue frame_keys=JsonValue::Array();for(const auto& key:operation->keyboard.frame_keys) frame_keys.array.push_back(String(key));
++                    Add(&keyboard,"frame_keys",frame_keys);
 +                    Add(&result,"keyboard",keyboard);
-+                    if(!query) {Add(&result,"accepted",JsonValue::Bool(true));Add(&result,"delivery",String("queued"));}
++                    if(!query) {Add(&result,"accepted",JsonValue::Bool(true));Add(&result,"delivery",String(frame_edges ? "hardware_edges_at_paused_boundary" : "queued"));}
 +                    return AGENT_MakeJsonRpcResult(response_id,result);
 +                };
 +                if(parsed.has_id && parsed.id.type!=JsonType::Null) session->deferred_requests[parsed.id_key]=pending;
@@ -1734,8 +1793,17 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
 +        }
 +    } else if (parsed.method == "state.save" || parsed.method == "state.load") {
 +        const bool load = parsed.method == "state.load";
++        std::vector<std::string> frame_keys;
++        bool valid_frame_keys=true;
++        if(const JsonValue* keys=parsed.params.Find("frame_keys")) {
++            valid_frame_keys=load && keys->type==JsonType::Array && keys->array.size()<=128;
++            if(valid_frame_keys) for(const auto& key:keys->array) {
++                if(key.type!=JsonType::String) { valid_frame_keys=false;break; }
++                frame_keys.push_back(key.text);
++            }
++        }
 +        std::string path;
-+        if (!GetString(parsed.params, "path", &path) || path.empty() || path[0] != '/' || path.find('\0') != std::string::npos) {
++        if (!valid_frame_keys || !GetString(parsed.params, "path", &path) || path.empty() || path[0] != '/' || path.find('\0') != std::string::npos) {
 +            response = InvalidParams(parsed.id, "State path must be absolute");
 +        } else if (session->state != Impl::SessionState::Stopped) {
 +            response = SessionError(parsed.id, kErrorCapabilityUnavailable, "State operation requires stopped target", "TARGET_NOT_STOPPED", session);
@@ -1743,22 +1811,33 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
 +            // A restore is trusted for identity only when its bytes match a
 +            // state saved by this session. Never bind the current child PSP.
 +            const std::uint16_t saved_psp = session->target_psp;
-+            if (load) session->target_psp = 0;
++
 +            const std::shared_ptr<Impl::AdapterOperation> operation(new Impl::AdapterOperation());
 +            const std::string session_id = session->id;
-+            if (SubmitEmulationCommandLocked(impl, [operation, load, path](const std::uint64_t) {
++            if (SubmitEmulationCommandLocked(impl, [impl, session_id, operation, load, path, frame_keys](const std::uint64_t) {
 +                    std::string error;
++                    if(load && !AGENT_KeyboardFrameKeys(frame_keys,false,&error)) {
++                        std::lock_guard<std::mutex> guard(operation->mutex);
++                        operation->success=false;operation->error=error;operation->done=true;operation->completed.notify_all();return;
++                    }
++                    if(load) {
++                        std::lock_guard<std::mutex> identity_lock(impl->mutex);
++                        if(impl->session && impl->session->id==session_id) impl->session->target_psp=0;
++                    }
 +                    if (load) { dosbox_agent::AGENT_MouseResetInput(); dosbox_agent::AGENT_KeyboardResetInput(); dosbox_agent::AGENT_EnableFrameCapture(false); }
 +                    AgentKeyboardState keyboard; AGENT_KeyboardGetState(&keyboard);
 +                    const std::string before_hash = load ? StateFileHash(path) : std::string();
 +                    const bool ok = (!load && (keyboard.pending_events || keyboard.owned_keys))
 +                        ? (error="Run until pending keyboard input completes before saving",false)
-+                        : AGENT_StateFile(path, load, &error);
++                        : ((!load && !AGENT_KeyboardCheckpointReady(&error)) ? false : AGENT_StateFile(path, load, &error));
++                    if(ok && load) AGENT_KeyboardFrameKeys(frame_keys,true,&error);
++                    AGENT_KeyboardGetState(&keyboard);
 +                    const std::string after_hash = ok ? StateFileHash(path) : std::string();
 +                    if (load) { DEBUG_AgentClearLastBreakpoint(); dosbox_agent::AGENT_EnableFrameCapture(true); }
 +                    std::lock_guard<std::mutex> guard(operation->mutex);
 +                    if (ok && (!load || (!before_hash.empty() && before_hash == after_hash)))
 +                        operation->state_hash = after_hash;
++                    operation->keyboard = keyboard;
 +                    operation->success = ok; operation->error = error; operation->done = true;
 +                    operation->completed.notify_all();
 +                }) == 0) {
@@ -1778,7 +1857,18 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
 +                    Impl::Session& active = *impl->session;
 +                    if (!operation->success) return Error(response_id, kErrorCapabilityUnavailable, operation->error, "STATE_FAILED");
 +                    if (!operation->state_hash.empty()) {
-+                        if (!load && saved_psp) active.saved_state_psps[operation->state_hash] = saved_psp;
++                        if (!load && saved_psp) {
++                            if (!active.saved_state_psps.count(operation->state_hash)) {
++                                // Frequent frame snapshots must not grow trust
++                                // metadata without bound across history restarts.
++                                while (active.saved_state_psps.size() >= 8192) {
++                                    active.saved_state_psps.erase(active.saved_state_psp_order.front());
++                                    active.saved_state_psp_order.pop_front();
++                                }
++                                active.saved_state_psp_order.push_back(operation->state_hash);
++                            }
++                            active.saved_state_psps[operation->state_hash] = saved_psp;
++                        }
 +                        if (load) {
 +                            const auto saved = active.saved_state_psps.find(operation->state_hash);
 +                            if (saved != active.saved_state_psps.end()) active.target_psp = saved->second;
@@ -1790,6 +1880,8 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
 +                    active.last_stop_breakpoint_id.clear(); active.has_last_stop_breakpoint_address = false;
 +                    JsonValue result = SessionResult(active);
 +                    Add(&result, "completed", JsonValue::Bool(true));
++                    JsonValue frame_keys=JsonValue::Array();for(const auto& key:operation->keyboard.frame_keys) frame_keys.array.push_back(String(key));
++                    Add(&result,"frame_keys",frame_keys);
 +                    return AGENT_MakeJsonRpcResult(response_id, result);
 +                };
 +                if (parsed.has_id && parsed.id.type != JsonType::Null) session->deferred_requests[parsed.id_key] = pending;
@@ -1915,10 +2007,12 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
 +                    auto deferred = session->deferred_requests.find(parsed.id_key);
 +                    response = deferred->second.finish(); session->deferred_requests.erase(deferred);
 +                } else response = pending.finish();
-             }
-         }
++            }
++        }
      } else if (parsed.method == "state.get_registers") {
-@@ -1865,9 +2436,17 @@
+         if (session->state == Impl::SessionState::Running) {
+             response = SessionError(parsed.id, kErrorTargetRunning,
+@@ -1865,9 +2494,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              }
          }
      } else if (parsed.method == "session.stop") {
@@ -1937,7 +2031,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
              response = AGENT_MakeJsonRpcResult(parsed.id, result);
          } else if (session->state == Impl::SessionState::Starting ||
                     session->state == Impl::SessionState::Failed) {
-@@ -1934,6 +2513,7 @@
+@@ -1934,6 +2571,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      }
                  }) == 0) {
                  session->operations.erase(operation_id);
@@ -1945,7 +2039,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
                  response = Error(parsed.id, kErrorCapabilityUnavailable,
                                   "Emulation-thread bridge is unavailable", "COMMAND_REJECTED");
              } else {
-@@ -1955,7 +2535,7 @@
+@@ -1955,7 +2593,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                   item != session->breakpoints.end(); ++item) {
                  JsonValue entry = Object();
                  Add(&entry, "breakpoint_id", String(item->second.id));
@@ -1954,7 +2048,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
                  Add(&entry, "enabled", JsonValue::Bool(item->second.enabled));
                  Add(&entry, "once", JsonValue::Bool(item->second.native.once));
                  Add(&entry, "address", EncodeMemoryAddress(item->second.native.address));
-@@ -1970,7 +2550,7 @@
+@@ -1970,7 +2608,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
          MemoryAddress address;
          bool once = false;
          const JsonValue* once_value = parsed.params.Find("once");
@@ -1963,7 +2057,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
              !ParseMemoryAddress(parsed.params, "breakpoints.create", &address, &validation_error) ||
              (once_value != NULL && !GetBool(parsed.params, "once", &once))) {
              response = InvalidParams(parsed.id, validation_error.empty() ?
-@@ -1982,7 +2562,7 @@
+@@ -1982,7 +2620,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
              response = SessionError(parsed.id, kErrorCapabilityUnavailable,
                                      "Target must be stopped before creating breakpoints", "TARGET_NOT_STOPPED", session);
          } else {
@@ -1972,7 +2066,58 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
  #ifndef C_HEAVY_DEBUG
              if (kind == BreakpointKind::MemoryChange) {
                  response = Error(parsed.id, kErrorCapabilityUnavailable,
-@@ -2223,7 +2803,8 @@
+@@ -2153,9 +2791,10 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                 }
+             }
+         }
+-    } else if (parsed.method == "execution.step") {
++    } else if (parsed.method == "execution.step" || parsed.method == "frame.step") {
++        const bool frame_step = parsed.method == "frame.step";
+         std::string mode;
+-        if (!GetString(parsed.params, "mode", &mode) || (mode != "into" && mode != "over")) {
++        if (!frame_step && (!GetString(parsed.params, "mode", &mode) || (mode != "into" && mode != "over"))) {
+             response = InvalidParams(parsed.id, "execution.step requires mode=into or mode=over");
+         } else if (session->state == Impl::SessionState::Running) {
+             response = SessionError(parsed.id, kErrorTargetRunning,
+@@ -2169,12 +2808,17 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+             operation->registers.reset(new Impl::AdapterOperation());
+             const StepMode step_mode = mode == "into" ? StepMode::Into : StepMode::Over;
+             const std::string session_id = session->id;
+-            if (SubmitEmulationCommandLocked(impl, [impl, operation, step_mode, session_id](const std::uint64_t) {
++            if (SubmitEmulationCommandLocked(impl, [impl, operation, step_mode, session_id, frame_step](const std::uint64_t) {
+                 AgentRuntime& adapter = *impl->runtime;
+                 std::string adapter_error;
+                 bool continued = false;
+                 RegisterSnapshot registers;
+-                bool success = adapter.Step(step_mode, &continued, &adapter_error);
++                bool success;
++                if(frame_step) {
++                    success=AGENT_ArmFrameStep(&adapter_error);
++                    if(success) { success=adapter.Continue(&adapter_error); continued=success; }
++                    if(!success) AGENT_CancelFrameStep();
++                } else success = adapter.Step(step_mode, &continued, &adapter_error);
+                 if (success && !continued)
+                     success = adapter.GetRegisters(&registers, &adapter_error);
+                 {
+@@ -2190,7 +2834,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                     if (impl->session && impl->session->id == session_id &&
+                         impl->session->state == Impl::SessionState::Stopped) {
+                         impl->session->state = Impl::SessionState::Running;
+-                        impl->session->pending_stop_kind = "step";
++                        impl->session->pending_stop_kind = frame_step ? "frame" : "step";
+                         impl->state_changed.notify_all();
+                     }
+                 }
+@@ -2203,7 +2847,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                 Impl::DeferredRequest pending;
+                 pending.request = parsed;
+                 pending.fingerprint = parsed.fingerprint;
+-                pending.wait = [impl, session_id, operation](const std::uint32_t timeout_ms) {
++                pending.wait = [impl, session_id, operation, frame_step](const std::uint32_t timeout_ms) {
+                     {
+                         std::unique_lock<std::mutex> dispatch_lock(operation->dispatch->mutex);
+                         if (!operation->dispatch->completed.wait_for(dispatch_lock, std::chrono::milliseconds(timeout_ms),
+@@ -2223,7 +2867,8 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                          })) {
                              return false;
                          }
@@ -1982,7 +2127,40 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
                              return true;
                      }
  
-@@ -2280,6 +2861,11 @@
+@@ -2235,16 +2880,21 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                             submit_registers = true;
+                         }
+                     }
+-                    if (submit_registers && SubmitEmulationCommand(impl, [impl, operation](const std::uint64_t) {
++                    if (submit_registers && SubmitEmulationCommand(impl, [impl, operation, frame_step](const std::uint64_t) {
+                             AgentRuntime& adapter = *impl->runtime;
+                             std::string registers_error;
+                             RegisterSnapshot registers;
+-                            const bool success = adapter.GetRegisters(&registers, &registers_error);
++                            bool success = adapter.GetRegisters(&registers, &registers_error);
++                            FrameSnapshot frame;
++                            if(success && frame_step) success=AGENT_GetFrameSnapshot(&frame,&registers_error);
+                             {
+                                 std::lock_guard<std::mutex> registers_lock(operation->registers->mutex);
+                                 operation->registers->success = success;
+                                 operation->registers->error = registers_error;
+                                 operation->registers->registers = registers;
++                                operation->registers->frame = std::move(frame);
++                                operation->registers->guest_ticks = PIC_Ticks;
++                                operation->registers->frame_step_completed = AGENT_FrameStepCompleted();
+                                 operation->registers->done = true;
+                             }
+                             operation->registers->completed.notify_all();
+@@ -2260,7 +2910,7 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                     return operation->registers->completed.wait_for(registers_lock, std::chrono::milliseconds(timeout_ms),
+                                                                     [operation]() { return operation->registers->done; });
+                 };
+-                pending.finish = [impl, session_id, response_id, operation]() {
++                pending.finish = [impl, session_id, response_id, operation, frame_step]() {
+                     bool dispatch_success = false;
+                     bool continued = false;
+                     std::string dispatch_error;
+@@ -2280,6 +2930,11 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
                      if (!impl->session || impl->session->id != session_id)
                          return Error(response_id, kErrorSessionNotFound, "Session was not found", "SESSION_NOT_FOUND");
                      Impl::Session& active = *impl->session;
@@ -1994,7 +2172,23 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
                      if (!continued) {
                          active.last_stop_kind = "step";
                          active.last_stop_breakpoint_id.clear();
-@@ -2856,6 +3442,7 @@
+@@ -2314,6 +2969,15 @@ std::string AgentServer::HandleJsonRpcImpl(const std::shared_ptr<Impl>& impl, co
+                     JsonValue result = SessionResult(active);
+                     Add(&result, "stop_reason", StopReason(active));
+                     Add(&result, "registers", RegistersResult(registers, active));
++                    if(frame_step) {
++                        std::lock_guard<std::mutex> frame_lock(operation->registers->mutex);
++                        Add(&result,"completed",JsonValue::Bool(operation->registers->frame_step_completed && active.last_stop_kind=="frame"));
++                        Add(&result,"frame_id",Number(operation->registers->frame.frame_id));
++                        Add(&result,"mode_id",Number(operation->registers->frame.mode_id));
++                        Add(&result,"captured_ticks",Number(operation->registers->frame.captured_ticks));
++                        Add(&result,"guest_ticks",Number(operation->registers->guest_ticks));
++                        Add(&result,"boundary",String("completed_renderer_frame_then_safe_fetch"));
++                    }
+                     return AGENT_MakeJsonRpcResult(response_id, result);
+                 };
+                 if (parsed.has_id && parsed.id.type != JsonType::Null)
+@@ -2856,6 +3520,7 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
                                                 const std::string& workdir)
  {
      AgentRuntime& adapter = *impl->runtime;
@@ -2002,7 +2196,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -2888,6 +3475,21 @@
+@@ -2888,6 +3553,21 @@ void AgentServer::StartTargetOnEmulationThread(const std::shared_ptr<Impl>& impl
          return;
      }
  
@@ -2024,7 +2218,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
      {
          std::lock_guard<std::mutex> command_lock(impl->mutex);
          if (impl->stopping || !impl->session || impl->session->id != session_id ||
-@@ -2930,6 +3532,7 @@
+@@ -2930,6 +3610,7 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
                                                               const std::string& operation_id)
  {
      AgentRuntime& adapter = *impl->runtime;
@@ -2032,7 +2226,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
      if (!adapter.IsReadyForTargetStart()) {
          {
              std::lock_guard<std::mutex> command_lock(impl->mutex);
-@@ -2998,6 +3601,47 @@
+@@ -2998,6 +3679,47 @@ void AgentServer::CompleteTargetTerminationOnEmulationThread(const std::shared_p
      impl->state_changed.notify_all();
  }
  
@@ -2080,7 +2274,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
  void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
                                      const std::uint64_t generation,
                                      const std::uint16_t segment,
-@@ -3008,6 +3652,8 @@
+@@ -3008,6 +3730,8 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
          return;
      AgentRuntime& adapter = *impl->runtime;
      const std::uintptr_t native_breakpoint = adapter.ConsumeLastBreakpointHandle();
@@ -2089,7 +2283,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
      std::vector<TraceSample> trace_samples;
      bool native_trace_active = false;
      std::string trace_error;
-@@ -3037,6 +3683,18 @@
+@@ -3037,6 +3761,18 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
              impl->session->trace.Stop();
      }
      impl->session->state = Impl::SessionState::Stopped;
@@ -2108,7 +2302,7 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
      impl->session->last_stop_kind = startup ? "startup" :
              (native_breakpoint != 0 ? "breakpoint" :
               (!impl->session->pending_stop_kind.empty() ? impl->session->pending_stop_kind :
-@@ -3058,8 +3716,10 @@
+@@ -3058,8 +3794,10 @@ void AgentServer::OnDebuggerStopped(const std::shared_ptr<Impl>& impl,
              break;
          }
      }
@@ -2120,9 +2314,10 @@ diff -ruN a/src/agent/server/agent_server.cpp b/src/agent/server/agent_server.cp
      else
          ++impl->session->state_revision;
      for (std::map<std::string, Impl::Operation>::iterator operation = impl->session->operations.begin();
-diff -ruN a/src/agent/transport/local_transport.cpp b/src/agent/transport/local_transport.cpp
---- a/src/agent/transport/local_transport.cpp	2026-10-20 12:05:03.000000000 -0400
-+++ b/src/agent/transport/local_transport.cpp	2026-10-27 17:48:37.130713241 -0400
+diff --git a/src/agent/transport/local_transport.cpp b/src/agent/transport/local_transport.cpp
+index 363f635..7da0d74 100644
+--- a/src/agent/transport/local_transport.cpp
++++ b/src/agent/transport/local_transport.cpp
 @@ -2,6 +2,12 @@
  #include "rpc_transport.h"
  
@@ -2152,7 +2347,7 @@ diff -ruN a/src/agent/transport/local_transport.cpp b/src/agent/transport/local_
  #endif
  
  namespace dosbox_agent {
-@@ -291,29 +306,466 @@
+@@ -291,29 +306,466 @@ private:
  
  class UnixSocketTransport final : public IRpcTransport {
  public:
@@ -2339,9 +2534,10 @@ diff -ruN a/src/agent/transport/local_transport.cpp b/src/agent/transport/local_
 +            if (result < 0) return false;
 +            if (result > 0) return (descriptor.revents & events) != 0;
 +        }
-+        return false;
-+    }
-+
+         return false;
+     }
+ 
+-    void Stop() override {}
 +    bool WriteAll(const int fd, const std::string& message)
 +    {
 +        if (message.size() > max_message_bytes + 1) return false;
@@ -2472,7 +2668,7 @@ diff -ruN a/src/agent/transport/local_transport.cpp b/src/agent/transport/local_
 +    {
 +        if (!ValidateConfiguration(config, error) || !handler) return false;
 +#ifdef WIN32
-         return false;
++        return false;
 +#else
 +        if (worker.joinable()) {
 +            if (error != NULL) *error = "Pipe transport is already running";
@@ -2503,9 +2699,8 @@ diff -ruN a/src/agent/transport/local_transport.cpp b/src/agent/transport/local_
 +        if (worker.joinable()) worker.join();
 +        CloseDescriptors();
 +#endif
-     }
- 
--    void Stop() override {}
++    }
++
 +private:
 +#ifndef WIN32
 +    int read_fd = -1;
@@ -2628,7 +2823,7 @@ diff -ruN a/src/agent/transport/local_transport.cpp b/src/agent/transport/local_
  };
  
  } // namespace
-@@ -325,6 +777,8 @@
+@@ -325,6 +777,8 @@ std::unique_ptr<IRpcTransport> AGENT_CreateLocalTransport(const AgentTransport t
          return std::unique_ptr<IRpcTransport>(new NamedPipeTransport());
      case AgentTransport::UnixSocket:
          return std::unique_ptr<IRpcTransport>(new UnixSocketTransport());
@@ -2637,9 +2832,11 @@ diff -ruN a/src/agent/transport/local_transport.cpp b/src/agent/transport/local_
      }
      return std::unique_ptr<IRpcTransport>();
  }
-diff -ruN a/src/agent/transport/unix_transport_probe.cpp b/src/agent/transport/unix_transport_probe.cpp
---- a/src/agent/transport/unix_transport_probe.cpp	1969-12-31 19:00:00.000000000 -0500
-+++ b/src/agent/transport/unix_transport_probe.cpp	2026-10-27 17:48:37.130791689 -0400
+diff --git a/src/agent/transport/unix_transport_probe.cpp b/src/agent/transport/unix_transport_probe.cpp
+new file mode 100644
+index 0000000..0dedf94
+--- /dev/null
++++ b/src/agent/transport/unix_transport_probe.cpp
 @@ -0,0 +1,27 @@
 +// Standalone transport acceptance fixture; not part of the DOSBox executable.
 +#include "rpc_transport.h"
@@ -2668,10 +2865,11 @@ diff -ruN a/src/agent/transport/unix_transport_probe.cpp b/src/agent/transport/u
 +    std::cout << "STOPPED" << std::endl;
 +    return 0;
 +}
-diff -ruN a/src/cpu/core_normal.cpp b/src/cpu/core_normal.cpp
---- a/src/cpu/core_normal.cpp	2026-10-20 12:05:03.000000000 -0400
-+++ b/src/cpu/core_normal.cpp	2026-10-27 17:48:37.130845009 -0400
-@@ -57,6 +57,9 @@
+diff --git a/src/cpu/core_normal.cpp b/src/cpu/core_normal.cpp
+index e582cc0..1cd5cac 100644
+--- a/src/cpu/core_normal.cpp
++++ b/src/cpu/core_normal.cpp
+@@ -57,6 +57,9 @@ extern bool ignore_opcode_63;
  
  #include "lock.h"
  static INLINE uint8_t LockPrefixRead(PhysPt address) {
@@ -2681,7 +2879,7 @@ diff -ruN a/src/cpu/core_normal.cpp b/src/cpu/core_normal.cpp
  	return mem_readb_inline(address);
  }
  
-@@ -130,22 +133,34 @@
+@@ -130,22 +133,34 @@ static INLINE void FetchDiscardb() {
  }
  
  static INLINE uint8_t FetchPeekb() {
@@ -2716,7 +2914,7 @@ diff -ruN a/src/cpu/core_normal.cpp b/src/cpu/core_normal.cpp
  	uint32_t temp=LoadMd(core.cseip);
  	core.cseip+=4;
  	return temp;
-@@ -164,6 +179,9 @@
+@@ -164,6 +179,9 @@ static INLINE uint32_t Fetchd() {
  #define EALookupTable (core.ea_table)
  
  Bits CPU_Core_Normal_Run(void) {
@@ -2726,7 +2924,7 @@ diff -ruN a/src/cpu/core_normal.cpp b/src/cpu/core_normal.cpp
  	if (CPU_Cycles <= 0)
  		return CBRET_NONE;
  
-@@ -179,13 +197,19 @@
+@@ -179,13 +197,19 @@ Bits CPU_Core_Normal_Run(void) {
  		core.base_val_ds=ds;
  #if C_DEBUG
  #if C_HEAVY_DEBUG
@@ -2748,10 +2946,11 @@ diff -ruN a/src/cpu/core_normal.cpp b/src/cpu/core_normal.cpp
  restart_opcode:
  		switch (core.opcode_index+Fetchb()) {
  		#include "core_normal/prefix_none.h"
-diff -ruN a/src/debug/debug.cpp b/src/debug/debug.cpp
---- a/src/debug/debug.cpp	2026-10-20 12:05:03.000000000 -0400
-+++ b/src/debug/debug.cpp	2026-10-27 17:48:37.131331101 -0400
-@@ -45,6 +45,7 @@
+diff --git a/src/debug/debug.cpp b/src/debug/debug.cpp
+index 36c909c..51d8825 100644
+--- a/src/debug/debug.cpp
++++ b/src/debug/debug.cpp
+@@ -45,6 +45,7 @@ using namespace std;
  #include "debug.h"
  #if defined(C_DOSBOX_AGENT)
  #include "agent/agent_bridge.h"
@@ -2759,7 +2958,7 @@ diff -ruN a/src/debug/debug.cpp b/src/debug/debug.cpp
  #endif
  #include "cross.h" //snprintf
  #include "fpu_state.h"
-@@ -636,7 +637,7 @@
+@@ -636,7 +637,7 @@ static void AnnotateDirectBranch(char* line, const size_t line_size)
  bool mustCompleteInstruction = false;
  bool skipFirstInstruction = false;
  
@@ -2768,7 +2967,7 @@ diff -ruN a/src/debug/debug.cpp b/src/debug/debug.cpp
  
  #define BPINT_ALL 0x100
  
-@@ -706,6 +707,8 @@
+@@ -706,6 +707,8 @@ private:
  	static CBreakpoint*	lastTriggered;
  #if C_HEAVY_DEBUG
  	friend bool DEBUG_HeavyIsBreakpoint(void);
@@ -2777,7 +2976,7 @@ diff -ruN a/src/debug/debug.cpp b/src/debug/debug.cpp
  #endif
  };
  
-@@ -816,9 +819,16 @@
+@@ -816,9 +819,16 @@ void CBreakpoint::ActivateBreakpointsExceptAt(PhysPt adr)
  	}
  }
  
@@ -2794,7 +2993,7 @@ diff -ruN a/src/debug/debug.cpp b/src/debug/debug.cpp
  	// Quick exit if there are no breakpoints
  	if (BPoints.empty()) return false;
  
-@@ -1161,6 +1171,16 @@
+@@ -1161,6 +1171,16 @@ bool DEBUG_AgentResumeAfterTerminate(void)
  	return true;
  }
  
@@ -2811,7 +3010,7 @@ diff -ruN a/src/debug/debug.cpp b/src/debug/debug.cpp
  bool DEBUG_AgentCanStartTarget(void)
  {
  #if !defined(OSFREE)
-@@ -1175,6 +1195,46 @@
+@@ -1175,6 +1195,46 @@ uint64_t DEBUG_AgentEntryBreakpointSequence(void)
  	return agent_entry_breakpoint_sequence.load(std::memory_order_relaxed);
  }
  
@@ -2858,7 +3057,7 @@ diff -ruN a/src/debug/debug.cpp b/src/debug/debug.cpp
  bool DEBUG_AgentCreateExecutionBreakpoint(uint16_t seg, uint32_t off, bool once, uintptr_t* handle)
  {
  	if (handle == nullptr || GetAddress(seg,off) == mem_no_address)
-@@ -1221,7 +1281,10 @@
+@@ -1221,7 +1281,10 @@ bool DEBUG_AgentCreateMemoryBreakpoint(uint16_t seg,
  
  bool DEBUG_AgentDeleteBreakpoint(uintptr_t handle)
  {
@@ -2870,7 +3069,7 @@ diff -ruN a/src/debug/debug.cpp b/src/debug/debug.cpp
  }
  
  uintptr_t DEBUG_AgentConsumeLastBreakpoint(void)
-@@ -1231,6 +1294,16 @@
+@@ -1231,6 +1294,16 @@ uintptr_t DEBUG_AgentConsumeLastBreakpoint(void)
  
  void DEBUG_AgentClearLastBreakpoint(void)
  {
@@ -2887,7 +3086,7 @@ diff -ruN a/src/debug/debug.cpp b/src/debug/debug.cpp
  	(void)CBreakpoint::ConsumeLastTriggered();
  }
  
-@@ -4814,6 +4887,9 @@
+@@ -4814,6 +4887,9 @@ static int dbg_getch_vt(void) {
  #endif
  
  uint32_t DEBUG_CheckKeys(void) {
@@ -2897,7 +3096,7 @@ diff -ruN a/src/debug/debug.cpp b/src/debug/debug.cpp
  	Bits ret=0;
  	bool numberrun = false;
  	bool skipDraw = false;
-@@ -5287,7 +5363,12 @@
+@@ -5287,7 +5363,12 @@ Bitu DEBUG_Loop(void) {
          // Interrupt started ? - then skip it
          uint16_t oldCS	= SegValue(cs);
          uint32_t oldEIP	= reg_eip;
@@ -2911,7 +3110,7 @@ diff -ruN a/src/debug/debug.cpp b/src/debug/debug.cpp
          SDL_Delay(1);
  
  #if (C_DYNAMIC_X86)
-@@ -5359,6 +5440,9 @@
+@@ -5359,6 +5440,9 @@ void DEBUG_Enable_Handler(bool pressed) {
  	if (!pressed || control->opt_display2)
  		return;
  
@@ -2921,7 +3120,7 @@ diff -ruN a/src/debug/debug.cpp b/src/debug/debug.cpp
      if (hidedebugger) {
          hidedebugger=false;
  #if defined(WIN32) && !defined(_WIN32_WINDOWS)
-@@ -5377,6 +5461,9 @@
+@@ -5377,6 +5461,9 @@ void DEBUG_Enable_Handler(bool pressed) {
          if (runnormal) return;
      }
  
@@ -2931,7 +3130,7 @@ diff -ruN a/src/debug/debug.cpp b/src/debug/debug.cpp
      /* this command is now a toggle! */
      /* However this should break back into the debugger if RUNWATCH is active */
      if (debug_running) {
-@@ -5416,6 +5503,9 @@
+@@ -5416,6 +5503,9 @@ void DEBUG_Enable_Handler(bool pressed) {
      if (!isatty(0) || !isatty(1) || !isatty(2))
  	    allow = false;
  
@@ -2941,7 +3140,15 @@ diff -ruN a/src/debug/debug.cpp b/src/debug/debug.cpp
      if (!allow) {
  # if defined(MACOSX)
  	    LOG_MSG("Debugger in Mac OS X is not available unless you start DOSBox-X from a terminal or from the Terminal application");
-@@ -5464,6 +5554,9 @@
+@@ -5457,6 +5547,7 @@ void DEBUG_Enable_Handler(bool pressed) {
+     GFX_SetTitle(-1,-1,-1,false);
+     runnormal = false;
+ #if defined(C_DOSBOX_AGENT)
++    dosbox_agent::AGENT_CancelFrameStep();
+     dosbox_agent::AGENT_NotifyDebuggerStopped(SegValue(cs), reg_eip);
+ #endif
+     if (debugrunmode==1) {char command[] = "RUN"; ParseCommand(command);}
+@@ -5464,6 +5555,9 @@ void DEBUG_Enable_Handler(bool pressed) {
  }
  
  void DEBUG_DrawScreen(void) {
@@ -2951,7 +3158,7 @@ diff -ruN a/src/debug/debug.cpp b/src/debug/debug.cpp
  	DrawData();
  	DrawCode();
      DrawInput();
-@@ -6185,6 +6278,9 @@
+@@ -6185,6 +6279,9 @@ void DBGBlock::set_data_view(unsigned int view) {
  }
  
  void DEBUG_SetupConsole(void) {
@@ -2961,9 +3168,25 @@ diff -ruN a/src/debug/debug.cpp b/src/debug/debug.cpp
  	if (dbg.win_main == NULL) {
          LOG(LOG_MISC, LOG_DEBUG)("DEBUG_SetupConsole initializing GUI");
  
-diff -ruN a/src/debug/debug_gui.cpp b/src/debug/debug_gui.cpp
---- a/src/debug/debug_gui.cpp	2026-10-20 12:05:03.000000000 -0400
-+++ b/src/debug/debug_gui.cpp	2026-10-27 17:48:37.131726567 -0400
+@@ -6663,6 +6760,14 @@ void DEBUG_HeavyWriteLogInstruction(void) {
+ }
+ 
+ bool DEBUG_HeavyIsBreakpoint(void) {
++#if defined(C_DOSBOX_AGENT)
++    // Rendering-on-demand can complete inside the preceding instruction.
++    // Stop only here, at its next safe fetch, never from inside its callback.
++    if (dosbox_agent::AGENT_FrameStepStopRequested()) {
++        DEBUG_EnableDebugger();
++        return true;
++    }
++#endif
+ #if defined(C_DOSBOX_AGENT)
+ 	const bool agent_trace_was_active = agent_trace_active;
+     if (agent_trace_active) {
+diff --git a/src/debug/debug_gui.cpp b/src/debug/debug_gui.cpp
+index 6de6f1f..7e027a5 100644
+--- a/src/debug/debug_gui.cpp
++++ b/src/debug/debug_gui.cpp
 @@ -36,6 +36,9 @@
  #include "debug.h"
  #include "debug_mcp.h"
@@ -2974,7 +3197,7 @@ diff -ruN a/src/debug/debug_gui.cpp b/src/debug/debug_gui.cpp
  #include "pic.h"
  
  #include <stdexcept>
-@@ -589,6 +592,9 @@
+@@ -589,6 +592,9 @@ void DEBUG_FlushInput(void) {
  }
  
  void DBGUI_StartUp(void) {
@@ -2984,7 +3207,8 @@ diff -ruN a/src/debug/debug_gui.cpp b/src/debug/debug_gui.cpp
  	mainMenu.get_item("show_console").check(true).enable(false).refresh_item(mainMenu);
  	mainMenu.get_item("clear_console").check(false).enable(false).refresh_item(mainMenu);
  
-diff -ruN a/src/dos/dos_execute.cpp b/src/dos/dos_execute.cpp
+diff --git a/src/dos/dos_execute.cpp b/src/dos/dos_execute.cpp
+index 6ba9ffa..2d72e6a 100644
 --- a/src/dos/dos_execute.cpp
 +++ b/src/dos/dos_execute.cpp
 @@ -33,6 +33,9 @@
@@ -2997,7 +3221,7 @@ diff -ruN a/src/dos/dos_execute.cpp b/src/dos/dos_execute.cpp
  #if defined(OSFREE)
  #include "exepack.h"
  #include "exepackv1.h"
-@@ -154,6 +157,9 @@
+@@ -154,6 +157,9 @@ void DOS_Terminate(uint16_t pspseg,bool tsr,uint8_t exitcode) {
  	DOS_UpdatePSPName();
  
  	dos.errorcode=0;
@@ -3007,9 +3231,46 @@ diff -ruN a/src/dos/dos_execute.cpp b/src/dos/dos_execute.cpp
  
  	if ((!(CPU_AutoDetermineMode>>CPU_AUTODETERMINE_SHIFT)) || (cpu.pmode)) return;
  
-diff -ruN a/src/gui/render.cpp b/src/gui/render.cpp
---- a/src/gui/render.cpp	2026-10-20 12:05:03.000000000 -0400
-+++ b/src/gui/render.cpp	2026-10-27 17:48:37.131840458 -0400
+diff --git a/src/dosbox.cpp b/src/dosbox.cpp
+index 53895a2..b523884 100644
+--- a/src/dosbox.cpp
++++ b/src/dosbox.cpp
+@@ -54,6 +54,7 @@
+ #include "dosbox.h"
+ #if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
+ #include "agent/agent_bridge.h"
++#include "agent/video_adapter.h"
+ #endif // defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
+ #include "debug.h"
+ #include "cpu.h"
+@@ -471,8 +472,23 @@ static Bitu Normal_Loop(void) {
+         while (1) {
+ #if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
+             dosbox_agent::AGENT_BridgePump();
++            if (dosbox_agent::AGENT_FrameStepStopRequested()) {
++                DEBUG_EnableDebugger();
++                (void)DEBUG_ExitLoop();
++                return 0;
++            }
+ #endif
+             if (PIC_RunQueue()) {
++#if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
++                // A renderer callback can finish inside PIC_RunQueue. Unwind
++                // its event dispatch before serializing, without another IRQ
++                // delivery or guest instruction slipping past the frame stop.
++                if (dosbox_agent::AGENT_FrameStepStopRequested()) {
++                    DEBUG_EnableDebugger();
++                    (void)DEBUG_ExitLoop();
++                    return 0;
++                }
++#endif
+                 /* now is the time to check for the NMI (Non-maskable interrupt) */
+                 CPU_Check_NMI();
+ 
+diff --git a/src/gui/render.cpp b/src/gui/render.cpp
+index 82e2ae2..6ff3be1 100644
+--- a/src/gui/render.cpp
++++ b/src/gui/render.cpp
 @@ -41,6 +41,9 @@
  #include "pc98_cg.h"
  #include "pc98_gdc.h"
@@ -3020,7 +3281,7 @@ diff -ruN a/src/gui/render.cpp b/src/gui/render.cpp
  
  #include "render_scalers.h"
  #include "render_glsl.h"
-@@ -100,6 +103,115 @@
+@@ -100,6 +103,135 @@ ScalerLineHandler_t                     RENDER_DrawLine;
  
  uint32_t                                GFX_palette32bpp[256] = {0};
  
@@ -3033,6 +3294,8 @@ diff -ruN a/src/gui/render.cpp b/src/gui/render.cpp
 +std::uint64_t agent_frame_sequence = 0;
 +std::uint64_t agent_mode_sequence = 0;
 +FrameSnapshot agent_frame;
++bool agent_frame_step_armed = false;
++bool agent_frame_step_completed = false;
 +
 +void InvalidateAgentFrame()
 +{
@@ -3042,8 +3305,25 @@ diff -ruN a/src/gui/render.cpp b/src/gui/render.cpp
 +}
 +} // namespace
 +
++bool AGENT_ArmFrameStep(std::string* error)
++{
++    if (!agent_frame_capture_enabled || agent_frame_step_armed) {
++        if (error) *error = "Frame capture unavailable or a frame step is already active";
++        return false;
++    }
++    agent_frame_step_completed = false;
++    agent_frame_step_armed = true;
++    return true;
++}
++
++bool AGENT_FrameStepStopRequested() { return agent_frame_step_armed && agent_frame_step_completed; }
++bool AGENT_FrameStepCompleted() { return agent_frame_step_completed; }
++void AGENT_CancelFrameStep() { agent_frame_step_armed = false; }
++
 +void AGENT_EnableFrameCapture(bool enabled)
 +{
++    AGENT_CancelFrameStep();
++    agent_frame_step_completed = false;
 +    agent_frame_capture_enabled = enabled;
 +    InvalidateAgentFrame();
 +}
@@ -3129,6 +3409,7 @@ diff -ruN a/src/gui/render.cpp b/src/gui/render.cpp
 +    agent_frame.double_width = render.src.dblw;
 +    agent_frame.double_height = render.src.dblh;
 +    agent_frame_valid = true;
++    if (agent_frame_step_armed) agent_frame_step_completed = true;
 +}
 +} // namespace dosbox_agent
 +#endif
@@ -3136,7 +3417,7 @@ diff -ruN a/src/gui/render.cpp b/src/gui/render.cpp
  unsigned int                            GFX_GetBShift();
  void                                    aspect_ratio_menu();
  void                                    RENDER_CallBack( GFX_CallBackFunctions_t function );
-@@ -480,6 +592,11 @@
+@@ -480,6 +612,11 @@ void RENDER_EndUpdate( bool abort ) {
      if (video_debug_overlay && !abort && render.active && render.scale.outLine != 0)
          VGA_DebugOverlay();
  
@@ -3148,7 +3429,7 @@ diff -ruN a/src/gui/render.cpp b/src/gui/render.cpp
      if (!abort && render.active && RENDER_DrawLine == RENDER_ClearCacheHandler)
          render.scale.clearCache = false;
  
-@@ -562,6 +679,9 @@
+@@ -562,6 +699,9 @@ std::string RENDER_GetScaler(void) {
  static int aspect_x=0, aspect_y=0;
  
  void RENDER_Shutdown() {
@@ -3158,7 +3439,7 @@ diff -ruN a/src/gui/render.cpp b/src/gui/render.cpp
  	Scaler_AspectChangedLinesFree();
  	scalerSourceCacheBufferFree();
  	scalerChangeCacheFree();
-@@ -571,6 +691,9 @@
+@@ -571,6 +711,9 @@ void RENDER_Shutdown() {
  }
  
  void RENDER_Reset( void ) {
@@ -3168,7 +3449,7 @@ diff -ruN a/src/gui/render.cpp b/src/gui/render.cpp
  	Bitu width=render.src.width;
  	Bitu height=render.src.height;
  	bool dblw=render.src.dblw;
-@@ -1126,6 +1249,9 @@
+@@ -1126,6 +1269,9 @@ void RENDER_CalcDoubleWidthHeight(Bitu width, Bitu height, double scrn_ratio, bo
  void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double scrn_ratio) {
      RENDER_Halt( );
      if (!width || !height) {
@@ -3178,9 +3459,10 @@ diff -ruN a/src/gui/render.cpp b/src/gui/render.cpp
          LOG(LOG_MISC,LOG_WARN)("RENDER_SetSize() rejected video mode %u x %u",(unsigned int)width,(unsigned int)height);
          return; 
      }
-diff -ruN a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
---- a/src/gui/sdlmain.cpp	2026-10-20 12:05:03.000000000 -0400
-+++ b/src/gui/sdlmain.cpp	2026-10-27 17:48:37.132855576 -0400
+diff --git a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
+index 79624b0..1a3467e 100644
+--- a/src/gui/sdlmain.cpp
++++ b/src/gui/sdlmain.cpp
 @@ -32,11 +32,6 @@
  # endif
  #endif
@@ -3193,7 +3475,7 @@ diff -ruN a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
  #ifdef OS2
  # define INCL_DOS
  # define INCL_WIN
-@@ -135,6 +130,11 @@
+@@ -135,6 +130,11 @@ char* revert_escape_newlines(const char* aMessage);
  #include "control.h"
  #include "dos_inc.h"
  #include "dosbox.h"
@@ -3205,7 +3487,7 @@ diff -ruN a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
  #include "menudef.h"
  #include "pic.h"
  #include "timer.h"
-@@ -148,6 +148,22 @@
+@@ -148,6 +148,22 @@ char* revert_escape_newlines(const char* aMessage);
  #include "ptrop.h"
  #include "mapper.h"
  #include "sdlmain.h"
@@ -3228,7 +3510,7 @@ diff -ruN a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
  #include "zipfile.h"
  #include "glidedef.h"
  #include "bios_disk.h"
-@@ -1873,7 +1889,12 @@
+@@ -1873,7 +1889,12 @@ SDL_Window* GFX_SetSDLWindowMode(uint16_t width, uint16_t height, SCREEN_TYPES s
                                        width, height,
                                        (GFX_IsFullscreen() ? (sdl.desktop.full.display_res ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN) : 0)
                                        | ((screenType == SCREEN_OPENGL) ? SDL_WINDOW_OPENGL : 0) | (maximize && !TTF_using()? SDL_WINDOW_MAXIMIZED : 0)
@@ -3242,7 +3524,7 @@ diff -ruN a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
                                        | (dpi_aware_enable ? SDL_WINDOW_ALLOW_HIGHDPI : 0));
          if (sdl.window) {
              GFX_SetTitle(-1, -1, -1, false); //refresh title.
-@@ -4158,9 +4179,17 @@
+@@ -4158,9 +4179,17 @@ static void GUI_StartUp() {
      if (output == "surface")
      {
  #if C_DIRECT3D
@@ -3262,7 +3544,7 @@ diff -ruN a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
  #endif
          OUTPUT_SURFACE_Select();
          init_output = true;
-@@ -5905,7 +5934,68 @@
+@@ -5905,7 +5934,68 @@ bool gfx_in_mapper = false;
  #define DB_POLLSKIP 1
  #endif
  
@@ -3331,7 +3613,7 @@ diff -ruN a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
      CheckMapperKeyboardLayout();
  #if defined(C_SDL2) /* SDL 2.x---------------------------------- */
      //Don't poll too often. This can be heavy on the OS, especially Macs.
-@@ -7496,6 +7586,7 @@
+@@ -7496,6 +7586,7 @@ bool DOSBOX_parse_argv() {
              fprintf(stderr,"  -tests                                  Run unit tests to test the DOSBox-X code\n");
  #if defined(C_DOSBOX_AGENT)
              fprintf(stderr,"  -agent-config <path>                    Load agent configuration from an explicit file\n");
@@ -3339,7 +3621,7 @@ diff -ruN a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
              fprintf(stderr,"  -agent-self-test                        Verify agent startup and emulation queue behavior\n");
  #endif
              fprintf(stderr,"  -print-ticks                            (Debug) Print emulator time and SDL_GetTicks()\n");
-@@ -7530,6 +7621,9 @@
+@@ -7530,6 +7621,9 @@ bool DOSBOX_parse_argv() {
          else if (optname == "agent-self-test") {
              control->opt_agent_self_test = true;
          }
@@ -3349,7 +3631,7 @@ diff -ruN a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
  #endif
          else if (optname == "nolog") {
              control->opt_nolog = true;
-@@ -8468,6 +8562,44 @@
+@@ -8468,6 +8562,44 @@ int main(int argc, char* argv[]) SDL_MAIN_NOEXCEPT {
      /* -- parse command line arguments */
      if (!DOSBOX_parse_argv()) return 1;
  
@@ -3394,7 +3676,7 @@ diff -ruN a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
      if (control->opt_time_limit > 0)
          time_limit_ms = (Bitu)(control->opt_time_limit * 1000);
  
-@@ -9414,6 +9546,21 @@
+@@ -9414,6 +9546,21 @@ int main(int argc, char* argv[]) SDL_MAIN_NOEXCEPT {
          control->ParseEnv(environ);
  #endif
  
@@ -3416,10 +3698,38 @@ diff -ruN a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
          /* -- initialize logging first, so that higher level inits can report problems to the log file */
          LOG::Init();
  
-diff -ruN a/src/hardware/keyboard.cpp b/src/hardware/keyboard.cpp
---- a/src/hardware/keyboard.cpp	2026-10-20 12:05:03.000000000 -0400
-+++ b/src/hardware/keyboard.cpp	2026-10-27 17:48:37.155129133 -0400
-@@ -3043,3 +3043,166 @@
+diff --git a/src/hardware/keyboard.cpp b/src/hardware/keyboard.cpp
+index 423e8d2..42f0dd0 100644
+--- a/src/hardware/keyboard.cpp
++++ b/src/hardware/keyboard.cpp
+@@ -3040,6 +3040,250 @@ public:
+         registerPOD(keyb.scanning); 
+         registerPOD(keyb.scheduled);
+         registerPOD(port_61_data);
++        // Complete IBM keyboard/controller state for native frame checkpoints.
++        registerPOD(keyb.buf8042);
++        registerPOD(keyb.buf8042_len);
++        registerPOD(keyb.buf8042_pos);
++        registerPOD(keyb.pending_key);
++        registerPOD(keyb.pending_key_state);
++        registerPOD(keyb.led_state);
++        registerPOD(keyb.scanset);
++        registerPOD(keyb.enable_aux);
++        registerPOD(keyb.reset);
++        registerPOD(keyb.auxactive);
++        registerPOD(keyb.auxchanged);
++        registerPOD(keyb.cb_override_inhibit);
++        registerPOD(keyb.cb_irq12);
++        registerPOD(keyb.cb_irq1);
++        registerPOD(keyb.cb_xlat);
++        registerPOD(keyb.cb_sys);
++        registerPOD(keyb.leftalt_pressed);
++        registerPOD(keyb.rightalt_pressed);
++        registerPOD(keyb.leftctrl_pressed);
++        registerPOD(keyb.rightctrl_pressed);
++        registerPOD(keyb.leftshift_pressed);
++        registerPOD(keyb.rightshift_pressed);
++
      }
  } dummy;
  }
@@ -3437,12 +3747,13 @@ diff -ruN a/src/hardware/keyboard.cpp b/src/hardware/keyboard.cpp
 +std::deque<AgentKeyEvent> agent_key_events;
 +std::set<KBD_KEYS> agent_owned_keys;
 +std::map<std::string,KBD_KEYS> agent_key_leases;
++std::map<KBD_KEYS,std::string> agent_frame_keys;
 +
 +KBD_KEYS AgentNamedKey(const std::string& name)
 +{
 +    static const struct { const char* name; KBD_KEYS key; } names[] = {
 +        {"enter",KBD_enter},{"escape",KBD_esc},{"esc",KBD_esc},
-+        {"tab",KBD_tab},{"backspace",KBD_backspace},{"space",KBD_space},
++        {"tab",KBD_tab},{"backspace",KBD_backspace},{"space",KBD_space},{"kp5",KBD_kp5},
 +        {"left",KBD_left},{"right",KBD_right},{"up",KBD_up},{"down",KBD_down},
 +        {"home",KBD_home},{"end",KBD_end},{"insert",KBD_insert},{"delete",KBD_delete},
 +        {"pageup",KBD_pageup},{"pagedown",KBD_pagedown},
@@ -3481,8 +3792,14 @@ diff -ruN a/src/hardware/keyboard.cpp b/src/hardware/keyboard.cpp
 +{
 +    if (!state) return;
 +    state->pending_events=static_cast<std::uint32_t>(agent_key_events.size());
++    // All names admitted below emit at most three scan bytes per edge. This
++    // reflects the actual hardware FIFO, independently of legacy agent events.
++    state->frame_edge_capacity=keyb.used<KEYBUFSIZE
++        ? static_cast<std::uint32_t>((KEYBUFSIZE-keyb.used)/3) : 0;
 +    state->owned_keys=static_cast<std::uint32_t>(agent_owned_keys.size());
 +    state->duration_ms=0;
++    state->frame_keys.clear();
++    for (const auto& item:agent_frame_keys) state->frame_keys.push_back(item.second);
 +    for (const auto& event:agent_key_events) state->duration_ms+=event.delay;
 +}
 +
@@ -3493,6 +3810,56 @@ diff -ruN a/src/hardware/keyboard.cpp b/src/hardware/keyboard.cpp
 +    for (const auto key:agent_owned_keys) KEYBOARD_AddKey(key,false);
 +    agent_owned_keys.clear();
 +    agent_key_leases.clear();
++    for (const auto& item:agent_frame_keys) KEYBOARD_AddKey(item.first,false);
++    agent_frame_keys.clear();
++}
++
++bool AGENT_KeyboardCheckpointReady(std::string* error)
++{
++    // ResetDelay is not in the upstream PIC callback serialization table.
++    if (keyb.reset) { if(error) *error="Keyboard reset is active; checkpoint refused"; return false; }
++    return true;
++}
++
++bool AGENT_KeyboardFrameKeys(const std::vector<std::string>& names, bool restore, std::string* error)
++{
++    std::map<KBD_KEYS,std::string> checked;
++    if (IS_PC98_ARCH || names.size()>128) { if(error)*error="Invalid frame key state"; return false; }
++    for(const auto& name:names) {
++        const auto code=AgentNamedKey(name);
++        if(code==KBD_NONE || checked.count(code)) { if(error)*error="Unknown or duplicate frame key"; return false; }
++        checked.emplace(code,code==KBD_esc ? "escape" : name);
++    }
++    // Native load restores hardware FIFO and typematic phase. Replaying
++    // make/break events here would corrupt both, so restore ownership only.
++    if(restore) agent_frame_keys=std::move(checked);
++    return true;
++}
++
++bool AGENT_KeyboardFrameEdges(const std::vector<std::pair<std::string,bool>>& edges,
++                              AgentKeyboardState* state, std::string* error)
++{
++    const auto fail=[error](const char* why){if(error)*error=why;return false;};
++    if(IS_PC98_ARCH || edges.size()>32) return fail("Invalid frame keyboard edge list");
++    if(!agent_key_events.empty() || !agent_owned_keys.empty() || !agent_key_leases.empty())
++        return fail("Legacy keyboard input must finish before frame input");
++    if(keyb.reset) return fail("Keyboard reset is active");
++    if(keyb.used>KEYBUFSIZE || edges.size()>(KEYBUFSIZE-keyb.used)/3)
++        return fail("Frame input exceeds the available hardware keyboard FIFO capacity");
++    auto checked=agent_frame_keys;
++    for(const auto& edge:edges) {
++        const auto code=AgentNamedKey(edge.first);
++        if(machine==MCH_PCJR && (code==KBD_f11 || code==KBD_f12 || code==KBD_kp5))
++            return fail("This frame key is unsupported by the PCjr keyboard");
++        if(code==KBD_NONE || (checked.count(code)!=0)==edge.second)
++            return fail("Unknown frame key or duplicate key transition");
++        if(edge.second) checked.emplace(code,code==KBD_esc ? "escape" : edge.first);
++        else checked.erase(code);
++    }
++    for(const auto& edge:edges) KEYBOARD_AddKey(AgentNamedKey(edge.first),edge.second);
++    agent_frame_keys=std::move(checked);
++    AGENT_KeyboardGetState(state);
++    return true;
 +}
 +
 +bool AGENT_KeyboardLease(const std::string& key, const std::string& lease,
@@ -3500,7 +3867,7 @@ diff -ruN a/src/hardware/keyboard.cpp b/src/hardware/keyboard.cpp
 +{
 +    const auto fail=[error](const char* why) { if(error)*error=why; return false; };
 +    if (IS_PC98_ARCH) return fail("Keyboard adapter supports IBM PC targets only");
-+    if (!agent_key_events.empty()) return fail("Keyboard input is pending");
++    if (!agent_key_events.empty() || !agent_frame_keys.empty()) return fail("Keyboard input or frame keys are pending");
 +    KBD_KEYS code=KBD_NONE;
 +    if (down) {
 +        code=AgentNamedKey(key);
@@ -3526,7 +3893,7 @@ diff -ruN a/src/hardware/keyboard.cpp b/src/hardware/keyboard.cpp
 +{
 +    const auto fail=[error](const char* why) { if(error)*error=why; return false; };
 +    if (IS_PC98_ARCH) return fail("Keyboard adapter supports IBM PC targets only");
-+    if (!agent_key_events.empty() || !agent_owned_keys.empty())
++    if (!agent_key_events.empty() || !agent_owned_keys.empty() || !agent_frame_keys.empty())
 +        return fail("Keyboard input is pending; run guest time before queuing another operation");
 +    if (hold_ms<1 || hold_ms>1000 || gap_ms<1 || gap_ms>1000)
 +        return fail("Keyboard hold_ms and gap_ms must be 1..1000 guest milliseconds");
@@ -3586,9 +3953,158 @@ diff -ruN a/src/hardware/keyboard.cpp b/src/hardware/keyboard.cpp
 +}
 +} // namespace dosbox_agent
 +#endif
-diff -ruN a/src/ints/mouse.cpp b/src/ints/mouse.cpp
---- a/src/ints/mouse.cpp	2026-10-20 12:05:03.000000000 -0400
-+++ b/src/ints/mouse.cpp	2026-10-27 17:48:37.133728260 -0400
+diff --git a/src/hardware/pic.cpp b/src/hardware/pic.cpp
+index 31e2507..ad97b8a 100644
+--- a/src/hardware/pic.cpp
++++ b/src/hardware/pic.cpp
+@@ -24,6 +24,7 @@
+ #include "callback.h"
+ #include "logging.h"
+ #include "pic.h"
++#include <memory>
+ #include "timer.h"
+ #include "setup.h"
+ #include "control.h"
+@@ -656,6 +657,39 @@ static void AddEntry(PICEntry * entry) {
+ static bool InEventService = false;
+ static pic_tickindex_t srv_lag = 0;
+ 
++// Renderer repair during state load must not change the already-restored
++// guest event queue or its CPU budget. Queue links point into the fixed global
++// entries array, whose address remains stable while its contents are restored.
++void PIC_RunWithPreservedScheduler(PIC_EventHandler operation, Bitu value) {
++    struct SavedPhase {
++        decltype(pic_queue) queue = pic_queue;
++        PIC_Controller controllers[2] = {pics[0], pics[1]};
++        Bitu ticks = PIC_Ticks;
++        Bitu irq_check = PIC_IRQCheck;
++        Bitu irq_check_pending = PIC_IRQCheckPending;
++        bool servicing = InEventService;
++        pic_tickindex_t lag = srv_lag;
++        Bits cycles = CPU_Cycles;
++        Bits cycle_left = CPU_CycleLeft;
++        ~SavedPhase() {
++            pic_queue = queue;
++            pics[0] = controllers[0];
++            pics[1] = controllers[1];
++            PIC_Ticks = ticks;
++            PIC_IRQCheck = irq_check;
++            PIC_IRQCheckPending = irq_check_pending;
++            InEventService = servicing;
++            srv_lag = lag;
++            CPU_Cycles = cycles;
++            CPU_CycleLeft = cycle_left;
++        }
++    };
++    // The queue has 8192 entries: retain it on the heap, not a nested guest
++    // callback's stack. RAII also restores the phase if renderer repair throws.
++    const std::unique_ptr<SavedPhase> phase(new SavedPhase());
++    operation(value);
++}
++
+ pic_tickindex_t PIC_GetCurrentEventTime(void) {
+     if (InEventService)
+         return (pic_tickindex_t)PIC_Ticks + srv_lag;
+diff --git a/src/hardware/vga.cpp b/src/hardware/vga.cpp
+index ab70e49..f7e19b7 100644
+--- a/src/hardware/vga.cpp
++++ b/src/hardware/vga.cpp
+@@ -126,6 +126,7 @@
+ #include "setup.h"
+ #include "video.h"
+ #include "pic.h"
++void VGA_RestoreDrawingPhase();
+ #include "vga.h"
+ #include "inout.h"
+ #include "programs.h"
+@@ -2290,11 +2291,11 @@ private:
+ 		if( tandy_membase_idx == 0xffffffff ) vga.tandy.mem_base = vga.mem.linear;
+ 		else vga.tandy.mem_base = MemBase + tandy_membase_idx;
+ 
+-		// fix: re-derive VGA_DrawLine, line_length, address_add, width, height, etc. from the
+-		// freshly-loaded VGA registers. The serialised drawline_idx enum covers only 14 of ~46
+-		// variants and the load-side switch has no default, so without this the renderer can be
+-		// left pointing at a stale function (mode 13h → vertical colour bands).
+-		VGA_SetupDrawing(0);
++		// Repair host output and line handlers for fresh/cross-mode loads. The
++		// legacy drawline enum is incomplete, but ordinary SetupDrawing also
++		// changes loaded guest scanline/PIC/CPU phase. Keep the repair and then
++		// reinstate that phase rather than restarting the loaded frame.
++		VGA_RestoreDrawingPhase();
+ 	}
+ } dummy;
+ }
+diff --git a/src/hardware/vga_draw.cpp b/src/hardware/vga_draw.cpp
+index dd7ed8b..f9b5f36 100644
+--- a/src/hardware/vga_draw.cpp
++++ b/src/hardware/vga_draw.cpp
+@@ -36,6 +36,8 @@
+ #include "../gui/render_scalers.h"
+ #include "vga.h"
+ #include "pic.h"
++void PIC_RunWithPreservedScheduler(PIC_EventHandler, Bitu);
++#include <memory>
+ #include "jfont.h"
+ #include "menu.h"
+ #include "timer.h"
+@@ -8491,6 +8493,27 @@ void VGA_SetupDrawing(Bitu /*val*/) {
+ 		BiosLogoHookVGADrawLine();
+ }
+ 
++// Rebuild host output and all mode-specific line handlers, including those
++// absent from the legacy savestate enum, without consuming or rescheduling any
++// of the loaded guest frame. POD_Load_VGA_Draw already relocated its pointers.
++void VGA_RestoreDrawingPhase() {
++    struct SavedPhase {
++        VGA_Draw draw = vga.draw;
++        double fps = vga_fps;
++        double time_base = vga_mode_time_base;
++        int frames_since_base = vga_mode_frames_since_time_base;
++        ~SavedPhase() {
++            vga.draw = draw;
++            vga_fps = fps;
++            vga_mode_time_base = time_base;
++            vga_mode_frames_since_time_base = frames_since_base;
++        }
++    };
++    // VGA_Draw includes the large font buffer; do not put it on the CPU stack.
++    const std::unique_ptr<SavedPhase> phase(new SavedPhase());
++    PIC_RunWithPreservedScheduler(VGA_SetupDrawing, 0);
++}
++
+ void VGA_KillDrawing(void) {
+ 	PIC_RemoveEvents(VGA_DrawSingleLine);
+ 	PIC_RemoveEvents(VGA_DrawEGASingleLine);
+@@ -8709,6 +8732,12 @@ void POD_Save_VGA_Draw( std::ostream& stream )
+ 	WRITE_POD( &temp, temp );
+ 	WRITE_POD( &FontMask, FontMask );
+ 	WRITE_POD( &bg_color_index, bg_color_index );
++	// The vertical scheduler corrects drift from these globals. Restoring
++	// queued PIC events without their phase reference changes later frames.
++	WRITE_POD( &vga_fps, vga_fps );
++	WRITE_POD( &vga_mode_time_base, vga_mode_time_base );
++	WRITE_POD( &vga_mode_frames_since_time_base, vga_mode_frames_since_time_base );
++
+ }
+ 
+ 
+@@ -8767,6 +8796,12 @@ void POD_Load_VGA_Draw( std::istream& stream )
+ 	READ_POD( &temp, temp );
+ 	READ_POD( &FontMask, FontMask );
+ 	READ_POD( &bg_color_index, bg_color_index );
++	// The vertical scheduler corrects drift from these globals. Restoring
++	// queued PIC events without their phase reference changes later frames.
++	READ_POD( &vga_fps, vga_fps );
++	READ_POD( &vga_mode_time_base, vga_mode_time_base );
++	READ_POD( &vga_mode_frames_since_time_base, vga_mode_frames_since_time_base );
++
+ 
+ 	//**********************************************
+ 	//**********************************************
+diff --git a/src/ints/mouse.cpp b/src/ints/mouse.cpp
+index 84ada2d..0ae2528 100644
+--- a/src/ints/mouse.cpp
++++ b/src/ints/mouse.cpp
 @@ -43,6 +43,10 @@
  #include "control.h"
  #include "SDL.h"
@@ -3600,7 +4116,7 @@ diff -ruN a/src/ints/mouse.cpp b/src/ints/mouse.cpp
  #if defined(_MSC_VER)
  # pragma warning(disable:4244) /* const fmath::local::uint64_t to double possible loss of data */
  #endif
-@@ -110,8 +114,15 @@
+@@ -110,8 +114,15 @@ static Bitu call_mouse_bd = 0;
  static Bitu call_int33 = 0;
  static Bitu call_int74 = 0;
  static Bitu call_ps2, call_uir = 0;
@@ -3616,7 +4132,7 @@ diff -ruN a/src/ints/mouse.cpp b/src/ints/mouse.cpp
      if (call_mouse_bd != 0) {
          CALLBACK_DeAllocate(call_mouse_bd);
          call_mouse_bd = 0;
-@@ -1341,6 +1352,179 @@
+@@ -1341,6 +1352,179 @@ void Mouse_WheelMoved(int32_t scroll) {
  	mouse.last_scrolled_y=POS_Y;
  }
  
@@ -3796,7 +4312,7 @@ diff -ruN a/src/ints/mouse.cpp b/src/ints/mouse.cpp
  static void Mouse_SetMickeyPixelRate(int16_t px, int16_t py){
      if ((px!=0) && (py!=0)) {
          mouse.mickeysPerPixel_x  = (float)px/X_MICKEY;
-@@ -1544,6 +1728,9 @@
+@@ -1544,6 +1728,9 @@ void Mouse_AfterNewVideoMode(bool setmode) {
  
  //Much too empty, Mouse_NewVideoMode contains stuff that should be in here
  static void Mouse_Reset(void) {
@@ -3806,7 +4322,7 @@ diff -ruN a/src/ints/mouse.cpp b/src/ints/mouse.cpp
      Mouse_BeforeNewVideoMode(false);
      Mouse_AfterNewVideoMode(false);
      Mouse_SetMickeyPixelRate(8,16);
-@@ -2517,6 +2704,9 @@
+@@ -2517,6 +2704,9 @@ void MOUSE_Startup(Section *sec) {
  
      // Wasteland needs low(seg(int33))!=0 and low(ofs(int33))!=0
      real_writed(0,0x33<<2,i33loc);
@@ -3816,10 +4332,11 @@ diff -ruN a/src/ints/mouse.cpp b/src/ints/mouse.cpp
  
      call_mouse_bd=CALLBACK_Allocate();
      CALLBACK_Setup(call_mouse_bd,&MOUSE_BD_Handler,CB_RETF8,
-diff -ruN a/src/misc/savestates.cpp b/src/misc/savestates.cpp
---- a/src/misc/savestates.cpp	2026-10-20 12:05:03.000000000 -0400
-+++ b/src/misc/savestates.cpp	2026-10-27 17:48:37.134145959 -0400
-@@ -1,935 +1,979 @@
+diff --git a/src/misc/savestates.cpp b/src/misc/savestates.cpp
+index 27545af..496d1d2 100644
+--- a/src/misc/savestates.cpp
++++ b/src/misc/savestates.cpp
+@@ -1,935 +1,987 @@
 -#include <stdio.h>
 -#include <stdlib.h>
 -#include <sys/stat.h>
@@ -3889,6 +4406,7 @@ diff -ruN a/src/misc/savestates.cpp b/src/misc/savestates.cpp
 +#include "shell.h"
 +#include "cross.h"
 +#include "render.h"
++#include "vga.h"
 +#include "mapper.h"
 +#include "control.h"
 +#include "logging.h"
@@ -5709,6 +6227,13 @@ diff -ruN a/src/misc/savestates.cpp b/src/misc/savestates.cpp
 +
 +#if defined(C_DEBUG) && defined(C_DOSBOX_AGENT)
 +bool AGENT_StateFile(const std::string& path, bool load, std::string* error) {
++    // Until the pending register-driven mode change has executed, the old
++    // frame's line handler cannot be reconstructed from the new registers.
++    // Refuse before touching the destination or global save/load controls.
++    if (!load && vga.draw.resizing) {
++        if (error) *error = "VGA mode change is pending; checkpoint refused";
++        return false;
++    }
 +    const bool old_file = use_save_file, old_remark = noremark_save_state;
 +    const bool old_force = force_load_state;
 +    const std::string old_name = savefilename;
@@ -5725,9 +6250,11 @@ diff -ruN a/src/misc/savestates.cpp b/src/misc/savestates.cpp
 +    return agent_state_error.empty();
 +}
 +#endif
-diff -ruN a/tests/agent_headless/MOUSEVID.asm b/tests/agent_headless/MOUSEVID.asm
---- a/tests/agent_headless/MOUSEVID.asm	1969-12-31 19:00:00.000000000 -0500
-+++ b/tests/agent_headless/MOUSEVID.asm	2026-10-27 17:48:37.134261563 -0400
+diff --git a/tests/agent_headless/MOUSEVID.asm b/tests/agent_headless/MOUSEVID.asm
+new file mode 100644
+index 0000000..18a2649
+--- /dev/null
++++ b/tests/agent_headless/MOUSEVID.asm
 @@ -0,0 +1,257 @@
 +; Real DOS/INT33 acceptance fixture. Build: nasm -f bin MOUSEVID.asm -o MOUSEVID.COM
 +; All offsets below are runtime CS-relative offsets (COM origin = 0100h).
@@ -5986,9 +6513,11 @@ diff -ruN a/tests/agent_headless/MOUSEVID.asm b/tests/agent_headless/MOUSEVID.as
 +command_sequence:   dw 0
 +    times 0840h - ($ - $$ + 0100h) db 0
 +command:            dw 0
-diff -ruN a/tests/agent_headless/verify_headless.py b/tests/agent_headless/verify_headless.py
---- a/tests/agent_headless/verify_headless.py	1969-12-31 19:00:00.000000000 -0500
-+++ b/tests/agent_headless/verify_headless.py	2026-10-27 17:48:37.134279350 -0400
+diff --git a/tests/agent_headless/verify_headless.py b/tests/agent_headless/verify_headless.py
+new file mode 100644
+index 0000000..11087f2
+--- /dev/null
++++ b/tests/agent_headless/verify_headless.py
 @@ -0,0 +1,222 @@
 +#!/usr/bin/env python3
 +"""Exercise the real emulator through inherited pipes; never mock DOS/INT33.
@@ -6212,9 +6741,11 @@ diff -ruN a/tests/agent_headless/verify_headless.py b/tests/agent_headless/verif
 +
 +if __name__=='__main__':
 +    raise SystemExit(main())
-diff -ruN a/tools/headless_agent.py b/tools/headless_agent.py
---- a/tools/headless_agent.py	1969-12-31 19:00:00.000000000 -0500
-+++ b/tools/headless_agent.py	2026-10-27 17:48:37.134403597 -0400
+diff --git a/tools/headless_agent.py b/tools/headless_agent.py
+new file mode 100644
+index 0000000..31561fd
+--- /dev/null
++++ b/tools/headless_agent.py
 @@ -0,0 +1,212 @@
 +#!/usr/bin/env python3
 +"""Launch a trusted DOS fixture using dedicated inherited POSIX RPC pipes.
