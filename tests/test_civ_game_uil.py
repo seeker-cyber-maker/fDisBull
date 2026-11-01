@@ -213,7 +213,13 @@ def test_chieftain_city_starts_with_original_treasury_and_no_garrison():
     assert backend.state["$difficulty"] == 0
     assert backend.state["$unit_count"] == 0
     assert backend.state["$unit_last"] == 0
+    assert backend.state["$production"] == 1
+    assert backend.state["$unit_cost"] == 1
     assert _act(backend, "open", "world-city")["status"] == "success"
+    assert _act(backend, "activate", "city-change")["status"] == "success"
+    assert _act(backend, "build", "build-settlers")["status"] == "success"
+    assert backend.state["$production"] == 0
+    assert backend.state["$unit_cost"] == 4
     assert _act(backend, "buy", "city-buy")["status"] == "rejected"
     assert backend.state["$buy_price"] == 0
     assert backend.state["$shield_box"] == 0
@@ -253,15 +259,16 @@ def test_city_buy_computes_rush_price_and_commits_shields():
     assert _act(backend, "open", "world-city")["status"] == "success"
     assert backend.state["$money"] == 1500
     assert backend.state["$shield_box"] == 0
-    assert backend.state["$unit_cost"] == 4
+    assert backend.state["$production"] == 1
+    assert backend.state["$unit_cost"] == 1
     assert _act(backend, "buy", "city-buy")["status"] == "success"
-    assert backend.state["$buy_price"] == 320
-    assert backend.state["$shield_box"] == 40
-    assert backend.state["$money"] == 1180
+    assert backend.state["$buy_price"] == 50
+    assert backend.state["$shield_box"] == 10
+    assert backend.state["$money"] == 1450
     assert _act(backend, "buy", "city-buy")["status"] == "success"
     assert backend.state["$buy_price"] == 0
-    assert backend.state["$shield_box"] == 40
-    assert backend.state["$money"] == 1180
+    assert backend.state["$shield_box"] == 10
+    assert backend.state["$money"] == 1450
 
 
 def test_city_buy_marketplace_doubles_raw_and_commits_shields():

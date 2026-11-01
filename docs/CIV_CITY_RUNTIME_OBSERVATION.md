@@ -104,6 +104,11 @@ in the run's artifact table before export.
   `cand[show_menu(...) + 1]`.
 - The `A` auto-build toggle and the `a` unit-list cursor still lack a runtime
   exercise; the scene models them from the source and dispatch only.
+- A later founding run read the first city record at `DS:0x70EC`: Palace bit
+  set, `x=61`, `y=14`, `status=0`, `size=1`, `production=1` (Militia),
+  `food_box=0`, `shield_box=0`, `owner=1`, both `garrison` slots `-1` (empty),
+  and `money[1]=50` at `DS:B1D6`. Receipt:
+  `docs/evidence/civ-city-founding-state/`.
 
 ## Debugger scene overlay
 

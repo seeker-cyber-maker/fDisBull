@@ -133,9 +133,9 @@ carries every field and its evidence; the important groups are:
 | `$view_x`, `$view_y` | `u8` | DGROUP:D4CC/D75E; Civ64 SCENES-PLAY 3 | viewport projection |
 | `$selected_city` | `u8` | selector into DGROUP:70EC records | declared index |
 | `$selected_unit` | `u16` | selector into DGROUP:81D4 records | declared index |
-| `$production` | `i16` | DGROUP:70EC + city*1Ch + 09h; civd `struct_city.md`, CITYMGT.C:1444 | unit codes 0/1 and MarketPlace -5 in this scene |
+| `$production` | `i16` | DGROUP:70EC + city*1Ch + 09h; civd `struct_city.md`, CITYMGT.C:1444 | founding city 1 (Militia); chooser writes 0/1 and MarketPlace -5 |
 | `$shield_box` | `i16` | DGROUP:70EC + city*1Ch + 0Eh; CITYMGT.C:1433 | committed as `10*cost` |
-| `$money`, `$unit_cost` | `i32`, `u16` | `money[selected_owner]`; `utypes[production].cost` at DGROUP:112A; CITYMGT.C:1405, 1428-1434 | Chieftain 50, other tiers 0; Settlers 4, Militia 1 |
+| `$money`, `$unit_cost` | `i32`, `u16` | `money[selected_owner]`; `utypes[production].cost` at DGROUP:112A; CITYMGT.C:1405, 1428-1434 | Chieftain 50, other tiers 0; founding Militia 1, Settlers 4 |
 | `$improvement_cost`, `$improvement_index` | `u16`, `u8` | `improvements[-production].cost` at DGROUP:0B9A; CITYMGT.C:1409-1412 | MarketPlace index 5, cost 8 |
 | `$buy_price`, `$buy_temp` | `u32` | rush-price scratch; CITYMGT.C:1406-1415 | derived per purchase |
 | `$auto_build` | `bool` | DGROUP:70EC + city*1Ch + 06h bit 10h; CITYMGT.C:1380-1381 | source-bound toggle; no live observation |
@@ -199,6 +199,28 @@ The scene deliberately does **not** load a save, render a map, execute a turn,
 run AI, resolve combat, advance technology or write a city record. Those are
 separate slices.
 
+## Live founding-state read
+
+A keyboard-only Chieftain/Roman route (474.03) founded Rome and then read the
+first city record from guest memory at `DS:70EC` and the treasury at
+`DS:B1D6`/`NEWGAME.C:151-161`:
+
+| Field | Live value |
+| --- | --- |
+| `buildings` | Palace (bit 0) |
+| `x`, `y` | 61, 14 |
+| `status`, `size` | 0, 1 |
+| `production` | 1 (Militia) |
+| `food_box`, `shield_box` | 0, 0 |
+| `owner` | 1 |
+| `garrison[0..1]` | -1, -1 (empty) |
+| `money[1]` | 50 |
+
+The scene now starts on the live founding state: Chieftain money 50, Militia
+production with unit cost 1, zero garrison and zero shields. The seeded
+three-unit fixture is only for the unit-list clamp. Receipt and frames:
+`docs/evidence/civ-city-founding-state/`.
+
 ## Entity index
 
 | Entity | Evidence |
@@ -255,7 +277,9 @@ remain static. No DOS screen was run for this slice.
 ## Limits and non-claims
 
 - Partial scene graph and state projection, not a full simulation.
-- No DOS execution, VGA rendering, palette/font/asset loading or input decoding.
+- The founding city record was read from one 474.03 run; no save load, turn,
+  buy or other edition was exercised. VGA rendering, palette/font/asset loading
+  and input decoding are outside the scene.
 - Difficulty and competition rows are bound to `cur_tier`, `civ_total` and
   `players`; tribe rows map dynamically for both groups; city auto-build
   toggles status bit `0x10`; unit-list navigation clamps over a seeded 3-unit

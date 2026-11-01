@@ -76,7 +76,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -88,7 +88,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -249,7 +249,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -261,7 +261,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -422,7 +422,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -434,7 +434,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -595,7 +595,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -607,7 +607,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -768,7 +768,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -780,7 +780,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -941,7 +941,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -953,7 +953,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -1114,7 +1114,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -1126,7 +1126,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -1287,7 +1287,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -1299,7 +1299,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -1460,7 +1460,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -1472,7 +1472,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -1645,7 +1645,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -1657,7 +1657,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -1830,7 +1830,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -1842,7 +1842,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -2015,7 +2015,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -2027,7 +2027,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -2200,7 +2200,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -2212,7 +2212,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -2385,7 +2385,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -2397,7 +2397,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -2588,7 +2588,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -2600,7 +2600,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -2791,7 +2791,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -2803,7 +2803,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -2994,7 +2994,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -3006,7 +3006,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -3197,7 +3197,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -3209,7 +3209,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -3400,7 +3400,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -3412,7 +3412,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -3595,7 +3595,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -3607,7 +3607,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -3849,7 +3849,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -3861,7 +3861,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -4022,7 +4022,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -4034,7 +4034,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -4195,7 +4195,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -4207,7 +4207,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -4398,7 +4398,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -4410,7 +4410,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -4589,7 +4589,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -4601,7 +4601,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -4774,7 +4774,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -4786,7 +4786,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -4959,7 +4959,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -4971,7 +4971,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -5150,7 +5150,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -5162,7 +5162,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -5341,7 +5341,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -5353,7 +5353,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -5538,7 +5538,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -5550,7 +5550,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -5861,7 +5861,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -5873,7 +5873,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -6174,7 +6174,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -6186,7 +6186,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -6377,7 +6377,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -6389,7 +6389,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -6568,7 +6568,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -6580,7 +6580,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -6771,7 +6771,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -6783,7 +6783,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -6969,7 +6969,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -6981,7 +6981,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -7172,7 +7172,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -7184,7 +7184,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -7359,7 +7359,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -7371,7 +7371,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -7562,7 +7562,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -7574,7 +7574,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -7765,7 +7765,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -7777,7 +7777,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -7968,7 +7968,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -7980,7 +7980,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -8171,7 +8171,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -8183,7 +8183,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -8374,7 +8374,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -8386,7 +8386,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -8577,7 +8577,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -8589,7 +8589,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -8780,7 +8780,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -8792,7 +8792,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -8983,7 +8983,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -8995,7 +8995,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",
@@ -9162,7 +9162,7 @@
     },
     "$production": {
      "type": "i16",
-     "initial": 0
+     "initial": 1
     },
     "$shield_box": {
      "type": "i16",
@@ -9174,7 +9174,7 @@
     },
     "$unit_cost": {
      "type": "u16",
-     "initial": 4
+     "initial": 1
     },
     "$improvement_cost": {
      "type": "u16",

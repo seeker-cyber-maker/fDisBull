@@ -1,7 +1,7 @@
 {
  "format": "fdisbull-civ-game-uil-provenance-1",
  "scene": "examples/civ/civ_game_scene.json",
- "scene_sha256": "172d3edbfa09e98205b16375088b8e6f44b0bdb818cc4ee36731174a0ba807f5",
+ "scene_sha256": "626ba7cb7c04de0c0f289073e723d2a2768ed572c96225b710f7c401f97d61e9",
  "edition": {
   "label": "pinned Civ 474.05 / Civ64 475.05 DOS root",
   "packed_sha256": "22de2748e3089793644c7e501e2a95b553010ddec34a7ff42f4395cf779c9c2a",
@@ -1013,8 +1013,8 @@
   {
    "name": "$production",
    "type": "i16",
-   "initial": 0,
-   "evidence": "DGROUP:70EC + city*1Ch + 09h; civd CITYMGT.C:1444 and reference/struct_city.md."
+   "initial": 1,
+   "evidence": "DGROUP:70EC + city*1Ch + 09h; civd CITYMGT.C:1444 and reference/struct_city.md. The live founded city holds 1 (Militia)."
   },
   {
    "name": "$shield_box",
@@ -1031,8 +1031,8 @@
   {
    "name": "$unit_cost",
    "type": "u16",
-   "initial": 4,
-   "evidence": "utypes[production].cost at DGROUP:112A + production*22h + 18h; Settlers 4 and Militia 1 in 47401/.03/.05."
+   "initial": 1,
+   "evidence": "utypes[production].cost at DGROUP:112A + production*22h + 18h; Settlers 4 and Militia 1 in 47401/.03/.05; the live founded city starts on Militia (1)."
   },
   {
    "name": "$improvement_cost",
