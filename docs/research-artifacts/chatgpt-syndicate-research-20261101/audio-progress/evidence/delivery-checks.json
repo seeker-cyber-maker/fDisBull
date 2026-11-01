@@ -1,0 +1,33 @@
+{
+  "status": "passed",
+  "date": "2026-10-31",
+  "github_contacted": false,
+  "summary_automatic_pairs": 41,
+  "summary_manual_timer_pairs": 1,
+  "summary_natural_pairs": 42,
+  "final_host_cases": 6,
+  "all_final_expected_results": true,
+  "all_final_children_reaped": true,
+  "core_results_equal_across_three_runs": true,
+  "final_harness_hash": "712d953ae60a7b18e757ad21d0048a68b3c33a9142ee271fe8a04014d59887ad",
+  "private_preparer_compiler_exit_zero_no_warnings": true,
+  "original_paths_rehashed_unchanged": 897,
+  "python_syntax": "passed",
+  "new_document_links": "passed",
+  "new_patch_fixture_application": "passed",
+  "new_patch_applied_files_exact": "passed",
+  "original_graphics_patch_unchanged": true,
+  "publish_helper_shell_syntax": "passed",
+  "publish_helper_executed": false,
+  "text_only_payload_scan": "passed",
+  "remote_base_recheck": false,
+  "full_repository_suite_run": false,
+  "claims_not_established": [
+    "Original shipped music hang",
+    "Live DOSBox zero-delay hang",
+    "Audible fidelity",
+    "Live end-of-track transition",
+    "New production API",
+    "Whole-game recovery"
+  ]
+}

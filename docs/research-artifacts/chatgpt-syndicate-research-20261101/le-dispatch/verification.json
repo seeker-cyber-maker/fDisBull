@@ -1,0 +1,1147 @@
+{
+  "source_sha256": "bfbed760ab2def1fbe9f73588dc5a24747826c9b7660d615b02a8847d92bf078",
+  "source_size": 518713,
+  "mapped_sha256": "98454a7d9845d423ec63c6393c31a3b093deb27c390e400148017bc15a69d51b",
+  "tool": "fdisbull 0.26.0",
+  "tool_source_commit": "8ba24d62b5010d3a6a5d604524aad72e2e047b77",
+  "main_checked_commit": "f94a5cd74b153b58f56c9fdb6c653d2e295f5ee6",
+  "analysis_version": 1,
+  "scope": "Conditional static exploration of original mapped bytes; no game execution, no automatic whole-program proof and no production tool modification.",
+  "before": {
+    "instructions": 22910,
+    "unique_instruction_bytes": 71411,
+    "functions": 384,
+    "xrefs": 27027
+  },
+  "after": {
+    "instructions": 62837,
+    "unique_instruction_bytes": 209709,
+    "instruction_length_sum": 209710,
+    "functions": 609,
+    "xrefs": 75275,
+    "executable_object_bytes": 261620,
+    "instruction_union_percent_of_executable_extent": 80.15786254873481
+  },
+  "integrity": {
+    "sqlite": "ok",
+    "all_baseline_instruction_encodings_preserved": true,
+    "mismatched_instruction_bytes": [],
+    "independent_decoder_length_disagreements": [],
+    "source_file_and_retained_container_unchanged": true,
+    "mapped_image_unchanged": true,
+    "original_single_byte_instruction_overlap_retained": true
+  },
+  "table_scope": {
+    "locally_bounded_unsigned_sites": 71,
+    "two_predicate_sites": 4,
+    "all_indirect_jumps": 83,
+    "indirect_calls": 18,
+    "unique_slots": 1200,
+    "distinct_initial_targets": 587,
+    "union_table_bytes": 4800,
+    "table_bytes_overlapping_stored_instructions": 0,
+    "table_instruction_overlap_addresses": []
+  },
+  "candidate_function_warning": "609 is a candidate count, not recovered original functions; 12 of the 17 explicit user seeds are switch case labels, 5 are startup/finalization entries.",
+  "conditional_assumptions": [
+    "The admitted path actually traverses the selected guard slice; bypass paths and whole-program reachability are not established.",
+    "Successful flat 32-bit memory accesses, the described instruction semantics, and no asynchronous mutation during the local slice.",
+    "Compared table values are the relocated initial image; runtime table integrity and mutation have not been established."
+  ],
+  "unqualified_sites": [
+    {
+      "address": "0x25a67",
+      "flow": "indirect_jump"
+    },
+    {
+      "address": "0x3bb73",
+      "flow": "indirect_jump"
+    },
+    {
+      "address": "0x3d644",
+      "flow": "indirect_call"
+    },
+    {
+      "address": "0x3d64a",
+      "flow": "indirect_call"
+    },
+    {
+      "address": "0x3d656",
+      "flow": "indirect_call"
+    },
+    {
+      "address": "0x3d65c",
+      "flow": "indirect_call"
+    },
+    {
+      "address": "0x3e472",
+      "flow": "indirect_call"
+    },
+    {
+      "address": "0x3e4ef",
+      "flow": "indirect_call"
+    },
+    {
+      "address": "0x3e50f",
+      "flow": "indirect_call"
+    },
+    {
+      "address": "0x3e526",
+      "flow": "indirect_call"
+    },
+    {
+      "address": "0x3e54b",
+      "flow": "indirect_call"
+    },
+    {
+      "address": "0x3e57a",
+      "flow": "indirect_call"
+    },
+    {
+      "address": "0x3e595",
+      "flow": "indirect_call"
+    },
+    {
+      "address": "0x3e5b0",
+      "flow": "indirect_call"
+    },
+    {
+      "address": "0x3e5df",
+      "flow": "indirect_call"
+    },
+    {
+      "address": "0x3e8c6",
+      "flow": "indirect_call"
+    },
+    {
+      "address": "0x3f605",
+      "flow": "indirect_call"
+    },
+    {
+      "address": "0x3f872",
+      "flow": "indirect_call"
+    },
+    {
+      "address": "0x3f925",
+      "flow": "indirect_call"
+    },
+    {
+      "address": "0x3f968",
+      "flow": "indirect_call"
+    },
+    {
+      "address": "0x41fd2",
+      "flow": "indirect_jump"
+    },
+    {
+      "address": "0x4257d",
+      "flow": "indirect_jump"
+    },
+    {
+      "address": "0x428f0",
+      "flow": "indirect_jump"
+    },
+    {
+      "address": "0x42b98",
+      "flow": "indirect_jump"
+    },
+    {
+      "address": "0x42d70",
+      "flow": "indirect_jump"
+    },
+    {
+      "address": "0x4d94f",
+      "flow": "indirect_jump"
+    }
+  ],
+  "tables": [
+    {
+      "dispatch": "0x10379",
+      "kind": "unsigned_guard",
+      "guard": "0x1036b",
+      "slice_start": "0x10362",
+      "escape": "0x10441",
+      "table": "0x10344",
+      "entries": 6,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x10779",
+      "kind": "unsigned_guard",
+      "guard": "0x1075e",
+      "slice_start": "0x1074f",
+      "escape": "0x10d3d",
+      "table": "0x10550",
+      "entries": 17,
+      "distinct_initial_targets": 11,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x10c91",
+      "kind": "unsigned_guard",
+      "guard": "0x10c82",
+      "slice_start": "0x10c75",
+      "escape": "0x10d15",
+      "table": "0x10594",
+      "entries": 17,
+      "distinct_initial_targets": 3,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x11bf7",
+      "kind": "unsigned_guard",
+      "guard": "0x11bea",
+      "slice_start": "0x11bcd",
+      "escape": "0x11cd2",
+      "table": "0x11a24",
+      "entries": 16,
+      "distinct_initial_targets": 5,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x11faf",
+      "kind": "unsigned_guard",
+      "guard": "0x11f90",
+      "slice_start": "0x11f70",
+      "escape": "0x11fcf",
+      "table": "0x11e40",
+      "entries": 6,
+      "distinct_initial_targets": 6,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x12076",
+      "kind": "unsigned_guard",
+      "guard": "0x1205a",
+      "slice_start": "0x12044",
+      "escape": "0x1212e",
+      "table": "0x11e58",
+      "entries": 17,
+      "distinct_initial_targets": 10,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x124ae",
+      "kind": "unsigned_guard",
+      "guard": "0x12490",
+      "slice_start": "0x12483",
+      "escape": "0x12597",
+      "table": "0x123b0",
+      "entries": 17,
+      "distinct_initial_targets": 8,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x126a0",
+      "kind": "unsigned_guard",
+      "guard": "0x12682",
+      "slice_start": "0x12673",
+      "escape": "0x12799",
+      "table": "0x125a0",
+      "entries": 17,
+      "distinct_initial_targets": 9,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x1293e",
+      "kind": "unsigned_guard",
+      "guard": "0x1292f",
+      "slice_start": "0x1292f",
+      "escape": "0x13734",
+      "table": "0x127b8",
+      "entries": 6,
+      "distinct_initial_targets": 5,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x12dc1",
+      "kind": "unsigned_guard",
+      "guard": "0x12db4",
+      "slice_start": "0x12db1",
+      "escape": "0x13734",
+      "table": "0x127d0",
+      "entries": 43,
+      "distinct_initial_targets": 12,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x13931",
+      "kind": "unsigned_guard",
+      "guard": "0x13924",
+      "slice_start": "0x13921",
+      "escape": "0x144e0",
+      "table": "0x13794",
+      "entries": 6,
+      "distinct_initial_targets": 5,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x13b89",
+      "kind": "unsigned_guard",
+      "guard": "0x13b80",
+      "slice_start": "0x13b6d",
+      "escape": "0x144e0",
+      "table": "0x137ac",
+      "entries": 4,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x13e2d",
+      "kind": "unsigned_guard",
+      "guard": "0x13e20",
+      "slice_start": "0x13e1d",
+      "escape": "0x144e0",
+      "table": "0x137bc",
+      "entries": 43,
+      "distinct_initial_targets": 10,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x146f4",
+      "kind": "unsigned_guard",
+      "guard": "0x146e7",
+      "slice_start": "0x146e4",
+      "escape": "0x150ec",
+      "table": "0x14550",
+      "entries": 6,
+      "distinct_initial_targets": 5,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x14a5a",
+      "kind": "unsigned_guard",
+      "guard": "0x14a4d",
+      "slice_start": "0x14a4a",
+      "escape": "0x150ec",
+      "table": "0x14568",
+      "entries": 43,
+      "distinct_initial_targets": 9,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x15d74",
+      "kind": "unsigned_guard",
+      "guard": "0x15d67",
+      "slice_start": "0x15d5a",
+      "escape": "0x16208",
+      "table": "0x15c0c",
+      "entries": 13,
+      "distinct_initial_targets": 11,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x15e6c",
+      "kind": "unsigned_guard",
+      "guard": "0x15e63",
+      "slice_start": "0x15e5e",
+      "escape": "0x15e92",
+      "table": "0x15c40",
+      "entries": 8,
+      "distinct_initial_targets": 2,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x1660a",
+      "kind": "unsigned_guard",
+      "guard": "0x165fd",
+      "slice_start": "0x165f9",
+      "escape": "0x1691e",
+      "table": "0x164e4",
+      "entries": 9,
+      "distinct_initial_targets": 9,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x166e8",
+      "kind": "unsigned_guard",
+      "guard": "0x166d6",
+      "slice_start": "0x166bf",
+      "escape": "0x1691e",
+      "table": "0x16508",
+      "entries": 17,
+      "distinct_initial_targets": 6,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x16ba6",
+      "kind": "unsigned_guard",
+      "guard": "0x16b99",
+      "slice_start": "0x16b95",
+      "escape": "0x16d16",
+      "table": "0x16a44",
+      "entries": 9,
+      "distinct_initial_targets": 8,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x16c1e",
+      "kind": "unsigned_guard",
+      "guard": "0x16c0f",
+      "slice_start": "0x16bf8",
+      "escape": "0x16cd1",
+      "table": "0x16a68",
+      "entries": 17,
+      "distinct_initial_targets": 6,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x1711d",
+      "kind": "unsigned_guard",
+      "guard": "0x17112",
+      "slice_start": "0x17106",
+      "escape": "0x1717b",
+      "table": "0x17008",
+      "entries": 17,
+      "distinct_initial_targets": 2,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x17159",
+      "kind": "unsigned_guard",
+      "guard": "0x17146",
+      "slice_start": "0x17141",
+      "escape": "0x1717b",
+      "table": "0x1704c",
+      "entries": 17,
+      "distinct_initial_targets": 2,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x171bf",
+      "kind": "unsigned_guard",
+      "guard": "0x171b4",
+      "slice_start": "0x17192",
+      "escape": "0x171ed",
+      "table": "0x17090",
+      "entries": 17,
+      "distinct_initial_targets": 3,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x172b9",
+      "kind": "unsigned_guard",
+      "guard": "0x172ae",
+      "slice_start": "0x172a1",
+      "escape": "0x172f9",
+      "table": "0x17278",
+      "entries": 10,
+      "distinct_initial_targets": 5,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x17e75",
+      "kind": "unsigned_guard",
+      "guard": "0x17e68",
+      "slice_start": "0x17e59",
+      "escape": "0x180ba",
+      "table": "0x175b0",
+      "entries": 4,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x18270",
+      "kind": "unsigned_guard",
+      "guard": "0x18263",
+      "slice_start": "0x18260",
+      "escape": "0x18537",
+      "table": "0x18238",
+      "entries": 4,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x1b619",
+      "kind": "unsigned_guard",
+      "guard": "0x1b609",
+      "slice_start": "0x1b600",
+      "escape": "0x1bbbc",
+      "table": "0x1b5ac",
+      "entries": 7,
+      "distinct_initial_targets": 7,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x1c0b0",
+      "kind": "unsigned_guard",
+      "guard": "0x1c0a0",
+      "slice_start": "0x1c084",
+      "escape": "0x1c202",
+      "table": "0x1be1c",
+      "entries": 16,
+      "distinct_initial_targets": 5,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x1c3d9",
+      "kind": "unsigned_guard",
+      "guard": "0x1c3cc",
+      "slice_start": "0x1c3bd",
+      "escape": "0x1c7c0",
+      "table": "0x1be5c",
+      "entries": 6,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x1c9ef",
+      "kind": "unsigned_guard",
+      "guard": "0x1c9e0",
+      "slice_start": "0x1c9d9",
+      "escape": "0x1cc3c",
+      "table": "0x1be74",
+      "entries": 17,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x1cd26",
+      "kind": "unsigned_guard",
+      "guard": "0x1cd17",
+      "slice_start": "0x1cd13",
+      "escape": "0x1d035",
+      "table": "0x1cc54",
+      "entries": 45,
+      "distinct_initial_targets": 15,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x1d596",
+      "kind": "unsigned_guard",
+      "guard": "0x1d58d",
+      "slice_start": "0x1d58a",
+      "escape": "0x1d5cf",
+      "table": "0x1d390",
+      "entries": 42,
+      "distinct_initial_targets": 2,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x1daa1",
+      "kind": "unsigned_guard",
+      "guard": "0x1da84",
+      "slice_start": "0x1da7f",
+      "escape": "0x1dc01",
+      "table": "0x1d438",
+      "entries": 5,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x1e51a",
+      "kind": "unsigned_guard",
+      "guard": "0x1e4eb",
+      "slice_start": "0x1e4e4",
+      "escape": "0x1ea0c",
+      "table": "0x1e4b0",
+      "entries": 10,
+      "distinct_initial_targets": 9,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x1ebdd",
+      "kind": "unsigned_guard",
+      "guard": "0x1ebc9",
+      "slice_start": "0x1eba6",
+      "escape": "0x1fb10",
+      "table": "0x1eaa8",
+      "entries": 53,
+      "distinct_initial_targets": 28,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x21874",
+      "kind": "unsigned_guard",
+      "guard": "0x21867",
+      "slice_start": "0x2185e",
+      "escape": "0x227d9",
+      "table": "0x1fb50",
+      "entries": 25,
+      "distinct_initial_targets": 11,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x27219",
+      "kind": "unsigned_guard",
+      "guard": "0x2720c",
+      "slice_start": "0x27201",
+      "escape": "0x272a8",
+      "table": "0x26eb0",
+      "entries": 13,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x27408",
+      "kind": "unsigned_guard",
+      "guard": "0x273f9",
+      "slice_start": "0x273f0",
+      "escape": "0x2748b",
+      "table": "0x27360",
+      "entries": 23,
+      "distinct_initial_targets": 17,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x2b971",
+      "kind": "unsigned_guard",
+      "guard": "0x2b964",
+      "slice_start": "0x2b95f",
+      "escape": "0x2c201",
+      "table": "0x2b85c",
+      "entries": 43,
+      "distinct_initial_targets": 37,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x2bdd2",
+      "kind": "unsigned_guard",
+      "guard": "0x2bdc1",
+      "slice_start": "0x2bdb3",
+      "escape": "0x2c201",
+      "table": "0x2b908",
+      "entries": 4,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x2be43",
+      "kind": "unsigned_guard",
+      "guard": "0x2be34",
+      "slice_start": "0x2be2d",
+      "escape": "0x2c201",
+      "table": "0x2b918",
+      "entries": 4,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x2be86",
+      "kind": "unsigned_guard",
+      "guard": "0x2be77",
+      "slice_start": "0x2be73",
+      "escape": "0x2c201",
+      "table": "0x2b928",
+      "entries": 4,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x2c402",
+      "kind": "unsigned_guard",
+      "guard": "0x2c3f0",
+      "slice_start": "0x2c3e9",
+      "escape": "0x2c4c5",
+      "table": "0x2c340",
+      "entries": 17,
+      "distinct_initial_targets": 9,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x2cc9c",
+      "kind": "unsigned_guard",
+      "guard": "0x2cc8d",
+      "slice_start": "0x2cc83",
+      "escape": "0x2d0ce",
+      "table": "0x2cad8",
+      "entries": 6,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x2cd04",
+      "kind": "unsigned_guard",
+      "guard": "0x2ccf5",
+      "slice_start": "0x2ccf5",
+      "escape": "0x2d012",
+      "table": "0x2caf0",
+      "entries": 20,
+      "distinct_initial_targets": 16,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x2d397",
+      "kind": "unsigned_guard",
+      "guard": "0x2d388",
+      "slice_start": "0x2d384",
+      "escape": "0x2d5f4",
+      "table": "0x2d2c0",
+      "entries": 45,
+      "distinct_initial_targets": 19,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x2dced",
+      "kind": "unsigned_guard",
+      "guard": "0x2dcde",
+      "slice_start": "0x2dcd4",
+      "escape": "0x2e1d6",
+      "table": "0x2d5fc",
+      "entries": 5,
+      "distinct_initial_targets": 3,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x2e4ce",
+      "kind": "unsigned_guard",
+      "guard": "0x2e4c3",
+      "slice_start": "0x2e4be",
+      "escape": "0x2e4e9",
+      "table": "0x2e480",
+      "entries": 5,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x2e58d",
+      "kind": "unsigned_guard",
+      "guard": "0x2e57e",
+      "slice_start": "0x2e57b",
+      "escape": "0x2e771",
+      "table": "0x2e540",
+      "entries": 5,
+      "distinct_initial_targets": 5,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x2e7cd",
+      "kind": "unsigned_guard",
+      "guard": "0x2e7be",
+      "slice_start": "0x2e7bb",
+      "escape": "0x2ea0b",
+      "table": "0x2e788",
+      "entries": 5,
+      "distinct_initial_targets": 5,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x2eafd",
+      "kind": "unsigned_guard",
+      "guard": "0x2eaee",
+      "slice_start": "0x2eaeb",
+      "escape": "0x2ecf9",
+      "table": "0x2eab8",
+      "entries": 5,
+      "distinct_initial_targets": 5,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x2f880",
+      "kind": "unsigned_guard",
+      "guard": "0x2f873",
+      "slice_start": "0x2f865",
+      "escape": "0x2f8d6",
+      "table": "0x2f784",
+      "entries": 20,
+      "distinct_initial_targets": 16,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x2f9c8",
+      "kind": "unsigned_guard",
+      "guard": "0x2f9bb",
+      "slice_start": "0x2f9bb",
+      "escape": "0x2fa07",
+      "table": "0x2f980",
+      "entries": 4,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x2fdbb",
+      "kind": "unsigned_guard",
+      "guard": "0x2fdaf",
+      "slice_start": "0x2fd9d",
+      "escape": "0x2fdc3",
+      "table": "0x2fce0",
+      "entries": 16,
+      "distinct_initial_targets": 2,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x2ff0b",
+      "kind": "unsigned_guard",
+      "guard": "0x2feff",
+      "slice_start": "0x2feed",
+      "escape": "0x2ff13",
+      "table": "0x2fe2c",
+      "entries": 16,
+      "distinct_initial_targets": 2,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x31357",
+      "kind": "unsigned_guard",
+      "guard": "0x31348",
+      "slice_start": "0x31341",
+      "escape": "0x315d8",
+      "table": "0x31244",
+      "entries": 45,
+      "distinct_initial_targets": 2,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x313df",
+      "kind": "unsigned_guard",
+      "guard": "0x313cf",
+      "slice_start": "0x313b9",
+      "escape": "0x315d8",
+      "table": "0x312f8",
+      "entries": 17,
+      "distinct_initial_targets": 3,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x318ec",
+      "kind": "unsigned_guard",
+      "guard": "0x318df",
+      "slice_start": "0x318dc",
+      "escape": "0x31db3",
+      "table": "0x31774",
+      "entries": 45,
+      "distinct_initial_targets": 3,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x32003",
+      "kind": "unsigned_guard",
+      "guard": "0x31ff6",
+      "slice_start": "0x31fe6",
+      "escape": "0x3210f",
+      "table": "0x31f8c",
+      "entries": 11,
+      "distinct_initial_targets": 11,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x32d13",
+      "kind": "unsigned_guard",
+      "guard": "0x32d03",
+      "slice_start": "0x32cf1",
+      "escape": "0x32daf",
+      "table": "0x32cc4",
+      "entries": 4,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x3418c",
+      "kind": "unsigned_guard",
+      "guard": "0x3417f",
+      "slice_start": "0x34179",
+      "escape": "0x344a2",
+      "table": "0x34054",
+      "entries": 45,
+      "distinct_initial_targets": 43,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x3461e",
+      "kind": "unsigned_guard",
+      "guard": "0x34613",
+      "slice_start": "0x3460d",
+      "escape": "0x3464c",
+      "table": "0x34568",
+      "entries": 8,
+      "distinct_initial_targets": 8,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x35899",
+      "kind": "unsigned_guard",
+      "guard": "0x3588c",
+      "slice_start": "0x35883",
+      "escape": "0x35d05",
+      "table": "0x34ab0",
+      "entries": 8,
+      "distinct_initial_targets": 8,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x363c3",
+      "kind": "unsigned_guard",
+      "guard": "0x363ba",
+      "slice_start": "0x363b6",
+      "escape": "0x3643a",
+      "table": "0x36334",
+      "entries": 4,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x367b8",
+      "kind": "unsigned_guard",
+      "guard": "0x367ab",
+      "slice_start": "0x36794",
+      "escape": "0x36860",
+      "table": "0x36718",
+      "entries": 6,
+      "distinct_initial_targets": 6,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x3775c",
+      "kind": "unsigned_guard",
+      "guard": "0x3774f",
+      "slice_start": "0x37727",
+      "escape": "0x37852",
+      "table": "0x375c0",
+      "entries": 4,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x378bb",
+      "kind": "unsigned_guard",
+      "guard": "0x378b0",
+      "slice_start": "0x378ac",
+      "escape": "0x37be6",
+      "table": "0x375d0",
+      "entries": 12,
+      "distinct_initial_targets": 10,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x39940",
+      "kind": "unsigned_guard",
+      "guard": "0x39933",
+      "slice_start": "0x39912",
+      "escape": "0x39e88",
+      "table": "0x397d8",
+      "entries": 44,
+      "distinct_initial_targets": 25,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x3a3d6",
+      "kind": "unsigned_guard",
+      "guard": "0x3a3c7",
+      "slice_start": "0x3a3b8",
+      "escape": "0x3a52e",
+      "table": "0x3a340",
+      "entries": 19,
+      "distinct_initial_targets": 9,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x3aa2d",
+      "kind": "unsigned_guard",
+      "guard": "0x3aa20",
+      "slice_start": "0x3aa15",
+      "escape": "0x3b478",
+      "table": "0x3a920",
+      "entries": 20,
+      "distinct_initial_targets": 18,
+      "bound_result": "unsat",
+      "all_slots_match_LE_fixups": true,
+      "all_initial_target_starts_decoded": true
+    },
+    {
+      "dispatch": "0x4398c",
+      "kind": "two_predicates",
+      "table": "0x43992",
+      "entries": 4,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "infeasible_initial_slots": [],
+      "all_slots_match_LE_fixups": true
+    },
+    {
+      "dispatch": "0x4878e",
+      "kind": "two_predicates",
+      "table": "0x48794",
+      "entries": 4,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "infeasible_initial_slots": [
+        2
+      ],
+      "all_slots_match_LE_fixups": true
+    },
+    {
+      "dispatch": "0x488b7",
+      "kind": "two_predicates",
+      "table": "0x488bd",
+      "entries": 4,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "infeasible_initial_slots": [
+        2
+      ],
+      "all_slots_match_LE_fixups": true
+    },
+    {
+      "dispatch": "0x4a3a1",
+      "kind": "two_predicates",
+      "table": "0x4a3a7",
+      "entries": 4,
+      "distinct_initial_targets": 4,
+      "bound_result": "unsat",
+      "infeasible_initial_slots": [],
+      "all_slots_match_LE_fixups": true
+    }
+  ],
+  "stored_classifications": {
+    "code_data_overlap_bytes": 106,
+    "all_function_sources": {
+      "direct call": 591,
+      "user seed": 17,
+      "le_entry": 1
+    }
+  },
+  "captured_at_utc": "2026-10-31T01:17:38.484799+00:00",
+  "derived_analysis": {
+    "total": 384,
+    "states": {
+      "done": 351,
+      "partial": 14,
+      "pending": 19
+    },
+    "unregistered_decoded_function_entries": 225,
+    "warning": "Historical derived results were not refreshed into whole-program proofs. Local guard models are separate research evidence."
+  },
+  "native_game_execution": false,
+  "manually_injected_resolved_control_edges": 0
+}

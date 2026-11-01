@@ -1,0 +1,6038 @@
+[
+  {
+    "family": "hline-a",
+    "case": "remainder-0",
+    "args": [
+      0,
+      7,
+      10,
+      0
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 72,
+    "tail_indices": [
+      0
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "f05ac29fe1444225c23ad12755b6b3ee586dcd808e1912f329522fff0c819d34",
+    "buffer_sha256": "eaba359800ab14a44214ac008b8a9cb328d3c8ed71f2b600f9737628abffe413"
+  },
+  {
+    "family": "hline-a",
+    "case": "remainder-1",
+    "args": [
+      0,
+      8,
+      10,
+      1
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      1
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "ff835c70c38c62f43cae2a853c7f3cad422e3b1528ac6d456ce6720c19e55394",
+    "buffer_sha256": "1b33af24a6e6c67fbe52d0b4e5b200b5894298098a2b418a98041a51e051d7ca"
+  },
+  {
+    "family": "hline-a",
+    "case": "remainder-2",
+    "args": [
+      0,
+      9,
+      10,
+      2
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      2
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "b499ae58c4e297247e8d2536452efe6040ae70a5f70ac376d7db0b41a3bd0698",
+    "buffer_sha256": "e416ee3cd2eb5950257528d8b4655bd7b6c3670736886089120aad9ee2d6b588"
+  },
+  {
+    "family": "hline-a",
+    "case": "remainder-3",
+    "args": [
+      0,
+      10,
+      10,
+      3
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      3
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "b17c0bc69e7239890985059c7747d5351b8449b0527edd673e50a2cf71def4a2",
+    "buffer_sha256": "a14f5d11fe614186564d1a55edb5c802e8bf7d38273f8b5142e28ab2fffe19f3"
+  },
+  {
+    "family": "hline-a",
+    "case": "remainder-4",
+    "args": [
+      0,
+      11,
+      10,
+      4
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      4
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "487d890e084e8ecd34bf1528730af0c701562db892d5ebe2c1d42389289c8867",
+    "buffer_sha256": "f00081e85d3d1935c8ccaa27fd207a95a3c8cf9af6a009e53cc8a41d5e3091fc"
+  },
+  {
+    "family": "hline-a",
+    "case": "remainder-5",
+    "args": [
+      0,
+      12,
+      10,
+      5
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      5
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "77b62ac9273e57a2399fd3af1f2930ef8b663bf7b8bf28b4bdd19f7526f93c0d",
+    "buffer_sha256": "4aed0f5f2758d2250ef316b330d99968c00be9e24093e3633fa18a946ad9a7c3"
+  },
+  {
+    "family": "hline-a",
+    "case": "remainder-6",
+    "args": [
+      0,
+      13,
+      10,
+      6
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      6
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "8b8f025dc2e05420344eaa0cd4b5f149f80bcc51c16ffa547030d0e66e46633b",
+    "buffer_sha256": "77116d4317ad7d08610224fb7871873e83b2855e12323acb66611b919c499319"
+  },
+  {
+    "family": "hline-a",
+    "case": "remainder-7",
+    "args": [
+      0,
+      14,
+      10,
+      7
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      7
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "af59a6240fea00a281f604bce1fd48d8876886bba8f6723045d258fffba570af",
+    "buffer_sha256": "863b4538d20525ae2351e1269c7bb95cefa31eeab9aaad85d14e811a56a00829"
+  },
+  {
+    "family": "hline-a",
+    "case": "remainder-8",
+    "args": [
+      0,
+      15,
+      10,
+      8
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      8
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "0df8c5d0f8c6b8ffa4ecabeeb3bbeff0ca4af8f15ac3347e94b66dd4d2826c2f",
+    "buffer_sha256": "2b02511b17ae94d9c1c6713fcc2e0b75c242d5a3643d701d811a81f4dbfb0ef5"
+  },
+  {
+    "family": "hline-a",
+    "case": "remainder-9",
+    "args": [
+      0,
+      16,
+      10,
+      9
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      9
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "45391779e3c3d6fbfbd36fa7297bf6d415733471469b4c7a8d424d23b751c98e",
+    "buffer_sha256": "f968b6a081e88e09b3e6b86a8fabaace0f51f6686597fed84bf678b7ee148deb"
+  },
+  {
+    "family": "hline-a",
+    "case": "remainder-10",
+    "args": [
+      0,
+      17,
+      10,
+      10
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      10
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "2d659e3218a81908de622ffe1cdaf4231eea6261ea95207a3cb10394c99e1a9c",
+    "buffer_sha256": "8a0950b92bfe8b1551e80e364e35af91afefb64b200387bebd905423a4c90a21"
+  },
+  {
+    "family": "hline-a",
+    "case": "remainder-11",
+    "args": [
+      0,
+      18,
+      10,
+      11
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      11
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "f2c3937b122a35d4d458b56f8f34f77274d8c1c40645736d6975ad13dbaf9859",
+    "buffer_sha256": "58cd924bc0c0db5890688933b6793eedf79021a94d2cc03f81f66e160d8928fb"
+  },
+  {
+    "family": "hline-a",
+    "case": "remainder-12",
+    "args": [
+      0,
+      19,
+      10,
+      12
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "aa4c44763f71eebc7794b1e70670dd3ea592a61076845363a44d24c8e37fd923",
+    "buffer_sha256": "11d12c13c7258807009ef7113b3c24000faf27a091ff1dd553bca028b3d1b3ea"
+  },
+  {
+    "family": "hline-a",
+    "case": "remainder-13",
+    "args": [
+      0,
+      20,
+      10,
+      13
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      13
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "228089b09f99414889bbccf0ed1a413245d89bb46110aad008fb97ba14f2b816",
+    "buffer_sha256": "377a621c6146505dca5962585ed9b48cddcaf3bba63cc304db3e2f718a8866ff"
+  },
+  {
+    "family": "hline-a",
+    "case": "remainder-14",
+    "args": [
+      0,
+      21,
+      10,
+      14
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      14
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "a0e3e98eec3ec2d034d2bf739d90736815478fc6a0aa3e6eaf0a7feb644ddda4",
+    "buffer_sha256": "04f1d9b37c495019468870db3d69e5dc48615c9d89125edfc022c791802abf75"
+  },
+  {
+    "family": "hline-a",
+    "case": "remainder-15",
+    "args": [
+      0,
+      22,
+      10,
+      15
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      15
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "5b83c3539590872b57197946ff58d2c7c82ca59881847cefa95b65d956b33fb9",
+    "buffer_sha256": "408f9da93a51125805e334c8089f48f137c7cb0d957012f2fa31d4feb8c5775b"
+  },
+  {
+    "family": "hline-a",
+    "case": "remainder-16",
+    "args": [
+      0,
+      23,
+      10,
+      0
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      16
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "9f2c22c89688d5b812deb5176154322c44b235cc253e130d42696f1467c660bd",
+    "buffer_sha256": "5136a8579177daae35fba789a15628e36946ed6687d6eae7d8e24aa1448b110e"
+  },
+  {
+    "family": "hline-a",
+    "case": "color-0",
+    "args": [
+      3,
+      51,
+      17,
+      0
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "6c5ddfda8c5dc98db1ee5ce6deffbaa058ef87bcd764d73bcd9379682e6891f3",
+    "buffer_sha256": "c6c2968cc0b188837ac417c61586e46304567b8e6dc0150175bc12e96d3c9148"
+  },
+  {
+    "family": "hline-a",
+    "case": "color-1",
+    "args": [
+      3,
+      51,
+      17,
+      1
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "ad2c747bce248c6ff61281cb696b443c0b048c2edf5f511f4ac9ea4e03c5d653",
+    "buffer_sha256": "2e1097f0467c614e4eb4d50a63aea6dc2e1e28a88d457060da6b9f477ca37ea9"
+  },
+  {
+    "family": "hline-a",
+    "case": "color-2",
+    "args": [
+      3,
+      51,
+      17,
+      2
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "06fbd5bfcf118e8c8b74067f287bdd8ca3ec0e4e64893aa26ade6015bc91a477",
+    "buffer_sha256": "b7d158344e748827bde1898ce424b6c4f2c34e3cc99725efe0ff463aee0cec4c"
+  },
+  {
+    "family": "hline-a",
+    "case": "color-3",
+    "args": [
+      3,
+      51,
+      17,
+      3
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "8fe2b1808ca7f5160a31d2fe27d9f70deb1e22dbc2fd0e9e44074b27179e81ce",
+    "buffer_sha256": "b0c00b14fcadabea251b98ee6ffa96e6fec6075b03fa495f61145f28a8a01225"
+  },
+  {
+    "family": "hline-a",
+    "case": "color-4",
+    "args": [
+      3,
+      51,
+      17,
+      4
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "3f078aa94889a0f45c97096f6ba421e03b912b622bbfb81c04e3a24fcbc32b60",
+    "buffer_sha256": "67e68669cba18c8f15bd93553a44260a1996a444f4209d0e7321ef8f9e16d4fd"
+  },
+  {
+    "family": "hline-a",
+    "case": "color-5",
+    "args": [
+      3,
+      51,
+      17,
+      5
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "6c5c1e0397866a641667ac5652b81d10d3cc24813758be8e6265532e7f671751",
+    "buffer_sha256": "712b3e847531cb1c012b178b52609486f25f8658153b5279867150538de8eb47"
+  },
+  {
+    "family": "hline-a",
+    "case": "color-6",
+    "args": [
+      3,
+      51,
+      17,
+      6
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "4028acf58f14e3514e76dba51a2826ac9a51103b406e1c0d471c6faff861c2bb",
+    "buffer_sha256": "1030aa50b59c229f0a4ca06c3ce905a3670a03ebaf48ec5e83e36f34e139f23f"
+  },
+  {
+    "family": "hline-a",
+    "case": "color-7",
+    "args": [
+      3,
+      51,
+      17,
+      7
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "a7ab737cdc1d74fc09ba461a80453b556a69780ccac24313e094858c11972f45",
+    "buffer_sha256": "d5188e34848bec8dfc84804b578f48c722d6d1be3c3901c0644de7bae317ca57"
+  },
+  {
+    "family": "hline-a",
+    "case": "color-8",
+    "args": [
+      3,
+      51,
+      17,
+      8
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "0b4087e91ac0a42b1b558f1cfcad92c818f45a1d20d2d25a4e2ea16b5e17012f",
+    "buffer_sha256": "5c95e6985f165e2589287fe6cdb0a95b3e05b331223e1e679138f9406cae0a48"
+  },
+  {
+    "family": "hline-a",
+    "case": "color-9",
+    "args": [
+      3,
+      51,
+      17,
+      9
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "e6d07faa20730b09b6bf7d19bcd15ed9529f0df8780ea10a424dea2835f1e248",
+    "buffer_sha256": "089eaf060d2251781610062204affdc35a96c4a60622a2390b52e5f4b344add5"
+  },
+  {
+    "family": "hline-a",
+    "case": "color-10",
+    "args": [
+      3,
+      51,
+      17,
+      10
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "842ad61181540cdb0f48baed04815ce9d6cda19803199aa6ebfd096bd158b7c1",
+    "buffer_sha256": "e4fe9fbb178c62157757379c9b6dffbcff3a69011ef6fe0ef2c10a77749b1546"
+  },
+  {
+    "family": "hline-a",
+    "case": "color-11",
+    "args": [
+      3,
+      51,
+      17,
+      11
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "48373ea018951ce3519fe68b3094ad1d347f3ce808ded1b5951e376fc8d7c2b7",
+    "buffer_sha256": "49a53f7a4e1ffb6a81680cac124d29461290f97060b9dfabc971d82878647d60"
+  },
+  {
+    "family": "hline-a",
+    "case": "color-12",
+    "args": [
+      3,
+      51,
+      17,
+      12
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "304173b9a8325ec763509f4d28d6f0190887200aaafb07c762d19e79076a8cc2",
+    "buffer_sha256": "c070e96874c2b3b968d2b1f7e43a20c0ecc0e2292e42bd0a900d61621af7789c"
+  },
+  {
+    "family": "hline-a",
+    "case": "color-13",
+    "args": [
+      3,
+      51,
+      17,
+      13
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "078298757d77405fb293438232b4a93919b36ccaa95a215fb0f9d23d044bc548",
+    "buffer_sha256": "ea8f6392367f6860ef6ee9bb859249152ad2f95dddd9d890b153eb878ef4b140"
+  },
+  {
+    "family": "hline-a",
+    "case": "color-14",
+    "args": [
+      3,
+      51,
+      17,
+      14
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "f21232cf060278459030f934cb3a29eaa7bc9e05a0debfa0bf34a28bb1bd8078",
+    "buffer_sha256": "976d21abd03fca57a843cc3062cf9bbac4acea99fbb02f2ea5e1b9806b6ac7fa"
+  },
+  {
+    "family": "hline-a",
+    "case": "color-15",
+    "args": [
+      3,
+      51,
+      17,
+      15
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "013e87c87220e899a9fc5d7c2f452da59b342aca64e3743dcc93d13c0ba22fa0",
+    "buffer_sha256": "90b6c0ff5261f049a338058ef634f9114a477cdeea9dcbc986522cabf0a2c46a"
+  },
+  {
+    "family": "hline-a",
+    "case": "edge-0",
+    "args": [
+      -9,
+      17,
+      3,
+      7
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 82,
+    "tail_indices": [
+      10
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "c4346d0249cdbecfbdc5355521285565b7912e56a4854c3698a48a42cdae232e",
+    "buffer_sha256": "3ccd5fbbbc2cb3921eee7a63034341fc5d72b0f9e795367d214758724c58591f"
+  },
+  {
+    "family": "hline-a",
+    "case": "edge-1",
+    "args": [
+      635,
+      647,
+      399,
+      8
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 73,
+    "tail_indices": [
+      0
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "a69daa5c883fe826c615c8151e91483d897f9aae81a11d05d05485a0d8ce9026",
+    "buffer_sha256": "94afbf4f757d28a42da724d2d94b80294ac43b428666d9bec536615d8bc07cfc"
+  },
+  {
+    "family": "hline-a",
+    "case": "edge-2",
+    "args": [
+      17,
+      3,
+      20,
+      4
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 82,
+    "tail_indices": [
+      9
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "e514d8d8ac027966890f43746fbc0526bd97750fdd96d60f96667a7ec689bdfe",
+    "buffer_sha256": "74cc4a231549fa68be098cbec86e4d99a1045e4a0de1e78e146a7eeb32fd5525"
+  },
+  {
+    "family": "hline-a",
+    "case": "edge-3",
+    "args": [
+      3,
+      2,
+      10,
+      5
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 37,
+    "tail_indices": [],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "9c47f858581fcd552f2341c6f0c7a3b9f7dd92a04202c4c2548e848bcde58ac4",
+    "buffer_sha256": "5117cce57fb16567b6313fba9a88f29952938134501f079826c2423736d91f9e"
+  },
+  {
+    "family": "hline-a",
+    "case": "edge-4",
+    "args": [
+      -20,
+      -2,
+      4,
+      2
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 26,
+    "tail_indices": [],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "4277665c68dda337d44534545a1982ab5bdf54eab10cf65cd987bc89d34f1732",
+    "buffer_sha256": "5117cce57fb16567b6313fba9a88f29952938134501f079826c2423736d91f9e"
+  },
+  {
+    "family": "hline-a",
+    "case": "edge-5",
+    "args": [
+      5,
+      7,
+      500,
+      3
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 34,
+    "tail_indices": [],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "4a39e63d5a7a09a4c722761526849d666ad6ff38fe92c12794d659a4a5c16b82",
+    "buffer_sha256": "5117cce57fb16567b6313fba9a88f29952938134501f079826c2423736d91f9e"
+  },
+  {
+    "family": "hline-a",
+    "case": "edge-6",
+    "args": [
+      2,
+      19,
+      -1,
+      11
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 32,
+    "tail_indices": [],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "f5e371ff782a61f783446b54236e3538c1bed56437a1ffa28798567e42c75524",
+    "buffer_sha256": "5117cce57fb16567b6313fba9a88f29952938134501f079826c2423736d91f9e"
+  },
+  {
+    "family": "hline-a",
+    "case": "edge-7",
+    "args": [
+      3,
+      3,
+      4,
+      15
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 67,
+    "tail_indices": [],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "7b5615a822199b32203920c9173fad9291c923f03b90a8fdde9b61ad576380d1",
+    "buffer_sha256": "acf1317713d26f6a4e216cf27fe85c82873719453c909ce34c937e06c6758eda"
+  },
+  {
+    "family": "hline-a",
+    "case": "edge-8",
+    "args": [
+      1,
+      63,
+      7,
+      9
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 123,
+    "tail_indices": [
+      8
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "d199823dcde4207a1bae872bcfc66318e667308cb39326f07298efb60b9a6271",
+    "buffer_sha256": "1ccc579f3b26bd4de797c85a49a8e08de4cb818df33ec642be014fe4bc065696"
+  },
+  {
+    "family": "hline-a",
+    "case": "edge-9",
+    "args": [
+      4,
+      40,
+      3,
+      6
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      1
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "76ed55193a516582ca9d8be8140fab5c99bcf12e46799b289449a59a14ef0e83",
+    "buffer_sha256": "0c646ca1ce849cef7f9e42996d8288ffe62243f043cb252c92fe053f0dba80db"
+  },
+  {
+    "family": "hline-a",
+    "case": "translated-viewport",
+    "args": [
+      1,
+      37,
+      2,
+      9
+    ],
+    "viewport": [
+      25,
+      16,
+      50,
+      25
+    ],
+    "reason": "returned",
+    "steps": 95,
+    "tail_indices": [
+      15
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "918f27c61ec0e64efb3f4141ea06d3b9ca8e8b19ed6795f0a34ea7b04d0d7171",
+    "buffer_sha256": "48212cc2e27968de697f1c5a37283ce116a2303e66c1ba191c759f11d1b8f677"
+  },
+  {
+    "family": "hline-b",
+    "case": "remainder-0",
+    "args": [
+      0,
+      7,
+      10,
+      0
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 72,
+    "tail_indices": [
+      0
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "d31918a44efa5096c85213e0ac04fec0dbf20b091e3b8c5782968a7929aeb77c",
+    "buffer_sha256": "eaba359800ab14a44214ac008b8a9cb328d3c8ed71f2b600f9737628abffe413"
+  },
+  {
+    "family": "hline-b",
+    "case": "remainder-1",
+    "args": [
+      0,
+      8,
+      10,
+      1
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      1
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "5f21905222e51560da1cef35cd4f212d6d4d4090b96e957ccb781aa96593c22d",
+    "buffer_sha256": "1b33af24a6e6c67fbe52d0b4e5b200b5894298098a2b418a98041a51e051d7ca"
+  },
+  {
+    "family": "hline-b",
+    "case": "remainder-2",
+    "args": [
+      0,
+      9,
+      10,
+      2
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      2
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "3c1a799b5083c583a5fd6107773ffe969ac5d6829f5c2a46e8f334ebd84c2ed0",
+    "buffer_sha256": "e416ee3cd2eb5950257528d8b4655bd7b6c3670736886089120aad9ee2d6b588"
+  },
+  {
+    "family": "hline-b",
+    "case": "remainder-3",
+    "args": [
+      0,
+      10,
+      10,
+      3
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      3
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "8ced8bd96f5d8ffef32a79a17c68e156ee12b3351527d81036999fa16aaeda32",
+    "buffer_sha256": "a14f5d11fe614186564d1a55edb5c802e8bf7d38273f8b5142e28ab2fffe19f3"
+  },
+  {
+    "family": "hline-b",
+    "case": "remainder-4",
+    "args": [
+      0,
+      11,
+      10,
+      4
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      4
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "ad55e7ec0fe2326d68ea5cff1db92ffdf595302b91aa5aa94098a2f961a2b94c",
+    "buffer_sha256": "f00081e85d3d1935c8ccaa27fd207a95a3c8cf9af6a009e53cc8a41d5e3091fc"
+  },
+  {
+    "family": "hline-b",
+    "case": "remainder-5",
+    "args": [
+      0,
+      12,
+      10,
+      5
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      5
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "faf758c207fe063e792d188a45145296e87731e115b892469cd8df1fb8c50966",
+    "buffer_sha256": "4aed0f5f2758d2250ef316b330d99968c00be9e24093e3633fa18a946ad9a7c3"
+  },
+  {
+    "family": "hline-b",
+    "case": "remainder-6",
+    "args": [
+      0,
+      13,
+      10,
+      6
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      6
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "e3c26badc69a28d2065d8c7660c12a4aef6360c1bf1d65bea7d08a319370c4b5",
+    "buffer_sha256": "77116d4317ad7d08610224fb7871873e83b2855e12323acb66611b919c499319"
+  },
+  {
+    "family": "hline-b",
+    "case": "remainder-7",
+    "args": [
+      0,
+      14,
+      10,
+      7
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      7
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "000123eff91ae87f3fd5da93a5e36472d356e9ec67dfa1988dc7ab381915b774",
+    "buffer_sha256": "863b4538d20525ae2351e1269c7bb95cefa31eeab9aaad85d14e811a56a00829"
+  },
+  {
+    "family": "hline-b",
+    "case": "remainder-8",
+    "args": [
+      0,
+      15,
+      10,
+      8
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      8
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "1323cfe70f4c6973bdc94b60e33e7b0b6c423980d1953d02a5f0c5409a572d84",
+    "buffer_sha256": "2b02511b17ae94d9c1c6713fcc2e0b75c242d5a3643d701d811a81f4dbfb0ef5"
+  },
+  {
+    "family": "hline-b",
+    "case": "remainder-9",
+    "args": [
+      0,
+      16,
+      10,
+      9
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      9
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "da0fbac65f9cb80a4944adcc9ac28d03fb8aebf35b072f7ab402be0f986903cb",
+    "buffer_sha256": "f968b6a081e88e09b3e6b86a8fabaace0f51f6686597fed84bf678b7ee148deb"
+  },
+  {
+    "family": "hline-b",
+    "case": "remainder-10",
+    "args": [
+      0,
+      17,
+      10,
+      10
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      10
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "9fcbe97fbfba1e7685edd7ed4b4b053c6133987620813ca9acca2c4fc5655b8c",
+    "buffer_sha256": "8a0950b92bfe8b1551e80e364e35af91afefb64b200387bebd905423a4c90a21"
+  },
+  {
+    "family": "hline-b",
+    "case": "remainder-11",
+    "args": [
+      0,
+      18,
+      10,
+      11
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      11
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "520e98629c22a11b6c3d8f756054720a6479de0df6fbe856433bba04feb3fb7b",
+    "buffer_sha256": "58cd924bc0c0db5890688933b6793eedf79021a94d2cc03f81f66e160d8928fb"
+  },
+  {
+    "family": "hline-b",
+    "case": "remainder-12",
+    "args": [
+      0,
+      19,
+      10,
+      12
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "8dd8b17e7b5edf585c072c9bf603b124a37d650cca6316c8edd4b271f97d69ab",
+    "buffer_sha256": "11d12c13c7258807009ef7113b3c24000faf27a091ff1dd553bca028b3d1b3ea"
+  },
+  {
+    "family": "hline-b",
+    "case": "remainder-13",
+    "args": [
+      0,
+      20,
+      10,
+      13
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      13
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "64ad5274b283bf1f1e7a98de2274ef1ef75df43ae35663579306f030f7d884f6",
+    "buffer_sha256": "377a621c6146505dca5962585ed9b48cddcaf3bba63cc304db3e2f718a8866ff"
+  },
+  {
+    "family": "hline-b",
+    "case": "remainder-14",
+    "args": [
+      0,
+      21,
+      10,
+      14
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      14
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "d2908379799e4de419eec2651e0fccf6e320c27431df4956c1c7960389b9d426",
+    "buffer_sha256": "04f1d9b37c495019468870db3d69e5dc48615c9d89125edfc022c791802abf75"
+  },
+  {
+    "family": "hline-b",
+    "case": "remainder-15",
+    "args": [
+      0,
+      22,
+      10,
+      15
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      15
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "039f8a2d4f1469a34b251ae5cc81ec5222b9f04e5493849af1968a21a9d3c8a4",
+    "buffer_sha256": "408f9da93a51125805e334c8089f48f137c7cb0d957012f2fa31d4feb8c5775b"
+  },
+  {
+    "family": "hline-b",
+    "case": "remainder-16",
+    "args": [
+      0,
+      23,
+      10,
+      0
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 81,
+    "tail_indices": [
+      16
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "edfd612f9ccc691588b50bfc10a0fd25305a142ac620a46e10cd799549c6e78e",
+    "buffer_sha256": "5136a8579177daae35fba789a15628e36946ed6687d6eae7d8e24aa1448b110e"
+  },
+  {
+    "family": "hline-b",
+    "case": "color-0",
+    "args": [
+      3,
+      51,
+      17,
+      0
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "1f1768f09514cea05ed9f78be7b0fa1594663f68bcc73b05f9052e8b99622e5f",
+    "buffer_sha256": "c6c2968cc0b188837ac417c61586e46304567b8e6dc0150175bc12e96d3c9148"
+  },
+  {
+    "family": "hline-b",
+    "case": "color-1",
+    "args": [
+      3,
+      51,
+      17,
+      1
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "b086cf9ba8dac759ccbd50fa90b3da0f03f24a23772fc298628e4a944ba87623",
+    "buffer_sha256": "2e1097f0467c614e4eb4d50a63aea6dc2e1e28a88d457060da6b9f477ca37ea9"
+  },
+  {
+    "family": "hline-b",
+    "case": "color-2",
+    "args": [
+      3,
+      51,
+      17,
+      2
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "136ec3ff10227a1f0de24e5b4b85910b0d245a394e9b9b1f14ed13c40f772454",
+    "buffer_sha256": "b7d158344e748827bde1898ce424b6c4f2c34e3cc99725efe0ff463aee0cec4c"
+  },
+  {
+    "family": "hline-b",
+    "case": "color-3",
+    "args": [
+      3,
+      51,
+      17,
+      3
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "7acfee8c8f0759ab114a565d0eaadbb6c227cb2db82b6bf7d6a38813ff576111",
+    "buffer_sha256": "b0c00b14fcadabea251b98ee6ffa96e6fec6075b03fa495f61145f28a8a01225"
+  },
+  {
+    "family": "hline-b",
+    "case": "color-4",
+    "args": [
+      3,
+      51,
+      17,
+      4
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "11510d69f4e8dfc74b62df2aa3b5f5ab2a1dd053b41f886768e2a46e8a282079",
+    "buffer_sha256": "67e68669cba18c8f15bd93553a44260a1996a444f4209d0e7321ef8f9e16d4fd"
+  },
+  {
+    "family": "hline-b",
+    "case": "color-5",
+    "args": [
+      3,
+      51,
+      17,
+      5
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "77e4b8f65c1fe5f98f0a4b7f6e195fe549c6e8fd6d139183f29874addad69a50",
+    "buffer_sha256": "712b3e847531cb1c012b178b52609486f25f8658153b5279867150538de8eb47"
+  },
+  {
+    "family": "hline-b",
+    "case": "color-6",
+    "args": [
+      3,
+      51,
+      17,
+      6
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "6cee3ff5b7a9f958f33f86484927fa86a07ea4769b03746ddecf6606fa199e91",
+    "buffer_sha256": "1030aa50b59c229f0a4ca06c3ce905a3670a03ebaf48ec5e83e36f34e139f23f"
+  },
+  {
+    "family": "hline-b",
+    "case": "color-7",
+    "args": [
+      3,
+      51,
+      17,
+      7
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "27a5cf4cf8cec3d343a8dfbeaf562bbcd577cad5bdddf53848f2ba7f8437c7c8",
+    "buffer_sha256": "d5188e34848bec8dfc84804b578f48c722d6d1be3c3901c0644de7bae317ca57"
+  },
+  {
+    "family": "hline-b",
+    "case": "color-8",
+    "args": [
+      3,
+      51,
+      17,
+      8
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "fc1a2ca231cbb6393fb29be3d3bbf7deaf077dfd88eafce4f0d97a764de4c527",
+    "buffer_sha256": "5c95e6985f165e2589287fe6cdb0a95b3e05b331223e1e679138f9406cae0a48"
+  },
+  {
+    "family": "hline-b",
+    "case": "color-9",
+    "args": [
+      3,
+      51,
+      17,
+      9
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "bfe91f728759627b6e942c6a9d9046cae5475f8789d73e15ca083f3b92d1d8fb",
+    "buffer_sha256": "089eaf060d2251781610062204affdc35a96c4a60622a2390b52e5f4b344add5"
+  },
+  {
+    "family": "hline-b",
+    "case": "color-10",
+    "args": [
+      3,
+      51,
+      17,
+      10
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "765184d935260f12e823ffb0a9fb3840e399ed359c51ddc1ecf4ddb656b5b2f3",
+    "buffer_sha256": "e4fe9fbb178c62157757379c9b6dffbcff3a69011ef6fe0ef2c10a77749b1546"
+  },
+  {
+    "family": "hline-b",
+    "case": "color-11",
+    "args": [
+      3,
+      51,
+      17,
+      11
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "421d392faea70f6d0d8b44a3643acc5a70a3e288743f0401ff2f1acf7480b0bb",
+    "buffer_sha256": "49a53f7a4e1ffb6a81680cac124d29461290f97060b9dfabc971d82878647d60"
+  },
+  {
+    "family": "hline-b",
+    "case": "color-12",
+    "args": [
+      3,
+      51,
+      17,
+      12
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "3abd69a43be1519e78305fe6cb0bac73a02a04871e0ecfe9dd934c4922a9c6a6",
+    "buffer_sha256": "c070e96874c2b3b968d2b1f7e43a20c0ecc0e2292e42bd0a900d61621af7789c"
+  },
+  {
+    "family": "hline-b",
+    "case": "color-13",
+    "args": [
+      3,
+      51,
+      17,
+      13
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "899c66f48b7a41c01a5a536a51df86f21301105652d81211fb489aca4e7ea150",
+    "buffer_sha256": "ea8f6392367f6860ef6ee9bb859249152ad2f95dddd9d890b153eb878ef4b140"
+  },
+  {
+    "family": "hline-b",
+    "case": "color-14",
+    "args": [
+      3,
+      51,
+      17,
+      14
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "f1bbd3ae51b0a50f4c65b54c6e5d316c1c7d08d5c70881ffdf2e7b9acaf8d1d7",
+    "buffer_sha256": "976d21abd03fca57a843cc3062cf9bbac4acea99fbb02f2ea5e1b9806b6ac7fa"
+  },
+  {
+    "family": "hline-b",
+    "case": "color-15",
+    "args": [
+      3,
+      51,
+      17,
+      15
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "2b927d06ca61e5f933f96387850e0637b45d09ff9efb91f41e2ded9565f1783c",
+    "buffer_sha256": "90b6c0ff5261f049a338058ef634f9114a477cdeea9dcbc986522cabf0a2c46a"
+  },
+  {
+    "family": "hline-b",
+    "case": "edge-0",
+    "args": [
+      -9,
+      17,
+      3,
+      7
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 82,
+    "tail_indices": [
+      10
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "733572bc7ff341b2c0f061dda7cfb2b4c97183d0f8bd47ad85fb7eb4bd2ee4d3",
+    "buffer_sha256": "3ccd5fbbbc2cb3921eee7a63034341fc5d72b0f9e795367d214758724c58591f"
+  },
+  {
+    "family": "hline-b",
+    "case": "edge-1",
+    "args": [
+      635,
+      647,
+      399,
+      8
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 73,
+    "tail_indices": [
+      0
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "c346a3256d181a3fbef746fdc1de991099c91264d77778593ed84a9048bddae0",
+    "buffer_sha256": "94afbf4f757d28a42da724d2d94b80294ac43b428666d9bec536615d8bc07cfc"
+  },
+  {
+    "family": "hline-b",
+    "case": "edge-2",
+    "args": [
+      17,
+      3,
+      20,
+      4
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 82,
+    "tail_indices": [
+      9
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "dad94f441fde90d6d8691231acbf99516014f8477926d2bc2a9a4faa064f2496",
+    "buffer_sha256": "74cc4a231549fa68be098cbec86e4d99a1045e4a0de1e78e146a7eeb32fd5525"
+  },
+  {
+    "family": "hline-b",
+    "case": "edge-3",
+    "args": [
+      3,
+      2,
+      10,
+      5
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 37,
+    "tail_indices": [],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "62748ebe56be212c7c55cd782b41b442bd6e51a5b74a90ae364aa883fbfd28c8",
+    "buffer_sha256": "5117cce57fb16567b6313fba9a88f29952938134501f079826c2423736d91f9e"
+  },
+  {
+    "family": "hline-b",
+    "case": "edge-4",
+    "args": [
+      -20,
+      -2,
+      4,
+      2
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 26,
+    "tail_indices": [],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "1f8289eb19f14a1ddbae1cc745b245892281f51d3ef85ed9b303383e9619fbd8",
+    "buffer_sha256": "5117cce57fb16567b6313fba9a88f29952938134501f079826c2423736d91f9e"
+  },
+  {
+    "family": "hline-b",
+    "case": "edge-5",
+    "args": [
+      5,
+      7,
+      500,
+      3
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 34,
+    "tail_indices": [],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "efb6a549cd3d606f9b7ee9b3983eb56fe74844766d24dae8c64d6fe9fbe74c9c",
+    "buffer_sha256": "5117cce57fb16567b6313fba9a88f29952938134501f079826c2423736d91f9e"
+  },
+  {
+    "family": "hline-b",
+    "case": "edge-6",
+    "args": [
+      2,
+      19,
+      -1,
+      11
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 32,
+    "tail_indices": [],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "c8dd4a3ce58e29f48dd8e230888584b8b0450dc1820d12d9035e646a1e5ffe31",
+    "buffer_sha256": "5117cce57fb16567b6313fba9a88f29952938134501f079826c2423736d91f9e"
+  },
+  {
+    "family": "hline-b",
+    "case": "edge-7",
+    "args": [
+      3,
+      3,
+      4,
+      15
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 67,
+    "tail_indices": [],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "1f6381592d40387c7300ee8bee06f9d26dfd81ca9614dd616d90d8aa69b7cdaa",
+    "buffer_sha256": "acf1317713d26f6a4e216cf27fe85c82873719453c909ce34c937e06c6758eda"
+  },
+  {
+    "family": "hline-b",
+    "case": "edge-8",
+    "args": [
+      1,
+      63,
+      7,
+      9
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 123,
+    "tail_indices": [
+      8
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "8d3351d4e10e0ce9e0c8caebcd63963e58f73cfb70cc7024bd710806067087ff",
+    "buffer_sha256": "1ccc579f3b26bd4de797c85a49a8e08de4cb818df33ec642be014fe4bc065696"
+  },
+  {
+    "family": "hline-b",
+    "case": "edge-9",
+    "args": [
+      4,
+      40,
+      3,
+      6
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 109,
+    "tail_indices": [
+      1
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "5bda223c3a683a8c36e0aef6f557bb7a53b2cfcd3fa4d5f3f94d4b341bbd5989",
+    "buffer_sha256": "0c646ca1ce849cef7f9e42996d8288ffe62243f043cb252c92fe053f0dba80db"
+  },
+  {
+    "family": "hline-b",
+    "case": "translated-viewport",
+    "args": [
+      1,
+      37,
+      2,
+      9
+    ],
+    "viewport": [
+      25,
+      16,
+      50,
+      25
+    ],
+    "reason": "returned",
+    "steps": 95,
+    "tail_indices": [
+      15
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "e8bdc2b99dde320d309d2fd322dac46445a982fb1b7dd37e42c139903955f9b9",
+    "buffer_sha256": "48212cc2e27968de697f1c5a37283ce116a2303e66c1ba191c759f11d1b8f677"
+  },
+  {
+    "family": "rect-a",
+    "case": "remainder-0",
+    "args": [
+      0,
+      10,
+      8,
+      3,
+      0
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 110,
+    "tail_indices": [
+      0
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "2997d8332a9cf26bfa50f2bf4e7c7796ce4a04651a56ba4a0aed6d06d0d41b73",
+    "buffer_sha256": "c0dc71367b3616a1b1cd07a5307c87d782ebc6569a141cfddf6cf313c41e4c78"
+  },
+  {
+    "family": "rect-a",
+    "case": "remainder-1",
+    "args": [
+      0,
+      10,
+      9,
+      3,
+      1
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      1
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "b624dac36d7d2e0db286b2f58087e04810034dbeeaa5f87627349bc2a65411b1",
+    "buffer_sha256": "a473914d5c0f119829aaef1cb670557d121c00c610f34a37a673831a4475d822"
+  },
+  {
+    "family": "rect-a",
+    "case": "remainder-2",
+    "args": [
+      0,
+      10,
+      10,
+      3,
+      2
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      2
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "c0a54644caa60188cbce356c569e8611f6e6678414d7e2d621aa6687ef3f2b7e",
+    "buffer_sha256": "1d049cb9d04aee3a1dd71bb71caa7acf60fe30118f4c536852bf9bf4efc69ec5"
+  },
+  {
+    "family": "rect-a",
+    "case": "remainder-3",
+    "args": [
+      0,
+      10,
+      11,
+      3,
+      3
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      3
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "64cdfa4b39a7142ff9a6f21117a1a776078b099f482bbbd36c482463d196c5a0",
+    "buffer_sha256": "bf4df2dbb71c3124d89c45df0551fba65fba96aa0e43c3eeddb58d421faab688"
+  },
+  {
+    "family": "rect-a",
+    "case": "remainder-4",
+    "args": [
+      0,
+      10,
+      12,
+      3,
+      4
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      4
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "6c5c20332f7e1222f17cc38281ab975eaa13a326380f8969387ae0aa51e08c88",
+    "buffer_sha256": "aeab12bc5b9a7fec93b5abec1a1e0b7175fe15ee84c3da9f575f9b24ed0154a3"
+  },
+  {
+    "family": "rect-a",
+    "case": "remainder-5",
+    "args": [
+      0,
+      10,
+      13,
+      3,
+      5
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      5
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "513b1c6fbcdeee2c5457499915474df778686453f0de2799c18c2dbffc71b567",
+    "buffer_sha256": "cf7dee54e2d30aa784581d44f056dc3443e3cce013e770523421a40262bcfd28"
+  },
+  {
+    "family": "rect-a",
+    "case": "remainder-6",
+    "args": [
+      0,
+      10,
+      14,
+      3,
+      6
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      6
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "3d65f7d08a8388dd43c496fa6cd273ec6fb87a4a08040cb92de56577b42a5595",
+    "buffer_sha256": "f5d676d2dfa9287cd0c931e67909754e4a700152ab98b9bae20248346badf302"
+  },
+  {
+    "family": "rect-a",
+    "case": "remainder-7",
+    "args": [
+      0,
+      10,
+      15,
+      3,
+      7
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      7
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "5b2ff5a4609b9b83ee2fc2afca485764e2208b080c27a6b58687b745559c6b1c",
+    "buffer_sha256": "c7f0056488b2f0eee73b01243273a079efb4b957ef7b71f3b96f7fb40ffeb709"
+  },
+  {
+    "family": "rect-a",
+    "case": "remainder-8",
+    "args": [
+      0,
+      10,
+      16,
+      3,
+      8
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      8
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "845564471399b870e08c88d425bc64807312e3d1dea74bfd445ef6343cd1df0e",
+    "buffer_sha256": "425d5d0bc3d263c66ef95f2ca3f236775820e87eca600966bed41a3887b4f879"
+  },
+  {
+    "family": "rect-a",
+    "case": "remainder-9",
+    "args": [
+      0,
+      10,
+      17,
+      3,
+      9
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      9
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "3a61dd26380df1c5e54fd58acbeec08c9176878e8935b5c6ce8d0630754f84f3",
+    "buffer_sha256": "68311ff2f5cd23cdf1cd97628e9c404776b5fec05d6d3fcc608893adc90fe562"
+  },
+  {
+    "family": "rect-a",
+    "case": "remainder-10",
+    "args": [
+      0,
+      10,
+      18,
+      3,
+      10
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      10
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "60592e6dc09ece697f34746e033e5af8686e6924defadc127e22bef59b40ea78",
+    "buffer_sha256": "00a3f3ee07771349d146e743ca3370d3c1749e4828771b3fabf61e2dca5ee594"
+  },
+  {
+    "family": "rect-a",
+    "case": "remainder-11",
+    "args": [
+      0,
+      10,
+      19,
+      3,
+      11
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      11
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "07a44f78ff4e8cdfa427e526eb484d8242cda2714aed0410ec051cb3b10f96c6",
+    "buffer_sha256": "4a01c8da2a1735291f6b033738f3b2492ad23ad5baa1d6c4a098bdc866100dba"
+  },
+  {
+    "family": "rect-a",
+    "case": "remainder-12",
+    "args": [
+      0,
+      10,
+      20,
+      3,
+      12
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "2f295ca4da3a341852936f960d3846e21a4674ab16648ad70c1d6077634a717c",
+    "buffer_sha256": "247ab2880666ac0f4c24d9f83ade376a6c2f16854e6fcaa8cfc4ab8e5624e4ec"
+  },
+  {
+    "family": "rect-a",
+    "case": "remainder-13",
+    "args": [
+      0,
+      10,
+      21,
+      3,
+      13
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      13
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "7723c169c06bf2aabb01fd12945ee622db2ddd72f520f869f2d8cd03292e17e4",
+    "buffer_sha256": "792566356a986a89b77802beeb7ea384c2bc94d1663a300efcd6957ca3ffffbf"
+  },
+  {
+    "family": "rect-a",
+    "case": "remainder-14",
+    "args": [
+      0,
+      10,
+      22,
+      3,
+      14
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      14
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "ba516fbdf5e326d8b3a13d9e14d81850942a42a9877944435ef2d5a5cb8730b1",
+    "buffer_sha256": "13dcee1d3adcffc9017df840fcf127fdb691a6b7ba5f811901dd7865b30ea3bb"
+  },
+  {
+    "family": "rect-a",
+    "case": "remainder-15",
+    "args": [
+      0,
+      10,
+      23,
+      3,
+      15
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      15
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "57815ef1ea65cc1ce7e81f4ad27f955106203c459a8da324b7695d5b08ba6298",
+    "buffer_sha256": "81f2edc4236f62be16af2e5f41291e84e4fae84ce12f96c9c6c96666ab9c8c9c"
+  },
+  {
+    "family": "rect-a",
+    "case": "remainder-16",
+    "args": [
+      0,
+      10,
+      24,
+      3,
+      0
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      16
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "267b82157533a6528087b4ef745e01d1d7a5db503a6c9e665b0696c5f4585a07",
+    "buffer_sha256": "3639a9bf21e366af4703c122ff33a6dd6581848be28084ac50a021c6cc036e4f"
+  },
+  {
+    "family": "rect-a",
+    "case": "color-0",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      0
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "139f7165f4626c4c6d5bf00dbb988b5dc5e7f0eacf8fa0e41ba83cc8e19c9e1e",
+    "buffer_sha256": "186bc812f7a1823142edcc76758c80eb4633f329bc9d3d408b039c0acf0b0388"
+  },
+  {
+    "family": "rect-a",
+    "case": "color-1",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      1
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "8bba1d603ec95ff3261fd8ef8e5debfeeb271cb253c326be66884356e74933be",
+    "buffer_sha256": "aa4502567cdcfba79cd62edf18ea89e788e12a7c40a7cf5baf0a046482e9d094"
+  },
+  {
+    "family": "rect-a",
+    "case": "color-2",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      2
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "c94347120992996818f96eab6e078840d3a878f298ee48f5f34ebfe16be0a9a9",
+    "buffer_sha256": "0fb7ae31c3c6b5ed713b243245b0def2c6b6c88b1fcb2cc946c1c29a5ef7d170"
+  },
+  {
+    "family": "rect-a",
+    "case": "color-3",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      3
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "cf0cf70aaee905dacd42a6f63f7fed6ba1daf61a92a2297c0f41e2800da8c1cd",
+    "buffer_sha256": "39bc53335a364551b45e7c89f83f615cedabb4e06d450f29708cd2b55de7800d"
+  },
+  {
+    "family": "rect-a",
+    "case": "color-4",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      4
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "e82084b669d39c60c4d2455120e5520c5811bf4971713332d31eaefb5c625e0f",
+    "buffer_sha256": "21820a5eea845581ac42edd5668ace8a3543e8189229e97ba2886c9b82b591fe"
+  },
+  {
+    "family": "rect-a",
+    "case": "color-5",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      5
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "dd2361a13d1dedd28f6e784afaed323eb0eb1f107741c0a6b6a69f74d99397fa",
+    "buffer_sha256": "c26cf29fb24b2cc3f792442b0474035428c30e69f2c16d1139236cb625380359"
+  },
+  {
+    "family": "rect-a",
+    "case": "color-6",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      6
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "8157f222d2932f7510705e665bea295bd572684e3d31ccd7448b0d1edde9770c",
+    "buffer_sha256": "981c108a88e6fc29f5781b176e48088d385e71c27e1f5a0a50d895cb2f84a5fa"
+  },
+  {
+    "family": "rect-a",
+    "case": "color-7",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      7
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "e3fb47fb0d8f829f96359b2da9782259e756bc93f2fa8ca91901007be541968b",
+    "buffer_sha256": "9584b59e8302db385595fb5fd45a823d7eac7ad80e97a9fb1f07151dad560a70"
+  },
+  {
+    "family": "rect-a",
+    "case": "color-8",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      8
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "3e35adaed2c74571ebb97e84a70ca652afaee06ceab1b832c101801ac5727f1e",
+    "buffer_sha256": "5270a2a0205c82776228464d021bb6b2536c1d91a854ce8943beb6a9e8b52275"
+  },
+  {
+    "family": "rect-a",
+    "case": "color-9",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      9
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "2949bb7bdd7c12fb6a31993551813ad115b371284ec03e81ea010bc6e322680a",
+    "buffer_sha256": "798ff641e9445b94a86dcba1cc9a64e6e1274e302f69796a9474c2e9e09ff4d0"
+  },
+  {
+    "family": "rect-a",
+    "case": "color-10",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      10
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "b783bcdbfa64885e2223174324547f0da64c835fe74ecfa11591e41c82f687bb",
+    "buffer_sha256": "2cfba25253fc18e1962daef77ee886751e529611a1cfeec34b35713029bcf627"
+  },
+  {
+    "family": "rect-a",
+    "case": "color-11",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      11
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "9cae57d20bd55a276cec26e763cc05b4fe85118a7814987375359ee04f8f3c8b",
+    "buffer_sha256": "9354f16c98674569636470c37ad82730d70f38fe97428f41890e3099e763c375"
+  },
+  {
+    "family": "rect-a",
+    "case": "color-12",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      12
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "70d4ceaaebf616df9bd0720fb2dd5cad06978a1dc5d25cd2f622f08fe5439494",
+    "buffer_sha256": "63f3038cea15bd65fab37b8b9166e724eb234a75d2d14698d4cbcff5bb643569"
+  },
+  {
+    "family": "rect-a",
+    "case": "color-13",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      13
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "e2796ad619e9d581e0cdfd0f365e5751de481a039afb5cf84347cb0512e30940",
+    "buffer_sha256": "3df4ab49c09c9411647d06d074d9893910ebf740ebfa0d26b8c191a179b01fc3"
+  },
+  {
+    "family": "rect-a",
+    "case": "color-14",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      14
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "20d68b1659e2f4b4f8f6ce4a5ed93ac11f1be533f50f164fa0224f6eed1083f7",
+    "buffer_sha256": "b1662d8977669eccf6824b19c6ddc21a9dcea13facd6779acc6c749948e3c1c4"
+  },
+  {
+    "family": "rect-a",
+    "case": "color-15",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      15
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "540853bcafe74635fd85e059c0cdb5fdf4e2dcce14bcb221ef0edeb6d4caeca0",
+    "buffer_sha256": "a48e605a95f9f1964dbf394fc83ca145cdbb2940ced3376db569da2f508f3668"
+  },
+  {
+    "family": "rect-a",
+    "case": "edge-0",
+    "args": [
+      -9,
+      3,
+      17,
+      4,
+      7
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 117,
+    "tail_indices": [
+      0
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "1f5bd04e447a41e1c8aff22cddba3473624b1e2f2f396114f472ebf3c8bcdae5",
+    "buffer_sha256": "6108989be7e7ac9b485550e2e256ab7e1277a6eb60fa76eda39cf0ed65e46d16"
+  },
+  {
+    "family": "rect-a",
+    "case": "edge-1",
+    "args": [
+      635,
+      398,
+      10,
+      6,
+      8
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 106,
+    "tail_indices": [
+      0
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "85c3e953c4efea4fa84c3ef685fdffa9f65689fd50ea04e2543e8edb57dc032d",
+    "buffer_sha256": "17bfc6a6bc2cea8ac01e783d7a38783a58a2520ef825d930e4b7180209e10e18"
+  },
+  {
+    "family": "rect-a",
+    "case": "edge-2",
+    "args": [
+      10,
+      12,
+      -9,
+      -5,
+      4
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 165,
+    "tail_indices": [
+      2
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "50a412ad1a8de81ffa070862eaad4933048a692ea5d95d6761bce4eff0d436c5",
+    "buffer_sha256": "3d363cec589f5317f112dfb1d48d702488e708e101ec389b1b32c96d0d51b93b"
+  },
+  {
+    "family": "rect-a",
+    "case": "edge-3",
+    "args": [
+      0,
+      0,
+      0,
+      4,
+      5
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 23,
+    "tail_indices": [],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "6a6e743c3830f64aa291bcc167e879269c739a5c43dcf2666690a5adb98f57c6",
+    "buffer_sha256": "5117cce57fb16567b6313fba9a88f29952938134501f079826c2423736d91f9e"
+  },
+  {
+    "family": "rect-a",
+    "case": "edge-4",
+    "args": [
+      -20,
+      2,
+      4,
+      3,
+      2
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 37,
+    "tail_indices": [],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "23a626fa3745ce0b12577464ec667cfac73c40532f75045f5ccfd2f7b7b10c9b",
+    "buffer_sha256": "5117cce57fb16567b6313fba9a88f29952938134501f079826c2423736d91f9e"
+  },
+  {
+    "family": "rect-a",
+    "case": "edge-5",
+    "args": [
+      5,
+      500,
+      6,
+      3,
+      3
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 47,
+    "tail_indices": [],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "d26a5dadc510607734516bf7387ba23622be644af449e9252a6a52616e64c918",
+    "buffer_sha256": "5117cce57fb16567b6313fba9a88f29952938134501f079826c2423736d91f9e"
+  },
+  {
+    "family": "rect-a",
+    "case": "edge-6",
+    "args": [
+      2,
+      -5,
+      19,
+      8,
+      11
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 134,
+    "tail_indices": [
+      13
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "492fe93a6a1d7725ee2bd9f2e508d535f3134c43acbd7f3519bf53206f07d85b",
+    "buffer_sha256": "97a2de33c4b80f0f742fb516fe4e1dae6841b7168ce1f784dc10a612dd252d26"
+  },
+  {
+    "family": "rect-a",
+    "case": "edge-7",
+    "args": [
+      3,
+      4,
+      1,
+      1,
+      15
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 90,
+    "tail_indices": [],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "5be047deb734427775d75bcc8cfeaf6efef6a0cf47cb3505afe4138cdaaaa97c",
+    "buffer_sha256": "acf1317713d26f6a4e216cf27fe85c82873719453c909ce34c937e06c6758eda"
+  },
+  {
+    "family": "rect-a",
+    "case": "edge-8",
+    "args": [
+      1,
+      1,
+      63,
+      7,
+      9
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 346,
+    "tail_indices": [
+      8
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "ad1899ff40bee6d9552b50a043f9aa9119bdbe078b992d58a8145d05ed953f2d",
+    "buffer_sha256": "dadb77ab3028aecaf449d9d36f53e6fa3d9b410183d04152b49f51f104d515f7"
+  },
+  {
+    "family": "rect-a",
+    "case": "edge-9",
+    "args": [
+      4,
+      3,
+      40,
+      2,
+      6
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      4
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "6e32d4ad3f44951d4c49bd125a7410316bca0d6f3841d638cb9f89406af95275",
+    "buffer_sha256": "d699847c99707c5fbbcc8e254c1305ed40129264cfd9c2e550bbceb13f9107a9"
+  },
+  {
+    "family": "rect-a",
+    "case": "translated-viewport",
+    "args": [
+      1,
+      2,
+      37,
+      3,
+      9
+    ],
+    "viewport": [
+      25,
+      16,
+      50,
+      25
+    ],
+    "reason": "returned",
+    "steps": 164,
+    "tail_indices": [
+      15
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "25fb9e8abd56f091566b63dfe40dc263f27c73b21f49598decbba55ed8dcbf3a",
+    "buffer_sha256": "44afb57cd95bb3f7dcf43bcab5335cacd8089f5f29388369254d56aad8c885d2"
+  },
+  {
+    "family": "rect-b",
+    "case": "remainder-0",
+    "args": [
+      0,
+      10,
+      8,
+      3,
+      0
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 110,
+    "tail_indices": [
+      0
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "18ffb316a4498b3c4dd3fd7cbd06664975190e4725be989d72d4480c6d092e73",
+    "buffer_sha256": "c0dc71367b3616a1b1cd07a5307c87d782ebc6569a141cfddf6cf313c41e4c78"
+  },
+  {
+    "family": "rect-b",
+    "case": "remainder-1",
+    "args": [
+      0,
+      10,
+      9,
+      3,
+      1
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      1
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "8f2b37585782a8a3fcdef831a121329f9c6c4291973a50680957994ea5e0fa12",
+    "buffer_sha256": "a473914d5c0f119829aaef1cb670557d121c00c610f34a37a673831a4475d822"
+  },
+  {
+    "family": "rect-b",
+    "case": "remainder-2",
+    "args": [
+      0,
+      10,
+      10,
+      3,
+      2
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      2
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "42d2fde5bf4ef31a6c054d62ff1656bb7f1f58e11b9b58973c815e790df97224",
+    "buffer_sha256": "1d049cb9d04aee3a1dd71bb71caa7acf60fe30118f4c536852bf9bf4efc69ec5"
+  },
+  {
+    "family": "rect-b",
+    "case": "remainder-3",
+    "args": [
+      0,
+      10,
+      11,
+      3,
+      3
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      3
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "25e028697b5ff8569e96795b3f7205084bdb87edba2f31b93b2a9f4bab05940c",
+    "buffer_sha256": "bf4df2dbb71c3124d89c45df0551fba65fba96aa0e43c3eeddb58d421faab688"
+  },
+  {
+    "family": "rect-b",
+    "case": "remainder-4",
+    "args": [
+      0,
+      10,
+      12,
+      3,
+      4
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      4
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "97b153106294c95bf73a6ed1607f0cd6690212c2d2190fd47304de478aaa81ca",
+    "buffer_sha256": "aeab12bc5b9a7fec93b5abec1a1e0b7175fe15ee84c3da9f575f9b24ed0154a3"
+  },
+  {
+    "family": "rect-b",
+    "case": "remainder-5",
+    "args": [
+      0,
+      10,
+      13,
+      3,
+      5
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      5
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "84b1beb6eaf4f5d86efecff12d9ff2d06c45c08cd308883ba2c64c20120219c2",
+    "buffer_sha256": "cf7dee54e2d30aa784581d44f056dc3443e3cce013e770523421a40262bcfd28"
+  },
+  {
+    "family": "rect-b",
+    "case": "remainder-6",
+    "args": [
+      0,
+      10,
+      14,
+      3,
+      6
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      6
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "4db871298932a5a13f60051493c7164338735c00cdc88a0245f9d060f15fcadb",
+    "buffer_sha256": "f5d676d2dfa9287cd0c931e67909754e4a700152ab98b9bae20248346badf302"
+  },
+  {
+    "family": "rect-b",
+    "case": "remainder-7",
+    "args": [
+      0,
+      10,
+      15,
+      3,
+      7
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      7
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "57bb9c593a433fcf9209100449e008c1261c042a29ffdd12f37c748b5865aa0c",
+    "buffer_sha256": "c7f0056488b2f0eee73b01243273a079efb4b957ef7b71f3b96f7fb40ffeb709"
+  },
+  {
+    "family": "rect-b",
+    "case": "remainder-8",
+    "args": [
+      0,
+      10,
+      16,
+      3,
+      8
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      8
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "c79bb457e23c56e31b8596d2a08c0a80d5d30ff552fe6f237df962bcc84c98c0",
+    "buffer_sha256": "425d5d0bc3d263c66ef95f2ca3f236775820e87eca600966bed41a3887b4f879"
+  },
+  {
+    "family": "rect-b",
+    "case": "remainder-9",
+    "args": [
+      0,
+      10,
+      17,
+      3,
+      9
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      9
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "d138751232798e8717d8a31f8082428aa28b53dc42bdd1697c62e600dddec5b7",
+    "buffer_sha256": "68311ff2f5cd23cdf1cd97628e9c404776b5fec05d6d3fcc608893adc90fe562"
+  },
+  {
+    "family": "rect-b",
+    "case": "remainder-10",
+    "args": [
+      0,
+      10,
+      18,
+      3,
+      10
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      10
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "6110e351504aeaec6004686cede1ba378e00aec4534b04eebb365b32db64be04",
+    "buffer_sha256": "00a3f3ee07771349d146e743ca3370d3c1749e4828771b3fabf61e2dca5ee594"
+  },
+  {
+    "family": "rect-b",
+    "case": "remainder-11",
+    "args": [
+      0,
+      10,
+      19,
+      3,
+      11
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      11
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "fd97684e3faafde7fd450761c079c33f694a8985e79f5c331b9d5bd76e5c354b",
+    "buffer_sha256": "4a01c8da2a1735291f6b033738f3b2492ad23ad5baa1d6c4a098bdc866100dba"
+  },
+  {
+    "family": "rect-b",
+    "case": "remainder-12",
+    "args": [
+      0,
+      10,
+      20,
+      3,
+      12
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "d227485306a739ca37014536d07729b46fb7eb9806e00adab8cf7ea5274d64cf",
+    "buffer_sha256": "247ab2880666ac0f4c24d9f83ade376a6c2f16854e6fcaa8cfc4ab8e5624e4ec"
+  },
+  {
+    "family": "rect-b",
+    "case": "remainder-13",
+    "args": [
+      0,
+      10,
+      21,
+      3,
+      13
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      13
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "8c0bc8a217cec31613fac489115f535de003236003cfd766f13d0fe1aa1727e0",
+    "buffer_sha256": "792566356a986a89b77802beeb7ea384c2bc94d1663a300efcd6957ca3ffffbf"
+  },
+  {
+    "family": "rect-b",
+    "case": "remainder-14",
+    "args": [
+      0,
+      10,
+      22,
+      3,
+      14
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      14
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "bd8df5a1e4474a28e2239db9109dbc9beaa4b8e6545567b3c5a5af4a2cf4b14a",
+    "buffer_sha256": "13dcee1d3adcffc9017df840fcf127fdb691a6b7ba5f811901dd7865b30ea3bb"
+  },
+  {
+    "family": "rect-b",
+    "case": "remainder-15",
+    "args": [
+      0,
+      10,
+      23,
+      3,
+      15
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      15
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "1b7c24537cf5052026168da969339e1fb1dc3a900a8c16b85183a62f71ac9a51",
+    "buffer_sha256": "81f2edc4236f62be16af2e5f41291e84e4fae84ce12f96c9c6c96666ab9c8c9c"
+  },
+  {
+    "family": "rect-b",
+    "case": "remainder-16",
+    "args": [
+      0,
+      10,
+      24,
+      3,
+      0
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 133,
+    "tail_indices": [
+      16
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "9e8d3fd8656895c45826d218ba73f118dfa526ebfd69ab34b733c54fdc3e171e",
+    "buffer_sha256": "3639a9bf21e366af4703c122ff33a6dd6581848be28084ac50a021c6cc036e4f"
+  },
+  {
+    "family": "rect-b",
+    "case": "color-0",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      0
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "d28b0a5a1109ab2e4d8decaf6f18ee42f2ec5369cf6c3e7a85a013c279e96601",
+    "buffer_sha256": "186bc812f7a1823142edcc76758c80eb4633f329bc9d3d408b039c0acf0b0388"
+  },
+  {
+    "family": "rect-b",
+    "case": "color-1",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      1
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "93e6303515d253bc3be80a5a85ecaa559b3c29824c0144fa3f184483c41b928c",
+    "buffer_sha256": "aa4502567cdcfba79cd62edf18ea89e788e12a7c40a7cf5baf0a046482e9d094"
+  },
+  {
+    "family": "rect-b",
+    "case": "color-2",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      2
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "73af1b4db4dd4a9530100be05645ea85a215b1f5be036c88783eda64a3b8e23e",
+    "buffer_sha256": "0fb7ae31c3c6b5ed713b243245b0def2c6b6c88b1fcb2cc946c1c29a5ef7d170"
+  },
+  {
+    "family": "rect-b",
+    "case": "color-3",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      3
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "64ef25ec0d15486a5d168923c4e585eeb5a2084525c68c6db54beea6beb6b50b",
+    "buffer_sha256": "39bc53335a364551b45e7c89f83f615cedabb4e06d450f29708cd2b55de7800d"
+  },
+  {
+    "family": "rect-b",
+    "case": "color-4",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      4
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "f476bb5f8e9931a3c3b13785170b37c1eb38ee6a03975385924fb6558963fb1a",
+    "buffer_sha256": "21820a5eea845581ac42edd5668ace8a3543e8189229e97ba2886c9b82b591fe"
+  },
+  {
+    "family": "rect-b",
+    "case": "color-5",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      5
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "141ae87e436d1bc2384e9ad25ab1f430fb27a002f7a4cb7c88f69a7ff8a3664f",
+    "buffer_sha256": "c26cf29fb24b2cc3f792442b0474035428c30e69f2c16d1139236cb625380359"
+  },
+  {
+    "family": "rect-b",
+    "case": "color-6",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      6
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "9ce635f213a356ee42c37171202a7650f095ed25c3ec5af8cb6ecffa73ce7bf8",
+    "buffer_sha256": "981c108a88e6fc29f5781b176e48088d385e71c27e1f5a0a50d895cb2f84a5fa"
+  },
+  {
+    "family": "rect-b",
+    "case": "color-7",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      7
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "db196f14936e5094c7d031d736e589e29db6ca1fac69bdabded7d85d445b19a4",
+    "buffer_sha256": "9584b59e8302db385595fb5fd45a823d7eac7ad80e97a9fb1f07151dad560a70"
+  },
+  {
+    "family": "rect-b",
+    "case": "color-8",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      8
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "4f7a27de642980d193decc9ce9a015e7ff419884b9b2d569af6a2d3c3ffb91a0",
+    "buffer_sha256": "5270a2a0205c82776228464d021bb6b2536c1d91a854ce8943beb6a9e8b52275"
+  },
+  {
+    "family": "rect-b",
+    "case": "color-9",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      9
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "06a602829ec768f419affe3f5a88e654a8ead4a3bcd04de56d86adae881c9773",
+    "buffer_sha256": "798ff641e9445b94a86dcba1cc9a64e6e1274e302f69796a9474c2e9e09ff4d0"
+  },
+  {
+    "family": "rect-b",
+    "case": "color-10",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      10
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "4d8baff4ce643cda8f2db1be45e7a8274509a0a4429ddbcf70a796745cff363c",
+    "buffer_sha256": "2cfba25253fc18e1962daef77ee886751e529611a1cfeec34b35713029bcf627"
+  },
+  {
+    "family": "rect-b",
+    "case": "color-11",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      11
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "d570fe66e6ab45f9e0bccb298e84440f66e18bdca57f2b9c81536d14686a078f",
+    "buffer_sha256": "9354f16c98674569636470c37ad82730d70f38fe97428f41890e3099e763c375"
+  },
+  {
+    "family": "rect-b",
+    "case": "color-12",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      12
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "0638d36586f449ddde3d06c9e7df994bcab4844f9645493c5981f6cb34d304f9",
+    "buffer_sha256": "63f3038cea15bd65fab37b8b9166e724eb234a75d2d14698d4cbcff5bb643569"
+  },
+  {
+    "family": "rect-b",
+    "case": "color-13",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      13
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "2412be30a9325dfdbe5693e7c56050bfdb53311b37ef993140f1a767d4680ba0",
+    "buffer_sha256": "3df4ab49c09c9411647d06d074d9893910ebf740ebfa0d26b8c191a179b01fc3"
+  },
+  {
+    "family": "rect-b",
+    "case": "color-14",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      14
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "8ee5d52b58c5d3b807ca402a3be3b643bef570a14d9ce49849883b713a1ed853",
+    "buffer_sha256": "b1662d8977669eccf6824b19c6ddc21a9dcea13facd6779acc6c749948e3c1c4"
+  },
+  {
+    "family": "rect-b",
+    "case": "color-15",
+    "args": [
+      3,
+      17,
+      49,
+      2,
+      15
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      12
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "a1d2c32d3ef48b808ed32cb804ad6d4a7c70b624391bec3a45af574cf288f0f5",
+    "buffer_sha256": "a48e605a95f9f1964dbf394fc83ca145cdbb2940ced3376db569da2f508f3668"
+  },
+  {
+    "family": "rect-b",
+    "case": "edge-0",
+    "args": [
+      -9,
+      3,
+      17,
+      4,
+      7
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 117,
+    "tail_indices": [
+      0
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "d8775bb6e703aabdb8e7fa31f0c0a8ab6269bfc2be3d9f965a3ef19e603b08e1",
+    "buffer_sha256": "6108989be7e7ac9b485550e2e256ab7e1277a6eb60fa76eda39cf0ed65e46d16"
+  },
+  {
+    "family": "rect-b",
+    "case": "edge-1",
+    "args": [
+      635,
+      398,
+      10,
+      6,
+      8
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 106,
+    "tail_indices": [
+      0
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "c46d8ef092d3f488e28ff5980128c71c78d457a45d3814db970294c18684ac1a",
+    "buffer_sha256": "17bfc6a6bc2cea8ac01e783d7a38783a58a2520ef825d930e4b7180209e10e18"
+  },
+  {
+    "family": "rect-b",
+    "case": "edge-2",
+    "args": [
+      10,
+      12,
+      -9,
+      -5,
+      4
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 165,
+    "tail_indices": [
+      2
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "03fd459b5d2f33072f3131734db6764fe25328b9d606ce1f51af13c7aa7d27b9",
+    "buffer_sha256": "3d363cec589f5317f112dfb1d48d702488e708e101ec389b1b32c96d0d51b93b"
+  },
+  {
+    "family": "rect-b",
+    "case": "edge-3",
+    "args": [
+      0,
+      0,
+      0,
+      4,
+      5
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 23,
+    "tail_indices": [],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "324d57392fbd39a020ac9bbddf3c2a8c003da3363bfcbcbf75e4e26555ed13d1",
+    "buffer_sha256": "5117cce57fb16567b6313fba9a88f29952938134501f079826c2423736d91f9e"
+  },
+  {
+    "family": "rect-b",
+    "case": "edge-4",
+    "args": [
+      -20,
+      2,
+      4,
+      3,
+      2
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 37,
+    "tail_indices": [],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "e23ac575c28625ce94c4afb1f79db66b526af0408772b80bc9f25d661f6b24c3",
+    "buffer_sha256": "5117cce57fb16567b6313fba9a88f29952938134501f079826c2423736d91f9e"
+  },
+  {
+    "family": "rect-b",
+    "case": "edge-5",
+    "args": [
+      5,
+      500,
+      6,
+      3,
+      3
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 47,
+    "tail_indices": [],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "252994f445380dfb66d69030c29b2429093ae5abf375d8ea5838811db933f176",
+    "buffer_sha256": "5117cce57fb16567b6313fba9a88f29952938134501f079826c2423736d91f9e"
+  },
+  {
+    "family": "rect-b",
+    "case": "edge-6",
+    "args": [
+      2,
+      -5,
+      19,
+      8,
+      11
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 134,
+    "tail_indices": [
+      13
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "fc08c0c2d0728e6307cfc8bffbe5c000532fb2b56fdaab1b466ec5a0e30cb25d",
+    "buffer_sha256": "97a2de33c4b80f0f742fb516fe4e1dae6841b7168ce1f784dc10a612dd252d26"
+  },
+  {
+    "family": "rect-b",
+    "case": "edge-7",
+    "args": [
+      3,
+      4,
+      1,
+      1,
+      15
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 90,
+    "tail_indices": [],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "ba1afe955ba8227e4314b3bf8539d42d55fd8593ebf7d79ffcda8a7dd9e1911c",
+    "buffer_sha256": "acf1317713d26f6a4e216cf27fe85c82873719453c909ce34c937e06c6758eda"
+  },
+  {
+    "family": "rect-b",
+    "case": "edge-8",
+    "args": [
+      1,
+      1,
+      63,
+      7,
+      9
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 346,
+    "tail_indices": [
+      8
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "1ff738280dd2396a269ee2eccd700fac0f1779e89e0601953a834ff0df87ebbc",
+    "buffer_sha256": "dadb77ab3028aecaf449d9d36f53e6fa3d9b410183d04152b49f51f104d515f7"
+  },
+  {
+    "family": "rect-b",
+    "case": "edge-9",
+    "args": [
+      4,
+      3,
+      40,
+      2,
+      6
+    ],
+    "viewport": [
+      0,
+      0,
+      640,
+      400
+    ],
+    "reason": "returned",
+    "steps": 171,
+    "tail_indices": [
+      4
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "0ada52d96db3f9fb035c58cf4fcc0d59521025c5750f7b50a16ffd6f814ff5ab",
+    "buffer_sha256": "d699847c99707c5fbbcc8e254c1305ed40129264cfd9c2e550bbceb13f9107a9"
+  },
+  {
+    "family": "rect-b",
+    "case": "translated-viewport",
+    "args": [
+      1,
+      2,
+      37,
+      3,
+      9
+    ],
+    "viewport": [
+      25,
+      16,
+      50,
+      25
+    ],
+    "reason": "returned",
+    "steps": 164,
+    "tail_indices": [
+      15
+    ],
+    "checks": {
+      "buffer_0x1001000": true,
+      "canary_0x1001000": true,
+      "buffer_0x1041000": true,
+      "canary_0x1041000": true,
+      "returned": true,
+      "preserved_registers": true,
+      "reaped": true,
+      "tail_bounds": true
+    },
+    "all_pass": true,
+    "receipt_sha256": "1c7495ac543d52110e2fda1f189e3b4be427f2da837bf63800ec499c06547746",
+    "buffer_sha256": "44afb57cd95bb3f7dcf43bcab5335cacd8089f5f29388369254d56aad8c885d2"
+  }
+]
