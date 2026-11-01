@@ -250,6 +250,59 @@ proof that the debugger caused an earlier failure.
 
 ## Preserve knowledge without preserving stale observations
 
+### Keep selective probes for rare behavior
+
+When investigation continues during ordinary use, strongly prefer retaining a
+standing execution probe for each plausible unknown entry or bounded group of
+entries. Keep a reviewed manifest when the installed tool cannot persist plans.
+The purpose is to catch unexpected natural use with useful context, rather than
+repeatedly forcing every speculative condition. Budget-limited or unsupported
+probes remain explicitly deferred; do not silently describe them as covered.
+
+Select entries using code bytes, decoding, references, a candidate boundary or
+another stated reason. Do not infer that every unreferenced address is a function.
+For a value, identify its address space, byte width, access kind, lifetime and
+the question a read, write or transition could answer. An unresolved pointer
+slot currently equal to zero is different from unstructured null padding.
+Avoid blanket probes on padding, filler and arbitrary zero-filled ranges; record
+the exclusion and revisit it if a later writer, remapping or execution makes the
+range meaningful. A masked predicate is usable only if the installed backend
+supports its stated semantics; a sampled read is not a write watchpoint.
+
+Bind definitions to source identity and version, expected code bytes or a stated
+data-region identity, module-relative location and current mapping/generation.
+Preserve segmented aliases separately from physical deduplication. On a new run,
+reload, restore or code-layer change, verify the mapping and actual installed
+inventory before calling a probe armed. Keep desired, installed, invalidated,
+unsupported and budget-deferred states distinct. Stored history cannot reconnect
+an exited emulator. Rebinding never authorizes launching a guest or restoring it.
+
+At a first natural hit, preserve the probe and run identities, mapped PC, bounded
+register/stack/caller evidence, relevant selected values, current action/input
+identity and recent event references. Record missing caller information as
+unknown; stack bytes alone do not certify a call edge. Preserve host wall time,
+guest clock, simulation date and random-state evidence separately when available.
+For example, a hypothetical program might activate code only on a particular
+real-world weekday. That example does not establish a calendar dependency in the
+current target or authorize changing the host clock.
+
+Raise the finding's analysis priority using the new context, without assigning
+semantic meaning automatically. Capture once and latch the native probe off, or
+apply an explicitly supported bounded sampling policy, to avoid a hot loop.
+Keep the durable definition and hit receipt for review and deliberate rearming.
+If capture is incomplete, retain the paused guest and report the missing evidence
+instead of replaying an input or claiming the probe never fired. One controller
+owns guest execution; passive capture must not redirect, edit state or clear
+unrelated probes. Existing intervention hooks are not passive capture hooks.
+
+Before and after a batch, retain selected/armed/deferred/latched counts, first
+hits, dropped or suppressed events, overhead and actual capability limits. Check
+that inventory queries do not advance execution, queue input or restore state.
+Prefer compact inventory pages and artifact references to oversized replies.
+No-hit results are bounded to the observed route, time and instrumentation.
+Preserve the live provider for continued ordinary play when authorized; a durable
+plan creates no scheduler, autonomous polling loop or promise of perpetual uptime.
+
 Reuse established identities, geometry, routes and documented conditions.
 Preserve one object identity when the same control remains the same object across
 revisions or state-dependent availability and relative outcomes. Use a separate
