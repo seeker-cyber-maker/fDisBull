@@ -1,0 +1,58 @@
+{
+  "pytest_exit_code": 1,
+  "summary": "2 failed, 3032 passed, 123 skipped, 23 errors in 51.25s",
+  "log_sha256": "1918f798f645f1c5a5518a0cb859c0691453d139e0be63e7fbfd4127a5cb1272",
+  "failure_nodes": [
+    "tests/test_inspection.py::test_actual_elf_exports_and_unresolved_imports_are_honest",
+    "tests/test_loading.py::test_real_elf_retains_entry_and_named_function"
+  ],
+  "error_nodes": [
+    "tests/test_elf_metadata.py::test_got_slots_come_from_actual_relocations_and_keep_module_proof",
+    "tests/test_elf_metadata.py::test_plt_stubs_are_native_validated_not_fixed_stride_guesses",
+    "tests/test_elf_metadata.py::test_function_data_ifunc_tls_and_absolute_exports_have_distinct_identity",
+    "tests/test_elf_metadata.py::test_pie_copy_storage_tls_and_versioned_dependency_are_not_callable_slots",
+    "tests/test_elf_metadata.py::test_fno_plt_uses_glob_dat_without_fabricating_a_stub",
+    "tests/test_elf_metadata.py::test_duplicate_versioned_export_names_remain_separate",
+    "tests/test_elf_metadata.py::test_conflicting_version_requirement_indices_do_not_prove_a_module",
+    "tests/test_elf_metadata.py::test_limits_cap_metadata_and_path_lists_with_warnings",
+    "tests/test_elf_metadata.py::test_rel_encoding_does_not_claim_an_explicit_zero_addend",
+    "tests/test_elf_metadata.py::test_unversioned_copy_storage_keeps_dependency_candidates_without_attribution",
+    "tests/test_elf_metadata.py::test_bad_limits_are_rejected[0]",
+    "tests/test_elf_metadata.py::test_bad_limits_are_rejected[True]",
+    "tests/test_elf_metadata.py::test_bad_limits_are_rejected[100001]",
+    "tests/test_elf_metadata.py::test_bad_limits_are_rejected[2]",
+    "tests/test_platform_calls.py::test_linux_calls_xrefs_and_shared_bulk_effects[plt]",
+    "tests/test_platform_calls.py::test_linux_calls_xrefs_and_shared_bulk_effects[got]",
+    "tests/test_platform_calls.py::test_patched_got_disk_pointer_does_not_become_an_internal_call[plt]",
+    "tests/test_platform_calls.py::test_patched_got_disk_pointer_does_not_become_an_internal_call[got]",
+    "tests/test_platform_calls.py::test_refresh_upgrades_legacy_metadata_preserving_versions_annotations_and_bytes",
+    "tests/test_platform_calls.py::test_stub_patch_retracts_library_identity_and_derived_call_xref_only_in_child",
+    "tests/test_platform_calls.py::test_dependency_name_patch_rebuilds_versioned_modules_without_ghosts",
+    "tests/test_platform_calls.py::test_import_name_patch_replaces_old_symbol_alias_and_contract",
+    "tests/test_platform_calls.py::test_public_linkage_json_methods_and_refresh_return_structured_results"
+  ],
+  "error_groups": {
+    "tests/test_elf_metadata.py": 14,
+    "tests/test_platform_calls.py": 9
+  },
+  "classification": "inherited Darwin/ARM64 vs Linux/x86/GNU toolchain tests; no new feature failure",
+  "unchanged_test_files": {
+    "tests/test_elf_metadata.py": true,
+    "tests/test_platform_calls.py": true,
+    "tests/test_loading.py": true,
+    "tests/test_inspection.py": true,
+    "tests/test_debug_experiments.py": true,
+    "tests/test_pe_mz_workflow.py": true
+  },
+  "source_unchanged_during_full_suite": {
+    "examples/agi/verify_mushroom.py": true,
+    "examples/agi/build_mushroom_scene.py": true,
+    "tests/test_agi_mushroom_route.py": true,
+    "tests/test_agi_mushroom_scene.py": true
+  },
+  "prior_exact_2ad1b07_baseline_reproduction": {
+    "sha256": "9e3a1a090e76f6485c4c23e079cf3c044dff2167daf49181a34621a4c72d00b3"
+  },
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "no_native_inputs_available_to_test_child": true
+}

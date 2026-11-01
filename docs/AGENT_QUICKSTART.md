@@ -269,6 +269,9 @@ For an original-game route and reusable scene example, see the
 source-linked predicate observation and separate scene exporter have distinct
 checks. The companion collision scanner proposes bounded static candidates;
 it does not certify safe movement or glitches.
+The [mushroom-island follow-up](AGI_MUSHROOM_CROSSING.md) combines a qualified
+crossing with a normal parser command and separate native score/inventory
+observations, then exports the observed route to the shared Z player.
 
 ### Compare a source block with shared semantics
 

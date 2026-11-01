@@ -7,6 +7,10 @@ below preserves the earlier independent diagnostic probes and their limits.
 The [qualified lake routes](AGI_GOAT_BRANCHES.md) add regular water refusal and
 room-exit retirement, and explain why the diagnostic invisible-wander branch
 has no normal-command witness under the recovered guards.
+The [mushroom-island route](AGI_MUSHROOM_CROSSING.md) adds an independent
+three-action scene with a native river crossing, physical approach and
+source-bound score/inventory pickup. It uses authored responses and the same
+separate player, with explicit partial-coverage and checkpoint limits.
 
 `examples/agi/build_z_scene.py` creates a private, partial Z scene from the
 owner's KQ1 AGI 2.917 logic 103 and the checked-in diagnostic host receipt. It

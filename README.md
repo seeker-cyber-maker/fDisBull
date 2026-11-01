@@ -231,6 +231,9 @@ Interrupted work keeps its evidence and stops for inspection.
 The [eastern bridge case study](docs/AGI_BRIDGE_CLIP.md) follows a speedrunner's
 description to a reproduced KQ1 corner clip, a neighboring failure control,
 and a reusable partial scene in the separate player.
+The [mushroom-island follow-up](docs/AGI_MUSHROOM_CROSSING.md) carries that
+workflow through a river crossing and a real inventory pickup, then offers the
+recorded journey through the separate text player.
 
 The [Z-machine processor](docs/ZMACHINE_PROCESSOR.md) adds direct v3 bytecode
 inspection through fDisBull's processor interface. It reports operands, calls,

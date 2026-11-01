@@ -1,0 +1,164 @@
+{
+  "format": "fdisbull-agi-mushroom-verification-1",
+  "date": "2026-10-31",
+  "reviewed_mr": {
+    "iid": 15,
+    "head": "4e8ab3a69a9ec6d8502548dbf69f36e2c5f0249e",
+    "base": "2ad1b07b0ff353abbb138d711909eda6e860a61f",
+    "pipeline": null,
+    "material_findings": 0,
+    "private_review_sha256": "5f446cdb75c440caee7bf60a849db7f91dfb2a7deec8d713482162fc06401680",
+    "fresh_selected_tests": 593,
+    "native_only_checkpoint_test_excluded": 1,
+    "known_artifacts_rebuilt_and_hash_checked": true
+  },
+  "python": "3.13.13",
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "implementation_sha256": {
+    "examples/agi/verify_mushroom.py": "a01004c50163db2ca9bdb20c96cf2d5d3a74671bfe2bb0a759ef1316fb778e2a",
+    "examples/agi/build_mushroom_scene.py": "0a8b0c572d7b5d0fbdca5839afbddc66663f745832f026e18ce577bbb2d86872",
+    "tests/test_agi_mushroom_route.py": "93d52bae173c0ee7eaa85de0ed276e2955a67bad5a7c54bc12c07b7d88b05828",
+    "tests/test_agi_mushroom_scene.py": "08b553ee1541d3aa666585811e8f7689aed7470de102bce02895d931e080eb75"
+  },
+  "source": {
+    "agi_sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+    "resources": {
+      "0": "efb5e7e2b584eec6d741b7e08e42eb8247d00fde04add4720ee251eb9310cd4b",
+      "1": "7a77ce60af3c88b972b6a45eb7eefec2915de2fc97b46cb6cd23dfb3a97681d0",
+      "9": "553abeb91d3a10422a5025093f084fcac887b2c71e0ad989cb0fa5748aa40eb8",
+      "10": "d7482f0e3c924ac60669a188aa0dec5e08cac027d7ed581eef6b505d74d7a063",
+      "11": "595134f123ff086cc537f7acb0e0cec4586fcfc4f685d8e77358479810ba7372",
+      "16": "dd971a09976bf9abfce669c0d5b3e92c7a30b2038f0625b1eefbb03538ad2114",
+      "103": "cb1293db23b0007712fdd6193bd590dbdfdbaa8a84698f16c56b70c1321cdaed",
+      "8": "889eb805667460a09a85046fa6e7effac65a74ade60ef64dd5363d85f99f75ca",
+      "39": "49ebf4046de0446b7c307108e4d2e264560447aa778e898df292ad3e523758f6",
+      "40": "f90bf4c8804442350f8a24f65be72bb7de39c0314b464fe8f8878ce4f95730ba",
+      "41": "df4ef57d4ca9ef7c9684b1b8204f4ce6daa13028d660d6f060aaa029bf0e97ed",
+      "42": "ab995f11cf849a7a5e3f735e8e5fbb7e3b9ea8bd0d1da49db2de4a9aab0b363d",
+      "101": "f4b49fac11b2da7888fc6da564338db1b10cdf5903b2c0650d9fccc7bf2d25db",
+      "33": "40133de0083849d99f57a9d869533536028621771d7b98e06581c02c4e96750e",
+      "34": "a89cda3ef5bd15a577135c4378272a67dad21d5bae8a81d6fa69586b3e2e56ad",
+      "47": "80c41eec21a3c3d2ca326ac9f9e6890b89c1241703e8b7a8a22e27494bb81283",
+      "48": "967da543cab4708290f3e6d4c45b93522ed45bb394199d5206800bfa05300611"
+    }
+  },
+  "pictures": {
+    "33": "fff62fadb5168159916862cf65ca9971dc9fc1c67af77aa0393a16a1083c1ffc",
+    "47": "8eb6137bcf214c92eb1291381a7272b798a77e7d1df7ea01aad40fd96f2fce29",
+    "48": "83424bddb9dcbabbf0db0ebcb27f8b4365d90b070f05b23e979e7d6e2253eef6"
+  },
+  "inventory_source_sha256": "2d1b7a75bb443b4a340cb8d9a2842ff5c834d7d597ea2a1365b6a7a2dfb57985",
+  "native": {
+    "full_source_bound_routes": 2,
+    "final_source_run": "native-02",
+    "final_source_adjacent_control": "control-01",
+    "final_collector_sha256": "a01004c50163db2ca9bdb20c96cf2d5d3a74671bfe2bb0a759ef1316fb778e2a",
+    "no_guest_edits_redirects_teleports_or_state_loads": true,
+    "source_and_copy_unchanged": true,
+    "limits": {
+      "guest_ms": 420000,
+      "wall_ms": 600000
+    },
+    "prototype": {
+      "id": "explore-04",
+      "ordinary_route_and_score_one_observed": true,
+      "private_raw_sha256": "95287aee9c4168ae5436081e3a5236a3a7412d6831f0d7f0f001b4c258150cf5"
+    },
+    "failed_approaches": [
+      {
+        "id": "explore-01",
+        "result": "entered water in room40; approach failed"
+      },
+      {
+        "id": "explore-03",
+        "result": "blocked at room40(82,87); approach failed"
+      }
+    ],
+    "setup_refusal": "explore-02 launch reused an existing output path; refused before native start",
+    "exploratory_post_teardown_check_sha256": "93d642452f55eb9ed71b67444fd05c78b2df383e88f66dbeb086ad1912310cab"
+  },
+  "frames": [
+    {
+      "run": "native-02",
+      "name": "mushroom-midwater.png",
+      "sha256": "869328acaa79ca4a68a5a8146c69f19ef61577f985df9a8c8962431d7cbb91c4",
+      "size": [
+        320,
+        200
+      ],
+      "metadata_chunks": []
+    },
+    {
+      "run": "native-02",
+      "name": "mushroom-landed.png",
+      "sha256": "4fe78e52afcd6ff477c94b262546651a9f8c44e46f4d3e4551e1e01220228eae",
+      "size": [
+        320,
+        200
+      ],
+      "metadata_chunks": []
+    },
+    {
+      "run": "native-02",
+      "name": "mushroom-near.png",
+      "sha256": "d0a31b884bbb9d9399dbd4f524e8bacb95f78ad89a0bbe7229f7358a43aebae0",
+      "size": [
+        320,
+        200
+      ],
+      "metadata_chunks": []
+    },
+    {
+      "run": "native-02",
+      "name": "mushroom-taken.png",
+      "sha256": "8821be001c7e767748524183f5cf4b68c227ed549e19c6d620dba0c4a82f6a63",
+      "size": [
+        320,
+        200
+      ],
+      "metadata_chunks": []
+    },
+    {
+      "run": "control-01",
+      "name": "control-stopped.png",
+      "sha256": "d2c81272e74ac91b4d9692d7e9709a4dde86551d6b6ba234c3b14e82fdb34c65",
+      "size": [
+        320,
+        200
+      ],
+      "metadata_chunks": []
+    }
+  ],
+  "scene": {
+    "scene_sha256": "1a59f49df18f537ef01069a85d6c7d24ed324831ecd7c79c5082077cfbc90dbe",
+    "provenance_sha256": "6fd9d60a14f98d83d5825ee9ba9c4c73d82156a72ba2463720dd4f1f75484104",
+    "generated_output_private": true,
+    "original_message_text_excluded": true,
+    "installed_player_version": "0.28.0",
+    "direct_and_separate_process": true,
+    "checkpoints": "in memory only; fresh process has no checkpoint"
+  },
+  "checks": {
+    "focused": "950 passed, 4 skipped in 4.93s",
+    "full_suite": "2 failed, 3032 passed, 123 skipped, 23 errors in 51.25s",
+    "full_suite_exit_code": 1,
+    "remaining_failures": "25 inherited ARM64Mac vs Linux/x86/GNU-toolchain checks; no new-feature failure",
+    "linux_ci": "not run / no head pipeline",
+    "diff_check": "passed"
+  },
+  "exclusions": [
+    "game/story/resource files",
+    "native states",
+    "project databases",
+    "raw memory/capture/trace corpus",
+    "generated scenes",
+    "private absolute paths"
+  ],
+  "limits": [
+    "Selected normal-input route and edition only; repeated runs are not deterministic replay or full-game recovery.",
+    "Known room41 edge skip is explicitly used for the approach. Game owns room-entry placement; its full placement/collision routines were not traced.",
+    "Adjacent alignment shows bounded non-advancement, not a universal unreachability proof.",
+    "Artifact hashes check identity/consistency; supplied native assertions are not authenticated execution.",
+    "No integration merge, tag, release, packaging or installation change."
+  ]
+}
