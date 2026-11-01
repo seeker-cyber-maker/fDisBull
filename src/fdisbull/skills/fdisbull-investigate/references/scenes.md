@@ -6,9 +6,12 @@ UIL scene intent from game data and handlers, read [scene-recovery.md](scene-rec
 ## Contents
 
 - [Observe and reuse scenes](#observe-and-reuse-scenes)
+- [Build a bounded scene efficiently](#build-a-bounded-scene-efficiently)
 - [Define objects and predicates](#define-objects-and-predicates)
 - [Calibrate content and readiness](#calibrate-content-and-readiness)
 - [Retain action and failure evidence](#retain-action-and-failure-evidence)
+- [Investigate spatial predicate boundaries](#investigate-spatial-predicate-boundaries)
+- [Keep world, viewport and collision domains separate](#keep-world-viewport-and-collision-domains-separate)
 - [Adaptation provenance](#adaptation-provenance)
 
 ## Observe and reuse scenes
@@ -50,6 +53,104 @@ scene.assert_current()
 scene.object("office.bank").exists()  # Visible only; not a readiness assertion.
 scene.click("office.bank")        # All prerequisites + bounded postcondition.
 ```
+
+## Build a bounded scene efficiently
+
+Source checkouts containing `fdisbull.native_controller` and
+`fdisbull.scene_receipts` provide shared controller/receipt helpers. Check their
+availability before relying on newer guidance in an installed package. Keep
+game-specific source predicates and pending transitions in an adapter. Use the
+controller's admission hook for existing execution blocks, including before
+keyboard delivery; a foreign debugger stop never becomes an ordinary pending
+scene state. Receipt completion requires explicit forward observation endpoints.
+Give a private full log and a portable summary distinct artifact roles/hashes.
+The helpers cache one bounded artifact snapshot and do not authenticate a run.
+
+Start with one intended interaction or short contiguous route, its policy and
+the observation that would distinguish success from the nearest failure. Check
+for existing qualified captures and source bindings first. For interpreted games,
+use the actual interpreter and source resource where available; picture and
+collision masks can propose a route or adjacent control, but do not establish
+that either is physically reachable. Do not expand a partial scene into a
+whole-game claim.
+
+Use ordinary inputs for a gameplay claim. Record the delivered input and the
+relevant before/after state in order, including enough identity and source
+provenance to associate each edge with the stable run. Hash source, resources
+and backend once per stable run or reusable qualified binding; recheck when the
+identity, byte version, backend or restored context can have changed. This does
+not replace any per-stop binding or freshness check required by the selected
+native protocol.
+
+Use bounded memory or sparse-pixel polls for routine progress and preserve the
+actual guest time returned. Request a fresh stored frame when appearance or
+frame timing is material; a last-completed frame is not automatically fresh or
+atomic with a separate memory read. Stop on a foreign or unknown stop, uncertain
+delivery, unsafe state or exhausted budget. Preserve the returned observations
+and already observed effects before cleanup; an incomplete response is not
+evidence that the action rolled back, and it does not authorize a replay.
+
+Source checkouts with `control.align` can share one bounded ordinary-input axis
+or unit-diagonal leg. Supply `x`/`y` scalars or inclusive ranges and adapter
+callbacks for position, ordinary start/stop and boolean settlement. The adapter
+owns source safety, coordinate units and room/domain context; unspecified axes
+must remain unchanged. Use a range when every point in it satisfies the relevant
+source/geometry contract. Local guest, poll and stall caps retain actual sampled
+positions and also constrain callback/owned-stop execution through the same
+controller. Overshoot, drift, changed context or unknown stops latch the attempt;
+the helper never automatically reverses, retries, teleports or restores.
+
+`control.capture_frame_state` shares a read-only stopped-status / state / stored
+frame / state / stopped-status bracket. Its default does not execute the guest.
+Use `require_fresh=True` only at a meaningful visual boundary; cheap status polls
+can wait for a newer frame through the owner/controller, under its existing
+execution admission and stop checks. A full `baseline_frame` carries session,
+mode and frame ID; a bare `baseline_frame_id` is a caller-asserted ordinal in the
+pinned session/mode. An already fresh frame needs no advance, and equality at
+the global guest cap reached by an admitted freshness slice permits only its
+final read-only bracket. Strict initial admission prevents a new operation on
+an already exhausted controller. Do not resume a foreign stop or an unsafe
+water/failure state for a picture.
+
+Retain both state reads, identity checks and frame metadata. An optional
+`state_projector` compares selected material fields without discarding the raw
+observations. Missing or mismatched evidence remains incomplete. Stable
+bracketing is not atomic frame/CPU equivalence or UI readiness:
+`metadata.captured_ticks` is render time, while `metadata.state_revision` is the
+capture RPC revision, never the render-CPU revision. A stale timeout returns its
+last status without an automatic extra capture/advance; caller-owned diagnostic
+capture can preserve the failure. Exceptions retain partial evidence and latch
+the controller. The new bounded KQ1 candidate/control pair qualifies this
+source slice, including 43 completed alignment legs and three required-fresh
+captures. Other engines/routes remain separate. The SDK default brackets a
+frame probe with two explicit paused-status reads; video metadata alone cannot
+establish that execution is stopped. Keep prior-frame identities in their
+owned live run and invalidate them on restoration or context replacement.
+
+Describe expected transition stages as well as final invariants. A known west
+border flag can precede a room change; the room number can change before the
+original interpreter finishes drawing the actor. Admit such a stage only in
+its qualified route context and bounded budget. Keep a foreign debugger stop
+separate from an expected game-state transition. For intermediate waypoints,
+use a source-supported range when an exact sample is immaterial. Preserve exact
+coordinates where the pixel or predicate boundary is the discriminator.
+
+Author a separate player projection from the supported source and observed
+edges. Guard actions with their phase and relevant state so stale or repeated
+actions cannot silently reuse an old result. Bind evidence for consequential
+transitions to the source identity and observations that support them, and fail
+closed when missing evidence would change the claim. Keep source candidates,
+native witnesses and modeled scene effects separately labeled. Test the actual
+player with the authored content, including a relevant refusal and checkpoint
+restore if persistence is in scope; do not equate an in-memory checkpoint with
+a durable one.
+
+Choose verification in proportion to the change and claim: one meaningful
+positive and a discriminating control may settle a bounded behavior. Reuse
+unchanged source checks and completed results rather than repeating successful
+runs, full suites or unrelated probes without a new risk or requirement. This
+does not waive required safety gates, protocol checks or project-mandated checks.
+
 
 ## Define objects and predicates
 
@@ -160,6 +261,54 @@ Track an investigation decision alongside the object's context, for example:
 
 Confidence is not a score to maximize by collecting more prose. Prefer the
 smallest probe that can change the next decision; preserve counterexamples.
+
+## Investigate spatial predicate boundaries
+
+When an interaction looks physically implausible, inspect its actual source
+predicate before inventing a distance rule. Record whether it uses an actor
+origin, center, footprint or measured distance, its coordinate convention,
+and the scalar/modal context. For paired AGI `posn` and negated `posn` guards,
+`fdisbull.agi_spatial_predicates` can extract the narrow supported pattern;
+`fdisbull.scene_boundaries.audit_rectangle_boundary` derives bounded thin
+terminal complement bands using shared mask geometry.
+
+A source witness is not a path. Check picture clearance and live obstacles,
+then test adjacent positions through ordinary input in independent checkpoint
+forks if the first action consumes inventory. Preserve exact launch poses,
+NPC poses, original branch messages, writes, returns and failures. Keep unknown
+reachability explicit and do not call a terminal band an isolated component.
+Stop at the declared effect boundary; a score access does not prove a whole
+room cycle or completed animation. The KQ1 dragon example confirms two row
+166/167 branch outcomes while leaving the other 40 band origins unqualified.
+
+## Keep world, viewport and collision domains separate
+
+Use optional `coordinate_domains` metadata and the offline
+`debug-scene-domain-audit` / `debug-spatial-domain-audit` methods to inspect
+signed object extents before clipping. Declare the common space/unit, world,
+room, collision coverage and viewport independently. Keep a baseline collision
+footprint separate from rendered sprite bounds; leave missing transforms,
+footprints and camera information unknown. The summary counts examined
+comparisons, not qualified movement, and can be selected through output handles.
+
+Expected off-screen data uses explicit scoped margin rules. Disable anomaly
+flags per rule or with `alerts:false` while retaining layout notices. A platform
+name does not establish a scrolling mechanism, and expected margins never
+enlarge a safe mask or authorize teleportation. Imported metadata and screenshots
+remain historical until fresh observations bind the context again.
+
+Check both mixed and fully dry border baselines beside an inward hazard. KQ1's
+recorded x154 water-walk touches the picture's right edge; it is not an object
+past the viewport. A bounds-only containment result does not settle terrain
+passability. Keep source seam candidates, native observations and inferred
+mechanisms separate. A row inside a game picture is not automatically a row
+outside the full screenshot.
+
+World inventories can seed this work without inventing their missing rules.
+Preserve exact coordinates, stacked identities and elevation layers. Distinguish
+declared diagnostic anchors, static candidates, observed placements and
+qualified interactions. A scene/camera glyph or world census does not supply
+collision geometry or a safe teleport destination by itself.
 
 ## Adaptation provenance
 

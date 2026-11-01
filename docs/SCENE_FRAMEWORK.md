@@ -10,6 +10,10 @@ For published packages, tag CI and copied qualification, see the
 Scenes are now project database objects. A versioned manifest drives both the
 headless overlay and named guest actions. Clean snapshots, object identities,
 context, earlier revisions and failed observations survive project restart.
+Optional [coordinate-domain metadata](SCENE_COORDINATE_DOMAINS.md) adds a stored,
+offline audit of object extents against explicit world, room, collision and
+viewport bounds. Expected off-screen margins retain designer notices. The audit
+does not grant action readiness or safe movement.
 This implementation supports native DOSBox RGB probes; the Wine/QEMU and IDA
 backends do not yet expose this scene runtime. No released 0.16.0 package is
 silently upgraded by these source changes.

@@ -1,0 +1,149 @@
+{
+  "schema": "authored-video-route-provenance-v1",
+  "source": {
+    "url": "https://www.youtube.com/watch?v=DgW6hNJZjxQ",
+    "video_id": "DgW6hNJZjxQ",
+    "title": "Kings Quest 1 TAS speedrun in 9.89 (no audio)",
+    "uploader": "Robb",
+    "handle": "@diploma2007",
+    "channel_id": "UCs8mhq2STB7GkP3FCy52REA",
+    "upload_date": "2022-12-16"
+  },
+  "source_acquisition": {
+    "route": "authentication-free direct metadata and yt-dlp; no cookies, dependency updates, or access bypass",
+    "yt_dlp_version": "2026.10.26",
+    "usable_captions": false,
+    "media_sha256": [
+      {
+        "name": "DgW6hNJZjxQ.f137.mp4",
+        "size_bytes": 2613974,
+        "sha256": "eac568499cfe3169a798c8efb06aaaea0d146775728d7b4265b1a68677219fae"
+      },
+      {
+        "name": "DgW6hNJZjxQ.f251.webm",
+        "size_bytes": 10005,
+        "sha256": "2112f2af0d487e7150e59ceb7bbd44c672bb72e335324f382768e2e0079fa8e5"
+      },
+      {
+        "name": "DgW6hNJZjxQ.mkv",
+        "size_bytes": 2620440,
+        "sha256": "5d7c24009b8de2cd06c8a4ad83295ca127661222655ad5b91b9a969937f74a40"
+      }
+    ]
+  },
+  "recording": {
+    "container_duration_seconds": 20.021,
+    "nominal_video_fps": "30/1",
+    "encoded_video_frames": 599,
+    "timestamp_basis": "ffprobe best_effort_timestamp_time, zero-based encoded-frame index",
+    "first_frame_pts_seconds": 0.0,
+    "last_frame_pts_seconds": 19.933,
+    "full_frame_size": [
+      1920,
+      1080
+    ],
+    "game_crop_full_frame_xyxy": [
+      666,
+      60,
+      1626,
+      660
+    ],
+    "canonical_game_view_size": [
+      320,
+      200
+    ],
+    "canonical_game_resize": "nearest neighbor",
+    "full_frame_manifest_sha256": "204c277cc068eaf53e411eed61c3b8b0e14793b88ea55b0ba60989ec74460cd1"
+  },
+  "observed_endpoint": {
+    "first_stopped_timer_frame": 422,
+    "pts_seconds": 14.067,
+    "external_timer_seconds": 9.89,
+    "previous_frame_timer_seconds": 9.87,
+    "visible_score": "63/158",
+    "visible_game_state": "king-steps-aside modal",
+    "last_frame": 598,
+    "last_frame_pts_seconds": 19.933,
+    "later_coronation_or_inventory_screen_shown": false
+  },
+  "preparation": {
+    "restore_ui_observed": true,
+    "path_prompt_frames": [
+      71,
+      73
+    ],
+    "entered_directory_string": "not visible at f72",
+    "save_list_frames": [
+      74,
+      76
+    ],
+    "selected_save_label": "save1",
+    "displayed_save_file_basename": "kq1sg.1",
+    "restore_confirmation_frames": [
+      77,
+      79
+    ],
+    "game_view_returns_frame": 80,
+    "restart_highlight_frame": 81,
+    "final_restart_modal_frames": [
+      83,
+      122
+    ],
+    "save_contents": "unknown; not supplied",
+    "full_restart_effect_on_state_and_rng": "unknown",
+    "independently_qualified_fresh_start": false
+  },
+  "attributed_uploader_claims": {
+    "description_profile": "DOSBox TAS at 157600 cycles",
+    "manual_reproducibility": "uploader says most tricks can be performed manually, except the well section which the uploader describes as too fast for a human"
+  },
+  "visible_titlebar": {
+    "dosbox": "ECE r4319",
+    "cpu_cycles": 157600,
+    "frameskip": 0,
+    "program": "KQ1"
+  },
+  "unknowns": [
+    "exact game build and binary hashes",
+    "graphics selection",
+    "TAS input file",
+    "host-to-guest keyboard remapping",
+    "save1 contents and full final-restart/RNG effects",
+    "repeated and between-frame inputs",
+    "exact parser dispatch and native direction timing",
+    "native actor coordinates",
+    "receiving-runtime reproduction"
+  ],
+  "interpretation_limits": [
+    "physical top number-row highlights are not a verified numpad mapping",
+    "key-highlight disappearance does not establish key release or an AGI movement stop",
+    "letter sets do not prove typing order",
+    "large viewport changes include messages, menus, redraws and scene entries",
+    "split names alone do not prove inventory",
+    "declared TAS endpoint is separate from filmed later ending"
+  ],
+  "coverage": {
+    "encoded_frames_indexed": 599,
+    "game_crops": 599,
+    "keyboard_crops": 599,
+    "key_set_change_frames": 207,
+    "numbered_label_onset_frames": 105,
+    "large_picture_delta_candidate_frames": 100,
+    "scene_or_modal_annotation_boundaries": 96,
+    "triplets": 196,
+    "command_response_annotations": 27,
+    "menu_annotations": 9,
+    "all_source_frame_sha256_retained": true,
+    "hidden_native_inputs_recovered": false,
+    "avatar_unique_color_candidate_frames": 206,
+    "reviewed_motion_intervals": 13,
+    "native_actor_coordinates_recovered": false,
+    "complete_native_input_sequence_recovered": false
+  },
+  "canonical_private_packet": {
+    "name": "kq1-robb-9.89-recreation-handoff-v1.zip",
+    "sha256": "716cef87bc34822423cf9e459f113682a2658635b2c4a93fcb609fe4e3d10f36"
+  },
+  "authored_route_sha256": "b086effc1a711b3665fecbb3b6077070b7b4c0398de75497eed1952deb4610f4",
+  "publication_scope": "Authored route prose and this provenance only; third-party video, crops, original game files and save bytes are not included in the authored publication."
+}

@@ -1,0 +1,134 @@
+{
+  "format": "fdisbull-agi-gnome-giant-traces-1",
+  "native_distance": {
+    "sha256": "3d1f79ae0ecf7335f62b7270b1575ab1e21cfd7009fb3a6e1d6cd06420f89f05",
+    "source_logic": 58,
+    "source_logic_sha256": "38a7afd5c3fdd3e03c7c8e0ed670516b75d1521a4f0034bd0faac14954a3570e",
+    "source_offset": 564,
+    "source_cursor_offset": 568,
+    "arguments": [
+      0,
+      1,
+      70
+    ],
+    "identity": {
+      "session_id": "ses-1",
+      "cs": 3835,
+      "ds": 6384,
+      "agi_sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+      "handler_sha256": "1948a0f4a7f843c374a0a80216cc781e9fbf73cf97de2cf42d0d4ada2d422bc9"
+    },
+    "derived_expected_distance": 24,
+    "native_result": 24,
+    "before_v70": 0,
+    "actor_table": 14989,
+    "distance_writer": {
+      "cause_offset": 18594,
+      "resume_offset": 18598,
+      "bx": 70,
+      "ax": 24,
+      "si": 14989,
+      "di": 15032,
+      "bp": 10276,
+      "sp": 10272,
+      "ss": 6384
+    },
+    "handler_return": {
+      "offset": 762,
+      "observed": true,
+      "source_cursor_offset": 568,
+      "stack_verified": true,
+      "ss": 6384,
+      "writer_bp": 10276,
+      "sp": 10284,
+      "ax": 25926,
+      "si": 25923
+    },
+    "scope": "Supplied command-time native distance write and real return, bound to the captured sleeping pose; not independent authentication."
+  },
+  "pickups": {
+    "key": {
+      "source_logic": 40,
+      "item": 5,
+      "before": {
+        "score": 14,
+        "item_location": 0
+      },
+      "after": {
+        "score": 17,
+        "item_location": 255
+      },
+      "order": [
+        "item",
+        "return",
+        "score"
+      ],
+      "item_source_offset": 726,
+      "score_source_offset": 731,
+      "item_writer": {
+        "cause_offset": 29826,
+        "resume_offset": 29830,
+        "di_offset": 14676
+      },
+      "score_writer": {
+        "cause_offset": 29402,
+        "resume_offset": 29406,
+        "bx": 3,
+        "al": 3
+      },
+      "handler_return": {
+        "offset": 762,
+        "observed": true,
+        "source_cursor_offset": 728,
+        "stack_verified": true
+      },
+      "trace": {
+        "sha256": "889f83c5c9bc047bcde01d392c170871ebc5404749039bbee5b7695edfc02062",
+        "event_count": 59,
+        "maximum_count": 128
+      }
+    },
+    "chest": {
+      "source_logic": 58,
+      "item": 2,
+      "before": {
+        "score": 26,
+        "item_location": 0
+      },
+      "after": {
+        "score": 34,
+        "item_location": 255
+      },
+      "order": [
+        "score",
+        "item",
+        "return"
+      ],
+      "item_source_offset": 605,
+      "score_source_offset": 602,
+      "item_writer": {
+        "cause_offset": 29826,
+        "resume_offset": 29830,
+        "di_offset": 14667
+      },
+      "score_writer": {
+        "cause_offset": 29402,
+        "resume_offset": 29406,
+        "bx": 3,
+        "al": 8
+      },
+      "handler_return": {
+        "offset": 762,
+        "observed": true,
+        "source_cursor_offset": 607,
+        "stack_verified": true
+      },
+      "trace": {
+        "sha256": "5dfa7137edbbe8610a58eaa65a94fa7eb9638918db923214adbcfd49b21299da",
+        "event_count": 68,
+        "maximum_count": 128
+      }
+    }
+  },
+  "scope": "Native writer/return operands and bounded trace identities; full instruction-event payloads remain private."
+}

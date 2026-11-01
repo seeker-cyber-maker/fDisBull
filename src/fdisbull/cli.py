@@ -22,7 +22,7 @@ AGENT_SKILL_GUIDES = {
     "references/reconstruction.md": "First-use recovery recipe: original-to-UIL-to-target gates, discriminating probes and resumable evidence",
     "references/proofs.md": "Build explicit bounded Z3 models and report their assumptions and scope",
     "references/workflows.md": "Choose static analysis, native debugging, scene or text-player entry points",
-    "references/udl-uil-udc.md": "Qualify source blocks, retained Zork IR, recovered intents and scene rules, and original-backed DOS compilation",
+    "references/udl-uil-udc.md": "Qualify direct AGI components, source blocks, retained Zork IR, recovered intents and scene rules, and original-backed DOS compilation",
     "references/common-uil.md": "Compose indexed typed UIL, semantic catalogs, recoverable blocks and standalone selected output",
     "references/recovery-research.md": "Qualify research, retain reusable meanings and compare recovery depth and cost",
     "references/semantic-contracts.md": "Recover complete intent contracts and compare facts, effects, time and projection losses",
@@ -87,6 +87,7 @@ METHODS = {
     "output-export": "Export retained JSON to a new private file outside Git; artifact,output",
     "debug-save-spatial-map": "Save an immutable source-bound room map; name,document,[parent,version,author]",
     "debug-spatial-map-info": "Read a pinned room-map revision; revision,[version]",
+    "debug-spatial-domain-audit": "Audit stored world/room/viewport extents without changing navigation; revision,[version,max_checks]",
     "debug-spatial-check": "Check actor footprint against known safe masks; revision,point,[conditions,version]",
     "debug-spatial-candidates": "Propose clear anchors in game units; revision,[zone,origin,limit,clearance,conditions,version]",
     "debug-spatial-route": "Plan a bounded cardinal route through known clear cells; revision,start,goal,[conditions,maxnodes,version]",
@@ -123,6 +124,7 @@ METHODS = {
     "debug-save-scene": "Save a versioned scene manifest with persistent objects and screenshot evidence; name,definition,[parent,version,author]",
     "debug-scenes": "List current scene revisions; [version]",
     "debug-scene-info": "Read a scene manifest, evidence and persistent object identities; scene,[version]",
+    "debug-scene-domain-audit": "Audit stored object extents and expected margins; scene,[version,max_checks]",
     "debug-scene-overlay": "Render shared masks with names or numbers and a legend; scene,[artifact,name,grid_step,version,labels]",
     "debug-scene-observation": "Read one retained full or compact historical observation; observation,[compact]",
     "debug-export-scenes": "Export compatible scene definitions and clean PNG evidence only; scenes,output,[version]",
@@ -252,6 +254,9 @@ METHODS = {
     "function-patterns": "Candidate prologue/epilogue evidence; [version,limit,offset,scan_unexplored]",
     "managed": "Inspect .NET metadata or disassemble one CIL method; path or project,[token,max_instructions,version]",
     "agi-logic": "Read-only partial AGI 2.917 logic decoding; logdir, volume_dir, logic, profile, [max_instructions]",
+    "decoder-modules": "List explicitly registered trusted source decoder modules; no project required",
+    "module-analyze": "Direct source analysis without native ASM; module,path,[volume_dir,logic,profile,address,max_instructions]",
+    "module-lift": "Direct source-to-UDL/UIL projection; module,path,initial_state,[volume_dir,logic,profile,entry_offset,stop_offsets,stop_points,callee_entries,max_instructions,max_call_depth,control_flow,allow_opaque,effect_profile]",
     "zmachine-disasm": "Read-only Z-machine v3 instruction slice; path,[address,max_instructions]",
     "zmachine-analyze": "Bounded recursive Z-machine v3 processor analysis; path,[entry_points,max_instructions]",
     "decoder-check": "Compare x86 iced/Capstone proposals without execution; data,[bits,address,scan_offsets,max_candidates]",
@@ -476,6 +481,37 @@ def invoke(method, params, debugger=None):
             return native("snapshot", **p)
         from .macos_session import run_session, recover_session
         return (run_session if method == "macos-session" else recover_session)(native=native, **p)
+    if method in ("decoder-modules", "module-analyze", "module-lift"):
+        from .decoder_modules import analyze_input, builtin_registry, lift_input
+        registry = builtin_registry()
+        if method == "decoder-modules":
+            if p:
+                raise ValueError("decoder-modules takes no parameters")
+            return {"format": "fdisbull-decoder-modules-1", "modules": registry.catalog(),
+                    "registration": "explicit trusted in-process objects; no automatic imports"}
+        identity, path = p.pop("module"), p.pop("path")
+        limit = p.pop("max_instructions", 40 if method == "module-analyze" else 128)
+        if method == "module-analyze":
+            address = p.pop("address", None)
+            return analyze_input(registry.open(identity, path, **p),
+                                 address=address, max_instructions=limit)
+        state_file = p.pop("state_file", None)
+        if state_file is not None:
+            if "initial_state" in p:
+                raise ValueError("supply initial_state or state_file, not both")
+            with Path(state_file).open("rb") as handle:
+                raw = handle.read(65537)
+            if len(raw) > 65536:
+                raise ValueError("initial state exceeds 64 KiB")
+            p["initial_state"] = json.loads(raw)
+        initial_state = p.pop("initial_state")
+        call_depth = p.pop("max_call_depth", None)
+        control_flow, allow_opaque = p.pop("control_flow", None), p.pop("allow_opaque", None)
+        effect_profile = p.pop("effect_profile", None)
+        return lift_input(registry.open(identity, path, **p),
+                          initial_state=initial_state, max_instructions=limit,
+                          max_call_depth=call_depth, control_flow=control_flow,
+                          allow_opaque=allow_opaque, effect_profile=effect_profile)
     if method in ("zmachine-disasm", "zmachine-analyze"):
         from .zmachine_analysis import analyze_story, disassemble_story
 
@@ -617,6 +653,7 @@ def invoke(method, params, debugger=None):
         "debug-save-scene",
         "debug-scenes",
         "debug-scene-info",
+        "debug-scene-domain-audit",
         "debug-scene-overlay",
         "debug-scene-observations",
         "debug-scene-observation",
@@ -629,6 +666,7 @@ def invoke(method, params, debugger=None):
         "debug-text-projection-info",
         "debug-save-spatial-map",
         "debug-spatial-map-info",
+        "debug-spatial-domain-audit",
         "debug-spatial-check",
         "debug-spatial-candidates",
         "debug-spatial-route",
@@ -1004,6 +1042,9 @@ def respond(request, default_project=None, debugger=None):
                 "gog-list",
                 "gog-unpack",
                 "agi-logic",
+                "decoder-modules",
+                "module-analyze",
+                "module-lift",
                 "zmachine-disasm",
                 "zmachine-analyze",
                 "output-info",
@@ -1235,6 +1276,12 @@ def parser():
             choices=("graphics", "audio", "input"),
             default=[],
         )
+        if name == "il-run":
+            c.add_argument("--effect-context", help="Private explicit object/resource model context")
+            c.add_argument("--checkpoint", help="Private suspended model invocation")
+            c.add_argument("--host-result", help="Matching explicit host completion result")
+            c.add_argument("--max-steps", type=int, default=1024)
+            c.add_argument("--max-call-depth", type=int, default=8)
     c = sub.add_parser(
         "il-store",
         help="Store an immutable source-checked shared IL revision with a project",
@@ -1422,6 +1469,7 @@ def parser():
         "debug-save-scene",
         "debug-scenes",
         "debug-scene-info",
+        "debug-scene-domain-audit",
         "debug-scene-overlay",
         "debug-scene-observations",
         "debug-scene-observation",
@@ -1437,8 +1485,10 @@ def parser():
             c.add_argument("definition_file")
             c.add_argument("--parent")
             c.add_argument("--author", default="agent")
-        elif name in ("debug-scene-info", "debug-scene-overlay"):
+        elif name in ("debug-scene-info", "debug-scene-domain-audit", "debug-scene-overlay"):
             c.add_argument("scene")
+            if name == "debug-scene-domain-audit":
+                c.add_argument("--max-checks", type=int, default=4096)
             if name == "debug-scene-overlay":
                 c.add_argument("--artifact")
                 c.add_argument("--name", default="scene-overlay.png")
@@ -1775,6 +1825,33 @@ def parser():
     c.add_argument("logic", type=int)
     c.add_argument("--profile", required=True, choices=["2.917"])
     c.add_argument("--max-instructions", type=int, default=1000)
+    c = sub.add_parser("debug-spatial-domain-audit", help=METHODS["debug-spatial-domain-audit"])
+    c.add_argument("project")
+    c.add_argument("revision")
+    c.add_argument("--version", type=int)
+    c.add_argument("--max-checks", type=int, default=4096)
+    sub.add_parser("decoder-modules", help=METHODS["decoder-modules"])
+    for name in ("module-analyze", "module-lift"):
+        c = sub.add_parser(name, help=METHODS[name])
+        c.add_argument("module")
+        c.add_argument("path")
+        c.add_argument("--volume-dir")
+        c.add_argument("--logic", type=int)
+        c.add_argument("--profile", choices=["2.917"])
+        c.add_argument("--max-instructions", type=int, default=40 if name == "module-analyze" else 128)
+        if name == "module-analyze":
+            c.add_argument("--address", type=lambda s: int(s, 0))
+        else:
+            c.add_argument("--state-file", required=True)
+            c.add_argument("--entry-offset", type=lambda s: int(s, 0), default=0)
+            c.add_argument("--stop-offset", dest="stop_offsets", action="append", type=lambda s: int(s, 0))
+            c.add_argument("--stop-point", dest="stop_points", action="append", help="LOGIC:OFFSET component boundary")
+            c.add_argument("--callee-entry", dest="callee_entries", action="append", help="LOGIC:OFFSET cached scan-entry witness")
+            c.add_argument("--max-call-depth", type=int)
+            c.add_argument("--control-flow", choices=["tree", "compact"])
+            c.add_argument("--allow-opaque", action="store_const", const=True, default=None,
+                           help="Retain known unmodeled actions in a non-executable compact graph")
+            c.add_argument("--effect-profile", choices=["agi-2.917"], help="Explicit object/resource effect contract")
     c = sub.add_parser("zmachine-disasm", help=METHODS["zmachine-disasm"])
     c.add_argument("path")
     c.add_argument("--address", type=lambda s: int(s, 0))
@@ -2444,6 +2521,11 @@ def _language_command(command, args):
                         program,
                         state=read_json(args["state"]) if args["state"] else None,
                         capabilities=args["capability"],
+                        max_steps=args["max_steps"],
+                        max_call_depth=args["max_call_depth"],
+                        effect_context=read_json(args["effect_context"]) if args["effect_context"] else None,
+                        checkpoint=read_json(args["checkpoint"]) if args["checkpoint"] else None,
+                        host_result=read_json(args["host_result"]) if args["host_result"] else None,
                     )
                 )
                 emit(result)

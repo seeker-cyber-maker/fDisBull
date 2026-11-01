@@ -35,6 +35,14 @@ a driver or resource rather than its executable format. A compression or
 relocation problem belongs to loading/mapping, not automatically to instruction
 decoding. Reuse the existing ISA processor when only the container changes.
 
+When AGI or Z-machine guest instructions are present, prefer their explicit
+source decoder module to treating the interpreter's native ASM as the story.
+`decoder-modules` lists built-in capabilities; `module-analyze` is projectless.
+An AGI LOGDIR/VOL container is validated structurally under a selected profile,
+not an extension or automatic interpreter-version guess. Module snapshots and
+resource-local locations have separate identities; retain both when linking
+facts. Do not flatten a guest offset into the DOS interpreter's address space.
+
 Keep a mapping record for file offsets, loaded object/section addresses,
 zero-filled ranges, relocated bytes and runtime selectors or generations.
 Do not disassemble a wrapper as though it were the main image. Keep alternate

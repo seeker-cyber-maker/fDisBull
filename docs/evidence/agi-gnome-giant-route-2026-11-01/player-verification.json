@@ -1,0 +1,58 @@
+{
+  "format": "fdisbull-agi-gnome-giant-player-verification-1",
+  "complete": true,
+  "scope": "Authored partial projection checked in the genuine installed direct and separate-process player; in-memory checkpoints only.",
+  "versions": {
+    "fdisbull": "0.28.0",
+    "fdisbull-player": "0.28.0"
+  },
+  "module_sha256": {
+    "fdisbull.il_scenes": "303cbf995ed7669428969a54e3f0520375024167bca92392a521a36108798e97",
+    "fdisbull_player.player": "ec8e916c8b9c82d420b9675d560c8cbec60707ac48fb3196d74c867630def65c"
+  },
+  "isolated": true,
+  "pythonpath_absent": true,
+  "direct": {
+    "checked_phases": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "inventory_matches_capture": true,
+    "stale_and_repeat_preserve_state": true,
+    "before_chest_in_memory_checkpoint_restore": true,
+    "restore_invalidates_old_token": true
+  },
+  "separate_content_process": {
+    "checked_phases": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "inventory_matches_capture": true,
+    "stale_and_repeat_preserve_state": true,
+    "before_chest_in_memory_checkpoint_restore": true,
+    "restore_invalidates_old_token": true
+  },
+  "all_modeled_scalar_phases_match_capture": true,
+  "all_three_content_process_installation_identities_match": true,
+  "failed_precondition_preserved_direct_and_process": true,
+  "fresh_checkpoint_missing_direct_and_process": true,
+  "projection_native_fields": 40,
+  "phases": 9,
+  "scene_sha256": "c119c90f9e1c9698971672e3fc22ee98fc96731a37c673a3b11fdc76a475fc84",
+  "provenance_sha256": "b3518909a659304d8c5cb7899a34f9e78335f5727f644239fd5da9fd7d816dd5",
+  "raw_player_receipt_sha256": "88f2dfefb29f7d4f40172a5569d40f4e0ec4d62b7fd48fa2e46caf9c37768282"
+}

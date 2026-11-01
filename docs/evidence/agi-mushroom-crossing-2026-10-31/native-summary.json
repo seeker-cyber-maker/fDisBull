@@ -1,0 +1,577 @@
+{
+  "format": "fdisbull-agi-mushroom-native-summary-1",
+  "runs": [
+    {
+      "id": "native-01",
+      "complete": true,
+      "collector_sha256": "3ba355c36194f075ef6293a00262d19d7dc253f0b7ebac2f70a4e5fc3c483452",
+      "backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+      "final_source": false,
+      "runtime": {
+        "policy": "physical",
+        "fresh_game": true,
+        "interventions": [],
+        "session_id": "ses-1",
+        "guest_elapsed_ms": 101798
+      },
+      "route_guest_elapsed_ms": 101798,
+      "room48_initial_ready_state": {
+        "room": 48,
+        "score": 0,
+        "ego": {
+          "x": 129,
+          "y": 141,
+          "direction": 0,
+          "drawn": true
+        },
+        "in_water": false,
+        "on_trigger": false,
+        "swimming": 0,
+        "dead": false,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "bridge_active": false,
+        "troll_removed": false,
+        "troll_paid": false,
+        "mushroom_carried": false,
+        "mushroom_taken": false,
+        "mushroom_scored": false
+      },
+      "final_state": {
+        "room": 47,
+        "score": 1,
+        "ego": {
+          "x": 94,
+          "y": 90,
+          "direction": 0,
+          "drawn": true
+        },
+        "in_water": false,
+        "on_trigger": false,
+        "swimming": 0,
+        "dead": false,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "bridge_active": false,
+        "troll_removed": false,
+        "troll_paid": false,
+        "mushroom_carried": true,
+        "mushroom_taken": true,
+        "mushroom_scored": true
+      },
+      "observations": {
+        "mushroom-before": {
+          "state": {
+            "room": 33,
+            "score": 0,
+            "ego": {
+              "x": 154,
+              "y": 87,
+              "direction": 0,
+              "drawn": true
+            },
+            "in_water": false,
+            "on_trigger": false,
+            "swimming": 0,
+            "dead": false,
+            "ego_width": 6,
+            "ego_view": 0,
+            "step_size": 1,
+            "bridge_active": false,
+            "troll_removed": false,
+            "troll_paid": false,
+            "mushroom_carried": false,
+            "mushroom_taken": false,
+            "mushroom_scored": false
+          },
+          "frame": {
+            "path": "mushroom-before.png",
+            "sha256": "411d43d3bfadd03da2205df48bfece4bec87f50af5d14d2c7e1f314b676b2a20"
+          }
+        },
+        "mushroom-midwater": {
+          "state": {
+            "room": 33,
+            "score": 0,
+            "ego": {
+              "x": 154,
+              "y": 55,
+              "direction": 0,
+              "drawn": true
+            },
+            "in_water": false,
+            "on_trigger": false,
+            "swimming": 0,
+            "dead": false,
+            "ego_width": 6,
+            "ego_view": 0,
+            "step_size": 1,
+            "bridge_active": false,
+            "troll_removed": false,
+            "troll_paid": false,
+            "mushroom_carried": false,
+            "mushroom_taken": false,
+            "mushroom_scored": false
+          },
+          "frame": {
+            "path": "mushroom-midwater.png",
+            "sha256": "59e6c7d3e5e1cf090136ea788185823cec3bc4bb8e289b8e910c5b55294390e7"
+          }
+        },
+        "mushroom-landed": {
+          "state": {
+            "room": 48,
+            "score": 0,
+            "ego": {
+              "x": 129,
+              "y": 140,
+              "direction": 0,
+              "drawn": true
+            },
+            "in_water": false,
+            "on_trigger": false,
+            "swimming": 0,
+            "dead": false,
+            "ego_width": 6,
+            "ego_view": 0,
+            "step_size": 1,
+            "bridge_active": false,
+            "troll_removed": false,
+            "troll_paid": false,
+            "mushroom_carried": false,
+            "mushroom_taken": false,
+            "mushroom_scored": false
+          },
+          "frame": {
+            "path": "mushroom-landed.png",
+            "sha256": "6e88d92783ef68ed5e8dbc47b3dcef0870f6f6645c6d1c821d8571092418413a"
+          }
+        },
+        "mushroom-near": {
+          "state": {
+            "room": 47,
+            "score": 0,
+            "ego": {
+              "x": 94,
+              "y": 90,
+              "direction": 0,
+              "drawn": true
+            },
+            "in_water": false,
+            "on_trigger": false,
+            "swimming": 0,
+            "dead": false,
+            "ego_width": 6,
+            "ego_view": 0,
+            "step_size": 1,
+            "bridge_active": false,
+            "troll_removed": false,
+            "troll_paid": false,
+            "mushroom_carried": false,
+            "mushroom_taken": false,
+            "mushroom_scored": false
+          },
+          "frame": {
+            "path": "mushroom-near.png",
+            "sha256": "a3eb6eb7fc39b785d2cd28300486cc0c84d2002aeed530697596dbeb3e6d526d"
+          }
+        },
+        "mushroom-taken": {
+          "state": {
+            "room": 47,
+            "score": 1,
+            "ego": {
+              "x": 94,
+              "y": 90,
+              "direction": 0,
+              "drawn": true
+            },
+            "in_water": false,
+            "on_trigger": false,
+            "swimming": 0,
+            "dead": false,
+            "ego_width": 6,
+            "ego_view": 0,
+            "step_size": 1,
+            "bridge_active": false,
+            "troll_removed": false,
+            "troll_paid": false,
+            "mushroom_carried": true,
+            "mushroom_taken": true,
+            "mushroom_scored": true
+          },
+          "frame": {
+            "path": "mushroom-taken.png",
+            "sha256": "0cbf0543848a39a3a359c095322690be276ab8136865055cedd4460285847571"
+          }
+        }
+      },
+      "original_pickup": {
+        "source_logic": 47,
+        "source_logic_sha256": "80c41eec21a3c3d2ca326ac9f9e6890b89c1241703e8b7a8a22e27494bb81283",
+        "score_source_offset": 405,
+        "item_source_offset": 408,
+        "before": {
+          "score": 0,
+          "item_location": 0
+        },
+        "after": {
+          "score": 1,
+          "item_location": 255
+        },
+        "score_writer": {
+          "cause_offset": 29402,
+          "resume_offset": 29406,
+          "bx": 3,
+          "al": 1
+        },
+        "item_writer": {
+          "cause_offset": 29826,
+          "resume_offset": 29830,
+          "di_offset": 14733
+        },
+        "handler_return": {
+          "offset": 762,
+          "observed": true,
+          "source_cursor_offset": 410,
+          "stack_verified": true
+        }
+      },
+      "source_and_copy_unchanged_after_teardown": true,
+      "raw_private_artifacts": {
+        "result.json": "0594289cde330655951f10540b341118bbd18e5d4a28696ef19acebc13d13a74",
+        "capture.private.json": "91e2d390adaf89a27d588619a6cc5021efb34e119e4504444990fcbbe205fde3",
+        "journal.private.json": "1f6df057a29587830f951ba9879ac060fd9c906b4ae77fee072abefe77698af6",
+        "mushroom-pickup.private.json": "2f95805c182b3c7accc002ccb46072d708bbffbd8ab3b7cc9acbf5d8a2a1fc57",
+        "mushroom-trace.private.json": "10d37c4133afcce5c236ce16dd95e944b92ad6e8bed03c2d02f846e906a0344e"
+      },
+      "messages": [
+        {
+          "logic": 47,
+          "source_offset": 399,
+          "message_id": 9,
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "native-02",
+      "complete": true,
+      "collector_sha256": "a01004c50163db2ca9bdb20c96cf2d5d3a74671bfe2bb0a759ef1316fb778e2a",
+      "backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+      "final_source": true,
+      "runtime": {
+        "policy": "physical",
+        "fresh_game": true,
+        "interventions": [],
+        "session_id": "ses-1",
+        "guest_elapsed_ms": 101308
+      },
+      "route_guest_elapsed_ms": 101308,
+      "room48_initial_ready_state": {
+        "room": 48,
+        "score": 0,
+        "ego": {
+          "x": 129,
+          "y": 140,
+          "direction": 0,
+          "drawn": true
+        },
+        "in_water": false,
+        "on_trigger": false,
+        "swimming": 0,
+        "dead": false,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "bridge_active": false,
+        "troll_removed": false,
+        "troll_paid": false,
+        "mushroom_carried": false,
+        "mushroom_taken": false,
+        "mushroom_scored": false
+      },
+      "final_state": {
+        "room": 47,
+        "score": 1,
+        "ego": {
+          "x": 94,
+          "y": 90,
+          "direction": 0,
+          "drawn": true
+        },
+        "in_water": false,
+        "on_trigger": false,
+        "swimming": 0,
+        "dead": false,
+        "ego_width": 6,
+        "ego_view": 0,
+        "step_size": 1,
+        "bridge_active": false,
+        "troll_removed": false,
+        "troll_paid": false,
+        "mushroom_carried": true,
+        "mushroom_taken": true,
+        "mushroom_scored": true
+      },
+      "observations": {
+        "mushroom-before": {
+          "state": {
+            "room": 33,
+            "score": 0,
+            "ego": {
+              "x": 154,
+              "y": 87,
+              "direction": 0,
+              "drawn": true
+            },
+            "in_water": false,
+            "on_trigger": false,
+            "swimming": 0,
+            "dead": false,
+            "ego_width": 6,
+            "ego_view": 0,
+            "step_size": 1,
+            "bridge_active": false,
+            "troll_removed": false,
+            "troll_paid": false,
+            "mushroom_carried": false,
+            "mushroom_taken": false,
+            "mushroom_scored": false
+          },
+          "frame": {
+            "path": "mushroom-before.png",
+            "sha256": "f1553ee241f69137a544d1cdcb1bb6fd567cbd5a35524fae94cffccd655e211b"
+          }
+        },
+        "mushroom-midwater": {
+          "state": {
+            "room": 33,
+            "score": 0,
+            "ego": {
+              "x": 154,
+              "y": 55,
+              "direction": 0,
+              "drawn": true
+            },
+            "in_water": false,
+            "on_trigger": false,
+            "swimming": 0,
+            "dead": false,
+            "ego_width": 6,
+            "ego_view": 0,
+            "step_size": 1,
+            "bridge_active": false,
+            "troll_removed": false,
+            "troll_paid": false,
+            "mushroom_carried": false,
+            "mushroom_taken": false,
+            "mushroom_scored": false
+          },
+          "frame": {
+            "path": "mushroom-midwater.png",
+            "sha256": "869328acaa79ca4a68a5a8146c69f19ef61577f985df9a8c8962431d7cbb91c4"
+          }
+        },
+        "mushroom-landed": {
+          "state": {
+            "room": 48,
+            "score": 0,
+            "ego": {
+              "x": 129,
+              "y": 140,
+              "direction": 0,
+              "drawn": true
+            },
+            "in_water": false,
+            "on_trigger": false,
+            "swimming": 0,
+            "dead": false,
+            "ego_width": 6,
+            "ego_view": 0,
+            "step_size": 1,
+            "bridge_active": false,
+            "troll_removed": false,
+            "troll_paid": false,
+            "mushroom_carried": false,
+            "mushroom_taken": false,
+            "mushroom_scored": false
+          },
+          "frame": {
+            "path": "mushroom-landed.png",
+            "sha256": "4fe78e52afcd6ff477c94b262546651a9f8c44e46f4d3e4551e1e01220228eae"
+          }
+        },
+        "mushroom-near": {
+          "state": {
+            "room": 47,
+            "score": 0,
+            "ego": {
+              "x": 94,
+              "y": 90,
+              "direction": 0,
+              "drawn": true
+            },
+            "in_water": false,
+            "on_trigger": false,
+            "swimming": 0,
+            "dead": false,
+            "ego_width": 6,
+            "ego_view": 0,
+            "step_size": 1,
+            "bridge_active": false,
+            "troll_removed": false,
+            "troll_paid": false,
+            "mushroom_carried": false,
+            "mushroom_taken": false,
+            "mushroom_scored": false
+          },
+          "frame": {
+            "path": "mushroom-near.png",
+            "sha256": "d0a31b884bbb9d9399dbd4f524e8bacb95f78ad89a0bbe7229f7358a43aebae0"
+          }
+        },
+        "mushroom-taken": {
+          "state": {
+            "room": 47,
+            "score": 1,
+            "ego": {
+              "x": 94,
+              "y": 90,
+              "direction": 0,
+              "drawn": true
+            },
+            "in_water": false,
+            "on_trigger": false,
+            "swimming": 0,
+            "dead": false,
+            "ego_width": 6,
+            "ego_view": 0,
+            "step_size": 1,
+            "bridge_active": false,
+            "troll_removed": false,
+            "troll_paid": false,
+            "mushroom_carried": true,
+            "mushroom_taken": true,
+            "mushroom_scored": true
+          },
+          "frame": {
+            "path": "mushroom-taken.png",
+            "sha256": "8821be001c7e767748524183f5cf4b68c227ed549e19c6d620dba0c4a82f6a63"
+          }
+        }
+      },
+      "original_pickup": {
+        "source_logic": 47,
+        "source_logic_sha256": "80c41eec21a3c3d2ca326ac9f9e6890b89c1241703e8b7a8a22e27494bb81283",
+        "score_source_offset": 405,
+        "item_source_offset": 408,
+        "before": {
+          "score": 0,
+          "item_location": 0
+        },
+        "after": {
+          "score": 1,
+          "item_location": 255
+        },
+        "score_writer": {
+          "cause_offset": 29402,
+          "resume_offset": 29406,
+          "bx": 3,
+          "al": 1
+        },
+        "item_writer": {
+          "cause_offset": 29826,
+          "resume_offset": 29830,
+          "di_offset": 14733
+        },
+        "handler_return": {
+          "offset": 762,
+          "observed": true,
+          "source_cursor_offset": 410,
+          "stack_verified": true
+        }
+      },
+      "source_and_copy_unchanged_after_teardown": true,
+      "raw_private_artifacts": {
+        "result.json": "68d2a8c62154ea992e7c13d69d70a1564af5167492011d1a50a27719c6788b42",
+        "capture.private.json": "20bc6a5c9d1c6f0c11dfac55a940b0e420744b049bbd9add7aafc605e3664da5",
+        "journal.private.json": "760e088062a17f2adbbe76515aee2e043220006f674ab138f292b897b75b5b97",
+        "mushroom-pickup.private.json": "edffc3366e0633e25a946ee66b60f724a80ba427cdec0693bd5a9a8a29e5e9af",
+        "mushroom-trace.private.json": "5cd13aeeaea1367215e0474dd69410ac6e36d01b5270cc458745bfc0d11e1fa5"
+      },
+      "messages": [
+        {
+          "logic": 47,
+          "source_offset": 399,
+          "message_id": 9,
+          "status": "completed"
+        }
+      ]
+    }
+  ],
+  "adjacent_control": {
+    "id": "control-01",
+    "complete": true,
+    "collector_sha256": "a01004c50163db2ca9bdb20c96cf2d5d3a74671bfe2bb0a759ef1316fb778e2a",
+    "backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+    "result": "bounded-north-request-without-advancement",
+    "stable_guest_elapsed_ms": 3055,
+    "consecutive_position_observations": 21,
+    "requested_state": {
+      "room": 33,
+      "score": 0,
+      "ego": {
+        "x": 153,
+        "y": 85,
+        "direction": 1,
+        "drawn": true
+      },
+      "in_water": false,
+      "on_trigger": false,
+      "swimming": 0,
+      "dead": false,
+      "ego_width": 6,
+      "ego_view": 0,
+      "step_size": 1,
+      "bridge_active": false,
+      "troll_removed": false,
+      "troll_paid": false,
+      "mushroom_carried": false,
+      "mushroom_taken": false,
+      "mushroom_scored": false
+    },
+    "final_state": {
+      "room": 33,
+      "score": 0,
+      "ego": {
+        "x": 153,
+        "y": 85,
+        "direction": 0,
+        "drawn": true
+      },
+      "in_water": false,
+      "on_trigger": false,
+      "swimming": 0,
+      "dead": false,
+      "ego_width": 6,
+      "ego_view": 0,
+      "step_size": 1,
+      "bridge_active": false,
+      "troll_removed": false,
+      "troll_paid": false,
+      "mushroom_carried": false,
+      "mushroom_taken": false,
+      "mushroom_scored": false
+    },
+    "source_and_copy_unchanged_after_teardown": true,
+    "raw_private_artifacts": {
+      "result.json": "9e9807032c96c5ef59682a33ea93bc0bfd9f96b1707158c2b4f7c15a29b889a9",
+      "capture.private.json": "b1d0b3e5d2ddf28031f26951211fbe41cdff41fc248b6f953b253772fb8eaf7a",
+      "journal.private.json": "3f3742400f0c0aac34c9a21effb7f85b23a2c80267c613a71b747ed19d2c894a"
+    },
+    "limit": "Bounded non-advancement under a received north request, not proof of permanent unreachability."
+  }
+}

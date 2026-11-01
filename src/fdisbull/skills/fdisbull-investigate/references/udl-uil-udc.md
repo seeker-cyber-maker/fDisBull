@@ -88,6 +88,7 @@ general compiler manual.
 - [Qualified Zork scene rules](#qualified-zork-scene-rules)
 - [Read a proof narrowly](#read-a-proof-narrowly)
 - [Bytecode inspection and runtime qualification](#do-not-conflate-bytecode-inspection-with-runtime-qualification)
+- [Direct guest-language front ends](#direct-guest-language-front-ends)
 
 ## Keep the terms separate
 
@@ -463,3 +464,118 @@ DOS/UIL/composed comparisons remain separate. Authored NE/GDI/input checks in
 Wine 11 new WoW64 do not qualify original Windows 3.x, physical hardware or
 whole-game behavior. Source-checkout docs/UDC_MEMORY_WIN16.md documents the
 Python/JSON APIs, SDK recipe, storage and current limits.
+
+## Direct guest-language front ends
+
+Use a recognized guest language as input, keeping interpreter and story separate.
+`decoder-modules` lists explicit trusted module identities and capabilities;
+`module-analyze` opens AGI v2 logic or a qualified raw Z-machine v3 story without
+native ASM or a project database. `module-lift` admits bounded acyclic scalar
+AGI components: comparisons/isset with AND/OR/NOT, branches, direct logic calls
+and scalar assignments/arithmetic/flags. Supply exactly all reachable read/write
+`$agi_vN` u8 and `$agi_fN` bool initial values and an explicit code-relative
+`callee_entries` witness for each captured call target. Cached scan-start need
+not be zero. Never select a target from initial values for an unsupported
+`call.v`, or prune an unsupported branch because the witness avoids it.
+
+Use `entry_offset`, root `stop_offsets` and cross-resource `stop_points` to
+declare a smaller observation component. A stop inside a callee ends the entire
+component with its caller suspended; it cannot stand in for a returning callee.
+The v2 projection retains exits, suspended frames and source-entry mappings for
+IL `visited` IDs. Qualification is nominal state/control projection, not actual
+interpreter execution. Cycles, recursion, parser/I/O operations and exhausted
+budgets refuse qualification. Keep full-call, bounded call-entry and original
+runtime evidence separate.
+
+For many shared branches or repeated callees, use `control_flow="compact"`
+(`--control-flow compact`). The v3 AGI projection uses `fdisbull-il-2`, with
+one continuation per source location and explicit transfer/call/return/stop.
+The original tree form stays the default. Map continuation IDs in `visited`
+through `block_sources`; use `control_trace` for modeled runtime frames rather
+than attaching one invented frame to a shared source node. Whole-graph
+validation covers inactive branches, all targets and globally unique IDs.
+State and event refusal remains atomic under execution or call-depth budgets.
+
+Use `allow_opaque=True` (`--allow-opaque`) only for a declared structural
+question. It retains known action encodings as explicit opaque operations and
+marks the result `control_flow_only`. Such a graph refuses execution before
+any events, even when the initial witness avoids the action. Unknown widths
+and unsupported conditions still refuse construction. All typed initial values
+remain caller-supplied; synthetic inspection values are not runtime evidence.
+The KQ1 logic-103 comparison covers its selected CFG and structural branch-choice
+paths, not state/effect parity or a working AGI game. Keep generated source-byte
+graphs private; export only authored tests and sanitized counts/digests.
+V1-only scene and source-block/UDC proof consumers explicitly reject v2 graphs;
+do not flatten or omit continuations to get a misleading acceptance result.
+
+For the bounded object/resource profile, select
+`effect_profile="agi-2.917"` (`--effect-profile agi-2.917`) with compact control
+flow. It lowers the declared 22 KQ1 action encodings to typed effect ports and
+uses `object_resource_projection`, not a native-execution qualification.
+Supply explicit object snapshots and captured VIEW geometry/messages. The
+`agi_resources` helpers validate uncompressed DOS v2 resources; the declared
+2.917 profile is an assumption requiring separate interpreter qualification.
+`object_state()` creates a nominal model fixture, not a captured game object.
+
+Drawing/erasing/messages yield a bound request and private JSON checkpoint.
+Check proposed model values, then resume only with a matching explicit host
+result. Readback without a result must preserve request identity and visits.
+Do not infer collision safety, a displayed frame, dismissed dialogue, arrival,
+or an elapsed guest tick from a planned operation. Motion ports configure
+controllers; they do not advance them. Timers, renderer/collision work and
+independent scheduler changes need another qualified host or observation.
+
+The evaluator dispatches no GUI/native command. Its checksum and a supplied
+`completed` result are not authoritative native completion evidence. Keep
+caller claims distinct from provider receipts. If a later model failure reports
+`recovery_required`, preserve prior `host_completions`, reconcile the host, and
+resume the existing qualified route rather than assuming rollback or replaying
+the original action. `state`/`effect_context` remain the model transaction's
+baseline until completion; proposed fields are intermediate observations.
+The 472-case KQ corpus uses synthetic snapshots and supplied host outcomes;
+full model branch/site coverage is not proof of native reachability or parity.
+Keep source-retaining graphs, contexts, messages and checkpoints private.
+
+The separate Python `AGIDOSMonitor` / `AGIDOSHostAdapter` can now qualify one
+original DOS KQ1 leaf invocation against its lifted graph. Bind the unpacked
+interpreter, selected resource, initial fetch, current logic record and call
+frame before advancing. Native source fetches include conditions and jumps;
+handler completions must be observed, and return needs its actual stack
+witness. Capture-key mismatches, foreign breakpoints/watchpoints, hooks, missing
+frames, timeouts and unknown transport outcomes are incomplete or differences,
+never equality. Readback cannot retry an operation. Keep prior native
+completions even when the model or a later capture fails; reconcile or explicitly
+restore before a new trial. The adapter's verified result covers the declared
+final scalar/object projection with named exclusions, not every transient value
+or whole-game parity. A returned print handler is not visual text recognition.
+`examples/agi/verify_host.py` labels its synthetic caller/state interventions;
+do not report them as ordinary gameplay or natural reachability. The standalone
+model evaluator remains native-free.
+
+For branch closure, use `aggregate_native_coverage` with complete source-bound
+host receipts and keep expected, observed and missing source/effect/branch
+sets. Counts must use completed native steps and distinguish actual branch
+destinations; same-target outcomes stay unknown. Reject partial, duplicate or
+foreign-source records. The aggregator validates caller records, not their
+authenticity or whole-game equivalence. Prefer guided model cases to select
+cheap discriminating native probes, then independently run each original path.
+
+An explicit `dialogue_key="enter"` or `"escape"` host policy now qualifies an
+untimed native message wait before sending one physical key. It binds RAM text
+to source, checks the original wait/stack/window and idle keyboard, requires a
+fresh stored preview after measured guest progress, and verifies window closure,
+settled input and original return. Missing capture, foreign stop or lost input
+response must preserve the attempted phase and cannot trigger a replay. Default
+blocking behavior still stops incomplete. Source-linked diagnostic Z builders
+can reuse checked messages and observed state changes with a separate player;
+keep original text/generated content private and label authored commands,
+projection loss, in-memory checkpoint limits and natural-route coverage.
+
+Bind source occurrence using the snapshot key plus the module's resource-local
+location. File offsets and guest offsets are different coordinates. Unknown
+instructions, unsupported control flow, malformed source or budget stops refuse semantic
+qualification. Prefer a cheap supported direct lift over recovering the same
+guest operation from interpreter ASM, but retain ASM for unknown languages and
+engine effects. A missing capability requires another scoped module or probe,
+not an inferred implementation. Persistence, scene/Z recovery, runtime effects
+and UDC emission still require independent tests.

@@ -8,6 +8,12 @@ latest published release is
 [0.27.0](https://github.com/seeker-cyber-maker/fDisBull/releases/tag/v0.27.0);
 0.29.0 is not published yet.
 
+See the [feature history](docs/FEATURE_HISTORY.md) for what shipped in each
+version and what remains in review. This development branch adds direct AGI
+lifting and original-DOS qualification to the earlier source line; those
+additions are in the open PR stack described in the feature map. Check the
+installed capabilities when choosing a workflow.
+
 Give an agent a program to explore—and a place to keep what it learns.
 fDisBull connects disassembly, headless debugging, scene-aware controls and
 persistent evidence. Find the instruction behind a changing value, name a
@@ -296,6 +302,53 @@ can run a user-supplied version-3 story using a separately selected Python and
 Jericho environment. Story inspection and the recovered mailbox slice are
 bounded evidence, not recovery of the parser, turn loop or complete game.
 No original game or story files are distributed.
+
+[Direct decoder modules](docs/DECODER_MODULES.md) make AGI logic and Z-machine
+stories inputs in their own languages. Inspect them without creating an x86
+analysis project. Follow scalar AGI decisions, branches and direct logic calls
+into UDL/UIL with source evidence and explicit state. The guest-language front
+end can grow independently of the DOS interpreter's assembly; supported source
+components and their boundaries stay explicit. Compact control flow keeps shared
+paths once, making larger routines easier to inspect. Unmodeled engine actions
+stay visible and block execution until their effects are implemented.
+An explicit [object/resource effect profile](docs/AGI_EFFECTS.md) now models
+AGI positions, views, queries and controller changes. Drawing and message
+windows use resumable host requests, so an agent can inspect a routine without
+silently treating a requested external action as completed.
+The [original DOS host adapter](docs/AGI_DOS_HOST.md) can now check selected
+KQ1 routines against the running original: follow the same decisions, observe
+real handler returns, and compare the declared state at the routine boundary.
+Interrupted work keeps its evidence and stops for inspection.
+The [eastern bridge case study](docs/AGI_BRIDGE_CLIP.md) follows a speedrunner's
+description to a reproduced KQ1 corner clip, a neighboring failure control,
+and a reusable partial scene in the separate player.
+The [mushroom-island follow-up](docs/AGI_MUSHROOM_CROSSING.md) carries that
+workflow through a river crossing and a real inventory pickup, then offers the
+recorded journey through the separate text player.
+The [clover-and-diamonds cave route](docs/AGI_LEPRECHAUN_ROUTE.md) follows
+ordinary game input through a moving rat, the shield pickup and the small
+opening, then turns the recorded journey into seven guarded text actions.
+The [gnome/key and giant's chest follow-up](docs/AGI_GNOME_GIANT_ROUTE.md)
+continues from a verified native checkpoint through the original game's
+riddle, tree and clouds. Its eight guarded text actions retain the recorded
+inventory, score and source evidence in the separate player.
+The [dragon and magic mirror route](docs/AGI_DRAGON_MIRROR_ROUTE.md) starts a
+fresh game, uses water to clear the dragon, takes the mirror and returns to the
+surface. Original inventory writes and short traces support eight guarded
+text actions, with the preparation, failures and final evidence kept inspectable.
+Its [boundary analysis](docs/AGI_BOUNDARY_EXCEPTIONS.md) also exposes the dragon
+rule's last-row exception, with adjacent outcomes checked in the original game.
+The [coordinate-domain audit](docs/SCENE_COORDINATE_DOMAINS.md) keeps world,
+viewport and collision bounds distinct, flags object overhangs and retains
+designer notes for expected scrolling margins.
+The [bottom-row bridge route](docs/AGI_BRIDGE_BOTTOM.md) now has a fresh-game
+witness, an adjacent water control and a two-action scene for the separate
+player, with the original game files unchanged.
+Agents can now reuse [bounded native control and scene receipts](docs/BOUNDED_NATIVE_SCENES.md)
+for their own routes, carrying partial results and evidence forward without
+rewriting the same transport and capture bookkeeping.
+A separate [reconstruction of Robb's short TAS](docs/research/kq1-robb-9.89/ROUTE.md)
+preserves the visible route and its unresolved inputs for another investigator.
 
 The [Z-machine processor](docs/ZMACHINE_PROCESSOR.md) adds direct v3 bytecode
 inspection through fDisBull's processor interface. It reports operands, calls,

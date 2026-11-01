@@ -120,6 +120,13 @@ Keep independent binary, notes/source-assisted and documented-results-derived UD
 lanes explicit; generated code is not recovered source. Report bounded partial,
 unsupported, unknown and refused outcomes honestly.
 
+For recognized guest code, check `decoder-modules` and use the direct source
+front end before choosing an ASM scaffold. AGI `module-analyze` and the narrow
+`module-lift` do not require a native project. Check capabilities, selected
+profile, source occurrence and required initial-state witness; a direct decoder
+does not imply a complete interpreter or scene recovery. Read
+the source-backed semantics reference below for the qualification gates.
+
 ## Choose a useful probe
 
 For a genuine fork, record one active question, target/context, hypothesis,
@@ -135,6 +142,14 @@ Preserve the tool's required identity, resource and freshness checks. Paralleliz
 independent questions over pinned evidence; one controller owns a live guest's
 input, execution and restoration. Shared derivation is not independent evidence.
 The methodology reference describes the coverage, retry and handoff procedure.
+
+For scene building, keep one behavior question active and choose evidence for
+the intended claim before collecting it. Bind a stable run's source and backend
+identities once, then use cheap bounded state or pixel observations for route
+progress where the protocol permits. Capture a fresh frame or trace when it
+answers a visual or causal question, not on every movement poll. Reuse a
+qualified source check within its actual scope; revalidate after a change or
+restore. See the scene reference for projection and failure boundaries.
 
 ## Match evidence to the claim
 

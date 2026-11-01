@@ -1,0 +1,557 @@
+{
+  "format": "fdisbull-kq1-water-and-river-verification-1",
+  "checked_at_utc": "2026-10-31T23:45:32.149806+00:00",
+  "base_commit": "08daea56e9754f38f56f028659e9fce8d0394f4e",
+  "platform": "Local macOS ARM64; native source checks in genuine CPython3.13.13. Separate installed player reported0.28.0/Python3.13.18.",
+  "review": {
+    "exact_reviewed_head": "08daea56e9754f38f56f028659e9fce8d0394f4e",
+    "verdict": "One P2 failure-path retention finding; addressed in this follow-up.",
+    "finding": "Trace artifact write failure skipped trace.stop; trace.stop failure skipped persistence of the already-qualified score proof.",
+    "regression": "Two authored tests failed for those mechanisms against the exact reviewed source, then passed after the fix.",
+    "fix": "Persist known write before continuation; independently attempt cleanup and artifact/proof persistence; retain failure details; assign verified status only after final proof write.",
+    "review_evidence_sha256": "d4f0cc1110a77d3953dfde9f6f71cc1c4ee3524f32e0d3fdfea47a0596ca6594",
+    "fault_evidence_sha256": "dc01d33d2ac77b0a94eef8edd9e6267d133066c9157a8a708299036605e8cc06",
+    "fix_commit": "cefaf82acccb57f53c57c5d0d40f64c1c18d5812"
+  },
+  "native_water": {
+    "status": "complete",
+    "policy": "physical",
+    "fresh_game": true,
+    "guest_state_loads": 0,
+    "debugger_memory_register_code_writes": 0,
+    "route_guest_elapsed_ms": 117425,
+    "source": {
+      "agi_sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+      "resources": {
+        "0": "efb5e7e2b584eec6d741b7e08e42eb8247d00fde04add4720ee251eb9310cd4b",
+        "1": "7a77ce60af3c88b972b6a45eb7eefec2915de2fc97b46cb6cd23dfb3a97681d0",
+        "9": "553abeb91d3a10422a5025093f084fcac887b2c71e0ad989cb0fa5748aa40eb8",
+        "10": "d7482f0e3c924ac60669a188aa0dec5e08cac027d7ed581eef6b505d74d7a063",
+        "11": "595134f123ff086cc537f7acb0e0cec4586fcfc4f685d8e77358479810ba7372",
+        "16": "dd971a09976bf9abfce669c0d5b3e92c7a30b2038f0625b1eefbb03538ad2114",
+        "103": "cb1293db23b0007712fdd6193bd590dbdfdbaa8a84698f16c56b70c1321cdaed",
+        "8": "889eb805667460a09a85046fa6e7effac65a74ade60ef64dd5363d85f99f75ca",
+        "101": "f4b49fac11b2da7888fc6da564338db1b10cdf5903b2c0650d9fccc7bf2d25db"
+      }
+    },
+    "backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+    "source_and_copy_unchanged_after_teardown": true,
+    "capture_sha256": "e3e5213c04e6308e794cf747f261fc614b9cdbda007adbf28e48828adddc42af",
+    "qualified_capture_sha256": "873c3a49ccd6c9e43d7eb1e77d0720db5a74d9b58ac2e4e297879918124f60ee",
+    "journal_sha256": "1b7e782305e17c1734cd6c45ec667c9466bdd5376e063bd2cff4e672ceec25d6",
+    "implementation_sha256": {
+      "examples/agi/verify_goat.py": "efcc64c7d7c5ad81f105be1c13cdbc8f405fac5096e5600f7c82efab30424672",
+      "src/fdisbull/agi_print.py": "9edbbf5b217acea6b98d2b4adb285036ac4d0d4acf3238e016c64d55e62fa61f",
+      "src/fdisbull/agi_host.py": "a302e79f42e0ff8476b999d99850a4d900d29c8c1bce2091f0b5bc7042cfff91",
+      "src/fdisbull/agi_dos.py": "ef57ef690e17032b26240844cb12712ac7bc06210ce04eb0a766c6256837f414",
+      "src/fdisbull/agi_resources.py": "ef31df40324059e6858749c2a5513a1387cb973a0d1d717279a3bbc9b227d1bd",
+      "examples/agi/verify_goat_branches.py": "679fba4d53d33b839edb8f7c2b4cc43f0de388beabe88cc4cb8be121ff6470ce",
+      "examples/agi/verify_troll.py": "65b760cc47e71e1bc87771ca35d71f32faeaeea5364a76102b1bf9ae1dfefa3e"
+    },
+    "effects": [
+      {
+        "branch": "water-refusal",
+        "status": "verified",
+        "complete": true,
+        "source_logic": 103,
+        "source_logic_sha256": "cb1293db23b0007712fdd6193bd590dbdfdbaa8a84698f16c56b70c1321cdaed",
+        "source_offset": 381,
+        "opcode": 84,
+        "argument": 13,
+        "writer": {
+          "offset": 28107,
+          "resume_offset": 28111
+        },
+        "raw_effect_receipt_sha256": "f20d9d9aeca2ee13c5369582b96c85f78d6d3ea1c8f4bc9647a8bbe0e02ce3ea",
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "watchpoint",
+          "native_kind": "breakpoint",
+          "causing_instruction": {
+            "offset": "0x00006DCB",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "resume_pc": {
+            "space": "segmented",
+            "segment": "0x0EFB",
+            "offset": "0x00006DCF"
+          },
+          "instruction_completed": null,
+          "registers_stage": "after-access",
+          "context": "dos-cpu"
+        },
+        "before": {
+          "room": 8,
+          "score": 7,
+          "carrot": true,
+          "following": true,
+          "gate_open": true,
+          "ego": {
+            "x": 132,
+            "y": 68,
+            "direction": 0,
+            "drawn": true
+          },
+          "goat": {
+            "x": 128,
+            "y": 51,
+            "direction": 0,
+            "drawn": true
+          },
+          "gate_actor": {
+            "x": 43,
+            "y": 156,
+            "direction": 0,
+            "drawn": false
+          },
+          "inside_pen": false,
+          "control_direction": 0,
+          "distance": 0,
+          "initializing": false,
+          "window": 0,
+          "carrot_carried": true,
+          "water_refused": false,
+          "goat_wandering": false,
+          "goat_motion": 0,
+          "goat_retired": false,
+          "water_departure": false,
+          "invisible": false,
+          "in_water": true,
+          "swimming": 1,
+          "edge": 0,
+          "goat_distance": 21
+        },
+        "after_access": {
+          "room": 8,
+          "score": 7,
+          "carrot": true,
+          "following": true,
+          "gate_open": true,
+          "ego": {
+            "x": 132,
+            "y": 68,
+            "direction": 0,
+            "drawn": true
+          },
+          "goat": {
+            "x": 128,
+            "y": 51,
+            "direction": 0,
+            "drawn": true
+          },
+          "gate_actor": {
+            "x": 43,
+            "y": 156,
+            "direction": 0,
+            "drawn": false
+          },
+          "inside_pen": false,
+          "control_direction": 0,
+          "distance": 0,
+          "initializing": false,
+          "window": 0,
+          "carrot_carried": true,
+          "water_refused": true,
+          "goat_wandering": true,
+          "goat_motion": 1,
+          "goat_retired": false,
+          "water_departure": false,
+          "invisible": false,
+          "in_water": true,
+          "swimming": 1,
+          "edge": 0,
+          "goat_distance": 21
+        },
+        "trace_sha256": "1d6a4a1455c4f1168226dd46318549e4dc47081ee8e055c6d18b881b948dc1a6",
+        "trace_count": 32
+      },
+      {
+        "branch": "water-departure",
+        "status": "verified",
+        "complete": true,
+        "source_logic": 8,
+        "source_logic_sha256": "889eb805667460a09a85046fa6e7effac65a74ade60ef64dd5363d85f99f75ca",
+        "source_offset": 478,
+        "opcode": 13,
+        "argument": 75,
+        "writer": {
+          "offset": 29746,
+          "resume_offset": 29748
+        },
+        "raw_effect_receipt_sha256": "796ae3d611018a5eeab2d32cb80902e7a284e931cb55dd1f5f229cfa5e6c7ce2",
+        "stop": {
+          "format": "fdisbull-debug-stop-1",
+          "trigger": "watchpoint",
+          "native_kind": "breakpoint",
+          "causing_instruction": {
+            "offset": "0x00007432",
+            "segment": "0x0EFB",
+            "space": "segmented"
+          },
+          "resume_pc": {
+            "space": "segmented",
+            "segment": "0x0EFB",
+            "offset": "0x00007434"
+          },
+          "instruction_completed": null,
+          "registers_stage": "after-access",
+          "context": "dos-cpu"
+        },
+        "before": {
+          "room": 8,
+          "score": 7,
+          "carrot": true,
+          "following": true,
+          "gate_open": true,
+          "ego": {
+            "x": 75,
+            "y": 49,
+            "direction": 0,
+            "drawn": true
+          },
+          "goat": {
+            "x": 38,
+            "y": 44,
+            "direction": 8,
+            "drawn": true
+          },
+          "gate_actor": {
+            "x": 43,
+            "y": 156,
+            "direction": 0,
+            "drawn": false
+          },
+          "inside_pen": false,
+          "control_direction": 0,
+          "distance": 0,
+          "initializing": false,
+          "window": 0,
+          "carrot_carried": true,
+          "water_refused": true,
+          "goat_wandering": true,
+          "goat_motion": 1,
+          "goat_retired": false,
+          "water_departure": false,
+          "invisible": false,
+          "in_water": false,
+          "swimming": 0,
+          "edge": 0,
+          "goat_distance": 35
+        },
+        "after_access": {
+          "room": 8,
+          "score": 7,
+          "carrot": true,
+          "following": false,
+          "gate_open": true,
+          "ego": {
+            "x": 75,
+            "y": 44,
+            "direction": 1,
+            "drawn": true
+          },
+          "goat": {
+            "x": 32,
+            "y": 44,
+            "direction": 8,
+            "drawn": true
+          },
+          "gate_actor": {
+            "x": 43,
+            "y": 156,
+            "direction": 0,
+            "drawn": false
+          },
+          "inside_pen": false,
+          "control_direction": 1,
+          "distance": 0,
+          "initializing": false,
+          "window": 0,
+          "carrot_carried": true,
+          "water_refused": false,
+          "goat_wandering": true,
+          "goat_motion": 1,
+          "goat_retired": false,
+          "water_departure": false,
+          "invisible": false,
+          "in_water": false,
+          "swimming": 0,
+          "edge": 1,
+          "goat_distance": 36
+        },
+        "trace_sha256": "4becb02096d59a21efde7cee06917558b11a05d3f8156bbf60e5acf2c3e6d7d4",
+        "trace_count": 32
+      }
+    ],
+    "observed_frames": {
+      "before-carrot": {
+        "sha256": "2f8185f8afdb2120e995924848e188efe9606689953f818a18e6376a2441c2fd",
+        "state": {
+          "room": 11,
+          "score": 2,
+          "carrot": true,
+          "following": false,
+          "gate_open": true,
+          "carrot_carried": true,
+          "water_refused": false,
+          "goat_wandering": true,
+          "goat_retired": false,
+          "water_departure": false
+        },
+        "goat_visible": true
+      },
+      "following": {
+        "sha256": "d69fb54f8eaba411b3df36ce5ae486823c4e203e69255d8bd3b053155a389b83",
+        "state": {
+          "room": 11,
+          "score": 7,
+          "carrot": true,
+          "following": true,
+          "gate_open": true,
+          "carrot_carried": true,
+          "water_refused": false,
+          "goat_wandering": true,
+          "goat_retired": false,
+          "water_departure": false
+        },
+        "goat_visible": true
+      },
+      "outside-pen": {
+        "sha256": "71c866c249d6ecf401de2cdfe5ff5344396d9f2e5cfc169f34ea8728e478e9e9",
+        "state": {
+          "room": 9,
+          "score": 7,
+          "carrot": true,
+          "following": true,
+          "gate_open": true,
+          "carrot_carried": true,
+          "water_refused": false,
+          "goat_wandering": false,
+          "goat_retired": false,
+          "water_departure": false
+        },
+        "goat_visible": true
+      },
+      "water-refused": {
+        "sha256": "275b755f248659d2d678904dc169abbe68a67b40e661cb6b19826b03500cf98f",
+        "state": {
+          "room": 8,
+          "score": 7,
+          "carrot": true,
+          "following": true,
+          "gate_open": true,
+          "carrot_carried": true,
+          "water_refused": true,
+          "goat_wandering": true,
+          "goat_retired": false,
+          "water_departure": false
+        },
+        "goat_visible": true
+      },
+      "water-departure": {
+        "sha256": "3ea505b770f9a7646454dc5f757b1ab5e6f7fd4d78e397f9a91000d1476fb552",
+        "state": {
+          "room": 9,
+          "score": 7,
+          "carrot": true,
+          "following": false,
+          "gate_open": true,
+          "carrot_carried": true,
+          "water_refused": false,
+          "goat_wandering": true,
+          "goat_retired": true,
+          "water_departure": true
+        },
+        "goat_visible": false
+      }
+    },
+    "visibility_basis": "Separate inspection of selected stored native PNGs; not inferred from actor flags.",
+    "incomplete_native_attempts": [
+      {
+        "id": "water-01",
+        "status": "incomplete",
+        "reason": "Ordinary south movement blocked by the goat at the pen exit.",
+        "receipt_sha256": "fe99f94cc24f0c99b53c32f1a066fc78d709ef1a5fb46f2bb4570679700fcad5",
+        "journal_sha256": "38d712784bc5247c5a73532254b60515d2c36c233b2398bc55d4e08a787c08e5",
+        "source_and_copy_unchanged": true
+      },
+      {
+        "id": "water-02-live",
+        "status": "incomplete",
+        "reason": "Exploratory run stopped at an overly narrow before-motion assumption; native motion0 was a stopped goat, not a foreign write.",
+        "receipt_sha256": "3602422285f1770267cce11fbe1005eaee594b24a4fa60881159cf880084d5b6",
+        "journal_sha256": "6664ce5013d6803d03d8e2eb787f4ca2261569c10d0abe04b8a51a1533535882",
+        "source_and_copy_unchanged": true
+      }
+    ]
+  },
+  "scenes": {
+    "installed_distributions": {
+      "fdisbull": "0.28.0",
+      "fdisbull-player": "0.28.0"
+    },
+    "module_sha256": {
+      "fdisbull": "a4d9dfcf6b3596c6eb7de9d2102bf75447f1a16f0f1a331df55f84ce08207758",
+      "fdisbull.il_scenes": "303cbf995ed7669428969a54e3f0520375024167bca92392a521a36108798e97",
+      "fdisbull.interaction_il": "ef23fe8b94c3490dae139912bcd7bc2814b2fc51f012d4c84ad426e5059332ee",
+      "fdisbull_player": "5aba0f26e3280a65904e0d2272103cf4bc63d87e088ccf69b8288642384ca4d6",
+      "fdisbull_player.player": "ec8e916c8b9c82d420b9675d560c8cbec60707ac48fb3196d74c867630def65c"
+    },
+    "raw_player_receipt_sha256": "9253b547d8b0a5a0f551ec8e81253e7b42f7849e8645b2940b90476f435a3300",
+    "exports": [
+      {
+        "name": "kq1-water-refusal-2026-11-01",
+        "scene_sha256": "34705725482e0e171a27f2cd2594bdfdd008bb6201d767269702ff4df9d51789",
+        "provenance_sha256": "1c8122ab5ebf0edba03372a616775a6bbebe24bfe85a23a16b4f7674840bc564",
+        "tested_capture_prefix_length": 3,
+        "commands": [
+          "use carrot on goat",
+          "use route",
+          "use water"
+        ],
+        "in_process_final_state": {
+          "$phase": 3,
+          "$room": 8,
+          "$score": 7,
+          "$carrot": true,
+          "$following": true,
+          "$gate_open": true,
+          "$carrot_carried": true,
+          "$water_refused": true,
+          "$goat_wandering": true,
+          "$goat_retired": false,
+          "$water_departure": false
+        },
+        "separate_content_process_final_state": {
+          "$phase": 3,
+          "$room": 8,
+          "$score": 7,
+          "$carrot": true,
+          "$following": true,
+          "$gate_open": true,
+          "$carrot_carried": true,
+          "$water_refused": true,
+          "$goat_wandering": true,
+          "$goat_retired": false,
+          "$water_departure": false
+        },
+        "stale_and_repeat_refused": true,
+        "checkpoint_restore_and_token_invalidation": true,
+        "fresh_backend_checkpoint": "missing",
+        "checkpoint_scope": "in memory only",
+        "child_readback_sha256": "a9d2007e60e7641ac59b34d1d63d486db361d398aaa40fd7ebbbeaa0af7bc977"
+      },
+      {
+        "name": "kq1-water-departure-2026-11-01",
+        "scene_sha256": "c1e52c21717e5b649ea4847850721e859210b7f60a6f36a60b2fcf7debf86b15",
+        "provenance_sha256": "2adfc94e1a2f08e3bd73114aaf7688aa2ae5fdfaffcda99ce3c67abd73dac73e",
+        "tested_capture_prefix_length": 4,
+        "commands": [
+          "use carrot on goat",
+          "use route",
+          "use water",
+          "use exit"
+        ],
+        "in_process_final_state": {
+          "$phase": 4,
+          "$room": 9,
+          "$score": 7,
+          "$carrot": true,
+          "$following": false,
+          "$gate_open": true,
+          "$carrot_carried": true,
+          "$water_refused": false,
+          "$goat_wandering": true,
+          "$goat_retired": true,
+          "$water_departure": true
+        },
+        "separate_content_process_final_state": {
+          "$phase": 4,
+          "$room": 9,
+          "$score": 7,
+          "$carrot": true,
+          "$following": false,
+          "$gate_open": true,
+          "$carrot_carried": true,
+          "$water_refused": false,
+          "$goat_wandering": true,
+          "$goat_retired": true,
+          "$water_departure": true
+        },
+        "stale_and_repeat_refused": true,
+        "checkpoint_restore_and_token_invalidation": true,
+        "fresh_backend_checkpoint": "missing",
+        "checkpoint_scope": "in memory only",
+        "child_readback_sha256": "2ae679029f9d7207b82e707140eac53e4e8b4d736e333ca47f998048cbae4227"
+      }
+    ],
+    "scope": "Installed pure-IL player checks against native capture observations; no native guest execution or durable checkpoint claim."
+  },
+  "invisible_wander": {
+    "status": "No normal-command witness; source-linked model verified under explicit assumptions.",
+    "summary": "invisibility-summary.json",
+    "summary_sha256": "72239673c8484c1a2e9cda99af120a620fe5dfb4518d229f87855ccf6a40d8c4"
+  },
+  "river_glitch": {
+    "status": "Boundary crossing and adjacent control reproduced",
+    "summary": "river-summary.json",
+    "summary_sha256": "544481cb0790105caaa3bce749185b13e7b00ba97474c6300b00aa81d2cd4219"
+  },
+  "trace_summary_sha256": "e45a99ad0f3c9db6282699f7d322e2142c69e6ee90b7da59bd44838c95a625a6",
+  "tests": {
+    "command": "python -m pytest -q tests/test_agi*.py tests/test_il_scenes.py tests/test_text_player.py tests/test_player_checkpoints.py tests/test_player_live.py",
+    "passed": 581,
+    "skipped": 4,
+    "exit_code": 0,
+    "stdout_sha256": "06677f2475db94b5f38c997a901c947131617c186f74abf4c819237973f669fe",
+    "scope": "Selected local macOS tests; not Linux CI."
+  },
+  "excluded_from_git": [
+    "game/story/resource files",
+    "native saved states",
+    "byte-retaining project databases",
+    "raw native memory/VIEW/trace payloads",
+    "full raw capture corpus and raw private transcripts",
+    "generated original-text scenes",
+    "downloaded runner PDF"
+  ],
+  "limits": [
+    "Exact supplied AGI2.917 edition and selected routes only.",
+    "Water retirement is logic8, not the separate logic103 invisible-wander message2.",
+    "Hashes validate bytes and supplied evidence consistency, not execution authenticity.",
+    "Native continuation traces are fetch observations, not instruction-completion certificates.",
+    "IL-scene checkpoints are in memory only; no full-game or durable persistence claim.",
+    "No LinuxCI, packaging, release, integration merge or system installation change is claimed."
+  ],
+  "selected_verification_frames": {
+    "water-refused.png": {
+      "sha256": "275b755f248659d2d678904dc169abbe68a67b40e661cb6b19826b03500cf98f",
+      "width": 320,
+      "height": 200,
+      "original_capture_bytes": true,
+      "metadata_chunks": "no text/EXIF chunks"
+    },
+    "water-departure.png": {
+      "sha256": "3ea505b770f9a7646454dc5f757b1ab5e6f7fd4d78e397f9a91000d1476fb552",
+      "width": 320,
+      "height": 200,
+      "original_capture_bytes": true,
+      "metadata_chunks": "no text/EXIF chunks"
+    },
+    "river-crossed.png": {
+      "sha256": "eb9322fea3f3c00864e055e79b4ca8cde048279fc8d48fb8cc29af9e495932c0",
+      "width": 320,
+      "height": 200,
+      "original_capture_bytes": true,
+      "metadata_chunks": "no text/EXIF chunks"
+    },
+    "adjacent-water-control.png": {
+      "sha256": "b246e7e5b528d5e1dbab7e9949e1abec876c1e71b33b59e8ff981cf655516bf9",
+      "width": 320,
+      "height": 200,
+      "original_capture_bytes": true,
+      "metadata_chunks": "no text/EXIF chunks"
+    }
+  }
+}

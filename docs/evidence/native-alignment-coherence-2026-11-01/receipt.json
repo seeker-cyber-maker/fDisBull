@@ -1,0 +1,1335 @@
+{
+  "agi_sha256": "5ab189ebd9822739962767afe0113853e23797ef16dd4784d2dc93423934fb74",
+  "authored_tests": {
+    "files": [
+      "tests/test_native_alignment.py",
+      "tests/test_native_controller.py",
+      "tests/test_frame_coherence.py",
+      "tests/test_scene_receipts.py",
+      "tests/test_agi_bridge_clip.py",
+      "tests/test_agi_bridge_bottom.py",
+      "tests/test_agi_goat_route.py",
+      "tests/test_agi_bottom_scene.py",
+      "tests/test_agi_clip_scene.py",
+      "tests/test_agi_leprechaun_route.py",
+      "tests/test_agi_leprechaun_scene.py",
+      "tests/test_agi_dragon_mirror_route.py",
+      "tests/test_agi_dragon_mirror_scene.py",
+      "tests/test_agi_gnome_giant_route.py",
+      "tests/test_agi_gnome_giant_scene.py",
+      "tests/test_agi_mushroom_route.py",
+      "tests/test_agi_mushroom_scene.py",
+      "tests/test_agi_z_scenes.py",
+      "tests/test_agi_goat_scene.py",
+      "tests/test_agi_goat_branch_route.py",
+      "tests/test_agi_river_route.py",
+      "tests/test_agi_troll_route.py",
+      "tests/test_agent_skill_gate.py"
+    ],
+    "log": {
+      "path": "affected-tests.log",
+      "sha256": "c84f15902e5d339f20a347a76ff4f6bc1534d762e519a9be43bf75211ba83363"
+    },
+    "result": "1757 passed, 2 skipped in 11.39s",
+    "skip_scope": "Two optional source-resource tests lack their specific configured resource inputs; separate native KQ1 runs completed"
+  },
+  "backend_sha256": "bcf318de2a22d49d1b28888a312e12b774cf1f041fdd8862fc4ab3335ea59b60",
+  "base_commit": "719882fea8325bc5f954bbc35a7f3de60ee099aa",
+  "candidate_dry_x86_y167_observed": true,
+  "export": {
+    "complete_receipt": true,
+    "edges": 2,
+    "independent_in_memory_rebuild_byte_equal": true,
+    "observations": 5,
+    "player_scope": "Prior qualification reused for byte-identical payload; no new player execution by this audit",
+    "provenance_rebuild_equal": true,
+    "provenance_sha256": "6f55da325ee302083e50731a3044b3ca1dd320469df28c503f2dc9d9bb0ad1d5",
+    "scene_sha256": "dc383d97d3b394a2435bd7b13a8e4a146bbd28b356bf076271b114dfb8a6bf47"
+  },
+  "first_attempt": {
+    "alignment_legs_complete": 13,
+    "complete": false,
+    "error": "Frame/state observation incomplete: ['guest is not known to be stopped']",
+    "guest_ms": 54555,
+    "partial_capture_sha256": "47f54fe65aba3ae2b124a93bbb83402b03e96172dced23ca5e09cdc40af50010",
+    "process_receipt_sha256": "b5d9584afd77dc22166e5fe4d90c0a824d8ca4bc9f1e9243c8556f4541b52bf1",
+    "retained_private": true,
+    "scope": "Video-only status adapter lacked paused-state fact; corrected pair uses distinct frozen source and fresh sessions"
+  },
+  "format": "fdisbull-native-alignment-coherence-verification-1",
+  "frames": [
+    {
+      "chunks": [
+        "IHDR",
+        "IDAT",
+        "IEND"
+      ],
+      "edited": false,
+      "path": "west-exit.png",
+      "sha256": "48a6179b34ed9be9a6577dadd29c51dc76b0d89b0e14b086e2bc981a7a417c80"
+    },
+    {
+      "chunks": [
+        "IHDR",
+        "IDAT",
+        "IEND"
+      ],
+      "edited": false,
+      "path": "adjacent-row.png",
+      "sha256": "d3097503b51cbc8f1b7d7037aeb978809272be88d09a513564796c7746d2e05e"
+    }
+  ],
+  "frozen_dependency_count": 203,
+  "independent_audit": {
+    "findings": [],
+    "frozen_dependencies": 203,
+    "no_recorded_loads_or_guest_edits": true,
+    "processes_reaped": true,
+    "referenced_frame_hashes_checked": 10,
+    "sha256": "d814aeced7498544345117a123e3dd74f167db11078319516a3dc11a8d1a5b91",
+    "source_and_copy_files": 24,
+    "verdict": "pass-scoped-retained-evidence"
+  },
+  "limits": [
+    "Sampled ordinary-input route and adjacent control only; not all origins or full-game parity",
+    "Frame brackets are not atomic frame/CPU equivalence or readiness",
+    "SQLite ledger shows no recorded state loads or guest code/coordinate/register edits; this is not an instruction-level absence proof",
+    "Source/artifact hashes establish byte identity, not native authentication",
+    "No gameplay, player or test suite was executed during this audit",
+    "One corrected native candidate/control pair; the earlier partial attempt remains separate.",
+    "Existing player compatibility reused for byte-identical payload; no fresh player run.",
+    "No Linux CI, hosted-CI qualification, merge, tag, release or installation update.",
+    "Game inputs, states, databases, full captures/journals and generated scene/provenance remain private."
+  ],
+  "linux": {
+    "admitted": false,
+    "cache_free_bytes": 21025214464,
+    "container_started": false,
+    "expected_bytes": 1073741824,
+    "minimum_reserve_bytes": 20000000000,
+    "status": "not_run_storage_refusal"
+  },
+  "matched_x86_priority_baselines": {
+    "166": [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+    ],
+    "167": [
+      15,
+      15,
+      15,
+      15,
+      15,
+      15
+    ]
+  },
+  "native_system": "macOS ARM64; genuine Python3.13.13 environment",
+  "native_trials": [
+    {
+      "alignment_count": 22,
+      "alignments": [
+        {
+          "actual": {
+            "x": 3,
+            "y": 51
+          },
+          "complete": true,
+          "guest_ms": 0,
+          "initial": {
+            "x": 3,
+            "y": 51
+          },
+          "sample_count": 1,
+          "settled": true,
+          "targets": {
+            "y": [
+              51,
+              51
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 99,
+            "y": 51
+          },
+          "complete": true,
+          "guest_ms": 9842,
+          "initial": {
+            "x": 3,
+            "y": 51
+          },
+          "sample_count": 134,
+          "settled": true,
+          "targets": {
+            "x": [
+              99,
+              99
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 99,
+            "y": 65
+          },
+          "complete": true,
+          "guest_ms": 1575,
+          "initial": {
+            "x": 99,
+            "y": 51
+          },
+          "sample_count": 21,
+          "settled": true,
+          "targets": {
+            "y": [
+              65,
+              65
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 106,
+            "y": 65
+          },
+          "complete": true,
+          "guest_ms": 866,
+          "initial": {
+            "x": 99,
+            "y": 65
+          },
+          "sample_count": 11,
+          "settled": true,
+          "targets": {
+            "x": [
+              106,
+              106
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 106,
+            "y": 89
+          },
+          "complete": true,
+          "guest_ms": 2643,
+          "initial": {
+            "x": 106,
+            "y": 65
+          },
+          "sample_count": 36,
+          "settled": true,
+          "targets": {
+            "y": [
+              89,
+              89
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 108,
+            "y": 89
+          },
+          "complete": true,
+          "guest_ms": 405,
+          "initial": {
+            "x": 106,
+            "y": 89
+          },
+          "sample_count": 5,
+          "settled": true,
+          "targets": {
+            "x": [
+              108,
+              108
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 108,
+            "y": 90
+          },
+          "complete": true,
+          "guest_ms": 259,
+          "initial": {
+            "x": 108,
+            "y": 89
+          },
+          "sample_count": 3,
+          "settled": true,
+          "targets": {
+            "y": [
+              90,
+              90
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 111,
+            "y": 90
+          },
+          "complete": true,
+          "guest_ms": 483,
+          "initial": {
+            "x": 108,
+            "y": 90
+          },
+          "sample_count": 6,
+          "settled": true,
+          "targets": {
+            "x": [
+              111,
+              111
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 111,
+            "y": 91
+          },
+          "complete": true,
+          "guest_ms": 257,
+          "initial": {
+            "x": 111,
+            "y": 90
+          },
+          "sample_count": 3,
+          "settled": true,
+          "targets": {
+            "y": [
+              91,
+              91
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 112,
+            "y": 91
+          },
+          "complete": true,
+          "guest_ms": 261,
+          "initial": {
+            "x": 111,
+            "y": 91
+          },
+          "sample_count": 3,
+          "settled": true,
+          "targets": {
+            "x": [
+              112,
+              112
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 112,
+            "y": 92
+          },
+          "complete": true,
+          "guest_ms": 333,
+          "initial": {
+            "x": 112,
+            "y": 91
+          },
+          "sample_count": 4,
+          "settled": true,
+          "targets": {
+            "y": [
+              92,
+              92
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 113,
+            "y": 92
+          },
+          "complete": true,
+          "guest_ms": 261,
+          "initial": {
+            "x": 112,
+            "y": 92
+          },
+          "sample_count": 3,
+          "settled": true,
+          "targets": {
+            "x": [
+              113,
+              113
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 113,
+            "y": 160
+          },
+          "complete": true,
+          "guest_ms": 7055,
+          "initial": {
+            "x": 113,
+            "y": 92
+          },
+          "sample_count": 96,
+          "settled": true,
+          "targets": {
+            "y": [
+              160,
+              160
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 129,
+            "y": 44
+          },
+          "complete": true,
+          "guest_ms": 1703,
+          "initial": {
+            "x": 113,
+            "y": 44
+          },
+          "sample_count": 23,
+          "settled": true,
+          "targets": {
+            "x": [
+              129,
+              130
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 129,
+            "y": 60
+          },
+          "complete": true,
+          "guest_ms": 1793,
+          "initial": {
+            "x": 129,
+            "y": 44
+          },
+          "sample_count": 24,
+          "settled": true,
+          "targets": {
+            "y": [
+              60,
+              60
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 126,
+            "y": 60
+          },
+          "complete": true,
+          "guest_ms": 411,
+          "initial": {
+            "x": 129,
+            "y": 60
+          },
+          "sample_count": 5,
+          "settled": true,
+          "targets": {
+            "x": [
+              126,
+              126
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 126,
+            "y": 61
+          },
+          "complete": true,
+          "guest_ms": 329,
+          "initial": {
+            "x": 126,
+            "y": 60
+          },
+          "sample_count": 4,
+          "settled": true,
+          "targets": {
+            "y": [
+              61,
+              61
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 122,
+            "y": 61
+          },
+          "complete": true,
+          "guest_ms": 619,
+          "initial": {
+            "x": 126,
+            "y": 61
+          },
+          "sample_count": 8,
+          "settled": true,
+          "targets": {
+            "x": [
+              122,
+              122
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 122,
+            "y": 62
+          },
+          "complete": true,
+          "guest_ms": 266,
+          "initial": {
+            "x": 122,
+            "y": 61
+          },
+          "sample_count": 3,
+          "settled": true,
+          "targets": {
+            "y": [
+              62,
+              62
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 110,
+            "y": 62
+          },
+          "complete": true,
+          "guest_ms": 1422,
+          "initial": {
+            "x": 122,
+            "y": 62
+          },
+          "sample_count": 19,
+          "settled": true,
+          "targets": {
+            "x": [
+              110,
+              110
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 110,
+            "y": 166
+          },
+          "complete": true,
+          "guest_ms": 10542,
+          "initial": {
+            "x": 110,
+            "y": 62
+          },
+          "sample_count": 144,
+          "settled": true,
+          "targets": {
+            "y": [
+              166,
+              166
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 110,
+            "y": 167
+          },
+          "complete": true,
+          "guest_ms": 257,
+          "initial": {
+            "x": 110,
+            "y": 166
+          },
+          "sample_count": 3,
+          "settled": true,
+          "targets": {
+            "y": [
+              167,
+              167
+            ]
+          }
+        }
+      ],
+      "all_inputs_accepted_complete": true,
+      "backend_unchanged": true,
+      "complete": true,
+      "frame_observations": [
+        {
+          "atomic": false,
+          "captured_ticks": 70230,
+          "complete": true,
+          "dead": false,
+          "ego": {
+            "direction": 0,
+            "drawn": true,
+            "x": 113,
+            "y": 44
+          },
+          "frame_id": 4169,
+          "frame_sha256": "a57521cf66a860c3fdd0d6301c68440f6650ac050b00f92a86a5dbe499f92b69",
+          "frame_state_equivalence": null,
+          "freshness": "not_requested",
+          "guest_ms": 54630,
+          "id": "bridge-entry",
+          "in_water": false,
+          "mode_id": 5,
+          "preparation_guest_ms": 0,
+          "room": 39,
+          "score": 0,
+          "session_id": "ses-1",
+          "stable_state": true,
+          "state_revision": 1062,
+          "status_brackets": 2
+        },
+        {
+          "atomic": false,
+          "captured_ticks": 87309,
+          "complete": true,
+          "dead": false,
+          "ego": {
+            "direction": 0,
+            "drawn": true,
+            "x": 110,
+            "y": 166
+          },
+          "frame_id": 5197,
+          "frame_sha256": "9c1c0c327c7525ed3bbd039ef3bac4266e463d1b46adf3489102c970bc69fde4",
+          "frame_state_equivalence": null,
+          "freshness": "not_requested",
+          "guest_ms": 71715,
+          "id": "east-bank",
+          "in_water": false,
+          "mode_id": 5,
+          "preparation_guest_ms": 0,
+          "room": 39,
+          "score": 0,
+          "session_id": "ses-1",
+          "stable_state": true,
+          "state_revision": 1308,
+          "status_brackets": 2
+        },
+        {
+          "atomic": false,
+          "captured_ticks": 87652,
+          "complete": true,
+          "dead": false,
+          "ego": {
+            "direction": 0,
+            "drawn": true,
+            "x": 110,
+            "y": 167
+          },
+          "frame_id": 5220,
+          "frame_sha256": "614a1c8f27c2ce65be620719a6499f8d6590370a81770eb39429ef633f3be62d",
+          "frame_state_equivalence": null,
+          "freshness": "confirmed",
+          "guest_ms": 72047,
+          "id": "row-start",
+          "in_water": false,
+          "mode_id": 5,
+          "preparation_guest_ms": 75,
+          "room": 39,
+          "score": 0,
+          "session_id": "ses-1",
+          "stable_state": true,
+          "state_revision": 1314,
+          "status_brackets": 3
+        },
+        {
+          "atomic": false,
+          "captured_ticks": 90634,
+          "complete": true,
+          "dead": false,
+          "ego": {
+            "direction": 7,
+            "drawn": true,
+            "x": 80,
+            "y": 167
+          },
+          "frame_id": 5399,
+          "frame_sha256": "b7b400c16c2e3840c9ed07516bea7ee731c77e953aa2dab6b13c812d54098f5f",
+          "frame_state_equivalence": null,
+          "freshness": "not_requested",
+          "guest_ms": 75062,
+          "id": "over-water",
+          "in_water": false,
+          "mode_id": 5,
+          "preparation_guest_ms": 0,
+          "room": 39,
+          "score": 0,
+          "session_id": "ses-1",
+          "stable_state": true,
+          "state_revision": 1396,
+          "status_brackets": 2
+        },
+        {
+          "atomic": false,
+          "captured_ticks": 99794,
+          "complete": true,
+          "dead": false,
+          "ego": {
+            "direction": 0,
+            "drawn": true,
+            "x": 151,
+            "y": 167
+          },
+          "frame_id": 5922,
+          "frame_sha256": "48a6179b34ed9be9a6577dadd29c51dc76b0d89b0e14b086e2bc981a7a417c80",
+          "frame_state_equivalence": null,
+          "freshness": "confirmed",
+          "guest_ms": 84196,
+          "id": "west-exit",
+          "in_water": false,
+          "mode_id": 5,
+          "preparation_guest_ms": 79,
+          "room": 40,
+          "score": 0,
+          "session_id": "ses-1",
+          "stable_state": true,
+          "state_revision": 1664,
+          "status_brackets": 3
+        }
+      ],
+      "frozen_source_unchanged": true,
+      "guest_accounting": {
+        "dialogue_ms": 143,
+        "ordinary_ms": 84053,
+        "total_ms": 84196
+      },
+      "id": "candidate-167-01",
+      "input_count": 54,
+      "outcome": "bottom-row-west-exit",
+      "private_artifacts": {
+        "capture": "5f2a6684b90e284c49064c3c2ed2902f07e1495cd42af712018f6b86f714dd72",
+        "journal": "ec7a8f57f373820fb94d27b25cd84d24111df495f035920c131ae1dd82742812",
+        "report": "7f1ad674dc155de959095e2b63b9a68fe483283d3c89e557220e5b7b7444e416"
+      },
+      "process_receipt_sha256": "e7c5b1b0d1e3339727295e988c18022519d55976e4fe748155b1aea0cda688d2",
+      "source_unchanged": true
+    },
+    {
+      "alignment_count": 21,
+      "alignments": [
+        {
+          "actual": {
+            "x": 2,
+            "y": 51
+          },
+          "complete": true,
+          "guest_ms": 0,
+          "initial": {
+            "x": 2,
+            "y": 51
+          },
+          "sample_count": 1,
+          "settled": true,
+          "targets": {
+            "y": [
+              51,
+              51
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 99,
+            "y": 51
+          },
+          "complete": true,
+          "guest_ms": 9913,
+          "initial": {
+            "x": 2,
+            "y": 51
+          },
+          "sample_count": 136,
+          "settled": true,
+          "targets": {
+            "x": [
+              99,
+              99
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 99,
+            "y": 65
+          },
+          "complete": true,
+          "guest_ms": 1637,
+          "initial": {
+            "x": 99,
+            "y": 51
+          },
+          "sample_count": 22,
+          "settled": true,
+          "targets": {
+            "y": [
+              65,
+              65
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 106,
+            "y": 65
+          },
+          "complete": true,
+          "guest_ms": 837,
+          "initial": {
+            "x": 99,
+            "y": 65
+          },
+          "sample_count": 11,
+          "settled": true,
+          "targets": {
+            "x": [
+              106,
+              106
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 106,
+            "y": 89
+          },
+          "complete": true,
+          "guest_ms": 2509,
+          "initial": {
+            "x": 106,
+            "y": 65
+          },
+          "sample_count": 34,
+          "settled": true,
+          "targets": {
+            "y": [
+              89,
+              89
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 108,
+            "y": 89
+          },
+          "complete": true,
+          "guest_ms": 411,
+          "initial": {
+            "x": 106,
+            "y": 89
+          },
+          "sample_count": 5,
+          "settled": true,
+          "targets": {
+            "x": [
+              108,
+              108
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 108,
+            "y": 90
+          },
+          "complete": true,
+          "guest_ms": 334,
+          "initial": {
+            "x": 108,
+            "y": 89
+          },
+          "sample_count": 4,
+          "settled": true,
+          "targets": {
+            "y": [
+              90,
+              90
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 111,
+            "y": 90
+          },
+          "complete": true,
+          "guest_ms": 478,
+          "initial": {
+            "x": 108,
+            "y": 90
+          },
+          "sample_count": 6,
+          "settled": true,
+          "targets": {
+            "x": [
+              111,
+              111
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 111,
+            "y": 91
+          },
+          "complete": true,
+          "guest_ms": 331,
+          "initial": {
+            "x": 111,
+            "y": 90
+          },
+          "sample_count": 4,
+          "settled": true,
+          "targets": {
+            "y": [
+              91,
+              91
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 112,
+            "y": 91
+          },
+          "complete": true,
+          "guest_ms": 260,
+          "initial": {
+            "x": 111,
+            "y": 91
+          },
+          "sample_count": 3,
+          "settled": true,
+          "targets": {
+            "x": [
+              112,
+              112
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 112,
+            "y": 92
+          },
+          "complete": true,
+          "guest_ms": 333,
+          "initial": {
+            "x": 112,
+            "y": 91
+          },
+          "sample_count": 4,
+          "settled": true,
+          "targets": {
+            "y": [
+              92,
+              92
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 113,
+            "y": 92
+          },
+          "complete": true,
+          "guest_ms": 255,
+          "initial": {
+            "x": 112,
+            "y": 92
+          },
+          "sample_count": 3,
+          "settled": true,
+          "targets": {
+            "x": [
+              113,
+              113
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 113,
+            "y": 160
+          },
+          "complete": true,
+          "guest_ms": 7048,
+          "initial": {
+            "x": 113,
+            "y": 92
+          },
+          "sample_count": 96,
+          "settled": true,
+          "targets": {
+            "y": [
+              160,
+              160
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 129,
+            "y": 44
+          },
+          "complete": true,
+          "guest_ms": 1713,
+          "initial": {
+            "x": 113,
+            "y": 44
+          },
+          "sample_count": 23,
+          "settled": true,
+          "targets": {
+            "x": [
+              129,
+              130
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 129,
+            "y": 60
+          },
+          "complete": true,
+          "guest_ms": 1781,
+          "initial": {
+            "x": 129,
+            "y": 44
+          },
+          "sample_count": 24,
+          "settled": true,
+          "targets": {
+            "y": [
+              60,
+              60
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 126,
+            "y": 60
+          },
+          "complete": true,
+          "guest_ms": 407,
+          "initial": {
+            "x": 129,
+            "y": 60
+          },
+          "sample_count": 5,
+          "settled": true,
+          "targets": {
+            "x": [
+              126,
+              126
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 126,
+            "y": 61
+          },
+          "complete": true,
+          "guest_ms": 326,
+          "initial": {
+            "x": 126,
+            "y": 60
+          },
+          "sample_count": 4,
+          "settled": true,
+          "targets": {
+            "y": [
+              61,
+              61
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 122,
+            "y": 61
+          },
+          "complete": true,
+          "guest_ms": 620,
+          "initial": {
+            "x": 126,
+            "y": 61
+          },
+          "sample_count": 8,
+          "settled": true,
+          "targets": {
+            "x": [
+              122,
+              122
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 122,
+            "y": 62
+          },
+          "complete": true,
+          "guest_ms": 260,
+          "initial": {
+            "x": 122,
+            "y": 61
+          },
+          "sample_count": 3,
+          "settled": true,
+          "targets": {
+            "y": [
+              62,
+              62
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 110,
+            "y": 62
+          },
+          "complete": true,
+          "guest_ms": 1425,
+          "initial": {
+            "x": 122,
+            "y": 62
+          },
+          "sample_count": 19,
+          "settled": true,
+          "targets": {
+            "x": [
+              110,
+              110
+            ]
+          }
+        },
+        {
+          "actual": {
+            "x": 110,
+            "y": 166
+          },
+          "complete": true,
+          "guest_ms": 10555,
+          "initial": {
+            "x": 110,
+            "y": 62
+          },
+          "sample_count": 143,
+          "settled": true,
+          "targets": {
+            "y": [
+              166,
+              166
+            ]
+          }
+        }
+      ],
+      "all_inputs_accepted_complete": true,
+      "backend_unchanged": true,
+      "complete": true,
+      "frame_observations": [
+        {
+          "atomic": false,
+          "captured_ticks": 70459,
+          "complete": true,
+          "dead": false,
+          "ego": {
+            "direction": 0,
+            "drawn": true,
+            "x": 113,
+            "y": 44
+          },
+          "frame_id": 4190,
+          "frame_sha256": "a57521cf66a860c3fdd0d6301c68440f6650ac050b00f92a86a5dbe499f92b69",
+          "frame_state_equivalence": null,
+          "freshness": "not_requested",
+          "guest_ms": 54802,
+          "id": "bridge-entry",
+          "in_water": false,
+          "mode_id": 5,
+          "preparation_guest_ms": 0,
+          "room": 39,
+          "score": 0,
+          "session_id": "ses-1",
+          "stable_state": true,
+          "state_revision": 1050,
+          "status_brackets": 2
+        },
+        {
+          "atomic": false,
+          "captured_ticks": 87537,
+          "complete": true,
+          "dead": false,
+          "ego": {
+            "direction": 0,
+            "drawn": true,
+            "x": 110,
+            "y": 166
+          },
+          "frame_id": 5205,
+          "frame_sha256": "9c1c0c327c7525ed3bbd039ef3bac4266e463d1b46adf3489102c970bc69fde4",
+          "frame_state_equivalence": null,
+          "freshness": "not_requested",
+          "guest_ms": 71889,
+          "id": "east-bank",
+          "in_water": false,
+          "mode_id": 5,
+          "preparation_guest_ms": 0,
+          "room": 39,
+          "score": 0,
+          "session_id": "ses-1",
+          "stable_state": true,
+          "state_revision": 1295,
+          "status_brackets": 2
+        },
+        {
+          "atomic": false,
+          "captured_ticks": 87623,
+          "complete": true,
+          "dead": false,
+          "ego": {
+            "direction": 0,
+            "drawn": true,
+            "x": 110,
+            "y": 166
+          },
+          "frame_id": 5211,
+          "frame_sha256": "9c1c0c327c7525ed3bbd039ef3bac4266e463d1b46adf3489102c970bc69fde4",
+          "frame_state_equivalence": null,
+          "freshness": "confirmed",
+          "guest_ms": 71964,
+          "id": "row-start",
+          "in_water": false,
+          "mode_id": 5,
+          "preparation_guest_ms": 75,
+          "room": 39,
+          "score": 0,
+          "session_id": "ses-1",
+          "stable_state": true,
+          "state_revision": 1296,
+          "status_brackets": 3
+        },
+        {
+          "atomic": false,
+          "captured_ticks": 89963,
+          "complete": true,
+          "dead": false,
+          "ego": {
+            "direction": 7,
+            "drawn": true,
+            "x": 86,
+            "y": 166
+          },
+          "frame_id": 5352,
+          "frame_sha256": "d3097503b51cbc8f1b7d7037aeb978809272be88d09a513564796c7746d2e05e",
+          "frame_state_equivalence": null,
+          "freshness": "not_requested",
+          "guest_ms": 74329,
+          "id": "control-water",
+          "in_water": true,
+          "mode_id": 5,
+          "preparation_guest_ms": 0,
+          "room": 39,
+          "score": 0,
+          "session_id": "ses-1",
+          "stable_state": true,
+          "state_revision": 1360,
+          "status_brackets": 2
+        }
+      ],
+      "frozen_source_unchanged": true,
+      "guest_accounting": {
+        "dialogue_ms": 0,
+        "ordinary_ms": 74329,
+        "total_ms": 74329
+      },
+      "id": "control-166-01",
+      "input_count": 51,
+      "outcome": "adjacent-row-water-observed",
+      "private_artifacts": {
+        "capture": "0a216386827d506e960ff81c1828bbef25972fceabc7ff0e24d0a9a555276922",
+        "journal": "57399986a06ce125e90fff05f635fa976729dc211919542cc1856ff811057861",
+        "report": "c2a4cac0b49d5873c3e9ac47241cd807262d886a903e5e9bc352f68c0a934f56"
+      },
+      "process_receipt_sha256": "ad719f6cb3db33b0a8145af0a5173e5aa1e0ae0a90e5c2a3e603377f0250a861",
+      "source_unchanged": true
+    }
+  ],
+  "original_manifest_count": 24,
+  "prelaunch_sha256": "e0b0dc86c8c73f8771a6ddc94783df1851ffc3261e149ea08151986f9a82cc21",
+  "reviewed_mr": {
+    "findings": "No material findings in bounded exact-head review",
+    "head": "719882fea8325bc5f954bbc35a7f3de60ee099aa",
+    "iid": 38
+  },
+  "source_sha256": {
+    "examples/agi/verify_bridge_bottom.py": "d5b2367150f6204ea635a67d2c0a1fda61b8d76a72994049baab47a5de252acb",
+    "examples/agi/verify_bridge_clip.py": "23cbf41655f3c6071b72fa1051de6cd9b00474c0bce2d7d6180e98370c10137b",
+    "examples/agi/verify_goat.py": "6d79749f27936574d2aa2e5c96bcb3eb3b7abb4d7bf0aa91fd01211c12d3d062",
+    "examples/agi/verify_mushroom.py": "f648061671da1d00c9bfdca4550e2608cb82de61f9d910cd5b430ba33db95498",
+    "src/fdisbull/frame_coherence.py": "750019e99cff0c412e4c9d178857b8ca81bd7bbb9746016b68664aaf8be82a59",
+    "src/fdisbull/native_controller.py": "05dbbd7c1c39016696889a00e3bccb5aa774af33ade07233ff28f5b0359a65e0",
+    "tests/test_agent_skill_gate.py": "5e569849057276f3d23c7b3ccb71b1c0da60f8c650b26aa2e4575d28df903a59",
+    "tests/test_agi_bottom_scene.py": "425d18e59e83d45f3be12775387bf7e84d2589c5958d4727e5bbf1f596162cf4",
+    "tests/test_agi_bridge_bottom.py": "17dfc41dd6ba71ec41aa1c7455b20dd512398fbb77e89edd7c523f226374dbe1",
+    "tests/test_agi_bridge_clip.py": "c4bf156e8865feefd0742ccb91191668bba98ce5b5257f9cefc25df983ced9d0",
+    "tests/test_agi_clip_scene.py": "dd4dcc7f348168146e0386a58c02bc876a8ad554b26b5be51dcf36088f3e00dd",
+    "tests/test_agi_dragon_mirror_route.py": "ecdc149ce1311f26b5e537ace08e456c65bdd8ae4ca2fe31a979da591b6a3bfd",
+    "tests/test_agi_dragon_mirror_scene.py": "e79934b65087da8de43ddef1309aff3124f3ace41a39aba38753533490410a7f",
+    "tests/test_agi_gnome_giant_route.py": "ea49ca3011b7cdb80906bbc233e0e167cc060f0bc48212c06380b0807ae5f6a3",
+    "tests/test_agi_gnome_giant_scene.py": "7854470439a6ae4069d7a1c3579dca6d59d866e03c5503aba6e8a71fe53f2973",
+    "tests/test_agi_goat_branch_route.py": "34eeca03991f1d9329bd39059e3bbcd0d983b8fd6129b11c9607ce3f34b1a759",
+    "tests/test_agi_goat_route.py": "31f40dde035d4defdd210005aa3b5fb2899677fe35fe804fb829ded54bda3899",
+    "tests/test_agi_goat_scene.py": "60737c2f35468414cb0712104de9d5d3dd8db2edb89effc9f89ead40425c27aa",
+    "tests/test_agi_leprechaun_route.py": "b609c3f811ce03d5bd9d262c173919e969e5b3d6ccccd134e586518899a08b55",
+    "tests/test_agi_leprechaun_scene.py": "ab573726945b48a9c9059d483cead8279fd1b1eb8ad2687783ae2ee3b6bb0475",
+    "tests/test_agi_mushroom_route.py": "0babe8e304d1f61cc2665bd2e34df1d5cb361892666ceeec8b78a4ebd2a09edc",
+    "tests/test_agi_mushroom_scene.py": "08b553ee1541d3aa666585811e8f7689aed7470de102bce02895d931e080eb75",
+    "tests/test_agi_river_route.py": "4fd0d69a5fd552eb6d767c9df960b333b0d0fc458c94e5f4c919b1b723ab2882",
+    "tests/test_agi_troll_route.py": "860c86e50e4ef29e08cc2003916bec3e7d9ada03e4a5fbd00d4079c4675f2377",
+    "tests/test_agi_z_scenes.py": "fca39af2bf405183707d4820a61d992dce08dbce8a92d5846a34eef11ee8bc6f",
+    "tests/test_frame_coherence.py": "bcef17f0b8261f2f095629b54f71ea7134a4aebbb627f57e8e4b081272c71774",
+    "tests/test_native_alignment.py": "530d1f52b2d710b9e7547f386c4a6692e699599f6d616ba0d9e68cd4943fbf62",
+    "tests/test_native_controller.py": "e4431265370a124ca49bbeb5d718ddb6946d6776e435261204cf02b2432194d8",
+    "tests/test_scene_receipts.py": "22e927b0661d65a62e8ea090a97f02abdbc0114bfd1c7e583a837299583eac5b"
+  },
+  "supplied_archive": {
+    "archive_code_executed": false,
+    "bridge_scope": "Retained room41 x154 crossing; not room39 bottom clip",
+    "bytes": 20755106,
+    "independent_movie_replay": false,
+    "matched_named_analysis_resources": 11,
+    "name": "KQ1-JPC-RR-TAS-Evaluation-2026-11-01.zip",
+    "sha256": "52040dc1d6b0c25c64255c9e3af68e432b267ac5382a72aa1348d391b4521118"
+  }
+}

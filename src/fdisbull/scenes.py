@@ -198,6 +198,9 @@ class SceneProjectMixin(SceneBundleMixin):
             from .navigation_geometry import validate_navigation
             validate_navigation(doc['navigation'])
             for collider in doc['navigation'].get('colliders',[]):predicate(collider['when'],width,height)
+        if 'coordinate_domains' in doc:
+            from .scene_domains import validate_coordinate_domains
+            validate_coordinate_domains(doc['coordinate_domains'])
         doc.setdefault('exclusive_group','main');globals()['name'](doc['exclusive_group'])
         objects=doc.get('objects')
         if not isinstance(objects,list) or not 1<=len(objects)<=64:raise ValueError('Scene requires 1..64 objects')
@@ -272,12 +275,29 @@ class SceneProjectMixin(SceneBundleMixin):
         if row is None:raise ValueError('Unknown scene revision for this byte version')
         doc=json.loads(row['document'])
         if hashlib.sha256(encoded(doc)).hexdigest()!=row['sha256']:raise ValueError('Scene manifest hash mismatch')
+        if 'coordinate_domains' in doc:
+            from .scene_domains import validate_coordinate_domains
+            validate_coordinate_domains(doc['coordinate_domains'])
         for item in self.db.execute('SELECT DISTINCT artifact FROM debug_scene_evidence WHERE revision=?',(row['id'],)):
             self._scene_snapshot(item['artifact'],v)
         for obj in doc['objects']:
             if hashlib.sha256(region(obj['area'],doc['width'],doc['height']).tobytes()).hexdigest()!=obj['area_sha256']:
                 raise ValueError('Scene geometry raster differs from the saved definition')
         return {k:row[k] for k in ('id','scene','version','name','parent','created','author','sha256')}|{'definition':doc}
+
+    def debug_scene_domain_audit(self, scene, *, version=None, max_checks=4096):
+        """Inspect stored layout declarations; never grant live movement authority."""
+        from .scene_domains import audit_coordinate_domains
+        integer(max_checks,1,8192)
+        info=self.debug_scene_info(scene,version=version)
+        result=dict(format='fdisbull-stored-scene-domain-audit-1',scene_revision=info['id'],
+                    manifest_sha256=info['sha256'],reference=info['definition']['reference'],
+                    historical_only=True,live_state_verified=False,navigation_authority='none')
+        descriptor=info['definition'].get('coordinate_domains')
+        if descriptor is None:
+            return dict(result,status='not_defined',complete=False,audit=None)
+        audit=audit_coordinate_domains(descriptor,max_checks=max_checks)
+        return dict(result,status='audited',complete=audit['complete'],audit=audit)
 
     def debug_scenes(self, *, version=None):
         v=self.version(version)['id']

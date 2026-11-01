@@ -416,6 +416,59 @@ loaded or executed those bytes. To claim runtime behavior, qualify the resource
 mapping and trace interpreter fetch, branch conditions and effects. See
 `docs/AGI_LOGIC.md` and the interpreter section of `methodology.md`.
 
+For direct guest inputs, `fdisbull decoder-modules` lists the explicitly
+registered AGI and Z-machine front ends. `module-analyze` reads their source
+instructions without a native project; `module-lift` provides the first narrow
+AGI state projection into shared UDL/UIL. See [decoder modules](DECODER_MODULES.md)
+for commands, source identities, required state witnesses and unsupported cases.
+Choose the actual guest language before spending effort on the interpreter's
+ASM; qualify runtime effects separately.
+
+For an original-game route and reusable scene example, see the
+[KQ1 bridge-corner investigation](AGI_BRIDGE_CLIP.md). Its fresh-game collector,
+source-linked predicate observation and separate scene exporter have distinct
+checks. The companion collision scanner proposes bounded static candidates;
+it does not certify safe movement or glitches.
+The [mushroom-island follow-up](AGI_MUSHROOM_CROSSING.md) combines a qualified
+crossing with a normal parser command and separate native score/inventory
+observations, then exports the observed route to the shared Z player.
+The [leprechaun-cave follow-up](AGI_LEPRECHAUN_ROUTE.md) adds preparation,
+range-sensitive parser input, the original shield writes and handler return,
+and the game's shrink/regrowth sequence. Its exporter requires complete
+observations and exposes the carried inventory in the separate player.
+The [gnome/key and chest segment](AGI_GNOME_GIANT_ROUTE.md) adds a reusable
+native-checkpoint continuation, an explicit origin receipt and eight guarded
+text actions. Keep the prepared checkpoint, full single-session observations,
+source-bound writes/returns and player verification as separate gates. A
+scratch variable can be stale: the chest example observes the original
+distance operation inside the command before continuing its effects.
+The [dragon and mirror route](AGI_DRAGON_MIRROR_ROUTE.md) qualifies eight
+fresh-game actions through a safe surface return. It adds source-bound water
+consumption and mirror pickup, pretyped input with guarded movement, and a
+coast-tolerant exit corridor. End short handler traces before blocking dialogue
+and observe later score effects separately. A physical priority-plane flag is
+not a story-state label: the underwater example binds actual PIC52 baseline
+classes, swimming state and carried water. Its separate Z scene checks all
+44 modeled native fields plus phase; original-game timing remains outside it.
+The [boundary follow-up](AGI_BOUNDARY_EXCEPTIONS.md) derives thin complement
+bands from paired AGI position predicates. Keep source candidates, picture
+clearance and native reachability separate. Independent checkpoint forks
+confirm the dragon rule at rows 166/167; other points remain unqualified.
+For off-screen objects and scrolling margins, use the
+[coordinate-domain audit](SCENE_COORDINATE_DOMAINS.md). Store its descriptor
+with the scene/map, then call `debug-scene-domain-audit` or
+`debug-spatial-domain-audit`. Expected mechanisms retain layout notices and
+never grant movement or teleport authority.
+The [bottom-row bridge follow-up](AGI_BRIDGE_BOTTOM.md) shows a complete bounded
+source-candidate → ordinary-input witness → standalone scene workflow, including
+expected border/room-initialization stages and the one-row-higher control.
+Use the [shared controller and receipt helpers](BOUNDED_NATIVE_SCENES.md) when
+authoring another native investigation. Keep the source-specific state/stop
+policy in the adapter; routine saved scripts continue to use their existing API.
+For video-led route research, the [Robb TAS reconstruction](research/kq1-robb-9.89/ROUTE.md)
+keeps visible key highlights, inferred directions and unknown dispatch separate.
+Qualify those proposed actions in the original game before using them as evidence.
+
 ### Compare a source block with shared semantics
 
 For the supported 0.23 DOS profile, read `udl-uil-udc.md` before using

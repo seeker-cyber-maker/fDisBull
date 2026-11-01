@@ -1,0 +1,32 @@
+{
+  "format": "fdisbull-affected-test-platform-1",
+  "python": "3.13.13",
+  "platform": "macOS ARM64",
+  "passed": 2051,
+  "skipped": 4,
+  "test_files": 43,
+  "wall_seconds": 13.294589541997993,
+  "log_sha256": "be9f9aaf01e5d5b40637e77fae3fd8aa0a971487d2974b5b0e47a8b5e71ee00a",
+  "source_hashes_unchanged": true,
+  "tested_source_sha256": {
+    "examples/agi/verify_dragon_mirror.py": "797ea3da5092db98f7af3b0eaeec4b537c1c383ccc397fa52f2b34b3dc6b1368",
+    "examples/agi/dragon_probes.py": "baacb0487fbf9c763ce43b0e463de5cf2852383f40d269c876ceae87cfe9ec34",
+    "examples/agi/inventory_probe.py": "b7b059a46327419faddef20efdd8b0511b5f26fa1fabca878b4ddb33ad9bbff1",
+    "examples/agi/build_dragon_mirror_scene.py": "45c66014cff3260aaacc26b7b4d0fa2c0dc746b9ccdf03cc693b6da5e966c084",
+    "tests/test_agi_dragon_mirror_route.py": "ecdc149ce1311f26b5e537ace08e456c65bdd8ae4ca2fe31a979da591b6a3bfd",
+    "tests/test_agi_dragon_mirror_scene.py": "27bb39159d23034ece3ba7d13f42e8bb88de687b0495a9f09322286a24939baa",
+    "tests/test_agi_inventory_probe.py": "b8a23ab71230861d211048a74731346fbaa9e6dee5a71f0bfc1c0e00933173cb"
+  },
+  "command": "PYTHONPATH=src:player:. python -B -m pytest -q -p no:cacheprovider tests/test_agi*.py tests/test_il_scenes.py tests/test_text_player.py tests/test_player_checkpoints.py tests/test_player_live.py",
+  "temporary_files_external": true,
+  "optional_native_private_selectors_removed": true,
+  "scope": "Affected authored tests; the original DOS route is separately qualified.",
+  "skips": [
+    "Case-sensitive-filesystem fixture",
+    "Optional DOSBox experiment",
+    "Two private source/trial checks"
+  ],
+  "full_suite_run": false,
+  "hosted_ordinary_linux_ci_qualified": false,
+  "hosted_native_linux_ci_qualified": false
+}

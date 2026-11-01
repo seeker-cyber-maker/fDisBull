@@ -1,0 +1,184 @@
+{
+  "format": "fdisbull-goat-invisibility-summary-1",
+  "status": "verified-under-assumptions",
+  "raw_private_receipt_sha256": "6f26a6f6f4159e6c2584c4bf19dc172159001fef7a5834965390fc686b60ac74",
+  "source_scan": {
+    "present_logic_count": 90,
+    "all_present_layouts_checked": true,
+    "instruction_count": 11452,
+    "target_or_dynamic_writers": 38
+  },
+  "source_directory_sha256": "18d53ac02a5457494f03352c36a4a4c2eb8251df70fff8dae6dc3d5b41d55b38",
+  "volumes": {
+    "0": "7f10c63737b4da8cf1633ba7c317ffc84a4bbc4eca10b39d2e349b18636bb5e2",
+    "1": "7c3a0c86c8ad1b028dc3d56cafb30a925690f243d70f2e7b2ac6f0dc802b00d0",
+    "2": "b6e321821a0d90809d985f57b279c2f155a6972482c4811c4a737987042a53cf"
+  },
+  "writer_inventory_sha256": "73e97caaef4951d16b3b75dab2685cb7024e1d6f54212db86077aef9ff9baf50",
+  "guarded_commands": [
+    {
+      "logic": 10,
+      "guard_offset": 638,
+      "target_offset": 694,
+      "instruction_sha256": "6225f998b7a4c4b18f3e377c8785ef283bd467d4e3ff3c1a5deb9ffb46a4864e",
+      "terms": [
+        {
+          "flag": 77,
+          "required": true
+        },
+        {
+          "flag": 75,
+          "required": false
+        },
+        {
+          "flag": 79,
+          "required": false
+        }
+      ],
+      "required_edge": "true",
+      "edge_dominates_target": true,
+      "resource_sha256": "d7482f0e3c924ac60669a188aa0dec5e08cac027d7ed581eef6b505d74d7a063",
+      "admitted_command": "lure"
+    },
+    {
+      "logic": 11,
+      "guard_offset": 844,
+      "target_offset": 900,
+      "instruction_sha256": "6225f998b7a4c4b18f3e377c8785ef283bd467d4e3ff3c1a5deb9ffb46a4864e",
+      "terms": [
+        {
+          "flag": 77,
+          "required": true
+        },
+        {
+          "flag": 75,
+          "required": false
+        },
+        {
+          "flag": 79,
+          "required": false
+        }
+      ],
+      "required_edge": "true",
+      "edge_dominates_target": true,
+      "resource_sha256": "595134f123ff086cc537f7acb0e0cec4586fcfc4f685d8e77358479810ba7372",
+      "admitted_command": "lure"
+    },
+    {
+      "logic": 0,
+      "guard_offset": 2424,
+      "target_offset": 2496,
+      "instruction_sha256": "2f825e9c3c6871a44a8bbb1b401c339968b31e0a6409d08bd79a9eca63334d8e",
+      "terms": [
+        {
+          "flag": 133,
+          "required": true
+        },
+        {
+          "flag": 75,
+          "required": false
+        },
+        {
+          "flag": 79,
+          "required": false
+        }
+      ],
+      "required_edge": "true",
+      "edge_dominates_target": true,
+      "resource_sha256": "efb5e7e2b584eec6d741b7e08e42eb8247d00fde04add4720ee251eb9310cd4b",
+      "admitted_command": "ring"
+    }
+  ],
+  "named_target": {
+    "logic": 103,
+    "message": 2,
+    "print_offset": 413,
+    "required_flags": [
+      75,
+      79
+    ],
+    "guard_witnesses": [
+      {
+        "logic": 103,
+        "guard_offset": 205,
+        "target_offset": 402,
+        "instruction_sha256": "8b19c12329ef43e92651e8bfe776534d31a685a58aa490f6b3fb323cc93a78e6",
+        "terms": [
+          {
+            "flag": 75,
+            "required": false
+          }
+        ],
+        "required_edge": "false",
+        "edge_dominates_target": true,
+        "resource_sha256": "cb1293db23b0007712fdd6193bd590dbdfdbaa8a84698f16c56b70c1321cdaed"
+      },
+      {
+        "logic": 103,
+        "guard_offset": 402,
+        "target_offset": 413,
+        "instruction_sha256": "2183c1c38f3df6dc87ef496b9930db9812970a3aef6953fc36b219959cabef8e",
+        "terms": [
+          {
+            "flag": 79,
+            "required": true
+          },
+          {
+            "flag": 42,
+            "required": false
+          }
+        ],
+        "required_edge": "true",
+        "edge_dominates_target": true,
+        "resource_sha256": "cb1293db23b0007712fdd6193bd590dbdfdbaa8a84698f16c56b70c1321cdaed"
+      }
+    ]
+  },
+  "solver": {
+    "z3_version": "5.3.2",
+    "timeout_ms": 5000,
+    "path_steps": 8,
+    "initial_violation": "unsat",
+    "inductive_step_violation": "unsat",
+    "bounded_violation": "unsat",
+    "debug_negative_control": "sat",
+    "negative_control_commands": [
+      "lure",
+      "debug set flag79"
+    ],
+    "negative_control_witness": [
+      {
+        "following": false,
+        "invisible": false
+      },
+      {
+        "following": true,
+        "invisible": false
+      },
+      {
+        "following": true,
+        "invisible": true
+      }
+    ],
+    "verified": true
+  },
+  "assumptions": [
+    "Initial following and invisible flags are both false.",
+    "Only source-qualified lure, ring, literal-reset and stutter transitions are admitted.",
+    "Logic99 debug flag-edit commands, external state edits/restores and interpreter faults are excluded.",
+    "Each admitted source flag effect is atomic; no asynchronous flag mutation is modeled.",
+    "Logic CFG entries begin at zero; calls return normally and do not bypass recorded guard edges.",
+    "Additional source guards and other state are omitted, overapproximating the admitted commands."
+  ],
+  "limitations": [
+    "Solver queries cover a two-flag abstraction and a bounded source-linked witness contract.",
+    "This is not whole-game reachability, an AGI engine proof, native execution or compatibility evidence.",
+    "Resource boundary enumeration does not prove every source instruction is reachable."
+  ],
+  "interpretation": "No ordinary-command witness for the separate invisible-wander branch under the qualified two-flag model. Not a native reproduction or whole-game proof.",
+  "implementation_sha256": {
+    "examples/agi/check_goat_invisibility.py": "7c7af6f681dab58ff9c5e1965c43b6cbc6deabce54a651f84c17a8e420975e9b",
+    "src/fdisbull/agi.py": "9b0815cfc861ceb0d157ab7a6744c39e414b5eead0a227b6c309a3144dc83fc7",
+    "src/fdisbull/agi_layout.py": "9c3c172715a6d60cfab0a882e6d2c35a1008ca4fa6e8ffc3f00076a9284fdff4"
+  }
+}

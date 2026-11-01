@@ -1,0 +1,38 @@
+{
+  "format": "fdisbull-boundary-port-derivation-1",
+  "scope": "Private restored diagnostic observed two independent specific cases; the portable public entry point itself has not been rerun natively.",
+  "files": [
+    {
+      "private": "preparation/boundary_controller.py",
+      "private_sha256": "808fccf1a36f7e135e441afd876bcb40881f7ca7bb5ac0c579dd4b2084f49e8b",
+      "public": "examples/agi/verify_dragon_boundary.py",
+      "public_sha256": "ef548a5cdd6288ec188708e381043b57d909bb101f4ca56342edf898f4fa591e",
+      "changes": "Module-qualified probe import and adjacent public probe filename."
+    },
+    {
+      "private": "preparation/inside_water_probe.py",
+      "private_sha256": "5770575f684de363662c1780b5d5c4d809ae08ad3763881c9e721208783b7d3f",
+      "public": "examples/agi/dragon_inside_probe.py",
+      "public_sha256": "40d881140fea450c0c2ab3372356bcab4dee88cd19460ebaec227a9f2d9a5915",
+      "changes": "Module docstring only."
+    }
+  ],
+  "authored_tests": {
+    "path": "tests/test_agi_dragon_boundary.py",
+    "sha256": "9d4764e226d6e2493b29fcef4c62f8cb0ab0929b12049b0740eb2c31c893a634",
+    "source": "private authored inside-stop and saved CPU tests; portable imports"
+  },
+  "native_receipts": [
+    {
+      "fork": "inside-02",
+      "diagnostic_sha256": "b1995c5766475bdfb7e6d281e872f4f6f0b3b0e15b9963f0845655ce34a4bfc1",
+      "supervisor_sha256": "1e72d6092a3795055e3856ebb4c791c38ac440092f68b6c990cf3e96e9c5e83b"
+    },
+    {
+      "fork": "outside-01",
+      "diagnostic_sha256": "57b8eca9f03fd096f97b6942d52392a79a7548416e3284a8093ef92b4c032bac",
+      "supervisor_sha256": "d682eaee8663b34a9a68b59e5a4ff535d6e2ccad3739bf98dded4eeb5b827508"
+    }
+  ],
+  "verification": "31 authored boundary and prior dragon route tests passed; public --help succeeded. No native operation was performed after promotion."
+}
