@@ -4,11 +4,17 @@
 #include <stdlib.h>
 #include <time.h>
 
+/* Source-qualified menu leaf is linked separately from the arena core. */
+extern uint8_t shadowrun_menu_phase,shadowrun_menu_cursor,shadowrun_menu_archetype,shadowrun_menu_preview,shadowrun_menu_supported;
+extern unsigned int shadowrun_menu_pressed;
+extern void shadowrun_menu_tick(void);
+
 /* Authored symbolic display of the source-bound shared state, not game art. */
 @interface ArenaView : NSView
 @property(nonatomic, assign) fdisbull_context *context;
 @property(nonatomic, assign) BOOL stopped;
 @property(nonatomic, assign) BOOL paused;
+@property(nonatomic, assign) BOOL sourceMenu;
 @property(nonatomic, copy) NSString *message;
 @property(nonatomic, strong) NSData *terrain;
 @end
@@ -29,7 +35,9 @@ static void label(NSString *text, NSPoint point, CGFloat size, NSColor *color) {
 - (NSString *)accessibilityRole { return NSAccessibilityGroupRole; }
 - (NSString *)accessibilityLabel {
     if (!self.context) return @"Arena unavailable";
-    return [NSString stringWithFormat:@"Arena %@, player %lld %lld, HP %lld, ammo %lld, inventory %@",
+    if (self.sourceMenu) return [NSString stringWithFormat:@"Source menu phase %u, selection %u",shadowrun_menu_phase,shadowrun_menu_cursor];
+    return [NSString stringWithFormat:@"%@ %@, player %lld %lld, HP %lld, ammo %lld, inventory %@",
+        value(self.context,"shadowrun_courtyard_profile",0)?@"Captured courtyard":@"Arena",
         self.stopped?@"stopped":self.paused?@"paused":@"running",
         (long long)value(self.context,"shadowrun_player_x",0),(long long)value(self.context,"shadowrun_player_y",0),
         (long long)value(self.context,"shadowrun_arena_hp",0),(long long)value(self.context,"shadowrun_play_ammo",0),
@@ -40,12 +48,39 @@ static void label(NSString *text, NSPoint point, CGFloat size, NSColor *color) {
     NSRect bounds=self.bounds;
     [[NSColor colorWithCalibratedRed:0.055 green:0.065 blue:0.08 alpha:1] setFill];NSRectFill(bounds);
     fdisbull_context *c=self.context;if (!c) return;
+    if (self.sourceMenu) {
+        label(@"SHADOWRUN  /  SOURCE MENU",NSMakePoint(36,35),18,[NSColor whiteColor]);
+        label(@"Original menu choices · symbolic presentation",NSMakePoint(36,64),12,[NSColor lightGrayColor]);
+        if (shadowrun_menu_phase<2) {
+            NSArray<NSString *> *items=shadowrun_menu_phase==0?@[@"New Game",@"Load Game"]:@[@"Samurai",@"Decker",@"Gator Shaman"];
+            for(NSUInteger i=0;i<items.count;i++) {
+                BOOL selected=i==shadowrun_menu_cursor;
+                label([NSString stringWithFormat:@"%c  %@",selected?'>':' ',items[i]],NSMakePoint(70,125+i*42),16,selected?[NSColor systemCyanColor]:[NSColor whiteColor]);
+            }
+            label(@"Up/Down choose · Z or X confirm · Enter is ignored here",NSMakePoint(36,bounds.size.height-48),12,[NSColor lightGrayColor]);
+        } else if (shadowrun_menu_phase==2) {
+            NSArray<NSString *> *names=@[@"Samurai",@"Decker",@"Gator Shaman"];
+            NSString *choice=shadowrun_menu_archetype<names.count?names[shadowrun_menu_archetype]:@"Unknown";
+            label([NSString stringWithFormat:@"Selected archetype: %@",choice],NSMakePoint(70,125),16,[NSColor whiteColor]);
+            label(@"Original character initialization is not modeled.",NSMakePoint(70,167),14,[NSColor lightGrayColor]);
+            label(value(c,"shadowrun_courtyard_profile",0)?@"P enters the separately captured courtyard.":@"P enters the separately prepared assisted arena.",NSMakePoint(70,195),14,[NSColor systemYellowColor]);
+            label(@"The menu choice does not change that prepared scene.",NSMakePoint(70,221),12,[NSColor lightGrayColor]);
+            label(@"The original opening later drives an automatic arrival walk.",NSMakePoint(70,257),12,[NSColor lightGrayColor]);
+            label(@"The full opening is not modeled here.",NSMakePoint(70,279),12,[NSColor lightGrayColor]);
+            label(@"R returns to the source menu · Esc quits",NSMakePoint(36,bounds.size.height-48),12,[NSColor lightGrayColor]);
+        } else {
+            label(@"Original load continuation is not modeled.",NSMakePoint(70,125),16,[NSColor whiteColor]);
+            label(@"R returns to the source menu · Esc quits",NSMakePoint(36,bounds.size.height-48),12,[NSColor lightGrayColor]);
+        }
+        return;
+    }
     BOOL menu=value(c,"shadowrun_play_menu",0)!=0;
     int64_t hp=value(c,"shadowrun_arena_hp",0),ammo=value(c,"shadowrun_play_ammo",0);
     int64_t target=value(c,"shadowrun_target_selected",0),status=value(c,"shadowrun_arena_frame_status",0);
-    NSString *top=[NSString stringWithFormat:@"SHADOWRUN  /  ASSISTED ARENA       HP %lld   AMMO %lld",(long long)hp,(long long)ammo];
+    BOOL courtyard=value(c,"shadowrun_courtyard_profile",0)!=0;
+    NSString *top=courtyard?[NSString stringWithFormat:@"SHADOWRUN  /  CAPTURED COURTYARD       HP %lld",(long long)hp]:[NSString stringWithFormat:@"SHADOWRUN  /  ASSISTED ARENA       HP %lld   AMMO %lld",(long long)hp,(long long)ammo];
     label(top,NSMakePoint(20,14),15,[NSColor whiteColor]);
-    NSString *hint=@"Space start/pause   Arrows move   Z fire/equip   X target/back   Enter inventory   R reset";
+    NSString *hint=courtyard?@"Space start/pause   Arrows move   R reset · Fire and inventory unavailable":@"Space start/pause   Arrows move   Z fire/equip   X target/back   Enter inventory   R reset";
     label(hint,NSMakePoint(20,37),11,[NSColor colorWithWhite:0.7 alpha:1]);
     if (menu) {
         label(@"INVENTORY  ·  Captured item identifiers",NSMakePoint(24,78),16,[NSColor whiteColor]);
@@ -93,6 +128,7 @@ static void label(NSString *text, NSPoint point, CGFloat size, NSColor *color) {
         label(@"Map colors group raw terrain values; they do not indicate passability.",NSMakePoint(20,oy+44*cell+31),11,[NSColor lightGrayColor]);
     }
     if (self.paused && !self.stopped && status!=3) label(@"PAUSED · press Space to start",NSMakePoint(20,bounds.size.height-24),13,[NSColor systemYellowColor]);
+    if (self.message && !self.stopped) label(self.message,NSMakePoint(bounds.size.width/2,bounds.size.height-24),12,[NSColor systemYellowColor]);
     if (self.stopped || status==3) {
         NSString *msg=status==3?@"HP depleted · press R to restart":(self.message?:@"Unsupported state · press R to restart");
         label(msg,NSMakePoint(20,bounds.size.height-24),13,[NSColor systemRedColor]);
@@ -116,6 +152,23 @@ static void label(NSString *text, NSPoint point, CGFloat size, NSColor *color) {
 @implementation ArenaWindow
 - (void)keyDown:(NSEvent *)e {
     ArenaController *c=self.controller;uint8_t b=0;
+    if (c.view.sourceMenu) {
+        if(e.isARepeat) return;
+        if(e.keyCode==53) {[NSApp terminate:nil];return;}
+        if(e.keyCode==15) {shadowrun_menu_phase=0;shadowrun_menu_cursor=0;shadowrun_menu_preview=0;shadowrun_menu_archetype=0;[c.view setNeedsDisplay:YES];return;}
+        if(shadowrun_menu_phase==2U && e.keyCode==35) {c.view.sourceMenu=NO;c.view.paused=YES;c.running=NO;c.pad=0;c.latched=0;[c.view setNeedsDisplay:YES];return;}
+        if(shadowrun_menu_phase>1U) return;
+        shadowrun_menu_pressed=0;
+        if(e.keyCode==126) shadowrun_menu_pressed=0x0100U;
+        else if(e.keyCode==125) shadowrun_menu_pressed=0x0200U;
+        else if(e.keyCode==6) shadowrun_menu_pressed=0x4000U;
+        else if(e.keyCode==7) shadowrun_menu_pressed=0x1000U;
+        if(shadowrun_menu_pressed) {shadowrun_menu_tick();[c.view setNeedsDisplay:YES];}
+        return;
+    }
+    if (value(c.context,"shadowrun_courtyard_profile",0) && (e.keyCode==6 || e.keyCode==7 || e.keyCode==36)) {
+        c.view.message=@"Action unavailable in captured courtyard";[c.view setNeedsDisplay:YES];return;
+    }
     switch(e.keyCode) {case 126:b=1;break;case 125:b=2;break;case 123:b=4;break;case 124:b=8;break;
         case 7:b=16;break;case 6:b=64;break;case 36:b=128;break;
         case 49: if(!e.isARepeat && !c.view.stopped){c.running=!c.running;c.view.paused=!c.running;[c.view setNeedsDisplay:YES];}return;
@@ -135,12 +188,12 @@ static void label(NSString *text, NSPoint point, CGFloat size, NSColor *color) {
     (void)note;ArenaWindow *w=[[ArenaWindow alloc] initWithContentRect:NSMakeRect(0,0,960,760)
         styleMask:(NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskResizable) backing:NSBackingStoreBuffered defer:NO];
     self.window=w;w.controller=self;w.delegate=self;w.title=@"Shadowrun · Assisted Arena";w.minSize=NSMakeSize(640,520);
-    self.view=[[ArenaView alloc] initWithFrame:w.contentView.bounds];self.view.autoresizingMask=NSViewWidthSizable|NSViewHeightSizable;self.view.context=self.context;self.view.paused=YES;
+    self.view=[[ArenaView alloc] initWithFrame:w.contentView.bounds];self.view.autoresizingMask=NSViewWidthSizable|NSViewHeightSizable;self.view.context=self.context;self.view.paused=YES;self.view.sourceMenu=YES;
     w.contentView=self.view;[w center];[w makeKeyAndOrderFront:nil];[NSApp activateIgnoringOtherApps:YES];
     self.timer=[NSTimer scheduledTimerWithTimeInterval:(1.0/60.0) target:self selector:@selector(tick:) userInfo:nil repeats:YES];
 }
 - (void)tick:(NSTimer *)timer {
-    (void)timer;if(!self.running || self.view.stopped || value(self.context,"shadowrun_arena_frame_status",0)==3) return;
+    (void)timer;if(self.view.sourceMenu || !self.running || self.view.stopped || value(self.context,"shadowrun_arena_frame_status",0)==3) return;
     uint8_t input=self.pad|self.latched;self.latched=0;
     int rc=fdisbull_step(self.context,input);
     if(rc) {self.view.stopped=YES;self.view.message=rc==1?@"Unsupported action or state · press R to restart":@"Runtime fault · press R to restart";}
@@ -152,18 +205,21 @@ static void label(NSString *text, NSPoint point, CGFloat size, NSColor *color) {
 
 int main(int argc,const char **argv) {
     @autoreleasepool {
-        NSString *rom=nil,*snapshot=nil,*pads=nil;long steps=0,renders=1;
+        NSString *rom=nil,*snapshot=nil,*pads=nil,*menuEdges=nil;long steps=0,renders=1;BOOL enterPrepared=NO;
         for(int i=1;i<argc;i++) {
             NSString *arg=[NSString stringWithUTF8String:argv[i]];
-            if (([arg isEqual:@"--rom"] || [arg isEqual:@"--snapshot"] || [arg isEqual:@"--steps"] || [arg isEqual:@"--pads"] || [arg isEqual:@"--render-benchmark"]) && i+1>=argc) {fprintf(stderr,"missing argument\n");return 2;}
+            if (([arg isEqual:@"--rom"] || [arg isEqual:@"--snapshot"] || [arg isEqual:@"--steps"] || [arg isEqual:@"--pads"] || [arg isEqual:@"--render-benchmark"] || [arg isEqual:@"--menu-edges"]) && i+1>=argc) {fprintf(stderr,"missing argument\n");return 2;}
             if ([arg isEqual:@"--rom"]) rom=[NSString stringWithUTF8String:argv[++i]];
             else if ([arg isEqual:@"--snapshot"]) snapshot=[NSString stringWithUTF8String:argv[++i]];
             else if ([arg isEqual:@"--pads"]) pads=[NSString stringWithUTF8String:argv[++i]];
+            else if ([arg isEqual:@"--menu-edges"]) menuEdges=[NSString stringWithUTF8String:argv[++i]];
+            else if ([arg isEqual:@"--enter-prepared"]) enterPrepared=YES;
             else if ([arg isEqual:@"--steps"]) {char *end=NULL;steps=strtol(argv[++i],&end,10);if(!end || *end || steps<0 || steps>100000) return 2;}
             else if ([arg isEqual:@"--render-benchmark"]) {char *end=NULL;renders=strtol(argv[++i],&end,10);if(!end || *end || renders<1 || renders>10000) return 2;}
             else {fprintf(stderr,"unknown option\n");return 2;}
         }
-        if (!snapshot && (steps || pads || renders!=1)) {fprintf(stderr,"headless options require --snapshot\n");return 2;}
+        if (!snapshot && (steps || pads || menuEdges || enterPrepared || renders!=1)) {fprintf(stderr,"headless options require --snapshot\n");return 2;}
+        if (enterPrepared && !menuEdges) {fprintf(stderr,"prepared entry requires menu evidence\n");return 2;}
         if (snapshot && [[NSFileManager defaultManager] fileExistsAtPath:snapshot]) {fprintf(stderr,"snapshot already exists\n");return 2;}
         if (!rom) rom=[[NSBundle mainBundle] objectForInfoDictionaryKey:@"FDisBullSourceROM"];
         if (!rom) {fprintf(stderr,"source ROM path required\n");return 2;}
@@ -171,6 +227,15 @@ int main(int argc,const char **argv) {
         if(rc || !ctx) {fprintf(stderr,"cannot open verified source ROM (%d)\n",rc);return 1;}
         [NSApplication sharedApplication];
         if (snapshot) {
+            BOOL menuMode=menuEdges!=nil;
+            if(menuEdges.length) for(NSString *entry in [menuEdges componentsSeparatedByString:@","]) {
+                NSScanner *scanner=[NSScanner scannerWithString:entry];NSInteger v;
+                if(![scanner scanInteger:&v] || !scanner.isAtEnd || v<0 || v>65535){fdisbull_destroy(ctx);return 2;}
+                shadowrun_menu_pressed=(unsigned int)v;shadowrun_menu_tick();
+                if(!shadowrun_menu_supported){fdisbull_destroy(ctx);return 1;}
+            }
+            if(enterPrepared && shadowrun_menu_phase!=2U) {fprintf(stderr,"menu has not reached the initializer boundary\n");fdisbull_destroy(ctx);return 2;}
+            if(menuMode && !enterPrepared && (steps || pads.length)) {fprintf(stderr,"arena input requires explicit prepared entry\n");fdisbull_destroy(ctx);return 2;}
             NSMutableArray<NSNumber *> *inputs=[NSMutableArray array];
             if(pads.length) for(NSString *entry in [pads componentsSeparatedByString:@","]) {
                 NSScanner *scanner=[NSScanner scannerWithString:entry];NSInteger v;
@@ -178,8 +243,8 @@ int main(int argc,const char **argv) {
                 [inputs addObject:@(v)];
             }
             for(long i=0;i<steps;i++) [inputs addObject:@0];
-            BOOL stopped=NO;for(NSNumber *v in inputs) {if(fdisbull_step(ctx,(uint8_t)v.unsignedIntValue)){stopped=YES;break;}}
-            ArenaView *view=[[ArenaView alloc] initWithFrame:NSMakeRect(0,0,960,760)];view.context=ctx;view.stopped=stopped;
+            BOOL stopped=NO;NSUInteger completed=0;for(NSNumber *v in inputs) {if(fdisbull_step(ctx,(uint8_t)v.unsignedIntValue)){stopped=YES;break;}completed++;}
+            ArenaView *view=[[ArenaView alloc] initWithFrame:NSMakeRect(0,0,960,760)];view.context=ctx;view.stopped=stopped;view.sourceMenu=menuMode&&!enterPrepared;
             NSBitmapImageRep *rep=[[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:960 pixelsHigh:760 bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO colorSpaceName:NSCalibratedRGBColorSpace bytesPerRow:0 bitsPerPixel:0];
             NSGraphicsContext *bitmap=[NSGraphicsContext graphicsContextWithBitmapImageRep:rep];
             NSGraphicsContext *flipped=[NSGraphicsContext graphicsContextWithCGContext:bitmap.CGContext flipped:YES];
@@ -191,7 +256,7 @@ int main(int argc,const char **argv) {
             clock_gettime(CLOCK_MONOTONIC,&end);[NSGraphicsContext restoreGraphicsState];
             uint64_t elapsed=(uint64_t)((int64_t)(end.tv_sec-start.tv_sec)*1000000000LL+(int64_t)(end.tv_nsec-start.tv_nsec));
             NSData *png=[rep representationUsingType:NSBitmapImageFileTypePNG properties:@{}];BOOL ok=[png writeToFile:snapshot atomically:YES];
-            printf("{\"stopped\":%s,\"hp\":%lld,\"player_x\":%lld,\"player_y\":%lld,\"render_iterations\":%ld,\"render_ns\":%llu}\n",stopped?"true":"false",(long long)value(ctx,"shadowrun_arena_hp",0),(long long)value(ctx,"shadowrun_player_x",0),(long long)value(ctx,"shadowrun_player_y",0),renders,(unsigned long long)elapsed);
+            printf("{\"stopped\":%s,\"hp\":%lld,\"player_x\":%lld,\"player_y\":%lld,\"menu_phase\":%u,\"menu_cursor\":%u,\"arena_entered\":%s,\"arena_ticks\":%lu,\"render_iterations\":%ld,\"render_ns\":%llu}\n",stopped?"true":"false",(long long)value(ctx,"shadowrun_arena_hp",0),(long long)value(ctx,"shadowrun_player_x",0),(long long)value(ctx,"shadowrun_player_y",0),shadowrun_menu_phase,shadowrun_menu_cursor,(!menuMode||enterPrepared)?"true":"false",(unsigned long)completed,renders,(unsigned long long)elapsed);
             fdisbull_destroy(ctx);return ok?0:1;
         }
         ArenaController *controller=[ArenaController new];controller.context=ctx;NSApp.delegate=controller;

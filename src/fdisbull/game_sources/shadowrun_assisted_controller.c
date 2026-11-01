@@ -3,9 +3,9 @@
 u8 shadowrun_arena_frame_status,shadowrun_arena_previous_pad,shadowrun_arena_player_pending;
 void shadowrun_arena_frame(u8 pad) {
     u8 pressed;u8 was_ready;u8 had_burst;u8 hostile_idle_pass;u8 hostile_idle_zero;u8 hostile_moving_idle;u8 hostile_positive_pass;u8 relaunched;u8 pursuing;u8 recovered_direction;
+    if (shadowrun_arena_frame_status==3U) return;
     pressed=pad & (shadowrun_arena_previous_pad ^ 255U);
     shadowrun_arena_previous_pad=pad;
-    if (shadowrun_arena_frame_status==3U) {shadowrun_play_refused=1;return;}
     if (shadowrun_arena_frame_status==2U || shadowrun_arena_profile!=1U) {
         shadowrun_arena_frame_status=2;shadowrun_play_refused=1;return;
     }
@@ -49,8 +49,18 @@ void shadowrun_arena_frame(u8 pad) {
                 }
             } else if (shadowrun_arena_moving_profile && pad==4U && !shadowrun_arena_player_pending) {
                 shadowrun_reaction_input_flags=4;shadowrun_reaction_input_heading=0xc000U;
-                shadowrun_reaction_resume_direction();
-                if (!shadowrun_reaction_direction_supported) {shadowrun_arena_frame_status=2;shadowrun_play_refused=1;return;}
+                if (shadowrun_reaction_action_timer==65535U) {
+                    shadowrun_reaction_resume_direction_expired();
+                    if (!shadowrun_reaction_direction_expired_supported) {shadowrun_arena_frame_status=2;shadowrun_play_refused=1;return;}
+                } else {
+                    shadowrun_reaction_resume_direction();
+                    if (!shadowrun_reaction_direction_supported) {shadowrun_arena_frame_status=2;shadowrun_play_refused=1;return;}
+                }
+                recovered_direction=1;
+            } else if (shadowrun_arena_moving_profile && pad==2U && !shadowrun_arena_player_pending) {
+                shadowrun_reaction_input_flags=2;shadowrun_reaction_input_heading=0x8000U;
+                shadowrun_reaction_resume_direction_down();
+                if (!shadowrun_reaction_direction_down_supported) {shadowrun_arena_frame_status=2;shadowrun_play_refused=1;return;}
                 recovered_direction=1;
             } else {shadowrun_arena_frame_status=2;shadowrun_play_refused=1;return;}
             shadowrun_arena_player_ready=1;shadowrun_play_shot_eligible=1;
@@ -93,7 +103,7 @@ void shadowrun_arena_frame(u8 pad) {
     }
     if (was_ready && shadowrun_play_shot_timer<32768U) shadowrun_play_shot_timer-=1U;
     if (was_ready && (pressed & 64U)) shadowrun_arena_player_pending=1;
-    if (shadowrun_play_shot_timer>=32768U && !shadowrun_arena_player_pending && !(pad & 64U))
+    if (shadowrun_play_shot_timer>=32768U && !shadowrun_arena_player_pending && !(pad & 79U))
         shadowrun_play_shot_timer=51;
     if (was_ready && shadowrun_arena_player_ready && shadowrun_play_shot_timer>=32768U && (shadowrun_arena_player_pending || (pad & 64U))) {
         if ((shadowrun_arena_burst_active && (!(shadowrun_burst_flags_low&8U) ||
@@ -118,8 +128,13 @@ void shadowrun_arena_frame(u8 pad) {
         if (shadowrun_attack_callback==0xb3eeUL) {
             if (shadowrun_attack_animation & 32768U) {
                 if (shadowrun_arena_moving_profile) {
-                    shadowrun_hostile_moving_pose_step();
-                    if (!shadowrun_moving_pose_supported) {shadowrun_arena_frame_status=2;shadowrun_play_refused=1;return;}
+                    if (shadowrun_attack_animation==0x8058U) {
+                        shadowrun_hostile_moving_pose_58_step();
+                        if (!shadowrun_moving_pose_58_supported) {shadowrun_arena_frame_status=2;shadowrun_play_refused=1;return;}
+                    } else {
+                        shadowrun_hostile_moving_pose_step();
+                        if (!shadowrun_moving_pose_supported) {shadowrun_arena_frame_status=2;shadowrun_play_refused=1;return;}
+                    }
                 }
                 else if (!shadowrun_attack_counter) shadowrun_hostile_attack_zero_counter_step();
                 else if (shadowrun_attack_action_timer==65535U) shadowrun_hostile_attack_expired_step();
@@ -130,7 +145,11 @@ void shadowrun_arena_frame(u8 pad) {
             }
         } else if (shadowrun_attack_callback==0xb45cUL) {
             if (shadowrun_arena_moving_profile) {
-                shadowrun_hostile_moving_idle_step();hostile_moving_idle=1;
+                if (shadowrun_attack_animation==0x18U) {
+                    shadowrun_hostile_moving_idle_18_step();
+                    shadowrun_moving_idle_supported=shadowrun_moving_idle_18_supported;
+                } else shadowrun_hostile_moving_idle_step();
+                hostile_moving_idle=1;
                 if (!shadowrun_moving_idle_supported) {
                     shadowrun_arena_hostile_relaunch();
                     if (!shadowrun_arena_supported) {shadowrun_arena_frame_status=2;shadowrun_play_refused=1;return;}
@@ -180,7 +199,7 @@ void shadowrun_arena_frame(u8 pad) {
         }
     }
     if (hostile_idle_zero && shadowrun_arena_player_hit_event) shadowrun_arena_supported=0;
-    if (hostile_moving_idle && shadowrun_arena_player_hit_event) shadowrun_arena_supported=0;
+    if (hostile_moving_idle && shadowrun_arena_player_hit_event && !relaunched) shadowrun_arena_supported=0;
     if (shadowrun_arena_moving_profile && (was_ready || recovered_direction) && shadowrun_arena_player_ready && shadowrun_arena_supported) {
         shadowrun_party_clock_tick();
         if (!shadowrun_party_clock_supported) shadowrun_arena_supported=0;

@@ -320,6 +320,10 @@ Genesis-bound UIL into a local window with keyboard controls. The NES route is
 preserved as [research with a handoff](docs/GENESIS_NES_RESEARCH_HANDOFF.md),
 possible for bounded slices but not recommended as the primary Genesis target.
 Native speed and source coverage are verified separately.
+The [actor-stage extension](docs/SHADOWRUN_MACOS_EXTENDED.md) adds source-backed
+menu navigation and a separate captured courtyard with player movement and
+three moving civilians. Original comparison windows and remaining combat
+boundaries are recorded alongside the native model checks.
 The separate [Mario debugging study](docs/MARIO_MINUS_WORLD.md) reproduces the
 minus-world warp in the supplied cartridge and traces the incorrect table
 selection that produces it.

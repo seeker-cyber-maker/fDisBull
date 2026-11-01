@@ -29,16 +29,39 @@ def profiles():
                        'bounded actor, equipment, terrain and concurrency paths',
                        'symbolic presentation; original graphics/audio not reproduced',
                        'unsupported continuations refuse; no full-game or hardware parity'],
+        }, {
+            'id': 'captured-courtyard',
+            'default_preset': 'courtyard',
+            'presets': {'courtyard': 'Captured scene 2 with the original three moving civilians'},
+            'default_target': 'macos-arm64',
+            'targets': {'macos-arm64': 'Native calm exploration from the original captured courtyard'},
+            'requires': ['reviewed opening manifest', 'exact source ROM',
+                         'receipt-bound scene-2 frame-5999 capture', 'Clang and macOS SDK'],
+            'output': 'private native application and build receipts',
+            'model_entry': 'shadowrun_arena_frame',
+            'limits': ['prepared captured scene; no armed-actor construction patches',
+                       'bounded movement, civilian scheduling and collision paths',
+                       'directional exploration only; firing and inventory are not admitted',
+                       'symbolic presentation; unsupported transitions roll back'],
         }],
     }
 
 
 def build(path, *, rom_path, capture, output, cc65_root=None,
-          profile='assisted-arena', preset='stationary', target='nes'):
-    if profile != 'assisted-arena' or preset not in ('stationary', 'moving'):
+          profile='assisted-arena', preset=None, target=None):
+    if profile not in ('assisted-arena', 'captured-courtyard'):
+        raise ValueError('unsupported Shadowrun AI profile or preset')
+    if preset is None:
+        preset = 'courtyard' if profile == 'captured-courtyard' else 'stationary'
+    if target is None:
+        target = 'macos-arm64' if profile == 'captured-courtyard' else 'nes'
+    if ((profile == 'assisted-arena' and preset not in ('stationary', 'moving')) or
+            (profile == 'captured-courtyard' and preset != 'courtyard')):
         raise ValueError('unsupported Shadowrun AI profile or preset')
     if target not in ('nes', 'macos-arm64'):
         raise ValueError('unsupported Shadowrun AI target')
+    if profile == 'captured-courtyard' and target != 'macos-arm64':
+        raise ValueError('captured courtyard requires the native macos-arm64 target')
     if target == 'macos-arm64':
         if cc65_root is not None:
             raise ValueError('--cc65-root applies to the NES target')

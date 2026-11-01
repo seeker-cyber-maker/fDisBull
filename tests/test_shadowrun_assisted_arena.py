@@ -61,13 +61,13 @@ def controller_machine():
     u16 shadowrun_reaction_action_timer,shadowrun_reaction_input_flags,shadowrun_reaction_global_e6;unsigned long shadowrun_player_callback,shadowrun_reaction_callback;
     u8 shadowrun_linked_motion_state,shadowrun_hostile_motion_state,shadowrun_hostile_motion_continuation_required;
     u8 shadowrun_arena_player_supported,shadowrun_arena_supported;u16 shadowrun_play_shot_timer;
-    u8 shadowrun_arena_moving_profile,shadowrun_arena_pursuit_started,shadowrun_party_flags_low,shadowrun_party_clock_supported,shadowrun_player_combat_walk_supported,shadowrun_moving_pose_supported,shadowrun_moving_idle_supported;
+    u8 shadowrun_arena_moving_profile,shadowrun_arena_pursuit_started,shadowrun_party_flags_low,shadowrun_party_clock_supported,shadowrun_player_combat_walk_supported,shadowrun_moving_pose_supported,shadowrun_moving_pose_58_supported,shadowrun_moving_idle_supported,shadowrun_moving_idle_18_supported;
     u16 shadowrun_pursuit_route_service_timer,shadowrun_party_kind,shadowrun_party_heading,shadowrun_party_transition_heading,shadowrun_party_speed;
     u16 shadowrun_player_heading,shadowrun_player_transition_heading,shadowrun_player_step_timer,shadowrun_reaction_speed;
     u16 shadowrun_reaction_increment,shadowrun_reaction_accumulator,shadowrun_reaction_threshold,shadowrun_reaction_index;
     u16 shadowrun_anim_increment,shadowrun_anim_accumulator,shadowrun_anim_threshold,shadowrun_anim_index;
     u16 shadowrun_reaction_input_heading,shadowrun_reaction_target_heading,shadowrun_player_target_heading,shadowrun_reaction_normal_sprite_speed;
-    u8 shadowrun_reaction_direction_supported,shadowrun_reaction_idle_walk_supported;
+    u8 shadowrun_reaction_direction_supported,shadowrun_reaction_direction_expired_supported,shadowrun_reaction_direction_down_supported,shadowrun_reaction_idle_walk_supported;
     unsigned long shadowrun_party_callback;
     void shadowrun_party_pose_tick(void){} void shadowrun_party_clock_tick(void){} void shadowrun_arena_pursuit_step(void){}
     u16 shadowrun_camera_x,shadowrun_camera_y,shadowrun_x_min,shadowrun_x_max,shadowrun_y_min,shadowrun_y_max;
@@ -79,13 +79,17 @@ def controller_machine():
     void shadowrun_reaction_step(void){} void shadowrun_reaction_resume_idle(void){}
     void shadowrun_reaction_resume_held(void){}
     void shadowrun_reaction_resume_direction(void){}
+    void shadowrun_reaction_resume_direction_expired(void){}
+    void shadowrun_reaction_resume_direction_down(void){}
     void shadowrun_reaction_resume_idle_walk(void){}
     void shadowrun_arena_burst_step(void){} void shadowrun_arena_burst_prepare(void){}
     void shadowrun_arena_burst_first_sprite(void){} void shadowrun_reaction_sprite_only(void){}
     void shadowrun_hostile_attack_step(void){} void shadowrun_hostile_idle_actor_pass(void){}
     void shadowrun_hostile_attack_expired_step(void){}
     void shadowrun_hostile_moving_pose_step(void){}
+    void shadowrun_hostile_moving_pose_58_step(void){}
     void shadowrun_hostile_moving_idle_step(void){}
+    void shadowrun_hostile_moving_idle_18_step(void){}
     void shadowrun_hostile_attack_zero_counter_step(void){} void shadowrun_hostile_idle_zero_counter_step(void){}
     void shadowrun_hostile_attack_positive_step(void){} void shadowrun_hostile_positive_reentry_step(void){} void shadowrun_arena_hostile_relaunch(void){}
     void shadowrun_hostile_idle_sprite_pass(void){} void shadowrun_arena_hostile_first_pose(void){}
@@ -98,6 +102,24 @@ def test_controller_stops_before_advancing_unknown_projectile():
     m.set_state({'shadowrun_arena_profile':1,'shadowrun_hostile_motion_continuation_required':1})
     m.call('shadowrun_arena_frame',8);s=m.snapshot()
     assert (s['shadowrun_arena_frame_status'],s['shadowrun_play_refused'],s['play_calls'],s['hostile_calls'])==(2,1,0,0)
+
+
+def test_expired_action_timer_stays_expired_during_directional_input():
+    for pad, expected in ((2, 65535), (0, 51)):
+        m=controller_machine()
+        m.set_state({'shadowrun_arena_profile':1,'shadowrun_arena_player_ready':1,
+                     'shadowrun_play_shot_timer':65535})
+        m.call('shadowrun_arena_frame',pad)
+        assert m.snapshot()['shadowrun_play_shot_timer']==expected
+
+
+def test_terminal_frame_does_not_change_stored_state():
+    m=controller_machine()
+    m.set_state({'shadowrun_arena_profile':1,'shadowrun_arena_frame_status':3,
+                 'shadowrun_arena_previous_pad':4,'shadowrun_play_refused':0})
+    before=m.snapshot()
+    m.call('shadowrun_arena_frame',8)
+    assert m.snapshot()==before
 
 
 def test_z_firing_boundary_is_atomic_and_admitted_shot_advances(monkeypatch):

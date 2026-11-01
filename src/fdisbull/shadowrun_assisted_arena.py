@@ -37,7 +37,7 @@ CONTROLLER_SOURCE=SOURCE.with_name('shadowrun_assisted_controller.c')
 ASSISTED_BURST_SOURCE=SOURCE.with_name('shadowrun_assisted_burst.c')
 ASSISTED_POSE_SOURCE=SOURCE.with_name('shadowrun_assisted_hostile_pose.c')
 PURSUIT_SOURCES=tuple(SOURCE.with_name('shadowrun_'+name+'.c') for name in
-    ('hostile_pursuit','hostile_move','hostile_pursuit_route','assisted_pursuit','animation','party_clock','hostile_moving_attack','player_combat_walk','player_reaction_direction','hostile_moving_pose','player_reaction_idle_walk','hostile_moving_idle','hostile_moving_relaunch'))
+    ('hostile_pursuit','hostile_move','hostile_pursuit_route','assisted_pursuit','animation','party_clock','hostile_moving_attack','hostile_moving_attack_reentry','player_combat_walk','player_combat_wall','player_combat_slide','player_reaction_direction','player_reaction_direction_expired','player_reaction_direction_down','hostile_moving_pose','hostile_moving_pose_58','player_reaction_idle_walk','hostile_moving_idle','hostile_moving_idle_18','hostile_moving_relaunch','hostile_moving_relaunch_repeat','hostile_expiry_cycle'))
 
 
 def lift_assisted_arena(rom):
@@ -89,15 +89,15 @@ def lift_assisted_arena(rom):
     old='total >= 4';typedef='typedef unsigned char u8;'
     if world_source.count(old)!=1 or world_source.count(typedef)!=1:
         raise ValueError('Captured attack roll source changed')
-    world_source=world_source.replace(typedef,typedef+'\nu8 shadowrun_player_attack_difficulty,shadowrun_arena_moving_profile,shadowrun_player_combat_attribute,shadowrun_player_combat_walk_supported;\nvoid shadowrun_player_combat_walk(void);',1)
+    world_source=world_source.replace(typedef,typedef+'\nu8 shadowrun_player_attack_difficulty,shadowrun_arena_moving_profile,shadowrun_player_combat_attribute,shadowrun_player_combat_walk_supported,shadowrun_player_combat_wall_supported,shadowrun_player_combat_slide_supported;\nvoid shadowrun_player_combat_walk(void);void shadowrun_player_combat_wall_stop(void);void shadowrun_player_combat_slide(void);',1)
     world_source=world_source.replace(old,'total >= shadowrun_player_attack_difficulty',1)
     walk='shadowrun_player_walk_bounded();'
     if world_source.count(walk)!=1:raise ValueError('Opening walk source changed')
-    world_source=world_source.replace(walk,'if (shadowrun_arena_moving_profile) { shadowrun_player_combat_walk(); shadowrun_player_walk_result=shadowrun_player_combat_walk_supported; } else shadowrun_player_walk_bounded();',1)
+    world_source=world_source.replace(walk,'if (shadowrun_arena_moving_profile) { shadowrun_player_combat_walk(); if (!shadowrun_player_combat_walk_supported) { shadowrun_player_combat_wall_stop(); if (shadowrun_player_combat_wall_supported) shadowrun_player_combat_walk_supported=1; else { shadowrun_player_combat_slide(); if (shadowrun_player_combat_slide_supported) shadowrun_player_combat_walk_supported=1; } } shadowrun_player_walk_result=shadowrun_player_combat_walk_supported; } else shadowrun_player_walk_bounded();',1)
     pursuit_raw=[p.read_bytes() for p in PURSUIT_SOURCES]
-    ordered=raw[:5]+raw[9:16]+raw[17:21]+raw[22:26]+raw[5:6]+raw[7:8]+raw[6:7]+raw[16:17]+pursuit_raw+raw[21:22]+raw[8:9]
+    ordered=raw[:5]+raw[9:16]+raw[17:21]+raw[22:26]+raw[5:6]+raw[7:8]+raw[6:7]+pursuit_raw+raw[16:17]+raw[21:22]+raw[8:9]
     extra='\n'.join(line for content in ordered for line in content.decode().splitlines()
-                    if not line.startswith(('typedef ','extern ')) and line not in ('u8 shadowrun_player_attack_difficulty;','u8 shadowrun_player_combat_attribute,shadowrun_player_combat_walk_supported;'))
+                    if not line.startswith(('typedef ','extern ')) and line not in ('u8 shadowrun_player_attack_difficulty;','u8 shadowrun_player_combat_attribute,shadowrun_player_combat_walk_supported;','u8 shadowrun_player_combat_wall_supported;','u8 shadowrun_player_combat_slide_supported;'))
     result=author_program(world_source+'\n'+extra,
         [{'id':0,'length':len(rom),'sha256':ROM_SHA256}],evidence={
             'kind':'source-constructed-assisted-arena-diagnostic',

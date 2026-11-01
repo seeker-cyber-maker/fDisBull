@@ -29,6 +29,8 @@ def test_projectless_profile_discovery_preserves_assisted_scope():
     ({'target': 'unknown'}, 'target'),
     ({'target': 'nes'}, 'requires --cc65-root'),
     ({'target': 'macos-arm64', 'cc65_root': 'irrelevant'}, 'applies to the NES'),
+    ({'profile': 'captured-courtyard', 'target': 'nes'}, 'native macos-arm64'),
+    ({'profile': 'captured-courtyard', 'preset': 'moving'}, 'profile or preset'),
 ])
 def test_invalid_target_options_refuse_before_output(tmp_path, options, reason):
     output = tmp_path / 'result'

@@ -1,5 +1,9 @@
 # Genesis-bound UIL to native macOS ARM64
 
+This document records the initial native qualification at `acfb843`. The
+[actor-stage extension](SHADOWRUN_MACOS_EXTENDED.md) adds the source-backed menu,
+an unpatched captured courtyard and corrected/extended armed continuations.
+
 The active local output is a native ARM64 AppKit application compiled from the
 same recovered Shadowrun procedural UIL. Genesis input identity, capture seed,
 movement/combat semantics and original comparisons are retained. The NES output
@@ -86,7 +90,7 @@ onscreen frame delivery or future whole-game performance. Exact counts, hashes,
 conditions and limits are recorded in
 [native verification](evidence/shadowrun-macos-2026-11-01/verification.json).
 
-The moving continuation at source frame 6124 remains unsupported. Preserve it
-as the next source-analysis question; faster hardware does not authorize
-inventing the next state. Atari-to-NES multicart packaging and Master System
+The initial qualification stopped at source frame 6124; the linked extension
+records the later supported windows and remaining boundaries. Faster hardware
+does not authorize inventing the next state. Atari-to-NES multicart packaging and Master System
 input remain deferred research candidates described in the handoff.

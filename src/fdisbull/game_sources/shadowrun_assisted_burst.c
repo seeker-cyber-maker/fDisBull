@@ -37,8 +37,13 @@ void shadowrun_arena_burst_step(void) {
     shadowrun_burst_rng=shadowrun_hostile_rng;
     shadowrun_hostile_motion_player_x=shadowrun_player_x;shadowrun_hostile_motion_player_y=shadowrun_player_y;
     shadowrun_player_damage_hp=shadowrun_arena_hp;shadowrun_player_damage_armor=shadowrun_arena_armor;
-    shadowrun_hostile_cycle_tick();
-    if (!shadowrun_hostile_cycle_supported) return;
+    if (!(shadowrun_burst_flags_low&8U) && !shadowrun_burst_lifetime && shadowrun_burst_effect<=1U) {
+        shadowrun_hostile_expiry_cycle();
+        if (!shadowrun_hostile_expiry_supported) return;
+    } else {
+        shadowrun_hostile_cycle_tick();
+        if (!shadowrun_hostile_cycle_supported) return;
+    }
     shadowrun_hostile_rng=shadowrun_burst_rng;shadowrun_arena_hp=shadowrun_player_damage_hp;
     if (shadowrun_hostile_cycle_reaction==3U) {
         shadowrun_arena_depleted=1;shadowrun_arena_player_ready=0;shadowrun_play_shot_eligible=0;

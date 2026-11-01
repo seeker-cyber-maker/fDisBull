@@ -31,11 +31,8 @@ void shadowrun_arena_hostile_relaunch(void) {
         shadowrun_play_actor_hp[0]!=10U || shadowrun_attack_callback!=0xb45cUL ||
         shadowrun_attack_service_timer || shadowrun_attack_action_timer<32768U ||
         shadowrun_arena_burst_active || shadowrun_linked_motion_state==1U) return;
-    if (shadowrun_arena_moving_profile) {
-        if (shadowrun_player_x!=15168U || shadowrun_player_y!=11322U ||
-            shadowrun_hostile_x!=15634U || shadowrun_hostile_y!=11122U) return;
-    } else if (shadowrun_player_x!=15584U || shadowrun_player_y!=11210U ||
-               shadowrun_hostile_x!=16096U || shadowrun_hostile_y!=11210U) return;
+    if (!shadowrun_arena_moving_profile && (shadowrun_player_x!=15584U || shadowrun_player_y!=11210U ||
+               shadowrun_hostile_x!=16096U || shadowrun_hostile_y!=11210U)) return;
     shadowrun_hostile_timer=shadowrun_attack_service_timer;
     shadowrun_hostile_cooldown=shadowrun_attack_action_timer;
     shadowrun_hostile_target_existing=1;shadowrun_hostile_target_timer=shadowrun_attack_counter;
@@ -44,15 +41,29 @@ void shadowrun_arena_hostile_relaunch(void) {
     shadowrun_arena_projectile_step();
     if (!shadowrun_arena_supported ||
         (shadowrun_hostile_motion_state!=2U && shadowrun_hostile_motion_state!=5U) ||
-        (shadowrun_hostile_motion_state==2U && shadowrun_player_damage_amount)) {
+        (!shadowrun_arena_moving_profile && shadowrun_hostile_motion_state==2U && shadowrun_player_damage_amount)) {
         shadowrun_arena_supported=0;return;
+    }
+    if (shadowrun_arena_depleted) {shadowrun_arena_supported=1;return;}
+    if (shadowrun_arena_moving_profile && shadowrun_hostile_motion_state==2U && shadowrun_player_damage_amount) {
+        shadowrun_reaction_sprite_only();
+        if (!shadowrun_reaction_sprite_supported) {shadowrun_arena_supported=0;return;}
+        shadowrun_arena_player_hit_event=1;
     }
     shadowrun_attack_ammo=shadowrun_hostile_ammo;shadowrun_attack_service_timer=shadowrun_hostile_timer;
     shadowrun_attack_heading=shadowrun_hostile_heading;
     shadowrun_hostile_attack_start();if (!shadowrun_attack_supported) {shadowrun_arena_supported=0;return;}
     if (shadowrun_arena_moving_profile) {
-        shadowrun_hostile_moving_relaunch_first();
-        if (!shadowrun_moving_relaunch_supported) {shadowrun_arena_supported=0;return;}
+        if (shadowrun_arena_player_hit_event) {
+            shadowrun_hostile_moving_attack_reentry();
+            if (!shadowrun_moving_attack_reentry_supported) {shadowrun_arena_supported=0;return;}
+        } else if (shadowrun_attack_counter<=1U) {
+            shadowrun_hostile_moving_relaunch_repeat();
+            if (!shadowrun_moving_relaunch_repeat_supported) {shadowrun_arena_supported=0;return;}
+        } else {
+            shadowrun_hostile_moving_relaunch_first();
+            if (!shadowrun_moving_relaunch_supported) {shadowrun_arena_supported=0;return;}
+        }
     } else if (shadowrun_attack_counter) shadowrun_hostile_relaunch_first();
     else shadowrun_hostile_relaunch_zero_counter();
     if (!shadowrun_arena_moving_profile && !shadowrun_attack_relaunch_supported) {shadowrun_arena_supported=0;return;}
