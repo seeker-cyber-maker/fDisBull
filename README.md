@@ -234,6 +234,11 @@ and a reusable partial scene in the separate player.
 The [mushroom-island follow-up](docs/AGI_MUSHROOM_CROSSING.md) carries that
 workflow through a river crossing and a real inventory pickup, then offers the
 recorded journey through the separate text player.
+The [clover-and-diamonds cave route](docs/AGI_LEPRECHAUN_ROUTE.md) follows
+ordinary game input through a moving rat, the shield pickup and the small
+opening, then turns the recorded journey into seven guarded text actions.
+A separate [reconstruction of Robb's short TAS](docs/research/kq1-robb-9.89/ROUTE.md)
+preserves the visible route and its unresolved inputs for another investigator.
 
 The [Z-machine processor](docs/ZMACHINE_PROCESSOR.md) adds direct v3 bytecode
 inspection through fDisBull's processor interface. It reports operands, calls,

@@ -272,6 +272,13 @@ it does not certify safe movement or glitches.
 The [mushroom-island follow-up](AGI_MUSHROOM_CROSSING.md) combines a qualified
 crossing with a normal parser command and separate native score/inventory
 observations, then exports the observed route to the shared Z player.
+The [leprechaun-cave follow-up](AGI_LEPRECHAUN_ROUTE.md) adds preparation,
+range-sensitive parser input, the original shield writes and handler return,
+and the game's shrink/regrowth sequence. Its exporter requires complete
+observations and exposes the carried inventory in the separate player.
+For video-led route research, the [Robb TAS reconstruction](research/kq1-robb-9.89/ROUTE.md)
+keeps visible key highlights, inferred directions and unknown dispatch separate.
+Qualify those proposed actions in the original game before using them as evidence.
 
 ### Compare a source block with shared semantics
 

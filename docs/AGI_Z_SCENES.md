@@ -61,3 +61,17 @@ PYTHONPATH=src:player python examples/agi/check_z_scene.py \
 
 The receipt exercises the commands, the drawn-flag change, repeat refusal and
 an in-memory save/load. It does not claim restart persistence.
+
+## A connected clover-and-diamonds cave slice
+
+The [leprechaun-cave example](AGI_LEPRECHAUN_ROUTE.md) uses a fresh ordinary-input
+preparation and a separate seven-action scene. Its exporter checks all eight
+recorded anchors, carried inventory, score changes, completed source messages
+and the original shield writer/return trace. It rejects missing, extra or
+contradictory evidence before emitting the authored projection.
+
+The text actions are `use hole`, `use bag`, `use tunnel`, `use rat`, `use throne`,
+`take shield` and `use exit`. They update the declared projection; they do not
+issue native calls or run an AGI interpreter. The final scene still needs its
+private original inputs at build time. Exported scene text is authored, and
+checkpoint checks cover in-memory restoration and token invalidation.
