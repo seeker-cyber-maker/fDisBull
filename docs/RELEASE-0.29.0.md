@@ -77,6 +77,7 @@ post-0.28 world-model examples.
   loads from the wheel.
 - 0.28.0's focused and full-suite results are historical evidence for its own
   cut; they do not qualify the merged 0.29.0 source.
+- Candidate receipt and logs: [0.29.0 release evidence](evidence/0.29.0-release/README.md).
 
 ## Not included
 

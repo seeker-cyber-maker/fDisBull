@@ -1,0 +1,59 @@
+{
+  "format": "fdisbull-release-candidate-evidence-1",
+  "version": "0.29.0",
+  "branch": "release/0.29.0",
+  "commit": "0844127c266280ed466f777c47af3470b129a8e1",
+  "tree": "f28134c0c2f47a3df290d11f1ce500a88d8177f8",
+  "base_commit": "d06bffb6dce58de09021aaddfac36e46299ab4df",
+  "base_branch": "release/0.28.0",
+  "merged_integration_commit": "b21b204",
+  "artifacts": {
+    "wheel": {
+      "file": "fdisbull-0.29.0-py3-none-any.whl",
+      "sha256": "4642cbafad4860dc0abb2602237ad84f471fccd167e6e2e0fdc008cd567aaebd",
+      "check_dist_entries": 196
+    },
+    "sdist": {
+      "file": "fdisbull-0.29.0.tar.gz",
+      "sha256": "9a8f1015fcf65ecb49d024f04350b56e023fdf0af909a27376eeeb078cf57302",
+      "check_dist_entries": 708
+    }
+  },
+  "qualification": {
+    "focused_world_model": {
+      "passed": 8,
+      "failed": 0
+    },
+    "full_macos": {
+      "passed": 2596,
+      "skipped": 127,
+      "failed": 3,
+      "errors": 23,
+      "seconds": 108.57,
+      "environment": "z3-solver and managed extras available"
+    },
+    "base_three_failures_reproduced": true,
+    "installed_wheel_smoke": {
+      "version": "0.29.0",
+      "capabilities_loaded": true
+    }
+  },
+  "scope": [
+    "unpublished 0.28.0 candidate scope",
+    "Civilization I read-only world snapshot example",
+    "Z world language and Zork I room/exit map"
+  ],
+  "not_included": [
+    "KQ1/AGI stacked draft work",
+    "reversible macOS sessions",
+    "Miniplanets NES port (PR #56)",
+    "CPUInfo replica application",
+    "Linux CI, native backend rebuilds and shared-prefix promotion"
+  ],
+  "publication": {
+    "tag": null,
+    "published": false,
+    "pushed": false
+  },
+  "claims_boundary": "Local host evidence only. The three failures and 23 errors are environment-specific macOS results, not Linux CI acceptance."
+}
