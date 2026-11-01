@@ -1,5 +1,14 @@
 # DinoPark analysis friction and retained Z terminal replies
 
+The [Employment recovery follow-up](VERIFICATION-DINOPARK-EMPLOYMENT-RECONCILIATION-2026-11-01.md)
+qualifies bounded business entry and original-action read-only reconciliation,
+including repeated witness failures. Its same-guest batch covers all eight
+locations and adds three indirect-call witnesses, bringing the inventory PC
+union to 47/201. All 97 unresolved entries and 13 asset candidates remain open;
+the separately guarded startup prefix is partial. The report also records the
+land setup failure, resource-fixture mismatch, request-schema/exit-code errors,
+long legacy actions and GitLab integration conflicts.
+
 The [Coelophysis purchase follow-up](VERIFICATION-DINOPARK-COELOPHYSIS-RECONCILIATION-2026-10-31.md)
 replaces fixed purchase sleeps in Z with bounded original-input phases, retains
 the paused provider and order receipts, and exposes a guarded continuation plus

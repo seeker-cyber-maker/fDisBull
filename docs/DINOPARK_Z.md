@@ -140,14 +140,24 @@ before BUY; the last inspected page cannot silently change the intended order.
 ## Saving and stopping
 
 An incomplete original action holds further action input while its reachable
-provider remains available. For a held `go dinomart`, `reconcile` can confirm
-the destination from the paused original frame and current selector without
+provider remains available. For a held business-entry command (`go dinomart`,
+`go employment`, `go store` or `go diner`), `reconcile` can confirm the
+destination from the paused original frame and current selector without
 sending input, running the guest or restoring a checkpoint. This requires the
 retained original input receipt, source scene revision and same live session.
 An unqualified destination leaves the hold intact. Other unknown action effects
 remain unresolved; this command does not authorize replay or reconnect an exited
 guest. Observation and session receipts expose `reconciliation_available` and
 the held attempt's `recovery_id`.
+
+These business entries share a finite 40-second native request budget, with a
+separate bounded recovery-status check. A later final-witness failure retains
+the original queued click and any matched navigation effect. Repeated read-only
+failures retain published scene revisions for retry. Reconciliation observes
+the destination; it does not advance an unfinished transition. The
+[Employment verification](VERIFICATION-DINOPARK-EMPLOYMENT-RECONCILIATION-2026-11-01.md)
+records normal entry/return, two witness failures, the successful original-action
+certificate, all eight locations and the remaining legacy-action limitations.
 
 A held Coelophysis order retains its delivered input receipts. Use `look` to
 obtain its current guarded actions. When offered, `continue dinosaur order`
