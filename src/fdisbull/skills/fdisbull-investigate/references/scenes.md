@@ -1,5 +1,8 @@
 # fDisBull scene investigation reference
 
+Use this reference for authored native scene observations and actions. For recovering
+UIL scene intent from game data and handlers, read [scene-recovery.md](scene-recovery.md).
+
 ## Contents
 
 - [Observe and reuse scenes](#observe-and-reuse-scenes)

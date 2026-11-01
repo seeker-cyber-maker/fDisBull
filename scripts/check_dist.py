@@ -13,7 +13,9 @@ EXCLUDED_DIRECTORIES = {"examples", "history", "experimental", "build", "dist", 
                         "freeware-games", "freeware-games.zip"}
 EXCLUDED_SUFFIXES = {".fdb", ".db", ".sqlite", ".sqlite3", ".sav", ".state", ".exe", ".com", ".dll", ".bin", ".dat", ".so", ".dylib", ".o", ".pyc"}
 PLAYER_MODULES = {"__init__.py", "__main__.py", "player.py", "runtime.py", "live.py", "word16.py",
-                  "game_intents.py", "intent_runtime.py", "batch.py"}
+                  "game_intents.py", "intent_runtime.py", "batch.py",
+                  "scene_intents.py", "scene_bindings.py", "scene_runtime.py",
+                  "door_intents.py", "door_bindings.py"}
 REQUIRED_PLAYER_SOURCE = {"player/pyproject.toml"} | {"player/fdisbull_player/" + name for name in PLAYER_MODULES}
 REQUIRED_TEST_HELPERS = {"tests/fixtures_formats.py", "tests/fixtures_macho.py", "tests/ida_rpc_vectors.json", "tests/dosbox_zip_empty_write.cpp"}
 REQUIRED_TEST_HELPERS.add("tests/fixtures_z_scenes.py")
@@ -56,6 +58,7 @@ REQUIRED_KNOWLEDGE_RESOURCES |= {"skills/fdisbull-investigate/SKILL.md", "skills
                                  "skills/fdisbull-investigate/references/workflows.md",
                                  "skills/fdisbull-investigate/references/recovery-research.md",
                                  "skills/fdisbull-investigate/references/semantic-contracts.md",
+                                 "skills/fdisbull-investigate/references/scene-recovery.md",
                                  "skills/fdisbull-investigate/references/formats-and-media.md",
                                  "skills/fdisbull-investigate/references/udl-uil-udc.md"}
 REQUIRED_KNOWLEDGE_RESOURCES |= {

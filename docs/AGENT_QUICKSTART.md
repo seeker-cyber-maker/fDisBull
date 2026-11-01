@@ -57,6 +57,7 @@ fdisbull agent-skill --reference references/udl-uil-udc.md
 fdisbull agent-skill --reference references/common-uil.md
 fdisbull agent-skill --reference references/recovery-research.md
 fdisbull agent-skill --reference references/semantic-contracts.md
+fdisbull agent-skill --reference references/scene-recovery.md
 fdisbull agent-skill --reference references/formats-and-media.md
 fdisbull agent-skill --skill write-gamefaqs-guide --reference references/evidence-and-provenance.md
 fdisbull agent-skill --skill write-gamefaqs-guide --reference references/routes-and-discoveries.md
@@ -79,7 +80,9 @@ The full skill may exceed the inline response budget and return an output
 artifact reference. Prefer the index and one selected guide for routine work;
 use the output retrieval commands below when a complete export is needed.
 The semantic-contract guide connects intent, effects, time and projection loss;
-the formats/media guide covers input mapping and qualified media reduction.
+the scene-recovery guide starts UIL extraction from required scene elements and
+bounded source dependencies. The formats/media guide covers input mapping and
+qualified media reduction.
 
 Use `write-gamefaqs-guide` to turn established investigation results into a
 human-readable review, route or mechanics reference. Cover recovered unused code,
@@ -300,6 +303,27 @@ data, so they must remain private. See [Zork IR](ZORK_UIL.md) and
 [intent recovery](ZORK_INTENTS.md). On a fault, inspect completed effects and
 interrupted-effect uncertainty; the CLI preserves the prior successful
 checkpoint. A transcript-write failure is a separate delivery failure.
+
+### Recover named Zork scenes and direct rules
+
+```text
+fdisbull zork-scenes /private/ZORK1.DAT \
+  --intents /private/zork.intents.json.gz \
+  --output /private/zork.scenes.json.gz \
+  --uil /private/zork.scene-rules.json \
+  --dispatch /private/zork.rule-links.json \
+  --udl /private/zork.scene-definitions.json.gz
+fdisbull-player --scenes /private/zork.scenes.json.gz \
+  --checkpoint /private/zork.scene-progress.json
+```
+
+This retains the supplied intent/IR package and adds executable, address-free
+scene rules plus direct named-handler links. Conditions and doors are read live;
+the source's packed target values are resolved during production. The compatibility
+adapter skips admitted selector operations and on-foot relocation instructions.
+Changed or unqualified source dependencies use an explicit residual path.
+The scene checkpoint binds the full new package. See [the scene contract](ZORK_SCENES.md)
+for actual effect boundaries, unresolved handler bodies and source-qualified scope.
 
 ### Inspect interpreted game data
 

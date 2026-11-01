@@ -348,6 +348,7 @@ def test_bundled_investigation_skill_is_readable_without_project():
         "references/common-uil.md",
         "references/recovery-research.md",
         "references/semantic-contracts.md",
+        "references/scene-recovery.md",
         "references/formats-and-media.md",
         "references/media-modules.md",
         "references/binary-claim-verification.md",

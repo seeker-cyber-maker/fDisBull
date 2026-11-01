@@ -1,0 +1,442 @@
+{
+  "title": "Authored scene-definition investigation cases",
+  "provenance": "All bytes, names and traces in this file are newly authored miniature cases, not extracted Zork game material.",
+  "task": "Recover each requested scene element as directly as the evidence supports. Return a compact ledger and semantic rules, explicit residuals, binding/rejoin obligations and a cheapest next probe for unresolved material elements. Do not execute or implement a runtime. Distinguish structure, semantics and observations.",
+  "cases": [
+    {
+      "id": "A",
+      "requirement": "Recover the four exits, live guards, handler entry and output/state effects. State what a turn or actual relocation requires.",
+      "qualified_profile": {
+        "version": 3,
+        "declared_bytes": 4096,
+        "byte_order": "big",
+        "source_binding": "fixture-A-r1, all supplied spans checked against this version",
+        "objects": {
+          "4": "atrium",
+          "9": "terrace",
+          "3": "glass_door"
+        },
+        "fact_bindings": {
+          "33": "bridge_ready"
+        },
+        "directions": {
+          "31": "north",
+          "30": "east",
+          "29": "west",
+          "28": "south"
+        },
+        "door_attribute": 11
+      },
+      "raw_properties": [
+        {
+          "owner": 4,
+          "property": 31,
+          "payload_hex": "09",
+          "extent": [
+            1200,
+            1201
+          ]
+        },
+        {
+          "owner": 4,
+          "property": 30,
+          "payload_hex": "09210000",
+          "extent": [
+            1210,
+            1214
+          ]
+        },
+        {
+          "owner": 4,
+          "property": 29,
+          "payload_hex": "0903000000",
+          "extent": [
+            1220,
+            1225
+          ]
+        },
+        {
+          "owner": 4,
+          "property": 28,
+          "payload_hex": "018000",
+          "extent": [
+            1230,
+            1233
+          ]
+        }
+      ],
+      "routine_header": {
+        "extent": [
+          768,
+          773
+        ],
+        "hex": "02000b0007",
+        "entry_decode": {
+          "start": 773,
+          "end": 777,
+          "operation": "conditional_branch",
+          "targets": [
+            790,
+            820
+          ]
+        },
+        "body_evidence": "not supplied"
+      },
+      "state_observations": [
+        {
+          "id": "before",
+          "global_33": 0,
+          "door_attribute_11": 0,
+          "turns": 7,
+          "location": 4
+        },
+        {
+          "id": "after_unrelated_action",
+          "global_33": 2,
+          "door_attribute_11": 1,
+          "turns": 8,
+          "location": 4
+        }
+      ],
+      "qualified_consumer": [
+        "p = get_prop_addr(current_room, direction); if p == 0: invoke omitted path M",
+        "n = get_prop_len(p)",
+        "n == 1: invoke travel(byte(p)); return its result",
+        "n == 2: print_paddr(word(p)); newline; return 2",
+        "n == 3: invoke packed_routine(word(p)); pass its result to omitted continuation R; final byte must be zero",
+        "n == 4: read live global numbered byte(p+1); if value != 0 invoke travel(byte(p)); else print custom word(p+2) if nonzero, otherwise resource blocked; newline; return 2",
+        "n == 5: test attribute 11 of object byte(p+1); if set invoke travel(byte(p)); else use custom resource if word(p+2)!=0, otherwise output prefix, door name, suffix, newline then set discourse.object=door and discourse.scene=current_room; return 2; final byte must be zero",
+        "travel admission, relocation, arrival and command completion bodies are omitted"
+      ]
+    },
+    {
+      "id": "B",
+      "requirement": "Determine whether target transport can be eliminated, the named target, live inputs and exact residual call/stack contract at each site. Identify the smallest unresolved dependency.",
+      "machine_rules": [
+        "operands evaluate left to right",
+        "ordinary stack reads pop; stores to stack push",
+        "word indexing adds twice the index",
+        "unknown calls have no supplied effect summary",
+        "all table entries below are valid typed packed-routine references, and target identity maps are qualified",
+        "call target packed zero consumes its ordinary operands, does not invoke a routine and returns zero to its result store"
+      ],
+      "bindings": {
+        "action_table": {
+          "immutable": true,
+          "entries": {
+            "0": 384,
+            "1": 448
+          }
+        },
+        "target_symbols": {
+          "384": "residual.inspect",
+          "448": "residual.turn_handle"
+        },
+        "action_index": {
+          "kind": "live field",
+          "domain": [
+            0,
+            1
+          ]
+        }
+      },
+      "sites": [
+        {
+          "id": "B1",
+          "entry_stack_bottom_to_top": [
+            "target_object",
+            "tool_object"
+          ],
+          "code": [
+            {
+              "id": "b10",
+              "op": "loadw",
+              "args": [
+                "action_table",
+                "action_index"
+              ],
+              "store": "sp"
+            },
+            {
+              "id": "b11",
+              "op": "call",
+              "args": [
+                "sp",
+                "sp",
+                "sp"
+              ],
+              "store": "local2",
+              "return_to": "b12"
+            }
+          ]
+        },
+        {
+          "id": "B2",
+          "entry_stack_bottom_to_top": [
+            "target_object"
+          ],
+          "callback_table": {
+            "mutable": true,
+            "initial_entries": {
+              "0": 384
+            }
+          },
+          "code": [
+            {
+              "id": "b20",
+              "op": "call",
+              "args": [
+                "unknown_helper"
+              ],
+              "store": "local4"
+            },
+            {
+              "id": "b21",
+              "op": "loadw",
+              "args": [
+                "callback_table",
+                0
+              ],
+              "store": "sp"
+            },
+            {
+              "id": "b22",
+              "op": "call",
+              "args": [
+                "sp",
+                "sp"
+              ],
+              "store": "local2",
+              "return_to": "b23"
+            }
+          ]
+        },
+        {
+          "id": "B3",
+          "entry_stack_bottom_to_top": [
+            "tool_object"
+          ],
+          "code": [
+            {
+              "id": "b30",
+              "op": "call",
+              "args": [
+                0,
+                "sp"
+              ],
+              "store": "sp",
+              "return_to": "b31"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "C",
+      "requirement": "Assign scene symbols where uniquely supported and describe reproducible behavior under record reordering.",
+      "title_for_every_record": "Dim Gallery",
+      "first_graph": {
+        "compiled": [
+          {
+            "object": 7,
+            "exits": {
+              "east": [
+                "direct",
+                8
+              ]
+            }
+          },
+          {
+            "object": 8,
+            "exits": {
+              "west": [
+                "direct",
+                7
+              ]
+            }
+          }
+        ],
+        "metadata": [
+          {
+            "symbol": "entry_gallery",
+            "numeric_hint": 8,
+            "exits": {
+              "east": [
+                "direct",
+                "end_gallery"
+              ]
+            }
+          },
+          {
+            "symbol": "end_gallery",
+            "numeric_hint": 7,
+            "exits": {
+              "west": [
+                "direct",
+                "entry_gallery"
+              ]
+            }
+          }
+        ]
+      },
+      "second_graph": {
+        "compiled": [
+          {
+            "object": 21,
+            "exits": {
+              "north": [
+                "direct",
+                22
+              ],
+              "south": [
+                "direct",
+                22
+              ]
+            }
+          },
+          {
+            "object": 22,
+            "exits": {
+              "north": [
+                "direct",
+                21
+              ],
+              "south": [
+                "direct",
+                21
+              ]
+            }
+          }
+        ],
+        "metadata": [
+          {
+            "symbol": "upper_loop",
+            "numeric_hint": 21,
+            "exits": {
+              "north": [
+                "direct",
+                "lower_loop"
+              ],
+              "south": [
+                "direct",
+                "lower_loop"
+              ]
+            }
+          },
+          {
+            "symbol": "lower_loop",
+            "numeric_hint": 22,
+            "exits": {
+              "north": [
+                "direct",
+                "upper_loop"
+              ],
+              "south": [
+                "direct",
+                "upper_loop"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "D",
+      "requirement": "Determine what can be replaced in the scene presentation/transition and what must survive a suspension. Explain the effect boundary and required verification.",
+      "bindings": {
+        "scene": "gallery",
+        "static_description": "resource.gallery",
+        "callback": "residual.gallery_event",
+        "callback_target": "qualified",
+        "callback_body": "omitted"
+      },
+      "source_order": [
+        {
+          "id": "d1",
+          "op": "invoke callback with mode describe; if handled skip d2"
+        },
+        {
+          "id": "d2",
+          "op": "emit static_description"
+        },
+        {
+          "id": "d3",
+          "op": "set caller local1 to property_address; local2 to property_length"
+        },
+        {
+          "id": "d4",
+          "op": "invoke residual arrival; it may request nested input before return"
+        },
+        {
+          "id": "d5",
+          "op": "complete action; scheduler contract omitted"
+        }
+      ],
+      "observations": {
+        "narrative_equal": true,
+        "world_memory_equal": true,
+        "reference_pending_input": true,
+        "candidate_pending_input": true,
+        "reference_caller_locals": [
+          1640,
+          4,
+          0
+        ],
+        "candidate_caller_locals": [
+          0,
+          0,
+          0
+        ],
+        "checkpoint_contains_caller_locals": true,
+        "time_rng_trace": "not supplied"
+      },
+      "fault_observation": {
+        "first_effect": "actor insertion committed",
+        "second_effect": "current_scene write outcome unknown",
+        "report_delivery": "failed"
+      }
+    },
+    {
+      "id": "E",
+      "requirement": "Classify the conflicting or incomplete records. State whether existing R88 conventions authorize acceptance and whether observation closes the rule.",
+      "records": [
+        {
+          "id": "E1",
+          "declared_size": 5,
+          "payload_hex": "0903000001",
+          "profile": "same final-zero door convention as A"
+        },
+        {
+          "id": "E2",
+          "declared_size": 4,
+          "payload_hex": "092100",
+          "profile": "same conditional convention as A"
+        },
+        {
+          "id": "E3",
+          "declared_size": 2,
+          "payload_hex": "0000",
+          "profile": "explicit blocked resource must be nonzero"
+        },
+        {
+          "id": "E4",
+          "property_absent": true,
+          "missing_path_body": "omitted",
+          "observed_once": {
+            "text": "The way is unavailable.",
+            "turn_delta": 1
+          },
+          "observation_context": "lit room; seed 12"
+        }
+      ],
+      "contradictory_source": {
+        "id": "E5",
+        "record_hex": "09210000",
+        "size": 4,
+        "metadata_claim": "nonzero permits travel",
+        "actual_consumer": "zero permits travel, nonzero refuses",
+        "edition": "unqualified sibling edition"
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 ---
 name: fdisbull-investigate
-description: Investigate programs with fDisBull using stored disassembly, bounded native execution, scenes, spatial maps, and qualified source or semantic checks. Use for evidence-based program or game investigation, not ordinary gameplay.
+description: Investigate programs with fDisBull using stored disassembly, bounded native execution, scenes, spatial maps, and qualified source or semantic checks. Use for evidence-based program or game investigation and scene intent recovery, not ordinary gameplay.
 ---
 
 # Investigate with fDisBull
@@ -158,6 +158,11 @@ conditions, effects, events, time, persistence and public observations. Preserve
 working low-level behavior and mark opaque operations explicitly while recovering
 one complete interaction at a time. Renaming machine operations does not recover
 intent.
+
+To recover UIL scenes from game data or handlers, read
+[references/scene-recovery.md](references/scene-recovery.md). Start from the required
+scene elements and investigate the bounded source dependencies needed to qualify
+them, retaining unresolved behavior explicitly.
 
 ## Report the tested scope
 

@@ -34,6 +34,13 @@ reported. They do not extend the native project database. The original Zork
 converter and executable IR remain unchanged; this adapter supplies source
 instruction facts and does not itself recover the separate game-intent UIL.
 
+The separate [Zork scene recovery layer](ZORK_SCENES.md) adds qualified data
+provenance: action tables, object callbacks and exit records resolve many of
+those stack-carried targets to named rules and source entries. It uses the
+processor's decoder interface for bounded discovery, then emits explicit scene
+semantics and UDL links. A resolved handler body can still be residual IR.
+This source-specific recovery is an additional layer above instruction facts.
+
 **Not yet generic persisted VM analysis:** the flat project loader admits only
 its supported native architectures. It cannot accept an arbitrary processor
 object, and an instruction-indexed or multi-space guest is not silently stored

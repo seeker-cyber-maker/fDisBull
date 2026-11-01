@@ -51,6 +51,7 @@ legacy migration and remaining export limits.
 | Play a supported projection or a user-supplied Zork story | [Text play and interpreter inspection](#text-play-and-interpreter-inspection) |
 | Convert Zork I to executable IR and recover bounded game-intent UIL | [Executable IR](docs/ZORK_UIL.md) · [Game-intent UIL](docs/ZORK_INTENTS.md) |
 | Disassemble Zork's v3 bytecode and follow static calls and branches | [Z-machine processor](docs/ZMACHINE_PROCESSOR.md) |
+| Recover named Zork rooms, exits and direct rule links | [Scene UIL](docs/ZORK_SCENES.md) |
 | Try shared interaction scenes through Z | [Z scene play](docs/Z_SCENES.md) |
 | Run a qualified DinoPark park through the original game | [DinoPark in Z](docs/DINOPARK_Z.md) |
 | Test a small recovered block against its original DOS backing | [The bounded UDC pipeline](#the-bounded-udc-pipeline) |
@@ -284,6 +285,14 @@ original operations. The consumer executes those domain rules and retains the
 parser, background callbacks, uncertain flag effects and unsupported cases as
 explicit low-level IR. Recovery is partial; the verification report distinguishes
 successful play from evidence that the higher-level rules actually executed.
+
+[Scene recovery](docs/ZORK_SCENES.md) extracts the qualified edition's 110 named
+rooms and 352 exits into explicit destinations, live conditions, door rules and
+refusals. Its player executes exit selection and on-foot actor relocation from
+those definitions, and uses pre-resolved rule links in place of the original
+table-to-stack dispatch. UDL keeps the source correspondence. Special exit and
+room handler bodies, the parser and most arrival/background behavior remain
+explicit residual IR; recovering their entry points does not recover their intent.
 
 ## The bounded UDC pipeline
 

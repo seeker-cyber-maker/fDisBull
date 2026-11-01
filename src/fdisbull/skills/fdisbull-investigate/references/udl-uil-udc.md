@@ -11,6 +11,7 @@ general compiler manual.
 - [Current DOS block boundary](#current-023-dos-block-boundary)
 - [Overlapping instruction backings](#overlapping-instruction-backings)
 - [Zork IR and recovered intents](#zork-ir-and-recovered-intents)
+- [Qualified Zork scene rules](#qualified-zork-scene-rules)
 - [Read a proof narrowly](#read-a-proof-narrowly)
 - [Bytecode inspection and runtime qualification](#do-not-conflate-bytecode-inspection-with-runtime-qualification)
 
@@ -197,6 +198,29 @@ receipt. Retrieve the receipt before another action. The CLI keeps the last
 successful checkpoint on failure; explicitly resume from that checkpoint rather
 than treating a faulted runtime as a fresh attempt. Native host-file effects and
 an independent player's checkpoint have different persistence boundaries.
+
+### Qualified Zork scene rules
+
+For the exact qualified Zork I R88 source, `zork-scenes` adds named scenes,
+directional rules, live conditions and doors, ordered refusal effects and resolved
+dispatch links. Its UIL uses semantic identities; original object numbers,
+packed addresses and operation witnesses remain in the UDL correspondence.
+
+```text
+fdisbull zork-scenes STORY --intents PRIVATE-INTENTS.json.gz \
+  --output PRIVATE-SCENES.json.gz --uil PRIVATE-SCENE-RULES.json \
+  --dispatch PRIVATE-DISPATCH.json --udl PRIVATE-SCENE-UDL.json.gz
+fdisbull-player --scenes PRIVATE-SCENES.json.gz --checkpoint PRIVATE-SCENE-CHECKPOINT.json
+```
+
+The current producer retains and validates the existing intent/IR package.
+Scene selection, admitted on-foot relocation and residual arrival behavior have
+separate effect boundaries. A resolved callback identity does not recover its
+body; parser behavior, condition setters and unresolved handlers remain explicit
+IR. Source-checkout `docs/ZORK_SCENES.md` specifies the supported package and
+execution contract. Read [scene-recovery.md](scene-recovery.md) for the procedure
+that starts from required scene elements; its proposed analysis steps do not add
+a general slicing pass or change the installed exporter's prerequisites.
 
 ## Read a proof narrowly
 
