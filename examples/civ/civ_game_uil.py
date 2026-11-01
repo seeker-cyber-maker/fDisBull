@@ -88,7 +88,7 @@ VARIABLES = {
     "$selected_unit": {"type": "u16", "initial": 0},
     "$production": {"type": "i16", "initial": 0},
     "$shield_box": {"type": "i16", "initial": 0},
-    "$money": {"type": "i32", "initial": 1500},
+    "$money": {"type": "i32", "initial": 0},
     "$unit_cost": {"type": "u16", "initial": 4},
     "$improvement_cost": {"type": "u16", "initial": 8},
     "$improvement_index": {"type": "u8", "initial": 5},
@@ -96,9 +96,9 @@ VARIABLES = {
     "$buy_temp": {"type": "u32", "initial": 0},
     "$chooser_open": {"type": "bool", "initial": False},
     "$unit_list_open": {"type": "bool", "initial": False},
-    "$unit_count": {"type": "u8", "initial": 3},
+    "$unit_count": {"type": "u8", "initial": 0},
     "$unit_cursor": {"type": "u8", "initial": 0},
-    "$unit_last": {"type": "u8", "initial": 2},
+    "$unit_last": {"type": "u8", "initial": 0},
     "$city_cursor": {"type": "u8", "initial": 0},
     "$auto_build": {"type": "bool", "initial": False},
     "$report": {"type": "u8", "initial": 0},
@@ -128,7 +128,7 @@ STATE_EVIDENCE = {
     "$selected_unit": "UIL selector into DGROUP:81D4 + civ*600h + unit*0Ch; Civ64 SCENES-PLAY 2.2.",
     "$production": "DGROUP:70EC + city*1Ch + 09h; civd CITYMGT.C:1444 and reference/struct_city.md.",
     "$shield_box": "DGROUP:70EC + city*1Ch + 0Eh; civd CITYMGT.C:1433 and reference/struct_city.md.",
-    "$money": "money[selected_owner]; civd CITYMGT.C:1428-1434. Scene starts at 1500.",
+    "$money": "money[selected_owner]; civd CITYMGT.C:1428-1434. NEWGAME.C:151-161 initializes every civ to 0 and sets the human to 50 only for Chieftain (cur_tier 0).",
     "$unit_cost": "utypes[production].cost at DGROUP:112A + production*22h + 18h; Settlers 4 and Militia 1 in 47401/.03/.05.",
     "$improvement_cost": "improvements[-production].cost at DGROUP:0B9A + index*1Eh + 18h; MarketPlace (5) costs 8 in 47401/.03/.05.",
     "$improvement_index": "-production for an improvement purchase; civd CITYMGT.C:1409-1412. Scene uses 5 (MarketPlace).",
@@ -136,9 +136,9 @@ STATE_EVIDENCE = {
     "$buy_temp": "Rush-price intermediate from scratch_i; civd CITYMGT.C:1407-1412.",
     "$chooser_open": "UIL context flag for key c / R:0ADE:0421; Civ64 SCENES-PLAY 7.12.",
     "$unit_list_open": "UIL context flag for key a / 0A99:7785; Civ64 SCENES-PLAY 7.1.",
-    "$unit_count": "Representative garrison length 3; source fills local unit_count_i from the city garrison up to 18 at CITYMGT.C:1158-1165.",
+    "$unit_count": "Runtime-founded Chieftain city has no unit in it (city-09 frame); source fills local unit_count_i from the city garrison up to 18 at CITYMGT.C:1158-1165. Tests seed 3 for the clamp.",
     "$unit_cursor": "Local choice_f; source clamps it to 0..unit_count_i-1 at CITYMGT.C:1515.",
-    "$unit_last": "Derived unit_count_i-1, the source clamp upper bound at CITYMGT.C:1515.",
+    "$unit_last": "Derived unit_count_i-1, the source clamp upper bound at CITYMGT.C:1515; 0 when the city has no unit.",
     "$city_cursor": "The source stores the unit cursor at [0x70DC]; Civ64 SCENES-PLAY 7.1.",
     "$auto_build": "DGROUP:70EC + city*1Ch + 06h bit 10h; civd CITYMGT.C:1380-1381 toggles it with key A.",
     "$report": "UIL report selector; F1..F10 table at R:0403 3B7D..3BFF; Civ64 SCENES-PLAY 7.14.",
@@ -865,7 +865,7 @@ SCREEN_SPECS = [
                 "unit-list",
                 "Unit list",
                 ["list", "units"],
-                "Cursor and count are declared state; source clamps choice_f to 0..unit_count_i-1.",
+                "Cursor and count are declared state; the founded city has no unit, and source clamps choice_f to 0..unit_count_i-1.",
             ),
             _object(
                 "unit-next",
@@ -1364,8 +1364,9 @@ def build_programs() -> dict:
         _transition(
             "choose-chieftain",
             COMPETITION,
-            "Chieftain chosen: cur_tier = 0; competition question.",
+            "Chieftain chosen: cur_tier = 0 and money = 50; competition question.",
             ("$difficulty", 0),
+            ("$money", 50),
         ),
     )
     add(
@@ -1373,8 +1374,9 @@ def build_programs() -> dict:
         _transition(
             "choose-warlord",
             COMPETITION,
-            "Warlord chosen: cur_tier = 1; competition question.",
+            "Warlord chosen: cur_tier = 1 and money = 0; competition question.",
             ("$difficulty", 1),
+            ("$money", 0),
         ),
     )
     add(
@@ -1382,8 +1384,9 @@ def build_programs() -> dict:
         _transition(
             "choose-prince",
             COMPETITION,
-            "Prince chosen: cur_tier = 2; competition question.",
+            "Prince chosen: cur_tier = 2 and money = 0; competition question.",
             ("$difficulty", 2),
+            ("$money", 0),
         ),
     )
     add(
@@ -1391,8 +1394,9 @@ def build_programs() -> dict:
         _transition(
             "choose-king",
             COMPETITION,
-            "King chosen: cur_tier = 3; competition question.",
+            "King chosen: cur_tier = 3 and money = 0; competition question.",
             ("$difficulty", 3),
+            ("$money", 0),
         ),
     )
     add(
@@ -1400,8 +1404,9 @@ def build_programs() -> dict:
         _transition(
             "choose-emperor",
             COMPETITION,
-            "Emperor chosen: cur_tier = 4; competition question.",
+            "Emperor chosen: cur_tier = 4 and money = 0; competition question.",
             ("$difficulty", 4),
+            ("$money", 0),
         ),
     )
     add(
@@ -2380,7 +2385,7 @@ def build_provenance(
         "limits": [
             "Partial scene graph and state projection, not a full game simulation.",
             "No DOS execution, VGA rendering, input decoding, AI, combat, technology, diplomacy, save parsing or economy model.",
-            "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; tribe-menu row navigation maps both groups to civnow and civ_tribe_of; city auto-build toggles status bit 10h; unit-list next/previous clamp over a representative 3-unit garrison and select stores the cursor; city buy computes the source unit rush price with Settlers 4 / Militia 1 from the original table and commits shields; the MarketPlace branch doubles the clamped raw and again past index 21. No setup or city action has a live-screen observation.",
+            "Difficulty and competition rows write `_cur_tier`, `_civ_total` and the derived `_players` mask; tribe-menu row navigation maps both groups to civnow and civ_tribe_of; city auto-build toggles status bit 10h; unit-list next/previous clamp is exercised over a seeded 3-unit fixture because the runtime-founded city has no unit, and select stores the cursor; city buy computes the source unit rush price with Settlers 4 / Militia 1 from the original table and commits shields; the MarketPlace branch doubles the clamped raw and again past index 21. No setup or city action has a live-screen observation.",
             "The game-over context is state-reachable for inspection; its trigger conditions are not modelled.",
             "Every screen boundary is resolved against a civd function; this is address resolution, not Windows-to-DOS byte equivalence.",
         ],

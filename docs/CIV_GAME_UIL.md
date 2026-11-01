@@ -135,12 +135,12 @@ carries every field and its evidence; the important groups are:
 | `$selected_unit` | `u16` | selector into DGROUP:81D4 records | declared index |
 | `$production` | `i16` | DGROUP:70EC + city*1Ch + 09h; civd `struct_city.md`, CITYMGT.C:1444 | unit codes 0/1 and MarketPlace -5 in this scene |
 | `$shield_box` | `i16` | DGROUP:70EC + city*1Ch + 0Eh; CITYMGT.C:1433 | committed as `10*cost` |
-| `$money`, `$unit_cost` | `i32`, `u16` | `money[selected_owner]`; `utypes[production].cost` at DGROUP:112A; CITYMGT.C:1405, 1428-1434 | money 1500; Settlers 4, Militia 1 |
+| `$money`, `$unit_cost` | `i32`, `u16` | `money[selected_owner]`; `utypes[production].cost` at DGROUP:112A; CITYMGT.C:1405, 1428-1434 | Chieftain 50, other tiers 0; Settlers 4, Militia 1 |
 | `$improvement_cost`, `$improvement_index` | `u16`, `u8` | `improvements[-production].cost` at DGROUP:0B9A; CITYMGT.C:1409-1412 | MarketPlace index 5, cost 8 |
 | `$buy_price`, `$buy_temp` | `u32` | rush-price scratch; CITYMGT.C:1406-1415 | derived per purchase |
 | `$auto_build` | `bool` | DGROUP:70EC + city*1Ch + 06h bit 10h; CITYMGT.C:1380-1381 | source-bound toggle; no live observation |
 | `$chooser_open`, `$unit_list_open` | `bool` | key `c` / key `a` contexts | UIL context flags |
-| `$unit_count`, `$unit_cursor`, `$unit_last`, `$city_cursor` | `u8` | `unit_count_i` / `choice_f`; record at `[0x70DC]`; CITYMGT.C:1158-1165, 1515 | representative garrison 3; source clamps cursor 0..count-1 |
+| `$unit_count`, `$unit_cursor`, `$unit_last`, `$city_cursor` | `u8` | `unit_count_i` / `choice_f`; record at `[0x70DC]`; CITYMGT.C:1158-1165, 1515 | founded city 0 units; tests seed 3 for the clamp |
 | `$report` | `u8` | F1-F10 table `R:0403 3B7D..3BFF` | declared selector |
 | `$earth_world` | `bool` | DGROUP:D76A; Civ64 SCENES 7.3 | declared branch |
 | `$game_over` | `bool` | UIL end-state flag | authored |
@@ -190,9 +190,10 @@ and other improvement/wonder rows are outside the scene.
 
 The unit list exposes `next`, `previous` and `select`. `next`/`previous` clamp
 the cursor to `0..unit_count_i-1` like `CITYMGT.C:1500-1515`; `select` stores
-the cursor and closes the list. The scene uses a representative three-unit
-garrison because `unit_count_i` is a local filled from `armydata`; the source
-army-record moves/status/goto writes are not modelled.
+the cursor and closes the list. The runtime-founded Chieftain city has no
+unit in it, so the default count is 0 and the clamp is exercised over a seeded
+three-unit fixture; `unit_count_i` is a local filled from `armydata`, and the
+source army-record moves/status/goto writes are not modelled.
 
 The scene deliberately does **not** load a save, render a map, execute a turn,
 run AI, resolve combat, advance technology or write a city record. Those are
@@ -240,10 +241,10 @@ The Z-player test uses the committed scene, not an in-memory rebuild.
 
 Observed on this host with the active fDisBull 0.28.0 interpreter:
 
-- `tests/test_civ_game_uil.py`: **16 passed**
+- `tests/test_civ_game_uil.py`: **17 passed**
 - CIV-focused set (`game UIL`, `city UIL`, `atlas`, `city trace`, `city overlay`):
-  **47 passed**
-- full repository suite: **2,251 passed, 152 skipped, 2 failed, 23 errors**.
+  **48 passed**
+- full repository suite: **2,252 passed, 152 skipped, 2 failed, 23 errors**.
   The failures/errors are the existing Apple-toolchain Linux ELF fixture
   boundary (`/usr/bin/gcc` is Apple clang; missing `-z ibtplt` and Linux
   metadata), not this scene.
@@ -257,16 +258,18 @@ remain static. No DOS screen was run for this slice.
 - No DOS execution, VGA rendering, palette/font/asset loading or input decoding.
 - Difficulty and competition rows are bound to `cur_tier`, `civ_total` and
   `players`; tribe rows map dynamically for both groups; city auto-build
-  toggles status bit `0x10`; unit-list navigation clamps over a representative
-  3-unit garrison; buy computes unit and improvement rush prices and commits
+  toggles status bit `0x10`; unit-list navigation clamps over a seeded 3-unit
+  fixture because the runtime-founded city has no unit; buy computes unit and
+  improvement rush prices and commits
   shields. Rename remains declared, and no action has a live-screen
   observation.
 - Unit-list navigation is cursor-only; select does not write army-record
-  moves/status/goto. Buy uses original Settlers/Militia/MarketPlace costs, but
-  the treasury and garrison counts are representative reads; the disorder guard
-  and other improvement/wonder rows are absent. Sell, rename, text entry and
-  report paging are absent. The detailed city fixture carries more city
-  behavior.
+  moves/status/goto. Buy uses original Settlers/Militia/MarketPlace costs; the
+  Chieftain start uses the source 50 (other tiers 0) and the founded city has no
+  unit. `shield_box`, money and status have not been read from a live city
+  state. The disorder guard and other improvement/wonder rows are absent. Sell,
+  rename, text entry and report paging are absent. The detailed city fixture
+  carries more city behavior.
 - Turn advance only increments declared counters; economy, AI, movement, combat,
   research, diplomacy and victory conditions are outside the model.
 - Game-over is state-reachable for inspection; its trigger conditions are not
@@ -277,8 +280,9 @@ remain static. No DOS screen was run for this slice.
 
 ## Next probes
 
-1. Replace the representative garrison and treasury with live reads; add more
-   original unit/improvement rows where the chooser exposes them.
+1. Read `shield_box`, money and status from a live city-screen state before
+   and after one buy; add more original unit/improvement rows where the chooser
+   exposes them.
 2. Add a matched live-screen or DOSBox observation for one setup row so the
    source-bound scene claim can become bounded-observed.
 3. Use the atlas's caller graph to add one bounded transition not yet modeled,

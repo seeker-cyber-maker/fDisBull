@@ -36,19 +36,19 @@ def _act(backend, verb, target):
     )
 
 
-def _to_tribe(backend):
+def _to_tribe(backend, difficulty="difficulty-prince"):
     for verb, target in (
         ("activate", "title-new"),
         ("activate", "birth-continue"),
-        ("activate", "difficulty-prince"),
+        ("activate", difficulty),
         ("activate", "competition-five"),
     ):
         assert _act(backend, verb, target)["status"] == "success", (verb, target)
     assert backend.observe()["context"]["id"] == "tribe"
 
 
-def _to_world(backend):
-    _to_tribe(backend)
+def _to_world(backend, difficulty="difficulty-prince"):
+    _to_tribe(backend, difficulty)
     for verb, target in (
         ("choose", "tribe-choose"),
         ("activate", "name-accept"),
@@ -205,6 +205,25 @@ def test_city_subcontexts_and_all_world_overlays_round_trip():
         assert backend.observe()["context"]["id"] == "world"
 
 
+def test_chieftain_city_starts_with_original_treasury_and_no_garrison():
+    backend = ILSceneBackend(build_scene())
+    assert backend.state["$money"] == 0
+    _to_world(backend, "difficulty-chieftain")
+    assert backend.state["$money"] == 50
+    assert backend.state["$difficulty"] == 0
+    assert backend.state["$unit_count"] == 0
+    assert backend.state["$unit_last"] == 0
+    assert _act(backend, "open", "world-city")["status"] == "success"
+    assert _act(backend, "buy", "city-buy")["status"] == "rejected"
+    assert backend.state["$buy_price"] == 0
+    assert backend.state["$shield_box"] == 0
+    assert backend.state["$money"] == 50
+    assert _act(backend, "open", "city-units")["status"] == "success"
+    assert _act(backend, "next", "unit-next")["status"] == "success"
+    assert backend.state["$unit_cursor"] == 0
+    assert _act(backend, "select", "unit-select")["status"] != "success"
+
+
 def test_city_auto_build_toggles_status_projection():
     backend = ILSceneBackend(build_scene())
     _to_world(backend)
@@ -230,6 +249,7 @@ def test_militia_choice_updates_unit_cost():
 def test_city_buy_computes_rush_price_and_commits_shields():
     backend = ILSceneBackend(build_scene())
     _to_world(backend)
+    backend.state["$money"] = 1500
     assert _act(backend, "open", "world-city")["status"] == "success"
     assert backend.state["$money"] == 1500
     assert backend.state["$shield_box"] == 0
@@ -247,6 +267,7 @@ def test_city_buy_computes_rush_price_and_commits_shields():
 def test_city_buy_marketplace_doubles_raw_and_commits_shields():
     backend = ILSceneBackend(build_scene())
     _to_world(backend)
+    backend.state["$money"] = 1500
     assert _act(backend, "open", "world-city")["status"] == "success"
     assert _act(backend, "activate", "city-change")["status"] == "success"
     assert backend.observe()["context"]["id"] == "production"
@@ -266,6 +287,8 @@ def test_city_buy_marketplace_doubles_raw_and_commits_shields():
 def test_city_unit_list_cursor_clamps_and_stores_selection():
     backend = ILSceneBackend(build_scene())
     _to_world(backend)
+    backend.state["$unit_count"] = 3
+    backend.state["$unit_last"] = 2
     assert _act(backend, "open", "world-city")["status"] == "success"
     assert _act(backend, "open", "city-units")["status"] == "success"
     assert backend.observe()["context"]["id"] == "units"

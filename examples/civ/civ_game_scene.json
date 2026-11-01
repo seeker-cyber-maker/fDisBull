@@ -84,7 +84,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -116,7 +116,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -124,7 +124,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -257,7 +257,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -289,7 +289,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -297,7 +297,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -430,7 +430,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -462,7 +462,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -470,7 +470,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -603,7 +603,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -635,7 +635,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -643,7 +643,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -776,7 +776,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -808,7 +808,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -816,7 +816,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -949,7 +949,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -981,7 +981,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -989,7 +989,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -1122,7 +1122,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -1154,7 +1154,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -1162,7 +1162,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -1295,7 +1295,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -1327,7 +1327,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -1335,7 +1335,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -1468,7 +1468,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -1500,7 +1500,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -1508,7 +1508,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -1542,7 +1542,7 @@
    "resources": {
     "choose-chieftain-text": {
      "kind": "text",
-     "text": "Chieftain chosen: cur_tier = 0; competition question."
+     "text": "Chieftain chosen: cur_tier = 0 and money = 50; competition question."
     }
    },
    "body": [
@@ -1557,6 +1557,12 @@
      "op": "set",
      "var": "$difficulty",
      "value": 0
+    },
+    {
+     "id": "choose-chieftain-set-money",
+     "op": "set",
+     "var": "$money",
+     "value": 50
     },
     {
      "id": "choose-chieftain-text",
@@ -1647,7 +1653,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -1679,7 +1685,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -1687,7 +1693,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -1721,7 +1727,7 @@
    "resources": {
     "choose-warlord-text": {
      "kind": "text",
-     "text": "Warlord chosen: cur_tier = 1; competition question."
+     "text": "Warlord chosen: cur_tier = 1 and money = 0; competition question."
     }
    },
    "body": [
@@ -1736,6 +1742,12 @@
      "op": "set",
      "var": "$difficulty",
      "value": 1
+    },
+    {
+     "id": "choose-warlord-set-money",
+     "op": "set",
+     "var": "$money",
+     "value": 0
     },
     {
      "id": "choose-warlord-text",
@@ -1826,7 +1838,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -1858,7 +1870,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -1866,7 +1878,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -1900,7 +1912,7 @@
    "resources": {
     "choose-prince-text": {
      "kind": "text",
-     "text": "Prince chosen: cur_tier = 2; competition question."
+     "text": "Prince chosen: cur_tier = 2 and money = 0; competition question."
     }
    },
    "body": [
@@ -1915,6 +1927,12 @@
      "op": "set",
      "var": "$difficulty",
      "value": 2
+    },
+    {
+     "id": "choose-prince-set-money",
+     "op": "set",
+     "var": "$money",
+     "value": 0
     },
     {
      "id": "choose-prince-text",
@@ -2005,7 +2023,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -2037,7 +2055,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -2045,7 +2063,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -2079,7 +2097,7 @@
    "resources": {
     "choose-king-text": {
      "kind": "text",
-     "text": "King chosen: cur_tier = 3; competition question."
+     "text": "King chosen: cur_tier = 3 and money = 0; competition question."
     }
    },
    "body": [
@@ -2094,6 +2112,12 @@
      "op": "set",
      "var": "$difficulty",
      "value": 3
+    },
+    {
+     "id": "choose-king-set-money",
+     "op": "set",
+     "var": "$money",
+     "value": 0
     },
     {
      "id": "choose-king-text",
@@ -2184,7 +2208,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -2216,7 +2240,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -2224,7 +2248,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -2258,7 +2282,7 @@
    "resources": {
     "choose-emperor-text": {
      "kind": "text",
-     "text": "Emperor chosen: cur_tier = 4; competition question."
+     "text": "Emperor chosen: cur_tier = 4 and money = 0; competition question."
     }
    },
    "body": [
@@ -2273,6 +2297,12 @@
      "op": "set",
      "var": "$difficulty",
      "value": 4
+    },
+    {
+     "id": "choose-emperor-set-money",
+     "op": "set",
+     "var": "$money",
+     "value": 0
     },
     {
      "id": "choose-emperor-text",
@@ -2363,7 +2393,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -2395,7 +2425,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -2403,7 +2433,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -2566,7 +2596,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -2598,7 +2628,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -2606,7 +2636,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -2769,7 +2799,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -2801,7 +2831,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -2809,7 +2839,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -2972,7 +3002,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -3004,7 +3034,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -3012,7 +3042,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -3175,7 +3205,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -3207,7 +3237,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -3215,7 +3245,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -3378,7 +3408,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -3410,7 +3440,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -3418,7 +3448,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -3573,7 +3603,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -3605,7 +3635,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -3613,7 +3643,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -3827,7 +3857,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -3859,7 +3889,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -3867,7 +3897,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -4000,7 +4030,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -4032,7 +4062,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -4040,7 +4070,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -4173,7 +4203,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -4205,7 +4235,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -4213,7 +4243,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -4376,7 +4406,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -4408,7 +4438,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -4416,7 +4446,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -4567,7 +4597,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -4599,7 +4629,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -4607,7 +4637,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -4752,7 +4782,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -4784,7 +4814,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -4792,7 +4822,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -4937,7 +4967,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -4969,7 +4999,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -4977,7 +5007,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -5128,7 +5158,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -5160,7 +5190,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -5168,7 +5198,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -5319,7 +5349,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -5351,7 +5381,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -5359,7 +5389,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -5516,7 +5546,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -5548,7 +5578,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -5556,7 +5586,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -5839,7 +5869,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -5871,7 +5901,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -5879,7 +5909,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -6152,7 +6182,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -6184,7 +6214,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -6192,7 +6222,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -6355,7 +6385,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -6387,7 +6417,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -6395,7 +6425,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -6546,7 +6576,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -6578,7 +6608,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -6586,7 +6616,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -6749,7 +6779,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -6781,7 +6811,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -6789,7 +6819,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -6947,7 +6977,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -6979,7 +7009,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -6987,7 +7017,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -7150,7 +7180,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -7182,7 +7212,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -7190,7 +7220,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -7337,7 +7367,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -7369,7 +7399,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -7377,7 +7407,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -7540,7 +7570,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -7572,7 +7602,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -7580,7 +7610,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -7743,7 +7773,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -7775,7 +7805,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -7783,7 +7813,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -7946,7 +7976,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -7978,7 +8008,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -7986,7 +8016,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -8149,7 +8179,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -8181,7 +8211,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -8189,7 +8219,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -8352,7 +8382,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -8384,7 +8414,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -8392,7 +8422,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -8555,7 +8585,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -8587,7 +8617,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -8595,7 +8625,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -8758,7 +8788,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -8790,7 +8820,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -8798,7 +8828,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -8961,7 +8991,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -8993,7 +9023,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -9001,7 +9031,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -9140,7 +9170,7 @@
     },
     "$money": {
      "type": "i32",
-     "initial": 1500
+     "initial": 0
     },
     "$unit_cost": {
      "type": "u16",
@@ -9172,7 +9202,7 @@
     },
     "$unit_count": {
      "type": "u8",
-     "initial": 3
+     "initial": 0
     },
     "$unit_cursor": {
      "type": "u8",
@@ -9180,7 +9210,7 @@
     },
     "$unit_last": {
      "type": "u8",
-     "initial": 2
+     "initial": 0
     },
     "$city_cursor": {
      "type": "u8",
@@ -10504,7 +10534,7 @@
     "list",
     "units"
    ],
-   "description": "Cursor and count are declared state; source clamps choice_f to 0..unit_count_i-1.",
+   "description": "Cursor and count are declared state; the founded city has no unit, and source clamps choice_f to 0..unit_count_i-1.",
    "bindings": [],
    "context": "units"
   },
